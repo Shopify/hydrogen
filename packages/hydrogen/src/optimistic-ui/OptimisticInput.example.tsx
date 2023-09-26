@@ -1,8 +1,4 @@
-import {
-  CartForm,
-  OptimisticInput,
-  useOptimisticDataFromActions,
-} from '@shopify/hydrogen';
+import {CartForm, OptimisticInput, useOptimisticData} from '@shopify/hydrogen';
 import {CartLine} from '@shopify/hydrogen-react/storefront-api-types';
 
 type OptimisticData = {
@@ -11,8 +7,7 @@ type OptimisticData = {
 
 export default function Cart({line}: {line: CartLine}) {
   const optimisticId = `line-${line.id}`;
-  const optimisticData =
-    useOptimisticDataFromActions<OptimisticData>(optimisticId);
+  const optimisticData = useOptimisticData<OptimisticData>(optimisticId);
 
   return (
     <div

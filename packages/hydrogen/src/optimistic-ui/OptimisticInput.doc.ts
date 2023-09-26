@@ -6,7 +6,7 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description:
-    'Creates a form input for optimistic UI updates. Use `useOptimisticDataFromActions` to update the UI with the latest optimistic data.',
+    'Creates a form input for optimistic UI updates. Use `useOptimisticData` to update the UI with the latest optimistic data.',
   type: 'component',
   defaultExample: {
     description: 'This is the default example',

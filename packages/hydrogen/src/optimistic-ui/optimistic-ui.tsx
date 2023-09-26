@@ -1,6 +1,6 @@
 import {useFetchers} from '@remix-run/react';
 
-export function useOptimisticDataFromActions<T>(identifier: string) {
+export function useOptimisticData<T>(identifier: string) {
   const fetchers = useFetchers();
   const data: Record<string, unknown> = {};
 
@@ -24,7 +24,7 @@ export function useOptimisticDataFromActions<T>(identifier: string) {
 
 export type OptimisticInputProps = {
   /**
-   * A unique identifier for the optimistic input. Use the same identifier in `useOptimisticDataFromActions`
+   * A unique identifier for the optimistic input. Use the same identifier in `useOptimisticData`
    * to retrieve the optimistic data from actions.
    */
   id: string;

@@ -1,7 +1,7 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'useOptimisticDataFromActions',
+  name: 'useOptimisticData',
   category: 'hooks',
   isVisualComponent: false,
   related: [],
@@ -29,7 +29,7 @@ const data: ReferenceEntityTemplateSchema = {
   definitions: [
     {
       title: 'Props',
-      type: 'UseOptimisticDataFromActionsGeneratedType',
+      type: 'UseOptimisticDataGeneratedType',
       description: '',
     },
   ],

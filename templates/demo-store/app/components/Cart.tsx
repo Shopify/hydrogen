@@ -6,7 +6,7 @@ import {
   CartForm,
   Image,
   Money,
-  useOptimisticDataFromActions,
+  useOptimisticData,
   OptimisticInput,
 } from '@shopify/hydrogen';
 import type {
@@ -248,8 +248,7 @@ function buildOptimisticCartLineId(lineId: string | undefined) {
 
 function CartLineItem({line}: {line: CartLine}) {
   const optimisticId = buildOptimisticCartLineId(line?.id);
-  const optimisticData =
-    useOptimisticDataFromActions<OptimisticData>(optimisticId);
+  const optimisticData = useOptimisticData<OptimisticData>(optimisticId);
 
   if (!line?.id) return null;
 
@@ -339,8 +338,7 @@ function ItemRemoveButton({lineId}: {lineId: CartLine['id']}) {
 
 function CartLineQuantityAdjust({line}: {line: CartLine}) {
   const optimisticId = buildOptimisticCartLineId(line?.id);
-  const optimisticData =
-    useOptimisticDataFromActions<OptimisticData>(optimisticId);
+  const optimisticData = useOptimisticData<OptimisticData>(optimisticId);
 
   if (!line || typeof line?.quantity === 'undefined') return null;
 

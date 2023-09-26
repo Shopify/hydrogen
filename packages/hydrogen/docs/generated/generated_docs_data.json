@@ -8532,7 +8532,7 @@
     "category": "components",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a form input for optimistic UI updates. Use `useOptimisticDataFromActions` to update the UI with the latest optimistic data.",
+    "description": "Creates a form input for optimistic UI updates. Use `useOptimisticData` to update the UI with the latest optimistic data.",
     "type": "component",
     "defaultExample": {
       "description": "This is the default example",
@@ -8540,12 +8540,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {\n  CartForm,\n  OptimisticInput,\n  useOptimisticDataFromActions,\n} from '@shopify/hydrogen';\n\nexport default function Cart({line}) {\n  const optimisticId = `line-${line.id}`;\n  const optimisticData = useOptimisticDataFromActions(optimisticId);\n\n  return (\n    <div\n      style={{\n        // Hide the line item if the optimistic data action is remove\n        // Do not remove the form from the DOM\n        display: optimisticData?.action === 'remove' ? 'none' : 'block',\n      }}\n    >\n      <CartForm\n        route=\"/cart\"\n        action={CartForm.ACTIONS.LinesRemove}\n        inputs={{\n          lineIds: [line.id],\n        }}\n      >\n        <button type=\"submit\">Remove</button>\n        <OptimisticInput id={optimisticId} data={{action: 'remove'}} />\n      </CartForm>\n    </div>\n  );\n}\n",
+            "code": "import {CartForm, OptimisticInput, useOptimisticData} from '@shopify/hydrogen';\n\nexport default function Cart({line}) {\n  const optimisticId = `line-${line.id}`;\n  const optimisticData = useOptimisticData(optimisticId);\n\n  return (\n    <div\n      style={{\n        // Hide the line item if the optimistic data action is remove\n        // Do not remove the form from the DOM\n        display: optimisticData?.action === 'remove' ? 'none' : 'block',\n      }}\n    >\n      <CartForm\n        route=\"/cart\"\n        action={CartForm.ACTIONS.LinesRemove}\n        inputs={{\n          lineIds: [line.id],\n        }}\n      >\n        <button type=\"submit\">Remove</button>\n        <OptimisticInput id={optimisticId} data={{action: 'remove'}} />\n      </CartForm>\n    </div>\n  );\n}\n",
             "language": "js"
           },
           {
             "title": "TypeScript",
-            "code": "import {\n  CartForm,\n  OptimisticInput,\n  useOptimisticDataFromActions,\n} from '@shopify/hydrogen';\nimport {CartLine} from '@shopify/hydrogen-react/storefront-api-types';\n\ntype OptimisticData = {\n  action: string;\n};\n\nexport default function Cart({line}: {line: CartLine}) {\n  const optimisticId = `line-${line.id}`;\n  const optimisticData =\n    useOptimisticDataFromActions<OptimisticData>(optimisticId);\n\n  return (\n    <div\n      style={{\n        // Hide the line item if the optimistic data action is remove\n        // Do not remove the form from the DOM\n        display: optimisticData?.action === 'remove' ? 'none' : 'block',\n      }}\n    >\n      <CartForm\n        route=\"/cart\"\n        action={CartForm.ACTIONS.LinesRemove}\n        inputs={{\n          lineIds: [line.id],\n        }}\n      >\n        <button type=\"submit\">Remove</button>\n        <OptimisticInput id={optimisticId} data={{action: 'remove'}} />\n      </CartForm>\n    </div>\n  );\n}\n",
+            "code": "import {CartForm, OptimisticInput, useOptimisticData} from '@shopify/hydrogen';\nimport {CartLine} from '@shopify/hydrogen-react/storefront-api-types';\n\ntype OptimisticData = {\n  action: string;\n};\n\nexport default function Cart({line}: {line: CartLine}) {\n  const optimisticId = `line-${line.id}`;\n  const optimisticData = useOptimisticData<OptimisticData>(optimisticId);\n\n  return (\n    <div\n      style={{\n        // Hide the line item if the optimistic data action is remove\n        // Do not remove the form from the DOM\n        display: optimisticData?.action === 'remove' ? 'none' : 'block',\n      }}\n    >\n      <CartForm\n        route=\"/cart\"\n        action={CartForm.ACTIONS.LinesRemove}\n        inputs={{\n          lineIds: [line.id],\n        }}\n      >\n        <button type=\"submit\">Remove</button>\n        <OptimisticInput id={optimisticId} data={{action: 'remove'}} />\n      </CartForm>\n    </div>\n  );\n}\n",
             "language": "ts"
           }
         ],
@@ -8562,7 +8562,7 @@
             "filePath": "/optimistic-ui/optimistic-ui.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "OptimisticInputProps",
-            "value": "{\n  /**\n   * A unique identifier for the optimistic input. Use the same identifier in `useOptimisticDataFromActions`\n   * to retrieve the optimistic data from actions.\n   */\n  id: string;\n  /**\n   * The data to be stored in the optimistic input. Use for creating an optimistic successful state\n   * of this form action.\n   */\n  data: Record<string, unknown>;\n}",
+            "value": "{\n  /**\n   * A unique identifier for the optimistic input. Use the same identifier in `useOptimisticData`\n   * to retrieve the optimistic data from actions.\n   */\n  id: string;\n  /**\n   * The data to be stored in the optimistic input. Use for creating an optimistic successful state\n   * of this form action.\n   */\n  data: Record<string, unknown>;\n}",
             "description": "",
             "members": [
               {
@@ -8570,7 +8570,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "id",
                 "value": "string",
-                "description": "A unique identifier for the optimistic input. Use the same identifier in `useOptimisticDataFromActions`\nto retrieve the optimistic data from actions."
+                "description": "A unique identifier for the optimistic input. Use the same identifier in `useOptimisticData`\nto retrieve the optimistic data from actions."
               },
               {
                 "filePath": "/optimistic-ui/optimistic-ui.tsx",
@@ -8586,7 +8586,7 @@
     ]
   },
   {
-    "name": "useOptimisticDataFromActions",
+    "name": "useOptimisticData",
     "category": "hooks",
     "isVisualComponent": false,
     "related": [],
@@ -8598,12 +8598,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {\n  CartForm,\n  OptimisticInput,\n  useOptimisticDataFromActions,\n} from '@shopify/hydrogen';\n\nexport default function Cart({line}) {\n  const optimisticId = `line-${line.id}`;\n  const optimisticData = useOptimisticDataFromActions(optimisticId);\n\n  return (\n    <div\n      style={{\n        // Hide the line item if the optimistic data action is remove\n        // Do not remove the form from the DOM\n        display: optimisticData?.action === 'remove' ? 'none' : 'block',\n      }}\n    >\n      <CartForm\n        route=\"/cart\"\n        action={CartForm.ACTIONS.LinesRemove}\n        inputs={{\n          lineIds: [line.id],\n        }}\n      >\n        <button type=\"submit\">Remove</button>\n        <OptimisticInput id={optimisticId} data={{action: 'remove'}} />\n      </CartForm>\n    </div>\n  );\n}\n",
+            "code": "import {CartForm, OptimisticInput, useOptimisticData} from '@shopify/hydrogen';\n\nexport default function Cart({line}) {\n  const optimisticId = `line-${line.id}`;\n  const optimisticData = useOptimisticData(optimisticId);\n\n  return (\n    <div\n      style={{\n        // Hide the line item if the optimistic data action is remove\n        // Do not remove the form from the DOM\n        display: optimisticData?.action === 'remove' ? 'none' : 'block',\n      }}\n    >\n      <CartForm\n        route=\"/cart\"\n        action={CartForm.ACTIONS.LinesRemove}\n        inputs={{\n          lineIds: [line.id],\n        }}\n      >\n        <button type=\"submit\">Remove</button>\n        <OptimisticInput id={optimisticId} data={{action: 'remove'}} />\n      </CartForm>\n    </div>\n  );\n}\n",
             "language": "js"
           },
           {
             "title": "TypeScript",
-            "code": "import {\n  CartForm,\n  OptimisticInput,\n  useOptimisticDataFromActions,\n} from '@shopify/hydrogen';\nimport {CartLine} from '@shopify/hydrogen-react/storefront-api-types';\n\ntype OptimisticData = {\n  action: string;\n};\n\nexport default function Cart({line}: {line: CartLine}) {\n  const optimisticId = `line-${line.id}`;\n  const optimisticData =\n    useOptimisticDataFromActions<OptimisticData>(optimisticId);\n\n  return (\n    <div\n      style={{\n        // Hide the line item if the optimistic data action is remove\n        // Do not remove the form from the DOM\n        display: optimisticData?.action === 'remove' ? 'none' : 'block',\n      }}\n    >\n      <CartForm\n        route=\"/cart\"\n        action={CartForm.ACTIONS.LinesRemove}\n        inputs={{\n          lineIds: [line.id],\n        }}\n      >\n        <button type=\"submit\">Remove</button>\n        <OptimisticInput id={optimisticId} data={{action: 'remove'}} />\n      </CartForm>\n    </div>\n  );\n}\n",
+            "code": "import {CartForm, OptimisticInput, useOptimisticData} from '@shopify/hydrogen';\nimport {CartLine} from '@shopify/hydrogen-react/storefront-api-types';\n\ntype OptimisticData = {\n  action: string;\n};\n\nexport default function Cart({line}: {line: CartLine}) {\n  const optimisticId = `line-${line.id}`;\n  const optimisticData = useOptimisticData<OptimisticData>(optimisticId);\n\n  return (\n    <div\n      style={{\n        // Hide the line item if the optimistic data action is remove\n        // Do not remove the form from the DOM\n        display: optimisticData?.action === 'remove' ? 'none' : 'block',\n      }}\n    >\n      <CartForm\n        route=\"/cart\"\n        action={CartForm.ACTIONS.LinesRemove}\n        inputs={{\n          lineIds: [line.id],\n        }}\n      >\n        <button type=\"submit\">Remove</button>\n        <OptimisticInput id={optimisticId} data={{action: 'remove'}} />\n      </CartForm>\n    </div>\n  );\n}\n",
             "language": "ts"
           }
         ],
@@ -8614,11 +8614,11 @@
       {
         "title": "Props",
         "description": "",
-        "type": "UseOptimisticDataFromActionsGeneratedType",
+        "type": "UseOptimisticDataGeneratedType",
         "typeDefinitions": {
-          "UseOptimisticDataFromActionsGeneratedType": {
+          "UseOptimisticDataGeneratedType": {
             "filePath": "/optimistic-ui/optimistic-ui.tsx",
-            "name": "UseOptimisticDataFromActionsGeneratedType",
+            "name": "UseOptimisticDataGeneratedType",
             "description": "",
             "params": [
               {
@@ -8634,7 +8634,7 @@
               "name": "",
               "value": ""
             },
-            "value": "export function useOptimisticDataFromActions<T>(identifier: string) {\n  const fetchers = useFetchers();\n  const data: Record<string, unknown> = {};\n\n  for (const fetcher of fetchers) {\n    const formData = fetcher.submission?.formData;\n    if (formData && formData.get('optimistic-identifier') === identifier) {\n      try {\n        if (formData.has('optimistic-data')) {\n          const dataInForm: unknown = JSON.parse(\n            String(formData.get('optimistic-data')),\n          );\n          Object.assign(data, dataInForm);\n        }\n      } catch {\n        // do nothing\n      }\n    }\n  }\n  return data as T;\n}"
+            "value": "export function useOptimisticData<T>(identifier: string) {\n  const fetchers = useFetchers();\n  const data: Record<string, unknown> = {};\n\n  for (const fetcher of fetchers) {\n    const formData = fetcher.submission?.formData;\n    if (formData && formData.get('optimistic-identifier') === identifier) {\n      try {\n        if (formData.has('optimistic-data')) {\n          const dataInForm: unknown = JSON.parse(\n            String(formData.get('optimistic-data')),\n          );\n          Object.assign(data, dataInForm);\n        }\n      } catch {\n        // do nothing\n      }\n    }\n  }\n  return data as T;\n}"
           }
         }
       }
