@@ -3,8 +3,6 @@
  */
 export function isCI() {
   const {env} = process;
-  console.log('Printing process.env:');
-  console.log(JSON.stringify(env, null, 2));
 
   return env.CI === 'false'
     ? false // Overrides
