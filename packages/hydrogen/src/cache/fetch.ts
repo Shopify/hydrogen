@@ -16,6 +16,7 @@ export type CacheKey = string | readonly unknown[];
 
 export type FetchDebugInfo = {
   stackLine?: string;
+  graphql?: string;
 };
 
 export type WithCacheOptions<T = unknown> = {

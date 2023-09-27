@@ -1,6 +1,7 @@
 import {EventEmitter} from 'node:events';
 import {ReadableStream} from 'node:stream/web';
 import {Request, Response} from '@shopify/mini-oxygen';
+import {getGraphiQLUrl} from './graphiql-url.js';
 
 type RequestEvent = {
   event: string;
@@ -23,6 +24,7 @@ export type H2OEvent = {
   cacheStatus?: 'MISS' | 'HIT' | 'STALE' | 'PUT';
   waitUntil?: ExecutionContext['waitUntil'];
   stackLine?: string;
+  graphql?: string;
 };
 
 async function getRequestInfo(request: Request) {
@@ -36,6 +38,9 @@ async function getRequestInfo(request: Request) {
     purpose: data.purpose === 'prefetch' ? '(prefetch)' : '',
     cacheStatus: data.cacheStatus ?? '',
     stackLine: data.stackLine ?? '',
+    graphql: data.graphql
+      ? (JSON.parse(data.graphql) as {query: string; variables: object})
+      : null,
   };
 }
 
@@ -52,15 +57,15 @@ export async function logRequestEvent(request: Request): Promise<Response> {
     return new Response('ok');
   }
 
-  const {eventType, purpose, stackLine, ...data} = await getRequestInfo(
-    request,
-  );
+  const {eventType, purpose, stackLine, graphql, ...data} =
+    await getRequestInfo(request);
 
+  let graphiqlLink = '';
   let description = request.url;
 
   if (eventType === 'subrequest') {
     description =
-      decodeURIComponent(request.url)
+      graphql?.query
         .match(/(query|mutation)\s+(\w+)/)?.[0]
         ?.replace(/\s+/, ' ') || request.url;
 
@@ -74,6 +79,10 @@ export async function logRequestEvent(request: Request): Promise<Response> {
     if (fnName && filePath) {
       description += ` (${fnName}:${filePath})`;
     }
+
+    if (graphql) {
+      graphiqlLink = getGraphiQLUrl({graphql});
+    }
   }
 
   const event = {
@@ -81,6 +90,7 @@ export async function logRequestEvent(request: Request): Promise<Response> {
     data: JSON.stringify({
       ...data,
       url: `${purpose} ${description}`.trim(),
+      graphiqlLink,
     }),
   };
 

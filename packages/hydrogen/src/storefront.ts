@@ -323,13 +323,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     }
 
     const url = getStorefrontApiUrl({storefrontApiVersion});
+    const graphqlData = JSON.stringify({query, variables: queryVariables});
     const requestInit: RequestInit = {
       method: 'POST',
       headers: {...defaultHeaders, ...userHeaders},
-      body: JSON.stringify({
-        query,
-        variables: queryVariables,
-      }),
+      body: graphqlData,
     };
 
     const [body, response] = await fetchWithServerCache(url, requestInit, {
@@ -337,7 +335,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       cache: cacheOptions || CacheShort(),
       shouldCacheResponse: checkGraphQLErrors,
       waitUntil,
-      debugInfo: {stackLine},
+      debugInfo: {stackLine, graphql: graphqlData},
     });
 
     const errorOptions: StorefrontErrorOptions<T> = {
