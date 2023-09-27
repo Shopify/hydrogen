@@ -73,7 +73,7 @@ export async function logRequestEvent(request: Request): Promise<Response> {
 
     // This might need to be passed through sourcemaps in Workerd
     const [, fnName, filePath] =
-      stackLine?.match(/\s+at ([^\s]+) \(.*?\/(app\/[^\)\n]*)\)/) || [];
+      stackLine?.match(/\s+at ([^\s]+) \(.*?\/(app\/[^\n]*)\)/) || [];
 
     if (fnName && filePath) {
       originFile = `${fnName}:${filePath}`;
