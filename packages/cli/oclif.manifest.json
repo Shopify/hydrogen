@@ -28,6 +28,12 @@
           "description": "Show a bundle size summary after building.",
           "allowNo": true
         },
+        "lockfile-check": {
+          "name": "lockfile-check",
+          "type": "boolean",
+          "description": "Checks that there is exactly 1 valid lockfile in the project.",
+          "allowNo": true
+        },
         "disable-route-warning": {
           "name": "disable-route-warning",
           "type": "boolean",
