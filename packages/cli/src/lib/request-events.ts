@@ -53,7 +53,8 @@ export async function clearHistory(): Promise<Response> {
 }
 
 export async function logRequestEvent(request: Request): Promise<Response> {
-  if (DEV_ROUTES.has(new URL(request.url).pathname)) {
+  const url = new URL(request.url);
+  if (DEV_ROUTES.has(url.pathname)) {
     return new Response('ok');
   }
 
@@ -67,14 +68,11 @@ export async function logRequestEvent(request: Request): Promise<Response> {
     description =
       graphql?.query
         .match(/(query|mutation)\s+(\w+)/)?.[0]
-        ?.replace(/\s+/, ' ') || request.url;
+        ?.replace(/\s+/, ' ') || decodeURIComponent(url.search.slice(1));
 
     // This might need to be passed through sourcemaps in Workerd
     const [, fnName, filePath] =
-      stackLine?.match(
-        // /\/([^\/]+?\/(routes\/|root\.[jt]sx?)[^:\)\n]*)[:\/)]/,
-        /\s+at ([^\s]+) \(.*?\/(app\/[^\)\n]*)\)/,
-      ) || [];
+      stackLine?.match(/\s+at ([^\s]+) \(.*?\/(app\/[^\)\n]*)\)/) || [];
 
     if (fnName && filePath) {
       description += ` (${fnName}:${filePath})`;
@@ -94,8 +92,8 @@ export async function logRequestEvent(request: Request): Promise<Response> {
     }),
   };
 
-  if (eventHistory.length > 100) eventHistory.shift();
   eventHistory.push(event);
+  if (eventHistory.length > 100) eventHistory.shift();
 
   eventEmitter.emit('request', event);
 

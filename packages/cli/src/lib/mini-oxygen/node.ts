@@ -1,6 +1,5 @@
 import {randomUUID} from 'node:crypto';
 import {AsyncLocalStorage} from 'node:async_hooks';
-import {resolvePath} from '@shopify/cli-kit/node/path';
 import {readFile} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {
@@ -18,7 +17,6 @@ import {
 } from '../request-events.js';
 
 export async function startNodeServer({
-  root,
   port = DEFAULT_PORT,
   watch = false,
   buildPathWorkerFile,
