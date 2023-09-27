@@ -6,7 +6,7 @@ type OptimisticData = {
 };
 
 export default function Cart({line}: {line: CartLine}) {
-  const optimisticId = `line-${line.id}`;
+  const optimisticId = line.id;
   const optimisticData = useOptimisticData<OptimisticData>(optimisticId);
 
   return (

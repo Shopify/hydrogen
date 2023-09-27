@@ -1,7 +1,7 @@
 import {CartForm, OptimisticInput, useOptimisticData} from '@shopify/hydrogen';
 
 export default function Cart({line}) {
-  const optimisticId = `line-${line.id}`;
+  const optimisticId = line.id;
   const optimisticData = useOptimisticData(optimisticId);
 
   return (

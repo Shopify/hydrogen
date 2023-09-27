@@ -241,14 +241,8 @@ type OptimisticData = {
   quantity?: number;
 };
 
-// Construct an unique optimistic id for this cart line id
-function buildOptimisticCartLineId(lineId: string | undefined) {
-  return lineId ? `cart-line-${lineId}` : '';
-}
-
 function CartLineItem({line}: {line: CartLine}) {
-  const optimisticId = buildOptimisticCartLineId(line?.id);
-  const optimisticData = useOptimisticData<OptimisticData>(optimisticId);
+  const optimisticData = useOptimisticData<OptimisticData>(line?.id);
 
   if (!line?.id) return null;
 
@@ -314,8 +308,6 @@ function CartLineItem({line}: {line: CartLine}) {
 }
 
 function ItemRemoveButton({lineId}: {lineId: CartLine['id']}) {
-  const optimisticId = buildOptimisticCartLineId(lineId);
-
   return (
     <CartForm
       route="/cart"
@@ -331,13 +323,13 @@ function ItemRemoveButton({lineId}: {lineId: CartLine['id']}) {
         <span className="sr-only">Remove</span>
         <IconRemove aria-hidden="true" />
       </button>
-      <OptimisticInput id={optimisticId} data={{action: 'remove'}} />
+      <OptimisticInput id={lineId} data={{action: 'remove'}} />
     </CartForm>
   );
 }
 
 function CartLineQuantityAdjust({line}: {line: CartLine}) {
-  const optimisticId = buildOptimisticCartLineId(line?.id);
+  const optimisticId = line?.id;
   const optimisticData = useOptimisticData<OptimisticData>(optimisticId);
 
   if (!line || typeof line?.quantity === 'undefined') return null;
