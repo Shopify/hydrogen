@@ -65,6 +65,17 @@ describe('checkLockfileStatus()', () => {
         );
       });
     });
+
+    it('throws when shouldExit is true', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        await writeFile(joinPath(tmpDir, 'package-lock.json'), '');
+        await writeFile(joinPath(tmpDir, 'pnpm-lock.yaml'), '');
+
+        await expect(checkLockfileStatus(tmpDir, true)).rejects.toThrow(
+          /Multiple lockfiles found/is,
+        );
+      });
+    });
   });
 
   describe('when a lockfile is missing', () => {
@@ -73,6 +84,14 @@ describe('checkLockfileStatus()', () => {
         await checkLockfileStatus(tmpDir);
 
         expect(outputMock.warn()).toMatch(/ warning .+ No lockfile found .+/is);
+      });
+    });
+
+    it('throws when shouldExit is true', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        await expect(checkLockfileStatus(tmpDir, true)).rejects.toThrow(
+          /No lockfile found/is,
+        );
       });
     });
   });

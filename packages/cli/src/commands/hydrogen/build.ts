@@ -37,6 +37,7 @@ import {
   hasMetafile,
 } from '../../lib/bundle/analyzer.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
+import {isCI} from '../../lib/is-ci.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
 const MAX_WORKER_BUNDLE_SIZE = 10;
@@ -51,8 +52,15 @@ export default class Build extends Command {
       allowNo: true,
       default: true,
     }),
-    ['bundle-stats']: Flags.boolean({
+    'bundle-stats': Flags.boolean({
       description: 'Show a bundle size summary after building.',
+      default: true,
+      allowNo: true,
+    }),
+    'lockfile-check': Flags.boolean({
+      description:
+        'Checks that there is exactly 1 valid lockfile in the project.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK',
       default: true,
       allowNo: true,
     }),
@@ -60,13 +68,13 @@ export default class Build extends Command {
       description: 'Disable warning about missing standard routes.',
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
     }),
-    ['codegen-unstable']: Flags.boolean({
+    'codegen-unstable': Flags.boolean({
       description:
         'Generate types for the Storefront API queries found in your project.',
       required: false,
       default: false,
     }),
-    ['codegen-config-path']: commonFlags.codegenConfigPath,
+    'codegen-config-path': commonFlags.codegenConfigPath,
 
     base: deprecated('--base')(),
     entry: deprecated('--entry')(),
@@ -85,15 +93,7 @@ export default class Build extends Command {
   }
 }
 
-export async function runBuild({
-  directory,
-  useCodegen = false,
-  codegenConfigPath,
-  sourcemap = false,
-  disableRouteWarning = false,
-  bundleStats = true,
-  assetPath,
-}: {
+type RunBuildOptions = {
   directory?: string;
   useCodegen?: boolean;
   codegenConfigPath?: string;
@@ -101,7 +101,19 @@ export async function runBuild({
   disableRouteWarning?: boolean;
   assetPath?: string;
   bundleStats?: boolean;
-}) {
+  lockfileCheck?: boolean;
+};
+
+export async function runBuild({
+  directory,
+  useCodegen = false,
+  codegenConfigPath,
+  sourcemap = false,
+  disableRouteWarning = false,
+  bundleStats = true,
+  lockfileCheck = true,
+  assetPath,
+}: RunBuildOptions) {
   if (!process.env.NODE_ENV) {
     process.env.NODE_ENV = 'production';
   }
@@ -112,7 +124,11 @@ export async function runBuild({
   const {root, buildPath, buildPathClient, buildPathWorkerFile, publicPath} =
     getProjectPaths(directory);
 
-  await Promise.all([checkLockfileStatus(root), muteRemixLogs()]);
+  if (lockfileCheck) {
+    await checkLockfileStatus(root, isCI());
+  }
+
+  await muteRemixLogs();
 
   console.time(LOG_WORKER_BUILT);
 
