@@ -61,6 +61,7 @@ export async function logRequestEvent(request: Request): Promise<Response> {
   const {eventType, purpose, stackLine, graphql, ...data} =
     await getRequestInfo(request);
 
+  let originFile = '';
   let graphiqlLink = '';
   let description = request.url;
 
@@ -75,7 +76,7 @@ export async function logRequestEvent(request: Request): Promise<Response> {
       stackLine?.match(/\s+at ([^\s]+) \(.*?\/(app\/[^\)\n]*)\)/) || [];
 
     if (fnName && filePath) {
-      description += ` (${fnName}:${filePath})`;
+      originFile = `${fnName}:${filePath}`;
     }
 
     if (graphql) {
@@ -89,6 +90,7 @@ export async function logRequestEvent(request: Request): Promise<Response> {
       ...data,
       url: `${purpose} ${description}`.trim(),
       graphiqlLink,
+      originFile,
     }),
   };
 
