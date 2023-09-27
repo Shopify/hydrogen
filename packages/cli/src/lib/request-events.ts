@@ -14,17 +14,28 @@ const EVENT_MAP: Record<string, string> = {
   subrequest: 'Sub request',
 };
 
-function getRequestInfo(request: Request) {
+export type H2OEvent = {
+  eventType: 'request' | 'subrequest';
+  requestId?: string | null;
+  purpose?: string | null;
+  startTime: number;
+  endTime: number;
+  cacheStatus?: 'MISS' | 'HIT' | 'STALE' | 'PUT';
+  waitUntil?: ExecutionContext['waitUntil'];
+  stackLine?: string;
+};
+
+async function getRequestInfo(request: Request) {
+  const data = await request.json<H2OEvent>();
+
   return {
-    id: request.headers.get('request-id')!,
-    eventType: request.headers.get('hydrogen-event-type') || 'unknown',
-    startTime: request.headers.get('hydrogen-start-time')!,
-    endTime: request.headers.get('hydrogen-end-time') || String(Date.now()),
-    purpose: request.headers.get('purpose') === 'prefetch' ? '(prefetch)' : '',
-    cacheStatus: request.headers.get('hydrogen-cache-status'),
-    stackLine: decodeURIComponent(
-      request.headers.get('hydrogen-stack-line') || '',
-    ),
+    id: data.requestId ?? '',
+    eventType: data.eventType || 'unknown',
+    startTime: data.startTime,
+    endTime: data.endTime || Date.now(),
+    purpose: data.purpose === 'prefetch' ? '(prefetch)' : '',
+    cacheStatus: data.cacheStatus ?? '',
+    stackLine: data.stackLine ?? '',
   };
 }
 
@@ -41,7 +52,9 @@ export async function logRequestEvent(request: Request): Promise<Response> {
     return new Response('ok');
   }
 
-  const {eventType, purpose, stackLine, ...data} = getRequestInfo(request);
+  const {eventType, purpose, stackLine, ...data} = await getRequestInfo(
+    request,
+  );
 
   let description = request.url;
 

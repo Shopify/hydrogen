@@ -337,7 +337,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       cache: cacheOptions || CacheShort(),
       shouldCacheResponse: checkGraphQLErrors,
       waitUntil,
-      stackLine,
+      debugInfo: {stackLine},
     });
 
     const errorOptions: StorefrontErrorOptions<T> = {

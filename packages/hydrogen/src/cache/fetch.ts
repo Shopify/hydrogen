@@ -14,12 +14,16 @@ import {
  */
 export type CacheKey = string | readonly unknown[];
 
+export type FetchDebugInfo = {
+  stackLine?: string;
+};
+
 export type WithCacheOptions<T = unknown> = {
   strategy?: CachingStrategy | null;
   cacheInstance?: Cache;
   shouldCacheResult?: (value: T) => boolean;
   waitUntil?: ExecutionContext['waitUntil'];
-  stackLine?: string;
+  debugInfo?: FetchDebugInfo;
 };
 
 export type FetchCacheOptions = {
@@ -29,7 +33,7 @@ export type FetchCacheOptions = {
   shouldCacheResponse?: (body: any, response: Response) => boolean;
   waitUntil?: ExecutionContext['waitUntil'];
   returnType?: 'json' | 'text' | 'arrayBuffer' | 'blob';
-  stackLine?: string;
+  debugInfo?: FetchDebugInfo;
 };
 
 function toSerializableResponse(body: any, response: Response) {
@@ -66,7 +70,7 @@ export async function runWithCache<T = unknown>(
     cacheInstance,
     shouldCacheResult = () => true,
     waitUntil,
-    stackLine,
+    debugInfo,
   }: WithCacheOptions<T>,
 ): Promise<T> {
   const startTime = Date.now();
@@ -87,7 +91,7 @@ export async function runWithCache<T = unknown>(
             startTime: overrideStartTime || startTime,
             cacheStatus,
             waitUntil,
-            stackLine,
+            ...debugInfo,
           });
         }
       : undefined;
@@ -178,7 +182,7 @@ export async function fetchWithServerCache(
     shouldCacheResponse = () => true,
     waitUntil,
     returnType = 'json',
-    stackLine,
+    debugInfo,
   }: FetchCacheOptions = {},
 ): Promise<readonly [any, Response]> {
   if (!cacheOptions && (!requestInit.method || requestInit.method === 'GET')) {
@@ -212,7 +216,7 @@ export async function fetchWithServerCache(
       cacheInstance,
       waitUntil,
       strategy: cacheOptions ?? null,
-      stackLine,
+      debugInfo,
       shouldCacheResult: (result) =>
         shouldCacheResponse(...fromSerializableResponse(result)),
     },

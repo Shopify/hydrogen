@@ -28,7 +28,9 @@ export function createWithCache<T = unknown>(
       strategy,
       cacheInstance: cache,
       waitUntil,
-      stackLine: getCallerStackLine?.(),
+      debugInfo: {
+        stackLine: getCallerStackLine?.(),
+      },
     });
   };
 }

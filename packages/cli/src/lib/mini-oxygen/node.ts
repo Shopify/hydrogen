@@ -25,7 +25,6 @@ export async function startNodeServer({
   buildPathClient,
   env,
 }: MiniOxygenOptions): Promise<MiniOxygenInstance> {
-  const dotenvPath = resolvePath(root, '.env');
   const oxygenHeaders = Object.fromEntries(
     Object.entries(OXYGEN_HEADERS_MAP).map(([key, value]) => {
       return [key, value.defaultValue];
@@ -35,14 +34,14 @@ export async function startNodeServer({
   const asyncLocalStorage = new AsyncLocalStorage();
   const serviceBindings = {
     H2O_LOG_EVENT: {
-      fetch: (request: Request) =>
+      fetch: async (request: Request) =>
         logRequestEvent(
           new Request(request.url, {
-            headers: {
-              ...Object.fromEntries(request.headers.entries()),
-              // Merge some headers from the parent request
+            method: 'POST',
+            body: JSON.stringify({
+              ...(await request.json<Record<string, string>>()),
               ...(asyncLocalStorage.getStore() as Record<string, string>),
-            },
+            }),
           }),
         ),
     },
@@ -82,7 +81,7 @@ export async function startNodeServer({
 
       // Provide headers to sub-requests and dispatch the request.
       const response = await asyncLocalStorage.run(
-        {'request-id': requestId, purpose: request.headers.get('purpose')},
+        {requestId, purpose: request.headers.get('purpose')},
         () => defaultDispatcher(request),
       );
 
