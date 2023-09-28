@@ -11,6 +11,8 @@ type ServerEvent = {
   startTime: number;
   endTime: number;
   cacheStatus: string;
+  stackLine?: string;
+  graphql?: string;
 };
 
 type ServerEvents = {

@@ -8,6 +8,7 @@ import {
 import {BugError} from '@shopify/cli-kit/node/error';
 import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
+import {getGraphiQLUrl} from './graphiql-url.js';
 
 type ConsoleMethod = 'log' | 'warn' | 'error' | 'debug' | 'info';
 const originalConsole = {...console};
@@ -221,10 +222,7 @@ export function muteAuthLogs({
  * Where the message can be multiline and the last line
  * can contain links to docs or other resources.
  */
-export function enhanceH2Logs(options: {
-  graphiqlUrl: string;
-  rootDirectory: string;
-}) {
+export function enhanceH2Logs(options: {rootDirectory: string; host: string}) {
   injectLogReplacer('error');
   injectLogReplacer('warn', ([first]) =>
     // Show createStorefrontClient warnings only once.
@@ -274,13 +272,13 @@ export function enhanceH2Logs(options: {
         }
 
         if (typeof cause !== 'string' && !!cause?.graphql?.query) {
-          const {query, variables} = cause.graphql;
-          const link = `${options.graphiqlUrl}?query=${encodeURIComponent(
-            query,
-          )}${variables ? `&variables=${encodeURIComponent(variables)}` : ''}`;
+          const link = getGraphiQLUrl({
+            host: options.host,
+            graphql: cause.graphql,
+          });
 
           const [, queryType, queryName] =
-            query.match(/(query|mutation)\s+(\w+)/) || [];
+            cause.graphql.query.match(/(query|mutation)\s+(\w+)/) || [];
 
           tryMessage =
             (tryMessage ? `${tryMessage}\n\n` : '') +

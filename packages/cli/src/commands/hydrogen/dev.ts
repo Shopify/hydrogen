@@ -29,6 +29,7 @@ import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
 import {setupLiveReload} from '../../lib/live-reload.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
+import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -173,9 +174,8 @@ async function runDev({
       workerRuntime,
     );
 
-    const graphiqlUrl = `${miniOxygen.listeningAt}/graphiql`;
     const debugNetworkUrl = `${miniOxygen.listeningAt}/debug-network`;
-    enhanceH2Logs({graphiqlUrl, ...remixConfig});
+    enhanceH2Logs({host: miniOxygen.listeningAt, ...remixConfig});
 
     miniOxygen.showBanner({
       appName: storefront ? colors.cyan(storefront?.title) : undefined,
@@ -184,7 +184,11 @@ async function runDev({
           ? `Initial build: ${initialBuildDurationMs}ms\n`
           : '',
       extraLines: [
-        colors.dim(`\nView GraphiQL API browser: ${graphiqlUrl}`),
+        colors.dim(
+          `\nView GraphiQL API browser: ${getGraphiQLUrl({
+            host: miniOxygen.listeningAt,
+          })}`,
+        ),
         workerRuntime
           ? ''
           : colors.dim(
