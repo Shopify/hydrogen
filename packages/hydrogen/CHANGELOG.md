@@ -1,5 +1,17 @@
 # @shopify/hydrogen
 
+## 2023.7.9
+
+### Patch Changes
+
+- Allow generic inference in standalone usage of WithCache type - Contributed by @chinanderm ([#1363](https://github.com/Shopify/hydrogen/pull/1363)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Cart Optimistic UI helpers ([#1366](https://github.com/Shopify/hydrogen/pull/1366)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Fix storefront sub request cache key ([#1375](https://github.com/Shopify/hydrogen/pull/1375)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Fix the Pagination component to use forwardRefs for the NextLink and PreviousLink render props ([#1362](https://github.com/Shopify/hydrogen/pull/1362)) by [@blittle](https://github.com/blittle)
+
 ## 2023.7.8
 
 ### Patch Changes

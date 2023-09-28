@@ -1,5 +1,19 @@
 # @shopify/cli-hydrogen
 
+## 5.4.0
+
+### Minor Changes
+
+- The build command now throws errors on CI when it can't find a valid lockfile. This should prevent unforseen issues related to dependency versioning in production. ([#1370](https://github.com/Shopify/hydrogen/pull/1370)) by [@frandiox](https://github.com/frandiox)
+
+  This behavior can be disabled with the flag `--no-lockfile-check`, which might be useful in monorepos or other setups where the lockfile is not available in the project directory.
+
+### Patch Changes
+
+- Add check to render collection images when available ([#1373](https://github.com/Shopify/hydrogen/pull/1373)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Remove sourcemap annotations from client bundles. This prevents errors showing up in the devtools when the sourcemaps fail to load. ([#1364](https://github.com/Shopify/hydrogen/pull/1364)) by [@blittle](https://github.com/blittle)
+
 ## 5.3.1
 
 ### Patch Changes
