@@ -1,4 +1,13 @@
-import {createElement, useEffect, useMemo, useRef, useState} from 'react';
+import {
+  createElement,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  forwardRef,
+  type ReactNode,
+  type Ref,
+} from 'react';
 import type {
   Maybe,
   PageInfo,
@@ -6,7 +15,7 @@ import type {
 import {flattenConnection} from '@shopify/hydrogen-react';
 import {
   Link,
-  LinkProps,
+  type LinkProps,
   useNavigation,
   useLocation,
   useNavigate,
@@ -33,9 +42,13 @@ interface PaginationInfo<NodesType> {
   /** The paginated array of nodes. You should map over and render this array. */
   nodes: Array<NodesType>;
   /** The `<NextLink>` is a helper component that makes it easy to navigate to the next page of paginated data. Alternatively you can build your own `<Link>` component: `<Link to={nextPageUrl} state={state} preventScrollReset />` */
-  NextLink: (props: Omit<LinkProps, 'to'>) => JSX.Element | null;
+  NextLink: (
+    props: Omit<LinkProps, 'to'> & {ref?: Ref<HTMLAnchorElement>},
+  ) => ReactNode;
   /** The `<PreviousLink>` is a helper component that makes it easy to navigate to the previous page of paginated data. Alternatively you can build your own `<Link>` component: `<Link to={previousPageUrl} state={state} preventScrollReset />` */
-  PreviousLink: (props: Omit<LinkProps, 'to'>) => JSX.Element | null;
+  PreviousLink: (
+    props: Omit<LinkProps, 'to'> & {ref?: Ref<HTMLAnchorElement>},
+  ) => ReactNode;
   /** The URL to the previous page of paginated data. Use this prop to build your own `<Link>` component. */
   previousPageUrl: string;
   /** The URL to the next page of paginated data. Use this prop to build your own `<Link>` component. */
@@ -66,7 +79,7 @@ type PaginationProps<NodesType> = {
 
 type PaginationRenderProp<NodesType> = (
   props: PaginationInfo<NodesType>,
-) => JSX.Element | null;
+) => ReactNode;
 
 /**
  *
@@ -109,7 +122,10 @@ export function Pagination<NodesType>({
 
   const NextLink = useMemo(
     () =>
-      function NextLink(props: Omit<LinkProps, 'to'>) {
+      forwardRef<HTMLAnchorElement, Omit<LinkProps, 'to'>>(function NextLink(
+        props,
+        ref,
+      ) {
         return hasNextPage
           ? createElement(Link, {
               preventScrollReset: true,
@@ -117,15 +133,19 @@ export function Pagination<NodesType>({
               to: nextPageUrl,
               state,
               replace: true,
+              ref,
             })
           : null;
-      },
+      }),
     [hasNextPage, nextPageUrl, state],
   );
 
   const PreviousLink = useMemo(
     () =>
-      function PrevLink(props: Omit<LinkProps, 'to'>) {
+      forwardRef<HTMLAnchorElement, Omit<LinkProps, 'to'>>(function PrevLink(
+        props,
+        ref,
+      ) {
         return hasPreviousPage
           ? createElement(Link, {
               preventScrollReset: true,
@@ -133,9 +153,10 @@ export function Pagination<NodesType>({
               to: previousPageUrl,
               state,
               replace: true,
+              ref,
             })
           : null;
-      },
+      }),
     [hasPreviousPage, previousPageUrl, state],
   );
 
