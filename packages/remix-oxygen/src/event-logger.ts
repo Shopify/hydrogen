@@ -7,6 +7,7 @@ export type H2OEvent = {
   endTime?: number;
   cacheStatus?: 'MISS' | 'HIT' | 'STALE' | 'PUT';
   waitUntil?: ExecutionContext['waitUntil'];
+  stackLine?: string;
 };
 
 export function createEventLogger(appLoadContext: Record<string, unknown>) {
@@ -23,25 +24,18 @@ export function createEventLogger(appLoadContext: Record<string, unknown>) {
 
   return ({
     url,
-    eventType,
-    requestId,
-    purpose,
-    startTime,
-    endTime,
-    cacheStatus,
+    endTime = Date.now(),
     waitUntil = context?.waitUntil,
+    ...rest
   }: H2OEvent) => {
     const promise = eventLoggerService
       .fetch(
         new Request(url, {
-          headers: {
-            purpose: purpose || '',
-            'request-id': requestId || '',
-            'hydrogen-event-type': eventType,
-            'hydrogen-start-time': String(startTime),
-            'hydrogen-end-time': String(endTime || Date.now()),
-            'hydrogen-cache-status': cacheStatus || '',
-          },
+          method: 'POST',
+          body: JSON.stringify({
+            endTime,
+            ...rest,
+          }),
         }),
       )
       .catch((error: Error) => {

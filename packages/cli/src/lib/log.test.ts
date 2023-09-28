@@ -5,7 +5,7 @@ import {resetAllLogs, enhanceH2Logs} from './log.js';
 
 describe('log replacer', () => {
   describe('enhanceH2Logs', () => {
-    const graphiqlUrl = 'http://localhost:3000/graphiql';
+    const host = 'http://localhost:3000';
     const rootDirectory = fileURLToPath(import.meta.url);
     const outputMock = mockAndCaptureOutput();
 
@@ -21,7 +21,7 @@ describe('log replacer', () => {
 
     describe('enhances h2:info pattern', () => {
       it('renders in an info banner', () => {
-        enhanceH2Logs({graphiqlUrl, rootDirectory});
+        enhanceH2Logs({host, rootDirectory});
 
         console.warn('[h2:info:storefront.query] Tip');
 
@@ -35,7 +35,7 @@ describe('log replacer', () => {
 
     describe('enhances h2:warn pattern', () => {
       it('renders in a warning banner', () => {
-        enhanceH2Logs({graphiqlUrl, rootDirectory});
+        enhanceH2Logs({host, rootDirectory});
 
         console.warn('[h2:warn:storefront.query] Wrong query 1');
 
@@ -47,7 +47,7 @@ describe('log replacer', () => {
       });
 
       it('shows links from the last line as a list', () => {
-        enhanceH2Logs({graphiqlUrl, rootDirectory});
+        enhanceH2Logs({host, rootDirectory});
 
         console.warn(
           '[h2:warn:storefront.query] Wrong query.\nhttps://docs.com/something',
@@ -62,7 +62,7 @@ describe('log replacer', () => {
 
     describe('enhances h2:error pattern', () => {
       it('renders in an error banner', () => {
-        enhanceH2Logs({graphiqlUrl, rootDirectory});
+        enhanceH2Logs({host, rootDirectory});
 
         console.error(new Error('[h2:error:storefront.query] Wrong query 2'));
 
@@ -75,7 +75,7 @@ describe('log replacer', () => {
       });
 
       it('shows a GraphiQL link when the error is related to a GraphQL query', () => {
-        enhanceH2Logs({graphiqlUrl, rootDirectory});
+        enhanceH2Logs({host, rootDirectory});
 
         console.error(
           new Error('[h2:error:storefront.query] Wrong query 3', {
@@ -95,7 +95,7 @@ describe('log replacer', () => {
       });
 
       it('trims stack traces when the error is related to a GraphQL query', () => {
-        enhanceH2Logs({graphiqlUrl, rootDirectory});
+        enhanceH2Logs({host, rootDirectory});
 
         console.error(
           new Error('[h2:error:storefront.query] Wrong query 4', {

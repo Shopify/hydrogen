@@ -1,6 +1,7 @@
 import {EventEmitter} from 'node:events';
 import {ReadableStream} from 'node:stream/web';
 import {Request, Response} from '@shopify/mini-oxygen';
+import {getGraphiQLUrl} from './graphiql-url.js';
 
 type RequestEvent = {
   event: string;
@@ -14,14 +15,32 @@ const EVENT_MAP: Record<string, string> = {
   subrequest: 'Sub request',
 };
 
-function getRequestInfo(request: Request) {
+export type H2OEvent = {
+  eventType: 'request' | 'subrequest';
+  requestId?: string | null;
+  purpose?: string | null;
+  startTime: number;
+  endTime: number;
+  cacheStatus?: 'MISS' | 'HIT' | 'STALE' | 'PUT';
+  waitUntil?: ExecutionContext['waitUntil'];
+  stackLine?: string;
+  graphql?: string;
+};
+
+async function getRequestInfo(request: Request) {
+  const data = await request.json<H2OEvent>();
+
   return {
-    id: request.headers.get('request-id')!,
-    eventType: request.headers.get('hydrogen-event-type') || 'unknown',
-    startTime: request.headers.get('hydrogen-start-time')!,
-    endTime: request.headers.get('hydrogen-end-time') || String(Date.now()),
-    purpose: request.headers.get('purpose') === 'prefetch' ? '(prefetch)' : '',
-    cacheStatus: request.headers.get('hydrogen-cache-status'),
+    id: data.requestId ?? '',
+    eventType: data.eventType || 'unknown',
+    startTime: data.startTime,
+    endTime: data.endTime || Date.now(),
+    purpose: data.purpose === 'prefetch' ? '(prefetch)' : '',
+    cacheStatus: data.cacheStatus ?? '',
+    stackLine: data.stackLine ?? '',
+    graphql: data.graphql
+      ? (JSON.parse(data.graphql) as {query: string; variables: object})
+      : null,
   };
 }
 
@@ -34,19 +53,35 @@ export async function clearHistory(): Promise<Response> {
 }
 
 export async function logRequestEvent(request: Request): Promise<Response> {
-  if (DEV_ROUTES.has(new URL(request.url).pathname)) {
+  const url = new URL(request.url);
+  if (DEV_ROUTES.has(url.pathname)) {
     return new Response('ok');
   }
 
-  const {eventType, purpose, ...data} = getRequestInfo(request);
+  const {eventType, purpose, stackLine, graphql, ...data} =
+    await getRequestInfo(request);
 
+  let originFile = '';
+  let graphiqlLink = '';
   let description = request.url;
 
   if (eventType === 'subrequest') {
     description =
-      decodeURIComponent(request.url)
+      graphql?.query
         .match(/(query|mutation)\s+(\w+)/)?.[0]
-        ?.replace(/\s+/, ' ') || request.url;
+        ?.replace(/\s+/, ' ') || decodeURIComponent(url.search.slice(1));
+
+    // This might need to be passed through sourcemaps in Workerd
+    const [, fnName, filePath] =
+      stackLine?.match(/\s+at ([^\s]+) \(.*?\/(app\/[^\n]*)\)/) || [];
+
+    if (fnName && filePath) {
+      originFile = `${fnName}:${filePath}`;
+    }
+
+    if (graphql) {
+      graphiqlLink = getGraphiQLUrl({graphql});
+    }
   }
 
   const event = {
@@ -54,11 +89,13 @@ export async function logRequestEvent(request: Request): Promise<Response> {
     data: JSON.stringify({
       ...data,
       url: `${purpose} ${description}`.trim(),
+      graphiqlLink,
+      originFile,
     }),
   };
 
-  if (eventHistory.length > 100) eventHistory.shift();
   eventHistory.push(event);
+  if (eventHistory.length > 100) eventHistory.shift();
 
   eventEmitter.emit('request', event);
 
