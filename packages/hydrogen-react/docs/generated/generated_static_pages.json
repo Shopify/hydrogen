@@ -94,7 +94,7 @@
           "tabs": [
             {
               "title": "Component",
-              "code": "import {ShopPayButton} from '@shopify/hydrogen-react';\n\nexport function MyProduct({variantId}) {\n  return <ShopPayButton variantIds={[variantId]} />;\n}\n",
+              "code": "import {ShopPayButton} from '@shopify/hydrogen-react';\n\nexport function MyProduct({variantId}) {\n  return &lt;ShopPayButton variantIds={[variantId]} /&gt;;\n}\n",
               "language": "javascript"
             }
           ]
@@ -110,7 +110,7 @@
           "tabs": [
             {
               "title": "Hook",
-              "code": "import {useMoney} from '@shopify/hydrogen-react';\n\nexport function MyComponent({variant}) {\n  const {currencyCode, currencySymbol, amount} = useMoney(variant.pricev2);\n\n  return (\n    <div>\n      <strong>{currencyCode}</strong>\n      <span>{currencySymbol}</span>\n      <span>{amount}</span>\n    </div>\n  );\n}\n",
+              "code": "import {useMoney} from '@shopify/hydrogen-react';\n\nexport function MyComponent({variant}) {\n  const {currencyCode, currencySymbol, amount} = useMoney(variant.pricev2);\n\n  return (\n    &lt;div&gt;\n      &lt;strong&gt;{currencyCode}&lt;/strong&gt;\n      &lt;span&gt;{currencySymbol}&lt;/span&gt;\n      &lt;span&gt;{amount}&lt;/span&gt;\n    &lt;/div&gt;\n  );\n}\n",
               "language": "javascript"
             }
           ]
@@ -126,7 +126,7 @@
           "tabs": [
             {
               "title": "Utility",
-              "code": "import {flattenConnection, MediaFile} from '@shopify/hydrogen-react';\n\nexport function Product({product}) {\n  const media = flattenConnection(product.media);\n  return (\n    <>\n      {media.map((mediaFile) => {\n        return <MediaFile data={mediaFile} key={mediaFile.id} />;\n      })}\n    </>\n  );\n}\n",
+              "code": "import {flattenConnection, MediaFile} from '@shopify/hydrogen-react';\n\nexport function Product({product}) {\n  const media = flattenConnection(product.media);\n  return (\n    &lt;&gt;\n      {media.map((mediaFile) =&gt; {\n        return &lt;MediaFile data={mediaFile} key={mediaFile.id} /&gt;;\n      })}\n    &lt;/&gt;\n  );\n}\n",
               "language": "javascript"
             }
           ]
