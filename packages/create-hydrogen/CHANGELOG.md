@@ -1,5 +1,14 @@
 # @shopify/create-hydrogen
 
+## 4.2.6
+
+### Patch Changes
+
+- Add check to render collection images when available ([#1373](https://github.com/Shopify/hydrogen/pull/1373)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies [[`e148cfca`](https://github.com/Shopify/hydrogen/commit/e148cfca004d6bb2981d136231e3825509d52305), [`06da5570`](https://github.com/Shopify/hydrogen/commit/06da5570c25a64b1afc4cce093c3ba3d2d7da2ca), [`425791ce`](https://github.com/Shopify/hydrogen/commit/425791ced37ddb50f71fbdc78760905555716444)]:
+  - @shopify/cli-hydrogen@5.4.0
+
 ## 4.2.5
 
 ### Patch Changes
