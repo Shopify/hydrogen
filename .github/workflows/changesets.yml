@@ -100,7 +100,7 @@ jobs:
           git commit -m "Update templates for dist"
           git push origin HEAD:dist --force
 
-  update_lock_and_sync_latest:
+  sync_latest:
     needs: changelog
     # Only update package-lock.json if a release was published, and we're on the "latest" release branch
     if: needs.changelog.outputs.published == 'true' && needs.changelog.outputs.latest == 'true'
