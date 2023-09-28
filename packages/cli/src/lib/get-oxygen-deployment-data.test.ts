@@ -1,13 +1,12 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 
-import {getOxygenDeploymentToken} from './get-oxygen-token.js';
+import {getOxygenDeploymentData} from './get-oxygen-deployment-data.js';
 import {login} from './auth.js';
-import {getCliCommand} from './shell.js';
 import {getConfig} from './shopify-config.js';
 import {renderMissingLink, renderMissingStorefront} from './render-errors.js';
 import {linkStorefront} from '../commands/hydrogen/link.js';
-import {getOxygenToken} from './graphql/admin/oxygen-token.js';
+import {getOxygenData} from './graphql/admin/get-oxygen-data.js';
 
 vi.mock('@shopify/cli-kit/node/ui', async () => {
   const original = await vi.importActual<
@@ -23,10 +22,20 @@ vi.mock('./admin-session.js');
 vi.mock('./shopify-config.js');
 vi.mock('./render-errors.js');
 vi.mock('../commands/hydrogen/link.js');
-vi.mock('./graphql/admin/oxygen-token.js');
+vi.mock('./graphql/admin/get-oxygen-data.js');
 
-describe('getOxygenDeploymentToken', () => {
+describe('getOxygenDeploymentData', () => {
   const OXYGEN_DEPLOYMENT_TOKEN = 'a-lovely-token';
+  const environments = [
+    {
+      name: 'production',
+      branch: 'main',
+    },
+    {
+      name: 'preview',
+      branch: 'staging',
+    },
+  ];
 
   beforeEach(() => {
     vi.mocked(login).mockResolvedValue({
@@ -47,8 +56,11 @@ describe('getOxygenDeploymentToken', () => {
     vi.mocked(getConfig).mockResolvedValue({
       storefront: {id: 'storefront-id', title: 'Existing Link'},
     });
-    vi.mocked(getOxygenToken).mockResolvedValue({
-      storefront: {oxygenDeploymentToken: OXYGEN_DEPLOYMENT_TOKEN},
+    vi.mocked(getOxygenData).mockResolvedValue({
+      storefront: {
+        deploymentToken: OXYGEN_DEPLOYMENT_TOKEN,
+        environments,
+      },
     });
   });
 
@@ -56,9 +68,10 @@ describe('getOxygenDeploymentToken', () => {
     vi.resetAllMocks();
   });
 
-  it('returns the oxygen deployment token', async () => {
-    const token = await getOxygenDeploymentToken({root: 'test-root'});
-    expect(token).toBe(OXYGEN_DEPLOYMENT_TOKEN);
+  it('returns the oxygen deployment token and environments', async () => {
+    const data = await getOxygenDeploymentData({root: 'test-root'});
+    expect(data?.deploymentToken).toBe(OXYGEN_DEPLOYMENT_TOKEN);
+    expect(data?.environments).toEqual(environments);
   });
 
   describe('when there is no linked storefront', () => {
@@ -79,7 +92,7 @@ describe('getOxygenDeploymentToken', () => {
 
     it('calls renderMissingLink and prompts the user to create a link', async () => {
       vi.mocked(renderConfirmationPrompt).mockResolvedValue(true);
-      await getOxygenDeploymentToken({root: 'test-root'});
+      await getOxygenDeploymentData({root: 'test-root'});
       expect(renderMissingLink).toHaveBeenCalled();
       expect(renderConfirmationPrompt).toHaveBeenCalled();
       expect(linkStorefront).toHaveBeenCalled();
@@ -87,18 +100,18 @@ describe('getOxygenDeploymentToken', () => {
 
     it('returns nothing if the user does not create a new link', async () => {
       vi.mocked(renderConfirmationPrompt).mockResolvedValue(false);
-      const token = await getOxygenDeploymentToken({root: 'test-root'});
+      const token = await getOxygenDeploymentData({root: 'test-root'});
       expect(token).toEqual(undefined);
     });
   });
 
   describe('when there is no matching storefront in the shop', () => {
     beforeEach(() => {
-      vi.mocked(getOxygenToken).mockResolvedValue({storefront: null});
+      vi.mocked(getOxygenData).mockResolvedValue({storefront: null});
     });
 
     it('calls renderMissingStorefront and returns nothing', async () => {
-      const token = await getOxygenDeploymentToken({root: 'test-root'});
+      const token = await getOxygenDeploymentData({root: 'test-root'});
       expect(renderMissingStorefront).toHaveBeenCalled();
       expect(token).toEqual(undefined);
     });
@@ -106,14 +119,14 @@ describe('getOxygenDeploymentToken', () => {
 
   describe('when the storefront does not have an oxygen deployment token', () => {
     beforeEach(() => {
-      vi.mocked(getOxygenToken).mockResolvedValue({
-        storefront: {oxygenDeploymentToken: ''},
+      vi.mocked(getOxygenData).mockResolvedValue({
+        storefront: {deploymentToken: '', environments: []},
       });
     });
 
     it('returns nothing', async () => {
-      const token = await getOxygenDeploymentToken({root: 'test-root'});
-      expect(token).toEqual(undefined);
+      const data = await getOxygenDeploymentData({root: 'test-root'});
+      expect(data).toEqual(undefined);
     });
   });
 });

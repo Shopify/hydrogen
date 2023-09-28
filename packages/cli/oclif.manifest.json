@@ -153,6 +153,14 @@
       "hidden": true,
       "aliases": [],
       "flags": {
+        "environmentTag": {
+          "name": "environmentTag",
+          "type": "option",
+          "char": "e",
+          "description": "Environment tag for environment to deploy to",
+          "required": false,
+          "multiple": false
+        },
         "path": {
           "name": "path",
           "type": "option",
@@ -172,6 +180,14 @@
           "description": "Marks a preview deployment as publicly accessible.",
           "required": false,
           "allowNo": false
+        },
+        "token": {
+          "name": "token",
+          "type": "option",
+          "char": "t",
+          "description": "Oxygen deployment token",
+          "required": false,
+          "multiple": false
         },
         "metadataUrl": {
           "name": "metadataUrl",

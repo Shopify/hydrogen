@@ -7,13 +7,16 @@ import {
   outputWarn,
 } from '@shopify/cli-kit/node/output';
 import {AbortError} from '@shopify/cli-kit/node/error';
+import {getLatestGitCommit} from '@shopify/cli-kit/node/git';
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {
   renderFatalError,
+  renderSelectPrompt,
   renderSuccess,
   renderTasks,
 } from '@shopify/cli-kit/node/ui';
 import {Logger, LogLevel} from '@shopify/cli-kit/node/output';
+import {ciPlatform} from '@shopify/cli-kit/node/context/local';
 import {
   createDeploy,
   DeploymentConfig,
@@ -22,7 +25,7 @@ import {
 } from '@shopify/oxygen-cli/deploy';
 
 import {commonFlags} from '../../lib/flags.js';
-import {getOxygenDeploymentToken} from '../../lib/get-oxygen-token.js';
+import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
 import {runBuild} from './build.js';
 
 export const deploymentLogger: Logger = (
@@ -36,6 +39,11 @@ export const deploymentLogger: Logger = (
 
 export default class Deploy extends Command {
   static flags: any = {
+    environmentTag: Flags.string({
+      char: 'e',
+      description: 'Environment tag for environment to deploy to',
+      required: false,
+    }),
     path: commonFlags.path,
     shop: commonFlags.shop,
     publicDeployment: Flags.boolean({
@@ -43,6 +51,12 @@ export default class Deploy extends Command {
       description: 'Marks a preview deployment as publicly accessible.',
       required: false,
       default: false,
+    }),
+    token: Flags.string({
+      char: 't',
+      description: 'Oxygen deployment token',
+      env: 'SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN',
+      required: false,
     }),
     metadataUrl: Flags.string({
       description:
@@ -70,9 +84,11 @@ export default class Deploy extends Command {
     const {flags} = await this.parse(Deploy);
     const actualPath = flags.path ? resolvePath(flags.path) : process.cwd();
     await oxygenDeploy({
+      environmentTag: flags.environmentTag,
       path: actualPath,
       shop: flags.shop,
       publicDeployment: flags.publicDeployment,
+      token: flags.token,
       metadataUrl: flags.metadataUrl,
       metadataUser: flags.metadataUser,
       metadataVersion: flags.metadataVersion,
@@ -91,9 +107,11 @@ export default class Deploy extends Command {
 }
 
 interface OxygenDeploymentOptions {
+  environmentTag?: string;
   path: string;
-  shop: string;
   publicDeployment: boolean;
+  shop: string;
+  token?: string;
   metadataUrl?: string;
   metadataUser?: string;
   metadataVersion?: string;
@@ -103,6 +121,7 @@ export async function oxygenDeploy(
   options: OxygenDeploymentOptions,
 ): Promise<void> {
   const {
+    environmentTag,
     path,
     shop,
     publicDeployment,
@@ -110,27 +129,72 @@ export async function oxygenDeploy(
     metadataUser,
     metadataVersion,
   } = options;
+  const ci = ciPlatform();
+  let token = options.token;
+  let branch, deploymentData, deploymentEnvironmentTag, gitCommit;
 
-  const token = await getOxygenDeploymentToken({
-    root: path,
-    flagShop: shop,
-  });
+  try {
+    gitCommit = await getLatestGitCommit(path);
+    branch = (/HEAD -> ([^,]*)/.exec(gitCommit.refs) || [])[1];
+  } catch (error) {
+    outputWarn('Could not retrieve Git history.');
+    branch = undefined;
+  }
+
+  if (!ci.isCI) {
+    deploymentData = await getOxygenDeploymentData({
+      root: path,
+      flagShop: shop,
+    });
+
+    if (deploymentData && !token) {
+      token = deploymentData.deploymentToken;
+    }
+  }
+
   if (!token) {
-    throw new AbortError('Could not obtain Oxygen deployment token');
+    const errMessage = ci.isCI
+      ? `No deployment token provided. Use the ${colors.blueBright(
+          'token',
+        )} flag to provide a token.`
+      : `Could not obtain an Oxygen deployment token, please try again or contact Shopify support.`;
+    throw new AbortError(errMessage);
+  }
+
+  if (!ci.isCI && !environmentTag && deploymentData?.environments) {
+    if (deploymentData.environments.length > 1) {
+      const choices = [
+        ...deploymentData.environments.map(({name, branch}) => ({
+          label: name,
+          value: branch,
+        })),
+      ];
+
+      deploymentEnvironmentTag = await renderSelectPrompt({
+        message: 'Select an environment to deploy to',
+        choices,
+        defaultValue: branch,
+      });
+    } else {
+      outputInfo(
+        `Using current checked out branch ${branch} as environment tag`,
+      );
+    }
   }
 
   const config: DeploymentConfig = {
     assetsDir: 'dist/client',
     deploymentUrl: 'https://oxygen.shopifyapps.com',
     deploymentToken: parseToken(token as string),
-    healthCheckMaxDuration: 180,
+    environmentTag: environmentTag || deploymentEnvironmentTag || branch,
+    verificationMaxDuration: 180,
     metadata: {
       ...(metadataUrl ? {url: metadataUrl} : {}),
       ...(metadataUser ? {user: metadataUser} : {}),
       ...(metadataVersion ? {version: metadataVersion} : {}),
     },
     publicDeployment: publicDeployment,
-    skipHealthCheck: false,
+    skipVerification: false,
     rootPath: path,
     skipBuild: false,
     workerOnly: false,
@@ -167,10 +231,10 @@ export async function oxygenDeploy(
         useCodegen: false,
       });
     },
-    onHealthCheckComplete: () => resolveHealthCheck(),
+    onVerificationComplete: () => resolveHealthCheck(),
     onUploadFilesStart: () => uploadStart(),
     onUploadFilesComplete: () => resolveUpload(),
-    onHealthCheckError: (error: Error) => {
+    onVerificationError: (error: Error) => {
       deployError = new AbortError(
         error.message,
         'Please verify the deployment status in the Shopify Admin and retry deploying if necessary.',
@@ -194,7 +258,7 @@ export async function oxygenDeploy(
         task: async () => await uploadPromise,
       },
       {
-        title: 'Performing health check',
+        title: 'Performing deployment verification',
         task: async () => await healthCheckPromise,
       },
     ]);

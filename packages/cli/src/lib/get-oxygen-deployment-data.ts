@@ -5,7 +5,10 @@ import {linkStorefront} from '../commands/hydrogen/link.js';
 import {login} from './auth.js';
 import {getCliCommand} from './shell.js';
 import {renderMissingLink, renderMissingStorefront} from './render-errors.js';
-import {getOxygenToken} from './graphql/admin/oxygen-token.js';
+import {
+  getOxygenData,
+  HydrogenStorefront,
+} from './graphql/admin/get-oxygen-data.js';
 
 interface Arguments {
   root: string;
@@ -16,9 +19,9 @@ interface Arguments {
   flagShop?: string;
 }
 
-export async function getOxygenDeploymentToken({
+export async function getOxygenDeploymentData({
   root,
-}: Arguments): Promise<string | undefined> {
+}: Arguments): Promise<HydrogenStorefront | undefined> {
   const [{session, config}, cliCommand] = await Promise.all([
     login(root),
     getCliCommand(),
@@ -44,7 +47,7 @@ export async function getOxygenDeploymentToken({
     return;
   }
 
-  const {storefront} = await getOxygenToken(session, config.storefront.id);
+  const {storefront} = await getOxygenData(session, config.storefront.id);
 
   if (!storefront) {
     renderMissingStorefront({
@@ -56,10 +59,10 @@ export async function getOxygenDeploymentToken({
     return;
   }
 
-  if (!storefront.oxygenDeploymentToken) {
+  if (!storefront.deploymentToken) {
     outputWarn(`Could not retrieve a deployment token.`);
     return;
   }
 
-  return storefront.oxygenDeploymentToken;
+  return storefront;
 }
