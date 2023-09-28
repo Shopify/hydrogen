@@ -1,5 +1,15 @@
 # demo-store
 
+## 2.1.3
+
+### Patch Changes
+
+- Cart Optimistic UI helpers ([#1366](https://github.com/Shopify/hydrogen/pull/1366)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Updated dependencies [[`e148cfca`](https://github.com/Shopify/hydrogen/commit/e148cfca004d6bb2981d136231e3825509d52305), [`1be1e40d`](https://github.com/Shopify/hydrogen/commit/1be1e40de6abf58679dbfada20fb430892dc5ef8), [`8772903d`](https://github.com/Shopify/hydrogen/commit/8772903da9efe23fb56fc4bfcace729065f4960f), [`bfb142e8`](https://github.com/Shopify/hydrogen/commit/bfb142e84a22ca1c506f7ebb1692e435790c8fd3), [`06da5570`](https://github.com/Shopify/hydrogen/commit/06da5570c25a64b1afc4cce093c3ba3d2d7da2ca), [`00210faa`](https://github.com/Shopify/hydrogen/commit/00210faa55cad78a8331adecddc9bdde9463acc7), [`425791ce`](https://github.com/Shopify/hydrogen/commit/425791ced37ddb50f71fbdc78760905555716444)]:
+  - @shopify/cli-hydrogen@5.4.0
+  - @shopify/hydrogen@2023.7.9
+
 ## 2.1.2
 
 ### Patch Changes
