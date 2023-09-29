@@ -8,8 +8,8 @@ function logCacheApiStatus(
 ) {
   // const url = request.url;
   // if (!/Product\(/.test(url)) return;
-  // // eslint-disable-next-line no-console
-  // console.log(status, 'cacheKey', url.substring(0, 50));
+  // eslint-disable-next-line no-console
+  // console.log(status, 'cacheKey', url.substring(118, 140));
   // if (response) {
   //   let headersJson: Record<string, string> = {};
   //   response.headers.forEach((value, key) => {
@@ -56,13 +56,23 @@ async function getItem(
 ): Promise<Response | undefined> {
   if (!cache) return;
 
+  const cacheKey = request.url.substring(124, 150);
+  const logStartTime = Date.now();
   const response = await cache.match(request);
+  const logEndTime = Date.now();
+
   if (!response) {
     logCacheApiStatus('MISS', request);
+    console.log(`MISS`, logEndTime - logStartTime, cacheKey);
     return;
   }
 
   logCacheApiStatus('HIT', request, response);
+  console.log(
+    `${isStale(request, response) ? 'STALE' : 'HIT'}`,
+    logEndTime - logStartTime,
+    cacheKey,
+  );
 
   return response;
 }

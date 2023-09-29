@@ -1,0 +1,56 @@
+.panels {
+  display: grid;
+  container-type: inline-size;
+  width: 90vmin;
+  /* The Trick 👇 */
+  grid-template-columns: auto 1fr;
+}
+
+.resizer {
+  position: relative;
+  top: 100%;
+  right: 0;
+  height: 48px;
+  width: 400px;
+  resize: horizontal;
+  overflow: hidden;
+  max-width: calc(100cqi - var(--min-width));
+  min-width: calc(var(--min-width) * 3);
+  transform-origin: 100% 100%;
+  scale: 1 100;
+  translate: 14px -50%;
+  background: green;
+  z-index: 9999;
+  clip-path: inset(calc(100% - 12px) 0 0 calc(100% - 12px));
+  /* Important to hide it */
+  opacity: 0;
+}
+
+.panel {
+  position: relative;
+}
+
+.panel:first-of-type::after {
+  content: '';
+  position: absolute;
+  width: 0.5rem;
+  height: 2rem;
+  top: 50%;
+  bottom: 0;
+  right: 0;
+  background: hsl(10 80% 50%);
+  translate: -50% -50%;
+  pointer-events: none;
+  border-radius: 4rem;
+  box-shadow: 0 1px black, 0 1px hsl(0 0% 100% / 0.5) inset;
+  z-index: 3;
+}
+
+.panels:has(.resizer:is(:hover)) .panel:first-of-type::after {
+  background: hsl(10 80% 60%);
+}
+
+.panels:has(.resizer:is(:active)) .panel:first-of-type::after {
+  background: hsl(10 80% 40%);
+  box-shadow: 0 1px black inset, 0 1px black, 0 -1px hsl(0 0% 100% / 0.5) inset;
+}

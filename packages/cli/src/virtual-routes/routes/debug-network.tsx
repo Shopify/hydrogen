@@ -1,25 +1,16 @@
+import type {LinksFunction} from '@shopify/remix-oxygen';
 import {useEffect, useRef, useState} from 'react';
-import type {Waterfall, WaterfallItems} from 'flame-chart-js';
-
-import {FlameChartWrapper} from '../components/FlameChartWrapper.jsx';
-import {Link} from '@remix-run/react';
 import {Script} from '@shopify/hydrogen';
+import {
+  RequestWaterfall,
+  type ServerEvent,
+  type ServerEvents,
+} from '../components/RequestWaterfall.jsx';
 
-type ServerEvent = {
-  id: string;
-  url: string;
-  startTime: number;
-  endTime: number;
-  cacheStatus: string;
-  stackLine?: string;
-  graphql?: string;
-};
+import styles from '../assets/debug-network.css';
 
-type ServerEvents = {
-  smallestStartTime: number;
-  mainRequests: ServerEvent[];
-  subRequests: Record<string, ServerEvent[]>;
-  showPutRequests: boolean;
+export const links: LinksFunction = () => {
+  return [{rel: 'stylesheet', href: styles}];
 };
 
 export default function DebugNetwork() {
@@ -29,6 +20,7 @@ export default function DebugNetwork() {
     mainRequests: [],
     subRequests: {},
     showPutRequests: false,
+    viewportHeight: 300,
   });
 
   // For triggering a react render
@@ -82,12 +74,16 @@ export default function DebugNetwork() {
     });
     evtSource.addEventListener('Sub request', subRequestHandler);
 
+    serverEvents.current.viewportHeight = window.innerHeight;
+
     return () => {
       evtSource.removeEventListener('Request', mainRequestHandler);
       evtSource.removeEventListener('Sub request', subRequestHandler);
       evtSource.close();
     };
   }, []);
+
+  // CSS resize: https://twitter.com/jh3yy/status/1707514774685106581
 
   return (
     <>
@@ -102,102 +98,145 @@ export default function DebugNetwork() {
           fontSize: '0.8rem',
         }}
       >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
+        <Header
+          serverEvents={serverEvents.current}
+          setServerEvents={(newServerEvents) => {
+            serverEvents.current = newServerEvents;
+            setTimestamp(new Date().getTime());
           }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <button
-              onClick={() => {
-                fetch('/debug-network-server', {method: 'DELETE'}).catch(
-                  (error) => console.error('Could not clear history:', error),
-                );
-
-                serverEvents.current = {
-                  smallestStartTime: 0,
-                  mainRequests: [],
-                  subRequests: {},
-                  showPutRequests: serverEvents.current.showPutRequests,
-                };
-
-                setTimestamp(new Date().getTime());
+        />
+        <div className="panels">
+          <div className="panel">
+            <div
+              className="resizer"
+              onMouseUp={() => {
+                const resizerWidth =
+                  document.querySelector('.resizer')?.clientWidth;
+                console.log('onMouseUp', resizerWidth);
+                if (resizerWidth) {
+                  const waterfallPanel =
+                    document.querySelector('#waterfall-panel');
+                  waterfallPanel?.setAttribute(
+                    'style',
+                    `width: ${resizerWidth}px`,
+                  );
+                }
               }}
-            >
-              Clear
-            </button>
-            <input
-              id="showPutRequests"
-              type="checkbox"
-              checked={serverEvents.current.showPutRequests}
-              onChange={(event) => {
-                serverEvents.current.showPutRequests = event.target.checked;
-                setTimestamp(new Date().getTime());
-              }}
-            />
-            <label htmlFor="showPutRequests">
-              Show cache update requests (PUT)
-            </label>
+            ></div>
+            <div id="waterfall-panel">
+              <RequestWaterfall
+                key={timestamp}
+                serverEvents={serverEvents.current}
+              />
+            </div>
           </div>
-          <p
-            style={{
-              paddingRight: '5px',
-            }}
-          >
-            Unstable
-          </p>
+          <div className="panel">
+            <RequestsTable serverEvents={serverEvents.current} />
+          </div>
         </div>
-        <FlameChart key={timestamp} serverEvents={serverEvents.current} />
-        <p style={{color: '#777', fontSize: '0.7rem', paddingLeft: '5px'}}>
-          Note: You may need to turn on '<b>Disable Cache</b>' for your
-          navigating window. If you are not seeing any requests, try re-running
-          '<b>npm run dev</b>' in your terminal while leaving this window open.
-        </p>
       </div>
     </>
   );
 }
 
-const PANEL_HEIGHT = 300;
-
-function FlameChart({serverEvents}: {serverEvents: ServerEvents}) {
-  if (serverEvents.mainRequests.length === 0)
-    return (
+function Header({
+  serverEvents,
+  setServerEvents,
+}: {
+  serverEvents: ServerEvents;
+  setServerEvents: (serverEvents: ServerEvents) => void;
+}) {
+  return (
+    <>
       <div
         style={{
-          height: `${PANEL_HEIGHT}px`,
           display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: '#FAFAFA',
+          justifyContent: 'space-between',
         }}
       >
-        <p style={{fontWeight: 'bold', color: '#777'}}>
-          Navigate your{' '}
-          <Link to="/" target="_blank">
-            app
-          </Link>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
+          <button
+            onClick={() => {
+              fetch('/debug-network-server', {method: 'DELETE'}).catch(
+                (error) => console.error('Could not clear history:', error),
+              );
+
+              setServerEvents({
+                ...serverEvents,
+                smallestStartTime: 0,
+                mainRequests: [],
+                subRequests: {},
+                showPutRequests: serverEvents.showPutRequests,
+              });
+            }}
+          >
+            Clear
+          </button>
+          <input
+            id="showPutRequests"
+            type="checkbox"
+            checked={serverEvents.showPutRequests}
+            onChange={(event) => {
+              setServerEvents({
+                ...serverEvents,
+                showPutRequests: event.target.checked,
+              });
+            }}
+          />
+          <label htmlFor="showPutRequests">
+            Show cache update requests (PUT)
+          </label>
+        </div>
+        <p
+          style={{
+            paddingRight: '5px',
+          }}
+        >
+          Unstable
         </p>
       </div>
-    );
+      <p style={{color: '#777', fontSize: '0.7rem', paddingLeft: '5px'}}>
+        Note: You may need to turn on '<b>Disable Cache</b>' for your navigating
+        window.
+      </p>
+    </>
+  );
+}
 
-  let totalRequests = 0;
-  let totalSubRequests = 0;
+type RequestItem = {
+  id: string;
+  name: string;
+  cacheStatus: string;
+  time: number;
+};
+type RequestItems = RequestItem[];
+
+function RequestsTable({serverEvents}: {serverEvents: ServerEvents}) {
+  // const requests = [{
+  //   id: '1',
+  //   name: 'test',
+  //   cacheStatus: 'MISS',
+  //   time: 300,
+  // }, {
+  //   id: '2',
+  //   name: 'test2',
+  //   cacheStatus: 'HIT',
+  //   time: 50,
+  // }];
 
   const calcDuration = (time: number) => time - serverEvents.smallestStartTime;
-  let items: WaterfallItems = [];
+  let requests: RequestItems = [];
 
   serverEvents.mainRequests.forEach((mainRequest: ServerEvent) => {
     const mainResponseStart = calcDuration(mainRequest.endTime);
     let mainResponseEnd = mainResponseStart;
 
-    const subRequestItems: WaterfallItems = [];
+    const subRequestItems: RequestItems = [];
     const subRequests = serverEvents.subRequests[mainRequest.id] || [];
     subRequests.forEach((subRequest: ServerEvent) => {
       const subRequestEnd = calcDuration(subRequest.endTime);
@@ -207,12 +246,10 @@ function FlameChart({serverEvents}: {serverEvents: ServerEvents}) {
       }
 
       const subRequestItem = {
-        name: `${subRequest.cacheStatus} ${subRequest.url}`.trim(),
-        intervals: 'request',
-        timing: {
-          requestStart: calcDuration(subRequest.startTime),
-          requestEnd: subRequestEnd,
-        },
+        id: subRequest.id,
+        name: subRequest.url,
+        cacheStatus: subRequest.cacheStatus,
+        time: subRequestEnd - calcDuration(subRequest.startTime),
       };
 
       if (serverEvents.showPutRequests) {
@@ -221,86 +258,35 @@ function FlameChart({serverEvents}: {serverEvents: ServerEvents}) {
         subRequest.cacheStatus !== 'PUT' &&
           subRequestItems.push(subRequestItem);
       }
-
-      totalSubRequests++;
     });
 
-    totalRequests++;
-
-    items.push({
+    requests.push({
+      id: mainRequest.id,
       name: mainRequest.url,
-      intervals: 'mainRequest',
-      timing: {
-        requestStart: calcDuration(mainRequest.startTime),
-        responseStart: mainResponseStart,
-        responseEnd: mainResponseEnd,
-      },
+      cacheStatus: mainRequest.cacheStatus,
+      time: mainResponseEnd - calcDuration(mainRequest.startTime),
     });
-    items = items.concat(subRequestItems);
+    requests = requests.concat(subRequestItems);
   });
 
-  const data: Waterfall = {
-    items,
-    intervals: {
-      mainRequest: [
-        {
-          name: 'server',
-          color: '#99CC00',
-          type: 'block',
-          start: 'requestStart',
-          end: 'responseStart',
-        },
-        {
-          name: 'streaming',
-          color: '#33CCFF',
-          type: 'block',
-          start: 'responseStart',
-          end: 'responseEnd',
-        },
-      ],
-      request: [
-        {
-          name: 'request',
-          color: '#FFCC00',
-          type: 'block',
-          start: 'requestStart',
-          end: 'requestEnd',
-        },
-      ],
-    },
-  };
+  const rowMarkup = requests.map(({id, name, cacheStatus, time}, index) => (
+    <tr key={index}>
+      <td>{name}</td>
+      <td>{cacheStatus}</td>
+      <td>{time} ms</td>
+    </tr>
+  ));
+
   return (
-    <>
-      <FlameChartWrapper
-        height={PANEL_HEIGHT}
-        waterfall={data}
-        settings={{
-          styles: {
-            waterfallPlugin: {
-              defaultHeight: PANEL_HEIGHT,
-            },
-          },
-        }}
-      />
-      <div
-        style={{
-          display: 'flex',
-          padding: '5px',
-          borderTop: '1px solid #CCC',
-          borderBottom: '1px solid #CCC',
-        }}
-      >
-        {totalRequests} requests
-        <span
-          style={{
-            paddingLeft: '2px',
-            paddingRight: '2px',
-          }}
-        >
-          |
-        </span>
-        {totalSubRequests} sub requests
-      </div>
-    </>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Cache Status</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      {rowMarkup}
+    </table>
   );
 }

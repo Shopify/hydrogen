@@ -45,10 +45,10 @@ async function getRequestInfo(request: Request) {
 }
 
 const eventEmitter = new EventEmitter();
-const eventHistory: RequestEvent[] = [];
+let eventHistory: RequestEvent[] = [];
 
 export async function clearHistory(): Promise<Response> {
-  eventHistory.length = 0;
+  eventHistory = [];
   return new Response('ok');
 }
 
