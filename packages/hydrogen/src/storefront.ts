@@ -194,6 +194,8 @@ type StorefrontHeaders = {
   buyerIp: string | null;
   /** The cookie header from the client  */
   cookie: string | null;
+  /** The purpose header value for debugging */
+  purpose: string | null;
 };
 
 type StorefrontQueryOptions = StorefrontQuerySecondParam & {
@@ -358,6 +360,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         stackLine,
         graphql: graphqlData,
         requestId: requestInit.headers[STOREFRONT_REQUEST_GROUP_ID_HEADER],
+        purpose: storefrontHeaders?.purpose,
       },
     });
 

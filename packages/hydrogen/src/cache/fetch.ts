@@ -18,6 +18,7 @@ export type FetchDebugInfo = {
   requestId?: string;
   stackLine?: string;
   graphql?: string;
+  purpose?: string | null;
 };
 
 export type WithCacheOptions<T = unknown> = {
