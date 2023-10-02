@@ -20,6 +20,12 @@ import {DEFAULT_PORT} from '../flags.js';
 import {findPort} from '../find-port.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
 import {OXYGEN_HEADERS_MAP, logRequestLine} from './common.js';
+import {
+  H2O_BINDING_NAME,
+  handleDebugNetworkRequest,
+  logRequestEvent,
+  setConstructors,
+} from '../request-events.js';
 
 export async function startWorkerdServer({
   root,
@@ -37,6 +43,8 @@ export async function startWorkerdServer({
     },
     {} as Record<string, string>,
   );
+
+  setConstructors({Response});
 
   const buildMiniOxygenOptions = async () =>
     ({
@@ -59,6 +67,7 @@ export async function startWorkerdServer({
           serviceBindings: {
             hydrogen: 'hydrogen',
             assets: createAssetHandler(buildPathClient),
+            debugNetwork: handleDebugNetworkRequest,
             logRequest,
           },
         },
@@ -71,14 +80,19 @@ export async function startWorkerdServer({
               contents: await readFile(resolvePath(root, buildPathWorkerFile)),
             },
           ],
-          bindings: {...env},
           compatibilityFlags: ['streams_enable_constructors'],
           compatibilityDate: '2022-10-31',
+          bindings: {...env},
+          serviceBindings: {
+            [H2O_BINDING_NAME]: logRequestEvent,
+          },
         },
       ],
     } satisfies MiniflareOptions);
 
   let miniOxygenOptions = await buildMiniOxygenOptions();
+  // @ts-expect-error H2O logger in serviceBindings
+  // breaks the type for some unknown reason.
   const miniOxygen = new Miniflare(miniOxygenOptions);
   const listeningAt = (await miniOxygen.ready).origin;
 
@@ -105,6 +119,7 @@ export async function startWorkerdServer({
       }
 
       cleanupInspector?.();
+      // @ts-expect-error
       await miniOxygen.setOptions(miniOxygenOptions);
       inspectorUrl ??= await findInspectorUrl(inspectorPort);
       if (inspectorUrl) {
@@ -139,21 +154,19 @@ async function miniOxygenHandler(
     hydrogen: Service;
     assets: Service;
     logRequest: Service;
+    debugNetwork: Service;
     initialAssets: string[];
     oxygenHeadersMap: Record<string, string>;
   },
   context: ExecutionContext,
 ) {
+  const {pathname} = new URL(request.url);
+
+  if (pathname === '/debug-network-server') {
+    return env.debugNetwork.fetch(request);
+  }
+
   if (request.method === 'GET') {
-    const pathname = new URL(request.url).pathname;
-
-    if (pathname.startsWith('/debug-network')) {
-      // TODO implement /debug-network-server here
-      return new Response(
-        'The Network Debugger is currently not supported in the Worker Runtime.',
-      );
-    }
-
     if (new Set(env.initialAssets).has(pathname.slice(1))) {
       const response = await env.assets.fetch(
         new Request(request.url, {
@@ -168,6 +181,7 @@ async function miniOxygenHandler(
 
   const requestInit = {
     headers: {
+      'request-id': crypto.randomUUID(),
       ...env.oxygenHeadersMap,
       ...Object.fromEntries(request.headers.entries()),
     },
@@ -184,7 +198,7 @@ async function miniOxygenHandler(
         method: request.method,
         signal: request.signal,
         headers: {
-          ...Object.fromEntries(request.headers.entries()),
+          ...requestInit.headers,
           'h2-duration-ms': String(durationMs),
           'h2-response-status': String(response.status),
         },

@@ -174,7 +174,6 @@ async function runDev({
       workerRuntime,
     );
 
-    const debugNetworkUrl = `${miniOxygen.listeningAt}/debug-network`;
     enhanceH2Logs({host: miniOxygen.listeningAt, ...remixConfig});
 
     miniOxygen.showBanner({
@@ -189,12 +188,10 @@ async function runDev({
             host: miniOxygen.listeningAt,
           })}`,
         ),
-        workerRuntime
-          ? ''
-          : colors.dim(
-              `\nView server-side network requests: ${debugNetworkUrl}`,
-            ),
-      ].filter(Boolean),
+        colors.dim(
+          `\nView server-side network requests: ${miniOxygen.listeningAt}/debug-network`,
+        ),
+      ],
     });
 
     if (useCodegen) {

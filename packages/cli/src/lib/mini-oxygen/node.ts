@@ -11,9 +11,9 @@ import {DEFAULT_PORT} from '../flags.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
 import {OXYGEN_HEADERS_MAP, logRequestLine} from './common.js';
 import {
-  clearHistory,
+  H2O_BINDING_NAME,
   logRequestEvent,
-  streamRequestEvents,
+  handleDebugNetworkRequest,
 } from '../request-events.js';
 
 export async function startNodeServer({
@@ -31,14 +31,14 @@ export async function startNodeServer({
 
   const asyncLocalStorage = new AsyncLocalStorage();
   const serviceBindings = {
-    H2O_LOG_EVENT: {
+    [H2O_BINDING_NAME]: {
       fetch: async (request: Request) =>
         logRequestEvent(
           new Request(request.url, {
             method: 'POST',
             body: JSON.stringify({
-              ...(await request.json<Record<string, string>>()),
               ...(asyncLocalStorage.getStore() as Record<string, string>),
+              ...(await request.json<Record<string, string>>()),
             }),
           }),
         ),
@@ -64,9 +64,7 @@ export async function startNodeServer({
     async onRequest(request, defaultDispatcher) {
       const url = new URL(request.url);
       if (url.pathname === '/debug-network-server') {
-        return request.method === 'DELETE'
-          ? clearHistory()
-          : streamRequestEvents(request);
+        return handleDebugNetworkRequest(request);
       }
 
       let requestId = request.headers.get('request-id');
