@@ -15,6 +15,7 @@ import {
 export type CacheKey = string | readonly unknown[];
 
 export type FetchDebugInfo = {
+  requestId?: string;
   stackLine?: string;
   graphql?: string;
 };

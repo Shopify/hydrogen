@@ -324,11 +324,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
     const url = getStorefrontApiUrl({storefrontApiVersion});
     const graphqlData = JSON.stringify({query, variables: queryVariables});
-    const requestInit: RequestInit = {
+    const requestInit = {
       method: 'POST',
       headers: {...defaultHeaders, ...userHeaders},
       body: graphqlData,
-    };
+    } satisfies RequestInit;
 
     // Remove any headers that are identifiable to the user or request
     const cacheKey = [
@@ -354,7 +354,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       cacheKey,
       shouldCacheResponse: checkGraphQLErrors,
       waitUntil,
-      debugInfo: {stackLine, graphql: graphqlData},
+      debugInfo: {
+        stackLine,
+        graphql: graphqlData,
+        requestId: requestInit.headers[STOREFRONT_REQUEST_GROUP_ID_HEADER],
+      },
     });
 
     const errorOptions: StorefrontErrorOptions<T> = {
