@@ -1,4 +1,4 @@
-import type {EntryContext} from '@shopify/remix-oxygen';
+import type {DataFunctionArgs, EntryContext} from '@shopify/remix-oxygen';
 import {RemixServer} from '@remix-run/react';
 import isbot from 'isbot';
 import {renderToReadableStream} from 'react-dom/server';
@@ -20,7 +20,7 @@ export default async function handleRequest(
       signal: request.signal,
       onError(error) {
         // eslint-disable-next-line no-console
-        console.error(error);
+        console.error((error as Error)?.stack ? (error as Error).stack : error);
         responseStatusCode = 500;
       },
     },
@@ -36,4 +36,11 @@ export default async function handleRequest(
     headers: responseHeaders,
     status: responseStatusCode,
   });
+}
+
+export function handleError(error: any, {request}: DataFunctionArgs) {
+  if (!request.signal.aborted) {
+    // eslint-disable-next-line no-console
+    console.error((error as Error)?.stack ? (error as Error).stack : error);
+  }
 }

@@ -6,7 +6,11 @@
 
 import {PassThrough} from 'node:stream';
 
-import type {AppLoadContext, EntryContext} from '@remix-run/node';
+import type {
+  AppLoadContext,
+  DataFunctionArgs,
+  EntryContext,
+} from '@remix-run/node';
 import {Response} from '@remix-run/node';
 import {RemixServer} from '@remix-run/react';
 import isbot from 'isbot';
@@ -76,7 +80,9 @@ function handleBotRequest(
         },
         onError(error: unknown) {
           responseStatusCode = 500;
-          console.error(error);
+          console.error(
+            (error as Error)?.stack ? (error as Error).stack : error,
+          );
         },
       },
     );
@@ -123,7 +129,9 @@ function handleBrowserRequest(
           reject(error);
         },
         onError(error: unknown) {
-          console.error(error);
+          console.error(
+            (error as Error)?.stack ? (error as Error).stack : error,
+          );
           responseStatusCode = 500;
         },
       },
@@ -131,4 +139,11 @@ function handleBrowserRequest(
 
     setTimeout(abort, ABORT_DELAY);
   });
+}
+
+export function handleError(error: any, {request}: DataFunctionArgs) {
+  if (!request.signal.aborted) {
+    // eslint-disable-next-line no-console
+    console.error((error as Error)?.stack ? (error as Error).stack : error);
+  }
 }
