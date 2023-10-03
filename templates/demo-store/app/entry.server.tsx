@@ -1,4 +1,4 @@
-import type {EntryContext} from '@shopify/remix-oxygen';
+import type {DataFunctionArgs, EntryContext} from '@shopify/remix-oxygen';
 import {RemixServer} from '@remix-run/react';
 import isbot from 'isbot';
 import {renderToReadableStream} from 'react-dom/server';
@@ -36,4 +36,13 @@ export default async function handleRequest(
     headers: responseHeaders,
     status: responseStatusCode,
   });
+}
+
+export function handleError(
+  error: any,
+  {request, params, context}: DataFunctionArgs,
+) {
+  if (!request.signal.aborted) {
+    console.error(error?.stack ? error?.stack : error);
+  }
 }
