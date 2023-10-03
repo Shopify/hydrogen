@@ -11,6 +11,8 @@ import type {DataFunctionArgs} from '@shopify/remix-oxygen';
 /* ... */
 
 export function handleError(error: any, {request}: DataFunctionArgs) {
+  // Avoids logging when the request is aborted, since Remix's cancellation
+  // and race-condition handling can cause a lot of requests to be aborted.
   if (!request.signal.aborted) {
     console.error((error as Error)?.stack ? (error as Error).stack : error);
   }
