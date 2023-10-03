@@ -20,7 +20,7 @@ export default async function handleRequest(
       signal: request.signal,
       onError(error) {
         // eslint-disable-next-line no-console
-        console.error(error.stack);
+        console.error((error as Error).stack);
         responseStatusCode = 500;
       },
     },
