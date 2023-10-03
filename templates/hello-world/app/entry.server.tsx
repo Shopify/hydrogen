@@ -40,6 +40,8 @@ export default async function handleRequest(
 }
 
 export function handleError(error: any, {request}: DataFunctionArgs) {
+  // Avoids logging when the request is aborted, since Remix's cancellation
+  // and race-condition handling can cause a lot of requests to be aborted.
   if (!request.signal.aborted) {
     // eslint-disable-next-line no-console
     console.error((error as Error)?.stack ? (error as Error).stack : error);
