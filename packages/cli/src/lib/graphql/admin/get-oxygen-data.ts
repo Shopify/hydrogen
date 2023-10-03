@@ -12,8 +12,8 @@ export const GetDeploymentDataQuery = `#graphql
   }
 `;
 
-export interface HydrogenStorefront {
-  deploymentToken: string;
+export interface OxygenDeploymentData {
+  oxygenDeploymentToken: string;
   environments: Array<{
     name: string;
     branch: string;
@@ -21,14 +21,14 @@ export interface HydrogenStorefront {
 }
 
 export interface GetDeploymentDataSchema {
-  storefront: HydrogenStorefront | null;
+  hydrogenStorefront: OxygenDeploymentData | null;
 }
 
 export async function getOxygenData(
   adminSession: AdminSession,
   storefrontId: string,
-): Promise<{storefront: HydrogenStorefront | null}> {
-  const {storefront} = await adminRequest<GetDeploymentDataSchema>(
+): Promise<{storefront: OxygenDeploymentData | null}> {
+  const {hydrogenStorefront} = await adminRequest<GetDeploymentDataSchema>(
     GetDeploymentDataQuery,
     adminSession,
     {
@@ -36,5 +36,5 @@ export async function getOxygenData(
     },
   );
 
-  return {storefront: storefront};
+  return {storefront: hydrogenStorefront};
 }

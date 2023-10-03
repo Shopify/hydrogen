@@ -26,6 +26,7 @@ import {
 
 import {commonFlags} from '../../lib/flags.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
+import {OxygenDeploymentData} from '../../lib/graphql/admin/get-oxygen-data.js';
 import {runBuild} from './build.js';
 
 export const deploymentLogger: Logger = (
@@ -39,14 +40,14 @@ export const deploymentLogger: Logger = (
 
 export default class Deploy extends Command {
   static flags: any = {
-    environmentTag: Flags.string({
+    'env-branch': Flags.string({
       char: 'e',
       description: 'Environment tag for environment to deploy to',
       required: false,
     }),
     path: commonFlags.path,
     shop: commonFlags.shop,
-    publicDeployment: Flags.boolean({
+    'public-deployment': Flags.boolean({
       env: 'SHOPIFY_HYDROGEN_FLAG_PUBLIC_DEPLOYMENT',
       description: 'Marks a preview deployment as publicly accessible.',
       required: false,
@@ -58,19 +59,19 @@ export default class Deploy extends Command {
       env: 'SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN',
       required: false,
     }),
-    metadataUrl: Flags.string({
+    'metadata-url': Flags.string({
       description:
         'URL that links to the deployment. Will be saved and displayed in the Shopify admin',
       required: false,
       env: 'SHOPIFY_HYDROGEN_FLAG_METADATA_URL',
     }),
-    metadataUser: Flags.string({
+    'metadata-user': Flags.string({
       description:
         'User that initiated the deployment. Will be saved and displayed in the Shopify admin',
       required: false,
       env: 'SHOPIFY_HYDROGEN_FLAG_METADATA_USER',
     }),
-    metadataVersion: Flags.string({
+    'metadata-version': Flags.string({
       description:
         'A version identifier for the deployment. Will be saved and displayed in the Shopify admin',
       required: false,
@@ -84,14 +85,14 @@ export default class Deploy extends Command {
     const {flags} = await this.parse(Deploy);
     const actualPath = flags.path ? resolvePath(flags.path) : process.cwd();
     await oxygenDeploy({
-      environmentTag: flags.environmentTag,
+      environmentTag: flags['env-branch'],
       path: actualPath,
       shop: flags.shop,
-      publicDeployment: flags.publicDeployment,
+      publicDeployment: flags['public-deployment'],
       token: flags.token,
-      metadataUrl: flags.metadataUrl,
-      metadataUser: flags.metadataUser,
-      metadataVersion: flags.metadataVersion,
+      metadataUrl: flags['metadata-url'],
+      metadataUser: flags['metadata-user'],
+      metadataVersion: flags['metadata-version'],
     })
       .catch((error) => {
         renderFatalError(error);
@@ -117,6 +118,10 @@ interface OxygenDeploymentOptions {
   metadataVersion?: string;
 }
 
+interface GitCommit {
+  refs: string;
+}
+
 export async function oxygenDeploy(
   options: OxygenDeploymentOptions,
 ): Promise<void> {
@@ -131,7 +136,10 @@ export async function oxygenDeploy(
   } = options;
   const ci = ciPlatform();
   let token = options.token;
-  let branch, deploymentData, deploymentEnvironmentTag, gitCommit;
+  let branch: string | undefined;
+  let deploymentData: OxygenDeploymentData | undefined;
+  let deploymentEnvironmentTag: string | undefined = undefined;
+  let gitCommit: GitCommit;
 
   try {
     gitCommit = await getLatestGitCommit(path);
@@ -147,16 +155,20 @@ export async function oxygenDeploy(
       flagShop: shop,
     });
 
-    if (deploymentData && !token) {
-      token = deploymentData.deploymentToken;
+    if (!deploymentData) {
+      return;
     }
+
+    token = token || deploymentData.oxygenDeploymentToken;
   }
 
   if (!token) {
     const errMessage = ci.isCI
-      ? `No deployment token provided. Use the ${colors.blueBright(
-          'token',
-        )} flag to provide a token.`
+      ? [
+          'No deployment token provided. Use the ',
+          {command: '--token'},
+          ' flag to provide a token.',
+        ]
       : `Could not obtain an Oxygen deployment token, please try again or contact Shopify support.`;
     throw new AbortError(errMessage);
   }
@@ -258,7 +270,7 @@ export async function oxygenDeploy(
         task: async () => await uploadPromise,
       },
       {
-        title: 'Performing deployment verification',
+        title: 'Verifying deployment',
         task: async () => await healthCheckPromise,
       },
     ]);

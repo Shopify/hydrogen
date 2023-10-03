@@ -153,8 +153,8 @@
       "hidden": true,
       "aliases": [],
       "flags": {
-        "environmentTag": {
-          "name": "environmentTag",
+        "env-branch": {
+          "name": "env-branch",
           "type": "option",
           "char": "e",
           "description": "Environment tag for environment to deploy to",
@@ -174,8 +174,8 @@
           "description": "Shop URL. It can be the shop prefix (janes-apparel) or the full myshopify.com URL (janes-apparel.myshopify.com, https://janes-apparel.myshopify.com).",
           "multiple": false
         },
-        "publicDeployment": {
-          "name": "publicDeployment",
+        "public-deployment": {
+          "name": "public-deployment",
           "type": "boolean",
           "description": "Marks a preview deployment as publicly accessible.",
           "required": false,
@@ -189,22 +189,22 @@
           "required": false,
           "multiple": false
         },
-        "metadataUrl": {
-          "name": "metadataUrl",
+        "metadata-url": {
+          "name": "metadata-url",
           "type": "option",
           "description": "URL that links to the deployment. Will be saved and displayed in the Shopify admin",
           "required": false,
           "multiple": false
         },
-        "metadataUser": {
-          "name": "metadataUser",
+        "metadata-user": {
+          "name": "metadata-user",
           "type": "option",
           "description": "User that initiated the deployment. Will be saved and displayed in the Shopify admin",
           "required": false,
           "multiple": false
         },
-        "metadataVersion": {
-          "name": "metadataVersion",
+        "metadata-version": {
+          "name": "metadata-version",
           "type": "option",
           "description": "A version identifier for the deployment. Will be saved and displayed in the Shopify admin",
           "required": false,

@@ -58,7 +58,7 @@ describe('getOxygenDeploymentData', () => {
     });
     vi.mocked(getOxygenData).mockResolvedValue({
       storefront: {
-        deploymentToken: OXYGEN_DEPLOYMENT_TOKEN,
+        oxygenDeploymentToken: OXYGEN_DEPLOYMENT_TOKEN,
         environments,
       },
     });
@@ -70,7 +70,7 @@ describe('getOxygenDeploymentData', () => {
 
   it('returns the oxygen deployment token and environments', async () => {
     const data = await getOxygenDeploymentData({root: 'test-root'});
-    expect(data?.deploymentToken).toBe(OXYGEN_DEPLOYMENT_TOKEN);
+    expect(data?.oxygenDeploymentToken).toBe(OXYGEN_DEPLOYMENT_TOKEN);
     expect(data?.environments).toEqual(environments);
   });
 
@@ -120,7 +120,7 @@ describe('getOxygenDeploymentData', () => {
   describe('when the storefront does not have an oxygen deployment token', () => {
     beforeEach(() => {
       vi.mocked(getOxygenData).mockResolvedValue({
-        storefront: {deploymentToken: '', environments: []},
+        storefront: {oxygenDeploymentToken: '', environments: []},
       });
     });
 

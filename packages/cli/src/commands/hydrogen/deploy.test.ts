@@ -134,7 +134,7 @@ describe('deploy', () => {
       'https://a-lovely-deployment.com',
     );
     vi.mocked(getOxygenDeploymentData).mockResolvedValue({
-      deploymentToken: 'some-encoded-token',
+      oxygenDeploymentToken: 'some-encoded-token',
       environments: [],
     });
     vi.mocked(parseToken).mockReturnValue(mockToken);
@@ -188,7 +188,7 @@ describe('deploy', () => {
 
   it('calls renderSelectPrompt when there are multiple environments', async () => {
     vi.mocked(getOxygenDeploymentData).mockResolvedValue({
-      deploymentToken: 'some-encoded-token',
+      oxygenDeploymentToken: 'some-encoded-token',
       environments: [
         {name: 'production', branch: 'main'},
         {name: 'preview', branch: 'staging'},

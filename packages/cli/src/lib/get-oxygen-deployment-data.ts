@@ -7,7 +7,7 @@ import {getCliCommand} from './shell.js';
 import {renderMissingLink, renderMissingStorefront} from './render-errors.js';
 import {
   getOxygenData,
-  HydrogenStorefront,
+  OxygenDeploymentData,
 } from './graphql/admin/get-oxygen-data.js';
 
 interface Arguments {
@@ -21,7 +21,7 @@ interface Arguments {
 
 export async function getOxygenDeploymentData({
   root,
-}: Arguments): Promise<HydrogenStorefront | undefined> {
+}: Arguments): Promise<OxygenDeploymentData | undefined> {
   const [{session, config}, cliCommand] = await Promise.all([
     login(root),
     getCliCommand(),
@@ -59,7 +59,7 @@ export async function getOxygenDeploymentData({
     return;
   }
 
-  if (!storefront.deploymentToken) {
+  if (!storefront.oxygenDeploymentToken) {
     outputWarn(`Could not retrieve a deployment token.`);
     return;
   }
