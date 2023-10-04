@@ -157,7 +157,7 @@
           "name": "env-branch",
           "type": "option",
           "char": "e",
-          "description": "Environment tag for environment to deploy to",
+          "description": "Environment branch (tag) for environment to deploy to",
           "required": false,
           "multiple": false
         },

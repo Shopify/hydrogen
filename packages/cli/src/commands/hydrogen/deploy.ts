@@ -24,7 +24,7 @@ import {
   parseToken,
 } from '@shopify/oxygen-cli/deploy';
 
-import {commonFlags} from '../../lib/flags.js';
+import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
 import {OxygenDeploymentData} from '../../lib/graphql/admin/get-oxygen-data.js';
 import {runBuild} from './build.js';
@@ -42,7 +42,7 @@ export default class Deploy extends Command {
   static flags: any = {
     'env-branch': Flags.string({
       char: 'e',
-      description: 'Environment tag for environment to deploy to',
+      description: 'Environment branch (tag) for environment to deploy to',
       required: false,
     }),
     path: commonFlags.path,
@@ -83,17 +83,9 @@ export default class Deploy extends Command {
 
   async run() {
     const {flags} = await this.parse(Deploy);
-    const actualPath = flags.path ? resolvePath(flags.path) : process.cwd();
-    await oxygenDeploy({
-      environmentTag: flags['env-branch'],
-      path: actualPath,
-      shop: flags.shop,
-      publicDeployment: flags['public-deployment'],
-      token: flags.token,
-      metadataUrl: flags['metadata-url'],
-      metadataUser: flags['metadata-user'],
-      metadataVersion: flags['metadata-version'],
-    })
+    const deploymentOptions = this.flagsToOxygenDeploymentOptions(flags);
+
+    await oxygenDeploy(deploymentOptions)
       .catch((error) => {
         renderFatalError(error);
         process.exit(1);
@@ -104,6 +96,17 @@ export default class Deploy extends Command {
         // The actual build has already finished so we can kill the process
         process.exit(0);
       });
+  }
+
+  private flagsToOxygenDeploymentOptions(flags: {
+    [x: string]: any;
+  }): OxygenDeploymentOptions {
+    const camelFlags = flagsToCamelObject(flags);
+    return {
+      ...camelFlags,
+      environmentTag: flags['env-branch'],
+      path: flags.path ? resolvePath(flags.path) : process.cwd(),
+    } as OxygenDeploymentOptions;
   }
 }
 
