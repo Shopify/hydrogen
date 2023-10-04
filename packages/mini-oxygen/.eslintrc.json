@@ -18,10 +18,13 @@
   "plugins": ["@typescript-eslint"],
   "rules": {
     "consistent-return": "off",
-    "node/shebang": ["error", {
-      "convertPath": {
+    "node/shebang": [
+      "error",
+      {
+        "convertPath": {
           "src/**/*.ts": ["^src/(.+?)\\.ts$", "dist/$1.js"]
+        }
       }
-  }]
+    ]
   }
 }

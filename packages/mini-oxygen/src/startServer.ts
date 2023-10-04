@@ -5,7 +5,7 @@ import type {Socket} from 'net';
 import getPort, {portNumbers} from 'get-port';
 
 import {MiniOxygen} from './mini-oxygen/core.js';
-import type {MiniOxygenServerOptions} from './mini-oxygen/server.js';
+import type {MiniOxygenServerOptions, fetch} from './mini-oxygen/server.js';
 
 class WorkerNotFoundError extends Error {
   name = 'WorkerNotFoundError';
@@ -25,6 +25,7 @@ export type MiniOxygenOptions = Partial<{
   sourceMap: boolean;
   envPath: string;
   env: {[key: string]: unknown};
+  globalFetch?: typeof fetch;
 }>;
 
 export type MiniOxygenCreateServerOptions = MiniOxygenServerOptions & {
@@ -62,6 +63,7 @@ export function createMiniOxygen(
     sourceMap = true,
     envPath,
     env = {},
+    globalFetch,
   } = opts;
 
   const root = rootPath ?? process.cwd();
@@ -79,6 +81,7 @@ export function createMiniOxygen(
 
   const mf = new MiniOxygen(
     {
+      globalFetch,
       buildCommand,
       envPath,
       script,
