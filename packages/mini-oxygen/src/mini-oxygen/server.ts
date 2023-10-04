@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
 import path from 'path';
 import http from 'http';
 import type {IncomingMessage} from 'http';
@@ -135,9 +134,7 @@ function createAutoReloadMiddleware(mf: MiniOxygen): NextHandleFunction {
       mf.addEventListener('reload', () => writeSSE(res, 'reload'));
 
       res.writeHead(200, {
-        // eslint-disable-next-line @typescript-eslint/naming-convention
         'Content-Type': 'text/event-stream',
-        // eslint-disable-next-line @typescript-eslint/naming-convention
         'Cache-Control': 'no-cache',
         Connection: 'keep-alive',
       });
@@ -167,7 +164,6 @@ function createRequestMiddleware(
 
     const reqHeaders: {[key: string]: string} = {};
 
-    // eslint-disable-next-line guard-for-in
     for (const key in req.headers) {
       const val = req.headers[key];
       if (Array.isArray(val)) {
@@ -262,7 +258,6 @@ function createRequestMiddleware(
       res.end();
     } catch (err: any) {
       onResponseError?.(request, err as Error);
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       res.writeHead(status, {'Content-Type': 'text/plain; charset=UTF-8'});
       res.end(err.stack, 'utf8');
     }
@@ -282,7 +277,6 @@ function sendProxyRequest(
       path: `${url.protocol}//${url.host}${url.pathname}`,
       headers: {
         ...req.headers,
-        // eslint-disable-next-line @typescript-eslint/naming-convention
         'mini-Oxygen-Proxy': 'true',
       },
       timeout: 3000,
@@ -303,7 +297,6 @@ function sendProxyRequest(
   });
 
   proxyRequest.catch((err: Error) => {
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     res.writeHead(500, {'Content-Type': 'text/plain; charset=UTF-8'});
     res.end(err.stack, 'utf8');
     return res;

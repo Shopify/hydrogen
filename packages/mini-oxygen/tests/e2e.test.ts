@@ -1,7 +1,7 @@
 import {it, vi, describe, beforeEach, expect, afterEach} from 'vitest';
 import EventSource from 'eventsource';
 
-import {startServer, Response, type MiniOxygenOptions} from '../index.js';
+import {startServer, Response, type MiniOxygenOptions} from '../src/index.js';
 
 import {
   createFixture,

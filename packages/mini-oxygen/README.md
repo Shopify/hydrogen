@@ -7,6 +7,7 @@ For modules support (necessary for module workers), the node instance that spawn
 To use Mini Oxygen within your app, follow these steps:
 
 Add `@shopify/mini-oxygen` as a dev dependency of your app:
+
 ```shell
 yarn add --dev @shopify/mini-oxygen
 ```

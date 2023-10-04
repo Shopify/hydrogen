@@ -2,7 +2,6 @@ import {join, resolve} from 'path';
 import http from 'http';
 import type {IncomingMessage} from 'http';
 
-import {Mock} from 'vitest';
 import {writeFile, ensureDir, remove} from 'fs-extra';
 
 export interface Fixture {
@@ -112,7 +111,6 @@ export async function sendRequest(port: number, path: string) {
 
 export function createMockProxyServer(port: number): http.Server {
   const onRequest = (_req: IncomingMessage, res: any) => {
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     res.writeHead(200, {'Content-Type': 'text/plain; charset=UTF-8'});
     res.end('bogus content', 'utf8');
   };

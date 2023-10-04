@@ -1,33 +1,31 @@
 {
   "name": "@shopify/mini-oxygen",
-  "author": "Shopify Inc.",
   "publishConfig": {
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "engines": {
-    "node": ">16.7.0"
-  },
-  "type": "module",
   "version": "2.2.2",
+  "license": "MIT",
+  "type": "module",
   "description": "Development assistant for custom Shopify Oxygen hosted storefronts",
   "main": "./dist/index.js",
+  "module": "dist/index.js",
   "types": "./dist/index.d.ts",
-  "repository": "https://github.com/Shopify/mini-oxygen.git",
-  "license": "MIT",
+  "sideEffects": false,
+  "repository": "https://github.com/Shopify/hydrogen.git",
   "scripts": {
-    "dev": "tsc -p . --preserveWatchOutput -w",
-    "build": "tsc -p .",
-    "lint": "eslint --ext .js,.ts --max-warnings 0 src",
-    "lint:format": "yarn run lint --fix",
-    "type-check": "yarn tsc --noEmit",
-    "prepack": "yarn install && yarn build",
-    "test": "NODE_OPTIONS=--experimental-vm-modules vitest ."
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "prepack": "npm run build",
+    "test": "NODE_OPTIONS=--experimental-vm-modules vitest run"
   },
   "files": [
-    "dist/**"
+    "dist"
   ],
-  "prettier": "@shopify/prettier-config",
+  "engines": {
+    "node": ">=16.13.0"
+  },
   "dependencies": {
     "@miniflare/cache": "^2.14.1",
     "@miniflare/core": "^2.14.1",
@@ -38,34 +36,22 @@
     "@miniflare/web-sockets": "2.14.1",
     "body-parser": "1.20.2",
     "connect": "^3.7.0",
-    "eventsource": "^2.0.2",
     "fs-extra": "^11.1.0",
-    "get-port": "7.0.0",
+    "get-port": "^7.0.0",
     "inquirer": "^9.0.0",
     "mime": "^3.0.0",
-    "semiver": "^1.1.0",
     "source-map-support": "^0.5.21"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.24.3",
-    "@shopify/eslint-plugin": "^43.0.0",
-    "@shopify/prettier-config": "^1.1.2",
     "@types/body-parser": "1.19.3",
     "@types/connect": "^3.4.35",
     "@types/eventsource": "^1.1.10",
-    "@types/fs-extra": "^11.0.0",
-    "@types/inquirer": "^9.0.0",
+    "@types/fs-extra": "^11.0.1",
     "@types/mime": "^3.0.1",
     "@types/node": "^18.7.0",
     "@types/source-map-support": "^0.5.6",
     "@types/ws": "^8.5.3",
-    "@typescript-eslint/eslint-plugin": "^5.27.0",
-    "@typescript-eslint/parser": "^5.27.0",
-    "eslint": "^8.12.0",
-    "eslint-config-prettier": "^9.0.0",
-    "eslint-plugin-prettier": "^5.0.0-alpha.2",
-    "prettier": "^3.0.0",
-    "typescript": "^5.1.6",
-    "vitest": "^0.34.1"
+    "eventsource": "^2.0.2",
+    "vitest": "^0.33.0"
   }
 }

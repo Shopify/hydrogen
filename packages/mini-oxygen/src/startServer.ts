@@ -51,7 +51,6 @@ export function createMiniOxygen(
   opts: MiniOxygenOptions,
 ): MiniOxygenPublicInstance {
   const {
-    // eslint-disable-next-line no-console
     log = (message: string) => console.log(message),
     workerFile,
     script,
@@ -163,7 +162,6 @@ export function createMiniOxygen(
         socket.once('close', () => sockets.delete(socket));
       });
 
-      // eslint-disable-next-line promise/param-names
       return new Promise((res) => {
         app.listen(actualPort, () => {
           log(
