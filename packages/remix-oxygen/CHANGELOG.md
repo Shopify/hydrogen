@@ -1,5 +1,11 @@
 # @shopify/remix-oxygen
 
+## 1.1.5
+
+### Patch Changes
+
+- Fix debug-network logger utility. Avoid logging debug-network errors multiple times. ([#1400](https://github.com/Shopify/hydrogen/pull/1400)) by [@frandiox](https://github.com/frandiox)
+
 ## 1.1.4
 
 ### Patch Changes
