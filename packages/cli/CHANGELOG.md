@@ -1,5 +1,14 @@
 # @shopify/cli-hydrogen
 
+## 5.4.1
+
+### Patch Changes
+
+- Add token flag, environmentTag flag, environment selection screen, rename health check to deployment verification ([#1381](https://github.com/Shopify/hydrogen/pull/1381)) by [@vincentezw](https://github.com/vincentezw)
+
+- Updated dependencies [[`eb9451ed`](https://github.com/Shopify/hydrogen/commit/eb9451ed7883f610d1412bdab2553523859ac701)]:
+  - @shopify/remix-oxygen@1.1.5
+
 ## 5.4.0
 
 ### Minor Changes
