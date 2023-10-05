@@ -10,6 +10,8 @@ export type H2OEvent = {
   stackLine?: string;
 };
 
+let hasWarned = false;
+
 export function createEventLogger(appLoadContext: Record<string, unknown>) {
   const context = (appLoadContext || {}) as {
     env?: Record<string, any>;
@@ -39,7 +41,12 @@ export function createEventLogger(appLoadContext: Record<string, unknown>) {
         }),
       )
       .catch((error: Error) => {
-        console.debug('Failed to log H2O event\n', error.stack);
+        if (!hasWarned) {
+          // This might repeat a lot of times due to
+          // the same issue, so we only warn once.
+          console.debug('Failed to log H2O event\n', error.stack);
+          hasWarned = true;
+        }
       });
 
     promise && waitUntil?.(promise);
