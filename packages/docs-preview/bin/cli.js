@@ -1,6 +1,7 @@
-const {readFile, watch, writeFile} = require('fs/promises');
+const {writeFile, readFile} = require('fs/promises');
 const {spawn} = require('child_process');
 const path = require('path');
+const chokidar = require('chokidar');
 
 const docsMetaFile = path.resolve(process.cwd(), process.argv[2]);
 
@@ -26,7 +27,6 @@ async function run() {
   remix.stdout.on('data', (data) => console.log(`${data}`));
   remix.stdout.on('error', (data) => console.error(`${data}`));
   remix.on('error', (error) => {
-    console.log('hi');
     process.exit(1);
   });
   remix.on('close', (code) => {
@@ -34,21 +34,9 @@ async function run() {
     process.exit(code);
   });
 
-  try {
-    const watcher = watch(docsMetaFile);
-
-    for await (const event of watcher) {
-      if (event.eventType === 'change') {
-        // Whenever the source metafile changes, copy it back into the Remix app dir
-        // which automatically picks it up and hot reloads the page
-        copyMetaFile(docsMetaFile);
-      }
-    }
-  } catch (err) {
-    if (err.name === 'AbortError') return;
-    console.error('Failed to startup Remix');
-    throw err;
-  }
+  chokidar.watch(docsMetaFile).on('all', (event, path) => {
+    copyMetaFile(docsMetaFile);
+  });
 }
 
 let timeout;
@@ -69,7 +57,7 @@ function copyMetaFile(file) {
     } catch (e) {
       console.error('Error copying metafile', e);
     }
-  }, 100);
+  }, 1000);
 }
 
 run();
