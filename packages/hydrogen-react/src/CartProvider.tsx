@@ -15,6 +15,7 @@ import {
   CartLineInput,
   CartLineUpdateInput,
   CountryCode,
+  LanguageCode,
   Cart as CartType,
   MutationCartNoteUpdateArgs,
 } from './storefront-api-types.js';
@@ -95,6 +96,8 @@ type CartProviderProps = {
   customerAccessToken?: CartBuyerIdentityInput['customerAccessToken'];
   /** The ISO country code for i18n. */
   countryCode?: CountryCode;
+  /** The ISO luanguage code for i18n. */
+  languageCode?: LanguageCode;
 };
 
 /**
@@ -130,6 +133,7 @@ export function CartProvider({
   cartFragment = defaultCartFragment,
   customerAccessToken,
   countryCode,
+  languageCode,
 }: CartProviderProps): JSX.Element {
   const shop = useShop();
 
@@ -144,7 +148,14 @@ export function CartProvider({
     'US'
   ).toUpperCase() as CountryCode;
 
+  languageCode = (
+    (languageCode as string) ??
+    shop.languageIsoCode ??
+    'EN'
+  ).toUpperCase() as LanguageCode;
+
   if (countryCode) countryCode = countryCode.toUpperCase() as CountryCode;
+
   const [prevCountryCode, setPrevCountryCode] = useState(countryCode);
   const [prevCustomerAccessToken, setPrevCustomerAccessToken] =
     useState(customerAccessToken);
@@ -164,6 +175,7 @@ export function CartProvider({
     data: cart,
     cartFragment,
     countryCode,
+    languageCode,
     onCartActionEntry(_, event) {
       try {
         switch (event.type) {

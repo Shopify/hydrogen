@@ -6,6 +6,7 @@ import {
   CartLineInput,
   CartLineUpdateInput,
   CountryCode,
+  LanguageCode,
   Cart as CartType,
   MutationCartDiscountCodesUpdateArgs,
   MutationCartNoteUpdateArgs,
@@ -36,6 +37,7 @@ export function useCartActions({
   numCartLines,
   cartFragment,
   countryCode = 'US',
+  languageCode = 'EN',
 }: {
   /**  Maximum number of cart lines to fetch. Defaults to 250 cart lines. */
   numCartLines?: number;
@@ -43,6 +45,7 @@ export function useCartActions({
   cartFragment: string;
   /** The ISO country code for i18n. */
   countryCode?: CountryCode;
+  languageCode?: LanguageCode;
 }) {
   const fetchCart = useCartFetch();
 
@@ -54,10 +57,11 @@ export function useCartActions({
           id: cartId,
           numCartLines,
           country: countryCode,
+          language: languageCode,
         },
       });
     },
-    [fetchCart, cartFragment, numCartLines, countryCode],
+    [fetchCart, cartFragment, numCartLines, countryCode, languageCode],
   );
 
   const cartCreate = useCallback(
@@ -68,10 +72,11 @@ export function useCartActions({
           input: cart,
           numCartLines,
           country: countryCode,
+          language: languageCode,
         },
       });
     },
-    [cartFragment, countryCode, fetchCart, numCartLines],
+    [cartFragment, countryCode, fetchCart, numCartLines, languageCode],
   );
 
   const cartLineAdd = useCallback(
@@ -83,10 +88,11 @@ export function useCartActions({
           lines,
           numCartLines,
           country: countryCode,
+          language: languageCode,
         },
       });
     },
-    [cartFragment, countryCode, fetchCart, numCartLines],
+    [cartFragment, countryCode, fetchCart, numCartLines, languageCode],
   );
 
   const cartLineUpdate = useCallback(
@@ -98,10 +104,11 @@ export function useCartActions({
           lines,
           numCartLines,
           country: countryCode,
+          language: languageCode,
         },
       });
     },
-    [cartFragment, countryCode, fetchCart, numCartLines],
+    [cartFragment, countryCode, fetchCart, numCartLines, languageCode],
   );
 
   const cartLineRemove = useCallback(
@@ -113,10 +120,11 @@ export function useCartActions({
           lines,
           numCartLines,
           country: countryCode,
+          language: languageCode,
         },
       });
     },
-    [cartFragment, countryCode, fetchCart, numCartLines],
+    [cartFragment, countryCode, fetchCart, numCartLines, languageCode],
   );
 
   const noteUpdate = useCallback(
@@ -128,10 +136,11 @@ export function useCartActions({
           note,
           numCartLines,
           country: countryCode,
+          language: languageCode,
         },
       });
     },
-    [fetchCart, cartFragment, numCartLines, countryCode],
+    [fetchCart, cartFragment, numCartLines, countryCode, languageCode],
   );
 
   const buyerIdentityUpdate = useCallback(
@@ -143,10 +152,11 @@ export function useCartActions({
           buyerIdentity,
           numCartLines,
           country: countryCode,
+          language: languageCode,
         },
       });
     },
-    [cartFragment, countryCode, fetchCart, numCartLines],
+    [cartFragment, countryCode, fetchCart, numCartLines, languageCode],
   );
 
   const cartAttributesUpdate = useCallback(
@@ -158,10 +168,11 @@ export function useCartActions({
           attributes,
           numCartLines,
           country: countryCode,
+          language: languageCode,
         },
       });
     },
-    [cartFragment, countryCode, fetchCart, numCartLines],
+    [cartFragment, countryCode, fetchCart, numCartLines, languageCode],
   );
 
   const discountCodesUpdate = useCallback(
@@ -176,10 +187,11 @@ export function useCartActions({
           discountCodes,
           numCartLines,
           country: countryCode,
+          language: languageCode,
         },
       });
     },
-    [cartFragment, countryCode, fetchCart, numCartLines],
+    [cartFragment, countryCode, fetchCart, numCartLines, languageCode],
   );
 
   return useMemo(
