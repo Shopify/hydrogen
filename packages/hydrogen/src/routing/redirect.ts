@@ -75,18 +75,11 @@ export async function storefrontRedirect(
 }
 
 function isLocalPath(url: string) {
-  try {
-    // We don't want to redirect cross domain,
-    // doing so could create fishing vulnerability
-    // If `new URL()` succeeds, it's a fully qualified
-    // url which is cross domain. If it fails, it's just
-    // a path, which will be the current domain.
-    new URL(url);
-  } catch (e) {
-    return true;
-  }
-
-  return false;
+  // We don't want to redirect cross domain,
+  // doing so could create phishing vulnerability
+  // Test for protocols, e.g. https://, http://, //
+  // and uris: mailto:, tel:, javascript:, etc.
+  return !/^(([a-z+-]+:)?\/\/|[a-z+-]+:)/i.test(url.trim());
 }
 
 const REDIRECT_QUERY = `#graphql
