@@ -10,11 +10,7 @@ import {
   SHOPIFY_STOREFRONT_S_HEADER,
 } from '@shopify/hydrogen-react';
 import type {ExecutionArgs} from 'graphql';
-import {
-  fetchWithServerCache,
-  checkGraphQLErrors,
-  getCallerStackLine,
-} from './cache/fetch';
+import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
 import {STOREFRONT_REQUEST_GROUP_ID_HEADER} from './constants';
 import {
   CacheNone,
@@ -420,7 +416,6 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         const result = fetchStorefrontApi({
           ...payload,
           query,
-          stackLine: getCallerStackLine?.(),
         });
 
         // This is a no-op, but we need to catch the promise to avoid unhandled rejections
@@ -453,7 +448,6 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         const result = fetchStorefrontApi({
           ...payload,
           mutation,
-          stackLine: getCallerStackLine?.(),
         });
 
         // This is a no-op, but we need to catch the promise to avoid unhandled rejections
