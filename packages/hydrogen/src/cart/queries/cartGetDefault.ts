@@ -135,6 +135,16 @@ export const DEFAULT_CART_FRAGMENT = `#graphql
               }
             }
           }
+          sellingPlanAllocation {
+            sellingPlan {
+              id
+              name
+              options {
+                name
+                value
+              }
+            }
+          }
         }
       }
     }
