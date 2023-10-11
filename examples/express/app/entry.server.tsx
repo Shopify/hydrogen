@@ -6,11 +6,7 @@
 
 import {PassThrough} from 'node:stream';
 
-import type {
-  AppLoadContext,
-  DataFunctionArgs,
-  EntryContext,
-} from '@remix-run/node';
+import type {AppLoadContext, EntryContext} from '@remix-run/node';
 import {Response} from '@remix-run/node';
 import {RemixServer} from '@remix-run/react';
 import isbot from 'isbot';
@@ -139,13 +135,4 @@ function handleBrowserRequest(
 
     setTimeout(abort, ABORT_DELAY);
   });
-}
-
-export function handleError(error: any, {request}: DataFunctionArgs) {
-  // Avoids logging when the request is aborted, since Remix's cancellation
-  // and race-condition handling can cause a lot of requests to be aborted.
-  if (!request.signal.aborted) {
-    // eslint-disable-next-line no-console
-    console.error((error as Error)?.stack ? (error as Error).stack : error);
-  }
 }
