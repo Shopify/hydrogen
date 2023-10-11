@@ -54,7 +54,7 @@ export async function loader({params, request, context}: LoaderArgs) {
     },
   });
 
-  if (!product?.id) {
+  if (!product?.id && product.id.should.error) {
     throw new Response('product', {status: 404});
   }
 
