@@ -54,7 +54,8 @@ export async function loader({params, request, context}: LoaderArgs) {
     },
   });
 
-  if (!product?.id && product.id.should.error) {
+  // @ts-ignore
+  if (product.does.not.exist && !product?.id) {
     throw new Response('product', {status: 404});
   }
 
