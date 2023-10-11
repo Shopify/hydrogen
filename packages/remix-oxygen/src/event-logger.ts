@@ -7,7 +7,6 @@ export type H2OEvent = {
   endTime?: number;
   cacheStatus?: 'MISS' | 'HIT' | 'STALE' | 'PUT';
   waitUntil?: ExecutionContext['waitUntil'];
-  stackLine?: string;
 };
 
 let hasWarned = false;

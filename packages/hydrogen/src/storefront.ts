@@ -292,11 +292,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     cache: cacheOptions,
     headers = [],
     storefrontApiVersion,
-    stackLine,
-  }: {stackLine?: string} & (
-    | StorefrontQueryOptions
-    | StorefrontMutationOptions
-  )): Promise<T> {
+  }: StorefrontQueryOptions | StorefrontMutationOptions): Promise<T> {
     const userHeaders =
       headers instanceof Headers
         ? Object.fromEntries(headers.entries())
@@ -350,7 +346,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       cacheKey,
       shouldCacheResponse: checkGraphQLErrors,
       waitUntil,
-      debugInfo: {stackLine, graphql: graphqlData},
+      debugInfo: {graphql: graphqlData},
     });
 
     const errorOptions: StorefrontErrorOptions<T> = {
