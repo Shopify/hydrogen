@@ -1,5 +1,16 @@
 # demo-store
 
+## 2.1.4
+
+### Patch Changes
+
+- Ensure that the `/discount?redirect=...` route only redirects to relative URLs. ([#1399](https://github.com/Shopify/hydrogen/pull/1399)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`cf5fe844`](https://github.com/Shopify/hydrogen/commit/cf5fe844bad989ec944d03bacf3666a6ab09063c), [`4f735fd7`](https://github.com/Shopify/hydrogen/commit/4f735fd725aef26cd3bd5b50c87d2c028b93c598), [`4156d16b`](https://github.com/Shopify/hydrogen/commit/4156d16bb171a7f5dd4d5feaad7cbd03ffb4610a)]:
+  - @shopify/cli-hydrogen@5.4.2
+  - @shopify/remix-oxygen@1.1.6
+  - @shopify/hydrogen@2023.7.10
+
 ## 2.1.3
 
 ### Patch Changes
