@@ -9,6 +9,11 @@ declare global {
   var __H2O_LOG_EVENT: undefined | ((event: H2OEvent) => void);
 }
 
+const originalErrorToString = Error.prototype.toString;
+Error.prototype.toString = function () {
+  return this.stack || originalErrorToString.call(this);
+};
+
 export function createRequestHandler<Context = unknown>({
   build,
   mode,
