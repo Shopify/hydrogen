@@ -1,5 +1,11 @@
 # @shopify/remix-oxygen
 
+## 1.1.6
+
+### Patch Changes
+
+- Update the Oxygen Remix adapter to make sure that stack traces are logged in production ([#1393](https://github.com/Shopify/hydrogen/pull/1393)) by [@blittle](https://github.com/blittle)
+
 ## 1.1.5
 
 ### Patch Changes

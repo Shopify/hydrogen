@@ -1,5 +1,11 @@
 # @shopify/hydrogen
 
+## 2023.7.10
+
+### Patch Changes
+
+- Ensure `storefrontRedirect` fallback only redirects to relative URLs. ([#1399](https://github.com/Shopify/hydrogen/pull/1399)) by [@frandiox](https://github.com/frandiox)
+
 ## 2023.7.9
 
 ### Patch Changes
