@@ -7,12 +7,13 @@ import {
   renderFatalError,
   renderSuccess,
 } from '@shopify/cli-kit/node/ui';
+import {getLatestGitCommit} from '@shopify/cli-kit/node/git';
 
 import {deploymentLogger, oxygenDeploy} from './deploy.js';
-import {getOxygenDeploymentToken} from '../../lib/get-oxygen-token.js';
+import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
 import {createDeploy, parseToken} from '@shopify/oxygen-cli/deploy';
 
-vi.mock('../../lib/get-oxygen-token.js');
+vi.mock('../../lib/get-oxygen-deployment-data.js');
 vi.mock('@shopify/oxygen-cli/deploy');
 vi.mock('../../lib/auth.js');
 vi.mock('../../lib/shopify-config.js');
@@ -24,6 +25,7 @@ vi.mock('@shopify/cli-kit/node/output', async () => {
   return {
     outputContent: () => ({value: ''}),
     outputInfo: () => {},
+    outputWarn: () => {},
   };
 });
 vi.mock('@shopify/cli-kit/node/ui', async () => {
@@ -32,6 +34,16 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
     renderSelectPrompt: vi.fn(),
     renderSuccess: vi.fn(),
     renderTasks: vi.fn(),
+  };
+});
+vi.mock('@shopify/cli-kit/node/git', async () => {
+  return {
+    getLatestGitCommit: vi.fn(),
+  };
+});
+vi.mock('@shopify/cli-kit/node/context/local', async () => {
+  return {
+    ciPlatform: () => ({isCI: false}),
   };
 });
 
@@ -76,12 +88,40 @@ describe('deploy', () => {
     namespaceId: '1',
   };
 
+  const expectedConfig = {
+    assetsDir: 'dist/client',
+    deploymentUrl: 'https://oxygen.shopifyapps.com',
+    deploymentToken: mockToken,
+    verificationMaxDuration: 180,
+    metadata: {
+      url: deployParams.metadataUrl,
+      user: deployParams.metadataUser,
+      version: deployParams.metadataVersion,
+    },
+    publicDeployment: deployParams.publicDeployment,
+    skipVerification: false,
+    rootPath: deployParams.path,
+    skipBuild: false,
+    workerOnly: false,
+    workerDir: 'dist/worker',
+  };
+
+  const expectedHooks = {
+    buildFunction: expect.any(Function),
+    onVerificationComplete: expect.any(Function),
+    onUploadFilesStart: expect.any(Function),
+    onUploadFilesComplete: expect.any(Function),
+    onVerificationError: expect.any(Function),
+    onUploadFilesError: expect.any(Function),
+  };
+
   beforeEach(async () => {
     process.exit = vi.fn() as any;
     vi.mocked(login).mockResolvedValue({
       session: ADMIN_SESSION,
       config: UNLINKED_SHOPIFY_CONFIG,
     });
+
     vi.mocked(getStorefronts).mockResolvedValue([
       {
         ...FULL_SHOPIFY_CONFIG.storefront,
@@ -93,7 +133,10 @@ describe('deploy', () => {
     vi.mocked(createDeploy).mockResolvedValue(
       'https://a-lovely-deployment.com',
     );
-    vi.mocked(getOxygenDeploymentToken).mockResolvedValue('some-encoded-token');
+    vi.mocked(getOxygenDeploymentData).mockResolvedValue({
+      oxygenDeploymentToken: 'some-encoded-token',
+      environments: [],
+    });
     vi.mocked(parseToken).mockReturnValue(mockToken);
   });
 
@@ -102,49 +145,65 @@ describe('deploy', () => {
     process.exit = originalExit;
   });
 
-  it('calls getOxygenDeploymentToken with the correct parameters', async () => {
+  it('calls getOxygenDeploymentData with the correct parameters', async () => {
     await oxygenDeploy(deployParams);
-    expect(getOxygenDeploymentToken).toHaveBeenCalledWith({
+    expect(getOxygenDeploymentData).toHaveBeenCalledWith({
       root: './',
       flagShop: 'snowdevil.myshopify.com',
     });
-    expect(getOxygenDeploymentToken).toHaveBeenCalledTimes(1);
+    expect(getOxygenDeploymentData).toHaveBeenCalledTimes(1);
   });
 
   it('calls createDeploy with the correct parameters', async () => {
     await oxygenDeploy(deployParams);
 
-    const expectedConfig = {
-      assetsDir: 'dist/client',
-      deploymentUrl: 'https://oxygen.shopifyapps.com',
-      deploymentToken: mockToken,
-      healthCheckMaxDuration: 180,
-      metadata: {
-        url: deployParams.metadataUrl,
-        user: deployParams.metadataUser,
-        version: deployParams.metadataVersion,
-      },
-      publicDeployment: deployParams.publicDeployment,
-      skipHealthCheck: false,
-      rootPath: deployParams.path,
-      skipBuild: false,
-      workerOnly: false,
-      workerDir: 'dist/worker',
-    };
-
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
       config: expectedConfig,
-      hooks: {
-        buildFunction: expect.any(Function),
-        onHealthCheckComplete: expect.any(Function),
-        onUploadFilesStart: expect.any(Function),
-        onUploadFilesComplete: expect.any(Function),
-        onHealthCheckError: expect.any(Function),
-        onUploadFilesError: expect.any(Function),
-      },
+      hooks: expectedHooks,
       logger: deploymentLogger,
     });
     expect(vi.mocked(renderSuccess)).toHaveBeenCalled;
+  });
+
+  it('calls createDeploy with the checked out branch name', async () => {
+    vi.mocked(getLatestGitCommit).mockResolvedValue({
+      hash: '123',
+      message: 'test commit',
+      date: '2021-01-01',
+      author_name: 'test author',
+      author_email: 'test@author.com',
+      body: 'test body',
+      refs: 'HEAD -> main',
+    });
+
+    await oxygenDeploy(deployParams);
+
+    expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
+      config: {...expectedConfig, environmentTag: 'main'},
+      hooks: expectedHooks,
+      logger: deploymentLogger,
+    });
+    expect(vi.mocked(renderSuccess)).toHaveBeenCalled;
+  });
+
+  it('calls renderSelectPrompt when there are multiple environments', async () => {
+    vi.mocked(getOxygenDeploymentData).mockResolvedValue({
+      oxygenDeploymentToken: 'some-encoded-token',
+      environments: [
+        {name: 'production', branch: 'main'},
+        {name: 'preview', branch: 'staging'},
+      ],
+    });
+
+    await oxygenDeploy(deployParams);
+
+    expect(vi.mocked(renderSelectPrompt)).toHaveBeenCalledWith({
+      message: 'Select an environment to deploy to',
+      choices: [
+        {label: 'production', value: 'main'},
+        {label: 'preview', value: 'staging'},
+      ],
+    });
   });
 
   it('handles error during uploadFiles', async () => {
@@ -177,7 +236,7 @@ describe('deploy', () => {
     }
   });
 
-  it('handles error during health check', async () => {
+  it('handles error during deployment verification', async () => {
     const mockRenderFatalError = vi.fn();
     vi.mocked(renderFatalError).mockImplementation(mockRenderFatalError);
 
@@ -186,7 +245,7 @@ describe('deploy', () => {
     vi.mocked(createDeploy).mockImplementation((options) => {
       options.hooks?.onUploadFilesStart?.();
       options.hooks?.onUploadFilesComplete?.();
-      options.hooks?.onHealthCheckError?.(error);
+      options.hooks?.onVerificationError?.(error);
 
       return new Promise((_resolve, reject) => {
         reject(error);

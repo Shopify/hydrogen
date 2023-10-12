@@ -10,7 +10,11 @@ import {
   SHOPIFY_STOREFRONT_S_HEADER,
 } from '@shopify/hydrogen-react';
 import type {ExecutionArgs} from 'graphql';
-import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
+import {
+  fetchWithServerCache,
+  checkGraphQLErrors,
+  getCallerStackLine,
+} from './cache/fetch';
 import {STOREFRONT_REQUEST_GROUP_ID_HEADER} from './constants';
 import {
   CacheNone,
@@ -292,7 +296,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     cache: cacheOptions,
     headers = [],
     storefrontApiVersion,
-  }: StorefrontQueryOptions | StorefrontMutationOptions): Promise<T> {
+    stackLine,
+  }: {stackLine?: string} & (
+    | StorefrontQueryOptions
+    | StorefrontMutationOptions
+  )): Promise<T> {
     const userHeaders =
       headers instanceof Headers
         ? Object.fromEntries(headers.entries())
@@ -315,20 +323,38 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     }
 
     const url = getStorefrontApiUrl({storefrontApiVersion});
+    const graphqlData = JSON.stringify({query, variables: queryVariables});
     const requestInit: RequestInit = {
       method: 'POST',
       headers: {...defaultHeaders, ...userHeaders},
-      body: JSON.stringify({
-        query,
-        variables: queryVariables,
-      }),
+      body: graphqlData,
     };
+
+    // Remove any headers that are identifiable to the user or request
+    const cacheKey = [
+      url,
+      {
+        method: requestInit.method,
+        headers: {
+          'content-type': defaultHeaders['content-type'],
+          'X-SDK-Variant': defaultHeaders['X-SDK-Variant'],
+          'X-SDK-Variant-Source': defaultHeaders['X-SDK-Variant-Source'],
+          'X-SDK-Version': defaultHeaders['X-SDK-Version'],
+          'X-Shopify-Storefront-Access-Token':
+            defaultHeaders['X-Shopify-Storefront-Access-Token'],
+          'user-agent': defaultHeaders['user-agent'],
+        },
+        body: requestInit.body,
+      },
+    ];
 
     const [body, response] = await fetchWithServerCache(url, requestInit, {
       cacheInstance: mutation ? undefined : cache,
       cache: cacheOptions || CacheShort(),
+      cacheKey,
       shouldCacheResponse: checkGraphQLErrors,
       waitUntil,
+      debugInfo: {stackLine, graphql: graphqlData},
     });
 
     const errorOptions: StorefrontErrorOptions<T> = {
@@ -391,10 +417,16 @@ export function createStorefrontClient<TI18n extends I18nBase>(
           );
         }
 
-        const result = fetchStorefrontApi({...payload, query});
-        // this is a no-op, but we need to catch the promise to avoid unhandled rejections
+        const result = fetchStorefrontApi({
+          ...payload,
+          query,
+          stackLine: getCallerStackLine?.(),
+        });
+
+        // This is a no-op, but we need to catch the promise to avoid unhandled rejections
         // we cannot return the catch no-op, or it would swallow the error
         result.catch(() => {});
+
         return result;
       }),
       /**
@@ -418,10 +450,16 @@ export function createStorefrontClient<TI18n extends I18nBase>(
           );
         }
 
-        const result = fetchStorefrontApi({...payload, mutation});
-        // this is a no-op, but we need to catch the promise to avoid unhandled rejections
+        const result = fetchStorefrontApi({
+          ...payload,
+          mutation,
+          stackLine: getCallerStackLine?.(),
+        });
+
+        // This is a no-op, but we need to catch the promise to avoid unhandled rejections
         // we cannot return the catch no-op, or it would swallow the error
         result.catch(() => {});
+
         return result;
       }),
       cache,

@@ -14,11 +14,17 @@ import {
  */
 export type CacheKey = string | readonly unknown[];
 
+export type FetchDebugInfo = {
+  stackLine?: string;
+  graphql?: string;
+};
+
 export type WithCacheOptions<T = unknown> = {
   strategy?: CachingStrategy | null;
   cacheInstance?: Cache;
   shouldCacheResult?: (value: T) => boolean;
   waitUntil?: ExecutionContext['waitUntil'];
+  debugInfo?: FetchDebugInfo;
 };
 
 export type FetchCacheOptions = {
@@ -28,6 +34,7 @@ export type FetchCacheOptions = {
   shouldCacheResponse?: (body: any, response: Response) => boolean;
   waitUntil?: ExecutionContext['waitUntil'];
   returnType?: 'json' | 'text' | 'arrayBuffer' | 'blob';
+  debugInfo?: FetchDebugInfo;
 };
 
 function toSerializableResponse(body: any, response: Response) {
@@ -64,6 +71,7 @@ export async function runWithCache<T = unknown>(
     cacheInstance,
     shouldCacheResult = () => true,
     waitUntil,
+    debugInfo,
   }: WithCacheOptions<T>,
 ): Promise<T> {
   const startTime = Date.now();
@@ -84,6 +92,7 @@ export async function runWithCache<T = unknown>(
             startTime: overrideStartTime || startTime,
             cacheStatus,
             waitUntil,
+            ...debugInfo,
           });
         }
       : undefined;
@@ -174,6 +183,7 @@ export async function fetchWithServerCache(
     shouldCacheResponse = () => true,
     waitUntil,
     returnType = 'json',
+    debugInfo,
   }: FetchCacheOptions = {},
 ): Promise<readonly [any, Response]> {
   if (!cacheOptions && (!requestInit.method || requestInit.method === 'GET')) {
@@ -207,8 +217,18 @@ export async function fetchWithServerCache(
       cacheInstance,
       waitUntil,
       strategy: cacheOptions ?? null,
+      debugInfo,
       shouldCacheResult: (result) =>
         shouldCacheResponse(...fromSerializableResponse(result)),
     },
   ).then(fromSerializableResponse);
 }
+
+export const getCallerStackLine =
+  process.env.NODE_ENV === 'development'
+    ? () => {
+        const stackInfo = {stack: ''};
+        Error.captureStackTrace(stackInfo);
+        return stackInfo.stack.split('\n').slice(3, 4).join('\n') || '';
+      }
+    : null;

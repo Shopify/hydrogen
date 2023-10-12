@@ -100,12 +100,12 @@ jobs:
           git commit -m "Update templates for dist"
           git push origin HEAD:dist --force
 
-  update_lock_and_sync_latest:
+  sync_latest:
     needs: changelog
     # Only update package-lock.json if a release was published, and we're on the "latest" release branch
     if: needs.changelog.outputs.published == 'true' && needs.changelog.outputs.latest == 'true'
     runs-on: ubuntu-latest
-    name: Update package-lock.json
+    name: Sync latest to version branch
     steps:
       - name: Checkout the code
         uses: actions/checkout@v3
@@ -113,15 +113,16 @@ jobs:
       - name: Update package-lock.json
         run: npm install --package-lock-only --ignore-engines
 
-      - name: Push commit to main branch
-        run: |
-          git add .
-          git status
-          git config user.email "hydrogen@shopify.com"
-          git config user.name "Hydrogen Bot"
-          git show-ref
-          git commit -m "Update package-lock.json"
-          git push origin HEAD:main
+      # TODO: Figure out how to push to protected branch
+      # - name: Push commit to main branch
+      #   run: |
+      #     git add .
+      #     git status
+      #     git config user.email "hydrogen@shopify.com"
+      #     git config user.name "Hydrogen Bot"
+      #     git show-ref
+      #     git commit -m "[ci] Update package-lock.json"
+      #     git push origin HEAD:main
 
       - name: Sync latest to version branch
         run: |
@@ -129,7 +130,7 @@ jobs:
           git config user.name "Hydrogen Bot"
           git show-ref
           git commit -m "[ci] release ${{ needs.changelog.outputs.latestBranch }}"
-          git push origin HEAD:${{ needs.changelog.outputs.latestBranch }} --force
+          git push origin main:${{ needs.changelog.outputs.latestBranch }} --force
 
   discord_announcement:
     needs: changelog

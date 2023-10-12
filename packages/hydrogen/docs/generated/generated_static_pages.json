@@ -95,7 +95,7 @@
           "tabs": [
             {
               "title": "example-page.jsx",
-              "code": "import {ShopPayButton} from '@shopify/hydrogen';\n\nexport function renderShopPayButton({variantId, storeDomain}) {\n  return <ShopPayButton variantIds={[variantId]} storeDomain={storeDomain} />;\n}\n",
+              "code": "import {ShopPayButton} from '@shopify/hydrogen';\n\nexport function renderShopPayButton({variantId, storeDomain}) {\n  return &lt;ShopPayButton variantIds={[variantId]} storeDomain={storeDomain} /&gt;;\n}\n",
               "language": "jsx"
             }
           ]

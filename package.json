@@ -2,8 +2,9 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
-    "build": "turbo build --parallel",
-    "build:pkg": "npm run build -- --filter=./packages/*",
+    "build": "npm run build:pkg",
+    "build:pkg": "turbo build --parallel --filter=./packages/*",
+    "build:all": "turbo build --parallel",
     "ci:checks": "turbo run lint test format:check typecheck",
     "dev": "npm run dev:pkg",
     "dev:pkg": "cross-env LOCAL_DEV=true turbo dev --parallel --filter=./packages/*",

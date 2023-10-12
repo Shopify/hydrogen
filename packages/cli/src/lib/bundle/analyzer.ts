@@ -1,7 +1,16 @@
 import {joinPath, dirname} from '@shopify/cli-kit/node/path';
 import {fileURLToPath} from 'node:url';
-import {writeFile, readFile} from '@shopify/cli-kit/node/fs';
+import {writeFile, readFile, fileExists} from '@shopify/cli-kit/node/fs';
 import colors from '@shopify/cli-kit/node/colors';
+
+export async function hasMetafile(buildPath: string): Promise<boolean> {
+  return (
+    await Promise.all([
+      fileExists(joinPath(buildPath, 'worker', 'metafile.server.json')),
+      fileExists(joinPath(buildPath, 'worker', 'metafile.js.json')),
+    ])
+  ).every(Boolean);
+}
 
 export async function buildBundleAnalysis(buildPath: string) {
   await Promise.all([
@@ -66,7 +75,7 @@ export async function getBundleAnalysisSummary(bundlePath: string) {
         .split('\n')
         .filter((line) => {
           const match = line.match(
-            /(.*)\/node_modules\/(react-dom|@remix-run|@shopify\/hydrogen|react-router|react-router-dom)\/(.*)/g,
+            /(.*)(node_modules\/|server-assets-manifest:|server-entry-module:)(react-dom|@remix-run|@shopify\/hydrogen|react-router|react-router-dom)\/(.*)/g,
           );
 
           return !match;

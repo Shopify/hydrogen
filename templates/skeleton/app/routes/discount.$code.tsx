@@ -3,14 +3,13 @@ import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 /**
  * Automatically applies a discount found on the url
  * If a cart exists it's updated with the discount, otherwise a cart is created with the discount already applied
- * @param ?redirect an optional path to return to otherwise return to the home page
+ *
  * @example
- * Example path applying a discount and redirecting
- * ```ts
+ * Example path applying a discount and optional redirecting (defaults to the home page)
+ * ```js
  * /discount/FREESHIPPING?redirect=/products
  *
  * ```
- * @preserve
  */
 export async function loader({request, context, params}: LoaderFunctionArgs) {
   const {cart} = context;
@@ -18,8 +17,13 @@ export async function loader({request, context, params}: LoaderFunctionArgs) {
 
   const url = new URL(request.url);
   const searchParams = new URLSearchParams(url.search);
-  const redirectParam =
+  let redirectParam =
     searchParams.get('redirect') || searchParams.get('return_to') || '/';
+
+  if (redirectParam.includes('//')) {
+    // Avoid redirecting to external URLs to prevent phishing attacks
+    redirectParam = '/';
+  }
 
   searchParams.delete('redirect');
   searchParams.delete('return_to');
