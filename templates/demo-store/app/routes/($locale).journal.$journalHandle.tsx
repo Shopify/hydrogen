@@ -54,7 +54,6 @@ export async function loader({request, params, context}: LoaderFunctionArgs) {
 export default function Article() {
   const {article, formattedDate} = useLoaderData<typeof loader>();
 
-  // @ts-ignore TODO error in JsonifyObject
   const {title, image, contentHtml, author} = article;
 
   return (

@@ -102,11 +102,6 @@ export default function Authenticated() {
     return <Outlet />;
   }
 
-  // TODO remove this alias when JsonifyObject type error is fixed
-  const accountData = data as typeof data & {
-    featuredData: Promise<FeaturedData>;
-  };
-
   // Authenticated routes
   if (outlet) {
     if (renderOutletInModal) {
@@ -115,7 +110,7 @@ export default function Authenticated() {
           <Modal cancelLink="/account">
             <Outlet context={{customer: data.customer}} />
           </Modal>
-          <Account {...accountData} />
+          <Account {...data} />
         </>
       );
     } else {
@@ -123,7 +118,7 @@ export default function Authenticated() {
     }
   }
 
-  return <Account {...accountData} />;
+  return <Account {...data} />;
 }
 
 interface AccountType {
