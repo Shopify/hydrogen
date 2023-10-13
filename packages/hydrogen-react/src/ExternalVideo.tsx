@@ -1,5 +1,6 @@
 import type {ExternalVideo as ExternalVideoType} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
+import {forwardRef} from 'react';
 
 interface ExternalVideoBaseProps {
   /**
@@ -20,46 +21,50 @@ export type ExternalVideoProps = Omit<JSX.IntrinsicElements['iframe'], 'src'> &
  * The `ExternalVideo` component renders an embedded video for the Storefront
  * API's [ExternalVideo object](https://shopify.dev/api/storefront/reference/products/externalvideo).
  */
-export function ExternalVideo(props: ExternalVideoProps): JSX.Element {
-  const {
-    data,
-    options,
-    id = data.id,
-    frameBorder = '0',
-    allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture',
-    allowFullScreen = true,
-    loading = 'lazy',
-    ...passthroughProps
-  } = props;
 
-  if (!data.embedUrl) {
-    throw new Error(`<ExternalVideo/> requires the 'embedUrl' property`);
-  }
+export const ExternalVideo = forwardRef<HTMLIFrameElement, ExternalVideoProps>(
+  (props, ref): JSX.Element => {
+    const {
+      data,
+      options,
+      id = data.id,
+      frameBorder = '0',
+      allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture',
+      allowFullScreen = true,
+      loading = 'lazy',
+      ...passthroughProps
+    } = props;
 
-  let finalUrl: string = data.embedUrl;
-
-  if (options) {
-    const urlObject = new URL(data.embedUrl);
-    for (const key of Object.keys(options) as (keyof typeof options)[]) {
-      // @ts-expect-error https://github.com/microsoft/TypeScript/issues/32951
-      urlObject.searchParams.set(key, options[key]);
+    if (!data.embedUrl) {
+      throw new Error(`<ExternalVideo/> requires the 'embedUrl' property`);
     }
-    finalUrl = urlObject.toString();
-  }
 
-  return (
-    <iframe
-      {...passthroughProps}
-      id={id ?? data.embedUrl}
-      title={data.alt ?? data.id ?? 'external video'}
-      frameBorder={frameBorder}
-      allow={allow}
-      allowFullScreen={allowFullScreen}
-      src={finalUrl}
-      loading={loading}
-    ></iframe>
-  );
-}
+    let finalUrl: string = data.embedUrl;
+
+    if (options) {
+      const urlObject = new URL(data.embedUrl);
+      for (const key of Object.keys(options) as (keyof typeof options)[]) {
+        // @ts-expect-error https://github.com/microsoft/TypeScript/issues/32951
+        urlObject.searchParams.set(key, options[key]);
+      }
+      finalUrl = urlObject.toString();
+    }
+
+    return (
+      <iframe
+        {...passthroughProps}
+        id={id ?? data.embedUrl}
+        title={data.alt ?? data.id ?? 'external video'}
+        frameBorder={frameBorder}
+        allow={allow}
+        allowFullScreen={allowFullScreen}
+        src={finalUrl}
+        loading={loading}
+        ref={ref}
+      ></iframe>
+    );
+  },
+);
 
 interface YouTube {
   autoplay?: 0 | 1;

@@ -1,4 +1,4 @@
-import {type HTMLAttributes} from 'react';
+import {forwardRef, type HTMLAttributes} from 'react';
 import {shopifyLoader} from './Image.js';
 import type {Video as VideoType} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
@@ -17,9 +17,10 @@ export interface VideoProps {
 /**
  * The `Video` component renders a `video` for the Storefront API's [Video object](https://shopify.dev/api/storefront/reference/products/video).
  */
-export function Video(
-  props: JSX.IntrinsicElements['video'] & VideoProps,
-): JSX.Element {
+export const Video = forwardRef<
+  HTMLVideoElement,
+  JSX.IntrinsicElements['video'] & VideoProps
+>((props, ref): JSX.Element => {
   const {
     data,
     previewImageOptions,
@@ -47,6 +48,7 @@ export function Video(
       playsInline={playsInline}
       controls={controls}
       poster={posterUrl}
+      ref={ref}
     >
       {data.sources.map((source) => {
         if (!(source?.url && source?.mimeType)) {
@@ -63,4 +65,4 @@ export function Video(
       })}
     </video>
   );
-}
+});
