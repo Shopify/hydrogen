@@ -43,8 +43,9 @@ export function useCartActions({
   numCartLines?: number;
   /** A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/2023-07/objects/cart) for all queries and mutations. A default value is used if no argument is provided. */
   cartFragment: string;
-  /** The ISO country code for i18n. */
+  /** The ISO country code for i18n. Default to `US` */
   countryCode?: CountryCode;
+  /** The ISO language code for i18n. Default to `EN` */
   languageCode?: LanguageCode;
 }) {
   const fetchCart = useCartFetch();
