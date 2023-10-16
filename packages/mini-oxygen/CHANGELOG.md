@@ -1,5 +1,11 @@
 # @shopify/mini-oxygen
 
+## 2.2.3
+
+### Patch Changes
+
+- Increase the request body size limit to 100mb when running locally. ([#1421](https://github.com/Shopify/hydrogen/pull/1421)) by [@frandiox](https://github.com/frandiox)
+
 ## 2.2.2
 
 ### Patch Changes

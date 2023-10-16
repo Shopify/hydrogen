@@ -4,7 +4,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "2.2.2",
+  "version": "2.2.3",
   "license": "MIT",
   "type": "module",
   "description": "Development assistant for custom Shopify Oxygen hosted storefronts",
