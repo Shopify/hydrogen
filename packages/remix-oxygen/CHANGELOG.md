@@ -1,5 +1,11 @@
 # @shopify/remix-oxygen
 
+## 1.1.7
+
+### Patch Changes
+
+- Fix subrequest performance in development. ([#1411](https://github.com/Shopify/hydrogen/pull/1411)) by [@frandiox](https://github.com/frandiox)
+
 ## 1.1.6
 
 ### Patch Changes
