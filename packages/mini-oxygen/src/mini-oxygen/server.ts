@@ -323,7 +323,7 @@ export function createServer(
     app.use(SSEUrl, createAutoReloadMiddleware(mf));
   }
 
-  app.use(bodyParser.raw({type: '*/*'}));
+  app.use(bodyParser.raw({type: '*/*', limit: '100mb'}));
   app.use(createRequestMiddleware(mf, {autoReload, proxyServer, ...rest}));
 
   const server = http.createServer(app);
