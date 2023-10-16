@@ -173,6 +173,95 @@ export const defaultCartFragment = /* GraphQL */ `
     lines(first: $numCartLines) {
       edges {
         node {
+          ... on ComponentizableCartLine {
+            lineComponents {
+              id
+              quantity
+              attributes {
+                key
+                value
+              }
+              cost {
+                totalAmount {
+                  amount
+                  currencyCode
+                }
+                compareAtAmountPerQuantity {
+                  amount
+                  currencyCode
+                }
+              }
+              merchandise {
+                ... on ProductVariant {
+                  id
+                  availableForSale
+                  compareAtPrice {
+                    ...MoneyFragment
+                  }
+                  price {
+                    ...MoneyFragment
+                  }
+                  requiresShipping
+                  title
+                  image {
+                    ...ImageFragment
+                  }
+                  product {
+                    handle
+                    title
+                    id
+                  }
+                  selectedOptions {
+                    name
+                    value
+                  }
+                }
+              }
+            }
+            id
+            quantity
+            attributes {
+              key
+              value
+            }
+            cost {
+              totalAmount {
+                amount
+                currencyCode
+              }
+              compareAtAmountPerQuantity {
+                amount
+                currencyCode
+              }
+            }
+            merchandise {
+              ... on ProductVariant {
+                id
+                availableForSale
+                compareAtPrice {
+                  ...MoneyFragment
+                }
+                price {
+                  ...MoneyFragment
+                }
+                requiresShipping
+                title
+                image {
+                  ...ImageFragment
+                }
+                product {
+                  handle
+                  title
+                  id
+                }
+                selectedOptions {
+                  name
+                  value
+                }
+              }
+            }
+          }
+
           id
           quantity
           attributes {

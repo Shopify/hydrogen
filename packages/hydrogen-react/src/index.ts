@@ -39,6 +39,10 @@ export {CartLineQuantity} from './CartLineQuantity.js';
 export {CartLineQuantityAdjustButton} from './CartLineQuantityAdjustButton.js';
 export {CartProvider, useCart} from './CartProvider.js';
 export {storefrontApiCustomScalars} from './codegen.helpers.js';
+export {
+  ComponentizableCartLineProvider,
+  useComponentizableCartLine,
+} from './ComponentizableCartLineProvider.js';
 export {getShopifyCookies} from './cookies-utils.js';
 export {ExternalVideo} from './ExternalVideo.js';
 export {flattenConnection} from './flatten-connection.js';
