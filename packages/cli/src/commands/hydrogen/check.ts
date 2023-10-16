@@ -1,7 +1,7 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {commonFlags} from '../../lib/flags.js';
-import {getRemixConfig} from '../../lib/config.js';
+import {getRemixConfig} from '../../lib/remix-config.js';
 import {findMissingRoutes, logMissingRoutes} from '../../lib/missing-routes.js';
 
 import {Args} from '@oclif/core';
@@ -35,7 +35,7 @@ export default class GenerateRoute extends Command {
   }
 }
 
-async function runCheckRoutes({directory}: {directory: string}) {
-  const remixConfig = await getRemixConfig(directory, true);
+export async function runCheckRoutes({directory}: {directory: string}) {
+  const remixConfig = await getRemixConfig(directory);
   logMissingRoutes(findMissingRoutes(remixConfig));
 }

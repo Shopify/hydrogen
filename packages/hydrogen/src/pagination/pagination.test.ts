@@ -4,9 +4,20 @@ import {cleanup, render} from '@testing-library/react';
 import {describe, it, expect, afterEach, vi, afterAll} from 'vitest';
 import type {LinkProps} from '@remix-run/react';
 
+vi.mock('react', async (importOriginal) => {
+  const mod = (await importOriginal()) as any;
+  return {
+    ...mod,
+    useEffect: vi.fn(),
+  };
+});
+
 vi.mock('@remix-run/react', () => ({
   useNavigation: vi.fn(() => ({
     state: 'idle',
+  })),
+  useNavigate: vi.fn(() => ({
+    navigate() {},
   })),
   useLocation: vi.fn(() => fillLocation()),
   Link: vi.fn(({to, state, preventScrollReset}: LinkProps) =>
@@ -61,6 +72,92 @@ describe('<Pagination>', () => {
 
   afterAll(() => {
     vi.resetAllMocks();
+  });
+
+  it("throws when pageInfo isn't provided", () => {
+    function makeError() {
+      render(
+        createElement(Pagination, {
+          // @ts-expect-error
+          connection: {
+            nodes: [1, 2, 3],
+          },
+          children: ({nodes}) =>
+            createElement(
+              Fragment,
+              null,
+              nodes.map((node) =>
+                createElement('div', {key: node as string}, node as string),
+              ),
+            ),
+        }),
+      );
+    }
+    expect(makeError).toThrowError(
+      'The Pagination component requires `pageInfo` to be a part of your query. See the guide on how to setup your query to include `pageInfo`: https://shopify.dev/docs/custom-storefronts/hydrogen/data-fetching/pagination#setup-the-paginated-query',
+    );
+  });
+
+  it("throws when pageInfo properties aren't provided", () => {
+    function makeError(pageInfo: any) {
+      return function () {
+        render(
+          createElement(Pagination, {
+            connection: {
+              nodes: [1, 2, 3],
+              pageInfo,
+            },
+            children: ({nodes}) =>
+              createElement(
+                Fragment,
+                null,
+                nodes.map((node) =>
+                  createElement('div', {key: node as string}, node as string),
+                ),
+              ),
+          }),
+        );
+      };
+    }
+    expect(
+      makeError({
+        hasPreviousPage: true,
+        hasNextPage: true,
+        startCursor: 'abc',
+      }),
+    ).toThrowError(
+      'The Pagination component requires `pageInfo.endCursor` to be a part of your query. See the guide on how to setup your query to include `pageInfo.endCursor`: https://shopify.dev/docs/custom-storefronts/hydrogen/data-fetching/pagination#setup-the-paginated-query',
+    );
+
+    expect(
+      makeError({
+        hasPreviousPage: true,
+        hasNextPage: true,
+        endCursor: 'abc',
+      }),
+    ).toThrowError(
+      'The Pagination component requires `pageInfo.startCursor` to be a part of your query. See the guide on how to setup your query to include `pageInfo.startCursor`: https://shopify.dev/docs/custom-storefronts/hydrogen/data-fetching/pagination#setup-the-paginated-query',
+    );
+
+    expect(
+      makeError({
+        hasPreviousPage: true,
+        startCursor: 'abc',
+        endCursor: 'abc',
+      }),
+    ).toThrowError(
+      'The Pagination component requires `pageInfo.hasNextPage` to be a part of your query. See the guide on how to setup your query to include `pageInfo.hasNextPage`: https://shopify.dev/docs/custom-storefronts/hydrogen/data-fetching/pagination#setup-the-paginated-query',
+    );
+
+    expect(
+      makeError({
+        hasNextPage: true,
+        startCursor: 'abc',
+        endCursor: 'abc',
+      }),
+    ).toThrowError(
+      'The Pagination component requires `pageInfo.hasPreviousPage` to be a part of your query. See the guide on how to setup your query to include `pageInfo.hasPreviousPage`: https://shopify.dev/docs/custom-storefronts/hydrogen/data-fetching/pagination#setup-the-paginated-query',
+    );
   });
 
   it('passes nodes to children as render props', () => {

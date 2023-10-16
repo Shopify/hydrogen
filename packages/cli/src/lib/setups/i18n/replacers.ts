@@ -1,12 +1,10 @@
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
 import {fileExists} from '@shopify/cli-kit/node/fs';
-import {ts, tsx, js, jsx} from '@ast-grep/napi';
 import {findFileWithExtension, replaceFileContent} from '../../file.js';
 import type {FormatOptions} from '../../format-code.js';
 import type {I18nSetupConfig} from './index.js';
-
-const astGrep = {ts, tsx, js, jsx};
+import {importLangAstGrep} from '../../ast.js';
 
 /**
  * Adds the `getLocaleFromRequest` function to the server entrypoint and calls it.
@@ -22,7 +20,8 @@ export async function replaceServerI18n(
   });
 
   await replaceFileContent(filepath, formatConfig, async (content) => {
-    const root = astGrep[astType].parse(content).root();
+    const astGrep = await importLangAstGrep(astType);
+    const root = astGrep.parse(content).root();
 
     // First parameter of the `fetch` function.
     // Normally it's called `request`, but it could be renamed.
@@ -221,10 +220,11 @@ export async function replaceRemixEnv(
     entryFilepath,
   ).replace(/.[tj]sx?$/, '');
 
-  await replaceFileContent(remixEnvPath, formatConfig, (content) => {
+  await replaceFileContent(remixEnvPath, formatConfig, async (content) => {
     if (content.includes(`Storefront<`)) return; // Already set up
 
-    const root = astGrep.ts.parse(content).root();
+    const astGrep = await importLangAstGrep('ts');
+    const root = astGrep.parse(content).root();
 
     const storefrontTypeNode = root.find({
       rule: {

@@ -23,6 +23,5 @@ export function hashKey(queryKey: QueryKey): string {
       }
     }
   }
-
-  return hash;
+  return encodeURIComponent(hash);
 }

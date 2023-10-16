@@ -1,7 +1,7 @@
 import {readdir} from 'node:fs/promises';
 import {
   installNodeModules,
-  packageManagerUsedForCreating,
+  packageManagerFromUserAgent,
   type PackageManager,
 } from '@shopify/cli-kit/node/node-package-manager';
 import {
@@ -42,6 +42,7 @@ import {
   setupI18nStrategy,
   I18nSetupConfig,
   renderI18nPrompt,
+  I18nChoice,
 } from '../setups/i18n/index.js';
 import {titleize} from '../string.js';
 import {
@@ -53,17 +54,17 @@ import {
 import {transpileProject} from '../transpile-ts.js';
 import {
   CSS_STRATEGY_NAME_MAP,
-  SETUP_CSS_STRATEGIES,
   setupCssStrategy,
-  type CssStrategy,
   renderCssPrompt,
+  type CssStrategy,
+  type StylingChoice,
 } from '../setups/css/index.js';
 import {
   generateProjectFile,
   generateRoutes,
   renderRoutePrompt,
-  ROUTE_MAP,
 } from '../setups/routes/generate.js';
+import {execAsync} from '../process.js';
 
 export type InitOptions = {
   path?: string;
@@ -77,6 +78,7 @@ export type InitOptions = {
   routes?: boolean;
   shortcut?: boolean;
   installDeps?: boolean;
+  git?: boolean;
 };
 
 export const LANGUAGES = {
@@ -84,10 +86,6 @@ export const LANGUAGES = {
   ts: 'TypeScript',
 } as const;
 type Language = keyof typeof LANGUAGES;
-
-export type StylingChoice = (typeof SETUP_CSS_STRATEGIES)[number];
-
-export type I18nChoice = I18nStrategy | 'none';
 
 export async function handleI18n(
   controller: AbortController,
@@ -121,37 +119,47 @@ export async function handleRouteGeneration(
   flagRoutes?: boolean,
 ) {
   // TODO: Need a multi-select UI component
-  const routesToScaffold = flagRoutes
-    ? 'all'
-    : await renderRoutePrompt({
-        abortSignal: controller.signal,
-      });
+  const routesToScaffold =
+    flagRoutes === true
+      ? 'all'
+      : flagRoutes === false
+      ? []
+      : await renderRoutePrompt({
+          abortSignal: controller.signal,
+        });
 
-  const routes =
-    routesToScaffold === 'all'
-      ? ROUTE_MAP
-      : routesToScaffold.reduce((acc, item) => {
-          const value = ROUTE_MAP[item];
-          if (value) acc[item] = value;
-          return acc;
-        }, {} as typeof ROUTE_MAP);
+  const needsRouteGeneration =
+    routesToScaffold === 'all' || routesToScaffold.length > 0;
 
   return {
-    routes,
+    needsRouteGeneration,
     setupRoutes: async (
       directory: string,
       language: Language,
       i18nStrategy?: I18nStrategy,
     ) => {
-      if (routesToScaffold === 'all' || routesToScaffold.length > 0) {
-        await generateRoutes({
-          routeName: routesToScaffold,
-          directory,
-          force: true,
-          typescript: language === 'ts',
-          localePrefix: i18nStrategy === 'subfolders' ? 'locale' : false,
-          signal: controller.signal,
-        });
+      if (needsRouteGeneration) {
+        const result = await generateRoutes(
+          {
+            routeName: routesToScaffold,
+            directory,
+            force: true,
+            typescript: language === 'ts',
+            localePrefix: i18nStrategy === 'subfolders' ? 'locale' : false,
+            signal: controller.signal,
+          },
+          {
+            rootDirectory: directory,
+            appDirectory: joinPath(directory, 'app'),
+            future: {
+              v2_errorBoundary: true,
+              v2_meta: true,
+              v2_routeConvention: true,
+            },
+          },
+        );
+
+        return result.routeGroups;
       }
     },
   };
@@ -162,7 +170,14 @@ export function generateProjectEntries(
 ) {
   return Promise.all(
     ['root', 'entry.server', 'entry.client'].map((filename) =>
-      generateProjectFile(filename, options),
+      generateProjectFile(filename, {
+        v2Flags: {
+          isV2ErrorBoundary: true,
+          isV2Meta: true,
+          isV2RouteConvention: true,
+        },
+        ...options,
+      }),
     ),
   );
 }
@@ -337,7 +352,7 @@ export async function handleLanguage(
   const language =
     flagLanguage ??
     (await renderSelectPrompt({
-      message: 'Choose a language',
+      message: 'Select a language',
       choices: [
         {label: 'JavaScript', value: 'js'},
         {label: 'TypeScript', value: 'ts'},
@@ -365,12 +380,12 @@ export async function handleCssStrategy(
   controller: AbortController,
   flagStyling?: StylingChoice,
 ) {
-  const selection = flagStyling
-    ? flagStyling
-    : await renderCssPrompt({
-        abortSignal: controller.signal,
-        extraChoices: {none: 'Skip and set up later'},
-      });
+  const selection =
+    flagStyling ??
+    (await renderCssPrompt({
+      abortSignal: controller.signal,
+      extraChoices: {none: 'Skip and set up later'},
+    }));
 
   const cssStrategy = selection === 'none' ? undefined : selection;
 
@@ -405,7 +420,7 @@ export async function handleDependencies(
   controller: AbortController,
   shouldInstallDeps?: boolean,
 ) {
-  const detectedPackageManager = await packageManagerUsedForCreating();
+  const detectedPackageManager = packageManagerFromUserAgent();
   let actualPackageManager: PackageManager = 'npm';
 
   if (shouldInstallDeps !== false) {
@@ -470,6 +485,13 @@ export async function createInitialCommit(directory: string) {
   try {
     await initializeGitRepository(directory);
     await writeFile(joinPath(directory, '.gitignore'), gitIgnoreContent);
+
+    if (process.env.NODE_ENV === 'test' && process.env.CI) {
+      // CI environments don't have a git user configured
+      await execAsync(`git config --global user.name "hydrogen"`);
+      await execAsync(`git config --global user.email "hydrogen@shopify.com"`);
+    }
+
     return commitAll(directory, 'Scaffold Storefront');
   } catch (error: any) {
     // Ignore errors
@@ -493,7 +515,7 @@ export async function commitAll(directory: string, message: string) {
 
 export type SetupSummary = {
   language?: Language;
-  packageManager: 'npm' | 'pnpm' | 'yarn';
+  packageManager: 'npm' | 'pnpm' | 'yarn' | 'unknown';
   cssStrategy?: CssStrategy;
   hasCreatedShortcut: boolean;
   depsInstalled: boolean;
@@ -549,10 +571,19 @@ export async function renderProjectReady(
     for (let [routeName, routePaths] of Object.entries(routes)) {
       routePaths = Array.isArray(routePaths) ? routePaths : [routePaths];
 
+      let urls = [
+        ...new Set(routePaths.map((item) => '/' + normalizeRoutePath(item))),
+      ].sort();
+
+      if (urls.length > 2) {
+        // Shorten the summary by grouping them by prefix when there are more than 2
+        // e.g. /account/.../... => /account/*
+        const prefixesSet = new Set(urls.map((url) => url.split('/')[1] ?? ''));
+        urls = [...prefixesSet].map((item) => '/' + item + '/*');
+      }
+
       routeSummary += `\n    • ${capitalize(routeName)} ${colors.dim(
-        '(' +
-          routePaths.map((item) => '/' + normalizeRoutePath(item)).join(' & ') +
-          ')',
+        '(' + urls.join(' & ') + ')',
       )}`;
     }
   }
@@ -687,6 +718,10 @@ export function createAbortHandler(
       ),
     );
 
+    if (process.env.NODE_ENV === 'test') {
+      console.error(error);
+    }
+
     process.exit(1);
   };
 }
@@ -703,12 +738,12 @@ async function projectExists(projectDir: string) {
 }
 
 function normalizeRoutePath(routePath: string) {
-  const isIndex = /(^|\.)_index$/.test(routePath);
-  return isIndex
-    ? routePath.slice(0, -'_index'.length).replace(/\.$/, '')
-    : routePath
-        .replace(/\.(?!\w+\])/g, '/') // Replace dots with slashes, except for dots in brackets
-        .replace(/\$/g, ':') // Replace dollar signs with colons
-        .replace(/[\[\]]/g, '') // Remove brackets
-        .replace(/:(\w+)Handle/i, ':handle'); // Replace arbitrary handle names with a standard `:handle`
+  return routePath
+    .replace(/(^|\.)_index$/, '') // Remove index segments
+    .replace(/((^|\.)[^\.]+)_\./g, '$1.') // Replace rootless segments
+    .replace(/\.(?!\w+\])/g, '/') // Replace dots with slashes, except for dots in brackets
+    .replace(/\$$/g, ':catchAll') // Replace catch-all
+    .replace(/\$/g, ':') // Replace dollar signs with colons
+    .replace(/[\[\]]/g, '') // Remove brackets
+    .replace(/:\w*Handle/i, ':handle'); // Replace arbitrary handle names with a standard `:handle`
 }

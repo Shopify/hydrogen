@@ -1,7 +1,7 @@
-import path from 'path';
-import {fileURLToPath} from 'url';
-import recursiveReaddir from 'recursive-readdir';
-import type {RemixConfig} from './config.js';
+import {fileURLToPath} from 'node:url';
+import {glob} from '@shopify/cli-kit/node/fs';
+import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
+import type {RemixConfig} from './remix-config.js';
 
 export const VIRTUAL_ROUTES_DIR = 'virtual-routes/routes';
 export const VIRTUAL_ROOT = 'virtual-routes/virtual-root';
@@ -9,10 +9,12 @@ export const VIRTUAL_ROOT = 'virtual-routes/virtual-root';
 export async function addVirtualRoutes(config: RemixConfig) {
   const userRouteList = Object.values(config.routes);
   const distPath = fileURLToPath(new URL('..', import.meta.url));
-  const virtualRoutesPath = path.join(distPath, VIRTUAL_ROUTES_DIR);
+  const virtualRoutesPath = joinPath(distPath, VIRTUAL_ROUTES_DIR);
 
-  for (const absoluteFilePath of await recursiveReaddir(virtualRoutesPath)) {
-    const relativeFilePath = path.relative(virtualRoutesPath, absoluteFilePath);
+  for (const absoluteFilePath of await glob(
+    joinPath(virtualRoutesPath, '**', '*'),
+  )) {
+    const relativeFilePath = relativePath(virtualRoutesPath, absoluteFilePath);
     const routePath = relativeFilePath
       .replace(/\.[jt]sx?$/, '')
       .replaceAll('\\', '/');
@@ -38,16 +40,16 @@ export async function addVirtualRoutes(config: RemixConfig) {
         path: normalizedVirtualRoutePath,
         index: isIndex || undefined,
         caseSensitive: undefined,
-        file: path.relative(config.appDirectory, absoluteFilePath),
+        file: relativePath(config.appDirectory, absoluteFilePath),
       };
 
       if (!config.routes[VIRTUAL_ROOT]) {
         config.routes[VIRTUAL_ROOT] = {
           id: VIRTUAL_ROOT,
           path: '',
-          file: path.relative(
+          file: relativePath(
             config.appDirectory,
-            path.join(distPath, VIRTUAL_ROOT + '.jsx'),
+            joinPath(distPath, VIRTUAL_ROOT + '.jsx'),
           ),
         };
       }

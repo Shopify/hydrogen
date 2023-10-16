@@ -1,6 +1,6 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {fileURLToPath} from 'node:url';
-import {packageManagerUsedForCreating} from '@shopify/cli-kit/node/node-package-manager';
+import {packageManagerFromUserAgent} from '@shopify/cli-kit/node/node-package-manager';
 import {Flags} from '@oclif/core';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController} from '@shopify/cli-kit/node/abort';
@@ -10,19 +10,18 @@ import {
   flagsToCamelObject,
 } from '../../lib/flags.js';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
-import {SETUP_CSS_STRATEGIES} from './../../lib/setups/css/index.js';
-import {I18N_CHOICES} from '../../lib/setups/i18n/index.js';
+import {
+  STYLING_CHOICES,
+  type StylingChoice,
+} from './../../lib/setups/css/index.js';
+import {I18N_CHOICES, type I18nChoice} from '../../lib/setups/i18n/index.js';
 import {supressNodeExperimentalWarnings} from '../../lib/process.js';
 import {
   setupRemoteTemplate,
   setupLocalStarterTemplate,
   type InitOptions,
 } from '../../lib/onboarding/index.js';
-import {
-  LANGUAGES,
-  type I18nChoice,
-  type StylingChoice,
-} from '../../lib/onboarding/common.js';
+import {LANGUAGES} from '../../lib/onboarding/common.js';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 
@@ -51,21 +50,32 @@ export default class Init extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_MOCK_DATA',
     }),
     styling: commonFlags.styling,
-    i18n: commonFlags.i18n,
+    markets: commonFlags.markets,
     shortcut: commonFlags.shortcut,
     routes: Flags.boolean({
       description: 'Generate routes for all pages.',
       env: 'SHOPIFY_HYDROGEN_FLAG_ROUTES',
       hidden: true,
+      allowNo: true,
+    }),
+    git: Flags.boolean({
+      description: 'Init Git and create initial commits.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_GIT',
+      default: true,
+      allowNo: true,
     }),
   };
 
   async run(): Promise<void> {
-    const {flags} = await this.parse(Init);
+    // Rename markets => i18n
+    const {
+      flags: {markets, ..._flags},
+    } = await this.parse(Init);
+    const flags = {..._flags, i18n: markets};
 
     if (flags.i18n && !I18N_CHOICES.includes(flags.i18n as I18nChoice)) {
       throw new AbortError(
-        `Invalid i18n strategy: ${
+        `Invalid URL structure strategy: ${
           flags.i18n
         }. Must be one of ${I18N_CHOICES.join(', ')}`,
       );
@@ -73,12 +83,12 @@ export default class Init extends Command {
 
     if (
       flags.styling &&
-      !SETUP_CSS_STRATEGIES.includes(flags.styling as StylingChoice)
+      !STYLING_CHOICES.includes(flags.styling as StylingChoice)
     ) {
       throw new AbortError(
         `Invalid styling strategy: ${
           flags.styling
-        }. Must be one of ${SETUP_CSS_STRATEGIES.join(', ')}`,
+        }. Must be one of ${STYLING_CHOICES.join(', ')}`,
       );
     }
 
@@ -91,6 +101,8 @@ export async function runInit(
 ) {
   supressNodeExperimentalWarnings();
 
+  options.git ??= true;
+
   const showUpgrade = await checkHydrogenVersion(
     // Resolving the CLI package from a local directory might fail because
     // this code could be run from a global dependency (e.g. on `npm create`).
@@ -100,7 +112,7 @@ export async function runInit(
   );
 
   if (showUpgrade) {
-    const packageManager = await packageManagerUsedForCreating();
+    const packageManager = packageManagerFromUserAgent();
     showUpgrade(
       packageManager === 'unknown'
         ? ''

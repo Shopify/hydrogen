@@ -2,7 +2,7 @@ import path from 'path';
 import Command from '@shopify/cli-kit/node/base-command';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {Flags} from '@oclif/core';
-import {getProjectPaths, getRemixConfig} from '../../lib/config.js';
+import {getProjectPaths, getRemixConfig} from '../../lib/remix-config.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {codegen} from '../../lib/codegen.js';
 
@@ -38,23 +38,23 @@ export default class Codegen extends Command {
 
     await runCodegen({
       ...flagsToCamelObject(flags),
-      path: directory,
+      directory,
     });
   }
 }
 
 export async function runCodegen({
-  path: appPath,
+  directory,
   codegenConfigPath,
   forceSfapiVersion,
   watch,
 }: {
-  path?: string;
+  directory?: string;
   codegenConfigPath?: string;
   forceSfapiVersion?: string;
   watch?: boolean;
 }) {
-  const {root} = getProjectPaths(appPath);
+  const {root} = getProjectPaths(directory);
   const remixConfig = await getRemixConfig(root);
 
   console.log(''); // New line

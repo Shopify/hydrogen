@@ -1,4 +1,7 @@
 /* eslint-disable eslint-comments/disable-enable-pair */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import {vi, beforeEach, describe, expect, it} from 'vitest';
 
@@ -8,7 +11,9 @@ import {getCartMock, getCartLineMock} from './CartProvider.test.helpers.js';
 import {ShopifyProvider, type ShopifyProviderProps} from './ShopifyProvider.js';
 import {getShopifyConfig} from './ShopifyProvider.test.js';
 
-const mockUseCartActions = vi.fn();
+const {mockUseCartActions} = vi.hoisted(() => ({
+  mockUseCartActions: vi.fn(),
+}));
 
 vi.mock('./useCartActions.js', () => ({
   useCartActions: mockUseCartActions,
@@ -199,7 +204,6 @@ describe('<CartProvider />', () => {
       expect(cartFetchSpy).not.toHaveBeenCalled();
       expect(result.current).toMatchObject({
         status: 'uninitialized',
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         lines: expect.arrayContaining([]),
       });
     });
@@ -409,7 +413,6 @@ describe('<CartProvider />', () => {
 
       expect(result.current).toMatchObject({
         status: 'uninitialized',
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         error: expect.arrayContaining([]),
       });
 
@@ -1526,7 +1529,6 @@ describe('<CartProvider />', () => {
 
     expect(fetchCartSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         query: expect.stringContaining(cartFragmentMock),
       }),
     );

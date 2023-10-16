@@ -3,8 +3,7 @@ name: ⏭️ Next Release
 on:
   push:
     branches:
-      # update to latest cal release to keep this action working
-      - 2023-04
+      - main
 
 jobs:
   next-release:
@@ -44,6 +43,10 @@ jobs:
           # set output so it can be used in other jobs
           echo "NEXT_VERSION=${NEXT_VERSION}" >> $GITHUB_OUTPUT
 
+      - name: 🏗 Build CLI
+        if: steps.version.outputs.NEXT_VERSION
+        run: npm run build
+
       - name: ⤴️ Update version
         if: steps.version.outputs.NEXT_VERSION
         run: |
@@ -52,6 +55,7 @@ jobs:
           git checkout -B next/${{ steps.version.outputs.NEXT_VERSION }}
           # using changeset snapshot releases, this sets the version to 0.0.0-{tag}-DATETIMESTAMP where tag=next-SHORT_SHA
           # as an example this results in a next release as following 0.0.0-next-1686a75-20230313113149 with a next tag
+          npm run version:next
           npm run changeset -- version --snapshot ${{steps.version.outputs.NEXT_VERSION}}
           npm run version:post
         env:

@@ -69,7 +69,7 @@
         "type": "Generic",
         "anchorLink": "versioning",
         "title": "Versioning",
-        "sectionContent": "Hydrogen is tied to specific versions of the [Storefront API](/api/storefront), which is versioned quarterly. For example, if you're using Storefront API version `2023-04`, then Hydrogen versions `2023.4.x` are fully compatible.\n\n> Caution:\n>If a Storefront API version includes breaking changes, then the corresponding Hydrogen version will include the same breaking changes.",
+        "sectionContent": "Hydrogen is tied to specific versions of the [Storefront API](/api/storefront), which is versioned quarterly. For example, if you're using Storefront API version `2023-07`, then Hydrogen versions `2023.7.x` are fully compatible.\n\n> Caution:\n>If a Storefront API version includes breaking changes, then the corresponding Hydrogen version will include the same breaking changes.",
         "sectionCard": [
           {
             "subtitle": "Learn more",
@@ -95,7 +95,7 @@
           "tabs": [
             {
               "title": "example-page.jsx",
-              "code": "import {ShopPayButton} from '@shopify/hydrogen';\n\nexport function renderShopPayButton({variantId, storeDomain}) {\n  return <ShopPayButton variantIds={[variantId]} storeDomain={storeDomain} />;\n}\n",
+              "code": "import {ShopPayButton} from '@shopify/hydrogen';\n\nexport function renderShopPayButton({variantId, storeDomain}) {\n  return &lt;ShopPayButton variantIds={[variantId]} storeDomain={storeDomain} /&gt;;\n}\n",
               "language": "jsx"
             }
           ]

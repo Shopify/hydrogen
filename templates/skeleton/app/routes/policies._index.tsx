@@ -1,101 +1,57 @@
-import {
-  json,
-  type LoaderArgs,
-  type ErrorBoundaryComponent,
-} from '@shopify/remix-oxygen';
-import {
-  useLoaderData,
-  Link,
-  useCatch,
-  useRouteError,
-  isRouteErrorResponse,
-} from '@remix-run/react';
-import type {Shop} from '@shopify/hydrogen/storefront-api-types';
+import {json, type LoaderArgs} from '@shopify/remix-oxygen';
+import {useLoaderData, Link} from '@remix-run/react';
 
-export async function loader({context: {storefront}}: LoaderArgs) {
-  const data = await storefront.query<{
-    shop: Pick<Shop, SelectedPolicies>;
-  }>(POLICIES_QUERY);
-
+export async function loader({context}: LoaderArgs) {
+  const data = await context.storefront.query(POLICIES_QUERY);
   const policies = Object.values(data.shop || {});
 
-  if (policies.length === 0) {
-    throw new Response('Not found', {status: 404});
+  if (!policies.length) {
+    throw new Response('No policies found', {status: 404});
   }
 
-  return json({
-    policies,
-  });
+  return json({policies});
 }
 
 export default function Policies() {
   const {policies} = useLoaderData<typeof loader>();
 
   return (
-    <>
-      {policies.map((policy) => {
-        return (
-          policy && (
-            <Link key={policy.id} to={`/policies/${policy.handle}`}>
-              {policy.title}
-            </Link>
-          )
-        );
-      })}
-    </>
-  );
-}
-
-export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
-  console.error(error);
-
-  return <div>There was an error.</div>;
-};
-
-export function CatchBoundary() {
-  const caught = useCatch();
-  console.error(caught);
-
-  return (
-    <div>
-      There was an error. Status: {caught.status}. Message:{' '}
-      {caught.data?.message}
+    <div className="policies">
+      <h1>Policies</h1>
+      <div>
+        {policies.map((policy) => {
+          if (!policy) return null;
+          return (
+            <fieldset key={policy.id}>
+              <Link to={`/policies/${policy.handle}`}>{policy.title}</Link>
+            </fieldset>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-export function ErrorBoundary() {
-  const error = useRouteError();
-
-  if (isRouteErrorResponse(error)) {
-    console.error(error.status, error.statusText, error.data);
-    return <div>Route Error</div>;
-  } else {
-    console.error((error as Error).message);
-    return <div>Thrown Error</div>;
-  }
-}
-
 const POLICIES_QUERY = `#graphql
-  fragment Policy on ShopPolicy {
+  fragment PolicyItem on ShopPolicy {
     id
     title
     handle
   }
-
-  query PoliciesQuery {
+  query Policies ($country: CountryCode, $language: LanguageCode)
+    @inContext(country: $country, language: $language) {
     shop {
       privacyPolicy {
-        ...Policy
+        ...PolicyItem
       }
       shippingPolicy {
-        ...Policy
+        ...PolicyItem
       }
       termsOfService {
-        ...Policy
+        ...PolicyItem
       }
       refundPolicy {
-        ...Policy
+        ...PolicyItem
       }
       subscriptionPolicy {
         id
@@ -104,14 +60,4 @@ const POLICIES_QUERY = `#graphql
       }
     }
   }
-`;
-
-const policies = [
-  'privacyPolicy',
-  'shippingPolicy',
-  'refundPolicy',
-  'termsOfService',
-  'subscriptionPolicy',
-] as const;
-
-type SelectedPolicies = (typeof policies)[number];
+` as const;

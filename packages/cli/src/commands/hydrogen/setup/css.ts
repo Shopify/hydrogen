@@ -11,7 +11,7 @@ import {
   installNodeModules,
 } from '@shopify/cli-kit/node/node-package-manager';
 import {Args} from '@oclif/core';
-import {getRemixConfig} from '../../../lib/config.js';
+import {getRemixConfig} from '../../../lib/remix-config.js';
 import {
   setupCssStrategy,
   SETUP_CSS_STRATEGIES,

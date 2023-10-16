@@ -31,6 +31,7 @@ module.exports = {
     'plugin:@typescript-eslint/recommended-requiring-type-checking',
   ],
   rules: {
+    'eslint-comments/no-unused-disable': 'off',
     'jest/no-disabled-tests': 'off',
     'jest/no-export': 'off',
     'no-console': 'off',

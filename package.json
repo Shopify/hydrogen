@@ -2,10 +2,11 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
-    "build": "turbo build --parallel",
-    "build:pkg": "npm run build -- --filter=./packages/*",
+    "build": "npm run build:pkg",
+    "build:pkg": "turbo build --parallel --filter=./packages/*",
+    "build:all": "turbo build --parallel",
     "ci:checks": "turbo run lint test format:check typecheck",
-    "dev": "npm run dev:pkg -- --filter=./templates/demo-store",
+    "dev": "npm run dev:pkg",
     "dev:pkg": "cross-env LOCAL_DEV=true turbo dev --parallel --filter=./packages/*",
     "preview": "turbo build --filter=./packages/* && npm run preview -w demo-store",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx ./packages & npm run lint -w demo-store",
@@ -18,6 +19,7 @@
     "version:post": "npm run version:hydrogen && npm run version:cli",
     "version:hydrogen": "node -p \"'export const LIB_VERSION = \\'' + require('./packages/hydrogen/package.json').version + '\\';'\" > packages/hydrogen/src/version.ts",
     "version:cli": "cd packages/cli && npm run generate:manifest",
+    "version:next": "node scripts/changeset-version-next.mjs",
     "changeset": "changeset",
     "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/*/dist && rimraf templates/*/.cache",
     "check": "npm run build && npm run lint && npm run typecheck && npm run test"
@@ -31,6 +33,7 @@
     "packages/hydrogen",
     "packages/create-hydrogen",
     "packages/cli",
+    "packages/mini-oxygen",
     "packages/hydrogen-react",
     "packages/hydrogen-codegen"
   ],
@@ -44,9 +47,9 @@
     "lint-staged": "^10.5.4",
     "prettier": "^2.8.4",
     "rimraf": "^3.0.2",
-    "tsup": "^6.5.0",
-    "turbo": "^1.8.3",
-    "typescript": "^4.9.5",
+    "tsup": "7.2.0",
+    "turbo": "1.10.12",
+    "typescript": "^5.2.2",
     "yorkie": "^2.0.0"
   },
   "engines": {

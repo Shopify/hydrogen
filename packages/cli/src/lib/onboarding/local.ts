@@ -2,7 +2,7 @@ import {copy as copyWithFilter} from 'fs-extra/esm';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController} from '@shopify/cli-kit/node/abort';
 import {writeFile} from '@shopify/cli-kit/node/fs';
-import {joinPath} from '@shopify/cli-kit/node/path';
+import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
 import {hyphenate} from '@shopify/cli-kit/common/string';
 import colors from '@shopify/cli-kit/node/colors';
 import {
@@ -49,7 +49,8 @@ export async function setupLocalStarterTemplate(
         message: 'Connect to Shopify',
         choices: [
           {
-            label: 'Use sample data from Mock.shop (no login required)',
+            label:
+              'Use sample data from mock.shop (You can connect a Shopify account later)',
             value: 'mock',
           },
           {label: 'Link your Shopify account', value: 'link'},
@@ -84,11 +85,17 @@ export async function setupLocalStarterTemplate(
       })
       .catch(abort);
 
+  const templateDir = getStarterDir();
   let backgroundWorkPromise: Promise<any> = copyWithFilter(
-    getStarterDir(),
+    templateDir,
     project.directory,
     // Filter out the `app` directory, which will be generated later
-    {filter: (filepath: string) => !/\/app\//i.test(filepath)},
+    {
+      filter: (filepath: string) =>
+        !/^(app|dist|node_modules)\//i.test(
+          relativePath(templateDir, filepath),
+        ),
+    },
   )
     .then(() =>
       // Generate project entries and their file dependencies
@@ -130,7 +137,9 @@ export async function setupLocalStarterTemplate(
     ];
 
     const envLeadingComment =
-      '# The variables added in this file are only available locally in MiniOxygen\n';
+      '# The variables added in this file are only available locally in MiniOxygen.\n' +
+      '# Run `h2 link` to also inject environment variables from your storefront,\n' +
+      '# or `h2 env pull` to populate this file.';
 
     if (storefrontInfo && createStorefrontPromise) {
       promises.push(
@@ -173,7 +182,9 @@ export async function setupLocalStarterTemplate(
   backgroundWorkPromise = backgroundWorkPromise
     .then(() => transpileProject().catch(abort))
     // Directory files are all setup, commit them to git
-    .then(() => createInitialCommit(project.directory));
+    .then(() =>
+      options.git ? createInitialCommit(project.directory) : undefined,
+    );
 
   const {setupCss, cssStrategy} = await handleCssStrategy(
     project.directory,
@@ -185,10 +196,12 @@ export async function setupLocalStarterTemplate(
     backgroundWorkPromise = backgroundWorkPromise
       .then(() => setupCss().catch(abort))
       .then(() =>
-        commitAll(
-          project.directory,
-          'Setup ' + CSS_STRATEGY_NAME_MAP[cssStrategy],
-        ),
+        options.git
+          ? commitAll(
+              project.directory,
+              'Setup ' + CSS_STRATEGY_NAME_MAP[cssStrategy],
+            )
+          : undefined,
       );
   }
 
@@ -218,7 +231,7 @@ export async function setupLocalStarterTemplate(
     });
 
     tasks.push({
-      title: 'Installing dependencies',
+      title: 'Installing dependencies. This could take a few minutes',
       task: async () => {
         await installingDepsPromise;
       },
@@ -267,13 +280,12 @@ export async function setupLocalStarterTemplate(
       options.i18n,
     );
 
-    const {routes, setupRoutes} = await handleRouteGeneration(
+    const {setupRoutes} = await handleRouteGeneration(
       controller,
-      options.routes || true, // TODO: Remove default value when multi-select UI component is available
+      options.routes ?? true, // TODO: Remove default value when multi-select UI component is available
     );
 
     setupSummary.i18n = i18nStrategy;
-    setupSummary.routes = routes;
     backgroundWorkPromise = backgroundWorkPromise.then(async () => {
       // These tasks need to be performed in
       // sequence to ensure commits are clean.
@@ -283,22 +295,28 @@ export async function setupLocalStarterTemplate(
         serverEntryPoint: language === 'ts' ? 'server.ts' : 'server.js',
       })
         .then(() =>
-          commitAll(
-            project.directory,
-            `Setup internationalization using ${i18nStrategy}`,
-          ),
+          options.git
+            ? commitAll(
+                project.directory,
+                `Setup markets support using ${i18nStrategy}`,
+              )
+            : undefined,
         )
         .catch((error) => {
           setupSummary.i18nError = error as AbortError;
         });
 
       await setupRoutes(project.directory, language, i18nStrategy)
-        .then(() =>
-          commitAll(
-            project.directory,
-            `Generate routes for core functionality`,
-          ),
-        )
+        .then((routes) => {
+          setupSummary.routes = routes;
+
+          if (options.git && routes) {
+            return commitAll(
+              project.directory,
+              `Generate routes for core functionality`,
+            );
+          }
+        })
         .catch((error) => {
           setupSummary.routesError = error as AbortError;
         });
@@ -307,7 +325,14 @@ export async function setupLocalStarterTemplate(
 
   await renderTasks(tasks);
 
-  await commitAll(project.directory, 'Lockfile');
+  if (options.git) {
+    await commitAll(project.directory, 'Lockfile');
+  }
 
   await renderProjectReady(project, setupSummary);
+
+  return {
+    ...project,
+    ...setupSummary,
+  };
 }

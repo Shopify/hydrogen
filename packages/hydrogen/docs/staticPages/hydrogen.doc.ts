@@ -76,7 +76,7 @@ const data: LandingTemplateSchema = {
       anchorLink: 'versioning',
       title: 'Versioning',
       sectionContent:
-        "Hydrogen is tied to specific versions of the [Storefront API](/api/storefront), which is versioned quarterly. For example, if you're using Storefront API version `2023-04`, then Hydrogen versions `2023.4.x` are fully compatible.\n\n> Caution:\n>If a Storefront API version includes breaking changes, then the corresponding Hydrogen version will include the same breaking changes.",
+        "Hydrogen is tied to specific versions of the [Storefront API](/api/storefront), which is versioned quarterly. For example, if you're using Storefront API version `2023-07`, then Hydrogen versions `2023.7.x` are fully compatible.\n\n> Caution:\n>If a Storefront API version includes breaking changes, then the corresponding Hydrogen version will include the same breaking changes.",
       sectionCard: [
         {
           subtitle: 'Learn more',

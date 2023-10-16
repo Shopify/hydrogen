@@ -15,6 +15,12 @@ export const GENERATOR_SETUP_ASSETS_SUB_DIRS = [
 export type AssetDir = (typeof GENERATOR_SETUP_ASSETS_SUB_DIRS)[number];
 
 export function getAssetDir(feature: AssetDir) {
+  if (process.env.NODE_ENV === 'test') {
+    return fileURLToPath(
+      new URL(`../setup-assets/${feature}`, import.meta.url),
+    );
+  }
+
   return fileURLToPath(
     new URL(
       `../${GENERATOR_TEMPLATES_DIR}/${GENERATOR_SETUP_ASSETS_DIR}/${feature}`,
@@ -24,19 +30,28 @@ export function getAssetDir(feature: AssetDir) {
 }
 
 export function getTemplateAppFile(filepath: string, root = getStarterDir()) {
-  return fileURLToPath(
-    new URL(
-      `${root}/${GENERATOR_APP_DIR}${filepath ? `/${filepath}` : ''}`,
-      import.meta.url,
-    ),
+  const url = new URL(
+    `${root}/${GENERATOR_APP_DIR}${filepath ? `/${filepath}` : ''}`,
+    import.meta.url,
   );
+  return url.protocol === 'file:' ? fileURLToPath(url) : url.toString();
 }
 
 export function getStarterDir() {
+  if (process.env.NODE_ENV === 'test') {
+    return getSkeletonSourceDir();
+  }
+
   return fileURLToPath(
     new URL(
       `../${GENERATOR_TEMPLATES_DIR}/${GENERATOR_STARTER_DIR}`,
       import.meta.url,
     ),
+  );
+}
+
+export function getSkeletonSourceDir() {
+  return fileURLToPath(
+    new URL(`../../../../templates/skeleton`, import.meta.url),
   );
 }

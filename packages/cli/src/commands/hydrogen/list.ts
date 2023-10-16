@@ -6,6 +6,7 @@ import {
   outputInfo,
   outputNewline,
 } from '@shopify/cli-kit/node/output';
+import {renderInfo} from '@shopify/cli-kit/node/ui';
 import {commonFlags} from '../../lib/flags.js';
 import {parseGid} from '../../lib/gid.js';
 import {
@@ -13,8 +14,9 @@ import {
   type HydrogenStorefront,
   getStorefrontsWithDeployment,
 } from '../../lib/graphql/admin/list-storefronts.js';
-import {logMissingStorefronts} from '../../lib/missing-storefronts.js';
+import {newHydrogenStorefrontUrl} from '../../lib/admin-urls.js';
 import {login} from '../../lib/auth.js';
+import {getCliCommand} from '../../lib/shell.js';
 
 export default class List extends Command {
   static description =
@@ -75,7 +77,16 @@ export async function runList({path: root = process.cwd()}: Flags) {
       },
     );
   } else {
-    logMissingStorefronts(session);
+    renderInfo({
+      headline: 'Hydrogen storefronts',
+      body: 'There are no Hydrogen storefronts on your Shop.',
+      nextSteps: [
+        `Ensure you are logged in to the correct shop (currently: ${session.storeFqdn})`,
+        `Create a new Hydrogen storefront: Run \`${await getCliCommand(
+          root,
+        )} link\` or visit ${newHydrogenStorefrontUrl(session)}`,
+      ],
+    });
   }
 }
 

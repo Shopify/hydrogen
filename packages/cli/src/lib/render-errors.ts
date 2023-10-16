@@ -46,7 +46,7 @@ export function renderMissingLink({session, cliCommand}: MissingLink) {
     type: 0,
     message: `No linked Hydrogen storefront on ${session.storeFqdn}`,
     tryMessage: [
-      'To pull environment variables, link this project to a Hydrogen storefront. To select a storefront to link, run',
+      'To pull environment variables or to deploy to Oxygen, link this project to a Hydrogen storefront. To select a storefront to link, run',
       {command: `${cliCommand} link`},
     ],
   });

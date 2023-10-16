@@ -1,9 +1,4 @@
-import {
-  VariantSelector,
-  getFirstAvailableVariant,
-  getSelectedProductOptions,
-  useVariantUrl,
-} from './VariantSelector';
+import {VariantSelector, getSelectedProductOptions} from './VariantSelector';
 import {createElement} from 'react';
 import {cleanup, render} from '@testing-library/react';
 import {describe, it, expect, afterEach, vi, afterAll} from 'vitest';
@@ -33,46 +28,6 @@ function fillLocation(partial: Partial<Location> = {}) {
     ...partial,
   };
 }
-
-describe('getFirstAvailableVariant', () => {
-  it('returns the first available variant', () => {
-    expect(
-      getFirstAvailableVariant([
-        {
-          availableForSale: false,
-          selectedOptions: [{name: 'Color', value: 'Red'}],
-        },
-        {
-          availableForSale: true,
-          selectedOptions: [{name: 'Color', value: 'Blue'}],
-        },
-      ]),
-    ).toEqual({
-      availableForSale: true,
-      selectedOptions: [{name: 'Color', value: 'Blue'}],
-    });
-  });
-
-  it('returns the first available variant from a connection', () => {
-    expect(
-      getFirstAvailableVariant({
-        nodes: [
-          {
-            availableForSale: false,
-            selectedOptions: [{name: 'Color', value: 'Red'}],
-          },
-          {
-            availableForSale: true,
-            selectedOptions: [{name: 'Color', value: 'Blue'}],
-          },
-        ],
-      }),
-    ).toEqual({
-      availableForSale: true,
-      selectedOptions: [{name: 'Color', value: 'Blue'}],
-    });
-  });
-});
 
 describe('getSelectedProductOptions', () => {
   it('returns the selected options', () => {
@@ -134,6 +89,106 @@ describe('<VariantSelector>', () => {
           </a>
           <a
             href="/products/snowboard?Size=M"
+          >
+            M
+          </a>
+        </div>
+      </DocumentFragment>
+    `);
+  });
+
+  it('uses a custom product path', () => {
+    const {asFragment} = render(
+      createElement(VariantSelector, {
+        handle: 'snowboard',
+        productPath: 'shop',
+        options: [
+          {name: 'Color', values: ['Red', 'Blue']},
+          {name: 'Size', values: ['S', 'M']},
+        ],
+        children: ({option}) =>
+          createElement(
+            'div',
+            null,
+            option.values.map(({value, to}) =>
+              createElement('a', {key: option.name + value, href: to}, value),
+            ),
+          ),
+      }),
+    );
+
+    expect(asFragment()).toMatchInlineSnapshot(`
+      <DocumentFragment>
+        <div>
+          <a
+            href="/shop/snowboard?Color=Red"
+          >
+            Red
+          </a>
+          <a
+            href="/shop/snowboard?Color=Blue"
+          >
+            Blue
+          </a>
+        </div>
+        <div>
+          <a
+            href="/shop/snowboard?Size=S"
+          >
+            S
+          </a>
+          <a
+            href="/shop/snowboard?Size=M"
+          >
+            M
+          </a>
+        </div>
+      </DocumentFragment>
+    `);
+  });
+
+  it('uses a custom product path with leading slash', () => {
+    const {asFragment} = render(
+      createElement(VariantSelector, {
+        handle: 'snowboard',
+        productPath: '/shop',
+        options: [
+          {name: 'Color', values: ['Red', 'Blue']},
+          {name: 'Size', values: ['S', 'M']},
+        ],
+        children: ({option}) =>
+          createElement(
+            'div',
+            null,
+            option.values.map(({value, to}) =>
+              createElement('a', {key: option.name + value, href: to}, value),
+            ),
+          ),
+      }),
+    );
+
+    expect(asFragment()).toMatchInlineSnapshot(`
+      <DocumentFragment>
+        <div>
+          <a
+            href="/shop/snowboard?Color=Red"
+          >
+            Red
+          </a>
+          <a
+            href="/shop/snowboard?Color=Blue"
+          >
+            Blue
+          </a>
+        </div>
+        <div>
+          <a
+            href="/shop/snowboard?Size=S"
+          >
+            S
+          </a>
+          <a
+            href="/shop/snowboard?Size=M"
           >
             M
           </a>
@@ -429,57 +484,6 @@ describe('<VariantSelector>', () => {
             M
           </a>
         </div>
-      </DocumentFragment>
-    `);
-  });
-});
-
-describe('getVariantUrl', () => {
-  afterEach(() => {
-    cleanup();
-  });
-
-  afterAll(() => {
-    vi.resetAllMocks();
-  });
-
-  it('returns the URL for a product with no options', () => {
-    vi.mocked(useLocation).mockReturnValueOnce(fillLocation({}));
-
-    function Test() {
-      const {to, search} = useVariantUrl('snowboard', []);
-
-      return createElement('a', {href: to + search});
-    }
-
-    const {asFragment} = render(createElement(Test, {}));
-    expect(asFragment()).toMatchInlineSnapshot(`
-      <DocumentFragment>
-        <a
-          href="/products/snowboard?"
-        />
-      </DocumentFragment>
-    `);
-  });
-
-  it('returns the URL for a product with no options', () => {
-    vi.mocked(useLocation).mockReturnValueOnce(fillLocation({}));
-
-    function Test() {
-      const {to, search} = useVariantUrl('snowboard', [
-        {name: 'Color', value: 'Red'},
-        {name: 'Size', value: 'S'},
-      ]);
-
-      return createElement('a', {href: to + search});
-    }
-
-    const {asFragment} = render(createElement(Test, {}));
-    expect(asFragment()).toMatchInlineSnapshot(`
-      <DocumentFragment>
-        <a
-          href="/products/snowboard?Color=Red&Size=S?Color=Red&Size=S"
-        />
       </DocumentFragment>
     `);
   });

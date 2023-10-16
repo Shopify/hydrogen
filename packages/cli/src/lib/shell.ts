@@ -206,7 +206,7 @@ async function createShortcutsForWindows() {
 
 export async function getCliCommand(
   directory = process.cwd(),
-  forcePkgManager?: 'npm' | 'pnpm' | 'yarn',
+  forcePkgManager?: 'npm' | 'pnpm' | 'yarn' | 'unknown',
 ) {
   if (!forcePkgManager && (await hasCliAlias())) {
     return ALIAS_NAME;

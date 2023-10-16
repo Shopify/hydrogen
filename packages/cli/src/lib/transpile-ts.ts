@@ -1,8 +1,7 @@
-import path from 'path';
-import fs from 'fs/promises';
-import ts, {type CompilerOptions} from 'typescript';
-import glob from 'fast-glob';
+import type {CompilerOptions} from 'typescript';
+import {glob, readFile, writeFile, removeFile} from '@shopify/cli-kit/node/fs';
 import {outputDebug} from '@shopify/cli-kit/node/output';
+import {joinPath} from '@shopify/cli-kit/node/path';
 import {formatCode, getCodeFormatOptions} from './format-code.js';
 
 const escapeNewLines = (code: string) =>
@@ -24,7 +23,10 @@ const DEFAULT_TS_CONFIG: TranspilerOptions = {
   skipLibCheck: true,
 };
 
-export function transpileFile(code: string, config = DEFAULT_TS_CONFIG) {
+export async function transpileFile(code: string, config = DEFAULT_TS_CONFIG) {
+  const tsImport = await import('typescript');
+  const ts = tsImport.default ?? tsImport;
+
   // We need to escape new lines in the template because TypeScript
   // will remove them when compiling.
   const withArtificialNewLines = escapeNewLines(code);
@@ -105,25 +107,25 @@ export async function transpileProject(projectDir: string) {
 
   for (const entry of entries) {
     if (entry.endsWith('.d.ts')) {
-      await fs.rm(entry);
+      await removeFile(entry);
       continue;
     }
 
-    const tsx = await fs.readFile(entry, 'utf8');
-    const mjs = formatCode(transpileFile(tsx), formatConfig);
+    const tsx = await readFile(entry);
+    const mjs = await formatCode(await transpileFile(tsx), formatConfig);
 
-    await fs.rm(entry);
-    await fs.writeFile(entry.replace(/\.ts(x?)$/, '.js$1'), mjs, 'utf8');
+    await removeFile(entry);
+    await writeFile(entry.replace(/\.ts(x?)$/, '.js$1'), mjs);
   }
 
   // Change extensions in remix.config.js
   try {
-    const remixConfigPath = path.join(projectDir, 'remix.config.js');
-    let remixConfig = await fs.readFile(remixConfigPath, 'utf8');
+    const remixConfigPath = joinPath(projectDir, 'remix.config.js');
+    let remixConfig = await readFile(remixConfigPath);
 
     remixConfig = remixConfig.replace(/\/server\.ts/gim, '/server.js');
 
-    await fs.writeFile(remixConfigPath, remixConfig);
+    await writeFile(remixConfigPath, remixConfig);
   } catch (error) {
     outputDebug(
       'Could not change TS extensions in remix.config.js:\n' +
@@ -133,17 +135,16 @@ export async function transpileProject(projectDir: string) {
 
   // Transpile tsconfig.json to jsconfig.json
   try {
-    const tsConfigPath = path.join(projectDir, 'tsconfig.json');
-    const tsConfigWithComments = await fs.readFile(tsConfigPath, 'utf8');
+    const tsConfigPath = joinPath(projectDir, 'tsconfig.json');
+    const tsConfigWithComments = await readFile(tsConfigPath);
     const jsConfig = convertConfigToJS(
       JSON.parse(tsConfigWithComments.replace(/^\s*\/\/.*$/gm, '')),
     );
 
-    await fs.rm(tsConfigPath);
-    await fs.writeFile(
-      path.join(projectDir, 'jsconfig.json'),
+    await removeFile(tsConfigPath);
+    await writeFile(
+      joinPath(projectDir, 'jsconfig.json'),
       JSON.stringify(jsConfig, null, 2),
-      'utf8',
     );
   } catch (error) {
     outputDebug(
@@ -154,7 +155,7 @@ export async function transpileProject(projectDir: string) {
   // Remove some TS dependencies
   try {
     const pkgJson = JSON.parse(
-      await fs.readFile(path.join(projectDir, 'package.json'), 'utf8'),
+      await readFile(joinPath(projectDir, 'package.json')),
     );
 
     delete pkgJson.scripts['typecheck'];
@@ -175,8 +176,8 @@ export async function transpileProject(projectDir: string) {
       pkgJson.scripts.build = pkgJson.scripts.build.replace(codegenFlag, '');
     }
 
-    await fs.writeFile(
-      path.join(projectDir, 'package.json'),
+    await writeFile(
+      joinPath(projectDir, 'package.json'),
       JSON.stringify(pkgJson, null, 2),
     );
   } catch (error) {
@@ -188,15 +189,15 @@ export async function transpileProject(projectDir: string) {
 
   // Remove TS from ESLint
   try {
-    const eslintrcPath = path.join(projectDir, '.eslintrc.js');
-    let eslintrc = await fs.readFile(eslintrcPath, 'utf8');
+    const eslintrcPath = joinPath(projectDir, '.eslintrc.js');
+    let eslintrc = await readFile(eslintrcPath);
 
     eslintrc = eslintrc
       .replace(/\/\*\*[\s*]+@type.+\s+\*\/\s?/gim, '')
       .replace(/\s*,?\s*['"`]plugin:hydrogen\/typescript['"`]/gim, '')
       .replace(/\s+['"`]@typescript-eslint\/.+,/gim, '');
 
-    await fs.writeFile(eslintrcPath, eslintrc);
+    await writeFile(eslintrcPath, eslintrc);
   } catch (error) {
     outputDebug(
       'Could not remove TS rules from .eslintrc:\n' + (error as Error).stack,

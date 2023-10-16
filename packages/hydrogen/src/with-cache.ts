@@ -15,7 +15,7 @@ type CreateWithCacheOptions = {
  * By default, it uses the `CacheShort` strategy.
  *
  */
-export function createWithCache_unstable<T = unknown>(
+export function createWithCache<T = unknown>(
   options: CreateWithCacheOptions,
 ): CreateWithCacheReturn<T> {
   const {cache, waitUntil} = options;
@@ -28,6 +28,7 @@ export function createWithCache_unstable<T = unknown>(
       strategy,
       cacheInstance: cache,
       waitUntil,
+      debugInfo: {},
     });
   };
 }
@@ -37,10 +38,10 @@ export function createWithCache_unstable<T = unknown>(
  *
  * Use the `CachingStrategy` to define a custom caching mechanism for your data. Or use one of the built-in caching strategies: `CacheNone`, `CacheShort`, `CacheLong`.
  */
-type CreateWithCacheReturn<T> = (
+type CreateWithCacheReturn<T> = <U = T>(
   cacheKey: CacheKey,
   strategy: CachingStrategy,
-  actionFn: () => T | Promise<T>,
-) => Promise<T>;
+  actionFn: () => U | Promise<U>,
+) => Promise<U>;
 
-export type WithCache = ReturnType<typeof createWithCache_unstable>;
+export type WithCache = ReturnType<typeof createWithCache>;

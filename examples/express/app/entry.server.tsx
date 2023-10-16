@@ -11,6 +11,7 @@ import {Response} from '@remix-run/node';
 import {RemixServer} from '@remix-run/react';
 import isbot from 'isbot';
 import {renderToPipeableStream} from 'react-dom/server';
+import {createContentSecurityPolicy} from '@shopify/hydrogen';
 
 const ABORT_DELAY = 5_000;
 
@@ -43,17 +44,23 @@ function handleBotRequest(
   remixContext: EntryContext,
 ) {
   return new Promise((resolve, reject) => {
+    const {nonce, header, NonceProvider} = createContentSecurityPolicy();
+
     const {pipe, abort} = renderToPipeableStream(
-      <RemixServer
-        context={remixContext}
-        url={request.url}
-        abortDelay={ABORT_DELAY}
-      />,
+      <NonceProvider>
+        <RemixServer
+          context={remixContext}
+          url={request.url}
+          abortDelay={ABORT_DELAY}
+        />
+      </NonceProvider>,
       {
+        nonce,
         onAllReady() {
           const body = new PassThrough();
 
           responseHeaders.set('Content-Type', 'text/html');
+          responseHeaders.set('Content-Security-Policy', header);
 
           resolve(
             new Response(body, {
@@ -69,7 +76,9 @@ function handleBotRequest(
         },
         onError(error: unknown) {
           responseStatusCode = 500;
-          console.error(error);
+          console.error(
+            (error as Error)?.stack ? (error as Error).stack : error,
+          );
         },
       },
     );
@@ -84,18 +93,24 @@ function handleBrowserRequest(
   responseHeaders: Headers,
   remixContext: EntryContext,
 ) {
+  const {nonce, header, NonceProvider} = createContentSecurityPolicy();
+
   return new Promise((resolve, reject) => {
     const {pipe, abort} = renderToPipeableStream(
-      <RemixServer
-        context={remixContext}
-        url={request.url}
-        abortDelay={ABORT_DELAY}
-      />,
+      <NonceProvider>
+        <RemixServer
+          context={remixContext}
+          url={request.url}
+          abortDelay={ABORT_DELAY}
+        />
+      </NonceProvider>,
       {
+        nonce,
         onShellReady() {
           const body = new PassThrough();
 
           responseHeaders.set('Content-Type', 'text/html');
+          responseHeaders.set('Content-Security-Policy', header);
 
           resolve(
             new Response(body, {
@@ -110,7 +125,9 @@ function handleBrowserRequest(
           reject(error);
         },
         onError(error: unknown) {
-          console.error(error);
+          console.error(
+            (error as Error)?.stack ? (error as Error).stack : error,
+          );
           responseStatusCode = 500;
         },
       },

@@ -8,15 +8,10 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'VariantSelector',
       type: 'components',
-      url: '/docs/api/hydrogen/2023-04/components/variantselector',
-    },
-    {
-      name: 'getFirstAvailableVariant',
-      type: 'utilities',
-      url: '/docs/api/hydrogen/2023-04/utilities/getfirstavailablevariant',
+      url: '/docs/api/hydrogen/2023-07/components/variantselector',
     },
   ],
-  description: `The \`getSelectedProductOptions\` returns the selected options from the Request search parameters. The selected options can then be easily passed to your GraphQL query with [\`variantBySelectedOptions\`](https://shopify.dev/docs/api/storefront/2023-04/objects/product#field-product-variantbyselectedoptions).`,
+  description: `The \`getSelectedProductOptions\` returns the selected options from the Request search parameters. The selected options can then be easily passed to your GraphQL query with [\`variantBySelectedOptions\`](https://shopify.dev/docs/api/storefront/2023-07/objects/product#field-product-variantbyselectedoptions).`,
   type: 'component',
   defaultExample: {
     description: 'I am the default example',

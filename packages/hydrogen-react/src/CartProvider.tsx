@@ -87,9 +87,9 @@ type CartProviderProps = {
   onAttributesUpdateComplete?: () => void;
   /** A callback that is invoked when the process to update the cart discount codes completes */
   onDiscountCodesUpdateComplete?: () => void;
-  /** An object with fields that correspond to the Storefront API's [Cart object](https://shopify.dev/api/storefront/2023-04/objects/cart). */
+  /** An object with fields that correspond to the Storefront API's [Cart object](https://shopify.dev/api/storefront/2023-07/objects/cart). */
   data?: PartialDeep<CartType, {recurseIntoArrays: true}>;
-  /** A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/2023-04/objects/cart) for all queries and mutations. A default value is used if no argument is provided. */
+  /** A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/2023-07/objects/cart) for all queries and mutations. A default value is used if no argument is provided. */
   cartFragment?: string;
   /** A customer access token that's accessible on the server if there's a customer login. */
   customerAccessToken?: CartBuyerIdentityInput['customerAccessToken'];

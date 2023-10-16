@@ -1,6 +1,6 @@
 /**
  * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
- * Based on Storefront API 2023-04
+ * Based on Storefront API 2023-07
  * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run `npm run graphql-types`.
  * Except custom Scalars, which are defined in the `codegen.ts` file
  */
@@ -14,26 +14,20 @@ export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
   [SubKey in K]: Maybe<T[SubKey]>;
 };
-export type MakeEmpty<T extends {[key: string]: unknown}, K extends keyof T> = {
-  [_ in K]?: never;
-};
-export type Incremental<T> =
-  | T
-  | {[P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never};
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: {input: string; output: string};
-  String: {input: string; output: string};
-  Boolean: {input: boolean; output: boolean};
-  Int: {input: number; output: number};
-  Float: {input: number; output: number};
-  Color: {input: string; output: string};
-  DateTime: {input: string; output: string};
-  Decimal: {input: string; output: string};
-  HTML: {input: string; output: string};
-  JSON: {input: unknown; output: unknown};
-  URL: {input: string; output: string};
-  UnsignedInt64: {input: string; output: string};
+  ID: string;
+  String: string;
+  Boolean: boolean;
+  Int: number;
+  Float: number;
+  Color: string;
+  DateTime: string;
+  Decimal: string;
+  HTML: string;
+  JSON: unknown;
+  URL: string;
+  UnsignedInt64: string;
 };
 
 /**
@@ -44,11 +38,11 @@ export type Scalars = {
 export type ApiVersion = {
   __typename?: 'ApiVersion';
   /** The human-readable name of the version. */
-  displayName: Scalars['String']['output'];
+  displayName: Scalars['String'];
   /** The unique identifier of an ApiVersion. All supported API versions have a date-based (YYYY-MM) or `unstable` handle. */
-  handle: Scalars['String']['output'];
+  handle: Scalars['String'];
   /** Whether the version is actively supported by Shopify. Supported API versions are guaranteed to be stable. Unsupported API versions include unstable, release candidate, and end-of-life versions that are marked as unsupported. For more information, refer to [Versioning](https://shopify.dev/api/usage/versioning). */
-  supported: Scalars['Boolean']['output'];
+  supported: Scalars['Boolean'];
 };
 
 /**
@@ -59,15 +53,15 @@ export type ApplePayWalletContentInput = {
   /** The customer's billing address. */
   billingAddress: MailingAddressInput;
   /** The data for the Apple Pay wallet. */
-  data: Scalars['String']['input'];
+  data: Scalars['String'];
   /** The header data for the Apple Pay wallet. */
   header: ApplePayWalletHeaderInput;
   /** The last digits of the card used to create the payment. */
-  lastDigits?: InputMaybe<Scalars['String']['input']>;
+  lastDigits?: InputMaybe<Scalars['String']>;
   /** The signature for the Apple Pay wallet. */
-  signature: Scalars['String']['input'];
+  signature: Scalars['String'];
   /** The version for the Apple Pay wallet. */
-  version: Scalars['String']['input'];
+  version: Scalars['String'];
 };
 
 /**
@@ -76,13 +70,13 @@ export type ApplePayWalletContentInput = {
  */
 export type ApplePayWalletHeaderInput = {
   /** The application data for the Apple Pay wallet. */
-  applicationData?: InputMaybe<Scalars['String']['input']>;
+  applicationData?: InputMaybe<Scalars['String']>;
   /** The ephemeral public key for the Apple Pay wallet. */
-  ephemeralPublicKey: Scalars['String']['input'];
+  ephemeralPublicKey: Scalars['String'];
   /** The public key hash for the Apple Pay wallet. */
-  publicKeyHash: Scalars['String']['input'];
+  publicKeyHash: Scalars['String'];
   /** The transaction ID for the Apple Pay wallet. */
-  transactionId: Scalars['String']['input'];
+  transactionId: Scalars['String'];
 };
 
 /** Details about the gift card used on the checkout. */
@@ -103,9 +97,9 @@ export type AppliedGiftCard = Node & {
    */
   balanceV2: MoneyV2;
   /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
+  id: Scalars['ID'];
   /** The last characters of the gift card. */
-  lastCharacters: Scalars['String']['output'];
+  lastCharacters: Scalars['String'];
   /** The amount that was applied to the checkout in its currency. */
   presentmentAmountUsed: MoneyV2;
 };
@@ -113,7 +107,8 @@ export type AppliedGiftCard = Node & {
 /** An article in an online store blog. */
 export type Article = HasMetafields &
   Node &
-  OnlineStorePublishable & {
+  OnlineStorePublishable &
+  Trackable & {
     __typename?: 'Article';
     /**
      * The article's author.
@@ -127,20 +122,20 @@ export type Article = HasMetafields &
     /** List of comments posted on the article. */
     comments: CommentConnection;
     /** Stripped content of the article, single line with HTML tags removed. */
-    content: Scalars['String']['output'];
+    content: Scalars['String'];
     /** The content of the article, complete with HTML formatting. */
-    contentHtml: Scalars['HTML']['output'];
+    contentHtml: Scalars['HTML'];
     /** Stripped excerpt of the article, single line with HTML tags removed. */
-    excerpt?: Maybe<Scalars['String']['output']>;
+    excerpt?: Maybe<Scalars['String']>;
     /** The excerpt of the article, complete with HTML formatting. */
-    excerptHtml?: Maybe<Scalars['HTML']['output']>;
+    excerptHtml?: Maybe<Scalars['HTML']>;
     /**
      * A human-friendly unique string for the Article automatically generated from its title.
      *
      */
-    handle: Scalars['String']['output'];
+    handle: Scalars['String'];
     /** A globally-unique ID. */
-    id: Scalars['ID']['output'];
+    id: Scalars['ID'];
     /** The image associated with the article. */
     image?: Maybe<Image>;
     /** Returns a metafield found by namespace and key. */
@@ -151,40 +146,42 @@ export type Article = HasMetafields &
      */
     metafields: Array<Maybe<Metafield>>;
     /** The URL used for viewing the resource on the shop's Online Store. Returns `null` if the resource is currently not published to the Online Store sales channel. */
-    onlineStoreUrl?: Maybe<Scalars['URL']['output']>;
+    onlineStoreUrl?: Maybe<Scalars['URL']>;
     /** The date and time when the article was published. */
-    publishedAt: Scalars['DateTime']['output'];
+    publishedAt: Scalars['DateTime'];
     /** The article’s SEO information. */
     seo?: Maybe<Seo>;
     /** A categorization that a article can be tagged with. */
-    tags: Array<Scalars['String']['output']>;
+    tags: Array<Scalars['String']>;
     /** The article’s name. */
-    title: Scalars['String']['output'];
+    title: Scalars['String'];
+    /** A URL parameters to be added to a page URL when it is linked from a GraphQL result. This allows for tracking the origin of the traffic. */
+    trackingParameters?: Maybe<Scalars['String']>;
   };
 
 /** An article in an online store blog. */
 export type ArticleCommentsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
 };
 
 /** An article in an online store blog. */
 export type ArticleContentArgs = {
-  truncateAt?: InputMaybe<Scalars['Int']['input']>;
+  truncateAt?: InputMaybe<Scalars['Int']>;
 };
 
 /** An article in an online store blog. */
 export type ArticleExcerptArgs = {
-  truncateAt?: InputMaybe<Scalars['Int']['input']>;
+  truncateAt?: InputMaybe<Scalars['Int']>;
 };
 
 /** An article in an online store blog. */
 export type ArticleMetafieldArgs = {
-  key: Scalars['String']['input'];
-  namespace: Scalars['String']['input'];
+  key: Scalars['String'];
+  namespace: Scalars['String'];
 };
 
 /** An article in an online store blog. */
@@ -196,15 +193,15 @@ export type ArticleMetafieldsArgs = {
 export type ArticleAuthor = {
   __typename?: 'ArticleAuthor';
   /** The author's bio. */
-  bio?: Maybe<Scalars['String']['output']>;
+  bio?: Maybe<Scalars['String']>;
   /** The author’s email. */
-  email: Scalars['String']['output'];
+  email: Scalars['String'];
   /** The author's first name. */
-  firstName: Scalars['String']['output'];
+  firstName: Scalars['String'];
   /** The author's last name. */
-  lastName: Scalars['String']['output'];
+  lastName: Scalars['String'];
   /** The author's full name. */
-  name: Scalars['String']['output'];
+  name: Scalars['String'];
 };
 
 /**
@@ -228,7 +225,7 @@ export type ArticleConnection = {
 export type ArticleEdge = {
   __typename?: 'ArticleEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of ArticleEdge. */
   node: Article;
 };
@@ -258,17 +255,17 @@ export type ArticleSortKeys =
 export type Attribute = {
   __typename?: 'Attribute';
   /** Key or name of the attribute. */
-  key: Scalars['String']['output'];
+  key: Scalars['String'];
   /** Value of the attribute. */
-  value?: Maybe<Scalars['String']['output']>;
+  value?: Maybe<Scalars['String']>;
 };
 
 /** The input fields for an attribute. */
 export type AttributeInput = {
   /** Key or name of the attribute. */
-  key: Scalars['String']['input'];
+  key: Scalars['String'];
   /** Value of the attribute. */
-  value: Scalars['String']['input'];
+  value: Scalars['String'];
 };
 
 /**
@@ -284,7 +281,7 @@ export type AutomaticDiscountApplication = DiscountApplication & {
   /** The type of line that the discount is applicable towards. */
   targetType: DiscountApplicationTargetType;
   /** The title of the application. */
-  title: Scalars['String']['output'];
+  title: Scalars['String'];
   /** The value of the discount application. */
   value: PricingValue;
 };
@@ -298,7 +295,7 @@ export type AvailableShippingRates = {
    * This field should be polled until its value becomes `true`.
    *
    */
-  ready: Scalars['Boolean']['output'];
+  ready: Scalars['Boolean'];
   /** The fetched shipping rates. `null` until the `ready` field is `true`. */
   shippingRates?: Maybe<Array<ShippingRate>>;
 };
@@ -323,18 +320,18 @@ export type BaseCartLine = {
    */
   estimatedCost: CartLineEstimatedCost;
   /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
+  id: Scalars['ID'];
   /** The merchandise that the buyer intends to purchase. */
   merchandise: Merchandise;
   /** The quantity of the merchandise that the customer intends to purchase. */
-  quantity: Scalars['Int']['output'];
+  quantity: Scalars['Int'];
   /** The selling plan associated with the cart line and the effect that each selling plan has on variants when they're purchased. */
   sellingPlanAllocation?: Maybe<SellingPlanAllocation>;
 };
 
 /** Represents a cart line common fields. */
 export type BaseCartLineAttributeArgs = {
-  key: Scalars['String']['input'];
+  key: Scalars['String'];
 };
 
 /**
@@ -346,7 +343,7 @@ export type BaseCartLineConnection = {
   /** A list of edges. */
   edges: Array<BaseCartLineEdge>;
   /** A list of the nodes contained in BaseCartLineEdge. */
-  nodes: Array<CartLine>;
+  nodes: Array<CartLine | ComponentizableCartLine>;
   /** Information to aid in pagination. */
   pageInfo: PageInfo;
 };
@@ -358,9 +355,9 @@ export type BaseCartLineConnection = {
 export type BaseCartLineEdge = {
   __typename?: 'BaseCartLineEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of BaseCartLineEdge. */
-  node: CartLine;
+  node: CartLine | ComponentizableCartLine;
 };
 
 /** An online store blog. */
@@ -378,9 +375,9 @@ export type Blog = HasMetafields &
      * A human-friendly unique string for the Blog automatically generated from its title.
      *
      */
-    handle: Scalars['String']['output'];
+    handle: Scalars['String'];
     /** A globally-unique ID. */
-    id: Scalars['ID']['output'];
+    id: Scalars['ID'];
     /** Returns a metafield found by namespace and key. */
     metafield?: Maybe<Metafield>;
     /**
@@ -389,33 +386,33 @@ export type Blog = HasMetafields &
      */
     metafields: Array<Maybe<Metafield>>;
     /** The URL used for viewing the resource on the shop's Online Store. Returns `null` if the resource is currently not published to the Online Store sales channel. */
-    onlineStoreUrl?: Maybe<Scalars['URL']['output']>;
+    onlineStoreUrl?: Maybe<Scalars['URL']>;
     /** The blog's SEO information. */
     seo?: Maybe<Seo>;
     /** The blogs’s title. */
-    title: Scalars['String']['output'];
+    title: Scalars['String'];
   };
 
 /** An online store blog. */
 export type BlogArticleByHandleArgs = {
-  handle: Scalars['String']['input'];
+  handle: Scalars['String'];
 };
 
 /** An online store blog. */
 export type BlogArticlesArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  query?: InputMaybe<Scalars['String']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
   sortKey?: InputMaybe<ArticleSortKeys>;
 };
 
 /** An online store blog. */
 export type BlogMetafieldArgs = {
-  key: Scalars['String']['input'];
-  namespace: Scalars['String']['input'];
+  key: Scalars['String'];
+  namespace: Scalars['String'];
 };
 
 /** An online store blog. */
@@ -444,7 +441,7 @@ export type BlogConnection = {
 export type BlogEdge = {
   __typename?: 'BlogEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of BlogEdge. */
   node: Blog;
 };
@@ -477,9 +474,9 @@ export type Brand = {
   /** The store's default logo. */
   logo?: Maybe<MediaImage>;
   /** The store's short description. */
-  shortDescription?: Maybe<Scalars['String']['output']>;
+  shortDescription?: Maybe<Scalars['String']>;
   /** The store's slogan. */
-  slogan?: Maybe<Scalars['String']['output']>;
+  slogan?: Maybe<Scalars['String']>;
   /** The store's preferred logo for square UI elements. */
   squareLogo?: Maybe<MediaImage>;
 };
@@ -491,9 +488,9 @@ export type Brand = {
 export type BrandColorGroup = {
   __typename?: 'BrandColorGroup';
   /** The background color. */
-  background?: Maybe<Scalars['Color']['output']>;
+  background?: Maybe<Scalars['Color']>;
   /** The foreground color. */
-  foreground?: Maybe<Scalars['Color']['output']>;
+  foreground?: Maybe<Scalars['Color']>;
 };
 
 /**
@@ -537,14 +534,14 @@ export type Cart = HasMetafields &
     attribute?: Maybe<Attribute>;
     /** The attributes associated with the cart. Attributes are represented as key-value pairs. */
     attributes: Array<Attribute>;
-    /** Information about the buyer that is interacting with the cart. */
+    /** Information about the buyer that's interacting with the cart. */
     buyerIdentity: CartBuyerIdentity;
     /** The URL of the checkout for the cart. */
-    checkoutUrl: Scalars['URL']['output'];
+    checkoutUrl: Scalars['URL'];
     /** The estimated costs that the buyer will pay at checkout. The costs are subject to change and changes will be reflected at checkout. The `cost` field uses the `buyerIdentity` field to determine [international pricing](https://shopify.dev/custom-storefronts/internationalization/international-pricing). */
     cost: CartCost;
     /** The date and time when the cart was created. */
-    createdAt: Scalars['DateTime']['output'];
+    createdAt: Scalars['DateTime'];
     /**
      * The delivery groups available for the cart, based on the buyer identity default
      * delivery address preference or the default address of the logged-in customer.
@@ -572,7 +569,7 @@ export type Cart = HasMetafields &
      */
     estimatedCost: CartEstimatedCost;
     /** A globally-unique ID. */
-    id: Scalars['ID']['output'];
+    id: Scalars['ID'];
     /** A list of lines containing information about the items the customer intends to purchase. */
     lines: BaseCartLineConnection;
     /** Returns a metafield found by namespace and key. */
@@ -582,12 +579,12 @@ export type Cart = HasMetafields &
      *
      */
     metafields: Array<Maybe<Metafield>>;
-    /** A note that is associated with the cart. For example, the note can be a personalized message to the buyer. */
-    note?: Maybe<Scalars['String']['output']>;
+    /** A note that's associated with the cart. For example, the note can be a personalized message to the buyer. */
+    note?: Maybe<Scalars['String']>;
     /** The total number of items in the cart. */
-    totalQuantity: Scalars['Int']['output'];
+    totalQuantity: Scalars['Int'];
     /** The date and time when the cart was updated. */
-    updatedAt: Scalars['DateTime']['output'];
+    updatedAt: Scalars['DateTime'];
   };
 
 /**
@@ -598,7 +595,7 @@ export type Cart = HasMetafields &
  *
  */
 export type CartAttributeArgs = {
-  key: Scalars['String']['input'];
+  key: Scalars['String'];
 };
 
 /**
@@ -609,11 +606,11 @@ export type CartAttributeArgs = {
  *
  */
 export type CartDeliveryGroupsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
 };
 
 /**
@@ -624,11 +621,11 @@ export type CartDeliveryGroupsArgs = {
  *
  */
 export type CartLinesArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
 };
 
 /**
@@ -639,8 +636,8 @@ export type CartLinesArgs = {
  *
  */
 export type CartMetafieldArgs = {
-  key: Scalars['String']['input'];
-  namespace: Scalars['String']['input'];
+  key: Scalars['String'];
+  namespace: Scalars['String'];
 };
 
 /**
@@ -669,7 +666,7 @@ export type CartAutomaticDiscountAllocation = CartDiscountAllocation & {
   /** The discounted amount that has been applied to the cart line. */
   discountedAmount: MoneyV2;
   /** The title of the allocated discount. */
-  title: Scalars['String']['output'];
+  title: Scalars['String'];
 };
 
 /** Represents information about the buyer that is interacting with the cart. */
@@ -686,16 +683,16 @@ export type CartBuyerIdentity = {
    *
    */
   deliveryAddressPreferences: Array<DeliveryAddress>;
-  /** The email address of the buyer that is interacting with the cart. */
-  email?: Maybe<Scalars['String']['output']>;
-  /** The phone number of the buyer that is interacting with the cart. */
-  phone?: Maybe<Scalars['String']['output']>;
+  /** The email address of the buyer that's interacting with the cart. */
+  email?: Maybe<Scalars['String']>;
+  /** The phone number of the buyer that's interacting with the cart. */
+  phone?: Maybe<Scalars['String']>;
   /**
    * A set of wallet preferences tied to the buyer that is interacting with the cart.
    * Preferences can be used to populate relevant payment fields in the checkout flow.
    *
    */
-  walletPreferences: Array<Scalars['String']['output']>;
+  walletPreferences: Array<Scalars['String']>;
 };
 
 /**
@@ -709,7 +706,7 @@ export type CartBuyerIdentityInput = {
   /** The country where the buyer is located. */
   countryCode?: InputMaybe<CountryCode>;
   /** The access token used to identify the customer associated with the cart. */
-  customerAccessToken?: InputMaybe<Scalars['String']['input']>;
+  customerAccessToken?: InputMaybe<Scalars['String']>;
   /**
    * An ordered set of delivery addresses tied to the buyer that is interacting with the cart.
    * The rank of the preferences is determined by the order of the addresses in the array. Preferences
@@ -718,16 +715,16 @@ export type CartBuyerIdentityInput = {
    */
   deliveryAddressPreferences?: InputMaybe<Array<DeliveryAddressInput>>;
   /** The email address of the buyer that is interacting with the cart. */
-  email?: InputMaybe<Scalars['String']['input']>;
+  email?: InputMaybe<Scalars['String']>;
   /** The phone number of the buyer that is interacting with the cart. */
-  phone?: InputMaybe<Scalars['String']['input']>;
+  phone?: InputMaybe<Scalars['String']>;
   /**
    * A set of wallet preferences tied to the buyer that is interacting with the cart.
    * Preferences can be used to populate relevant payment fields in the checkout flow.
    *   Accepted value: `["shop_pay"]`.
    *
    */
-  walletPreferences?: InputMaybe<Array<Scalars['String']['input']>>;
+  walletPreferences?: InputMaybe<Array<Scalars['String']>>;
 };
 
 /** Return type for `cartBuyerIdentityUpdate` mutation. */
@@ -755,7 +752,7 @@ export type CartCardSource =
 export type CartCodeDiscountAllocation = CartDiscountAllocation & {
   __typename?: 'CartCodeDiscountAllocation';
   /** The code used to apply the discount. */
-  code: Scalars['String']['output'];
+  code: Scalars['String'];
   /** The discounted amount that has been applied to the cart line. */
   discountedAmount: MoneyV2;
 };
@@ -769,7 +766,7 @@ export type CartCompletionActionRequired = {
   /** The action required to complete the cart completion attempt. */
   action?: Maybe<CartCompletionAction>;
   /** The ID of the cart completion attempt. */
-  id: Scalars['String']['output'];
+  id: Scalars['String'];
 };
 
 /** The result of a cart completion attempt. */
@@ -785,29 +782,29 @@ export type CartCompletionFailed = {
   /** The errors that caused the checkout to fail. */
   errors: Array<CompletionError>;
   /** The ID of the cart completion attempt. */
-  id: Scalars['String']['output'];
+  id: Scalars['String'];
 };
 
 /** A cart checkout completion that's still processing. */
 export type CartCompletionProcessing = {
   __typename?: 'CartCompletionProcessing';
   /** The ID of the cart completion attempt. */
-  id: Scalars['String']['output'];
+  id: Scalars['String'];
   /** The number of milliseconds to wait before polling again. */
-  pollDelay: Scalars['Int']['output'];
+  pollDelay: Scalars['Int'];
 };
 
 /** A successful completion to checkout a cart and a created order. */
 export type CartCompletionSuccess = {
   __typename?: 'CartCompletionSuccess';
   /** The date and time when the job completed. */
-  completedAt?: Maybe<Scalars['DateTime']['output']>;
+  completedAt?: Maybe<Scalars['DateTime']>;
   /** The ID of the cart completion attempt. */
-  id: Scalars['String']['output'];
+  id: Scalars['String'];
   /** The ID of the order that's created in Shopify. */
-  orderId: Scalars['ID']['output'];
+  orderId: Scalars['ID'];
   /** The URL of the order confirmation in Shopify. */
-  orderUrl: Scalars['URL']['output'];
+  orderUrl: Scalars['URL'];
 };
 
 /**
@@ -823,19 +820,19 @@ export type CartCost = {
   /** The amount, before taxes and cart-level discounts, for the customer to pay. */
   subtotalAmount: MoneyV2;
   /** Whether the subtotal amount is estimated. */
-  subtotalAmountEstimated: Scalars['Boolean']['output'];
+  subtotalAmountEstimated: Scalars['Boolean'];
   /** The total amount for the customer to pay. */
   totalAmount: MoneyV2;
   /** Whether the total amount is estimated. */
-  totalAmountEstimated: Scalars['Boolean']['output'];
+  totalAmountEstimated: Scalars['Boolean'];
   /** The duty amount for the customer to pay at checkout. */
   totalDutyAmount?: Maybe<MoneyV2>;
   /** Whether the total duty amount is estimated. */
-  totalDutyAmountEstimated: Scalars['Boolean']['output'];
+  totalDutyAmountEstimated: Scalars['Boolean'];
   /** The tax amount for the customer to pay at checkout. */
   totalTaxAmount?: Maybe<MoneyV2>;
   /** Whether the total tax amount is estimated. */
-  totalTaxAmountEstimated: Scalars['Boolean']['output'];
+  totalTaxAmountEstimated: Scalars['Boolean'];
 };
 
 /** Return type for `cartCreate` mutation. */
@@ -853,7 +850,7 @@ export type CartCustomDiscountAllocation = CartDiscountAllocation & {
   /** The discounted amount that has been applied to the cart line. */
   discountedAmount: MoneyV2;
   /** The title of the allocated discount. */
-  title: Scalars['String']['output'];
+  title: Scalars['String'];
 };
 
 /** Information about the options available for one or more line items to be delivered to a specific address. */
@@ -866,18 +863,18 @@ export type CartDeliveryGroup = {
   /** The delivery options available for the delivery group. */
   deliveryOptions: Array<CartDeliveryOption>;
   /** The ID for the delivery group. */
-  id: Scalars['ID']['output'];
+  id: Scalars['ID'];
   /** The selected delivery option for the delivery group. */
   selectedDeliveryOption?: Maybe<CartDeliveryOption>;
 };
 
 /** Information about the options available for one or more line items to be delivered to a specific address. */
 export type CartDeliveryGroupCartLinesArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
 };
 
 /**
@@ -901,7 +898,7 @@ export type CartDeliveryGroupConnection = {
 export type CartDeliveryGroupEdge = {
   __typename?: 'CartDeliveryGroupEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of CartDeliveryGroupEdge. */
   node: CartDeliveryGroup;
 };
@@ -910,17 +907,17 @@ export type CartDeliveryGroupEdge = {
 export type CartDeliveryOption = {
   __typename?: 'CartDeliveryOption';
   /** The code of the delivery option. */
-  code?: Maybe<Scalars['String']['output']>;
+  code?: Maybe<Scalars['String']>;
   /** The method for the delivery option. */
   deliveryMethodType: DeliveryMethodType;
   /** The description of the delivery option. */
-  description?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']>;
   /** The estimated cost for the delivery option. */
   estimatedCost: MoneyV2;
   /** The unique identifier of the delivery option. */
-  handle: Scalars['String']['output'];
+  handle: Scalars['String'];
   /** The title of the delivery option. */
-  title?: Maybe<Scalars['String']['output']>;
+  title?: Maybe<Scalars['String']>;
 };
 
 /**
@@ -933,7 +930,7 @@ export type CartDirectPaymentMethodInput = {
   /** The source of the credit card payment. */
   cardSource?: InputMaybe<CartCardSource>;
   /** The session ID for the direct payment method used to create the payment. */
-  sessionId: Scalars['String']['input'];
+  sessionId: Scalars['String'];
 };
 
 /** The discounts that have been applied to the cart line. */
@@ -946,9 +943,9 @@ export type CartDiscountAllocation = {
 export type CartDiscountCode = {
   __typename?: 'CartDiscountCode';
   /** Whether the discount code is applicable to the cart's current contents. */
-  applicable: Scalars['Boolean']['output'];
+  applicable: Scalars['Boolean'];
   /** The code for the discount. */
-  code: Scalars['String']['output'];
+  code: Scalars['String'];
 };
 
 /** Return type for `cartDiscountCodesUpdate` mutation. */
@@ -1031,30 +1028,30 @@ export type CartInput = {
    * The case-insensitive discount codes that the customer added at checkout.
    *
    */
-  discountCodes?: InputMaybe<Array<Scalars['String']['input']>>;
+  discountCodes?: InputMaybe<Array<Scalars['String']>>;
   /** A list of merchandise lines to add to the cart. */
   lines?: InputMaybe<Array<CartLineInput>>;
   /** The metafields to associate with this cart. */
   metafields?: InputMaybe<Array<CartInputMetafieldInput>>;
-  /** A note that is associated with the cart. For example, the note can be a personalized message to the buyer. */
-  note?: InputMaybe<Scalars['String']['input']>;
+  /** A note that's associated with the cart. For example, the note can be a personalized message to the buyer. */
+  note?: InputMaybe<Scalars['String']>;
 };
 
 /** The input fields for a cart metafield value to set. */
 export type CartInputMetafieldInput = {
   /** The key name of the metafield. */
-  key: Scalars['String']['input'];
+  key: Scalars['String'];
   /**
    * The type of data that the cart metafield stores.
    * The type of data must be a [supported type](https://shopify.dev/apps/metafields/types).
    *
    */
-  type: Scalars['String']['input'];
+  type: Scalars['String'];
   /**
    * The data to store in the cart metafield. The data is always stored as a string, regardless of the metafield's type.
    *
    */
-  value: Scalars['String']['input'];
+  value: Scalars['String'];
 };
 
 /** Represents information about the merchandise in the cart. */
@@ -1079,18 +1076,18 @@ export type CartLine = BaseCartLine &
      */
     estimatedCost: CartLineEstimatedCost;
     /** A globally-unique ID. */
-    id: Scalars['ID']['output'];
+    id: Scalars['ID'];
     /** The merchandise that the buyer intends to purchase. */
     merchandise: Merchandise;
     /** The quantity of the merchandise that the customer intends to purchase. */
-    quantity: Scalars['Int']['output'];
+    quantity: Scalars['Int'];
     /** The selling plan associated with the cart line and the effect that each selling plan has on variants when they're purchased. */
     sellingPlanAllocation?: Maybe<SellingPlanAllocation>;
   };
 
 /** Represents information about the merchandise in the cart. */
 export type CartLineAttributeArgs = {
-  key: Scalars['String']['input'];
+  key: Scalars['String'];
 };
 
 /** The cost of the merchandise line that the buyer will pay at checkout. */
@@ -1124,11 +1121,11 @@ export type CartLineInput = {
   /** An array of key-value pairs that contains additional information about the merchandise line. */
   attributes?: InputMaybe<Array<AttributeInput>>;
   /** The ID of the merchandise that the buyer intends to purchase. */
-  merchandiseId: Scalars['ID']['input'];
+  merchandiseId: Scalars['ID'];
   /** The quantity of the merchandise. */
-  quantity?: InputMaybe<Scalars['Int']['input']>;
+  quantity?: InputMaybe<Scalars['Int']>;
   /** The ID of the selling plan that the merchandise is being purchased with. */
-  sellingPlanId?: InputMaybe<Scalars['ID']['input']>;
+  sellingPlanId?: InputMaybe<Scalars['ID']>;
 };
 
 /** The input fields to update a line item on a cart. */
@@ -1136,13 +1133,13 @@ export type CartLineUpdateInput = {
   /** An array of key-value pairs that contains additional information about the merchandise line. */
   attributes?: InputMaybe<Array<AttributeInput>>;
   /** The ID of the merchandise line. */
-  id: Scalars['ID']['input'];
+  id: Scalars['ID'];
   /** The ID of the merchandise for the line item. */
-  merchandiseId?: InputMaybe<Scalars['ID']['input']>;
+  merchandiseId?: InputMaybe<Scalars['ID']>;
   /** The quantity of the line item. */
-  quantity?: InputMaybe<Scalars['Int']['input']>;
+  quantity?: InputMaybe<Scalars['Int']>;
   /** The ID of the selling plan that the merchandise is being purchased with. */
-  sellingPlanId?: InputMaybe<Scalars['ID']['input']>;
+  sellingPlanId?: InputMaybe<Scalars['ID']>;
 };
 
 /** Return type for `cartLinesAdd` mutation. */
@@ -1179,16 +1176,16 @@ export type CartMetafieldDeleteInput = {
    *  that relies on the default app-reserved namespace.
    *
    */
-  key: Scalars['String']['input'];
+  key: Scalars['String'];
   /** The ID of the cart resource. */
-  ownerId: Scalars['ID']['input'];
+  ownerId: Scalars['ID'];
 };
 
 /** Return type for `cartMetafieldDelete` mutation. */
 export type CartMetafieldDeletePayload = {
   __typename?: 'CartMetafieldDeletePayload';
   /** The ID of the deleted cart metafield. */
-  deletedId?: Maybe<Scalars['ID']['output']>;
+  deletedId?: Maybe<Scalars['ID']>;
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<MetafieldDeleteUserError>;
 };
@@ -1196,20 +1193,20 @@ export type CartMetafieldDeletePayload = {
 /** The input fields for a cart metafield value to set. */
 export type CartMetafieldsSetInput = {
   /** The key name of the cart metafield. */
-  key: Scalars['String']['input'];
+  key: Scalars['String'];
   /** The ID of the cart resource. */
-  ownerId: Scalars['ID']['input'];
+  ownerId: Scalars['ID'];
   /**
    * The type of data that the cart metafield stores.
    * The type of data must be a [supported type](https://shopify.dev/apps/metafields/types).
    *
    */
-  type: Scalars['String']['input'];
+  type: Scalars['String'];
   /**
    * The data to store in the cart metafield. The data is always stored as a string, regardless of the metafield's type.
    *
    */
-  value: Scalars['String']['input'];
+  value: Scalars['String'];
 };
 
 /** Return type for `cartMetafieldsSet` mutation. */
@@ -1253,7 +1250,7 @@ export type CartPaymentInput = {
    * Note that this value doesn't correspond to the Shopify Order ID.
    *
    */
-  sourceIdentifier?: InputMaybe<Scalars['String']['input']>;
+  sourceIdentifier?: InputMaybe<Scalars['String']>;
   /**
    * The input fields to use when checking out a cart with a wallet payment method (like Shop Pay or Apple Pay).
    *
@@ -1276,9 +1273,9 @@ export type CartPaymentUpdatePayload = {
  */
 export type CartSelectedDeliveryOptionInput = {
   /** The ID of the cart delivery group. */
-  deliveryGroupId: Scalars['ID']['input'];
+  deliveryGroupId: Scalars['ID'];
   /** The handle of the selected delivery option. */
-  deliveryOptionHandle: Scalars['String']['input'];
+  deliveryOptionHandle: Scalars['String'];
 };
 
 /** Return type for `cartSelectedDeliveryOptionsUpdate` mutation. */
@@ -1312,9 +1309,9 @@ export type CartUserError = DisplayableError & {
   /** The error code. */
   code?: Maybe<CartErrorCode>;
   /** The path to the input field that caused the error. */
-  field?: Maybe<Array<Scalars['String']['output']>>;
+  field?: Maybe<Array<Scalars['String']>>;
   /** The error message. */
-  message: Scalars['String']['output'];
+  message: Scalars['String'];
 };
 
 /**
@@ -1343,29 +1340,29 @@ export type Checkout = Node & {
   /** The identity of the customer associated with the checkout. */
   buyerIdentity: CheckoutBuyerIdentity;
   /** The date and time when the checkout was completed. */
-  completedAt?: Maybe<Scalars['DateTime']['output']>;
+  completedAt?: Maybe<Scalars['DateTime']>;
   /** The date and time when the checkout was created. */
-  createdAt: Scalars['DateTime']['output'];
+  createdAt: Scalars['DateTime'];
   /** The currency code for the checkout. */
   currencyCode: CurrencyCode;
-  /** A list of extra information that is added to the checkout. */
+  /** A list of extra information that's added to the checkout. */
   customAttributes: Array<Attribute>;
   /** Discounts that have been applied on the checkout. */
   discountApplications: DiscountApplicationConnection;
   /** The email attached to this checkout. */
-  email?: Maybe<Scalars['String']['output']>;
+  email?: Maybe<Scalars['String']>;
   /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
+  id: Scalars['ID'];
   /** A list of line item objects, each one containing information about an item in the checkout. */
   lineItems: CheckoutLineItemConnection;
   /** The sum of all the prices of all the items in the checkout. Duties, taxes, shipping and discounts excluded. */
   lineItemsSubtotalPrice: MoneyV2;
   /** The note associated with the checkout. */
-  note?: Maybe<Scalars['String']['output']>;
+  note?: Maybe<Scalars['String']>;
   /** The resulting order from a paid checkout. */
   order?: Maybe<Order>;
-  /** The Order Status Page for this Checkout, null when checkout is not completed. */
-  orderStatusUrl?: Maybe<Scalars['URL']['output']>;
+  /** The Order Status Page for this Checkout, null when checkout isn't completed. */
+  orderStatusUrl?: Maybe<Scalars['URL']>;
   /** The amount left to be paid. This is equal to the cost of the line items, taxes, and shipping, minus discounts and gift cards. */
   paymentDue: MoneyV2;
   /**
@@ -1380,9 +1377,9 @@ export type Checkout = Node & {
    * date, polling is required until the value is true.
    *
    */
-  ready: Scalars['Boolean']['output'];
+  ready: Scalars['Boolean'];
   /** States whether or not the fulfillment requires shipping. */
-  requiresShipping: Scalars['Boolean']['output'];
+  requiresShipping: Scalars['Boolean'];
   /** The shipping address to where the line items will be shipped. */
   shippingAddress?: Maybe<MailingAddress>;
   /**
@@ -1390,7 +1387,7 @@ export type Checkout = Node & {
    *
    */
   shippingDiscountAllocations: Array<DiscountAllocation>;
-  /** Once a shipping rate is selected by the customer it is transitioned to a `shipping_line` object. */
+  /** Once a shipping rate is selected by the customer it's transitioned to a `shipping_line` object. */
   shippingLine?: Maybe<ShippingRate>;
   /** The price at checkout before shipping and taxes. */
   subtotalPrice: MoneyV2;
@@ -1400,9 +1397,9 @@ export type Checkout = Node & {
    */
   subtotalPriceV2: MoneyV2;
   /** Whether the checkout is tax exempt. */
-  taxExempt: Scalars['Boolean']['output'];
+  taxExempt: Scalars['Boolean'];
   /** Whether taxes are included in the line item and shipping line prices. */
-  taxesIncluded: Scalars['Boolean']['output'];
+  taxesIncluded: Scalars['Boolean'];
   /** The sum of all the duties applied to the line items in the checkout. */
   totalDuties?: Maybe<MoneyV2>;
   /** The sum of all the prices of all the items in the checkout, including taxes and duties. */
@@ -1420,27 +1417,27 @@ export type Checkout = Node & {
    */
   totalTaxV2: MoneyV2;
   /** The date and time when the checkout was last updated. */
-  updatedAt: Scalars['DateTime']['output'];
+  updatedAt: Scalars['DateTime'];
   /** The url pointing to the checkout accessible from the web. */
-  webUrl: Scalars['URL']['output'];
+  webUrl: Scalars['URL'];
 };
 
 /** A container for all the information required to checkout items and pay. */
 export type CheckoutDiscountApplicationsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
 };
 
 /** A container for all the information required to checkout items and pay. */
 export type CheckoutLineItemsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
 };
 
 /** The input fields required to update a checkout's attributes. */
@@ -1452,11 +1449,11 @@ export type CheckoutAttributesUpdateV2Input = {
    * each operation.
    *
    */
-  allowPartialAddresses?: InputMaybe<Scalars['Boolean']['input']>;
-  /** A list of extra information that is added to the checkout. */
+  allowPartialAddresses?: InputMaybe<Scalars['Boolean']>;
+  /** A list of extra information that's added to the checkout. */
   customAttributes?: InputMaybe<Array<AttributeInput>>;
   /** The text of an optional note that a shop owner can attach to the checkout. */
-  note?: InputMaybe<Scalars['String']['input']>;
+  note?: InputMaybe<Scalars['String']>;
 };
 
 /** Return type for `checkoutAttributesUpdateV2` mutation. */
@@ -1545,17 +1542,17 @@ export type CheckoutCreateInput = {
    * Full validation of addresses is still done at completion time. Defaults to `null`.
    *
    */
-  allowPartialAddresses?: InputMaybe<Scalars['Boolean']['input']>;
+  allowPartialAddresses?: InputMaybe<Scalars['Boolean']>;
   /** The identity of the customer associated with the checkout. */
   buyerIdentity?: InputMaybe<CheckoutBuyerIdentityInput>;
-  /** A list of extra information that is added to the checkout. */
+  /** A list of extra information that's added to the checkout. */
   customAttributes?: InputMaybe<Array<AttributeInput>>;
   /** The email with which the customer wants to checkout. */
-  email?: InputMaybe<Scalars['String']['input']>;
+  email?: InputMaybe<Scalars['String']>;
   /** A list of line item objects, each one containing information about an item in the checkout. */
   lineItems?: InputMaybe<Array<CheckoutLineItemInput>>;
   /** The text of an optional note that a shop owner can attach to the checkout. */
-  note?: InputMaybe<Scalars['String']['input']>;
+  note?: InputMaybe<Scalars['String']>;
   /** The shipping address to where the line items will be shipped. */
   shippingAddress?: InputMaybe<MailingAddressInput>;
 };
@@ -1568,7 +1565,7 @@ export type CheckoutCreatePayload = {
   /** The list of errors that occurred from executing the mutation. */
   checkoutUserErrors: Array<CheckoutUserError>;
   /** The checkout queue token. Available only to selected stores. */
-  queueToken?: Maybe<Scalars['String']['output']>;
+  queueToken?: Maybe<Scalars['String']>;
   /**
    * The list of errors that occurred from executing the mutation.
    * @deprecated Use `checkoutUserErrors` instead.
@@ -1779,11 +1776,11 @@ export type CheckoutLineItem = Node & {
   /** The discounts that have been allocated onto the checkout line item by discount applications. */
   discountAllocations: Array<DiscountAllocation>;
   /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
+  id: Scalars['ID'];
   /** The quantity of the line item. */
-  quantity: Scalars['Int']['output'];
+  quantity: Scalars['Int'];
   /** Title of the line item. Defaults to the product's title. */
-  title: Scalars['String']['output'];
+  title: Scalars['String'];
   /** Unit price of the line item. */
   unitPrice?: Maybe<MoneyV2>;
   /** Product variant of the line item. */
@@ -1811,7 +1808,7 @@ export type CheckoutLineItemConnection = {
 export type CheckoutLineItemEdge = {
   __typename?: 'CheckoutLineItemEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of CheckoutLineItemEdge. */
   node: CheckoutLineItem;
 };
@@ -1821,9 +1818,9 @@ export type CheckoutLineItemInput = {
   /** Extra information in the form of an array of Key-Value pairs about the line item. */
   customAttributes?: InputMaybe<Array<AttributeInput>>;
   /** The quantity of the line item. */
-  quantity: Scalars['Int']['input'];
+  quantity: Scalars['Int'];
   /** The ID of the product variant for the line item. */
-  variantId: Scalars['ID']['input'];
+  variantId: Scalars['ID'];
 };
 
 /** The input fields to update a line item on the checkout. */
@@ -1831,11 +1828,11 @@ export type CheckoutLineItemUpdateInput = {
   /** Extra information in the form of an array of Key-Value pairs about the line item. */
   customAttributes?: InputMaybe<Array<AttributeInput>>;
   /** The ID of the line item. */
-  id?: InputMaybe<Scalars['ID']['input']>;
+  id?: InputMaybe<Scalars['ID']>;
   /** The quantity of the line item. */
-  quantity?: InputMaybe<Scalars['Int']['input']>;
+  quantity?: InputMaybe<Scalars['Int']>;
   /** The variant ID of the line item. */
-  variantId?: InputMaybe<Scalars['ID']['input']>;
+  variantId?: InputMaybe<Scalars['ID']>;
 };
 
 /** Return type for `checkoutLineItemsAdd` mutation. */
@@ -1923,28 +1920,29 @@ export type CheckoutUserError = DisplayableError & {
   /** The error code. */
   code?: Maybe<CheckoutErrorCode>;
   /** The path to the input field that caused the error. */
-  field?: Maybe<Array<Scalars['String']['output']>>;
+  field?: Maybe<Array<Scalars['String']>>;
   /** The error message. */
-  message: Scalars['String']['output'];
+  message: Scalars['String'];
 };
 
 /** A collection represents a grouping of products that a shop owner can create to organize them or make their shops easier to browse. */
 export type Collection = HasMetafields &
   Node &
-  OnlineStorePublishable & {
+  OnlineStorePublishable &
+  Trackable & {
     __typename?: 'Collection';
     /** Stripped description of the collection, single line with HTML tags removed. */
-    description: Scalars['String']['output'];
+    description: Scalars['String'];
     /** The description of the collection, complete with HTML formatting. */
-    descriptionHtml: Scalars['HTML']['output'];
+    descriptionHtml: Scalars['HTML'];
     /**
      * A human-friendly unique string for the collection automatically generated from its title.
      * Limit of 255 characters.
      *
      */
-    handle: Scalars['String']['output'];
+    handle: Scalars['String'];
     /** A globally-unique ID. */
-    id: Scalars['ID']['output'];
+    id: Scalars['ID'];
     /** Image associated with the collection. */
     image?: Maybe<Image>;
     /** Returns a metafield found by namespace and key. */
@@ -1955,26 +1953,28 @@ export type Collection = HasMetafields &
      */
     metafields: Array<Maybe<Metafield>>;
     /** The URL used for viewing the resource on the shop's Online Store. Returns `null` if the resource is currently not published to the Online Store sales channel. */
-    onlineStoreUrl?: Maybe<Scalars['URL']['output']>;
+    onlineStoreUrl?: Maybe<Scalars['URL']>;
     /** List of products in the collection. */
     products: ProductConnection;
     /** The collection's SEO information. */
     seo: Seo;
     /** The collection’s name. Limit of 255 characters. */
-    title: Scalars['String']['output'];
+    title: Scalars['String'];
+    /** A URL parameters to be added to a page URL when it is linked from a GraphQL result. This allows for tracking the origin of the traffic. */
+    trackingParameters?: Maybe<Scalars['String']>;
     /** The date and time when the collection was last modified. */
-    updatedAt: Scalars['DateTime']['output'];
+    updatedAt: Scalars['DateTime'];
   };
 
 /** A collection represents a grouping of products that a shop owner can create to organize them or make their shops easier to browse. */
 export type CollectionDescriptionArgs = {
-  truncateAt?: InputMaybe<Scalars['Int']['input']>;
+  truncateAt?: InputMaybe<Scalars['Int']>;
 };
 
 /** A collection represents a grouping of products that a shop owner can create to organize them or make their shops easier to browse. */
 export type CollectionMetafieldArgs = {
-  key: Scalars['String']['input'];
-  namespace: Scalars['String']['input'];
+  key: Scalars['String'];
+  namespace: Scalars['String'];
 };
 
 /** A collection represents a grouping of products that a shop owner can create to organize them or make their shops easier to browse. */
@@ -1984,12 +1984,12 @@ export type CollectionMetafieldsArgs = {
 
 /** A collection represents a grouping of products that a shop owner can create to organize them or make their shops easier to browse. */
 export type CollectionProductsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
   filters?: InputMaybe<Array<ProductFilter>>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
   sortKey?: InputMaybe<ProductCollectionSortKeys>;
 };
 
@@ -2005,6 +2005,8 @@ export type CollectionConnection = {
   nodes: Array<Collection>;
   /** Information to aid in pagination. */
   pageInfo: PageInfo;
+  /** The total count of Collections. */
+  totalCount: Scalars['UnsignedInt64'];
 };
 
 /**
@@ -2014,7 +2016,7 @@ export type CollectionConnection = {
 export type CollectionEdge = {
   __typename?: 'CollectionEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of CollectionEdge. */
   node: Collection;
 };
@@ -2040,25 +2042,25 @@ export type Comment = Node & {
   /** The comment’s author. */
   author: CommentAuthor;
   /** Stripped content of the comment, single line with HTML tags removed. */
-  content: Scalars['String']['output'];
+  content: Scalars['String'];
   /** The content of the comment, complete with HTML formatting. */
-  contentHtml: Scalars['HTML']['output'];
+  contentHtml: Scalars['HTML'];
   /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
+  id: Scalars['ID'];
 };
 
 /** A comment on an article. */
 export type CommentContentArgs = {
-  truncateAt?: InputMaybe<Scalars['Int']['input']>;
+  truncateAt?: InputMaybe<Scalars['Int']>;
 };
 
 /** The author of a comment. */
 export type CommentAuthor = {
   __typename?: 'CommentAuthor';
   /** The author's email. */
-  email: Scalars['String']['output'];
+  email: Scalars['String'];
   /** The author’s name. */
-  name: Scalars['String']['output'];
+  name: Scalars['String'];
 };
 
 /**
@@ -2082,7 +2084,7 @@ export type CommentConnection = {
 export type CommentEdge = {
   __typename?: 'CommentEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of CommentEdge. */
   node: Comment;
 };
@@ -2091,7 +2093,7 @@ export type CommentEdge = {
 export type CompletePaymentChallenge = {
   __typename?: 'CompletePaymentChallenge';
   /** The URL for the 3DS payment redirect. */
-  redirectUrl?: Maybe<Scalars['URL']['output']>;
+  redirectUrl?: Maybe<Scalars['URL']>;
 };
 
 /** An error that occurred during a cart completion attempt. */
@@ -2100,7 +2102,7 @@ export type CompletionError = {
   /** The error code. */
   code: CompletionErrorCode;
   /** The error message. */
-  message?: Maybe<Scalars['String']['output']>;
+  message?: Maybe<Scalars['String']>;
 };
 
 /** The code of the error that occurred during a cart completion attempt. */
@@ -2119,6 +2121,44 @@ export type CompletionErrorCode =
   | 'PAYMENT_INVALID_PAYMENT_METHOD'
   | 'PAYMENT_TRANSIENT_ERROR';
 
+/** Represents information about the grouped merchandise in the cart. */
+export type ComponentizableCartLine = BaseCartLine &
+  Node & {
+    __typename?: 'ComponentizableCartLine';
+    /** An attribute associated with the cart line. */
+    attribute?: Maybe<Attribute>;
+    /** The attributes associated with the cart line. Attributes are represented as key-value pairs. */
+    attributes: Array<Attribute>;
+    /** The cost of the merchandise that the buyer will pay for at checkout. The costs are subject to change and changes will be reflected at checkout. */
+    cost: CartLineCost;
+    /** The discounts that have been applied to the cart line. */
+    discountAllocations: Array<
+      | CartAutomaticDiscountAllocation
+      | CartCodeDiscountAllocation
+      | CartCustomDiscountAllocation
+    >;
+    /**
+     * The estimated cost of the merchandise that the buyer will pay for at checkout. The estimated costs are subject to change and changes will be reflected at checkout.
+     * @deprecated Use `cost` instead.
+     */
+    estimatedCost: CartLineEstimatedCost;
+    /** A globally-unique ID. */
+    id: Scalars['ID'];
+    /** The components of the line item. */
+    lineComponents: Array<CartLine>;
+    /** The merchandise that the buyer intends to purchase. */
+    merchandise: Merchandise;
+    /** The quantity of the merchandise that the customer intends to purchase. */
+    quantity: Scalars['Int'];
+    /** The selling plan associated with the cart line and the effect that each selling plan has on variants when they're purchased. */
+    sellingPlanAllocation?: Maybe<SellingPlanAllocation>;
+  };
+
+/** Represents information about the grouped merchandise in the cart. */
+export type ComponentizableCartLineAttributeArgs = {
+  key: Scalars['String'];
+};
+
 /** A country. */
 export type Country = {
   __typename?: 'Country';
@@ -2131,7 +2171,7 @@ export type Country = {
   /** The market that includes this country. */
   market?: Maybe<Market>;
   /** The name of the country. */
-  name: Scalars['String']['output'];
+  name: Scalars['String'];
   /** The unit system used in the country. */
   unitSystem: UnitSystem;
 };
@@ -2639,21 +2679,21 @@ export type CountryCode =
 export type CreditCard = {
   __typename?: 'CreditCard';
   /** The brand of the credit card. */
-  brand?: Maybe<Scalars['String']['output']>;
+  brand?: Maybe<Scalars['String']>;
   /** The expiry month of the credit card. */
-  expiryMonth?: Maybe<Scalars['Int']['output']>;
+  expiryMonth?: Maybe<Scalars['Int']>;
   /** The expiry year of the credit card. */
-  expiryYear?: Maybe<Scalars['Int']['output']>;
+  expiryYear?: Maybe<Scalars['Int']>;
   /** The credit card's BIN number. */
-  firstDigits?: Maybe<Scalars['String']['output']>;
+  firstDigits?: Maybe<Scalars['String']>;
   /** The first name of the card holder. */
-  firstName?: Maybe<Scalars['String']['output']>;
+  firstName?: Maybe<Scalars['String']>;
   /** The last 4 digits of the credit card. */
-  lastDigits?: Maybe<Scalars['String']['output']>;
+  lastDigits?: Maybe<Scalars['String']>;
   /** The last name of the card holder. */
-  lastName?: Maybe<Scalars['String']['output']>;
+  lastName?: Maybe<Scalars['String']>;
   /** The masked credit card number with only the last 4 digits displayed. */
-  maskedNumber?: Maybe<Scalars['String']['output']>;
+  maskedNumber?: Maybe<Scalars['String']>;
 };
 
 /**
@@ -2665,13 +2705,13 @@ export type CreditCardPaymentInputV2 = {
   /** The billing address for the payment. */
   billingAddress: MailingAddressInput;
   /** A unique client generated key used to avoid duplicate charges. When a duplicate payment is found, the original is returned instead of creating a new one. For more information, refer to [Idempotent requests](https://shopify.dev/api/usage/idempotent-requests). */
-  idempotencyKey: Scalars['String']['input'];
+  idempotencyKey: Scalars['String'];
   /** The amount and currency of the payment. */
   paymentAmount: MoneyInput;
   /** Executes the payment in test mode if possible. Defaults to `false`. */
-  test?: InputMaybe<Scalars['Boolean']['input']>;
+  test?: InputMaybe<Scalars['Boolean']>;
   /** The ID returned by Shopify's Card Vault. */
-  vaultId: Scalars['String']['input'];
+  vaultId: Scalars['String'];
 };
 
 /** The part of the image that should remain after cropping. */
@@ -2693,9 +2733,9 @@ export type Currency = {
   /** The ISO code of the currency. */
   isoCode: CurrencyCode;
   /** The name of the currency. */
-  name: Scalars['String']['output'];
+  name: Scalars['String'];
   /** The symbol of the currency. */
-  symbol: Scalars['String']['output'];
+  symbol: Scalars['String'];
 };
 
 /**
@@ -3031,25 +3071,25 @@ export type CurrencyCode =
 export type Customer = HasMetafields & {
   __typename?: 'Customer';
   /** Indicates whether the customer has consented to be sent marketing material via email. */
-  acceptsMarketing: Scalars['Boolean']['output'];
+  acceptsMarketing: Scalars['Boolean'];
   /** A list of addresses for the customer. */
   addresses: MailingAddressConnection;
   /** The date and time when the customer was created. */
-  createdAt: Scalars['DateTime']['output'];
+  createdAt: Scalars['DateTime'];
   /** The customer’s default address. */
   defaultAddress?: Maybe<MailingAddress>;
   /** The customer’s name, email or phone number. */
-  displayName: Scalars['String']['output'];
+  displayName: Scalars['String'];
   /** The customer’s email address. */
-  email?: Maybe<Scalars['String']['output']>;
+  email?: Maybe<Scalars['String']>;
   /** The customer’s first name. */
-  firstName?: Maybe<Scalars['String']['output']>;
+  firstName?: Maybe<Scalars['String']>;
   /** A unique ID for the customer. */
-  id: Scalars['ID']['output'];
+  id: Scalars['ID'];
   /** The customer's most recently updated, incomplete checkout. */
   lastIncompleteCheckout?: Maybe<Checkout>;
   /** The customer’s last name. */
-  lastName?: Maybe<Scalars['String']['output']>;
+  lastName?: Maybe<Scalars['String']>;
   /** Returns a metafield found by namespace and key. */
   metafield?: Maybe<Metafield>;
   /**
@@ -3058,34 +3098,34 @@ export type Customer = HasMetafields & {
    */
   metafields: Array<Maybe<Metafield>>;
   /** The number of orders that the customer has made at the store in their lifetime. */
-  numberOfOrders: Scalars['UnsignedInt64']['output'];
+  numberOfOrders: Scalars['UnsignedInt64'];
   /** The orders associated with the customer. */
   orders: OrderConnection;
   /** The customer’s phone number. */
-  phone?: Maybe<Scalars['String']['output']>;
+  phone?: Maybe<Scalars['String']>;
   /**
    * A comma separated list of tags that have been added to the customer.
    * Additional access scope required: unauthenticated_read_customer_tags.
    *
    */
-  tags: Array<Scalars['String']['output']>;
+  tags: Array<Scalars['String']>;
   /** The date and time when the customer information was updated. */
-  updatedAt: Scalars['DateTime']['output'];
+  updatedAt: Scalars['DateTime'];
 };
 
 /** A customer represents a customer account with the shop. Customer accounts store contact information for the customer, saving logged-in customers the trouble of having to provide it at every checkout. */
 export type CustomerAddressesArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
 };
 
 /** A customer represents a customer account with the shop. Customer accounts store contact information for the customer, saving logged-in customers the trouble of having to provide it at every checkout. */
 export type CustomerMetafieldArgs = {
-  key: Scalars['String']['input'];
-  namespace: Scalars['String']['input'];
+  key: Scalars['String'];
+  namespace: Scalars['String'];
 };
 
 /** A customer represents a customer account with the shop. Customer accounts store contact information for the customer, saving logged-in customers the trouble of having to provide it at every checkout. */
@@ -3095,12 +3135,12 @@ export type CustomerMetafieldsArgs = {
 
 /** A customer represents a customer account with the shop. Customer accounts store contact information for the customer, saving logged-in customers the trouble of having to provide it at every checkout. */
 export type CustomerOrdersArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  query?: InputMaybe<Scalars['String']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
   sortKey?: InputMaybe<OrderSortKeys>;
 };
 
@@ -3108,17 +3148,17 @@ export type CustomerOrdersArgs = {
 export type CustomerAccessToken = {
   __typename?: 'CustomerAccessToken';
   /** The customer’s access token. */
-  accessToken: Scalars['String']['output'];
+  accessToken: Scalars['String'];
   /** The date and time when the customer access token expires. */
-  expiresAt: Scalars['DateTime']['output'];
+  expiresAt: Scalars['DateTime'];
 };
 
 /** The input fields required to create a customer access token. */
 export type CustomerAccessTokenCreateInput = {
   /** The email associated to the customer. */
-  email: Scalars['String']['input'];
+  email: Scalars['String'];
   /** The login password to be used by the customer. */
-  password: Scalars['String']['input'];
+  password: Scalars['String'];
 };
 
 /** Return type for `customerAccessTokenCreate` mutation. */
@@ -3148,9 +3188,9 @@ export type CustomerAccessTokenCreateWithMultipassPayload = {
 export type CustomerAccessTokenDeletePayload = {
   __typename?: 'CustomerAccessTokenDeletePayload';
   /** The destroyed access token. */
-  deletedAccessToken?: Maybe<Scalars['String']['output']>;
+  deletedAccessToken?: Maybe<Scalars['String']>;
   /** ID of the destroyed customer access token. */
-  deletedCustomerAccessTokenId?: Maybe<Scalars['String']['output']>;
+  deletedCustomerAccessTokenId?: Maybe<Scalars['String']>;
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<UserError>;
 };
@@ -3178,9 +3218,9 @@ export type CustomerActivateByUrlPayload = {
 /** The input fields to activate a customer. */
 export type CustomerActivateInput = {
   /** The activation token required to activate the customer. */
-  activationToken: Scalars['String']['input'];
+  activationToken: Scalars['String'];
   /** New password that will be set during activation. */
-  password: Scalars['String']['input'];
+  password: Scalars['String'];
 };
 
 /** Return type for `customerActivate` mutation. */
@@ -3219,7 +3259,7 @@ export type CustomerAddressDeletePayload = {
   /** The list of errors that occurred from executing the mutation. */
   customerUserErrors: Array<CustomerUserError>;
   /** ID of the deleted customer address. */
-  deletedCustomerAddressId?: Maybe<Scalars['String']['output']>;
+  deletedCustomerAddressId?: Maybe<Scalars['String']>;
   /**
    * The list of errors that occurred from executing the mutation.
    * @deprecated Use `customerUserErrors` instead.
@@ -3244,22 +3284,22 @@ export type CustomerAddressUpdatePayload = {
 /** The input fields to create a new customer. */
 export type CustomerCreateInput = {
   /** Indicates whether the customer has consented to be sent marketing material via email. */
-  acceptsMarketing?: InputMaybe<Scalars['Boolean']['input']>;
+  acceptsMarketing?: InputMaybe<Scalars['Boolean']>;
   /** The customer’s email. */
-  email: Scalars['String']['input'];
+  email: Scalars['String'];
   /** The customer’s first name. */
-  firstName?: InputMaybe<Scalars['String']['input']>;
+  firstName?: InputMaybe<Scalars['String']>;
   /** The customer’s last name. */
-  lastName?: InputMaybe<Scalars['String']['input']>;
+  lastName?: InputMaybe<Scalars['String']>;
   /** The login password used by the customer. */
-  password: Scalars['String']['input'];
+  password: Scalars['String'];
   /**
    * A unique phone number for the customer.
    *
    * Formatted using E.164 standard. For example, _+16135551111_.
    *
    */
-  phone?: InputMaybe<Scalars['String']['input']>;
+  phone?: InputMaybe<Scalars['String']>;
 };
 
 /** Return type for `customerCreate` mutation. */
@@ -3354,9 +3394,9 @@ export type CustomerResetByUrlPayload = {
 /** The input fields to reset a customer's password. */
 export type CustomerResetInput = {
   /** New password that will be set as part of the reset password process. */
-  password: Scalars['String']['input'];
+  password: Scalars['String'];
   /** The reset token required to reset the customer’s password. */
-  resetToken: Scalars['String']['input'];
+  resetToken: Scalars['String'];
 };
 
 /** Return type for `customerReset` mutation. */
@@ -3378,22 +3418,22 @@ export type CustomerResetPayload = {
 /** The input fields to update the Customer information. */
 export type CustomerUpdateInput = {
   /** Indicates whether the customer has consented to be sent marketing material via email. */
-  acceptsMarketing?: InputMaybe<Scalars['Boolean']['input']>;
+  acceptsMarketing?: InputMaybe<Scalars['Boolean']>;
   /** The customer’s email. */
-  email?: InputMaybe<Scalars['String']['input']>;
+  email?: InputMaybe<Scalars['String']>;
   /** The customer’s first name. */
-  firstName?: InputMaybe<Scalars['String']['input']>;
+  firstName?: InputMaybe<Scalars['String']>;
   /** The customer’s last name. */
-  lastName?: InputMaybe<Scalars['String']['input']>;
+  lastName?: InputMaybe<Scalars['String']>;
   /** The login password used by the customer. */
-  password?: InputMaybe<Scalars['String']['input']>;
+  password?: InputMaybe<Scalars['String']>;
   /**
    * A unique phone number for the customer.
    *
    * Formatted using E.164 standard. For example, _+16135551111_. To remove the phone number, specify `null`.
    *
    */
-  phone?: InputMaybe<Scalars['String']['input']>;
+  phone?: InputMaybe<Scalars['String']>;
 };
 
 /** Return type for `customerUpdate` mutation. */
@@ -3422,9 +3462,9 @@ export type CustomerUserError = DisplayableError & {
   /** The error code. */
   code?: Maybe<CustomerErrorCode>;
   /** The path to the input field that caused the error. */
-  field?: Maybe<Array<Scalars['String']['output']>>;
+  field?: Maybe<Array<Scalars['String']>>;
   /** The error message. */
-  message: Scalars['String']['output'];
+  message: Scalars['String'];
 };
 
 /** A delivery address of the buyer that is interacting with the cart. */
@@ -3439,7 +3479,7 @@ export type DeliveryAddressInput = {
    * The ID of a customer address that is associated with the buyer that is interacting with the cart.
    *
    */
-  customerAddressId?: InputMaybe<Scalars['ID']['input']>;
+  customerAddressId?: InputMaybe<Scalars['ID']>;
   /** A delivery address preference of a buyer that is interacting with the cart. */
   deliveryAddress?: InputMaybe<MailingAddressInput>;
 };
@@ -3537,7 +3577,7 @@ export type DiscountApplicationConnection = {
 export type DiscountApplicationEdge = {
   __typename?: 'DiscountApplicationEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of DiscountApplicationEdge. */
   node:
     | AutomaticDiscountApplication
@@ -3581,9 +3621,9 @@ export type DiscountCodeApplication = DiscountApplication & {
   /** The method by which the discount's value is allocated to its entitled items. */
   allocationMethod: DiscountApplicationAllocationMethod;
   /** Specifies whether the discount code was applied successfully. */
-  applicable: Scalars['Boolean']['output'];
+  applicable: Scalars['Boolean'];
   /** The string identifying the discount code that was used at the time of application. */
-  code: Scalars['String']['output'];
+  code: Scalars['String'];
   /** Which lines of targetType that the discount is allocated over. */
   targetSelection: DiscountApplicationTargetSelection;
   /** The type of line that the discount is applicable towards. */
@@ -3595,20 +3635,20 @@ export type DiscountCodeApplication = DiscountApplication & {
 /** Represents an error in the input of a mutation. */
 export type DisplayableError = {
   /** The path to the input field that caused the error. */
-  field?: Maybe<Array<Scalars['String']['output']>>;
+  field?: Maybe<Array<Scalars['String']>>;
   /** The error message. */
-  message: Scalars['String']['output'];
+  message: Scalars['String'];
 };
 
 /** Represents a web address. */
 export type Domain = {
   __typename?: 'Domain';
   /** The host name of the domain (eg: `example.com`). */
-  host: Scalars['String']['output'];
+  host: Scalars['String'];
   /** Whether SSL is enabled or not. */
-  sslEnabled: Scalars['Boolean']['output'];
+  sslEnabled: Scalars['Boolean'];
   /** The URL of the domain (eg: `https://example.com`). */
-  url: Scalars['URL']['output'];
+  url: Scalars['URL'];
 };
 
 /** Represents a video hosted outside of Shopify. */
@@ -3616,22 +3656,22 @@ export type ExternalVideo = Media &
   Node & {
     __typename?: 'ExternalVideo';
     /** A word or phrase to share the nature or contents of a media. */
-    alt?: Maybe<Scalars['String']['output']>;
+    alt?: Maybe<Scalars['String']>;
     /** The embed URL of the video for the respective host. */
-    embedUrl: Scalars['URL']['output'];
+    embedUrl: Scalars['URL'];
     /**
      * The URL.
      * @deprecated Use `originUrl` instead.
      */
-    embeddedUrl: Scalars['URL']['output'];
+    embeddedUrl: Scalars['URL'];
     /** The host of the external video. */
     host: MediaHost;
     /** A globally-unique ID. */
-    id: Scalars['ID']['output'];
+    id: Scalars['ID'];
     /** The media content type. */
     mediaContentType: MediaContentType;
     /** The origin URL of the video on the respective host. */
-    originUrl: Scalars['URL']['output'];
+    originUrl: Scalars['URL'];
     /** The presentation for a media. */
     presentation?: Maybe<MediaPresentation>;
     /** The preview image for the media. */
@@ -3642,9 +3682,9 @@ export type ExternalVideo = Media &
 export type Filter = {
   __typename?: 'Filter';
   /** A unique identifier. */
-  id: Scalars['String']['output'];
+  id: Scalars['String'];
   /** A human-friendly string for this filter. */
-  label: Scalars['String']['output'];
+  label: Scalars['String'];
   /** An enumeration that denotes the type of data this filter represents. */
   type: FilterType;
   /** The list of values for this filter. */
@@ -3670,18 +3710,18 @@ export type FilterType =
 export type FilterValue = {
   __typename?: 'FilterValue';
   /** The number of results that match this filter value. */
-  count: Scalars['Int']['output'];
+  count: Scalars['Int'];
   /** A unique identifier. */
-  id: Scalars['String']['output'];
+  id: Scalars['String'];
   /**
    * An input object that can be used to filter by this value on the parent field.
    *
    * The value is provided as a helper for building dynamic filtering UI. For example, if you have a list of selected `FilterValue` objects, you can combine their respective `input` values to use in a subsequent query.
    *
    */
-  input: Scalars['JSON']['output'];
+  input: Scalars['JSON'];
   /** A human-friendly string for this filter value. */
-  label: Scalars['String']['output'];
+  label: Scalars['String'];
 };
 
 /** Represents a single fulfillment in an order. */
@@ -3690,7 +3730,7 @@ export type Fulfillment = {
   /** List of the fulfillment's line items. */
   fulfillmentLineItems: FulfillmentLineItemConnection;
   /** The name of the tracking company. */
-  trackingCompany?: Maybe<Scalars['String']['output']>;
+  trackingCompany?: Maybe<Scalars['String']>;
   /**
    * Tracking information associated with the fulfillment,
    * such as the tracking number and tracking URL.
@@ -3701,16 +3741,16 @@ export type Fulfillment = {
 
 /** Represents a single fulfillment in an order. */
 export type FulfillmentFulfillmentLineItemsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
 };
 
 /** Represents a single fulfillment in an order. */
 export type FulfillmentTrackingInfoArgs = {
-  first?: InputMaybe<Scalars['Int']['input']>;
+  first?: InputMaybe<Scalars['Int']>;
 };
 
 /** Represents a single line item in a fulfillment. There is at most one fulfillment line item for each order line item. */
@@ -3719,7 +3759,7 @@ export type FulfillmentLineItem = {
   /** The associated order's line item. */
   lineItem: OrderLineItem;
   /** The amount fulfilled in this fulfillment. */
-  quantity: Scalars['Int']['output'];
+  quantity: Scalars['Int'];
 };
 
 /**
@@ -3743,7 +3783,7 @@ export type FulfillmentLineItemConnection = {
 export type FulfillmentLineItemEdge = {
   __typename?: 'FulfillmentLineItemEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of FulfillmentLineItemEdge. */
   node: FulfillmentLineItem;
 };
@@ -3752,34 +3792,34 @@ export type FulfillmentLineItemEdge = {
 export type FulfillmentTrackingInfo = {
   __typename?: 'FulfillmentTrackingInfo';
   /** The tracking number of the fulfillment. */
-  number?: Maybe<Scalars['String']['output']>;
+  number?: Maybe<Scalars['String']>;
   /** The URL to track the fulfillment. */
-  url?: Maybe<Scalars['URL']['output']>;
+  url?: Maybe<Scalars['URL']>;
 };
 
 /** The generic file resource lets you manage files in a merchant’s store. Generic files include any file that doesn’t fit into a designated type such as image or video. Example: PDF, JSON. */
 export type GenericFile = Node & {
   __typename?: 'GenericFile';
   /** A word or phrase to indicate the contents of a file. */
-  alt?: Maybe<Scalars['String']['output']>;
+  alt?: Maybe<Scalars['String']>;
   /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
+  id: Scalars['ID'];
   /** The MIME type of the file. */
-  mimeType?: Maybe<Scalars['String']['output']>;
+  mimeType?: Maybe<Scalars['String']>;
   /** The size of the original file in bytes. */
-  originalFileSize?: Maybe<Scalars['Int']['output']>;
+  originalFileSize?: Maybe<Scalars['Int']>;
   /** The preview image for the file. */
   previewImage?: Maybe<Image>;
   /** The URL of the file. */
-  url?: Maybe<Scalars['URL']['output']>;
+  url?: Maybe<Scalars['URL']>;
 };
 
 /** The input fields used to specify a geographical location. */
 export type GeoCoordinateInput = {
   /** The coordinate's latitude value. */
-  latitude: Scalars['Float']['input'];
+  latitude: Scalars['Float'];
   /** The coordinate's longitude value. */
-  longitude: Scalars['Float']['input'];
+  longitude: Scalars['Float'];
 };
 
 /** Represents information about the metafields associated to the specified resource. */
@@ -3795,8 +3835,8 @@ export type HasMetafields = {
 
 /** Represents information about the metafields associated to the specified resource. */
 export type HasMetafieldsMetafieldArgs = {
-  key: Scalars['String']['input'];
-  namespace: Scalars['String']['input'];
+  key: Scalars['String'];
+  namespace: Scalars['String'];
 };
 
 /** Represents information about the metafields associated to the specified resource. */
@@ -3807,20 +3847,20 @@ export type HasMetafieldsMetafieldsArgs = {
 /** The input fields to identify a metafield on an owner resource by namespace and key. */
 export type HasMetafieldsIdentifier = {
   /** The identifier for the metafield. */
-  key: Scalars['String']['input'];
+  key: Scalars['String'];
   /** A container for a set of metafields. */
-  namespace: Scalars['String']['input'];
+  namespace: Scalars['String'];
 };
 
 /** Represents an image resource. */
 export type Image = {
   __typename?: 'Image';
   /** A word or phrase to share the nature or contents of an image. */
-  altText?: Maybe<Scalars['String']['output']>;
-  /** The original height of the image in pixels. Returns `null` if the image is not hosted by Shopify. */
-  height?: Maybe<Scalars['Int']['output']>;
+  altText?: Maybe<Scalars['String']>;
+  /** The original height of the image in pixels. Returns `null` if the image isn't hosted by Shopify. */
+  height?: Maybe<Scalars['Int']>;
   /** A unique ID for the image. */
-  id?: Maybe<Scalars['ID']['output']>;
+  id?: Maybe<Scalars['ID']>;
   /**
    * The location of the original image as a URL.
    *
@@ -3828,21 +3868,21 @@ export type Image = {
    *
    * @deprecated Use `url` instead.
    */
-  originalSrc: Scalars['URL']['output'];
+  originalSrc: Scalars['URL'];
   /**
    * The location of the image as a URL.
    * @deprecated Use `url` instead.
    */
-  src: Scalars['URL']['output'];
+  src: Scalars['URL'];
   /**
    * The location of the transformed image as a URL.
    *
    * All transformation arguments are considered "best-effort". If they can be applied to an image, they will be.
-   * Otherwise any transformations which an image type does not support will be ignored.
+   * Otherwise any transformations which an image type doesn't support will be ignored.
    *
    * @deprecated Use `url(transform:)` instead
    */
-  transformedSrc: Scalars['URL']['output'];
+  transformedSrc: Scalars['URL'];
   /**
    * The location of the image as a URL.
    *
@@ -3853,18 +3893,18 @@ export type Image = {
    * If you need multiple variations of the same image, then you can use [GraphQL aliases](https://graphql.org/learn/queries/#aliases).
    *
    */
-  url: Scalars['URL']['output'];
-  /** The original width of the image in pixels. Returns `null` if the image is not hosted by Shopify. */
-  width?: Maybe<Scalars['Int']['output']>;
+  url: Scalars['URL'];
+  /** The original width of the image in pixels. Returns `null` if the image isn't hosted by Shopify. */
+  width?: Maybe<Scalars['Int']>;
 };
 
 /** Represents an image resource. */
 export type ImageTransformedSrcArgs = {
   crop?: InputMaybe<CropRegion>;
-  maxHeight?: InputMaybe<Scalars['Int']['input']>;
-  maxWidth?: InputMaybe<Scalars['Int']['input']>;
+  maxHeight?: InputMaybe<Scalars['Int']>;
+  maxWidth?: InputMaybe<Scalars['Int']>;
   preferredContentType?: InputMaybe<ImageContentType>;
-  scale?: InputMaybe<Scalars['Int']['input']>;
+  scale?: InputMaybe<Scalars['Int']>;
 };
 
 /** Represents an image resource. */
@@ -3902,7 +3942,7 @@ export type ImageContentType =
 export type ImageEdge = {
   __typename?: 'ImageEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of ImageEdge. */
   node: Image;
 };
@@ -3927,12 +3967,12 @@ export type ImageTransformInput = {
    * Image height in pixels between 1 and 5760.
    *
    */
-  maxHeight?: InputMaybe<Scalars['Int']['input']>;
+  maxHeight?: InputMaybe<Scalars['Int']>;
   /**
    * Image width in pixels between 1 and 5760.
    *
    */
-  maxWidth?: InputMaybe<Scalars['Int']['input']>;
+  maxWidth?: InputMaybe<Scalars['Int']>;
   /**
    * Convert the source image into the preferred content type.
    * Supported conversions: `.svg` to `.png`, any file type to `.jpg`, and any file type to `.webp`.
@@ -3943,18 +3983,18 @@ export type ImageTransformInput = {
    * Image size multiplier for high-resolution retina displays. Must be within 1..3.
    *
    */
-  scale?: InputMaybe<Scalars['Int']['input']>;
+  scale?: InputMaybe<Scalars['Int']>;
 };
 
 /** A language. */
 export type Language = {
   __typename?: 'Language';
   /** The name of the language in the language itself. If the language uses capitalization, it is capitalized for a mid-sentence position. */
-  endonymName: Scalars['String']['output'];
+  endonymName: Scalars['String'];
   /** The ISO code. */
   isoCode: LanguageCode;
   /** The name of the language in the current language. */
-  name: Scalars['String']['output'];
+  name: Scalars['String'];
 };
 
 /** ISO 639-1 language codes supported by Shopify. */
@@ -4256,7 +4296,7 @@ export type Location = HasMetafields &
     /** The address of the location. */
     address: LocationAddress;
     /** A globally-unique ID. */
-    id: Scalars['ID']['output'];
+    id: Scalars['ID'];
     /** Returns a metafield found by namespace and key. */
     metafield?: Maybe<Metafield>;
     /**
@@ -4265,13 +4305,13 @@ export type Location = HasMetafields &
      */
     metafields: Array<Maybe<Metafield>>;
     /** The name of the location. */
-    name: Scalars['String']['output'];
+    name: Scalars['String'];
   };
 
 /** Represents a location where product inventory is held. */
 export type LocationMetafieldArgs = {
-  key: Scalars['String']['input'];
-  namespace: Scalars['String']['input'];
+  key: Scalars['String'];
+  namespace: Scalars['String'];
 };
 
 /** Represents a location where product inventory is held. */
@@ -4286,32 +4326,32 @@ export type LocationMetafieldsArgs = {
 export type LocationAddress = {
   __typename?: 'LocationAddress';
   /** The first line of the address for the location. */
-  address1?: Maybe<Scalars['String']['output']>;
+  address1?: Maybe<Scalars['String']>;
   /** The second line of the address for the location. */
-  address2?: Maybe<Scalars['String']['output']>;
+  address2?: Maybe<Scalars['String']>;
   /** The city of the location. */
-  city?: Maybe<Scalars['String']['output']>;
+  city?: Maybe<Scalars['String']>;
   /** The country of the location. */
-  country?: Maybe<Scalars['String']['output']>;
+  country?: Maybe<Scalars['String']>;
   /** The country code of the location. */
-  countryCode?: Maybe<Scalars['String']['output']>;
+  countryCode?: Maybe<Scalars['String']>;
   /** A formatted version of the address for the location. */
-  formatted: Array<Scalars['String']['output']>;
+  formatted: Array<Scalars['String']>;
   /** The latitude coordinates of the location. */
-  latitude?: Maybe<Scalars['Float']['output']>;
+  latitude?: Maybe<Scalars['Float']>;
   /** The longitude coordinates of the location. */
-  longitude?: Maybe<Scalars['Float']['output']>;
+  longitude?: Maybe<Scalars['Float']>;
   /** The phone number of the location. */
-  phone?: Maybe<Scalars['String']['output']>;
+  phone?: Maybe<Scalars['String']>;
   /** The province of the location. */
-  province?: Maybe<Scalars['String']['output']>;
+  province?: Maybe<Scalars['String']>;
   /**
    * The code for the province, state, or district of the address of the location.
    *
    */
-  provinceCode?: Maybe<Scalars['String']['output']>;
+  provinceCode?: Maybe<Scalars['String']>;
   /** The ZIP code of the location. */
-  zip?: Maybe<Scalars['String']['output']>;
+  zip?: Maybe<Scalars['String']>;
 };
 
 /**
@@ -4335,7 +4375,7 @@ export type LocationConnection = {
 export type LocationEdge = {
   __typename?: 'LocationEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of LocationEdge. */
   node: Location;
 };
@@ -4355,27 +4395,27 @@ export type LocationSortKeys =
 export type MailingAddress = Node & {
   __typename?: 'MailingAddress';
   /** The first line of the address. Typically the street address or PO Box number. */
-  address1?: Maybe<Scalars['String']['output']>;
+  address1?: Maybe<Scalars['String']>;
   /**
    * The second line of the address. Typically the number of the apartment, suite, or unit.
    *
    */
-  address2?: Maybe<Scalars['String']['output']>;
+  address2?: Maybe<Scalars['String']>;
   /**
    * The name of the city, district, village, or town.
    *
    */
-  city?: Maybe<Scalars['String']['output']>;
+  city?: Maybe<Scalars['String']>;
   /**
    * The name of the customer's company or organization.
    *
    */
-  company?: Maybe<Scalars['String']['output']>;
+  company?: Maybe<Scalars['String']>;
   /**
    * The name of the country.
    *
    */
-  country?: Maybe<Scalars['String']['output']>;
+  country?: Maybe<Scalars['String']>;
   /**
    * The two-letter code for the country of the address.
    *
@@ -4383,7 +4423,7 @@ export type MailingAddress = Node & {
    *
    * @deprecated Use `countryCodeV2` instead.
    */
-  countryCode?: Maybe<Scalars['String']['output']>;
+  countryCode?: Maybe<Scalars['String']>;
   /**
    * The two-letter code for the country of the address.
    *
@@ -4392,48 +4432,48 @@ export type MailingAddress = Node & {
    */
   countryCodeV2?: Maybe<CountryCode>;
   /** The first name of the customer. */
-  firstName?: Maybe<Scalars['String']['output']>;
+  firstName?: Maybe<Scalars['String']>;
   /** A formatted version of the address, customized by the provided arguments. */
-  formatted: Array<Scalars['String']['output']>;
+  formatted: Array<Scalars['String']>;
   /** A comma-separated list of the values for city, province, and country. */
-  formattedArea?: Maybe<Scalars['String']['output']>;
+  formattedArea?: Maybe<Scalars['String']>;
   /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
+  id: Scalars['ID'];
   /** The last name of the customer. */
-  lastName?: Maybe<Scalars['String']['output']>;
+  lastName?: Maybe<Scalars['String']>;
   /** The latitude coordinate of the customer address. */
-  latitude?: Maybe<Scalars['Float']['output']>;
+  latitude?: Maybe<Scalars['Float']>;
   /** The longitude coordinate of the customer address. */
-  longitude?: Maybe<Scalars['Float']['output']>;
+  longitude?: Maybe<Scalars['Float']>;
   /**
    * The full name of the customer, based on firstName and lastName.
    *
    */
-  name?: Maybe<Scalars['String']['output']>;
+  name?: Maybe<Scalars['String']>;
   /**
    * A unique phone number for the customer.
    *
    * Formatted using E.164 standard. For example, _+16135551111_.
    *
    */
-  phone?: Maybe<Scalars['String']['output']>;
+  phone?: Maybe<Scalars['String']>;
   /** The region of the address, such as the province, state, or district. */
-  province?: Maybe<Scalars['String']['output']>;
+  province?: Maybe<Scalars['String']>;
   /**
    * The two-letter code for the region.
    *
    * For example, ON.
    *
    */
-  provinceCode?: Maybe<Scalars['String']['output']>;
+  provinceCode?: Maybe<Scalars['String']>;
   /** The zip or postal code of the address. */
-  zip?: Maybe<Scalars['String']['output']>;
+  zip?: Maybe<Scalars['String']>;
 };
 
 /** Represents a mailing address for customers and shipping. */
 export type MailingAddressFormattedArgs = {
-  withCompany?: InputMaybe<Scalars['Boolean']['input']>;
-  withName?: InputMaybe<Scalars['Boolean']['input']>;
+  withCompany?: InputMaybe<Scalars['Boolean']>;
+  withName?: InputMaybe<Scalars['Boolean']>;
 };
 
 /**
@@ -4457,7 +4497,7 @@ export type MailingAddressConnection = {
 export type MailingAddressEdge = {
   __typename?: 'MailingAddressEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of MailingAddressEdge. */
   node: MailingAddress;
 };
@@ -4468,39 +4508,39 @@ export type MailingAddressInput = {
    * The first line of the address. Typically the street address or PO Box number.
    *
    */
-  address1?: InputMaybe<Scalars['String']['input']>;
+  address1?: InputMaybe<Scalars['String']>;
   /**
    * The second line of the address. Typically the number of the apartment, suite, or unit.
    *
    */
-  address2?: InputMaybe<Scalars['String']['input']>;
+  address2?: InputMaybe<Scalars['String']>;
   /**
    * The name of the city, district, village, or town.
    *
    */
-  city?: InputMaybe<Scalars['String']['input']>;
+  city?: InputMaybe<Scalars['String']>;
   /**
    * The name of the customer's company or organization.
    *
    */
-  company?: InputMaybe<Scalars['String']['input']>;
+  company?: InputMaybe<Scalars['String']>;
   /** The name of the country. */
-  country?: InputMaybe<Scalars['String']['input']>;
+  country?: InputMaybe<Scalars['String']>;
   /** The first name of the customer. */
-  firstName?: InputMaybe<Scalars['String']['input']>;
+  firstName?: InputMaybe<Scalars['String']>;
   /** The last name of the customer. */
-  lastName?: InputMaybe<Scalars['String']['input']>;
+  lastName?: InputMaybe<Scalars['String']>;
   /**
    * A unique phone number for the customer.
    *
    * Formatted using E.164 standard. For example, _+16135551111_.
    *
    */
-  phone?: InputMaybe<Scalars['String']['input']>;
+  phone?: InputMaybe<Scalars['String']>;
   /** The region of the address, such as the province, state, or district. */
-  province?: InputMaybe<Scalars['String']['input']>;
+  province?: InputMaybe<Scalars['String']>;
   /** The zip or postal code of the address. */
-  zip?: InputMaybe<Scalars['String']['input']>;
+  zip?: InputMaybe<Scalars['String']>;
 };
 
 /**
@@ -4512,13 +4552,13 @@ export type ManualDiscountApplication = DiscountApplication & {
   /** The method by which the discount's value is allocated to its entitled items. */
   allocationMethod: DiscountApplicationAllocationMethod;
   /** The description of the application. */
-  description?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']>;
   /** Which lines of targetType that the discount is allocated over. */
   targetSelection: DiscountApplicationTargetSelection;
   /** The type of line that the discount is applicable towards. */
   targetType: DiscountApplicationTargetType;
   /** The title of the application. */
-  title: Scalars['String']['output'];
+  title: Scalars['String'];
   /** The value of the discount application. */
   value: PricingValue;
 };
@@ -4531,9 +4571,9 @@ export type Market = HasMetafields &
      * A human-readable unique string for the market automatically generated from its title.
      *
      */
-    handle: Scalars['String']['output'];
+    handle: Scalars['String'];
     /** A globally-unique ID. */
-    id: Scalars['ID']['output'];
+    id: Scalars['ID'];
     /** Returns a metafield found by namespace and key. */
     metafield?: Maybe<Metafield>;
     /**
@@ -4545,8 +4585,8 @@ export type Market = HasMetafields &
 
 /** A group of one or more regions of the world that a merchant is targeting for sales. To learn more about markets, refer to [the Shopify Markets conceptual overview](/docs/apps/markets). */
 export type MarketMetafieldArgs = {
-  key: Scalars['String']['input'];
-  namespace: Scalars['String']['input'];
+  key: Scalars['String'];
+  namespace: Scalars['String'];
 };
 
 /** A group of one or more regions of the world that a merchant is targeting for sales. To learn more about markets, refer to [the Shopify Markets conceptual overview](/docs/apps/markets). */
@@ -4557,7 +4597,9 @@ export type MarketMetafieldsArgs = {
 /** Represents a media interface. */
 export type Media = {
   /** A word or phrase to share the nature or contents of a media. */
-  alt?: Maybe<Scalars['String']['output']>;
+  alt?: Maybe<Scalars['String']>;
+  /** A globally-unique ID. */
+  id: Scalars['ID'];
   /** The media content type. */
   mediaContentType: MediaContentType;
   /** The presentation for a media. */
@@ -4598,7 +4640,7 @@ export type MediaContentType =
 export type MediaEdge = {
   __typename?: 'MediaEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of MediaEdge. */
   node: ExternalVideo | MediaImage | Model3d | Video;
 };
@@ -4615,9 +4657,9 @@ export type MediaImage = Media &
   Node & {
     __typename?: 'MediaImage';
     /** A word or phrase to share the nature or contents of a media. */
-    alt?: Maybe<Scalars['String']['output']>;
+    alt?: Maybe<Scalars['String']>;
     /** A globally-unique ID. */
-    id: Scalars['ID']['output'];
+    id: Scalars['ID'];
     /** The image for the media. */
     image?: Maybe<Image>;
     /** The media content type. */
@@ -4632,9 +4674,9 @@ export type MediaImage = Media &
 export type MediaPresentation = Node & {
   __typename?: 'MediaPresentation';
   /** A JSON object representing a presentation view. */
-  asJson?: Maybe<Scalars['JSON']['output']>;
+  asJson?: Maybe<Scalars['JSON']>;
   /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
+  id: Scalars['ID'];
 };
 
 /** A media presentation. */
@@ -4657,15 +4699,15 @@ export type MediaPresentationFormat =
 export type Menu = Node & {
   __typename?: 'Menu';
   /** The menu's handle. */
-  handle: Scalars['String']['output'];
+  handle: Scalars['String'];
   /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
+  id: Scalars['ID'];
   /** The menu's child items. */
   items: Array<MenuItem>;
   /** The count of items on the menu. */
-  itemsCount: Scalars['Int']['output'];
+  itemsCount: Scalars['Int'];
   /** The menu's title. */
-  title: Scalars['String']['output'];
+  title: Scalars['String'];
 };
 
 /**
@@ -4675,20 +4717,34 @@ export type Menu = Node & {
 export type MenuItem = Node & {
   __typename?: 'MenuItem';
   /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
+  id: Scalars['ID'];
   /** The menu item's child items. */
   items: Array<MenuItem>;
+  /** The linked resource. */
+  resource?: Maybe<MenuItemResource>;
   /** The ID of the linked resource. */
-  resourceId?: Maybe<Scalars['ID']['output']>;
+  resourceId?: Maybe<Scalars['ID']>;
   /** The menu item's tags to filter a collection. */
-  tags: Array<Scalars['String']['output']>;
+  tags: Array<Scalars['String']>;
   /** The menu item's title. */
-  title: Scalars['String']['output'];
+  title: Scalars['String'];
   /** The menu item's type. */
   type: MenuItemType;
   /** The menu item's URL. */
-  url?: Maybe<Scalars['URL']['output']>;
+  url?: Maybe<Scalars['URL']>;
 };
+
+/**
+ * The list of possible resources a `MenuItem` can reference.
+ *
+ */
+export type MenuItemResource =
+  | Article
+  | Blog
+  | Collection
+  | Page
+  | Product
+  | ShopPolicy;
 
 /** A menu item type. */
 export type MenuItemType =
@@ -4726,15 +4782,15 @@ export type Merchandise = ProductVariant;
 export type Metafield = Node & {
   __typename?: 'Metafield';
   /** The date and time when the storefront metafield was created. */
-  createdAt: Scalars['DateTime']['output'];
+  createdAt: Scalars['DateTime'];
   /** The description of a metafield. */
-  description?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']>;
   /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
+  id: Scalars['ID'];
   /** The unique identifier for the metafield within its namespace. */
-  key: Scalars['String']['output'];
+  key: Scalars['String'];
   /** The container for a group of metafields that the metafield is associated with. */
-  namespace: Scalars['String']['output'];
+  namespace: Scalars['String'];
   /** The type of resource that the metafield is attached to. */
   parentResource: MetafieldParentResource;
   /** Returns a reference object if the metafield's type is a resource reference. */
@@ -4746,11 +4802,11 @@ export type Metafield = Node & {
    * Refer to the list of [supported types](https://shopify.dev/apps/metafields/definitions/types).
    *
    */
-  type: Scalars['String']['output'];
+  type: Scalars['String'];
   /** The date and time when the metafield was last updated. */
-  updatedAt: Scalars['DateTime']['output'];
+  updatedAt: Scalars['DateTime'];
   /** The data stored in the metafield. Always stored as a string, regardless of the metafield's type. */
-  value: Scalars['String']['output'];
+  value: Scalars['String'];
 };
 
 /**
@@ -4759,10 +4815,10 @@ export type Metafield = Node & {
  *
  */
 export type MetafieldReferencesArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
 };
 
 /** Possible error codes that can be returned by `MetafieldDeleteUserError`. */
@@ -4778,9 +4834,9 @@ export type MetafieldDeleteUserError = DisplayableError & {
   /** The error code. */
   code?: Maybe<MetafieldDeleteErrorCode>;
   /** The path to the input field that caused the error. */
-  field?: Maybe<Array<Scalars['String']['output']>>;
+  field?: Maybe<Array<Scalars['String']>>;
   /** The error message. */
-  message: Scalars['String']['output'];
+  message: Scalars['String'];
 };
 
 /**
@@ -4795,11 +4851,11 @@ export type MetafieldDeleteUserError = DisplayableError & {
  */
 export type MetafieldFilter = {
   /** The key of the metafield to filter on. */
-  key: Scalars['String']['input'];
+  key: Scalars['String'];
   /** The namespace of the metafield to filter on. */
-  namespace: Scalars['String']['input'];
+  namespace: Scalars['String'];
   /** The value of the metafield. */
-  value: Scalars['String']['input'];
+  value: Scalars['String'];
 };
 
 /** A resource that the metafield belongs to. */
@@ -4852,7 +4908,7 @@ export type MetafieldReferenceConnection = {
 export type MetafieldReferenceEdge = {
   __typename?: 'MetafieldReferenceEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of MetafieldReferenceEdge. */
   node: MetafieldReference;
 };
@@ -4863,11 +4919,11 @@ export type MetafieldsSetUserError = DisplayableError & {
   /** The error code. */
   code?: Maybe<MetafieldsSetUserErrorCode>;
   /** The index of the array element that's causing the error. */
-  elementIndex?: Maybe<Scalars['Int']['output']>;
+  elementIndex?: Maybe<Scalars['Int']>;
   /** The path to the input field that caused the error. */
-  field?: Maybe<Array<Scalars['String']['output']>>;
+  field?: Maybe<Array<Scalars['String']>>;
   /** The error message. */
-  message: Scalars['String']['output'];
+  message: Scalars['String'];
 };
 
 /** Possible error codes that can be returned by `MetafieldsSetUserError`. */
@@ -4903,18 +4959,18 @@ export type Metaobject = Node & {
    */
   fields: Array<MetaobjectField>;
   /** The unique handle of the metaobject. Useful as a custom ID. */
-  handle: Scalars['String']['output'];
+  handle: Scalars['String'];
   /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
+  id: Scalars['ID'];
   /** The type of the metaobject. Defines the namespace of its associated metafields. */
-  type: Scalars['String']['output'];
+  type: Scalars['String'];
   /** The date and time when the metaobject was last updated. */
-  updatedAt: Scalars['DateTime']['output'];
+  updatedAt: Scalars['DateTime'];
 };
 
 /** An instance of a user-defined model based on a MetaobjectDefinition. */
 export type MetaobjectFieldArgs = {
-  key: Scalars['String']['input'];
+  key: Scalars['String'];
 };
 
 /**
@@ -4938,7 +4994,7 @@ export type MetaobjectConnection = {
 export type MetaobjectEdge = {
   __typename?: 'MetaobjectEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of MetaobjectEdge. */
   node: Metaobject;
 };
@@ -4947,7 +5003,7 @@ export type MetaobjectEdge = {
 export type MetaobjectField = {
   __typename?: 'MetaobjectField';
   /** The field key. */
-  key: Scalars['String']['output'];
+  key: Scalars['String'];
   /** A referenced object if the field type is a resource reference. */
   reference?: Maybe<MetafieldReference>;
   /** A list of referenced objects if the field type is a resource reference list. */
@@ -4957,25 +5013,25 @@ export type MetaobjectField = {
    * See the list of [supported types](https://shopify.dev/apps/metafields/definitions/types).
    *
    */
-  type: Scalars['String']['output'];
+  type: Scalars['String'];
   /** The field value. */
-  value?: Maybe<Scalars['String']['output']>;
+  value?: Maybe<Scalars['String']>;
 };
 
 /** Provides the value of a Metaobject field. */
 export type MetaobjectFieldReferencesArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
 };
 
 /** The input fields used to retrieve a metaobject by handle. */
 export type MetaobjectHandleInput = {
   /** The handle of the metaobject. */
-  handle: Scalars['String']['input'];
+  handle: Scalars['String'];
   /** The type of the metaobject. */
-  type: Scalars['String']['input'];
+  type: Scalars['String'];
 };
 
 /** Represents a Shopify hosted 3D model. */
@@ -4983,9 +5039,9 @@ export type Model3d = Media &
   Node & {
     __typename?: 'Model3d';
     /** A word or phrase to share the nature or contents of a media. */
-    alt?: Maybe<Scalars['String']['output']>;
+    alt?: Maybe<Scalars['String']>;
     /** A globally-unique ID. */
-    id: Scalars['ID']['output'];
+    id: Scalars['ID'];
     /** The media content type. */
     mediaContentType: MediaContentType;
     /** The presentation for a media. */
@@ -5000,19 +5056,19 @@ export type Model3d = Media &
 export type Model3dSource = {
   __typename?: 'Model3dSource';
   /** The filesize of the 3d model. */
-  filesize: Scalars['Int']['output'];
+  filesize: Scalars['Int'];
   /** The format of the 3d model. */
-  format: Scalars['String']['output'];
+  format: Scalars['String'];
   /** The MIME type of the 3d model. */
-  mimeType: Scalars['String']['output'];
+  mimeType: Scalars['String'];
   /** The URL of the 3d model. */
-  url: Scalars['String']['output'];
+  url: Scalars['String'];
 };
 
 /** The input fields for a monetary value with currency. */
 export type MoneyInput = {
   /** Decimal money amount. */
-  amount: Scalars['Decimal']['input'];
+  amount: Scalars['Decimal'];
   /** Currency of the money. */
   currencyCode: CurrencyCode;
 };
@@ -5024,7 +5080,7 @@ export type MoneyInput = {
 export type MoneyV2 = {
   __typename?: 'MoneyV2';
   /** Decimal money amount. */
-  amount: Scalars['Decimal']['output'];
+  amount: Scalars['Decimal'];
   /** Currency of the money. */
   currencyCode: CurrencyCode;
 };
@@ -5150,8 +5206,9 @@ export type Mutation = {
    * [`customerReset`](https://shopify.dev/api/storefront/latest/mutations/customerReset) mutation to reset the
    * customer password.
    *
-   * This mutation is throttled by IP. With authenticated access,
+   * This mutation is throttled by IP. With private access,
    * you can provide a [`Shopify-Storefront-Buyer-IP`](https://shopify.dev/api/usage/authentication#optional-ip-header) instead of the request IP.
+   * The header is case-sensitive and must be sent as `Shopify-Storefront-Buyer-IP`.
    *
    * Make sure that the value provided to `Shopify-Storefront-Buyer-IP` is trusted. Unthrottled access to this
    * mutation presents a security risk.
@@ -5175,13 +5232,13 @@ export type Mutation = {
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCartAttributesUpdateArgs = {
   attributes: Array<AttributeInput>;
-  cartId: Scalars['ID']['input'];
+  cartId: Scalars['ID'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCartBuyerIdentityUpdateArgs = {
   buyerIdentity: CartBuyerIdentityInput;
-  cartId: Scalars['ID']['input'];
+  cartId: Scalars['ID'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
@@ -5191,25 +5248,25 @@ export type MutationCartCreateArgs = {
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCartDiscountCodesUpdateArgs = {
-  cartId: Scalars['ID']['input'];
-  discountCodes?: InputMaybe<Array<Scalars['String']['input']>>;
+  cartId: Scalars['ID'];
+  discountCodes?: InputMaybe<Array<Scalars['String']>>;
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCartLinesAddArgs = {
-  cartId: Scalars['ID']['input'];
+  cartId: Scalars['ID'];
   lines: Array<CartLineInput>;
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCartLinesRemoveArgs = {
-  cartId: Scalars['ID']['input'];
-  lineIds: Array<Scalars['ID']['input']>;
+  cartId: Scalars['ID'];
+  lineIds: Array<Scalars['ID']>;
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCartLinesUpdateArgs = {
-  cartId: Scalars['ID']['input'];
+  cartId: Scalars['ID'];
   lines: Array<CartLineUpdateInput>;
 };
 
@@ -5225,131 +5282,131 @@ export type MutationCartMetafieldsSetArgs = {
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCartNoteUpdateArgs = {
-  cartId: Scalars['ID']['input'];
-  note?: InputMaybe<Scalars['String']['input']>;
+  cartId: Scalars['ID'];
+  note?: InputMaybe<Scalars['String']>;
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCartPaymentUpdateArgs = {
-  cartId: Scalars['ID']['input'];
+  cartId: Scalars['ID'];
   payment: CartPaymentInput;
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCartSelectedDeliveryOptionsUpdateArgs = {
-  cartId: Scalars['ID']['input'];
+  cartId: Scalars['ID'];
   selectedDeliveryOptions: Array<CartSelectedDeliveryOptionInput>;
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCartSubmitForCompletionArgs = {
-  attemptToken: Scalars['String']['input'];
-  cartId: Scalars['ID']['input'];
+  attemptToken: Scalars['String'];
+  cartId: Scalars['ID'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCheckoutAttributesUpdateV2Args = {
-  checkoutId: Scalars['ID']['input'];
+  checkoutId: Scalars['ID'];
   input: CheckoutAttributesUpdateV2Input;
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCheckoutCompleteFreeArgs = {
-  checkoutId: Scalars['ID']['input'];
+  checkoutId: Scalars['ID'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCheckoutCompleteWithCreditCardV2Args = {
-  checkoutId: Scalars['ID']['input'];
+  checkoutId: Scalars['ID'];
   payment: CreditCardPaymentInputV2;
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCheckoutCompleteWithTokenizedPaymentV3Args = {
-  checkoutId: Scalars['ID']['input'];
+  checkoutId: Scalars['ID'];
   payment: TokenizedPaymentInputV3;
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCheckoutCreateArgs = {
   input: CheckoutCreateInput;
-  queueToken?: InputMaybe<Scalars['String']['input']>;
+  queueToken?: InputMaybe<Scalars['String']>;
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCheckoutCustomerAssociateV2Args = {
-  checkoutId: Scalars['ID']['input'];
-  customerAccessToken: Scalars['String']['input'];
+  checkoutId: Scalars['ID'];
+  customerAccessToken: Scalars['String'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCheckoutCustomerDisassociateV2Args = {
-  checkoutId: Scalars['ID']['input'];
+  checkoutId: Scalars['ID'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCheckoutDiscountCodeApplyV2Args = {
-  checkoutId: Scalars['ID']['input'];
-  discountCode: Scalars['String']['input'];
+  checkoutId: Scalars['ID'];
+  discountCode: Scalars['String'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCheckoutDiscountCodeRemoveArgs = {
-  checkoutId: Scalars['ID']['input'];
+  checkoutId: Scalars['ID'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCheckoutEmailUpdateV2Args = {
-  checkoutId: Scalars['ID']['input'];
-  email: Scalars['String']['input'];
+  checkoutId: Scalars['ID'];
+  email: Scalars['String'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCheckoutGiftCardRemoveV2Args = {
-  appliedGiftCardId: Scalars['ID']['input'];
-  checkoutId: Scalars['ID']['input'];
+  appliedGiftCardId: Scalars['ID'];
+  checkoutId: Scalars['ID'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCheckoutGiftCardsAppendArgs = {
-  checkoutId: Scalars['ID']['input'];
-  giftCardCodes: Array<Scalars['String']['input']>;
+  checkoutId: Scalars['ID'];
+  giftCardCodes: Array<Scalars['String']>;
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCheckoutLineItemsAddArgs = {
-  checkoutId: Scalars['ID']['input'];
+  checkoutId: Scalars['ID'];
   lineItems: Array<CheckoutLineItemInput>;
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCheckoutLineItemsRemoveArgs = {
-  checkoutId: Scalars['ID']['input'];
-  lineItemIds: Array<Scalars['ID']['input']>;
+  checkoutId: Scalars['ID'];
+  lineItemIds: Array<Scalars['ID']>;
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCheckoutLineItemsReplaceArgs = {
-  checkoutId: Scalars['ID']['input'];
+  checkoutId: Scalars['ID'];
   lineItems: Array<CheckoutLineItemInput>;
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCheckoutLineItemsUpdateArgs = {
-  checkoutId: Scalars['ID']['input'];
+  checkoutId: Scalars['ID'];
   lineItems: Array<CheckoutLineItemUpdateInput>;
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCheckoutShippingAddressUpdateV2Args = {
-  checkoutId: Scalars['ID']['input'];
+  checkoutId: Scalars['ID'];
   shippingAddress: MailingAddressInput;
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCheckoutShippingLineUpdateArgs = {
-  checkoutId: Scalars['ID']['input'];
-  shippingRateHandle: Scalars['String']['input'];
+  checkoutId: Scalars['ID'];
+  shippingRateHandle: Scalars['String'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
@@ -5359,48 +5416,48 @@ export type MutationCustomerAccessTokenCreateArgs = {
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCustomerAccessTokenCreateWithMultipassArgs = {
-  multipassToken: Scalars['String']['input'];
+  multipassToken: Scalars['String'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCustomerAccessTokenDeleteArgs = {
-  customerAccessToken: Scalars['String']['input'];
+  customerAccessToken: Scalars['String'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCustomerAccessTokenRenewArgs = {
-  customerAccessToken: Scalars['String']['input'];
+  customerAccessToken: Scalars['String'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCustomerActivateArgs = {
-  id: Scalars['ID']['input'];
+  id: Scalars['ID'];
   input: CustomerActivateInput;
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCustomerActivateByUrlArgs = {
-  activationUrl: Scalars['URL']['input'];
-  password: Scalars['String']['input'];
+  activationUrl: Scalars['URL'];
+  password: Scalars['String'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCustomerAddressCreateArgs = {
   address: MailingAddressInput;
-  customerAccessToken: Scalars['String']['input'];
+  customerAccessToken: Scalars['String'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCustomerAddressDeleteArgs = {
-  customerAccessToken: Scalars['String']['input'];
-  id: Scalars['ID']['input'];
+  customerAccessToken: Scalars['String'];
+  id: Scalars['ID'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCustomerAddressUpdateArgs = {
   address: MailingAddressInput;
-  customerAccessToken: Scalars['String']['input'];
-  id: Scalars['ID']['input'];
+  customerAccessToken: Scalars['String'];
+  id: Scalars['ID'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
@@ -5410,31 +5467,31 @@ export type MutationCustomerCreateArgs = {
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCustomerDefaultAddressUpdateArgs = {
-  addressId: Scalars['ID']['input'];
-  customerAccessToken: Scalars['String']['input'];
+  addressId: Scalars['ID'];
+  customerAccessToken: Scalars['String'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCustomerRecoverArgs = {
-  email: Scalars['String']['input'];
+  email: Scalars['String'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCustomerResetArgs = {
-  id: Scalars['ID']['input'];
+  id: Scalars['ID'];
   input: CustomerResetInput;
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCustomerResetByUrlArgs = {
-  password: Scalars['String']['input'];
-  resetUrl: Scalars['URL']['input'];
+  password: Scalars['String'];
+  resetUrl: Scalars['URL'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCustomerUpdateArgs = {
   customer: CustomerUpdateInput;
-  customerAccessToken: Scalars['String']['input'];
+  customerAccessToken: Scalars['String'];
 };
 
 /**
@@ -5446,13 +5503,13 @@ export type MutationCustomerUpdateArgs = {
  */
 export type Node = {
   /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
+  id: Scalars['ID'];
 };
 
 /** Represents a resource that can be published to the Online Store sales channel. */
 export type OnlineStorePublishable = {
   /** The URL used for viewing the resource on the shop's Online Store. Returns `null` if the resource is currently not published to the Online Store sales channel. */
-  onlineStoreUrl?: Maybe<Scalars['URL']['output']>;
+  onlineStoreUrl?: Maybe<Scalars['URL']>;
 };
 
 /** An order is a customer’s completed request to purchase one or more products from a shop. An order is created when a customer completes the checkout process, during which time they provides an email address, billing address and payment information. */
@@ -5464,10 +5521,10 @@ export type Order = HasMetafields &
     /** The reason for the order's cancellation. Returns `null` if the order wasn't canceled. */
     cancelReason?: Maybe<OrderCancelReason>;
     /** The date and time when the order was canceled. Returns null if the order wasn't canceled. */
-    canceledAt?: Maybe<Scalars['DateTime']['output']>;
+    canceledAt?: Maybe<Scalars['DateTime']>;
     /** The code of the currency used for the payment. */
     currencyCode: CurrencyCode;
-    /** The subtotal of line items and their discounts, excluding line items that have been removed. Does not contain order-level discounts, duties, shipping costs, or shipping discounts. Taxes are not included unless the order is a taxes-included order. */
+    /** The subtotal of line items and their discounts, excluding line items that have been removed. Does not contain order-level discounts, duties, shipping costs, or shipping discounts. Taxes aren't included unless the order is a taxes-included order. */
     currentSubtotalPrice: MoneyV2;
     /** The total cost of duties for the order, including refunds. */
     currentTotalDuties?: Maybe<MoneyV2>;
@@ -5478,21 +5535,21 @@ export type Order = HasMetafields &
     /** A list of the custom attributes added to the order. */
     customAttributes: Array<Attribute>;
     /** The locale code in which this specific order happened. */
-    customerLocale?: Maybe<Scalars['String']['output']>;
+    customerLocale?: Maybe<Scalars['String']>;
     /** The unique URL that the customer can use to access the order. */
-    customerUrl?: Maybe<Scalars['URL']['output']>;
+    customerUrl?: Maybe<Scalars['URL']>;
     /** Discounts that have been applied on the order. */
     discountApplications: DiscountApplicationConnection;
     /** Whether the order has had any edits applied or not. */
-    edited: Scalars['Boolean']['output'];
+    edited: Scalars['Boolean'];
     /** The customer's email address. */
-    email?: Maybe<Scalars['String']['output']>;
+    email?: Maybe<Scalars['String']>;
     /** The financial status of the order. */
     financialStatus?: Maybe<OrderFinancialStatus>;
     /** The fulfillment status for the order. */
     fulfillmentStatus: OrderFulfillmentStatus;
     /** A globally-unique ID. */
-    id: Scalars['ID']['output'];
+    id: Scalars['ID'];
     /** List of the order’s line items. */
     lineItems: OrderLineItemConnection;
     /** Returns a metafield found by namespace and key. */
@@ -5507,22 +5564,22 @@ export type Order = HasMetafields &
      * For example, _#1000_ or _Store1001.
      *
      */
-    name: Scalars['String']['output'];
+    name: Scalars['String'];
     /** A unique numeric identifier for the order for use by shop owner and customer. */
-    orderNumber: Scalars['Int']['output'];
+    orderNumber: Scalars['Int'];
     /** The total cost of duties charged at checkout. */
     originalTotalDuties?: Maybe<MoneyV2>;
     /** The total price of the order before any applied edits. */
     originalTotalPrice: MoneyV2;
     /** The customer's phone number for receiving SMS notifications. */
-    phone?: Maybe<Scalars['String']['output']>;
+    phone?: Maybe<Scalars['String']>;
     /**
      * The date and time when the order was imported.
      * This value can be set to dates in the past when importing from other systems.
      * If no value is provided, it will be auto-generated based on current date and time.
      *
      */
-    processedAt: Scalars['DateTime']['output'];
+    processedAt: Scalars['DateTime'];
     /** The address to where the order will be shipped. */
     shippingAddress?: Maybe<MailingAddress>;
     /**
@@ -5531,7 +5588,7 @@ export type Order = HasMetafields &
      */
     shippingDiscountAllocations: Array<DiscountAllocation>;
     /** The unique URL for the order's status page. */
-    statusUrl: Scalars['URL']['output'];
+    statusUrl: Scalars['URL'];
     /** Price of the order before shipping and taxes. */
     subtotalPrice?: Maybe<MoneyV2>;
     /**
@@ -5573,26 +5630,26 @@ export type Order = HasMetafields &
 
 /** An order is a customer’s completed request to purchase one or more products from a shop. An order is created when a customer completes the checkout process, during which time they provides an email address, billing address and payment information. */
 export type OrderDiscountApplicationsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
 };
 
 /** An order is a customer’s completed request to purchase one or more products from a shop. An order is created when a customer completes the checkout process, during which time they provides an email address, billing address and payment information. */
 export type OrderLineItemsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
 };
 
 /** An order is a customer’s completed request to purchase one or more products from a shop. An order is created when a customer completes the checkout process, during which time they provides an email address, billing address and payment information. */
 export type OrderMetafieldArgs = {
-  key: Scalars['String']['input'];
-  namespace: Scalars['String']['input'];
+  key: Scalars['String'];
+  namespace: Scalars['String'];
 };
 
 /** An order is a customer’s completed request to purchase one or more products from a shop. An order is created when a customer completes the checkout process, during which time they provides an email address, billing address and payment information. */
@@ -5602,7 +5659,7 @@ export type OrderMetafieldsArgs = {
 
 /** An order is a customer’s completed request to purchase one or more products from a shop. An order is created when a customer completes the checkout process, during which time they provides an email address, billing address and payment information. */
 export type OrderSuccessfulFulfillmentsArgs = {
-  first?: InputMaybe<Scalars['Int']['input']>;
+  first?: InputMaybe<Scalars['Int']>;
 };
 
 /** Represents the reason for the order's cancellation. */
@@ -5631,7 +5688,7 @@ export type OrderConnection = {
   /** Information to aid in pagination. */
   pageInfo: PageInfo;
   /** The total count of Orders. */
-  totalCount: Scalars['UnsignedInt64']['output'];
+  totalCount: Scalars['UnsignedInt64'];
 };
 
 /**
@@ -5641,7 +5698,7 @@ export type OrderConnection = {
 export type OrderEdge = {
   __typename?: 'OrderEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of OrderEdge. */
   node: Order;
 };
@@ -5688,19 +5745,19 @@ export type OrderFulfillmentStatus =
 export type OrderLineItem = {
   __typename?: 'OrderLineItem';
   /** The number of entries associated to the line item minus the items that have been removed. */
-  currentQuantity: Scalars['Int']['output'];
+  currentQuantity: Scalars['Int'];
   /** List of custom attributes associated to the line item. */
   customAttributes: Array<Attribute>;
   /** The discounts that have been allocated onto the order line item by discount applications. */
   discountAllocations: Array<DiscountAllocation>;
   /** The total price of the line item, including discounts, and displayed in the presentment currency. */
   discountedTotalPrice: MoneyV2;
-  /** The total price of the line item, not including any discounts. The total price is calculated using the original unit price multiplied by the quantity, and it is displayed in the presentment currency. */
+  /** The total price of the line item, not including any discounts. The total price is calculated using the original unit price multiplied by the quantity, and it's displayed in the presentment currency. */
   originalTotalPrice: MoneyV2;
   /** The number of products variants associated to the line item. */
-  quantity: Scalars['Int']['output'];
+  quantity: Scalars['Int'];
   /** The title of the product combined with title of the variant. */
-  title: Scalars['String']['output'];
+  title: Scalars['String'];
   /** The product variant object associated to the line item. */
   variant?: Maybe<ProductVariant>;
 };
@@ -5726,7 +5783,7 @@ export type OrderLineItemConnection = {
 export type OrderLineItemEdge = {
   __typename?: 'OrderLineItemEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of OrderLineItemEdge. */
   node: OrderLineItem;
 };
@@ -5749,18 +5806,19 @@ export type OrderSortKeys =
 /** Shopify merchants can create pages to hold static HTML content. Each Page object represents a custom page on the online store. */
 export type Page = HasMetafields &
   Node &
-  OnlineStorePublishable & {
+  OnlineStorePublishable &
+  Trackable & {
     __typename?: 'Page';
     /** The description of the page, complete with HTML formatting. */
-    body: Scalars['HTML']['output'];
+    body: Scalars['HTML'];
     /** Summary of the page body. */
-    bodySummary: Scalars['String']['output'];
+    bodySummary: Scalars['String'];
     /** The timestamp of the page creation. */
-    createdAt: Scalars['DateTime']['output'];
+    createdAt: Scalars['DateTime'];
     /** A human-friendly unique string for the page automatically generated from its title. */
-    handle: Scalars['String']['output'];
+    handle: Scalars['String'];
     /** A globally-unique ID. */
-    id: Scalars['ID']['output'];
+    id: Scalars['ID'];
     /** Returns a metafield found by namespace and key. */
     metafield?: Maybe<Metafield>;
     /**
@@ -5769,19 +5827,21 @@ export type Page = HasMetafields &
      */
     metafields: Array<Maybe<Metafield>>;
     /** The URL used for viewing the resource on the shop's Online Store. Returns `null` if the resource is currently not published to the Online Store sales channel. */
-    onlineStoreUrl?: Maybe<Scalars['URL']['output']>;
+    onlineStoreUrl?: Maybe<Scalars['URL']>;
     /** The page's SEO information. */
     seo?: Maybe<Seo>;
     /** The title of the page. */
-    title: Scalars['String']['output'];
+    title: Scalars['String'];
+    /** A URL parameters to be added to a page URL when it is linked from a GraphQL result. This allows for tracking the origin of the traffic. */
+    trackingParameters?: Maybe<Scalars['String']>;
     /** The timestamp of the latest page update. */
-    updatedAt: Scalars['DateTime']['output'];
+    updatedAt: Scalars['DateTime'];
   };
 
 /** Shopify merchants can create pages to hold static HTML content. Each Page object represents a custom page on the online store. */
 export type PageMetafieldArgs = {
-  key: Scalars['String']['input'];
-  namespace: Scalars['String']['input'];
+  key: Scalars['String'];
+  namespace: Scalars['String'];
 };
 
 /** Shopify merchants can create pages to hold static HTML content. Each Page object represents a custom page on the online store. */
@@ -5810,7 +5870,7 @@ export type PageConnection = {
 export type PageEdge = {
   __typename?: 'PageEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of PageEdge. */
   node: Page;
 };
@@ -5824,13 +5884,13 @@ export type PageEdge = {
 export type PageInfo = {
   __typename?: 'PageInfo';
   /** The cursor corresponding to the last node in edges. */
-  endCursor?: Maybe<Scalars['String']['output']>;
+  endCursor?: Maybe<Scalars['String']>;
   /** Whether there are more pages to fetch following the current page. */
-  hasNextPage: Scalars['Boolean']['output'];
+  hasNextPage: Scalars['Boolean'];
   /** Whether there are any pages prior to the current page. */
-  hasPreviousPage: Scalars['Boolean']['output'];
+  hasPreviousPage: Scalars['Boolean'];
   /** The cursor corresponding to the first node in edges. */
-  startCursor?: Maybe<Scalars['String']['output']>;
+  startCursor?: Maybe<Scalars['String']>;
 };
 
 /** The set of valid sort keys for the Page query. */
@@ -5865,22 +5925,22 @@ export type Payment = Node & {
   /** The credit card used for the payment in the case of direct payments. */
   creditCard?: Maybe<CreditCard>;
   /** A message describing a processing error during asynchronous processing. */
-  errorMessage?: Maybe<Scalars['String']['output']>;
+  errorMessage?: Maybe<Scalars['String']>;
   /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
+  id: Scalars['ID'];
   /**
    * A client-side generated token to identify a payment and perform idempotent operations.
    * For more information, refer to
    * [Idempotent requests](https://shopify.dev/api/usage/idempotent-requests).
    *
    */
-  idempotencyKey?: Maybe<Scalars['String']['output']>;
+  idempotencyKey?: Maybe<Scalars['String']>;
   /** The URL where the customer needs to be redirected so they can complete the 3D Secure payment flow. */
-  nextActionUrl?: Maybe<Scalars['URL']['output']>;
+  nextActionUrl?: Maybe<Scalars['URL']>;
   /** Whether the payment is still processing asynchronously. */
-  ready: Scalars['Boolean']['output'];
+  ready: Scalars['Boolean'];
   /** A flag to indicate if the payment is to be done in test mode for gateways that support it. */
-  test: Scalars['Boolean']['output'];
+  test: Scalars['Boolean'];
   /** The actual transaction recorded by Shopify after having processed the payment with the gateway. */
   transaction?: Maybe<Transaction>;
 };
@@ -5891,7 +5951,7 @@ export type PaymentSettings = {
   /** List of the card brands which the shop accepts. */
   acceptedCardBrands: Array<CardBrand>;
   /** The url pointing to the endpoint to vault credit cards. */
-  cardVaultUrl: Scalars['URL']['output'];
+  cardVaultUrl: Scalars['URL'];
   /** The country where the shop is located. */
   countryCode: CountryCode;
   /** The three-letter code for the shop's primary currency. */
@@ -5899,7 +5959,7 @@ export type PaymentSettings = {
   /** A list of enabled currencies (ISO 4217 format) that the shop accepts. Merchants can enable currencies from their Shopify Payments settings in the Shopify admin. */
   enabledPresentmentCurrencies: Array<CurrencyCode>;
   /** The shop’s Shopify Payments account ID. */
-  shopifyPaymentsAccountId?: Maybe<Scalars['String']['output']>;
+  shopifyPaymentsAccountId?: Maybe<Scalars['String']>;
   /** List of the digital wallets which the shop supports. */
   supportedDigitalWallets: Array<DigitalWallet>;
 };
@@ -5917,22 +5977,61 @@ export type PaymentTokenType =
   /** Vault payment token type. */
   | 'VAULT';
 
+/** Decides the distribution of results. */
+export type PredictiveSearchLimitScope =
+  /** Return results up to limit across all types. */
+  | 'ALL'
+  /** Return results up to limit per type. */
+  | 'EACH';
+
+/**
+ * A predictive search result represents a list of products, collections, pages, articles, and query suggestions
+ * that matches the predictive search query.
+ *
+ */
+export type PredictiveSearchResult = {
+  __typename?: 'PredictiveSearchResult';
+  /** The articles that match the search query. */
+  articles: Array<Article>;
+  /** The articles that match the search query. */
+  collections: Array<Collection>;
+  /** The pages that match the search query. */
+  pages: Array<Page>;
+  /** The products that match the search query. */
+  products: Array<Product>;
+  /** The query suggestions that are relevant to the search query. */
+  queries: Array<SearchQuerySuggestion>;
+};
+
+/** The types of search items to perform predictive search on. */
+export type PredictiveSearchType =
+  /** Returns matching articles. */
+  | 'ARTICLE'
+  /** Returns matching collections. */
+  | 'COLLECTION'
+  /** Returns matching pages. */
+  | 'PAGE'
+  /** Returns matching products. */
+  | 'PRODUCT'
+  /** Returns matching query strings. */
+  | 'QUERY';
+
 /**
  * The input fields for a filter used to view a subset of products in a collection matching a specific price range.
  *
  */
 export type PriceRangeFilter = {
   /** The maximum price in the range. Empty indicates no max price. */
-  max?: InputMaybe<Scalars['Float']['input']>;
+  max?: InputMaybe<Scalars['Float']>;
   /** The minimum price in the range. Defaults to zero. */
-  min?: InputMaybe<Scalars['Float']['input']>;
+  min?: InputMaybe<Scalars['Float']>;
 };
 
 /** The value of the percentage pricing object. */
 export type PricingPercentageValue = {
   __typename?: 'PricingPercentageValue';
   /** The percentage value of the object. */
-  percentage: Scalars['Float']['output'];
+  percentage: Scalars['Float'];
 };
 
 /** The price value (fixed or percentage) for a discount application. */
@@ -5944,20 +6043,21 @@ export type PricingValue = MoneyV2 | PricingPercentageValue;
  */
 export type Product = HasMetafields &
   Node &
-  OnlineStorePublishable & {
+  OnlineStorePublishable &
+  Trackable & {
     __typename?: 'Product';
     /** Indicates if at least one product variant is available for sale. */
-    availableForSale: Scalars['Boolean']['output'];
+    availableForSale: Scalars['Boolean'];
     /** List of collections a product belongs to. */
     collections: CollectionConnection;
     /** The compare at price of the product across all variants. */
     compareAtPriceRange: ProductPriceRange;
     /** The date and time when the product was created. */
-    createdAt: Scalars['DateTime']['output'];
+    createdAt: Scalars['DateTime'];
     /** Stripped description of the product, single line with HTML tags removed. */
-    description: Scalars['String']['output'];
+    description: Scalars['String'];
     /** The description of the product, complete with HTML formatting. */
-    descriptionHtml: Scalars['HTML']['output'];
+    descriptionHtml: Scalars['HTML'];
     /**
      * The featured image for the product.
      *
@@ -5970,13 +6070,13 @@ export type Product = HasMetafields &
      * They are used by the Liquid templating language to refer to objects.
      *
      */
-    handle: Scalars['String']['output'];
+    handle: Scalars['String'];
     /** A globally-unique ID. */
-    id: Scalars['ID']['output'];
+    id: Scalars['ID'];
     /** List of images associated with the product. */
     images: ImageConnection;
     /** Whether the product is a gift card. */
-    isGiftCard: Scalars['Boolean']['output'];
+    isGiftCard: Scalars['Boolean'];
     /** The media associated with the product. */
     media: MediaConnection;
     /** Returns a metafield found by namespace and key. */
@@ -5987,17 +6087,17 @@ export type Product = HasMetafields &
      */
     metafields: Array<Maybe<Metafield>>;
     /** The URL used for viewing the resource on the shop's Online Store. Returns `null` if the resource is currently not published to the Online Store sales channel. */
-    onlineStoreUrl?: Maybe<Scalars['URL']['output']>;
+    onlineStoreUrl?: Maybe<Scalars['URL']>;
     /** List of product options. */
     options: Array<ProductOption>;
     /** The price range. */
     priceRange: ProductPriceRange;
     /** A categorization that a product can be tagged with, commonly used for filtering and searching. */
-    productType: Scalars['String']['output'];
+    productType: Scalars['String'];
     /** The date and time when the product was published to the channel. */
-    publishedAt: Scalars['DateTime']['output'];
+    publishedAt: Scalars['DateTime'];
     /** Whether the product can only be purchased with a selling plan. */
-    requiresSellingPlan: Scalars['Boolean']['output'];
+    requiresSellingPlan: Scalars['Boolean'];
     /** A list of a product's available selling plan groups. A selling plan group represents a selling method. For example, 'Subscribe and save' is a selling method where customers pay for goods or services per delivery. A selling plan group contains individual selling plans. */
     sellingPlanGroups: SellingPlanGroupConnection;
     /** The product's SEO information. */
@@ -6007,11 +6107,13 @@ export type Product = HasMetafields &
      * Additional access scope required for private apps: unauthenticated_read_product_tags.
      *
      */
-    tags: Array<Scalars['String']['output']>;
+    tags: Array<Scalars['String']>;
     /** The product’s title. */
-    title: Scalars['String']['output'];
+    title: Scalars['String'];
     /** The total quantity of inventory in stock for this Product. */
-    totalInventory?: Maybe<Scalars['Int']['output']>;
+    totalInventory?: Maybe<Scalars['Int']>;
+    /** A URL parameters to be added to a page URL when it is linked from a GraphQL result. This allows for tracking the origin of the traffic. */
+    trackingParameters?: Maybe<Scalars['String']>;
     /**
      * The date and time when the product was last modified.
      * A product's `updatedAt` value can change for different reasons. For example, if an order
@@ -6019,7 +6121,7 @@ export type Product = HasMetafields &
      * is counted as an update.
      *
      */
-    updatedAt: Scalars['DateTime']['output'];
+    updatedAt: Scalars['DateTime'];
     /**
      * Find a product’s variant based on its selected options.
      * This is useful for converting a user’s selection of product options into a single matching variant.
@@ -6030,7 +6132,7 @@ export type Product = HasMetafields &
     /** List of the product’s variants. */
     variants: ProductVariantConnection;
     /** The product’s vendor name. */
-    vendor: Scalars['String']['output'];
+    vendor: Scalars['String'];
   };
 
 /**
@@ -6038,11 +6140,11 @@ export type Product = HasMetafields &
  * For example, a digital download (such as a movie, music or ebook file) also qualifies as a product, as do services (such as equipment rental, work for hire, customization of another product or an extended warranty).
  */
 export type ProductCollectionsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
 };
 
 /**
@@ -6050,7 +6152,7 @@ export type ProductCollectionsArgs = {
  * For example, a digital download (such as a movie, music or ebook file) also qualifies as a product, as do services (such as equipment rental, work for hire, customization of another product or an extended warranty).
  */
 export type ProductDescriptionArgs = {
-  truncateAt?: InputMaybe<Scalars['Int']['input']>;
+  truncateAt?: InputMaybe<Scalars['Int']>;
 };
 
 /**
@@ -6058,11 +6160,11 @@ export type ProductDescriptionArgs = {
  * For example, a digital download (such as a movie, music or ebook file) also qualifies as a product, as do services (such as equipment rental, work for hire, customization of another product or an extended warranty).
  */
 export type ProductImagesArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
   sortKey?: InputMaybe<ProductImageSortKeys>;
 };
 
@@ -6071,11 +6173,11 @@ export type ProductImagesArgs = {
  * For example, a digital download (such as a movie, music or ebook file) also qualifies as a product, as do services (such as equipment rental, work for hire, customization of another product or an extended warranty).
  */
 export type ProductMediaArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
   sortKey?: InputMaybe<ProductMediaSortKeys>;
 };
 
@@ -6084,8 +6186,8 @@ export type ProductMediaArgs = {
  * For example, a digital download (such as a movie, music or ebook file) also qualifies as a product, as do services (such as equipment rental, work for hire, customization of another product or an extended warranty).
  */
 export type ProductMetafieldArgs = {
-  key: Scalars['String']['input'];
-  namespace: Scalars['String']['input'];
+  key: Scalars['String'];
+  namespace: Scalars['String'];
 };
 
 /**
@@ -6101,7 +6203,7 @@ export type ProductMetafieldsArgs = {
  * For example, a digital download (such as a movie, music or ebook file) also qualifies as a product, as do services (such as equipment rental, work for hire, customization of another product or an extended warranty).
  */
 export type ProductOptionsArgs = {
-  first?: InputMaybe<Scalars['Int']['input']>;
+  first?: InputMaybe<Scalars['Int']>;
 };
 
 /**
@@ -6109,11 +6211,11 @@ export type ProductOptionsArgs = {
  * For example, a digital download (such as a movie, music or ebook file) also qualifies as a product, as do services (such as equipment rental, work for hire, customization of another product or an extended warranty).
  */
 export type ProductSellingPlanGroupsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
 };
 
 /**
@@ -6129,11 +6231,11 @@ export type ProductVariantBySelectedOptionsArgs = {
  * For example, a digital download (such as a movie, music or ebook file) also qualifies as a product, as do services (such as equipment rental, work for hire, customization of another product or an extended warranty).
  */
 export type ProductVariantsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
   sortKey?: InputMaybe<ProductVariantSortKeys>;
 };
 
@@ -6183,7 +6285,7 @@ export type ProductConnection = {
 export type ProductEdge = {
   __typename?: 'ProductEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of ProductEdge. */
   node: Product;
 };
@@ -6196,17 +6298,17 @@ export type ProductEdge = {
  */
 export type ProductFilter = {
   /** Filter on if the product is available for sale. */
-  available?: InputMaybe<Scalars['Boolean']['input']>;
+  available?: InputMaybe<Scalars['Boolean']>;
   /** A range of prices to filter with-in. */
   price?: InputMaybe<PriceRangeFilter>;
   /** A product metafield to filter on. */
   productMetafield?: InputMaybe<MetafieldFilter>;
   /** The product type to filter on. */
-  productType?: InputMaybe<Scalars['String']['input']>;
+  productType?: InputMaybe<Scalars['String']>;
   /** The product vendor to filter on. */
-  productVendor?: InputMaybe<Scalars['String']['input']>;
+  productVendor?: InputMaybe<Scalars['String']>;
   /** A product tag to filter on. */
-  tag?: InputMaybe<Scalars['String']['input']>;
+  tag?: InputMaybe<Scalars['String']>;
   /** A variant metafield to filter on. */
   variantMetafield?: InputMaybe<MetafieldFilter>;
   /** A variant option to filter on. */
@@ -6250,11 +6352,11 @@ export type ProductMediaSortKeys =
 export type ProductOption = Node & {
   __typename?: 'ProductOption';
   /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
+  id: Scalars['ID'];
   /** The product option’s name. */
-  name: Scalars['String']['output'];
+  name: Scalars['String'];
   /** The corresponding value to the product option name. */
-  values: Array<Scalars['String']['output']>;
+  values: Array<Scalars['String']>;
 };
 
 /** The price range of the product. */
@@ -6307,9 +6409,9 @@ export type ProductVariant = HasMetafields &
   Node & {
     __typename?: 'ProductVariant';
     /** Indicates if the product variant is available for sale. */
-    availableForSale: Scalars['Boolean']['output'];
+    availableForSale: Scalars['Boolean'];
     /** The barcode (for example, ISBN, UPC, or GTIN) associated with the variant. */
-    barcode?: Maybe<Scalars['String']['output']>;
+    barcode?: Maybe<Scalars['String']>;
     /** The compare at price of the variant. This can be used to mark a variant as on sale, when `compareAtPrice` is higher than `price`. */
     compareAtPrice?: Maybe<MoneyV2>;
     /**
@@ -6318,9 +6420,9 @@ export type ProductVariant = HasMetafields &
      */
     compareAtPriceV2?: Maybe<MoneyV2>;
     /** Whether a product is out of stock but still available for purchase (used for backorders). */
-    currentlyNotInStock: Scalars['Boolean']['output'];
+    currentlyNotInStock: Scalars['Boolean'];
     /** A globally-unique ID. */
-    id: Scalars['ID']['output'];
+    id: Scalars['ID'];
     /**
      * Image associated with the product variant. This field falls back to the product image if no image is available.
      *
@@ -6343,33 +6445,33 @@ export type ProductVariant = HasMetafields &
     /** The product object that the product variant belongs to. */
     product: Product;
     /** The total sellable quantity of the variant for online sales channels. */
-    quantityAvailable?: Maybe<Scalars['Int']['output']>;
+    quantityAvailable?: Maybe<Scalars['Int']>;
     /** Whether a customer needs to provide a shipping address when placing an order for the product variant. */
-    requiresShipping: Scalars['Boolean']['output'];
+    requiresShipping: Scalars['Boolean'];
     /** List of product options applied to the variant. */
     selectedOptions: Array<SelectedOption>;
     /** Represents an association between a variant and a selling plan. Selling plan allocations describe which selling plans are available for each variant, and what their impact is on pricing. */
     sellingPlanAllocations: SellingPlanAllocationConnection;
     /** The SKU (stock keeping unit) associated with the variant. */
-    sku?: Maybe<Scalars['String']['output']>;
+    sku?: Maybe<Scalars['String']>;
     /** The in-store pickup availability of this variant by location. */
     storeAvailability: StoreAvailabilityConnection;
     /** The product variant’s title. */
-    title: Scalars['String']['output'];
+    title: Scalars['String'];
     /** The unit price value for the variant based on the variant's measurement. */
     unitPrice?: Maybe<MoneyV2>;
     /** The unit price measurement for the variant. */
     unitPriceMeasurement?: Maybe<UnitPriceMeasurement>;
     /** The weight of the product variant in the unit system specified with `weight_unit`. */
-    weight?: Maybe<Scalars['Float']['output']>;
+    weight?: Maybe<Scalars['Float']>;
     /** Unit of measurement for weight. */
     weightUnit: WeightUnit;
   };
 
 /** A product variant represents a different version of a product, such as differing sizes or differing colors. */
 export type ProductVariantMetafieldArgs = {
-  key: Scalars['String']['input'];
-  namespace: Scalars['String']['input'];
+  key: Scalars['String'];
+  namespace: Scalars['String'];
 };
 
 /** A product variant represents a different version of a product, such as differing sizes or differing colors. */
@@ -6379,21 +6481,21 @@ export type ProductVariantMetafieldsArgs = {
 
 /** A product variant represents a different version of a product, such as differing sizes or differing colors. */
 export type ProductVariantSellingPlanAllocationsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
 };
 
 /** A product variant represents a different version of a product, such as differing sizes or differing colors. */
 export type ProductVariantStoreAvailabilityArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
   near?: InputMaybe<GeoCoordinateInput>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
 };
 
 /**
@@ -6417,7 +6519,7 @@ export type ProductVariantConnection = {
 export type ProductVariantEdge = {
   __typename?: 'ProductVariantEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of ProductVariantEdge. */
   node: ProductVariant;
 };
@@ -6507,6 +6609,7 @@ export type QueryRoot = {
     | CheckoutLineItem
     | Collection
     | Comment
+    | ComponentizableCartLine
     | ExternalVideo
     | GenericFile
     | Location
@@ -6542,6 +6645,7 @@ export type QueryRoot = {
       | CheckoutLineItem
       | Collection
       | Comment
+      | ComponentizableCartLine
       | ExternalVideo
       | GenericFile
       | Location
@@ -6575,6 +6679,8 @@ export type QueryRoot = {
   pageByHandle?: Maybe<Page>;
   /** List of the shop's pages. */
   pages: PageConnection;
+  /** List of the predictive search results. */
+  predictiveSearch?: Maybe<PredictiveSearchResult>;
   /** Fetch a specific `Product` by one of its unique attributes. */
   product?: Maybe<Product>;
   /**
@@ -6601,6 +6707,8 @@ export type QueryRoot = {
   products: ProductConnection;
   /** The list of public Storefront API versions, including supported, release candidate and unstable versions. */
   publicApiVersions: Array<ApiVersion>;
+  /** List of the search results. */
+  search: SearchResultItemConnection;
   /** The shop associated with the storefront access token. */
   shop: Shop;
   /** A list of redirects for a shop. */
@@ -6609,199 +6717,224 @@ export type QueryRoot = {
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootArticleArgs = {
-  id: Scalars['ID']['input'];
+  id: Scalars['ID'];
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootArticlesArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  query?: InputMaybe<Scalars['String']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
   sortKey?: InputMaybe<ArticleSortKeys>;
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootBlogArgs = {
-  handle?: InputMaybe<Scalars['String']['input']>;
-  id?: InputMaybe<Scalars['ID']['input']>;
+  handle?: InputMaybe<Scalars['String']>;
+  id?: InputMaybe<Scalars['ID']>;
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootBlogByHandleArgs = {
-  handle: Scalars['String']['input'];
+  handle: Scalars['String'];
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootBlogsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  query?: InputMaybe<Scalars['String']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
   sortKey?: InputMaybe<BlogSortKeys>;
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootCartArgs = {
-  id: Scalars['ID']['input'];
+  id: Scalars['ID'];
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootCartCompletionAttemptArgs = {
-  attemptId: Scalars['String']['input'];
+  attemptId: Scalars['String'];
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootCollectionArgs = {
-  handle?: InputMaybe<Scalars['String']['input']>;
-  id?: InputMaybe<Scalars['ID']['input']>;
+  handle?: InputMaybe<Scalars['String']>;
+  id?: InputMaybe<Scalars['ID']>;
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootCollectionByHandleArgs = {
-  handle: Scalars['String']['input'];
+  handle: Scalars['String'];
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootCollectionsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  query?: InputMaybe<Scalars['String']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
   sortKey?: InputMaybe<CollectionSortKeys>;
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootCustomerArgs = {
-  customerAccessToken: Scalars['String']['input'];
+  customerAccessToken: Scalars['String'];
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootLocationsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
   near?: InputMaybe<GeoCoordinateInput>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
   sortKey?: InputMaybe<LocationSortKeys>;
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootMenuArgs = {
-  handle: Scalars['String']['input'];
+  handle: Scalars['String'];
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootMetaobjectArgs = {
   handle?: InputMaybe<MetaobjectHandleInput>;
-  id?: InputMaybe<Scalars['ID']['input']>;
+  id?: InputMaybe<Scalars['ID']>;
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootMetaobjectsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<Scalars['String']['input']>;
-  type: Scalars['String']['input'];
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
+  sortKey?: InputMaybe<Scalars['String']>;
+  type: Scalars['String'];
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootNodeArgs = {
-  id: Scalars['ID']['input'];
+  id: Scalars['ID'];
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootNodesArgs = {
-  ids: Array<Scalars['ID']['input']>;
+  ids: Array<Scalars['ID']>;
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootPageArgs = {
-  handle?: InputMaybe<Scalars['String']['input']>;
-  id?: InputMaybe<Scalars['ID']['input']>;
+  handle?: InputMaybe<Scalars['String']>;
+  id?: InputMaybe<Scalars['ID']>;
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootPageByHandleArgs = {
-  handle: Scalars['String']['input'];
+  handle: Scalars['String'];
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootPagesArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  query?: InputMaybe<Scalars['String']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
   sortKey?: InputMaybe<PageSortKeys>;
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
+export type QueryRootPredictiveSearchArgs = {
+  limit?: InputMaybe<Scalars['Int']>;
+  limitScope?: InputMaybe<PredictiveSearchLimitScope>;
+  query: Scalars['String'];
+  searchableFields?: InputMaybe<Array<SearchableField>>;
+  types?: InputMaybe<Array<PredictiveSearchType>>;
+  unavailableProducts?: InputMaybe<SearchUnavailableProductsType>;
+};
+
+/** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootProductArgs = {
-  handle?: InputMaybe<Scalars['String']['input']>;
-  id?: InputMaybe<Scalars['ID']['input']>;
+  handle?: InputMaybe<Scalars['String']>;
+  id?: InputMaybe<Scalars['ID']>;
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootProductByHandleArgs = {
-  handle: Scalars['String']['input'];
+  handle: Scalars['String'];
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootProductRecommendationsArgs = {
   intent?: InputMaybe<ProductRecommendationIntent>;
-  productId: Scalars['ID']['input'];
+  productId: Scalars['ID'];
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootProductTagsArgs = {
-  first: Scalars['Int']['input'];
+  first: Scalars['Int'];
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootProductTypesArgs = {
-  first: Scalars['Int']['input'];
+  first: Scalars['Int'];
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootProductsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  query?: InputMaybe<Scalars['String']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
   sortKey?: InputMaybe<ProductSortKeys>;
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
+export type QueryRootSearchArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  prefix?: InputMaybe<SearchPrefixQueryType>;
+  productFilters?: InputMaybe<Array<ProductFilter>>;
+  query: Scalars['String'];
+  reverse?: InputMaybe<Scalars['Boolean']>;
+  sortKey?: InputMaybe<SearchSortKeys>;
+  types?: InputMaybe<Array<SearchType>>;
+  unavailableProducts?: InputMaybe<SearchUnavailableProductsType>;
+};
+
+/** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootUrlRedirectsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  query?: InputMaybe<Scalars['String']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
 };
 
 /** SEO information. */
 export type Seo = {
   __typename?: 'SEO';
   /** The meta description. */
-  description?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']>;
   /** The SEO title. */
-  title?: Maybe<Scalars['String']['output']>;
+  title?: Maybe<Scalars['String']>;
 };
 
 /**
@@ -6818,10 +6951,110 @@ export type ScriptDiscountApplication = DiscountApplication & {
   /** The type of line that the discount is applicable towards. */
   targetType: DiscountApplicationTargetType;
   /** The title of the application as defined by the Script. */
-  title: Scalars['String']['output'];
+  title: Scalars['String'];
   /** The value of the discount application. */
   value: PricingValue;
 };
+
+/** Specifies whether to perform a partial word match on the last search term. */
+export type SearchPrefixQueryType =
+  /** Perform a partial word match on the last search term. */
+  | 'LAST'
+  /** Don't perform a partial word match on the last search term. */
+  | 'NONE';
+
+/** A search query suggestion. */
+export type SearchQuerySuggestion = Trackable & {
+  __typename?: 'SearchQuerySuggestion';
+  /** The text of the search query suggestion with highlighted HTML tags. */
+  styledText: Scalars['String'];
+  /** The text of the search query suggestion. */
+  text: Scalars['String'];
+  /** A URL parameters to be added to a page URL when it is linked from a GraphQL result. This allows for tracking the origin of the traffic. */
+  trackingParameters?: Maybe<Scalars['String']>;
+};
+
+/**
+ * A search result that matches the search query.
+ *
+ */
+export type SearchResultItem = Article | Page | Product;
+
+/**
+ * An auto-generated type for paginating through multiple SearchResultItems.
+ *
+ */
+export type SearchResultItemConnection = {
+  __typename?: 'SearchResultItemConnection';
+  /** A list of edges. */
+  edges: Array<SearchResultItemEdge>;
+  /** A list of the nodes contained in SearchResultItemEdge. */
+  nodes: Array<SearchResultItem>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** A list of available filters. */
+  productFilters: Array<Filter>;
+  /** The total number of results. */
+  totalCount: Scalars['Int'];
+};
+
+/**
+ * An auto-generated type which holds one SearchResultItem and a cursor during pagination.
+ *
+ */
+export type SearchResultItemEdge = {
+  __typename?: 'SearchResultItemEdge';
+  /** A cursor for use in pagination. */
+  cursor: Scalars['String'];
+  /** The item at the end of SearchResultItemEdge. */
+  node: SearchResultItem;
+};
+
+/** The set of valid sort keys for the search query. */
+export type SearchSortKeys =
+  /** Sort by the `price` value. */
+  | 'PRICE'
+  /** Sort by relevance to the search terms. */
+  | 'RELEVANCE';
+
+/** The types of search items to perform search within. */
+export type SearchType =
+  /** Returns matching articles. */
+  | 'ARTICLE'
+  /** Returns matching pages. */
+  | 'PAGE'
+  /** Returns matching products. */
+  | 'PRODUCT';
+
+/** Specifies whether to display results for unavailable products. */
+export type SearchUnavailableProductsType =
+  /** Exclude unavailable products. */
+  | 'HIDE'
+  /** Show unavailable products after all other matching results. This is the default. */
+  | 'LAST'
+  /** Show unavailable products in the order that they're found. */
+  | 'SHOW';
+
+/** Specifies the list of resource fields to search. */
+export type SearchableField =
+  /** Author of the page or article. */
+  | 'AUTHOR'
+  /** Body of the page or article or product description or collection description. */
+  | 'BODY'
+  /** Product type. */
+  | 'PRODUCT_TYPE'
+  /** Tag associated with the product or article. */
+  | 'TAG'
+  /** Title of the page or article or product title or collection title. */
+  | 'TITLE'
+  /** Variant barcode. */
+  | 'VARIANTS_BARCODE'
+  /** Variant SKU. */
+  | 'VARIANTS_SKU'
+  /** Variant title. */
+  | 'VARIANTS_TITLE'
+  /** Product vendor. */
+  | 'VENDOR';
 
 /**
  * Properties used by customers to select a product variant.
@@ -6831,17 +7064,17 @@ export type ScriptDiscountApplication = DiscountApplication & {
 export type SelectedOption = {
   __typename?: 'SelectedOption';
   /** The product option’s name. */
-  name: Scalars['String']['output'];
+  name: Scalars['String'];
   /** The product option’s value. */
-  value: Scalars['String']['output'];
+  value: Scalars['String'];
 };
 
 /** The input fields required for a selected option. */
 export type SelectedOptionInput = {
   /** The product option’s name. */
-  name: Scalars['String']['input'];
+  name: Scalars['String'];
   /** The product option’s value. */
-  value: Scalars['String']['input'];
+  value: Scalars['String'];
 };
 
 /** Represents how products and variants can be sold and purchased. */
@@ -6850,17 +7083,17 @@ export type SellingPlan = {
   /** The initial payment due for the purchase. */
   checkoutCharge: SellingPlanCheckoutCharge;
   /** The description of the selling plan. */
-  description?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']>;
   /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
+  id: Scalars['ID'];
   /** The name of the selling plan. For example, '6 weeks of prepaid granola, delivered weekly'. */
-  name: Scalars['String']['output'];
+  name: Scalars['String'];
   /** The selling plan options available in the drop-down list in the storefront. For example, 'Delivery every week' or 'Delivery every 2 weeks' specifies the delivery frequency options for the product. Individual selling plans contribute their options to the associated selling plan group. For example, a selling plan group might have an option called `option1: Delivery every`. One selling plan in that group could contribute `option1: 2 weeks` with the pricing for that option, and another selling plan could contribute `option1: 4 weeks`, with different pricing. */
   options: Array<SellingPlanOption>;
   /** The price adjustments that a selling plan makes when a variant is purchased with a selling plan. */
   priceAdjustments: Array<SellingPlanPriceAdjustment>;
   /** Whether purchasing the selling plan will result in multiple deliveries. */
-  recurringDeliveries: Scalars['Boolean']['output'];
+  recurringDeliveries: Scalars['Boolean'];
 };
 
 /** Represents an association between a variant and a selling plan. Selling plan allocations describe the options offered for each variant, and the price of the variant when purchased with a selling plan. */
@@ -6897,7 +7130,7 @@ export type SellingPlanAllocationConnection = {
 export type SellingPlanAllocationEdge = {
   __typename?: 'SellingPlanAllocationEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of SellingPlanAllocationEdge. */
   node: SellingPlanAllocation;
 };
@@ -6928,7 +7161,7 @@ export type SellingPlanCheckoutCharge = {
 export type SellingPlanCheckoutChargePercentageValue = {
   __typename?: 'SellingPlanCheckoutChargePercentageValue';
   /** The percentage value of the price used for checkout charge. */
-  percentage: Scalars['Float']['output'];
+  percentage: Scalars['Float'];
 };
 
 /** The checkout charge when the full amount isn't charged at checkout. */
@@ -6964,7 +7197,7 @@ export type SellingPlanConnection = {
 export type SellingPlanEdge = {
   __typename?: 'SellingPlanEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of SellingPlanEdge. */
   node: SellingPlan;
 };
@@ -6987,9 +7220,9 @@ export type SellingPlanFixedPriceAdjustment = {
 export type SellingPlanGroup = {
   __typename?: 'SellingPlanGroup';
   /** A display friendly name for the app that created the selling plan group. */
-  appName?: Maybe<Scalars['String']['output']>;
+  appName?: Maybe<Scalars['String']>;
   /** The name of the selling plan group. */
-  name: Scalars['String']['output'];
+  name: Scalars['String'];
   /** Represents the selling plan options available in the drop-down list in the storefront. For example, 'Delivery every week' or 'Delivery every 2 weeks' specifies the delivery frequency options for the product. */
   options: Array<SellingPlanGroupOption>;
   /** A list of selling plans in a selling plan group. A selling plan is a representation of how products and variants can be sold and purchased. For example, an individual selling plan could be '6 weeks of prepaid granola, delivered weekly'. */
@@ -6998,11 +7231,11 @@ export type SellingPlanGroup = {
 
 /** Represents a selling method. For example, 'Subscribe and save' is a selling method where customers pay for goods or services per delivery. A selling plan group contains individual selling plans. */
 export type SellingPlanGroupSellingPlansArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  reverse?: InputMaybe<Scalars['Boolean']>;
 };
 
 /**
@@ -7026,7 +7259,7 @@ export type SellingPlanGroupConnection = {
 export type SellingPlanGroupEdge = {
   __typename?: 'SellingPlanGroupEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of SellingPlanGroupEdge. */
   node: SellingPlanGroup;
 };
@@ -7039,25 +7272,25 @@ export type SellingPlanGroupEdge = {
 export type SellingPlanGroupOption = {
   __typename?: 'SellingPlanGroupOption';
   /** The name of the option. For example, 'Delivery every'. */
-  name: Scalars['String']['output'];
+  name: Scalars['String'];
   /** The values for the options specified by the selling plans in the selling plan group. For example, '1 week', '2 weeks', '3 weeks'. */
-  values: Array<Scalars['String']['output']>;
+  values: Array<Scalars['String']>;
 };
 
 /** An option provided by a Selling Plan. */
 export type SellingPlanOption = {
   __typename?: 'SellingPlanOption';
   /** The name of the option (ie "Delivery every"). */
-  name?: Maybe<Scalars['String']['output']>;
+  name?: Maybe<Scalars['String']>;
   /** The value of the option (ie "Month"). */
-  value?: Maybe<Scalars['String']['output']>;
+  value?: Maybe<Scalars['String']>;
 };
 
 /** A percentage amount that's deducted from the original variant price. For example, 10% off. */
 export type SellingPlanPercentagePriceAdjustment = {
   __typename?: 'SellingPlanPercentagePriceAdjustment';
   /** The percentage value of the price adjustment. */
-  adjustmentPercentage: Scalars['Int']['output'];
+  adjustmentPercentage: Scalars['Int'];
 };
 
 /** Represents by how much the price of a variant associated with a selling plan is adjusted. Each variant can have up to two price adjustments. If a variant has multiple price adjustments, then the first price adjustment applies when the variant is initially purchased. The second price adjustment applies after a certain number of orders (specified by the `orderCount` field) are made. If a selling plan doesn't have any price adjustments, then the unadjusted price of the variant is the effective price. */
@@ -7066,7 +7299,7 @@ export type SellingPlanPriceAdjustment = {
   /** The type of price adjustment. An adjustment value can have one of three types: percentage, amount off, or a new price. */
   adjustmentValue: SellingPlanPriceAdjustmentValue;
   /** The number of orders that the price adjustment applies to. If the price adjustment always applies, then this field is `null`. */
-  orderCount?: Maybe<Scalars['Int']['output']>;
+  orderCount?: Maybe<Scalars['Int']>;
 };
 
 /** Represents by how much the price of a variant associated with a selling plan is adjusted. Each variant can have up to two price adjustments. */
@@ -7079,7 +7312,7 @@ export type SellingPlanPriceAdjustmentValue =
 export type ShippingRate = {
   __typename?: 'ShippingRate';
   /** Human-readable unique identifier for this shipping rate. */
-  handle: Scalars['String']['output'];
+  handle: Scalars['String'];
   /** Price of this shipping rate. */
   price: MoneyV2;
   /**
@@ -7088,7 +7321,7 @@ export type ShippingRate = {
    */
   priceV2: MoneyV2;
   /** Title of this shipping rate. */
-  title: Scalars['String']['output'];
+  title: Scalars['String'];
 };
 
 /** Shop represents a collection of the general settings and information about the shop. */
@@ -7098,9 +7331,9 @@ export type Shop = HasMetafields &
     /** The shop's branding configuration. */
     brand?: Maybe<Brand>;
     /** A description of the shop. */
-    description?: Maybe<Scalars['String']['output']>;
+    description?: Maybe<Scalars['String']>;
     /** A globally-unique ID. */
-    id: Scalars['ID']['output'];
+    id: Scalars['ID'];
     /** Returns a metafield found by namespace and key. */
     metafield?: Maybe<Metafield>;
     /**
@@ -7109,9 +7342,9 @@ export type Shop = HasMetafields &
      */
     metafields: Array<Maybe<Metafield>>;
     /** A string representing the way currency is formatted when the currency isn’t specified. */
-    moneyFormat: Scalars['String']['output'];
+    moneyFormat: Scalars['String'];
     /** The shop’s name. */
-    name: Scalars['String']['output'];
+    name: Scalars['String'];
     /** Settings related to payments. */
     paymentSettings: PaymentSettings;
     /** The primary domain of the shop’s Online Store. */
@@ -7132,8 +7365,8 @@ export type Shop = HasMetafields &
 
 /** Shop represents a collection of the general settings and information about the shop. */
 export type ShopMetafieldArgs = {
-  key: Scalars['String']['input'];
-  namespace: Scalars['String']['input'];
+  key: Scalars['String'];
+  namespace: Scalars['String'];
 };
 
 /** Shop represents a collection of the general settings and information about the shop. */
@@ -7149,22 +7382,22 @@ export type ShopPayWalletContentInput = {
   /** The customer's billing address. */
   billingAddress: MailingAddressInput;
   /** Session token for transaction. */
-  sessionToken: Scalars['String']['input'];
+  sessionToken: Scalars['String'];
 };
 
 /** Policy that a merchant has configured for their store, such as their refund or privacy policy. */
 export type ShopPolicy = Node & {
   __typename?: 'ShopPolicy';
   /** Policy text, maximum size of 64kb. */
-  body: Scalars['String']['output'];
+  body: Scalars['String'];
   /** Policy’s handle. */
-  handle: Scalars['String']['output'];
+  handle: Scalars['String'];
   /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
+  id: Scalars['ID'];
   /** Policy’s title. */
-  title: Scalars['String']['output'];
+  title: Scalars['String'];
   /** Public URL to the policy. */
-  url: Scalars['URL']['output'];
+  url: Scalars['URL'];
 };
 
 /**
@@ -7176,15 +7409,15 @@ export type ShopPolicy = Node & {
 export type ShopPolicyWithDefault = {
   __typename?: 'ShopPolicyWithDefault';
   /** The text of the policy. Maximum size: 64KB. */
-  body: Scalars['String']['output'];
+  body: Scalars['String'];
   /** The handle of the policy. */
-  handle: Scalars['String']['output'];
+  handle: Scalars['String'];
   /** The unique ID of the policy. A default policy doesn't have an ID. */
-  id?: Maybe<Scalars['ID']['output']>;
+  id?: Maybe<Scalars['ID']>;
   /** The title of the policy. */
-  title: Scalars['String']['output'];
+  title: Scalars['String'];
   /** Public URL to the policy. */
-  url: Scalars['URL']['output'];
+  url: Scalars['URL'];
 };
 
 /**
@@ -7195,11 +7428,13 @@ export type ShopPolicyWithDefault = {
 export type StoreAvailability = {
   __typename?: 'StoreAvailability';
   /** Whether the product variant is in-stock at this location. */
-  available: Scalars['Boolean']['output'];
+  available: Scalars['Boolean'];
   /** The location where this product variant is stocked at. */
   location: Location;
   /** Returns the estimated amount of time it takes for pickup to be ready (Example: Usually ready in 24 hours). */
-  pickUpTime: Scalars['String']['output'];
+  pickUpTime: Scalars['String'];
+  /** The quantity of the product variant in-stock at this location. */
+  quantityAvailable: Scalars['Int'];
 };
 
 /**
@@ -7223,7 +7458,7 @@ export type StoreAvailabilityConnection = {
 export type StoreAvailabilityEdge = {
   __typename?: 'StoreAvailabilityEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of StoreAvailabilityEdge. */
   node: StoreAvailability;
 };
@@ -7247,9 +7482,9 @@ export type StringConnection = {
 export type StringEdge = {
   __typename?: 'StringEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of StringEdge. */
-  node: Scalars['String']['output'];
+  node: Scalars['String'];
 };
 
 /** An error that occurred during cart submit for completion. */
@@ -7258,7 +7493,7 @@ export type SubmissionError = {
   /** The error code. */
   code: SubmissionErrorCode;
   /** The error message. */
-  message?: Maybe<Scalars['String']['output']>;
+  message?: Maybe<Scalars['String']>;
 };
 
 /** The code of the error that occurred during cart submit for completion. */
@@ -7361,14 +7596,14 @@ export type SubmissionErrorCode =
 export type SubmitAlreadyAccepted = {
   __typename?: 'SubmitAlreadyAccepted';
   /** The ID of the cart completion attempt that will be used for polling for the result. */
-  attemptId: Scalars['String']['output'];
+  attemptId: Scalars['String'];
 };
 
 /** Cart submit for checkout completion failed. */
 export type SubmitFailed = {
   __typename?: 'SubmitFailed';
   /** The URL of the checkout for the cart. */
-  checkoutUrl?: Maybe<Scalars['URL']['output']>;
+  checkoutUrl?: Maybe<Scalars['URL']>;
   /** The list of errors that occurred from executing the mutation. */
   errors: Array<SubmissionError>;
 };
@@ -7377,7 +7612,7 @@ export type SubmitFailed = {
 export type SubmitSuccess = {
   __typename?: 'SubmitSuccess';
   /** The ID of the cart completion attempt that will be used for polling for the result. */
-  attemptId: Scalars['String']['output'];
+  attemptId: Scalars['String'];
 };
 
 /** Cart submit for checkout completion is throttled. */
@@ -7389,7 +7624,7 @@ export type SubmitThrottled = {
    * next poll request.
    *
    */
-  pollAfter: Scalars['DateTime']['output'];
+  pollAfter: Scalars['DateTime'];
 };
 
 /**
@@ -7401,17 +7636,23 @@ export type TokenizedPaymentInputV3 = {
   /** The billing address for the payment. */
   billingAddress: MailingAddressInput;
   /** A unique client generated key used to avoid duplicate charges. When a duplicate payment is found, the original is returned instead of creating a new one. For more information, refer to [Idempotent requests](https://shopify.dev/api/usage/idempotent-requests). */
-  idempotencyKey: Scalars['String']['input'];
+  idempotencyKey: Scalars['String'];
   /** Public Hash Key used for AndroidPay payments only. */
-  identifier?: InputMaybe<Scalars['String']['input']>;
+  identifier?: InputMaybe<Scalars['String']>;
   /** The amount and currency of the payment. */
   paymentAmount: MoneyInput;
   /** A simple string or JSON containing the required payment data for the tokenized payment. */
-  paymentData: Scalars['String']['input'];
-  /** Whether to execute the payment in test mode, if possible. Test mode is not supported in production stores. Defaults to `false`. */
-  test?: InputMaybe<Scalars['Boolean']['input']>;
+  paymentData: Scalars['String'];
+  /** Whether to execute the payment in test mode, if possible. Test mode isn't supported in production stores. Defaults to `false`. */
+  test?: InputMaybe<Scalars['Boolean']>;
   /** The type of payment token. */
   type: PaymentTokenType;
+};
+
+/** Represents a resource that you can track the origin of the search traffic. */
+export type Trackable = {
+  /** A URL parameters to be added to a page URL when it is linked from a GraphQL result. This allows for tracking the origin of the traffic. */
+  trackingParameters?: Maybe<Scalars['String']>;
 };
 
 /** An object representing exchange of money for a product or service. */
@@ -7434,7 +7675,7 @@ export type Transaction = {
   /** The status of the transaction. */
   statusV2?: Maybe<TransactionStatus>;
   /** Whether the transaction was done in test mode or not. */
-  test: Scalars['Boolean']['output'];
+  test: Scalars['Boolean'];
 };
 
 /** The different kinds of order transactions. */
@@ -7476,11 +7717,11 @@ export type UnitPriceMeasurement = {
   /** The quantity unit for the unit price measurement. */
   quantityUnit?: Maybe<UnitPriceMeasurementMeasuredUnit>;
   /** The quantity value for the unit price measurement. */
-  quantityValue: Scalars['Float']['output'];
+  quantityValue: Scalars['Float'];
   /** The reference unit for the unit price measurement. */
   referenceUnit?: Maybe<UnitPriceMeasurementMeasuredUnit>;
   /** The reference value for the unit price measurement. */
-  referenceValue: Scalars['Int']['output'];
+  referenceValue: Scalars['Int'];
 };
 
 /** The accepted types of unit of measurement. */
@@ -7530,11 +7771,11 @@ export type UnitSystem =
 export type UrlRedirect = Node & {
   __typename?: 'UrlRedirect';
   /** The ID of the URL redirect. */
-  id: Scalars['ID']['output'];
+  id: Scalars['ID'];
   /** The old path to be redirected from. When the user visits this path, they'll be redirected to the target location. */
-  path: Scalars['String']['output'];
+  path: Scalars['String'];
   /** The target location where the user will be redirected to. */
-  target: Scalars['String']['output'];
+  target: Scalars['String'];
 };
 
 /**
@@ -7558,7 +7799,7 @@ export type UrlRedirectConnection = {
 export type UrlRedirectEdge = {
   __typename?: 'UrlRedirectEdge';
   /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
+  cursor: Scalars['String'];
   /** The item at the end of UrlRedirectEdge. */
   node: UrlRedirect;
 };
@@ -7567,9 +7808,9 @@ export type UrlRedirectEdge = {
 export type UserError = DisplayableError & {
   __typename?: 'UserError';
   /** The path to the input field that caused the error. */
-  field?: Maybe<Array<Scalars['String']['output']>>;
+  field?: Maybe<Array<Scalars['String']>>;
   /** The error message. */
-  message: Scalars['String']['output'];
+  message: Scalars['String'];
 };
 
 /**
@@ -7578,9 +7819,9 @@ export type UserError = DisplayableError & {
  */
 export type VariantOptionFilter = {
   /** The name of the variant option to filter on. */
-  name: Scalars['String']['input'];
+  name: Scalars['String'];
   /** The value of the variant option to filter on. */
-  value: Scalars['String']['input'];
+  value: Scalars['String'];
 };
 
 /** Represents a Shopify hosted video. */
@@ -7588,9 +7829,9 @@ export type Video = Media &
   Node & {
     __typename?: 'Video';
     /** A word or phrase to share the nature or contents of a media. */
-    alt?: Maybe<Scalars['String']['output']>;
+    alt?: Maybe<Scalars['String']>;
     /** A globally-unique ID. */
-    id: Scalars['ID']['output'];
+    id: Scalars['ID'];
     /** The media content type. */
     mediaContentType: MediaContentType;
     /** The presentation for a media. */
@@ -7605,15 +7846,15 @@ export type Video = Media &
 export type VideoSource = {
   __typename?: 'VideoSource';
   /** The format of the video source. */
-  format: Scalars['String']['output'];
+  format: Scalars['String'];
   /** The height of the video. */
-  height: Scalars['Int']['output'];
+  height: Scalars['Int'];
   /** The video MIME type. */
-  mimeType: Scalars['String']['output'];
+  mimeType: Scalars['String'];
   /** The URL of the video. */
-  url: Scalars['String']['output'];
+  url: Scalars['String'];
   /** The width of the video. */
-  width: Scalars['Int']['output'];
+  width: Scalars['Int'];
 };
 
 /** Units of measurement for weight. */

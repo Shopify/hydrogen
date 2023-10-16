@@ -8,14 +8,14 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'createStorefrontClient',
       type: 'utilities',
-      url: '/docs/api/hydrogen/2023-04/utilities/createstorefrontclient',
+      url: '/docs/api/hydrogen/2023-07/utilities/createstorefrontclient',
     },
   ],
 
   description: `> Caution:
 > This utility should only be used when deploying Hydrogen to a Node.js environment. It should *not* be used when deploying Hydrogen to Oxygen.
 
-If you are deploying Hydrogen to a Node.js environment, you can use this limited implementation of an in-memory cache. It only supports the \`cache-control\` header. It does NOT support \`age\` or \`expires\` headers. 
+If you are deploying Hydrogen to a Node.js environment, you can use this limited implementation of an in-memory cache. It only supports the \`cache-control\` header. It does NOT support \`age\` or \`expires\` headers.
 
 Learn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).`,
   type: 'utility',

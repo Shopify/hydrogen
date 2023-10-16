@@ -1,7 +1,14 @@
 import clsx from 'clsx';
 import {useRef} from 'react';
 import {useScroll} from 'react-use';
-import {flattenConnection, CartForm, Image, Money} from '@shopify/hydrogen';
+import {
+  flattenConnection,
+  CartForm,
+  Image,
+  Money,
+  useOptimisticData,
+  OptimisticInput,
+} from '@shopify/hydrogen';
 import type {
   Cart as CartType,
   CartCost,
@@ -229,7 +236,14 @@ function CartSummary({
   );
 }
 
+type OptimisticData = {
+  action?: string;
+  quantity?: number;
+};
+
 function CartLineItem({line}: {line: CartLine}) {
+  const optimisticData = useOptimisticData<OptimisticData>(line?.id);
+
   if (!line?.id) return null;
 
   const {id, quantity, merchandise} = line;
@@ -237,7 +251,15 @@ function CartLineItem({line}: {line: CartLine}) {
   if (typeof quantity === 'undefined' || !merchandise?.product) return null;
 
   return (
-    <li key={id} className="flex gap-4">
+    <li
+      key={id}
+      className="flex gap-4"
+      style={{
+        // Hide the line item if the optimistic data action is remove
+        // Do not remove the form from the DOM
+        display: optimisticData?.action === 'remove' ? 'none' : 'flex',
+      }}
+    >
       <div className="flex-shrink">
         {merchandise.image && (
           <Image
@@ -274,7 +296,7 @@ function CartLineItem({line}: {line: CartLine}) {
             <div className="flex justify-start text-copy">
               <CartLineQuantityAdjust line={line} />
             </div>
-            <ItemRemoveButton lineIds={[id]} />
+            <ItemRemoveButton lineId={id} />
           </div>
         </div>
         <Text>
@@ -285,13 +307,13 @@ function CartLineItem({line}: {line: CartLine}) {
   );
 }
 
-function ItemRemoveButton({lineIds}: {lineIds: CartLine['id'][]}) {
+function ItemRemoveButton({lineId}: {lineId: CartLine['id']}) {
   return (
     <CartForm
       route="/cart"
       action={CartForm.ACTIONS.LinesRemove}
       inputs={{
-        lineIds,
+        lineIds: [lineId],
       }}
     >
       <button
@@ -301,20 +323,27 @@ function ItemRemoveButton({lineIds}: {lineIds: CartLine['id'][]}) {
         <span className="sr-only">Remove</span>
         <IconRemove aria-hidden="true" />
       </button>
+      <OptimisticInput id={lineId} data={{action: 'remove'}} />
     </CartForm>
   );
 }
 
 function CartLineQuantityAdjust({line}: {line: CartLine}) {
+  const optimisticId = line?.id;
+  const optimisticData = useOptimisticData<OptimisticData>(optimisticId);
+
   if (!line || typeof line?.quantity === 'undefined') return null;
-  const {id: lineId, quantity} = line;
-  const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
-  const nextQuantity = Number((quantity + 1).toFixed(0));
+
+  const optimisticQuantity = optimisticData?.quantity || line.quantity;
+
+  const {id: lineId} = line;
+  const prevQuantity = Number(Math.max(0, optimisticQuantity - 1).toFixed(0));
+  const nextQuantity = Number((optimisticQuantity + 1).toFixed(0));
 
   return (
     <>
       <label htmlFor={`quantity-${lineId}`} className="sr-only">
-        Quantity, {quantity}
+        Quantity, {optimisticQuantity}
       </label>
       <div className="flex items-center border rounded">
         <UpdateCartButton lines={[{id: lineId, quantity: prevQuantity}]}>
@@ -323,14 +352,18 @@ function CartLineQuantityAdjust({line}: {line: CartLine}) {
             aria-label="Decrease quantity"
             className="w-10 h-10 transition text-primary/50 hover:text-primary disabled:text-primary/10"
             value={prevQuantity}
-            disabled={quantity <= 1}
+            disabled={optimisticQuantity <= 1}
           >
             <span>&#8722;</span>
+            <OptimisticInput
+              id={optimisticId}
+              data={{quantity: prevQuantity}}
+            />
           </button>
         </UpdateCartButton>
 
         <div className="px-2 text-center" data-test="item-quantity">
-          {quantity}
+          {optimisticQuantity}
         </div>
 
         <UpdateCartButton lines={[{id: lineId, quantity: nextQuantity}]}>
@@ -341,6 +374,10 @@ function CartLineQuantityAdjust({line}: {line: CartLine}) {
             aria-label="Increase quantity"
           >
             <span>&#43;</span>
+            <OptimisticInput
+              id={optimisticId}
+              data={{quantity: nextQuantity}}
+            />
           </button>
         </UpdateCartButton>
       </div>

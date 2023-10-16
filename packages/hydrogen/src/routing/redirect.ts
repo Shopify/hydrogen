@@ -3,7 +3,7 @@ import type {UrlRedirectConnection} from '@shopify/hydrogen-react/storefront-api
 import type {I18nBase, Storefront} from '../storefront';
 
 type StorefrontRedirect = {
-  /** The [Storefront client](/docs/api/hydrogen/2023-04/utilities/createstorefrontclient) instance */
+  /** The [Storefront client](/docs/api/hydrogen/2023-07/utilities/createstorefrontclient) instance */
   storefront: Storefront<I18nBase>;
   /** The [MDN Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object that was passed to the `server.ts` request handler. */
   request: Request;
@@ -75,18 +75,11 @@ export async function storefrontRedirect(
 }
 
 function isLocalPath(url: string) {
-  try {
-    // We don't want to redirect cross domain,
-    // doing so could create fishing vulnerability
-    // If `new URL()` succeeds, it's a fully qualified
-    // url which is cross domain. If it fails, it's just
-    // a path, which will be the current domain.
-    new URL(url);
-  } catch (e) {
-    return true;
-  }
-
-  return false;
+  // We don't want to redirect cross domain,
+  // doing so could create phishing vulnerability
+  // Test for protocols, e.g. https://, http://, //
+  // and uris: mailto:, tel:, javascript:, etc.
+  return !/^(([a-z+-]+:)?\/\/|[a-z+-]+:)/i.test(url.trim());
 }
 
 const REDIRECT_QUERY = `#graphql

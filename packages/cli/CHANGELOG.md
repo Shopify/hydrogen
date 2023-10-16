@@ -1,5 +1,312 @@
 # @shopify/cli-hydrogen
 
+## 5.4.3
+
+### Patch Changes
+
+- Fix subrequest performance in development. ([#1411](https://github.com/Shopify/hydrogen/pull/1411)) by [@frandiox](https://github.com/frandiox)
+
+- Increase the request body size limit to 100mb when running locally. ([#1421](https://github.com/Shopify/hydrogen/pull/1421)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`29414664`](https://github.com/Shopify/hydrogen/commit/294146644df57592a775ae33cdf4359015155d72), [`832a0eaf`](https://github.com/Shopify/hydrogen/commit/832a0eafad331f61b7cfdf90dec6427f1aaaef6b)]:
+  - @shopify/remix-oxygen@1.1.7
+  - @shopify/mini-oxygen@2.2.3
+
+## 5.4.2
+
+### Patch Changes
+
+- Fix product search results header style ([#1405](https://github.com/Shopify/hydrogen/pull/1405)) by [@tatsuya](https://github.com/tatsuya)
+
+- Updated dependencies [[`4f735fd7`](https://github.com/Shopify/hydrogen/commit/4f735fd725aef26cd3bd5b50c87d2c028b93c598)]:
+  - @shopify/remix-oxygen@1.1.6
+
+## 5.4.1
+
+### Patch Changes
+
+- Add token flag, environmentTag flag, environment selection screen, rename health check to deployment verification ([#1381](https://github.com/Shopify/hydrogen/pull/1381)) by [@vincentezw](https://github.com/vincentezw)
+
+- Updated dependencies [[`eb9451ed`](https://github.com/Shopify/hydrogen/commit/eb9451ed7883f610d1412bdab2553523859ac701)]:
+  - @shopify/remix-oxygen@1.1.5
+
+## 5.4.0
+
+### Minor Changes
+
+- The build command now throws errors on CI when it can't find a valid lockfile. This should prevent unforseen issues related to dependency versioning in production. ([#1370](https://github.com/Shopify/hydrogen/pull/1370)) by [@frandiox](https://github.com/frandiox)
+
+  This behavior can be disabled with the flag `--no-lockfile-check`, which might be useful in monorepos or other setups where the lockfile is not available in the project directory.
+
+### Patch Changes
+
+- Add check to render collection images when available ([#1373](https://github.com/Shopify/hydrogen/pull/1373)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Remove sourcemap annotations from client bundles. This prevents errors showing up in the devtools when the sourcemaps fail to load. ([#1364](https://github.com/Shopify/hydrogen/pull/1364)) by [@blittle](https://github.com/blittle)
+
+## 5.3.1
+
+### Patch Changes
+
+- Make the CLI bundle analysis compatible with older Remix versions that don't output a metafile ([#1357](https://github.com/Shopify/hydrogen/pull/1357)) by [@blittle](https://github.com/blittle)
+
+## 5.3.0
+
+### Minor Changes
+
+- Add `--worker-unstable` flag to `h2 dev` and `h2 preview` commands. This flag enables the use of the new experimental worker runtime for local development, which is closer to Oxygen production than the current Node.js sandbox. Please report any issues you encounter with this flag. ([#1184](https://github.com/Shopify/hydrogen/pull/1184)) by [@frandiox](https://github.com/frandiox)
+
+- Add deploy command (disabled by default) ([#1019](https://github.com/Shopify/hydrogen/pull/1019)) by [@vincentezw](https://github.com/vincentezw)
+
+### Patch Changes
+
+- Add magic cart and discount routes to skeleton template ([#1309](https://github.com/Shopify/hydrogen/pull/1309)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updates placeholder page to suggest the `h2 setup` command, instead of `h2 generate route home` ([#1347](https://github.com/Shopify/hydrogen/pull/1347)) by [@benjaminsehl](https://github.com/benjaminsehl)
+
+- Adjust behavior of `h2 preview` command around environment variables to be more consistent with `h2 dev` command. ([#1184](https://github.com/Shopify/hydrogen/pull/1184)) by [@frandiox](https://github.com/frandiox)
+
+- We've added a tool for analyzing bundle sizes. You should try to keep your worker bundle small. The larger it gets effects the cold startup time of your app. We now include `client-bundle-analyzer.html` and `worker-bundle-analyzer.html` files in the build output. Open these in your browser to view an interactive analysis of your bundles. The CLI output also includes links to each file. Hydrogen also fails to build if your bundle size is over 10 MB. This is because Oxygen only supports worker bundles less than 10 MB. ([#1306](https://github.com/Shopify/hydrogen/pull/1306)) by [@blittle](https://github.com/blittle)
+
+- Raise the subrequest limit to 100 for development. ([#1348](https://github.com/Shopify/hydrogen/pull/1348)) by [@frandiox](https://github.com/frandiox)
+
+- Fix `--routes` and `--markets` flag when creating new projects. ([#1342](https://github.com/Shopify/hydrogen/pull/1342)) by [@frandiox](https://github.com/frandiox)
+
+- Make sourcemaps to default be turned on. They were off to prevent sourcemaps leaking server code to the client. Oxygen now makes sure to not serve the sourcemaps, so it's okay to generate them. Also, when sourcemaps are present, we hope to enable sourcemapped stack traces in error logs on Oxygen. ([#1339](https://github.com/Shopify/hydrogen/pull/1339)) by [@blittle](https://github.com/blittle)
+
+## 5.2.3
+
+### Patch Changes
+
+- Delay installing certain dependencies to speed up project initialization time. ([#1272](https://github.com/Shopify/hydrogen/pull/1272)) by [@frandiox](https://github.com/frandiox)
+
+- (Unstable) server-side network request debug virtual route ([#1284](https://github.com/Shopify/hydrogen/pull/1284)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  1. Update your `server.ts` so that it also passes in the `waitUntil` and `env`.
+
+     ```diff
+       const handleRequest = createRequestHandler({
+         build: remixBuild,
+         mode: process.env.NODE_ENV,
+     +    getLoadContext: () => ({session, storefront, env, waitUntil}),
+       });
+     ```
+
+     If you are using typescript, make sure to update `remix.env.d.ts`
+
+     ```diff
+       declare module '@shopify/remix-oxygen' {
+         export interface AppLoadContext {
+     +     env: Env;
+           cart: HydrogenCart;
+           storefront: Storefront;
+           session: HydrogenSession;
+     +      waitUntil: ExecutionContext['waitUntil'];
+         }
+       }
+     ```
+
+  2. Run `npm run dev` and you should see terminal log information about a new virtual route that you can view server-side network requests at http://localhost:3000/debug-network
+
+  3. Open http://localhost:3000/debug-network in a tab and your app another tab. When you navigate around your app, you should see server network requests being logged in the debug-network tab
+
+- Updated dependencies [[`71a07374`](https://github.com/Shopify/hydrogen/commit/71a0737438d51bae79330d3251f47355e814a453)]:
+  - @shopify/remix-oxygen@1.1.4
+
+## 5.2.2
+
+### Patch Changes
+
+- Fix error stack traces in development mode. ([#1297](https://github.com/Shopify/hydrogen/pull/1297)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`345f06a2`](https://github.com/Shopify/hydrogen/commit/345f06a27886eceaf1ea6b75971c1130b059e2db)]:
+  - @shopify/hydrogen-react@2023.7.4
+
+## 5.2.1
+
+### Patch Changes
+
+- Fix the default page shown when the project has no routes. ([#1266](https://github.com/Shopify/hydrogen/pull/1266)) by [@frandiox](https://github.com/frandiox)
+
+- Hydrogen is now compatible with TypeScript v5. ([#1240](https://github.com/Shopify/hydrogen/pull/1240)) by [@frandiox](https://github.com/frandiox)
+
+  If you have `typescript` as a dev dependency in your app, it is recommended to change its version as follows:
+
+  ```diff
+    "devDependencies": {
+      ...
+  -   "typescript": "^4.9.5",
+  +   "typescript": "^5.2.2",
+    },
+  ```
+
+  After installing the new version of TypeScript, you may need to update the version used in your IDE. For example, in VSCode, you can do this by clicking on the `{ }` icon in the bottom-right toolbar next to the language mode (generally, `{ } TypeScript JSX` when editing a `.tsx` file).
+
+- Fix development server port in some situations where it was set to a random number instead of the default 3000 or the `--port` flag value. ([#1267](https://github.com/Shopify/hydrogen/pull/1267)) by [@frandiox](https://github.com/frandiox)
+
+- Fix transpiling TS to JS when scaffolding routes. ([#1273](https://github.com/Shopify/hydrogen/pull/1273)) by [@frandiox](https://github.com/frandiox)
+
+- Catch more errors during init while connecting to Shopify ([#1281](https://github.com/Shopify/hydrogen/pull/1281)) by [@graygilmore](https://github.com/graygilmore)
+
+- Add functionality for creating a Content Security Policy. See the [guide on Content Security Policies](https://shopify.dev/docs/custom-storefronts/hydrogen/content-security-policy) for more details. ([#1235](https://github.com/Shopify/hydrogen/pull/1235)) by [@blittle](https://github.com/blittle)
+
+- Updated dependencies [[`06516ee9`](https://github.com/Shopify/hydrogen/commit/06516ee91f20153902c2b8ef79c0f6690ba385bb), [`423acee2`](https://github.com/Shopify/hydrogen/commit/423acee243c62e49a865ff2cd82735991aca1d8f)]:
+  - @shopify/hydrogen-react@2023.7.3
+
+## 5.2.0
+
+### Minor Changes
+
+- Support Remix Hot Module Replacement (HMR) and Hot Data Revalidation (HDR). ([#1187](https://github.com/Shopify/hydrogen/pull/1187)) by [@frandiox](https://github.com/frandiox)
+
+  Start using it with the following changes to your project:
+
+  1. Upgrade to the latest Hydrogen version and Remix 1.19.1.
+
+  2. Enable the v2 dev server in `remix.config.js`:
+
+  ```diff
+  // ...
+  future: {
+  + v2_dev: true,
+    v2_meta: true,
+    v2_headers: true,
+    // ...
+  }
+  ```
+
+  3. Add Remix' `<LiveReload />` component if you don't have it to your `root.jsx` or `root.tsx` file:
+
+  ```diff
+  import {
+    Outlet,
+    Scripts,
+  + LiveReload,
+    ScrollRestoration,
+  } from '@remix-run/react';
+
+  // ...
+
+  export default function App() {
+    // ...
+
+    return (
+      <html>
+        <head>
+         {/* ...  */}
+        </head>
+        <body>
+          <Outlet />
+          <ScrollRestoration />
+          <Scripts />
+  +       <LiveReload />
+        </body>
+      </html>
+    );
+  }
+
+  export function ErrorBoundary() {
+    // ...
+
+    return (
+      <html>
+        <head>
+          {/* ... */}
+        </head>
+        <body>
+          Error!
+          <Scripts />
+  +       <LiveReload />
+        </body>
+      </html>
+    );
+  }
+  ```
+
+### Patch Changes
+
+- Avoid development server crash on unhandled promise rejection. ([#1244](https://github.com/Shopify/hydrogen/pull/1244)) by [@frandiox](https://github.com/frandiox)
+
+- Fix build command when `public` directory is missing. ([#1224](https://github.com/Shopify/hydrogen/pull/1224)) by [@frandiox](https://github.com/frandiox)
+
+- Use nonce from CSP header in MiniOxygen's auto-reload script. ([#1251](https://github.com/Shopify/hydrogen/pull/1251)) by [@frandiox](https://github.com/frandiox)
+
+- Add default exported route to enable the error to be caught in the root.tsx ErrorBoundary ([#1215](https://github.com/Shopify/hydrogen/pull/1215)) by [@josh-sanger](https://github.com/josh-sanger)
+
+- Improve error handling when failing to get remote environment variables. ([#1225](https://github.com/Shopify/hydrogen/pull/1225)) by [@frandiox](https://github.com/frandiox)
+
+- Fix GraphQL Codegen throwing error related to Git on Windows. ([#1253](https://github.com/Shopify/hydrogen/pull/1253)) by [@frandiox](https://github.com/frandiox)
+
+- Add shouldRevalidate export to limit root loaders revalidation on mutations only ([#1237](https://github.com/Shopify/hydrogen/pull/1237)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Removed quantityAvailable field from skeleton PDP graphql query so that it works with default Storefront API permissions. ([#1236](https://github.com/Shopify/hydrogen/pull/1236)) by [@abecciu](https://github.com/abecciu)
+
+- Updated dependencies [[`e9e1736a`](https://github.com/Shopify/hydrogen/commit/e9e1736ace6bd981e8109e38402eb405f7c865c1), [`1a0e858d`](https://github.com/Shopify/hydrogen/commit/1a0e858d94ea7d14f3f37ca32d288b33436038b0)]:
+  - @shopify/hydrogen-react@2023.7.2
+
+## 5.1.2
+
+### Patch Changes
+
+- Update @shopify/oxygen-workers-types dependencies ([#1208](https://github.com/Shopify/hydrogen/pull/1208)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies [[`21eb9dac`](https://github.com/Shopify/hydrogen/commit/21eb9dac935722fd8d0d385b00c3bbcfb4693baa), [`d80c4ada`](https://github.com/Shopify/hydrogen/commit/d80c4ada051dd5530c12720cb7d8e8c6dda19c98)]:
+  - @shopify/remix-oxygen@1.1.3
+  - @shopify/hydrogen-react@2023.7.1
+
+## 5.1.1
+
+### Patch Changes
+
+- Update to Remix v1.19.1. ([#1172](https://github.com/Shopify/hydrogen/pull/1172)) by [@frandiox](https://github.com/frandiox)
+
+  See changes for [1.18](https://github.com/remix-run/remix/releases/tag/remix%401.18.0) and [1.19](https://github.com/remix-run/remix/releases/tag/remix%401.19.0).
+
+- Fix the starter template cart aside to cover everything on larger pages ([#1163](https://github.com/Shopify/hydrogen/pull/1163)) by [@QuentinGibson](https://github.com/QuentinGibson)
+
+- Skip Oxygen requirement checks of `remix.config.js` when `@shopify/remix-oxygen` is not installed. ([#1137](https://github.com/Shopify/hydrogen/pull/1137)) by [@frandiox](https://github.com/frandiox)
+
+- Warn in development when Remix packages are out of sync. ([#1173](https://github.com/Shopify/hydrogen/pull/1173)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`b7a8ecf6`](https://github.com/Shopify/hydrogen/commit/b7a8ecf6a687e72de7745a78c61c1a78a9a52629)]:
+  - @shopify/remix-oxygen@1.1.2
+
+## 5.1.0
+
+### What’s new
+
+⭐️ Check out our [blog post](https://hydrogen.shopify.dev/updates) with all the latest updates on Hydrogen, and what’s coming on the roadmap.
+
+Shopify CLI now gives you [more options](https://shopify.dev/docs/custom-storefronts/hydrogen/getting-started/quickstart) when creating a new Hydrogen app on the command line:
+
+- Create a new Shopify storefront and connect it to the local project, or use [Mock.shop](https://mock.shop).
+- Pick your styling method: Tailwind, CSS Modules, Vanilla Extract, PostCSS.
+- URL strategies to support language and currency options with Shopify Markets.
+- Automatically scaffold standard Shopify routes.
+
+### Minor Changes
+
+- The onboarding process when creating new Hydrogen apps has been reworked. ([#913](https://github.com/Shopify/hydrogen/pull/913)) by [@frandiox](https://github.com/frandiox)
+
+- Add `login` and `logout` commands. Rework how other commands interact with auth. ([#1022](https://github.com/Shopify/hydrogen/pull/1022)) by [@frandiox](https://github.com/frandiox)
+
+- Reload environment variables in the development server when `.env` file is updated. Show injected variables when project is not linked to any storefront. ([#997](https://github.com/Shopify/hydrogen/pull/997)) by [@frandiox](https://github.com/frandiox)
+
+- Support creating new storefronts from the `link` command. ([#1022](https://github.com/Shopify/hydrogen/pull/1022)) by [@frandiox](https://github.com/frandiox)
+
+### Patch Changes
+
+- Stop checking `/products` and `/discount` routes in `h2 check routes` command. ([#1141](https://github.com/Shopify/hydrogen/pull/1141)) by [@frandiox](https://github.com/frandiox)
+
+- Show proper error message when Hydrogen App isn't installed on Shop ([#1075](https://github.com/Shopify/hydrogen/pull/1075)) by [@aswamy](https://github.com/aswamy)
+
+- Improve warning and error format for known Hydrogen messages in development. ([#1093](https://github.com/Shopify/hydrogen/pull/1093)) by [@frandiox](https://github.com/frandiox)
+
+- Add `--codegen-unstable` flag to `build` command. ([#1049](https://github.com/Shopify/hydrogen/pull/1049)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`c39411e0`](https://github.com/Shopify/hydrogen/commit/c39411e0454750697d580a1ef4858800c494980f), [`0d2e5ffb`](https://github.com/Shopify/hydrogen/commit/0d2e5ffb68096f1dc48ade8793e6ef53088af6da), [`4bee03df`](https://github.com/Shopify/hydrogen/commit/4bee03df3cc8203510f6b05522c1268aa5e5f2f4), [`11ab64a8`](https://github.com/Shopify/hydrogen/commit/11ab64a88966dd7b90522f15836abfff6f5d595f), [`7a7456a5`](https://github.com/Shopify/hydrogen/commit/7a7456a5ab073559aef37f043e8aa47570639b96)]:
+  - @shopify/hydrogen-react@2023.4.6
+
 ## 5.0.2
 
 ### Patch Changes

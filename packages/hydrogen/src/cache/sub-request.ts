@@ -13,7 +13,7 @@ import {
 /**
  * Cache API is weird. We just need a full URL, so we make one up.
  */
-function getKeyUrl(key: string) {
+export function getKeyUrl(key: string) {
   return `https://shopify.dev/?${key}`;
 }
 

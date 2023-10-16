@@ -17,10 +17,7 @@ import {
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortSignal} from '@shopify/cli-kit/node/abort';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
-import {
-  transpileFile,
-  type TranspilerOptions,
-} from '../../../lib/transpile-ts.js';
+import {transpileFile} from '../../../lib/transpile-ts.js';
 import {
   type FormatOptions,
   formatCode,
@@ -36,21 +33,68 @@ import {
   convertTemplateToRemixVersion,
   getV2Flags,
   type RemixV2Flags,
+  type RequiredRemixFutureFlags,
 } from '../../../lib/remix-version-interop.js';
-import {getRemixConfig} from '../../../lib/config.js';
+import {type RemixConfig, getRemixConfig} from '../../remix-config.js';
 import {findFileWithExtension} from '../../file.js';
 
-export const ROUTE_MAP: Record<string, string | string[]> = {
-  home: '_index',
-  page: 'pages.$pageHandle',
-  cart: 'cart',
-  products: 'products.$productHandle',
-  collections: 'collections.$collectionHandle',
-  policies: ['policies._index', 'policies.$policyHandle'],
+const NO_LOCALE_PATTERNS = [/robots\.txt/];
+
+const ROUTE_MAP = {
+  home: ['_index', '$'],
+  page: 'pages*',
+  cart: ['cart', 'cart.$lines', 'discount.$code'],
+  products: 'products*',
+  collections: 'collections*',
+  policies: 'policies*',
+  blogs: 'blogs*',
+  account: 'account*',
+  search: ['search', 'api.predictive-search'],
   robots: '[robots.txt]',
   sitemap: '[sitemap.xml]',
-  account: ['account.login', 'account.register'],
 };
+
+type RouteKey = keyof typeof ROUTE_MAP;
+
+let allRouteTemplateFiles: string[] = [];
+export async function getResolvedRoutes(
+  routeKeys = Object.keys(ROUTE_MAP) as RouteKey[],
+) {
+  if (allRouteTemplateFiles.length === 0) {
+    allRouteTemplateFiles = (
+      await readdir(getTemplateAppFile(GENERATOR_ROUTE_DIR))
+    ).map((item) => item.replace(/\.tsx?$/, ''));
+  }
+
+  const routeGroups: Record<string, string[]> = {};
+  const resolvedRouteFiles: string[] = [];
+
+  for (const key of routeKeys) {
+    routeGroups[key] = [];
+
+    const value = ROUTE_MAP[key];
+
+    if (!value) {
+      throw new AbortError(
+        `No route found for ${key}. Try one of ${ALL_ROUTE_CHOICES.join()}.`,
+      );
+    }
+
+    const routes = Array.isArray(value) ? value : [value];
+
+    for (const route of routes) {
+      const routePrefix = route.replace('*', '');
+
+      routeGroups[key]!.push(
+        ...allRouteTemplateFiles.filter((file) => file.startsWith(routePrefix)),
+      );
+    }
+
+    resolvedRouteFiles.push(...routeGroups[key]!);
+  }
+
+  return {routeGroups, resolvedRouteFiles};
+}
 
 export const ALL_ROUTE_CHOICES = [...Object.keys(ROUTE_MAP), 'all'];
 
@@ -69,31 +113,24 @@ type GenerateRoutesOptions = Omit<
   localePrefix?: GenerateProjectFileOptions['localePrefix'] | false;
 };
 
-export async function generateRoutes(options: GenerateRoutesOptions) {
-  const routePath =
-    options.routeName === 'all'
-      ? Object.values(ROUTE_MAP).flat()
-      : typeof options.routeName === 'string'
-      ? ROUTE_MAP[options.routeName as keyof typeof ROUTE_MAP]
-      : options.routeName
-          .flatMap(
-            (item: keyof typeof ROUTE_MAP) =>
-              ROUTE_MAP[item as keyof typeof ROUTE_MAP] as string | string[],
-          )
-          .filter(Boolean);
+type RemixConfigParam = Pick<RemixConfig, 'rootDirectory' | 'appDirectory'> &
+  Pick<Partial<RemixConfig>, 'tsconfigPath'> & {
+    future: RequiredRemixFutureFlags;
+  };
 
-  if (!routePath) {
-    throw new AbortError(
-      `No route found for ${
-        options.routeName
-      }. Try one of ${ALL_ROUTE_CHOICES.join()}.`,
-    );
-  }
+export async function generateRoutes(
+  options: GenerateRoutesOptions,
+  remixConfig?: RemixConfigParam,
+) {
+  const {routeGroups, resolvedRouteFiles} =
+    options.routeName === 'all'
+      ? await getResolvedRoutes()
+      : await getResolvedRoutes([options.routeName as RouteKey]);
 
   const {rootDirectory, appDirectory, future, tsconfigPath} =
-    await getRemixConfig(options.directory);
+    remixConfig || (await getRemixConfig(options.directory));
 
-  const routesArray = (Array.isArray(routePath) ? routePath : [routePath]).map(
+  const routesArray = resolvedRouteFiles.flatMap(
     (item) => GENERATOR_ROUTE_DIR + '/' + item,
   );
 
@@ -104,10 +141,9 @@ export async function generateRoutes(options: GenerateRoutesOptions) {
     options,
     v2Flags.isV2RouteConvention,
   );
-  const typescript = options.typescript ?? !!tsconfigPath;
-  const transpilerOptions = typescript
-    ? undefined
-    : await getJsTranspilerOptions(rootDirectory);
+  const typescript = !!(
+    options.typescript ?? tsconfigPath?.endsWith('tsconfig.json')
+  );
 
   const routes: GenerateRoutesResult[] = [];
   for (const route of routesArray) {
@@ -119,7 +155,6 @@ export async function generateRoutes(options: GenerateRoutesOptions) {
         rootDirectory,
         appDirectory,
         formatOptions,
-        transpilerOptions,
         v2Flags,
       }),
     );
@@ -127,8 +162,8 @@ export async function generateRoutes(options: GenerateRoutesOptions) {
 
   return {
     routes,
+    routeGroups,
     isTypescript: typescript,
-    transpilerOptions,
     v2Flags,
     formatOptions,
   };
@@ -160,16 +195,16 @@ async function getLocalePrefix(
     () => [],
   );
 
-  const homeRouteWithLocaleRE = isV2RouteConvention
-    ? /^\(\$(\w+)\)\._index.[jt]sx?$/
+  const coreRouteWithLocaleRE = isV2RouteConvention
+    ? /^\(\$(\w+)\)\.(_index|\$|cart).[jt]sx?$/
     : /^\(\$(\w+)\)$/;
 
-  const homeRouteWithLocale = existingFiles.find((file) =>
-    homeRouteWithLocaleRE.test(file),
+  const coreRouteWithLocale = existingFiles.find((file) =>
+    coreRouteWithLocaleRE.test(file),
   );
 
-  if (homeRouteWithLocale) {
-    return homeRouteWithLocale.match(homeRouteWithLocaleRE)?.[1];
+  if (coreRouteWithLocale) {
+    return coreRouteWithLocale.match(coreRouteWithLocaleRE)?.[1];
   }
 }
 
@@ -186,7 +221,6 @@ export async function generateProjectFile(
     force,
     adapter,
     templatesRoot = getStarterDir(),
-    transpilerOptions,
     formatOptions,
     localePrefix,
     v2Flags = {},
@@ -194,13 +228,15 @@ export async function generateProjectFile(
   }: GenerateProjectFileOptions & {
     rootDirectory: string;
     appDirectory: string;
-    transpilerOptions?: TranspilerOptions;
     formatOptions?: FormatOptions;
     v2Flags?: RemixV2Flags;
   },
 ): Promise<GenerateRoutesResult> {
+  const extension = (routeFrom.match(/(\.[jt]sx?)$/) ?? [])[1] ?? '.tsx';
+  routeFrom = routeFrom.replace(extension, '');
+
   const routeTemplatePath = getTemplateAppFile(
-    routeFrom + '.tsx',
+    routeFrom + extension,
     templatesRoot,
   );
   const allFilesToGenerate = await findRouteDependencies(
@@ -211,7 +247,7 @@ export async function generateProjectFile(
   const routeDestinationPath = joinPath(
     appDirectory,
     getDestinationRoute(routeFrom, localePrefix, v2Flags) +
-      `.${typescript ? 'tsx' : 'jsx'}`,
+      (typescript ? extension : extension.replace('.ts', '.js')),
   );
 
   const result: GenerateRoutesResult = {
@@ -248,23 +284,22 @@ export async function generateProjectFile(
       await mkdir(dirname(destinationPath));
     }
 
+    const templateAppFilePath = getTemplateAppFile(filePath, templatesRoot);
+
     if (!/\.[jt]sx?$/.test(filePath)) {
       // Nothing to transform for non-JS files.
-      await copyFile(
-        getTemplateAppFile(filePath, templatesRoot),
-        destinationPath,
-      );
+      await copyFile(templateAppFilePath, destinationPath);
       continue;
     }
 
     let templateContent = convertTemplateToRemixVersion(
-      await readFile(getTemplateAppFile(filePath, templatesRoot)),
+      await readFile(templateAppFilePath),
       v2Flags,
     );
 
     // If the project is not using TS, we need to compile the template to JS.
     if (!typescript) {
-      templateContent = transpileFile(templateContent, transpilerOptions);
+      templateContent = await transpileFile(templateContent);
     }
 
     // If the command was run with an adapter flag, we replace the default
@@ -279,7 +314,7 @@ export async function generateProjectFile(
     // We format the template content with Prettier.
     // TODO use @shopify/cli-kit's format function once it supports TypeScript
     // templateContent = await file.format(templateContent, destinationPath);
-    templateContent = formatCode(
+    templateContent = await formatCode(
       templateContent,
       formatOptions,
       destinationPath,
@@ -302,7 +337,8 @@ function getDestinationRoute(
 ) {
   const routePath = routeFrom.replace(GENERATOR_ROUTE_DIR + '/', '');
   const filePrefix =
-    localePrefix && !/\.(txt|xml)/.test(routePath)
+    localePrefix &&
+    !NO_LOCALE_PATTERNS.some((pattern) => pattern.test(routePath))
       ? `($${localePrefix})` + (v2Flags.isV2RouteConvention ? '.' : '/')
       : '';
 
@@ -365,18 +401,6 @@ async function findRouteDependencies(
   }
 
   return [...fileDependencies];
-}
-
-async function getJsTranspilerOptions(rootDirectory: string) {
-  const jsConfigPath = joinPath(rootDirectory, 'jsconfig.json');
-  if (!(await fileExists(jsConfigPath))) return;
-
-  return JSON.parse(
-    (await readFile(jsConfigPath, {encoding: 'utf8'})).replace(
-      /^\s*\/\/.*$/gm,
-      '',
-    ),
-  )?.compilerOptions as undefined | TranspilerOptions;
 }
 
 export async function renderRoutePrompt(options?: {abortSignal: AbortSignal}) {

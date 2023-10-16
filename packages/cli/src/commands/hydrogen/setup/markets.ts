@@ -3,7 +3,7 @@ import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {renderSuccess, renderTasks} from '@shopify/cli-kit/node/ui';
 import {Args} from '@oclif/core';
-import {getRemixConfig} from '../../../lib/config.js';
+import {getRemixConfig} from '../../../lib/remix-config.js';
 import {
   setupI18nStrategy,
   SETUP_I18N_STRATEGIES,
@@ -12,9 +12,8 @@ import {
   renderI18nPrompt,
 } from '../../../lib/setups/i18n/index.js';
 
-export default class SetupI18n extends Command {
-  static description =
-    'Setup internationalization strategies for your project.';
+export default class SetupMarkets extends Command {
+  static description = 'Setup support for multiple markets in your project.';
 
   static flags = {
     path: commonFlags.path,
@@ -23,13 +22,13 @@ export default class SetupI18n extends Command {
   static args = {
     strategy: Args.string({
       name: 'strategy',
-      description: `The internationalization strategy to setup. One of ${SETUP_I18N_STRATEGIES.join()}`,
+      description: `The URL structure strategy to setup multiple markets. One of ${SETUP_I18N_STRATEGIES.join()}`,
       options: SETUP_I18N_STRATEGIES as unknown as string[],
     }),
   };
 
   async run(): Promise<void> {
-    const {flags, args} = await this.parse(SetupI18n);
+    const {flags, args} = await this.parse(SetupMarkets);
     const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
     await runSetupI18n({

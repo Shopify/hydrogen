@@ -2,6 +2,7 @@ import Command from '@shopify/cli-kit/node/base-command';
 import {AbortController} from '@shopify/cli-kit/node/abort';
 import {renderTasks} from '@shopify/cli-kit/node/ui';
 import {basename, resolvePath} from '@shopify/cli-kit/node/path';
+import {copyFile} from '@shopify/cli-kit/node/fs';
 import {
   commonFlags,
   overrideFlag,
@@ -12,7 +13,7 @@ import {
   renderI18nPrompt,
   setupI18nStrategy,
 } from '../../lib/setups/i18n/index.js';
-import {getRemixConfig} from '../../lib/config.js';
+import {getRemixConfig} from '../../lib/remix-config.js';
 import {
   generateProjectEntries,
   handleCliShortcut,
@@ -20,6 +21,8 @@ import {
   renderProjectReady,
 } from '../../lib/onboarding/common.js';
 import {getCliCommand} from '../../lib/shell.js';
+import {generateProjectFile} from '../../lib/setups/routes/generate.js';
+import {getTemplateAppFile} from '../../lib/build.js';
 
 export default class Setup extends Command {
   static description = 'Scaffold routes and core functionality.';
@@ -28,7 +31,7 @@ export default class Setup extends Command {
     path: commonFlags.path,
     force: commonFlags.force,
     styling: commonFlags.styling,
-    i18n: commonFlags.i18n,
+    markets: commonFlags.markets,
     shortcut: commonFlags.shortcut,
     'install-deps': overrideFlag(commonFlags.installDeps, {default: true}),
   };
@@ -48,11 +51,11 @@ type RunSetupOptions = {
   directory: string;
   installDeps: boolean;
   styling?: string;
-  i18n?: string;
+  markets?: string;
   shortcut?: boolean;
 };
 
-async function runSetup(options: RunSetupOptions) {
+export async function runSetup(options: RunSetupOptions) {
   const controller = new AbortController();
   const remixConfig = await getRemixConfig(options.directory);
   const location = basename(remixConfig.rootDirectory);
@@ -70,8 +73,8 @@ async function runSetup(options: RunSetupOptions) {
     },
   ];
 
-  const i18nStrategy = options.i18n
-    ? (options.i18n as I18nStrategy)
+  const i18nStrategy = options.markets
+    ? (options.markets as I18nStrategy)
     : await renderI18nPrompt({
         abortSignal: controller.signal,
         extraChoices: {none: 'Set up later'},
@@ -79,29 +82,64 @@ async function runSetup(options: RunSetupOptions) {
 
   const i18n = i18nStrategy === 'none' ? undefined : i18nStrategy;
 
-  if (i18n) {
-    backgroundWorkPromise = backgroundWorkPromise.then(() =>
-      setupI18nStrategy(i18n, remixConfig),
-    );
-  }
+  const {needsRouteGeneration, setupRoutes} = await handleRouteGeneration(
+    controller,
+  );
 
-  const {routes, setupRoutes} = await handleRouteGeneration(controller);
-  const needsRouteGeneration = Object.keys(routes).length > 0;
+  let routes: Record<string, string[]> | undefined;
 
   if (needsRouteGeneration) {
     const typescript = !!remixConfig.tsconfigPath;
 
     backgroundWorkPromise = backgroundWorkPromise
       .then(() =>
-        generateProjectEntries({
-          rootDirectory: remixConfig.rootDirectory,
-          appDirectory: remixConfig.appDirectory,
-          typescript,
-        }),
+        Promise.all([
+          // When starting from hello-world, the server entry point won't
+          // include all the cart logic from skeleton, so we need to copy it.
+          generateProjectFile('../server.ts', {...remixConfig, typescript}),
+          ...(typescript
+            ? [
+                copyFile(
+                  getTemplateAppFile('../remix.env.d.ts'),
+                  resolvePath(remixConfig.rootDirectory, 'remix.env.d.ts'),
+                ),
+                copyFile(
+                  getTemplateAppFile('../storefrontapi.generated.d.ts'),
+                  resolvePath(
+                    remixConfig.rootDirectory,
+                    'storefrontapi.generated.d.ts',
+                  ),
+                ),
+              ]
+            : []),
+          // Copy app entries
+          generateProjectEntries({
+            rootDirectory: remixConfig.rootDirectory,
+            appDirectory: remixConfig.appDirectory,
+            typescript,
+            v2Flags: {
+              isV2RouteConvention: remixConfig.future?.v2_routeConvention,
+              isV2ErrorBoundary: remixConfig.future?.v2_errorBoundary,
+              isV2Meta: remixConfig.future?.v2_meta,
+            },
+          }),
+        ]),
       )
-      .then(() =>
-        setupRoutes(remixConfig.rootDirectory, typescript ? 'ts' : 'js', i18n),
-      );
+      .then(async () => {
+        routes = await setupRoutes(
+          remixConfig.rootDirectory,
+          typescript ? 'ts' : 'js',
+          i18n,
+        );
+      });
+  }
+
+  if (i18n) {
+    // i18n setup needs to happen after copying the app entries,
+    // because it needs to modify the server entry point.
+    backgroundWorkPromise = backgroundWorkPromise.then(() =>
+      setupI18nStrategy(i18n, remixConfig),
+    );
   }
 
   let hasCreatedShortcut = false;

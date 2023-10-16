@@ -20,6 +20,7 @@ export const I18N_STRATEGY_NAME_MAP: Record<I18nStrategy, string> = {
 };
 
 export const I18N_CHOICES = [...SETUP_I18N_STRATEGIES, 'none'] as const;
+export type I18nChoice = (typeof I18N_CHOICES)[number];
 
 export type I18nSetupConfig = {
   rootDirectory: string;
@@ -60,7 +61,7 @@ export async function renderI18nPrompt<
   }) as [[I18nStrategy | T, string]];
 
   return renderSelectPrompt<I18nStrategy | T>({
-    message: 'Choose a strategy to support multiple markets',
+    message: 'Select a URL structure to support multiple markets',
     ...options,
     choices: i18nStrategies.map(([value, label]) => ({
       value,

@@ -53,7 +53,8 @@ export function AddToCartButton<AsType extends React.ElementType = 'button'>(
     variantId === '' ||
     selectedVariant === null ||
     addingItem ||
-    passthroughProps.disabled;
+    // Only certain 'as' types such as 'button' contain `disabled`
+    (passthroughProps as {disabled?: boolean}).disabled;
 
   useEffect(() => {
     if (addingItem && status === 'idle') {

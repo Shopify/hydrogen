@@ -1,9 +1,7 @@
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {ts, tsx, js, jsx, type SgNode} from '@ast-grep/napi';
 import {type FormatOptions} from '../../format-code.js';
 import {findFileWithExtension, replaceFileContent} from '../../file.js';
-
-const astGrep = {ts, tsx, js, jsx};
+import {importLangAstGrep, type SgNode} from '../../ast.js';
 
 /**
  * Adds new properties to the Remix config file.
@@ -28,7 +26,8 @@ export async function replaceRemixConfig(
   }
 
   await replaceFileContent(filepath, formatConfig, async (content) => {
-    const root = astGrep[astType].parse(content).root();
+    const astGrep = await importLangAstGrep(astType);
+    const root = astGrep.parse(content).root();
 
     const remixConfigNode = root.find({
       rule: {
@@ -135,7 +134,8 @@ export async function replaceRootLinks(
       return; // Already installed
     }
 
-    const root = astGrep[astType].parse(content).root();
+    const astGrep = await importLangAstGrep(astType);
+    const root = astGrep.parse(content).root();
 
     const lastImportNode = root
       .findAll({rule: {kind: 'import_statement'}})

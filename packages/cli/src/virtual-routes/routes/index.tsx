@@ -39,9 +39,13 @@ export const links: LinksFunction = () => [
   },
 ];
 
-export async function loader({context}: {context: AppLoadContext}) {
-  const layout = await context.storefront.query<{shop: Shop}>(LAYOUT_QUERY);
-  return {layout};
+export async function loader({
+  context: {storefront},
+}: {
+  context: AppLoadContext;
+}) {
+  const layout = await storefront.query<{shop: Shop}>(LAYOUT_QUERY);
+  return {layout, isMockShop: storefront.getApiUrl().includes('mock.shop')};
 }
 
 export const HYDROGEN_SHOP_ID = 'gid://shopify/Shop/55145660472';
@@ -51,31 +55,50 @@ export function ErrorBoundary() {
 }
 
 export default function Index() {
-  const data = useLoaderData<typeof loader>();
+  const {
+    isMockShop,
+    layout: {shop},
+  } = useLoaderData<typeof loader>();
 
-  const {name: shopName, id: shopId} = data.layout.shop;
+  let {name: shopName, id: shopId} = shop;
 
-  const configDone = shopId !== HYDROGEN_SHOP_ID;
+  const configDone = shopId !== HYDROGEN_SHOP_ID && !isMockShop;
+  if (isMockShop || !shopName) shopName = 'Hydrogen';
 
   return (
     <>
       <Layout shopName={shopName}>
         {configDone ? <HydrogenLogoBaseColor /> : <HydrogenLogoBaseBW />}
-        <h1>Hello, {shopName || 'Hydrogen'}</h1>
+        <h1>Hello, {shopName}</h1>
         <p>Welcome to your new custom storefront</p>
-        {configDone ? null : (
-          <section className="Banner">
-            <div>
-              <IconBanner />
-              <h2>Configure storefront token</h2>
-            </div>
+
+        <section className="Banner">
+          <div>
+            <IconBanner />
+            <h2>
+              {configDone
+                ? 'Create your first route'
+                : 'Configure storefront token'}
+            </h2>
+          </div>
+          {configDone ? (
+            <p>
+              You&rsquo;re seeing this because you don&rsquo;t have a home route
+              in your project yet. <br />
+              Run <code>h2 setup</code> to scaffold standard Shopify routes.
+              Learn more about
+              {` `}
+              <CreateRoutesLink />
+            </p>
+          ) : (
             <p>
               You&rsquo;re seeing this because you have not yet configured your
               storefront token. <br />
-              <br /> To get started, edit {` `}
-              <code>.env</code>. Then, create your first route with the file
-              {` `}
-              <code>/app/routes/_index.jsx</code>. Learn more about
+              <br /> To link your store,{` `}
+              run <code>h2 link && h2 env pull</code>. Then, run{' '}
+              <code>h2 setup</code> to scaffold standard Shopify routes.
+              <br />
+              Learn more about
               {` `}
               <a
                 target="_blank"
@@ -86,20 +109,25 @@ export default function Index() {
               </a>
               {` `}
               and{` `}
-              <a
-                target="_blank"
-                rel="norefferer noopener"
-                href="https://shopify.dev/docs/custom-storefronts/hydrogen/building/begin-development#step-4-create-a-route"
-              >
-                creating routes
-              </a>
-              .
+              <CreateRoutesLink />.
             </p>
-          </section>
-        )}
+          )}
+        </section>
         <ResourcesLinks />
       </Layout>
     </>
+  );
+}
+
+function CreateRoutesLink() {
+  return (
+    <a
+      target="_blank"
+      rel="norefferer noopener"
+      href="https://shopify.dev/docs/custom-storefronts/hydrogen/building/begin-development#step-4-create-a-route"
+    >
+      creating routes
+    </a>
   );
 }
 

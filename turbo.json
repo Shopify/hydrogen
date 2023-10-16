@@ -3,16 +3,13 @@
   "pipeline": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["src/**/*.ts", "./tsup.config.ts"],
+      "inputs": ["src/**/*.ts"],
       "outputs": ["dist/**", "build/**"]
     },
     "dev": {
-      "dependsOn": [
-        "@shopify/hydrogen#build",
-        "@shopify/cli-hydrogen#build",
-        "@shopify/remix-oxygen#build"
-      ],
-      "cache": false
+      "dependsOn": ["^dev"],
+      "cache": false,
+      "persistent": true
     },
     "lint": {
       "outputs": []
@@ -28,13 +25,19 @@
       "cache": false
     },
     "@shopify/cli-hydrogen#build": {
-      "dependsOn": ["@shopify/hydrogen-codegen#build"]
+      "dependsOn": [
+        "@shopify/hydrogen-codegen#build",
+        "@shopify/mini-oxygen#build"
+      ]
     },
     "@shopify/create-hydrogen#build": {
       "dependsOn": ["@shopify/cli-hydrogen#build"]
     },
     "@shopify/hydrogen#build": {
-      "dependsOn": ["@shopify/hydrogen-react#build"]
+      "dependsOn": [
+        "@shopify/hydrogen-react#build",
+        "@shopify/remix-oxygen#build"
+      ]
     },
     "demo-store#build": {
       "dependsOn": [
@@ -61,9 +64,10 @@
       "outputs": ["dist/**"]
     },
     "hydrogen-express#build": {
-      "dependsOn": [
-        "@shopify/hydrogen#build"
-      ]
+      "dependsOn": ["@shopify/hydrogen#build"]
+    },
+    "customer-api#build": {
+      "dependsOn": ["@shopify/hydrogen#build"]
     }
   }
 }

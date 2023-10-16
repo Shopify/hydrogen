@@ -110,7 +110,7 @@ describe('<ProductPrice />', () => {
     ).toHaveClass('emphasized');
   });
 
-  it.skip(`has the correct TS types for itself and for <Money/>`, () => {
+  it(`has the correct TS types for itself and for <Money/>`, () => {
     // no errors
     render(<ProductPrice data={getProduct()} />);
 
@@ -125,7 +125,7 @@ describe('<ProductPrice />', () => {
     );
 
     // @ts-expect-error should error because no 'data' prop
-    render(<ProductPrice />);
+    expect(() => render(<ProductPrice />)).toThrowError('data');
 
     // @ts-expect-error should error because 'priceType' is wrong
     render(<ProductPrice data={getProduct()} priceType="test" />);
@@ -136,8 +136,7 @@ describe('<ProductPrice />', () => {
     // @ts-expect-error should error because 'variantId' is wrong
     render(<ProductPrice data={getProduct()} variantId={0} />);
 
-    // ts-expect-error should error because 'measurement' isn't an accepted prop
-    // unforutnately it does error. There's something I'm missing here
+    // @ts-expect-error should error because 'measurement' isn't an accepted prop
     render(<ProductPrice data={getProduct()} measurement="" />);
 
     // valid 'Money' props

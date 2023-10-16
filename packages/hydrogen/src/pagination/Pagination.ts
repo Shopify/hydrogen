@@ -1,7 +1,25 @@
-import {createElement, useEffect, useMemo, useState} from 'react';
-import type {Maybe, PageInfo} from '@shopify/hydrogen/storefront-api-types';
+import {
+  createElement,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  forwardRef,
+  type ReactNode,
+  type Ref,
+} from 'react';
+import type {
+  Maybe,
+  PageInfo,
+} from '@shopify/hydrogen-react/storefront-api-types';
 import {flattenConnection} from '@shopify/hydrogen-react';
-import {Link, LinkProps, useNavigation, useLocation} from '@remix-run/react';
+import {
+  Link,
+  type LinkProps,
+  useNavigation,
+  useLocation,
+  useNavigate,
+} from '@remix-run/react';
 
 type Connection<NodesType> =
   | {
@@ -24,9 +42,13 @@ interface PaginationInfo<NodesType> {
   /** The paginated array of nodes. You should map over and render this array. */
   nodes: Array<NodesType>;
   /** The `<NextLink>` is a helper component that makes it easy to navigate to the next page of paginated data. Alternatively you can build your own `<Link>` component: `<Link to={nextPageUrl} state={state} preventScrollReset />` */
-  NextLink: (props: Omit<LinkProps, 'to'>) => JSX.Element | null;
+  NextLink: (
+    props: Omit<LinkProps, 'to'> & {ref?: Ref<HTMLAnchorElement>},
+  ) => ReactNode;
   /** The `<PreviousLink>` is a helper component that makes it easy to navigate to the previous page of paginated data. Alternatively you can build your own `<Link>` component: `<Link to={previousPageUrl} state={state} preventScrollReset />` */
-  PreviousLink: (props: Omit<LinkProps, 'to'>) => JSX.Element | null;
+  PreviousLink: (
+    props: Omit<LinkProps, 'to'> & {ref?: Ref<HTMLAnchorElement>},
+  ) => ReactNode;
   /** The URL to the previous page of paginated data. Use this prop to build your own `<Link>` component. */
   previousPageUrl: string;
   /** The URL to the next page of paginated data. Use this prop to build your own `<Link>` component. */
@@ -57,7 +79,7 @@ type PaginationProps<NodesType> = {
 
 type PaginationRenderProp<NodesType> = (
   props: PaginationInfo<NodesType>,
-) => JSX.Element | null;
+) => ReactNode;
 
 /**
  *
@@ -100,7 +122,10 @@ export function Pagination<NodesType>({
 
   const NextLink = useMemo(
     () =>
-      function NextLink(props: Omit<LinkProps, 'to'>) {
+      forwardRef<HTMLAnchorElement, Omit<LinkProps, 'to'>>(function NextLink(
+        props,
+        ref,
+      ) {
         return hasNextPage
           ? createElement(Link, {
               preventScrollReset: true,
@@ -108,15 +133,19 @@ export function Pagination<NodesType>({
               to: nextPageUrl,
               state,
               replace: true,
+              ref,
             })
           : null;
-      },
-    [hasNextPage, nextPageUrl],
+      }),
+    [hasNextPage, nextPageUrl, state],
   );
 
   const PreviousLink = useMemo(
     () =>
-      function PrevLink(props: Omit<LinkProps, 'to'>) {
+      forwardRef<HTMLAnchorElement, Omit<LinkProps, 'to'>>(function PrevLink(
+        props,
+        ref,
+      ) {
         return hasPreviousPage
           ? createElement(Link, {
               preventScrollReset: true,
@@ -124,10 +153,11 @@ export function Pagination<NodesType>({
               to: previousPageUrl,
               state,
               replace: true,
+              ref,
             })
           : null;
-      },
-    [hasPreviousPage, previousPageUrl],
+      }),
+    [hasPreviousPage, previousPageUrl, state],
   );
 
   return children({
@@ -143,6 +173,23 @@ export function Pagination<NodesType>({
   });
 }
 
+function getParamsWithoutPagination(paramsString?: string) {
+  const params = new URLSearchParams(paramsString);
+  params.delete('cursor');
+  params.delete('direction');
+  return params.toString();
+}
+
+function makeError(prop: string) {
+  throw new Error(
+    `The Pagination component requires ${
+      '`' + prop + '`'
+    } to be a part of your query. See the guide on how to setup your query to include ${
+      '`' + prop + '`'
+    }: https://shopify.dev/docs/custom-storefronts/hydrogen/data-fetching/pagination#setup-the-paginated-query`,
+  );
+}
+
 /**
  * Get cumulative pagination logic for a given connection
  */
@@ -155,72 +202,123 @@ export function usePagination<NodesType>(
   startCursor: Maybe<string> | undefined;
   endCursor: Maybe<string> | undefined;
 } {
-  const {state, search} = useLocation() as {
+  if (!connection.pageInfo) {
+    makeError('pageInfo');
+  }
+
+  if (typeof connection.pageInfo.startCursor === 'undefined') {
+    makeError('pageInfo.startCursor');
+  }
+
+  if (typeof connection.pageInfo.endCursor === 'undefined') {
+    makeError('pageInfo.endCursor');
+  }
+
+  if (typeof connection.pageInfo.hasNextPage === 'undefined') {
+    makeError('pageInfo.hasNextPage');
+  }
+
+  if (typeof connection.pageInfo.hasPreviousPage === 'undefined') {
+    makeError('pageInfo.hasPreviousPage');
+  }
+
+  const navigate = useNavigate();
+  const {state, search, pathname} = useLocation() as {
     state?: PaginationState<NodesType>;
     search?: string;
+    pathname?: string;
   };
 
   const params = new URLSearchParams(search);
   const direction = params.get('direction');
   const isPrevious = direction === 'previous';
+  const [nodes, setNodes] = useState(flattenConnection(connection));
+  const [currentPageInfo, setCurrentPageInfo] = useState({
+    startCursor: connection.pageInfo.startCursor,
+    endCursor: connection.pageInfo.endCursor,
+    hasPreviousPage: connection.pageInfo.hasPreviousPage,
+    hasNextPage: connection.pageInfo.hasNextPage,
+  });
 
-  const nodes = useMemo(() => {
-    if (!state || !state?.nodes) {
-      return flattenConnection(connection);
-    }
+  // Keep track of the current URL state, to compare whenever the URL changes
+  const urlRef = useRef({
+    params: getParamsWithoutPagination(search),
+    pathname,
+  });
 
-    if (isPrevious) {
-      return [...flattenConnection(connection), ...state.nodes];
-    } else {
-      return [...state.nodes, ...flattenConnection(connection)];
-    }
-  }, [state, connection]);
+  // Within an effect to prevent hydration errors
+  useEffect(() => {
+    if (
+      // If the URL changes (independent of pagination params)
+      // then reset the pagination params in the URL
+      getParamsWithoutPagination(search) !== urlRef.current.params ||
+      pathname !== urlRef.current.pathname
+    ) {
+      urlRef.current = {
+        pathname,
+        params: getParamsWithoutPagination(search),
+      };
+      navigate(`${pathname}?${getParamsWithoutPagination(search)}`, {
+        replace: true,
+        preventScrollReset: true,
+        state: {nodes: undefined, pageInfo: undefined},
+      });
+    } else if (state?.nodes) {
+      // Take existing nodes from history.state and append or prepend new nodes from the connection
+      setNodes(
+        isPrevious
+          ? [...flattenConnection(connection), ...state.nodes]
+          : [...state.nodes, ...flattenConnection(connection)],
+      );
 
-  // `connection` represents the data that came from the server
-  // `state` represents the data that came from the client
-  const currentPageInfo = useMemo(() => {
-    let pageStartCursor =
-      state?.pageInfo?.startCursor === undefined
-        ? connection.pageInfo.startCursor
-        : state.pageInfo.startCursor;
+      if (state?.pageInfo) {
+        // Based on the direction we are going, only take the connection pageInfo in that direction,
+        // otherwise keep the existing pageInfo from history.state
+        let pageStartCursor =
+          state?.pageInfo?.startCursor === undefined
+            ? connection.pageInfo.startCursor
+            : state.pageInfo.startCursor;
 
-    let pageEndCursor =
-      state?.pageInfo?.endCursor === undefined
-        ? connection.pageInfo.endCursor
-        : state.pageInfo.endCursor;
+        let pageEndCursor =
+          state?.pageInfo?.endCursor === undefined
+            ? connection.pageInfo.endCursor
+            : state.pageInfo.endCursor;
 
-    if (state?.nodes) {
-      if (isPrevious) {
-        pageStartCursor = connection.pageInfo.startCursor;
-      } else {
-        pageEndCursor = connection.pageInfo.endCursor;
+        let previousPageExists =
+          state?.pageInfo?.hasPreviousPage === undefined
+            ? connection.pageInfo.hasPreviousPage
+            : state.pageInfo.hasPreviousPage;
+
+        let nextPageExists =
+          state?.pageInfo?.hasNextPage === undefined
+            ? connection.pageInfo.hasNextPage
+            : state.pageInfo.hasNextPage;
+
+        if (isPrevious) {
+          pageStartCursor = connection.pageInfo.startCursor;
+          previousPageExists = connection.pageInfo.hasPreviousPage;
+        } else {
+          pageEndCursor = connection.pageInfo.endCursor;
+          nextPageExists = connection.pageInfo.hasNextPage;
+        }
+
+        setCurrentPageInfo({
+          startCursor: pageStartCursor,
+          endCursor: pageEndCursor,
+          hasPreviousPage: previousPageExists,
+          hasNextPage: nextPageExists,
+        });
       }
+    } else {
+      setNodes(flattenConnection(connection));
+      setCurrentPageInfo({
+        startCursor: connection.pageInfo.startCursor,
+        endCursor: connection.pageInfo.endCursor,
+        hasPreviousPage: connection.pageInfo.hasPreviousPage,
+        hasNextPage: connection.pageInfo.hasNextPage,
+      });
     }
-
-    const previousPageExists =
-      state?.pageInfo?.hasPreviousPage === undefined
-        ? connection.pageInfo.hasPreviousPage
-        : state.pageInfo.hasPreviousPage;
-
-    const nextPageExists =
-      state?.pageInfo?.hasNextPage === undefined
-        ? connection.pageInfo.hasNextPage
-        : state.pageInfo.hasNextPage;
-
-    return {
-      startCursor: pageStartCursor,
-      endCursor: pageEndCursor,
-      hasPreviousPage: previousPageExists,
-      hasNextPage: nextPageExists,
-    };
-  }, [
-    isPrevious,
-    state,
-    connection.pageInfo.hasNextPage,
-    connection.pageInfo.hasPreviousPage,
-    connection.pageInfo.startCursor,
-    connection.pageInfo.endCursor,
-  ]);
+  }, [state, connection, isPrevious, search, navigate, pathname]);
 
   const previousPageUrl = useMemo(() => {
     const params = new URLSearchParams(search);
@@ -251,7 +349,7 @@ export function getPaginationVariables(
   request: Request,
   options: {pageBy: number} = {pageBy: 20},
 ) {
-  if (!(request instanceof Request)) {
+  if (typeof request?.url === 'undefined') {
     throw new Error(
       'getPaginationVariables must be called with the Request object passed to your loader function',
     );

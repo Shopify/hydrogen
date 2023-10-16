@@ -1,60 +1,50 @@
-import {
-  type LoaderArgs,
-  type ErrorBoundaryComponent,
-} from '@shopify/remix-oxygen';
-import {useCatch, useRouteError, isRouteErrorResponse} from '@remix-run/react';
-import type {Shop} from '@shopify/hydrogen/storefront-api-types';
+import {type LoaderArgs} from '@shopify/remix-oxygen';
+import {useRouteError, isRouteErrorResponse} from '@remix-run/react';
 import {parseGid} from '@shopify/hydrogen';
 
-export const loader = async ({request, context}: LoaderArgs) => {
+export async function loader({request, context}: LoaderArgs) {
   const url = new URL(request.url);
 
-  const {shop} = await context.storefront.query<{shop: Pick<Shop, 'id'>}>(
-    SHOP_QUERY,
-  );
+  const {shop} = await context.storefront.query(ROBOTS_QUERY);
 
-  return new Response(
-    robotsTxtData({url: url.origin, shopId: parseGid(shop.id).id}),
-    {
-      status: 200,
-      headers: {
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        'Content-Type': 'text/plain',
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        'Cache-Control': `max-age=${60 * 60 * 24}`,
-      },
+  const shopId = parseGid(shop.id).id;
+  const body = robotsTxtData({url: url.origin, shopId});
+
+  return new Response(body, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/plain',
+
+      'Cache-Control': `max-age=${60 * 60 * 24}`,
     },
-  );
-};
-
-export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
-  console.error(error);
-
-  return <div>There was an error.</div>;
-};
-
-export function CatchBoundary() {
-  const caught = useCatch();
-  console.error(caught);
-
-  return (
-    <div>
-      There was an error. Status: {caught.status}. Message:{' '}
-      {caught.data?.message}
-    </div>
-  );
+  });
 }
 
 export function ErrorBoundary() {
   const error = useRouteError();
 
   if (isRouteErrorResponse(error)) {
-    console.error(error.status, error.statusText, error.data);
-    return <div>Route Error</div>;
-  } else {
-    console.error((error as Error).message);
-    return <div>Thrown Error</div>;
+    return (
+      <div>
+        <h1>Oops</h1>
+        <p>Status: {error.status}</p>
+        <p>{error.data.message}</p>
+      </div>
+    );
   }
+
+  let errorMessage = 'Unknown error';
+  if (error instanceof Error) {
+    errorMessage = error.message;
+  }
+
+  return (
+    <div>
+      <h1>Uh oh ...</h1>
+      <p>Something went wrong.</p>
+      <pre>{errorMessage}</pre>
+    </div>
+  );
 }
 
 function robotsTxtData({url, shopId}: {shopId?: string; url?: string}) {
@@ -69,13 +59,9 @@ User-agent: adsbot-google
 Disallow: /checkouts/
 Disallow: /checkout
 Disallow: /carts
-Disallow: /orders${
-    shopId
-      ? `
-Disallow: /${shopId}/checkouts
-Disallow: /${shopId}/orders`
-      : ''
-  }
+Disallow: /orders
+${shopId ? `Disallow: /${shopId}/checkouts` : ''}
+${shopId ? `Disallow: /${shopId}/orders` : ''}
 Disallow: /*?*oseid=*
 Disallow: /*preview_theme_id*
 Disallow: /*preview_script_id*
@@ -100,9 +86,8 @@ Crawl-delay: 1
 }
 
 /**
- *
- * This function generates disallow rules that generally follow what Shopify's Online Store has as defaults for their robots.txt
- *
+ * This function generates disallow rules that generally follow what Shopify's
+ * Online Store has as defaults for their robots.txt
  */
 function generalDisallowRules({
   shopId,
@@ -115,13 +100,9 @@ function generalDisallowRules({
 Disallow: /cart
 Disallow: /orders
 Disallow: /checkouts/
-Disallow: /checkout${
-    shopId
-      ? `
-Disallow: /${shopId}/checkouts
-Disallow: /${shopId}/orders`
-      : ''
-  }
+Disallow: /checkout
+${shopId ? `Disallow: /${shopId}/checkouts` : ''}
+${shopId ? `Disallow: /${shopId}/orders` : ''}
 Disallow: /carts
 Disallow: /account
 Disallow: /collections/*sort_by*
@@ -150,18 +131,15 @@ Disallow: /search
 Allow: /search/
 Disallow: /search/?*
 Disallow: /apple-app-site-association
-Disallow: /.well-known/shopify/monorail${
-    sitemapUrl
-      ? `
-Sitemap: ${sitemapUrl}`
-      : ''
-  }`;
+Disallow: /.well-known/shopify/monorail
+${sitemapUrl ? `Sitemap: ${sitemapUrl}` : ''}`;
 }
 
-const SHOP_QUERY = `#graphql
-  query robots_shop_query {
+const ROBOTS_QUERY = `#graphql
+  query StoreRobots($country: CountryCode, $language: LanguageCode)
+   @inContext(country: $country, language: $language) {
     shop {
       id
     }
   }
-`;
+` as const;

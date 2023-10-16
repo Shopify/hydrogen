@@ -10,10 +10,13 @@ import {
  * swap out the cookie-based implementation with something else!
  */
 export class HydrogenSession {
-  constructor(
-    private sessionStorage: SessionStorage,
-    private session: Session,
-  ) {}
+  #sessionStorage;
+  #session;
+
+  constructor(sessionStorage: SessionStorage, session: Session) {
+    this.#sessionStorage = sessionStorage;
+    this.#session = session;
+  }
 
   static async init(request: Request, secrets: string[]) {
     const storage = createCookieSessionStorage({
@@ -31,31 +34,31 @@ export class HydrogenSession {
     return new this(storage, session);
   }
 
-  has(key: string) {
-    return this.session.has(key);
+  get has() {
+    return this.#session.has;
   }
 
-  get(key: string) {
-    return this.session.get(key);
+  get get() {
+    return this.#session.get;
+  }
+
+  get flash() {
+    return this.#session.flash;
+  }
+
+  get unset() {
+    return this.#session.unset;
+  }
+
+  get set() {
+    return this.#session.set;
   }
 
   destroy() {
-    return this.sessionStorage.destroySession(this.session);
-  }
-
-  flash(key: string, value: any) {
-    this.session.flash(key, value);
-  }
-
-  unset(key: string) {
-    this.session.unset(key);
-  }
-
-  set(key: string, value: any) {
-    this.session.set(key, value);
+    return this.#sessionStorage.destroySession(this.#session);
   }
 
   commit() {
-    return this.sessionStorage.commitSession(this.session);
+    return this.#sessionStorage.commitSession(this.#session);
   }
 }

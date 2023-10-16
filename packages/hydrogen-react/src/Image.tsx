@@ -10,9 +10,13 @@ import type {Image as ImageType} from './storefront-api-types.js';
  * default srcSet generation behaviour
  */
 type SrcSetOptions = {
+  /** The number of sizes to generate */
   intervals: number;
+  /** The smallest image size */
   startingWidth: number;
+  /** The increment by which to increase for each size, in pixels */
   incrementSize: number;
+  /** The size used for placeholder fallback images */
   placeholderWidth: number;
 };
 
@@ -81,7 +85,7 @@ type HydrogenImageBaseProps = {
    * @defaultValue `center`
    */
   crop?: Crop;
-  /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2023-04/objects/Image) object. Must be an Image object.
+  /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2023-07/objects/Image) object. Must be an Image object.
    *
    * @example
    * ```
@@ -385,87 +389,102 @@ type FixedWidthImageProps = Omit<HydrogenImageProps, FixedImageExludedProps> & {
   ref: React.Ref<HTMLImageElement>;
 };
 
-function FixedWidthImage({
-  aspectRatio,
-  crop,
-  decoding,
-  height,
-  imageWidths,
-  loader = shopifyLoader,
-  loading,
-  normalizedProps,
-  passthroughProps,
-  ref,
-  width,
-}: FixedWidthImageProps) {
-  const fixed = React.useMemo(() => {
-    const intWidth: number | undefined = getNormalizedFixedUnit(width);
-    const intHeight: number | undefined = getNormalizedFixedUnit(height);
+const FixedWidthImage = React.forwardRef<
+  HTMLImageElement,
+  FixedWidthImageProps
+>(
+  (
+    {
+      aspectRatio,
+      crop,
+      decoding,
+      height,
+      imageWidths,
+      loader = shopifyLoader,
+      loading,
+      normalizedProps,
+      passthroughProps,
+      width,
+    },
+    ref,
+  ) => {
+    const fixed = React.useMemo(() => {
+      const intWidth: number | undefined = getNormalizedFixedUnit(width);
+      const intHeight: number | undefined = getNormalizedFixedUnit(height);
 
-    /*
-     * The aspect ratio for fixed width images is taken from the explicitly
-     * set prop, but if that's not present, and both width and height are
-     * set, we calculate the aspect ratio from the width and height—as
-     * long as they share the same unit type (e.g. both are 'px').
-     */
-    const fixedAspectRatio = aspectRatio
-      ? aspectRatio
-      : unitsMatch(normalizedProps.width, normalizedProps.height)
-      ? [intWidth, intHeight].join('/')
-      : normalizedProps.aspectRatio
-      ? normalizedProps.aspectRatio
-      : undefined;
+      /*
+       * The aspect ratio for fixed width images is taken from the explicitly
+       * set prop, but if that's not present, and both width and height are
+       * set, we calculate the aspect ratio from the width and height—as
+       * long as they share the same unit type (e.g. both are 'px').
+       */
+      const fixedAspectRatio = aspectRatio
+        ? aspectRatio
+        : unitsMatch(normalizedProps.width, normalizedProps.height)
+        ? [intWidth, intHeight].join('/')
+        : normalizedProps.aspectRatio
+        ? normalizedProps.aspectRatio
+        : undefined;
 
-    /*
-     * The Sizes Array generates an array of all of the parts
-     * that make up the srcSet, including the width, height, and crop
-     */
-    const sizesArray =
-      imageWidths === undefined
-        ? undefined
-        : generateSizes(imageWidths, fixedAspectRatio, crop);
+      /*
+       * The Sizes Array generates an array of all of the parts
+       * that make up the srcSet, including the width, height, and crop
+       */
+      const sizesArray =
+        imageWidths === undefined
+          ? undefined
+          : generateSizes(imageWidths, fixedAspectRatio, crop);
 
-    const fixedHeight = intHeight
-      ? intHeight
-      : fixedAspectRatio && intWidth
-      ? intWidth * (parseAspectRatio(fixedAspectRatio) ?? 1)
-      : undefined;
+      const fixedHeight = intHeight
+        ? intHeight
+        : fixedAspectRatio && intWidth
+        ? intWidth * (parseAspectRatio(fixedAspectRatio) ?? 1)
+        : undefined;
 
-    const srcSet = generateSrcSet(normalizedProps.src, sizesArray, loader);
-    const src = loader({
-      src: normalizedProps.src,
-      width: intWidth,
-      height: fixedHeight,
-      crop: normalizedProps.height === 'auto' ? undefined : crop,
-    });
+      const srcSet = generateSrcSet(normalizedProps.src, sizesArray, loader);
+      const src = loader({
+        src: normalizedProps.src,
+        width: intWidth,
+        height: fixedHeight,
+        crop: normalizedProps.height === 'auto' ? undefined : crop,
+      });
 
-    return {
-      width: intWidth,
-      aspectRatio: fixedAspectRatio,
-      height: fixedHeight,
-      srcSet,
-      src,
-    };
-  }, [aspectRatio, crop, height, imageWidths, loader, normalizedProps, width]);
+      return {
+        width: intWidth,
+        aspectRatio: fixedAspectRatio,
+        height: fixedHeight,
+        srcSet,
+        src,
+      };
+    }, [
+      aspectRatio,
+      crop,
+      height,
+      imageWidths,
+      loader,
+      normalizedProps,
+      width,
+    ]);
 
-  return (
-    <img
-      ref={ref}
-      alt={normalizedProps.alt}
-      decoding={decoding}
-      height={fixed.height}
-      loading={loading}
-      src={fixed.src}
-      srcSet={fixed.srcSet}
-      width={fixed.width}
-      style={{
-        aspectRatio: fixed.aspectRatio,
-        ...passthroughProps.style,
-      }}
-      {...passthroughProps}
-    />
-  );
-}
+    return (
+      <img
+        ref={ref}
+        alt={normalizedProps.alt}
+        decoding={decoding}
+        height={fixed.height}
+        loading={loading}
+        src={fixed.src}
+        srcSet={fixed.srcSet}
+        width={fixed.width}
+        style={{
+          aspectRatio: fixed.aspectRatio,
+          ...passthroughProps.style,
+        }}
+        {...passthroughProps}
+      />
+    );
+  },
+);
 
 type FluidImageExcludedProps =
   | 'data'
@@ -484,66 +503,70 @@ type FluidImageProps = Omit<HydrogenImageProps, FluidImageExcludedProps> & {
   ref: React.Ref<HTMLImageElement>;
 };
 
-function FluidImage({
-  crop,
-  decoding,
-  imageWidths,
-  loader = shopifyLoader,
-  loading,
-  normalizedProps,
-  passthroughProps,
-  placeholderWidth,
-  ref,
-  sizes,
-}: FluidImageProps) {
-  const fluid = React.useMemo(() => {
-    const sizesArray =
-      imageWidths === undefined
-        ? undefined
-        : generateSizes(imageWidths, normalizedProps.aspectRatio, crop);
-
-    const placeholderHeight =
-      normalizedProps.aspectRatio && placeholderWidth
-        ? placeholderWidth *
-          (parseAspectRatio(normalizedProps.aspectRatio) ?? 1)
-        : undefined;
-
-    const srcSet = generateSrcSet(normalizedProps.src, sizesArray, loader);
-
-    const src = loader({
-      src: normalizedProps.src,
-      width: placeholderWidth,
-      height: placeholderHeight,
+const FluidImage = React.forwardRef<HTMLImageElement, FluidImageProps>(
+  (
+    {
       crop,
-    });
+      decoding,
+      imageWidths,
+      loader = shopifyLoader,
+      loading,
+      normalizedProps,
+      passthroughProps,
+      placeholderWidth,
+      sizes,
+    },
+    ref,
+  ) => {
+    const fluid = React.useMemo(() => {
+      const sizesArray =
+        imageWidths === undefined
+          ? undefined
+          : generateSizes(imageWidths, normalizedProps.aspectRatio, crop);
 
-    return {
-      placeholderHeight,
-      srcSet,
-      src,
-    };
-  }, [crop, imageWidths, loader, normalizedProps, placeholderWidth]);
+      const placeholderHeight =
+        normalizedProps.aspectRatio && placeholderWidth
+          ? placeholderWidth *
+            (parseAspectRatio(normalizedProps.aspectRatio) ?? 1)
+          : undefined;
 
-  return (
-    <img
-      ref={ref}
-      alt={normalizedProps.alt}
-      decoding={decoding}
-      height={fluid.placeholderHeight}
-      loading={loading}
-      sizes={sizes}
-      src={fluid.src}
-      srcSet={fluid.srcSet}
-      width={placeholderWidth}
-      {...passthroughProps}
-      style={{
-        width: normalizedProps.width,
-        aspectRatio: normalizedProps.aspectRatio,
-        ...passthroughProps.style,
-      }}
-    />
-  );
-}
+      const srcSet = generateSrcSet(normalizedProps.src, sizesArray, loader);
+
+      const src = loader({
+        src: normalizedProps.src,
+        width: placeholderWidth,
+        height: placeholderHeight,
+        crop,
+      });
+
+      return {
+        placeholderHeight,
+        srcSet,
+        src,
+      };
+    }, [crop, imageWidths, loader, normalizedProps, placeholderWidth]);
+
+    return (
+      <img
+        ref={ref}
+        alt={normalizedProps.alt}
+        decoding={decoding}
+        height={fluid.placeholderHeight}
+        loading={loading}
+        sizes={sizes}
+        src={fluid.src}
+        srcSet={fluid.srcSet}
+        width={placeholderWidth}
+        {...passthroughProps}
+        style={{
+          width: normalizedProps.width,
+          aspectRatio: normalizedProps.aspectRatio,
+          ...passthroughProps.style,
+        }}
+      />
+    );
+  },
+);
 
 /**
  * The shopifyLoader function is a simple utility function that takes a src, width,

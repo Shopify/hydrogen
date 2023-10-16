@@ -131,29 +131,29 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
   >;
   /** The cache instance passed in from the `createStorefrontClient` argument. */
   cache?: Cache;
-  /** Re-export of [`CacheNone`](/docs/api/hydrogen/2023-04/utilities/cachenone). */
+  /** Re-export of [`CacheNone`](/docs/api/hydrogen/2023-07/utilities/cachenone). */
   CacheNone: typeof CacheNone;
-  /** Re-export of [`CacheLong`](/docs/api/hydrogen/2023-04/utilities/cachelong). */
+  /** Re-export of [`CacheLong`](/docs/api/hydrogen/2023-07/utilities/cachelong). */
   CacheLong: typeof CacheLong;
-  /** Re-export of [`CacheShort`](/docs/api/hydrogen/2023-04/utilities/cacheshort). */
+  /** Re-export of [`CacheShort`](/docs/api/hydrogen/2023-07/utilities/cacheshort). */
   CacheShort: typeof CacheShort;
-  /** Re-export of [`CacheCustom`](/docs/api/hydrogen/2023-04/utilities/cachecustom). */
+  /** Re-export of [`CacheCustom`](/docs/api/hydrogen/2023-07/utilities/cachecustom). */
   CacheCustom: typeof CacheCustom;
-  /** Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/2023-04/utilities/generatecachecontrolheader). */
+  /** Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/2023-07/utilities/generatecachecontrolheader). */
   generateCacheControlHeader: typeof generateCacheControlHeader;
-  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details. */
+  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2023-07/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details. */
   getPublicTokenHeaders: ReturnType<
     typeof createStorefrontUtilities
   >['getPublicTokenHeaders'];
-  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.*/
+  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2023-07/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.*/
   getPrivateTokenHeaders: ReturnType<
     typeof createStorefrontUtilities
   >['getPrivateTokenHeaders'];
-  /** Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details. */
+  /** Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2023-07/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details. */
   getShopifyDomain: ReturnType<
     typeof createStorefrontUtilities
   >['getShopifyDomain'];
-  /** Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.*/
+  /** Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2023-07/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.*/
   getApiUrl: ReturnType<
     typeof createStorefrontUtilities
   >['getStorefrontApiUrl'];
@@ -220,7 +220,7 @@ function minifyQuery(string: string) {
 const defaultI18n: I18nBase = {language: 'EN', country: 'US'};
 
 /**
- *  This function extends `createStorefrontClient` from [Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.
+ *  This function extends `createStorefrontClient` from [Hydrogen React](/docs/api/hydrogen-react/2023-07/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.
  *
  *  Learn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).
  */
@@ -237,10 +237,12 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     storefrontId,
     ...clientOptions
   } = options;
-  if (!cache) {
-    // TODO: should only warn in development
+  const H2_PREFIX_WARN = '[h2:warn:createStorefrontClient] ';
+
+  if (process.env.NODE_ENV === 'development' && !cache) {
     warnOnce(
-      'Storefront API client created without a cache instance. This may slow down your sub-requests.',
+      H2_PREFIX_WARN +
+        'Storefront API client created without a cache instance. This may slow down your sub-requests.',
     );
   }
 
@@ -276,9 +278,10 @@ export function createStorefrontClient<TI18n extends I18nBase>(
   }
 
   // Deprecation warning
-  if (!storefrontHeaders) {
+  if (process.env.NODE_ENV === 'development' && !storefrontHeaders) {
     warnOnce(
-      '"requestGroupId" and "buyerIp" will be deprecated in the next calendar release. Please use "getStorefrontHeaders"',
+      H2_PREFIX_WARN +
+        '`requestGroupId` and `buyerIp` will be deprecated in the next calendar release. Please use `getStorefrontHeaders`',
     );
   }
 
@@ -312,21 +315,47 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     }
 
     const url = getStorefrontApiUrl({storefrontApiVersion});
+    const graphqlData = JSON.stringify({query, variables: queryVariables});
     const requestInit: RequestInit = {
       method: 'POST',
       headers: {...defaultHeaders, ...userHeaders},
-      body: JSON.stringify({
-        query,
-        variables: queryVariables,
-      }),
+      body: graphqlData,
     };
+
+    // Remove any headers that are identifiable to the user or request
+    const cacheKey = [
+      url,
+      {
+        method: requestInit.method,
+        headers: {
+          'content-type': defaultHeaders['content-type'],
+          'X-SDK-Variant': defaultHeaders['X-SDK-Variant'],
+          'X-SDK-Variant-Source': defaultHeaders['X-SDK-Variant-Source'],
+          'X-SDK-Version': defaultHeaders['X-SDK-Version'],
+          'X-Shopify-Storefront-Access-Token':
+            defaultHeaders['X-Shopify-Storefront-Access-Token'],
+          'user-agent': defaultHeaders['user-agent'],
+        },
+        body: requestInit.body,
+      },
+    ];
 
     const [body, response] = await fetchWithServerCache(url, requestInit, {
       cacheInstance: mutation ? undefined : cache,
       cache: cacheOptions || CacheShort(),
+      cacheKey,
       shouldCacheResponse: checkGraphQLErrors,
       waitUntil,
+      debugInfo: {graphql: graphqlData},
     });
+
+    const errorOptions: StorefrontErrorOptions<T> = {
+      response,
+      type: mutation ? 'mutation' : 'query',
+      query,
+      queryVariables,
+      errors: undefined,
+    };
 
     if (!response.ok) {
       /**
@@ -340,12 +369,18 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         errors = [{message: body}];
       }
 
-      throwError(response, errors);
+      throwError({...errorOptions, errors});
     }
 
     const {data, errors} = body as StorefrontApiResponse<T>;
 
-    if (errors?.length) throwError(response, errors, StorefrontApiError);
+    if (errors?.length) {
+      throwError({
+        ...errorOptions,
+        errors,
+        ErrorConstructor: StorefrontApiError,
+      });
+    }
 
     return data as T;
   }
@@ -368,10 +403,22 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        */
       query: <Storefront['query']>((query: string, payload) => {
         query = minifyQuery(query);
-        if (isMutationRE.test(query))
-          throw new Error('storefront.query cannot execute mutations');
+        if (isMutationRE.test(query)) {
+          throw new Error(
+            '[h2:error:storefront.query] Cannot execute mutations',
+          );
+        }
 
-        return fetchStorefrontApi({...payload, query});
+        const result = fetchStorefrontApi({
+          ...payload,
+          query,
+        });
+
+        // This is a no-op, but we need to catch the promise to avoid unhandled rejections
+        // we cannot return the catch no-op, or it would swallow the error
+        result.catch(() => {});
+
+        return result;
       }),
       /**
        * Sends a GraphQL mutation to the Storefront API.
@@ -388,10 +435,22 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        */
       mutate: <Storefront['mutate']>((mutation: string, payload) => {
         mutation = minifyQuery(mutation);
-        if (isQueryRE.test(mutation))
-          throw new Error('storefront.mutate cannot execute queries');
+        if (isQueryRE.test(mutation)) {
+          throw new Error(
+            '[h2:error:storefront.mutate] Cannot execute queries',
+          );
+        }
 
-        return fetchStorefrontApi({...payload, mutation});
+        const result = fetchStorefrontApi({
+          ...payload,
+          mutation,
+        });
+
+        // This is a no-op, but we need to catch the promise to avoid unhandled rejections
+        // we cannot return the catch no-op, or it would swallow the error
+        result.catch(() => {});
+
+        return result;
       }),
       cache,
       CacheNone,
@@ -428,24 +487,45 @@ export function createStorefrontClient<TI18n extends I18nBase>(
   };
 }
 
-function throwError<T>(
-  response: Response,
-  errors: StorefrontApiResponse<T>['errors'],
+type StorefrontErrorOptions<T> = {
+  response: Response;
+  errors: StorefrontApiResponse<T>['errors'];
+  type: 'query' | 'mutation';
+  query: string;
+  queryVariables: Record<string, any>;
+  ErrorConstructor?: ErrorConstructor;
+};
+
+function throwError<T>({
+  response,
+  errors,
+  type,
+  query,
+  queryVariables,
   ErrorConstructor = Error,
-) {
-  const reqId = response.headers.get('x-request-id');
-  const reqIdMessage = reqId ? ` - Request ID: ${reqId}` : '';
-
-  if (errors) {
-    const errorMessages =
-      typeof errors === 'string'
-        ? errors
-        : errors.map((error) => error.message).join('\n');
-
-    throw new ErrorConstructor(errorMessages + reqIdMessage);
-  }
+}: StorefrontErrorOptions<T>) {
+  const requestId = response.headers.get('x-request-id');
+  const errorMessage =
+    (typeof errors === 'string'
+      ? errors
+      : errors?.map?.((error) => error.message).join('\n')) ||
+    `API response error: ${response.status}`;
 
   throw new ErrorConstructor(
-    `API response error: ${response.status}` + reqIdMessage,
+    `[h2:error:storefront.${type}] ` +
+      errorMessage +
+      (requestId ? ` - Request ID: ${requestId}` : ''),
+    {
+      cause: JSON.stringify({
+        errors,
+        requestId,
+        ...(process.env.NODE_ENV === 'development' && {
+          graphql: {
+            query,
+            variables: JSON.stringify(queryVariables),
+          },
+        }),
+      }),
+    },
   );
 }

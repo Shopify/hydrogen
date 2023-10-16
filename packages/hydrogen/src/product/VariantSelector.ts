@@ -1,7 +1,6 @@
 import {useLocation} from '@remix-run/react';
 import {flattenConnection} from '@shopify/hydrogen-react';
 import type {
-  Product,
   ProductOption,
   ProductVariant,
   ProductVariantConnection,
@@ -27,14 +26,14 @@ export type VariantOptionValue = {
 type VariantSelectorProps = {
   /** The product handle for all of the variants */
   handle: string;
-  /** Product options from the [Storefront API](/docs/api/storefront/2023-04/objects/ProductOption). Make sure both `name` and `values` are apart of your query. */
+  /** Product options from the [Storefront API](/docs/api/storefront/2023-07/objects/ProductOption). Make sure both `name` and `values` are apart of your query. */
   options: Array<PartialDeep<ProductOption>> | undefined;
-  /** Product variants from the [Storefront API](/docs/api/storefront/2023-04/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`. */
+  /** Product variants from the [Storefront API](/docs/api/storefront/2023-07/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`. */
   variants?:
     | PartialDeep<ProductVariantConnection>
     | Array<PartialDeep<ProductVariant>>;
-  /** Provide a default variant when no options are selected. You can use the utility `getFirstAvailableVariant` to get a default variant. */
-  defaultVariant?: PartialDeep<ProductVariant>;
+  /** By default all products are under /products. Use this prop to provide a custom path. */
+  productPath?: string;
   children: ({option}: {option: VariantOption}) => ReactNode;
 };
 
@@ -42,13 +41,16 @@ export function VariantSelector({
   handle,
   options = [],
   variants: _variants = [],
+  productPath = 'products',
   children,
-  defaultVariant,
 }: VariantSelectorProps) {
   const variants =
     _variants instanceof Array ? _variants : flattenConnection(_variants);
 
-  const {searchParams, path, alreadyOnProductPage} = useVariantPath(handle);
+  const {searchParams, path, alreadyOnProductPage} = useVariantPath(
+    handle,
+    productPath,
+  );
 
   // If an option only has one value, it doesn't need a UI to select it
   // But instead it always needs to be added to the product options so
@@ -97,13 +99,6 @@ export function VariantSelector({
               const calculatedActiveValue = currentParam
                 ? // If a URL parameter exists for the current option, check if it equals the current value
                   currentParam === value!
-                : defaultVariant
-                ? // Else check if the default variant has the current option value
-                  defaultVariant.selectedOptions?.some(
-                    (selectedOption) =>
-                      selectedOption?.name === option.name &&
-                      selectedOption?.value === value,
-                  )
                 : false;
 
               if (calculatedActiveValue) {
@@ -119,7 +114,7 @@ export function VariantSelector({
                 isAvailable: variant ? variant.availableForSale! : true,
                 to: path + searchString,
                 search: searchString,
-                isActive: Boolean(calculatedActiveValue),
+                isActive: calculatedActiveValue,
               });
             }
 
@@ -141,7 +136,7 @@ type GetSelectedProductOptions = (request: Request) => SelectedOptionInput[];
 export const getSelectedProductOptions: GetSelectedProductOptions = (
   request,
 ) => {
-  if (!(request instanceof Request))
+  if (typeof request?.url === 'undefined')
     throw new TypeError(`Expected a Request instance, got ${typeof request}`);
 
   const searchParams = new URL(request.url).searchParams;
@@ -155,32 +150,19 @@ export const getSelectedProductOptions: GetSelectedProductOptions = (
   return selectedOptions;
 };
 
-type GetFirstAvailableVariant = (
-  variants:
-    | PartialDeep<ProductVariantConnection>
-    | Array<PartialDeep<ProductVariant>>,
-) => PartialDeep<ProductVariant> | undefined;
-
-export const getFirstAvailableVariant: GetFirstAvailableVariant = (
-  variants:
-    | PartialDeep<ProductVariantConnection>
-    | Array<PartialDeep<ProductVariant>> = [],
-): PartialDeep<ProductVariant> | undefined => {
-  return (
-    variants instanceof Array ? variants : flattenConnection(variants)
-  ).find((variant) => variant?.availableForSale);
-};
-
-function useVariantPath(handle: string) {
+function useVariantPath(handle: string, productPath: string) {
   const {pathname, search} = useLocation();
 
   return useMemo(() => {
     const match = /(\/[a-zA-Z]{2}-[a-zA-Z]{2}\/)/g.exec(pathname);
     const isLocalePathname = match && match.length > 0;
+    productPath = productPath.startsWith('/')
+      ? productPath.substring(1)
+      : productPath;
 
     const path = isLocalePathname
-      ? `${match![0]}products/${handle}`
-      : `/products/${handle}`;
+      ? `${match![0]}${productPath}/${handle}`
+      : `/${productPath}/${handle}`;
 
     const searchParams = new URLSearchParams(search);
 
@@ -192,31 +174,5 @@ function useVariantPath(handle: string) {
       alreadyOnProductPage: path === pathname,
       path,
     };
-  }, [pathname, search, handle]);
-}
-
-export function useVariantUrl(
-  /** The product handle for the generated URL */
-  handle: string,
-  /** A list of product options from the [Storefront API](/docs/api/storefront/2023-04/objects/ProductOption) to include in the URL search params. */
-  selectedOptions: SelectedOptionInput[],
-) {
-  const {searchParams, alreadyOnProductPage, path} = useVariantPath(handle);
-
-  return useMemo(() => {
-    const clonedSearchParams = new URLSearchParams(
-      alreadyOnProductPage ? searchParams : undefined,
-    );
-
-    selectedOptions.forEach((option) => {
-      clonedSearchParams.set(option.name, option.value);
-    });
-
-    const searchString = clonedSearchParams.toString();
-
-    return {
-      to: `${path}${searchString ? '?' + searchString : ''}`,
-      search: `?${searchString}`,
-    };
-  }, [searchParams, alreadyOnProductPage, path, selectedOptions]);
+  }, [pathname, search, handle, productPath]);
 }

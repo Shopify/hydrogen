@@ -1,5 +1,7 @@
+import {useEffect} from 'react';
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
-import {useLoaderData} from '@remix-run/react';
+import {useLoaderData, useNavigate} from '@remix-run/react';
+import {useInView} from 'react-intersection-observer';
 import type {
   Filter,
   ProductCollectionSortKeys,
@@ -7,8 +9,8 @@ import type {
 import {
   flattenConnection,
   AnalyticsPageType,
-  Pagination__unstable as Pagination,
-  getPaginationVariables__unstable as getPaginationVariables,
+  Pagination,
+  getPaginationVariables,
 } from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 
@@ -139,6 +141,8 @@ export default function Collection() {
   const {collection, collections, appliedFilters} =
     useLoaderData<typeof loader>();
 
+  const {ref, inView} = useInView();
+
   return (
     <>
       <PageHeader heading={collection.title}>
@@ -159,24 +163,35 @@ export default function Collection() {
           collections={collections}
         >
           <Pagination connection={collection.products}>
-            {({nodes, isLoading, PreviousLink, NextLink}) => (
+            {({
+              nodes,
+              isLoading,
+              PreviousLink,
+              NextLink,
+              nextPageUrl,
+              hasNextPage,
+              state,
+            }) => (
               <>
                 <div className="flex items-center justify-center mb-6">
                   <Button as={PreviousLink} variant="secondary" width="full">
                     {isLoading ? 'Loading...' : 'Load previous'}
                   </Button>
                 </div>
-                <Grid layout="products">
-                  {nodes.map((product, i) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      loading={getImageLoadingPriority(i)}
-                    />
-                  ))}
-                </Grid>
+                <ProductsLoadedOnScroll
+                  nodes={nodes}
+                  inView={inView}
+                  nextPageUrl={nextPageUrl}
+                  hasNextPage={hasNextPage}
+                  state={state}
+                />
                 <div className="flex items-center justify-center mt-6">
-                  <Button as={NextLink} variant="secondary" width="full">
+                  <Button
+                    ref={ref}
+                    as={NextLink}
+                    variant="secondary"
+                    width="full"
+                  >
                     {isLoading ? 'Loading...' : 'Load more products'}
                   </Button>
                 </div>
@@ -186,6 +201,44 @@ export default function Collection() {
         </SortFilter>
       </Section>
     </>
+  );
+}
+
+function ProductsLoadedOnScroll({
+  nodes,
+  inView,
+  nextPageUrl,
+  hasNextPage,
+  state,
+}: {
+  nodes: any;
+  inView: boolean;
+  nextPageUrl: string;
+  hasNextPage: boolean;
+  state: any;
+}) {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (inView && hasNextPage) {
+      navigate(nextPageUrl, {
+        replace: true,
+        preventScrollReset: true,
+        state,
+      });
+    }
+  }, [inView, navigate, state, nextPageUrl, hasNextPage]);
+
+  return (
+    <Grid layout="products">
+      {nodes.map((product: any, i: number) => (
+        <ProductCard
+          key={product.id}
+          product={product}
+          loading={getImageLoadingPriority(i)}
+        />
+      ))}
+    </Grid>
   );
 }
 
@@ -246,6 +299,7 @@ const COLLECTION_QUERY = `#graphql
           hasNextPage
           hasNextPage
           endCursor
+          startCursor
         }
       }
     }

@@ -14,10 +14,7 @@ export {graphiqlLoader} from './routing/graphiql';
 export {Seo} from './seo/seo';
 export {type SeoConfig} from './seo/generate-seo-tags';
 export type {SeoHandleFunction} from './seo/seo';
-export {
-  Pagination as Pagination__unstable,
-  getPaginationVariables as getPaginationVariables__unstable,
-} from './pagination/Pagination';
+export {Pagination, getPaginationVariables} from './pagination/Pagination';
 
 export {CartForm, type CartActionInput} from './cart/CartForm';
 export {cartCreateDefault} from './cart/queries/cartCreateDefault';
@@ -33,7 +30,7 @@ export {cartAttributesUpdateDefault} from './cart/queries/cartAttributesUpdateDe
 export {cartMetafieldsSetDefault} from './cart/queries/cartMetafieldsSetDefault';
 export {cartMetafieldDeleteDefault} from './cart/queries/cartMetafieldDeleteDefault';
 export {cartGetIdDefault} from './cart/cartGetIdDefault';
-export {cartSetIdDefault} from './cart/cartSetIdDefault';
+export {cartSetIdDefault, type CookieOptions} from './cart/cartSetIdDefault';
 export {
   type HydrogenCartCustom,
   type HydrogenCart,
@@ -49,14 +46,20 @@ export type {
 export {
   VariantSelector,
   getSelectedProductOptions,
-  getFirstAvailableVariant,
-  useVariantUrl,
 } from './product/VariantSelector';
 
 export type {
   VariantOption,
   VariantOptionValue,
 } from './product/VariantSelector';
+
+export {createContentSecurityPolicy, useNonce} from './csp/csp';
+export {Script} from './csp/Script';
+
+export {
+  useOptimisticData,
+  OptimisticInput,
+} from './optimistic-ui/optimistic-ui';
 
 export {
   AnalyticsEventName,
@@ -76,6 +79,7 @@ export {
   ShopifySalesChannel,
   ShopPayButton,
   storefrontApiCustomScalars,
+  useLoadScript,
   useMoney,
   useShopifyCookies,
   Video,
