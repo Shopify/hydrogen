@@ -27,6 +27,8 @@ import {
   setConstructors,
 } from '../request-events.js';
 
+const DEFAULT_INSPECTOR_PORT = 8787;
+
 export async function startWorkerdServer({
   root,
   port = DEFAULT_PORT,
@@ -35,7 +37,9 @@ export async function startWorkerdServer({
   buildPathClient,
   env,
 }: MiniOxygenOptions): Promise<MiniOxygenInstance> {
-  const inspectorPort = await findPort(8787);
+  const appPort = await findPort(port);
+  const inspectorPort = await findPort(DEFAULT_INSPECTOR_PORT);
+
   const oxygenHeadersMap = Object.values(OXYGEN_HEADERS_MAP).reduce(
     (acc, item) => {
       acc[item.name] = item.defaultValue;
@@ -50,10 +54,10 @@ export async function startWorkerdServer({
     ({
       cf: false,
       verbose: false,
-      port: port,
+      port: appPort,
+      inspectorPort,
       log: new NoOpLog(),
       liveReload: watch,
-      inspectorPort,
       host: 'localhost',
       workers: [
         {
@@ -103,7 +107,7 @@ export async function startWorkerdServer({
     : undefined;
 
   return {
-    port,
+    port: appPort,
     listeningAt,
     async reload(nextOptions) {
       miniOxygenOptions = await buildMiniOxygenOptions();
