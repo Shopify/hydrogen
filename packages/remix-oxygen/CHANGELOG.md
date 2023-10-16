@@ -1,5 +1,23 @@
 # @shopify/remix-oxygen
 
+## 1.1.7
+
+### Patch Changes
+
+- Fix subrequest performance in development. ([#1411](https://github.com/Shopify/hydrogen/pull/1411)) by [@frandiox](https://github.com/frandiox)
+
+## 1.1.6
+
+### Patch Changes
+
+- Update the Oxygen Remix adapter to make sure that stack traces are logged in production ([#1393](https://github.com/Shopify/hydrogen/pull/1393)) by [@blittle](https://github.com/blittle)
+
+## 1.1.5
+
+### Patch Changes
+
+- Fix debug-network logger utility. Avoid logging debug-network errors multiple times. ([#1400](https://github.com/Shopify/hydrogen/pull/1400)) by [@frandiox](https://github.com/frandiox)
+
 ## 1.1.4
 
 ### Patch Changes

@@ -1,4 +1,4 @@
-import {type CacheKey, runWithCache, getCallerStackLine} from './cache/fetch';
+import {type CacheKey, runWithCache} from './cache/fetch';
 import type {CachingStrategy} from './cache/strategies';
 
 type CreateWithCacheOptions = {
@@ -28,9 +28,7 @@ export function createWithCache<T = unknown>(
       strategy,
       cacheInstance: cache,
       waitUntil,
-      debugInfo: {
-        stackLine: getCallerStackLine?.(),
-      },
+      debugInfo: {},
     });
   };
 }

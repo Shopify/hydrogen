@@ -23,7 +23,6 @@ export type H2OEvent = {
   endTime: number;
   cacheStatus?: 'MISS' | 'HIT' | 'STALE' | 'PUT';
   waitUntil?: ExecutionContext['waitUntil'];
-  stackLine?: string;
   graphql?: string;
 };
 
@@ -37,7 +36,6 @@ async function getRequestInfo(request: Request) {
     endTime: data.endTime || Date.now(),
     purpose: data.purpose === 'prefetch' ? '(prefetch)' : '',
     cacheStatus: data.cacheStatus ?? '',
-    stackLine: data.stackLine ?? '',
     graphql: data.graphql
       ? (JSON.parse(data.graphql) as {query: string; variables: object})
       : null,
@@ -58,10 +56,8 @@ export async function logRequestEvent(request: Request): Promise<Response> {
     return new Response('ok');
   }
 
-  const {eventType, purpose, stackLine, graphql, ...data} =
-    await getRequestInfo(request);
+  const {eventType, purpose, graphql, ...data} = await getRequestInfo(request);
 
-  let originFile = '';
   let graphiqlLink = '';
   let description = request.url;
 
@@ -70,14 +66,6 @@ export async function logRequestEvent(request: Request): Promise<Response> {
       graphql?.query
         .match(/(query|mutation)\s+(\w+)/)?.[0]
         ?.replace(/\s+/, ' ') || decodeURIComponent(url.search.slice(1));
-
-    // This might need to be passed through sourcemaps in Workerd
-    const [, fnName, filePath] =
-      stackLine?.match(/\s+at ([^\s]+) \(.*?\/(app\/[^\n]*)\)/) || [];
-
-    if (fnName && filePath) {
-      originFile = `${fnName}:${filePath}`;
-    }
 
     if (graphql) {
       graphiqlLink = getGraphiQLUrl({graphql});
@@ -90,7 +78,6 @@ export async function logRequestEvent(request: Request): Promise<Response> {
       ...data,
       url: `${purpose} ${description}`.trim(),
       graphiqlLink,
-      originFile,
     }),
   };
 

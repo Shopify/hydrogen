@@ -1,0 +1,57 @@
+{
+  "name": "@shopify/mini-oxygen",
+  "publishConfig": {
+    "access": "public",
+    "@shopify:registry": "https://registry.npmjs.org"
+  },
+  "version": "2.2.3",
+  "license": "MIT",
+  "type": "module",
+  "description": "Development assistant for custom Shopify Oxygen hosted storefronts",
+  "main": "./dist/index.js",
+  "module": "dist/index.js",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "repository": "https://github.com/Shopify/hydrogen.git",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "prepack": "npm run build",
+    "test": "NODE_OPTIONS=--experimental-vm-modules vitest run"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=16.13.0"
+  },
+  "dependencies": {
+    "@miniflare/cache": "^2.14.1",
+    "@miniflare/core": "^2.14.1",
+    "@miniflare/queues": "^2.14.1",
+    "@miniflare/runner-vm": "^2.14.1",
+    "@miniflare/shared": "^2.14.1",
+    "@miniflare/storage-memory": "^2.14.1",
+    "@miniflare/web-sockets": "2.14.1",
+    "body-parser": "1.20.2",
+    "connect": "^3.7.0",
+    "fs-extra": "^11.1.0",
+    "get-port": "^7.0.0",
+    "inquirer": "^9.0.0",
+    "mime": "^3.0.0",
+    "source-map-support": "^0.5.21"
+  },
+  "devDependencies": {
+    "@types/body-parser": "1.19.3",
+    "@types/connect": "^3.4.35",
+    "@types/eventsource": "^1.1.10",
+    "@types/fs-extra": "^11.0.1",
+    "@types/mime": "^3.0.1",
+    "@types/node": "^18.7.0",
+    "@types/source-map-support": "^0.5.6",
+    "@types/ws": "^8.5.3",
+    "eventsource": "^2.0.2",
+    "vitest": "^0.33.0"
+  }
+}

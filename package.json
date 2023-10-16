@@ -33,6 +33,7 @@
     "packages/hydrogen",
     "packages/create-hydrogen",
     "packages/cli",
+    "packages/mini-oxygen",
     "packages/hydrogen-react",
     "packages/hydrogen-codegen"
   ],
