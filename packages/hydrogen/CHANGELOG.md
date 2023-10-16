@@ -1,5 +1,11 @@
 # @shopify/hydrogen
 
+## 2023.7.11
+
+### Patch Changes
+
+- Fix subrequest performance in development. ([#1411](https://github.com/Shopify/hydrogen/pull/1411)) by [@frandiox](https://github.com/frandiox)
+
 ## 2023.7.10
 
 ### Patch Changes
