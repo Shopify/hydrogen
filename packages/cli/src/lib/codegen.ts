@@ -145,6 +145,9 @@ async function generateTypes({
       // Note: do not use `silent` without `watch`, it will swallow errors and
       // won't hide all logs. `errorsOnly` flag doesn't work either.
       silent: !watch,
+
+      // @ts-expect-error this is to avoid process.cwd() in tests
+      cwd: dirs.rootDirectory,
     },
     // https://github.com/dotansimha/graphql-code-generator/issues/9490
     filepath: 'not-used-but-must-be-set',
