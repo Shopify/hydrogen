@@ -3,7 +3,7 @@ import path from 'node:path';
 
 describe('Hydrogen Codegen', async () => {
   // Patch dependency before importing the Codegen CLI
-  await import('../src/patch.mjs');
+  await import('../src/patch.js');
   const {preset, schema, pluckConfig} = await import('../src/index.js');
   const {defaultInterfaceExtensionCode} = await import('../src/preset.js');
   const {executeCodegen} = await import('@graphql-codegen/cli');

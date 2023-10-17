@@ -10,7 +10,7 @@ const require = createRequire(import.meta.url);
 const realGqlTagPluck = require.resolve('@graphql-tools/graphql-tag-pluck');
 // During tests, this file is in src/xyz.ts but in dev/prod,
 // the file is in dist/(esm|cjs)/xyz.js
-const depth = path.extname(import.meta.url) === '.mts' ? '../' : '../../';
+const depth = path.extname(import.meta.url) === '.ts' ? '../' : '../../';
 const vendorGqlTagPluck = fileURLToPath(
   new URL(depth + '/vendor/graphql-tag-pluck', import.meta.url),
 );
