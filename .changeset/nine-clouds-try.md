@@ -1,5 +1,5 @@
 ---
-'@shopify/hydrogen-react': minor
+'@shopify/hydrogen-react': patch
 ---
 
 Add Language to CartProvider
