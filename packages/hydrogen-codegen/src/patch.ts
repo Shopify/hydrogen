@@ -1,5 +1,5 @@
 import path from 'node:path';
-import fs from 'node:fs/promises';
+import fs from 'node:fs';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 
@@ -16,12 +16,12 @@ const vendorGqlTagPluck = fileURLToPath(
 );
 
 // Copy files sequencially to avoid `EBUSY` errors in Windows
-await fs.copyFile(
+fs.copyFileSync(
   path.join(vendorGqlTagPluck, 'visitor.cjs'),
   realGqlTagPluck.replace(/index\.js$/, 'visitor.js'),
 );
 
-await fs.copyFile(
+fs.copyFileSync(
   path.join(vendorGqlTagPluck, 'visitor.mjs'),
   realGqlTagPluck.replace('cjs', 'esm').replace(/index\.js$/, 'visitor.js'),
 );
@@ -42,15 +42,15 @@ const selectionSetToObjectFileESM = selectionSetToObjectFileCJS.replace(
   'esm',
 );
 
-await fs.writeFile(
+fs.writeFileSync(
   selectionSetToObjectFileCJS,
-  patchSelectionSet(await fs.readFile(selectionSetToObjectFileCJS, 'utf-8')),
+  patchSelectionSet(fs.readFileSync(selectionSetToObjectFileCJS, 'utf-8')),
   'utf-8',
 );
 
-await fs.writeFile(
+fs.writeFileSync(
   selectionSetToObjectFileESM,
-  patchSelectionSet(await fs.readFile(selectionSetToObjectFileESM, 'utf-8')),
+  patchSelectionSet(fs.readFileSync(selectionSetToObjectFileESM, 'utf-8')),
   'utf-8',
 );
 

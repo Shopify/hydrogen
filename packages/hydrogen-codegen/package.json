@@ -25,7 +25,12 @@
       "import": "./dist/esm/index.js",
       "default": "./dist/esm/index.js"
     },
-    "./patch": "./dist/esm/patch.js",
+    "./patch": {
+      "types": "./dist/esm/patch.d.ts",
+      "require": "./dist/cjs/patch.cjs",
+      "import": "./dist/esm/patch.js",
+      "default": "./dist/esm/patch.js"
+    },
     "./package.json": "./package.json"
   },
   "repository": {
