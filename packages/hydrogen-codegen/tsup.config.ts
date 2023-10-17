@@ -15,7 +15,7 @@ export default defineConfig([
     ...commonConfig,
     format: 'esm',
     dts: true,
-    entry: ['src/**/*.ts'],
+    entry: ['src/**/*.ts', 'src/patch.mts'],
     outDir: 'dist/esm',
     async onSuccess() {
       const schemaFile = 'dist/esm/schema.js';
