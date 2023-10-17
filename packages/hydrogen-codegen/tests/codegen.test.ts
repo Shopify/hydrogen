@@ -1,23 +1,23 @@
 import {describe, it, expect} from 'vitest';
-import path from 'path';
-import {preset, schema, pluckConfig, patchGqlPluck} from '../src/index.js';
-import {defaultInterfaceExtensionCode} from '../src/preset.js';
-
-const getCodegenOptions = (fixture: string, output = 'out.d.ts') => ({
-  pluckConfig: pluckConfig as any,
-  generates: {
-    [output]: {
-      preset,
-      schema,
-      documents: path.join(__dirname, `fixtures/${fixture}`),
-    },
-  },
-});
+import path from 'node:path';
 
 describe('Hydrogen Codegen', async () => {
   // Patch dependency before importing the Codegen CLI
-  await patchGqlPluck();
+  await import('../src/patch.mjs');
+  const {preset, schema, pluckConfig} = await import('../src/index.js');
+  const {defaultInterfaceExtensionCode} = await import('../src/preset.js');
   const {executeCodegen} = await import('@graphql-codegen/cli');
+
+  const getCodegenOptions = (fixture: string, output = 'out.d.ts') => ({
+    pluckConfig: pluckConfig as any,
+    generates: {
+      [output]: {
+        preset,
+        schema,
+        documents: path.join(__dirname, `fixtures/${fixture}`),
+      },
+    },
+  });
 
   it('requires .d.ts extension', async () => {
     await expect(
@@ -165,7 +165,7 @@ describe('Hydrogen Codegen', async () => {
       );
 
       export type CollectionContentTestQueryVariables = StorefrontAPI.Exact<{
-        handle?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
+        handle?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']['input']>;
         country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
         language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
       }>;
