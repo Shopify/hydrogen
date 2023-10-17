@@ -30,7 +30,6 @@ import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
 import {createRemixLogger, muteRemixLogs} from '../../lib/log.js';
-import {codegen} from '../../lib/codegen.js';
 import {
   buildBundleAnalysis,
   getBundleAnalysisSummary,
@@ -156,7 +155,12 @@ export async function runBuild({
       logThrown(thrown);
       process.exit(1);
     }),
-    useCodegen && codegen({...remixConfig, configFilePath: codegenConfigPath}),
+    useCodegen &&
+      import('@shopify/hydrogen-codegen/patch').then(() =>
+        import('../../lib/codegen.js').then(({codegen}) =>
+          codegen({...remixConfig, configFilePath: codegenConfigPath}),
+        ),
+      ),
   ]);
 
   if (process.env.NODE_ENV !== 'development') {
