@@ -1,16 +1,12 @@
-import {
-  generate,
-  loadCodegenConfig,
-  type LoadCodegenConfigResult,
-  CodegenContext,
-} from '@graphql-codegen/cli';
-import {schema, preset, pluckConfig} from '@shopify/hydrogen-codegen';
+import {spawn} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
 import {formatCode, getCodeFormatOptions} from './format-code.js';
 import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
 import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {spawn} from 'node:child_process';
-import {fileURLToPath} from 'node:url';
+
+// Do not import code synchronously from this dependency, it must be patched first
+import type {LoadCodegenConfigResult} from '@graphql-codegen/cli';
 
 const nodePath = process.argv[1];
 const modulePath = fileURLToPath(import.meta.url);
@@ -55,9 +51,6 @@ export async function spawnCodegenProcess({
   appDirectory,
   configFilePath,
 }: CodegenOptions) {
-  // Patch dependencies before spawning the process that imports the dependencies
-  await import('@shopify/hydrogen-codegen/patch');
-
   const child = spawn(
     'node',
     [
@@ -109,16 +102,21 @@ type CodegenOptions = ProjectDirs & {
 };
 
 export async function codegen(options: CodegenOptions) {
-  try {
-    return await generateTypes(options);
-  } catch (error) {
+  await import('@shopify/hydrogen-codegen/patch').catch((error: Error) => {
+    throw new AbortError(
+      `Failed to patch dependencies for codegen.\n${error.stack}`,
+      'Please report this issue.',
+    );
+  });
+
+  return generateTypes(options).catch((error: Error) => {
     const {message, details} = normalizeCodegenError(
-      (error as Error).message,
+      error.message,
       options.rootDirectory,
     );
 
     throw new AbortError(message, details);
-  }
+  });
 }
 
 async function generateTypes({
@@ -127,6 +125,10 @@ async function generateTypes({
   forceSfapiVersion,
   ...dirs
 }: CodegenOptions) {
+  const {generate, loadCodegenConfig, CodegenContext} = await import(
+    '@graphql-codegen/cli'
+  );
+
   const {config: codegenConfig} =
     // Load <root>/codegen.ts if available
     (await loadCodegenConfig({
@@ -134,7 +136,7 @@ async function generateTypes({
       searchPlaces: [dirs.rootDirectory],
     })) ||
     // Fall back to default config
-    generateDefaultConfig(dirs, forceSfapiVersion);
+    (await generateDefaultConfig(dirs, forceSfapiVersion));
 
   await addHooksToHydrogenOptions(codegenConfig, dirs);
 
@@ -160,10 +162,14 @@ async function generateTypes({
   return Object.keys(codegenConfig.generates);
 }
 
-function generateDefaultConfig(
+async function generateDefaultConfig(
   {rootDirectory, appDirectory}: ProjectDirs,
   forceSfapiVersion?: string,
-): LoadCodegenConfigResult {
+): Promise<LoadCodegenConfigResult> {
+  const {schema, preset, pluckConfig} = await import(
+    '@shopify/hydrogen-codegen'
+  );
+
   const tsDefaultGlob = '*!(*.d).{ts,tsx}'; // No d.ts files
   const appDirRelative = relativePath(rootDirectory, appDirectory);
 
@@ -210,6 +216,8 @@ async function addHooksToHydrogenOptions(
   codegenConfig: LoadCodegenConfigResult['config'],
   {rootDirectory}: ProjectDirs,
 ) {
+  const {schema} = await import('@shopify/hydrogen-codegen');
+
   const [, options] =
     Object.entries(codegenConfig.generates).find(
       ([, value]) =>

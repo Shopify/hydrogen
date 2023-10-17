@@ -4,6 +4,7 @@ import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {Flags} from '@oclif/core';
 import {getProjectPaths, getRemixConfig} from '../../lib/remix-config.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
+import {codegen} from '../../lib/codegen.js';
 
 export default class Codegen extends Command {
   static description =
@@ -57,10 +58,6 @@ export async function runCodegen({
   const remixConfig = await getRemixConfig(root);
 
   console.log(''); // New line
-
-  // Patch dependencies before importing them
-  await import('@shopify/hydrogen-codegen/patch');
-  const {codegen} = await import('../../lib/codegen.js');
 
   const generatedFiles = await codegen({
     ...remixConfig,
