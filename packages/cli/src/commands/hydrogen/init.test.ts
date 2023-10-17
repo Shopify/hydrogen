@@ -19,7 +19,6 @@ import {getSkeletonSourceDir} from '../../lib/build.js';
 import {execAsync} from '../../lib/process.js';
 import {symlink, rmdir} from 'fs-extra';
 import {runCheckRoutes} from './check.js';
-import '@shopify/hydrogen-codegen/patch';
 import {runCodegen} from './codegen.js';
 import {runBuild} from './build.js';
 
