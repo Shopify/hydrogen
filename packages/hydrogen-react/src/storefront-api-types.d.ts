@@ -1,6 +1,6 @@
 /**
  * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
- * Based on Storefront API 2023-07
+ * Based on Storefront API 2023-10
  * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run `npm run graphql-types`.
  * Except custom Scalars, which are defined in the `codegen.ts` file
  */
@@ -129,10 +129,7 @@ export type Article = HasMetafields &
     excerpt?: Maybe<Scalars['String']>;
     /** The excerpt of the article, complete with HTML formatting. */
     excerptHtml?: Maybe<Scalars['HTML']>;
-    /**
-     * A human-friendly unique string for the Article automatically generated from its title.
-     *
-     */
+    /** A human-friendly unique string for the Article automatically generated from its title. */
     handle: Scalars['String'];
     /** A globally-unique ID. */
     id: Scalars['ID'];
@@ -140,10 +137,7 @@ export type Article = HasMetafields &
     image?: Maybe<Image>;
     /** Returns a metafield found by namespace and key. */
     metafield?: Maybe<Metafield>;
-    /**
-     * The metafields associated with the resource matching the supplied list of namespaces and keys.
-     *
-     */
+    /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
     metafields: Array<Maybe<Metafield>>;
     /** The URL used for viewing the resource on the shop's Online Store. Returns `null` if the resource is currently not published to the Online Store sales channel. */
     onlineStoreUrl?: Maybe<Scalars['URL']>;
@@ -151,7 +145,10 @@ export type Article = HasMetafields &
     publishedAt: Scalars['DateTime'];
     /** The article’s SEO information. */
     seo?: Maybe<Seo>;
-    /** A categorization that a article can be tagged with. */
+    /**
+     * A categorization that a article can be tagged with.
+     *
+     */
     tags: Array<Scalars['String']>;
     /** The article’s name. */
     title: Scalars['String'];
@@ -181,7 +178,7 @@ export type ArticleExcerptArgs = {
 /** An article in an online store blog. */
 export type ArticleMetafieldArgs = {
   key: Scalars['String'];
-  namespace: Scalars['String'];
+  namespace?: InputMaybe<Scalars['String']>;
 };
 
 /** An article in an online store blog. */
@@ -380,10 +377,7 @@ export type Blog = HasMetafields &
     id: Scalars['ID'];
     /** Returns a metafield found by namespace and key. */
     metafield?: Maybe<Metafield>;
-    /**
-     * The metafields associated with the resource matching the supplied list of namespaces and keys.
-     *
-     */
+    /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
     metafields: Array<Maybe<Metafield>>;
     /** The URL used for viewing the resource on the shop's Online Store. Returns `null` if the resource is currently not published to the Online Store sales channel. */
     onlineStoreUrl?: Maybe<Scalars['URL']>;
@@ -412,7 +406,7 @@ export type BlogArticlesArgs = {
 /** An online store blog. */
 export type BlogMetafieldArgs = {
   key: Scalars['String'];
-  namespace: Scalars['String'];
+  namespace?: InputMaybe<Scalars['String']>;
 };
 
 /** An online store blog. */
@@ -554,17 +548,10 @@ export type Cart = HasMetafields &
       | CartCodeDiscountAllocation
       | CartCustomDiscountAllocation
     >;
-    /**
-     * The case-insensitive discount codes that the customer added at checkout.
-     *
-     */
+    /** The case-insensitive discount codes that the customer added at checkout. */
     discountCodes: Array<CartDiscountCode>;
     /**
-     * The estimated costs that the buyer will pay at checkout.
-     * The estimated costs are subject to change and changes will be reflected at checkout.
-     * The `estimatedCost` field uses the `buyerIdentity` field to determine
-     * [international pricing](https://shopify.dev/custom-storefronts/internationalization/international-pricing).
-     *
+     * The estimated costs that the buyer will pay at checkout. The estimated costs are subject to change and changes will be reflected at checkout. The `estimatedCost` field uses the `buyerIdentity` field to determine [international pricing](https://shopify.dev/custom-storefronts/internationalization/international-pricing).
      * @deprecated Use `cost` instead.
      */
     estimatedCost: CartEstimatedCost;
@@ -574,10 +561,7 @@ export type Cart = HasMetafields &
     lines: BaseCartLineConnection;
     /** Returns a metafield found by namespace and key. */
     metafield?: Maybe<Metafield>;
-    /**
-     * The metafields associated with the resource matching the supplied list of namespaces and keys.
-     *
-     */
+    /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
     metafields: Array<Maybe<Metafield>>;
     /** A note that's associated with the cart. For example, the note can be a personalized message to the buyer. */
     note?: Maybe<Scalars['String']>;
@@ -637,7 +621,7 @@ export type CartLinesArgs = {
  */
 export type CartMetafieldArgs = {
   key: Scalars['String'];
-  namespace: Scalars['String'];
+  namespace?: InputMaybe<Scalars['String']>;
 };
 
 /**
@@ -980,16 +964,11 @@ export type CartErrorCode =
   /** Missing note. */
   | 'MISSING_NOTE'
   /** The payment method is not supported. */
-  | 'PAYMENT_METHOD_NOT_SUPPORTED';
+  | 'PAYMENT_METHOD_NOT_SUPPORTED'
+  /** Validation failed. */
+  | 'VALIDATION_CUSTOM';
 
-/**
- * The estimated costs that the buyer will pay at checkout.
- * The estimated cost uses
- * [`CartBuyerIdentity`](https://shopify.dev/api/storefront/reference/cart/cartbuyeridentity)
- * to determine
- * [international pricing](https://shopify.dev/custom-storefronts/internationalization/international-pricing).
- *
- */
+/** The estimated costs that the buyer will pay at checkout. The estimated cost uses [`CartBuyerIdentity`](https://shopify.dev/api/storefront/reference/cart/cartbuyeridentity) to determine [international pricing](https://shopify.dev/custom-storefronts/internationalization/international-pricing). */
 export type CartEstimatedCost = {
   __typename?: 'CartEstimatedCost';
   /** The estimated amount, before taxes and discounts, for the customer to pay at checkout. The checkout charge amount doesn't include any deferred payments that'll be paid at a later date. If the cart has no deferred payments, then the checkout charge amount is equivalent to`subtotal_amount`. */
@@ -1033,7 +1012,10 @@ export type CartInput = {
   lines?: InputMaybe<Array<CartLineInput>>;
   /** The metafields to associate with this cart. */
   metafields?: InputMaybe<Array<CartInputMetafieldInput>>;
-  /** A note that's associated with the cart. For example, the note can be a personalized message to the buyer. */
+  /**
+   * A note that's associated with the cart. For example, the note can be a personalized message to the buyer.
+   *
+   */
   note?: InputMaybe<Scalars['String']>;
 };
 
@@ -1103,7 +1085,10 @@ export type CartLineCost = {
   totalAmount: MoneyV2;
 };
 
-/** The estimated cost of the merchandise line that the buyer will pay at checkout. */
+/**
+ * The estimated cost of the merchandise line that the buyer will pay at checkout.
+ *
+ */
 export type CartLineEstimatedCost = {
   __typename?: 'CartLineEstimatedCost';
   /** The amount of the merchandise line. */
@@ -1925,7 +1910,11 @@ export type CheckoutUserError = DisplayableError & {
   message: Scalars['String'];
 };
 
-/** A collection represents a grouping of products that a shop owner can create to organize them or make their shops easier to browse. */
+/**
+ * A collection represents a grouping of products that a shop owner can create to
+ * organize them or make their shops easier to browse.
+ *
+ */
 export type Collection = HasMetafields &
   Node &
   OnlineStorePublishable &
@@ -1947,10 +1936,7 @@ export type Collection = HasMetafields &
     image?: Maybe<Image>;
     /** Returns a metafield found by namespace and key. */
     metafield?: Maybe<Metafield>;
-    /**
-     * The metafields associated with the resource matching the supplied list of namespaces and keys.
-     *
-     */
+    /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
     metafields: Array<Maybe<Metafield>>;
     /** The URL used for viewing the resource on the shop's Online Store. Returns `null` if the resource is currently not published to the Online Store sales channel. */
     onlineStoreUrl?: Maybe<Scalars['URL']>;
@@ -1966,23 +1952,39 @@ export type Collection = HasMetafields &
     updatedAt: Scalars['DateTime'];
   };
 
-/** A collection represents a grouping of products that a shop owner can create to organize them or make their shops easier to browse. */
+/**
+ * A collection represents a grouping of products that a shop owner can create to
+ * organize them or make their shops easier to browse.
+ *
+ */
 export type CollectionDescriptionArgs = {
   truncateAt?: InputMaybe<Scalars['Int']>;
 };
 
-/** A collection represents a grouping of products that a shop owner can create to organize them or make their shops easier to browse. */
+/**
+ * A collection represents a grouping of products that a shop owner can create to
+ * organize them or make their shops easier to browse.
+ *
+ */
 export type CollectionMetafieldArgs = {
   key: Scalars['String'];
-  namespace: Scalars['String'];
+  namespace?: InputMaybe<Scalars['String']>;
 };
 
-/** A collection represents a grouping of products that a shop owner can create to organize them or make their shops easier to browse. */
+/**
+ * A collection represents a grouping of products that a shop owner can create to
+ * organize them or make their shops easier to browse.
+ *
+ */
 export type CollectionMetafieldsArgs = {
   identifiers: Array<HasMetafieldsIdentifier>;
 };
 
-/** A collection represents a grouping of products that a shop owner can create to organize them or make their shops easier to browse. */
+/**
+ * A collection represents a grouping of products that a shop owner can create to
+ * organize them or make their shops easier to browse.
+ *
+ */
 export type CollectionProductsArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
@@ -2739,7 +2741,8 @@ export type Currency = {
 };
 
 /**
- * The three-letter currency codes that represent the world currencies used in stores. These include standard ISO 4217 codes, legacy codes,
+ * The three-letter currency codes that represent the world currencies used in
+ * stores. These include standard ISO 4217 codes, legacy codes,
  * and non-standard codes.
  *
  */
@@ -3042,7 +3045,7 @@ export type CurrencyCode =
   | 'VED'
   /** Venezuelan Bolivares (VEF). */
   | 'VEF'
-  /** Venezuelan Bolivares (VES). */
+  /** Venezuelan Bolivares Soberanos (VES). */
   | 'VES'
   /** Vietnamese đồng (VND). */
   | 'VND'
@@ -3092,10 +3095,7 @@ export type Customer = HasMetafields & {
   lastName?: Maybe<Scalars['String']>;
   /** Returns a metafield found by namespace and key. */
   metafield?: Maybe<Metafield>;
-  /**
-   * The metafields associated with the resource matching the supplied list of namespaces and keys.
-   *
-   */
+  /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
   metafields: Array<Maybe<Metafield>>;
   /** The number of orders that the customer has made at the store in their lifetime. */
   numberOfOrders: Scalars['UnsignedInt64'];
@@ -3125,7 +3125,7 @@ export type CustomerAddressesArgs = {
 /** A customer represents a customer account with the shop. Customer accounts store contact information for the customer, saving logged-in customers the trouble of having to provide it at every checkout. */
 export type CustomerMetafieldArgs = {
   key: Scalars['String'];
-  namespace: Scalars['String'];
+  namespace?: InputMaybe<Scalars['String']>;
 };
 
 /** A customer represents a customer account with the shop. Customer accounts store contact information for the customer, saving logged-in customers the trouble of having to provide it at every checkout. */
@@ -3716,7 +3716,9 @@ export type FilterValue = {
   /**
    * An input object that can be used to filter by this value on the parent field.
    *
-   * The value is provided as a helper for building dynamic filtering UI. For example, if you have a list of selected `FilterValue` objects, you can combine their respective `input` values to use in a subsequent query.
+   * The value is provided as a helper for building dynamic filtering UI. For
+   * example, if you have a list of selected `FilterValue` objects, you can combine
+   * their respective `input` values to use in a subsequent query.
    *
    */
   input: Scalars['JSON'];
@@ -3826,17 +3828,14 @@ export type GeoCoordinateInput = {
 export type HasMetafields = {
   /** Returns a metafield found by namespace and key. */
   metafield?: Maybe<Metafield>;
-  /**
-   * The metafields associated with the resource matching the supplied list of namespaces and keys.
-   *
-   */
+  /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
   metafields: Array<Maybe<Metafield>>;
 };
 
 /** Represents information about the metafields associated to the specified resource. */
 export type HasMetafieldsMetafieldArgs = {
   key: Scalars['String'];
-  namespace: Scalars['String'];
+  namespace?: InputMaybe<Scalars['String']>;
 };
 
 /** Represents information about the metafields associated to the specified resource. */
@@ -3848,8 +3847,8 @@ export type HasMetafieldsMetafieldsArgs = {
 export type HasMetafieldsIdentifier = {
   /** The identifier for the metafield. */
   key: Scalars['String'];
-  /** A container for a set of metafields. */
-  namespace: Scalars['String'];
+  /** The container the metafield belongs to. If omitted, the app-reserved namespace will be used. */
+  namespace?: InputMaybe<Scalars['String']>;
 };
 
 /** Represents an image resource. */
@@ -3950,15 +3949,18 @@ export type ImageEdge = {
 /**
  * The available options for transforming an image.
  *
- * All transformation options are considered best effort. Any transformation that the original image type doesn't support will be ignored.
+ * All transformation options are considered best effort. Any transformation that
+ * the original image type doesn't support will be ignored.
  *
  */
 export type ImageTransformInput = {
   /**
    * The region of the image to remain after cropping.
-   * Must be used in conjunction with the `maxWidth` and/or `maxHeight` fields, where the `maxWidth` and `maxHeight` aren't equal.
+   * Must be used in conjunction with the `maxWidth` and/or `maxHeight` fields,
+   * where the `maxWidth` and `maxHeight` aren't equal.
    * The `crop` argument should coincide with the smaller value. A smaller `maxWidth` indicates a `LEFT` or `RIGHT` crop, while
-   * a smaller `maxHeight` indicates a `TOP` or `BOTTOM` crop. For example, `{ maxWidth: 5, maxHeight: 10, crop: LEFT }` will result
+   * a smaller `maxHeight` indicates a `TOP` or `BOTTOM` crop. For example, `{
+   * maxWidth: 5, maxHeight: 10, crop: LEFT }` will result
    * in an image with a width of 5 and height of 10, where the right side of the image is removed.
    *
    */
@@ -3984,6 +3986,20 @@ export type ImageTransformInput = {
    *
    */
   scale?: InputMaybe<Scalars['Int']>;
+};
+
+/** Provide details about the contexts influenced by the @inContext directive on a field. */
+export type InContext = {
+  __typename?: 'InContext';
+  description: Scalars['String'];
+  type: InContextType;
+};
+
+/** This gives information about the type of context that impacts a field. For example, for a query with @inContext(language: "EN"), the type would point to the name: LanguageCode and kind: ENUM. */
+export type InContextType = {
+  __typename?: 'InContextType';
+  kind: Scalars['String'];
+  name: Scalars['String'];
 };
 
 /** A language. */
@@ -4029,6 +4045,8 @@ export type LanguageCode =
   | 'CA'
   /** Chechen. */
   | 'CE'
+  /** Central Kurdish. */
+  | 'CKB'
   /** Czech. */
   | 'CS'
   /** Church Slavic. */
@@ -4061,6 +4079,8 @@ export type LanguageCode =
   | 'FF'
   /** Finnish. */
   | 'FI'
+  /** Filipino. */
+  | 'FIL'
   /** Faroese. */
   | 'FO'
   /** French. */
@@ -4127,6 +4147,8 @@ export type LanguageCode =
   | 'KW'
   /** Kyrgyz. */
   | 'KY'
+  /** Latin. */
+  | 'LA'
   /** Luxembourgish. */
   | 'LB'
   /** Ganda. */
@@ -4151,6 +4173,8 @@ export type LanguageCode =
   | 'ML'
   /** Mongolian. */
   | 'MN'
+  /** Moldavian. */
+  | 'MO'
   /** Marathi. */
   | 'MR'
   /** Malay. */
@@ -4201,12 +4225,18 @@ export type LanguageCode =
   | 'RU'
   /** Kinyarwanda. */
   | 'RW'
+  /** Sanskrit. */
+  | 'SA'
+  /** Sardinian. */
+  | 'SC'
   /** Sindhi. */
   | 'SD'
   /** Northern Sami. */
   | 'SE'
   /** Sango. */
   | 'SG'
+  /** Serbo-Croatian. */
+  | 'SH'
   /** Sinhala. */
   | 'SI'
   /** Slovak. */
@@ -4299,10 +4329,7 @@ export type Location = HasMetafields &
     id: Scalars['ID'];
     /** Returns a metafield found by namespace and key. */
     metafield?: Maybe<Metafield>;
-    /**
-     * The metafields associated with the resource matching the supplied list of namespaces and keys.
-     *
-     */
+    /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
     metafields: Array<Maybe<Metafield>>;
     /** The name of the location. */
     name: Scalars['String'];
@@ -4311,7 +4338,7 @@ export type Location = HasMetafields &
 /** Represents a location where product inventory is held. */
 export type LocationMetafieldArgs = {
   key: Scalars['String'];
-  namespace: Scalars['String'];
+  namespace?: InputMaybe<Scalars['String']>;
 };
 
 /** Represents a location where product inventory is held. */
@@ -4401,20 +4428,11 @@ export type MailingAddress = Node & {
    *
    */
   address2?: Maybe<Scalars['String']>;
-  /**
-   * The name of the city, district, village, or town.
-   *
-   */
+  /** The name of the city, district, village, or town. */
   city?: Maybe<Scalars['String']>;
-  /**
-   * The name of the customer's company or organization.
-   *
-   */
+  /** The name of the customer's company or organization. */
   company?: Maybe<Scalars['String']>;
-  /**
-   * The name of the country.
-   *
-   */
+  /** The name of the country. */
   country?: Maybe<Scalars['String']>;
   /**
    * The two-letter code for the country of the address.
@@ -4445,10 +4463,7 @@ export type MailingAddress = Node & {
   latitude?: Maybe<Scalars['Float']>;
   /** The longitude coordinate of the customer address. */
   longitude?: Maybe<Scalars['Float']>;
-  /**
-   * The full name of the customer, based on firstName and lastName.
-   *
-   */
+  /** The full name of the customer, based on firstName and lastName. */
   name?: Maybe<Scalars['String']>;
   /**
    * A unique phone number for the customer.
@@ -4576,17 +4591,14 @@ export type Market = HasMetafields &
     id: Scalars['ID'];
     /** Returns a metafield found by namespace and key. */
     metafield?: Maybe<Metafield>;
-    /**
-     * The metafields associated with the resource matching the supplied list of namespaces and keys.
-     *
-     */
+    /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
     metafields: Array<Maybe<Metafield>>;
   };
 
 /** A group of one or more regions of the world that a merchant is targeting for sales. To learn more about markets, refer to [the Shopify Markets conceptual overview](/docs/apps/markets). */
 export type MarketMetafieldArgs = {
   key: Scalars['String'];
-  namespace: Scalars['String'];
+  namespace?: InputMaybe<Scalars['String']>;
 };
 
 /** A group of one or more regions of the world that a merchant is targeting for sales. To learn more about markets, refer to [the Shopify Markets conceptual overview](/docs/apps/markets). */
@@ -4710,10 +4722,7 @@ export type Menu = Node & {
   title: Scalars['String'];
 };
 
-/**
- * A menu item within a parent menu.
- *
- */
+/** A menu item within a parent menu. */
 export type MenuItem = Node & {
   __typename?: 'MenuItem';
   /** A globally-unique ID. */
@@ -4948,25 +4957,34 @@ export type MetafieldsSetUserErrorCode =
   | 'TOO_SHORT';
 
 /** An instance of a user-defined model based on a MetaobjectDefinition. */
-export type Metaobject = Node & {
-  __typename?: 'Metaobject';
-  /** Accesses a field of the object by key. */
-  field?: Maybe<MetaobjectField>;
-  /**
-   * All object fields with defined values.
-   * Omitted object keys can be assumed null, and no guarantees are made about field order.
-   *
-   */
-  fields: Array<MetaobjectField>;
-  /** The unique handle of the metaobject. Useful as a custom ID. */
-  handle: Scalars['String'];
-  /** A globally-unique ID. */
-  id: Scalars['ID'];
-  /** The type of the metaobject. Defines the namespace of its associated metafields. */
-  type: Scalars['String'];
-  /** The date and time when the metaobject was last updated. */
-  updatedAt: Scalars['DateTime'];
-};
+export type Metaobject = Node &
+  OnlineStorePublishable & {
+    __typename?: 'Metaobject';
+    /** Accesses a field of the object by key. */
+    field?: Maybe<MetaobjectField>;
+    /**
+     * All object fields with defined values.
+     * Omitted object keys can be assumed null, and no guarantees are made about field order.
+     *
+     */
+    fields: Array<MetaobjectField>;
+    /** The unique handle of the metaobject. Useful as a custom ID. */
+    handle: Scalars['String'];
+    /** A globally-unique ID. */
+    id: Scalars['ID'];
+    /** The URL used for viewing the metaobject on the shop's Online Store. Returns `null` if the metaobject definition doesn't have the `online_store` capability. */
+    onlineStoreUrl?: Maybe<Scalars['URL']>;
+    /**
+     * The metaobject's SEO information. Returns `null` if the metaobject definition
+     * doesn't have the `renderable` capability.
+     *
+     */
+    seo?: Maybe<MetaobjectSeo>;
+    /** The type of the metaobject. Defines the namespace of its associated metafields. */
+    type: Scalars['String'];
+    /** The date and time when the metaobject was last updated. */
+    updatedAt: Scalars['DateTime'];
+  };
 
 /** An instance of a user-defined model based on a MetaobjectDefinition. */
 export type MetaobjectFieldArgs = {
@@ -5032,6 +5050,15 @@ export type MetaobjectHandleInput = {
   handle: Scalars['String'];
   /** The type of the metaobject. */
   type: Scalars['String'];
+};
+
+/** SEO information for a metaobject. */
+export type MetaobjectSeo = {
+  __typename?: 'MetaobjectSEO';
+  /** The meta description. */
+  description?: Maybe<MetaobjectField>;
+  /** The SEO title. */
+  title?: Maybe<MetaobjectField>;
 };
 
 /** Represents a Shopify hosted 3D model. */
@@ -5554,10 +5581,7 @@ export type Order = HasMetafields &
     lineItems: OrderLineItemConnection;
     /** Returns a metafield found by namespace and key. */
     metafield?: Maybe<Metafield>;
-    /**
-     * The metafields associated with the resource matching the supplied list of namespaces and keys.
-     *
-     */
+    /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
     metafields: Array<Maybe<Metafield>>;
     /**
      * Unique identifier for the order that appears on the order.
@@ -5649,7 +5673,7 @@ export type OrderLineItemsArgs = {
 /** An order is a customer’s completed request to purchase one or more products from a shop. An order is created when a customer completes the checkout process, during which time they provides an email address, billing address and payment information. */
 export type OrderMetafieldArgs = {
   key: Scalars['String'];
-  namespace: Scalars['String'];
+  namespace?: InputMaybe<Scalars['String']>;
 };
 
 /** An order is a customer’s completed request to purchase one or more products from a shop. An order is created when a customer completes the checkout process, during which time they provides an email address, billing address and payment information. */
@@ -5673,7 +5697,9 @@ export type OrderCancelReason =
   /** There was insufficient inventory. */
   | 'INVENTORY'
   /** The order was canceled for an unlisted reason. */
-  | 'OTHER';
+  | 'OTHER'
+  /** Staff made an error. */
+  | 'STAFF';
 
 /**
  * An auto-generated type for paginating through multiple Orders.
@@ -5821,10 +5847,7 @@ export type Page = HasMetafields &
     id: Scalars['ID'];
     /** Returns a metafield found by namespace and key. */
     metafield?: Maybe<Metafield>;
-    /**
-     * The metafields associated with the resource matching the supplied list of namespaces and keys.
-     *
-     */
+    /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
     metafields: Array<Maybe<Metafield>>;
     /** The URL used for viewing the resource on the shop's Online Store. Returns `null` if the resource is currently not published to the Online Store sales channel. */
     onlineStoreUrl?: Maybe<Scalars['URL']>;
@@ -5841,7 +5864,7 @@ export type Page = HasMetafields &
 /** Shopify merchants can create pages to hold static HTML content. Each Page object represents a custom page on the online store. */
 export type PageMetafieldArgs = {
   key: Scalars['String'];
-  namespace: Scalars['String'];
+  namespace?: InputMaybe<Scalars['String']>;
 };
 
 /** Shopify merchants can create pages to hold static HTML content. Each Page object represents a custom page on the online store. */
@@ -5956,7 +5979,11 @@ export type PaymentSettings = {
   countryCode: CountryCode;
   /** The three-letter code for the shop's primary currency. */
   currencyCode: CurrencyCode;
-  /** A list of enabled currencies (ISO 4217 format) that the shop accepts. Merchants can enable currencies from their Shopify Payments settings in the Shopify admin. */
+  /**
+   * A list of enabled currencies (ISO 4217 format) that the shop accepts.
+   * Merchants can enable currencies from their Shopify Payments settings in the Shopify admin.
+   *
+   */
   enabledPresentmentCurrencies: Array<CurrencyCode>;
   /** The shop’s Shopify Payments account ID. */
   shopifyPaymentsAccountId?: Maybe<Scalars['String']>;
@@ -6039,7 +6066,10 @@ export type PricingValue = MoneyV2 | PricingPercentageValue;
 
 /**
  * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
- * For example, a digital download (such as a movie, music or ebook file) also qualifies as a product, as do services (such as equipment rental, work for hire, customization of another product or an extended warranty).
+ * For example, a digital download (such as a movie, music or ebook file) also
+ * qualifies as a product, as do services (such as equipment rental, work for hire,
+ * customization of another product or an extended warranty).
+ *
  */
 export type Product = HasMetafields &
   Node &
@@ -6081,10 +6111,7 @@ export type Product = HasMetafields &
     media: MediaConnection;
     /** Returns a metafield found by namespace and key. */
     metafield?: Maybe<Metafield>;
-    /**
-     * The metafields associated with the resource matching the supplied list of namespaces and keys.
-     *
-     */
+    /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
     metafields: Array<Maybe<Metafield>>;
     /** The URL used for viewing the resource on the shop's Online Store. Returns `null` if the resource is currently not published to the Online Store sales channel. */
     onlineStoreUrl?: Maybe<Scalars['URL']>;
@@ -6137,7 +6164,10 @@ export type Product = HasMetafields &
 
 /**
  * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
- * For example, a digital download (such as a movie, music or ebook file) also qualifies as a product, as do services (such as equipment rental, work for hire, customization of another product or an extended warranty).
+ * For example, a digital download (such as a movie, music or ebook file) also
+ * qualifies as a product, as do services (such as equipment rental, work for hire,
+ * customization of another product or an extended warranty).
+ *
  */
 export type ProductCollectionsArgs = {
   after?: InputMaybe<Scalars['String']>;
@@ -6149,7 +6179,10 @@ export type ProductCollectionsArgs = {
 
 /**
  * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
- * For example, a digital download (such as a movie, music or ebook file) also qualifies as a product, as do services (such as equipment rental, work for hire, customization of another product or an extended warranty).
+ * For example, a digital download (such as a movie, music or ebook file) also
+ * qualifies as a product, as do services (such as equipment rental, work for hire,
+ * customization of another product or an extended warranty).
+ *
  */
 export type ProductDescriptionArgs = {
   truncateAt?: InputMaybe<Scalars['Int']>;
@@ -6157,7 +6190,10 @@ export type ProductDescriptionArgs = {
 
 /**
  * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
- * For example, a digital download (such as a movie, music or ebook file) also qualifies as a product, as do services (such as equipment rental, work for hire, customization of another product or an extended warranty).
+ * For example, a digital download (such as a movie, music or ebook file) also
+ * qualifies as a product, as do services (such as equipment rental, work for hire,
+ * customization of another product or an extended warranty).
+ *
  */
 export type ProductImagesArgs = {
   after?: InputMaybe<Scalars['String']>;
@@ -6170,7 +6206,10 @@ export type ProductImagesArgs = {
 
 /**
  * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
- * For example, a digital download (such as a movie, music or ebook file) also qualifies as a product, as do services (such as equipment rental, work for hire, customization of another product or an extended warranty).
+ * For example, a digital download (such as a movie, music or ebook file) also
+ * qualifies as a product, as do services (such as equipment rental, work for hire,
+ * customization of another product or an extended warranty).
+ *
  */
 export type ProductMediaArgs = {
   after?: InputMaybe<Scalars['String']>;
@@ -6183,16 +6222,22 @@ export type ProductMediaArgs = {
 
 /**
  * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
- * For example, a digital download (such as a movie, music or ebook file) also qualifies as a product, as do services (such as equipment rental, work for hire, customization of another product or an extended warranty).
+ * For example, a digital download (such as a movie, music or ebook file) also
+ * qualifies as a product, as do services (such as equipment rental, work for hire,
+ * customization of another product or an extended warranty).
+ *
  */
 export type ProductMetafieldArgs = {
   key: Scalars['String'];
-  namespace: Scalars['String'];
+  namespace?: InputMaybe<Scalars['String']>;
 };
 
 /**
  * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
- * For example, a digital download (such as a movie, music or ebook file) also qualifies as a product, as do services (such as equipment rental, work for hire, customization of another product or an extended warranty).
+ * For example, a digital download (such as a movie, music or ebook file) also
+ * qualifies as a product, as do services (such as equipment rental, work for hire,
+ * customization of another product or an extended warranty).
+ *
  */
 export type ProductMetafieldsArgs = {
   identifiers: Array<HasMetafieldsIdentifier>;
@@ -6200,7 +6245,10 @@ export type ProductMetafieldsArgs = {
 
 /**
  * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
- * For example, a digital download (such as a movie, music or ebook file) also qualifies as a product, as do services (such as equipment rental, work for hire, customization of another product or an extended warranty).
+ * For example, a digital download (such as a movie, music or ebook file) also
+ * qualifies as a product, as do services (such as equipment rental, work for hire,
+ * customization of another product or an extended warranty).
+ *
  */
 export type ProductOptionsArgs = {
   first?: InputMaybe<Scalars['Int']>;
@@ -6208,7 +6256,10 @@ export type ProductOptionsArgs = {
 
 /**
  * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
- * For example, a digital download (such as a movie, music or ebook file) also qualifies as a product, as do services (such as equipment rental, work for hire, customization of another product or an extended warranty).
+ * For example, a digital download (such as a movie, music or ebook file) also
+ * qualifies as a product, as do services (such as equipment rental, work for hire,
+ * customization of another product or an extended warranty).
+ *
  */
 export type ProductSellingPlanGroupsArgs = {
   after?: InputMaybe<Scalars['String']>;
@@ -6220,7 +6271,10 @@ export type ProductSellingPlanGroupsArgs = {
 
 /**
  * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
- * For example, a digital download (such as a movie, music or ebook file) also qualifies as a product, as do services (such as equipment rental, work for hire, customization of another product or an extended warranty).
+ * For example, a digital download (such as a movie, music or ebook file) also
+ * qualifies as a product, as do services (such as equipment rental, work for hire,
+ * customization of another product or an extended warranty).
+ *
  */
 export type ProductVariantBySelectedOptionsArgs = {
   selectedOptions: Array<SelectedOptionInput>;
@@ -6228,7 +6282,10 @@ export type ProductVariantBySelectedOptionsArgs = {
 
 /**
  * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
- * For example, a digital download (such as a movie, music or ebook file) also qualifies as a product, as do services (such as equipment rental, work for hire, customization of another product or an extended warranty).
+ * For example, a digital download (such as a movie, music or ebook file) also
+ * qualifies as a product, as do services (such as equipment rental, work for hire,
+ * customization of another product or an extended warranty).
+ *
  */
 export type ProductVariantsArgs = {
   after?: InputMaybe<Scalars['String']>;
@@ -6404,7 +6461,10 @@ export type ProductSortKeys =
   /** Sort by the `vendor` value. */
   | 'VENDOR';
 
-/** A product variant represents a different version of a product, such as differing sizes or differing colors. */
+/**
+ * A product variant represents a different version of a product, such as differing sizes or differing colors.
+ *
+ */
 export type ProductVariant = HasMetafields &
   Node & {
     __typename?: 'ProductVariant';
@@ -6423,17 +6483,11 @@ export type ProductVariant = HasMetafields &
     currentlyNotInStock: Scalars['Boolean'];
     /** A globally-unique ID. */
     id: Scalars['ID'];
-    /**
-     * Image associated with the product variant. This field falls back to the product image if no image is available.
-     *
-     */
+    /** Image associated with the product variant. This field falls back to the product image if no image is available. */
     image?: Maybe<Image>;
     /** Returns a metafield found by namespace and key. */
     metafield?: Maybe<Metafield>;
-    /**
-     * The metafields associated with the resource matching the supplied list of namespaces and keys.
-     *
-     */
+    /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
     metafields: Array<Maybe<Metafield>>;
     /** The product variant’s price. */
     price: MoneyV2;
@@ -6468,18 +6522,27 @@ export type ProductVariant = HasMetafields &
     weightUnit: WeightUnit;
   };
 
-/** A product variant represents a different version of a product, such as differing sizes or differing colors. */
+/**
+ * A product variant represents a different version of a product, such as differing sizes or differing colors.
+ *
+ */
 export type ProductVariantMetafieldArgs = {
   key: Scalars['String'];
-  namespace: Scalars['String'];
+  namespace?: InputMaybe<Scalars['String']>;
 };
 
-/** A product variant represents a different version of a product, such as differing sizes or differing colors. */
+/**
+ * A product variant represents a different version of a product, such as differing sizes or differing colors.
+ *
+ */
 export type ProductVariantMetafieldsArgs = {
   identifiers: Array<HasMetafieldsIdentifier>;
 };
 
-/** A product variant represents a different version of a product, such as differing sizes or differing colors. */
+/**
+ * A product variant represents a different version of a product, such as differing sizes or differing colors.
+ *
+ */
 export type ProductVariantSellingPlanAllocationsArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
@@ -6488,7 +6551,10 @@ export type ProductVariantSellingPlanAllocationsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']>;
 };
 
-/** A product variant represents a different version of a product, such as differing sizes or differing colors. */
+/**
+ * A product variant represents a different version of a product, such as differing sizes or differing colors.
+ *
+ */
 export type ProductVariantStoreAvailabilityArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
@@ -6563,7 +6629,10 @@ export type QueryRoot = {
    *
    */
   cart?: Maybe<Cart>;
-  /** A poll for the status of the cart checkout completion and order creation. */
+  /**
+   * A poll for the status of the cart checkout completion and order creation.
+   *
+   */
   cartCompletionAttempt?: Maybe<CartCompletionAttemptResult>;
   /** Fetch a specific `Collection` by one of its unique attributes. */
   collection?: Maybe<Collection>;
@@ -6587,12 +6656,10 @@ export type QueryRoot = {
    *
    * When sorting by distance, you must specify a location via the `near` argument.
    *
-   */
-  locations: LocationConnection;
-  /**
-   * Retrieve a [navigation menu](https://help.shopify.com/manual/online-store/menus-and-links) by its handle.
    *
    */
+  locations: LocationConnection;
+  /** Retrieve a [navigation menu](https://help.shopify.com/manual/online-store/menus-and-links) by its handle. */
   menu?: Maybe<Menu>;
   /** Fetch a specific Metaobject by one of its unique identifiers. */
   metaobject?: Maybe<Metaobject>;
@@ -7336,10 +7403,7 @@ export type Shop = HasMetafields &
     id: Scalars['ID'];
     /** Returns a metafield found by namespace and key. */
     metafield?: Maybe<Metafield>;
-    /**
-     * The metafields associated with the resource matching the supplied list of namespaces and keys.
-     *
-     */
+    /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
     metafields: Array<Maybe<Metafield>>;
     /** A string representing the way currency is formatted when the currency isn’t specified. */
     moneyFormat: Scalars['String'];
@@ -7366,7 +7430,7 @@ export type Shop = HasMetafields &
 /** Shop represents a collection of the general settings and information about the shop. */
 export type ShopMetafieldArgs = {
   key: Scalars['String'];
-  namespace: Scalars['String'];
+  namespace?: InputMaybe<Scalars['String']>;
 };
 
 /** Shop represents a collection of the general settings and information about the shop. */
@@ -7813,10 +7877,7 @@ export type UserError = DisplayableError & {
   message: Scalars['String'];
 };
 
-/**
- * The input fields for a filter used to view a subset of products in a collection matching a specific variant option.
- *
- */
+/** The input fields for a filter used to view a subset of products in a collection matching a specific variant option. */
 export type VariantOptionFilter = {
   /** The name of the variant option to filter on. */
   name: Scalars['String'];
