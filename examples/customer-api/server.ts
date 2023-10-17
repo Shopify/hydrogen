@@ -1,6 +1,10 @@
 // Virtual entry point for the app
 import * as remixBuild from '@remix-run/dev/server-build';
-import {createStorefrontClient, storefrontRedirect} from '@shopify/hydrogen';
+import {
+  createStorefrontClient,
+  storefrontRedirect,
+  createCustomerClient,
+} from '@shopify/hydrogen';
 import {
   createRequestHandler,
   getStorefrontHeaders,
@@ -8,7 +12,6 @@ import {
   type SessionStorage,
   type Session,
 } from '@shopify/remix-oxygen';
-import {createCustomerClient} from '~/utils/customer.server';
 
 /**
  * Export a fetch handler in module format.
@@ -77,8 +80,6 @@ export default {
          */
         return storefrontRedirect({request, response, storefront});
       }
-
-      response.headers.set('Set-Cookie', await session.commit());
 
       return response;
     } catch (error) {

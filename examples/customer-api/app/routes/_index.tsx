@@ -12,11 +12,26 @@ export async function loader({context}: LoaderFunctionArgs) {
       }
       `);
 
-    return json({
-      user,
-    });
+    return json(
+      {
+        user,
+      },
+      {
+        headers: {
+          'Set-Cookie': await context.session.commit(),
+        },
+      },
+    );
   }
-  return json({user: null});
+
+  return json(
+    {user: null},
+    {
+      headers: {
+        'Set-Cookie': await context.session.commit(),
+      },
+    },
+  );
 }
 
 export function ErrorBoundary() {
