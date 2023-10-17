@@ -6,7 +6,7 @@
   "scripts": {
     "build": "shopify hydrogen build",
     "dev": "shopify hydrogen dev",
-    "ngrok": "ngrok http --domain=<your-ngrok-domain> 3000",
+    "ngrok": "ngrok http --domain=stinkbug-upright-illegally.ngrok-free.app 3000",
     "preview": "npm run build && shopify hydrogen preview",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "typecheck": "tsc --noEmit"
