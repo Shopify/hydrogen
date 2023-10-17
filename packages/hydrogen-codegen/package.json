@@ -25,6 +25,7 @@
       "import": "./dist/esm/index.js",
       "default": "./dist/esm/index.js"
     },
+    "./patch": "./dist/esm/patch.js",
     "./package.json": "./package.json"
   },
   "repository": {

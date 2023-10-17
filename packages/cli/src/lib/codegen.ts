@@ -4,12 +4,7 @@ import {
   type LoadCodegenConfigResult,
   CodegenContext,
 } from '@graphql-codegen/cli';
-import {
-  schema,
-  preset,
-  pluckConfig,
-  patchGqlPluck,
-} from '@shopify/hydrogen-codegen';
+import {schema, preset, pluckConfig} from '@shopify/hydrogen-codegen';
 import {formatCode, getCodeFormatOptions} from './format-code.js';
 import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
 import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
@@ -55,11 +50,14 @@ function normalizeCodegenError(errorMessage: string, rootDirectory?: string) {
  * Running on a separate process splits work from this processor
  * and also allows us to filter out logs.
  */
-export function spawnCodegenProcess({
+export async function spawnCodegenProcess({
   rootDirectory,
   appDirectory,
   configFilePath,
 }: CodegenOptions) {
+  // Patch dependencies before spawning the process that imports the dependencies
+  await import('@shopify/hydrogen-codegen/patch');
+
   const child = spawn(
     'node',
     [
@@ -111,8 +109,6 @@ type CodegenOptions = ProjectDirs & {
 };
 
 export async function codegen(options: CodegenOptions) {
-  await patchGqlPluck();
-
   try {
     return await generateTypes(options);
   } catch (error) {
