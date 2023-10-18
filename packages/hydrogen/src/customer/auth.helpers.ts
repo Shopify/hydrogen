@@ -1,3 +1,5 @@
+import {BadRequest} from './BadRequest';
+
 export const userAgent =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36';
 
@@ -94,7 +96,6 @@ export function clearSession(session: HydrogenSession): void {
 
 export async function checkExpires(
   expiresAt: string,
-  request: Request,
   session: HydrogenSession,
   customerAccountId: string,
   customerAccountUrl: string,
@@ -153,18 +154,6 @@ function convertBufferToString(hash: ArrayBuffer) {
   const uintArray = new Uint8Array(hash);
   const numberArray = Array.from(uintArray);
   return String.fromCharCode(...numberArray);
-}
-
-export class BadRequest extends Response {
-  constructor(message?: string, helpMessage?: string) {
-    // A lot of things can go wrong when configuring the customer account api
-    // oauth flow. In dev mode, log a helper message.
-    if (helpMessage && process.env.NODE_ENV === 'development') {
-      console.error('Customer Account API Error: ' + helpMessage);
-    }
-
-    super(`Bad request: ${message}`, {status: 400});
-  }
 }
 
 export async function generateState(): Promise<string> {

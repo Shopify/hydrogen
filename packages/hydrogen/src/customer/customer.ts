@@ -7,13 +7,13 @@ import {
   generateState,
   refreshToken,
   type HydrogenSession,
-  BadRequest,
   checkExpires,
   userAgent,
   exchangeAccessToken,
   AccessTokenResponse,
   getNonce,
 } from './auth.helpers';
+import {BadRequest} from './BadRequest';
 
 export type CustomerClient = {
   logout: () => Promise<Response>;
@@ -43,7 +43,9 @@ export function createCustomerClient({
   customerApiVersion?: string;
   request: Request;
 }): CustomerClient {
-  const origin = new URL(request.url).origin.replace('http', 'https');
+  const origin = request.url.startsWith('http:')
+    ? new URL(request.url).origin.replace('http', 'https')
+    : new URL(request.url).origin;
 
   return {
     login: async () => {
@@ -139,7 +141,6 @@ export function createCustomerClient({
 
       await checkExpires(
         expiresAt,
-        request,
         session,
         customerAccountId,
         customerAccountUrl,
