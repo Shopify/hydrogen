@@ -27,7 +27,14 @@ export function generateFunctionDocumentation(
     const declaration = variableStatement?.getDeclarations()[0];
     const type = declaration?.getType().getText();
     if (type && type !== 'any' && type !== 'unknown') {
-      jsDocs.addTag({tagName: 'type', text: `{${type}}`});
+      if (type.startsWith('() => SerializeFrom<')) {
+        // SerializeFrom type breaks for some reason. Replace it with a well-known type
+        if (type.endsWith('.loader>')) {
+          jsDocs.addTag({tagName: 'return', text: `{LoaderReturnData}`});
+        }
+      } else {
+        jsDocs.addTag({tagName: 'type', text: `{${type}}`});
+      }
     }
   }
 }

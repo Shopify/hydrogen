@@ -56,6 +56,9 @@ export function generateTypeDefs(sourceFile: SourceFile, code: string) {
 
   typedefsFromImports.forEach((typeElements, moduleSpecifier) => {
     for (const typeElement of typeElements) {
+      // This type doesn't work standalone
+      if (typeElement === 'SerializeFrom') continue;
+
       typedefs.push(
         `/** @typedef {import('${moduleSpecifier}').${typeElement}} ${typeElement} */`,
       );

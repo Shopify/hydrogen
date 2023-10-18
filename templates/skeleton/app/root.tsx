@@ -1,5 +1,9 @@
 import {useNonce} from '@shopify/hydrogen';
-import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {
+  defer,
+  type SerializeFrom,
+  type LoaderFunctionArgs,
+} from '@shopify/remix-oxygen';
 import {
   Links,
   Meta,
@@ -18,11 +22,6 @@ import favicon from '../public/favicon.svg';
 import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
-
-export const useRootLoaderData = () => {
-  const [root] = useMatches();
-  return root?.data as Awaited<ReturnType<typeof loader>>['data'];
-};
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -60,6 +59,11 @@ export function links() {
     {rel: 'icon', type: 'image/svg+xml', href: favicon},
   ];
 }
+
+export const useRootLoaderData = () => {
+  const [root] = useMatches();
+  return root?.data as SerializeFrom<typeof loader>;
+};
 
 export async function loader({context}: LoaderFunctionArgs) {
   const {storefront, session, cart} = context;
