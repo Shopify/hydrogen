@@ -30,7 +30,7 @@ export function generateTypeDefs(sourceFile: SourceFile, code: string) {
 
   const typeImports = sourceFile
     .getImportDeclarations()
-    .filter((imp) => imp.getText().includes(' type '));
+    .filter((imp) => /({|\s|\n)type\s/.test(imp.getText()));
 
   const typedefsFromImports = new Map<string, string[]>();
 
