@@ -40,7 +40,7 @@
     "dist"
   ],
   "dependencies": {
-    "@remix-run/server-runtime": "0.0.0-nightly-7eeaa77-20231011"
+    "@remix-run/server-runtime": "2.1.0"
   },
   "devDependencies": {
     "@shopify/oxygen-workers-types": "^3.17.3"

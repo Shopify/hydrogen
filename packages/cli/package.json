@@ -54,8 +54,8 @@
     "ws": "^8.13.0"
   },
   "peerDependencies": {
-    "@remix-run/dev": "0.0.0-nightly-7eeaa77-20231011",
-    "@remix-run/react": "0.0.0-nightly-7eeaa77-20231011",
+    "@remix-run/dev": "2.1.0",
+    "@remix-run/react": "2.1.0",
     "@shopify/hydrogen-react": "^2023.7.4",
     "@shopify/remix-oxygen": "^1.1.5"
   },
