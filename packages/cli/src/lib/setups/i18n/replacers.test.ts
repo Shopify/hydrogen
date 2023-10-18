@@ -64,6 +64,7 @@ describe('i18n replacers', () => {
           LanguageCode,
           CountryCode,
         } from \\"@shopify/hydrogen/storefront-api-types\\";
+        import type { CustomerAccessToken } from \\"@shopify/hydrogen/storefront-api-types\\";
         import type { HydrogenSession } from \\"./server\\";
 
         declare global {
@@ -89,16 +90,23 @@ describe('i18n replacers', () => {
           type I18nLocale = { language: LanguageCode; country: CountryCode };
         }
 
-        /**
-         * Declare local additions to \`AppLoadContext\` to include the session utilities we injected in \`server.ts\`.
-         */
         declare module \\"@shopify/remix-oxygen\\" {
+          /**
+           * Declare local additions to the Remix loader context.
+           */
           export interface AppLoadContext {
             env: Env;
             cart: HydrogenCart;
             storefront: Storefront<I18nLocale>;
             session: HydrogenSession;
             waitUntil: ExecutionContext[\\"waitUntil\\"];
+          }
+
+          /**
+           * Declare the data we expect to access via \`context.session\`.
+           */
+          export interface SessionData {
+            customerAccessToken: CustomerAccessToken;
           }
         }
         "
@@ -165,7 +173,7 @@ describe('i18n replacers', () => {
                 throw new Error(\\"SESSION_SECRET environment variable is not set\\");
               }
 
-              const waitUntil = (p: Promise<any>) => executionContext.waitUntil(p);
+              const waitUntil = executionContext.waitUntil.bind(executionContext);
               const [cache, session] = await Promise.all([
                 caches.open(\\"hydrogen\\"),
                 HydrogenSession.init(request, [env.SESSION_SECRET]),
