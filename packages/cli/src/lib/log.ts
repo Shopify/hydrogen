@@ -8,6 +8,7 @@ import {
 import {BugError} from '@shopify/cli-kit/node/error';
 import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
+import {getGraphiQLUrl} from './graphiql-url.js';
 
 type ConsoleMethod = 'log' | 'warn' | 'error' | 'debug' | 'info';
 const originalConsole = {...console};
@@ -67,10 +68,18 @@ function injectLogReplacer(
     console[method] = (...args: unknown[]) => {
       if (debounceMessage(args, debouncer?.(args))) return;
 
-      const replacer = messageReplacers.find(([matcher]) => matcher(args))?.[1];
-      if (!replacer) return originalConsole[method](...args);
+      const replacers = messageReplacers.reduce((acc, [matcher, replacer]) => {
+        if (matcher(args)) acc.push(replacer);
+        return acc;
+      }, [] as Replacer[]);
 
-      const result = replacer(args);
+      if (replacers.length === 0) return originalConsole[method](...args);
+
+      const result = replacers.reduce(
+        (resultArgs, replacer) => resultArgs && replacer(resultArgs),
+        args as void | string[],
+      );
+
       if (result) return originalConsole[method](...result);
     };
   }
@@ -81,9 +90,11 @@ function injectLogReplacer(
  */
 export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
   injectLogReplacer('log');
+  injectLogReplacer('error');
+  injectLogReplacer('warn');
 
   let isFirstWorkerReload = true;
-  addMessageReplacers('dev', [
+  addMessageReplacers('dev-node', [
     ([first]) => typeof first === 'string' && first.includes('[mf:'),
     (args: string[]) => {
       const first = args[0] as string;
@@ -104,6 +115,33 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
       }
     },
   ]);
+
+  addMessageReplacers(
+    'dev-workerd',
+    [
+      // Workerd logs
+      ([first]) =>
+        typeof first === 'string' && /^\x1B\[31m(workerd\/|stack:)/.test(first),
+      () => {},
+    ],
+
+    // Non-actionable warnings/errors:
+    [
+      ([first]) =>
+        typeof first === 'string' && /^A promise rejection/i.test(first),
+      () => {},
+    ],
+    [
+      ([first]) => {
+        const message = first?.message ?? first;
+        return (
+          typeof message === 'string' &&
+          /^Network connection lost/i.test(message)
+        );
+      },
+      () => {},
+    ],
+  );
 }
 
 const originalWrite = process.stdout.write;
@@ -123,12 +161,18 @@ export function muteAuthLogs({
     process.stdout.write = ((item, cb: any) => {
       if (typeof item !== 'string') return write(item, cb);
 
-      const replacer = messageReplacers.find(([matcher]) =>
-        matcher([item]),
-      )?.[1];
-      if (!replacer) return write(item, cb);
+      const replacers = messageReplacers.reduce((acc, [matcher, replacer]) => {
+        if (matcher([item])) acc.push(replacer);
+        return acc;
+      }, [] as Replacer[]);
 
-      const result = replacer([item]);
+      if (replacers.length === 0) return write(item, cb);
+
+      const result = replacers.reduce(
+        (resultArgs, replacer) => resultArgs && replacer(resultArgs),
+        [item] as void | string[],
+      );
+
       if (result) return write(result[0] as string, cb);
     }) as typeof write;
   }
@@ -178,10 +222,7 @@ export function muteAuthLogs({
  * Where the message can be multiline and the last line
  * can contain links to docs or other resources.
  */
-export function enhanceH2Logs(options: {
-  graphiqlUrl: string;
-  rootDirectory: string;
-}) {
+export function enhanceH2Logs(options: {rootDirectory: string; host: string}) {
   injectLogReplacer('error');
   injectLogReplacer('warn', ([first]) =>
     // Show createStorefrontClient warnings only once.
@@ -193,7 +234,7 @@ export function enhanceH2Logs(options: {
   addMessageReplacers('h2-warn', [
     ([first]) => {
       const message = first?.message ?? first;
-      return typeof message === 'string' && message.startsWith('[h2:');
+      return typeof message === 'string' && message.includes('[h2:');
     },
     (args: any[]) => {
       const firstArg = args[0];
@@ -205,7 +246,7 @@ export function enhanceH2Logs(options: {
       const stringArg = errorObject?.message ?? (firstArg as string);
 
       const [, type, scope, message] =
-        stringArg.match(/^\[h2:([^:]+):([^\]]+)\]\s+(.*)$/ims) || [];
+        stringArg.match(/\[h2:([^:]+):([^\]]+)\]\s+(.*)$/ims) || [];
 
       if (!type || !scope || !message) return args;
 
@@ -219,18 +260,25 @@ export function enhanceH2Logs(options: {
       if (type === 'error' || errorObject) {
         let tryMessage = hasLinks ? lastLine : undefined;
         let stack = errorObject?.stack;
-        const cause = errorObject?.cause as
+        let cause = errorObject?.cause as
           | {[key: string]: any; graphql?: {query: string; variables: string}}
+          | string
           | undefined;
 
-        if (!!cause?.graphql?.query) {
-          const {query, variables} = cause.graphql;
-          const link = `${options.graphiqlUrl}?query=${encodeURIComponent(
-            query,
-          )}${variables ? `&variables=${encodeURIComponent(variables)}` : ''}`;
+        if (typeof cause === 'string') {
+          try {
+            cause = JSON.parse(cause);
+          } catch {}
+        }
+
+        if (typeof cause !== 'string' && !!cause?.graphql?.query) {
+          const link = getGraphiQLUrl({
+            host: options.host,
+            graphql: cause.graphql,
+          });
 
           const [, queryType, queryName] =
-            query.match(/(query|mutation)\s+(\w+)/) || [];
+            cause.graphql.query.match(/(query|mutation)\s+(\w+)/) || [];
 
           tryMessage =
             (tryMessage ? `${tryMessage}\n\n` : '') +

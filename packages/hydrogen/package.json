@@ -5,7 +5,7 @@
     "@shopify:registry": "https://registry.npmjs.org"
   },
   "type": "module",
-  "version": "2023.7.7",
+  "version": "2023.7.11",
   "license": "MIT",
   "main": "dist/index.cjs",
   "module": "dist/production/index.js",
@@ -66,6 +66,6 @@
     "happy-dom": "^8.9.0",
     "schema-dts": "^1.1.0",
     "vitest": "^0.33.0",
-    "@shopify/generate-docs": "0.10.7"
+    "@shopify/generate-docs": "0.11.1"
   }
 }

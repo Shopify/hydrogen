@@ -11,8 +11,9 @@ import {
   copyFile,
   rmdir,
   glob,
-  removeFile,
   fileExists,
+  readFile,
+  writeFile,
 } from '@shopify/cli-kit/node/fs';
 import {resolvePath, relativePath, joinPath} from '@shopify/cli-kit/node/path';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
@@ -22,6 +23,7 @@ import {
   getProjectPaths,
   getRemixConfig,
   handleRemixImportFail,
+  RemixConfig,
   type ServerMode,
 } from '../../lib/remix-config.js';
 import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
@@ -32,8 +34,10 @@ import {codegen} from '../../lib/codegen.js';
 import {
   buildBundleAnalysis,
   getBundleAnalysisSummary,
+  hasMetafile,
 } from '../../lib/bundle/analyzer.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
+import {isCI} from '../../lib/is-ci.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
 const MAX_WORKER_BUNDLE_SIZE = 10;
@@ -48,8 +52,15 @@ export default class Build extends Command {
       allowNo: true,
       default: true,
     }),
-    ['bundle-stats']: Flags.boolean({
+    'bundle-stats': Flags.boolean({
       description: 'Show a bundle size summary after building.',
+      default: true,
+      allowNo: true,
+    }),
+    'lockfile-check': Flags.boolean({
+      description:
+        'Checks that there is exactly 1 valid lockfile in the project.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK',
       default: true,
       allowNo: true,
     }),
@@ -57,13 +68,13 @@ export default class Build extends Command {
       description: 'Disable warning about missing standard routes.',
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
     }),
-    ['codegen-unstable']: Flags.boolean({
+    'codegen-unstable': Flags.boolean({
       description:
         'Generate types for the Storefront API queries found in your project.',
       required: false,
       default: false,
     }),
-    ['codegen-config-path']: commonFlags.codegenConfigPath,
+    'codegen-config-path': commonFlags.codegenConfigPath,
 
     base: deprecated('--base')(),
     entry: deprecated('--entry')(),
@@ -82,15 +93,7 @@ export default class Build extends Command {
   }
 }
 
-export async function runBuild({
-  directory,
-  useCodegen = false,
-  codegenConfigPath,
-  sourcemap = false,
-  disableRouteWarning = false,
-  bundleStats = true,
-  assetPath,
-}: {
+type RunBuildOptions = {
   directory?: string;
   useCodegen?: boolean;
   codegenConfigPath?: string;
@@ -98,7 +101,19 @@ export async function runBuild({
   disableRouteWarning?: boolean;
   assetPath?: string;
   bundleStats?: boolean;
-}) {
+  lockfileCheck?: boolean;
+};
+
+export async function runBuild({
+  directory,
+  useCodegen = false,
+  codegenConfigPath,
+  sourcemap = false,
+  disableRouteWarning = false,
+  bundleStats = true,
+  lockfileCheck = true,
+  assetPath,
+}: RunBuildOptions) {
   if (!process.env.NODE_ENV) {
     process.env.NODE_ENV = 'production';
   }
@@ -109,7 +124,11 @@ export async function runBuild({
   const {root, buildPath, buildPathClient, buildPathWorkerFile, publicPath} =
     getProjectPaths(directory);
 
-  await Promise.all([checkLockfileStatus(root), muteRemixLogs()]);
+  if (lockfileCheck) {
+    await checkLockfileStatus(root, isCI());
+  }
+
+  await muteRemixLogs();
 
   console.time(LOG_WORKER_BUILT);
 
@@ -148,43 +167,22 @@ export async function runBuild({
   if (process.env.NODE_ENV !== 'development') {
     console.timeEnd(LOG_WORKER_BUILT);
     const sizeMB = (await fileSize(buildPathWorkerFile)) / (1024 * 1024);
-    const bundleAnalysisPath = await buildBundleAnalysis(buildPath);
 
-    outputInfo(
-      outputContent`   ${colors.dim(
-        relativePath(root, buildPathWorkerFile),
-      )}  ${outputToken.link(
-        colors.yellow(sizeMB.toFixed(2) + ' MB'),
-        bundleAnalysisPath,
-      )}\n`,
-    );
-
-    if (bundleStats && sizeMB < MAX_WORKER_BUNDLE_SIZE) {
-      outputInfo(
-        outputContent`${
-          (await getBundleAnalysisSummary(buildPathWorkerFile)) || '\n'
-        }\n    │\n    └─── ${outputToken.link(
-          'Complete analysis: ' + bundleAnalysisPath,
-          bundleAnalysisPath,
-        )}\n\n`,
+    if (await hasMetafile(buildPath)) {
+      await writeBundleAnalysis(
+        buildPath,
+        root,
+        buildPathWorkerFile,
+        sizeMB,
+        bundleStats,
+        remixConfig,
       );
-    }
-
-    if (sizeMB >= MAX_WORKER_BUNDLE_SIZE) {
-      throw new AbortError(
-        '🚨 Worker bundle exceeds 10 MB! Oxygen has a maximum worker bundle size of 10 MB.',
-        outputContent`See the bundle analysis for a breakdown of what is contributing to the bundle size:\n${outputToken.link(
-          bundleAnalysisPath,
-          bundleAnalysisPath,
-        )}`,
-      );
-    } else if (sizeMB >= 5) {
-      outputWarn(
-        `🚨 Worker bundle exceeds 5 MB! This can delay your worker response.${
-          remixConfig.serverMinify
-            ? ''
-            : ' Minify your bundle by adding `serverMinify: true` to remix.config.js.'
-        }\n`,
+    } else {
+      await writeSimpleBuildStatus(
+        root,
+        buildPathWorkerFile,
+        sizeMB,
+        remixConfig,
       );
     }
   }
@@ -205,11 +203,104 @@ export async function runBuild({
     }
   }
 
+  if (process.env.NODE_ENV !== 'development') {
+    await cleanClientSourcemaps(buildPathClient);
+  }
+
   // The Remix compiler hangs due to a bug in ESBuild:
   // https://github.com/evanw/esbuild/issues/2727
   // The actual build has already finished so we can kill the process.
   if (!process.env.SHOPIFY_UNIT_TEST && !assetPath) {
     process.exit(0);
+  }
+}
+
+async function cleanClientSourcemaps(buildPathClient: string) {
+  const bundleFiles = await glob(joinPath(buildPathClient, '**/*.js'));
+
+  await Promise.all(
+    bundleFiles.map(async (filePath) => {
+      const file = await readFile(filePath);
+      return await writeFile(
+        filePath,
+        file.replace(/\/\/# sourceMappingURL=.+\.js\.map$/gm, ''),
+      );
+    }),
+  );
+}
+
+async function writeBundleAnalysis(
+  buildPath: string,
+  root: string,
+  buildPathWorkerFile: string,
+  sizeMB: number,
+  bundleStats: boolean,
+  remixConfig: RemixConfig,
+) {
+  const bundleAnalysisPath = await buildBundleAnalysis(buildPath);
+  outputInfo(
+    outputContent`   ${colors.dim(
+      relativePath(root, buildPathWorkerFile),
+    )}  ${outputToken.link(
+      colors.yellow(sizeMB.toFixed(2) + ' MB'),
+      bundleAnalysisPath,
+    )}\n`,
+  );
+
+  if (bundleStats && sizeMB < MAX_WORKER_BUNDLE_SIZE) {
+    outputInfo(
+      outputContent`${
+        (await getBundleAnalysisSummary(buildPathWorkerFile)) || '\n'
+      }\n    │\n    └─── ${outputToken.link(
+        'Complete analysis: ' + bundleAnalysisPath,
+        bundleAnalysisPath,
+      )}\n\n`,
+    );
+  }
+
+  if (sizeMB >= MAX_WORKER_BUNDLE_SIZE) {
+    throw new AbortError(
+      '🚨 Worker bundle exceeds 10 MB! Oxygen has a maximum worker bundle size of 10 MB.',
+      outputContent`See the bundle analysis for a breakdown of what is contributing to the bundle size:\n${outputToken.link(
+        bundleAnalysisPath,
+        bundleAnalysisPath,
+      )}`,
+    );
+  } else if (sizeMB >= 5) {
+    outputWarn(
+      `🚨 Worker bundle exceeds 5 MB! This can delay your worker response.${
+        remixConfig.serverMinify
+          ? ''
+          : ' Minify your bundle by adding `serverMinify: true` to remix.config.js.'
+      }\n`,
+    );
+  }
+}
+
+async function writeSimpleBuildStatus(
+  root: string,
+  buildPathWorkerFile: string,
+  sizeMB: number,
+  remixConfig: RemixConfig,
+) {
+  outputInfo(
+    outputContent`   ${colors.dim(
+      relativePath(root, buildPathWorkerFile),
+    )}  ${colors.yellow(sizeMB.toFixed(2) + ' MB')}\n`,
+  );
+
+  if (sizeMB >= MAX_WORKER_BUNDLE_SIZE) {
+    throw new AbortError(
+      '🚨 Worker bundle exceeds 10 MB! Oxygen has a maximum worker bundle size of 10 MB.',
+    );
+  } else if (sizeMB >= 5) {
+    outputWarn(
+      `🚨 Worker bundle exceeds 5 MB! This can delay your worker response.${
+        remixConfig.serverMinify
+          ? ''
+          : ' Minify your bundle by adding `serverMinify: true` to remix.config.js.'
+      }\n`,
+    );
   }
 }
 

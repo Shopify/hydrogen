@@ -1,5 +1,36 @@
 # demo-store
 
+## 2.1.4
+
+### Patch Changes
+
+- Ensure that the `/discount?redirect=...` route only redirects to relative URLs. ([#1399](https://github.com/Shopify/hydrogen/pull/1399)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`cf5fe844`](https://github.com/Shopify/hydrogen/commit/cf5fe844bad989ec944d03bacf3666a6ab09063c), [`4f735fd7`](https://github.com/Shopify/hydrogen/commit/4f735fd725aef26cd3bd5b50c87d2c028b93c598), [`4156d16b`](https://github.com/Shopify/hydrogen/commit/4156d16bb171a7f5dd4d5feaad7cbd03ffb4610a)]:
+  - @shopify/cli-hydrogen@5.4.2
+  - @shopify/remix-oxygen@1.1.6
+  - @shopify/hydrogen@2023.7.10
+
+## 2.1.3
+
+### Patch Changes
+
+- Cart Optimistic UI helpers ([#1366](https://github.com/Shopify/hydrogen/pull/1366)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Updated dependencies [[`e148cfca`](https://github.com/Shopify/hydrogen/commit/e148cfca004d6bb2981d136231e3825509d52305), [`1be1e40d`](https://github.com/Shopify/hydrogen/commit/1be1e40de6abf58679dbfada20fb430892dc5ef8), [`8772903d`](https://github.com/Shopify/hydrogen/commit/8772903da9efe23fb56fc4bfcace729065f4960f), [`bfb142e8`](https://github.com/Shopify/hydrogen/commit/bfb142e84a22ca1c506f7ebb1692e435790c8fd3), [`06da5570`](https://github.com/Shopify/hydrogen/commit/06da5570c25a64b1afc4cce093c3ba3d2d7da2ca), [`00210faa`](https://github.com/Shopify/hydrogen/commit/00210faa55cad78a8331adecddc9bdde9463acc7), [`425791ce`](https://github.com/Shopify/hydrogen/commit/425791ced37ddb50f71fbdc78760905555716444)]:
+  - @shopify/cli-hydrogen@5.4.0
+  - @shopify/hydrogen@2023.7.9
+
+## 2.1.2
+
+### Patch Changes
+
+- Improved types of `HydrogenSession` when accessing `session.get('customerAccessToken')`. ([#1341](https://github.com/Shopify/hydrogen/pull/1341)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`33ae6ab6`](https://github.com/Shopify/hydrogen/commit/33ae6ab6029213ba34e8c7441d99c7eb8d31721b), [`d8dc1acf`](https://github.com/Shopify/hydrogen/commit/d8dc1acf96fae571115908973a47cab3e85f2f2a), [`e62a4db1`](https://github.com/Shopify/hydrogen/commit/e62a4db1f54866868d76b450a285d19360fbf83b), [`305862ff`](https://github.com/Shopify/hydrogen/commit/305862ff20ca1db2cdecebe2fff34452189d04e8), [`33258210`](https://github.com/Shopify/hydrogen/commit/33258210b494b7627c9035c0c54561a3f7a865b2), [`e62a4db1`](https://github.com/Shopify/hydrogen/commit/e62a4db1f54866868d76b450a285d19360fbf83b), [`be4994fe`](https://github.com/Shopify/hydrogen/commit/be4994feaee7834edd6e58c0bfe585fafa5a48a0), [`87918e31`](https://github.com/Shopify/hydrogen/commit/87918e317f15f21cc7e6f3deb39664935e379d79), [`2ce3861e`](https://github.com/Shopify/hydrogen/commit/2ce3861ebe51b2fec53c178a19cc21201c4cc2ac), [`e62a4db1`](https://github.com/Shopify/hydrogen/commit/e62a4db1f54866868d76b450a285d19360fbf83b), [`384a4267`](https://github.com/Shopify/hydrogen/commit/384a4267a56d9386ba4f59b82c0705010ddba590), [`113821e5`](https://github.com/Shopify/hydrogen/commit/113821e57bc46ef5fe926889473399f2dc54bbdb)]:
+  - @shopify/cli-hydrogen@5.3.0
+  - @shopify/hydrogen@2023.7.8
+
 ## 2.1.1
 
 ### Patch Changes

@@ -65,8 +65,8 @@ export async function loader({context}: LoaderArgs) {
 
   // validate the customer access token is valid
   const {isLoggedIn, headers} = await validateCustomerAccessToken(
-    customerAccessToken,
     session,
+    customerAccessToken,
   );
 
   // defer the cart query by not awaiting it
@@ -191,26 +191,27 @@ export function CatchBoundary() {
  * @see https://shopify.dev/docs/api/storefront/latest/objects/CustomerAccessToken
  *
  * @example
- * ```ts
- * //
+ * ```js
  * const {isLoggedIn, headers} = await validateCustomerAccessToken(
  *  customerAccessToken,
  *  session,
- *  );
- *  ```
- *  */
+ * );
+ * ```
+ */
 async function validateCustomerAccessToken(
-  customerAccessToken: CustomerAccessToken,
   session: HydrogenSession,
+  customerAccessToken?: CustomerAccessToken,
 ) {
   let isLoggedIn = false;
   const headers = new Headers();
   if (!customerAccessToken?.accessToken || !customerAccessToken?.expiresAt) {
     return {isLoggedIn, headers};
   }
-  const expiresAt = new Date(customerAccessToken.expiresAt);
-  const dateNow = new Date();
+
+  const expiresAt = new Date(customerAccessToken.expiresAt).getTime();
+  const dateNow = Date.now();
   const customerAccessTokenExpired = expiresAt < dateNow;
+
   if (customerAccessTokenExpired) {
     session.unset('customerAccessToken');
     headers.append('Set-Cookie', await session.commit());

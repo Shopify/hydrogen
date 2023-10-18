@@ -1,52 +1,106 @@
 import {EventEmitter} from 'node:events';
 import {ReadableStream} from 'node:stream/web';
+import {getGraphiQLUrl} from './graphiql-url.js';
 import {Request, Response} from '@shopify/mini-oxygen';
+import type {
+  Request as WorkerdRequest,
+  Response as WorkerdResponse,
+  ResponseInit,
+} from 'miniflare';
+
+export const H2O_BINDING_NAME = 'H2O_LOG_EVENT';
+
+// These 2 types are based on Undici but have slight differences
+type RequestKind = Request | WorkerdRequest;
+type InferredResponse<R extends RequestKind> = R extends WorkerdRequest
+  ? WorkerdResponse
+  : Response;
+
+let ResponseConstructor = Response as typeof Response | typeof WorkerdResponse;
+export function setConstructors(constructors: {
+  Response: typeof ResponseConstructor;
+}) {
+  ResponseConstructor = constructors.Response;
+}
+
+export const DEV_ROUTES = new Set(['/graphiql', '/debug-network']);
 
 type RequestEvent = {
   event: string;
   data: string;
 };
 
-export const DEV_ROUTES = new Set(['/graphiql', '/debug-network']);
-
 const EVENT_MAP: Record<string, string> = {
   request: 'Request',
   subrequest: 'Sub request',
 };
 
-function getRequestInfo(request: Request) {
+export type H2OEvent = {
+  eventType: 'request' | 'subrequest';
+  requestId?: string | null;
+  purpose?: string | null;
+  startTime: number;
+  endTime: number;
+  cacheStatus?: 'MISS' | 'HIT' | 'STALE' | 'PUT';
+  waitUntil?: ExecutionContext['waitUntil'];
+  graphql?: string;
+};
+
+async function getRequestInfo(request: RequestKind) {
+  const data = (await request.json()) as H2OEvent;
+
   return {
-    id: request.headers.get('request-id')!,
-    eventType: request.headers.get('hydrogen-event-type') || 'unknown',
-    startTime: request.headers.get('hydrogen-start-time')!,
-    endTime: request.headers.get('hydrogen-end-time') || String(Date.now()),
-    purpose: request.headers.get('purpose') === 'prefetch' ? '(prefetch)' : '',
-    cacheStatus: request.headers.get('hydrogen-cache-status'),
+    id: data.requestId ?? '',
+    eventType: data.eventType || 'unknown',
+    startTime: data.startTime,
+    endTime: data.endTime || Date.now(),
+    purpose: data.purpose === 'prefetch' ? '(prefetch)' : '',
+    cacheStatus: data.cacheStatus ?? '',
+    graphql: data.graphql
+      ? (JSON.parse(data.graphql) as {query: string; variables: object})
+      : null,
   };
 }
 
 const eventEmitter = new EventEmitter();
 const eventHistory: RequestEvent[] = [];
 
-export async function clearHistory(): Promise<Response> {
-  eventHistory.length = 0;
-  return new Response('ok');
+function createResponse<R extends RequestKind>(
+  main: string | ReadableStream = 'ok',
+  init?: Pick<ResponseInit, 'headers'>,
+) {
+  return new ResponseConstructor(main, init) as InferredResponse<R>;
 }
 
-export async function logRequestEvent(request: Request): Promise<Response> {
-  if (DEV_ROUTES.has(new URL(request.url).pathname)) {
-    return new Response('ok');
+async function clearHistory<R extends RequestKind>(
+  request: R,
+): Promise<InferredResponse<R>> {
+  eventHistory.length = 0;
+  return createResponse<R>();
+}
+
+export async function logRequestEvent<R extends RequestKind>(
+  request: R,
+): Promise<InferredResponse<R>> {
+  const url = new URL(request.url);
+  if (DEV_ROUTES.has(url.pathname)) {
+    return createResponse<R>();
   }
 
-  const {eventType, purpose, ...data} = getRequestInfo(request);
+  const {eventType, purpose, graphql, ...data} = await getRequestInfo(request);
 
+  let graphiqlLink = '';
   let description = request.url;
 
   if (eventType === 'subrequest') {
     description =
-      decodeURIComponent(request.url)
+      graphql?.query
         .match(/(query|mutation)\s+(\w+)/)?.[0]
-        ?.replace(/\s+/, ' ') || request.url;
+        ?.replace(/\s+/, ' ') || decodeURIComponent(url.search.slice(1));
+
+    if (graphql) {
+      graphiqlLink = getGraphiQLUrl({graphql});
+    }
   }
 
   const event = {
@@ -54,18 +108,21 @@ export async function logRequestEvent(request: Request): Promise<Response> {
     data: JSON.stringify({
       ...data,
       url: `${purpose} ${description}`.trim(),
+      graphiqlLink,
     }),
   };
 
-  if (eventHistory.length > 100) eventHistory.shift();
   eventHistory.push(event);
+  if (eventHistory.length > 100) eventHistory.shift();
 
   eventEmitter.emit('request', event);
 
-  return new Response('ok');
+  return createResponse<R>();
 }
 
-export function streamRequestEvents(request: Request) {
+function streamRequestEvents<R extends RequestKind>(
+  request: R,
+): InferredResponse<R> {
   const stream = new ReadableStream({
     start(controller) {
       const encoder = new TextEncoder();
@@ -94,11 +151,17 @@ export function streamRequestEvents(request: Request) {
     },
   });
 
-  return new Response(stream, {
+  return createResponse(stream, {
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-store',
       Connection: 'keep-alive',
     },
   });
+}
+
+export function handleDebugNetworkRequest<R extends RequestKind>(request: R) {
+  return request.method === 'DELETE'
+    ? clearHistory(request)
+    : streamRequestEvents(request);
 }
