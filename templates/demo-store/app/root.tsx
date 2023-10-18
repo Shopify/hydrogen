@@ -3,6 +3,7 @@ import {
   type LinksFunction,
   type LoaderFunctionArgs,
   type AppLoadContext,
+  type SerializeFrom,
 } from '@shopify/remix-oxygen';
 import {
   isRouteErrorResponse,
@@ -30,11 +31,6 @@ import {NotFound} from './components/NotFound';
 import styles from './styles/app.css';
 import {DEFAULT_LOCALE, parseMenu} from './lib/utils';
 import {useAnalytics} from './hooks/useAnalytics';
-
-export const useRootLoaderData = () => {
-  const [root] = useMatches();
-  return root?.data as Awaited<ReturnType<typeof loader>>['data'];
-};
 
 // This is important to avoid re-fetching root queries on sub-navigations
 export const shouldRevalidate: ShouldRevalidateFunction = ({
@@ -68,6 +64,11 @@ export const links: LinksFunction = () => {
     },
     {rel: 'icon', type: 'image/svg+xml', href: favicon},
   ];
+};
+
+export const useRootLoaderData = () => {
+  const [root] = useMatches();
+  return root?.data as SerializeFrom<typeof loader>;
 };
 
 export async function loader({request, context}: LoaderFunctionArgs) {
