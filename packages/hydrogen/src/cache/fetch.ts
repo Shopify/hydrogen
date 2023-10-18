@@ -15,8 +15,9 @@ import {
 export type CacheKey = string | readonly unknown[];
 
 export type FetchDebugInfo = {
-  stackLine?: string;
+  requestId?: string;
   graphql?: string;
+  purpose?: string | null;
 };
 
 export type WithCacheOptions<T = unknown> = {
@@ -223,12 +224,3 @@ export async function fetchWithServerCache(
     },
   ).then(fromSerializableResponse);
 }
-
-export const getCallerStackLine =
-  process.env.NODE_ENV === 'development'
-    ? () => {
-        const stackInfo = {stack: ''};
-        Error.captureStackTrace(stackInfo);
-        return stackInfo.stack.split('\n').slice(3, 4).join('\n') || '';
-      }
-    : null;

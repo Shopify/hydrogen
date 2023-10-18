@@ -71,7 +71,7 @@ export function connectToInspector({
   /**
    * A handle to the interval we run to keep the websocket alive
    */
-  let keepAliveInterval: NodeJS.Timer;
+  let keepAliveInterval: NodeJS.Timeout;
 
   /**
    * Test if the websocket is closed

@@ -25,7 +25,10 @@
       "cache": false
     },
     "@shopify/cli-hydrogen#build": {
-      "dependsOn": ["@shopify/hydrogen-codegen#build"]
+      "dependsOn": [
+        "@shopify/hydrogen-codegen#build",
+        "@shopify/mini-oxygen#build"
+      ]
     },
     "@shopify/create-hydrogen#build": {
       "dependsOn": ["@shopify/cli-hydrogen#build"]

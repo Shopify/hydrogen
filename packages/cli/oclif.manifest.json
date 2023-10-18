@@ -1,5 +1,5 @@
 {
-  "version": "5.4.1",
+  "version": "5.4.3",
   "commands": {
     "hydrogen:build": {
       "id": "hydrogen:build",
@@ -588,6 +588,32 @@
           "type": "option",
           "description": "The path to the directory of the Hydrogen storefront. The default is the current directory.",
           "multiple": false
+        }
+      },
+      "args": {}
+    },
+    "hydrogen:debug:cpu": {
+      "id": "hydrogen:debug:cpu",
+      "description": "Builds and profiles the server startup time the app.",
+      "strict": true,
+      "pluginName": "@shopify/cli-hydrogen",
+      "pluginAlias": "@shopify/cli-hydrogen",
+      "pluginType": "core",
+      "aliases": [],
+      "flags": {
+        "path": {
+          "name": "path",
+          "type": "option",
+          "description": "The path to the directory of the Hydrogen storefront. The default is the current directory.",
+          "multiple": false
+        },
+        "output": {
+          "name": "output",
+          "type": "option",
+          "description": "Specify a path to generate the profile file. Defaults to \"startup.cpuprofile\".",
+          "required": false,
+          "multiple": false,
+          "default": "startup.cpuprofile"
         }
       },
       "args": {}

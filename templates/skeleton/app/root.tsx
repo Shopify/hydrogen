@@ -24,7 +24,9 @@ export const useRootLoaderData = () => {
   return root?.data as Awaited<ReturnType<typeof loader>>['data'];
 };
 
-// This is important to avoid re-fetching root queries on sub-navigations
+/**
+ * This is important to avoid re-fetching root queries on sub-navigations
+ */
 export const shouldRevalidate: ShouldRevalidateFunction = ({
   formMethod,
   currentUrl,

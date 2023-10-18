@@ -10,11 +10,7 @@ import {
   SHOPIFY_STOREFRONT_S_HEADER,
 } from '@shopify/hydrogen-react';
 import type {ExecutionArgs} from 'graphql';
-import {
-  fetchWithServerCache,
-  checkGraphQLErrors,
-  getCallerStackLine,
-} from './cache/fetch';
+import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
 import {STOREFRONT_REQUEST_GROUP_ID_HEADER} from './constants';
 import {
   CacheNone,
@@ -194,6 +190,8 @@ type StorefrontHeaders = {
   buyerIp: string | null;
   /** The cookie header from the client  */
   cookie: string | null;
+  /** The purpose header value for debugging */
+  purpose: string | null;
 };
 
 type StorefrontQueryOptions = StorefrontQuerySecondParam & {
@@ -296,11 +294,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     cache: cacheOptions,
     headers = [],
     storefrontApiVersion,
-    stackLine,
-  }: {stackLine?: string} & (
-    | StorefrontQueryOptions
-    | StorefrontMutationOptions
-  )): Promise<T> {
+  }: StorefrontQueryOptions | StorefrontMutationOptions): Promise<T> {
     const userHeaders =
       headers instanceof Headers
         ? Object.fromEntries(headers.entries())
@@ -324,11 +318,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
     const url = getStorefrontApiUrl({storefrontApiVersion});
     const graphqlData = JSON.stringify({query, variables: queryVariables});
-    const requestInit: RequestInit = {
+    const requestInit = {
       method: 'POST',
       headers: {...defaultHeaders, ...userHeaders},
       body: graphqlData,
-    };
+    } satisfies RequestInit;
 
     // Remove any headers that are identifiable to the user or request
     const cacheKey = [
@@ -354,7 +348,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       cacheKey,
       shouldCacheResponse: checkGraphQLErrors,
       waitUntil,
-      debugInfo: {stackLine, graphql: graphqlData},
+      debugInfo: {
+        graphql: graphqlData,
+        requestId: requestInit.headers[STOREFRONT_REQUEST_GROUP_ID_HEADER],
+        purpose: storefrontHeaders?.purpose,
+      },
     });
 
     const errorOptions: StorefrontErrorOptions<T> = {
@@ -420,7 +418,6 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         const result = fetchStorefrontApi({
           ...payload,
           query,
-          stackLine: getCallerStackLine?.(),
         });
 
         // This is a no-op, but we need to catch the promise to avoid unhandled rejections
@@ -453,7 +450,6 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         const result = fetchStorefrontApi({
           ...payload,
           mutation,
-          stackLine: getCallerStackLine?.(),
         });
 
         // This is a no-op, but we need to catch the promise to avoid unhandled rejections

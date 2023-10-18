@@ -1,5 +1,26 @@
 # @shopify/cli-hydrogen
 
+## 5.4.3
+
+### Patch Changes
+
+- Fix subrequest performance in development. ([#1411](https://github.com/Shopify/hydrogen/pull/1411)) by [@frandiox](https://github.com/frandiox)
+
+- Increase the request body size limit to 100mb when running locally. ([#1421](https://github.com/Shopify/hydrogen/pull/1421)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`29414664`](https://github.com/Shopify/hydrogen/commit/294146644df57592a775ae33cdf4359015155d72), [`832a0eaf`](https://github.com/Shopify/hydrogen/commit/832a0eafad331f61b7cfdf90dec6427f1aaaef6b)]:
+  - @shopify/remix-oxygen@1.1.7
+  - @shopify/mini-oxygen@2.2.3
+
+## 5.4.2
+
+### Patch Changes
+
+- Fix product search results header style ([#1405](https://github.com/Shopify/hydrogen/pull/1405)) by [@tatsuya](https://github.com/tatsuya)
+
+- Updated dependencies [[`4f735fd7`](https://github.com/Shopify/hydrogen/commit/4f735fd725aef26cd3bd5b50c87d2c028b93c598)]:
+  - @shopify/remix-oxygen@1.1.6
+
 ## 5.4.1
 
 ### Patch Changes
