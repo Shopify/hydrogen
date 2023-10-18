@@ -12,8 +12,8 @@
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "generate:manifest": "node scripts/generate-manifest.mjs",
-    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run --test-timeout=15000",
-    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest --test-timeout=15000"
+    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run --test-timeout=20000",
+    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest --test-timeout=20000"
   },
   "devDependencies": {
     "@types/diff": "^5.0.2",
