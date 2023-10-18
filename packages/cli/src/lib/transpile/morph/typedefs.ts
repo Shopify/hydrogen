@@ -56,8 +56,19 @@ export function generateTypeDefs(sourceFile: SourceFile, code: string) {
 
   typedefsFromImports.forEach((typeElements, moduleSpecifier) => {
     for (const typeElement of typeElements) {
+      // We only use this in root.tsx and it's better to
+      // reuse the existing LoaderReturnData, so skip it.
+      if (typeElement === 'SerializeFrom') continue;
+
+      // Note: SerializeFrom also needs generic if we stop skipping it.
+      const hasGeneric = typeElement === 'V2_MetaFunction';
+
       typedefs.push(
-        `/** @typedef {import('${moduleSpecifier}').${typeElement}} ${typeElement} */`,
+        `/** ${
+          hasGeneric ? '@template T ' : ''
+        }@typedef {import('${moduleSpecifier}').${typeElement}${
+          hasGeneric ? '<T>' : ''
+        }} ${typeElement} */`,
       );
     }
   });
