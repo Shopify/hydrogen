@@ -46,7 +46,7 @@ function normalizeCodegenError(errorMessage: string, rootDirectory?: string) {
  * Running on a separate process splits work from this processor
  * and also allows us to filter out logs.
  */
-export async function spawnCodegenProcess({
+export function spawnCodegenProcess({
   rootDirectory,
   appDirectory,
   configFilePath,
