@@ -58,8 +58,8 @@
     "content-security-policy-builder": "^2.1.1"
   },
   "peerDependencies": {
-    "@remix-run/react": "2.1.0",
-    "@remix-run/server-runtime": "2.1.0"
+    "@remix-run/react": "^2.1.0",
+    "@remix-run/server-runtime": "^2.1.0"
   },
   "devDependencies": {
     "@testing-library/react": "^14.0.0",
