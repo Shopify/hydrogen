@@ -27,14 +27,20 @@ export function generateFunctionDocumentation(
     const declaration = variableStatement?.getDeclarations()[0];
     const type = declaration?.getType().getText();
     if (type && type !== 'any' && type !== 'unknown') {
-      if (type.startsWith('() => SerializeFrom<')) {
-        // SerializeFrom type breaks for some reason. Replace it with a well-known type
-        if (type.endsWith('.loader>')) {
-          jsDocs.addTag({tagName: 'return', text: `{LoaderReturnData}`});
-        }
-      } else {
-        jsDocs.addTag({tagName: 'type', text: `{${type}}`});
-      }
+      const tagName = type.startsWith('() =>') ? 'return' : 'type';
+
+      // Some generated docs try to import variables from the same file.
+      // E.g. `<typeof loader>` becomes `<typeof import("....").loader>`
+      const normalizedType = type
+        .replace(/^\(\)\s+=>\s+/, '')
+        .replace(/typeof import\("[^"]+"\)\./, 'typeof ');
+
+      const text =
+        normalizedType === 'SerializeFrom<typeof loader>'
+          ? `{LoaderReturnData}` // Better alias
+          : `{${normalizedType}}`;
+
+      jsDocs.addTag({tagName, text});
     }
   }
 }
