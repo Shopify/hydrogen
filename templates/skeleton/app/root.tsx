@@ -21,7 +21,9 @@ import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
 
-// This is important to avoid re-fetching root queries on sub-navigations
+/**
+ * This is important to avoid re-fetching root queries on sub-navigations
+ */
 export const shouldRevalidate: ShouldRevalidateFunction = ({
   formMethod,
   currentUrl,

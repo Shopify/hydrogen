@@ -31,10 +31,10 @@ export async function setupI18nStrategy(
   strategy: I18nStrategy,
   options: I18nSetupConfig,
 ) {
-  const isTs = options.serverEntryPoint?.endsWith('.ts') ?? false;
+  const isJs = options.serverEntryPoint?.endsWith('.js') ?? false;
 
   const templatePath = fileURLToPath(
-    new URL(`./templates/${strategy}${isTs ? '.ts' : '.js'}`, import.meta.url),
+    new URL(`./templates/${strategy}.ts`, import.meta.url),
   );
 
   if (!(await fileExists(templatePath))) {
@@ -44,7 +44,7 @@ export async function setupI18nStrategy(
   const template = await readFile(templatePath);
   const formatConfig = await getCodeFormatOptions(options.rootDirectory);
 
-  await replaceServerI18n(options, formatConfig, template);
+  await replaceServerI18n(options, formatConfig, template, isJs);
   await replaceRemixEnv(options, formatConfig, template);
 }
 

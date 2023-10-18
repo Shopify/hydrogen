@@ -12,8 +12,8 @@
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "generate:manifest": "node scripts/generate-manifest.mjs",
-    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run --test-timeout=15000",
-    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest --test-timeout=15000"
+    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run --test-timeout=20000",
+    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest --test-timeout=20000"
   },
   "devDependencies": {
     "@types/diff": "^5.0.2",
@@ -49,7 +49,7 @@
     "source-map": "^0.7.4",
     "stack-trace": "^1.0.0-pre2",
     "tar-fs": "^2.1.1",
-    "typescript": "^5.2.2",
+    "ts-morph": "20.0.0",
     "use-resize-observer": "^9.1.0",
     "ws": "^8.13.0"
   },

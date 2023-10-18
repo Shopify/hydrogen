@@ -1,65 +1,23 @@
-import type {CompilerOptions} from 'typescript';
+import type {CompilerOptions} from 'ts-morph';
 import {glob, readFile, writeFile, removeFile} from '@shopify/cli-kit/node/fs';
 import {outputDebug} from '@shopify/cli-kit/node/output';
 import {joinPath} from '@shopify/cli-kit/node/path';
-import {formatCode, getCodeFormatOptions} from './format-code.js';
-
-const escapeNewLines = (code: string) =>
-  code.replace(/\n\n/g, '\n/* :newline: */');
-const restoreNewLines = (code: string) =>
-  code.replace(/\/\* :newline: \*\//g, '\n');
-
-export type TranspilerOptions = Omit<CompilerOptions, 'target'>;
-
-const DEFAULT_TS_CONFIG: TranspilerOptions = {
-  lib: ['DOM', 'DOM.Iterable', 'ES2022'],
-  isolatedModules: true,
-  esModuleInterop: true,
-  resolveJsonModule: true,
-  target: 'ES2022',
-  strict: true,
-  allowJs: true,
-  forceConsistentCasingInFileNames: true,
-  skipLibCheck: true,
-};
-
-export async function transpileFile(code: string, config = DEFAULT_TS_CONFIG) {
-  const tsImport = await import('typescript');
-  const ts = tsImport.default ?? tsImport;
-
-  // We need to escape new lines in the template because TypeScript
-  // will remove them when compiling.
-  const withArtificialNewLines = escapeNewLines(code);
-
-  // We compile the template to JavaScript.
-  const compiled = ts.transpileModule(withArtificialNewLines, {
-    reportDiagnostics: false,
-    compilerOptions: {
-      ...config,
-      // '1' tells TypeScript to preserve the JSX syntax.
-      jsx: 1,
-      removeComments: false,
-    },
-  });
-
-  // Here we restore the new lines that were removed by TypeScript.
-  return restoreNewLines(compiled.outputText);
-}
+import {formatCode, getCodeFormatOptions} from '../format-code.js';
+import {transpileFile} from './file.js';
 
 const DEFAULT_JS_CONFIG: Omit<CompilerOptions, 'jsx'> = {
-  allowJs: true,
-  forceConsistentCasingInFileNames: true,
-  strict: true,
-  lib: ['DOM', 'DOM.Iterable', 'ES2022'],
-  esModuleInterop: true,
-  isolatedModules: true,
-  jsx: 'react-jsx',
-  noEmit: true,
-  resolveJsonModule: true,
+  checkJs: false,
+  target: 'ES2022',
+  module: 'ES2022',
+  moduleResolution: 'bundler',
+  baseUrl: '.',
+  paths: {
+    '~/*': ['app/*'],
+  },
 };
 
 // https://code.visualstudio.com/docs/languages/jsconfig#_jsconfig-options
-const JS_CONFIG_KEYS = [
+const JS_CONFIG_KEYS = new Set([
   'noLib',
   'target',
   'module',
@@ -70,20 +28,23 @@ const JS_CONFIG_KEYS = [
   'baseUrl',
   'paths',
   ...Object.keys(DEFAULT_JS_CONFIG),
-];
+]);
 
-export function convertConfigToJS(tsConfig: {
-  include?: string[];
-  compilerOptions?: CompilerOptions;
-}) {
+function convertConfigToJS(
+  tsConfig: {
+    include?: string[];
+    compilerOptions?: CompilerOptions;
+  },
+  keepTypes = false,
+) {
   const jsConfig = {
     compilerOptions: {...DEFAULT_JS_CONFIG},
   } as typeof tsConfig;
 
   if (tsConfig.include) {
     jsConfig.include = tsConfig.include
-      .filter((s) => !s.endsWith('.d.ts'))
-      .map((s) => s.replace(/\.ts(x?)$/, '.js$1'));
+      .filter((s) => keepTypes || !s.endsWith('.d.ts'))
+      .map((s) => s.replace(/(?<!\.d)\.ts(x?)$/, '.js$1'));
   }
 
   if (tsConfig.compilerOptions) {
@@ -97,7 +58,7 @@ export function convertConfigToJS(tsConfig: {
   return jsConfig;
 }
 
-export async function transpileProject(projectDir: string) {
+export async function transpileProject(projectDir: string, keepTypes = true) {
   const entries = await glob('**/*.+(ts|tsx)', {
     absolute: true,
     cwd: projectDir,
@@ -107,12 +68,16 @@ export async function transpileProject(projectDir: string) {
 
   for (const entry of entries) {
     if (entry.endsWith('.d.ts')) {
-      await removeFile(entry);
+      if (!keepTypes) await removeFile(entry);
+
       continue;
     }
 
     const tsx = await readFile(entry);
-    const mjs = await formatCode(await transpileFile(tsx), formatConfig);
+    const mjs = await formatCode(
+      await transpileFile(tsx, entry, keepTypes),
+      formatConfig,
+    );
 
     await removeFile(entry);
     await writeFile(entry.replace(/\.ts(x?)$/, '.js$1'), mjs);
@@ -139,6 +104,7 @@ export async function transpileProject(projectDir: string) {
     const tsConfigWithComments = await readFile(tsConfigPath);
     const jsConfig = convertConfigToJS(
       JSON.parse(tsConfigWithComments.replace(/^\s*\/\/.*$/gm, '')),
+      keepTypes,
     );
 
     await removeFile(tsConfigPath);
@@ -159,21 +125,23 @@ export async function transpileProject(projectDir: string) {
     );
 
     delete pkgJson.scripts['typecheck'];
-    delete pkgJson.devDependencies['typescript'];
-    delete pkgJson.devDependencies['@shopify/oxygen-workers-types'];
+    if (!keepTypes) {
+      delete pkgJson.devDependencies['typescript'];
+      delete pkgJson.devDependencies['@shopify/oxygen-workers-types'];
 
-    for (const key of Object.keys(pkgJson.devDependencies)) {
-      if (key.startsWith('@types/')) {
-        delete pkgJson.devDependencies[key];
+      for (const key of Object.keys(pkgJson.devDependencies)) {
+        if (key.startsWith('@types/')) {
+          delete pkgJson.devDependencies[key];
+        }
       }
-    }
 
-    const codegenFlag = /\s*--codegen(-unstable)?/;
-    if (pkgJson.scripts?.dev) {
-      pkgJson.scripts.dev = pkgJson.scripts.dev.replace(codegenFlag, '');
-    }
-    if (pkgJson.scripts?.build) {
-      pkgJson.scripts.build = pkgJson.scripts.build.replace(codegenFlag, '');
+      const codegenFlag = /\s*--codegen(-unstable)?/;
+      if (pkgJson.scripts?.dev) {
+        pkgJson.scripts.dev = pkgJson.scripts.dev.replace(codegenFlag, '');
+      }
+      if (pkgJson.scripts?.build) {
+        pkgJson.scripts.build = pkgJson.scripts.build.replace(codegenFlag, '');
+      }
     }
 
     await writeFile(
