@@ -3,6 +3,7 @@ import {createElement} from 'react';
 import {cleanup, render} from '@testing-library/react';
 import {describe, it, expect, afterEach, vi, afterAll} from 'vitest';
 import {type LinkProps, useLocation} from '@remix-run/react';
+import {ProductVariant} from '@shopify/hydrogen-react/storefront-api-types';
 
 vi.mock('@remix-run/react', () => ({
   useNavigation: vi.fn(() => ({
@@ -442,11 +443,11 @@ describe('<VariantSelector>', () => {
             {
               availableForSale: true,
               selectedOptions: [{name: 'Size', value: 'S'}],
-            },
+            } as ProductVariant,
             {
               availableForSale: false,
               selectedOptions: [{name: 'Size', value: 'M'}],
-            },
+            } as ProductVariant,
           ],
         },
         children: ({option}) =>
