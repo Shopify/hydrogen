@@ -18,7 +18,7 @@ import {BadRequest} from './BadRequest';
 export type CustomerClient = {
   logout: () => Promise<Response>;
   authorize: (redirectPath?: string) => Promise<Response>;
-  isLoggedIn: () => Promise<boolean>;
+  isLoggedIn: () => boolean;
   login: () => Promise<Response>;
   mutate: (
     query: string,
@@ -97,34 +97,10 @@ export function createCustomerClient({
         },
       );
     },
-    isLoggedIn: async () => {
-      const accessToken = session.get('customer_access_token');
-      const expiresAt = session.get('expires_at');
-
-      if (!accessToken || !expiresAt) return false;
-
-      if (parseInt(expiresAt, 10) < new Date().getTime()) {
-        try {
-          await refreshToken(
-            session,
-            customerAccountId,
-            customerAccountUrl,
-            origin,
-          );
-
-          return true;
-        } catch (error) {
-          if (error && (error as Response).status !== 401) {
-            throw error;
-          }
-        }
-      } else {
-        return true;
-      }
-
-      clearSession(session);
-
-      return false;
+    isLoggedIn: () => {
+      return !!(
+        session.get('customer_access_token') && session.get('expires_at')
+      );
     },
     async mutate(query: string, variables?: any) {
       return this.query(query, variables);

@@ -62,6 +62,30 @@ describe('customer', () => {
       vi.clearAllMocks();
     });
 
+    it('returns true if logged in', async () => {
+      const customer = createCustomerClient({
+        session,
+        customerAccountId: 'customerAccountId',
+        customerAccountUrl: 'https://customer-api',
+        request: new Request('https://localhost'),
+      });
+
+      expect(customer.isLoggedIn()).toBe(true);
+    });
+
+    it('returns false if logged out', async () => {
+      const customer = createCustomerClient({
+        session,
+        customerAccountId: 'customerAccountId',
+        customerAccountUrl: 'https://customer-api',
+        request: new Request('https://localhost'),
+      });
+
+      session.get.mockReturnValueOnce(undefined);
+
+      expect(customer.isLoggedIn()).toBe(false);
+    });
+
     it('Redirects to the customer account api login url', async () => {
       const customer = createCustomerClient({
         session,
@@ -343,36 +367,46 @@ describe('customer', () => {
       );
     });
 
-    // it('Makes query', async () => {
-    //   const customer = createCustomerClient({
-    //     session,
-    //     customerAccountId: 'customerAccountId',
-    //     customerAccountUrl: 'https://customer-api',
-    //     request: new Request('https://localhost'),
-    //   });
+    it('Makes query', async () => {
+      const customer = createCustomerClient({
+        session,
+        customerAccountId: 'customerAccountId',
+        customerAccountUrl: 'https://customer-api',
+        request: new Request('https://localhost'),
+      });
 
-    //   const response = await customer.query(`some query`);
-    // });
+      session.get.mockImplementation((v) =>
+        v === 'expires_at' ? new Date().getTime() + 10000 + '' : v,
+      );
 
-    // it('Refreshes token then makes query', async () => {
-    //   const customer = createCustomerClient({
-    //     session,
-    //     customerAccountId: 'customerAccountId',
-    //     customerAccountUrl: 'https://customer-api',
-    //     request: new Request('https://localhost'),
-    //   });
+      const someJson = {data: 'json'};
 
-    //   session.get.mockImplementation((v) =>
-    //     v === 'expires_at' ? '100' : v === 'refresh_token' ? null : v,
-    //   );
+      fetch.mockResolvedValue(createFetchResponse(someJson, {ok: true}));
 
-    //   async function run() {
-    //     await customer.query(`some query`);
-    //   }
+      const response = await customer.query(`some query`);
+      expect(response).toBe('json');
+      // Session not updated because it's not expired
+      expect(session.set).not.toHaveBeenCalled();
+    });
 
-    //   await expect(run).rejects.toThrowError(
-    //     'Unauthorized No refresh_token in the session. Make sure your session is configured correctly and passed to `createCustomerClient`',
-    //   );
-    // });
+    it('Refreshes the token and then makes query', async () => {
+      const customer = createCustomerClient({
+        session,
+        customerAccountId: 'customerAccountId',
+        customerAccountUrl: 'https://customer-api',
+        request: new Request('https://localhost'),
+      });
+
+      session.get.mockImplementation((v) => (v === 'expires_at' ? '100' : v));
+
+      const someJson = {data: 'json'};
+
+      fetch.mockResolvedValue(createFetchResponse(someJson, {ok: true}));
+
+      const response = await customer.query(`some query`);
+      expect(response).toBe('json');
+      // Session updated because token was refreshed
+      expect(session.set).toHaveBeenCalled();
+    });
   });
 });
