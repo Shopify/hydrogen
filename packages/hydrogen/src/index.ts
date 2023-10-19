@@ -16,6 +16,7 @@ export {type SeoConfig} from './seo/generate-seo-tags';
 export type {SeoHandleFunction} from './seo/seo';
 export {Pagination, getPaginationVariables} from './pagination/Pagination';
 export {createCustomerClient as createCustomerClient__unstable} from './customer/customer';
+export type {CustomerClient} from './customer/customer';
 
 export {CartForm, type CartActionInput} from './cart/CartForm';
 export {cartCreateDefault} from './cart/queries/cartCreateDefault';

@@ -501,15 +501,17 @@ type StorefrontErrorOptions<T> = {
   query: string;
   queryVariables: Record<string, any>;
   ErrorConstructor?: ErrorConstructor;
+  client?: string;
 };
 
-function throwError<T>({
+export function throwError<T>({
   response,
   errors,
   type,
   query,
   queryVariables,
   ErrorConstructor = Error,
+  client = 'storefront',
 }: StorefrontErrorOptions<T>) {
   const requestId = response.headers.get('x-request-id');
   const errorMessage =
@@ -519,7 +521,7 @@ function throwError<T>({
     `API response error: ${response.status}`;
 
   throw new ErrorConstructor(
-    `[h2:error:storefront.${type}] ` +
+    `[h2:error:${client}.${type}] ` +
       errorMessage +
       (requestId ? ` - Request ID: ${requestId}` : ''),
     {

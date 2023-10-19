@@ -14,6 +14,8 @@ import {
 import {BadRequest} from './BadRequest';
 import {generateNonce} from '../csp/nonce';
 import {IS_MUTATION_RE, IS_QUERY_RE} from '../constants';
+import {throwError} from '../storefront';
+import {parseJSON} from '../utils/parse-json';
 
 export type CustomerClient = {
   logout: () => Promise<Response>;
@@ -22,12 +24,12 @@ export type CustomerClient = {
   login: () => Promise<Response>;
   mutate: <ReturnType = any, RawGqlString extends string = string>(
     query: RawGqlString,
-    options?: {variables?: any},
-  ) => Promise<{data: ReturnType; status: number; ok: boolean}>;
+    options?: {variables: Record<string, any>},
+  ) => Promise<ReturnType>;
   query: <ReturnType = any, RawGqlString extends string = string>(
     query: RawGqlString,
-    options?: {variables?: any},
-  ) => Promise<{data: ReturnType; status: number; ok: boolean}>;
+    options?: {variables: Record<string, any>},
+  ) => Promise<ReturnType>;
 };
 
 export function createCustomerClient({
@@ -102,14 +104,20 @@ export function createCustomerClient({
         session.get('customer_access_token') && session.get('expires_at')
       );
     },
-    async mutate(mutation: string, options) {
+    async mutate<ReturnType = any, RawGqlString extends string = string>(
+      mutation: RawGqlString,
+      options: {variables: Record<string, any>} = {variables: {}},
+    ) {
       if (IS_QUERY_RE.test(mutation)) {
         throw new Error('[h2:error:customer.mutate] Cannot execute queries');
       }
 
-      return this.query(mutation, options);
+      return this.query<ReturnType, RawGqlString>(mutation, options);
     },
-    query: async (query: string, options = {}) => {
+    query: async <ReturnType = any, RawGqlString extends string = string>(
+      query: RawGqlString,
+      options: {variables: Record<string, any>} = {variables: {}},
+    ) => {
       if (IS_MUTATION_RE.test(query)) {
         throw new Error('[h2:error:customer.query] Cannot execute mutations');
       }
@@ -131,7 +139,7 @@ export function createCustomerClient({
         origin,
       );
 
-      return await fetch(
+      const response = await fetch(
         `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`,
         {
           method: 'POST',
@@ -147,16 +155,49 @@ export function createCustomerClient({
             variables: options.variables || {},
           }),
         },
-      ).then(async (response) => {
-        if (!response.ok) {
-          throw new Error(
-            `${response.status} (RequestID ${response.headers.get(
-              'x-request-id',
-            )}): ${await response.text()}`,
-          );
+      );
+
+      const body = await response.text();
+      let data: ReturnType;
+
+      if (!response.ok) {
+        /**
+         * The Storefront API might return a string error, or a JSON-formatted {error: string}.
+         * We try both and conform them to a single {errors} format.
+         */
+        let errors;
+        try {
+          errors = parseJSON(body);
+        } catch (_e) {
+          errors = [{message: body}];
         }
-        return ((await response.json()) as any).data;
-      });
+
+        throwError({
+          response,
+          type: 'query',
+          query,
+          queryVariables: options.variables,
+          errors,
+          client: 'customer',
+        });
+      }
+
+      try {
+        data = parseJSON(body).data;
+      } catch (e) {
+        throwError({
+          response,
+          type: 'query',
+          query,
+          queryVariables: options.variables,
+          errors: [{message: body}],
+          client: 'customer',
+        });
+      }
+
+      // data is always initialized in the try block above
+      // @ts-expect-error
+      return data as any as ReturnType;
     },
     authorize: async (redirectPath = '/') => {
       const url = new URL(request.url);

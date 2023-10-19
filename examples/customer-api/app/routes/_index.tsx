@@ -3,7 +3,9 @@ import {type LoaderFunctionArgs, json} from '@shopify/remix-oxygen';
 
 export async function loader({context}: LoaderFunctionArgs) {
   if (await context.customer.isLoggedIn()) {
-    const user = await context.customer.query(`
+    const {customer} = await context.customer.query<{
+      customer: {firstName: string; lastName: string};
+    }>(`
       {
         customer {
           firstName
@@ -14,7 +16,7 @@ export async function loader({context}: LoaderFunctionArgs) {
 
     return json(
       {
-        user,
+        customer,
       },
       {
         headers: {
@@ -25,7 +27,7 @@ export async function loader({context}: LoaderFunctionArgs) {
   }
 
   return json(
-    {user: null},
+    {customer: null},
     {
       headers: {
         'Set-Cookie': await context.session.commit(),
@@ -51,15 +53,15 @@ export function ErrorBoundary() {
 }
 
 export default function () {
-  const {user} = useLoaderData() as any;
+  const {customer} = useLoaderData();
 
   return (
     <div style={{marginTop: 24}}>
-      {user ? (
+      {customer ? (
         <>
           <div style={{marginBottom: 24}}>
             <b>
-              Welcome {user.customer.firstName} {user.customer.lastName}
+              Welcome {customer.firstName} {customer.lastName}
             </b>
           </div>
           <div>
@@ -69,7 +71,7 @@ export default function () {
           </div>
         </>
       ) : null}
-      {!user ? (
+      {!customer ? (
         <Form method="post" action="/authorize">
           <button>Login</button>
         </Form>
