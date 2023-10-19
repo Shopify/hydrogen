@@ -1,7 +1,7 @@
 import {
   json,
   redirect,
-  type ActionFunction,
+  type ActionFunctionArgs,
   type LoaderFunctionArgs,
 } from '@shopify/remix-oxygen';
 import {Form, Link, useActionData} from '@remix-run/react';
@@ -23,7 +23,7 @@ export async function loader({context}: LoaderFunctionArgs) {
   return json({});
 }
 
-export const action: ActionFunction = async ({request, context}) => {
+export async function action({request, context}: ActionFunctionArgs) {
   if (request.method !== 'POST') {
     return json({error: 'Method not allowed'}, {status: 405});
   }
@@ -101,7 +101,7 @@ export const action: ActionFunction = async ({request, context}) => {
     }
     return json({error}, {status: 400});
   }
-};
+}
 
 export default function Register() {
   const data = useActionData<ActionResponse>();
