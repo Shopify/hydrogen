@@ -5,7 +5,6 @@ import {
   generateCodeVerifier,
   generateNonce,
   generateState,
-  refreshToken,
   type HydrogenSession,
   checkExpires,
   userAgent,

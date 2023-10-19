@@ -1,7 +1,7 @@
 import {BadRequest} from './BadRequest';
+import {LIB_VERSION} from '../version';
 
-export const userAgent =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36';
+export const userAgent = `Shopify Hydrogen ${LIB_VERSION}`;
 
 export interface HydrogenSession {
   get: (key: string) => string | undefined;

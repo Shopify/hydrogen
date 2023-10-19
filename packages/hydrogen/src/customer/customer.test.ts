@@ -81,7 +81,7 @@ describe('customer', () => {
         request: new Request('https://localhost'),
       });
 
-      session.get.mockReturnValueOnce(undefined);
+      (session.get as any).mockReturnValueOnce(undefined);
 
       expect(customer.isLoggedIn()).toBe(false);
     });
@@ -335,7 +335,7 @@ describe('customer', () => {
         request: new Request('https://localhost'),
       });
 
-      session.get.mockReturnValueOnce(undefined);
+      (session.get as any).mockReturnValueOnce(undefined);
 
       async function run() {
         await customer.query(`some query`);
@@ -354,7 +354,7 @@ describe('customer', () => {
         request: new Request('https://localhost'),
       });
 
-      session.get.mockImplementation((v) =>
+      (session.get as any).mockImplementation((v: string) =>
         v === 'expires_at' ? '100' : v === 'refresh_token' ? null : v,
       );
 
@@ -375,7 +375,7 @@ describe('customer', () => {
         request: new Request('https://localhost'),
       });
 
-      session.get.mockImplementation((v) =>
+      (session.get as any).mockImplementation((v: string) =>
         v === 'expires_at' ? new Date().getTime() + 10000 + '' : v,
       );
 
@@ -397,7 +397,9 @@ describe('customer', () => {
         request: new Request('https://localhost'),
       });
 
-      session.get.mockImplementation((v) => (v === 'expires_at' ? '100' : v));
+      (session.get as any).mockImplementation((v: string) =>
+        v === 'expires_at' ? '100' : v,
+      );
 
       const someJson = {data: 'json'};
 
