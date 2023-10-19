@@ -1,4 +1,9 @@
-import {json, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
+import {
+  json,
+  redirect,
+  type LoaderArgs,
+  type ActionArgs,
+} from '@shopify/remix-oxygen';
 import {Form, Link, useActionData} from '@remix-run/react';
 
 type ActionResponse = {
@@ -15,7 +20,7 @@ export async function loader({context}: LoaderArgs) {
   return json({});
 }
 
-export async function action({request, context}: LoaderArgs) {
+export async function action({request, context}: ActionArgs) {
   const {storefront} = context;
   const form = await request.formData();
   const email = form.has('email') ? String(form.get('email')) : null;
