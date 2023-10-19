@@ -10,6 +10,18 @@ export interface HydrogenSession {
   commit: () => Promise<string>;
 }
 
+export function redirect(
+  path: string,
+  options: {status?: number; headers?: {}} = {},
+) {
+  const headers = options.headers
+    ? new Headers(options.headers)
+    : new Headers({});
+  headers.set('location', path);
+
+  return new Response(null, {status: options.status || 302, headers});
+}
+
 export interface AccessTokenResponse {
   access_token: string;
   expires_in: number;
@@ -160,19 +172,6 @@ export async function generateState(): Promise<string> {
   const timestamp = Date.now().toString();
   const randomString = Math.random().toString(36).substring(2);
   return timestamp + randomString;
-}
-
-export async function generateNonce(length: number): Promise<string> {
-  const characters =
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let nonce = '';
-
-  for (let i = 0; i < length; i++) {
-    const randomIndex = Math.floor(Math.random() * characters.length);
-    nonce += characters.charAt(randomIndex);
-  }
-
-  return nonce;
 }
 
 export async function exchangeAccessToken(

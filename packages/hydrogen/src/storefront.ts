@@ -11,6 +11,7 @@ import {
 } from '@shopify/hydrogen-react';
 import type {ExecutionArgs} from 'graphql';
 import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
+<<<<<<< HEAD
 import {
   SDK_VARIANT_HEADER,
   SDK_VARIANT_SOURCE_HEADER,
@@ -18,6 +19,15 @@ import {
   STOREFRONT_ACCESS_TOKEN_HEADER,
   STOREFRONT_REQUEST_GROUP_ID_HEADER,
 } from './constants';
+||||||| parent of a75328071 (Review feedback)
+import {STOREFRONT_REQUEST_GROUP_ID_HEADER} from './constants';
+=======
+import {
+  IS_MUTATION_RE,
+  IS_QUERY_RE,
+  STOREFRONT_REQUEST_GROUP_ID_HEADER,
+} from './constants';
+>>>>>>> a75328071 (Review feedback)
 import {
   CacheNone,
   CacheLong,
@@ -212,9 +222,6 @@ export const StorefrontApiError = class extends Error {} as ErrorConstructor;
 export const isStorefrontApiError = (error: any) =>
   error instanceof StorefrontApiError;
 
-const isQueryRE = /(^|}\s)query[\s({]/im;
-const isMutationRE = /(^|}\s)mutation[\s({]/im;
-
 function minifyQuery(string: string) {
   return string
     .replace(/\s*#.*$/gm, '') // Remove GQL comments
@@ -403,7 +410,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        */
       query: <Storefront['query']>((query: string, payload) => {
         query = minifyQuery(query);
-        if (isMutationRE.test(query)) {
+        if (IS_MUTATION_RE.test(query)) {
           throw new Error(
             '[h2:error:storefront.query] Cannot execute mutations',
           );
@@ -435,7 +442,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        */
       mutate: <Storefront['mutate']>((mutation: string, payload) => {
         mutation = minifyQuery(mutation);
-        if (isQueryRE.test(mutation)) {
+        if (IS_QUERY_RE.test(mutation)) {
           throw new Error(
             '[h2:error:storefront.mutate] Cannot execute queries',
           );

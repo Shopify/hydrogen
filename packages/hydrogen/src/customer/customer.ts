@@ -1,9 +1,7 @@
-import {redirect} from '@shopify/remix-oxygen';
 import {
   clearSession,
   generateCodeChallenge,
   generateCodeVerifier,
-  generateNonce,
   generateState,
   type HydrogenSession,
   checkExpires,
@@ -11,22 +9,25 @@ import {
   exchangeAccessToken,
   AccessTokenResponse,
   getNonce,
+  redirect,
 } from './auth.helpers';
 import {BadRequest} from './BadRequest';
+import {generateNonce} from '../csp/nonce';
+import {IS_MUTATION_RE, IS_QUERY_RE} from '../constants';
 
 export type CustomerClient = {
   logout: () => Promise<Response>;
   authorize: (redirectPath?: string) => Promise<Response>;
   isLoggedIn: () => boolean;
   login: () => Promise<Response>;
-  mutate: (
-    query: string,
-    variables?: any,
-  ) => Promise<{data: unknown; status: number; ok: boolean}>;
-  query: (
-    query: string,
-    variables?: any,
-  ) => Promise<{data: unknown; status: number; ok: boolean}>;
+  mutate: <ReturnType = any, RawGqlString extends string = string>(
+    query: RawGqlString,
+    options?: {variables?: any},
+  ) => Promise<{data: ReturnType; status: number; ok: boolean}>;
+  query: <ReturnType = any, RawGqlString extends string = string>(
+    query: RawGqlString,
+    options?: {variables?: any},
+  ) => Promise<{data: ReturnType; status: number; ok: boolean}>;
 };
 
 export function createCustomerClient({
@@ -51,7 +52,7 @@ export function createCustomerClient({
       const loginUrl = new URL(customerAccountUrl + '/auth/oauth/authorize');
 
       const state = await generateState();
-      const nonce = await generateNonce(24);
+      const nonce = await generateNonce();
 
       loginUrl.searchParams.set('client_id', customerAccountId);
       loginUrl.searchParams.set('scope', 'openid email');
@@ -101,10 +102,18 @@ export function createCustomerClient({
         session.get('customer_access_token') && session.get('expires_at')
       );
     },
-    async mutate(query: string, variables?: any) {
-      return this.query(query, variables);
+    async mutate(mutation: string, options) {
+      if (IS_QUERY_RE.test(mutation)) {
+        throw new Error('[h2:error:customer.mutate] Cannot execute queries');
+      }
+
+      return this.query(mutation, options);
     },
-    query: async (query: string, variables?: any) => {
+    query: async (query: string, options = {}) => {
+      if (IS_MUTATION_RE.test(query)) {
+        throw new Error('[h2:error:customer.query] Cannot execute mutations');
+      }
+
       const accessToken = session.get('customer_access_token');
       const expiresAt = session.get('expires_at');
 
@@ -135,7 +144,7 @@ export function createCustomerClient({
           body: JSON.stringify({
             operationName: 'SomeQuery',
             query,
-            variables: variables || {},
+            variables: options.variables || {},
           }),
         },
       ).then(async (response) => {
