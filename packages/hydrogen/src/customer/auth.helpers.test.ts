@@ -17,15 +17,15 @@ vi.mock('./BadRequest', () => {
   };
 });
 
-// vi.stubGlobal(
-//   'Response',
-//   class Response {
-//     // message;
-//     constructor(body: any, options: any) {
-//       // this.message = body;
-//     }
-//   },
-// );
+vi.stubGlobal(
+  'Response',
+  class Response {
+    message;
+    constructor(body: any, options: any) {
+      this.message = body;
+    }
+  },
+);
 
 const fetch = (global.fetch = vi.fn() as any);
 
