@@ -81,6 +81,8 @@ jobs:
       - name: Compile skeleton
         run: |
           node scripts/compile-template-for-dist.mjs skeleton
+          (cd templates/skeleton-js && npm i --package-lock-only --workspaces false)
+          (cd templates/skeleton-ts && npm i --package-lock-only --workspaces false)
 
       - name: Compile hello-world
         run: |

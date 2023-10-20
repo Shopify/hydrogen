@@ -69,6 +69,7 @@ type StorefrontHeaders = {
   requestGroupId: string | null;
   buyerIp: string | null;
   cookie: string | null;
+  purpose: string | null;
 };
 
 export function getStorefrontHeaders(request: Request): StorefrontHeaders {
@@ -77,5 +78,6 @@ export function getStorefrontHeaders(request: Request): StorefrontHeaders {
     requestGroupId: headers.get('request-id'),
     buyerIp: headers.get('oxygen-buyer-ip'),
     cookie: headers.get('cookie'),
+    purpose: headers.get('purpose'),
   };
 }
