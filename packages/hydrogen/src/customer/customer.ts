@@ -5,7 +5,7 @@ import {
   generateState,
   type HydrogenSession,
   checkExpires,
-  userAgent,
+  USER_AGENT,
   exchangeAccessToken,
   AccessTokenResponse,
   getNonce,
@@ -164,7 +164,7 @@ export function createCustomerClient({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'User-Agent': userAgent,
+            'User-Agent': USER_AGENT,
             Origin: origin,
             Authorization: accessToken,
           },
@@ -263,7 +263,7 @@ export function createCustomerClient({
 
       const headers = {
         'content-type': 'application/x-www-form-urlencoded',
-        'User-Agent': userAgent,
+        'User-Agent': USER_AGENT,
         Origin: new URL(request.url).origin.replace('http', 'https'),
       };
 

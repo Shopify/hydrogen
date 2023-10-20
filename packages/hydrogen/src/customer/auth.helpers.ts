@@ -5,7 +5,9 @@ export interface Locks {
   refresh?: Promise<any>;
 }
 
-export const userAgent = `Shopify Hydrogen ${LIB_VERSION}`;
+export const USER_AGENT = `Shopify Hydrogen ${LIB_VERSION}`;
+
+const CUSTOMER_API_CLIENT_ID = '30243aa5-17c1-465a-8493-944bcc4e88aa';
 
 export interface HydrogenSession {
   get: (key: string) => string | undefined;
@@ -62,7 +64,7 @@ export async function refreshToken({
 
   const headers = {
     'content-type': 'application/x-www-form-urlencoded',
-    'User-Agent': userAgent,
+    'User-Agent': USER_AGENT,
     Origin: origin,
   };
 
@@ -203,7 +205,6 @@ export async function exchangeAccessToken(
   origin: string,
 ) {
   const clientId = customerAccountId;
-  const customerApiClientId = '30243aa5-17c1-465a-8493-944bcc4e88aa';
   const accessToken = session.get('customer_authorization_code_token');
 
   if (!accessToken)
@@ -216,7 +217,7 @@ export async function exchangeAccessToken(
 
   body.append('grant_type', 'urn:ietf:params:oauth:grant-type:token-exchange');
   body.append('client_id', clientId);
-  body.append('audience', customerApiClientId);
+  body.append('audience', CUSTOMER_API_CLIENT_ID);
   body.append('subject_token', accessToken);
   body.append(
     'subject_token_type',
@@ -226,7 +227,7 @@ export async function exchangeAccessToken(
 
   const headers = {
     'content-type': 'application/x-www-form-urlencoded',
-    'User-Agent': userAgent,
+    'User-Agent': USER_AGENT,
     Origin: origin,
   };
 
