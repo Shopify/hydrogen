@@ -21,7 +21,9 @@ import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
 
-// This is important to avoid re-fetching root queries on sub-navigations
+/**
+ * This is important to avoid re-fetching root queries on sub-navigations
+ */
 export const shouldRevalidate: ShouldRevalidateFunction = ({
   formMethod,
   currentUrl,
@@ -189,14 +191,13 @@ export function CatchBoundary() {
  * @see https://shopify.dev/docs/api/storefront/latest/objects/CustomerAccessToken
  *
  * @example
- * ```ts
- * //
+ * ```js
  * const {isLoggedIn, headers} = await validateCustomerAccessToken(
  *  customerAccessToken,
  *  session,
- *  );
- *  ```
- *  */
+ * );
+ * ```
+ */
 async function validateCustomerAccessToken(
   session: HydrogenSession,
   customerAccessToken?: CustomerAccessToken,

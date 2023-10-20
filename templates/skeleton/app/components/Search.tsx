@@ -151,7 +151,7 @@ export function SearchResults({
 function SearchResultsProductsGrid({products}: Pick<SearchQuery, 'products'>) {
   return (
     <div className="search-result">
-      <h3>Products</h3>
+      <h2>Products</h2>
       <Pagination connection={products}>
         {({nodes, isLoading, NextLink, PreviousLink}) => {
           const itemsMarkup = nodes.map((product) => (
@@ -450,13 +450,11 @@ function usePredictiveSearch(): UseSearchReturn {
 
 /**
  * Converts a plural search type to a singular search type
- * @param type - The plural search type
- * @returns The singular search type
  *
  * @example
- * ```ts
- * pluralToSingularSearchType('articles') // => 'ARTICLE'
- * pluralToSingularSearchType(['articles', 'products']) // => 'ARTICLE,PRODUCT'
+ * ```js
+ * pluralToSingularSearchType('articles'); // => 'ARTICLE'
+ * pluralToSingularSearchType(['articles', 'products']); // => 'ARTICLE,PRODUCT'
  * ```
  */
 function pluralToSingularSearchType(

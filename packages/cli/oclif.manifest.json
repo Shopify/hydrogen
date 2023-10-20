@@ -1,5 +1,5 @@
 {
-  "version": "5.2.3",
+  "version": "5.4.3",
   "commands": {
     "hydrogen:build": {
       "id": "hydrogen:build",
@@ -26,6 +26,12 @@
           "name": "bundle-stats",
           "type": "boolean",
           "description": "Show a bundle size summary after building.",
+          "allowNo": true
+        },
+        "lockfile-check": {
+          "name": "lockfile-check",
+          "type": "boolean",
+          "description": "Checks that there is exactly 1 valid lockfile in the project.",
           "allowNo": true
         },
         "disable-route-warning": {
@@ -147,6 +153,14 @@
       "hidden": true,
       "aliases": [],
       "flags": {
+        "env-branch": {
+          "name": "env-branch",
+          "type": "option",
+          "char": "e",
+          "description": "Environment branch (tag) for environment to deploy to",
+          "required": false,
+          "multiple": false
+        },
         "path": {
           "name": "path",
           "type": "option",
@@ -160,29 +174,37 @@
           "description": "Shop URL. It can be the shop prefix (janes-apparel) or the full myshopify.com URL (janes-apparel.myshopify.com, https://janes-apparel.myshopify.com).",
           "multiple": false
         },
-        "publicDeployment": {
-          "name": "publicDeployment",
+        "public-deployment": {
+          "name": "public-deployment",
           "type": "boolean",
           "description": "Marks a preview deployment as publicly accessible.",
           "required": false,
           "allowNo": false
         },
-        "metadataUrl": {
-          "name": "metadataUrl",
+        "token": {
+          "name": "token",
+          "type": "option",
+          "char": "t",
+          "description": "Oxygen deployment token",
+          "required": false,
+          "multiple": false
+        },
+        "metadata-url": {
+          "name": "metadata-url",
           "type": "option",
           "description": "URL that links to the deployment. Will be saved and displayed in the Shopify admin",
           "required": false,
           "multiple": false
         },
-        "metadataUser": {
-          "name": "metadataUser",
+        "metadata-user": {
+          "name": "metadata-user",
           "type": "option",
           "description": "User that initiated the deployment. Will be saved and displayed in the Shopify admin",
           "required": false,
           "multiple": false
         },
-        "metadataVersion": {
-          "name": "metadataVersion",
+        "metadata-version": {
+          "name": "metadata-version",
           "type": "option",
           "description": "A version identifier for the deployment. Will be saved and displayed in the Shopify admin",
           "required": false,
@@ -566,6 +588,32 @@
           "type": "option",
           "description": "The path to the directory of the Hydrogen storefront. The default is the current directory.",
           "multiple": false
+        }
+      },
+      "args": {}
+    },
+    "hydrogen:debug:cpu": {
+      "id": "hydrogen:debug:cpu",
+      "description": "Builds and profiles the server startup time the app.",
+      "strict": true,
+      "pluginName": "@shopify/cli-hydrogen",
+      "pluginAlias": "@shopify/cli-hydrogen",
+      "pluginType": "core",
+      "aliases": [],
+      "flags": {
+        "path": {
+          "name": "path",
+          "type": "option",
+          "description": "The path to the directory of the Hydrogen storefront. The default is the current directory.",
+          "multiple": false
+        },
+        "output": {
+          "name": "output",
+          "type": "option",
+          "description": "Specify a path to generate the profile file. Defaults to \"startup.cpuprofile\".",
+          "required": false,
+          "multiple": false,
+          "default": "startup.cpuprofile"
         }
       },
       "args": {}

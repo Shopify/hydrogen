@@ -51,7 +51,7 @@ import {
   getCliCommand,
   type CliCommand,
 } from '../shell.js';
-import {transpileProject} from '../transpile-ts.js';
+import {transpileProject} from '../transpile/index.js';
 import {
   CSS_STRATEGY_NAME_MAP,
   setupCssStrategy,
@@ -364,7 +364,7 @@ export async function handleLanguage(
   return {
     language,
     async transpileProject() {
-      if (language === 'js') {
+      if (language !== 'ts') {
         await transpileProject(projectDir);
       }
     },

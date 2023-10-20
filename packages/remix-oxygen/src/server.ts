@@ -9,6 +9,11 @@ declare global {
   var __H2O_LOG_EVENT: undefined | ((event: H2OEvent) => void);
 }
 
+const originalErrorToString = Error.prototype.toString;
+Error.prototype.toString = function () {
+  return this.stack || originalErrorToString.call(this);
+};
+
 export function createRequestHandler<Context = unknown>({
   build,
   mode,
@@ -64,6 +69,7 @@ type StorefrontHeaders = {
   requestGroupId: string | null;
   buyerIp: string | null;
   cookie: string | null;
+  purpose: string | null;
 };
 
 export function getStorefrontHeaders(request: Request): StorefrontHeaders {
@@ -72,5 +78,6 @@ export function getStorefrontHeaders(request: Request): StorefrontHeaders {
     requestGroupId: headers.get('request-id'),
     buyerIp: headers.get('oxygen-buyer-ip'),
     cookie: headers.get('cookie'),
+    purpose: headers.get('purpose'),
   };
 }

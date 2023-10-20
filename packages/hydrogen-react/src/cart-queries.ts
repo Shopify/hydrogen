@@ -4,7 +4,8 @@ export const CartLineAdd = (cartFragment: string): string => /* GraphQL */ `
     $lines: [CartLineInput!]!
     $numCartLines: Int = 250
     $country: CountryCode = ZZ
-  ) @inContext(country: $country) {
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
     cartLinesAdd(cartId: $cartId, lines: $lines) {
       cart {
         ...CartFragment
@@ -20,7 +21,8 @@ export const CartCreate = (cartFragment: string): string => /* GraphQL */ `
     $input: CartInput!
     $numCartLines: Int = 250
     $country: CountryCode = ZZ
-  ) @inContext(country: $country) {
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
     cartCreate(input: $input) {
       cart {
         ...CartFragment
@@ -37,7 +39,8 @@ export const CartLineRemove = (cartFragment: string): string => /* GraphQL */ `
     $lines: [ID!]!
     $numCartLines: Int = 250
     $country: CountryCode = ZZ
-  ) @inContext(country: $country) {
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
     cartLinesRemove(cartId: $cartId, lineIds: $lines) {
       cart {
         ...CartFragment
@@ -54,7 +57,8 @@ export const CartLineUpdate = (cartFragment: string): string => /* GraphQL */ `
     $lines: [CartLineUpdateInput!]!
     $numCartLines: Int = 250
     $country: CountryCode = ZZ
-  ) @inContext(country: $country) {
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
     cartLinesUpdate(cartId: $cartId, lines: $lines) {
       cart {
         ...CartFragment
@@ -71,7 +75,8 @@ export const CartNoteUpdate = (cartFragment: string): string => /* GraphQL */ `
     $note: String
     $numCartLines: Int = 250
     $country: CountryCode = ZZ
-  ) @inContext(country: $country) {
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
     cartNoteUpdate(cartId: $cartId, note: $note) {
       cart {
         ...CartFragment
@@ -90,7 +95,8 @@ export const CartBuyerIdentityUpdate = (
     $buyerIdentity: CartBuyerIdentityInput!
     $numCartLines: Int = 250
     $country: CountryCode = ZZ
-  ) @inContext(country: $country) {
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
     cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: $buyerIdentity) {
       cart {
         ...CartFragment
@@ -109,7 +115,8 @@ export const CartAttributesUpdate = (
     $cartId: ID!
     $numCartLines: Int = 250
     $country: CountryCode = ZZ
-  ) @inContext(country: $country) {
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
     cartAttributesUpdate(attributes: $attributes, cartId: $cartId) {
       cart {
         ...CartFragment
@@ -128,7 +135,8 @@ export const CartDiscountCodesUpdate = (
     $discountCodes: [String!]
     $numCartLines: Int = 250
     $country: CountryCode = ZZ
-  ) @inContext(country: $country) {
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
     cartDiscountCodesUpdate(cartId: $cartId, discountCodes: $discountCodes) {
       cart {
         ...CartFragment
@@ -144,7 +152,8 @@ export const CartQuery = (cartFragment: string): string => /* GraphQL */ `
     $id: ID!
     $numCartLines: Int = 250
     $country: CountryCode = ZZ
-  ) @inContext(country: $country) {
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
     cart(id: $id) {
       ...CartFragment
     }

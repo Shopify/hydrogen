@@ -1,6 +1,5 @@
 import {randomUUID} from 'node:crypto';
 import {AsyncLocalStorage} from 'node:async_hooks';
-import {resolvePath} from '@shopify/cli-kit/node/path';
 import {readFile} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {
@@ -12,20 +11,18 @@ import {DEFAULT_PORT} from '../flags.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
 import {OXYGEN_HEADERS_MAP, logRequestLine} from './common.js';
 import {
-  clearHistory,
+  H2O_BINDING_NAME,
   logRequestEvent,
-  streamRequestEvents,
+  handleDebugNetworkRequest,
 } from '../request-events.js';
 
 export async function startNodeServer({
-  root,
   port = DEFAULT_PORT,
   watch = false,
   buildPathWorkerFile,
   buildPathClient,
   env,
 }: MiniOxygenOptions): Promise<MiniOxygenInstance> {
-  const dotenvPath = resolvePath(root, '.env');
   const oxygenHeaders = Object.fromEntries(
     Object.entries(OXYGEN_HEADERS_MAP).map(([key, value]) => {
       return [key, value.defaultValue];
@@ -34,15 +31,15 @@ export async function startNodeServer({
 
   const asyncLocalStorage = new AsyncLocalStorage();
   const serviceBindings = {
-    H2O_LOG_EVENT: {
-      fetch: (request: Request) =>
+    [H2O_BINDING_NAME]: {
+      fetch: async (request: Request) =>
         logRequestEvent(
           new Request(request.url, {
-            headers: {
-              ...Object.fromEntries(request.headers.entries()),
-              // Merge some headers from the parent request
+            method: 'POST',
+            body: JSON.stringify({
               ...(asyncLocalStorage.getStore() as Record<string, string>),
-            },
+              ...(await request.json<Record<string, string>>()),
+            }),
           }),
         ),
     },
@@ -67,9 +64,7 @@ export async function startNodeServer({
     async onRequest(request, defaultDispatcher) {
       const url = new URL(request.url);
       if (url.pathname === '/debug-network-server') {
-        return request.method === 'DELETE'
-          ? clearHistory()
-          : streamRequestEvents(request);
+        return handleDebugNetworkRequest(request);
       }
 
       let requestId = request.headers.get('request-id');
@@ -82,7 +77,7 @@ export async function startNodeServer({
 
       // Provide headers to sub-requests and dispatch the request.
       const response = await asyncLocalStorage.run(
-        {'request-id': requestId, purpose: request.headers.get('purpose')},
+        {requestId, purpose: request.headers.get('purpose')},
         () => defaultDispatcher(request),
       );
 

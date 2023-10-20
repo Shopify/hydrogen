@@ -4,7 +4,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "5.2.3",
+  "version": "5.4.3",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -12,8 +12,8 @@
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "generate:manifest": "node scripts/generate-manifest.mjs",
-    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run --test-timeout=15000",
-    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest --test-timeout=15000"
+    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run --test-timeout=20000",
+    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest --test-timeout=20000"
   },
   "devDependencies": {
     "@types/diff": "^5.0.2",
@@ -37,8 +37,8 @@
     "@oclif/core": "2.11.7",
     "@shopify/cli-kit": "3.49.2",
     "@shopify/hydrogen-codegen": "^0.0.2",
-    "@shopify/mini-oxygen": "^2.2.1",
-    "@shopify/oxygen-cli": "^1.12.0",
+    "@shopify/mini-oxygen": "^2.2.3",
+    "@shopify/oxygen-cli": "^2.0.0",
     "ansi-escapes": "^6.2.0",
     "diff": "^5.1.0",
     "fs-extra": "^11.1.0",
@@ -49,7 +49,7 @@
     "source-map": "^0.7.4",
     "stack-trace": "^1.0.0-pre2",
     "tar-fs": "^2.1.1",
-    "typescript": "^5.2.2",
+    "ts-morph": "20.0.0",
     "use-resize-observer": "^9.1.0",
     "ws": "^8.13.0"
   },
@@ -57,7 +57,7 @@
     "@remix-run/dev": "1.19.1",
     "@remix-run/react": "1.19.1",
     "@shopify/hydrogen-react": "^2023.7.4",
-    "@shopify/remix-oxygen": "^1.1.4"
+    "@shopify/remix-oxygen": "^1.1.7"
   },
   "peerDependenciesMeta": {
     "@remix-run/dev": {

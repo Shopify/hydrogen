@@ -9,6 +9,8 @@ export type H2OEvent = {
   waitUntil?: ExecutionContext['waitUntil'];
 };
 
+let hasWarned = false;
+
 export function createEventLogger(appLoadContext: Record<string, unknown>) {
   const context = (appLoadContext || {}) as {
     env?: Record<string, any>;
@@ -23,30 +25,30 @@ export function createEventLogger(appLoadContext: Record<string, unknown>) {
 
   return ({
     url,
-    eventType,
-    requestId,
-    purpose,
-    startTime,
-    endTime,
-    cacheStatus,
+    endTime = Date.now(),
     waitUntil = context?.waitUntil,
+    ...rest
   }: H2OEvent) => {
-    const promise = eventLoggerService
-      .fetch(
-        new Request(url, {
-          headers: {
-            purpose: purpose || '',
-            'request-id': requestId || '',
-            'hydrogen-event-type': eventType,
-            'hydrogen-start-time': String(startTime),
-            'hydrogen-end-time': String(endTime || Date.now()),
-            'hydrogen-cache-status': cacheStatus || '',
-          },
+    const promise = Promise.resolve().then(() =>
+      eventLoggerService
+        .fetch(
+          new Request(url, {
+            method: 'POST',
+            body: JSON.stringify({
+              endTime,
+              ...rest,
+            }),
+          }),
+        )
+        .catch((error: Error) => {
+          if (!hasWarned) {
+            // This might repeat a lot of times due to
+            // the same issue, so we only warn once.
+            console.debug('Failed to log H2O event\n', error.stack);
+            hasWarned = true;
+          }
         }),
-      )
-      .catch((error: Error) => {
-        console.debug('Failed to log H2O event\n', error.stack);
-      });
+    );
 
     promise && waitUntil?.(promise);
   };
