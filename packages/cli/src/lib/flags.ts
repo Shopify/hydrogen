@@ -60,7 +60,7 @@ export const commonFlags = {
     description:
       'Specify a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if it exists.',
     required: false,
-    dependsOn: ['codegen-unstable'],
+    dependsOn: ['codegen'],
   }),
   styling: Flags.string({
     description: `Sets the styling strategy to use. One of ${STYLING_CHOICES.map(

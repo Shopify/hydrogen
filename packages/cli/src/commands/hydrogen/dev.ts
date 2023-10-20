@@ -41,7 +41,7 @@ export default class Dev extends Command {
     path: commonFlags.path,
     port: commonFlags.port,
     ['worker-unstable']: commonFlags.workerRuntime,
-    ['codegen-unstable']: Flags.boolean({
+    ['codegen']: Flags.boolean({
       description:
         'Generate types for the Storefront API queries found in your project. It updates the types on file save.',
       required: false,
@@ -70,7 +70,7 @@ export default class Dev extends Command {
 
     await runDev({
       ...flagsToCamelObject(flags),
-      useCodegen: flags['codegen-unstable'],
+      useCodegen: flags['codegen'],
       workerRuntime: flags['worker-unstable'],
       path: directory,
     });
