@@ -57,7 +57,7 @@ export type CustomMethodsBase = Record<string, Function>;
 export type CartHandlerOptionsWithCustom<
   TCustomMethods extends CustomMethodsBase,
 > = CartHandlerOptions & {
-  customMethods__unstable?: TCustomMethods;
+  customMethods?: TCustomMethods;
 };
 
 export type HydrogenCart = {
@@ -167,10 +167,10 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
     deleteMetafield: cartMetafieldDeleteDefault(mutateOptions),
   };
 
-  if ('customMethods__unstable' in options) {
+  if ('customMethods' in options) {
     return {
       ...methods,
-      ...(options.customMethods__unstable ?? {}),
+      ...(options.customMethods ?? {}),
     };
   } else {
     return methods;
@@ -206,7 +206,7 @@ export type CartHandlerOptionsForDocs<
    * Define custom methods or override existing methods for your cart API instance.
    * See the [example usage](/docs/api/hydrogen/2023-07/utilities/createcarthandler#example-custom-methods) in the documentation.
    */
-  customMethods__unstable?: TCustomMethods;
+  customMethods?: TCustomMethods;
 };
 
 export type HydrogenCartForDocs = {
