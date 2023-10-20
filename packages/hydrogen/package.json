@@ -53,7 +53,7 @@
     "dist"
   ],
   "dependencies": {
-    "@shopify/hydrogen-react": "2023.7.4",
+    "@shopify/hydrogen-react": "2023.10.0",
     "react": "^18.2.0",
     "content-security-policy-builder": "^2.1.1",
     "type-fest": "^4.5.0"
