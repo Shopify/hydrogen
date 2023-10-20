@@ -5,8 +5,8 @@ export async function loader({context}: LoaderFunctionArgs) {
   if (await context.customer.isLoggedIn()) {
     const {customer} = await context.customer.query<{
       customer: {firstName: string; lastName: string};
-    }>(`
-      {
+    }>(`#graphql
+      query getCustomer {
         customer {
           firstName
           lastName

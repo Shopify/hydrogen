@@ -1,6 +1,10 @@
 import {BadRequest} from './BadRequest';
 import {LIB_VERSION} from '../version';
 
+export interface Locks {
+  refresh?: Promise<any>;
+}
+
 export const userAgent = `Shopify Hydrogen ${LIB_VERSION}`;
 
 export interface HydrogenSession {
@@ -31,12 +35,17 @@ export interface AccessTokenResponse {
   error_description?: string;
 }
 
-export async function refreshToken(
-  session: HydrogenSession,
-  customerAccountId: string,
-  customerAccountUrl: string,
-  origin: string,
-) {
+export async function refreshToken({
+  session,
+  customerAccountId,
+  customerAccountUrl,
+  origin,
+}: {
+  session: HydrogenSession;
+  customerAccountId: string;
+  customerAccountUrl: string;
+  origin: string;
+}) {
   const newBody = new URLSearchParams();
 
   const refreshToken = session.get('refresh_token');
@@ -106,21 +115,34 @@ export function clearSession(session: HydrogenSession): void {
   session.unset('nonce');
 }
 
-export async function checkExpires(
-  expiresAt: string,
-  session: HydrogenSession,
-  customerAccountId: string,
-  customerAccountUrl: string,
-  origin: string,
-) {
-  if (parseInt(expiresAt, 10) < new Date().getTime()) {
+export async function checkExpires({
+  locks,
+  expiresAt,
+  session,
+  customerAccountId,
+  customerAccountUrl,
+  origin,
+}: {
+  locks: Locks;
+  expiresAt: string;
+  session: HydrogenSession;
+  customerAccountId: string;
+  customerAccountUrl: string;
+  origin: string;
+}) {
+  if (parseInt(expiresAt, 10) - 1000 < new Date().getTime()) {
     try {
-      await refreshToken(
-        session,
-        customerAccountId,
-        customerAccountUrl,
-        origin,
-      );
+      // Makes sure that only one refresh request is sent at a time
+      if (!locks.refresh)
+        locks.refresh = refreshToken({
+          session,
+          customerAccountId,
+          customerAccountUrl,
+          origin,
+        });
+
+      await locks.refresh;
+      delete locks.refresh;
     } catch (error) {
       clearSession(session);
 

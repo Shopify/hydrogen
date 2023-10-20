@@ -10,6 +10,7 @@ import {
   AccessTokenResponse,
   getNonce,
   redirect,
+  Locks,
 } from './auth.helpers';
 import {BadRequest} from './BadRequest';
 import {generateNonce} from '../csp/nonce';
@@ -20,7 +21,7 @@ import {parseJSON} from '../utils/parse-json';
 export type CustomerClient = {
   logout: () => Promise<Response>;
   authorize: (redirectPath?: string) => Promise<Response>;
-  isLoggedIn: () => boolean;
+  isLoggedIn: () => Promise<boolean>;
   login: () => Promise<Response>;
   mutate: <ReturnType = any, RawGqlString extends string = string>(
     query: RawGqlString,
@@ -48,6 +49,8 @@ export function createCustomerClient({
   const origin = request.url.startsWith('http:')
     ? new URL(request.url).origin.replace('http', 'https')
     : new URL(request.url).origin;
+
+  const locks: Locks = {};
 
   return {
     login: async () => {
@@ -99,10 +102,25 @@ export function createCustomerClient({
         },
       );
     },
-    isLoggedIn: () => {
-      return !!(
-        session.get('customer_access_token') && session.get('expires_at')
-      );
+    isLoggedIn: async () => {
+      const expiresAt = session.get('expires_at');
+
+      if (!session.get('customer_access_token') || !expiresAt) return false;
+
+      try {
+        await checkExpires({
+          locks,
+          expiresAt,
+          session,
+          customerAccountId,
+          customerAccountUrl,
+          origin,
+        });
+      } catch {
+        return false;
+      }
+
+      return true;
     },
     async mutate<ReturnType = any, RawGqlString extends string = string>(
       mutation: RawGqlString,
@@ -131,13 +149,14 @@ export function createCustomerClient({
           'Login before querying the Customer Account API.',
         );
 
-      await checkExpires(
+      await checkExpires({
+        locks,
         expiresAt,
         session,
         customerAccountId,
         customerAccountUrl,
         origin,
-      );
+      });
 
       const response = await fetch(
         `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`,

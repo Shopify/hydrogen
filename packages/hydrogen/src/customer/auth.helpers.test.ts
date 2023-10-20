@@ -56,12 +56,12 @@ describe('auth.helpers', () => {
 
     it("Throws BadRequest when there's no refresh token in the session", async () => {
       async function run() {
-        await refreshToken(
+        await refreshToken({
           session,
-          'customerAccountId',
-          'customerAccountUrl',
-          'https://localhost',
-        );
+          customerAccountId: 'customerAccountId',
+          customerAccountUrl: 'customerAccountUrl',
+          origin: 'https://localhost',
+        });
       }
 
       await expect(run).rejects.toThrowError(
@@ -75,12 +75,12 @@ describe('auth.helpers', () => {
       fetch.mockResolvedValue(createFetchResponse('Unauthorized', {ok: false}));
 
       async function run() {
-        await refreshToken(
+        await refreshToken({
           session,
-          'customerAccountId',
-          'customerAccountUrl',
-          'https://localhost',
-        );
+          customerAccountId: 'customerAccountId',
+          customerAccountUrl: 'customerAccountUrl',
+          origin: 'https://localhost',
+        });
       }
 
       await expect(run).rejects.toThrowError('Unauthorized');
@@ -102,12 +102,12 @@ describe('auth.helpers', () => {
       );
 
       async function run() {
-        await refreshToken(
+        await refreshToken({
           session,
-          'customerAccountId',
-          'customerAccountUrl',
-          'https://localhost',
-        );
+          customerAccountId: 'customerAccountId',
+          customerAccountUrl: 'customerAccountUrl',
+          origin: 'https://localhost',
+        });
       }
 
       await expect(run).rejects.toThrowError(
@@ -130,12 +130,12 @@ describe('auth.helpers', () => {
         ),
       );
 
-      await refreshToken(
+      await refreshToken({
         session,
-        'customerAccountId',
-        'customerAccountUrl',
-        'https://localhost',
-      );
+        customerAccountId: 'customerAccountId',
+        customerAccountUrl: 'customerAccountUrl',
+        origin: 'https://localhost',
+      });
 
       expect(session.set).toHaveBeenNthCalledWith(
         1,
@@ -206,13 +206,14 @@ describe('auth.helpers', () => {
 
     it("no-ops if the session isn't expired", async () => {
       async function run() {
-        await checkExpires(
-          new Date().getTime() + 10000 + '',
+        await checkExpires({
+          locks: {},
+          expiresAt: new Date().getTime() + 10000 + '',
           session,
-          'customerAccountId',
-          'customerAccountUrl',
-          'https://localhost',
-        );
+          customerAccountId: 'customerAccountId',
+          customerAccountUrl: 'customerAccountUrl',
+          origin: 'https://localhost',
+        });
       }
 
       expect(await run()).toBeUndefined();
@@ -233,13 +234,14 @@ describe('auth.helpers', () => {
         ),
       );
 
-      await checkExpires(
-        '100',
+      await checkExpires({
+        locks: {},
+        expiresAt: '100',
         session,
-        'customerAccountId',
-        'customerAccountUrl',
-        'https://localhost',
-      );
+        customerAccountId: 'customerAccountId',
+        customerAccountUrl: 'customerAccountUrl',
+        origin: 'https://localhost',
+      });
 
       expect(session.set).toHaveBeenNthCalledWith(
         1,
@@ -258,6 +260,60 @@ describe('auth.helpers', () => {
         'refresh_token',
       );
       expect(session.set).toHaveBeenNthCalledWith(
+        5,
+        'customer_access_token',
+        'access_token',
+      );
+    });
+
+    it('does not refresh the token when a refresh is already in process', async () => {
+      (session.get as any).mockResolvedValue('value');
+
+      fetch.mockResolvedValue(
+        createFetchResponse(
+          {
+            access_token: 'access_token',
+            expires_in: '',
+            id_token: 'id_token',
+            refresh_token: 'refresh_token',
+          },
+          {ok: true},
+        ),
+      );
+
+      await checkExpires({
+        locks: {
+          // mock an existing refresh promise
+          refresh: Promise.resolve(),
+        },
+        expiresAt: '100',
+        session,
+        customerAccountId: 'customerAccountId',
+        customerAccountUrl: 'customerAccountUrl',
+        origin: 'https://localhost',
+      });
+
+      expect(session.set).not.toHaveBeenNthCalledWith(
+        1,
+        'customer_authorization_code_token',
+        'access_token',
+      );
+      expect(session.set).not.toHaveBeenNthCalledWith(
+        2,
+        'expires_at',
+        expect.anything(),
+      );
+      expect(session.set).not.toHaveBeenNthCalledWith(
+        3,
+        'id_token',
+        'id_token',
+      );
+      expect(session.set).not.toHaveBeenNthCalledWith(
+        4,
+        'refresh_token',
+        'refresh_token',
+      );
+      expect(session.set).not.toHaveBeenNthCalledWith(
         5,
         'customer_access_token',
         'access_token',

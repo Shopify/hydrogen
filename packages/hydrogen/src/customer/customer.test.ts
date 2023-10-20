@@ -70,7 +70,7 @@ describe('customer', () => {
         request: new Request('https://localhost'),
       });
 
-      expect(customer.isLoggedIn()).toBe(true);
+      expect(await customer.isLoggedIn()).toBe(true);
     });
 
     it('returns false if logged out', async () => {
@@ -83,7 +83,7 @@ describe('customer', () => {
 
       (session.get as any).mockReturnValueOnce(undefined);
 
-      expect(customer.isLoggedIn()).toBe(false);
+      expect(await customer.isLoggedIn()).toBe(false);
     });
 
     it('Redirects to the customer account api login url', async () => {
