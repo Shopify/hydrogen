@@ -54,7 +54,7 @@
           "required": false,
           "multiple": false,
           "dependsOn": [
-            "codegen-unstable"
+            "codegen"
           ]
         },
         "base": {
@@ -255,7 +255,7 @@
           "required": false,
           "multiple": false,
           "dependsOn": [
-            "codegen-unstable"
+            "codegen"
           ]
         },
         "sourcemap": {
