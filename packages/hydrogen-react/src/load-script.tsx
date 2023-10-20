@@ -2,9 +2,15 @@ import {useState, useEffect} from 'react';
 
 const SCRIPTS_LOADED: Record<string, Promise<boolean>> = {};
 
+type LoadScriptOptions = {
+  module?: boolean;
+  in?: 'head' | 'body';
+  attributes?: Record<string, string>;
+};
+
 export function loadScript(
   src: string,
-  options?: {module?: boolean; in?: 'head' | 'body'},
+  options?: LoadScriptOptions,
 ): Promise<boolean> {
   const isScriptLoaded = SCRIPTS_LOADED[src];
 
@@ -31,6 +37,13 @@ export function loadScript(
       document.head.appendChild(script);
     } else {
       document.body.appendChild(script);
+    }
+
+    const attributes = options?.attributes;
+    if (attributes) {
+      Object.keys(attributes).forEach((key) => {
+        attributes[key] && script.setAttribute(key, attributes[key]);
+      });
     }
   });
 
