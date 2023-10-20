@@ -40,8 +40,8 @@
           "description": "Disable warning about missing standard routes.",
           "allowNo": false
         },
-        "codegen": {
-          "name": "codegen",
+        "codegen-unstable": {
+          "name": "codegen-unstable",
           "type": "boolean",
           "description": "Generate types for the Storefront API queries found in your project.",
           "required": false,
@@ -54,7 +54,7 @@
           "required": false,
           "multiple": false,
           "dependsOn": [
-            "codegen"
+            "codegen-unstable"
           ]
         },
         "base": {
@@ -105,8 +105,8 @@
         }
       }
     },
-    "hydrogen:codegen": {
-      "id": "hydrogen:codegen",
+    "hydrogen:codegen-unstable": {
+      "id": "hydrogen:codegen-unstable",
       "description": "Generate types for the Storefront API queries found in your project.",
       "strict": true,
       "pluginName": "@shopify/cli-hydrogen",
@@ -241,8 +241,8 @@
           "description": "Run the app in a worker environment closer to Oxygen production instead of a Node.js sandbox. This flag is unstable and may change without notice.",
           "allowNo": false
         },
-        "codegen": {
-          "name": "codegen",
+        "codegen-unstable": {
+          "name": "codegen-unstable",
           "type": "boolean",
           "description": "Generate types for the Storefront API queries found in your project. It updates the types on file save.",
           "required": false,
@@ -255,7 +255,7 @@
           "required": false,
           "multiple": false,
           "dependsOn": [
-            "codegen"
+            "codegen-unstable"
           ]
         },
         "sourcemap": {
