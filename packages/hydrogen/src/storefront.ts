@@ -190,6 +190,8 @@ type StorefrontHeaders = {
   buyerIp: string | null;
   /** The cookie header from the client  */
   cookie: string | null;
+  /** The purpose header value for debugging */
+  purpose: string | null;
 };
 
 type StorefrontQueryOptions = StorefrontQuerySecondParam & {
@@ -316,11 +318,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
     const url = getStorefrontApiUrl({storefrontApiVersion});
     const graphqlData = JSON.stringify({query, variables: queryVariables});
-    const requestInit: RequestInit = {
+    const requestInit = {
       method: 'POST',
       headers: {...defaultHeaders, ...userHeaders},
       body: graphqlData,
-    };
+    } satisfies RequestInit;
 
     // Remove any headers that are identifiable to the user or request
     const cacheKey = [
@@ -346,7 +348,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       cacheKey,
       shouldCacheResponse: checkGraphQLErrors,
       waitUntil,
-      debugInfo: {graphql: graphqlData},
+      debugInfo: {
+        graphql: graphqlData,
+        requestId: requestInit.headers[STOREFRONT_REQUEST_GROUP_ID_HEADER],
+        purpose: storefrontHeaders?.purpose,
+      },
     });
 
     const errorOptions: StorefrontErrorOptions<T> = {
