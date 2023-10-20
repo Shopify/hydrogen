@@ -1,8 +1,9 @@
 /** @type {import('@remix-run/dev').AppConfig} */
 module.exports = {
   ignoredRouteFiles: ['**/.*'],
+  watchPaths: [process.env.DOCS_META_FILE],
   future: {
-    v2_dev: true,
+    v2_dev: false,
     v2_meta: true,
     v2_headers: true,
     v2_errorBoundary: true,

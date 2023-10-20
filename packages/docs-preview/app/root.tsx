@@ -13,13 +13,15 @@ import {
 import stylesheet from '~/tailwind.css';
 import {Fragment, useCallback, useState} from 'react';
 import he from 'he';
-import data from './generated_docs_data';
 
 export const links: LinksFunction = () => [
   {rel: 'stylesheet', href: stylesheet},
 ];
 
 export async function loader() {
+  delete require.cache[process.env.DOCS_META_FILE!];
+  const data = require(process.env.DOCS_META_FILE!);
+
   for (const doc of data) {
     for (const tab of doc.defaultExample.codeblock.tabs) {
       tab.code = he.decode(tab.code);
