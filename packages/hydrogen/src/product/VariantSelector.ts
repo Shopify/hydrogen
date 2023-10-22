@@ -6,7 +6,7 @@ import type {
   ProductVariantConnection,
   SelectedOptionInput,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {ReactNode, useMemo, createElement, Fragment} from 'react';
+import {type ReactNode, useMemo, createElement, Fragment} from 'react';
 import type {PartialDeep} from 'type-fest';
 
 export type VariantOption = {

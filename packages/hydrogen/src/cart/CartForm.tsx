@@ -1,6 +1,6 @@
 import {type FetcherWithComponents, useFetcher} from '@remix-run/react';
 import {type MetafieldWithoutOwnerId} from './queries/cart-types';
-import React from 'react';
+import type {ReactNode} from 'react';
 import {
   AttributeInput,
   CartBuyerIdentityInput,
@@ -173,9 +173,7 @@ type CartFormCommonProps = {
    * Children nodes of CartForm.
    * Children can be a render prop that receives the fetcher.
    */
-  children:
-    | React.ReactNode
-    | ((fetcher: FetcherWithComponents<any>) => React.ReactNode);
+  children: ReactNode | ((fetcher: FetcherWithComponents<any>) => ReactNode);
   /**
    * The route to submit the form to. Defaults to the current route.
    */
