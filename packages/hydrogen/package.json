@@ -54,16 +54,17 @@
   ],
   "dependencies": {
     "@shopify/hydrogen-react": "2023.7.4",
-    "react": "^18.2.0",
     "content-security-policy-builder": "^2.1.1"
   },
   "peerDependencies": {
     "@remix-run/react": "1.19.1",
-    "@remix-run/server-runtime": "1.19.1"
+    "@remix-run/server-runtime": "1.19.1",
+    "react": "^18.2.0"
   },
   "devDependencies": {
     "@testing-library/react": "^14.0.0",
     "happy-dom": "^8.9.0",
+    "react": "^18.2.0",
     "schema-dts": "^1.1.0",
     "vitest": "^0.33.0",
     "@shopify/generate-docs": "0.11.1"
