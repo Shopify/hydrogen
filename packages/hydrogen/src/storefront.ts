@@ -28,6 +28,11 @@ import {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {warnOnce} from './utils/warning';
 import {LIB_VERSION} from './version';
+import {
+  getHeader,
+  getDebugHeaders,
+  type CrossRuntimeRequest,
+} from './utils/request';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 
@@ -164,7 +169,9 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
 };
 
 type HydrogenClientProps<TI18n> = {
-  /** Storefront API headers. If on Oxygen, use `getStorefrontHeaders()` */
+  /** The `request` object is used to access headers for the Storefront API. */
+  request?: CrossRuntimeRequest;
+  /** @deprecated Storefront API headers. If on Oxygen, use `getStorefrontHeaders()` */
   storefrontHeaders?: StorefrontHeaders;
   /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */
   cache?: Cache;
@@ -190,8 +197,6 @@ type StorefrontHeaders = {
   buyerIp: string | null;
   /** The cookie header from the client  */
   cookie: string | null;
-  /** The purpose header value for debugging */
-  purpose: string | null;
 };
 
 type StorefrontQueryOptions = StorefrontQuerySecondParam & {
@@ -226,19 +231,17 @@ const defaultI18n: I18nBase = {language: 'EN', country: 'US'};
  *
  *  Learn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).
  */
-export function createStorefrontClient<TI18n extends I18nBase>(
-  options: CreateStorefrontClientOptions<TI18n>,
-): StorefrontClient<TI18n> {
-  const {
-    storefrontHeaders,
-    cache,
-    waitUntil,
-    buyerIp,
-    i18n,
-    requestGroupId,
-    storefrontId,
-    ...clientOptions
-  } = options;
+export function createStorefrontClient<TI18n extends I18nBase>({
+  request,
+  storefrontHeaders,
+  cache,
+  waitUntil,
+  buyerIp,
+  i18n,
+  requestGroupId,
+  storefrontId,
+  ...clientOptions
+}: CreateStorefrontClientOptions<TI18n>): StorefrontClient<TI18n> {
   const H2_PREFIX_WARN = '[h2:warn:createStorefrontClient] ';
 
   if (process.env.NODE_ENV === 'development' && !cache) {
@@ -255,11 +258,27 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     getShopifyDomain,
   } = createStorefrontUtilities(clientOptions);
 
-  const getHeaders = clientOptions.privateStorefrontToken
+  // Deprecation warning
+  if (process.env.NODE_ENV === 'development' && storefrontHeaders) {
+    warnOnce(
+      H2_PREFIX_WARN +
+        '`storefrontHeaders` will be deprecated in the next calendar release. Please pass `request` instead.',
+    );
+  }
+
+  if (request) {
+    storefrontHeaders = {
+      requestGroupId: getHeader(request, 'request-id'),
+      buyerIp: getHeader(request, 'oxygen-buyer-ip'),
+      cookie: getHeader(request, 'cookie'),
+    };
+  }
+
+  const getTokenHeaders = clientOptions.privateStorefrontToken
     ? getPrivateTokenHeaders
     : getPublicTokenHeaders;
 
-  const defaultHeaders = getHeaders({
+  const defaultHeaders = getTokenHeaders({
     contentType: 'json',
     buyerIp: storefrontHeaders?.buyerIp || buyerIp,
   });
@@ -270,8 +289,8 @@ export function createStorefrontClient<TI18n extends I18nBase>(
   if (storefrontId) defaultHeaders[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;
   if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;
 
-  if (storefrontHeaders && storefrontHeaders.cookie) {
-    const cookies = getShopifyCookies(storefrontHeaders.cookie ?? '');
+  if (storefrontHeaders?.cookie) {
+    const cookies = getShopifyCookies(storefrontHeaders.cookie);
 
     if (cookies[SHOPIFY_Y])
       defaultHeaders[SHOPIFY_STOREFRONT_Y_HEADER] = cookies[SHOPIFY_Y];
@@ -350,8 +369,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       waitUntil,
       debugInfo: {
         graphql: graphqlData,
-        requestId: requestInit.headers[STOREFRONT_REQUEST_GROUP_ID_HEADER],
-        purpose: storefrontHeaders?.purpose,
+        ...getDebugHeaders(request),
       },
     });
 

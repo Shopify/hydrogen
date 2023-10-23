@@ -69,15 +69,16 @@ type StorefrontHeaders = {
   requestGroupId: string | null;
   buyerIp: string | null;
   cookie: string | null;
-  purpose: string | null;
 };
 
+/**
+ * @deprecated Since 2023-10
+ */
 export function getStorefrontHeaders(request: Request): StorefrontHeaders {
   const headers = request.headers;
   return {
     requestGroupId: headers.get('request-id'),
     buyerIp: headers.get('oxygen-buyer-ip'),
     cookie: headers.get('cookie'),
-    purpose: headers.get('purpose'),
   };
 }
