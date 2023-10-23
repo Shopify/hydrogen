@@ -50,7 +50,38 @@
     },
     "./storefront-api-types": "./dist/types/storefront-api-types.d.ts",
     "./storefront.schema.json": "./storefront.schema.json",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./*": {
+      "node": {
+        "require": {
+          "types": "./dist/types/*.d.cts",
+          "development": "./dist/node-dev/*.js",
+          "default": "./dist/node-prod/*.js"
+        },
+        "import": {
+          "types": "./dist/types/*.d.ts",
+          "development": "./dist/node-dev/*.mjs",
+          "default": "./dist/node-prod/*.mjs"
+        },
+        "default": "./dist/node-prod/*.js"
+      },
+      "module": {
+        "types": "./dist/types/*.d.ts",
+        "development": "./dist/browser-dev/*.mjs",
+        "default": "./dist/browser-prod/*.mjs"
+      },
+      "import": {
+        "types": "./dist/types/*.d.ts",
+        "development": "./dist/browser-dev/*.mjs",
+        "default": "./dist/browser-prod/*.mjs"
+      },
+      "require": {
+        "types": "./dist/types/*.d.cts",
+        "development": "./dist/node-dev/*.js",
+        "default": "./dist/node-prod/*.js"
+      },
+      "default": "./dist/browser-prod/*.mjs"
+    }
   },
   "typesVersions": {
     "*": {
