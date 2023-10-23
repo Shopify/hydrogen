@@ -217,7 +217,7 @@ type StorefrontMutationOptions = StorefrontMutateSecondParam & {
   cache?: never;
 };
 
-const StorefrontApiError = class extends Error {} as ErrorConstructor;
+export const StorefrontApiError = class extends Error {} as ErrorConstructor;
 export const isStorefrontApiError = (error: any) =>
   error instanceof StorefrontApiError;
 

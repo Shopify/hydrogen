@@ -1,8 +1,8 @@
 import {generateUUID} from './uuid';
 
 export type CrossRuntimeRequest = {
-  url: string;
-  method: string;
+  url?: string;
+  method?: string;
   socket?: {remoteAddress?: string}; // For Node request
   headers: {
     get?: (key: string) => string | null | undefined;
