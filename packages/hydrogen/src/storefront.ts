@@ -32,6 +32,7 @@ import {
   getHeader,
   getDebugHeaders,
   type CrossRuntimeRequest,
+  getClientIp,
 } from './utils/request';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
@@ -269,8 +270,8 @@ export function createStorefrontClient<TI18n extends I18nBase>({
   if (request) {
     storefrontHeaders = {
       requestGroupId: getHeader(request, 'request-id'),
-      buyerIp: getHeader(request, 'oxygen-buyer-ip'),
       cookie: getHeader(request, 'cookie'),
+      buyerIp: getClientIp(request),
     };
   }
 
