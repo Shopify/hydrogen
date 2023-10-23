@@ -1,6 +1,6 @@
 export type CrossRuntimeRequest = {
-  url: string;
-  method: string;
+  url?: string;
+  method?: string;
   headers: {
     get?: (key: string) => string | null | undefined;
     [key: string]: any;
