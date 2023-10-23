@@ -1,9 +1,6 @@
 // Virtual entry point for the app
 import * as remixBuild from '@remix-run/dev/server-build';
-import {
-  createRequestHandler,
-  getStorefrontHeaders,
-} from '@shopify/remix-oxygen';
+import {createRequestHandler} from '@shopify/remix-oxygen';
 import {
   cartGetIdDefault,
   cartSetIdDefault,
@@ -43,13 +40,13 @@ export default {
        */
       const {storefront} = createStorefrontClient({
         cache,
+        request,
         waitUntil,
         i18n: getLocaleFromRequest(request),
         publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
         privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
         storeDomain: env.PUBLIC_STORE_DOMAIN,
         storefrontId: env.PUBLIC_STOREFRONT_ID,
-        storefrontHeaders: getStorefrontHeaders(request),
       });
 
       const cart = createCartHandler({

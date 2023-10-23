@@ -150,7 +150,6 @@ describe('i18n replacers', () => {
         } from \\"@shopify/hydrogen\\";
         import {
           createRequestHandler,
-          getStorefrontHeaders,
           createCookieSessionStorage,
           type SessionStorage,
           type Session,
@@ -184,13 +183,13 @@ describe('i18n replacers', () => {
                */
               const { storefront } = createStorefrontClient({
                 cache,
+                request,
                 waitUntil,
                 i18n: getLocaleFromRequest(request),
                 publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
                 privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
                 storeDomain: env.PUBLIC_STORE_DOMAIN,
                 storefrontId: env.PUBLIC_STOREFRONT_ID,
-                storefrontHeaders: getStorefrontHeaders(request),
               });
 
               /*

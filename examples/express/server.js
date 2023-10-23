@@ -75,10 +75,11 @@ function purgeRequireCache() {
   }
 }
 
-async function getContext(req) {
-  const session = await HydrogenSession.init(req, [env.SESSION_SECRET]);
+async function getContext(request) {
+  const session = await HydrogenSession.init(request, [env.SESSION_SECRET]);
 
   const {storefront} = createStorefrontClient({
+    request,
     // A [`cache` instance](https://developer.mozilla.org/en-US/docs/Web/API/Cache) is necessary for sub-request caching to work.
     // We provide only an in-memory implementation
     cache: new InMemoryCache(),
@@ -89,11 +90,6 @@ async function getContext(req) {
     privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
     storeDomain: env.PUBLIC_STORE_DOMAIN,
     storefrontId: env.PUBLIC_STOREFRONT_ID,
-    storefrontHeaders: {
-      requestGroupId: req.get('request-id'),
-      buyerIp: req.get('oxygen-buyer-ip'),
-      cookie: req.get('cookie'),
-    },
   });
 
   return {session, storefront, env};

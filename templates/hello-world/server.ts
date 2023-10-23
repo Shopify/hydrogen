@@ -3,7 +3,6 @@ import * as remixBuild from '@remix-run/dev/server-build';
 import {createStorefrontClient, storefrontRedirect} from '@shopify/hydrogen';
 import {
   createRequestHandler,
-  getStorefrontHeaders,
   createCookieSessionStorage,
   type SessionStorage,
   type Session,
@@ -26,7 +25,7 @@ export default {
         throw new Error('SESSION_SECRET environment variable is not set');
       }
 
-      const waitUntil = (p: Promise<any>) => executionContext.waitUntil(p);
+      const waitUntil = executionContext.waitUntil.bind(executionContext);
       const [cache, session] = await Promise.all([
         caches.open('hydrogen'),
         HydrogenSession.init(request, [env.SESSION_SECRET]),
@@ -37,13 +36,13 @@ export default {
        */
       const {storefront} = createStorefrontClient({
         cache,
+        request,
         waitUntil,
         i18n: {language: 'EN', country: 'US'},
         publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
         privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
         storeDomain: env.PUBLIC_STORE_DOMAIN,
         storefrontId: env.PUBLIC_STOREFRONT_ID,
-        storefrontHeaders: getStorefrontHeaders(request),
       });
 
       /**
