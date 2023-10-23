@@ -1,19 +1,16 @@
 import {storefrontRedirect, createStorefrontClient} from '@shopify/hydrogen';
 import * as remixBuild from '@remix-run/dev/server-build';
-import {
-  createRequestHandler,
-  getStorefrontHeaders,
-} from '@shopify/remix-oxygen';
+import {createRequestHandler} from '@shopify/remix-oxygen';
 
 export default {
   async fetch(request, env, executionContext) {
     const {storefront} = createStorefrontClient({
+      request,
       cache: await caches.open('hydrogen'),
-      waitUntil: (p) => executionContext.waitUntil(p),
+      waitUntil: executionContext.waitUntil.bind(executionContext),
       privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
       publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
       storeDomain: env.PUBLIC_STORE_DOMAIN,
-      storefrontHeaders: getStorefrontHeaders(request),
     });
 
     const handleRequest = createRequestHandler({
