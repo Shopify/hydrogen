@@ -42,7 +42,7 @@ export function loadScript(
     const attributes = options?.attributes;
     if (attributes) {
       Object.keys(attributes).forEach((key) => {
-        attributes[key] && script.setAttribute(key, attributes[key]);
+        script.setAttribute(key, attributes[key]);
       });
     }
   });

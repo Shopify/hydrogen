@@ -62,6 +62,7 @@ describe(`useLoadScript`, () => {
         attributes: {
           'data-test1': 'test1',
           test2: 'test2',
+          test3: '',
         },
       }),
     );
@@ -70,6 +71,7 @@ describe(`useLoadScript`, () => {
     expect(script).toContainHTML('src="test3.js"');
     expect(script).toContainHTML('data-test1="test1"');
     expect(script).toContainHTML('test2="test2"');
+    expect(script).toContainHTML('test3=""');
   });
 
   it('does not double create scripts', () => {
