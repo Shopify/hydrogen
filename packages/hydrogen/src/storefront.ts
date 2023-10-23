@@ -20,7 +20,6 @@ import {
   generateCacheControlHeader,
   type CachingStrategy,
 } from './cache/strategies';
-import {generateUUID} from './utils/uuid';
 import {parseJSON} from './utils/parse-json';
 import {
   CountryCode,
@@ -31,8 +30,9 @@ import {LIB_VERSION} from './version';
 import {
   getHeader,
   getDebugHeaders,
-  type CrossRuntimeRequest,
   getClientIp,
+  getRequestId,
+  type CrossRuntimeRequest,
 } from './utils/request';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
@@ -269,9 +269,9 @@ export function createStorefrontClient<TI18n extends I18nBase>({
 
   if (request) {
     storefrontHeaders = {
-      requestGroupId: getHeader(request, 'request-id'),
-      cookie: getHeader(request, 'cookie'),
+      requestGroupId: getRequestId(request),
       buyerIp: getClientIp(request),
+      cookie: getHeader(request, 'cookie'),
     };
   }
 
@@ -284,9 +284,8 @@ export function createStorefrontClient<TI18n extends I18nBase>({
     buyerIp: storefrontHeaders?.buyerIp || buyerIp,
   });
 
-  defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] =
-    storefrontHeaders?.requestGroupId || requestGroupId || generateUUID();
-
+  const requestId = storefrontHeaders?.requestGroupId || requestGroupId || null;
+  if (requestId) defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] = requestId;
   if (storefrontId) defaultHeaders[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;
   if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;
 

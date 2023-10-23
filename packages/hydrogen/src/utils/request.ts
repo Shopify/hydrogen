@@ -1,3 +1,5 @@
+import {generateUUID} from './uuid';
+
 export type CrossRuntimeRequest = {
   url: string;
   method: string;
@@ -18,6 +20,17 @@ export function getClientIp(request: CrossRuntimeRequest) {
   );
 }
 
+export function getRequestId(request: CrossRuntimeRequest) {
+  let requestId = getHeader(request, 'request-id');
+
+  if (!requestId) {
+    // Store it in the headers object for later access
+    request.headers['request-id'] = requestId = generateUUID();
+  }
+
+  return requestId;
+}
+
 export function getHeader(request: CrossRuntimeRequest, key: string) {
   const value = request.headers?.get?.(key) ?? request.headers?.[key];
   return typeof value === 'string' ? value : null;
@@ -26,7 +39,7 @@ export function getHeader(request: CrossRuntimeRequest, key: string) {
 export function getDebugHeaders(request?: CrossRuntimeRequest) {
   return request
     ? {
-        requestId: getHeader(request, 'request-id'),
+        requestId: getRequestId(request),
         purpose: getHeader(request, 'purpose'),
       }
     : {};
