@@ -125,7 +125,8 @@
     "test:watch": "vitest",
     "typecheck": "run-p typecheck:*",
     "typecheck:code": "tsc --noEmit",
-    "typecheck:examples": "tsc --noEmit --project tsconfig.examples.json"
+    "typecheck:examples": "tsc --noEmit --project tsconfig.examples.json",
+    "preview-docs": "node ../docs-preview/bin/cli.js docs/generated/generated_docs_data.json"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
