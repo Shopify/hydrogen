@@ -982,14 +982,14 @@
             "filePath": "/cart/CartForm.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartFormCommonProps",
-            "value": "{\n  /**\n   * Children nodes of CartForm.\n   * Children can be a render prop that receives the fetcher.\n   */\n  children:\n    | React.ReactNode\n    | ((fetcher: FetcherWithComponents<any>) => React.ReactNode);\n  /**\n   * The route to submit the form to. Defaults to the current route.\n   */\n  route?: string;\n}",
+            "value": "{\n  /**\n   * Children nodes of CartForm.\n   * Children can be a render prop that receives the fetcher.\n   */\n  children: ReactNode | ((fetcher: FetcherWithComponents<any>) => ReactNode);\n  /**\n   * The route to submit the form to. Defaults to the current route.\n   */\n  route?: string;\n}",
             "description": "",
             "members": [
               {
                 "filePath": "/cart/CartForm.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "children",
-                "value": "any",
+                "value": "ReactNode | ((fetcher: FetcherWithComponents<any>) => ReactNode)",
                 "description": "Children nodes of CartForm. Children can be a render prop that receives the fetcher."
               },
               {
@@ -8351,7 +8351,13 @@
               "name": "StorefrontClient<TI18n extends I18nBase>",
               "value": "StorefrontClient<TI18n extends I18nBase>"
             },
+<<<<<<< HEAD
             "value": "export function createStorefrontClient<TI18n extends I18nBase>(\n  options: CreateStorefrontClientOptions<TI18n>,\n): StorefrontClient<TI18n> {\n  const {\n    storefrontHeaders,\n    cache,\n    waitUntil,\n    buyerIp,\n    i18n,\n    requestGroupId,\n    storefrontId,\n    ...clientOptions\n  } = options;\n  const H2_PREFIX_WARN = '[h2:warn:createStorefrontClient] ';\n\n  if (process.env.NODE_ENV === 'development' && !cache) {\n    warnOnce(\n      H2_PREFIX_WARN +\n        'Storefront API client created without a cache instance. This may slow down your sub-requests.',\n    );\n  }\n\n  const {\n    getPublicTokenHeaders,\n    getPrivateTokenHeaders,\n    getStorefrontApiUrl,\n    getShopifyDomain,\n  } = createStorefrontUtilities(clientOptions);\n\n  const getHeaders = clientOptions.privateStorefrontToken\n    ? getPrivateTokenHeaders\n    : getPublicTokenHeaders;\n\n  const defaultHeaders = getHeaders({\n    contentType: 'json',\n    buyerIp: storefrontHeaders?.buyerIp || buyerIp,\n  });\n\n  defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] =\n    storefrontHeaders?.requestGroupId || requestGroupId || generateUUID();\n\n  if (storefrontId) defaultHeaders[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;\n  if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;\n\n  if (storefrontHeaders && storefrontHeaders.cookie) {\n    const cookies = getShopifyCookies(storefrontHeaders.cookie ?? '');\n\n    if (cookies[SHOPIFY_Y])\n      defaultHeaders[SHOPIFY_STOREFRONT_Y_HEADER] = cookies[SHOPIFY_Y];\n    if (cookies[SHOPIFY_S])\n      defaultHeaders[SHOPIFY_STOREFRONT_S_HEADER] = cookies[SHOPIFY_S];\n  }\n\n  // Deprecation warning\n  if (process.env.NODE_ENV === 'development' && !storefrontHeaders) {\n    warnOnce(\n      H2_PREFIX_WARN +\n        '`requestGroupId` and `buyerIp` will be deprecated in the next calendar release. Please use `getStorefrontHeaders`',\n    );\n  }\n\n  async function fetchStorefrontApi<T>({\n    query,\n    mutation,\n    variables,\n    cache: cacheOptions,\n    headers = [],\n    storefrontApiVersion,\n  }: StorefrontQueryOptions | StorefrontMutationOptions): Promise<T> {\n    const userHeaders =\n      headers instanceof Headers\n        ? Object.fromEntries(headers.entries())\n        : Array.isArray(headers)\n        ? Object.fromEntries(headers)\n        : headers;\n\n    query = query ?? mutation;\n\n    const queryVariables = {...variables};\n\n    if (i18n) {\n      if (!variables?.country && /\\$country/.test(query)) {\n        queryVariables.country = i18n.country;\n      }\n\n      if (!variables?.language && /\\$language/.test(query)) {\n        queryVariables.language = i18n.language;\n      }\n    }\n\n    const url = getStorefrontApiUrl({storefrontApiVersion});\n    const graphqlData = JSON.stringify({query, variables: queryVariables});\n    const requestInit: RequestInit = {\n      method: 'POST',\n      headers: {...defaultHeaders, ...userHeaders},\n      body: graphqlData,\n    };\n\n    // Remove any headers that are identifiable to the user or request\n    const cacheKey = [\n      url,\n      {\n        method: requestInit.method,\n        headers: {\n          'content-type': defaultHeaders['content-type'],\n          'X-SDK-Variant': defaultHeaders['X-SDK-Variant'],\n          'X-SDK-Variant-Source': defaultHeaders['X-SDK-Variant-Source'],\n          'X-SDK-Version': defaultHeaders['X-SDK-Version'],\n          'X-Shopify-Storefront-Access-Token':\n            defaultHeaders['X-Shopify-Storefront-Access-Token'],\n          'user-agent': defaultHeaders['user-agent'],\n        },\n        body: requestInit.body,\n      },\n    ];\n\n    const [body, response] = await fetchWithServerCache(url, requestInit, {\n      cacheInstance: mutation ? undefined : cache,\n      cache: cacheOptions || CacheShort(),\n      cacheKey,\n      shouldCacheResponse: checkGraphQLErrors,\n      waitUntil,\n      debugInfo: {graphql: graphqlData},\n    });\n\n    const errorOptions: StorefrontErrorOptions<T> = {\n      response,\n      type: mutation ? 'mutation' : 'query',\n      query,\n      queryVariables,\n      errors: undefined,\n    };\n\n    if (!response.ok) {\n      /**\n       * The Storefront API might return a string error, or a JSON-formatted {error: string}.\n       * We try both and conform them to a single {errors} format.\n       */\n      let errors;\n      try {\n        errors = parseJSON(body);\n      } catch (_e) {\n        errors = [{message: body}];\n      }\n\n      throwError({...errorOptions, errors});\n    }\n\n    const {data, errors} = body as StorefrontApiResponse<T>;\n\n    if (errors?.length) {\n      throwError({\n        ...errorOptions,\n        errors,\n        ErrorConstructor: StorefrontApiError,\n      });\n    }\n\n    return data as T;\n  }\n\n  return {\n    storefront: {\n      /**\n       * Sends a GraphQL query to the Storefront API.\n       *\n       * Example:\n       *\n       * ```js\n       * async function loader ({context: {storefront}}) {\n       *   const data = await storefront.query('query { ... }', {\n       *     variables: {},\n       *     cache: storefront.CacheLong()\n       *   });\n       * }\n       * ```\n       */\n      query: <Storefront['query']>((query: string, payload) => {\n        query = minifyQuery(query);\n        if (isMutationRE.test(query)) {\n          throw new Error(\n            '[h2:error:storefront.query] Cannot execute mutations',\n          );\n        }\n\n        const result = fetchStorefrontApi({\n          ...payload,\n          query,\n        });\n\n        // This is a no-op, but we need to catch the promise to avoid unhandled rejections\n        // we cannot return the catch no-op, or it would swallow the error\n        result.catch(() => {});\n\n        return result;\n      }),\n      /**\n       * Sends a GraphQL mutation to the Storefront API.\n       *\n       * Example:\n       *\n       * ```js\n       * async function loader ({context: {storefront}}) {\n       *   await storefront.mutate('mutation { ... }', {\n       *     variables: {},\n       *   });\n       * }\n       * ```\n       */\n      mutate: <Storefront['mutate']>((mutation: string, payload) => {\n        mutation = minifyQuery(mutation);\n        if (isQueryRE.test(mutation)) {\n          throw new Error(\n            '[h2:error:storefront.mutate] Cannot execute queries',\n          );\n        }\n\n        const result = fetchStorefrontApi({\n          ...payload,\n          mutation,\n        });\n\n        // This is a no-op, but we need to catch the promise to avoid unhandled rejections\n        // we cannot return the catch no-op, or it would swallow the error\n        result.catch(() => {});\n\n        return result;\n      }),\n      cache,\n      CacheNone,\n      CacheLong,\n      CacheShort,\n      CacheCustom,\n      generateCacheControlHeader,\n      getPublicTokenHeaders,\n      getPrivateTokenHeaders,\n      getShopifyDomain,\n      getApiUrl: getStorefrontApiUrl,\n      /**\n       * Wether it's a GraphQL error returned in the Storefront API response.\n       *\n       * Example:\n       *\n       * ```js\n       * async function loader ({context: {storefront}}) {\n       *   try {\n       *     await storefront.query(...);\n       *   } catch(error) {\n       *     if (storefront.isApiError(error)) {\n       *       // ...\n       *     }\n       *\n       *     throw error;\n       *   }\n       * }\n       * ```\n       */\n      isApiError: isStorefrontApiError,\n      i18n: (i18n ?? defaultI18n) as TI18n,\n    },\n  };\n}"
+||||||| parent of 41b322a65 (Added reference docs)
+            "value": "export function createStorefrontClient<TI18n extends I18nBase>(\n  options: CreateStorefrontClientOptions<TI18n>,\n): StorefrontClient<TI18n> {\n  const {\n    storefrontHeaders,\n    cache,\n    waitUntil,\n    buyerIp,\n    i18n,\n    requestGroupId,\n    storefrontId,\n    ...clientOptions\n  } = options;\n  const H2_PREFIX_WARN = '[h2:warn:createStorefrontClient] ';\n\n  if (process.env.NODE_ENV === 'development' && !cache) {\n    warnOnce(\n      H2_PREFIX_WARN +\n        'Storefront API client created without a cache instance. This may slow down your sub-requests.',\n    );\n  }\n\n  const {\n    getPublicTokenHeaders,\n    getPrivateTokenHeaders,\n    getStorefrontApiUrl,\n    getShopifyDomain,\n  } = createStorefrontUtilities(clientOptions);\n\n  const getHeaders = clientOptions.privateStorefrontToken\n    ? getPrivateTokenHeaders\n    : getPublicTokenHeaders;\n\n  const defaultHeaders = getHeaders({\n    contentType: 'json',\n    buyerIp: storefrontHeaders?.buyerIp || buyerIp,\n  });\n\n  defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] =\n    storefrontHeaders?.requestGroupId || requestGroupId || generateUUID();\n\n  if (storefrontId) defaultHeaders[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;\n  if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;\n\n  if (storefrontHeaders && storefrontHeaders.cookie) {\n    const cookies = getShopifyCookies(storefrontHeaders.cookie ?? '');\n\n    if (cookies[SHOPIFY_Y])\n      defaultHeaders[SHOPIFY_STOREFRONT_Y_HEADER] = cookies[SHOPIFY_Y];\n    if (cookies[SHOPIFY_S])\n      defaultHeaders[SHOPIFY_STOREFRONT_S_HEADER] = cookies[SHOPIFY_S];\n  }\n\n  // Deprecation warning\n  if (process.env.NODE_ENV === 'development' && !storefrontHeaders) {\n    warnOnce(\n      H2_PREFIX_WARN +\n        '`requestGroupId` and `buyerIp` will be deprecated in the next calendar release. Please use `getStorefrontHeaders`',\n    );\n  }\n\n  async function fetchStorefrontApi<T>({\n    query,\n    mutation,\n    variables,\n    cache: cacheOptions,\n    headers = [],\n    storefrontApiVersion,\n    stackLine,\n  }: {stackLine?: string} & (\n    | StorefrontQueryOptions\n    | StorefrontMutationOptions\n  )): Promise<T> {\n    const userHeaders =\n      headers instanceof Headers\n        ? Object.fromEntries(headers.entries())\n        : Array.isArray(headers)\n        ? Object.fromEntries(headers)\n        : headers;\n\n    query = query ?? mutation;\n\n    const queryVariables = {...variables};\n\n    if (i18n) {\n      if (!variables?.country && /\\$country/.test(query)) {\n        queryVariables.country = i18n.country;\n      }\n\n      if (!variables?.language && /\\$language/.test(query)) {\n        queryVariables.language = i18n.language;\n      }\n    }\n\n    const url = getStorefrontApiUrl({storefrontApiVersion});\n    const graphqlData = JSON.stringify({query, variables: queryVariables});\n    const requestInit: RequestInit = {\n      method: 'POST',\n      headers: {...defaultHeaders, ...userHeaders},\n      body: graphqlData,\n    };\n\n    // Remove any headers that are identifiable to the user or request\n    const cacheKey = [\n      url,\n      {\n        method: requestInit.method,\n        headers: {\n          'content-type': defaultHeaders['content-type'],\n          'X-SDK-Variant': defaultHeaders['X-SDK-Variant'],\n          'X-SDK-Variant-Source': defaultHeaders['X-SDK-Variant-Source'],\n          'X-SDK-Version': defaultHeaders['X-SDK-Version'],\n          'X-Shopify-Storefront-Access-Token':\n            defaultHeaders['X-Shopify-Storefront-Access-Token'],\n          'user-agent': defaultHeaders['user-agent'],\n        },\n        body: requestInit.body,\n      },\n    ];\n\n    const [body, response] = await fetchWithServerCache(url, requestInit, {\n      cacheInstance: mutation ? undefined : cache,\n      cache: cacheOptions || CacheShort(),\n      cacheKey,\n      shouldCacheResponse: checkGraphQLErrors,\n      waitUntil,\n      debugInfo: {stackLine, graphql: graphqlData},\n    });\n\n    const errorOptions: StorefrontErrorOptions<T> = {\n      response,\n      type: mutation ? 'mutation' : 'query',\n      query,\n      queryVariables,\n      errors: undefined,\n    };\n\n    if (!response.ok) {\n      /**\n       * The Storefront API might return a string error, or a JSON-formatted {error: string}.\n       * We try both and conform them to a single {errors} format.\n       */\n      let errors;\n      try {\n        errors = parseJSON(body);\n      } catch (_e) {\n        errors = [{message: body}];\n      }\n\n      throwError({...errorOptions, errors});\n    }\n\n    const {data, errors} = body as StorefrontApiResponse<T>;\n\n    if (errors?.length) {\n      throwError({\n        ...errorOptions,\n        errors,\n        ErrorConstructor: StorefrontApiError,\n      });\n    }\n\n    return data as T;\n  }\n\n  return {\n    storefront: {\n      /**\n       * Sends a GraphQL query to the Storefront API.\n       *\n       * Example:\n       *\n       * ```js\n       * async function loader ({context: {storefront}}) {\n       *   const data = await storefront.query('query { ... }', {\n       *     variables: {},\n       *     cache: storefront.CacheLong()\n       *   });\n       * }\n       * ```\n       */\n      query: <Storefront['query']>((query: string, payload) => {\n        query = minifyQuery(query);\n        if (isMutationRE.test(query)) {\n          throw new Error(\n            '[h2:error:storefront.query] Cannot execute mutations',\n          );\n        }\n\n        const result = fetchStorefrontApi({\n          ...payload,\n          query,\n          stackLine: getCallerStackLine?.(),\n        });\n\n        // This is a no-op, but we need to catch the promise to avoid unhandled rejections\n        // we cannot return the catch no-op, or it would swallow the error\n        result.catch(() => {});\n\n        return result;\n      }),\n      /**\n       * Sends a GraphQL mutation to the Storefront API.\n       *\n       * Example:\n       *\n       * ```js\n       * async function loader ({context: {storefront}}) {\n       *   await storefront.mutate('mutation { ... }', {\n       *     variables: {},\n       *   });\n       * }\n       * ```\n       */\n      mutate: <Storefront['mutate']>((mutation: string, payload) => {\n        mutation = minifyQuery(mutation);\n        if (isQueryRE.test(mutation)) {\n          throw new Error(\n            '[h2:error:storefront.mutate] Cannot execute queries',\n          );\n        }\n\n        const result = fetchStorefrontApi({\n          ...payload,\n          mutation,\n          stackLine: getCallerStackLine?.(),\n        });\n\n        // This is a no-op, but we need to catch the promise to avoid unhandled rejections\n        // we cannot return the catch no-op, or it would swallow the error\n        result.catch(() => {});\n\n        return result;\n      }),\n      cache,\n      CacheNone,\n      CacheLong,\n      CacheShort,\n      CacheCustom,\n      generateCacheControlHeader,\n      getPublicTokenHeaders,\n      getPrivateTokenHeaders,\n      getShopifyDomain,\n      getApiUrl: getStorefrontApiUrl,\n      /**\n       * Wether it's a GraphQL error returned in the Storefront API response.\n       *\n       * Example:\n       *\n       * ```js\n       * async function loader ({context: {storefront}}) {\n       *   try {\n       *     await storefront.query(...);\n       *   } catch(error) {\n       *     if (storefront.isApiError(error)) {\n       *       // ...\n       *     }\n       *\n       *     throw error;\n       *   }\n       * }\n       * ```\n       */\n      isApiError: isStorefrontApiError,\n      i18n: (i18n ?? defaultI18n) as TI18n,\n    },\n  };\n}"
+=======
+            "value": "export function createStorefrontClient<TI18n extends I18nBase>(\n  options: CreateStorefrontClientOptions<TI18n>,\n): StorefrontClient<TI18n> {\n  const {\n    storefrontHeaders,\n    cache,\n    waitUntil,\n    buyerIp,\n    i18n,\n    requestGroupId,\n    storefrontId,\n    ...clientOptions\n  } = options;\n  const H2_PREFIX_WARN = '[h2:warn:createStorefrontClient] ';\n\n  if (process.env.NODE_ENV === 'development' && !cache) {\n    warnOnce(\n      H2_PREFIX_WARN +\n        'Storefront API client created without a cache instance. This may slow down your sub-requests.',\n    );\n  }\n\n  const {\n    getPublicTokenHeaders,\n    getPrivateTokenHeaders,\n    getStorefrontApiUrl,\n    getShopifyDomain,\n  } = createStorefrontUtilities(clientOptions);\n\n  const getHeaders = clientOptions.privateStorefrontToken\n    ? getPrivateTokenHeaders\n    : getPublicTokenHeaders;\n\n  const defaultHeaders = getHeaders({\n    contentType: 'json',\n    buyerIp: storefrontHeaders?.buyerIp || buyerIp,\n  });\n\n  defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] =\n    storefrontHeaders?.requestGroupId || requestGroupId || generateUUID();\n\n  if (storefrontId) defaultHeaders[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;\n  if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;\n\n  if (storefrontHeaders && storefrontHeaders.cookie) {\n    const cookies = getShopifyCookies(storefrontHeaders.cookie ?? '');\n\n    if (cookies[SHOPIFY_Y])\n      defaultHeaders[SHOPIFY_STOREFRONT_Y_HEADER] = cookies[SHOPIFY_Y];\n    if (cookies[SHOPIFY_S])\n      defaultHeaders[SHOPIFY_STOREFRONT_S_HEADER] = cookies[SHOPIFY_S];\n  }\n\n  // Deprecation warning\n  if (process.env.NODE_ENV === 'development' && !storefrontHeaders) {\n    warnOnce(\n      H2_PREFIX_WARN +\n        '`requestGroupId` and `buyerIp` will be deprecated in the next calendar release. Please use `getStorefrontHeaders`',\n    );\n  }\n\n  async function fetchStorefrontApi<T>({\n    query,\n    mutation,\n    variables,\n    cache: cacheOptions,\n    headers = [],\n    storefrontApiVersion,\n  }: StorefrontQueryOptions | StorefrontMutationOptions): Promise<T> {\n    const userHeaders =\n      headers instanceof Headers\n        ? Object.fromEntries(headers.entries())\n        : Array.isArray(headers)\n        ? Object.fromEntries(headers)\n        : headers;\n\n    query = query ?? mutation;\n\n    const queryVariables = {...variables};\n\n    if (i18n) {\n      if (!variables?.country && /\\$country/.test(query)) {\n        queryVariables.country = i18n.country;\n      }\n\n      if (!variables?.language && /\\$language/.test(query)) {\n        queryVariables.language = i18n.language;\n      }\n    }\n\n    const url = getStorefrontApiUrl({storefrontApiVersion});\n    const graphqlData = JSON.stringify({query, variables: queryVariables});\n    const requestInit = {\n      method: 'POST',\n      headers: {...defaultHeaders, ...userHeaders},\n      body: graphqlData,\n    } satisfies RequestInit;\n\n    // Remove any headers that are identifiable to the user or request\n    const cacheKey = [\n      url,\n      {\n        method: requestInit.method,\n        headers: {\n          'content-type': defaultHeaders['content-type'],\n          'X-SDK-Variant': defaultHeaders['X-SDK-Variant'],\n          'X-SDK-Variant-Source': defaultHeaders['X-SDK-Variant-Source'],\n          'X-SDK-Version': defaultHeaders['X-SDK-Version'],\n          'X-Shopify-Storefront-Access-Token':\n            defaultHeaders['X-Shopify-Storefront-Access-Token'],\n          'user-agent': defaultHeaders['user-agent'],\n        },\n        body: requestInit.body,\n      },\n    ];\n\n    const [body, response] = await fetchWithServerCache(url, requestInit, {\n      cacheInstance: mutation ? undefined : cache,\n      cache: cacheOptions || CacheShort(),\n      cacheKey,\n      shouldCacheResponse: checkGraphQLErrors,\n      waitUntil,\n      debugInfo: {\n        graphql: graphqlData,\n        requestId: requestInit.headers[STOREFRONT_REQUEST_GROUP_ID_HEADER],\n        purpose: storefrontHeaders?.purpose,\n      },\n    });\n\n    const errorOptions: StorefrontErrorOptions<T> = {\n      response,\n      type: mutation ? 'mutation' : 'query',\n      query,\n      queryVariables,\n      errors: undefined,\n    };\n\n    if (!response.ok) {\n      /**\n       * The Storefront API might return a string error, or a JSON-formatted {error: string}.\n       * We try both and conform them to a single {errors} format.\n       */\n      let errors;\n      try {\n        errors = parseJSON(body);\n      } catch (_e) {\n        errors = [{message: body}];\n      }\n\n      throwError({...errorOptions, errors});\n    }\n\n    const {data, errors} = body as StorefrontApiResponse<T>;\n\n    if (errors?.length) {\n      throwError({\n        ...errorOptions,\n        errors,\n        ErrorConstructor: StorefrontApiError,\n      });\n    }\n\n    return data as T;\n  }\n\n  return {\n    storefront: {\n      /**\n       * Sends a GraphQL query to the Storefront API.\n       *\n       * Example:\n       *\n       * ```js\n       * async function loader ({context: {storefront}}) {\n       *   const data = await storefront.query('query { ... }', {\n       *     variables: {},\n       *     cache: storefront.CacheLong()\n       *   });\n       * }\n       * ```\n       */\n      query: <Storefront['query']>((query: string, payload) => {\n        query = minifyQuery(query);\n        if (IS_MUTATION_RE.test(query)) {\n          throw new Error(\n            '[h2:error:storefront.query] Cannot execute mutations',\n          );\n        }\n\n        const result = fetchStorefrontApi({\n          ...payload,\n          query,\n        });\n\n        // This is a no-op, but we need to catch the promise to avoid unhandled rejections\n        // we cannot return the catch no-op, or it would swallow the error\n        result.catch(() => {});\n\n        return result;\n      }),\n      /**\n       * Sends a GraphQL mutation to the Storefront API.\n       *\n       * Example:\n       *\n       * ```js\n       * async function loader ({context: {storefront}}) {\n       *   await storefront.mutate('mutation { ... }', {\n       *     variables: {},\n       *   });\n       * }\n       * ```\n       */\n      mutate: <Storefront['mutate']>((mutation: string, payload) => {\n        mutation = minifyQuery(mutation);\n        if (IS_QUERY_RE.test(mutation)) {\n          throw new Error(\n            '[h2:error:storefront.mutate] Cannot execute queries',\n          );\n        }\n\n        const result = fetchStorefrontApi({\n          ...payload,\n          mutation,\n        });\n\n        // This is a no-op, but we need to catch the promise to avoid unhandled rejections\n        // we cannot return the catch no-op, or it would swallow the error\n        result.catch(() => {});\n\n        return result;\n      }),\n      cache,\n      CacheNone,\n      CacheLong,\n      CacheShort,\n      CacheCustom,\n      generateCacheControlHeader,\n      getPublicTokenHeaders,\n      getPrivateTokenHeaders,\n      getShopifyDomain,\n      getApiUrl: getStorefrontApiUrl,\n      /**\n       * Wether it's a GraphQL error returned in the Storefront API response.\n       *\n       * Example:\n       *\n       * ```js\n       * async function loader ({context: {storefront}}) {\n       *   try {\n       *     await storefront.query(...);\n       *   } catch(error) {\n       *     if (storefront.isApiError(error)) {\n       *       // ...\n       *     }\n       *\n       *     throw error;\n       *   }\n       * }\n       * ```\n       */\n      isApiError: isStorefrontApiError,\n      i18n: (i18n ?? defaultI18n) as TI18n,\n    },\n  };\n}"
+>>>>>>> 41b322a65 (Added reference docs)
           },
           "CreateStorefrontClientOptions": {
             "filePath": "/storefront.ts",
@@ -8431,7 +8437,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontHeaders",
-            "value": "{\n  /** A unique ID that correlates all sub-requests together. */\n  requestGroupId: string | null;\n  /** The IP address of the client. */\n  buyerIp: string | null;\n  /** The cookie header from the client  */\n  cookie: string | null;\n}",
+            "value": "{\n  /** A unique ID that correlates all sub-requests together. */\n  requestGroupId: string | null;\n  /** The IP address of the client. */\n  buyerIp: string | null;\n  /** The cookie header from the client  */\n  cookie: string | null;\n  /** The purpose header value for debugging */\n  purpose: string | null;\n}",
             "description": "",
             "members": [
               {
@@ -8454,6 +8460,13 @@
                 "name": "cookie",
                 "value": "string",
                 "description": "The cookie header from the client"
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "purpose",
+                "value": "string",
+                "description": "The purpose header value for debugging"
               }
             ]
           },
@@ -8996,6 +9009,206 @@
     ]
   },
   {
+    "name": "createCustomerClient",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "createStorefrontClient",
+        "type": "utility",
+        "url": "/docs/api/hydrogen/2023-07/utilities/createstorefrontclient"
+      }
+    ],
+    "description": "> Caution:\n> This component is in an unstable pre-release state and may have breaking changes in a future release.\n\nThe `createCustomerClient` function creates a GraphQL client for querying the [Customer Account API](https://shopify.dev/docs/api/customer). It also provides methods to authenticate and check if the user is logged in.\n\nSee an end to end [example on using the Customer Account API client](https://github.com/Shopify/hydrogen/tree/main/examples/customer-api).",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {createCustomerClient__unstable} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  createCookieSessionStorage,\n} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(request, env, executionContext) {\n    const session = await HydrogenSession.init(request, [env.SESSION_SECRET]);\n\n    /* Create a Customer API client with your credentials and options */\n    const customer = createCustomerClient__unstable({\n      /* Runtime utility in serverless environments */\n      waitUntil: (p) =&gt; executionContext.waitUntil(p),\n      /* Public Customer Account API token for your store */\n      customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_ID,\n      /* Public account URL for your store */\n      customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_URL,\n      request,\n      session,\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      /* Inject the customer account client in the Remix context */\n      getLoadContext: () =&gt; ({customer}),\n    });\n\n    return handleRequest(request);\n  },\n};\n\nclass HydrogenSession {\n  static async init(request, secrets) {\n    const storage = createCookieSessionStorage({\n      cookie: {\n        name: 'session',\n        httpOnly: true,\n        path: '/',\n        sameSite: 'lax',\n        secrets,\n      },\n    });\n\n    const session = await storage.getSession(request.headers.get('Cookie'));\n\n    return new this(storage, session);\n  }\n\n  get(key) {\n    return this.session.get(key);\n  }\n\n  destroy() {\n    return this.sessionStorage.destroySession(this.session);\n  }\n\n  flash(key, value) {\n    this.session.flash(key, value);\n  }\n\n  unset(key) {\n    this.session.unset(key);\n  }\n\n  set(key, value) {\n    this.session.set(key, value);\n  }\n\n  commit() {\n    return this.sessionStorage.commitSession(this.session);\n  }\n}\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {createCustomerClient__unstable} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  createCookieSessionStorage,\n  type SessionStorage,\n  type Session,\n} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(\n    request: Request,\n    env: Record&lt;string, string&gt;,\n    executionContext: ExecutionContext,\n  ) {\n    const session = await HydrogenSession.init(request, [env.SESSION_SECRET]);\n\n    /* Create a Customer API client with your credentials and options */\n    const customer = createCustomerClient__unstable({\n      /* Runtime utility in serverless environments */\n      waitUntil: (p) =&gt; executionContext.waitUntil(p),\n      /* Public Customer Account API token for your store */\n      customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_ID,\n      /* Public account URL for your store */\n      customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_URL,\n      request,\n      session,\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      /* Inject the customer account client in the Remix context */\n      getLoadContext: () =&gt; ({customer}),\n    });\n\n    return handleRequest(request);\n  },\n};\n\nclass HydrogenSession {\n  constructor(\n    private sessionStorage: SessionStorage,\n    private session: Session,\n  ) {}\n\n  static async init(request: Request, secrets: string[]) {\n    const storage = createCookieSessionStorage({\n      cookie: {\n        name: 'session',\n        httpOnly: true,\n        path: '/',\n        sameSite: 'lax',\n        secrets,\n      },\n    });\n\n    const session = await storage.getSession(request.headers.get('Cookie'));\n\n    return new this(storage, session);\n  }\n\n  get(key: string) {\n    return this.session.get(key);\n  }\n\n  destroy() {\n    return this.sessionStorage.destroySession(this.session);\n  }\n\n  flash(key: string, value: any) {\n    this.session.flash(key, value);\n  }\n\n  unset(key: string) {\n    this.session.unset(key);\n  }\n\n  set(key: string, value: any) {\n    this.session.set(key, value);\n  }\n\n  commit() {\n    return this.sessionStorage.commitSession(this.session);\n  }\n}\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "CreateCustomerClientGeneratedType",
+        "typeDefinitions": {
+          "CreateCustomerClientGeneratedType": {
+            "filePath": "/customer/customer.ts",
+            "name": "CreateCustomerClientGeneratedType",
+            "description": "",
+            "params": [
+              {
+                "name": "options",
+                "description": "",
+                "value": "CustomerClientOptions",
+                "filePath": "/customer/customer.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "/customer/customer.ts",
+              "description": "",
+              "name": "CustomerClient",
+              "value": "CustomerClient"
+            },
+            "value": "export function createCustomerClient(\n  options: CustomerClientOptions,\n): CustomerClient {\n  const {\n    session,\n    customerAccountId,\n    customerAccountUrl,\n    customerApiVersion = '2023-10',\n    request,\n    waitUntil,\n  } = options;\n  const origin = request.url.startsWith('http:')\n    ? new URL(request.url).origin.replace('http', 'https')\n    : new URL(request.url).origin;\n\n  const locks: Locks = {};\n\n  const logSubRequestEvent =\n    process.env.NODE_ENV === 'development'\n      ? (query: string, startTime: number) => {\n          globalThis.__H2O_LOG_EVENT?.({\n            eventType: 'subrequest',\n            url: `https://shopify.dev/?${hashKey([\n              `Customer Account `,\n              /((query|mutation) [^\\s\\(]+)/g.exec(query)?.[0] ||\n                query.substring(0, 10),\n            ])}`,\n            startTime,\n            cacheStatus: 'MISS',\n            waitUntil,\n            requestId: getHeader('request-id', request),\n            purpose: 'Customer API query',\n          });\n        }\n      : undefined;\n\n  return {\n    login: async () => {\n      const loginUrl = new URL(customerAccountUrl + '/auth/oauth/authorize');\n\n      const state = await generateState();\n      const nonce = await generateNonce();\n\n      loginUrl.searchParams.set('client_id', customerAccountId);\n      loginUrl.searchParams.set('scope', 'openid email');\n      loginUrl.searchParams.append('response_type', 'code');\n      loginUrl.searchParams.append('redirect_uri', origin + '/authorize');\n      loginUrl.searchParams.set(\n        'scope',\n        'openid email https://api.customers.com/auth/customer.graphql',\n      );\n      loginUrl.searchParams.append('state', state);\n      loginUrl.searchParams.append('nonce', nonce);\n\n      const verifier = await generateCodeVerifier();\n      const challenge = await generateCodeChallenge(verifier);\n\n      session.set('code-verifier', verifier);\n      session.set('state', state);\n      session.set('nonce', nonce);\n\n      loginUrl.searchParams.append('code_challenge', challenge);\n      loginUrl.searchParams.append('code_challenge_method', 'S256');\n\n      return redirect(loginUrl.toString(), {\n        headers: {\n          'Set-Cookie': await session.commit(),\n        },\n      });\n    },\n    logout: async () => {\n      const idToken = session.get('id_token');\n\n      clearSession(session);\n\n      return redirect(\n        `${customerAccountUrl}/auth/logout?id_token_hint=${idToken}`,\n        {\n          status: 302,\n\n          headers: {\n            'Set-Cookie': await session.commit(),\n          },\n        },\n      );\n    },\n    isLoggedIn: async () => {\n      const expiresAt = session.get('expires_at');\n\n      if (!session.get('customer_access_token') || !expiresAt) return false;\n\n      const startTime = new Date().getTime();\n\n      try {\n        await checkExpires({\n          locks,\n          expiresAt,\n          session,\n          customerAccountId,\n          customerAccountUrl,\n          origin,\n        });\n\n        logSubRequestEvent?.(' check expires', startTime);\n      } catch {\n        return false;\n      }\n\n      return true;\n    },\n    async mutate<ReturnType = any, RawGqlString extends string = string>(\n      mutation: RawGqlString,\n      options: {variables: Record<string, any>} = {variables: {}},\n    ) {\n      if (IS_QUERY_RE.test(mutation)) {\n        throw new Error('[h2:error:customer.mutate] Cannot execute queries');\n      }\n\n      return this.query<ReturnType, RawGqlString>(mutation, options);\n    },\n    query: async <ReturnType = any, RawGqlString extends string = string>(\n      query: RawGqlString,\n      options: {variables: Record<string, any>} = {variables: {}},\n    ) => {\n      if (IS_MUTATION_RE.test(query)) {\n        throw new Error('[h2:error:customer.query] Cannot execute mutations');\n      }\n\n      const accessToken = session.get('customer_access_token');\n      const expiresAt = session.get('expires_at');\n\n      if (!accessToken || !expiresAt)\n        throw new BadRequest(\n          'Unauthorized',\n          'Login before querying the Customer Account API.',\n        );\n\n      await checkExpires({\n        locks,\n        expiresAt,\n        session,\n        customerAccountId,\n        customerAccountUrl,\n        origin,\n      });\n\n      const startTime = new Date().getTime();\n\n      const response = await fetch(\n        `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`,\n        {\n          method: 'POST',\n          headers: {\n            'Content-Type': 'application/json',\n            'User-Agent': USER_AGENT,\n            Origin: origin,\n            Authorization: accessToken,\n          },\n          body: JSON.stringify({\n            operationName: 'SomeQuery',\n            query,\n            variables: options.variables || {},\n          }),\n        },\n      );\n\n      logSubRequestEvent?.(query, startTime);\n\n      const body = await response.text();\n      let data: ReturnType;\n\n      if (!response.ok) {\n        /**\n         * The Storefront API might return a string error, or a JSON-formatted {error: string}.\n         * We try both and conform them to a single {errors} format.\n         */\n        let errors;\n        try {\n          errors = parseJSON(body);\n        } catch (_e) {\n          errors = [{message: body}];\n        }\n\n        throwError({\n          response,\n          type: 'query',\n          query,\n          queryVariables: options.variables,\n          errors,\n          client: 'customer',\n        });\n      }\n\n      try {\n        data = parseJSON(body).data;\n      } catch (e) {\n        throwError({\n          response,\n          type: 'query',\n          query,\n          queryVariables: options.variables,\n          errors: [{message: body}],\n          client: 'customer',\n        });\n      }\n\n      // data is always initialized in the try block above\n      // @ts-expect-error\n      return data as any as ReturnType;\n    },\n    authorize: async (redirectPath = '/') => {\n      const url = new URL(request.url);\n      const code = url.searchParams.get('code');\n      const state = url.searchParams.get('state');\n\n      if (!code || !state) {\n        clearSession(session);\n        throw new BadRequest(\n          'Unauthorized',\n          'No code or state parameter found in the redirect URL.',\n        );\n      }\n\n      if (session.get('state') !== state) {\n        clearSession(session);\n        throw new BadRequest(\n          'Unauthorized',\n          'The session state does not match the state parameter. Make sure that the session is configured correctly and passed to `createCustomerClient`.',\n        );\n      }\n\n      const clientId = customerAccountId;\n      const body = new URLSearchParams();\n\n      body.append('grant_type', 'authorization_code');\n      body.append('client_id', clientId);\n      body.append(\n        'redirect_uri',\n        new URL(request.url).origin.replace('http', 'https') + '/authorize',\n      );\n      body.append('code', code);\n\n      // Public Client\n      const codeVerifier = session.get('code-verifier');\n\n      if (!codeVerifier)\n        throw new BadRequest(\n          'Unauthorized',\n          'No code verifier found in the session. Make sure that the session is configured correctly and passed to `createCustomerClient`.',\n        );\n\n      body.append('code_verifier', codeVerifier);\n\n      const headers = {\n        'content-type': 'application/x-www-form-urlencoded',\n        'User-Agent': USER_AGENT,\n        Origin: new URL(request.url).origin.replace('http', 'https'),\n      };\n\n      const response = await fetch(`${customerAccountUrl}/auth/oauth/token`, {\n        method: 'POST',\n        headers,\n        body,\n      });\n\n      if (!response.ok) {\n        throw new Response(await response.text(), {\n          status: response.status,\n          headers: {\n            'Content-Type': 'text/html; charset=utf-8',\n          },\n        });\n      }\n\n      const {access_token, expires_in, id_token, refresh_token} =\n        await response.json<AccessTokenResponse>();\n\n      const sessionNonce = session.get('nonce');\n      const responseNonce = await getNonce(id_token);\n\n      if (sessionNonce !== responseNonce) {\n        throw new BadRequest(\n          'Unauthorized',\n          `Returned nonce does not match: ${sessionNonce} !== ${responseNonce}`,\n        );\n      }\n\n      session.set('customer_authorization_code_token', access_token);\n      session.set(\n        'expires_at',\n        new Date(new Date().getTime() + (expires_in! - 120) * 1000).getTime() +\n          '',\n      );\n      session.set('id_token', id_token);\n      session.set('refresh_token', refresh_token);\n\n      const customerAccessToken = await exchangeAccessToken(\n        session,\n        customerAccountId,\n        customerAccountUrl,\n        origin,\n      );\n\n      session.set('customer_access_token', customerAccessToken);\n\n      return redirect(redirectPath, {\n        headers: {\n          'Set-Cookie': await session.commit(),\n        },\n      });\n    },\n  };\n}"
+          },
+          "CustomerClientOptions": {
+            "filePath": "/customer/customer.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CustomerClientOptions",
+            "value": "{\n  /** The client requires a session to persist the auth and refresh token. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */\n  session: HydrogenSession;\n  /** Unique UUID prefixed with `shp_` associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. */\n  customerAccountId: string;\n  /** The account URL associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. */\n  customerAccountUrl: string;\n  /** Override the version of the API */\n  customerApiVersion?: string;\n  /** The object for the current Request. It should be provided by your platform. */\n  request: Request;\n  /** The waitUntil function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */\n  waitUntil: (p: Promise<any>) => void;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/customer/customer.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "session",
+                "value": "HydrogenSession",
+                "description": "The client requires a session to persist the auth and refresh token. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation."
+              },
+              {
+                "filePath": "/customer/customer.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "customerAccountId",
+                "value": "string",
+                "description": "Unique UUID prefixed with `shp_` associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel."
+              },
+              {
+                "filePath": "/customer/customer.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "customerAccountUrl",
+                "value": "string",
+                "description": "The account URL associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel."
+              },
+              {
+                "filePath": "/customer/customer.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "customerApiVersion",
+                "value": "string",
+                "description": "Override the version of the API",
+                "isOptional": true
+              },
+              {
+                "filePath": "/customer/customer.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "request",
+                "value": "Request",
+                "description": "The object for the current Request. It should be provided by your platform."
+              },
+              {
+                "filePath": "/customer/customer.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "waitUntil",
+                "value": "(p: Promise<any>) => void",
+                "description": "The waitUntil function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform."
+              }
+            ]
+          },
+          "HydrogenSession": {
+            "filePath": "/customer/auth.helpers.ts",
+            "name": "HydrogenSession",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/customer/auth.helpers.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "get",
+                "value": "(key: string) => string",
+                "description": ""
+              },
+              {
+                "filePath": "/customer/auth.helpers.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "set",
+                "value": "(key: string, value: string) => void",
+                "description": ""
+              },
+              {
+                "filePath": "/customer/auth.helpers.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "unset",
+                "value": "(key: string) => void",
+                "description": ""
+              },
+              {
+                "filePath": "/customer/auth.helpers.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "commit",
+                "value": "() => Promise<string>",
+                "description": ""
+              }
+            ],
+            "value": "export interface HydrogenSession {\n  get: (key: string) => string | undefined;\n  set: (key: string, value: string) => void;\n  unset: (key: string) => void;\n  commit: () => Promise<string>;\n}"
+          },
+          "CustomerClient": {
+            "filePath": "/customer/customer.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CustomerClient",
+            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. */\n  login: () => Promise<Response>;\n  /** On successful login, the user is redirect back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings. */\n  authorize: (redirectPath?: string) => Promise<Response>;\n  /** Returns if the user is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn: () => Promise<boolean>;\n  /** Logout the user by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. */\n  logout: () => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */\n  query: <ReturnType = any, RawGqlString extends string = string>(\n    query: RawGqlString,\n    options?: {variables: Record<string, any>},\n  ) => Promise<ReturnType>;\n  /** Execute a GraphQL mutation against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */\n  mutate: <ReturnType = any, RawGqlString extends string = string>(\n    query: RawGqlString,\n    options?: {variables: Record<string, any>},\n  ) => Promise<ReturnType>;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/customer/customer.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "login",
+                "value": "() => Promise<Response>",
+                "description": "Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain."
+              },
+              {
+                "filePath": "/customer/customer.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "authorize",
+                "value": "(redirectPath?: string) => Promise<Response>",
+                "description": "On successful login, the user is redirect back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings."
+              },
+              {
+                "filePath": "/customer/customer.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "isLoggedIn",
+                "value": "() => Promise<boolean>",
+                "description": "Returns if the user is logged in. It also checks if the access token is expired and refreshes it if needed."
+              },
+              {
+                "filePath": "/customer/customer.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "logout",
+                "value": "() => Promise<Response>",
+                "description": "Logout the user by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action."
+              },
+              {
+                "filePath": "/customer/customer.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "query",
+                "value": "<ReturnType = any, RawGqlString extends string = string>(query: RawGqlString, options?: { variables: Record<string, any>; }) => Promise<ReturnType>",
+                "description": "Execute a GraphQL query against the Customer Account API. Usually you should first check if the user is logged in before querying the API."
+              },
+              {
+                "filePath": "/customer/customer.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "mutate",
+                "value": "<ReturnType = any, RawGqlString extends string = string>(query: RawGqlString, options?: { variables: Record<string, any>; }) => Promise<ReturnType>",
+                "description": "Execute a GraphQL mutation against the Customer Account API. Usually you should first check if the user is logged in before querying the API."
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
     "name": "OptimisticInput",
     "category": "components",
     "isVisualComponent": false,
@@ -9281,7 +9494,7 @@
         "url": "/docs/api/hydrogen/2023-10/components/pagination"
       }
     ],
-    "description": "> Caution:\n> This component is in an unstable pre-release state and may have breaking changes in a future release.\n\nThe `getPaginationVariables` function is used with the [`<Pagination>`](/docs/api/hydrogen/components/pagnination) component to generate the variables needed to fetch paginated data from the Storefront API. The returned variables should be used within your storefront GraphQL query.",
+    "description": "The `getPaginationVariables` function is used with the [`<Pagination>`](/docs/api/hydrogen/components/pagnination) component to generate the variables needed to fetch paginated data from the Storefront API. The returned variables should be used within your storefront GraphQL query.",
     "type": "utility",
     "defaultExample": {
       "description": "I am the default example",
@@ -10083,12 +10296,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "// In your app's `server.ts` file:\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {createWithCache, CacheLong} from '@shopify/hydrogen';\n// Use another `createRequestHandler` if deploying off oxygen\nimport {createRequestHandler} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(request, env, executionContext) {\n    const cache = await caches.open('my-cms');\n    const withCache = createWithCache({\n      cache,\n      waitUntil: executionContext.waitUntil,\n    });\n\n    // Create a custom utility to query a third-party API:\n    const fetchMyCMS = (query) =&gt; {\n      // Prefix the cache key and make it unique based on arguments.\n      return withCache(['my-cms', query], CacheLong(), async () =&gt; {\n        return await (\n          await fetch('my-cms.com/api', {\n            method: 'POST',\n            body: query,\n          })\n        ).json();\n      });\n    };\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () =&gt; ({\n        /* ... */\n        fetchMyCMS,\n      }),\n    });\n\n    return handleRequest(request);\n  },\n};\n",
+            "code": "// In your app's `server.ts` file:\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {createWithCache, CacheLong} from '@shopify/hydrogen';\n// Use another `createRequestHandler` if deploying off oxygen\nimport {createRequestHandler} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(request, env, executionContext) {\n    const cache = await caches.open('my-cms');\n    const withCache = createWithCache({\n      cache,\n      waitUntil: executionContext.waitUntil.bind(executionContext),\n      request,\n    });\n\n    // Create a custom utility to query a third-party API:\n    const fetchMyCMS = (query) =&gt; {\n      // Prefix the cache key and make it unique based on arguments.\n      return withCache(['my-cms', query], CacheLong(), async () =&gt; {\n        return await (\n          await fetch('my-cms.com/api', {\n            method: 'POST',\n            body: query,\n          })\n        ).json();\n      });\n    };\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () =&gt; ({\n        /* ... */\n        fetchMyCMS,\n      }),\n    });\n\n    return handleRequest(request);\n  },\n};\n",
             "language": "js"
           },
           {
             "title": "TypeScript",
-            "code": "// In your app's `server.ts` file:\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {createWithCache, CacheLong} from '@shopify/hydrogen';\n// Use another `createRequestHandler` if deploying off oxygen\nimport {createRequestHandler} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(\n    request: Request,\n    env: Record&lt;string, string&gt;,\n    executionContext: ExecutionContext,\n  ) {\n    const cache = await caches.open('my-cms');\n    const withCache = createWithCache({\n      cache,\n      waitUntil: executionContext.waitUntil,\n    });\n\n    // Create a custom utility to query a third-party API:\n    const fetchMyCMS = (query: string) =&gt; {\n      // Prefix the cache key and make it unique based on arguments.\n      return withCache(['my-cms', query], CacheLong(), async () =&gt; {\n        return await (\n          await fetch('my-cms.com/api', {\n            method: 'POST',\n            body: query,\n          })\n        ).json();\n      });\n    };\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () =&gt; ({\n        // Make sure to update remix.env.d.ts to include `fetchMyCMS`\n        fetchMyCMS,\n      }),\n    });\n\n    return handleRequest(request);\n  },\n};\n",
+            "code": "// In your app's `server.ts` file:\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {createWithCache, CacheLong} from '@shopify/hydrogen';\n// Use another `createRequestHandler` if deploying off oxygen\nimport {createRequestHandler} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(\n    request: Request,\n    env: Record&lt;string, string&gt;,\n    executionContext: ExecutionContext,\n  ) {\n    const cache = await caches.open('my-cms');\n    const withCache = createWithCache({\n      cache,\n      waitUntil: executionContext.waitUntil.bind(executionContext),\n      request,\n    });\n\n    // Create a custom utility to query a third-party API:\n    const fetchMyCMS = (query: string) =&gt; {\n      // Prefix the cache key and make it unique based on arguments.\n      return withCache(['my-cms', query], CacheLong(), async () =&gt; {\n        return await (\n          await fetch('my-cms.com/api', {\n            method: 'POST',\n            body: query,\n          })\n        ).json();\n      });\n    };\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () =&gt; ({\n        // Make sure to update remix.env.d.ts to include `fetchMyCMS`\n        fetchMyCMS,\n      }),\n    });\n\n    return handleRequest(request);\n  },\n};\n",
             "language": "ts"
           }
         ],
@@ -10107,7 +10320,7 @@
             "description": "Creates a utility function that executes an asynchronous operation like `fetch` and caches the result according to the strategy provided. Use this to call any third-party APIs from loaders or actions. By default, it uses the `CacheShort` strategy.",
             "params": [
               {
-                "name": "options",
+                "name": "input1",
                 "description": "",
                 "value": "CreateWithCacheOptions",
                 "filePath": "/with-cache.ts"
@@ -10119,13 +10332,19 @@
               "name": "CreateWithCacheReturn<T = unknown>",
               "value": "CreateWithCacheReturn<T = unknown>"
             },
+<<<<<<< HEAD
             "value": "export function createWithCache<T = unknown>(\n  options: CreateWithCacheOptions,\n): CreateWithCacheReturn<T> {\n  const {cache, waitUntil} = options;\n  return function withCache<T = unknown>(\n    cacheKey: CacheKey,\n    strategy: CachingStrategy,\n    actionFn: () => T | Promise<T>,\n  ) {\n    return runWithCache<T>(cacheKey, actionFn, {\n      strategy,\n      cacheInstance: cache,\n      waitUntil,\n      debugInfo: {},\n    });\n  };\n}"
+||||||| parent of 41b322a65 (Added reference docs)
+            "value": "export function createWithCache<T = unknown>(\n  options: CreateWithCacheOptions,\n): CreateWithCacheReturn<T> {\n  const {cache, waitUntil} = options;\n  return function withCache<T = unknown>(\n    cacheKey: CacheKey,\n    strategy: CachingStrategy,\n    actionFn: () => T | Promise<T>,\n  ) {\n    return runWithCache<T>(cacheKey, actionFn, {\n      strategy,\n      cacheInstance: cache,\n      waitUntil,\n      debugInfo: {\n        stackLine: getCallerStackLine?.(),\n      },\n    });\n  };\n}"
+=======
+            "value": "export function createWithCache<T = unknown>({\n  cache,\n  waitUntil,\n  request,\n}: CreateWithCacheOptions): CreateWithCacheReturn<T> {\n  return function withCache<T = unknown>(\n    cacheKey: CacheKey,\n    strategy: CachingStrategy,\n    actionFn: () => T | Promise<T>,\n  ) {\n    return runWithCache<T>(cacheKey, actionFn, {\n      strategy,\n      cacheInstance: cache,\n      waitUntil,\n      debugInfo: {\n        requestId: getHeader('request-id', request),\n        purpose: getHeader('purpose', request),\n      },\n    });\n  };\n}"
+>>>>>>> 41b322a65 (Added reference docs)
           },
           "CreateWithCacheOptions": {
             "filePath": "/with-cache.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CreateWithCacheOptions",
-            "value": "{\n  /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */\n  cache: Cache;\n  /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */\n  waitUntil: ExecutionContext['waitUntil'];\n}",
+            "value": "{\n  /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */\n  cache: Cache;\n  /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */\n  waitUntil: ExecutionContext['waitUntil'];\n  /** The `request` object is used to access certain headers for debugging */\n  request?: CrossRuntimeRequest;\n}",
             "description": "",
             "members": [
               {
@@ -10141,6 +10360,30 @@
                 "name": "waitUntil",
                 "value": "ExecutionContext",
                 "description": "The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform."
+              },
+              {
+                "filePath": "/with-cache.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "request",
+                "value": "CrossRuntimeRequest",
+                "description": "The `request` object is used to access certain headers for debugging",
+                "isOptional": true
+              }
+            ]
+          },
+          "CrossRuntimeRequest": {
+            "filePath": "/with-cache.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CrossRuntimeRequest",
+            "value": "{\n  headers: {\n    get?: (key: string) => string | null | undefined;\n    [key: string]: any;\n  };\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/with-cache.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "headers",
+                "value": "{ [key: string]: any; get?: (key: string) => string; }",
+                "description": ""
               }
             ]
           },

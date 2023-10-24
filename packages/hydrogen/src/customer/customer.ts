@@ -21,35 +21,52 @@ import {getHeader} from '../with-cache';
 import {hashKey} from '../utils/hash';
 
 export type CustomerClient = {
-  logout: () => Promise<Response>;
-  authorize: (redirectPath?: string) => Promise<Response>;
-  isLoggedIn: () => Promise<boolean>;
+  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. */
   login: () => Promise<Response>;
-  mutate: <ReturnType = any, RawGqlString extends string = string>(
+  /** On successful login, the user is redirect back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings. */
+  authorize: (redirectPath?: string) => Promise<Response>;
+  /** Returns if the user is logged in. It also checks if the access token is expired and refreshes it if needed. */
+  isLoggedIn: () => Promise<boolean>;
+  /** Logout the user by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. */
+  logout: () => Promise<Response>;
+  /** Execute a GraphQL query against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
+  query: <ReturnType = any, RawGqlString extends string = string>(
     query: RawGqlString,
     options?: {variables: Record<string, any>},
   ) => Promise<ReturnType>;
-  query: <ReturnType = any, RawGqlString extends string = string>(
+  /** Execute a GraphQL mutation against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
+  mutate: <ReturnType = any, RawGqlString extends string = string>(
     query: RawGqlString,
     options?: {variables: Record<string, any>},
   ) => Promise<ReturnType>;
 };
 
-export function createCustomerClient({
-  session,
-  customerAccountId,
-  customerAccountUrl,
-  customerApiVersion = '2023-10',
-  request,
-  waitUntil,
-}: {
+type CustomerClientOptions = {
+  /** The client requires a session to persist the auth and refresh token. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */
   session: HydrogenSession;
+  /** Unique UUID prefixed with `shp_` associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. */
   customerAccountId: string;
+  /** The account URL associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. */
   customerAccountUrl: string;
+  /** Override the version of the API */
   customerApiVersion?: string;
+  /** The object for the current Request. It should be provided by your platform. */
   request: Request;
+  /** The waitUntil function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
   waitUntil: (p: Promise<any>) => void;
-}): CustomerClient {
+};
+
+export function createCustomerClient(
+  options: CustomerClientOptions,
+): CustomerClient {
+  const {
+    session,
+    customerAccountId,
+    customerAccountUrl,
+    customerApiVersion = '2023-10',
+    request,
+    waitUntil,
+  } = options;
   const origin = request.url.startsWith('http:')
     ? new URL(request.url).origin.replace('http', 'https')
     : new URL(request.url).origin;
