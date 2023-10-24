@@ -68,6 +68,7 @@ describe('customer', () => {
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
         request: new Request('https://localhost'),
+        waitUntil: vi.fn(),
       });
 
       expect(await customer.isLoggedIn()).toBe(true);
@@ -79,6 +80,7 @@ describe('customer', () => {
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
         request: new Request('https://localhost'),
+        waitUntil: vi.fn(),
       });
 
       (session.get as any).mockReturnValueOnce(undefined);
@@ -92,6 +94,7 @@ describe('customer', () => {
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
         request: new Request('https://localhost'),
+        waitUntil: vi.fn(),
       });
 
       const response = await customer.login();
@@ -130,6 +133,7 @@ describe('customer', () => {
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
         request: new Request('https://localhost'),
+        waitUntil: vi.fn(),
       });
 
       const response = await customer.logout();
@@ -179,6 +183,7 @@ describe('customer', () => {
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
         request: new Request('https://localhost'),
+        waitUntil: vi.fn(),
       });
 
       async function run() {
@@ -196,6 +201,7 @@ describe('customer', () => {
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
         request: new Request('https://localhost?state=nomatch&code=code'),
+        waitUntil: vi.fn(),
       });
 
       async function run() {
@@ -213,6 +219,7 @@ describe('customer', () => {
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
         request: new Request('https://localhost?state=state&code=code'),
+        waitUntil: vi.fn(),
       });
 
       fetch.mockResolvedValue(createFetchResponse('some text', {ok: false}));
@@ -230,6 +237,7 @@ describe('customer', () => {
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
         request: new Request('https://localhost?state=state&code=code'),
+        waitUntil: vi.fn(),
       });
 
       fetch.mockResolvedValue(
@@ -259,6 +267,7 @@ describe('customer', () => {
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
         request: new Request('https://localhost?state=state&code=code'),
+        waitUntil: vi.fn(),
       });
 
       fetch.mockResolvedValue(
@@ -333,6 +342,7 @@ describe('customer', () => {
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
         request: new Request('https://localhost'),
+        waitUntil: vi.fn(),
       });
 
       (session.get as any).mockReturnValueOnce(undefined);
@@ -352,6 +362,7 @@ describe('customer', () => {
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
         request: new Request('https://localhost'),
+        waitUntil: vi.fn(),
       });
 
       (session.get as any).mockImplementation((v: string) =>
@@ -373,6 +384,7 @@ describe('customer', () => {
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
         request: new Request('https://localhost'),
+        waitUntil: vi.fn(),
       });
 
       (session.get as any).mockImplementation((v: string) =>
@@ -395,6 +407,7 @@ describe('customer', () => {
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
         request: new Request('https://localhost'),
+        waitUntil: vi.fn(),
       });
 
       (session.get as any).mockImplementation((v: string) =>
