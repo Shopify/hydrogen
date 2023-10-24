@@ -18,11 +18,13 @@ function getDefinition(definitions: any, type: string) {
 
 export default function Index() {
   const {doc} = useLoaderData();
+  if (doc === 'worker.js') return null;
+
   const matches = useMatches();
   const data = (matches as any)[0].data.data;
 
   const docMetaData = data.find((d: any) => d.name === doc!);
-  const definition = docMetaData.definitions[0];
+  const definition = docMetaData?.definitions?.[0];
   const typeDef = definition
     ? getDefinition(definition.typeDefinitions, definition.type)
     : null;

@@ -20,7 +20,7 @@
     "test:watch": "vitest",
     "build-docs": "sh ./docs/build-docs.sh && npm run format",
     "format": "prettier --write \"{src,docs}/**/*\" --ignore-unknown",
-    "preview-docs": "node ../docs-preview/bin/cli.js docs/generated/generated_docs_data.json"
+    "preview-docs": "node ../../docs/preview/bin/cli.js docs/generated/generated_docs_data.json"
   },
   "exports": {
     ".": {

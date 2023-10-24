@@ -31,7 +31,7 @@
     "examples/express",
     "examples/customer-api",
     "examples/bun",
-    "packages/docs-preview",
+    "docs/preview",
     "packages/remix-oxygen",
     "packages/hydrogen",
     "packages/create-hydrogen",
