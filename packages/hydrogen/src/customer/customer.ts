@@ -17,6 +17,8 @@ import {generateNonce} from '../csp/nonce';
 import {IS_MUTATION_RE, IS_QUERY_RE} from '../constants';
 import {throwError} from '../storefront';
 import {parseJSON} from '../utils/parse-json';
+import {getHeader} from '../with-cache';
+import {hashKey} from '../utils/hash';
 
 export type CustomerClient = {
   logout: () => Promise<Response>;
@@ -39,18 +41,39 @@ export function createCustomerClient({
   customerAccountUrl,
   customerApiVersion = '2023-10',
   request,
+  waitUntil,
 }: {
   session: HydrogenSession;
   customerAccountId: string;
   customerAccountUrl: string;
   customerApiVersion?: string;
   request: Request;
+  waitUntil: (p: Promise<any>) => void;
 }): CustomerClient {
   const origin = request.url.startsWith('http:')
     ? new URL(request.url).origin.replace('http', 'https')
     : new URL(request.url).origin;
 
   const locks: Locks = {};
+
+  const logSubRequestEvent =
+    process.env.NODE_ENV === 'development'
+      ? (query: string, startTime: number) => {
+          globalThis.__H2O_LOG_EVENT?.({
+            eventType: 'subrequest',
+            url: `https://shopify.dev/?${hashKey([
+              `Customer Account `,
+              /((query|mutation) [^\s\(]+)/g.exec(query)?.[0] ||
+                query.substring(0, 10),
+            ])}`,
+            startTime,
+            cacheStatus: 'MISS',
+            waitUntil,
+            requestId: getHeader('request-id', request),
+            purpose: 'Customer API query',
+          });
+        }
+      : undefined;
 
   return {
     login: async () => {
@@ -107,6 +130,8 @@ export function createCustomerClient({
 
       if (!session.get('customer_access_token') || !expiresAt) return false;
 
+      const startTime = new Date().getTime();
+
       try {
         await checkExpires({
           locks,
@@ -116,6 +141,8 @@ export function createCustomerClient({
           customerAccountUrl,
           origin,
         });
+
+        logSubRequestEvent?.(' check expires', startTime);
       } catch {
         return false;
       }
@@ -158,6 +185,8 @@ export function createCustomerClient({
         origin,
       });
 
+      const startTime = new Date().getTime();
+
       const response = await fetch(
         `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`,
         {
@@ -175,6 +204,8 @@ export function createCustomerClient({
           }),
         },
       );
+
+      logSubRequestEvent?.(query, startTime);
 
       const body = await response.text();
       let data: ReturnType;

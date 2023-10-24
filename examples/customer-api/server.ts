@@ -54,6 +54,7 @@ export default {
        * Create a customer client for the new customer API.
        */
       const customer = createCustomerClient__unstable({
+        waitUntil,
         request,
         session,
         customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_ID,
