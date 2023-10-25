@@ -3,7 +3,6 @@ import {
   generateCodeChallenge,
   generateCodeVerifier,
   generateState,
-  type HydrogenSession,
   checkExpires,
   USER_AGENT,
   exchangeAccessToken,
@@ -11,14 +10,15 @@ import {
   getNonce,
   redirect,
   Locks,
+  type HydrogenSession,
 } from './auth.helpers';
 import {BadRequest} from './BadRequest';
 import {generateNonce} from '../csp/nonce';
 import {IS_MUTATION_RE, IS_QUERY_RE} from '../constants';
 import {throwError} from '../utils/error';
 import {parseJSON} from '../utils/parse-json';
-import {getHeader} from '../with-cache';
 import {hashKey} from '../utils/hash';
+import {CrossRuntimeRequest, getDebugHeaders} from '../utils/request';
 
 export type CustomerClient = {
   /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. */
@@ -51,25 +51,27 @@ type CustomerClientOptions = {
   /** Override the version of the API */
   customerApiVersion?: string;
   /** The object for the current Request. It should be provided by your platform. */
-  request: Request;
+  request: CrossRuntimeRequest;
   /** The waitUntil function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
-  waitUntil: (p: Promise<any>) => void;
+  waitUntil?: ExecutionContext['waitUntil'];
 };
 
-export function createCustomerClient(
-  options: CustomerClientOptions,
-): CustomerClient {
-  const {
-    session,
-    customerAccountId,
-    customerAccountUrl,
-    customerApiVersion = '2023-10',
-    request,
-    waitUntil,
-  } = options;
-  const origin = request.url.startsWith('http:')
-    ? new URL(request.url).origin.replace('http', 'https')
-    : new URL(request.url).origin;
+export function createCustomerClient({
+  session,
+  customerAccountId,
+  customerAccountUrl,
+  customerApiVersion = '2023-10',
+  request,
+  waitUntil,
+}: CustomerClientOptions): CustomerClient {
+  if (!request?.url) {
+    throw new Error(
+      '[h2:error:createCustomerClient] The request object does not contain a URL.',
+    );
+  }
+  const url = new URL(request.url);
+  const origin =
+    url.protocol === 'http:' ? url.origin.replace('http', 'https') : url.origin;
 
   const locks: Locks = {};
 
@@ -84,10 +86,16 @@ export function createCustomerClient(
                 query.substring(0, 10),
             ])}`,
             startTime,
-            cacheStatus: 'MISS',
             waitUntil,
+<<<<<<< HEAD
             requestId: getHeader('request-id', request),
             purpose: 'Customer API query',
+||||||| parent of 1da4e305a (Fix origin and params)
+            requestId: getHeader(request, 'request-id'),
+            purpose: 'Customer API query',
+=======
+            ...getDebugHeaders(request),
+>>>>>>> 1da4e305a (Fix origin and params)
           });
         }
       : undefined;
@@ -267,7 +275,6 @@ export function createCustomerClient(
       return data as any as ReturnType;
     },
     authorize: async (redirectPath = '/') => {
-      const url = new URL(request.url);
       const code = url.searchParams.get('code');
       const state = url.searchParams.get('state');
 
@@ -292,10 +299,7 @@ export function createCustomerClient(
 
       body.append('grant_type', 'authorization_code');
       body.append('client_id', clientId);
-      body.append(
-        'redirect_uri',
-        new URL(request.url).origin.replace('http', 'https') + '/authorize',
-      );
+      body.append('redirect_uri', origin + '/authorize');
       body.append('code', code);
 
       // Public Client
@@ -312,7 +316,7 @@ export function createCustomerClient(
       const headers = {
         'content-type': 'application/x-www-form-urlencoded',
         'User-Agent': USER_AGENT,
-        Origin: new URL(request.url).origin.replace('http', 'https'),
+        Origin: origin,
       };
 
       const response = await fetch(`${customerAccountUrl}/auth/oauth/token`, {
