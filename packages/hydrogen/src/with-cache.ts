@@ -1,12 +1,6 @@
 import {type CacheKey, runWithCache} from './cache/fetch';
 import type {CachingStrategy} from './cache/strategies';
-
-type CrossRuntimeRequest = {
-  headers: {
-    get?: (key: string) => string | null | undefined;
-    [key: string]: any;
-  };
-};
+import {type CrossRuntimeRequest, getDebugHeaders} from './utils/request';
 
 type CreateWithCacheOptions = {
   /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */
@@ -16,11 +10,6 @@ type CreateWithCacheOptions = {
   /** The `request` object is used to access certain headers for debugging */
   request?: CrossRuntimeRequest;
 };
-
-function getHeader(key: string, request?: CrossRuntimeRequest) {
-  const value = request?.headers?.get?.(key) ?? request?.headers?.[key];
-  return typeof value === 'string' ? value : undefined;
-}
 
 /**
  * Creates a utility function that executes an asynchronous operation
@@ -43,10 +32,7 @@ export function createWithCache<T = unknown>({
       strategy,
       cacheInstance: cache,
       waitUntil,
-      debugInfo: {
-        requestId: getHeader('request-id', request),
-        purpose: getHeader('purpose', request),
-      },
+      debugInfo: getDebugHeaders(request),
     });
   };
 }
