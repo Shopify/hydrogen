@@ -1,5 +1,5 @@
 import type {CachingStrategy} from './strategies';
-import {CacheShort, generateCacheControlHeader} from './strategies';
+import {CacheDefault, generateCacheControlHeader} from './strategies';
 
 function logCacheApiStatus(
   status: string | null,
@@ -35,7 +35,7 @@ function getCacheControlSetting(
       ...options,
     };
   } else {
-    return userCacheOptions || CacheShort();
+    return userCacheOptions || CacheDefault();
   }
 }
 
