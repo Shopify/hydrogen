@@ -80,20 +80,6 @@ describe('<Image />', () => {
     });
   });
 
-  describe('srcSet', () => {
-    it('renders a `srcSet` attribute when the `widths` prop is provided', () => {
-      const widths = [100, 200, 300];
-
-      render(<Image {...defaultProps} widths={widths} />);
-      const img = screen.getByRole('img');
-
-      expect(img).toHaveAttribute('srcSet');
-      expect(img.getAttribute('srcSet')).toMatchInlineSnapshot(
-        '"https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=200&crop=center 200w, https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=400&crop=center 400w, https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=600&crop=center 600w, https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=800&crop=center 800w, https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=1000&crop=center 1000w, https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=1200&crop=center 1200w, https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=1400&crop=center 1400w, https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=1600&crop=center 1600w, https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=1800&crop=center 1800w, https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=2000&crop=center 2000w, https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=2200&crop=center 2200w, https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=2400&crop=center 2400w, https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=2600&crop=center 2600w, https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=2800&crop=center 2800w, https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=3000&crop=center 3000w"',
-      );
-    });
-  });
-
   describe('aspect-ratio', () => {
     // Assertion support is limited for aspectRatio
     // https://github.com/testing-library/jest-dom/issues/452
@@ -199,32 +185,6 @@ describe('<Image />', () => {
     it('does not warn user if no sizes are provided but width is fixed', () => {
       render(<Image {...defaultProps} sizes={undefined} width={100} />);
       expect(console.warn).toHaveBeenCalledTimes(0);
-    });
-
-    it('warns user if widths is provided', () => {
-      render(<Image {...defaultProps} widths={[]} />);
-
-      expect(console.warn).toHaveBeenCalledTimes(1);
-      expect(getWarnings()).toMatchInlineSnapshot(
-        `
-        [
-          "Deprecated property from original Image component in use: \`widths\` are now calculated automatically based on the config and width props. Image used is https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg",
-        ]
-      `,
-      );
-    });
-
-    it('warns user if loaderOptions are provided', () => {
-      render(<Image {...defaultProps} loaderOptions={{}} />);
-
-      expect(console.warn).toHaveBeenCalledTimes(1);
-      expect(getWarnings()).toMatchInlineSnapshot(
-        `
-        [
-          "Deprecated property from original Image component in use: Use the \`crop\`, \`width\`, \`height\`, and src props, or the \`data\` prop to achieve the same result. Image used is https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg",
-        ]
-      `,
-      );
     });
   });
 });

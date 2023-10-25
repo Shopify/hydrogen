@@ -1,6 +1,6 @@
 import * as React from 'react';
 import type {Story} from '@ladle/react';
-import {Image, ShopifyLoaderOptions, LoaderParams} from './Image.js';
+import {Image, LoaderParams} from './Image.js';
 import type {PartialDeep} from 'type-fest';
 import type {Image as ImageType} from './storefront-api-types.js';
 
@@ -28,7 +28,6 @@ const Template: Story<{
   config?: ImageConfig;
   alt?: string;
   loading?: 'lazy' | 'eager';
-  loaderOptions?: ShopifyLoaderOptions;
   widths?: (HtmlImageProps['width'] | ImageType['width'])[];
 }> = (props) => {
   return (
@@ -54,19 +53,6 @@ const Template: Story<{
       <Image {...props} width="30vw" sizes="30vw" />
       <Image {...props} width={100} height={200} />
       <Image {...props} width="5rem" />
-      <Image {...props} widths={[100, 200, 300]} />
-      <Image
-        {...props}
-        loaderOptions={{
-          crop: 'center',
-        }}
-        widths={[200, 300]}
-      />
-      <Image
-        sizes="100vw"
-        src="https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg"
-        widths={[100, 200, 300]}
-      />
     </>
   );
 };

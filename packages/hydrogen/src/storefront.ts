@@ -174,10 +174,6 @@ type HydrogenClientProps<TI18n> = {
   storefrontHeaders?: StorefrontHeaders;
   /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */
   cache?: Cache;
-  /** @deprecated use storefrontHeaders instead */
-  buyerIp?: string;
-  /** @deprecated use storefrontHeaders instead */
-  requestGroupId?: string | null;
   /** The globally unique identifier for the Shop */
   storefrontId?: string;
   /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
@@ -239,9 +235,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     storefrontHeaders,
     cache,
     waitUntil,
-    buyerIp,
     i18n,
-    requestGroupId,
     storefrontId,
     ...clientOptions
   } = options;
@@ -267,11 +261,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
   const defaultHeaders = getHeaders({
     contentType: 'json',
-    buyerIp: storefrontHeaders?.buyerIp || buyerIp,
+    buyerIp: storefrontHeaders?.buyerIp || '',
   });
 
   defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] =
-    storefrontHeaders?.requestGroupId || requestGroupId || generateUUID();
+    storefrontHeaders?.requestGroupId || generateUUID();
 
   if (storefrontId) defaultHeaders[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;
   if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;
@@ -283,14 +277,6 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       defaultHeaders[SHOPIFY_STOREFRONT_Y_HEADER] = cookies[SHOPIFY_Y];
     if (cookies[SHOPIFY_S])
       defaultHeaders[SHOPIFY_STOREFRONT_S_HEADER] = cookies[SHOPIFY_S];
-  }
-
-  // Deprecation warning
-  if (process.env.NODE_ENV === 'development' && !storefrontHeaders) {
-    warnOnce(
-      H2_PREFIX_WARN +
-        '`requestGroupId` and `buyerIp` will be deprecated in the next calendar release. Please use `getStorefrontHeaders`',
-    );
   }
 
   async function fetchStorefrontApi<T>({
