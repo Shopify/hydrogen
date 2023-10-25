@@ -1,13 +1,12 @@
 import {
   createStorefrontClient as createStorefrontUtilities,
   getShopifyCookies,
-  type StorefrontApiResponseOk,
-  type StorefrontClientProps,
   SHOPIFY_S,
   SHOPIFY_Y,
   SHOPIFY_STOREFRONT_ID_HEADER,
   SHOPIFY_STOREFRONT_Y_HEADER,
   SHOPIFY_STOREFRONT_S_HEADER,
+  type StorefrontClientProps,
 } from '@shopify/hydrogen-react';
 import type {ExecutionArgs} from 'graphql';
 import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
@@ -45,8 +44,11 @@ import {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {warnOnce} from './utils/warning';
 import {LIB_VERSION} from './version';
-
-type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
+import {
+  throwError,
+  type GraphQLApiResponse,
+  type GraphQLErrorOptions,
+} from './utils/error';
 
 export type I18nBase = {
   language: LanguageCode;
@@ -356,7 +358,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       },
     });
 
-    const errorOptions: StorefrontErrorOptions<T> = {
+    const errorOptions: GraphQLErrorOptions<T> = {
       response,
       type: mutation ? 'mutation' : 'query',
       query,
@@ -379,7 +381,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       throwError({...errorOptions, errors});
     }
 
-    const {data, errors} = body as StorefrontApiResponse<T>;
+    const {data, errors} = body as GraphQLApiResponse<T>;
 
     if (errors?.length) {
       throwError({
@@ -492,49 +494,4 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       i18n: (i18n ?? defaultI18n) as TI18n,
     },
   };
-}
-
-type StorefrontErrorOptions<T> = {
-  response: Response;
-  errors: StorefrontApiResponse<T>['errors'];
-  type: 'query' | 'mutation';
-  query: string;
-  queryVariables: Record<string, any>;
-  ErrorConstructor?: ErrorConstructor;
-  client?: string;
-};
-
-export function throwError<T>({
-  response,
-  errors,
-  type,
-  query,
-  queryVariables,
-  ErrorConstructor = Error,
-  client = 'storefront',
-}: StorefrontErrorOptions<T>) {
-  const requestId = response.headers.get('x-request-id');
-  const errorMessage =
-    (typeof errors === 'string'
-      ? errors
-      : errors?.map?.((error) => error.message).join('\n')) ||
-    `API response error: ${response.status}`;
-
-  throw new ErrorConstructor(
-    `[h2:error:${client}.${type}] ` +
-      errorMessage +
-      (requestId ? ` - Request ID: ${requestId}` : ''),
-    {
-      cause: JSON.stringify({
-        errors,
-        requestId,
-        ...(process.env.NODE_ENV === 'development' && {
-          graphql: {
-            query,
-            variables: JSON.stringify(queryVariables),
-          },
-        }),
-      }),
-    },
-  );
 }

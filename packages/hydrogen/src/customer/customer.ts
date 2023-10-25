@@ -15,7 +15,7 @@ import {
 import {BadRequest} from './BadRequest';
 import {generateNonce} from '../csp/nonce';
 import {IS_MUTATION_RE, IS_QUERY_RE} from '../constants';
-import {throwError} from '../storefront';
+import {throwError} from '../utils/error';
 import {parseJSON} from '../utils/parse-json';
 import {getHeader} from '../with-cache';
 import {hashKey} from '../utils/hash';
