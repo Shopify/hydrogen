@@ -1,5 +1,32 @@
 # @shopify/hydrogen
 
+## 2023.7.12
+
+### Patch Changes
+
+- Move `react` to peer dependencies. It had been added as a direct dependency by mistake in a previous version. ([#1439](https://github.com/Shopify/hydrogen/pull/1439)) by [@frandiox](https://github.com/frandiox)
+
+- Integrate the debug-network tooling with the new `--worker-unstable` runtime CLI flag. ([#1387](https://github.com/Shopify/hydrogen/pull/1387)) by [@frandiox](https://github.com/frandiox)
+
+- Calls to `withCache` can now be shown in the `/debug-network` tool when using the Worker runtime. For this to work, use the new `request` parameter in `createWithCache`: ([#1438](https://github.com/Shopify/hydrogen/pull/1438)) by [@frandiox](https://github.com/frandiox)
+
+  ```diff
+  export default {
+    fetch(request, env, executionContext) {
+      // ...
+      const withCache = createWithCache({
+        cache,
+        waitUntil,
+  +     request,
+      });
+      // ...
+    },
+  }
+  ```
+
+- Updated dependencies [[`d30e2651`](https://github.com/Shopify/hydrogen/commit/d30e265180e7856d2257d8cad0bd067c8a91e9cc), [`1b45311d`](https://github.com/Shopify/hydrogen/commit/1b45311d28b2ca941c479a1896efa89a9b71bec1), [`2627faa7`](https://github.com/Shopify/hydrogen/commit/2627faa7f09ba306506bb206d4d6624de5691961)]:
+  - @shopify/hydrogen-react@2023.7.5
+
 ## 2023.7.11
 
 ### Patch Changes

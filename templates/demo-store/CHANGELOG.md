@@ -1,5 +1,16 @@
 # demo-store
 
+## 2.1.5
+
+### Patch Changes
+
+- Fix the starter template blog route to include a required `startCursor` in the GraphQL query. ([#1441](https://github.com/Shopify/hydrogen/pull/1441)) by [@blittle](https://github.com/blittle)
+
+- Updated dependencies [[`f5b05736`](https://github.com/Shopify/hydrogen/commit/f5b05736a3774b51ff695f1dc5bd16609cc68bf2), [`e992de2c`](https://github.com/Shopify/hydrogen/commit/e992de2c73462a954620c3ef896849782d18e506), [`f6469d11`](https://github.com/Shopify/hydrogen/commit/f6469d11248543c98e5166f8d8c1a2e2d9e5764c), [`b81b452d`](https://github.com/Shopify/hydrogen/commit/b81b452d010c650b1de1678f729945d1d4394820), [`945c55ae`](https://github.com/Shopify/hydrogen/commit/945c55aeb3b80f4b6c39d3527ec09c1bc6cd8477)]:
+  - @shopify/hydrogen@2023.7.12
+  - @shopify/cli-hydrogen@5.5.0
+  - @shopify/remix-oxygen@1.1.8
+
 ## 2.1.4
 
 ### Patch Changes
