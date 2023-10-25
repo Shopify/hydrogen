@@ -46,19 +46,6 @@ export type LoaderParams = {
 
 export type Loader = (params: LoaderParams) => string;
 
-/** Legacy type for backwards compatibility *
- * @deprecated Use `crop`, `width`, `height`, and `src` props, and/or `data` prop. Or pass a custom `loader` with `LoaderParams` */
-export type ShopifyLoaderOptions = {
-  /** The base URL of the image */
-  src?: ImageType['url'];
-  /** The URL param that controls width */
-  width?: HtmlImageProps['width'] | ImageType['width'];
-  /** The URL param that controls height */
-  height?: HtmlImageProps['height'] | ImageType['height'];
-  /** The URL param that controls the cropping region */
-  crop?: Crop;
-};
-
 /*
  * @TODO: Expand to include focal point support; and/or switch this to be an SF API type
  */
@@ -85,7 +72,7 @@ type HydrogenImageBaseProps = {
    * @defaultValue `center`
    */
   crop?: Crop;
-  /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2023-07/objects/Image) object. Must be an Image object.
+  /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2023-10/objects/Image) object. Must be an Image object.
    *
    * @example
    * ```
@@ -120,10 +107,6 @@ type HydrogenImageBaseProps = {
   loader?: Loader;
   /** An optional prop you can use to change the default srcSet generation behaviour */
   srcSetOptions?: SrcSetOptions;
-  /** @deprecated Use `crop`, `width`, `height`, and `src` props, and/or `data` prop */
-  loaderOptions?: ShopifyLoaderOptions;
-  /** @deprecated Autocalculated, use only `width` prop, or srcSetOptions */
-  widths?: (HtmlImageProps['width'] | ImageType['width'])[];
 };
 
 /**
@@ -182,7 +165,6 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
       decoding = 'async',
       height = 'auto',
       loader = shopifyLoader,
-      loaderOptions,
       loading = 'lazy',
       sizes,
       src,
@@ -193,40 +175,10 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
         placeholderWidth: 100,
       },
       width = '100%',
-      widths,
       ...passthroughProps
     },
     ref,
   ) => {
-    /*
-     * Deprecated Props from original Image component
-     */
-    if (__HYDROGEN_DEV__) {
-      if (loaderOptions) {
-        console.warn(
-          [
-            `Deprecated property from original Image component in use:`,
-            `Use the \`crop\`, \`width\`, \`height\`, and src props, or`,
-            `the \`data\` prop to achieve the same result. Image used is ${
-              src || data?.url || passthroughProps?.key || 'unknown'
-            }`,
-          ].join(' '),
-        );
-      }
-
-      if (widths) {
-        console.warn(
-          [
-            `Deprecated property from original Image component in use:`,
-            `\`widths\` are now calculated automatically based on the`,
-            `config and width props. Image used is ${
-              src || data?.url || passthroughProps?.key || 'unknown'
-            }`,
-          ].join(' '),
-        );
-      }
-    }
-
     /*
      * Gets normalized values for width, height from data  prop
      */

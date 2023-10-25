@@ -8,7 +8,7 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'Pagination',
       type: 'components',
-      url: '/docs/api/hydrogen/2023-07/components/pagination',
+      url: '/docs/api/hydrogen/2023-10/components/pagination',
     },
   ],
   description: `> Caution:

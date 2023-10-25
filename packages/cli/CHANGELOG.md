@@ -1,5 +1,32 @@
 # @shopify/cli-hydrogen
 
+## 5.5.1
+
+### Patch Changes
+
+- Fix template dist package due to CI error ([#1451](https://github.com/Shopify/hydrogen/pull/1451)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Updated dependencies [[`3eb376fe`](https://github.com/Shopify/hydrogen/commit/3eb376fe8796b50131dc43845772ae555e07a1a6)]:
+  - @shopify/hydrogen-react@2023.7.6
+
+## 5.5.0
+
+### Minor Changes
+
+- Generated JavaScript projects now use Codegen and JSDoc to enhance editor autocompletion. ([#1334](https://github.com/Shopify/hydrogen/pull/1334)) by [@frandiox](https://github.com/frandiox)
+
+- We've added an experimental tool for profiling the CPU at startup. This is useful for debugging slow startup times when Oxygen deployments fail with related errors. ([#1352](https://github.com/Shopify/hydrogen/pull/1352)) by [@frandiox](https://github.com/frandiox)
+
+  Run the new `h2 debug cpu` command to build + watch your app and generate a `startup.cpuprofile` file that you can open in DevTools or VSCode to see a flamegraph of CPU usage.
+
+### Patch Changes
+
+- Integrate the debug-network tooling with the new `--worker-unstable` runtime CLI flag. ([#1387](https://github.com/Shopify/hydrogen/pull/1387)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`d30e2651`](https://github.com/Shopify/hydrogen/commit/d30e265180e7856d2257d8cad0bd067c8a91e9cc), [`b81b452d`](https://github.com/Shopify/hydrogen/commit/b81b452d010c650b1de1678f729945d1d4394820), [`1b45311d`](https://github.com/Shopify/hydrogen/commit/1b45311d28b2ca941c479a1896efa89a9b71bec1), [`2627faa7`](https://github.com/Shopify/hydrogen/commit/2627faa7f09ba306506bb206d4d6624de5691961)]:
+  - @shopify/hydrogen-react@2023.7.5
+  - @shopify/remix-oxygen@1.1.8
+
 ## 5.4.3
 
 ### Patch Changes
