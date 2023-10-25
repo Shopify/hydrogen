@@ -1,5 +1,11 @@
 # @shopify/hydrogen-react
 
+## 2023.7.6
+
+### Patch Changes
+
+- Fix template dist package due to CI error ([#1451](https://github.com/Shopify/hydrogen/pull/1451)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 2023.7.5
 
 ### Patch Changes
