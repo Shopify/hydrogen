@@ -1,5 +1,15 @@
 # @shopify/hydrogen-react
 
+## 2023.7.5
+
+### Patch Changes
+
+- Add Language to CartProvider ([#1408](https://github.com/Shopify/hydrogen/pull/1408)) by [@Qubica](https://github.com/Qubica)
+
+- Add attributes option to useLoadScript ([#1442](https://github.com/Shopify/hydrogen/pull/1442)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Unlock `hydrogen-react` package.json exports to make it easier to use with NextJS and other frameworks. **Note**: Using Hydrogen internals is not officially supported, and those internal APIs could change at anytime outside our usual calendar versioning. ([#994](https://github.com/Shopify/hydrogen/pull/994)) by [@blittle](https://github.com/blittle)
+
 ## 2023.7.4
 
 ### Patch Changes
