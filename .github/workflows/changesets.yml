@@ -102,18 +102,18 @@ jobs:
           git commit -m "Update templates for dist"
           git push origin HEAD:dist --force
 
-  sync_latest:
-    needs: changelog
-    # Only update package-lock.json if a release was published, and we're on the "latest" release branch
-    if: needs.changelog.outputs.published == 'true' && needs.changelog.outputs.latest == 'true'
-    runs-on: ubuntu-latest
-    name: Sync latest to version branch
-    steps:
-      - name: Checkout the code
-        uses: actions/checkout@v3
+  # sync_latest:
+  #   needs: changelog
+  #   # Only update package-lock.json if a release was published, and we're on the "latest" release branch
+  #   if: needs.changelog.outputs.published == 'true' && needs.changelog.outputs.latest == 'true'
+  #   runs-on: ubuntu-latest
+  #   name: Sync latest to version branch
+  #   steps:
+  #     - name: Checkout the code
+  #       uses: actions/checkout@v3
 
-      - name: Update package-lock.json
-        run: npm install --package-lock-only --ignore-engines
+  #     - name: Update package-lock.json
+  #       run: npm install --package-lock-only --ignore-engines
 
       # TODO: Figure out how to push to protected branch
       # - name: Push commit to main branch
@@ -126,13 +126,13 @@ jobs:
       #     git commit -m "[ci] Update package-lock.json"
       #     git push origin HEAD:main
 
-      - name: Sync latest to version branch
-        run: |
-          git config user.email "hydrogen@shopify.com"
-          git config user.name "Hydrogen Bot"
-          git show-ref
-          git commit -m "[ci] release ${{ needs.changelog.outputs.latestBranch }}"
-          git push origin main:${{ needs.changelog.outputs.latestBranch }} --force
+      # - name: Sync latest to version branch
+      #   run: |
+      #     git config user.email "hydrogen@shopify.com"
+      #     git config user.name "Hydrogen Bot"
+      #     git show-ref
+      #     git commit -m "[ci] release ${{ needs.changelog.outputs.latestBranch }}"
+      #     git push origin main:${{ needs.changelog.outputs.latestBranch }} --force
 
   discord_announcement:
     needs: changelog
