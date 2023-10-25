@@ -14,8 +14,12 @@ import {
 } from './auth.helpers';
 import {BadRequest} from './BadRequest';
 import {generateNonce} from '../csp/nonce';
-import {IS_MUTATION_RE, IS_QUERY_RE} from '../constants';
-import {throwError} from '../utils/error';
+import {
+  minifyQuery,
+  assertQuery,
+  assertMutation,
+  throwGraphQLError,
+} from '../utils/graphql';
 import {parseJSON} from '../utils/parse-json';
 import {hashKey} from '../utils/hash';
 import {CrossRuntimeRequest, getDebugHeaders} from '../utils/request';
@@ -178,9 +182,8 @@ export function createCustomerClient({
       mutation: RawGqlString,
       options: {variables: Record<string, any>} = {variables: {}},
     ) {
-      if (IS_QUERY_RE.test(mutation)) {
-        throw new Error('[h2:error:customer.mutate] Cannot execute queries');
-      }
+      mutation = minifyQuery(mutation) as RawGqlString;
+      assertMutation(mutation, 'customer.mutate');
 
       return this.query<ReturnType, RawGqlString>(mutation, options);
     },
@@ -188,9 +191,8 @@ export function createCustomerClient({
       query: RawGqlString,
       options: {variables: Record<string, any>} = {variables: {}},
     ) => {
-      if (IS_MUTATION_RE.test(query)) {
-        throw new Error('[h2:error:customer.query] Cannot execute mutations');
-      }
+      query = minifyQuery(query) as RawGqlString;
+      assertQuery(query, 'customer.query');
 
       const accessToken = session.get('customer_access_token');
       const expiresAt = session.get('expires_at');
@@ -247,7 +249,7 @@ export function createCustomerClient({
           errors = [{message: body}];
         }
 
-        throwError({
+        throwGraphQLError({
           response,
           type: 'query',
           query,
@@ -260,7 +262,7 @@ export function createCustomerClient({
       try {
         data = parseJSON(body).data;
       } catch (e) {
-        throwError({
+        throwGraphQLError({
           response,
           type: 'query',
           query,

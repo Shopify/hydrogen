@@ -1,5 +1,27 @@
 import type {StorefrontApiResponseOk} from '@shopify/hydrogen-react';
 
+export function minifyQuery(string: string) {
+  return string
+    .replace(/\s*#.*$/gm, '') // Remove GQL comments
+    .replace(/\s+/gm, ' ') // Minify spaces
+    .trim();
+}
+
+const IS_QUERY_RE = /(^|}\s)query[\s({]/im;
+const IS_MUTATION_RE = /(^|}\s)mutation[\s({]/im;
+
+export function assertQuery(query: string, callerName: string) {
+  if (!IS_QUERY_RE.test(query)) {
+    throw new Error(`[h2:error:${callerName}] Can only execute queries`);
+  }
+}
+
+export function assertMutation(query: string, callerName: string) {
+  if (!IS_MUTATION_RE.test(query)) {
+    throw new Error(`[h2:error:${callerName}] Can only execute mutations`);
+  }
+}
+
 export type GraphQLApiResponse<T> = StorefrontApiResponseOk<T>;
 
 export type GraphQLErrorOptions<T> = {
@@ -12,7 +34,7 @@ export type GraphQLErrorOptions<T> = {
   client?: string;
 };
 
-export function throwError<T>({
+export function throwGraphQLError<T>({
   response,
   errors,
   type,

@@ -45,10 +45,13 @@ import {
 import {warnOnce} from './utils/warning';
 import {LIB_VERSION} from './version';
 import {
-  throwError,
+  minifyQuery,
+  assertQuery,
+  assertMutation,
+  throwGraphQLError,
   type GraphQLApiResponse,
   type GraphQLErrorOptions,
-} from './utils/error';
+} from './utils/graphql';
 
 export type I18nBase = {
   language: LanguageCode;
@@ -224,13 +227,6 @@ export const StorefrontApiError = class extends Error {} as ErrorConstructor;
 export const isStorefrontApiError = (error: any) =>
   error instanceof StorefrontApiError;
 
-function minifyQuery(string: string) {
-  return string
-    .replace(/\s*#.*$/gm, '') // Remove GQL comments
-    .replace(/\s+/gm, ' ') // Minify spaces
-    .trim();
-}
-
 const defaultI18n: I18nBase = {language: 'EN', country: 'US'};
 
 /**
@@ -378,13 +374,13 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         errors = [{message: body}];
       }
 
-      throwError({...errorOptions, errors});
+      throwGraphQLError({...errorOptions, errors});
     }
 
     const {data, errors} = body as GraphQLApiResponse<T>;
 
     if (errors?.length) {
-      throwError({
+      throwGraphQLError({
         ...errorOptions,
         errors,
         ErrorConstructor: StorefrontApiError,
@@ -412,11 +408,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        */
       query: <Storefront['query']>((query: string, payload) => {
         query = minifyQuery(query);
-        if (IS_MUTATION_RE.test(query)) {
-          throw new Error(
-            '[h2:error:storefront.query] Cannot execute mutations',
-          );
-        }
+        assertQuery(query, 'storefront.query');
 
         const result = fetchStorefrontApi({
           ...payload,
@@ -444,11 +436,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        */
       mutate: <Storefront['mutate']>((mutation: string, payload) => {
         mutation = minifyQuery(mutation);
-        if (IS_QUERY_RE.test(mutation)) {
-          throw new Error(
-            '[h2:error:storefront.mutate] Cannot execute queries',
-          );
-        }
+        assertMutation(mutation, 'storefront.mutate');
 
         const result = fetchStorefrontApi({
           ...payload,
