@@ -1,5 +1,11 @@
 # @shopify/remix-oxygen
 
+## 1.1.8
+
+### Patch Changes
+
+- Integrate the debug-network tooling with the new `--worker-unstable` runtime CLI flag. ([#1387](https://github.com/Shopify/hydrogen/pull/1387)) by [@frandiox](https://github.com/frandiox)
+
 ## 1.1.7
 
 ### Patch Changes
