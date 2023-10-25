@@ -11,7 +11,13 @@ import {
 } from '@shopify/hydrogen-react';
 import type {ExecutionArgs} from 'graphql';
 import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
-import {STOREFRONT_REQUEST_GROUP_ID_HEADER} from './constants';
+import {
+  SDK_VARIANT_HEADER,
+  SDK_VARIANT_SOURCE_HEADER,
+  SDK_VERSION_HEADER,
+  STOREFRONT_ACCESS_TOKEN_HEADER,
+  STOREFRONT_REQUEST_GROUP_ID_HEADER,
+} from './constants';
 import {
   CacheNone,
   CacheLong,
@@ -205,7 +211,7 @@ type StorefrontMutationOptions = StorefrontMutateSecondParam & {
   cache?: never;
 };
 
-const StorefrontApiError = class extends Error {} as ErrorConstructor;
+export const StorefrontApiError = class extends Error {} as ErrorConstructor;
 export const isStorefrontApiError = (error: any) =>
   error instanceof StorefrontApiError;
 
@@ -331,12 +337,13 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         method: requestInit.method,
         headers: {
           'content-type': defaultHeaders['content-type'],
-          'X-SDK-Variant': defaultHeaders['X-SDK-Variant'],
-          'X-SDK-Variant-Source': defaultHeaders['X-SDK-Variant-Source'],
-          'X-SDK-Version': defaultHeaders['X-SDK-Version'],
-          'X-Shopify-Storefront-Access-Token':
-            defaultHeaders['X-Shopify-Storefront-Access-Token'],
           'user-agent': defaultHeaders['user-agent'],
+          [SDK_VARIANT_HEADER]: defaultHeaders[SDK_VARIANT_HEADER],
+          [SDK_VARIANT_SOURCE_HEADER]:
+            defaultHeaders[SDK_VARIANT_SOURCE_HEADER],
+          [SDK_VERSION_HEADER]: defaultHeaders[SDK_VERSION_HEADER],
+          [STOREFRONT_ACCESS_TOKEN_HEADER]:
+            defaultHeaders[STOREFRONT_ACCESS_TOKEN_HEADER],
         },
         body: requestInit.body,
       },

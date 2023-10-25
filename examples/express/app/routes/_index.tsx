@@ -7,7 +7,7 @@ export default function Index() {
         Edit this route in <em>app/routes/index.tsx</em>.
       </p>
       <p>
-        <Link to="/collections/freestyle">Freestyle Collection</Link>
+        <Link to="/products/snowboard">Snowboard product</Link>
       </p>
     </>
   );
