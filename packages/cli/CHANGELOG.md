@@ -1,5 +1,14 @@
 # @shopify/cli-hydrogen
 
+## 5.5.1
+
+### Patch Changes
+
+- Fix template dist package due to CI error ([#1451](https://github.com/Shopify/hydrogen/pull/1451)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Updated dependencies [[`3eb376fe`](https://github.com/Shopify/hydrogen/commit/3eb376fe8796b50131dc43845772ae555e07a1a6)]:
+  - @shopify/hydrogen-react@2023.7.6
+
 ## 5.5.0
 
 ### Minor Changes
