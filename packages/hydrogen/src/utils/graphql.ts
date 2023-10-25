@@ -1,10 +1,10 @@
 import type {StorefrontApiResponseOk} from '@shopify/hydrogen-react';
 
-export function minifyQuery(string: string) {
+export function minifyQuery<T extends string>(string: T) {
   return string
     .replace(/\s*#.*$/gm, '') // Remove GQL comments
     .replace(/\s+/gm, ' ') // Minify spaces
-    .trim();
+    .trim() as T;
 }
 
 const IS_QUERY_RE = /(^|}\s)query[\s({]/im;
@@ -42,7 +42,7 @@ export function throwGraphQLError<T>({
   queryVariables,
   ErrorConstructor = Error,
   client = 'storefront',
-}: GraphQLErrorOptions<T>) {
+}: GraphQLErrorOptions<T>): never {
   const requestId = response.headers.get('x-request-id');
   const errorMessage =
     (typeof errors === 'string'

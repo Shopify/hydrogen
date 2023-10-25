@@ -348,7 +348,7 @@ describe('customer', () => {
       (session.get as any).mockReturnValueOnce(undefined);
 
       async function run() {
-        await customer.query(`some query`);
+        await customer.query(`query {...}`);
       }
 
       await expect(run).rejects.toThrowError(
@@ -370,7 +370,7 @@ describe('customer', () => {
       );
 
       async function run() {
-        await customer.query(`some query`);
+        await customer.query(`query {...}`);
       }
 
       await expect(run).rejects.toThrowError(
@@ -395,7 +395,7 @@ describe('customer', () => {
 
       fetch.mockResolvedValue(createFetchResponse(someJson, {ok: true}));
 
-      const response = await customer.query(`some query`);
+      const response = await customer.query(`query {...}`);
       expect(response).toBe('json');
       // Session not updated because it's not expired
       expect(session.set).not.toHaveBeenCalled();
@@ -418,7 +418,7 @@ describe('customer', () => {
 
       fetch.mockResolvedValue(createFetchResponse(someJson, {ok: true}));
 
-      const response = await customer.query(`some query`);
+      const response = await customer.query(`query {...}`);
       expect(response).toBe('json');
       // Session updated because token was refreshed
       expect(session.set).toHaveBeenCalled();

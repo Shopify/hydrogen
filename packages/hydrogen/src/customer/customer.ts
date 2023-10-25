@@ -19,6 +19,7 @@ import {
   assertQuery,
   assertMutation,
   throwGraphQLError,
+  type GraphQLErrorOptions,
 } from '../utils/graphql';
 import {parseJSON} from '../utils/parse-json';
 import {hashKey} from '../utils/hash';
@@ -40,7 +41,7 @@ export type CustomerClient = {
   ) => Promise<ReturnType>;
   /** Execute a GraphQL mutation against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
   mutate: <ReturnType = any, RawGqlString extends string = string>(
-    query: RawGqlString,
+    mutation: RawGqlString,
     options?: {variables: Record<string, any>},
   ) => Promise<ReturnType>;
 };
@@ -103,6 +104,88 @@ export function createCustomerClient({
           });
         }
       : undefined;
+
+  async function fetchCustomerAPI<T>({
+    query,
+    type,
+    variables = {},
+  }: {
+    query: string;
+    type: 'query' | 'mutation';
+    variables?: Record<string, any>;
+  }) {
+    const accessToken = session.get('customer_access_token');
+    const expiresAt = session.get('expires_at');
+
+    if (!accessToken || !expiresAt)
+      throw new BadRequest(
+        'Unauthorized',
+        'Login before querying the Customer Account API.',
+      );
+
+    await checkExpires({
+      locks,
+      expiresAt,
+      session,
+      customerAccountId,
+      customerAccountUrl,
+      origin,
+    });
+
+    const startTime = new Date().getTime();
+
+    const response = await fetch(
+      `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': USER_AGENT,
+          Origin: origin,
+          Authorization: accessToken,
+        },
+        body: JSON.stringify({
+          operationName: 'SomeQuery',
+          query,
+          variables,
+        }),
+      },
+    );
+
+    logSubRequestEvent?.(query, startTime);
+
+    const body = await response.text();
+
+    const errorOptions: GraphQLErrorOptions<T> = {
+      response,
+      type,
+      query,
+      queryVariables: variables,
+      errors: undefined,
+      client: 'customer',
+    };
+
+    if (!response.ok) {
+      /**
+       * The Customer API might return a string error, or a JSON-formatted {error: string}.
+       * We try both and conform them to a single {errors} format.
+       */
+      let errors;
+      try {
+        errors = parseJSON(body);
+      } catch (_e) {
+        errors = [{message: body}];
+      }
+
+      throwGraphQLError({...errorOptions, errors});
+    }
+
+    try {
+      return parseJSON(body).data;
+    } catch (e) {
+      throwGraphQLError({...errorOptions, errors: [{message: body}]});
+    }
+  }
 
   return {
     login: async () => {
@@ -178,103 +261,17 @@ export function createCustomerClient({
 
       return true;
     },
-    async mutate<ReturnType = any, RawGqlString extends string = string>(
-      mutation: RawGqlString,
-      options: {variables: Record<string, any>} = {variables: {}},
-    ) {
-      mutation = minifyQuery(mutation) as RawGqlString;
+    mutate(mutation, options) {
+      mutation = minifyQuery(mutation);
       assertMutation(mutation, 'customer.mutate');
 
-      return this.query<ReturnType, RawGqlString>(mutation, options);
+      return fetchCustomerAPI({query: mutation, type: 'mutation', ...options});
     },
-    query: async <ReturnType = any, RawGqlString extends string = string>(
-      query: RawGqlString,
-      options: {variables: Record<string, any>} = {variables: {}},
-    ) => {
-      query = minifyQuery(query) as RawGqlString;
+    query(query, options) {
+      query = minifyQuery(query);
       assertQuery(query, 'customer.query');
 
-      const accessToken = session.get('customer_access_token');
-      const expiresAt = session.get('expires_at');
-
-      if (!accessToken || !expiresAt)
-        throw new BadRequest(
-          'Unauthorized',
-          'Login before querying the Customer Account API.',
-        );
-
-      await checkExpires({
-        locks,
-        expiresAt,
-        session,
-        customerAccountId,
-        customerAccountUrl,
-        origin,
-      });
-
-      const startTime = new Date().getTime();
-
-      const response = await fetch(
-        `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'User-Agent': USER_AGENT,
-            Origin: origin,
-            Authorization: accessToken,
-          },
-          body: JSON.stringify({
-            operationName: 'SomeQuery',
-            query,
-            variables: options.variables || {},
-          }),
-        },
-      );
-
-      logSubRequestEvent?.(query, startTime);
-
-      const body = await response.text();
-      let data: ReturnType;
-
-      if (!response.ok) {
-        /**
-         * The Storefront API might return a string error, or a JSON-formatted {error: string}.
-         * We try both and conform them to a single {errors} format.
-         */
-        let errors;
-        try {
-          errors = parseJSON(body);
-        } catch (_e) {
-          errors = [{message: body}];
-        }
-
-        throwGraphQLError({
-          response,
-          type: 'query',
-          query,
-          queryVariables: options.variables,
-          errors,
-          client: 'customer',
-        });
-      }
-
-      try {
-        data = parseJSON(body).data;
-      } catch (e) {
-        throwGraphQLError({
-          response,
-          type: 'query',
-          query,
-          queryVariables: options.variables,
-          errors: [{message: body}],
-          client: 'customer',
-        });
-      }
-
-      // data is always initialized in the try block above
-      // @ts-expect-error
-      return data as any as ReturnType;
+      return fetchCustomerAPI({query, type: 'query', ...options});
     },
     authorize: async (redirectPath = '/') => {
       const code = url.searchParams.get('code');
