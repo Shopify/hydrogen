@@ -26,3 +26,14 @@ Quantities.args = {
   className: '',
   width: '',
 };
+
+export const ChannelAttribution = Template.bind({});
+ChannelAttribution.args = {
+  channel: 'hydrogen',
+  variantIdsAndQuantities: [
+    {id: 'gid://shopify/ProductVariant/123', quantity: 2},
+  ],
+  storeDomain: 'https://notashop.myshopify.io',
+  className: '',
+  width: '',
+};

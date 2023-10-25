@@ -4367,12 +4367,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {ShopPayButton} from '@shopify/hydrogen-react';\n\nexport function AddVariantQuantity1({variantId, storeDomain}) {\n  return &lt;ShopPayButton variantIds={[variantId]} storeDomain={storeDomain} /&gt;;\n}\n\nexport function AddVariantQuantityMultiple({variantId, quantity, storeDomain}) {\n  return (\n    &lt;ShopPayButton\n      variantIdsAndQuantities={[{id: variantId, quantity}]}\n      storeDomain={storeDomain}\n    /&gt;\n  );\n}\n",
+            "code": "import {ShopPayButton} from '@shopify/hydrogen-react';\n\nexport function AddVariantQuantity1({variantId, storeDomain}) {\n  return &lt;ShopPayButton variantIds={[variantId]} storeDomain={storeDomain} /&gt;;\n}\n\nexport function AddVariantQuantityMultiple({variantId, quantity, storeDomain}) {\n  return (\n    &lt;ShopPayButton\n      variantIdsAndQuantities={[{id: variantId, quantity}]}\n      storeDomain={storeDomain}\n    /&gt;\n  );\n}\n\nexport function ChannelAttribution({channel, variantId, storeDomain}) {\n  return (\n    &lt;ShopPayButton\n      channel={channel}\n      variantIds={[variantId]}\n      storeDomain={storeDomain}\n    /&gt;\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {ShopPayButton} from '@shopify/hydrogen-react';\n\nexport function AddVariantQuantity1({\n  variantId,\n  storeDomain,\n}: {\n  variantId: string;\n  storeDomain: string;\n}) {\n  return &lt;ShopPayButton variantIds={[variantId]} storeDomain={storeDomain} /&gt;;\n}\n\nexport function AddVariantQuantityMultiple({\n  variantId,\n  quantity,\n  storeDomain,\n}: {\n  variantId: string;\n  quantity: number;\n  storeDomain: string;\n}) {\n  return (\n    &lt;ShopPayButton\n      variantIdsAndQuantities={[{id: variantId, quantity}]}\n      storeDomain={storeDomain}\n    /&gt;\n  );\n}\n",
+            "code": "import {ShopPayButton} from '@shopify/hydrogen-react';\n\nexport function AddVariantQuantity1({\n  variantId,\n  storeDomain,\n}: {\n  variantId: string;\n  storeDomain: string;\n}) {\n  return &lt;ShopPayButton variantIds={[variantId]} storeDomain={storeDomain} /&gt;;\n}\n\nexport function AddVariantQuantityMultiple({\n  variantId,\n  quantity,\n  storeDomain,\n}: {\n  variantId: string;\n  quantity: number;\n  storeDomain: string;\n}) {\n  return (\n    &lt;ShopPayButton\n      variantIdsAndQuantities={[{id: variantId, quantity}]}\n      storeDomain={storeDomain}\n    /&gt;\n  );\n}\n\nexport function ChannelAttribution({\n  channel,\n  variantId,\n  storeDomain,\n}: {\n  channel: 'headless' | 'hydrogen';\n  variantId: string;\n  storeDomain: string;\n}) {\n  return (\n    &lt;ShopPayButton\n      channel={channel}\n      variantIds={[variantId]}\n      storeDomain={storeDomain}\n    /&gt;\n  );\n}\n",
             "language": "tsx"
           }
         ],
@@ -4412,7 +4412,7 @@
             "filePath": "/ShopPayButton.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ShopPayButtonProps",
-            "value": "ShopPayButtonStyleProps & ShopPayDomainProps & (ShopPayVariantIds | ShopPayVariantAndQuantities)",
+            "value": "ShopPayButtonStyleProps & ShopPayDomainProps & ShopPayChannelAttribution & (ShopPayVariantIds | ShopPayVariantAndQuantities)",
             "description": ""
           },
           "ShopPayButtonStyleProps": {
@@ -4453,6 +4453,23 @@
                 "name": "storeDomain",
                 "value": "string",
                 "description": "The domain of your Shopify storefront URL (eg: `your-store.myshopify.com`).",
+                "isOptional": true
+              }
+            ]
+          },
+          "ShopPayChannelAttribution": {
+            "filePath": "/ShopPayButton.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopPayChannelAttribution",
+            "value": "{\n  /** A string that adds channel attribution to the order. Can be either `headless` or `hydrogen` */\n  channel?: 'headless' | 'hydrogen';\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/ShopPayButton.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "channel",
+                "value": "\"headless\" | \"hydrogen\"",
+                "description": "A string that adds channel attribution to the order. Can be either `headless` or `hydrogen`",
                 "isOptional": true
               }
             ]
