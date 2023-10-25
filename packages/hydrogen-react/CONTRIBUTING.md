@@ -63,14 +63,12 @@ Every PR must pass certain CI checks in order to be merged; you can run these ch
 
 Processes that need to happen:
 
-- Create a new branch for the version, e.g. `2022-10`.
-- Comment out the "Create release pull request or publish" job in `releases.yml` so that it won't auto-publish a new version of the branch until you're ready
 - Create a new changeset. Use this changeset to add notes and guides to important things that are changed as part of this update.
 - Do a find & replace in the code to replace nearly all instances of the old version with the new version.
   - However, don't replace documentation unless it makes sense.
   - Also be careful that some versions of the Storefront API don't exactly match code here: for example, SFAPI `2022-07` could be `2022-07`, `2022-7`, and `2022.7.x` in this codebase.
   - Note that the package.json `version` field cannot have leading `0`s. So you cannot have `2022.01.0`, and must instead use `2022.1.0`
-- Run the `graphql-types` NPM script to generate the new types.
+- Update the schema url to the new api version (in `codegen.ts : Line 9`) and run the `graphql-types` NPM script to generate the new types.
   - Look through the new schema and see if there are any breaking changes
   - If there are new scalars, or scalars are removed, update the `codegen.yml` file's custom scalar settings and run the command again.
 - Search for all instances of `@deprecated` and see if it is time to make that breaking change
@@ -78,9 +76,6 @@ Processes that need to happen:
 - Manually update the `package.json` `version` to the latest. Note that you can't have a leading `0` in the version number, so for example Storefront API `2022-07` would have to be `2022.7.0`
 - Once you feel that everything is ready:
   - Do one last `ci:checks`
-  - Push the branch up to Github. Do _not_ make a Pull Request - we want the older Storefront API branch to stay as a snapshot of the code that was there at that release.
-- Change the default branch in Github to the newly-created branch.
-- Un-comment out the "Create release pull request or publish" job in `releases.yml`
 - Changelog CI will automatically create a new PR with the changelog. Merge it for the first official release of the new version!
 
 ## Package Exports Notes:
