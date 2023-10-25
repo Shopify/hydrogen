@@ -1,5 +1,27 @@
 # @shopify/create-hydrogen
 
+## 4.3.1
+
+### Patch Changes
+
+- Fix template dist package due to CI error ([#1451](https://github.com/Shopify/hydrogen/pull/1451)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Updated dependencies [[`3eb376fe`](https://github.com/Shopify/hydrogen/commit/3eb376fe8796b50131dc43845772ae555e07a1a6)]:
+  - @shopify/cli-hydrogen@5.5.1
+
+## 4.3.0
+
+### Minor Changes
+
+- Generated JavaScript projects now use Codegen and JSDoc to enhance editor autocompletion. ([#1334](https://github.com/Shopify/hydrogen/pull/1334)) by [@frandiox](https://github.com/frandiox)
+
+### Patch Changes
+
+- Fix the starter template blog route to include a required `startCursor` in the GraphQL query. ([#1441](https://github.com/Shopify/hydrogen/pull/1441)) by [@blittle](https://github.com/blittle)
+
+- Updated dependencies [[`e992de2c`](https://github.com/Shopify/hydrogen/commit/e992de2c73462a954620c3ef896849782d18e506), [`f6469d11`](https://github.com/Shopify/hydrogen/commit/f6469d11248543c98e5166f8d8c1a2e2d9e5764c), [`b81b452d`](https://github.com/Shopify/hydrogen/commit/b81b452d010c650b1de1678f729945d1d4394820)]:
+  - @shopify/cli-hydrogen@5.5.0
+
 ## 4.2.6
 
 ### Patch Changes

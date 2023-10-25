@@ -19,7 +19,8 @@
     "prepack": "npm run build",
     "test:watch": "vitest",
     "build-docs": "sh ./docs/build-docs.sh && npm run format",
-    "format": "prettier --write \"{src,docs}/**/*\" --ignore-unknown"
+    "format": "prettier --write \"{src,docs}/**/*\" --ignore-unknown",
+    "preview-docs": "node ../../docs/preview/bin/cli.js docs/generated/generated_docs_data.json"
   },
   "exports": {
     ".": {
@@ -60,11 +61,13 @@
   },
   "peerDependencies": {
     "@remix-run/react": "1.19.1",
-    "@remix-run/server-runtime": "1.19.1"
+    "@remix-run/server-runtime": "1.19.1",
+    "react": "^18.2.0"
   },
   "devDependencies": {
     "@testing-library/react": "^14.0.0",
     "happy-dom": "^8.9.0",
+    "react": "^18.2.0",
     "schema-dts": "^1.1.0",
     "vitest": "^0.33.0",
     "@shopify/generate-docs": "0.11.1"
