@@ -68,12 +68,7 @@ export default class Build extends Command {
       description: 'Disable warning about missing standard routes.',
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
     }),
-    'codegen-unstable': Flags.boolean({
-      description:
-        'Generate types for the Storefront API queries found in your project.',
-      required: false,
-      default: false,
-    }),
+    codegen: commonFlags.codegen,
     'codegen-config-path': commonFlags.codegenConfigPath,
 
     base: deprecated('--base')(),
@@ -87,7 +82,7 @@ export default class Build extends Command {
 
     await runBuild({
       ...flagsToCamelObject(flags),
-      useCodegen: flags['codegen-unstable'],
+      useCodegen: flags.codegen,
       directory,
     });
   }

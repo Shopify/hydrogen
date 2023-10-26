@@ -29,6 +29,9 @@ export default class Codegen extends Command {
     }),
   };
 
+  static aliases = ['codegen-unstable'];
+  static deprecateAliases = true;
+
   async run(): Promise<void> {
     const {flags} = await this.parse(Codegen);
     const directory = flags.path ? path.resolve(flags.path) : process.cwd();

@@ -15,7 +15,7 @@ export type CartOptionalInput = {
    * The cart id.
    * @default cart.getCartId();
    */
-  cartId?: Scalars['ID'];
+  cartId?: Scalars['ID']['input'];
   /**
    * The country code.
    * @default storefront.i18n.country

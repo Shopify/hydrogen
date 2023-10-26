@@ -11,7 +11,7 @@ import type {
 } from '@shopify/hydrogen-react/storefront-api-types';
 
 export type CartMetafieldDeleteFunction = (
-  key: Scalars['String'],
+  key: Scalars['String']['input'],
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryData>;
 

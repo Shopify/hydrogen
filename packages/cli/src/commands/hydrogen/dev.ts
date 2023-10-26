@@ -17,6 +17,7 @@ import {
   deprecated,
   commonFlags,
   flagsToCamelObject,
+  overrideFlag,
   DEFAULT_PORT,
 } from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
@@ -41,13 +42,12 @@ export default class Dev extends Command {
     path: commonFlags.path,
     port: commonFlags.port,
     ['worker-unstable']: commonFlags.workerRuntime,
-    ['codegen-unstable']: Flags.boolean({
+    codegen: overrideFlag(commonFlags.codegen, {
       description:
-        'Generate types for the Storefront API queries found in your project. It updates the types on file save.',
-      required: false,
-      default: false,
+        commonFlags.codegen.description! +
+        ' It updates the types on file save.',
     }),
-    ['codegen-config-path']: commonFlags.codegenConfigPath,
+    'codegen-config-path': commonFlags.codegenConfigPath,
     sourcemap: commonFlags.sourcemap,
     'disable-virtual-routes': Flags.boolean({
       description:
@@ -70,7 +70,7 @@ export default class Dev extends Command {
 
     await runDev({
       ...flagsToCamelObject(flags),
-      useCodegen: flags['codegen-unstable'],
+      useCodegen: flags.codegen,
       workerRuntime: flags['worker-unstable'],
       path: directory,
     });
