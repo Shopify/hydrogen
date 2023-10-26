@@ -5,7 +5,7 @@ export {
   createSessionStorage,
 } from './implementations';
 
-export {createRequestHandler, getBuyerIp, getStorefrontHeaders} from './server';
+export {createRequestHandler, getStorefrontHeaders} from './server';
 
 export {
   createSession,
