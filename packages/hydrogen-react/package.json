@@ -1,6 +1,6 @@
 {
   "name": "@shopify/hydrogen-react",
-  "version": "2023.7.4",
+  "version": "2023.10.0",
   "description": "React components, hooks, and utilities for creating custom Shopify storefronts",
   "homepage": "https://github.com/Shopify/hydrogen/tree/main/packages/hydrogen-react",
   "license": "MIT",
@@ -50,7 +50,38 @@
     },
     "./storefront-api-types": "./dist/types/storefront-api-types.d.ts",
     "./storefront.schema.json": "./storefront.schema.json",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./*": {
+      "node": {
+        "require": {
+          "types": "./dist/types/*.d.cts",
+          "development": "./dist/node-dev/*.js",
+          "default": "./dist/node-prod/*.js"
+        },
+        "import": {
+          "types": "./dist/types/*.d.ts",
+          "development": "./dist/node-dev/*.mjs",
+          "default": "./dist/node-prod/*.mjs"
+        },
+        "default": "./dist/node-prod/*.js"
+      },
+      "module": {
+        "types": "./dist/types/*.d.ts",
+        "development": "./dist/browser-dev/*.mjs",
+        "default": "./dist/browser-prod/*.mjs"
+      },
+      "import": {
+        "types": "./dist/types/*.d.ts",
+        "development": "./dist/browser-dev/*.mjs",
+        "default": "./dist/browser-prod/*.mjs"
+      },
+      "require": {
+        "types": "./dist/types/*.d.cts",
+        "development": "./dist/node-dev/*.js",
+        "default": "./dist/node-prod/*.js"
+      },
+      "default": "./dist/browser-prod/*.mjs"
+    }
   },
   "typesVersions": {
     "*": {
@@ -94,14 +125,15 @@
     "test:watch": "vitest",
     "typecheck": "run-p typecheck:*",
     "typecheck:code": "tsc --noEmit",
-    "typecheck:examples": "tsc --noEmit --project tsconfig.examples.json"
+    "typecheck:examples": "tsc --noEmit --project tsconfig.examples.json",
+    "preview-docs": "node ../docs-preview/bin/cli.js docs/generated/generated_docs_data.json"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
-    "@graphql-codegen/add": "^4.0.1",
-    "@graphql-codegen/cli": "^3.2.1",
-    "@graphql-codegen/introspection": "3.0.1",
-    "@graphql-codegen/typescript": "^3.0.1",
+    "@graphql-codegen/add": "^5.0.0",
+    "@graphql-codegen/cli": "^5.0.0",
+    "@graphql-codegen/introspection": "^4.0.0",
+    "@graphql-codegen/typescript": "^4.0.1",
     "@ladle/react": "^2.9.0",
     "@shopify/generate-docs": "^0.11.1",
     "@testing-library/jest-dom": "^5.17.0",
@@ -140,7 +172,7 @@
     "@xstate/fsm": "^2.0.0",
     "@xstate/react": "^3.2.1",
     "graphql": "^16.6.0",
-    "type-fest": "^3.6.0",
+    "type-fest": "^4.5.0",
     "worktop": "^0.7.3"
   },
   "repository": {

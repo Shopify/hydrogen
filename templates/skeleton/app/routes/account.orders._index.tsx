@@ -164,8 +164,8 @@ export const CUSTOMER_FRAGMENT = `#graphql
       pageInfo {
         hasPreviousPage
         hasNextPage
-        hasNextPage
         endCursor
+        startCursor
       }
     }
   }

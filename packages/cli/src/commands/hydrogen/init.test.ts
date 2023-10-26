@@ -19,7 +19,7 @@ import {getSkeletonSourceDir} from '../../lib/build.js';
 import {execAsync} from '../../lib/process.js';
 import {symlink, rmdir} from 'fs-extra';
 import {runCheckRoutes} from './check.js';
-import {runCodegen} from './codegen-unstable.js';
+import {runCodegen} from './codegen.js';
 import {runBuild} from './build.js';
 
 const {renderTasksHook} = vi.hoisted(() => ({renderTasksHook: vi.fn()}));

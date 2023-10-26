@@ -4,7 +4,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "5.4.3",
+  "version": "5.5.1",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@ast-grep/napi": "0.11.0",
-    "@graphql-codegen/cli": "3.3.1",
+    "@graphql-codegen/cli": "5.0.0",
     "@oclif/core": "2.11.7",
     "@shopify/cli-kit": "3.49.2",
     "@shopify/hydrogen-codegen": "^0.0.2",
@@ -54,11 +54,14 @@
     "use-resize-observer": "^9.1.0",
     "ws": "^8.13.0"
   },
+  "optionalDependencies": {
+    "@parcel/watcher": "^2.3.0"
+  },
   "peerDependencies": {
     "@remix-run/dev": "^2.1.0",
     "@remix-run/react": "^2.1.0",
-    "@shopify/hydrogen-react": "^2023.7.4",
-    "@shopify/remix-oxygen": "^1.1.7"
+    "@shopify/hydrogen-react": "^2023.7.6",
+    "@shopify/remix-oxygen": "^1.1.8"
   },
   "peerDependenciesMeta": {
     "@remix-run/dev": {

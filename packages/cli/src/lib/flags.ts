@@ -56,11 +56,19 @@ export const commonFlags = {
     default: true,
     allowNo: true,
   }),
+  codegen: Flags.boolean({
+    description:
+      'Generate types for the Storefront API queries found in your project.',
+    required: false,
+    default: false,
+    deprecateAliases: true,
+    aliases: ['codegen-unstable'],
+  }),
   codegenConfigPath: Flags.string({
     description:
       'Specify a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if it exists.',
     required: false,
-    dependsOn: ['codegen-unstable'],
+    dependsOn: ['codegen'],
   }),
   styling: Flags.string({
     description: `Sets the styling strategy to use. One of ${STYLING_CHOICES.map(
