@@ -1,4 +1,4 @@
-import type {LoaderArgs} from '@remix-run/node';
+import type {LoaderFunctionArgs} from '@remix-run/node';
 import {json} from '@remix-run/node';
 import {useLoaderData, useMatches} from '@remix-run/react';
 import {marked} from 'marked';
@@ -8,7 +8,7 @@ import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
 // @ts-ignore
 import {oneDark} from 'react-syntax-highlighter/dist/cjs/styles/prism/index.js';
 
-export async function loader({params}: LoaderArgs) {
+export async function loader({params}: LoaderFunctionArgs) {
   return json({doc: params.doc});
 }
 
@@ -17,13 +17,13 @@ function getDefinition(definitions: any, type: string) {
 }
 
 export default function Index() {
-  const {doc} = useLoaderData();
-  if (doc === 'worker.js') return null;
+  const {doc} = useLoaderData<typeof loader>();
+  if (!doc || doc === 'worker.js') return null;
 
   const matches = useMatches();
   const data = (matches as any)[0].data.data;
 
-  const docMetaData = data.find((d: any) => d.name === doc!);
+  const docMetaData = data.find((d: any) => d.name === doc);
   const definition = docMetaData?.definitions?.[0];
   const typeDef = definition
     ? getDefinition(definition.typeDefinitions, definition.type)
