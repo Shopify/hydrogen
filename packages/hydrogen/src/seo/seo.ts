@@ -8,11 +8,7 @@ import {
 import {generateSeoTags, type SeoConfig} from './generate-seo-tags';
 import {type Thing} from 'schema-dts';
 
-import type {
-  AppData,
-  LoaderFunction,
-  SerializeFrom,
-} from '@remix-run/server-runtime';
+import type {LoaderFunction, SerializeFrom} from '@remix-run/server-runtime';
 
 const SeoLogger = lazy(() => import('./log-seo-tags'));
 
@@ -21,7 +17,7 @@ export interface SeoHandleFunction<
   StructuredDataSchema extends Thing = Thing,
 > {
   (args: {
-    data: Loader extends LoaderFunction ? SerializeFrom<Loader> : AppData;
+    data: Loader extends LoaderFunction ? SerializeFrom<Loader> : unknown;
     id: string;
     params: Params;
     pathname: Location['pathname'];
@@ -36,6 +32,8 @@ interface SeoProps {
   debug?: boolean;
 }
 
+type SeoWrapper = undefined | {seo: any};
+
 export function Seo({debug}: SeoProps) {
   const matches = useMatches();
   const location = useLocation();
@@ -47,8 +45,8 @@ export function Seo({debug}: SeoProps) {
         .flatMap((match) => {
           const {handle, ...routeMatch} = match;
           const routeData = {...routeMatch, ...location};
-          const handleSeo = handle?.seo;
-          const loaderSeo = routeMatch?.data?.seo;
+          const handleSeo = (handle as SeoWrapper)?.seo;
+          const loaderSeo = (routeMatch?.data as SeoWrapper)?.seo;
 
           if (!handleSeo && !loaderSeo) {
             return [];
@@ -56,7 +54,7 @@ export function Seo({debug}: SeoProps) {
 
           // if seo is defined in the handle, invoke it with the route data
           if (handleSeo) {
-            return recursivelyInvokeOrReturn(handle.seo, routeData);
+            return recursivelyInvokeOrReturn(handleSeo, routeData);
           } else {
             return [loaderSeo];
           }

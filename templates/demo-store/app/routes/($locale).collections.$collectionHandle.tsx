@@ -1,5 +1,5 @@
 import {useEffect} from 'react';
-import {json, type LoaderArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, useNavigate} from '@remix-run/react';
 import {useInView} from 'react-intersection-observer';
 import type {
@@ -41,7 +41,7 @@ type FiltersQueryParams = Array<
   VariantFilterParam | PriceFiltersQueryParam | VariantOptionFiltersQueryParam
 >;
 
-export async function loader({params, request, context}: LoaderArgs) {
+export async function loader({params, request, context}: LoaderFunctionArgs) {
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 8,
   });

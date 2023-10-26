@@ -1,32 +1,27 @@
 import {
   json,
   redirect,
-  type ActionArgs,
-  type LoaderArgs,
+  type ActionFunctionArgs,
+  type LoaderFunctionArgs,
 } from '@shopify/remix-oxygen';
-import {
-  Form,
-  Link,
-  useActionData,
-  type V2_MetaFunction,
-} from '@remix-run/react';
+import {Form, Link, useActionData, type MetaFunction} from '@remix-run/react';
 
 type ActionResponse = {
   error: string | null;
 };
 
-export const meta: V2_MetaFunction = () => {
+export const meta: MetaFunction = () => {
   return [{title: 'Login'}];
 };
 
-export async function loader({context}: LoaderArgs) {
+export async function loader({context}: LoaderFunctionArgs) {
   if (await context.session.get('customerAccessToken')) {
     return redirect('/account');
   }
   return json({});
 }
 
-export async function action({request, context}: ActionArgs) {
+export async function action({request, context}: ActionFunctionArgs) {
   const {session, storefront} = context;
 
   if (request.method !== 'POST') {

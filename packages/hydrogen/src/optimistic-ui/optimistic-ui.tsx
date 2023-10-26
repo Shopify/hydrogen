@@ -4,9 +4,8 @@ export function useOptimisticData<T>(identifier: string) {
   const fetchers = useFetchers();
   const data: Record<string, unknown> = {};
 
-  for (const fetcher of fetchers) {
-    const formData = fetcher.submission?.formData;
-    if (formData && formData.get('optimistic-identifier') === identifier) {
+  for (const {formData} of fetchers) {
+    if (formData?.get('optimistic-identifier') === identifier) {
       try {
         if (formData.has('optimistic-data')) {
           const dataInForm: unknown = JSON.parse(

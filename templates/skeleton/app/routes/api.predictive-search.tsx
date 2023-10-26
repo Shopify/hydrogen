@@ -1,4 +1,4 @@
-import {json, type LoaderArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import type {
   NormalizedPredictiveSearch,
   NormalizedPredictiveSearchResults,
@@ -39,7 +39,7 @@ const DEFAULT_SEARCH_TYPES: PredictiveSearchTypes[] = [
  * Fetches the search results from the predictive search API
  * requested by the SearchForm component
  */
-export async function action({request, params, context}: LoaderArgs) {
+export async function action({request, params, context}: LoaderFunctionArgs) {
   if (request.method !== 'POST') {
     throw new Error('Invalid request method');
   }
@@ -57,7 +57,7 @@ async function fetchPredictiveSearchResults({
   params,
   request,
   context,
-}: Pick<LoaderArgs, 'params' | 'context' | 'request'>) {
+}: Pick<LoaderFunctionArgs, 'params' | 'context' | 'request'>) {
   const url = new URL(request.url);
   const searchParams = new URLSearchParams(url.search);
   let body;
@@ -111,7 +111,7 @@ async function fetchPredictiveSearchResults({
  */
 export function normalizePredictiveSearchResults(
   predictiveSearch: PredictiveSearchQuery['predictiveSearch'],
-  locale: LoaderArgs['params']['locale'],
+  locale: LoaderFunctionArgs['params']['locale'],
 ): NormalizedPredictiveSearch {
   let totalResults = 0;
   if (!predictiveSearch) {

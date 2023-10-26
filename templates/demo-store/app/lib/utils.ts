@@ -8,6 +8,7 @@ import type {
   ParentMenuItemFragment,
 } from 'storefrontapi.generated';
 import {countries} from '~/data/countries';
+import {useRootLoaderData} from '~/root';
 
 import type {I18nLocale} from './type';
 
@@ -296,8 +297,8 @@ export function getLocaleFromRequest(request: Request): I18nLocale {
 }
 
 export function usePrefixPathWithLocale(path: string) {
-  const [root] = useMatches();
-  const selectedLocale = root.data?.selectedLocale ?? DEFAULT_LOCALE;
+  const rootData = useRootLoaderData();
+  const selectedLocale = rootData?.selectedLocale ?? DEFAULT_LOCALE;
 
   return `${selectedLocale.pathPrefix}${
     path.startsWith('/') ? path : '/' + path
@@ -306,8 +307,8 @@ export function usePrefixPathWithLocale(path: string) {
 
 export function useIsHomePath() {
   const {pathname} = useLocation();
-  const [root] = useMatches();
-  const selectedLocale = root.data?.selectedLocale ?? DEFAULT_LOCALE;
+  const rootData = useRootLoaderData();
+  const selectedLocale = rootData?.selectedLocale ?? DEFAULT_LOCALE;
   const strippedPathname = pathname.replace(selectedLocale.pathPrefix, '');
   return strippedPathname === '/';
 }

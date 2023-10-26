@@ -1,9 +1,9 @@
-import {ActionArgs, LoaderArgs} from '@shopify/remix-oxygen';
+import {ActionFunctionArgs, LoaderFunctionArgs} from '@shopify/remix-oxygen';
 
-export async function action({context}: ActionArgs) {
+export async function action({context}: ActionFunctionArgs) {
   return context.customer.login();
 }
 
-export async function loader({context}: LoaderArgs) {
+export async function loader({context}: LoaderFunctionArgs) {
   return context.customer.authorize('/');
 }

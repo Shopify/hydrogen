@@ -369,11 +369,6 @@ describe('init', () => {
             styling: 'tailwind',
           });
 
-          // Injects booleans into Remix config
-          await expect(readFile(`${tmpDir}/remix.config.js`)).resolves.toMatch(
-            /tailwind: true,\n\s*postcss: true,\n\s*future:/,
-          );
-
           // Copies Tailwind file
           await expect(
             readFile(`${tmpDir}/app/styles/tailwind.css`),

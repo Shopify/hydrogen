@@ -88,9 +88,6 @@ describe('generate/route', () => {
         vi.mocked(getRemixConfig).mockResolvedValue({
           ...directories,
           tsconfigPath: 'somewhere/tsconfig.json',
-          future: {
-            v2_routeConvention: true,
-          },
         } as any);
 
         const result = await generateRoutes({
@@ -128,9 +125,7 @@ describe('generate/route', () => {
         // When
         await generateProjectFile(route, {
           ...directories,
-          v2Flags: {
-            isV2RouteConvention: false,
-          },
+          v1RouteConvention: true,
         });
 
         // Then
@@ -150,10 +145,7 @@ describe('generate/route', () => {
         });
 
         // When
-        await generateProjectFile(route, {
-          ...directories,
-          v2Flags: {isV2RouteConvention: true},
-        });
+        await generateProjectFile(route, directories);
 
         // Then
         expect(await readProjectFile(directories, route, 'jsx')).toContain(
@@ -181,27 +173,24 @@ describe('generate/route', () => {
         // When
         await generateProjectFile('routes/_index', {
           ...directories,
-          v2Flags: {isV2RouteConvention: true},
           localePrefix,
           typescript: true,
         });
         await generateProjectFile('routes/pages.$handle', {
           ...directories,
-          v2Flags: {isV2RouteConvention: false},
+          v1RouteConvention: true,
           localePrefix,
           typescript: true,
         });
 
         await generateProjectFile('routes/[sitemap.xml]', {
           ...directories,
-          v2Flags: {isV2RouteConvention: true},
           localePrefix,
           typescript: true,
         });
 
         await generateProjectFile('routes/[robots.txt]', {
           ...directories,
-          v2Flags: {isV2RouteConvention: true},
           localePrefix,
           typescript: true,
         });
@@ -241,7 +230,6 @@ describe('generate/route', () => {
         await generateProjectFile(route, {
           ...directories,
           typescript: true,
-          v2Flags: {isV2RouteConvention: true},
         });
 
         // Then
@@ -267,7 +255,6 @@ describe('generate/route', () => {
         // When
         await generateProjectFile(route, {
           ...directories,
-          v2Flags: {isV2RouteConvention: true},
         });
 
         // Then
@@ -337,7 +324,6 @@ describe('generate/route', () => {
 
         await generateProjectFile('routes/pages.$pageHandle', {
           ...directories,
-          v2Flags: {isV2RouteConvention: true},
           force: true,
         });
 

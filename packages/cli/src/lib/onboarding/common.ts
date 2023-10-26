@@ -151,11 +151,6 @@ export async function handleRouteGeneration(
           {
             rootDirectory: directory,
             appDirectory: joinPath(directory, 'app'),
-            future: {
-              v2_errorBoundary: true,
-              v2_meta: true,
-              v2_routeConvention: true,
-            },
           },
         );
 
@@ -170,14 +165,7 @@ export function generateProjectEntries(
 ) {
   return Promise.all(
     ['root', 'entry.server', 'entry.client'].map((filename) =>
-      generateProjectFile(filename, {
-        v2Flags: {
-          isV2ErrorBoundary: true,
-          isV2Meta: true,
-          isV2RouteConvention: true,
-        },
-        ...options,
-      }),
+      generateProjectFile(filename, options),
     ),
   );
 }

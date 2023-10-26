@@ -1,7 +1,7 @@
 import {Form, useLoaderData, useRouteError} from '@remix-run/react';
-import {type LoaderArgs, json} from '@shopify/remix-oxygen';
+import {type LoaderFunctionArgs, json} from '@shopify/remix-oxygen';
 
-export async function loader({context}: LoaderArgs) {
+export async function loader({context}: LoaderFunctionArgs) {
   if (await context.customer.isLoggedIn()) {
     const user = await context.customer.query(`
       {
@@ -36,7 +36,7 @@ export function ErrorBoundary() {
 }
 
 export default function () {
-  const {user} = useLoaderData();
+  const {user} = useLoaderData() as any;
 
   return (
     <div style={{marginTop: 24}}>

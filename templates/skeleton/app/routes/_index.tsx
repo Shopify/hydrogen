@@ -1,10 +1,5 @@
-import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
-import {
-  Await,
-  useLoaderData,
-  Link,
-  type V2_MetaFunction,
-} from '@remix-run/react';
+import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {Await, useLoaderData, Link, type MetaFunction} from '@remix-run/react';
 import {Suspense} from 'react';
 import {Image, Money} from '@shopify/hydrogen';
 import type {
@@ -12,11 +7,11 @@ import type {
   RecommendedProductsQuery,
 } from 'storefrontapi.generated';
 
-export const meta: V2_MetaFunction = () => {
+export const meta: MetaFunction = () => {
   return [{title: 'Hydrogen | Home'}];
 };
 
-export async function loader({context}: LoaderArgs) {
+export async function loader({context}: LoaderFunctionArgs) {
   const {storefront} = context;
   const {collections} = await storefront.query(FEATURED_COLLECTION_QUERY);
   const featuredCollection = collections.nodes[0];

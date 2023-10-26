@@ -1,4 +1,4 @@
-import {json, type LoaderArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import type {ProductSortKeys} from '@shopify/hydrogen/storefront-api-types';
 import {flattenConnection} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
@@ -14,7 +14,10 @@ import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
  * @returns Product[]
  * @see https://shopify.dev/api/storefront/2023-07/queries/products
  */
-export async function loader({request, context: {storefront}}: LoaderArgs) {
+export async function loader({
+  request,
+  context: {storefront},
+}: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const searchParams = new URLSearchParams(url.search);
 

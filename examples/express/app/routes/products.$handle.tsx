@@ -1,7 +1,7 @@
-import {json, type LoaderArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 
-export async function loader({params, context}: LoaderArgs) {
+export async function loader({params, context}: LoaderFunctionArgs) {
   const {handle} = params;
   const {storefront} = context;
 

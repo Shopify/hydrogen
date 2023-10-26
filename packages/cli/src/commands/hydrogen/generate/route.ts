@@ -12,6 +12,7 @@ import {
   ALL_ROUTE_CHOICES,
   generateRoutes,
 } from '../../../lib/setups/routes/generate.js';
+import {isV1RouteConventionInstalled} from '../../../lib/remix-version-interop.js';
 
 export default class GenerateRoute extends Command {
   static description = 'Generates a standard Shopify route.';
@@ -64,7 +65,10 @@ export async function runGenerate(options: {
   typescript?: boolean;
   force?: boolean;
 }) {
-  const {routes} = await generateRoutes(options);
+  const {routes} = await generateRoutes({
+    ...options,
+    v1RouteConvention: isV1RouteConventionInstalled(),
+  });
 
   const padEnd =
     3 +

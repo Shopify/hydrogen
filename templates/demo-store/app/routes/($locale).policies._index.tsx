@@ -1,4 +1,4 @@
-import {json, type LoaderArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import invariant from 'tiny-invariant';
 
@@ -9,7 +9,10 @@ import type {NonNullableFields} from '~/lib/type';
 
 export const headers = routeHeaders;
 
-export async function loader({request, context: {storefront}}: LoaderArgs) {
+export async function loader({
+  request,
+  context: {storefront},
+}: LoaderFunctionArgs) {
   const data = await storefront.query(POLICIES_QUERY);
 
   invariant(data, 'No data returned from Shopify API');

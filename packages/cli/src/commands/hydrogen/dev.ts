@@ -154,8 +154,8 @@ async function runDev({
   let initialBuildDurationMs = 0;
   let initialBuildStartTimeMs = Date.now();
 
-  const liveReload = remixConfig.future.v2_dev
-    ? await setupLiveReload(remixConfig.devServerPort)
+  const liveReload = true // TODO: option to disable HMR?
+    ? await setupLiveReload(remixConfig.dev?.port ?? 8002)
     : undefined;
 
   let miniOxygen: MiniOxygen;

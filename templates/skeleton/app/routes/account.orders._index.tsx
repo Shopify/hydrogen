@@ -1,16 +1,16 @@
-import {Link, useLoaderData, type V2_MetaFunction} from '@remix-run/react';
+import {Link, useLoaderData, type MetaFunction} from '@remix-run/react';
 import {Money, Pagination, getPaginationVariables} from '@shopify/hydrogen';
-import {json, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
+import {json, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import type {
   CustomerOrdersFragment,
   OrderItemFragment,
 } from 'storefrontapi.generated';
 
-export const meta: V2_MetaFunction = () => {
+export const meta: MetaFunction = () => {
   return [{title: 'Orders'}];
 };
 
-export async function loader({request, context}: LoaderArgs) {
+export async function loader({request, context}: LoaderFunctionArgs) {
   const {session, storefront} = context;
 
   const customerAccessToken = await session.get('customerAccessToken');
