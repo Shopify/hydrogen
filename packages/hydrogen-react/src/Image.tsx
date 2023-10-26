@@ -20,11 +20,6 @@ type SrcSetOptions = {
   placeholderWidth: number;
 };
 
-type HtmlImageProps = React.DetailedHTMLProps<
-  React.ImgHTMLAttributes<HTMLImageElement>,
-  HTMLImageElement
->;
-
 type NormalizedProps = {
   alt: string;
   aspectRatio: string | undefined;

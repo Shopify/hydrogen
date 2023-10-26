@@ -149,13 +149,13 @@ type CartMetafieldsSetRequire = {
 type CartMetafieldDeleteProps = {
   action: 'MetafieldsDelete';
   inputs?: {
-    key: Scalars['String'];
+    key: Scalars['String']['input'];
   } & OtherFormData;
 };
 type CartMetafieldDeleteRequire = {
   action: 'MetafieldsDelete';
   inputs: {
-    key: Scalars['String'];
+    key: Scalars['String']['input'];
   } & OtherFormData;
 };
 
