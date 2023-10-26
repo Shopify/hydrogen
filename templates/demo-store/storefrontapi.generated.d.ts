@@ -257,7 +257,7 @@ export type CollectionContentFragment = Pick<
 };
 
 export type SeoCollectionContentQueryVariables = StorefrontAPI.Exact<{
-  handle?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
+  handle?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']['input']>;
   country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
   language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
 }>;
@@ -329,7 +329,7 @@ export type SeoCollectionContentQuery = {
 };
 
 export type HeroCollectionContentQueryVariables = StorefrontAPI.Exact<{
-  handle?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
+  handle?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']['input']>;
   country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
   language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
 }>;
@@ -454,7 +454,7 @@ export type HomepageFeaturedCollectionsQuery = {
 };
 
 export type CustomerActivateMutationVariables = StorefrontAPI.Exact<{
-  id: StorefrontAPI.Scalars['ID'];
+  id: StorefrontAPI.Scalars['ID']['input'];
   input: StorefrontAPI.CustomerActivateInput;
 }>;
 
@@ -472,7 +472,7 @@ export type CustomerActivateMutation = {
 export type CustomerAddressUpdateMutationVariables = StorefrontAPI.Exact<{
   address: StorefrontAPI.MailingAddressInput;
   customerAccessToken: StorefrontAPI.Scalars['String']['input'];
-  id: StorefrontAPI.Scalars['ID'];
+  id: StorefrontAPI.Scalars['ID']['input'];
 }>;
 
 export type CustomerAddressUpdateMutation = {
@@ -485,7 +485,7 @@ export type CustomerAddressUpdateMutation = {
 
 export type CustomerAddressDeleteMutationVariables = StorefrontAPI.Exact<{
   customerAccessToken: StorefrontAPI.Scalars['String']['input'];
-  id: StorefrontAPI.Scalars['ID'];
+  id: StorefrontAPI.Scalars['ID']['input'];
 }>;
 
 export type CustomerAddressDeleteMutation = {
@@ -503,7 +503,7 @@ export type CustomerAddressDeleteMutation = {
 
 export type CustomerDefaultAddressUpdateMutationVariables =
   StorefrontAPI.Exact<{
-    addressId: StorefrontAPI.Scalars['ID'];
+    addressId: StorefrontAPI.Scalars['ID']['input'];
     customerAccessToken: StorefrontAPI.Scalars['String']['input'];
   }>;
 
@@ -649,7 +649,7 @@ export type LineItemFullFragment = Pick<
 export type CustomerOrderQueryVariables = StorefrontAPI.Exact<{
   country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
   language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
-  orderId: StorefrontAPI.Scalars['ID'];
+  orderId: StorefrontAPI.Scalars['ID']['input'];
 }>;
 
 export type CustomerOrderQuery = {
@@ -771,7 +771,7 @@ export type CustomerCreateMutation = {
 };
 
 export type CustomerResetMutationVariables = StorefrontAPI.Exact<{
-  id: StorefrontAPI.Scalars['ID'];
+  id: StorefrontAPI.Scalars['ID']['input'];
   input: StorefrontAPI.CustomerResetInput;
 }>;
 
@@ -959,9 +959,9 @@ export type CustomerDetailsFragment = Pick<
 };
 
 export type ApiAllProductsQueryVariables = StorefrontAPI.Exact<{
-  query?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
-  count?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']>;
-  reverse?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Boolean']>;
+  query?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']['input']>;
+  count?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']['input']>;
+  reverse?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Boolean']['input']>;
   country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
   language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
   sortKey?: StorefrontAPI.InputMaybe<StorefrontAPI.ProductSortKeys>;
@@ -1007,11 +1007,15 @@ export type CollectionDetailsQueryVariables = StorefrontAPI.Exact<{
     Array<StorefrontAPI.ProductFilter> | StorefrontAPI.ProductFilter
   >;
   sortKey: StorefrontAPI.ProductCollectionSortKeys;
-  reverse?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Boolean']>;
-  first?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']>;
-  last?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']>;
-  startCursor?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
-  endCursor?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
+  reverse?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Boolean']['input']>;
+  first?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']['input']>;
+  last?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']['input']>;
+  startCursor?: StorefrontAPI.InputMaybe<
+    StorefrontAPI.Scalars['String']['input']
+  >;
+  endCursor?: StorefrontAPI.InputMaybe<
+    StorefrontAPI.Scalars['String']['input']
+  >;
 }>;
 
 export type CollectionDetailsQuery = {
@@ -1080,10 +1084,14 @@ export type CollectionDetailsQuery = {
 export type CollectionsQueryVariables = StorefrontAPI.Exact<{
   country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
   language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
-  first?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']>;
-  last?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']>;
-  startCursor?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
-  endCursor?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
+  first?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']['input']>;
+  last?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']['input']>;
+  startCursor?: StorefrontAPI.InputMaybe<
+    StorefrontAPI.Scalars['String']['input']
+  >;
+  endCursor?: StorefrontAPI.InputMaybe<
+    StorefrontAPI.Scalars['String']['input']
+  >;
 }>;
 
 export type CollectionsQuery = {
@@ -1112,7 +1120,7 @@ export type CollectionsQuery = {
 export type FeaturedItemsQueryVariables = StorefrontAPI.Exact<{
   country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
   language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
-  pageBy?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']>;
+  pageBy?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']['input']>;
 }>;
 
 export type FeaturedItemsQuery = {
@@ -1185,7 +1193,7 @@ export type BlogQueryVariables = StorefrontAPI.Exact<{
   language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
   blogHandle: StorefrontAPI.Scalars['String']['input'];
   pageBy: StorefrontAPI.Scalars['Int']['input'];
-  cursor?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
+  cursor?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']['input']>;
 }>;
 
 export type BlogQuery = {
@@ -1481,8 +1489,8 @@ export type VariantsQuery = {
 };
 
 export type ProductRecommendationsQueryVariables = StorefrontAPI.Exact<{
-  productId: StorefrontAPI.Scalars['ID'];
-  count?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']>;
+  productId: StorefrontAPI.Scalars['ID']['input'];
+  count?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']['input']>;
   country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
   language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
 }>;
@@ -1551,10 +1559,14 @@ export type ProductRecommendationsQuery = {
 export type AllProductsQueryVariables = StorefrontAPI.Exact<{
   country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
   language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
-  first?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']>;
-  last?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']>;
-  startCursor?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
-  endCursor?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
+  first?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']['input']>;
+  last?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']['input']>;
+  startCursor?: StorefrontAPI.InputMaybe<
+    StorefrontAPI.Scalars['String']['input']
+  >;
+  endCursor?: StorefrontAPI.InputMaybe<
+    StorefrontAPI.Scalars['String']['input']
+  >;
 }>;
 
 export type AllProductsQuery = {
@@ -1595,12 +1607,18 @@ export type AllProductsQuery = {
 
 export type PaginatedProductsSearchQueryVariables = StorefrontAPI.Exact<{
   country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
-  endCursor?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
-  first?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']>;
+  endCursor?: StorefrontAPI.InputMaybe<
+    StorefrontAPI.Scalars['String']['input']
+  >;
+  first?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']['input']>;
   language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
-  last?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']>;
-  searchTerm?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
-  startCursor?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
+  last?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']['input']>;
+  searchTerm?: StorefrontAPI.InputMaybe<
+    StorefrontAPI.Scalars['String']['input']
+  >;
+  startCursor?: StorefrontAPI.InputMaybe<
+    StorefrontAPI.Scalars['String']['input']
+  >;
 }>;
 
 export type PaginatedProductsSearchQuery = {
@@ -1640,7 +1658,7 @@ export type PaginatedProductsSearchQuery = {
 };
 
 export type SitemapsQueryVariables = StorefrontAPI.Exact<{
-  urlLimits?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']>;
+  urlLimits?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']['input']>;
   language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
 }>;
 
