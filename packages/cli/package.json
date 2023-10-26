@@ -4,7 +4,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "5.4.3",
+  "version": "5.5.1",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -59,8 +59,8 @@
   "peerDependencies": {
     "@remix-run/dev": "1.19.1",
     "@remix-run/react": "1.19.1",
-    "@shopify/hydrogen-react": "^2023.7.4",
-    "@shopify/remix-oxygen": "^1.1.7"
+    "@shopify/hydrogen-react": "^2023.7.6",
+    "@shopify/remix-oxygen": "^1.1.8"
   },
   "peerDependenciesMeta": {
     "@remix-run/dev": {

@@ -112,6 +112,22 @@ export function CacheLong(overrideOptions?: CachingStrategy): AllCacheOptions {
 
 /**
  *
+ * @private
+ */
+export function CacheDefault(
+  overrideOptions?: CachingStrategy,
+): AllCacheOptions {
+  guardExpirableModeType(overrideOptions);
+  return {
+    mode: PUBLIC,
+    maxAge: 1,
+    staleWhileRevalidate: 86399, // 1 second less than 24 hours
+    ...overrideOptions,
+  };
+}
+
+/**
+ *
  * @public
  */
 export function CacheCustom(overrideOptions: CachingStrategy): AllCacheOptions {

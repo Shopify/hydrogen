@@ -10,7 +10,7 @@ type MockCarthandler = {
   cartId?: string;
   cartQueryFragment?: string;
   cartMutateFragment?: string;
-  customMethods__unstable?: Record<string, Function>;
+  customMethods?: Record<string, Function>;
 };
 
 function getCartHandler(options: MockCarthandler = {}) {
@@ -51,7 +51,7 @@ describe('createCartHandler', () => {
       storefront: mockCreateStorefrontClient(),
       getCartId: () => undefined,
       setCartId: () => new Headers(),
-      customMethods__unstable: {
+      customMethods: {
         foo() {
           return 'bar';
         },
@@ -65,7 +65,7 @@ describe('createCartHandler', () => {
 
   it('can override default methods', async () => {
     const cart = getCartHandler({
-      customMethods__unstable: {
+      customMethods: {
         get() {
           return Promise.resolve('bar');
         },
