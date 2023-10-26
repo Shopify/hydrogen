@@ -3,15 +3,15 @@ import type {AddressFragment, CustomerFragment} from 'storefrontapi.generated';
 import {
   json,
   redirect,
-  type ActionArgs,
-  type LoaderArgs,
+  type ActionFunctionArgs,
+  type LoaderFunctionArgs,
 } from '@shopify/remix-oxygen';
 import {
   Form,
   useActionData,
   useNavigation,
   useOutletContext,
-  type V2_MetaFunction,
+  type MetaFunction,
 } from '@remix-run/react';
 
 export type ActionResponse = {
@@ -23,11 +23,11 @@ export type ActionResponse = {
   updatedAddress?: AddressFragment;
 };
 
-export const meta: V2_MetaFunction = () => {
+export const meta: MetaFunction = () => {
   return [{title: 'Addresses'}];
 };
 
-export async function loader({context}: LoaderArgs) {
+export async function loader({context}: LoaderFunctionArgs) {
   const {session} = context;
   const customerAccessToken = await session.get('customerAccessToken');
   if (!customerAccessToken) {
@@ -36,7 +36,7 @@ export async function loader({context}: LoaderArgs) {
   return json({});
 }
 
-export async function action({request, context}: ActionArgs) {
+export async function action({request, context}: ActionFunctionArgs) {
   const {storefront, session} = context;
 
   try {

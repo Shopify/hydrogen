@@ -1,8 +1,8 @@
 import {
   json,
   redirect,
-  type LoaderArgs,
-  type ActionArgs,
+  type ActionFunctionArgs,
+  type LoaderFunctionArgs,
 } from '@shopify/remix-oxygen';
 import {Form, Link, useActionData} from '@remix-run/react';
 import type {CustomerCreateMutation} from 'storefrontapi.generated';
@@ -14,7 +14,7 @@ type ActionResponse = {
     | null;
 };
 
-export async function loader({context}: LoaderArgs) {
+export async function loader({context}: LoaderFunctionArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');
   if (customerAccessToken) {
     return redirect('/account');
@@ -23,7 +23,7 @@ export async function loader({context}: LoaderArgs) {
   return json({});
 }
 
-export async function action({request, context}: ActionArgs) {
+export async function action({request, context}: ActionFunctionArgs) {
   if (request.method !== 'POST') {
     return json({error: 'Method not allowed'}, {status: 405});
   }

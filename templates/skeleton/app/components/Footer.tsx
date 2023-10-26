@@ -1,5 +1,6 @@
-import {useMatches, NavLink} from '@remix-run/react';
+import {NavLink} from '@remix-run/react';
 import type {FooterQuery} from 'storefrontapi.generated';
+import {useRootLoaderData} from '~/root';
 
 export function Footer({menu}: FooterQuery) {
   return (
@@ -10,8 +11,8 @@ export function Footer({menu}: FooterQuery) {
 }
 
 function FooterMenu({menu}: Pick<FooterQuery, 'menu'>) {
-  const [root] = useMatches();
-  const publicStoreDomain = root?.data?.publicStoreDomain;
+  const {publicStoreDomain} = useRootLoaderData();
+
   return (
     <nav className="footer-menu" role="navigation">
       {(menu || FALLBACK_FOOTER_MENU).items.map((item) => {

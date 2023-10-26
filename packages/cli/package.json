@@ -46,6 +46,7 @@
     "gunzip-maybe": "^1.4.2",
     "miniflare": "3.20230918.0",
     "prettier": "^2.8.4",
+    "semver": "^7.5.3",
     "source-map": "^0.7.4",
     "stack-trace": "^1.0.0-pre2",
     "tar-fs": "^2.1.1",
@@ -57,8 +58,8 @@
     "@parcel/watcher": "^2.3.0"
   },
   "peerDependencies": {
-    "@remix-run/dev": "1.19.1",
-    "@remix-run/react": "1.19.1",
+    "@remix-run/dev": "^2.1.0",
+    "@remix-run/react": "^2.1.0",
     "@shopify/hydrogen-react": "^2023.7.6",
     "@shopify/remix-oxygen": "^1.1.8"
   },

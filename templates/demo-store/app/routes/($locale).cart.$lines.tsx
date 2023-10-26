@@ -1,4 +1,4 @@
-import {redirect, type LoaderArgs} from '@shopify/remix-oxygen';
+import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 
 /**
  * Automatically creates a new cart based on the URL and redirects straight to checkout.
@@ -19,7 +19,7 @@ import {redirect, type LoaderArgs} from '@shopify/remix-oxygen';
  * ```
  * @preserve
  */
-export async function loader({request, context, params}: LoaderArgs) {
+export async function loader({request, context, params}: LoaderFunctionArgs) {
   const {cart} = context;
   const {lines} = params;
   const linesMap = lines?.split(',').map((line) => {

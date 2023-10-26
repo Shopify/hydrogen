@@ -3,13 +3,13 @@ import {
   redirect,
   type ActionFunction,
   type AppLoadContext,
-  type LoaderArgs,
+  type LoaderFunctionArgs,
 } from '@shopify/remix-oxygen';
 import {
   Form,
   useActionData,
   useLoaderData,
-  type V2_MetaFunction,
+  type MetaFunction,
 } from '@remix-run/react';
 import {useState} from 'react';
 
@@ -20,7 +20,7 @@ export const handle = {
   isPublic: true,
 };
 
-export async function loader({context, params}: LoaderArgs) {
+export async function loader({context, params}: LoaderFunctionArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');
 
   if (customerAccessToken) {
@@ -89,7 +89,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
   }
 };
 
-export const meta: V2_MetaFunction = () => {
+export const meta: MetaFunction = () => {
   return [{title: 'Login'}];
 };
 
