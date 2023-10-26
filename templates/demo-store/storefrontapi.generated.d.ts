@@ -92,8 +92,8 @@ export type FeaturedCollectionDetailsFragment = Pick<
 
 export type LayoutQueryVariables = StorefrontAPI.Exact<{
   language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
-  headerMenuHandle: StorefrontAPI.Scalars['String'];
-  footerMenuHandle: StorefrontAPI.Scalars['String'];
+  headerMenuHandle: StorefrontAPI.Scalars['String']['input'];
+  footerMenuHandle: StorefrontAPI.Scalars['String']['input'];
 }>;
 
 export type LayoutQuery = {
@@ -471,7 +471,7 @@ export type CustomerActivateMutation = {
 
 export type CustomerAddressUpdateMutationVariables = StorefrontAPI.Exact<{
   address: StorefrontAPI.MailingAddressInput;
-  customerAccessToken: StorefrontAPI.Scalars['String'];
+  customerAccessToken: StorefrontAPI.Scalars['String']['input'];
   id: StorefrontAPI.Scalars['ID'];
 }>;
 
@@ -484,7 +484,7 @@ export type CustomerAddressUpdateMutation = {
 };
 
 export type CustomerAddressDeleteMutationVariables = StorefrontAPI.Exact<{
-  customerAccessToken: StorefrontAPI.Scalars['String'];
+  customerAccessToken: StorefrontAPI.Scalars['String']['input'];
   id: StorefrontAPI.Scalars['ID'];
 }>;
 
@@ -504,7 +504,7 @@ export type CustomerAddressDeleteMutation = {
 export type CustomerDefaultAddressUpdateMutationVariables =
   StorefrontAPI.Exact<{
     addressId: StorefrontAPI.Scalars['ID'];
-    customerAccessToken: StorefrontAPI.Scalars['String'];
+    customerAccessToken: StorefrontAPI.Scalars['String']['input'];
   }>;
 
 export type CustomerDefaultAddressUpdateMutation = {
@@ -517,7 +517,7 @@ export type CustomerDefaultAddressUpdateMutation = {
 
 export type CustomerAddressCreateMutationVariables = StorefrontAPI.Exact<{
   address: StorefrontAPI.MailingAddressInput;
-  customerAccessToken: StorefrontAPI.Scalars['String'];
+  customerAccessToken: StorefrontAPI.Scalars['String']['input'];
 }>;
 
 export type CustomerAddressCreateMutation = {
@@ -532,7 +532,7 @@ export type CustomerAddressCreateMutation = {
 };
 
 export type CustomerUpdateMutationVariables = StorefrontAPI.Exact<{
-  customerAccessToken: StorefrontAPI.Scalars['String'];
+  customerAccessToken: StorefrontAPI.Scalars['String']['input'];
   customer: StorefrontAPI.CustomerUpdateInput;
 }>;
 
@@ -746,7 +746,7 @@ export type CustomerOrderQuery = {
 };
 
 export type CustomerRecoverMutationVariables = StorefrontAPI.Exact<{
-  email: StorefrontAPI.Scalars['String'];
+  email: StorefrontAPI.Scalars['String']['input'];
 }>;
 
 export type CustomerRecoverMutation = {
@@ -787,7 +787,7 @@ export type CustomerResetMutation = {
 };
 
 export type CustomerDetailsQueryVariables = StorefrontAPI.Exact<{
-  customerAccessToken: StorefrontAPI.Scalars['String'];
+  customerAccessToken: StorefrontAPI.Scalars['String']['input'];
   country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
   language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
 }>;
@@ -1000,7 +1000,7 @@ export type ApiAllProductsQuery = {
 };
 
 export type CollectionDetailsQueryVariables = StorefrontAPI.Exact<{
-  handle: StorefrontAPI.Scalars['String'];
+  handle: StorefrontAPI.Scalars['String']['input'];
   country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
   language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
   filters?: StorefrontAPI.InputMaybe<
@@ -1158,8 +1158,8 @@ export type FeaturedItemsQuery = {
 
 export type ArticleDetailsQueryVariables = StorefrontAPI.Exact<{
   language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
-  blogHandle: StorefrontAPI.Scalars['String'];
-  articleHandle: StorefrontAPI.Scalars['String'];
+  blogHandle: StorefrontAPI.Scalars['String']['input'];
+  articleHandle: StorefrontAPI.Scalars['String']['input'];
 }>;
 
 export type ArticleDetailsQuery = {
@@ -1183,8 +1183,8 @@ export type ArticleDetailsQuery = {
 
 export type BlogQueryVariables = StorefrontAPI.Exact<{
   language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
-  blogHandle: StorefrontAPI.Scalars['String'];
-  pageBy: StorefrontAPI.Scalars['Int'];
+  blogHandle: StorefrontAPI.Scalars['String']['input'];
+  pageBy: StorefrontAPI.Scalars['Int']['input'];
   cursor?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
 }>;
 
@@ -1228,7 +1228,7 @@ export type ArticleFragment = Pick<
 
 export type PageDetailsQueryVariables = StorefrontAPI.Exact<{
   language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
-  handle: StorefrontAPI.Scalars['String'];
+  handle: StorefrontAPI.Scalars['String']['input'];
 }>;
 
 export type PageDetailsQuery = {
@@ -1248,10 +1248,10 @@ export type PolicyHandleFragment = Pick<
 
 export type PoliciesHandleQueryVariables = StorefrontAPI.Exact<{
   language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
-  privacyPolicy: StorefrontAPI.Scalars['Boolean'];
-  shippingPolicy: StorefrontAPI.Scalars['Boolean'];
-  termsOfService: StorefrontAPI.Scalars['Boolean'];
-  refundPolicy: StorefrontAPI.Scalars['Boolean'];
+  privacyPolicy: StorefrontAPI.Scalars['Boolean']['input'];
+  shippingPolicy: StorefrontAPI.Scalars['Boolean']['input'];
+  termsOfService: StorefrontAPI.Scalars['Boolean']['input'];
+  refundPolicy: StorefrontAPI.Scalars['Boolean']['input'];
 }>;
 
 export type PoliciesHandleQuery = {
@@ -1321,7 +1321,7 @@ export type ProductVariantFragmentFragment = Pick<
 export type ProductQueryVariables = StorefrontAPI.Exact<{
   country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
   language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
-  handle: StorefrontAPI.Scalars['String'];
+  handle: StorefrontAPI.Scalars['String']['input'];
   selectedOptions:
     | Array<StorefrontAPI.SelectedOptionInput>
     | StorefrontAPI.SelectedOptionInput;
@@ -1446,7 +1446,7 @@ export type ProductQuery = {
 export type VariantsQueryVariables = StorefrontAPI.Exact<{
   country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
   language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
-  handle: StorefrontAPI.Scalars['String'];
+  handle: StorefrontAPI.Scalars['String']['input'];
 }>;
 
 export type VariantsQuery = {
