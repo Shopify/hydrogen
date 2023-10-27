@@ -199,6 +199,7 @@ export async function oxygenDeploy(
 
   const config: DeploymentConfig = {
     assetsDir: 'dist/client',
+    bugsnag: true,
     deploymentUrl: 'https://oxygen.shopifyapps.com',
     deploymentToken: parseToken(token as string),
     environmentTag: environmentTag || deploymentEnvironmentTag || branch,

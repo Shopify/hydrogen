@@ -27,7 +27,7 @@
   "devDependencies": {
     "@remix-run/dev": "2.1.0",
     "@remix-run/eslint-config": "2.1.0",
-    "@shopify/cli": "3.49.2",
+    "@shopify/cli": "3.50.0",
     "@shopify/cli-hydrogen": "^5.4.3",
     "@types/compression": "^1.7.2",
     "@types/express": "^4.17.17",
