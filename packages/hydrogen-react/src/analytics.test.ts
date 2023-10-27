@@ -18,7 +18,7 @@ const createFetchSpy = ({
   failResponse?: boolean;
 }) => {
   const mockFetch = async (
-    input: RequestInfo | URL,
+    input: NodeJS.fetch.RequestInfo,
     init?: RequestInit,
   ): Promise<Response> => {
     // Mock Monorail endpoint

@@ -1,6 +1,6 @@
 {
   "name": "@shopify/hydrogen-react",
-  "version": "2023.7.4",
+  "version": "2023.10.0",
   "description": "React components, hooks, and utilities for creating custom Shopify storefronts",
   "homepage": "https://github.com/Shopify/hydrogen/tree/main/packages/hydrogen-react",
   "license": "MIT",
@@ -130,10 +130,10 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
-    "@graphql-codegen/add": "^4.0.1",
-    "@graphql-codegen/cli": "^3.2.1",
-    "@graphql-codegen/introspection": "3.0.1",
-    "@graphql-codegen/typescript": "^3.0.1",
+    "@graphql-codegen/add": "^5.0.0",
+    "@graphql-codegen/cli": "^5.0.0",
+    "@graphql-codegen/introspection": "^4.0.0",
+    "@graphql-codegen/typescript": "^4.0.1",
     "@ladle/react": "^2.9.0",
     "@shopify/generate-docs": "^0.11.1",
     "@testing-library/jest-dom": "^5.17.0",
@@ -172,7 +172,7 @@
     "@xstate/fsm": "^2.0.0",
     "@xstate/react": "^3.2.1",
     "graphql": "^16.6.0",
-    "type-fest": "^3.6.0",
+    "type-fest": "^4.5.0",
     "worktop": "^0.7.3"
   },
   "repository": {

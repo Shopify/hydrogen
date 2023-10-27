@@ -1,8 +1,9 @@
 import {
   defer,
   type LinksFunction,
-  type LoaderArgs,
+  type LoaderFunctionArgs,
   type AppLoadContext,
+  type SerializeFrom,
 } from '@shopify/remix-oxygen';
 import {
   isRouteErrorResponse,
@@ -65,7 +66,12 @@ export const links: LinksFunction = () => {
   ];
 };
 
-export async function loader({request, context}: LoaderArgs) {
+export const useRootLoaderData = () => {
+  const [root] = useMatches();
+  return root?.data as SerializeFrom<typeof loader>;
+};
+
+export async function loader({request, context}: LoaderFunctionArgs) {
   const {session, storefront, cart} = context;
   const [customerAccessToken, layout] = await Promise.all([
     session.get('customerAccessToken'),
@@ -121,9 +127,9 @@ export default function App() {
 
 export function ErrorBoundary({error}: {error: Error}) {
   const nonce = useNonce();
-  const [root] = useMatches();
-  const locale = root?.data?.selectedLocale ?? DEFAULT_LOCALE;
   const routeError = useRouteError();
+  const rootData = useRootLoaderData();
+  const locale = rootData?.selectedLocale ?? DEFAULT_LOCALE;
   const isRouteError = isRouteErrorResponse(routeError);
 
   let title = 'Error';
@@ -145,7 +151,7 @@ export function ErrorBoundary({error}: {error: Error}) {
       </head>
       <body>
         <Layout
-          layout={root?.data?.layout}
+          layout={rootData?.layout}
           key={`${locale.language}-${locale.country}`}
         >
           {isRouteError ? (

@@ -1,14 +1,14 @@
-import {freeText} from './utils.js';
 import {
-  isVariableDeclarator,
   isIdentifier,
-  isTemplateLiteral,
   isImportDefaultSpecifier,
   isImportSpecifier,
+  isTemplateLiteral,
   isTSAsExpression,
   isTSTypeReference,
+  isVariableDeclarator,
 } from '@babel/types';
 import {asArray} from '@graphql-tools/utils';
+import {freeText} from './utils.js';
 const defaults = {
   modules: [
     {

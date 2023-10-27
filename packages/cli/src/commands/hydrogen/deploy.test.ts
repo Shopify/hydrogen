@@ -90,6 +90,7 @@ describe('deploy', () => {
 
   const expectedConfig = {
     assetsDir: 'dist/client',
+    bugsnag: true,
     deploymentUrl: 'https://oxygen.shopifyapps.com',
     deploymentToken: mockToken,
     verificationMaxDuration: 180,

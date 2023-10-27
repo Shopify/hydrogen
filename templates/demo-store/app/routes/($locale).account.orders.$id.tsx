@@ -1,17 +1,17 @@
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
-import {json, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
-import {useLoaderData, type V2_MetaFunction} from '@remix-run/react';
+import {json, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {useLoaderData, type MetaFunction} from '@remix-run/react';
 import {Money, Image, flattenConnection} from '@shopify/hydrogen';
 
 import {statusMessage} from '~/lib/utils';
 import {Link, Heading, PageHeader, Text} from '~/components';
 
-export const meta: V2_MetaFunction<typeof loader> = ({data}) => {
+export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Order ${data?.order?.name}`}];
 };
 
-export async function loader({request, context, params}: LoaderArgs) {
+export async function loader({request, context, params}: LoaderFunctionArgs) {
   if (!params.id) {
     return redirect(params?.locale ? `${params.locale}/account` : '/account');
   }

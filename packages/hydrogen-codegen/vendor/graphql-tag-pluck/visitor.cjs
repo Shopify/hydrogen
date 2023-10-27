@@ -1,8 +1,8 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', {value: true});
-const utils_js_1 = require('./utils.js');
 const types_1 = require('@babel/types');
 const utils_1 = require('@graphql-tools/utils');
+const utils_js_1 = require('./utils.js');
 const defaults = {
   modules: [
     {

@@ -1,10 +1,10 @@
 import {Suspense} from 'react';
-import {defer, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
+import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {
   Await,
   Link,
   useLoaderData,
-  type V2_MetaFunction,
+  type MetaFunction,
   type FetcherWithComponents,
 } from '@remix-run/react';
 import type {
@@ -27,11 +27,11 @@ import type {
 } from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/utils';
 
-export const meta: V2_MetaFunction = ({data}) => {
-  return [{title: `Hydrogen | ${data.product.title}`}];
+export const meta: MetaFunction<typeof loader> = ({data}) => {
+  return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
 };
 
-export async function loader({params, request, context}: LoaderArgs) {
+export async function loader({params, request, context}: LoaderFunctionArgs) {
   const {handle} = params;
   const {storefront} = context;
 
@@ -74,7 +74,7 @@ export async function loader({params, request, context}: LoaderArgs) {
     // if no selected variant was returned from the selected options,
     // we redirect to the first variant's url with it's selected options applied
     if (!product.selectedVariant) {
-      return redirectToFirstVariant({product, request});
+      throw redirectToFirstVariant({product, request});
     }
   }
 
@@ -100,7 +100,7 @@ function redirectToFirstVariant({
   const url = new URL(request.url);
   const firstVariant = product.variants.nodes[0];
 
-  throw redirect(
+  return redirect(
     getVariantUrl({
       pathname: url.pathname,
       handle: product.handle,

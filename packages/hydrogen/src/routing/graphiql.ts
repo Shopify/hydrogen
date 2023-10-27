@@ -1,11 +1,11 @@
-import type {LoaderArgs} from '@remix-run/server-runtime';
+import type {LoaderFunctionArgs} from '@remix-run/server-runtime';
 import type {Storefront} from '../storefront';
 
-type GraphiQLLoader = (args: LoaderArgs) => Promise<Response>;
+type GraphiQLLoader = (args: LoaderFunctionArgs) => Promise<Response>;
 
 export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
   context,
-}: LoaderArgs) {
+}: LoaderFunctionArgs) {
   const storefront = context?.storefront as Storefront | undefined;
   if (!storefront) {
     throw new Error(

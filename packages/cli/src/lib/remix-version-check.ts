@@ -16,6 +16,11 @@ export function checkRemixVersions() {
   const require = createRequire(import.meta.url);
   const requiredVersionInHydrogen = getRequiredRemixVersion(require);
 
+  // Require this after requiring the hydrogen
+  // package version to avoid breaking test mocks.
+  const satisfiesSemver =
+    require('semver/functions/satisfies.js') as typeof import('semver/functions/satisfies.js');
+
   const pkgs = [
     'dev',
     'react',
@@ -27,7 +32,8 @@ export function checkRemixVersions() {
   ].map((name) => getRemixPackageVersion(require, name));
 
   const outOfSyncPkgs = pkgs.filter(
-    (pkg) => pkg.version && pkg.version !== requiredVersionInHydrogen,
+    (pkg) =>
+      pkg.version && !satisfiesSemver(pkg.version, requiredVersionInHydrogen),
   );
 
   if (outOfSyncPkgs.length === 0) return;

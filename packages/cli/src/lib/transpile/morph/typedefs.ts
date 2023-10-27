@@ -61,7 +61,7 @@ export function generateTypeDefs(sourceFile: SourceFile, code: string) {
       if (typeElement === 'SerializeFrom') continue;
 
       // Note: SerializeFrom also needs generic if we stop skipping it.
-      const hasGeneric = typeElement === 'V2_MetaFunction';
+      const hasGeneric = typeElement === 'MetaFunction';
 
       typedefs.push(
         `/** ${

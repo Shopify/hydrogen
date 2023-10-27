@@ -1,7 +1,7 @@
 import {getSelectedProductOptions} from '@shopify/hydrogen';
-import {json, type LoaderArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 
-export async function loader({request, params, context}: LoaderArgs) {
+export async function loader({request, params, context}: LoaderFunctionArgs) {
   const selectedOptions = getSelectedProductOptions(request);
 
   const {product} = await context.storefront.query(PRODUCT_QUERY, {

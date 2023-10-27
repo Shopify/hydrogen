@@ -11,7 +11,7 @@ import type {
 } from '@shopify/hydrogen-react/storefront-api-types';
 
 export type CartMetafieldDeleteFunction = (
-  key: Scalars['String'],
+  key: Scalars['String']['input'],
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryData>;
 
@@ -43,7 +43,7 @@ export function cartMetafieldDeleteDefault(
   };
 }
 
-//! @see https://shopify.dev/docs/api/storefront/2023-07/mutations/cartMetafieldDelete
+//! @see https://shopify.dev/docs/api/storefront/2023-10/mutations/cartMetafieldDelete
 export const CART_METAFIELD_DELETE_MUTATION = () => `#graphql
   mutation cartMetafieldDelete(
     $input: CartMetafieldDeleteInput!

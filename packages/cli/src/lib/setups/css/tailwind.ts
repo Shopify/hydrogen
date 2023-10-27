@@ -3,7 +3,7 @@ import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
 import {canWriteFiles, copyAssets, mergePackageJson} from './assets.js';
 import {getCodeFormatOptions} from '../../format-code.js';
 import type {CssSetupConfig, CssSetupResult} from './common.js';
-import {replaceRemixConfig, replaceRootLinks} from './replacers.js';
+import {replaceRootLinks} from './replacers.js';
 
 const tailwindCssPath = 'styles/tailwind.css';
 
@@ -40,17 +40,11 @@ export async function setupTailwind(
         : content,
     ),
     getCodeFormatOptions(rootDirectory).then((formatConfig) =>
-      Promise.all([
-        replaceRemixConfig(rootDirectory, formatConfig, {
-          tailwind: true,
-          postcss: true,
-        }),
-        replaceRootLinks(appDirectory, formatConfig, {
-          name: 'tailwindCss',
-          path: tailwindCssPath,
-          isDefault: true,
-        }),
-      ]),
+      replaceRootLinks(appDirectory, formatConfig, {
+        name: 'tailwindCss',
+        path: tailwindCssPath,
+        isDefault: true,
+      }),
     ),
   ]);
 
