@@ -8,7 +8,7 @@ First of all, it's necessary to create and inject the Hydrogen `storefront` clie
 
 ```ts
 import {createStorefrontClient} from '@shopify/hydrogen';
-import {createRequestHandler, getBuyerIp} from '@shopify/remix-oxygen';
+import {createRequestHandler} from '@shopify/remix-oxygen';
 
 export default {
   async fetch(request: Request, env: Env, executionContext: ExecutionContext) {
@@ -21,7 +21,6 @@ export default {
         const {storefront} = createStorefrontClient({
           cache,
           waitUntil: (p: Promise) => executionContext.waitUntil(p),
-          buyerIp: getBuyerIp(request),
           publicStorefrontToken: env.SHOPIFY_STOREFRONT_API_PUBLIC_TOKEN,
           storefrontApiVersion: env.SHOPIFY_STOREFRONT_API_VERSION,
           storeDomain: env.SHOPIFY_STORE_DOMAIN,

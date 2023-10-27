@@ -61,10 +61,6 @@ export function createRequestHandler<Context = unknown>({
   };
 }
 
-export function getBuyerIp(request: Request) {
-  return request.headers.get('oxygen-buyer-ip') ?? undefined;
-}
-
 type StorefrontHeaders = {
   requestGroupId: string | null;
   buyerIp: string | null;
