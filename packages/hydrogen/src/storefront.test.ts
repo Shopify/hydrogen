@@ -8,7 +8,7 @@ import {
 } from '@shopify/hydrogen-react';
 
 vi.mock('./cache/fetch.ts', async () => {
-  const original = await vi.importActual<typeof import('./cache/fetch.ts')>(
+  const original = await vi.importActual<typeof import('./cache/fetch.js')>(
     './cache/fetch.ts',
   );
 

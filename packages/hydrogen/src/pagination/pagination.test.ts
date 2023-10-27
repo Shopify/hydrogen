@@ -82,11 +82,11 @@ describe('<Pagination>', () => {
           connection: {
             nodes: [1, 2, 3],
           },
-          children: ({nodes}) =>
+          children: ({nodes}: any) =>
             createElement(
               Fragment,
               null,
-              nodes.map((node) =>
+              nodes.map((node: any) =>
                 createElement('div', {key: node as string}, node as string),
               ),
             ),
@@ -107,11 +107,11 @@ describe('<Pagination>', () => {
               nodes: [1, 2, 3],
               pageInfo,
             },
-            children: ({nodes}) =>
+            children: ({nodes}: any) =>
               createElement(
                 Fragment,
                 null,
-                nodes.map((node) =>
+                nodes.map((node: any) =>
                   createElement('div', {key: node as string}, node as string),
                 ),
               ),
@@ -172,11 +172,11 @@ describe('<Pagination>', () => {
             hasPreviousPage: false,
           },
         },
-        children: ({nodes}) =>
+        children: ({nodes}: any) =>
           createElement(
             Fragment,
             null,
-            nodes.map((node) =>
+            nodes.map((node: any) =>
               createElement('div', {key: node as string}, node as string),
             ),
           ),
@@ -209,7 +209,7 @@ describe('<Pagination>', () => {
             hasPreviousPage: false,
           },
         },
-        children: ({NextLink, PreviousLink}) =>
+        children: ({NextLink, PreviousLink}: any) =>
           createElement(
             'div',
             null,
@@ -243,7 +243,7 @@ describe('<Pagination>', () => {
             hasPreviousPage: true,
           },
         },
-        children: ({NextLink, PreviousLink}) =>
+        children: ({NextLink, PreviousLink}: any) =>
           createElement(
             'div',
             null,
@@ -285,7 +285,7 @@ describe('<Pagination>', () => {
           nextPageUrl,
           nodes,
           previousPageUrl,
-        }) =>
+        }: any) =>
           createElement(
             'div',
             null,
