@@ -293,6 +293,17 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     );
   }
 
+  // Remove any headers that are identifiable to the user or request
+  const cacheKeyHeader = JSON.stringify({
+    'content-type': defaultHeaders['content-type'],
+    'user-agent': defaultHeaders['user-agent'],
+    [SDK_VARIANT_HEADER]: defaultHeaders[SDK_VARIANT_HEADER],
+    [SDK_VARIANT_SOURCE_HEADER]: defaultHeaders[SDK_VARIANT_SOURCE_HEADER],
+    [SDK_VERSION_HEADER]: defaultHeaders[SDK_VERSION_HEADER],
+    [STOREFRONT_ACCESS_TOKEN_HEADER]:
+      defaultHeaders[STOREFRONT_ACCESS_TOKEN_HEADER],
+  });
+
   async function fetchStorefrontApi<T>({
     query,
     mutation,
@@ -330,23 +341,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       body: graphqlData,
     } satisfies RequestInit;
 
-    // Remove any headers that are identifiable to the user or request
     const cacheKey = [
       url,
-      {
-        method: requestInit.method,
-        headers: {
-          'content-type': defaultHeaders['content-type'],
-          'user-agent': defaultHeaders['user-agent'],
-          [SDK_VARIANT_HEADER]: defaultHeaders[SDK_VARIANT_HEADER],
-          [SDK_VARIANT_SOURCE_HEADER]:
-            defaultHeaders[SDK_VARIANT_SOURCE_HEADER],
-          [SDK_VERSION_HEADER]: defaultHeaders[SDK_VERSION_HEADER],
-          [STOREFRONT_ACCESS_TOKEN_HEADER]:
-            defaultHeaders[STOREFRONT_ACCESS_TOKEN_HEADER],
-        },
-        body: requestInit.body,
-      },
+      requestInit.method,
+      cacheKeyHeader,
+      requestInit.body,
     ];
 
     const [body, response] = await fetchWithServerCache(url, requestInit, {

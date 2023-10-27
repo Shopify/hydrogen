@@ -7,13 +7,10 @@ export function hashKey(queryKey: QueryKey): string {
   // Keys could be in the following shape:
   //
   // From `storefront.query`:
-  // ['prefix', 'api-endpoint', {body:'query',headers:{}}]
+  // ['api-endpoint', 'method', 'headers', 'query']
   //
   // From `createWithCache`:
   // ['string', {}, 1, []]
-  //
-  // If key is an object, it will be whatever the stringify output
-  // of that object.
   for (const key of rawKeys) {
     if (key != null) {
       if (typeof key === 'object') {
