@@ -20,6 +20,11 @@ import {
 } from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 
+type CartMachineState = StateMachine.Config<
+  CartMachineContext,
+  CartMachineEvent
+>['states'];
+
 function invokeCart(
   action: keyof CartMachineActions,
   options?: {
@@ -28,7 +33,7 @@ function invokeCart(
     errorTarget?: CartMachineTypeState['value'];
     exitActions?: [keyof CartMachineActions];
   },
-): StateMachine.Config<CartMachineContext, CartMachineEvent>['states']['on'] {
+): CartMachineState['on'] {
   return {
     entry: [
       ...(options?.entryActions || []),
@@ -164,17 +169,23 @@ function createCartMachine(
       },
       cartFetching: invokeCart('cartFetchAction', {
         errorTarget: 'initializationError',
-      }),
+      }) as CartMachineState,
       cartCreating: invokeCart('cartCreateAction', {
         errorTarget: 'initializationError',
-      }),
-      cartLineRemoving: invokeCart('cartLineRemoveAction'),
-      cartLineUpdating: invokeCart('cartLineUpdateAction'),
-      cartLineAdding: invokeCart('cartLineAddAction'),
-      noteUpdating: invokeCart('noteUpdateAction'),
-      buyerIdentityUpdating: invokeCart('buyerIdentityUpdateAction'),
-      cartAttributesUpdating: invokeCart('cartAttributesUpdateAction'),
-      discountCodesUpdating: invokeCart('discountCodesUpdateAction'),
+      }) as CartMachineState,
+      cartLineRemoving: invokeCart('cartLineRemoveAction') as CartMachineState,
+      cartLineUpdating: invokeCart('cartLineUpdateAction') as CartMachineState,
+      cartLineAdding: invokeCart('cartLineAddAction') as CartMachineState,
+      noteUpdating: invokeCart('noteUpdateAction') as CartMachineState,
+      buyerIdentityUpdating: invokeCart(
+        'buyerIdentityUpdateAction',
+      ) as CartMachineState,
+      cartAttributesUpdating: invokeCart(
+        'cartAttributesUpdateAction',
+      ) as CartMachineState,
+      discountCodesUpdating: invokeCart(
+        'discountCodesUpdateAction',
+      ) as CartMachineState,
     },
   });
 }
