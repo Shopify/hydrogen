@@ -19,7 +19,7 @@ export default {
     const customer = createCustomerClient__unstable({
       /* Runtime utility in serverless environments */
       waitUntil: (p) => executionContext.waitUntil(p),
-      /* Public Customer Account API token for your store */
+      /* Public Customer Account API client ID for your store */
       customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_ID,
       /* Public account URL for your store */
       customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_URL,
