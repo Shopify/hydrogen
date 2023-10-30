@@ -1,13 +1,12 @@
 import {
   createStorefrontClient as createStorefrontUtilities,
   getShopifyCookies,
-  type StorefrontApiResponseOk,
-  type StorefrontClientProps,
   SHOPIFY_S,
   SHOPIFY_Y,
   SHOPIFY_STOREFRONT_ID_HEADER,
   SHOPIFY_STOREFRONT_Y_HEADER,
   SHOPIFY_STOREFRONT_S_HEADER,
+  type StorefrontClientProps,
 } from '@shopify/hydrogen-react';
 import type {ExecutionArgs} from 'graphql';
 import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
@@ -35,8 +34,14 @@ import {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {warnOnce} from './utils/warning';
 import {LIB_VERSION} from './version';
-
-type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
+import {
+  minifyQuery,
+  assertQuery,
+  assertMutation,
+  throwGraphQLError,
+  type GraphQLApiResponse,
+  type GraphQLErrorOptions,
+} from './utils/graphql';
 
 export type I18nBase = {
   language: LanguageCode;
@@ -212,16 +217,6 @@ export const StorefrontApiError = class extends Error {} as ErrorConstructor;
 export const isStorefrontApiError = (error: any) =>
   error instanceof StorefrontApiError;
 
-const isQueryRE = /(^|}\s)query[\s({]/im;
-const isMutationRE = /(^|}\s)mutation[\s({]/im;
-
-function minifyQuery(string: string) {
-  return string
-    .replace(/\s*#.*$/gm, '') // Remove GQL comments
-    .replace(/\s+/gm, ' ') // Minify spaces
-    .trim();
-}
-
 const defaultI18n: I18nBase = {language: 'EN', country: 'US'};
 
 /**
@@ -349,7 +344,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       },
     });
 
-    const errorOptions: StorefrontErrorOptions<T> = {
+    const errorOptions: GraphQLErrorOptions<T> = {
       response,
       type: mutation ? 'mutation' : 'query',
       query,
@@ -369,13 +364,13 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         errors = [{message: body}];
       }
 
-      throwError({...errorOptions, errors});
+      throwGraphQLError({...errorOptions, errors});
     }
 
-    const {data, errors} = body as StorefrontApiResponse<T>;
+    const {data, errors} = body as GraphQLApiResponse<T>;
 
     if (errors?.length) {
-      throwError({
+      throwGraphQLError({
         ...errorOptions,
         errors,
         ErrorConstructor: StorefrontApiError,
@@ -403,11 +398,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        */
       query: <Storefront['query']>((query: string, payload) => {
         query = minifyQuery(query);
-        if (isMutationRE.test(query)) {
-          throw new Error(
-            '[h2:error:storefront.query] Cannot execute mutations',
-          );
-        }
+        assertQuery(query, 'storefront.query');
 
         const result = fetchStorefrontApi({
           ...payload,
@@ -435,11 +426,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        */
       mutate: <Storefront['mutate']>((mutation: string, payload) => {
         mutation = minifyQuery(mutation);
-        if (isQueryRE.test(mutation)) {
-          throw new Error(
-            '[h2:error:storefront.mutate] Cannot execute queries',
-          );
-        }
+        assertMutation(mutation, 'storefront.mutate');
 
         const result = fetchStorefrontApi({
           ...payload,
@@ -485,47 +472,4 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       i18n: (i18n ?? defaultI18n) as TI18n,
     },
   };
-}
-
-type StorefrontErrorOptions<T> = {
-  response: Response;
-  errors: StorefrontApiResponse<T>['errors'];
-  type: 'query' | 'mutation';
-  query: string;
-  queryVariables: Record<string, any>;
-  ErrorConstructor?: ErrorConstructor;
-};
-
-function throwError<T>({
-  response,
-  errors,
-  type,
-  query,
-  queryVariables,
-  ErrorConstructor = Error,
-}: StorefrontErrorOptions<T>) {
-  const requestId = response.headers.get('x-request-id');
-  const errorMessage =
-    (typeof errors === 'string'
-      ? errors
-      : errors?.map?.((error) => error.message).join('\n')) ||
-    `API response error: ${response.status}`;
-
-  throw new ErrorConstructor(
-    `[h2:error:storefront.${type}] ` +
-      errorMessage +
-      (requestId ? ` - Request ID: ${requestId}` : ''),
-    {
-      cause: JSON.stringify({
-        errors,
-        requestId,
-        ...(process.env.NODE_ENV === 'development' && {
-          graphql: {
-            query,
-            variables: JSON.stringify(queryVariables),
-          },
-        }),
-      }),
-    },
-  );
 }
