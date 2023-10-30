@@ -60,7 +60,7 @@
   "peerDependencies": {
     "@remix-run/dev": "^2.1.0",
     "@remix-run/react": "^2.1.0",
-    "@shopify/hydrogen-react": "^2023.10.1",
+    "@shopify/hydrogen-react": "^2023.10.0",
     "@shopify/remix-oxygen": "^2.0.0"
   },
   "peerDependenciesMeta": {
