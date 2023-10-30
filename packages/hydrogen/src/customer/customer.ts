@@ -83,7 +83,7 @@ export function createCustomerClient({
   const logSubRequestEvent =
     process.env.NODE_ENV === 'development'
       ? (query: string, startTime: number) => {
-          globalThis.__H2O_LOG_EVENT?.({
+          (globalThis as any).__H2O_LOG_EVENT?.({
             eventType: 'subrequest',
             url: `https://shopify.dev/?${hashKey([
               `Customer Account `,
