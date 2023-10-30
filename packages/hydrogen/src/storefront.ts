@@ -10,7 +10,6 @@ import {
 } from '@shopify/hydrogen-react';
 import type {ExecutionArgs} from 'graphql';
 import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
-<<<<<<< HEAD
 import {
   SDK_VARIANT_HEADER,
   SDK_VARIANT_SOURCE_HEADER,
@@ -18,15 +17,6 @@ import {
   STOREFRONT_ACCESS_TOKEN_HEADER,
   STOREFRONT_REQUEST_GROUP_ID_HEADER,
 } from './constants';
-||||||| parent of a75328071 (Review feedback)
-import {STOREFRONT_REQUEST_GROUP_ID_HEADER} from './constants';
-=======
-import {
-  IS_MUTATION_RE,
-  IS_QUERY_RE,
-  STOREFRONT_REQUEST_GROUP_ID_HEADER,
-} from './constants';
->>>>>>> a75328071 (Review feedback)
 import {
   CacheNone,
   CacheLong,

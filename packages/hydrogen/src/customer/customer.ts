@@ -92,15 +92,7 @@ export function createCustomerClient({
             ])}`,
             startTime,
             waitUntil,
-<<<<<<< HEAD
-            requestId: getHeader('request-id', request),
-            purpose: 'Customer API query',
-||||||| parent of 1da4e305a (Fix origin and params)
-            requestId: getHeader(request, 'request-id'),
-            purpose: 'Customer API query',
-=======
             ...getDebugHeaders(request),
->>>>>>> 1da4e305a (Fix origin and params)
           });
         }
       : undefined;

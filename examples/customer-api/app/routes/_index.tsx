@@ -53,7 +53,7 @@ export function ErrorBoundary() {
 }
 
 export default function () {
-  const {customer} = useLoaderData();
+  const {customer} = useLoaderData<typeof loader>();
 
   return (
     <div style={{marginTop: 24}}>

@@ -11,20 +11,6 @@ type CreateWithCacheOptions = {
   request?: CrossRuntimeRequest;
 };
 
-<<<<<<< HEAD
-||||||| parent of d93ef2d1d (Add customer account api to the sub-request debugger)
-function getHeader(key: string, request?: CrossRuntimeRequest) {
-  const value = request?.headers?.get?.(key) ?? request?.headers?.[key];
-  return typeof value === 'string' ? value : undefined;
-}
-
-=======
-export function getHeader(key: string, request?: CrossRuntimeRequest) {
-  const value = request?.headers?.get?.(key) ?? request?.headers?.[key];
-  return typeof value === 'string' ? value : undefined;
-}
-
->>>>>>> d93ef2d1d (Add customer account api to the sub-request debugger)
 /**
  * Creates a utility function that executes an asynchronous operation
  * like `fetch` and caches the result according to the strategy provided.
