@@ -1,5 +1,38 @@
 # @shopify/hydrogen-react
 
+## 2023.10.1
+
+### Patch Changes
+
+- Update Storefront api endpoint to 2023-10 ([#1431](https://github.com/Shopify/hydrogen/pull/1431)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Remove deprecated props: ([#1435](https://github.com/Shopify/hydrogen/pull/1435)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  - `createStorefrontClient`'s `buyerIp` and `requestGroupId`
+  - `<Image>` component's `loaderOptions` and `widths`
+
+- The Storefront API types included are now generated using `@graphql-codegen/typescript@4` ([changelog](https://github.com/dotansimha/graphql-code-generator/blob/master/packages/plugins/typescript/typescript/CHANGELOG.md#400)). This results in a breaking change if you were importing `Scalars` directly from `@shopify/hydrogen-react` or `@shopify/hydrogen`. ([#1108](https://github.com/Shopify/hydrogen/pull/1108)) by [@frandiox](https://github.com/frandiox)
+
+  Before:
+
+  ```tsx
+  import type {Scalars} from '@shopify/hydrogen/storefront-api-types';
+
+  type Props = {
+    id: Scalars['ID']; // This was a string
+  };
+  ```
+
+  After:
+
+  ```tsx
+  import type {Scalars} from '@shopify/hydrogen/storefront-api-types';
+
+  type Props = {
+    id: Scalars['ID']['input']; // Need to access 'input' or 'output' to get the string
+  };
+  ```
+
 ## 2023.7.6
 
 ### Patch Changes

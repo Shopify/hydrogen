@@ -1,5 +1,60 @@
 # @shopify/hydrogen
 
+## 2023.10.1
+
+### Patch Changes
+
+- Add a client for query the new Customer Account API ([#1430](https://github.com/Shopify/hydrogen/pull/1430)) by [@blittle](https://github.com/blittle)
+
+- Update Storefront api endpoint to 2023-10 ([#1431](https://github.com/Shopify/hydrogen/pull/1431)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Introduce a new default caching strategy with a `max-age` value of 1 second, and a `stale-while-revalidate` value of 1 day. When updating to this version of Hydrogen, note that if you would like to continue to use `CacheShort` as the default (10 second cache) to decrease risk of stale data (but also increase load times on low traffic pages), it's important to go and manually specify your caching strategy. ([#1336](https://github.com/Shopify/hydrogen/pull/1336)) by [@benjaminsehl](https://github.com/benjaminsehl)
+
+- Clean up hash function ([#1450](https://github.com/Shopify/hydrogen/pull/1450)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Move `createCartHandler`'s `customMethods__unstable` to stable ([#1440](https://github.com/Shopify/hydrogen/pull/1440)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Update to Remix v2. Remix is now a peer dependency and its version is no longer pinned. This means that you can upgrade to newer Remix 2.x versions without upgrading Hydrogen. ([#1289](https://github.com/Shopify/hydrogen/pull/1289)) by [@frandiox](https://github.com/frandiox)
+
+  ### Breaking changes
+
+  Please check the [Remix v2 release notes](https://github.com/remix-run/remix/releases/tag/remix%402.0.0) to see what needs to be changed in your app code. Common changes include:
+
+  - Renaming types prefixed with `V2_`. For example, `V2_MetaFunction` is now `MetaFunction`.
+  - Renaming other types like `LoaderArgs` and `ActionArgs`, which are now `LoaderFunctionArgs` and `ActionFunctionArgs` respectively.
+
+  If you were not already using v2 flags, follow the official [Remix migration guide](https://remix.run/docs/en/main/start/v2) before upgrading to v2.
+
+- Remove deprecated props: ([#1435](https://github.com/Shopify/hydrogen/pull/1435)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  - `createStorefrontClient`'s `buyerIp` and `requestGroupId`
+  - `<Image>` component's `loaderOptions` and `widths`
+
+- The Storefront API types included are now generated using `@graphql-codegen/typescript@4` ([changelog](https://github.com/dotansimha/graphql-code-generator/blob/master/packages/plugins/typescript/typescript/CHANGELOG.md#400)). This results in a breaking change if you were importing `Scalars` directly from `@shopify/hydrogen-react` or `@shopify/hydrogen`. ([#1108](https://github.com/Shopify/hydrogen/pull/1108)) by [@frandiox](https://github.com/frandiox)
+
+  Before:
+
+  ```tsx
+  import type {Scalars} from '@shopify/hydrogen/storefront-api-types';
+
+  type Props = {
+    id: Scalars['ID']; // This was a string
+  };
+  ```
+
+  After:
+
+  ```tsx
+  import type {Scalars} from '@shopify/hydrogen/storefront-api-types';
+
+  type Props = {
+    id: Scalars['ID']['input']; // Need to access 'input' or 'output' to get the string
+  };
+  ```
+
+- Updated dependencies [[`7fc088e2`](https://github.com/Shopify/hydrogen/commit/7fc088e21bea47840788cb7c60f873ce1f253128), [`0ae7cbe2`](https://github.com/Shopify/hydrogen/commit/0ae7cbe280d8351126e11dc13f35d7277d9b2d86), [`ad45656c`](https://github.com/Shopify/hydrogen/commit/ad45656c5f663cc1a60eab5daab4da1dfd0e6cc3)]:
+  - @shopify/hydrogen-react@2023.10.1
+
 ## 2023.7.13
 
 ### Patch Changes

@@ -1,5 +1,46 @@
 # @shopify/cli-hydrogen
 
+## 6.0.0
+
+### Major Changes
+
+- Update to Remix v2. Remix is now a peer dependency and its version is no longer pinned. This means that you can upgrade to newer Remix 2.x versions without upgrading Hydrogen. ([#1289](https://github.com/Shopify/hydrogen/pull/1289)) by [@frandiox](https://github.com/frandiox)
+
+  ### Breaking changes
+
+  Please check the [Remix v2 release notes](https://github.com/remix-run/remix/releases/tag/remix%402.0.0) to see what needs to be changed in your app code. Common changes include:
+
+  - Renaming types prefixed with `V2_`. For example, `V2_MetaFunction` is now `MetaFunction`.
+  - Renaming other types like `LoaderArgs` and `ActionArgs`, which are now `LoaderFunctionArgs` and `ActionFunctionArgs` respectively.
+
+  If you were not already using v2 flags, follow the official [Remix migration guide](https://remix.run/docs/en/main/start/v2) before upgrading to v2.
+
+### Minor Changes
+
+- The Codegen feature is now considered stable and related dependencies have been updated. Use `--codegen` flag instead of `--codegen-unstable` to generate code from your GraphQL queries. ([#1108](https://github.com/Shopify/hydrogen/pull/1108)) by [@frandiox](https://github.com/frandiox)
+
+### Patch Changes
+
+- Updated internal dependencies to improve terminal output. ([#1456](https://github.com/Shopify/hydrogen/pull/1456)) by [@vincentezw](https://github.com/vincentezw)
+
+  Please update the `@shopify/cli` dependency in your app to avoid duplicated subdependencies:
+
+  ```diff
+    "dependencies": {
+  -   "@shopify/cli": "3.49.2",
+  +   "@shopify/cli": "3.50.0",
+    }
+  ```
+
+- Update Storefront api endpoint to 2023-10 ([#1431](https://github.com/Shopify/hydrogen/pull/1431)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Fix codegen commands for generated projects ([#1464](https://github.com/Shopify/hydrogen/pull/1464)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Updated dependencies [[`a6f397b6`](https://github.com/Shopify/hydrogen/commit/a6f397b64dc6a0d856cb7961731ee1f86bf80292), [`7fc088e2`](https://github.com/Shopify/hydrogen/commit/7fc088e21bea47840788cb7c60f873ce1f253128), [`ad45656c`](https://github.com/Shopify/hydrogen/commit/ad45656c5f663cc1a60eab5daab4da1dfd0e6cc3), [`ad45656c`](https://github.com/Shopify/hydrogen/commit/ad45656c5f663cc1a60eab5daab4da1dfd0e6cc3), [`66a48573`](https://github.com/Shopify/hydrogen/commit/66a4857387148b6a104df5783314c74aca8aada0), [`0ae7cbe2`](https://github.com/Shopify/hydrogen/commit/0ae7cbe280d8351126e11dc13f35d7277d9b2d86), [`ad45656c`](https://github.com/Shopify/hydrogen/commit/ad45656c5f663cc1a60eab5daab4da1dfd0e6cc3)]:
+  - @shopify/remix-oxygen@2.0.0
+  - @shopify/hydrogen-react@2023.10.1
+  - @shopify/hydrogen-codegen@0.1.0
+
 ## 5.5.1
 
 ### Patch Changes
