@@ -59,11 +59,15 @@ export async function runCodegen({
 
   console.log(''); // New line
 
+  // Use root file to determine if we're using TypeScript or JavaScript
+  const rootFile = remixConfig?.routes?.root?.file;
+
   const generatedFiles = await codegen({
     ...remixConfig,
     configFilePath: codegenConfigPath,
     forceSfapiVersion,
     watch,
+    isJSProject: /jsx$/.test(rootFile || ''), // Default to false if rootFile is undefined
   });
 
   if (!watch) {

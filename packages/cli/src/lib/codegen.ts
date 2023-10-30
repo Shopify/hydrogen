@@ -17,6 +17,7 @@ if (isStandaloneProcess) {
     rootDirectory: process.argv[2]!,
     appDirectory: process.argv[3]!,
     configFilePath: process.argv[4],
+    isJSProject: process.argv[5] === 'js',
     watch: true,
   });
 }
@@ -99,6 +100,7 @@ type CodegenOptions = ProjectDirs & {
   watch?: boolean;
   configFilePath?: string;
   forceSfapiVersion?: string;
+  isJSProject?: boolean;
 };
 
 export async function codegen(options: CodegenOptions) {
@@ -165,12 +167,13 @@ async function generateTypes({
 async function generateDefaultConfig(
   {rootDirectory, appDirectory}: ProjectDirs,
   forceSfapiVersion?: string,
+  isJSProject?: boolean,
 ): Promise<LoadCodegenConfigResult> {
   const {schema, preset, pluckConfig} = await import(
     '@shopify/hydrogen-codegen'
   );
 
-  const tsDefaultGlob = '*!(*.d).{ts,tsx}'; // No d.ts files
+  const defaultGlob = isJSProject ? '*!(*.d).{js,jsx}' : '*!(*.d).{ts,tsx}'; // No d.ts files
   const appDirRelative = relativePath(rootDirectory, appDirectory);
 
   return {
@@ -183,8 +186,8 @@ async function generateDefaultConfig(
           preset,
           schema,
           documents: [
-            tsDefaultGlob, // E.g. ./server.ts
-            joinPath(appDirRelative, '**', tsDefaultGlob), // E.g. app/routes/_index.tsx
+            defaultGlob, // E.g. ./server.(t|j)s
+            joinPath(appDirRelative, '**', defaultGlob), // E.g. app/routes/_index.(t|j)sx
           ],
 
           ...(!!forceSfapiVersion && {
