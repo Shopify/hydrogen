@@ -79,7 +79,7 @@ Hydrogen 2023-10 has upgraded to Remix v2 and is now a peer dependency.
 - Add query explorer plugin to GraphiQL. Start your dev server and load `http://localhost:3000/graphiql` to use GraphiQL. ([#1470](https://github.com/Shopify/hydrogen/pull/1470)) by [@frandiox](https://github.com/frandiox)
 
 - Updated dependencies [[`0ae7cbe2`](https://github.com/Shopify/hydrogen/commit/0ae7cbe280d8351126e11dc13f35d7277d9b2d86), [`ad45656c`](https://github.com/Shopify/hydrogen/commit/ad45656c5f663cc1a60eab5daab4da1dfd0e6cc3)]:
-  - @shopify/hydrogen-react@2024.0.0
+  - @shopify/hydrogen-react@2023.10.0
 
 ## 2023.7.13
 
