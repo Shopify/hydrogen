@@ -20,76 +20,96 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
   // GraphiQL icon from their GitHub repo
   const favicon = `https://avatars.githubusercontent.com/u/12972006?s=48&v=4`;
 
+  // Add code highlighting to the HTML template
+  const html = String.raw;
+
   return new Response(
-    `
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <title>GraphiQL</title>
-    <link rel="icon" type="image/x-icon" href="${favicon}">
-    <style>
-      body {
-        height: 100%;
-        margin: 0;
-        width: 100%;
-        overflow: hidden;
-      }
+    html`
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <title>GraphiQL</title>
+          <link rel="icon" type="image/x-icon" href="${favicon}" />
+          <style>
+            body {
+              height: 100%;
+              margin: 0;
+              width: 100%;
+              overflow: hidden;
+            }
 
-      #graphiql {
-        height: 100vh;
-      }
-    </style>
+            #graphiql {
+              height: 100vh;
+            }
+          </style>
 
-    <script
-      crossorigin
-      src="https://unpkg.com/react@18/umd/react.development.js"
-    ></script>
-    <script
-      crossorigin
-      src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
-    ></script>
-    <link rel="stylesheet" href="https://unpkg.com/graphiql@3/graphiql.min.css" />
-  </head>
+          <script
+            crossorigin
+            src="https://unpkg.com/react@18/umd/react.development.js"
+          ></script>
+          <script
+            crossorigin
+            src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+          ></script>
+          <link
+            rel="stylesheet"
+            href="https://unpkg.com/graphiql@3/graphiql.min.css"
+          />
+        </head>
 
-  <body>
-    <div id="graphiql">Loading...</div>
-    <script
-      src="https://unpkg.com/graphiql@3/graphiql.min.js"
-      type="application/javascript"
-    ></script>
-    <script>
-      const windowUrl = new URL(document.URL);
+        <body>
+          <div id="graphiql">Loading...</div>
 
-      let query = '{\\n  shop {\\n    name\\n  }\\n}';
-      if (windowUrl.searchParams.has('query')) {
-        query = decodeURIComponent(windowUrl.searchParams.get('query') ?? '');
-        // Prettify query
-        if (query) query = GraphiQL.GraphQL.print(GraphiQL.GraphQL.parse(query));
-      }
+          <script
+            src="https://unpkg.com/graphiql@3/graphiql.min.js"
+            type="application/javascript"
+            crossorigin="anonymous"
+          ></script>
+          <script>
+            const windowUrl = new URL(document.URL);
 
-      let variables;
-      if (windowUrl.searchParams.has('variables')) {
-        variables = decodeURIComponent(windowUrl.searchParams.get('variables') ?? '');
-        // Prettify variables
-        if (variables) variables = JSON.stringify(JSON.parse(variables), null, 2);
-      }
+            let query = '{ shop { name } }';
+            if (windowUrl.searchParams.has('query')) {
+              query = decodeURIComponent(
+                windowUrl.searchParams.get('query') ?? query,
+              );
+            }
 
-      const root = ReactDOM.createRoot(document.getElementById('graphiql'));
-      root.render(
-        React.createElement(GraphiQL, {
-          fetcher: GraphiQL.createFetcher({
-            url: '${url}',
-            headers: {'X-Shopify-Storefront-Access-Token': '${accessToken}'}
-          }),
-          defaultEditorToolsVisibility: true,
-          query,
-          variables
-        }),
-      );
-    </script>
-  </body>
-</html>
-  `,
+            // Prettify query
+            query = GraphiQL.GraphQL.print(GraphiQL.GraphQL.parse(query));
+
+            let variables;
+            if (windowUrl.searchParams.has('variables')) {
+              variables = decodeURIComponent(
+                windowUrl.searchParams.get('variables') ?? '',
+              );
+            }
+
+            // Prettify variables
+            if (variables) {
+              variables = JSON.stringify(JSON.parse(variables), null, 2);
+            }
+
+            const root = ReactDOM.createRoot(
+              document.getElementById('graphiql'),
+            );
+            root.render(
+              React.createElement(GraphiQL, {
+                fetcher: GraphiQL.createFetcher({
+                  url: '${url}',
+                  headers: {
+                    'X-Shopify-Storefront-Access-Token': '${accessToken}',
+                  },
+                }),
+                defaultEditorToolsVisibility: true,
+                query,
+                variables,
+              }),
+            );
+          </script>
+        </body>
+      </html>
+    `,
     {status: 200, headers: {'content-type': 'text/html'}},
   );
 };
