@@ -61,8 +61,14 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
           />
         </head>
 
-        <body>
-          <div id="graphiql">Loading...</div>
+        <body style="background-color: hsl(219, 29%, 18%)">
+          <div id="graphiql">
+            <div
+              style="color: slategray; width: fit-content; margin: 40px auto; font-family: Arial;"
+            >
+              Loading GraphiQL...
+            </div>
+          </div>
 
           <script
             src="https://unpkg.com/graphiql@3/graphiql.min.js"
