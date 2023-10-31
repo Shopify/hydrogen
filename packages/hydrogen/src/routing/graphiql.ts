@@ -55,6 +55,10 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
             rel="stylesheet"
             href="https://unpkg.com/graphiql@3/graphiql.min.css"
           />
+          <link
+            rel="stylesheet"
+            href="https://unpkg.com/@graphiql/plugin-explorer/dist/style.css"
+          />
         </head>
 
         <body>
@@ -65,6 +69,12 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
             type="application/javascript"
             crossorigin="anonymous"
           ></script>
+          <script
+            src="https://unpkg.com/@graphiql/plugin-explorer/dist/index.umd.js"
+            type="application/javascript"
+            crossorigin="anonymous"
+          ></script>
+
           <script>
             const windowUrl = new URL(document.URL);
 
@@ -104,6 +114,7 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
                 defaultEditorToolsVisibility: true,
                 query,
                 variables,
+                plugins: [GraphiQLPluginExplorer.explorerPlugin()],
               }),
             );
           </script>
