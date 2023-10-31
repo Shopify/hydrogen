@@ -1,5 +1,29 @@
 # @shopify/cli-hydrogen
 
+## 6.0.0
+
+### Minor Changes
+
+- The Codegen feature is now considered stable and related dependencies have been updated. Use `--codegen` flag instead of `--codegen-unstable` to generate code from your GraphQL queries. ([#1108](https://github.com/Shopify/hydrogen/pull/1108)) by [@frandiox](https://github.com/frandiox)
+
+### Patch Changes
+
+- Updated internal dependencies to improve terminal output. ([#1456](https://github.com/Shopify/hydrogen/pull/1456)) by [@vincentezw](https://github.com/vincentezw)
+
+  Please update the `@shopify/cli` dependency in your app to avoid duplicated subdependencies:
+
+  ```diff
+    "dependencies": {
+  -   "@shopify/cli": "3.49.2",
+  +   "@shopify/cli": "3.50.0",
+    }
+  ```
+
+- Updated dependencies [[`a6f397b6`](https://github.com/Shopify/hydrogen/commit/a6f397b64dc6a0d856cb7961731ee1f86bf80292), [`ad45656c`](https://github.com/Shopify/hydrogen/commit/ad45656c5f663cc1a60eab5daab4da1dfd0e6cc3), [`ad45656c`](https://github.com/Shopify/hydrogen/commit/ad45656c5f663cc1a60eab5daab4da1dfd0e6cc3), [`58dc68de`](https://github.com/Shopify/hydrogen/commit/58dc68de2f71d12f1275961e160faa740387cdb5), [`0ae7cbe2`](https://github.com/Shopify/hydrogen/commit/0ae7cbe280d8351126e11dc13f35d7277d9b2d86), [`ad45656c`](https://github.com/Shopify/hydrogen/commit/ad45656c5f663cc1a60eab5daab4da1dfd0e6cc3)]:
+  - @shopify/remix-oxygen@2.0.0
+  - @shopify/hydrogen-codegen@0.1.0
+  - @shopify/hydrogen-react@2024.0.0
+
 ## 5.5.1
 
 ### Patch Changes

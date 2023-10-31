@@ -1,5 +1,11 @@
 # @shopify/remix-oxygen
 
+## 2.0.0
+
+### Major Changes
+
+- Remove the function export `getBuyerIp`, which was deprecated in 2023-07. ([#1455](https://github.com/Shopify/hydrogen/pull/1455)) by [@frandiox](https://github.com/frandiox)
+
 ## 1.1.8
 
 ### Patch Changes

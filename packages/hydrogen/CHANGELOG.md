@@ -1,5 +1,84 @@
 # @shopify/hydrogen
 
+## 2024.0.0
+
+### Major Changes
+
+- The default [caching strategy](https://shopify.dev/docs/custom-storefronts/hydrogen/data-fetching/cache#caching-strategies) has been updated. The new default caching strategy provides a `max-age` value of 1 second, and a `stale-while-revalidate` value of 1 day. If you would keep the old caching values, update your queries to use `CacheShort`: ([#1336](https://github.com/Shopify/hydrogen/pull/1336)) by [@benjaminsehl](https://github.com/benjaminsehl)
+
+  ```diff
+   const {product} = await storefront.query(
+     `#graphql
+       query Product($handle: String!) {
+         product(handle: $handle) { id title }
+       }
+     `,
+     {
+       variables: {handle: params.productHandle},
+  +    /**
+  +     * Override the default caching strategy with the old caching values
+  +     */
+  +    cache: storefront.CacheShort(),
+     },
+   );
+  ```
+
+- #### Remix v2 ([#1289](https://github.com/Shopify/hydrogen/pull/1289)) by [@frandiox](https://github.com/frandiox)
+
+  Hydrogen 2023-10 has upgraded to Remix v2 and is now a peer dependency.
+
+  - Please check the [Remix v2 release notes](https://github.com/remix-run/remix/releases/tag/remix%402.0.0) to see what needs to be changed in your app code. Common changes include:
+
+    - Renaming types prefixed with `V2_`. For example, `V2_MetaFunction` is now `MetaFunction`.
+    - Renaming other types like `LoaderArgs` and `ActionArgs`, which are now `LoaderFunctionArgs` and `ActionFunctionArgs` respectively.
+
+    If you were not already using v2 flags, follow the official [Remix migration guide](https://remix.run/docs/en/main/start/v2) before upgrading to v2.
+
+  - Update to Remix v2. Remix is now a peer dependency and its version is no longer pinned. This means that you can upgrade to newer Remix 2.x versions without upgrading Hydrogen. ([#1289](https://github.com/Shopify/hydrogen/pull/1289)) by [@frandiox](https://github.com/frandiox)
+
+- The Storefront API types included are now generated using `@graphql-codegen/typescript@4` ([changelog](https://github.com/dotansimha/graphql-code-generator/blob/master/packages/plugins/typescript/typescript/CHANGELOG.md#400)). This results in a breaking change if you were importing `Scalars` directly from `@shopify/hydrogen-react` or `@shopify/hydrogen`: ([#1108](https://github.com/Shopify/hydrogen/pull/1108)) by [@frandiox](https://github.com/frandiox)
+
+  ```diff
+   import type {Scalars} from '@shopify/hydrogen/storefront-api-types';
+
+   type Props = {
+  -  id: Scalars['ID']; // This was a string
+  +  id: Scalars['ID']['input']; // Need to access 'input' or 'output' to get the string
+   };
+  ```
+
+### Patch Changes
+
+- Add a client to query the [Customer Account API](https://shopify.dev/docs/api/customer) ([#1430](https://github.com/Shopify/hydrogen/pull/1430)) by [@blittle](https://github.com/blittle)
+
+- Update Storefront API version to 2023-10 ([#1431](https://github.com/Shopify/hydrogen/pull/1431)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Custom cart methods are now stable: ([#1440](https://github.com/Shopify/hydrogen/pull/1440)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  ```diff
+   const cart = createCartHandler({
+     storefront,
+     getCartId,
+     setCartId: cartSetIdDefault(),
+  -  customMethods__unstable: {
+  +  customMethods: {
+       addLines: async (lines, optionalParams) => {
+        // ...
+       },
+     },
+   });
+  ```
+
+- Remove deprecated parameters and props (#1455 and #1435): ([#1435](https://github.com/Shopify/hydrogen/pull/1435)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  - `createStorefrontClient` parameters `buyerIp` and `requestGroupId`
+  - `<Image>` props `loaderOptions` and `widths`
+
+- Add query explorer plugin to GraphiQL. Start your dev server and load `http://localhost:3000/graphiql` to use GraphiQL. ([#1470](https://github.com/Shopify/hydrogen/pull/1470)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`0ae7cbe2`](https://github.com/Shopify/hydrogen/commit/0ae7cbe280d8351126e11dc13f35d7277d9b2d86), [`ad45656c`](https://github.com/Shopify/hydrogen/commit/ad45656c5f663cc1a60eab5daab4da1dfd0e6cc3)]:
+  - @shopify/hydrogen-react@2024.0.0
+
 ## 2023.7.13
 
 ### Patch Changes
