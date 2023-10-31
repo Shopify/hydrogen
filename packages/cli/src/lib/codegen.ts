@@ -170,7 +170,7 @@ async function generateDefaultConfig(
     '@shopify/hydrogen-codegen'
   );
 
-  const defaultGlob = '*!(*.d).{ts,tsx}'; // No d.ts files
+  const defaultGlob = '*!(*.d).{ts,tsx,js,jsx}'; // No d.ts files
   const appDirRelative = relativePath(rootDirectory, appDirectory);
 
   return {
