@@ -1,6 +1,6 @@
 {
   "name": "@shopify/hydrogen-react",
-  "version": "2024.0.0",
+  "version": "2023.10.0",
   "description": "React components, hooks, and utilities for creating custom Shopify storefronts",
   "homepage": "https://github.com/Shopify/hydrogen/tree/main/packages/hydrogen-react",
   "license": "MIT",

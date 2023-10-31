@@ -26,11 +26,11 @@
   };
   ```
 
+- Add support for codegen in JavaScript projects with JSDoc. (#1334) by @frandiox ([#1464](https://github.com/Shopify/hydrogen/pull/1464)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ### Patch Changes
 
 - Remove warning when this package is used without `@shopify/hydrogen`. ([#1108](https://github.com/Shopify/hydrogen/pull/1108)) by [@frandiox](https://github.com/frandiox)
-
-- Add support for codegen in JavaScript projects with JSDoc. (#1334) by @frandiox ([#1464](https://github.com/Shopify/hydrogen/pull/1464)) by [@wizardlyhel](https://github.com/wizardlyhel)
 
 ## 0.0.2
 
