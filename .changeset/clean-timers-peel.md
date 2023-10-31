@@ -2,4 +2,4 @@
 '@shopify/remix-oxygen': major
 ---
 
-Remove deprecated function export `getBuyerIp`.
+Remove the function export `getBuyerIp`, which was deprecated in 2023-07.

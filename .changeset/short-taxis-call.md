@@ -1,6 +1,5 @@
 ---
-'@shopify/cli-hydrogen': patch
-'@shopify/create-hydrogen': patch
+'@shopify/codegen': patch
 ---
 
-Fix codegen commands for generated projects
+Add support for codegen in JavaScript projects with JSDoc. (#1334) by @frandiox
