@@ -1,5 +1,5 @@
 ---
-'demo-store': patch
+'skeleton': patch
 ---
 
 If you are calling `useMatches()` in different places of your app to access the data returned by the root loader, you may want to update it to the following pattern to enhance types:

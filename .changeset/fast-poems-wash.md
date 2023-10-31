@@ -1,6 +1,5 @@
 ---
 '@shopify/cli-hydrogen': patch
-'demo-store': patch
 ---
 
 Updated internal dependencies to improve terminal output.

@@ -3,7 +3,7 @@
 '@shopify/hydrogen': patch
 ---
 
-Remove deprecated props:
+Remove deprecated parameters and props (#1455 and #1435):
 
-- `createStorefrontClient`'s `buyerIp` and `requestGroupId`
-- `<Image>` component's `loaderOptions` and `widths`
+- `createStorefrontClient` parameters `buyerIp` and `requestGroupId`
+- `<Image>` props `loaderOptions` and `widths`
