@@ -1,12 +1,11 @@
 ---
-'@shopify/cli-hydrogen': patch
-'@shopify/create-hydrogen': patch
+'skeleton': major
 ---
 
-Fix skeleton template menu links
+The Storefront API 2023-10 made changes in menu links. The skeleton template requires changes:
 
-1; Update the `HeaderMenu` component to accept a `primaryDomainUrl` and include
-it in the internal url check
+1. Update the `HeaderMenu` component to accept a `primaryDomainUrl` and include
+   it in the internal url check
 
 ```diff
 // app/components/Header.tsx
@@ -38,8 +37,8 @@ export function HeaderMenu({
 }
 ```
 
-2; Update the `FooterMenu` component to accept a `primaryDomainUrl` prop and include
-it in the internal url check
+2. Update the `FooterMenu` component to accept a `primaryDomainUrl` prop and include
+   it in the internal url check
 
 ```diff
 // app/components/Footer.tsx
@@ -70,7 +69,7 @@ function FooterMenu({
 }
 ```
 
-3; Update the `Footer` component to accept a `shop` prop
+3. Update the `Footer` component to accept a `shop` prop
 
 ```diff
 export function Footer({
@@ -86,7 +85,7 @@ export function Footer({
 }
 ```
 
-4; Update `Layout.tsx` to pass the `shop`
+4. Update `Layout.tsx` to pass the `shop` prop
 
 ```diff
 export function Layout({
