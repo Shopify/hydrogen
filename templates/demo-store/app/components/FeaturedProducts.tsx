@@ -26,8 +26,8 @@ interface FeaturedProductsProps {
  * @param query a filtering query
  * @param reverse wether to reverse the product results
  * @param sortKey Sort the underlying list by the given key.
- * @see query https://shopify.dev/api/storefront/2023-07/queries/products
- * @see filters https://shopify.dev/api/storefront/2023-07/queries/products#argument-products-query
+ * @see query https://shopify.dev/api/storefront/current/queries/products
+ * @see filters https://shopify.dev/api/storefront/current/queries/products#argument-products-query
  */
 export function FeaturedProducts({
   count = 4,
