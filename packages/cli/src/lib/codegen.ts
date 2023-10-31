@@ -170,7 +170,7 @@ async function generateDefaultConfig(
     '@shopify/hydrogen-codegen'
   );
 
-  const tsDefaultGlob = '*!(*.d).{ts,tsx}'; // No d.ts files
+  const defaultGlob = '*!(*.d).{ts,tsx,js,jsx}'; // No d.ts files
   const appDirRelative = relativePath(rootDirectory, appDirectory);
 
   return {
@@ -183,8 +183,8 @@ async function generateDefaultConfig(
           preset,
           schema,
           documents: [
-            tsDefaultGlob, // E.g. ./server.ts
-            joinPath(appDirRelative, '**', tsDefaultGlob), // E.g. app/routes/_index.tsx
+            defaultGlob, // E.g. ./server.(t|j)s
+            joinPath(appDirRelative, '**', defaultGlob), // E.g. app/routes/_index.(t|j)sx
           ],
 
           ...(!!forceSfapiVersion && {
