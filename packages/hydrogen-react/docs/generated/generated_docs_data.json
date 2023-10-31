@@ -1272,7 +1272,7 @@
             "filePath": "/Image.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "HydrogenImageBaseProps",
-            "value": "{\n  /** The aspect ratio of the image, in the format of `width/height`.\n   *\n   * @example\n   * ```\n   * <Image data={productImage} aspectRatio=\"4/5\" />\n   * ```\n   */\n  aspectRatio?: string;\n  /** The crop position of the image.\n   *\n   * @remarks\n   * In the event that AspectRatio is set, without specifying a crop,\n   * the Shopify CDN won't return the expected image.\n   *\n   * @defaultValue `center`\n   */\n  crop?: Crop;\n  /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2023-10/objects/Image) object. Must be an Image object.\n   *\n   * @example\n   * ```\n   * import {IMAGE_FRAGMENT, Image} from '@shopify/hydrogen';\n   *\n   * export const IMAGE_QUERY = `#graphql\n   * ${IMAGE_FRAGMENT}\n   * query {\n   *   product {\n   *     featuredImage {\n   *       ...Image\n   *     }\n   *   }\n   * }`\n   *\n   * <Image\n   *   data={productImage}\n   *   sizes=\"(min-width: 45em) 50vw, 100vw\"\n   *   aspectRatio=\"4/5\"\n   * />\n   * ```\n   *\n   * Image: {@link https://shopify.dev/api/storefront/reference/common-objects/image}\n   */\n  data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;\n  /** A function that returns a URL string for an image.\n   *\n   * @remarks\n   * By default, this uses Shopify’s CDN {@link https://cdn.shopify.com/} but you can provide\n   * your own function to use a another provider, as long as they support URL based image transformations.\n   */\n  loader?: Loader;\n  /** An optional prop you can use to change the default srcSet generation behaviour */\n  srcSetOptions?: SrcSetOptions;\n  /** @deprecated Use `crop`, `width`, `height`, and `src` props, and/or `data` prop */\n  loaderOptions?: ShopifyLoaderOptions;\n  /** @deprecated Autocalculated, use only `width` prop, or srcSetOptions */\n  widths?: (HtmlImageProps['width'] | ImageType['width'])[];\n}",
+            "value": "{\n  /** The aspect ratio of the image, in the format of `width/height`.\n   *\n   * @example\n   * ```\n   * <Image data={productImage} aspectRatio=\"4/5\" />\n   * ```\n   */\n  aspectRatio?: string;\n  /** The crop position of the image.\n   *\n   * @remarks\n   * In the event that AspectRatio is set, without specifying a crop,\n   * the Shopify CDN won't return the expected image.\n   *\n   * @defaultValue `center`\n   */\n  crop?: Crop;\n  /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2023-10/objects/Image) object. Must be an Image object.\n   *\n   * @example\n   * ```\n   * import {IMAGE_FRAGMENT, Image} from '@shopify/hydrogen';\n   *\n   * export const IMAGE_QUERY = `#graphql\n   * ${IMAGE_FRAGMENT}\n   * query {\n   *   product {\n   *     featuredImage {\n   *       ...Image\n   *     }\n   *   }\n   * }`\n   *\n   * <Image\n   *   data={productImage}\n   *   sizes=\"(min-width: 45em) 50vw, 100vw\"\n   *   aspectRatio=\"4/5\"\n   * />\n   * ```\n   *\n   * Image: {@link https://shopify.dev/api/storefront/reference/common-objects/image}\n   */\n  data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;\n  /** A function that returns a URL string for an image.\n   *\n   * @remarks\n   * By default, this uses Shopify’s CDN {@link https://cdn.shopify.com/} but you can provide\n   * your own function to use a another provider, as long as they support URL based image transformations.\n   */\n  loader?: Loader;\n  /** An optional prop you can use to change the default srcSet generation behaviour */\n  srcSetOptions?: SrcSetOptions;\n}",
             "description": "",
             "members": [
               {
@@ -1343,24 +1343,6 @@
                 "value": "SrcSetOptions",
                 "description": "An optional prop you can use to change the default srcSet generation behaviour",
                 "isOptional": true
-              },
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "loaderOptions",
-                "value": "ShopifyLoaderOptions",
-                "description": "",
-                "isOptional": true,
-                "deprecationMessage": "Use `crop`, `width`, `height`, and `src` props, and/or `data` prop"
-              },
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "widths",
-                "value": "(string | number)[]",
-                "description": "",
-                "isOptional": true,
-                "deprecationMessage": "Autocalculated, use only `width` prop, or srcSetOptions"
               }
             ]
           },
@@ -1466,47 +1448,6 @@
                 "name": "placeholderWidth",
                 "value": "number",
                 "description": "The size used for placeholder fallback images"
-              }
-            ]
-          },
-          "ShopifyLoaderOptions": {
-            "filePath": "/Image.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopifyLoaderOptions",
-            "value": "{\n  /** The base URL of the image */\n  src?: ImageType['url'];\n  /** The URL param that controls width */\n  width?: HtmlImageProps['width'] | ImageType['width'];\n  /** The URL param that controls height */\n  height?: HtmlImageProps['height'] | ImageType['height'];\n  /** The URL param that controls the cropping region */\n  crop?: Crop;\n}",
-            "description": "Legacy type for backwards compatibility *",
-            "members": [
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "src",
-                "value": "string",
-                "description": "The base URL of the image",
-                "isOptional": true
-              },
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "width",
-                "value": "string | number",
-                "description": "The URL param that controls width",
-                "isOptional": true
-              },
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "height",
-                "value": "string | number",
-                "description": "The URL param that controls height",
-                "isOptional": true
-              },
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "crop",
-                "value": "Crop",
-                "description": "The URL param that controls the cropping region",
-                "isOptional": true
               }
             ]
           }
@@ -2078,7 +2019,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "aria-current",
-                "value": "boolean | \"time\" | \"step\" | \"date\" | \"true\" | \"false\" | \"page\" | \"location\"",
+                "value": "boolean | \"time\" | \"step\" | \"page\" | \"date\" | \"true\" | \"false\" | \"location\"",
                 "description": "Indicates the element that represents the current item within a container or set of related elements.",
                 "isOptional": true
               },
@@ -3773,7 +3714,7 @@
             "filePath": "/Image.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "HydrogenImageBaseProps",
-            "value": "{\n  /** The aspect ratio of the image, in the format of `width/height`.\n   *\n   * @example\n   * ```\n   * <Image data={productImage} aspectRatio=\"4/5\" />\n   * ```\n   */\n  aspectRatio?: string;\n  /** The crop position of the image.\n   *\n   * @remarks\n   * In the event that AspectRatio is set, without specifying a crop,\n   * the Shopify CDN won't return the expected image.\n   *\n   * @defaultValue `center`\n   */\n  crop?: Crop;\n  /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2023-10/objects/Image) object. Must be an Image object.\n   *\n   * @example\n   * ```\n   * import {IMAGE_FRAGMENT, Image} from '@shopify/hydrogen';\n   *\n   * export const IMAGE_QUERY = `#graphql\n   * ${IMAGE_FRAGMENT}\n   * query {\n   *   product {\n   *     featuredImage {\n   *       ...Image\n   *     }\n   *   }\n   * }`\n   *\n   * <Image\n   *   data={productImage}\n   *   sizes=\"(min-width: 45em) 50vw, 100vw\"\n   *   aspectRatio=\"4/5\"\n   * />\n   * ```\n   *\n   * Image: {@link https://shopify.dev/api/storefront/reference/common-objects/image}\n   */\n  data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;\n  /** A function that returns a URL string for an image.\n   *\n   * @remarks\n   * By default, this uses Shopify’s CDN {@link https://cdn.shopify.com/} but you can provide\n   * your own function to use a another provider, as long as they support URL based image transformations.\n   */\n  loader?: Loader;\n  /** An optional prop you can use to change the default srcSet generation behaviour */\n  srcSetOptions?: SrcSetOptions;\n  /** @deprecated Use `crop`, `width`, `height`, and `src` props, and/or `data` prop */\n  loaderOptions?: ShopifyLoaderOptions;\n  /** @deprecated Autocalculated, use only `width` prop, or srcSetOptions */\n  widths?: (HtmlImageProps['width'] | ImageType['width'])[];\n}",
+            "value": "{\n  /** The aspect ratio of the image, in the format of `width/height`.\n   *\n   * @example\n   * ```\n   * <Image data={productImage} aspectRatio=\"4/5\" />\n   * ```\n   */\n  aspectRatio?: string;\n  /** The crop position of the image.\n   *\n   * @remarks\n   * In the event that AspectRatio is set, without specifying a crop,\n   * the Shopify CDN won't return the expected image.\n   *\n   * @defaultValue `center`\n   */\n  crop?: Crop;\n  /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2023-10/objects/Image) object. Must be an Image object.\n   *\n   * @example\n   * ```\n   * import {IMAGE_FRAGMENT, Image} from '@shopify/hydrogen';\n   *\n   * export const IMAGE_QUERY = `#graphql\n   * ${IMAGE_FRAGMENT}\n   * query {\n   *   product {\n   *     featuredImage {\n   *       ...Image\n   *     }\n   *   }\n   * }`\n   *\n   * <Image\n   *   data={productImage}\n   *   sizes=\"(min-width: 45em) 50vw, 100vw\"\n   *   aspectRatio=\"4/5\"\n   * />\n   * ```\n   *\n   * Image: {@link https://shopify.dev/api/storefront/reference/common-objects/image}\n   */\n  data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;\n  /** A function that returns a URL string for an image.\n   *\n   * @remarks\n   * By default, this uses Shopify’s CDN {@link https://cdn.shopify.com/} but you can provide\n   * your own function to use a another provider, as long as they support URL based image transformations.\n   */\n  loader?: Loader;\n  /** An optional prop you can use to change the default srcSet generation behaviour */\n  srcSetOptions?: SrcSetOptions;\n}",
             "description": "",
             "members": [
               {
@@ -3844,24 +3785,6 @@
                 "value": "SrcSetOptions",
                 "description": "An optional prop you can use to change the default srcSet generation behaviour",
                 "isOptional": true
-              },
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "loaderOptions",
-                "value": "ShopifyLoaderOptions",
-                "description": "",
-                "isOptional": true,
-                "deprecationMessage": "Use `crop`, `width`, `height`, and `src` props, and/or `data` prop"
-              },
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "widths",
-                "value": "(string | number)[]",
-                "description": "",
-                "isOptional": true,
-                "deprecationMessage": "Autocalculated, use only `width` prop, or srcSetOptions"
               }
             ]
           },
@@ -3967,47 +3890,6 @@
                 "name": "placeholderWidth",
                 "value": "number",
                 "description": "The size used for placeholder fallback images"
-              }
-            ]
-          },
-          "ShopifyLoaderOptions": {
-            "filePath": "/Image.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopifyLoaderOptions",
-            "value": "{\n  /** The base URL of the image */\n  src?: ImageType['url'];\n  /** The URL param that controls width */\n  width?: HtmlImageProps['width'] | ImageType['width'];\n  /** The URL param that controls height */\n  height?: HtmlImageProps['height'] | ImageType['height'];\n  /** The URL param that controls the cropping region */\n  crop?: Crop;\n}",
-            "description": "Legacy type for backwards compatibility *",
-            "members": [
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "src",
-                "value": "string",
-                "description": "The base URL of the image",
-                "isOptional": true
-              },
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "width",
-                "value": "string | number",
-                "description": "The URL param that controls width",
-                "isOptional": true
-              },
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "height",
-                "value": "string | number",
-                "description": "The URL param that controls height",
-                "isOptional": true
-              },
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "crop",
-                "value": "Crop",
-                "description": "The URL param that controls the cropping region",
-                "isOptional": true
               }
             ]
           }
@@ -5806,7 +5688,7 @@
                 "syntaxKind": "MethodSignature",
                 "name": "pop",
                 "value": "() => unknown",
-                "description": "Removes the last element from an array and returns it.\r\nIf the array is empty, undefined is returned and the array is not modified."
+                "description": "Removes the last element from an array and returns it. If the array is empty, undefined is returned and the array is not modified."
               },
               {
                 "filePath": "/flatten-connection.ts",
@@ -5820,7 +5702,7 @@
                 "syntaxKind": "MethodSignature",
                 "name": "concat",
                 "value": "{ (...items: ConcatArray<unknown>[]): unknown[]; (...items: unknown[]): unknown[]; }",
-                "description": "Combines two or more arrays.\r\nThis method returns a new array without modifying any existing arrays."
+                "description": "Combines two or more arrays. This method returns a new array without modifying any existing arrays."
               },
               {
                 "filePath": "/flatten-connection.ts",
@@ -5834,28 +5716,28 @@
                 "syntaxKind": "MethodSignature",
                 "name": "reverse",
                 "value": "() => unknown[]",
-                "description": "Reverses the elements in an array in place.\r\nThis method mutates the array and returns a reference to the same array."
+                "description": "Reverses the elements in an array in place. This method mutates the array and returns a reference to the same array."
               },
               {
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "MethodSignature",
                 "name": "shift",
                 "value": "() => unknown",
-                "description": "Removes the first element from an array and returns it.\r\nIf the array is empty, undefined is returned and the array is not modified."
+                "description": "Removes the first element from an array and returns it. If the array is empty, undefined is returned and the array is not modified."
               },
               {
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "MethodSignature",
                 "name": "slice",
                 "value": "(start?: number, end?: number) => unknown[]",
-                "description": "Returns a copy of a section of an array.\r\nFor both start and end, a negative index can be used to indicate an offset from the end of the array.\r\nFor example, -2 refers to the second to last element of the array."
+                "description": "Returns a copy of a section of an array. For both start and end, a negative index can be used to indicate an offset from the end of the array. For example, -2 refers to the second to last element of the array."
               },
               {
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "MethodSignature",
                 "name": "sort",
                 "value": "(compareFn?: (a: unknown, b: unknown) => number) => FlattenConnectionReturnForDoc",
-                "description": "Sorts an array in place.\r\nThis method mutates the array and returns a reference to the same array."
+                "description": "Sorts an array in place. This method mutates the array and returns a reference to the same array."
               },
               {
                 "filePath": "/flatten-connection.ts",
@@ -5938,15 +5820,15 @@
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "MethodSignature",
                 "name": "find",
-                "value": "{ <S extends unknown>(predicate: (this: void, value: unknown, index: number, obj: unknown[]) => value is S, thisArg?: any): S; (predicate: (value: unknown, index: number, obj: unknown[]) => unknown, thisArg?: any): unknown; }",
-                "description": "Returns the value of the first element in the array where predicate is true, and undefined\r\notherwise."
+                "value": "{ <S extends unknown>(predicate: (value: unknown, index: number, obj: unknown[]) => value is S, thisArg?: any): S; (predicate: (value: unknown, index: number, obj: unknown[]) => unknown, thisArg?: any): unknown; }",
+                "description": "Returns the value of the first element in the array where predicate is true, and undefined otherwise."
               },
               {
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "MethodSignature",
                 "name": "findIndex",
                 "value": "(predicate: (value: unknown, index: number, obj: unknown[]) => unknown, thisArg?: any) => number",
-                "description": "Returns the index of the first element in the array where predicate is true, and -1\r\notherwise."
+                "description": "Returns the index of the first element in the array where predicate is true, and -1 otherwise."
               },
               {
                 "filePath": "/flatten-connection.ts",
@@ -5960,7 +5842,7 @@
                 "syntaxKind": "MethodSignature",
                 "name": "copyWithin",
                 "value": "(target: number, start: number, end?: number) => FlattenConnectionReturnForDoc",
-                "description": "Returns the this object after copying a section of the array identified by start and end\r\nto the same array starting at position target"
+                "description": "Returns the this object after copying a section of the array identified by start and end to the same array starting at position target"
               },
               {
                 "filePath": "/flatten-connection.ts",
@@ -5995,28 +5877,28 @@
                 "syntaxKind": "MethodSignature",
                 "name": "flatMap",
                 "value": "<U, This = undefined>(callback: (this: This, value: unknown, index: number, array: unknown[]) => U | readonly U[], thisArg?: This) => U[]",
-                "description": "Calls a defined callback function on each element of an array. Then, flattens the result into\r\na new array.\r\nThis is identical to a map followed by flat with depth 1."
+                "description": "Calls a defined callback function on each element of an array. Then, flattens the result into a new array. This is identical to a map followed by flat with depth 1."
               },
               {
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "MethodSignature",
                 "name": "flat",
                 "value": "<A, D extends number = 1>(this: A, depth?: D) => FlatArray<A, D>[]",
-                "description": "Returns a new array with all sub-array elements concatenated into it recursively up to the\r\nspecified depth."
+                "description": "Returns a new array with all sub-array elements concatenated into it recursively up to the specified depth."
               },
               {
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "MethodSignature",
-                "name": "__@iterator@441",
+                "name": "__@iterator@448",
                 "value": "() => IterableIterator<unknown>",
                 "description": "Iterator"
               },
               {
                 "filePath": "/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "__@unscopables@443",
-                "value": "() => { copyWithin: boolean; entries: boolean; fill: boolean; find: boolean; findIndex: boolean; keys: boolean; values: boolean; }",
-                "description": "Returns an object whose properties have the value 'true'\r\nwhen they will be absent when used in a 'with' statement."
+                "syntaxKind": "PropertySignature",
+                "name": "__@unscopables@450",
+                "value": "{ [x: number]: boolean; length?: boolean; toString?: boolean; toLocaleString?: boolean; pop?: boolean; push?: boolean; concat?: boolean; join?: boolean; reverse?: boolean; shift?: boolean; slice?: boolean; sort?: boolean; splice?: boolean; unshift?: boolean; indexOf?: boolean; lastIndexOf?: boolean; every?: boolean; some?: boolean; forEach?: boolean; map?: boolean; filter?: boolean; reduce?: boolean; reduceRight?: boolean; find?: boolean; findIndex?: boolean; fill?: boolean; copyWithin?: boolean; entries?: boolean; keys?: boolean; values?: boolean; includes?: boolean; flatMap?: boolean; flat?: boolean; [Symbol.iterator]?: boolean; readonly [Symbol.unscopables]?: boolean; at?: boolean; }",
+                "description": "Is an object whose properties have the value 'true' when they will be absent when used in a 'with' statement."
               },
               {
                 "filePath": "/flatten-connection.ts",
@@ -6321,8 +6203,41 @@
             "filePath": "/load-script.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "LoadScriptParams",
-            "value": "[src: string, options?: { module?: boolean; in?: \"body\" | \"head\"; }]",
+            "value": "[src: string, options?: LoadScriptOptions]",
             "description": ""
+          },
+          "LoadScriptOptions": {
+            "filePath": "/load-script.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "LoadScriptOptions",
+            "value": "{\n  module?: boolean;\n  in?: 'head' | 'body';\n  attributes?: Record<string, string>;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/load-script.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "module",
+                "value": "boolean",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/load-script.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "in",
+                "value": "\"body\" | \"head\"",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/load-script.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "attributes",
+                "value": "Record<string, string>",
+                "description": "",
+                "isOptional": true
+              }
+            ]
           }
         }
       }

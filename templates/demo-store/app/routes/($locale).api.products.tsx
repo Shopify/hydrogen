@@ -12,7 +12,7 @@ import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
  * @param reverse
  * @param sortKey
  * @returns Product[]
- * @see https://shopify.dev/api/storefront/2023-07/queries/products
+ * @see https://shopify.dev/api/storefront/current/queries/products
  */
 export async function loader({
   request,
