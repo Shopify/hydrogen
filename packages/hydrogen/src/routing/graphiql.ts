@@ -36,10 +36,18 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
               margin: 0;
               width: 100%;
               overflow: hidden;
+              background-color: hsl(219, 29%, 18%);
             }
 
             #graphiql {
               height: 100vh;
+            }
+
+            #graphiql > .placeholder {
+              color: slategray;
+              width: fit-content;
+              margin: 40px auto;
+              font-family: Arial;
             }
           </style>
 
@@ -61,13 +69,9 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
           />
         </head>
 
-        <body style="background-color: hsl(219, 29%, 18%)">
+        <body>
           <div id="graphiql">
-            <div
-              style="color: slategray; width: fit-content; margin: 40px auto; font-family: Arial;"
-            >
-              Loading GraphiQL...
-            </div>
+            <div class="placeholder">Loading GraphiQL...</div>
           </div>
 
           <script
