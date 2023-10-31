@@ -23,7 +23,6 @@ import {
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
 import {type MiniOxygen, startMiniOxygen} from '../../lib/mini-oxygen/index.js';
-import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
@@ -31,6 +30,7 @@ import {getConfig} from '../../lib/shopify-config.js';
 import {setupLiveReload} from '../../lib/live-reload.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
+import {displayDevUpgradeNotice} from './upgrade.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -62,6 +62,16 @@ export default class Dev extends Command {
     }),
     host: deprecated('--host')(),
     ['env-branch']: commonFlags.envBranch,
+    ['no-upgrade']: Flags.boolean({
+      description: 'Skip the upgrade version check',
+      required: false,
+      default: false,
+    }),
+    ['disable-version-check']: Flags.boolean({
+      description: 'Skip the version check when running `hydrogen dev`',
+      default: false,
+      required: false,
+    }),
   };
 
   async run(): Promise<void> {
@@ -87,6 +97,7 @@ async function runDev({
   envBranch,
   debug = false,
   sourcemap = true,
+  disableVersionCheck = false,
 }: {
   port?: number;
   path?: string;
@@ -97,6 +108,7 @@ async function runDev({
   envBranch?: string;
   debug?: boolean;
   sourcemap?: boolean;
+  disableVersionCheck: boolean;
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
@@ -106,8 +118,6 @@ async function runDev({
 
   const {root, publicPath, buildPathClient, buildPathWorkerFile} =
     getProjectPaths(appPath);
-
-  const checkingHydrogenVersion = checkHydrogenVersion(root);
 
   const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
   const reloadConfig = async () => {
@@ -199,8 +209,10 @@ async function runDev({
     }
 
     checkRemixVersions();
-    const showUpgrade = await checkingHydrogenVersion;
-    if (showUpgrade) showUpgrade();
+
+    if (!disableVersionCheck) {
+      displayDevUpgradeNotice({targetPath: appPath});
+    }
   }
 
   const fileWatchCache = createFileWatchCache();
