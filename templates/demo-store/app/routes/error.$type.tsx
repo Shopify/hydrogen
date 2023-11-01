@@ -18,6 +18,10 @@ export async function loader({params}: LoaderFunctionArgs) {
     case 'e':
       console.info(new Error('consol.info it broke not as bad'));
       break;
+    case 'f':
+      throw 'some string';
+    case 'g':
+      throw {some: 'object'};
   }
 
   return json({});
