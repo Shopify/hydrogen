@@ -57,3 +57,8 @@ export type CartQueryReturn<T> = (
   requiredParams: T,
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryData>;
+
+export type StorefrontApiErrors = unknown[];
+export type ApiErrors = {
+  apiErrors?: StorefrontApiErrors;
+};
