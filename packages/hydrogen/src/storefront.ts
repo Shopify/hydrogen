@@ -368,7 +368,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
     const {data, errors} = body as GraphQLApiResponse<T>;
 
-    if (errors?.length) {
+    if (!data && errors?.length) {
       throwGraphQLError({
         ...errorOptions,
         errors,
@@ -376,7 +376,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       });
     }
 
-    return data as T;
+    return errors?.length ? ({...data, errors} as T) : (data as T);
   }
 
   return {
