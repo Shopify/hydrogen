@@ -3,7 +3,6 @@ import path from 'path';
 import {Flags} from '@oclif/core';
 import {isClean} from '@shopify/cli-kit/node/git';
 import Command from '@shopify/cli-kit/node/base-command';
-import {consoleLog} from '@shopify/cli-kit/node/output';
 import {
   renderConfirmationPrompt,
   renderError,
@@ -500,9 +499,13 @@ async function promptUpgradeOptions(
 
     const majorVersion = `${semver.major(version)}.${semver.minor(version)}`;
 
+    const isFirstMajorVersion = semver.patch(version) === 0;
+
     return {
-      group: majorVersion,
-      label: `${version} ${isLatest ? '(latest)' : ''} - ${title}`,
+      // group: majorVersion,
+      label: `${version} ${
+        isLatest ? '(latest)' : isFirstMajorVersion ? '(major)' : ''
+      } - ${title}`,
       value: version,
     };
   }) as Array<Choice<string>>;
@@ -1060,7 +1063,7 @@ const SNAPSHOT: ChangeLog = {
       ],
     },
     {
-      title: '',
+      title: 'Fix build dist package',
       version: '2023.7.13',
       date: '',
       hash: '8bc00c931c7c7a3a32b0f2b9d322c0c373f75240',
@@ -1737,7 +1740,7 @@ const SNAPSHOT: ChangeLog = {
     },
     {
       title:
-        'New CLI flow, Login/Logout commands, Auto-reload env vars, Link existing stores',
+        'New CLI flow, Login/Logout commands, Auto-reload env vars and more',
       version: '2023.7.0',
       date: '',
       hash: 'ce199d5c47e4a27c779bd711ee619739019d74e7',
