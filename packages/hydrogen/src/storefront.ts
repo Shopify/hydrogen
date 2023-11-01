@@ -376,9 +376,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       });
     }
 
-    return (errors?.length ? {...data, errors} : data) as T & {
-      errors?: unknown[];
-    };
+    return {...data, errors} as T & {errors?: unknown[]};
   }
 
   return {
