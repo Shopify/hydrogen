@@ -62,11 +62,20 @@ export async function login(root?: string, shop?: string | true) {
     forcePrompt ||
     shop !== existingConfig.shop
   ) {
+    // There's some bug in cli-kit that causes the process to exit when
+    // waiting for `keypress` in some situations. It seems that Node gets
+    // in a state where the event loop is empty while awaiting, and then exits.
+    // Adding a dummy timeout here to keep the event loop busy fixes it.
+    // Ref: https://github.com/Shopify/cli/issues/3055
+    const dummyTimeout = setTimeout(() => {}, 600000);
+
     const token = await ensureAuthenticatedBusinessPlatform().catch(() => {
       throw new AbortError(
         'Unable to authenticate with Shopify. Please report this issue.',
       );
     });
+
+    clearTimeout(dummyTimeout);
 
     const userAccount = await getUserAccount(token);
     await hideLoginInfo();
