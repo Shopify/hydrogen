@@ -39,13 +39,11 @@
   "files": [
     "dist"
   ],
-  "dependencies": {
-    "@remix-run/server-runtime": "^2.1.0"
-  },
   "devDependencies": {
     "@shopify/oxygen-workers-types": "^3.17.3"
   },
   "peerDependencies": {
+    "@remix-run/server-runtime": "^2.1.0",
     "@shopify/oxygen-workers-types": "^3.17.3"
   }
 }
