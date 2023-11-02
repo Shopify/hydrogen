@@ -70,5 +70,13 @@
     "schema-dts": "^1.1.0",
     "vitest": "^0.33.0",
     "@shopify/generate-docs": "0.11.1"
+  },
+  "peerDependenciesMeta": {
+    "@remix-run/server-runtime": {
+      "optional": true
+    },
+    "@remix-run/react": {
+      "optional": true
+    }
   }
 }
