@@ -6,7 +6,7 @@ import {
   NoOpLog,
   type MiniflareOptions,
 } from 'miniflare';
-import {resolvePath} from '@shopify/cli-kit/node/path';
+import {dirname, resolvePath} from '@shopify/cli-kit/node/path';
 import {
   glob,
   readFile,
@@ -27,7 +27,7 @@ import {
   setConstructors,
 } from '../request-events.js';
 
-const DEFAULT_INSPECTOR_PORT = 8787;
+const DEFAULT_INSPECTOR_PORT = 9229;
 
 export async function startWorkerdServer({
   root,
@@ -49,6 +49,8 @@ export async function startWorkerdServer({
   );
 
   setConstructors({Response});
+
+  const absoluteBundlePath = resolvePath(root, buildPathWorkerFile);
 
   const buildMiniOxygenOptions = async () =>
     ({
@@ -77,11 +79,12 @@ export async function startWorkerdServer({
         },
         {
           name: 'hydrogen',
+          modulesRoot: dirname(absoluteBundlePath),
           modules: [
             {
               type: 'ESModule',
-              path: resolvePath(root, buildPathWorkerFile),
-              contents: await readFile(resolvePath(root, buildPathWorkerFile)),
+              path: absoluteBundlePath,
+              contents: await readFile(absoluteBundlePath),
             },
           ],
           compatibilityFlags: ['streams_enable_constructors'],
