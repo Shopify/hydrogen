@@ -119,6 +119,8 @@ export default class Upgrade extends Command {
   }
 }
 
+let CACHED_CHANGELOG: ChangeLog | null = null;
+
 export async function upgrade({
   appPath,
   dryRun,
@@ -130,7 +132,9 @@ export async function upgrade({
 }) {
   await checkDirtyGitBranch(appPath);
 
-  const currentVersion = await getHydrogenVersion({appPath});
+  const {currentVersion, currentDependencies} = await getHydrogenVersion({
+    appPath,
+  });
 
   // TODO: swap when we merge to production
   // const snapshots = await fetchChangelog();
@@ -142,16 +146,17 @@ export async function upgrade({
   });
 
   if (!upgradesAvailable?.length) {
-    renderInfo({
+    renderSuccess({
       headline: 'No Hydrogen upgrades available',
-      body: `You are already on the latest version ${getAbsoluteVersion(
+      body: `You are already using the latest version: ${getAbsoluteVersion(
         currentVersion,
-      )}.`,
+      )}`,
     });
 
     return;
   }
 
+  // Prompt the user to select a version from the list of available upgrades
   const selectedRelease = await getSelectedRelease({
     currentVersion,
     targetVersion,
@@ -162,12 +167,14 @@ export async function upgrade({
     throw new Error('No Hydrogen version selected');
   }
 
+  // Get an aggregate list of features and fixes included in the upgrade versions range
   const cumulativeRelease = getCummulativeRelease({
     releases: changelog.releases,
     currentVersion,
     selectedRelease,
   });
 
+  // Prompt the user to confirm the upgrade and display a list of features and fixes
   await displayConfirmation({
     appPath,
     cumulativeRelease,
@@ -176,17 +183,30 @@ export async function upgrade({
     targetVersion,
   });
 
-  // skip the dependency upgrade step if we're doing a dry run
+  // skip the dependency upgrade step and validation if we're doing a dry run
   if (!dryRun) {
-    await upgradeNodeModules({appPath, selectedRelease});
+    await upgradeNodeModules({appPath, selectedRelease, currentDependencies});
+    await validateUpgrade({
+      appPath,
+      selectedRelease,
+    });
   }
 
-  await displaySummary({
+  // Generate a markdown file with upgrade instructions
+  const instrunctionsFilePath = await generateUpgradeInstructionsFile({
     appPath,
-    dryRun,
-    currentVersion,
-    selectedRelease,
     cumulativeRelease,
+    currentVersion,
+    dryRun,
+    selectedRelease,
+  });
+
+  // Display a summary of the upgrade and next steps
+  await displaySummary({
+    currentVersion,
+    dryRun,
+    instrunctionsFilePath,
+    selectedRelease,
   });
 }
 
@@ -220,33 +240,36 @@ async function getHydrogenVersion({appPath}: {appPath: string}) {
     throw new Error('No package.json found');
   }
 
-  const dependencies = await getDependencies(packageJsonPath);
-  const currentVersion = dependencies['@shopify/hydrogen'];
+  const currentDependencies = await getDependencies(packageJsonPath);
+  const currentVersion = currentDependencies?.['@shopify/hydrogen'];
 
   if (!currentVersion) {
     throw new Error('Hydrogen version not found');
   }
 
-  return currentVersion;
+  return {currentVersion, currentDependencies};
 }
 
 /**
  * (Temp) Mock-fetches the changelog-versions.json while we merge
  */
 export async function fetchTempChangelog(): Promise<ChangeLog> {
-  return Promise.resolve(SNAPSHOT);
+  return Promise.resolve(TEMP_CHANGELOG);
 }
 
 /**
  * Fetches the changelog.json file from the Hydrogen repo
  */
-// TODO: consider moving changelog.json to hydrogen.shopify.dev
 export async function fetchChangelog(): Promise<ChangeLog | undefined> {
+  if (CACHED_CHANGELOG) {
+    return CACHED_CHANGELOG;
+  }
   try {
     const response = await fetch(
       // TODO: https://hydrogen.shopify.dev/changelong.json
       // NOTE: https://github.com/Shopify/hydrogen-shopify-dev/pull/154
-      'https://raw.githubusercontent.com/Shopify/hydrogen/main/changelog.json',
+      // NOTE: https://raw.githubusercontent.com/Shopify/hydrogen/main/changelog.json'
+      'https://hydrogen.shopify.dev/changelog.json',
     );
 
     if (!response.ok) {
@@ -256,7 +279,8 @@ export async function fetchChangelog(): Promise<ChangeLog | undefined> {
     const json = (await response.json()) as object;
 
     if ('releases' in json && 'url' in json) {
-      return json as ChangeLog;
+      CACHED_CHANGELOG = json as ChangeLog;
+      return CACHED_CHANGELOG;
     }
   } catch (error) {
     renderFatalError({
@@ -430,25 +454,63 @@ async function displayConfirmation({
   }
 }
 
+function isRemixDependency([name]: [string, string]) {
+  if (name.includes('@remix-run')) {
+    return true;
+  }
+  return false;
+}
+
 /**
  * Installs the new Hydrogen dependencies
  */
-// TODO: add support for conditional dependencies such as remix-run/css-bundle, hydrogen-codegen
 export async function upgradeNodeModules({
   appPath,
   selectedRelease,
+  currentDependencies,
 }: {
   appPath: string;
   selectedRelease: Release;
+  currentDependencies: Dependencies;
 }) {
   const args: string[] = [];
-  const dependencies = selectedRelease.dependencies || {};
-  const devDependencies = selectedRelease.devDependencies || {};
-  for (const [name, version] of Object.entries(dependencies)) {
+
+  // upgrade dependencies
+  for (const [name, version] of Object.entries(selectedRelease.dependencies)) {
+    const isRemixPackage = isRemixDependency([name, version]);
+    const dependencyExists = currentDependencies[name];
+    if (isRemixPackage || !dependencyExists) continue;
     args.push(`${name}@${getAbsoluteVersion(version)}`);
   }
-  for (const [name, version] of Object.entries(devDependencies)) {
+
+  // upgrade devDependencies
+  for (const [name, version] of Object.entries(
+    selectedRelease.devDependencies,
+  )) {
+    const isRemixPackage = isRemixDependency([name, version]);
+    const dependencyExists = currentDependencies[name];
+    if (isRemixPackage || !dependencyExists) continue;
     args.push(`${name}@${getAbsoluteVersion(version)}`);
+  }
+
+  // Maybe upgrade Remix dependencies
+  const currentRemix =
+    Object.entries(currentDependencies).find(isRemixDependency);
+  const selectedRemix = Object.entries(selectedRelease.dependencies).find(
+    isRemixDependency,
+  );
+
+  if (currentRemix && selectedRemix) {
+    const shouldUpgradeRemix = semver.lt(
+      getAbsoluteVersion(currentRemix[1]),
+      getAbsoluteVersion(selectedRemix[1]),
+    );
+
+    if (shouldUpgradeRemix) {
+      args.push(
+        ...appendRemixDependencies({currentDependencies, selectedRemix}),
+      );
+    }
   }
 
   await renderTasks(
@@ -466,6 +528,27 @@ export async function upgradeNodeModules({
     ],
     {},
   );
+}
+
+/**
+ * Appends the current @remix-run dependencies to the upgrade command
+ */
+function appendRemixDependencies({
+  currentDependencies,
+  selectedRemix,
+}: {
+  currentDependencies: Dependencies;
+  selectedRemix: [string, string];
+}) {
+  const command: string[] = [];
+  for (const [name, version] of Object.entries(currentDependencies)) {
+    const isRemixPackage = isRemixDependency([name, version]);
+    if (!isRemixPackage) {
+      continue;
+    }
+    command.push(`${name}@${getAbsoluteVersion(selectedRemix[1])}`);
+  }
+  return command;
 }
 
 /**
@@ -537,29 +620,16 @@ async function promptUpgradeOptions(
  * Displays a summary of the upgrade and next steps
  */
 async function displaySummary({
-  appPath,
-  cumulativeRelease,
   currentVersion,
   dryRun,
   selectedRelease,
+  instrunctionsFilePath,
 }: {
-  appPath: string;
-  cumulativeRelease: CummulativeRelease;
   currentVersion: string;
   dryRun: boolean;
   selectedRelease: Release;
+  instrunctionsFilePath?: string;
 }) {
-  const dependencies = await getDependencies(
-    path.join(appPath, 'package.json'),
-  );
-
-  if (!dryRun) {
-    checkUpgradeStatus({
-      dependencies,
-      selectedRelease,
-    });
-  }
-
   const updatedDependenciesList = [
     ...Object.entries(selectedRelease.dependencies || {}).map(
       ([name, version]) => `${name}@${version}`,
@@ -570,14 +640,6 @@ async function displaySummary({
   ];
 
   let nextSteps = [];
-
-  const instrunctionsFilePath = await generateUpgradeInstructionsFile({
-    appPath,
-    cumulativeRelease,
-    currentVersion,
-    dryRun,
-    selectedRelease,
-  });
 
   if (typeof instrunctionsFilePath === 'string') {
     let instructions = `Upgrade instructions created at:\n${instrunctionsFilePath}`;
@@ -624,15 +686,20 @@ async function displaySummary({
 }
 
 /**
- * Checks if the upgrade was successful by comparing the pinned version in the
+ * Validate if a h2 upgrade was successful by comparing the previous and current
+ * @shopify/hydrogen versions
  */
-function checkUpgradeStatus({
-  dependencies,
+async function validateUpgrade({
+  appPath,
   selectedRelease,
 }: {
-  dependencies: Record<string, string>;
+  appPath: string;
   selectedRelease: Release;
 }) {
+  const dependencies = await getDependencies(
+    path.join(appPath, 'package.json'),
+  );
+
   const updatedVersion = dependencies['@shopify/hydrogen'];
 
   if (!updatedVersion) {
@@ -783,7 +850,7 @@ export async function displayDevUpgradeNotice({
   targetPath?: string;
 }) {
   const appPath = targetPath ? path.resolve(targetPath) : process.cwd();
-  const currentVersion = await getHydrogenVersion({appPath});
+  const {currentVersion} = await getHydrogenVersion({appPath});
 
   const changelog = await fetchTempChangelog();
   if (!changelog?.releases) return;
@@ -879,7 +946,7 @@ export async function displayDevUpgradeNotice({
  * Temporary snapshot of the changelog.json file
  * Once we merge to production, we can remove this and use the fetchChangelog function
  */
-const SNAPSHOT: ChangeLog = {
+const TEMP_CHANGELOG: ChangeLog = {
   url: 'https://github.com/Shopify/hydrogen/pulls?q=is%3Apr+is%3Aclosed+%5Bci%5D+release+in%3Atitle+is%3Amerged',
   version: '1',
   releases: [
@@ -900,6 +967,7 @@ const SNAPSHOT: ChangeLog = {
       },
       devDependencies: {
         '@remix-run/dev': '2.1.0',
+        typescript: '^5.2.2',
       },
       fixes: [
         {
@@ -1164,6 +1232,8 @@ const SNAPSHOT: ChangeLog = {
           title:
             'Unlock hydrogen-react package.json exports to make it easier to use with NextJS and other frameworks.',
           info: 'Note: Using Hydrogen internals is not officially supported, and those internal APIs could change at anytime outside our usual calendar versioning.',
+          pr: 'https://github.com/Shopify/hydrogen/pull/994',
+          id: '994',
         },
       ],
       fixes: [
