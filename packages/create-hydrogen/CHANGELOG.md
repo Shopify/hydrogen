@@ -1,5 +1,14 @@
 # @shopify/create-hydrogen
 
+## 4.3.3
+
+### Patch Changes
+
+- Fix Shopify login during the init flow where the process would just exit when awaiting for a keypress. ([#1481](https://github.com/Shopify/hydrogen/pull/1481)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`f8626c8a`](https://github.com/Shopify/hydrogen/commit/f8626c8a6dd797a120b3d7278f821216badba7fe)]:
+  - @shopify/cli-hydrogen@6.0.1
+
 ## 4.3.2
 
 ### Patch Changes

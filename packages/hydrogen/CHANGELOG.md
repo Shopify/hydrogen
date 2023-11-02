@@ -1,5 +1,11 @@
 # @shopify/hydrogen
 
+## 2023.10.1
+
+### Patch Changes
+
+- SEO component: remove URL params from canonical tags ([#1478](https://github.com/Shopify/hydrogen/pull/1478)) by [@scottdixon](https://github.com/scottdixon)
+
 ## 2023.10.0
 
 ### Major and Breaking Changes
