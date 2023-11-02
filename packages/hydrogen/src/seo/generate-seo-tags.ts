@@ -410,14 +410,16 @@ export function generateSeoTags<
           break;
         }
 
+        const urlWithoutParams = content.split('?')[0];
+
         tagResults.push(
           generateTag('link', {
             rel: 'canonical',
-            href: content,
+            href: urlWithoutParams,
           }),
           generateTag('meta', {
             property: 'og:url',
-            content,
+            content: urlWithoutParams,
           }),
         );
 
