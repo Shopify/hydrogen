@@ -16,7 +16,8 @@
         "@shopify/remix-oxygen": "^2.0.0"
       },
       "devDependencies": {
-        "@remix-run/dev": "2.1.0"
+        "@remix-run/dev": "2.1.0",
+        "typescript": "^5.2.2"
       },
       "fixes": [
         {
@@ -170,7 +171,7 @@
       ]
     },
     {
-      "title": "",
+      "title": "Fix build dist package",
       "version": "2023.7.13",
       "date": "",
       "hash": "8bc00c931c7c7a3a32b0f2b9d322c0c373f75240",
@@ -263,7 +264,9 @@
         },
         {
           "title": "Unlock hydrogen-react package.json exports to make it easier to use with NextJS and other frameworks.",
-          "info": "Note: Using Hydrogen internals is not officially supported, and those internal APIs could change at anytime outside our usual calendar versioning."
+          "info": "Note: Using Hydrogen internals is not officially supported, and those internal APIs could change at anytime outside our usual calendar versioning.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/994",
+          "id": "994"
         }
       ],
       "fixes": [
@@ -813,7 +816,7 @@
       ]
     },
     {
-      "title": "New CLI flow, Login/Logout commands, Auto-reload env vars, Link existing stores",
+      "title": "New CLI flow, Login/Logout commands, Auto-reload env vars and more",
       "version": "2023.7.0",
       "date": "",
       "hash": "ce199d5c47e4a27c779bd711ee619739019d74e7",
