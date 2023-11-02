@@ -1,5 +1,11 @@
 # @shopify/remix-oxygen
 
+## 2.0.1
+
+### Patch Changes
+
+- Change @remix-run/server-runtime to properly be a peer dependency ([#1484](https://github.com/Shopify/hydrogen/pull/1484)) by [@blittle](https://github.com/blittle)
+
 ## 2.0.0
 
 ### Major Changes
