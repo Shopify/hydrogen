@@ -2019,7 +2019,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "aria-current",
-                "value": "boolean | \"time\" | \"step\" | \"page\" | \"date\" | \"true\" | \"false\" | \"location\"",
+                "value": "boolean | \"time\" | \"step\" | \"date\" | \"true\" | \"false\" | \"page\" | \"location\"",
                 "description": "Indicates the element that represents the current item within a container or set of related elements.",
                 "isOptional": true
               },
@@ -5705,7 +5705,7 @@
                 "syntaxKind": "MethodSignature",
                 "name": "pop",
                 "value": "() => unknown",
-                "description": "Removes the last element from an array and returns it. If the array is empty, undefined is returned and the array is not modified."
+                "description": "Removes the last element from an array and returns it.\r\nIf the array is empty, undefined is returned and the array is not modified."
               },
               {
                 "filePath": "/flatten-connection.ts",
@@ -5719,7 +5719,7 @@
                 "syntaxKind": "MethodSignature",
                 "name": "concat",
                 "value": "{ (...items: ConcatArray<unknown>[]): unknown[]; (...items: unknown[]): unknown[]; }",
-                "description": "Combines two or more arrays. This method returns a new array without modifying any existing arrays."
+                "description": "Combines two or more arrays.\r\nThis method returns a new array without modifying any existing arrays."
               },
               {
                 "filePath": "/flatten-connection.ts",
@@ -5733,28 +5733,28 @@
                 "syntaxKind": "MethodSignature",
                 "name": "reverse",
                 "value": "() => unknown[]",
-                "description": "Reverses the elements in an array in place. This method mutates the array and returns a reference to the same array."
+                "description": "Reverses the elements in an array in place.\r\nThis method mutates the array and returns a reference to the same array."
               },
               {
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "MethodSignature",
                 "name": "shift",
                 "value": "() => unknown",
-                "description": "Removes the first element from an array and returns it. If the array is empty, undefined is returned and the array is not modified."
+                "description": "Removes the first element from an array and returns it.\r\nIf the array is empty, undefined is returned and the array is not modified."
               },
               {
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "MethodSignature",
                 "name": "slice",
                 "value": "(start?: number, end?: number) => unknown[]",
-                "description": "Returns a copy of a section of an array. For both start and end, a negative index can be used to indicate an offset from the end of the array. For example, -2 refers to the second to last element of the array."
+                "description": "Returns a copy of a section of an array.\r\nFor both start and end, a negative index can be used to indicate an offset from the end of the array.\r\nFor example, -2 refers to the second to last element of the array."
               },
               {
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "MethodSignature",
                 "name": "sort",
                 "value": "(compareFn?: (a: unknown, b: unknown) => number) => FlattenConnectionReturnForDoc",
-                "description": "Sorts an array in place. This method mutates the array and returns a reference to the same array."
+                "description": "Sorts an array in place.\r\nThis method mutates the array and returns a reference to the same array."
               },
               {
                 "filePath": "/flatten-connection.ts",
@@ -5837,15 +5837,15 @@
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "MethodSignature",
                 "name": "find",
-                "value": "{ <S extends unknown>(predicate: (value: unknown, index: number, obj: unknown[]) => value is S, thisArg?: any): S; (predicate: (value: unknown, index: number, obj: unknown[]) => unknown, thisArg?: any): unknown; }",
-                "description": "Returns the value of the first element in the array where predicate is true, and undefined otherwise."
+                "value": "{ <S extends unknown>(predicate: (this: void, value: unknown, index: number, obj: unknown[]) => value is S, thisArg?: any): S; (predicate: (value: unknown, index: number, obj: unknown[]) => unknown, thisArg?: any): unknown; }",
+                "description": "Returns the value of the first element in the array where predicate is true, and undefined\r\notherwise."
               },
               {
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "MethodSignature",
                 "name": "findIndex",
                 "value": "(predicate: (value: unknown, index: number, obj: unknown[]) => unknown, thisArg?: any) => number",
-                "description": "Returns the index of the first element in the array where predicate is true, and -1 otherwise."
+                "description": "Returns the index of the first element in the array where predicate is true, and -1\r\notherwise."
               },
               {
                 "filePath": "/flatten-connection.ts",
@@ -5859,7 +5859,7 @@
                 "syntaxKind": "MethodSignature",
                 "name": "copyWithin",
                 "value": "(target: number, start: number, end?: number) => FlattenConnectionReturnForDoc",
-                "description": "Returns the this object after copying a section of the array identified by start and end to the same array starting at position target"
+                "description": "Returns the this object after copying a section of the array identified by start and end\r\nto the same array starting at position target"
               },
               {
                 "filePath": "/flatten-connection.ts",
@@ -5894,28 +5894,28 @@
                 "syntaxKind": "MethodSignature",
                 "name": "flatMap",
                 "value": "<U, This = undefined>(callback: (this: This, value: unknown, index: number, array: unknown[]) => U | readonly U[], thisArg?: This) => U[]",
-                "description": "Calls a defined callback function on each element of an array. Then, flattens the result into a new array. This is identical to a map followed by flat with depth 1."
+                "description": "Calls a defined callback function on each element of an array. Then, flattens the result into\r\na new array.\r\nThis is identical to a map followed by flat with depth 1."
               },
               {
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "MethodSignature",
                 "name": "flat",
                 "value": "<A, D extends number = 1>(this: A, depth?: D) => FlatArray<A, D>[]",
-                "description": "Returns a new array with all sub-array elements concatenated into it recursively up to the specified depth."
+                "description": "Returns a new array with all sub-array elements concatenated into it recursively up to the\r\nspecified depth."
               },
               {
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "MethodSignature",
-                "name": "__@iterator@448",
+                "name": "__@iterator@441",
                 "value": "() => IterableIterator<unknown>",
                 "description": "Iterator"
               },
               {
                 "filePath": "/flatten-connection.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "__@unscopables@450",
-                "value": "{ [x: number]: boolean; length?: boolean; toString?: boolean; toLocaleString?: boolean; pop?: boolean; push?: boolean; concat?: boolean; join?: boolean; reverse?: boolean; shift?: boolean; slice?: boolean; sort?: boolean; splice?: boolean; unshift?: boolean; indexOf?: boolean; lastIndexOf?: boolean; every?: boolean; some?: boolean; forEach?: boolean; map?: boolean; filter?: boolean; reduce?: boolean; reduceRight?: boolean; find?: boolean; findIndex?: boolean; fill?: boolean; copyWithin?: boolean; entries?: boolean; keys?: boolean; values?: boolean; includes?: boolean; flatMap?: boolean; flat?: boolean; [Symbol.iterator]?: boolean; readonly [Symbol.unscopables]?: boolean; at?: boolean; }",
-                "description": "Is an object whose properties have the value 'true' when they will be absent when used in a 'with' statement."
+                "syntaxKind": "MethodSignature",
+                "name": "__@unscopables@443",
+                "value": "() => { copyWithin: boolean; entries: boolean; fill: boolean; find: boolean; findIndex: boolean; keys: boolean; values: boolean; }",
+                "description": "Returns an object whose properties have the value 'true'\r\nwhen they will be absent when used in a 'with' statement."
               },
               {
                 "filePath": "/flatten-connection.ts",
