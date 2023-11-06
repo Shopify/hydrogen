@@ -67,4 +67,5 @@ jobs:
           token: ${{ github.token }}
           environment: 'preview'
           preview_url: ${{ steps.deploy.outputs.url }}
+          environment_url: ${{ steps.deploy.outputs.url }}
           description: ${{ github.event.head_commit.message }}
