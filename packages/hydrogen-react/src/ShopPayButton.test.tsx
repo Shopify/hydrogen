@@ -7,6 +7,7 @@ import {
   DoublePropsErrorMessage,
   MissingPropsErrorMessage,
   InvalidPropsErrorMessage,
+  InvalidChannelErrorMessage,
   MissingStoreDomainErrorMessage,
 } from './ShopPayButton.js';
 import {getShopifyConfig} from './ShopifyProvider.test.js';
@@ -164,5 +165,47 @@ describe(`<ShopPayButton />`, () => {
       'store-url',
       'https://notashop.myshopify.com',
     );
+  });
+
+  it(`throws an error if you pass an invalid channel value`, () => {
+    expect(() =>
+      render(
+        <ShopPayButton
+          // @ts-expect-error Purposely passing in invalid channel
+          channel="test"
+          variantIdsAndQuantities={[]}
+        />,
+        {
+          wrapper: ({children}) => (
+            <ShopifyProvider {...getShopifyConfig()}>
+              {children}
+            </ShopifyProvider>
+          ),
+        },
+      ),
+    ).toThrow(InvalidChannelErrorMessage);
+  });
+
+  it(`creates the correct attribute when using 'channel'`, () => {
+    const channel = 'hydrogen';
+    const {container} = render(
+      <ShopPayButton
+        channel={channel}
+        variantIds={['gid://shopify/ProductVariant/123']}
+      />,
+      {
+        wrapper: ({children}) => (
+          <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
+        ),
+      },
+    );
+
+    const button = container.querySelector('shop-pay-button');
+
+    expect(button).toHaveAttribute(
+      'store-url',
+      'https://notashop.myshopify.io',
+    );
+    expect(button).toHaveAttribute('channel', channel);
   });
 });

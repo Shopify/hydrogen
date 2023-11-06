@@ -63,6 +63,8 @@ export {
   OptimisticInput,
 } from './optimistic-ui/optimistic-ui';
 
+export {ShopPayButton} from './shop/ShopPayButton';
+
 export {
   AnalyticsEventName,
   AnalyticsPageType,
@@ -79,7 +81,6 @@ export {
   parseMetafield,
   sendShopifyAnalytics,
   ShopifySalesChannel,
-  ShopPayButton,
   storefrontApiCustomScalars,
   useLoadScript,
   useMoney,

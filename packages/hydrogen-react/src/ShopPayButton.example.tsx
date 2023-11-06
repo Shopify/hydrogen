@@ -26,3 +26,21 @@ export function AddVariantQuantityMultiple({
     />
   );
 }
+
+export function ChannelAttribution({
+  channel,
+  variantId,
+  storeDomain,
+}: {
+  channel: 'headless' | 'hydrogen';
+  variantId: string;
+  storeDomain: string;
+}) {
+  return (
+    <ShopPayButton
+      channel={channel}
+      variantIds={[variantId]}
+      storeDomain={storeDomain}
+    />
+  );
+}

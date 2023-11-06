@@ -12,3 +12,13 @@ export function AddVariantQuantityMultiple({variantId, quantity, storeDomain}) {
     />
   );
 }
+
+export function ChannelAttribution({channel, variantId, storeDomain}) {
+  return (
+    <ShopPayButton
+      channel={channel}
+      variantIds={[variantId]}
+      storeDomain={storeDomain}
+    />
+  );
+}
