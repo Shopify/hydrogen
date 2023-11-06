@@ -64,19 +64,11 @@
     "react": "^18.2.0"
   },
   "devDependencies": {
+    "@shopify/generate-docs": "0.11.1",
     "@testing-library/react": "^14.0.0",
     "happy-dom": "^8.9.0",
     "react": "^18.2.0",
     "schema-dts": "^1.1.0",
-    "vitest": "^0.33.0",
-    "@shopify/generate-docs": "0.11.1"
-  },
-  "peerDependenciesMeta": {
-    "@remix-run/server-runtime": {
-      "optional": true
-    },
-    "@remix-run/react": {
-      "optional": true
-    }
+    "vitest": "^0.33.0"
   }
 }
