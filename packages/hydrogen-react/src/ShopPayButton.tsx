@@ -5,6 +5,7 @@ import {parseGid} from './analytics-utils.js';
 // By using 'never' in the "or" cases below, it makes these props "exclusive" and means that you cannot pass both of them; you must pass either one OR the other.
 type ShopPayButtonProps = ShopPayButtonStyleProps &
   ShopPayDomainProps &
+  ShopPayChannelAttribution &
   (ShopPayVariantIds | ShopPayVariantAndQuantities);
 
 type ShopPayButtonStyleProps = {
@@ -36,11 +37,17 @@ type ShopPayVariantAndQuantities = {
   }>;
 };
 
+type ShopPayChannelAttribution = {
+  /** A string that adds channel attribution to the order. Can be either `headless` or `hydrogen` */
+  channel?: 'headless' | 'hydrogen';
+};
+
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
     interface IntrinsicElements {
       'shop-pay-button': {
+        channel?: string;
         variants: string;
         'store-url': string;
       };
@@ -51,12 +58,19 @@ declare global {
 const SHOPJS_URL =
   'https://cdn.shopify.com/shopifycloud/shop-js/v1.0/client.js';
 
+function isChannel(
+  channel: string,
+): channel is Exclude<ShopPayChannelAttribution['channel'], undefined> {
+  return channel === 'headless' || channel === 'hydrogen';
+}
+
 /**
  * The `ShopPayButton` component renders a button that redirects to the Shop Pay checkout.
  * It renders a [`<shop-pay-button>`](https://shopify.dev/custom-storefronts/tools/web-components) custom element, for which it will lazy-load the source code automatically.
  * It relies on the `<ShopProvider>` context provider.
  */
 export function ShopPayButton({
+  channel,
   variantIds,
   className,
   variantIdsAndQuantities,
@@ -68,6 +82,7 @@ export function ShopPayButton({
   const shopPayLoadedStatus = useLoadScript(SHOPJS_URL);
 
   let ids: string[] = [];
+  let channelAttribution: string | undefined;
 
   if (!storeDomain || storeDomain === defaultShopifyContext.storeDomain) {
     throw new Error(MissingStoreDomainErrorMessage);
@@ -79,6 +94,14 @@ export function ShopPayButton({
 
   if (!variantIds && !variantIdsAndQuantities) {
     throw new Error(MissingPropsErrorMessage);
+  }
+
+  if (channel) {
+    if (isChannel(channel)) {
+      channelAttribution = channel;
+    } else {
+      throw new Error(InvalidChannelErrorMessage);
+    }
   }
 
   if (variantIds) {
@@ -114,7 +137,11 @@ export function ShopPayButton({
   return (
     <div className={className} style={style}>
       {shopPayLoadedStatus === 'done' && (
-        <shop-pay-button store-url={storeDomain} variants={ids.join(',')} />
+        <shop-pay-button
+          {...(channelAttribution ? {channel: channelAttribution} : {})}
+          store-url={storeDomain}
+          variants={ids.join(',')}
+        />
       )}
     </div>
   );
@@ -125,3 +152,4 @@ export const MissingStoreDomainErrorMessage =
 export const InvalidPropsErrorMessage = `You must pass in "variantIds" in the form of ["gid://shopify/ProductVariant/1"]`;
 export const MissingPropsErrorMessage = `You must pass in either "variantIds" or "variantIdsAndQuantities" to ShopPayButton`;
 export const DoublePropsErrorMessage = `You must provide either a variantIds or variantIdsAndQuantities prop, but not both in the ShopPayButton component`;
+export const InvalidChannelErrorMessage = `Invalid channel attribution value. Must be either "headless" or "hydrogen"`;

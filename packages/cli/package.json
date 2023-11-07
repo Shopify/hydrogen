@@ -4,7 +4,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "6.0.0",
+  "version": "6.0.2",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -58,22 +58,10 @@
     "@parcel/watcher": "^2.3.0"
   },
   "peerDependencies": {
-    "@remix-run/dev": "^2.1.0",
-    "@remix-run/react": "^2.1.0",
-    "@shopify/hydrogen": "2023.10.0",
-    "@shopify/remix-oxygen": "^2.0.0"
+    "@remix-run/dev": "^2.1.0"
   },
   "peerDependenciesMeta": {
     "@remix-run/dev": {
-      "optional": true
-    },
-    "@remix-run/react": {
-      "optional": true
-    },
-    "@shopify/hydrogen-react": {
-      "optional": true
-    },
-    "@shopify/remix-oxygen": {
       "optional": true
     }
   },

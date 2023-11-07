@@ -5,7 +5,7 @@
     "@shopify:registry": "https://registry.npmjs.org"
   },
   "type": "module",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "license": "MIT",
   "main": "dist/index.cjs",
   "module": "dist/production/index.js",
@@ -39,13 +39,12 @@
   "files": [
     "dist"
   ],
-  "dependencies": {
-    "@remix-run/server-runtime": "^2.1.0"
-  },
   "devDependencies": {
+    "@remix-run/server-runtime": "^2.1.0",
     "@shopify/oxygen-workers-types": "^3.17.3"
   },
   "peerDependencies": {
+    "@remix-run/server-runtime": "^2.1.0",
     "@shopify/oxygen-workers-types": "^3.17.3"
   }
 }
