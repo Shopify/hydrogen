@@ -26,7 +26,8 @@ import {
   getPackageManager,
 } from '@shopify/cli-kit/node/node-package-manager';
 import {commonFlags} from '../../lib/flags.js';
-import {getHydrogenVersion} from '../../lib/upgrade.js';
+import {readFile} from '@shopify/cli-kit/node/fs';
+import {PackageJson} from 'type-fest';
 import {getProjectPaths} from '../../lib/remix-config.js';
 
 export type Dependencies = Record<string, string>;
@@ -87,7 +88,7 @@ export type ChangeLog = {
   version: string;
 };
 
-type CummulativeRelease = {
+export type CummulativeRelease = {
   features: Array<ReleaseItem>;
   fixes: Array<ReleaseItem>;
 };
@@ -135,10 +136,9 @@ export async function runUpgrade({
 
   await checkDirtyGitBranch(appPath);
 
-  console.log('inside runUpgrade');
   const current = await getHydrogenVersion({appPath});
 
-  if (!current) {
+  if (!current?.currentVersion) {
     throw new Error('Failed to get current Hydrogen version');
   }
 
@@ -162,9 +162,9 @@ export async function runUpgrade({
 
     if (!process.env.SHOPIFY_UNIT_TEST) {
       process.exit(0);
-    } else {
-      throw new Error(upToDateMessage);
     }
+
+    return;
   }
 
   // Prompt the user to select a version from the list of available upgrades
@@ -181,7 +181,12 @@ export async function runUpgrade({
       message: 'No Hydrogen version selected',
       tryMessage: `Please try again later`,
     });
-    process.exit(0);
+
+    if (!process.env.SHOPIFY_UNIT_TEST) {
+      process.exit(0);
+    }
+
+    return;
   }
 
   // Get an aggregate list of features and fixes included in the upgrade versions range
@@ -254,20 +259,69 @@ async function checkDirtyGitBranch(appPath: string) {
   const cleanBranch = (await isClean(appPath)) as unknown as () => boolean;
 
   if (!cleanBranch()) {
+    renderFatalError({
+      name: 'error',
+      type: 0,
+      message: 'The upgrade command can only be run on a clean git branch',
+      tryMessage: `Please commit your changes or re-run the command on a clean branch`,
+    });
     if (!process.env.SHOPIFY_UNIT_TEST) {
-      renderFatalError({
-        name: 'error',
-        type: 0,
-        message: 'The upgrade command can only be run on a clean git branch',
-        tryMessage: `Please commit your changes or re-run the command on a clean branch`,
-      });
       process.exit(0);
-    } else {
-      throw new Error(
-        'The upgrade command can only be run on a clean git branch',
-      );
     }
   }
+}
+
+/**
+ * Gets the current @shopify/hydrogen version from the app's package.json
+ */
+export async function getHydrogenVersion({appPath}: {appPath: string}) {
+  if (!appPath) {
+    throw new Error('No app path provided');
+  }
+
+  const {root} = getProjectPaths(appPath);
+  const packageJsonPath = path.join(root, 'package.json');
+
+  const rawPackageJson = await readFile(packageJsonPath).catch(() => null);
+
+  if (typeof rawPackageJson !== 'string') {
+    renderFatalError({
+      name: 'error',
+      type: 0,
+      message: 'Could not find a valid package.json',
+      tryMessage: `Please make sure you are running the command in a npm project`,
+    });
+
+    if (!process.env.SHOPIFY_UNIT_TEST) {
+      process.exit(0);
+    }
+
+    return;
+  }
+
+  const packageJson = JSON.parse(rawPackageJson) as PackageJson;
+
+  const currentDependencies = {
+    ...(packageJson?.dependencies ?? {}),
+    ...(packageJson?.devDependencies ?? {}),
+  } as Dependencies;
+
+  const currentVersion = currentDependencies?.['@shopify/hydrogen'];
+
+  if (!currentVersion) {
+    renderFatalError({
+      name: 'error',
+      type: 0,
+      message: 'Could not find a valid Hydrogen version in package.json',
+      tryMessage: `Please make sure you are running the command in a Hydrogen project`,
+    });
+
+    if (!process.env.SHOPIFY_UNIT_TEST) {
+      process.exit(0);
+    }
+  }
+
+  return {currentVersion, currentDependencies};
 }
 
 // /**
@@ -519,14 +573,12 @@ function isRemixDependency([name]: [string, string]) {
 }
 
 /**
- * Installs the new Hydrogen dependencies
+ * Builds the arguments for the `npm|yarn|pnpm install` command
  */
-export async function upgradeNodeModules({
-  appPath,
+export function buildUpgradeCommandArgs({
   selectedRelease,
   currentDependencies,
 }: {
-  appPath: string;
   selectedRelease: Release;
   currentDependencies: Dependencies;
 }) {
@@ -570,6 +622,21 @@ export async function upgradeNodeModules({
     }
   }
 
+  return args;
+}
+
+/**
+ * Installs the new Hydrogen dependencies
+ */
+export async function upgradeNodeModules({
+  appPath,
+  selectedRelease,
+  currentDependencies,
+}: {
+  appPath: string;
+  selectedRelease: Release;
+  currentDependencies: Dependencies;
+}) {
   await renderTasks(
     [
       {
@@ -578,7 +645,10 @@ export async function upgradeNodeModules({
           await installNodeModules({
             directory: appPath,
             packageManager: await getPackageManager(appPath),
-            args,
+            args: buildUpgradeCommandArgs({
+              selectedRelease,
+              currentDependencies,
+            }),
           });
         },
       },
@@ -942,8 +1012,6 @@ export async function displayDevUpgradeNotice({
     const pinnedReleaseVersion = getAbsoluteVersion(release.version);
     return pinnedReleaseVersion === pinnedCurrentVersion;
   });
-
-  console.log('currentReleaseIndex', currentReleaseIndex);
 
   const uniqueNextReleases = changelog.releases
     .slice(0, currentReleaseIndex)
