@@ -1,7 +1,7 @@
 import semver from 'semver';
 import path from 'path';
 import {Flags} from '@oclif/core';
-import {isClean} from '@shopify/cli-kit/node/git';
+import {isClean, ensureInsideGitDirectory} from '@shopify/cli-kit/node/git';
 import Command from '@shopify/cli-kit/node/base-command';
 import {
   renderConfirmationPrompt,
@@ -26,6 +26,7 @@ import {
   getPackageManager,
 } from '@shopify/cli-kit/node/node-package-manager';
 import {commonFlags} from '../../lib/flags.js';
+import {getHydrogenVersion} from '../../lib/upgrade.js';
 import {getProjectPaths} from '../../lib/remix-config.js';
 
 export type Dependencies = Record<string, string>;
@@ -80,7 +81,7 @@ export type Release = {
   version: string;
 };
 
-type ChangeLog = {
+export type ChangeLog = {
   url: string;
   releases: Array<Release>;
   version: string;
@@ -115,13 +116,13 @@ export default class Upgrade extends Command {
     const appPath = flags.path ? path.resolve(flags.path) : process.cwd();
     const version = flags.version;
     const dryRun = Boolean(flags['dry-run']);
-    await upgrade({appPath, version, dryRun});
+    await runUpgrade({appPath, version, dryRun});
   }
 }
 
 let CACHED_CHANGELOG: ChangeLog | null = null;
 
-export async function upgrade({
+export async function runUpgrade({
   appPath,
   dryRun,
   version: targetVersion,
@@ -130,41 +131,57 @@ export async function upgrade({
   dryRun: boolean;
   version?: string;
 }) {
+  await checkIsGitRepo(appPath);
+
   await checkDirtyGitBranch(appPath);
 
-  const {currentVersion, currentDependencies} = await getHydrogenVersion({
-    appPath,
-  });
+  console.log('inside runUpgrade');
+  const current = await getHydrogenVersion({appPath});
+
+  if (!current) {
+    throw new Error('Failed to get current Hydrogen version');
+  }
+
+  const {currentVersion, currentDependencies} = current;
 
   // TODO: swap when we merge to production
   // const snapshots = await fetchChangelog();
   const changelog = await fetchTempChangelog();
 
-  const upgradesAvailable = getAvailableUpgrades({
+  const {availableUpgrades} = getAvailableUpgrades({
     releases: changelog.releases,
     currentVersion,
   });
 
-  if (!upgradesAvailable?.length) {
-    renderSuccess({
-      headline: 'No Hydrogen upgrades available',
-      body: `You are already using the latest version: ${getAbsoluteVersion(
-        currentVersion,
-      )}`,
-    });
+  if (!availableUpgrades?.length) {
+    const upToDateMessage = `You are on the latest Hydrogen version: ${getAbsoluteVersion(
+      currentVersion,
+    )}`;
 
-    return;
+    renderSuccess({headline: upToDateMessage});
+
+    if (!process.env.SHOPIFY_UNIT_TEST) {
+      process.exit(0);
+    } else {
+      throw new Error(upToDateMessage);
+    }
   }
 
   // Prompt the user to select a version from the list of available upgrades
   const selectedRelease = await getSelectedRelease({
     currentVersion,
     targetVersion,
-    upgradesAvailable,
+    availableUpgrades,
   });
 
   if (!selectedRelease) {
-    throw new Error('No Hydrogen version selected');
+    renderFatalError({
+      name: 'error',
+      type: 0,
+      message: 'No Hydrogen version selected',
+      tryMessage: `Please try again later`,
+    });
+    process.exit(0);
   }
 
   // Get an aggregate list of features and fixes included in the upgrade versions range
@@ -211,44 +228,76 @@ export async function upgrade({
 }
 
 /**
- * Checks if the current git branch is clean and throws an error if it's not
+ * Checks if the target folder is a git repo and throws an error if it's not
  */
-async function checkDirtyGitBranch(appPath: string) {
-  // Casting because there is a bug in shopify-cli-kit/node/git
-  // Created a https://github.com/Shopify/cli/pull/3022
-  const cleanBranch = (await isClean(appPath)) as unknown as () => boolean;
-
-  if (!cleanBranch()) {
+async function checkIsGitRepo(appPath: string) {
+  try {
+    await ensureInsideGitDirectory(appPath);
+  } catch (error) {
     renderFatalError({
       name: 'error',
-      type: 0,
-      message: 'The upgrade command can only be run on a clean git branch',
-      tryMessage: `Please commit your changes or re-run the command on a clean branch`,
+      type: 1,
+      message: 'The upgrade command can only be run on a git repository',
+      tryMessage: `Please run the command inside a git repository or run 'git init' to create one`,
     });
-    process.exit(0);
+    if (!process.env.SHOPIFY_UNIT_TEST) {
+      process.exit(0);
+    }
   }
 }
 
 /**
- * Gets the current @shopify/hydrogen version from the app's package.json
+ * Checks if the current git branch is clean and throws an error if it's not
  */
-async function getHydrogenVersion({appPath}: {appPath: string}) {
-  const {root} = getProjectPaths(appPath);
-  const packageJsonPath = path.join(root, 'package.json');
+async function checkDirtyGitBranch(appPath: string) {
+  // TODO: remove type cast when we upgrade cli-kit to a version that includes https://github.com/Shopify/cli/pull/3022
+  const cleanBranch = (await isClean(appPath)) as unknown as () => boolean;
 
-  if (!packageJsonPath) {
-    throw new Error('No package.json found');
+  if (!cleanBranch()) {
+    if (!process.env.SHOPIFY_UNIT_TEST) {
+      renderFatalError({
+        name: 'error',
+        type: 0,
+        message: 'The upgrade command can only be run on a clean git branch',
+        tryMessage: `Please commit your changes or re-run the command on a clean branch`,
+      });
+      process.exit(0);
+    } else {
+      throw new Error(
+        'The upgrade command can only be run on a clean git branch',
+      );
+    }
   }
-
-  const currentDependencies = await getDependencies(packageJsonPath);
-  const currentVersion = currentDependencies?.['@shopify/hydrogen'];
-
-  if (!currentVersion) {
-    throw new Error('Hydrogen version not found');
-  }
-
-  return {currentVersion, currentDependencies};
 }
+
+// /**
+//  * Gets the current @shopify/hydrogen version from the app's package.json
+//  */
+// export async function getHydrogenVersion({appPath}: {appPath: string}) {
+//   if (!appPath) {
+//     throw new Error('No app path provided');
+//   }
+//
+//   console.log('inside getHydrogenVersion');
+//
+//   const {root} = getProjectPaths(appPath);
+//   const packageJsonPath = path.join(root, 'package.json');
+//
+//   if (!packageJsonPath) {
+//     throw new Error('No package.json found');
+//   }
+//
+//   const currentDependencies = await getDependencies(packageJsonPath);
+//   const currentVersion = currentDependencies?.['@shopify/hydrogen'];
+//
+//   if (!currentVersion) {
+//     throw new Error(
+//       'The upgrade command can only be used in Hydrogen projects including @shopify/hydrogen as a dependency',
+//     );
+//   }
+//
+//   return {currentVersion, currentDependencies};
+// }
 
 /**
  * (Temp) Mock-fetches the changelog-versions.json while we merge
@@ -289,7 +338,10 @@ export async function fetchChangelog(): Promise<ChangeLog | undefined> {
       message: 'Failed to fetch changelog',
       tryMessage: `Please try again later`,
     });
-    process.exit(0);
+
+    if (!process.env.SHOPIFY_UNIT_TEST) {
+      process.exit(0);
+    }
   }
 }
 
@@ -303,13 +355,10 @@ export function getAvailableUpgrades({
   releases: ChangeLog['releases'];
   currentVersion: string;
 }) {
-  if (!releases?.length) {
-    return [];
-  }
   const currentPinnedVersion = getAbsoluteVersion(currentVersion);
   let currentMajorVersion = '';
 
-  return releases.filter((release) => {
+  const availableUpgrades = releases.filter((release) => {
     const isUpgrade = semver.gt(release.version, currentPinnedVersion);
     if (!isUpgrade) return false;
     if (currentMajorVersion !== release.version) {
@@ -318,18 +367,26 @@ export function getAvailableUpgrades({
     }
     return false;
   }) as Array<Release>;
+
+  const uniqueAvailableUpgrades = availableUpgrades.reduce((acc, release) => {
+    if (acc[release.version]) return acc;
+    acc[release.version] = release;
+    return acc;
+  }, {} as Record<string, Release>);
+
+  return {availableUpgrades, uniqueAvailableUpgrades};
 }
 
 /**
  * Gets the selected release based on the --version flag or the user's prompt selection
  */
-async function getSelectedRelease({
+export async function getSelectedRelease({
   targetVersion,
-  upgradesAvailable,
+  availableUpgrades: upgradesAvailable,
   currentVersion,
 }: {
   targetVersion?: string;
-  upgradesAvailable: Array<Release>;
+  availableUpgrades: Array<Release>;
   currentVersion: string;
 }) {
   let flagRelease; // holds a valid release based on the --version flag
@@ -359,7 +416,7 @@ async function getSelectedRelease({
 /**
  * Gets an aggregate list of features and fixes included in the upgrade versions range
  */
-function getCummulativeRelease({
+export function getCummulativeRelease({
   releases,
   selectedRelease,
   currentVersion,
@@ -395,7 +452,7 @@ function getCummulativeRelease({
  * included in the upgrade versions range. The user can also return to the
  * version selection prompt if they want to choose a different version.
  **/
-async function displayConfirmation({
+export async function displayConfirmation({
   appPath,
   cumulativeRelease,
   selectedRelease,
@@ -446,7 +503,7 @@ async function displayConfirmation({
 
   if (!confirmedUpgrade) {
     // Go back to the version selection prompt
-    return await upgrade({
+    return await runUpgrade({
       appPath,
       dryRun,
       version: targetVersion,
@@ -642,7 +699,7 @@ async function displaySummary({
   let nextSteps = [];
 
   if (typeof instrunctionsFilePath === 'string') {
-    let instructions = `Upgrade instructions created at:\n${instrunctionsFilePath}`;
+    let instructions = `Upgrade instructions created at:\nfile://${instrunctionsFilePath}`;
     nextSteps.push(instructions);
   }
 
@@ -709,10 +766,11 @@ async function validateUpgrade({
   const updatedPinnedVersion = getAbsoluteVersion(updatedVersion);
 
   if (updatedPinnedVersion !== selectedRelease.version) {
-    return renderError({
+    renderError({
       headline: `Failed to upgrade to Hydrogen version ${selectedRelease.version}`,
       body: `You are still on version ${updatedPinnedVersion}`,
     });
+    process.exit(0);
   }
 }
 
@@ -853,30 +911,39 @@ export async function displayDevUpgradeNotice({
   const {currentVersion} = await getHydrogenVersion({appPath});
 
   const changelog = await fetchTempChangelog();
+
   if (!changelog?.releases) return;
 
-  const upgradesAvailable = getAvailableUpgrades({
+  const {availableUpgrades, uniqueAvailableUpgrades} = getAvailableUpgrades({
     releases: changelog.releases,
     currentVersion,
   });
 
-  const uniqueUpgradesAvailable = upgradesAvailable.reduce((acc, release) => {
-    if (acc[release.version]) return acc;
-    acc[release.version] = release;
-    return acc;
-  }, {} as Record<string, Release>);
-
-  if (!upgradesAvailable?.length) {
-    throw new Error('No @shopify/hydrogen upgrades available');
+  if (!availableUpgrades?.length) {
+    renderSuccess({
+      headline: `You are on the latest Hydrogen version: ${getAbsoluteVersion(
+        currentVersion,
+      )}`,
+    });
+    return;
   }
 
-  //@ts-ignore will always have a version here
-  const pinnedLatestVersion = getAbsoluteVersion(upgradesAvailable[0].version);
+  if (!availableUpgrades[0]?.version) {
+    renderError({
+      headline: `Failed to find the latest Hydrogen version`,
+      body: `Please try again later`,
+    });
+    return;
+  }
+
+  const pinnedLatestVersion = getAbsoluteVersion(availableUpgrades[0].version);
   const pinnedCurrentVersion = getAbsoluteVersion(currentVersion);
   const currentReleaseIndex = changelog.releases.findIndex((release) => {
     const pinnedReleaseVersion = getAbsoluteVersion(release.version);
     return pinnedReleaseVersion === pinnedCurrentVersion;
   });
+
+  console.log('currentReleaseIndex', currentReleaseIndex);
 
   const uniqueNextReleases = changelog.releases
     .slice(0, currentReleaseIndex)
@@ -896,9 +963,9 @@ export async function displayDevUpgradeNotice({
     : [];
 
   let headline =
-    Object.keys(uniqueUpgradesAvailable).length > 1
+    Object.keys(uniqueAvailableUpgrades).length > 1
       ? `There are ${
-          Object.keys(uniqueUpgradesAvailable).length
+          Object.keys(uniqueAvailableUpgrades).length
         } new @shopify/hydrogen versions available.`
       : `There's a new @shopify/hydrogen version available.`;
 
@@ -915,7 +982,7 @@ export async function displayDevUpgradeNotice({
                 list: {
                   items: [
                     ...nextReleases,
-                    upgradesAvailable.length > 5 && `...more`,
+                    availableUpgrades.length > 5 && `...more`,
                   ]
                     .flat()
                     .filter(Boolean),
