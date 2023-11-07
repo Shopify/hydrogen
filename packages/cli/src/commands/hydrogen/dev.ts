@@ -62,11 +62,6 @@ export default class Dev extends Command {
     }),
     host: deprecated('--host')(),
     ['env-branch']: commonFlags.envBranch,
-    ['no-upgrade']: Flags.boolean({
-      description: 'Skip the upgrade version check',
-      required: false,
-      default: false,
-    }),
     ['disable-version-check']: Flags.boolean({
       description: 'Skip the version check when running `hydrogen dev`',
       default: false,

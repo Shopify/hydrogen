@@ -3,6 +3,7 @@ import path from 'path';
 import {Flags} from '@oclif/core';
 import {isClean} from '@shopify/cli-kit/node/git';
 import Command from '@shopify/cli-kit/node/base-command';
+import {consoleLog} from '@shopify/cli-kit/node/output';
 import {
   renderConfirmationPrompt,
   renderError,
@@ -75,7 +76,7 @@ export type Release = {
   features: Array<ReleaseItem>;
   fixes: Array<ReleaseItem>;
   hash: string;
-  release: `https://${string}`;
+  pr: `https://${string}`;
   title: string;
   version: string;
 };
@@ -205,8 +206,8 @@ async function checkDirtyGitBranch(appPath: string) {
       message: 'The upgrade command can only be run on a clean git branch',
       tryMessage: `Please commit your changes or re-run the command on a clean branch`,
     });
+    process.exit(0);
   }
-  process.exit(0);
 }
 
 /**
@@ -241,29 +242,32 @@ export async function fetchTempChangelog(): Promise<ChangeLog> {
  * Fetches the changelog.json file from the Hydrogen repo
  */
 // TODO: consider moving changelog.json to hydrogen.shopify.dev
-export async function fetchChangelog(): Promise<ChangeLog> {
-  const response = await fetch(
-    'https://raw.githubusercontent.com/Shopify/hydrogen/main/changelog.json',
-  );
+export async function fetchChangelog(): Promise<ChangeLog | undefined> {
+  try {
+    const response = await fetch(
+      // TODO: https://hydrogen.shopify.dev/changelong.json
+      // NOTE: https://github.com/Shopify/hydrogen-shopify-dev/pull/154
+      'https://raw.githubusercontent.com/Shopify/hydrogen/main/changelog.json',
+    );
 
-  if (!response.ok) {
-    throw new Error('Failed to fetch changelog-versions.json');
+    if (!response.ok) {
+      throw new Error('Failed to fetch changelog.json');
+    }
+
+    const json = (await response.json()) as object;
+
+    if ('releases' in json && 'url' in json) {
+      return json as ChangeLog;
+    }
+  } catch (error) {
+    renderFatalError({
+      name: 'error',
+      type: 0,
+      message: 'Failed to fetch changelog',
+      tryMessage: `Please try again later`,
+    });
+    process.exit(0);
   }
-
-  const json = (await response.json()) as any;
-
-  if ('releases' in json && 'url' in json) {
-    return json as ChangeLog;
-  }
-
-  renderFatalError({
-    name: 'error',
-    type: 0,
-    message: 'Failed to fetch changelog',
-    tryMessage: `Please try again later`,
-  });
-
-  process.exit(0);
 }
 
 /**
@@ -647,17 +651,17 @@ function checkUpgradeStatus({
  */
 function generateStepMd(item: ReleaseItem) {
   const {steps} = item;
-  const heading = `### ${item.title}\n`;
+  const heading = `### ${item.title} [#${item.id}](${item.pr})\n`;
   const body = steps
     ?.map((step, stepIndex) => {
+      const pr = item.pr ? `[#${item.id}](${item.pr})\n` : '';
       const multiStep = steps.length > 1;
       const title = multiStep
-        ? `#### Step: ${stepIndex + 1}. ${step.title}\n`
+        ? `#### Step: ${stepIndex + 1}. ${step.title} ${pr}\n`
         : `#### ${step.title.trim()}\n`;
       const info = step.info ? `> ${step.info}\n` : '';
       const code = step.code ? `${Buffer.from(step.code, 'base64')}\n` : '';
       const docs = item.docs ? `[docs](${item.docs})\n` : '';
-      const pr = item.pr ? `[PR #${item.id}](${item.pr})\n` : '';
       return `${title}${info}${docs}${pr}${code}`;
     })
     .join('\n');
@@ -881,7 +885,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.7.11',
       date: '',
       hash: '5188d86f18793d85af9a4e10a6c88700c24d946a',
-      release: 'https://github.com/Shopify/hydrogen/pull/1420',
+      pr: 'https://github.com/Shopify/hydrogen/pull/1420',
       commit:
         'https://github.com/Shopify/hydrogen/pull/1420/commits/5188d86f18793d85af9a4e10a6c88700c24d946a',
       dependencies: {
@@ -912,7 +916,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.7.10',
       date: '',
       hash: '45366a247a94044f037e55fae1f96987af0655ca',
-      release: 'https://github.com/Shopify/hydrogen/pull/1409',
+      pr: 'https://github.com/Shopify/hydrogen/pull/1409',
       commit:
         'https://github.com/Shopify/hydrogen/pull/1409/commits/45366a247a94044f037e55fae1f96987af0655ca',
       dependencies: {
@@ -950,7 +954,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.7.9',
       date: '',
       hash: 'f244e4e47328c7082c3d7d2f7940eeb7f806f9ef',
-      release: 'https://github.com/Shopify/hydrogen/pull/1397',
+      pr: 'https://github.com/Shopify/hydrogen/pull/1397',
       commit:
         'https://github.com/Shopify/hydrogen/pull/1397/commits/f244e4e47328c7082c3d7d2f7940eeb7f806f9ef',
       dependencies: {
@@ -982,7 +986,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.7.9',
       date: '',
       hash: 'e15dd790e922d9e4befcca54fac0dad7344c481f',
-      release: 'https://github.com/Shopify/hydrogen/pull/1374',
+      pr: 'https://github.com/Shopify/hydrogen/pull/1374',
       commit:
         'https://github.com/Shopify/hydrogen/pull/1374/commits/e15dd790e922d9e4befcca54fac0dad7344c481f',
       dependencies: {
@@ -1037,7 +1041,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.7.8',
       date: '2023-08-31 10:36:12 -0400',
       hash: '0fa2287310368ad421b95b580c6fa0cdd17b83f',
-      release: 'https://github.com/Shopify/hydrogen/pull/1359',
+      pr: 'https://github.com/Shopify/hydrogen/pull/1359',
       commit:
         'https://github.com/Shopify/hydrogen/pull/1359/commits/0fa2287310368ad421b95b580c6fa0cdd17b83f7',
       dependencies: {
@@ -1063,7 +1067,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.7.8',
       date: '2023-09-21 01:24:39 +0000',
       hash: 'c977f21860e86d6735493596ea7ec84f73fd1de0',
-      release: 'https://github.com/Shopify/hydrogen/pull/1335',
+      pr: 'https://github.com/Shopify/hydrogen/pull/1335',
       commit:
         'https://github.com/Shopify/hydrogen/pull/1335/commits/c977f21860e86d6735493596ea7ec84f73fd1de0',
       dependencies: {
@@ -1123,7 +1127,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.7.7',
       date: '2023-09-07 20:32:18 +00',
       hash: 'cfc6de7f9af9ed992577c10afaea4d422f276401',
-      release: 'https://github.com/Shopify/hydrogen/pull/1307',
+      pr: 'https://github.com/Shopify/hydrogen/pull/1307',
       commit:
         'https://github.com/Shopify/hydrogen/pull/1307/commits/cfc6de7f9af9ed992577c10afaea4d422f276401',
       dependencies: {
@@ -1169,7 +1173,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.7.6',
       date: '',
       hash: '8f7b03e5bc06e89288b572f5399b7da723a8383a',
-      release: 'https://github.com/Shopify/hydrogen/pull/1295',
+      pr: 'https://github.com/Shopify/hydrogen/pull/1295',
       commit:
         'https://github.com/Shopify/hydrogen/pull/1295/commits/8f7b03e5bc06e89288b572f5399b7da723a8383a',
       dependencies: {
@@ -1200,7 +1204,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.7.5',
       date: '',
       hash: '9bf4e4afcf86e961252135a7d45b5f19f9958d36',
-      release: 'https://github.com/Shopify/hydrogen/pull/1293',
+      pr: 'https://github.com/Shopify/hydrogen/pull/1293',
       commit:
         'https://github.com/Shopify/hydrogen/pull/1293/commits/9bf4e4afcf86e961252135a7d45b5f19f9958d36',
       dependencies: {
@@ -1236,7 +1240,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.7.4',
       date: '',
       hash: '5d8550ee14ef3a72129b1a4d6aacb27629044071',
-      release: 'https://github.com/Shopify/hydrogen/pull/1263',
+      pr: 'https://github.com/Shopify/hydrogen/pull/1263',
       commit:
         'https://github.com/Shopify/hydrogen/pull/1263/commits/5d8550ee14ef3a72129b1a4d6aacb27629044071',
       dependencies: {
@@ -1288,7 +1292,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.7.3',
       date: '',
       hash: '695b145f95c50b1c9fece587a300c038995110ee',
-      release: 'https://github.com/Shopify/hydrogen/pull/1212',
+      pr: 'https://github.com/Shopify/hydrogen/pull/1212',
       commit:
         'https://github.com/Shopify/hydrogen/pull/1212/commits/695b145f95c50b1c9fece587a300c038995110ee',
       dependencies: {
@@ -1352,7 +1356,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.7.2',
       date: '',
       hash: 'ede660217b469205c2022099e1c92081f17cb19d',
-      release: 'https://github.com/Shopify/hydrogen/pull/1188',
+      pr: 'https://github.com/Shopify/hydrogen/pull/1188',
       commit:
         'https://github.com/Shopify/hydrogen/pull/1188/commits/ede660217b469205c2022099e1c92081f17cb19d',
       dependencies: {
@@ -1388,7 +1392,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.7.1',
       date: '',
       hash: '20f4ef21e42c33e975641b263a5edc76c38491fe',
-      release: 'https://github.com/Shopify/hydrogen/pull/1170',
+      pr: 'https://github.com/Shopify/hydrogen/pull/1170',
       commit:
         'https://github.com/Shopify/hydrogen/pull/1170/commits/20f4ef21e42c33e975641b263a5edc76c38491fe',
       dependencies: {
@@ -1434,7 +1438,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.7.0',
       date: '',
       hash: 'ce199d5c47e4a27c779bd711ee619739019d74e7',
-      release: 'https://github.com/Shopify/hydrogen/pull/1152',
+      pr: 'https://github.com/Shopify/hydrogen/pull/1152',
       commit:
         'https://github.com/Shopify/hydrogen/pull/1152/commits/ce199d5c47e4a27c779bd711ee619739019d74e7',
       dependencies: {
@@ -1564,7 +1568,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.4.6',
       date: '',
       hash: 'c6445ac572bba7006f0c90b99287701662fbffe7',
-      release: 'https://github.com/Shopify/hydrogen/pull/1020',
+      pr: 'https://github.com/Shopify/hydrogen/pull/1020',
       commit:
         'https://github.com/Shopify/hydrogen/pull/1020/commits/c6445ac572bba7006f0c90b99287701662fbffe7',
       dependencies: {
@@ -1595,7 +1599,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.4.5',
       date: '',
       hash: 'ab7501fb37c154fa4214542f6f0b37f987639de2',
-      release: 'https://github.com/Shopify/hydrogen/pull/1008',
+      pr: 'https://github.com/Shopify/hydrogen/pull/1008',
       commit:
         'https://github.com/Shopify/hydrogen/pull/1008/commits/ab7501fb37c154fa4214542f6f0b37f987639de2',
       dependencies: {
@@ -1631,7 +1635,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.4.4',
       date: '',
       hash: 'f5f897ce72aac7bc205e917392a2f3c9f8a697a7',
-      release: 'https://github.com/Shopify/hydrogen/pull/947',
+      pr: 'https://github.com/Shopify/hydrogen/pull/947',
       commit:
         'https://github.com/Shopify/hydrogen/pull/947/commits/f5f897ce72aac7bc205e917392a2f3c9f8a697a7',
       dependencies: {
@@ -1693,7 +1697,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.4.3',
       date: '',
       hash: 'b6a3d970d9ac0c604d5ec776e2924596eced61c4',
-      release: 'https://github.com/Shopify/hydrogen/pull/927',
+      pr: 'https://github.com/Shopify/hydrogen/pull/927',
       commit:
         'https://github.com/Shopify/hydrogen/pull/927/commits/b6a3d970d9ac0c604d5ec776e2924596eced61c4',
       dependencies: {
@@ -1720,7 +1724,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.4.2',
       date: '',
       hash: '76b484139e8816e68cf3fb32329403fcee61cccf',
-      release: 'https://github.com/Shopify/hydrogen/pull/897',
+      pr: 'https://github.com/Shopify/hydrogen/pull/897',
       commit:
         'https://github.com/Shopify/hydrogen/pull/897/commits/76b484139e8816e68cf3fb32329403fcee61cccf',
       dependencies: {
@@ -1783,7 +1787,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.4.1',
       date: '',
       hash: 'dcfbb24c321b01ff80b11f1d0802457e17394c35',
-      release: 'https://github.com/Shopify/hydrogen/pull/817',
+      pr: 'https://github.com/Shopify/hydrogen/pull/817',
       commit:
         'https://github.com/Shopify/hydrogen/pull/817/commits/dcfbb24c321b01ff80b11f1d0802457e17394c35',
       dependencies: {
@@ -1847,7 +1851,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.4.0',
       date: '',
       hash: 'c14dde60e76f7d3bdb582e6be64b64109921e4db',
-      release: 'https://github.com/Shopify/hydrogen/pull/754',
+      pr: 'https://github.com/Shopify/hydrogen/pull/754',
       commit:
         'https://github.com/Shopify/hydrogen/pull/754/commits/c14dde60e76f7d3bdb582e6be64b64109921e4db',
       dependencies: {
@@ -1868,7 +1872,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.1.7',
       date: '',
       hash: 'd5f3e779e3ac7b22b78771dfb50f412c93a2d133',
-      release: 'https://github.com/Shopify/hydrogen/pull/727',
+      pr: 'https://github.com/Shopify/hydrogen/pull/727',
       commit:
         'https://github.com/Shopify/hydrogen/pull/727/commits/d5f3e779e3ac7b22b78771dfb50f412c93a2d133',
       dependencies: {
@@ -1954,7 +1958,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.1.6',
       date: '',
       hash: 'd5a7eeb659628254ee7ec4b35459cd9b3d52008f',
-      release: 'https://github.com/Shopify/hydrogen/pull/574',
+      pr: 'https://github.com/Shopify/hydrogen/pull/574',
       commit:
         'https://github.com/Shopify/hydrogen/pull/574/commits/d5a7eeb659628254ee7ec4b35459cd9b3d52008f',
       dependencies: {
@@ -2033,7 +2037,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.1.5',
       date: '',
       hash: 'b38f68558f088533846f1cd27de2eb9a97e7e9e7',
-      release: 'https://github.com/Shopify/hydrogen/pull/565',
+      pr: 'https://github.com/Shopify/hydrogen/pull/565',
       commit:
         'https://github.com/Shopify/hydrogen/pull/565/commits/b38f68558f088533846f1cd27de2eb9a97e7e9e7',
       dependencies: {
@@ -2065,7 +2069,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.1.5',
       date: '',
       hash: 'f2adc542e9ed00c113942597334f0e679a1176c8',
-      release: 'https://github.com/Shopify/hydrogen/pull/563',
+      pr: 'https://github.com/Shopify/hydrogen/pull/563',
       commit:
         'https://github.com/Shopify/hydrogen/pull/563/commits/f2adc542e9ed00c113942597334f0e679a1176c8',
       dependencies: {
@@ -2091,7 +2095,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.1.4',
       date: '',
       hash: '41c7592eefded147a5b6f9c61f7f92e6e01e79eb',
-      release: 'https://github.com/Shopify/hydrogen/pull/556',
+      pr: 'https://github.com/Shopify/hydrogen/pull/556',
       commit:
         'https://github.com/Shopify/hydrogen/pull/556/commits/41c7592eefded147a5b6f9c61f7f92e6e01e79eb',
       dependencies: {
@@ -2122,7 +2126,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.1.4',
       date: '',
       hash: 'bf1014339ad0e48e621ecf60ebde7cf81894eda6',
-      release: 'https://github.com/Shopify/hydrogen/pull/522',
+      pr: 'https://github.com/Shopify/hydrogen/pull/522',
       commit:
         'https://github.com/Shopify/hydrogen/pull/522/commits/bf1014339ad0e48e621ecf60ebde7cf81894eda6',
       dependencies: {
@@ -2158,7 +2162,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.1.3',
       date: '',
       hash: '9e25ee653f6d76057bc9876eebbc5a58e711a25b',
-      release: 'https://github.com/Shopify/hydrogen/pull/504',
+      pr: 'https://github.com/Shopify/hydrogen/pull/504',
       commit:
         'https://github.com/Shopify/hydrogen/pull/504/commits/9e25ee653f6d76057bc9876eebbc5a58e711a25b',
       dependencies: {
@@ -2184,7 +2188,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.1.3',
       date: '',
       hash: '5a178b6175e20ec1f92ad60e90f2c7293a0e065e',
-      release: 'https://github.com/Shopify/hydrogen/pull/481',
+      pr: 'https://github.com/Shopify/hydrogen/pull/481',
       commit:
         'https://github.com/Shopify/hydrogen/pull/481/commits/5a178b6175e20ec1f92ad60e90f2c7293a0e065e',
       dependencies: {
@@ -2221,7 +2225,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.1.2',
       date: '',
       hash: '86b9cd9d6f80b804907c6c394970c43fe077a7e0',
-      release: 'https://github.com/Shopify/hydrogen/pull/479',
+      pr: 'https://github.com/Shopify/hydrogen/pull/479',
       commit:
         'https://github.com/Shopify/hydrogen/pull/479/commits/86b9cd9d6f80b804907c6c394970c43fe077a7e0',
       dependencies: {
@@ -2247,7 +2251,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.1.2',
       date: '',
       hash: '73e3ff46bad87d48e60609faeaa0e3c0b5a3c23b',
-      release: 'https://github.com/Shopify/hydrogen/pull/464',
+      pr: 'https://github.com/Shopify/hydrogen/pull/464',
       commit:
         'https://github.com/Shopify/hydrogen/pull/464/commits/73e3ff46bad87d48e60609faeaa0e3c0b5a3c23b',
       dependencies: {
@@ -2273,7 +2277,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.1.1',
       date: '',
       hash: '7dff568d84a0754fa8cc9f763b5deed259eb6841',
-      release: 'https://github.com/Shopify/hydrogen/pull/462',
+      pr: 'https://github.com/Shopify/hydrogen/pull/462',
       commit:
         'https://github.com/Shopify/hydrogen/pull/462/commits/7dff568d84a0754fa8cc9f763b5deed259eb6841',
       dependencies: {
@@ -2299,7 +2303,7 @@ const SNAPSHOT: ChangeLog = {
       version: '2023.1.0',
       date: '',
       hash: 'a2130c7e0b9821d3830964177720a7574761d5ea',
-      release: 'https://github.com/Shopify/hydrogen/pull/445',
+      pr: 'https://github.com/Shopify/hydrogen/pull/445',
       commit:
         'https://github.com/Shopify/hydrogen/pull/445/commits/a2130c7e0b9821d3830964177720a7574761d5ea',
       dependencies: {
