@@ -4,6 +4,7 @@ import {
   Await,
   Link,
   useLoaderData,
+  useLocation,
   type MetaFunction,
   type FetcherWithComponents,
 } from '@remix-run/react';
@@ -43,6 +44,7 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
       !option.name.startsWith('_psq') &&
       !option.name.startsWith('_ss') &&
       !option.name.startsWith('_v') &&
+      !option.name.startsWith('selling_plan') &&
       // Filter out third party tracking params
       !option.name.startsWith('fbclid'),
   );
@@ -50,6 +52,10 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
   if (!handle) {
     throw new Error('Expected product handle to be defined');
   }
+
+  const searchParams = new URL(request.url).searchParams;
+  const sellingPlanId = searchParams.get('selling_plan');
+  console.log('Selected selling plan ID:  ', sellingPlanId);
 
   // await the query for the critical product data
   const {product} = await storefront.query(PRODUCT_QUERY, {
@@ -154,7 +160,7 @@ function ProductMain({
   selectedVariant: ProductFragment['selectedVariant'];
   variants: Promise<ProductVariantsQuery>;
 }) {
-  const {title, descriptionHtml} = product;
+  const {title, descriptionHtml, sellingPlanGroups} = product;
   return (
     <div className="product-main">
       <h1>{title}</h1>
@@ -166,6 +172,7 @@ function ProductMain({
             product={product}
             selectedVariant={selectedVariant}
             variants={[]}
+            sellingPlanGroups={sellingPlanGroups}
           />
         }
       >
@@ -178,6 +185,7 @@ function ProductMain({
               product={product}
               selectedVariant={selectedVariant}
               variants={data.product?.variants.nodes || []}
+              sellingPlanGroups={sellingPlanGroups}
             />
           )}
         </Await>
@@ -223,11 +231,16 @@ function ProductForm({
   product,
   selectedVariant,
   variants,
+  sellingPlanGroups,
 }: {
   product: ProductFragment;
   selectedVariant: ProductFragment['selectedVariant'];
   variants: Array<ProductVariantFragment>;
+  sellingPlanGroups: ProductFragment['sellingPlanGroups'];
 }) {
+  const {pathname, search} = useLocation();
+  const linkParams = new URLSearchParams(search);
+  const selectedSellingPlan = linkParams.get('selling_plan');
   return (
     <div className="product-form">
       <VariantSelector
@@ -237,6 +250,51 @@ function ProductForm({
       >
         {({option}) => <ProductOptions key={option.name} option={option} />}
       </VariantSelector>
+
+      {sellingPlanGroups?.nodes && (
+        <div>
+          {sellingPlanGroups.nodes.map((sellingPlanGroup) => {
+            const {name, sellingPlans} = sellingPlanGroup;
+
+            return (
+              <div key={sellingPlanGroup.name}>
+                <p className="mb-2">
+                  <strong>{name}:</strong>
+                </p>
+                {sellingPlans.nodes.map((sellingPlan) => {
+                  linkParams.set('selling_plan', sellingPlan.id);
+                  return (
+                    <Link
+                      key={sellingPlan.id}
+                      to={
+                        selectedSellingPlan === sellingPlan.id
+                          ? `${pathname}?${linkParams
+                              .toString()
+                              .replace(/&?selling_plan=[^&]*/g, '')}` // deselect
+                          : `${pathname}?${linkParams.toString()}`
+                      }
+                      className={`border inline-block p-4 mr-2 leading-none py-1 border-b-[1.5px] hover:no-underline cursor-pointer transition-all duration-200
+                  ${
+                    selectedSellingPlan === sellingPlan.id
+                      ? 'border-gray-500'
+                      : 'border-neutral-50'
+                  }`}
+                      preventScrollReset
+                      replace
+                    >
+                      <p>
+                        {sellingPlan.options.map(
+                          (option) => `${option.name} ${option.value}`,
+                        )}
+                      </p>
+                    </Link>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      )}
       <br />
       <AddToCartButton
         disabled={!selectedVariant || !selectedVariant.availableForSale}
@@ -248,6 +306,7 @@ function ProductForm({
             ? [
                 {
                   merchandiseId: selectedVariant.id,
+                  sellingPlanId: selectedSellingPlan,
                   quantity: 1,
                 },
               ]
@@ -314,6 +373,7 @@ function AddToCartButton({
           <button
             type="submit"
             onClick={onClick}
+            className="bg-gray-400 inline-block p-2 px-4 hover:bg-black hover:text-white"
             disabled={disabled ?? fetcher.state !== 'idle'}
           >
             {children}
@@ -384,6 +444,24 @@ const PRODUCT_FRAGMENT = `#graphql
     seo {
       description
       title
+    }
+    sellingPlanGroups(first:10) {
+      nodes {
+        name
+        options {
+          name
+          values
+        }
+        sellingPlans(first:10) {
+          nodes {
+            id
+            options {
+              name
+              value
+            }
+          }
+        }
+      }
     }
   }
   ${PRODUCT_VARIANT_FRAGMENT}

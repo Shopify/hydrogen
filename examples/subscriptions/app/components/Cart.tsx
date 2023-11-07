@@ -69,7 +69,7 @@ function CartLineItem({
   layout: CartMainProps['layout'];
   line: CartLine;
 }) {
-  const {id, merchandise} = line;
+  const {id, merchandise, sellingPlanAllocation} = line;
   const {product, title, image, selectedOptions} = merchandise;
   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
 
@@ -99,6 +99,8 @@ function CartLineItem({
         >
           <p>
             <strong>{product.title}</strong>
+            <br />
+            {sellingPlanAllocation && sellingPlanAllocation.sellingPlan.name}
           </p>
         </Link>
         <CartLinePrice line={line} as="span" />
