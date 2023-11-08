@@ -10,6 +10,7 @@ import favicon from '../assets/favicon.svg';
 import faviconDark from '../assets/favicon-dark.svg';
 import styles from '../assets/debug-network.css';
 import {useDebugNetworkServer} from '../lib/useDebugNetworkServer.jsx';
+import {WaterfallPlugin} from 'flame-chart-js';
 
 export const links: LinksFunction = () => {
   return [
@@ -25,9 +26,24 @@ export const links: LinksFunction = () => {
   ];
 };
 
+const WATERFALL_CONFIG = {
+  colors: {
+    server: '#2ED389',
+    streaming: '#33CCFF',
+    subRequest: '#FFCC00',
+  },
+};
+
 export default function DebugNetwork() {
-  const {serverEvents, clear, stop, record, timestamp, setShowPutRequests} =
-    useDebugNetworkServer();
+  const {
+    serverEvents,
+    clear,
+    stop,
+    record,
+    timestamp,
+    setHidePutRequests,
+    setPreserveLog,
+  } = useDebugNetworkServer();
 
   return (
     <>
@@ -41,44 +57,20 @@ export default function DebugNetwork() {
         stopCallback={stop}
         recordCallback={record}
       />
-      <div
-        style={{
-          width: '100vw',
-          fontSize: '0.8rem',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <input
-              id="showPutRequests"
-              type="checkbox"
-              checked={serverEvents.showPutRequests}
-              onChange={(event) => setShowPutRequests(event.target.checked)}
+      <div className="pad">
+        <OptionsAndLegend
+          serverEvents={serverEvents}
+          setHidePutRequests={setHidePutRequests}
+          setPreserveLog={setPreserveLog}
+        />
+        <div className="panel">
+          <div id="waterfall-panel">
+            <RequestWaterfall
+              key={timestamp}
+              serverEvents={serverEvents}
+              config={WATERFALL_CONFIG}
             />
-            <label htmlFor="showPutRequests">
-              Show cache update requests (PUT)
-            </label>
           </div>
-          <p
-            style={{
-              paddingRight: '5px',
-            }}
-          >
-            Unstable
-          </p>
-        </div>
-        <div id="waterfall-panel">
-          <RequestWaterfall key={timestamp} serverEvents={serverEvents} />
         </div>
       </div>
     </>
@@ -97,7 +89,7 @@ function DebugHeader({
   recordCallback: () => void;
 }) {
   return (
-    <header className="justify-content">
+    <header className="justify-between text-large">
       <div className="flex-row">
         <img className="logo" src={faviconDark} alt="Hydrogen logo" />
         <h1>Server Network Timing</h1>
@@ -105,7 +97,6 @@ function DebugHeader({
       </div>
       <div className="flex-row">
         <button
-          className="primary"
           style={{width: '70px'}}
           onClick={() =>
             serverEvents.recordEvents ? stopCallback() : recordCallback()
@@ -113,8 +104,83 @@ function DebugHeader({
         >
           {serverEvents.recordEvents ? 'Stop' : 'Record'}
         </button>
-        <button onClick={() => clearCallback()}>Clear</button>
+        <button className="primary" onClick={() => clearCallback()}>
+          Clear
+        </button>
       </div>
     </header>
+  );
+}
+
+function OptionsAndLegend({
+  serverEvents,
+  setHidePutRequests,
+  setPreserveLog,
+}: {
+  serverEvents: ServerEvents;
+  setHidePutRequests: (checked: boolean) => void;
+  setPreserveLog: (checked: boolean) => void;
+}) {
+  return (
+    <div id="options-and-legend" className="justify-between">
+      <div className="flex-row text-large">
+        <div className="form-control">
+          <input
+            id="showPutRequests"
+            type="checkbox"
+            checked={serverEvents.hidePutRequests}
+            onChange={(event) => setHidePutRequests(event.target.checked)}
+          />
+          <label htmlFor="showPutRequests">
+            Show cache update requests (PUT)
+          </label>
+        </div>
+        <div className="form-control">
+          <input
+            id="preserveLog"
+            type="checkbox"
+            checked={serverEvents.preserveLog}
+            onChange={(event) => setPreserveLog(event.target.checked)}
+          />
+          <label htmlFor="preserveLog">Preserve Log</label>
+        </div>
+      </div>
+      <div className="flex-row text-normal gap-small">
+        <div className="legend flex-row">
+          <p>
+            <b>Main Request</b>
+          </p>
+          <p className="flex-row gap-small">
+            <span
+              className="swatch"
+              style={{
+                backgroundColor: WATERFALL_CONFIG.colors.server,
+              }}
+            ></span>
+            Time on server
+          </p>
+          <p className="flex-row gap-small">
+            <span
+              className="swatch"
+              style={{
+                backgroundColor: WATERFALL_CONFIG.colors.streaming,
+              }}
+            ></span>
+            Time to stream to client
+          </p>
+        </div>
+        <div className="legend flex-row">
+          <p className="flex-row gap-small">
+            <span
+              className="swatch"
+              style={{
+                backgroundColor: WATERFALL_CONFIG.colors.subRequest,
+              }}
+            ></span>
+            Sub request
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -11,12 +11,26 @@ export function useDebugNetworkServer() {
     smallestStartTime: 0,
     mainRequests: [],
     subRequests: {},
-    showPutRequests: false,
+    hidePutRequests: true,
     recordEvents: true,
+    preserveLog: false,
   });
 
   // For triggering a react render
   const [timestamp, setTimestamp] = useState<number>();
+
+  function clearServerEvents() {
+    fetch('/debug-network-server', {method: 'DELETE'}).catch((error) =>
+      console.error('Could not clear history:', error),
+    );
+
+    serverEvents.current = {
+      ...serverEvents.current,
+      smallestStartTime: 0,
+      mainRequests: [],
+      subRequests: {},
+    };
+  }
 
   // Handle server events
   function serverEventHandler(onEvent: (data: ServerEvent) => void) {
@@ -75,19 +89,6 @@ export function useDebugNetworkServer() {
     };
   }, []);
 
-  function clearServerEvents() {
-    fetch('/debug-network-server', {method: 'DELETE'}).catch((error) =>
-      console.error('Could not clear history:', error),
-    );
-
-    serverEvents.current = {
-      ...serverEvents.current,
-      smallestStartTime: 0,
-      mainRequests: [],
-      subRequests: {},
-    };
-  }
-
   function clear() {
     clearServerEvents();
     setTimestamp(new Date().getTime());
@@ -110,8 +111,13 @@ export function useDebugNetworkServer() {
     setTimestamp(new Date().getTime());
   }
 
-  function setShowPutRequests(showPutRequests: boolean) {
-    serverEvents.current.showPutRequests = showPutRequests;
+  function setHidePutRequests(hidePutRequests: boolean) {
+    serverEvents.current.hidePutRequests = hidePutRequests;
+    setTimestamp(new Date().getTime());
+  }
+
+  function setPreserveLog(preserveLog: boolean) {
+    serverEvents.current.preserveLog = preserveLog;
     setTimestamp(new Date().getTime());
   }
 
@@ -120,7 +126,8 @@ export function useDebugNetworkServer() {
     clear,
     stop,
     record,
-    setShowPutRequests,
+    setHidePutRequests,
+    setPreserveLog,
     timestamp,
   };
 }

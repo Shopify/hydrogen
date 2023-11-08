@@ -17,13 +17,30 @@ export type ServerEvents = {
   smallestStartTime: number;
   mainRequests: ServerEvent[];
   subRequests: Record<string, ServerEvent[]>;
-  showPutRequests: boolean;
+  hidePutRequests: boolean;
   recordEvents: boolean;
+  preserveLog: boolean;
+};
+
+export type RequestWaterfallConfig = {
+  colors: {
+    server: string;
+    streaming: string;
+    subRequest: string;
+  };
 };
 
 const PANEL_HEIGHT = 300;
+const STYLE_FONT =
+  '10px Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Open Sans, Helvetica Neue, sans-serif';
 
-export function RequestWaterfall({serverEvents}: {serverEvents: ServerEvents}) {
+export function RequestWaterfall({
+  serverEvents,
+  config,
+}: {
+  serverEvents: ServerEvents;
+  config: RequestWaterfallConfig;
+}) {
   const panelHeight = PANEL_HEIGHT;
 
   if (serverEvents.mainRequests.length === 0)
@@ -74,11 +91,11 @@ export function RequestWaterfall({serverEvents}: {serverEvents: ServerEvents}) {
         },
       };
 
-      if (serverEvents.showPutRequests) {
-        subRequestItems.push(subRequestItem);
-      } else {
+      if (serverEvents.hidePutRequests) {
         subRequest.cacheStatus !== 'PUT' &&
           subRequestItems.push(subRequestItem);
+      } else {
+        subRequestItems.push(subRequestItem);
       }
 
       totalSubRequests++;
@@ -104,14 +121,14 @@ export function RequestWaterfall({serverEvents}: {serverEvents: ServerEvents}) {
       mainRequest: [
         {
           name: 'server',
-          color: '#99CC00',
+          color: config.colors.server,
           type: 'block',
           start: 'requestStart',
           end: 'responseStart',
         },
         {
           name: 'streaming',
-          color: '#33CCFF',
+          color: config.colors.streaming,
           type: 'block',
           start: 'responseStart',
           end: 'responseEnd',
@@ -120,7 +137,7 @@ export function RequestWaterfall({serverEvents}: {serverEvents: ServerEvents}) {
       request: [
         {
           name: 'request',
-          color: '#FFCC00',
+          color: config.colors.subRequest,
           type: 'block',
           start: 'requestStart',
           end: 'requestEnd',
@@ -129,37 +146,26 @@ export function RequestWaterfall({serverEvents}: {serverEvents: ServerEvents}) {
     },
   };
   return (
-    <>
-      <FlameChartWrapper
-        height={panelHeight}
-        waterfall={data}
-        settings={{
-          styles: {
-            waterfallPlugin: {
-              defaultHeight: panelHeight,
-            },
+    <FlameChartWrapper
+      height={panelHeight}
+      waterfall={data}
+      settings={{
+        styles: {
+          main: {
+            blockHeight: 22,
+            font: STYLE_FONT,
           },
-        }}
-      />
-      <div
-        style={{
-          display: 'flex',
-          padding: '5px',
-          borderTop: '1px solid #CCC',
-          borderBottom: '1px solid #CCC',
-        }}
-      >
-        {totalRequests} requests
-        <span
-          style={{
-            paddingLeft: '2px',
-            paddingRight: '2px',
-          }}
-        >
-          |
-        </span>
-        {totalSubRequests} sub requests
-      </div>
-    </>
+          timeframeSelectorPlugin: {
+            font: STYLE_FONT,
+          },
+          timeGridPlugin: {
+            font: STYLE_FONT,
+          },
+          waterfallPlugin: {
+            defaultHeight: panelHeight,
+          },
+        },
+      }}
+    />
   );
 }
