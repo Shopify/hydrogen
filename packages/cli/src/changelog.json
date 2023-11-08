@@ -3,6 +3,63 @@
   "version": "1",
   "releases": [
     {
+      "title": "Moved @remix-run/server-runtime to peer dependency",
+      "version": "2023.10.2",
+      "date": "",
+      "hash": "875d35f52fcfd8006e78217cfac0096122f98a54",
+      "pr": "https://github.com/Shopify/hydrogen/pull/1486",
+      "commit": "https://github.com/Shopify/hydrogen/pull/1486/commits/875d35f52fcfd8006e78217cfac0096122f98a54",
+      "dependencies": {
+        "@remix-run/react": "2.1.0",
+        "@shopify/cli-hydrogen": "^6.0.2",
+        "@shopify/hydrogen": "^2023.10.2",
+        "@shopify/remix-oxygen": "^2.0.1"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "2.1.0",
+        "typescript": "^5.2.2"
+      },
+      "fixes": [
+        {
+          "title": "Moved @remix-run/server-runtime to peer dependency",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1484",
+          "id": "1484"
+        }
+      ],
+      "features": []
+    },
+    {
+      "title": "Fix h2 init flow and SEO canonical tags",
+      "version": "2023.10.1",
+      "date": "",
+      "hash": "58e63ce4ebda28dedb82fd8e2b461927fee68fb3",
+      "pr": "https://github.com/Shopify/hydrogen/pull/1479",
+      "commit": "https://github.com/Shopify/hydrogen/pull/1453/commits/58e63ce4ebda28dedb82fd8e2b461927fee68fb3",
+      "dependencies": {
+        "@remix-run/react": "2.1.0",
+        "@shopify/cli-hydrogen": "^6.0.1",
+        "@shopify/hydrogen": "^2023.10.1",
+        "@shopify/remix-oxygen": "^2.0.0"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "2.1.0",
+        "typescript": "^5.2.2"
+      },
+      "fixes": [
+        {
+          "title": "Fix Shopify login during the init flow where the process would just exit when awaiting for a keypress",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1481",
+          "id": "1481"
+        },
+        {
+          "title": "Removed URL params from canonical tags in SEO component",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1478",
+          "id": "1478"
+        }
+      ],
+      "features": []
+    },
+    {
       "title": "Storefront API version 2023.10, Remix v2, Customer API client and more",
       "version": "2023.10.0",
       "date": "",
