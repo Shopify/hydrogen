@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import {
   Miniflare,
   Request,
@@ -16,10 +17,15 @@ import {
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {lookupMimeType} from '@shopify/cli-kit/node/mimes';
 import {connectToInspector, findInspectorUrl} from './workerd-inspector.js';
+import {createInspectorProxy} from './workerd-inspector-proxy.js';
 import {DEFAULT_PORT} from '../flags.js';
 import {findPort} from '../find-port.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
-import {OXYGEN_HEADERS_MAP, logRequestLine} from './common.js';
+import {
+  DEFAULT_INSPECTOR_PORT,
+  OXYGEN_HEADERS_MAP,
+  logRequestLine,
+} from './common.js';
 import {
   H2O_BINDING_NAME,
   handleDebugNetworkRequest,
@@ -27,7 +33,7 @@ import {
   setConstructors,
 } from '../request-events.js';
 
-const DEFAULT_INSPECTOR_PORT = 9229;
+const PRIVATE_WORKERD_INSPECTOR_PORT = 9229;
 
 export async function startWorkerdServer({
   root,
@@ -38,7 +44,8 @@ export async function startWorkerdServer({
   env,
 }: MiniOxygenOptions): Promise<MiniOxygenInstance> {
   const appPort = await findPort(port);
-  const inspectorPort = await findPort(DEFAULT_INSPECTOR_PORT);
+  const workerdInspectorPort = await findPort(PRIVATE_WORKERD_INSPECTOR_PORT);
+  const publicInspectorPort = await findPort(DEFAULT_INSPECTOR_PORT);
 
   const oxygenHeadersMap = Object.values(OXYGEN_HEADERS_MAP).reduce(
     (acc, item) => {
@@ -57,7 +64,7 @@ export async function startWorkerdServer({
       cf: false,
       verbose: false,
       port: appPort,
-      inspectorPort,
+      inspectorPort: workerdInspectorPort,
       log: new NoOpLog(),
       liveReload: watch,
       host: 'localhost',
@@ -104,10 +111,16 @@ export async function startWorkerdServer({
   const listeningAt = (await miniOxygen.ready).origin;
 
   const sourceMapPath = buildPathWorkerFile + '.map';
-  let inspectorUrl = await findInspectorUrl(inspectorPort);
-  let cleanupInspector = inspectorUrl
+
+  let inspectorUrl = await findInspectorUrl(workerdInspectorPort);
+  let inspectorConnection = inspectorUrl
     ? connectToInspector({inspectorUrl, sourceMapPath})
     : undefined;
+
+  const inspectorProxy = createInspectorProxy(
+    publicInspectorPort,
+    inspectorConnection,
+  );
 
   return {
     port: appPort,
@@ -125,12 +138,14 @@ export async function startWorkerdServer({
         }
       }
 
-      cleanupInspector?.();
+      inspectorConnection?.close();
+
       // @ts-expect-error
       await miniOxygen.setOptions(miniOxygenOptions);
-      inspectorUrl ??= await findInspectorUrl(inspectorPort);
+      inspectorUrl ??= await findInspectorUrl(workerdInspectorPort);
       if (inspectorUrl) {
-        cleanupInspector = connectToInspector({inspectorUrl, sourceMapPath});
+        inspectorConnection = connectToInspector({inspectorUrl, sourceMapPath});
+        inspectorProxy.updateInspectorConnection(inspectorConnection);
       }
     },
     showBanner(options) {

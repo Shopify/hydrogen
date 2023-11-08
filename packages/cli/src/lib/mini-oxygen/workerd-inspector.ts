@@ -342,17 +342,21 @@ export function connectToInspector({
     sourceMapAbortController.abort();
   });
 
-  return () => {
-    clearInterval(keepAliveInterval);
+  return {
+    ws,
+    close: () => {
+      clearInterval(keepAliveInterval);
 
-    if (!isClosed()) {
-      try {
-        ws.close();
-      } catch (err) {
-        // Closing before the websocket is ready will throw an error.
+      if (!isClosed()) {
+        try {
+          ws.removeAllListeners();
+          ws.close();
+        } catch (err) {
+          // Closing before the websocket is ready will throw an error.
+        }
       }
-    }
 
-    sourceMapAbortController.abort();
+      sourceMapAbortController.abort();
+    },
   };
 }

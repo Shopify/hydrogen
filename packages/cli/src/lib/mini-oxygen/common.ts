@@ -6,6 +6,8 @@ import {
 import colors from '@shopify/cli-kit/node/colors';
 import {DEV_ROUTES} from '../request-events.js';
 
+export const DEFAULT_INSPECTOR_PORT = 9222;
+
 export function logRequestLine(
   // Minimal overlap between Fetch, Miniflare@2 and Miniflare@3 request types.
   request: Pick<Request, 'method' | 'url'> & {
