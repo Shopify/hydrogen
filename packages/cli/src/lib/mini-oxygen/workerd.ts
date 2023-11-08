@@ -38,6 +38,8 @@ const PRIVATE_WORKERD_INSPECTOR_PORT = 9229;
 export async function startWorkerdServer({
   root,
   port = DEFAULT_PORT,
+  inspectorPort = DEFAULT_INSPECTOR_PORT,
+  debug = false,
   watch = false,
   buildPathWorkerFile,
   buildPathClient,
@@ -45,7 +47,6 @@ export async function startWorkerdServer({
 }: MiniOxygenOptions): Promise<MiniOxygenInstance> {
   const appPort = await findPort(port);
   const workerdInspectorPort = await findPort(PRIVATE_WORKERD_INSPECTOR_PORT);
-  const publicInspectorPort = await findPort(DEFAULT_INSPECTOR_PORT);
 
   const oxygenHeadersMap = Object.values(OXYGEN_HEADERS_MAP).reduce(
     (acc, item) => {
@@ -117,10 +118,9 @@ export async function startWorkerdServer({
     ? connectToInspector({inspectorUrl, sourceMapPath})
     : undefined;
 
-  const inspectorProxy = createInspectorProxy(
-    publicInspectorPort,
-    inspectorConnection,
-  );
+  const inspectorProxy = debug
+    ? createInspectorProxy(await findPort(inspectorPort), inspectorConnection)
+    : undefined;
 
   return {
     port: appPort,
@@ -145,7 +145,7 @@ export async function startWorkerdServer({
       inspectorUrl ??= await findInspectorUrl(workerdInspectorPort);
       if (inspectorUrl) {
         inspectorConnection = connectToInspector({inspectorUrl, sourceMapPath});
-        inspectorProxy.updateInspectorConnection(inspectorConnection);
+        inspectorProxy?.updateInspectorConnection(inspectorConnection);
       }
     },
     showBanner(options) {
@@ -159,6 +159,13 @@ export async function startWorkerdServer({
         body: [
           `View ${options?.appName ?? 'Hydrogen'} app: ${listeningAt}`,
           ...(options?.extraLines ?? []),
+          ...(debug
+            ? [
+                {
+                  warn: `\n\nDebugger listening on ws://localhost:${inspectorPort}`,
+                },
+              ]
+            : []),
         ],
       });
       console.log('');

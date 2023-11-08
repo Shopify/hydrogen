@@ -22,7 +22,11 @@ import {
 } from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
-import {type MiniOxygen, startMiniOxygen} from '../../lib/mini-oxygen/index.js';
+import {
+  type MiniOxygen,
+  startMiniOxygen,
+  DEFAULT_INSPECTOR_PORT,
+} from '../../lib/mini-oxygen/index.js';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
@@ -56,9 +60,14 @@ export default class Dev extends Command {
       default: false,
     }),
     debug: Flags.boolean({
-      description: 'Attaches a Node inspector',
+      description: 'Enables inspector connections with a debugger.',
       env: 'SHOPIFY_HYDROGEN_FLAG_DEBUG',
       default: false,
+    }),
+    'inspector-port': Flags.integer({
+      description: 'Port where the inspector will be available.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_INSPECTOR_PORT',
+      default: DEFAULT_INSPECTOR_PORT,
     }),
     host: deprecated('--host')(),
     ['env-branch']: commonFlags.envBranch,
@@ -77,6 +86,19 @@ export default class Dev extends Command {
   }
 }
 
+type DevOptions = {
+  port?: number;
+  path?: string;
+  useCodegen?: boolean;
+  workerRuntime?: boolean;
+  codegenConfigPath?: string;
+  disableVirtualRoutes?: boolean;
+  envBranch?: string;
+  debug?: boolean;
+  sourcemap?: boolean;
+  inspectorPort?: number;
+};
+
 async function runDev({
   port: portFlag = DEFAULT_PORT,
   path: appPath,
@@ -87,22 +109,11 @@ async function runDev({
   envBranch,
   debug = false,
   sourcemap = true,
-}: {
-  port?: number;
-  path?: string;
-  useCodegen?: boolean;
-  workerRuntime?: boolean;
-  codegenConfigPath?: string;
-  disableVirtualRoutes?: boolean;
-  envBranch?: string;
-  debug?: boolean;
-  sourcemap?: boolean;
-}) {
+  inspectorPort,
+}: DevOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
   muteDevLogs();
-
-  if (debug) (await import('node:inspector')).open();
 
   const {root, publicPath, buildPathClient, buildPathWorkerFile} =
     getProjectPaths(appPath);
@@ -165,6 +176,8 @@ async function runDev({
     miniOxygen = await startMiniOxygen(
       {
         root,
+        debug,
+        inspectorPort,
         port: portFlag,
         watch: !liveReload,
         buildPathWorkerFile,
