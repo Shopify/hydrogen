@@ -5,6 +5,7 @@
 
 import {dirname} from 'node:path';
 import {readFile} from 'node:fs/promises';
+import {fetch} from '@shopify/cli-kit/node/http';
 import {SourceMapConsumer} from 'source-map';
 import {WebSocket, type MessageEvent} from 'ws';
 import {type Protocol} from 'devtools-protocol';
