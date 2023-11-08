@@ -301,6 +301,13 @@
           "char": "e",
           "description": "Specify an environment's branch name when using remote environment variables.",
           "multiple": false
+        },
+        "disable-version-check": {
+          "name": "disable-version-check",
+          "type": "boolean",
+          "description": "Skip the version check when running `hydrogen dev`",
+          "required": false,
+          "allowNo": false
         }
       },
       "args": {}
@@ -601,6 +608,40 @@
           "type": "option",
           "description": "The path to the directory of the Hydrogen storefront. The default is the current directory.",
           "multiple": false
+        }
+      },
+      "args": {}
+    },
+    "hydrogen:upgrade": {
+      "id": "hydrogen:upgrade",
+      "description": "Upgrade Remix and Hydrogen npm dependencies.",
+      "strict": true,
+      "pluginName": "@shopify/cli-hydrogen",
+      "pluginAlias": "@shopify/cli-hydrogen",
+      "pluginType": "core",
+      "aliases": [],
+      "flags": {
+        "path": {
+          "name": "path",
+          "type": "option",
+          "description": "The path to the directory of the Hydrogen storefront. The default is the current directory.",
+          "multiple": false
+        },
+        "version": {
+          "name": "version",
+          "type": "option",
+          "char": "v",
+          "description": "A target hydrogen version to update to",
+          "required": false,
+          "multiple": false
+        },
+        "dry-run": {
+          "name": "dry-run",
+          "type": "boolean",
+          "char": "d",
+          "description": "Generate a summary and .md file with upgrade instructions without actually upgrading the dependencies",
+          "required": false,
+          "allowNo": false
         }
       },
       "args": {}
