@@ -6,7 +6,10 @@ import {
   flagsToCamelObject,
   DEFAULT_PORT,
 } from '../../lib/flags.js';
-import {startMiniOxygen} from '../../lib/mini-oxygen/index.js';
+import {
+  DEFAULT_INSPECTOR_PORT,
+  startMiniOxygen,
+} from '../../lib/mini-oxygen/index.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
 
@@ -55,9 +58,10 @@ export async function runPreview({
     {
       root,
       port,
+      env,
       buildPathClient,
       buildPathWorkerFile,
-      env,
+      inspectorPort: DEFAULT_INSPECTOR_PORT,
     },
     workerRuntime,
   );

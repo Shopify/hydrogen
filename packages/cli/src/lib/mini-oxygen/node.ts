@@ -9,17 +9,12 @@ import {
 } from '@shopify/mini-oxygen';
 import {DEFAULT_PORT} from '../flags.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
-import {
-  DEFAULT_INSPECTOR_PORT,
-  OXYGEN_HEADERS_MAP,
-  logRequestLine,
-} from './common.js';
+import {OXYGEN_HEADERS_MAP, logRequestLine} from './common.js';
 import {
   H2O_BINDING_NAME,
   logRequestEvent,
   handleDebugNetworkRequest,
 } from '../request-events.js';
-import {findPort} from '../find-port.js';
 
 export async function startNodeServer({
   port = DEFAULT_PORT,
@@ -28,7 +23,7 @@ export async function startNodeServer({
   buildPathClient,
   env,
   debug = false,
-  inspectorPort = DEFAULT_INSPECTOR_PORT,
+  inspectorPort,
 }: MiniOxygenOptions): Promise<MiniOxygenInstance> {
   const oxygenHeaders = Object.fromEntries(
     Object.entries(OXYGEN_HEADERS_MAP).map(([key, value]) => {
@@ -53,8 +48,7 @@ export async function startNodeServer({
   };
 
   if (debug) {
-    const publicInspectorPort = await findPort(inspectorPort);
-    (await import('node:inspector')).open(publicInspectorPort);
+    (await import('node:inspector')).open(inspectorPort);
   }
 
   const miniOxygen = await startServer({
@@ -130,6 +124,13 @@ export async function startNodeServer({
         body: [
           `View ${options?.appName ?? 'Hydrogen'} app: ${listeningAt}`,
           ...(options?.extraLines ?? []),
+          ...(debug
+            ? [
+                {
+                  warn: `\n\nDebugger listening on ws://localhost:${inspectorPort}`,
+                },
+              ]
+            : []),
         ],
       });
       console.log('');

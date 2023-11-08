@@ -7,7 +7,7 @@ export type MiniOxygenOptions = {
   buildPathWorkerFile: string;
   env: {[key: string]: string};
   debug?: boolean;
-  inspectorPort?: number;
+  inspectorPort: number;
 };
 
 export type MiniOxygenInstance = {

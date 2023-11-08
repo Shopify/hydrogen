@@ -96,7 +96,7 @@ type DevOptions = {
   envBranch?: string;
   debug?: boolean;
   sourcemap?: boolean;
-  inspectorPort?: number;
+  inspectorPort: number;
 };
 
 async function runDev({

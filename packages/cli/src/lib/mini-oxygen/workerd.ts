@@ -21,11 +21,7 @@ import {createInspectorProxy} from './workerd-inspector-proxy.js';
 import {DEFAULT_PORT} from '../flags.js';
 import {findPort} from '../find-port.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
-import {
-  DEFAULT_INSPECTOR_PORT,
-  OXYGEN_HEADERS_MAP,
-  logRequestLine,
-} from './common.js';
+import {OXYGEN_HEADERS_MAP, logRequestLine} from './common.js';
 import {
   H2O_BINDING_NAME,
   handleDebugNetworkRequest,
@@ -38,7 +34,7 @@ const PRIVATE_WORKERD_INSPECTOR_PORT = 9229;
 export async function startWorkerdServer({
   root,
   port = DEFAULT_PORT,
-  inspectorPort = DEFAULT_INSPECTOR_PORT,
+  inspectorPort: publicInspectorPort,
   debug = false,
   watch = false,
   buildPathWorkerFile,
@@ -119,7 +115,7 @@ export async function startWorkerdServer({
     : undefined;
 
   const inspectorProxy = debug
-    ? createInspectorProxy(await findPort(inspectorPort), inspectorConnection)
+    ? createInspectorProxy(publicInspectorPort, inspectorConnection)
     : undefined;
 
   return {
@@ -162,7 +158,7 @@ export async function startWorkerdServer({
           ...(debug
             ? [
                 {
-                  warn: `\n\nDebugger listening on ws://localhost:${inspectorPort}`,
+                  warn: `\n\nDebugger listening on ws://localhost:${publicInspectorPort}`,
                 },
               ]
             : []),
