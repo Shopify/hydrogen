@@ -324,35 +324,6 @@ export async function getHydrogenVersion({appPath}: {appPath: string}) {
   return {currentVersion, currentDependencies};
 }
 
-// /**
-//  * Gets the current @shopify/hydrogen version from the app's package.json
-//  */
-// export async function getHydrogenVersion({appPath}: {appPath: string}) {
-//   if (!appPath) {
-//     throw new Error('No app path provided');
-//   }
-//
-//   console.log('inside getHydrogenVersion');
-//
-//   const {root} = getProjectPaths(appPath);
-//   const packageJsonPath = path.join(root, 'package.json');
-//
-//   if (!packageJsonPath) {
-//     throw new Error('No package.json found');
-//   }
-//
-//   const currentDependencies = await getDependencies(packageJsonPath);
-//   const currentVersion = currentDependencies?.['@shopify/hydrogen'];
-//
-//   if (!currentVersion) {
-//     throw new Error(
-//       'The upgrade command can only be used in Hydrogen projects including @shopify/hydrogen as a dependency',
-//     );
-//   }
-//
-//   return {currentVersion, currentDependencies};
-// }
-
 /**
  * (Temp) Mock-fetches the changelog-versions.json while we merge
  */
