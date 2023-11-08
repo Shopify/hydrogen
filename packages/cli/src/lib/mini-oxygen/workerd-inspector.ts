@@ -15,11 +15,11 @@ import {
 } from './workerd-inspector-logs.js';
 
 // https://chromedevtools.github.io/devtools-protocol/#endpoints
-interface InspectorWebSocketTarget {
+export interface InspectorWebSocketTarget {
   id: string;
   title: string;
   type: 'node';
-  description: string;
+  description?: string;
   webSocketDebuggerUrl: string;
   devtoolsFrontendUrl: string;
   devtoolsFrontendUrlCompat: string;

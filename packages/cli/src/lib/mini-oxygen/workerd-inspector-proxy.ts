@@ -6,6 +6,7 @@ import {
 } from 'node:http';
 import {WebSocketServer, type WebSocket, type MessageEvent} from 'ws';
 import {type Protocol} from 'devtools-protocol';
+import {type InspectorWebSocketTarget} from './workerd-inspector.js';
 
 export function createInspectorProxy(
   port: number,
@@ -60,7 +61,7 @@ export function createInspectorProxy(
                 url:
                   'https://' +
                   (inspectorWs ? new URL(inspectorWs.url).host : localHost),
-              },
+              } satisfies InspectorWebSocketTarget,
             ]),
           );
         }
