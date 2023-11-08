@@ -340,9 +340,8 @@ export async function fetchChangelog(): Promise<ChangeLog | undefined> {
   }
   try {
     const response = await fetch(
-      // TODO: https://hydrogen.shopify.dev/changelong.json
-      // NOTE: https://github.com/Shopify/hydrogen-shopify-dev/pull/154
-      // NOTE: https://raw.githubusercontent.com/Shopify/hydrogen/main/changelog.json'
+      // TODO: https://github.com/Shopify/hydrogen-shopify-dev/pull/154
+      // TODO: https://github.com/Shopify/hydrogen/blob/main/packages/cli/src/changelog.json
       'https://hydrogen.shopify.dev/changelog.json',
     );
 
