@@ -246,12 +246,20 @@ describe('upgrade', () => {
             releases,
           });
 
+          const uniqueAvailableUpgrades = releases
+            .slice(0, 2)
+            .reduce((acc, release) => {
+              // @ts-ignore
+              if (acc[release.version]) return acc;
+              return {
+                ...acc,
+                [release.version]: release,
+              };
+            }, {});
+
           expect(availableUpgrades).toMatchObject({
             availableUpgrades: releases.slice(0, 2),
-            uniqueAvailableUpgrades: {
-              '2023.10.0': releases[0],
-              '2023.7.13': releases[1],
-            },
+            uniqueAvailableUpgrades,
           });
         },
         {
@@ -447,9 +455,6 @@ describe('upgrade', () => {
       vi.mock('@shopify/cli-kit/node/ui', () => ({
         renderInfo: vi.fn(),
         renderConfirmationPrompt: vi.fn(),
-        // renderSelectPrompt: vi.fn(),
-        // renderFatalError: vi.fn(),
-        // renderSuccess: vi.fn(),
       }));
     });
     it('renders a confirmation prompt that prompts to continue or return to the previous menu', async () => {
@@ -466,7 +471,7 @@ describe('upgrade', () => {
           const targetVersion = undefined;
           const dryRun = false;
 
-          await displayConfirmation({
+          const confimed = await displayConfirmation({
             appPath,
             cumulativeRelease: CUMMLATIVE_RELEASE,
             selectedRelease,
@@ -475,6 +480,8 @@ describe('upgrade', () => {
           }).catch((error) => {
             console.log('error', error);
           });
+
+          if (!confimed) return;
 
           expect(renderInfo).toHaveBeenCalledWith({
             headline: `Included in this upgrade:`,

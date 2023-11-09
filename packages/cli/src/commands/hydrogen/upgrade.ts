@@ -197,13 +197,18 @@ export async function runUpgrade({
   });
 
   // Prompt the user to confirm the upgrade and display a list of features and fixes
-  await displayConfirmation({
+  const confirmed = await displayConfirmation({
     appPath,
     cumulativeRelease,
     dryRun,
     selectedRelease,
     targetVersion,
   });
+
+  // Exit if the user chose to return to the version selection prompt
+  if (!confirmed) {
+    return;
+  }
 
   // skip the dependency upgrade step and validation if we're doing a dry run
   if (!dryRun) {
@@ -533,6 +538,8 @@ export async function displayConfirmation({
       version: targetVersion,
     });
   }
+
+  return true;
 }
 
 function isRemixDependency([name]: [string, string]) {
@@ -677,6 +684,7 @@ async function promptUpgradeOptions(
       isLatest = true;
     }
 
+    // TODO: add group sorting function to cli-kit select prompt
     const majorVersion = `${semver.major(version)}.${semver.minor(version)}`;
 
     const isFirstMajorVersion = semver.patch(version) === 0;
@@ -752,8 +760,8 @@ async function displaySummary({
   )} → ${getAbsoluteVersion(`${selectedRelease.version}`)}`;
 
   const headline = dryRun
-    ? `Expected upgrade from ${versionsChange}`
-    : `You've have updated from ${versionsChange}`;
+    ? `Dry run upgrade ${versionsChange}`
+    : `You've updated from ${versionsChange}`;
 
   return renderSuccess({
     headline,
