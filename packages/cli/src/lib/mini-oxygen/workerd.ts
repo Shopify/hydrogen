@@ -118,8 +118,11 @@ export async function startWorkerdServer({
     ? createInspectorProxy(publicInspectorPort, inspectorConnection)
     : undefined;
 
-  const assetsServer = createAssetsServer(buildPathClient);
-  assetsServer.listen(assetsPort);
+  const assetsServer = assetsPort
+    ? createAssetsServer(buildPathClient)
+    : undefined;
+
+  assetsServer?.listen(assetsPort);
 
   return {
     port: appPort,
@@ -170,8 +173,8 @@ export async function startWorkerdServer({
       console.log('');
     },
     async close() {
-      assetsServer.closeAllConnections();
-      assetsServer.close();
+      assetsServer?.closeAllConnections();
+      assetsServer?.close();
       await miniOxygen.dispose();
     },
   };

@@ -21,7 +21,11 @@ import {
 } from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
-import {type MiniOxygen, startMiniOxygen} from '../../lib/mini-oxygen/index.js';
+import {
+  type MiniOxygen,
+  startMiniOxygen,
+  buildAssetsUrl,
+} from '../../lib/mini-oxygen/index.js';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
@@ -137,10 +141,10 @@ async function runDev({
   inspectorPort = debug ? await findPort(inspectorPort) : inspectorPort;
   appPort = workerRuntime ? await findPort(appPort) : appPort; // findPort is already called for Node sandbox
 
-  const assetsPort = workerRuntime ? await findPort(appPort + 10) : 0;
+  const assetsPort = workerRuntime ? await findPort(appPort + 100) : 0;
   if (assetsPort) {
     // Note: Set this env before loading Remix config!
-    process.env.HYDROGEN_ASSET_BASE_URL = `http://localhost:${assetsPort}/`;
+    process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
   }
 
   const [remixConfig, {shop, storefront}] = await Promise.all([

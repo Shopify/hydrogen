@@ -56,3 +56,7 @@ export function createAssetsServer(buildPathClient: string) {
     );
   });
 }
+
+export function buildAssetsUrl(assetsPort: number) {
+  return `http://localhost:${assetsPort}/`;
+}
