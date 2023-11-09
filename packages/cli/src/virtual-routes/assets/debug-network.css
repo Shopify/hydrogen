@@ -1,9 +1,11 @@
 :root {
+  --background-color: #f1f1f1;
   --primary-color: #303030;
   --secondary-color: #e3e3e3;
   --shadow-color: #999;
   --dark-border-color: #666;
   --button-state-color: #fafafa;
+  --secondary-text-color: #616161;
 
   --text-large: 0.813rem;
   --text-normal: 0.688rem;
@@ -11,7 +13,7 @@
 
 body {
   color: var(--primary-color);
-  background-color: #f1f1f1;
+  background-color: var(--background-color);
   font-size: var(--text-normal);
 }
 
@@ -171,6 +173,10 @@ button:active {
   border: 1px solid var(--secondary-color);
 }
 
+.panel.no-pad {
+  padding: 0px;
+}
+
 #request-info {
   display: flex;
   gap: 0.7rem;
@@ -181,4 +187,58 @@ button:active {
 
 #request-info .panel {
   flex: 1;
+}
+
+#request-table {
+  padding: 0;
+  font-size: var(--text-large);
+}
+
+#request-table .grid-row {
+  display: grid;
+  grid-template-columns: 1fr 80px 80px;
+  border-bottom: 1px solid var(--secondary-color);
+}
+
+#request-table .grid-cell {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  place-self: stretch;
+  padding: 0.5rem 0;
+}
+
+#request-table .grid-cell:first-child {
+  padding-left: 0.75rem;
+}
+
+#request-table .grid-cell:last-child {
+  padding-right: 0.75rem;
+}
+
+#request-table__header.grid-row {
+  font-weight: 450;
+}
+
+#request-table__header.grid-cell {
+  border-top: none;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+#request-table__content {
+  overflow: scroll;
+  min-height: 20vh;
+  max-height: 30vh;
+}
+
+#request-table__footer {
+  border-top: 1px solid var(--secondary-color);
+  background-color: var(--background-color);
+  border-radius: 0 0 0.75rem 0.75rem;
+  padding: 0.5rem 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

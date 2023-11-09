@@ -168,20 +168,21 @@ export function RequestWaterfall({
   );
 }
 
+export type RequestTimings = {
+  requestStart: number;
+  requestEnd: number;
+  responseStart: number;
+  responseEnd: number;
+};
+
 export function buildRequestData<T>({
   serverEvents,
   buildMainRequest,
   buildSubRequest,
 }: {
   serverEvents: ServerEvents;
-  buildMainRequest: (
-    mainRequest: ServerEvent,
-    timing: Record<string, number>,
-  ) => T;
-  buildSubRequest: (
-    subRequest: ServerEvent,
-    timing: Record<string, number>,
-  ) => T;
+  buildMainRequest: (mainRequest: ServerEvent, timing: RequestTimings) => T;
+  buildSubRequest: (subRequest: ServerEvent, timing: RequestTimings) => T;
 }): T[] {
   const calcDuration = (time: number) => time - serverEvents.smallestStartTime;
   let items: T[] = [];
@@ -202,6 +203,8 @@ export function buildRequestData<T>({
       const subRequestItem = buildSubRequest(subRequest, {
         requestStart: calcDuration(subRequest.startTime),
         requestEnd: subRequestEnd,
+        responseStart: -1,
+        responseEnd: -1,
       });
 
       if (serverEvents.hidePutRequests) {
@@ -217,6 +220,7 @@ export function buildRequestData<T>({
         requestStart: calcDuration(mainRequest.startTime),
         responseStart: mainResponseStart,
         responseEnd: mainResponseEnd,
+        requestEnd: -1,
       }),
     );
     items = items.concat(subRequestItems);

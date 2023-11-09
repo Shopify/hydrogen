@@ -72,8 +72,7 @@ export default function DebugNetwork() {
           />
         </div>
         <div id="request-info">
-          <div className="panel">
-            <p>Request table</p>
+          <div className="panel no-pad">
             <RequestTable serverEvents={serverEvents} />
           </div>
           <div className="panel">
@@ -134,13 +133,13 @@ function OptionsAndLegend({
       <div className="flex-row text-large">
         <div className="form-control">
           <input
-            id="showPutRequests"
+            id="hidePutRequests"
             type="checkbox"
             checked={serverEvents.hidePutRequests}
             onChange={(event) => setHidePutRequests(event.target.checked)}
           />
-          <label htmlFor="showPutRequests">
-            Show cache update requests (PUT)
+          <label htmlFor="hidePutRequests">
+            Hide cache update requests (PUT)
           </label>
         </div>
         <div className="form-control">
