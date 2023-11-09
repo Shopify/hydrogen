@@ -9,30 +9,43 @@ import {lookupMimeType} from '@shopify/cli-kit/node/mimes';
 
 const html = String.raw;
 
+// Mimic path in Shopify CDN for Oxygen v2
+const artificialAssetPrefix = 'mini-oxygen/00000/11111/22222/33333';
+
 export function createAssetsServer(buildPathClient: string) {
   return createServer(async (req: IncomingMessage, res: ServerResponse) => {
     // Similar headers to Shopify CDN
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('X-Content-Type-Options', 'nosniff');
 
-    const relativePath = req.url?.split('?')[0] || '';
-    const filePath = path.join(buildPathClient, relativePath);
+    const pathname = req.url?.split('?')[0] || '';
+    const isValidAssetPath =
+      pathname.startsWith(`/${artificialAssetPrefix}/`) &&
+      !pathname.includes('..'); // Ensure it doesn't leave the build directory
 
-    try {
-      const file = await fs.open(filePath);
-      const stat = await file.stat();
+    const relativeAssetPath = isValidAssetPath
+      ? pathname.replace(`/${artificialAssetPrefix}`, '')
+      : pathname;
 
-      if (stat.isFile()) {
-        res.setHeader('Content-Length', stat.size);
+    if (isValidAssetPath) {
+      const filePath = path.join(buildPathClient, relativeAssetPath);
 
-        res.setHeader(
-          'Content-Type',
-          lookupMimeType(filePath) || 'application/octet-stream',
-        );
+      try {
+        const file = await fs.open(filePath);
+        const stat = await file.stat();
 
-        return file.createReadStream().pipe(res);
-      }
-    } catch {}
+        if (stat.isFile()) {
+          res.setHeader('Content-Length', stat.size);
+
+          res.setHeader(
+            'Content-Type',
+            lookupMimeType(filePath) || 'application/octet-stream',
+          );
+
+          return file.createReadStream().pipe(res);
+        }
+      } catch {}
+    }
 
     // -- File was not found:
 
@@ -50,7 +63,7 @@ export function createAssetsServer(buildPathClient: string) {
         >
           <h2>404 NOT FOUND</h2>
           <p>This file was not found in the build output directory:</p>
-          <pre>${relativePath}</pre>
+          <pre>${relativeAssetPath}</pre>
         </body>
       </html>`,
     );
@@ -58,5 +71,5 @@ export function createAssetsServer(buildPathClient: string) {
 }
 
 export function buildAssetsUrl(assetsPort: number) {
-  return `http://localhost:${assetsPort}/`;
+  return `http://localhost:${assetsPort}/${artificialAssetPrefix}/`;
 }
