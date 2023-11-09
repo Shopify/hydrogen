@@ -9,9 +9,20 @@ import {lookupMimeType} from '@shopify/cli-kit/node/mimes';
 
 const html = String.raw;
 
-// Mimic path in Shopify CDN for Oxygen v2
+// Mimics path in Shopify CDN for Oxygen v2
 const artificialAssetPrefix = 'mini-oxygen/00000/11111/22222/33333';
 
+/**
+ * Returns a URL to the static assets server.
+ */
+export function buildAssetsUrl(assetsPort: number) {
+  return `http://localhost:${assetsPort}/${artificialAssetPrefix}/`;
+}
+
+/**
+ * Creates a server that serves static assets from the build directory.
+ * Mimics Shopify CDN URLs for Oxygen v2.
+ */
 export function createAssetsServer(buildPathClient: string) {
   return createServer(async (req: IncomingMessage, res: ServerResponse) => {
     // Similar headers to Shopify CDN
@@ -30,21 +41,20 @@ export function createAssetsServer(buildPathClient: string) {
     if (isValidAssetPath) {
       const filePath = path.join(buildPathClient, relativeAssetPath);
 
-      try {
-        const file = await fs.open(filePath);
-        const stat = await file.stat();
+      // Ignore errors and just return 404
+      const file = await fs.open(filePath).catch(() => {});
+      const stat = await file?.stat().catch(() => {});
 
-        if (stat.isFile()) {
-          res.setHeader('Content-Length', stat.size);
+      if (file && stat?.isFile()) {
+        res.setHeader('Content-Length', stat.size);
 
-          res.setHeader(
-            'Content-Type',
-            lookupMimeType(filePath) || 'application/octet-stream',
-          );
+        res.setHeader(
+          'Content-Type',
+          lookupMimeType(filePath) || 'application/octet-stream',
+        );
 
-          return file.createReadStream().pipe(res);
-        }
-      } catch {}
+        return file.createReadStream().pipe(res);
+      }
     }
 
     // -- File was not found:
@@ -52,7 +62,7 @@ export function createAssetsServer(buildPathClient: string) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.writeHead(404);
 
-    // Mimic what Shopify CDN does for 404s
+    // Mimic what Shopify CDN returns for 404s
     res.end(
       html`<html>
         <head>
@@ -62,16 +72,16 @@ export function createAssetsServer(buildPathClient: string) {
           style="display: flex; flex-direction: column; align-items: center; padding-top: 20px; font-family: Arial"
         >
           <h2>404 NOT FOUND</h2>
-          <p>This file was not found in the build output directory:</p>
+          <p>
+            ${isValidAssetPath
+              ? 'This file was not found in the build output directory:'
+              : 'The following URL pathname is not valid:'}
+          </p>
           <pre>${relativeAssetPath}</pre>
         </body>
       </html>`,
     );
   });
-}
-
-export function buildAssetsUrl(assetsPort: number) {
-  return `http://localhost:${assetsPort}/${artificialAssetPrefix}/`;
 }
 
 // Similar extensions to what oxygen-workers proxies:
