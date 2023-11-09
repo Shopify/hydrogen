@@ -1,4 +1,5 @@
-import type {Waterfall, WaterfallItems} from 'flame-chart-js';
+import {WaterfallItem, type Waterfall} from 'flame-chart-js';
+import {useMemo} from 'react';
 
 import {FlameChartWrapper} from './FlameChartWrapper.jsx';
 import {Link} from '@remix-run/react';
@@ -63,56 +64,35 @@ export function RequestWaterfall({
       </div>
     );
 
-  let totalRequests = 0;
-  let totalSubRequests = 0;
-
-  const calcDuration = (time: number) => time - serverEvents.smallestStartTime;
-  let items: WaterfallItems = [];
-
-  serverEvents.mainRequests.forEach((mainRequest: ServerEvent) => {
-    const mainResponseStart = calcDuration(mainRequest.endTime);
-    let mainResponseEnd = mainResponseStart;
-
-    const subRequestItems: WaterfallItems = [];
-    const subRequests = serverEvents.subRequests[mainRequest.id] || [];
-    subRequests.forEach((subRequest: ServerEvent) => {
-      const subRequestEnd = calcDuration(subRequest.endTime);
-
-      if (subRequest.cacheStatus !== 'PUT') {
-        mainResponseEnd = Math.max(mainResponseEnd, subRequestEnd);
-      }
-
-      const subRequestItem = {
+  const items = buildRequestData<WaterfallItem>({
+    serverEvents,
+    buildMainRequest: (
+      mainRequest: ServerEvent,
+      timing: Record<string, number>,
+    ) => {
+      return {
+        name: mainRequest.url,
+        intervals: 'mainRequest',
+        timing,
+      } satisfies WaterfallItem;
+    },
+    buildSubRequest: (
+      subRequest: ServerEvent,
+      timing: Record<string, number>,
+    ) => {
+      return {
         name: `${subRequest.cacheStatus} ${subRequest.url}`.trim(),
         intervals: 'request',
-        timing: {
-          requestStart: calcDuration(subRequest.startTime),
-          requestEnd: subRequestEnd,
-        },
-      };
-
-      if (serverEvents.hidePutRequests) {
-        subRequest.cacheStatus !== 'PUT' &&
-          subRequestItems.push(subRequestItem);
-      } else {
-        subRequestItems.push(subRequestItem);
-      }
-
-      totalSubRequests++;
-    });
-
-    totalRequests++;
-
-    items.push({
-      name: mainRequest.url,
-      intervals: 'mainRequest',
-      timing: {
-        requestStart: calcDuration(mainRequest.startTime),
-        responseStart: mainResponseStart,
-        responseEnd: mainResponseEnd,
-      },
-    });
-    items = items.concat(subRequestItems);
+        timing,
+        meta: [
+          {
+            name: 'id',
+            value: subRequest.id,
+            color: 'black',
+          },
+        ],
+      } satisfies WaterfallItem;
+    },
   });
 
   const data: Waterfall = {
@@ -145,27 +125,102 @@ export function RequestWaterfall({
       ],
     },
   };
+
+  // const tooltipRenderer = (data: any, renderEngine: RenderEngine | OffscreenRenderEngine, mouse: Mouse | null) => {
+  //   console.log({data, renderEngine, mouse});
+  // }
+
+  const onSelect = (data: any) => {
+    console.log(data);
+  };
+
+  const settings = useMemo(
+    () => ({
+      // options: {
+      //   tooltip: tooltipRenderer,
+      // },
+      styles: {
+        main: {
+          blockHeight: 22,
+          font: STYLE_FONT,
+        },
+        timeframeSelectorPlugin: {
+          font: STYLE_FONT,
+        },
+        timeGridPlugin: {
+          font: STYLE_FONT,
+        },
+        waterfallPlugin: {
+          defaultHeight: panelHeight,
+        },
+      },
+    }),
+    [panelHeight],
+  );
+
   return (
     <FlameChartWrapper
       height={panelHeight}
       waterfall={data}
-      settings={{
-        styles: {
-          main: {
-            blockHeight: 22,
-            font: STYLE_FONT,
-          },
-          timeframeSelectorPlugin: {
-            font: STYLE_FONT,
-          },
-          timeGridPlugin: {
-            font: STYLE_FONT,
-          },
-          waterfallPlugin: {
-            defaultHeight: panelHeight,
-          },
-        },
-      }}
+      onSelect={onSelect}
+      settings={settings}
     />
   );
+}
+
+export function buildRequestData<T>({
+  serverEvents,
+  buildMainRequest,
+  buildSubRequest,
+}: {
+  serverEvents: ServerEvents;
+  buildMainRequest: (
+    mainRequest: ServerEvent,
+    timing: Record<string, number>,
+  ) => T;
+  buildSubRequest: (
+    subRequest: ServerEvent,
+    timing: Record<string, number>,
+  ) => T;
+}): T[] {
+  const calcDuration = (time: number) => time - serverEvents.smallestStartTime;
+  let items: T[] = [];
+
+  serverEvents.mainRequests.forEach((mainRequest: ServerEvent) => {
+    const mainResponseStart = calcDuration(mainRequest.endTime);
+    let mainResponseEnd = mainResponseStart;
+
+    const subRequestItems: T[] = [];
+    const subRequests = serverEvents.subRequests[mainRequest.id] || [];
+    subRequests.forEach((subRequest: ServerEvent) => {
+      const subRequestEnd = calcDuration(subRequest.endTime);
+
+      if (subRequest.cacheStatus !== 'PUT') {
+        mainResponseEnd = Math.max(mainResponseEnd, subRequestEnd);
+      }
+
+      const subRequestItem = buildSubRequest(subRequest, {
+        requestStart: calcDuration(subRequest.startTime),
+        requestEnd: subRequestEnd,
+      });
+
+      if (serverEvents.hidePutRequests) {
+        subRequest.cacheStatus !== 'PUT' &&
+          subRequestItems.push(subRequestItem as T);
+      } else {
+        subRequestItems.push(subRequestItem as T);
+      }
+    });
+
+    items.push(
+      buildMainRequest(mainRequest, {
+        requestStart: calcDuration(mainRequest.startTime),
+        responseStart: mainResponseStart,
+        responseEnd: mainResponseEnd,
+      }),
+    );
+    items = items.concat(subRequestItems);
+  });
+
+  return items;
 }

@@ -5,6 +5,7 @@ import {
   RequestWaterfall,
   type ServerEvents,
 } from '../components/RequestWaterfall.jsx';
+import {RequestTable} from '../components/RequestTable.jsx';
 
 import favicon from '../assets/favicon.svg';
 import faviconDark from '../assets/favicon-dark.svg';
@@ -64,12 +65,19 @@ export default function DebugNetwork() {
           setPreserveLog={setPreserveLog}
         />
         <div className="panel">
-          <div id="waterfall-panel">
-            <RequestWaterfall
-              key={timestamp}
-              serverEvents={serverEvents}
-              config={WATERFALL_CONFIG}
-            />
+          <RequestWaterfall
+            key={timestamp}
+            serverEvents={serverEvents}
+            config={WATERFALL_CONFIG}
+          />
+        </div>
+        <div id="request-info">
+          <div className="panel">
+            <p>Request table</p>
+            <RequestTable serverEvents={serverEvents} />
+          </div>
+          <div className="panel">
+            <p>Request details</p>
           </div>
         </div>
       </div>

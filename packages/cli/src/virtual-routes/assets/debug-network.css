@@ -1,7 +1,7 @@
 :root {
   --primary-color: #303030;
   --secondary-color: #e3e3e3;
-  --shadow-color: #777;
+  --shadow-color: #999;
   --dark-border-color: #666;
   --button-state-color: #fafafa;
 
@@ -169,4 +169,16 @@ button:active {
   padding: 1rem 0.75rem;
   box-shadow: 0px 1px 0px var(--shadow-color);
   border: 1px solid var(--secondary-color);
+}
+
+#request-info {
+  display: flex;
+  gap: 0.7rem;
+  align-items: stretch;
+  flex-direction: row;
+  margin-top: 1rem;
+}
+
+#request-info .panel {
+  flex: 1;
 }
