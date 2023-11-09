@@ -31,7 +31,7 @@ export default class Preview extends Command {
 }
 
 type PreviewOptions = {
-  port?: number;
+  port: number;
   path?: string;
   workerRuntime?: boolean;
   envBranch?: string;

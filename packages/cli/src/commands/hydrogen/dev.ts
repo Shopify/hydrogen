@@ -31,6 +31,7 @@ import {getConfig} from '../../lib/shopify-config.js';
 import {setupLiveReload} from '../../lib/live-reload.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
+import {findPort} from '../../lib/find-port.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -75,7 +76,7 @@ export default class Dev extends Command {
 }
 
 type DevOptions = {
-  port?: number;
+  port: number;
   path?: string;
   useCodegen?: boolean;
   workerRuntime?: boolean;
