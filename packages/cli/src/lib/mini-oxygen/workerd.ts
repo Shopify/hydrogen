@@ -9,7 +9,7 @@ import {
   RequestInit,
 } from 'miniflare';
 import {dirname, resolvePath} from '@shopify/cli-kit/node/path';
-import {glob, readFile} from '@shopify/cli-kit/node/fs';
+import {readFile} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {connectToInspector, findInspectorUrl} from './workerd-inspector.js';
 import {createInspectorProxy} from './workerd-inspector-proxy.js';
@@ -22,7 +22,11 @@ import {
   logRequestEvent,
   setConstructors,
 } from '../request-events.js';
-import {buildAssetsUrl, createAssetsServer} from './assets.js';
+import {
+  buildAssetsUrl,
+  createAssetsServer,
+  STATIC_ASSET_EXTENSIONS,
+} from './assets.js';
 
 const PRIVATE_WORKERD_INSPECTOR_PORT = 9229;
 
@@ -51,6 +55,7 @@ export async function startWorkerdServer({
 
   const absoluteBundlePath = resolvePath(root, buildPathWorkerFile);
   const handleAssets = createAssetHandler(assetsPort);
+  const staticAssetExtensions = STATIC_ASSET_EXTENSIONS.slice();
 
   const buildMiniOxygenOptions = async () =>
     ({
@@ -67,7 +72,7 @@ export async function startWorkerdServer({
           modules: true,
           script: `export default { fetch: ${miniOxygenHandler.toString()} }`,
           bindings: {
-            initialAssets: await glob('**/*', {cwd: buildPathClient}),
+            staticAssetExtensions,
             oxygenHeadersMap,
           },
           serviceBindings: {
@@ -181,7 +186,7 @@ async function miniOxygenHandler(
     assets: Service;
     logRequest: Service;
     debugNetwork: Service;
-    initialAssets: string[];
+    staticAssetExtensions: string[];
     oxygenHeadersMap: Record<string, string>;
   },
   context: ExecutionContext,
@@ -193,7 +198,13 @@ async function miniOxygenHandler(
   }
 
   if (request.method === 'GET') {
-    if (new Set(env.initialAssets).has(pathname.slice(1))) {
+    const staticAssetExtensions = new Set(env.staticAssetExtensions);
+    const wellKnown = pathname.startsWith('/.well-known');
+    const extension = pathname.split('.').at(-1) ?? '';
+    const isAsset =
+      wellKnown || !!staticAssetExtensions.has(extension.toUpperCase());
+
+    if (isAsset) {
       const response = await env.assets.fetch(
         new Request(request.url, {
           signal: request.signal,
