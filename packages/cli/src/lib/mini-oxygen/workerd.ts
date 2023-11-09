@@ -6,16 +6,11 @@ import {
   fetch,
   NoOpLog,
   type MiniflareOptions,
+  RequestInit,
 } from 'miniflare';
 import {dirname, resolvePath} from '@shopify/cli-kit/node/path';
-import {
-  glob,
-  readFile,
-  fileSize,
-  createFileReadStream,
-} from '@shopify/cli-kit/node/fs';
+import {glob, readFile} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
-import {lookupMimeType} from '@shopify/cli-kit/node/mimes';
 import {connectToInspector, findInspectorUrl} from './workerd-inspector.js';
 import {createInspectorProxy} from './workerd-inspector-proxy.js';
 import {findPort} from '../find-port.js';
@@ -27,7 +22,7 @@ import {
   logRequestEvent,
   setConstructors,
 } from '../request-events.js';
-import {createAssetsServer} from './assets.js';
+import {buildAssetsUrl, createAssetsServer} from './assets.js';
 
 const PRIVATE_WORKERD_INSPECTOR_PORT = 9229;
 
@@ -55,6 +50,7 @@ export async function startWorkerdServer({
   setConstructors({Response});
 
   const absoluteBundlePath = resolvePath(root, buildPathWorkerFile);
+  const handleAssets = createAssetHandler(assetsPort);
 
   const buildMiniOxygenOptions = async () =>
     ({
@@ -76,7 +72,7 @@ export async function startWorkerdServer({
           },
           serviceBindings: {
             hydrogen: 'hydrogen',
-            assets: createAssetHandler(buildPathClient),
+            assets: handleAssets,
             debugNetwork: handleDebugNetworkRequest,
             logRequest,
           },
@@ -118,11 +114,8 @@ export async function startWorkerdServer({
     ? createInspectorProxy(publicInspectorPort, inspectorConnection)
     : undefined;
 
-  const assetsServer = assetsPort
-    ? createAssetsServer(buildPathClient)
-    : undefined;
-
-  assetsServer?.listen(assetsPort);
+  const assetsServer = createAssetsServer(buildPathClient);
+  assetsServer.listen(assetsPort);
 
   return {
     port: appPort,
@@ -173,8 +166,8 @@ export async function startWorkerdServer({
       console.log('');
     },
     async close() {
-      assetsServer?.closeAllConnections();
-      assetsServer?.close();
+      assetsServer.closeAllConnections();
+      assetsServer.close();
       await miniOxygen.dispose();
     },
   };
@@ -242,30 +235,16 @@ async function miniOxygenHandler(
   return response;
 }
 
-function createAssetHandler(buildPathClient: string) {
+function createAssetHandler(assetsPort: number) {
+  const assetsServerOrigin = buildAssetsUrl(assetsPort);
+
   return async (request: Request): Promise<Response> => {
-    const relativeAssetPath = new URL(request.url).pathname.replace('/', '');
-    if (relativeAssetPath) {
-      try {
-        const absoluteAssetPath = resolvePath(
-          buildPathClient,
-          relativeAssetPath,
-        );
-
-        return new Response(createFileReadStream(absoluteAssetPath), {
-          headers: {
-            'Content-Type': lookupMimeType(relativeAssetPath) || 'text/plain',
-            'Content-Length': String(await fileSize(absoluteAssetPath)),
-          },
-        });
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-          throw error;
-        }
-      }
-    }
-
-    return new Response('Not Found', {status: 404});
+    return fetch(
+      new Request(
+        request.url.replace(new URL(request.url).origin, assetsServerOrigin),
+        request as RequestInit,
+      ),
+    );
   };
 }
 
