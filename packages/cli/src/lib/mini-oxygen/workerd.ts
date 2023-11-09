@@ -27,6 +27,7 @@ import {
   logRequestEvent,
   setConstructors,
 } from '../request-events.js';
+import {createAssetsServer} from './assets.js';
 
 const PRIVATE_WORKERD_INSPECTOR_PORT = 9229;
 
@@ -34,6 +35,7 @@ export async function startWorkerdServer({
   root,
   port: appPort,
   inspectorPort: publicInspectorPort,
+  assetsPort,
   debug = false,
   watch = false,
   buildPathWorkerFile,
@@ -116,6 +118,9 @@ export async function startWorkerdServer({
     ? createInspectorProxy(publicInspectorPort, inspectorConnection)
     : undefined;
 
+  const assetsServer = createAssetsServer(buildPathClient);
+  assetsServer.listen(assetsPort);
+
   return {
     port: appPort,
     listeningAt,
@@ -165,6 +170,8 @@ export async function startWorkerdServer({
       console.log('');
     },
     async close() {
+      assetsServer.closeAllConnections();
+      assetsServer.close();
       await miniOxygen.dispose();
     },
   };

@@ -1,6 +1,6 @@
 export type MiniOxygenOptions = {
   root: string;
-  port?: number;
+  port: number;
   watch?: boolean;
   autoReload?: boolean;
   buildPathClient: string;
@@ -8,6 +8,7 @@ export type MiniOxygenOptions = {
   env: {[key: string]: string};
   debug?: boolean;
   inspectorPort: number;
+  assetsPort?: number;
 };
 
 export type MiniOxygenInstance = {

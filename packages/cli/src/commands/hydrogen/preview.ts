@@ -31,7 +31,7 @@ export default class Preview extends Command {
 }
 
 type PreviewOptions = {
-  port?: number;
+  port: number;
   path?: string;
   workerRuntime?: boolean;
   envBranch?: string;
@@ -59,10 +59,13 @@ export async function runPreview({
   appPort = workerRuntime ? await findPort(appPort) : appPort;
   inspectorPort = debug ? await findPort(inspectorPort) : inspectorPort;
 
+  const assetsPort = workerRuntime ? await findPort(appPort + 10) : 0;
+
   const miniOxygen = await startMiniOxygen(
     {
       root,
       port: appPort,
+      assetsPort,
       env,
       buildPathClient,
       buildPathWorkerFile,

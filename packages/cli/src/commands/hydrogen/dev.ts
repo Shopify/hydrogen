@@ -18,7 +18,6 @@ import {
   commonFlags,
   flagsToCamelObject,
   overrideFlag,
-  DEFAULT_PORT,
 } from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
@@ -31,6 +30,7 @@ import {getConfig} from '../../lib/shopify-config.js';
 import {setupLiveReload} from '../../lib/live-reload.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
+import {findPort} from '../../lib/find-port.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -75,7 +75,7 @@ export default class Dev extends Command {
 }
 
 type DevOptions = {
-  port?: number;
+  port: number;
   path?: string;
   useCodegen?: boolean;
   workerRuntime?: boolean;
@@ -137,6 +137,12 @@ async function runDev({
   inspectorPort = debug ? await findPort(inspectorPort) : inspectorPort;
   appPort = workerRuntime ? await findPort(appPort) : appPort; // findPort is already called for Node sandbox
 
+  const assetsPort = workerRuntime ? await findPort(appPort + 10) : 0;
+  if (assetsPort) {
+    // Note: Set this env before loading Remix config!
+    process.env.HYDROGEN_ASSET_BASE_URL = `http://localhost:${assetsPort}/`;
+  }
+
   const [remixConfig, {shop, storefront}] = await Promise.all([
     reloadConfig(),
     getConfig(root),
@@ -168,6 +174,7 @@ async function runDev({
       {
         root,
         debug,
+        assetsPort,
         inspectorPort,
         port: appPort,
         watch: !liveReload,
