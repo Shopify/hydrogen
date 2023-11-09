@@ -18,7 +18,6 @@ import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {lookupMimeType} from '@shopify/cli-kit/node/mimes';
 import {connectToInspector, findInspectorUrl} from './workerd-inspector.js';
 import {createInspectorProxy} from './workerd-inspector-proxy.js';
-import {DEFAULT_PORT} from '../flags.js';
 import {findPort} from '../find-port.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
 import {OXYGEN_HEADERS_MAP, logRequestLine} from './common.js';
@@ -33,7 +32,7 @@ const PRIVATE_WORKERD_INSPECTOR_PORT = 9229;
 
 export async function startWorkerdServer({
   root,
-  port = DEFAULT_PORT,
+  port: appPort,
   inspectorPort: publicInspectorPort,
   debug = false,
   watch = false,
@@ -41,7 +40,6 @@ export async function startWorkerdServer({
   buildPathClient,
   env,
 }: MiniOxygenOptions): Promise<MiniOxygenInstance> {
-  const appPort = await findPort(port);
   const workerdInspectorPort = await findPort(PRIVATE_WORKERD_INSPECTOR_PORT);
 
   const oxygenHeadersMap = Object.values(OXYGEN_HEADERS_MAP).reduce(

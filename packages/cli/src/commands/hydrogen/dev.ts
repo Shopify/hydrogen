@@ -22,11 +22,7 @@ import {
 } from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
-import {
-  type MiniOxygen,
-  startMiniOxygen,
-  DEFAULT_INSPECTOR_PORT,
-} from '../../lib/mini-oxygen/index.js';
+import {type MiniOxygen, startMiniOxygen} from '../../lib/mini-oxygen/index.js';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
@@ -59,16 +55,8 @@ export default class Dev extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_VIRTUAL_ROUTES',
       default: false,
     }),
-    debug: Flags.boolean({
-      description: 'Enables inspector connections with a debugger.',
-      env: 'SHOPIFY_HYDROGEN_FLAG_DEBUG',
-      default: false,
-    }),
-    'inspector-port': Flags.integer({
-      description: 'Port where the inspector will be available.',
-      env: 'SHOPIFY_HYDROGEN_FLAG_INSPECTOR_PORT',
-      default: DEFAULT_INSPECTOR_PORT,
-    }),
+    debug: commonFlags.debug,
+    'inspector-port': commonFlags.inspectorPort,
     host: deprecated('--host')(),
     ['env-branch']: commonFlags.envBranch,
   };
@@ -100,7 +88,7 @@ type DevOptions = {
 };
 
 async function runDev({
-  port: portFlag = DEFAULT_PORT,
+  port: appPort,
   path: appPath,
   useCodegen = false,
   workerRuntime = false,
@@ -146,6 +134,9 @@ async function runDev({
 
   const serverBundleExists = () => fileExists(buildPathWorkerFile);
 
+  inspectorPort = debug ? await findPort(inspectorPort) : inspectorPort;
+  appPort = workerRuntime ? await findPort(appPort) : appPort; // findPort is already called for Node sandbox
+
   const [remixConfig, {shop, storefront}] = await Promise.all([
     reloadConfig(),
     getConfig(root),
@@ -178,7 +169,7 @@ async function runDev({
         root,
         debug,
         inspectorPort,
-        port: portFlag,
+        port: appPort,
         watch: !liveReload,
         buildPathWorkerFile,
         buildPathClient,

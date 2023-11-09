@@ -530,6 +530,19 @@
           "char": "e",
           "description": "Specify an environment's branch name when using remote environment variables.",
           "multiple": false
+        },
+        "inspector-port": {
+          "name": "inspector-port",
+          "type": "option",
+          "description": "Port where the inspector will be available.",
+          "multiple": false,
+          "default": 9222
+        },
+        "debug": {
+          "name": "debug",
+          "type": "boolean",
+          "description": "Enables inspector connections with a debugger.",
+          "allowNo": false
         }
       },
       "args": {}

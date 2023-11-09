@@ -1,5 +1,4 @@
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
-import {findPort} from '../find-port.js';
 
 export type MiniOxygen = MiniOxygenInstance;
 
@@ -9,10 +8,6 @@ export async function startMiniOxygen(
   options: MiniOxygenOptions,
   useWorkerd = false,
 ): Promise<MiniOxygenInstance> {
-  if (options.debug) {
-    options.inspectorPort = await findPort(options.inspectorPort);
-  }
-
   if (useWorkerd) {
     const {startWorkerdServer} = await import('./workerd.js');
     return startWorkerdServer(options);
