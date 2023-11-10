@@ -9,6 +9,7 @@ import favicon from '../assets/favicon.svg';
 import faviconDark from '../assets/favicon-dark.svg';
 import styles from '../assets/debug-network.css';
 import {useDebugNetworkServer} from '../lib/useDebugNetworkServer.jsx';
+import {RequestDetails} from '../components/RequestInfo.jsx';
 
 export const links: LinksFunction = () => {
   return [
@@ -56,7 +57,7 @@ export default function DebugNetwork() {
         stopCallback={stop}
         recordCallback={record}
       />
-      <div className="pad">
+      <div id="main" className="pad">
         <OptionsAndLegend
           serverEvents={serverEvents}
           setHidePutRequests={setHidePutRequests}
@@ -77,10 +78,17 @@ export default function DebugNetwork() {
               setActiveEventId={setActiveEventId}
             />
           </div>
-          <div className="panel">
-            <p>Request details</p>
+          <div id="request-details-panel" className="panel no-pad">
+            <RequestDetails
+              serverEvents={serverEvents}
+              setActiveEventId={setActiveEventId}
+            />
           </div>
         </div>
+        <p className="footnote">
+          Note: You may need to turn on 'Disable Cache' for your navigating
+          window.
+        </p>
       </div>
     </>
   );
@@ -102,7 +110,7 @@ function DebugHeader({
       <div className="flex-row">
         <img className="logo" src={faviconDark} alt="Hydrogen logo" />
         <h1>Server Network Timing</h1>
-        <span className="tab">Dev</span>
+        <span className="pill">Dev</span>
       </div>
       <div className="flex-row">
         <button

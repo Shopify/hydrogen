@@ -43,7 +43,6 @@ export type FlameChartProps = {
   };
   plugins?: UIPlugin[];
   className?: string;
-  height?: number;
 
   onSelect?: (data: NodeTypes) => void;
 };
@@ -55,8 +54,9 @@ export const FlameChartWrapper = (props: FlameChartProps) => {
 
   useResizeObserver({
     ref: boxRef,
-    onResize: ({width = 0, height = 0}) =>
-      flameChart.current?.resize(width, height - 3),
+    onResize: ({width = 0, height = 0}) => {
+      flameChart.current?.resize(width, height - 3);
+    },
   });
 
   const initialize = useCallback(() => {
@@ -180,11 +180,7 @@ export const FlameChartWrapper = (props: FlameChartProps) => {
   }, [props.onSelect]);
 
   return (
-    <div
-      style={{height: `${props.height ? props.height : 300}px`}}
-      className={props.className}
-      ref={setBoxRef}
-    >
+    <div style={{height: `100%`}} className={props.className} ref={setBoxRef}>
       <canvas ref={setCanvasRef} />
     </div>
   );

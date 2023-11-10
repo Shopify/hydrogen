@@ -17,7 +17,6 @@ export type RequestWaterfallConfig = {
   };
 };
 
-const PANEL_HEIGHT = 300;
 const STYLE_FONT =
   '10px Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Open Sans, Helvetica Neue, sans-serif';
 
@@ -30,13 +29,11 @@ export function RequestWaterfall({
   config: RequestWaterfallConfig;
   setActiveEventId: (eventId: string | undefined) => void;
 }) {
-  const panelHeight = PANEL_HEIGHT;
-
   if (serverEvents.mainRequests.length === 0)
     return (
       <div
         style={{
-          height: `${panelHeight}px`,
+          // height: `${panelHeight}px`,
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
@@ -151,17 +148,13 @@ export function RequestWaterfall({
         timeGridPlugin: {
           font: STYLE_FONT,
         },
-        waterfallPlugin: {
-          defaultHeight: panelHeight,
-        },
       },
     }),
-    [panelHeight],
+    [],
   );
 
   return (
     <FlameChartWrapper
-      height={panelHeight}
       waterfall={data}
       onSelect={onSelect}
       settings={settings}

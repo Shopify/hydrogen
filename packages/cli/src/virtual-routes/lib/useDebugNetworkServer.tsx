@@ -8,7 +8,7 @@ export type ServerEvent = {
   endTime: number;
   cacheStatus: string;
   stackLine?: string;
-  graphql?: string;
+  graphiqlLink?: string;
 };
 
 export type ServerEvents = {
