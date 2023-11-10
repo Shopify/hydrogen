@@ -1,9 +1,28 @@
 import {useEffect, useRef, useState} from 'react';
 
-import type {
-  ServerEvent,
-  ServerEvents,
-} from '../components/RequestWaterfall.jsx';
+export type ServerEvent = {
+  id: string;
+  requestId: string;
+  url: string;
+  startTime: number;
+  endTime: number;
+  cacheStatus: string;
+  stackLine?: string;
+  graphql?: string;
+};
+
+export type ServerEvents = {
+  smallestStartTime: number;
+  mainRequests: ServerEvent[];
+  subRequests: Record<string, ServerEvent[]>;
+  allRequests: Record<string, ServerEvent>;
+  hidePutRequests: boolean;
+  recordEvents: boolean;
+  preserveLog: boolean;
+  activeEventId: string | undefined;
+};
+
+let nextEventId = 0;
 
 export function useDebugNetworkServer() {
   // Store server event data that can arrive at anytime across renders
@@ -11,9 +30,11 @@ export function useDebugNetworkServer() {
     smallestStartTime: 0,
     mainRequests: [],
     subRequests: {},
+    allRequests: {},
     hidePutRequests: true,
     recordEvents: true,
     preserveLog: false,
+    activeEventId: undefined,
   });
 
   // For triggering a react render
@@ -29,6 +50,7 @@ export function useDebugNetworkServer() {
       smallestStartTime: 0,
       mainRequests: [],
       subRequests: {},
+      allRequests: {},
     };
   }
 
@@ -47,7 +69,11 @@ export function useDebugNetworkServer() {
           );
         }
 
-        onEvent(data);
+        const id = `event-${nextEventId++}`;
+        onEvent({
+          ...data,
+          id,
+        });
 
         setTimeout(() => {
           setTimestamp(new Date().getTime());
@@ -62,23 +88,26 @@ export function useDebugNetworkServer() {
     });
 
     const mainRequestHandler = serverEventHandler((data: ServerEvent) => {
+      const cleanData = {
+        ...data,
+        url: data.url.replace(location.origin, ''),
+      };
       serverEvents.current.mainRequests = [
         ...serverEvents.current.mainRequests,
-        {
-          ...data,
-          url: data.url.replace(location.origin, ''),
-        },
+        cleanData,
       ];
+      serverEvents.current.allRequests[cleanData.id] = cleanData;
     });
     evtSource.addEventListener('Request', mainRequestHandler);
 
     const subRequestHandler = serverEventHandler((data: ServerEvent) => {
-      let groupEvents = serverEvents.current.subRequests[data.id] || [];
+      let groupEvents = serverEvents.current.subRequests[data.requestId] || [];
       groupEvents = [...groupEvents, data];
       serverEvents.current.subRequests = {
         ...serverEvents.current.subRequests,
-        [data.id]: groupEvents,
+        [data.requestId]: groupEvents,
       };
+      serverEvents.current.allRequests[data.id] = data;
     });
     evtSource.addEventListener('Sub request', subRequestHandler);
 
@@ -121,6 +150,11 @@ export function useDebugNetworkServer() {
     setTimestamp(new Date().getTime());
   }
 
+  function setActiveEventId(eventId: string | undefined) {
+    serverEvents.current.activeEventId = eventId;
+    setTimestamp(new Date().getTime());
+  }
+
   return {
     serverEvents: serverEvents.current,
     clear,
@@ -128,6 +162,68 @@ export function useDebugNetworkServer() {
     record,
     setHidePutRequests,
     setPreserveLog,
+    setActiveEventId,
     timestamp,
   };
+}
+
+export type RequestTimings = {
+  requestStart: number;
+  requestEnd: number;
+  responseStart: number;
+  responseEnd: number;
+};
+
+export function buildRequestData<T>({
+  serverEvents,
+  buildMainRequest,
+  buildSubRequest,
+}: {
+  serverEvents: ServerEvents;
+  buildMainRequest: (mainRequest: ServerEvent, timing: RequestTimings) => T;
+  buildSubRequest: (subRequest: ServerEvent, timing: RequestTimings) => T;
+}): T[] {
+  const calcDuration = (time: number) => time - serverEvents.smallestStartTime;
+  let items: T[] = [];
+
+  serverEvents.mainRequests.forEach((mainRequest: ServerEvent) => {
+    const mainResponseStart = calcDuration(mainRequest.endTime);
+    let mainResponseEnd = mainResponseStart;
+
+    const subRequestItems: T[] = [];
+    const subRequests = serverEvents.subRequests[mainRequest.requestId] || [];
+    subRequests.forEach((subRequest: ServerEvent) => {
+      const subRequestEnd = calcDuration(subRequest.endTime);
+
+      if (subRequest.cacheStatus !== 'PUT') {
+        mainResponseEnd = Math.max(mainResponseEnd, subRequestEnd);
+      }
+
+      const subRequestItem = buildSubRequest(subRequest, {
+        requestStart: calcDuration(subRequest.startTime),
+        requestEnd: subRequestEnd,
+        responseStart: -1,
+        responseEnd: -1,
+      });
+
+      if (serverEvents.hidePutRequests) {
+        subRequest.cacheStatus !== 'PUT' &&
+          subRequestItems.push(subRequestItem as T);
+      } else {
+        subRequestItems.push(subRequestItem as T);
+      }
+    });
+
+    items.push(
+      buildMainRequest(mainRequest, {
+        requestStart: calcDuration(mainRequest.startTime),
+        responseStart: mainResponseStart,
+        responseEnd: mainResponseEnd,
+        requestEnd: -1,
+      }),
+    );
+    items = items.concat(subRequestItems);
+  });
+
+  return items;
 }

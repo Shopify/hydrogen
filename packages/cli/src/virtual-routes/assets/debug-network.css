@@ -232,6 +232,11 @@ button:active {
   max-height: 30vh;
 }
 
+#request-table__content .grid-row.active {
+  background-color: #ebebeb;
+  font-weight: 600;
+}
+
 #request-table__footer {
   border-top: 1px solid var(--secondary-color);
   background-color: var(--background-color);

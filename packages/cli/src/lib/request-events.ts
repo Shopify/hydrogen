@@ -50,7 +50,7 @@ async function getRequestInfo(request: RequestKind) {
   const data = (await request.json()) as H2OEvent;
 
   return {
-    id: data.requestId ?? '',
+    requestId: data.requestId ?? '',
     eventType: data.eventType || 'unknown',
     startTime: data.startTime,
     endTime: data.endTime || Date.now(),

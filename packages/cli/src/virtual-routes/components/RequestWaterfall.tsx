@@ -3,25 +3,11 @@ import {useMemo} from 'react';
 
 import {FlameChartWrapper} from './FlameChartWrapper.jsx';
 import {Link} from '@remix-run/react';
-
-export type ServerEvent = {
-  id: string;
-  url: string;
-  startTime: number;
-  endTime: number;
-  cacheStatus: string;
-  stackLine?: string;
-  graphql?: string;
-};
-
-export type ServerEvents = {
-  smallestStartTime: number;
-  mainRequests: ServerEvent[];
-  subRequests: Record<string, ServerEvent[]>;
-  hidePutRequests: boolean;
-  recordEvents: boolean;
-  preserveLog: boolean;
-};
+import {
+  buildRequestData,
+  type ServerEvent,
+  type ServerEvents,
+} from '../lib/useDebugNetworkServer.jsx';
 
 export type RequestWaterfallConfig = {
   colors: {
@@ -38,9 +24,11 @@ const STYLE_FONT =
 export function RequestWaterfall({
   serverEvents,
   config,
+  setActiveEventId,
 }: {
   serverEvents: ServerEvents;
   config: RequestWaterfallConfig;
+  setActiveEventId: (eventId: string | undefined) => void;
 }) {
   const panelHeight = PANEL_HEIGHT;
 
@@ -74,6 +62,13 @@ export function RequestWaterfall({
         name: mainRequest.url,
         intervals: 'mainRequest',
         timing,
+        meta: [
+          {
+            name: 'id',
+            value: mainRequest.id,
+            color: 'black',
+          },
+        ],
       } satisfies WaterfallItem;
     },
     buildSubRequest: (
@@ -132,6 +127,12 @@ export function RequestWaterfall({
 
   const onSelect = (data: any) => {
     console.log(data);
+    const eventIdMeta = data.node.meta.filter(
+      (meta: any) => meta.name === 'id',
+    )[0];
+    if (eventIdMeta) {
+      setActiveEventId(eventIdMeta.value);
+    }
   };
 
   const settings = useMemo(
@@ -166,65 +167,4 @@ export function RequestWaterfall({
       settings={settings}
     />
   );
-}
-
-export type RequestTimings = {
-  requestStart: number;
-  requestEnd: number;
-  responseStart: number;
-  responseEnd: number;
-};
-
-export function buildRequestData<T>({
-  serverEvents,
-  buildMainRequest,
-  buildSubRequest,
-}: {
-  serverEvents: ServerEvents;
-  buildMainRequest: (mainRequest: ServerEvent, timing: RequestTimings) => T;
-  buildSubRequest: (subRequest: ServerEvent, timing: RequestTimings) => T;
-}): T[] {
-  const calcDuration = (time: number) => time - serverEvents.smallestStartTime;
-  let items: T[] = [];
-
-  serverEvents.mainRequests.forEach((mainRequest: ServerEvent) => {
-    const mainResponseStart = calcDuration(mainRequest.endTime);
-    let mainResponseEnd = mainResponseStart;
-
-    const subRequestItems: T[] = [];
-    const subRequests = serverEvents.subRequests[mainRequest.id] || [];
-    subRequests.forEach((subRequest: ServerEvent) => {
-      const subRequestEnd = calcDuration(subRequest.endTime);
-
-      if (subRequest.cacheStatus !== 'PUT') {
-        mainResponseEnd = Math.max(mainResponseEnd, subRequestEnd);
-      }
-
-      const subRequestItem = buildSubRequest(subRequest, {
-        requestStart: calcDuration(subRequest.startTime),
-        requestEnd: subRequestEnd,
-        responseStart: -1,
-        responseEnd: -1,
-      });
-
-      if (serverEvents.hidePutRequests) {
-        subRequest.cacheStatus !== 'PUT' &&
-          subRequestItems.push(subRequestItem as T);
-      } else {
-        subRequestItems.push(subRequestItem as T);
-      }
-    });
-
-    items.push(
-      buildMainRequest(mainRequest, {
-        requestStart: calcDuration(mainRequest.startTime),
-        responseStart: mainResponseStart,
-        responseEnd: mainResponseEnd,
-        requestEnd: -1,
-      }),
-    );
-    items = items.concat(subRequestItems);
-  });
-
-  return items;
 }

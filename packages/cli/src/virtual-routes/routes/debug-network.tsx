@@ -1,17 +1,14 @@
 import type {LinksFunction} from '@remix-run/server-runtime';
 import {Script} from '@shopify/hydrogen';
 
-import {
-  RequestWaterfall,
-  type ServerEvents,
-} from '../components/RequestWaterfall.jsx';
+import {RequestWaterfall} from '../components/RequestWaterfall.jsx';
+import {type ServerEvents} from '../lib/useDebugNetworkServer.jsx';
 import {RequestTable} from '../components/RequestTable.jsx';
 
 import favicon from '../assets/favicon.svg';
 import faviconDark from '../assets/favicon-dark.svg';
 import styles from '../assets/debug-network.css';
 import {useDebugNetworkServer} from '../lib/useDebugNetworkServer.jsx';
-import {WaterfallPlugin} from 'flame-chart-js';
 
 export const links: LinksFunction = () => {
   return [
@@ -44,6 +41,7 @@ export default function DebugNetwork() {
     timestamp,
     setHidePutRequests,
     setPreserveLog,
+    setActiveEventId,
   } = useDebugNetworkServer();
 
   return (
@@ -68,12 +66,16 @@ export default function DebugNetwork() {
           <RequestWaterfall
             key={timestamp}
             serverEvents={serverEvents}
+            setActiveEventId={setActiveEventId}
             config={WATERFALL_CONFIG}
           />
         </div>
         <div id="request-info">
           <div className="panel no-pad">
-            <RequestTable serverEvents={serverEvents} />
+            <RequestTable
+              serverEvents={serverEvents}
+              setActiveEventId={setActiveEventId}
+            />
           </div>
           <div className="panel">
             <p>Request details</p>
