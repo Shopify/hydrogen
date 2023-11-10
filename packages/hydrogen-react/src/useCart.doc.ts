@@ -34,7 +34,7 @@ const data: ReferenceEntityTemplateSchema = {
   definitions: [
     {
       title: 'Props',
-      type: 'UseCartGeneratedType',
+      type: 'UseCartDocs',
       description:
         '`useCart` hook must be a descendent of a `CartProvider` component.',
     },

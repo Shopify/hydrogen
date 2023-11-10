@@ -12,19 +12,22 @@ Run the following commands to get started working on Hydrogen.
 | ----------------------------------------------- | --------------------------------------------- |
 | `git clone git@github.com:Shopify/hydrogen.git` | Clones the repo to your local computer        |
 | `npm install`                                   | Installs the dependencies with `npm`          |
-| `npm run dev`                                   | Runs the `dev` command in all workspaces      |
+| `npm run dev`                                   | Runs the `dev` command in all packages        |
 | `npm run build`                                 | `build`s packages for production distribution |
 
 ## Context
 
 Hydrogen is a monorepo built with [Turborepo](https://turbo.build/) and consists of the following workspaces:
 
-- `templates`: Full working implementations of a Hydrogen storefront, such as the [`demo-store`](https://hydrogen.shop) template
-- `packages/hydrogen`: The hooks, components, and utilities provided by Hydrogen
-- `packages/remix-oxygen`: A [Remix](https://remix.run) runtime adapter for [Oxygen](https://shopify.dev/custom-storefronts/oxygen)
-- `packages/cli`: A plugin for the [Shopify CLI](https://github.com/Shopify/cli) to provide specific commands for working on Hydrogen storefronts
+- `packages/hydrogen`: Opinionated [Remix](https://remix.run) components, hooks, and utilities provided by Hydrogen
+- `packages/hydrogen-react`: Platform-agnostic components, hooks, and utilities. This package is used by Hydrogen and published on its own for use by other React-based frameworks.
+- `packages/create-hydrogen`: Package scripts to create new Hydrogen apps from the command line.
+- `packages/hydrogen-codegen`: GraphQL <> TypeScript code generator for Storefront API queries.
+- `packages/remix-oxygen`: A [Remix](https://remix.run) runtime adapter for [Oxygen](https://shopify.dev/custom-storefronts/oxygen), Shopify’s serverless hosting platform.
+- `packages/cli`: A plugin for the [Shopify CLI](https://github.com/Shopify/cli) to provide specific commands for working on Hydrogen storefronts.
+- `templates`: Full working implementations of Hydrogen storefronts. Used for scaffolding new starter Hydrogen apps, testing, and feature development.
 
-Running `npm run dev` at the root of the monorepo is the most common way to develop in Hydrogen. With this task running, each package will be rebuilt when files change and you can preview the results in the `templates/demo-store` template at (http://localhost:3000)[http://localhost:3000].
+Running `npm run dev` at the root of the monorepo is the most common way to develop in Hydrogen. With this task running, each package will be rebuilt when files change. In a different terminal, change directory to any project inside `templates` and serve with `npm run dev`. The preview URL will be printed in the terminal.
 
 The `Readme.md` files in the directories of individual packages and templates contain more specific information for developing in that workspace.
 
@@ -98,6 +101,44 @@ Tests that fail **only** in CI can be difficult and time-consuming to debug. If 
 - Commit and push your changes to Github.
 - The testing Github Action will run automatically and you will see it paused with both a Web Shell address and SSH address.
 - Copy and paste the SSH address into your terminal.
+
+## Generate API reference docs for Hydrogen and Hydrogen React
+
+The reference docs for Hydrogen and Hydrogen React are published on [Shopify.dev](https://shopify.dev):
+
+- [Hydrogen](https://shopify.dev/docs/api/hydrogen)
+- [Hydrogen React](https://shopify.dev/docs/api/hydrogen-react)
+
+In both cases, the reference documentation is stored in the Hydrogen repo in `*.doc.ts` files ([example](https://github.com/Shopify/hydrogen/blob/-/packages/hydrogen-react/src/Image.doc.ts)). These files get compiled into JSON, which is then copied over to Shopify.dev. For more background about how references work, see Shopify internal documentation on “[Writing UI reference docs](https://shopify.dev/internal/development/ui-reference-docs)”.
+
+> Note:
+> A Pull Request is automatically created every night to sync the changes from the Hydrogen repo to the `shopify-dev` repo. Once changes are merged into Hydrogen, you can merge the _newest_ such PR in `shopify-dev`; if there are older PRs of this type present, they can safely be closed, since they're now stale.
+
+### Generate the docs
+
+1. From the command line, `cd` to either `packages/hydrogen` or `packages/hydrogen-react`.
+1. Run `npm run build-docs` (view [build script](https://github.com/Shopify/hydrogen/blob/-/packages/hydrogen-react/docs/build-docs.sh))
+1. The script compiles and formats either one or both JSON files:
+   - `packages/{PACKAGE}/docs/generated/generated_docs_data.json`
+   - `packages/{PACKAGE}/docs/generated/generated_static_pages.json`
+1. You're now ready to copy these files to Shopify.dev.
+
+### Copy to Shopify.dev
+
+> Note:
+> Only Shopify staff will be able to complete these tasks, as it requires access to the private code repository for [Shopify.dev](https://shopify.dev).
+
+1. Terminal: `spin up shopify-dev:minimal`
+1. Terminal: `spin code` to open a VSCode Spin instance
+1. Copy the contents of the compiled JSON files to their corresponding location in the VSCode Spin instance:
+   - `db/data/docs/templated_apis/{PACKAGE}/{VERSION}/generated_docs_data.json`
+   - `db/data/docs/templated_apis/{PACKAGE}/{VERSION}/generated_static_pages.json`
+1. In the VSCode Spin instance:
+   1. Click on the Spin extension (with the Shopify bag icon).
+   1. Expand the list, then click on the "Restart unit" button for the `Server` line. (You can, alternatively, restart the whole spin instance by clicking on the restart button at the root, but it's not necessary and is likely slower.)
+1. Terminal: `spin open` (note: your original terminal and not the terminal for the VSCode Spin instance)
+1. In your browser, click on the `shopify.dev` link. You'll be redirected to your own personal spin instance of the docs
+1. Navigate to `{unique spin url}/docs/api/hydrogen` to see your updates
 
 ## Principles to develop by
 

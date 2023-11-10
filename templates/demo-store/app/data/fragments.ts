@@ -9,6 +9,7 @@ export const MEDIA_FRAGMENT = `#graphql
     ... on MediaImage {
       id
       image {
+        id
         url
         width
         height
@@ -42,9 +43,11 @@ export const PRODUCT_CARD_FRAGMENT = `#graphql
     title
     publishedAt
     handle
+    vendor
     variants(first: 1) {
       nodes {
         id
+        availableForSale
         image {
           url
           altText
@@ -68,6 +71,20 @@ export const PRODUCT_CARD_FRAGMENT = `#graphql
           title
         }
       }
+    }
+  }
+`;
+
+export const FEATURED_COLLECTION_FRAGMENT = `#graphql
+  fragment FeaturedCollectionDetails on Collection {
+    id
+    title
+    handle
+    image {
+      altText
+      width
+      height
+      url
     }
   }
 `;

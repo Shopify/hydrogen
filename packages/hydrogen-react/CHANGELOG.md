@@ -1,5 +1,152 @@
 # @shopify/hydrogen-react
 
+## 2023.10.0
+
+### Major Changes
+
+- The Storefront API types included are now generated using `@graphql-codegen/typescript@4` ([changelog](https://github.com/dotansimha/graphql-code-generator/blob/master/packages/plugins/typescript/typescript/CHANGELOG.md#400)). This results in a breaking change if you were importing `Scalars` directly from `@shopify/hydrogen-react` or `@shopify/hydrogen`: ([#1108](https://github.com/Shopify/hydrogen/pull/1108)) by [@frandiox](https://github.com/frandiox)
+
+  ```diff
+   import type {Scalars} from '@shopify/hydrogen/storefront-api-types';
+
+   type Props = {
+  -  id: Scalars['ID']; // This was a string
+  +  id: Scalars['ID']['input']; // Need to access 'input' or 'output' to get the string
+   };
+  ```
+
+### Patch Changes
+
+- Remove deprecated parameters and props (#1455 and #1435): ([#1435](https://github.com/Shopify/hydrogen/pull/1435)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  - `createStorefrontClient` parameters `buyerIp` and `requestGroupId`
+  - `<Image>` props `loaderOptions` and `widths`
+
+## 2023.7.6
+
+### Patch Changes
+
+- Fix template dist package due to CI error ([#1451](https://github.com/Shopify/hydrogen/pull/1451)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+## 2023.7.5
+
+### Patch Changes
+
+- Add Language to CartProvider ([#1408](https://github.com/Shopify/hydrogen/pull/1408)) by [@Qubica](https://github.com/Qubica)
+
+- Add attributes option to useLoadScript ([#1442](https://github.com/Shopify/hydrogen/pull/1442)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Unlock `hydrogen-react` package.json exports to make it easier to use with NextJS and other frameworks. **Note**: Using Hydrogen internals is not officially supported, and those internal APIs could change at anytime outside our usual calendar versioning. ([#994](https://github.com/Shopify/hydrogen/pull/994)) by [@blittle](https://github.com/blittle)
+
+## 2023.7.4
+
+### Patch Changes
+
+- Fix incorrect creation of cookie token that only happens on specific dates ([#1294](https://github.com/Shopify/hydrogen/pull/1294)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+## 2023.7.3
+
+### Patch Changes
+
+- Hydrogen is now compatible with TypeScript v5. ([#1240](https://github.com/Shopify/hydrogen/pull/1240)) by [@frandiox](https://github.com/frandiox)
+
+  If you have `typescript` as a dev dependency in your app, it is recommended to change its version as follows:
+
+  ```diff
+    "devDependencies": {
+      ...
+  -   "typescript": "^4.9.5",
+  +   "typescript": "^5.2.2",
+    },
+  ```
+
+  After installing the new version of TypeScript, you may need to update the version used in your IDE. For example, in VSCode, you can do this by clicking on the `{ }` icon in the bottom-right toolbar next to the language mode (generally, `{ } TypeScript JSX` when editing a `.tsx` file).
+
+- Fix passing `ref` to the `<Image>` component. ([#1268](https://github.com/Shopify/hydrogen/pull/1268)) by [@frandiox](https://github.com/frandiox)
+
+## 2023.7.2
+
+### Patch Changes
+
+- This change updates the implementation of the parseGid function so that it uses the builtin `URL` class to parse the gid. This enables the parts of the string, such as the search params, to be parsed as well ([#1185](https://github.com/Shopify/hydrogen/pull/1185)) by [@tatemz](https://github.com/tatemz)
+
+- Image component docs typo - Contributed by @MilosMosovsky ([#1243](https://github.com/Shopify/hydrogen/pull/1243)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+## 2023.7.1
+
+### Patch Changes
+
+- Fix demo-store analytics ([#1177](https://github.com/Shopify/hydrogen/pull/1177)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+## 2023.7.0
+
+## What’s new
+
+⭐️ Check out our [blog post](https://hydrogen.shopify.dev/updates) with all the latest updates on Hydrogen, and what’s coming on the roadmap.
+
+This major release includes support for the [2023-07 version](https://shopify.dev/docs/api/release-notes/2023-07#graphql-storefront-api-changes) of the Storefront API. This version doesn't include any breaking changes, but adds support for predictive search and local pickup options.
+
+### Patch Changes
+
+- Export useLoadScript ([#1080](https://github.com/Shopify/hydrogen/pull/1080)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Fix long language code breaking useMoney hook - Contributed by @QuentinGibson ([#1132](https://github.com/Shopify/hydrogen/pull/1132)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Throw error when `storeDomain` is not passed to `createStorefrontClient`. ([#1128](https://github.com/Shopify/hydrogen/pull/1128)) by [@frandiox](https://github.com/frandiox)
+
+- Improve warning and error format for known Hydrogen messages in development. ([#1093](https://github.com/Shopify/hydrogen/pull/1093)) by [@frandiox](https://github.com/frandiox)
+
+- Add discountCode.applicable in default Cart fragment ([#1040](https://github.com/Shopify/hydrogen/pull/1040)) by [@pnodet](https://github.com/pnodet)
+
+## 2023.4.5
+
+### Patch Changes
+
+- Add JSDoc examples to <Money /> and useMoney ([#1021](https://github.com/Shopify/hydrogen/pull/1021)) by [@juanpprieto](https://github.com/juanpprieto)
+
+## 2023.4.4
+
+### Patch Changes
+
+- A default `https://` protocol is now added automatically to `storeDomain` if missing. ([#985](https://github.com/Shopify/hydrogen/pull/985)) by [@frandiox](https://github.com/frandiox)
+
+- Add support for [`mock.shop`](https://mock.shop/) as a `storeDomain`. ([#986](https://github.com/Shopify/hydrogen/pull/986)) by [@frandiox](https://github.com/frandiox)
+
+- Fix `flattenConnection()`'s TypeScript types when working with `edges.node` ([#945](https://github.com/Shopify/hydrogen/pull/945)) by [@frehner](https://github.com/frehner)
+
+- Make `storefrontApiVersion` parameter optional. By default, it will use the current version of Hydrogen as the Storefront API version. ([#984](https://github.com/Shopify/hydrogen/pull/984)) by [@frandiox](https://github.com/frandiox)
+
+- Fix the `<CartProvider>` to by default pull localization from `<ShopifyProvider>`. You can still override the countryCode by passing a prop directly to `<CartProvider>`. Resovles https://github.com/Shopify/hydrogen/issues/622 ([#980](https://github.com/Shopify/hydrogen/pull/980)) by [@blittle](https://github.com/blittle)
+
+- Fix `<ModelViewer>` to properly set className ([#966](https://github.com/Shopify/hydrogen/pull/966)) by [@blittle](https://github.com/blittle)
+
+## 2023.4.3
+
+### Patch Changes
+
+- Fix release ([#926](https://github.com/Shopify/hydrogen/pull/926)) by [@blittle](https://github.com/blittle)
+
+## 2023.4.2
+
+### Patch Changes
+
+- Fix issue where the `<BuyNowButton/>` would incorrectly redirect to checkout when React re-renders in certain situations. ([#827](https://github.com/Shopify/hydrogen/pull/827)) by [@tiwac100](https://github.com/tiwac100)
+
+## 2023.4.1
+
+### Patch Changes
+
+- Adds `parseGid()` which is a helper function that takes in a [Shopify GID](https://shopify.dev/docs/api/usage/gids) and returns the `resource` and `id` from it. For example: ([#845](https://github.com/Shopify/hydrogen/pull/845)) by [@frehner](https://github.com/frehner)
+
+  ```js
+  import {parseGid} from '@shopify/hydrogen-react';
+
+  const {id, resource} = parseGid('gid://shopify/Order/123');
+
+  console.log(id); // 123
+  console.log(resource); // Order
+  ```
+
 ## 2023.4.0
 
 ### Major Changes

@@ -1,6 +1,6 @@
 import {describe, it, expect} from 'vitest';
 import {fileURLToPath} from 'url';
-import type {RemixConfig} from '@remix-run/dev/dist/config.js';
+import type {RemixConfig} from './remix-config.js';
 import {
   addVirtualRoutes,
   VIRTUAL_ROOT,

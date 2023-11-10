@@ -1,96 +1,102 @@
 import Command from '@shopify/cli-kit/node/base-command';
-import {renderTable} from '@shopify/cli-kit/node/ui';
-import {outputContent, outputInfo} from '@shopify/cli-kit/node/output';
-
-import {adminRequest, parseGid} from '../../lib/graphql.js';
-import {commonFlags} from '../../lib/flags.js';
-import {getHydrogenShop} from '../../lib/shop.js';
-import {getAdminSession} from '../../lib/admin-session.js';
+import {pluralize} from '@shopify/cli-kit/common/string';
+import colors from '@shopify/cli-kit/node/colors';
 import {
-  ListStorefrontsQuery,
-  ListStorefrontsSchema,
-  Deployment,
+  outputContent,
+  outputInfo,
+  outputNewline,
+} from '@shopify/cli-kit/node/output';
+import {renderInfo} from '@shopify/cli-kit/node/ui';
+import {commonFlags} from '../../lib/flags.js';
+import {parseGid} from '../../lib/gid.js';
+import {
+  type Deployment,
+  type HydrogenStorefront,
+  getStorefrontsWithDeployment,
 } from '../../lib/graphql/admin/list-storefronts.js';
-import {logMissingStorefronts} from '../../lib/missing-storefronts.js';
+import {newHydrogenStorefrontUrl} from '../../lib/admin-urls.js';
+import {login} from '../../lib/auth.js';
+import {getCliCommand} from '../../lib/shell.js';
 
 export default class List extends Command {
   static description =
     'Returns a list of Hydrogen storefronts available on a given shop.';
 
-  static hidden = true;
-
   static flags = {
     path: commonFlags.path,
-    shop: commonFlags.shop,
   };
 
   async run(): Promise<void> {
     const {flags} = await this.parse(List);
-    await listStorefronts(flags);
+    await runList(flags);
   }
 }
 
 interface Flags {
   path?: string;
-  shop?: string;
 }
 
-export async function listStorefronts({path, shop: flagShop}: Flags) {
-  const shop = await getHydrogenShop({path, shop: flagShop});
-  const adminSession = await getAdminSession(shop);
+export async function runList({path: root = process.cwd()}: Flags) {
+  const {session} = await login(root);
 
-  const result: ListStorefrontsSchema = await adminRequest(
-    ListStorefrontsQuery,
-    adminSession,
-  );
+  const storefronts = await getStorefrontsWithDeployment(session);
 
-  const storefrontsCount = result.hydrogenStorefronts.length;
+  if (storefronts.length > 0) {
+    outputNewline();
 
-  if (storefrontsCount > 0) {
     outputInfo(
-      outputContent`Found ${storefrontsCount.toString()} Hydrogen storefronts on ${shop}:\n`
-        .value,
+      pluralizedStorefronts({
+        storefronts,
+        shop: session.storeFqdn,
+      }).toString(),
     );
 
-    const rows = result.hydrogenStorefronts.map(
-      ({id, title, productionUrl, currentProductionDeployment}) => ({
-        id: parseGid(id),
-        title,
-        productionUrl,
-        currentDeployment: formatDeployment(currentProductionDeployment),
-      }),
-    );
+    storefronts.forEach(
+      ({currentProductionDeployment, id, productionUrl, title}) => {
+        outputNewline();
 
-    renderTable({
-      rows,
-      columns: {
-        id: {
-          header: 'ID',
-        },
-        title: {
-          header: 'Name',
-          color: 'whiteBright',
-        },
-        productionUrl: {
-          header: 'Production URL',
-        },
-        currentDeployment: {
-          header: 'Current deployment',
-        },
+        outputInfo(
+          outputContent`${colors.whiteBright(title)} ${colors.dim(
+            `(id: ${parseGid(id)})`,
+          )}`.value,
+        );
+
+        if (productionUrl) {
+          outputInfo(
+            outputContent`    ${colors.whiteBright(productionUrl)}`.value,
+          );
+        }
+
+        if (currentProductionDeployment) {
+          outputInfo(
+            outputContent`    ${colors.dim(
+              formatDeployment(currentProductionDeployment),
+            )}`.value,
+          );
+        }
       },
-    });
+    );
   } else {
-    logMissingStorefronts(adminSession);
+    renderInfo({
+      headline: 'Hydrogen storefronts',
+      body: 'There are no Hydrogen storefronts on your Shop.',
+      nextSteps: [
+        `Ensure you are logged in to the correct shop (currently: ${session.storeFqdn})`,
+        `Create a new Hydrogen storefront: Run \`${await getCliCommand(
+          root,
+        )} link\` or visit ${newHydrogenStorefrontUrl(session)}`,
+      ],
+    });
   }
 }
 
 const dateFormat = new Intl.DateTimeFormat('default', {
   year: 'numeric',
-  month: 'long',
+  month: 'numeric',
   day: 'numeric',
 });
 
-export function formatDeployment(deployment: Deployment | null) {
+export function formatDeployment(deployment: Deployment) {
   let message = '';
 
   if (!deployment) {
@@ -106,3 +112,18 @@ export function formatDeployment(deployment: Deployment | null) {
 
   return message;
 }
+
+const pluralizedStorefronts = ({
+  storefronts,
+  shop,
+}: {
+  storefronts: HydrogenStorefront[];
+  shop: string;
+}) => {
+  return pluralize(
+    storefronts,
+    (storefronts) =>
+      `Showing ${storefronts.length} Hydrogen storefronts for the store ${shop}`,
+    (_storefront) => `Showing 1 Hydrogen storefront for the store ${shop}`,
+  );
+};

@@ -154,6 +154,7 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
           variant: '',
           quantity: 0,
           product_id: 1,
+          price: parseFloat(productPayload.price),
         });
       });
       it(`with non-default product payload`, () => {
@@ -205,6 +206,7 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
           sku: productPayload.sku,
           variant_gid: productPayload.variantGid,
           variant_id: 2,
+          price: parseFloat(productPayload.price),
         });
       });
     });
@@ -270,6 +272,7 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
         variant: '',
         quantity: 0,
         product_id: 1,
+        price: parseFloat(productPayload.price),
       });
     });
   });

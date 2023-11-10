@@ -1,9 +1,28 @@
 import type {CachingStrategy} from './strategies';
-import {CacheShort, generateCacheControlHeader} from './strategies';
+import {CacheDefault, generateCacheControlHeader} from './strategies';
 
-function logCacheApiStatus(status: string | null, url: string) {
+function logCacheApiStatus(
+  status: string | null,
+  request: Request,
+  response?: Response,
+) {
+  // const url = request.url;
+  // if (!/Product\(/.test(url)) return;
   // // eslint-disable-next-line no-console
-  // console.log('\n' + status, url);
+  // console.log(status, 'cacheKey', url.substring(0, 50));
+  // if (response) {
+  //   let headersJson: Record<string, string> = {};
+  //   response.headers.forEach((value, key) => {
+  //     headersJson[key] = value;
+  //   });
+  //   const responseDate = response.headers.get('cache-put-date');
+  //   if (responseDate) {
+  //     const [age] = calculateAge(response, responseDate);
+  //     headersJson['age'] = age.toString();
+  //   }
+  //   // eslint-disable-next-line no-console
+  //   console.log(`${status} response headers: `, headersJson);
+  // }
 }
 
 function getCacheControlSetting(
@@ -16,7 +35,7 @@ function getCacheControlSetting(
       ...options,
     };
   } else {
-    return userCacheOptions || CacheShort();
+    return userCacheOptions || CacheDefault();
   }
 }
 
@@ -39,11 +58,11 @@ async function getItem(
 
   const response = await cache.match(request);
   if (!response) {
-    logCacheApiStatus('MISS', request.url);
+    logCacheApiStatus('MISS', request);
     return;
   }
 
-  logCacheApiStatus('HIT', request.url);
+  logCacheApiStatus('HIT', request, response);
 
   return response;
 }
@@ -101,14 +120,11 @@ async function setItem(
   const cacheControl = getCacheControlSetting(userCacheOptions);
 
   // The padded cache-control to mimic stale-while-revalidate
-  request.headers.set(
-    'cache-control',
-    generateDefaultCacheControlHeader(
-      getCacheControlSetting(cacheControl, {
-        maxAge:
-          (cacheControl.maxAge || 0) + (cacheControl.staleWhileRevalidate || 0),
-      }),
-    ),
+  const paddedCacheControlString = generateDefaultCacheControlHeader(
+    getCacheControlSetting(cacheControl, {
+      maxAge:
+        (cacheControl.maxAge || 0) + (cacheControl.staleWhileRevalidate || 0),
+    }),
   );
   // The cache-control we want to set on response
   const cacheControlString = generateDefaultCacheControlHeader(
@@ -117,26 +133,22 @@ async function setItem(
 
   // CF will override cache-control, so we need to keep a non-modified real-cache-control
   // cache-control is still necessary for mini-oxygen
-  response.headers.set('cache-control', cacheControlString);
+  response.headers.set('cache-control', paddedCacheControlString);
   response.headers.set('real-cache-control', cacheControlString);
   response.headers.set('cache-put-date', new Date().toUTCString());
 
-  logCacheApiStatus('PUT', request.url);
+  logCacheApiStatus('PUT', request, response);
   await cache.put(request, response);
 }
 
 async function deleteItem(cache: Cache, request: Request) {
   if (!cache) return;
 
-  logCacheApiStatus('DELETE', request.url);
+  logCacheApiStatus('DELETE', request);
   await cache.delete(request);
 }
 
-/**
- * Manually check the response to see if it's stale.
- */
-function isStale(request: Request, response: Response) {
-  const responseDate = response.headers.get('cache-put-date');
+function calculateAge(response: Response, responseDate: string) {
   const cacheControl = response.headers.get('real-cache-control');
   let responseMaxAge = 0;
 
@@ -147,18 +159,26 @@ function isStale(request: Request, response: Response) {
     }
   }
 
+  const ageInMs =
+    new Date().valueOf() - new Date(responseDate as string).valueOf();
+  return [ageInMs / 1000, responseMaxAge];
+}
+
+/**
+ * Manually check the response to see if it's stale.
+ */
+function isStale(request: Request, response: Response) {
+  const responseDate = response.headers.get('cache-put-date');
+
   if (!responseDate) {
     return false;
   }
 
-  const ageInMs =
-    new Date().valueOf() - new Date(responseDate as string).valueOf();
-  const age = ageInMs / 1000;
-
+  const [age, responseMaxAge] = calculateAge(response, responseDate);
   const result = age > responseMaxAge;
 
   if (result) {
-    logCacheApiStatus('STALE', request.url);
+    logCacheApiStatus('STALE', request, response);
   }
 
   return result;

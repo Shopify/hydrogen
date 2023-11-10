@@ -16,7 +16,7 @@ export function flattenConnection<
   connection?: ConnectionGeneric,
 ): ConnectionGeneric extends
   | {
-      edges: {node: Array<infer ConnectionBaseType>};
+      edges: Array<{node: infer ConnectionBaseType}>;
     }
   | {
       nodes: Array<infer ConnectionBaseType>;
@@ -58,13 +58,11 @@ export function flattenConnection<
   if ('edges' in connection && Array.isArray(connection.edges)) {
     // @ts-expect-error return type is failing
     return connection.edges.map((edge) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if (!edge?.node) {
         throw new Error(
           'flattenConnection(): Connection edges must contain nodes',
         );
       }
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
       return edge.node;
     }) as Array<unknown>;
   }
@@ -80,7 +78,7 @@ export function flattenConnection<
 }
 
 type ConnectionEdges = {
-  edges: {node: Array<unknown>};
+  edges: Array<{node: unknown}>;
 };
 
 type ConnectionNodes = {

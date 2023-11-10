@@ -1,81 +1,106 @@
-import {
-  Await,
-  useMatches,
-  useCatch,
-  useRouteError,
-  isRouteErrorResponse,
-} from '@remix-run/react';
+import {Await, type MetaFunction} from '@remix-run/react';
 import {Suspense} from 'react';
-import {flattenConnection} from '@shopify/hydrogen';
-import type {Cart as CartType} from '@shopify/hydrogen/storefront-api-types';
-import {type ErrorBoundaryComponent} from '@shopify/remix-oxygen';
+import type {CartQueryData} from '@shopify/hydrogen';
+import {CartForm} from '@shopify/hydrogen';
+import {json, type ActionFunctionArgs} from '@shopify/remix-oxygen';
+import {CartMain} from '~/components/Cart';
+import {useRootLoaderData} from '~/root';
 
-export async function action() {
-  // @TODO implement cart action
-}
-
-export default function CartRoute() {
-  const [root] = useMatches();
-  return (
-    <Suspense fallback="loading">
-      <Await
-        resolve={root.data?.cart as CartType}
-        errorElement={<div>An error occurred</div>}
-      >
-        {(cart) => {
-          const linesCount = Boolean(cart?.lines?.edges?.length || 0);
-          if (!linesCount) {
-            return (
-              <p>Looks like you haven&rsquo;t added anything to your cart.</p>
-            );
-          }
-
-          const cartLines = cart?.lines ? flattenConnection(cart?.lines) : [];
-
-          return (
-            <>
-              <h1>Cart</h1>
-              <ul>
-                {cartLines.map((line) => (
-                  <div key={line.id}>
-                    <h2>{line?.merchandise?.title}</h2>
-                  </div>
-                ))}
-              </ul>
-            </>
-          );
-        }}
-      </Await>
-    </Suspense>
-  );
-}
-
-export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
-  console.error(error);
-
-  return <div>There was an error.</div>;
+export const meta: MetaFunction = () => {
+  return [{title: `Hydrogen | Cart`}];
 };
 
-export function CatchBoundary() {
-  const caught = useCatch();
-  console.error(caught);
+export async function action({request, context}: ActionFunctionArgs) {
+  const {session, cart} = context;
 
-  return (
-    <div>
-      There was an error. Status: {caught.status}. Message:{' '}
-      {caught.data?.message}
-    </div>
+  const [formData, customerAccessToken] = await Promise.all([
+    request.formData(),
+    session.get('customerAccessToken'),
+  ]);
+
+  const {action, inputs} = CartForm.getFormInput(formData);
+
+  if (!action) {
+    throw new Error('No action provided');
+  }
+
+  let status = 200;
+  let result: CartQueryData;
+
+  switch (action) {
+    case CartForm.ACTIONS.LinesAdd:
+      result = await cart.addLines(inputs.lines);
+      break;
+    case CartForm.ACTIONS.LinesUpdate:
+      result = await cart.updateLines(inputs.lines);
+      break;
+    case CartForm.ACTIONS.LinesRemove:
+      result = await cart.removeLines(inputs.lineIds);
+      break;
+    case CartForm.ACTIONS.DiscountCodesUpdate: {
+      const formDiscountCode = inputs.discountCode;
+
+      // User inputted discount code
+      const discountCodes = (
+        formDiscountCode ? [formDiscountCode] : []
+      ) as string[];
+
+      // Combine discount codes already applied on cart
+      discountCodes.push(...inputs.discountCodes);
+
+      result = await cart.updateDiscountCodes(discountCodes);
+      break;
+    }
+    case CartForm.ACTIONS.BuyerIdentityUpdate: {
+      result = await cart.updateBuyerIdentity({
+        ...inputs.buyerIdentity,
+        customerAccessToken: customerAccessToken?.accessToken,
+      });
+      break;
+    }
+    default:
+      throw new Error(`${action} cart action is not defined`);
+  }
+
+  const cartId = result.cart.id;
+  const headers = cart.setCartId(result.cart.id);
+  const {cart: cartResult, errors} = result;
+
+  const redirectTo = formData.get('redirectTo') ?? null;
+  if (typeof redirectTo === 'string') {
+    status = 303;
+    headers.set('Location', redirectTo);
+  }
+
+  return json(
+    {
+      cart: cartResult,
+      errors,
+      analytics: {
+        cartId,
+      },
+    },
+    {status, headers},
   );
 }
 
-export function ErrorBoundary() {
-  const error = useRouteError();
+export default function Cart() {
+  const rootData = useRootLoaderData();
+  const cartPromise = rootData.cart;
 
-  if (isRouteErrorResponse(error)) {
-    console.error(error.status, error.statusText, error.data);
-    return <div>Route Error</div>;
-  } else {
-    console.error((error as Error).message);
-    return <div>Thrown Error</div>;
-  }
+  return (
+    <div className="cart">
+      <h1>Cart</h1>
+      <Suspense fallback={<p>Loading cart ...</p>}>
+        <Await
+          resolve={cartPromise}
+          errorElement={<div>An error occurred</div>}
+        >
+          {(cart) => {
+            return <CartMain layout="page" cart={cart} />;
+          }}
+        </Await>
+      </Suspense>
+    </div>
+  );
 }

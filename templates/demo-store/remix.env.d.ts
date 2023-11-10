@@ -2,7 +2,7 @@
 /// <reference types="@shopify/remix-oxygen" />
 /// <reference types="@shopify/oxygen-workers-types" />
 
-import type {WithCache} from '@shopify/hydrogen';
+import type {WithCache, HydrogenCart} from '@shopify/hydrogen';
 import type {Storefront} from '~/lib/type';
 import type {HydrogenSession} from '~/lib/session.server';
 
@@ -19,21 +19,28 @@ declare global {
     SESSION_SECRET: string;
     PUBLIC_STOREFRONT_API_TOKEN: string;
     PRIVATE_STOREFRONT_API_TOKEN: string;
-    PUBLIC_STOREFRONT_API_VERSION: string;
     PUBLIC_STORE_DOMAIN: string;
     PUBLIC_STOREFRONT_ID: string;
   }
 }
 
-/**
- * Declare local additions to `AppLoadContext` to include the session utilities we injected in `server.ts`.
- */
 declare module '@shopify/remix-oxygen' {
+  /**
+   * Declare local additions to the Remix loader context.
+   */
   export interface AppLoadContext {
     waitUntil: ExecutionContext['waitUntil'];
     session: HydrogenSession;
     storefront: Storefront;
+    cart: HydrogenCart;
     env: Env;
+  }
+
+  /**
+   * Declare the data we expect to access via `context.session`.
+   */
+  export interface SessionData {
+    customerAccessToken: string;
   }
 }
 

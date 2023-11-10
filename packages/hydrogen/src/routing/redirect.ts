@@ -3,9 +3,14 @@ import type {UrlRedirectConnection} from '@shopify/hydrogen-react/storefront-api
 import type {I18nBase, Storefront} from '../storefront';
 
 type StorefrontRedirect = {
+  /** The [Storefront client](/docs/api/hydrogen/2023-10/utilities/createstorefrontclient) instance */
   storefront: Storefront<I18nBase>;
+  /** The [MDN Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object that was passed to the `server.ts` request handler. */
   request: Request;
+  /** The [MDN Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) object created by `handleRequest` */
   response?: Response;
+  /** By default the `/admin` route is redirected to the Shopify Admin page for the current storefront. Disable this redirect by passing `true`. */
+  noAdminRedirect?: boolean;
 };
 
 /**
@@ -16,13 +21,22 @@ type StorefrontRedirect = {
  *
  * @see {@link https://help.shopify.com/en/manual/online-store/menus-and-links/url-redirect Creating URL redirects in Shopify}
  */
-export async function storefrontRedirect({
-  storefront,
-  request,
-  response = new Response('Not Found', {status: 404}),
-}: StorefrontRedirect): Promise<Response> {
+export async function storefrontRedirect(
+  options: StorefrontRedirect,
+): Promise<Response> {
+  const {
+    storefront,
+    request,
+    noAdminRedirect,
+    response = new Response('Not Found', {status: 404}),
+  } = options;
+
   const {pathname, search} = new URL(request.url);
   const redirectFrom = pathname + search;
+
+  if (pathname === '/admin' && !noAdminRedirect) {
+    return redirect(`${storefront.getShopifyDomain()}/admin`);
+  }
 
   try {
     const {urlRedirects} = await storefront.query<{
@@ -34,7 +48,7 @@ export async function storefrontRedirect({
     const location = urlRedirects?.edges?.[0]?.node?.target;
 
     if (location) {
-      return new Response(null, {status: 302, headers: {location}});
+      return new Response(null, {status: 301, headers: {location}});
     }
 
     const searchParams = new URLSearchParams(search);
@@ -61,18 +75,11 @@ export async function storefrontRedirect({
 }
 
 function isLocalPath(url: string) {
-  try {
-    // We don't want to redirect cross domain,
-    // doing so could create fishing vulnerability
-    // If `new URL()` succeeds, it's a fully qualified
-    // url which is cross domain. If it fails, it's just
-    // a path, which will be the current domain.
-    new URL(url);
-  } catch (e) {
-    return true;
-  }
-
-  return false;
+  // We don't want to redirect cross domain,
+  // doing so could create phishing vulnerability
+  // Test for protocols, e.g. https://, http://, //
+  // and uris: mailto:, tel:, javascript:, etc.
+  return !/^(([a-z+-]+:)?\/\/|[a-z+-]+:)/i.test(url.trim());
 }
 
 const REDIRECT_QUERY = `#graphql

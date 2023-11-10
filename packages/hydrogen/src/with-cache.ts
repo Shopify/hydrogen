@@ -1,5 +1,15 @@
 import {type CacheKey, runWithCache} from './cache/fetch';
 import type {CachingStrategy} from './cache/strategies';
+import {type CrossRuntimeRequest, getDebugHeaders} from './utils/request';
+
+type CreateWithCacheOptions = {
+  /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */
+  cache: Cache;
+  /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
+  waitUntil: ExecutionContext['waitUntil'];
+  /** The `request` object is used to access certain headers for debugging */
+  request?: CrossRuntimeRequest;
+};
 
 /**
  * Creates a utility function that executes an asynchronous operation
@@ -7,40 +17,35 @@ import type {CachingStrategy} from './cache/strategies';
  * Use this to call any third-party APIs from loaders or actions.
  * By default, it uses the `CacheShort` strategy.
  *
- * Example:
- *
- * ```js
- * // In your app's `server.ts` file:
- * createRequestHandler({
- *   /* ... *\/,
- *   getLoadContext: () => ({ withCache: createWithCache_unstable({cache, waitUntil}) })
- * });
- *
- * // In your route loaders:
- * import {CacheShort} from '@shopify/hydrogen';
- * export async function loader ({context: {withCache}}) {
- *   const data = await withCache('my-unique-key', CacheShort(), () => {
- *     return fetch('https://example.com/api').then(res => res.json());
- *   });
- * ```
  */
-export function createWithCache_unstable({
+export function createWithCache<T = unknown>({
   cache,
   waitUntil,
-}: {
-  cache: Cache;
-  waitUntil: ExecutionContext['waitUntil'];
-}) {
-  return <T = unknown>(
+  request,
+}: CreateWithCacheOptions): CreateWithCacheReturn<T> {
+  return function withCache<T = unknown>(
     cacheKey: CacheKey,
     strategy: CachingStrategy,
     actionFn: () => T | Promise<T>,
-  ) =>
-    runWithCache<T>(cacheKey, actionFn, {
+  ) {
+    return runWithCache<T>(cacheKey, actionFn, {
       strategy,
       cacheInstance: cache,
       waitUntil,
+      debugInfo: getDebugHeaders(request),
     });
+  };
 }
 
-export type WithCache = ReturnType<typeof createWithCache_unstable>;
+/**
+ * This is a caching async function. Whatever data is returned from the `actionFn` will be cached according to the strategy provided.
+ *
+ * Use the `CachingStrategy` to define a custom caching mechanism for your data. Or use one of the built-in caching strategies: `CacheNone`, `CacheShort`, `CacheLong`.
+ */
+type CreateWithCacheReturn<T> = <U = T>(
+  cacheKey: CacheKey,
+  strategy: CachingStrategy,
+  actionFn: () => U | Promise<U>,
+) => Promise<U>;
+
+export type WithCache = ReturnType<typeof createWithCache>;

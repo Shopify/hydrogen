@@ -15,6 +15,7 @@ import {
   CartLineInput,
   CartLineUpdateInput,
   CountryCode,
+  LanguageCode,
   Cart as CartType,
   MutationCartNoteUpdateArgs,
 } from './storefront-api-types.js';
@@ -24,13 +25,18 @@ import {
   CartMachineEvent,
   CartMachineTypeState,
   CartWithActions,
+  CartWithActionsDocs,
 } from './cart-types.js';
 import {useCartAPIStateMachine} from './useCartAPIStateMachine.js';
 import {CART_ID_STORAGE_KEY} from './cart-constants.js';
 import {PartialDeep} from 'type-fest';
 import {defaultCartFragment} from './cart-queries.js';
+import {useShop} from './ShopifyProvider.js';
 
 export const CartContext = createContext<CartWithActions | null>(null);
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type UseCartDocs = () => CartWithActionsDocs;
 
 /**
  * The `useCart` hook provides access to the cart object. It must be a descendent of a `CartProvider` component.
@@ -82,14 +88,16 @@ type CartProviderProps = {
   onAttributesUpdateComplete?: () => void;
   /** A callback that is invoked when the process to update the cart discount codes completes */
   onDiscountCodesUpdateComplete?: () => void;
-  /** An object with fields that correspond to the Storefront API's [Cart object](https://shopify.dev/api/storefront/2023-04/objects/cart). */
+  /** An object with fields that correspond to the Storefront API's [Cart object](https://shopify.dev/api/storefront/2023-10/objects/cart). */
   data?: PartialDeep<CartType, {recurseIntoArrays: true}>;
-  /** A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/2023-04/objects/cart) for all queries and mutations. A default value is used if no argument is provided. */
+  /** A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/2023-10/objects/cart) for all queries and mutations. A default value is used if no argument is provided. */
   cartFragment?: string;
   /** A customer access token that's accessible on the server if there's a customer login. */
   customerAccessToken?: CartBuyerIdentityInput['customerAccessToken'];
   /** The ISO country code for i18n. */
   countryCode?: CountryCode;
+  /** The ISO luanguage code for i18n. */
+  languageCode?: LanguageCode;
 };
 
 /**
@@ -124,9 +132,30 @@ export function CartProvider({
   data: cart,
   cartFragment = defaultCartFragment,
   customerAccessToken,
-  countryCode = 'US',
+  countryCode,
+  languageCode,
 }: CartProviderProps): JSX.Element {
+  const shop = useShop();
+
+  if (!shop)
+    throw new Error(
+      '<CartProvider> needs to be a descendant of <ShopifyProvider>',
+    );
+
+  countryCode = (
+    (countryCode as string) ??
+    shop.countryIsoCode ??
+    'US'
+  ).toUpperCase() as CountryCode;
+
+  languageCode = (
+    (languageCode as string) ??
+    shop.languageIsoCode ??
+    'EN'
+  ).toUpperCase() as LanguageCode;
+
   if (countryCode) countryCode = countryCode.toUpperCase() as CountryCode;
+
   const [prevCountryCode, setPrevCountryCode] = useState(countryCode);
   const [prevCustomerAccessToken, setPrevCustomerAccessToken] =
     useState(customerAccessToken);
@@ -146,6 +175,7 @@ export function CartProvider({
     data: cart,
     cartFragment,
     countryCode,
+    languageCode,
     onCartActionEntry(_, event) {
       try {
         switch (event.type) {

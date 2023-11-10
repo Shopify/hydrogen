@@ -41,10 +41,10 @@ export function BuyNowButton<AsType extends React.ElementType = 'button'>(
   } = props;
 
   useEffect(() => {
-    if (checkoutUrl) {
+    if (loading && checkoutUrl) {
       window.location.href = checkoutUrl;
     }
-  }, [checkoutUrl]);
+  }, [loading, checkoutUrl]);
 
   const handleBuyNow = useCallback(() => {
     setLoading(true);
@@ -61,7 +61,8 @@ export function BuyNowButton<AsType extends React.ElementType = 'button'>(
 
   return (
     <BaseButton
-      disabled={loading ?? passthroughProps.disabled}
+      // Only certain 'as' types such as 'button' contain `disabled`
+      disabled={loading ?? (passthroughProps as {disabled?: boolean}).disabled}
       {...passthroughProps}
       onClick={onClick}
       defaultOnClick={handleBuyNow}

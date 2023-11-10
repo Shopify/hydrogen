@@ -41,8 +41,7 @@ export default {
         i18n: {language: 'EN', country: 'US'},
         publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
         privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
-        storeDomain: `https://${env.PUBLIC_STORE_DOMAIN}`,
-        storefrontApiVersion: env.PUBLIC_STOREFRONT_API_VERSION || '2023-04',
+        storeDomain: env.PUBLIC_STORE_DOMAIN,
         storefrontId: env.PUBLIC_STOREFRONT_ID,
         storefrontHeaders: getStorefrontHeaders(request),
       });
@@ -54,7 +53,7 @@ export default {
       const handleRequest = createRequestHandler({
         build: remixBuild,
         mode: process.env.NODE_ENV,
-        getLoadContext: () => ({session, storefront, env}),
+        getLoadContext: () => ({session, storefront, env, waitUntil}),
       });
 
       const response = await handleRequest(request);
@@ -82,7 +81,7 @@ export default {
  * Feel free to customize it to your needs, add helper methods, or
  * swap out the cookie-based implementation with something else!
  */
-class HydrogenSession {
+export class HydrogenSession {
   constructor(
     private sessionStorage: SessionStorage,
     private session: Session,
@@ -102,6 +101,10 @@ class HydrogenSession {
     const session = await storage.getSession(request.headers.get('Cookie'));
 
     return new this(storage, session);
+  }
+
+  has(key: string) {
+    return this.session.has(key);
   }
 
   get(key: string) {

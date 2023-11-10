@@ -1,7 +1,7 @@
 import {parseJSON} from '../utils/parse-json';
 import {CacheAPI} from './api';
 import {
-  CacheShort,
+  CacheDefault,
   type CachingStrategy,
   type AllCacheOptions,
 } from './strategies.js';
@@ -13,12 +13,12 @@ import {
 /**
  * Cache API is weird. We just need a full URL, so we make one up.
  */
-function getKeyUrl(key: string) {
+export function getKeyUrl(key: string) {
   return `https://shopify.dev/?${key}`;
 }
 
 function getCacheOption(userCacheOptions?: CachingStrategy): AllCacheOptions {
-  return userCacheOptions || CacheShort();
+  return userCacheOptions || CacheDefault();
 }
 
 export function generateSubRequestCacheControlHeader(

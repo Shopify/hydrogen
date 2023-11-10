@@ -22,7 +22,9 @@ export interface ProductPriceProps {
  * The `ProductPrice` component renders a `Money` component with the product
  * [`priceRange`](https://shopify.dev/api/storefront/reference/products/productpricerange)'s `maxVariantPrice` or `minVariantPrice`, for either the regular price or compare at price range.
  */
-export function ProductPrice<ComponentGeneric extends React.ElementType>(
+export function ProductPrice<
+  ComponentGeneric extends React.ElementType = 'div',
+>(
   props: ProductPriceProps &
     Omit<MoneyProps<ComponentGeneric>, 'data' | 'measurement'>,
 ): JSX.Element | null {

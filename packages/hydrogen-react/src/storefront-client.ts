@@ -1,6 +1,6 @@
 import {SFAPI_VERSION} from './storefront-api-constants.js';
 
-type StorefrontClientProps = {
+export type StorefrontClientProps = {
   /** The host name of the domain (eg: `{shop}.myshopify.com`). */
   storeDomain: string;
   /** The Storefront API delegate access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) and [delegate access token](https://shopify.dev/apps/auth/oauth/delegate-access-tokens) documentation for more details. */
@@ -8,7 +8,7 @@ type StorefrontClientProps = {
   /** The Storefront API access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */
   publicStorefrontToken?: string;
   /** The Storefront API version. This should almost always be the same as the version Hydrogen React was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */
-  storefrontApiVersion: string;
+  storefrontApiVersion?: string;
   /**
    * Customizes which `"content-type"` header is added when using `getPrivateTokenHeaders()` and `getPublicTokenHeaders()`. When fetching with a `JSON.stringify()`-ed `body`, use `"json"`. When fetching with a `body` that is a plain string, use `"graphql"`. Defaults to `"json"`
    *
@@ -29,50 +29,75 @@ export function createStorefrontClient(
     storeDomain,
     privateStorefrontToken,
     publicStorefrontToken,
-    storefrontApiVersion,
+    storefrontApiVersion = SFAPI_VERSION,
     contentType,
   } = props;
 
+  if (!storeDomain) {
+    throw new Error(
+      H2_PREFIX_ERROR +
+        `\`storeDomain\` is required when creating a new Storefront client.\nReceived "${storeDomain}".`,
+    );
+  }
+
   if (storefrontApiVersion !== SFAPI_VERSION) {
     warnOnce(
-      `StorefrontClient: The Storefront API version that you're using is different than the version this build of Hydrogen React is targeting. You may run into unexpected errors if these versions don't match. Received verion: "${storefrontApiVersion}"; expected version "${SFAPI_VERSION}"`,
+      `The Storefront API version that you're using is different than the version this build of Hydrogen React is targeting.` +
+        `\nYou may run into unexpected errors if these versions don't match. Received verion: "${storefrontApiVersion}"; expected version "${SFAPI_VERSION}"`,
     );
   }
 
   // only warn if not in a browser environment
   if (__HYDROGEN_DEV__ && !privateStorefrontToken && !globalThis.document) {
     warnOnce(
-      `StorefrontClient: Using a private storefront token is recommended for server environments. Refer to the authentication https://shopify.dev/api/storefront#authentication documentation for more details.`,
+      `Using a private storefront token is recommended for server environments.` +
+        `\nRefer to the authentication https://shopify.dev/api/storefront#authentication documentation for more details.`,
     );
   }
 
   // only warn if in a browser environment and you're using the privateStorefrontToken
   if (__HYDROGEN_DEV__ && privateStorefrontToken && globalThis.document) {
     warnOnce(
-      `StorefrontClient: You are attempting to use a private token in an environment where it can be easily accessed by anyone. This is a security risk; please use the public token and the 'publicStorefrontToken' prop`,
+      'You are attempting to use a private token in an environment where it can be easily accessed by anyone.' +
+        '\nThis is a security risk; please use the public token and the `publicStorefrontToken` prop',
     );
   }
 
+  const isMockShop = (domain: string): boolean => domain.includes('mock.shop');
+  const getShopifyDomain: StorefrontClientReturn['getShopifyDomain'] = (
+    overrideProps,
+  ) => {
+    const domain = overrideProps?.storeDomain ?? storeDomain;
+    return domain.includes('://') ? domain : `https://${domain}`;
+  };
+
   return {
-    getShopifyDomain(overrideProps): string {
-      return overrideProps?.storeDomain ?? storeDomain;
-    },
+    getShopifyDomain,
     getStorefrontApiUrl(overrideProps): string {
-      const finalDomainUrl = overrideProps?.storeDomain ?? storeDomain;
-      return `${finalDomainUrl}${finalDomainUrl.endsWith('/') ? '' : '/'}api/${
+      const domain = getShopifyDomain(overrideProps);
+      const apiUrl = domain + (domain.endsWith('/') ? 'api' : '/api');
+
+      if (isMockShop(domain)) return apiUrl;
+
+      return `${apiUrl}/${
         overrideProps?.storefrontApiVersion ?? storefrontApiVersion
       }/graphql.json`;
     },
     getPrivateTokenHeaders(overrideProps): Record<string, string> {
-      if (!privateStorefrontToken && !overrideProps?.privateStorefrontToken) {
+      if (
+        !privateStorefrontToken &&
+        !overrideProps?.privateStorefrontToken &&
+        !isMockShop(storeDomain)
+      ) {
         throw new Error(
-          `StorefrontClient: You did not pass in a 'privateStorefrontToken' while using 'getPrivateTokenHeaders()'`,
+          H2_PREFIX_ERROR +
+            'You did not pass in a `privateStorefrontToken` while using `createStorefrontClient()` or `getPrivateTokenHeaders()`',
         );
       }
 
       if (__HYDROGEN_DEV__ && !overrideProps?.buyerIp) {
         warnOnce(
-          `StorefrontClient: it is recommended to pass in the 'buyerIp' property which improves analytics and data in the admin.`,
+          'It is recommended to pass in the `buyerIp` property which improves analytics and data in the admin.',
         );
       }
 
@@ -95,9 +120,14 @@ export function createStorefrontClient(
       };
     },
     getPublicTokenHeaders(overrideProps): Record<string, string> {
-      if (!publicStorefrontToken && !overrideProps?.publicStorefrontToken) {
+      if (
+        !publicStorefrontToken &&
+        !overrideProps?.publicStorefrontToken &&
+        !isMockShop(storeDomain)
+      ) {
         throw new Error(
-          `StorefrontClient: You did not pass in a 'publicStorefrontToken' while using 'getPublicTokenHeaders()'`,
+          H2_PREFIX_ERROR +
+            'You did not pass in a `publicStorefrontToken` while using `createStorefrontClient()` or `getPublicTokenHeaders()`',
         );
       }
 
@@ -136,9 +166,11 @@ export function getPublicTokenHeadersRaw(
 }
 
 const warnings = new Set<string>();
+const H2_PREFIX_ERROR = '[h2:error:createStorefrontClient] ';
+const H2_PREFIX_WARN = '[h2:warn:createStorefrontClient] ';
 const warnOnce = (string: string): void => {
   if (!warnings.has(string)) {
-    console.warn(string);
+    console.warn(H2_PREFIX_WARN + string);
     warnings.add(string);
   }
 };

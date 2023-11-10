@@ -64,6 +64,14 @@ describe(`createStorefrontClient`, () => {
         }),
       ).toBe(`https://newdomain.myshopify.com`);
     });
+
+    it(`automatically adds protocol if missing`, () => {
+      const client = createStorefrontClient(
+        generateConfig({storeDomain: 'newdomain.myshopify.com'}),
+      );
+
+      expect(client.getShopifyDomain()).toBe(`https://newdomain.myshopify.com`);
+    });
   });
 
   describe(`getStorefrontApiUrl`, () => {
@@ -97,6 +105,24 @@ describe(`createStorefrontClient`, () => {
         `https://testing.myshopify.com/api/${SFAPI_VERSION}/graphql.json`,
       );
     });
+
+    it(`automatically adds protocol if missing`, () => {
+      const client = createStorefrontClient(
+        generateConfig({storeDomain: 'newdomain.myshopify.com'}),
+      );
+
+      expect(client.getStorefrontApiUrl()).toBe(
+        `https://newdomain.myshopify.com/api/${SFAPI_VERSION}/graphql.json`,
+      );
+    });
+
+    it(`generates a URL correctly for mock.shop`, () => {
+      const client = createStorefrontClient(
+        generateConfig({storeDomain: 'mock.shop'}),
+      );
+
+      expect(client.getStorefrontApiUrl()).toBe(`https://mock.shop/api`);
+    });
   });
 
   describe(`getPrivateTokenHeaders`, () => {
@@ -109,7 +135,7 @@ describe(`createStorefrontClient`, () => {
         'Shopify-Storefront-Private-Token': 'privateToken',
         'X-SDK-Variant': 'hydrogen-react',
         'X-SDK-Variant-Source': 'react',
-        'X-SDK-Version': '2023-04',
+        'X-SDK-Version': '2023-10',
         'content-type': 'application/json',
       });
     });
@@ -130,7 +156,7 @@ describe(`createStorefrontClient`, () => {
         'Shopify-Storefront-Private-Token': 'newPrivate',
         'X-SDK-Variant': 'hydrogen-react',
         'X-SDK-Variant-Source': 'react',
-        'X-SDK-Version': '2023-04',
+        'X-SDK-Version': '2023-10',
         'content-type': 'application/graphql',
       });
     });
@@ -144,7 +170,7 @@ describe(`createStorefrontClient`, () => {
 
       expect(client.getPublicTokenHeaders()).toEqual({
         'X-Shopify-Storefront-Access-Token': 'publicToken',
-        'X-SDK-Version': '2023-04',
+        'X-SDK-Version': '2023-10',
         'X-SDK-Variant': 'hydrogen-react',
         'X-SDK-Variant-Source': 'react',
         'content-type': 'application/json',
@@ -163,7 +189,7 @@ describe(`createStorefrontClient`, () => {
         }),
       ).toEqual({
         'X-Shopify-Storefront-Access-Token': 'newPublic',
-        'X-SDK-Version': '2023-04',
+        'X-SDK-Version': '2023-10',
         'X-SDK-Variant': 'hydrogen-react',
         'X-SDK-Variant-Source': 'react',
         'content-type': 'application/graphql',
@@ -178,7 +204,6 @@ function generateConfig(
   props?: Partial<StorefrontClientProps>,
 ): StorefrontClientProps {
   return {
-    storefrontApiVersion: SFAPI_VERSION,
     storeDomain: 'https://testing.myshopify.com',
     ...props,
   };

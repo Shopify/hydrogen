@@ -1,42 +1,28 @@
 import Command from '@shopify/cli-kit/node/base-command';
-import {
-  installNodeModules,
-  packageManagerUsedForCreating,
-} from '@shopify/cli-kit/node/node-package-manager';
-import {
-  renderFatalError,
-  renderSuccess,
-  renderInfo,
-  renderSelectPrompt,
-  renderTextPrompt,
-  renderConfirmationPrompt,
-  renderTasks,
-} from '@shopify/cli-kit/node/ui';
+import {fileURLToPath} from 'node:url';
+import {packageManagerFromUserAgent} from '@shopify/cli-kit/node/node-package-manager';
 import {Flags} from '@oclif/core';
-import {basename, resolvePath, joinPath} from '@shopify/cli-kit/node/path';
-import {
-  rmdir,
-  copyFile,
-  fileExists,
-  isDirectory,
-} from '@shopify/cli-kit/node/fs';
-import {
-  outputInfo,
-  outputContent,
-  outputToken,
-} from '@shopify/cli-kit/node/output';
+import {AbortError} from '@shopify/cli-kit/node/error';
+import {AbortController} from '@shopify/cli-kit/node/abort';
 import {
   commonFlags,
   parseProcessFlags,
   flagsToCamelObject,
 } from '../../lib/flags.js';
-import {transpileProject} from '../../lib/transpile-ts.js';
-import {getLatestTemplates} from '../../lib/template-downloader.js';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
-import {readdir} from 'fs/promises';
-import {fileURLToPath} from 'url';
+import {
+  STYLING_CHOICES,
+  type StylingChoice,
+} from './../../lib/setups/css/index.js';
+import {I18N_CHOICES, type I18nChoice} from '../../lib/setups/i18n/index.js';
+import {supressNodeExperimentalWarnings} from '../../lib/process.js';
+import {
+  setupRemoteTemplate,
+  setupLocalStarterTemplate,
+  type InitOptions,
+} from '../../lib/onboarding/index.js';
+import {LANGUAGES} from '../../lib/onboarding/common.js';
 
-const STARTER_TEMPLATES = ['hello-world', 'demo-store'];
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 
 export default class Init extends Command {
@@ -49,40 +35,73 @@ export default class Init extends Command {
     }),
     language: Flags.string({
       description: 'Sets the template language to use. One of `js` or `ts`.',
-      choices: ['js', 'ts'],
+      choices: Object.keys(LANGUAGES),
       env: 'SHOPIFY_HYDROGEN_FLAG_LANGUAGE',
     }),
     template: Flags.string({
       description:
-        'Sets the template to use. One of `demo-store` or `hello-world`.',
-      choices: STARTER_TEMPLATES,
+        'Sets the template to use. Pass `demo-store` for a fully-featured store template or `hello-world` for a barebones project.',
       env: 'SHOPIFY_HYDROGEN_FLAG_TEMPLATE',
     }),
-    'install-deps': Flags.boolean({
-      description: 'Auto install dependencies using the active package manager',
-      env: 'SHOPIFY_HYDROGEN_FLAG_INSTALL_DEPS',
+    'install-deps': commonFlags.installDeps,
+    'mock-shop': Flags.boolean({
+      description: 'Use mock.shop as the data source for the storefront.',
+      default: false,
+      env: 'SHOPIFY_HYDROGEN_FLAG_MOCK_DATA',
+    }),
+    styling: commonFlags.styling,
+    markets: commonFlags.markets,
+    shortcut: commonFlags.shortcut,
+    routes: Flags.boolean({
+      description: 'Generate routes for all pages.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_ROUTES',
+      hidden: true,
+      allowNo: true,
+    }),
+    git: Flags.boolean({
+      description: 'Init Git and create initial commits.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_GIT',
+      default: true,
       allowNo: true,
     }),
   };
 
   async run(): Promise<void> {
-    const {flags} = await this.parse(Init);
+    // Rename markets => i18n
+    const {
+      flags: {markets, ..._flags},
+    } = await this.parse(Init);
+    const flags = {..._flags, i18n: markets};
 
-    await runInit(flagsToCamelObject(flags));
+    if (flags.i18n && !I18N_CHOICES.includes(flags.i18n as I18nChoice)) {
+      throw new AbortError(
+        `Invalid URL structure strategy: ${
+          flags.i18n
+        }. Must be one of ${I18N_CHOICES.join(', ')}`,
+      );
+    }
+
+    if (
+      flags.styling &&
+      !STYLING_CHOICES.includes(flags.styling as StylingChoice)
+    ) {
+      throw new AbortError(
+        `Invalid styling strategy: ${
+          flags.styling
+        }. Must be one of ${STYLING_CHOICES.join(', ')}`,
+      );
+    }
+
+    await runInit(flagsToCamelObject(flags) as InitOptions);
   }
 }
 
 export async function runInit(
-  options: {
-    path?: string;
-    template?: string;
-    language?: string;
-    token?: string;
-    force?: boolean;
-    installDeps?: boolean;
-  } = parseProcessFlags(process.argv, FLAG_MAP),
+  options: InitOptions = parseProcessFlags(process.argv, FLAG_MAP),
 ) {
   supressNodeExperimentalWarnings();
+
+  options.git ??= true;
 
   const showUpgrade = await checkHydrogenVersion(
     // Resolving the CLI package from a local directory might fail because
@@ -93,7 +112,7 @@ export async function runInit(
   );
 
   if (showUpgrade) {
-    const packageManager = await packageManagerUsedForCreating();
+    const packageManager = packageManagerFromUserAgent();
     showUpgrade(
       packageManager === 'unknown'
         ? ''
@@ -101,169 +120,14 @@ export async function runInit(
     );
   }
 
-  // Start downloading templates early.
-  let templatesDownloaded = false;
-  const templatesPromise = getLatestTemplates()
-    .then((result) => {
-      templatesDownloaded = true;
-      return result;
-    })
-    .catch((error) => {
-      renderFatalError(error);
-      process.exit(1);
-    });
+  const controller = new AbortController();
 
-  const appTemplate =
-    options.template ??
-    (await renderSelectPrompt({
-      message: 'Choose a template',
-      defaultValue: 'hello-world',
-      choices: STARTER_TEMPLATES.map((value) => ({
-        label: value
-          .replace(/-/g, ' ')
-          .replace(/\b\w/g, (l) => l.toUpperCase()),
-        value,
-      })),
-    }));
-
-  const language =
-    options.language ??
-    (await renderSelectPrompt({
-      message: 'Choose a language',
-      choices: [
-        {label: 'JavaScript', value: 'js'},
-        {label: 'TypeScript', value: 'ts'},
-      ],
-      defaultValue: 'js',
-    }));
-
-  const location =
-    options.path ??
-    (await renderTextPrompt({
-      message: 'Where would you like to create your app?',
-      defaultValue: 'hydrogen-storefront',
-    }));
-
-  const projectName = basename(location);
-  const projectDir = resolvePath(process.cwd(), location);
-
-  if (await projectExists(projectDir)) {
-    if (!options.force) {
-      const deleteFiles = await renderConfirmationPrompt({
-        message: `${location} is not an empty directory. Do you want to delete the existing files and continue?`,
-        defaultValue: false,
-      });
-
-      if (!deleteFiles) {
-        renderInfo({
-          headline: `Destination path ${location} already exists and is not an empty directory. You may use \`--force\` or \`-f\` to override it.`,
-        });
-
-        return;
-      }
-    }
-
-    await rmdir(projectDir, {force: true});
-  }
-
-  // Templates might be cached or the download might be finished already.
-  // Only output progress if the download is still in progress.
-  if (!templatesDownloaded) {
-    await renderTasks([
-      {
-        title: 'Downloading templates',
-        task: async () => {
-          await templatesPromise;
-        },
-      },
-    ]);
-  }
-
-  const {templatesDir} = await templatesPromise;
-
-  await copyFile(joinPath(templatesDir, appTemplate), projectDir);
-
-  if (language === 'js') {
-    try {
-      await transpileProject(projectDir);
-    } catch (error) {
-      await rmdir(projectDir, {force: true});
-      throw error;
-    }
-  }
-
-  let depsInstalled = false;
-  let packageManager = await packageManagerUsedForCreating();
-
-  if (packageManager !== 'unknown') {
-    const installDeps =
-      options.installDeps ??
-      (await renderConfirmationPrompt({
-        message: `Install dependencies with ${packageManager}?`,
-      }));
-
-    if (installDeps) {
-      await installNodeModules({
-        directory: projectDir,
-        packageManager,
-        args: [],
-        stdout: process.stdout,
-        stderr: process.stderr,
-      });
-
-      depsInstalled = true;
-    }
-  } else {
-    // Assume npm for showing next steps
-    packageManager = 'npm';
-  }
-
-  renderSuccess({
-    headline: `${projectName} is ready to build.`,
-    nextSteps: [
-      outputContent`Run ${outputToken.genericShellCommand(`cd ${location}`)}`
-        .value,
-      depsInstalled
-        ? undefined
-        : outputContent`Run ${outputToken.genericShellCommand(
-            `${packageManager} install`,
-          )} to install the dependencies`.value,
-      outputContent`Run ${outputToken.packagejsonScript(
-        packageManager,
-        'dev',
-      )} to start your local development server and start building`.value,
-    ].filter((step): step is string => Boolean(step)),
-    reference: [
-      'Getting started with Hydrogen: https://shopify.dev/docs/custom-storefronts/hydrogen/building/begin-development',
-      'Hydrogen project structure: https://shopify.dev/docs/custom-storefronts/hydrogen/project-structure',
-      'Setting up Hydrogen environment variables: https://shopify.dev/docs/custom-storefronts/hydrogen/environment-variables',
-    ],
-  });
-
-  if (appTemplate === 'demo-store') {
-    renderInfo({
-      headline: `Your project will display inventory from the Hydrogen Demo Store.`,
-      body: `To connect this project to your Shopify store’s inventory, update \`${projectName}/.env\` with your store ID and Storefront API key.`,
-    });
-  }
-}
-
-async function projectExists(projectDir: string) {
-  return (
-    (await fileExists(projectDir)) &&
-    (await isDirectory(projectDir)) &&
-    (await readdir(projectDir)).length > 0
-  );
-}
-
-function supressNodeExperimentalWarnings() {
-  const warningListener = process.listeners('warning')[0]!;
-  if (warningListener) {
-    process.removeAllListeners('warning');
-    process.prependListener('warning', (warning) => {
-      if (warning.name != 'ExperimentalWarning') {
-        warningListener(warning);
-      }
-    });
+  try {
+    return options.template
+      ? await setupRemoteTemplate(options, controller)
+      : await setupLocalStarterTemplate(options, controller);
+  } catch (error) {
+    controller.abort();
+    throw error;
   }
 }

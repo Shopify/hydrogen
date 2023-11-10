@@ -1,17 +1,19 @@
-import {vi, afterEach, beforeEach, describe, it, expect} from 'vitest';
-import {CartProvider, useCart} from './CartProvider.js';
-import {render, screen} from '@testing-library/react';
+import {vi, describe, it, expect} from 'vitest';
+import {useCart} from './CartProvider.js';
+import {render, screen, act} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {BuyNowButton} from './BuyNowButton.js';
 import {getCartWithActionsMock} from './CartProvider.test.helpers.js';
 
-vi.mock('./CartProvider');
+vi.mock('./CartProvider', () => {
+  return {
+    useCart: vi.fn(() => ({cartCreate: vi.fn()})),
+  };
+});
 
 describe('<BuyNowButton/>', () => {
   it('renders a button', () => {
-    render(<BuyNowButton variantId="1">Buy now</BuyNowButton>, {
-      wrapper: CartProvider,
-    });
+    render(<BuyNowButton variantId="1">Buy now</BuyNowButton>);
     expect(screen.getByRole('button')).toHaveTextContent('Buy now');
   });
 
@@ -20,9 +22,6 @@ describe('<BuyNowButton/>', () => {
       <BuyNowButton disabled variantId="1">
         Buy now
       </BuyNowButton>,
-      {
-        wrapper: CartProvider,
-      },
     );
 
     expect(screen.getByRole('button')).toBeDisabled();
@@ -33,9 +32,6 @@ describe('<BuyNowButton/>', () => {
       <BuyNowButton className="fancy-button" variantId="1">
         Buy now
       </BuyNowButton>,
-      {
-        wrapper: CartProvider,
-      },
     );
 
     expect(screen.getByRole('button')).toHaveClass('fancy-button');
@@ -64,12 +60,9 @@ describe('<BuyNowButton/>', () => {
         >
           Buy now
         </BuyNowButton>,
-        {
-          wrapper: CartProvider,
-        },
       );
 
-      await user.click(screen.getByRole('button'));
+      await act(() => user.click(screen.getByRole('button')));
 
       expect(mockCartCreate).toHaveBeenCalledTimes(1);
       expect(mockCartCreate).toHaveBeenCalledWith({
@@ -89,49 +82,15 @@ describe('<BuyNowButton/>', () => {
     it('disables the button', async () => {
       const user = userEvent.setup();
 
-      render(<BuyNowButton variantId="1">Buy now</BuyNowButton>, {
-        wrapper: CartProvider,
-      });
+      render(<BuyNowButton variantId="1">Buy now</BuyNowButton>);
 
       const button = screen.getByRole('button');
 
       expect(button).not.toBeDisabled();
 
-      await user.click(button);
+      await act(() => user.click(button));
 
       expect(button).toBeDisabled();
-    });
-  });
-
-  describe('when a checkout URL is available', () => {
-    const {location} = window;
-    const mockSetHref = vi.fn((href: string) => href);
-
-    beforeEach(() => {
-      delete (window as Partial<Window>).location;
-      window.location = {...window.location};
-      Object.defineProperty(window.location, 'href', {
-        set: mockSetHref,
-      });
-    });
-
-    afterEach(() => {
-      window.location = location;
-    });
-
-    it('redirects to checkout', () => {
-      vi.mocked(useCart).mockImplementation(() =>
-        getCartWithActionsMock({
-          checkoutUrl: '/checkout?id=123',
-        }),
-      );
-
-      render(<BuyNowButton variantId="1">Buy now</BuyNowButton>, {
-        wrapper: CartProvider,
-      });
-
-      expect(mockSetHref).toHaveBeenCalledTimes(1);
-      expect(mockSetHref).toHaveBeenCalledWith('/checkout?id=123');
     });
   });
 });

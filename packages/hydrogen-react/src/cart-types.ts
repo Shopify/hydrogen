@@ -7,38 +7,36 @@ import {
   MutationCartNoteUpdateArgs,
   CartBuyerIdentityInput,
   MutationCartAttributesUpdateArgs,
+  ComponentizableCartLine,
 } from './storefront-api-types.js';
 import {StateMachine} from '@xstate/fsm';
 import type {PartialDeep} from 'type-fest';
 
 export type CartStatus = CartState['status'];
 
-export type Cart = PartialDeep<
-  {
-    /** The cart's ID if it has been created through the Storefront API. */
-    id?: string;
-    /** The cart lines. */
-    lines: CartLine[];
-    /** The checkout URL for the cart, if the cart has been created in the Storefront API. */
-    checkoutUrl?: string;
-    /** The cart's note. */
-    note?: string;
-    /** The cart's buyer identity. */
-    buyerIdentity?: CartType['buyerIdentity'];
-    /** The cart's attributes. */
-    attributes: CartType['attributes'];
-    /** The discount codes applied to the cart. */
-    discountCodes?: CartType['discountCodes'];
-    /** The cost for the cart, including the subtotal, total, taxes, and duties. */
-    cost?: CartType['cost'];
-    /** The total number of items in the cart, across all lines. If there are no lines, then the value is 0. */
-    totalQuantity: number;
-  },
-  {recurseIntoArrays: true}
->;
+export interface CartBase {
+  /** The cart's ID if it has been created through the Storefront API. */
+  id?: string;
+  /** The cart lines. */
+  lines: Array<CartLine | ComponentizableCartLine>;
+  /** The checkout URL for the cart, if the cart has been created in the Storefront API. */
+  checkoutUrl?: string;
+  /** The cart's note. */
+  note?: string;
+  /** The cart's buyer identity. */
+  buyerIdentity?: CartType['buyerIdentity'];
+  /** The cart's attributes. */
+  attributes: CartType['attributes'];
+  /** The discount codes applied to the cart. */
+  discountCodes?: CartType['discountCodes'];
+  /** The cost for the cart, including the subtotal, total, taxes, and duties. */
+  cost?: CartType['cost'];
+  /** The total number of items in the cart, across all lines. If there are no lines, then the value is 0. */
+  totalQuantity?: number;
+}
 
-export interface CartWithActions extends Cart {
-  /** The status of the cart. This returns 'uninitialized' when the cart is not yet created, `creating` when the cart is being created, `fetching` when an existing cart is being fetched, `updating` when the cart is updating, and `idle` when the cart isn't being created or updated. */
+interface CartActions {
+  /** The status of the cart. This returns `uninitialized` when the cart is not yet created, `creating` when the cart is being created, `fetching` when an existing cart is being fetched, `updating` when the cart is updating, and `idle` when the cart isn't being created or updated. */
   status: CartStatus;
   /** If an error occurred on the previous cart action, then `error` will exist and `cart` will be put back into the last valid status it was in. */
   error?: unknown;
@@ -61,10 +59,16 @@ export interface CartWithActions extends Cart {
   /** A callback that updates the cart's discount codes. Expects the same `codes` input that you would provide to the Storefront API's `cartDiscountCodesUpdate` mutation. */
   discountCodesUpdate: (discountCodes: string[]) => void;
   /** The total number of items in the cart, across all lines. If there are no lines, then the value is 0. */
-  totalQuantity: number;
+  totalQuantity?: number;
   /** The fragment used to query the cart object for all queries and mutations. */
   cartFragment: string;
 }
+
+export type Cart = PartialDeep<CartBase, {recurseIntoArrays: true}>;
+
+export interface CartWithActions extends Cart, CartActions {}
+
+export interface CartWithActionsDocs extends CartBase, CartActions {}
 
 export type CartState =
   /** A cart has not been created yet, or an error occurred when a cart was attempting to be created or fetched. */

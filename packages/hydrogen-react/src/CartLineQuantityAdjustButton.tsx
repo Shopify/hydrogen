@@ -58,15 +58,16 @@ export function CartLineQuantityAdjustButton<
     linesUpdate,
   ]);
 
+  // Only certain 'as' types such as 'button' contain `disabled`
+  const disabledAttr = (passthroughProps as {disabled?: boolean}).disabled;
+
   return (
     <BaseButton
       {...passthroughProps}
       onClick={onClick}
       defaultOnClick={handleAdjust}
       disabled={
-        typeof passthroughProps.disabled !== 'undefined'
-          ? passthroughProps.disabled
-          : status !== 'idle'
+        typeof disabledAttr !== 'undefined' ? disabledAttr : status !== 'idle'
       }
     >
       {children}

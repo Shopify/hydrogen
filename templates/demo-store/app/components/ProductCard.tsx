@@ -1,15 +1,12 @@
 import clsx from 'clsx';
-import {
-  flattenConnection,
-  Image,
-  Money,
-  ShopifyAnalyticsProduct,
-  useMoney,
-} from '@shopify/hydrogen';
-import {Text, Link, AddToCartButton} from '~/components';
+import type {ShopifyAnalyticsProduct} from '@shopify/hydrogen';
+import {flattenConnection, Image, Money, useMoney} from '@shopify/hydrogen';
+import type {MoneyV2, Product} from '@shopify/hydrogen/storefront-api-types';
+
+import type {ProductCardFragment} from 'storefrontapi.generated';
+import {Text, Link, AddToCartButton, Button} from '~/components';
 import {isDiscounted, isNewArrival} from '~/lib/utils';
 import {getProductPlaceholder} from '~/lib/placeholders';
-import type {MoneyV2, Product} from '@shopify/hydrogen/storefront-api-types';
 
 export function ProductCard({
   product,
@@ -19,7 +16,7 @@ export function ProductCard({
   onClick,
   quickAdd,
 }: {
-  product: Product;
+  product: ProductCardFragment;
   label?: string;
   className?: string;
   loading?: HTMLImageElement['loading'];
@@ -104,7 +101,7 @@ export function ProductCard({
           </div>
         </div>
       </Link>
-      {quickAdd && (
+      {quickAdd && firstVariant.availableForSale && (
         <AddToCartButton
           lines={[
             {
@@ -123,6 +120,13 @@ export function ProductCard({
             Add to Cart
           </Text>
         </AddToCartButton>
+      )}
+      {quickAdd && !firstVariant.availableForSale && (
+        <Button variant="secondary" className="mt-2" disabled>
+          <Text as="span" className="flex items-center justify-center gap-2">
+            Sold out
+          </Text>
+        </Button>
       )}
     </div>
   );

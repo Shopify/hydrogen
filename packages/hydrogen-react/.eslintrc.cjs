@@ -12,6 +12,7 @@ module.exports = {
   plugins: ['eslint-plugin-tsdoc'],
   ignorePatterns: [
     '**/storefront-api-types.d.ts',
+    '**/codegen.ts',
     '**/dist/**',
     '**/coverage/**',
     '**/docs/**',
@@ -31,6 +32,7 @@ module.exports = {
     'plugin:@typescript-eslint/recommended-requiring-type-checking',
   ],
   rules: {
+    'eslint-comments/no-unused-disable': 'off',
     'jest/no-disabled-tests': 'off',
     'jest/no-export': 'off',
     'no-console': 'off',

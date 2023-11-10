@@ -1,5 +1,175 @@
 # @shopify/create-hydrogen
 
+## 4.3.3
+
+### Patch Changes
+
+- Fix Shopify login during the init flow where the process would just exit when awaiting for a keypress. ([#1481](https://github.com/Shopify/hydrogen/pull/1481)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`f8626c8a`](https://github.com/Shopify/hydrogen/commit/f8626c8a6dd797a120b3d7278f821216badba7fe)]:
+  - @shopify/cli-hydrogen@6.0.1
+
+## 4.3.2
+
+### Patch Changes
+
+- Updated dependencies [[`3464ec04`](https://github.com/Shopify/hydrogen/commit/3464ec04a084e1ceb30ee19874dc1b9171ce2b34), [`ad45656c`](https://github.com/Shopify/hydrogen/commit/ad45656c5f663cc1a60eab5daab4da1dfd0e6cc3)]:
+  - @shopify/cli-hydrogen@6.0.0
+
+## 4.3.1
+
+### Patch Changes
+
+- Fix template dist package due to CI error ([#1451](https://github.com/Shopify/hydrogen/pull/1451)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Updated dependencies [[`3eb376fe`](https://github.com/Shopify/hydrogen/commit/3eb376fe8796b50131dc43845772ae555e07a1a6)]:
+  - @shopify/cli-hydrogen@5.5.1
+
+## 4.3.0
+
+### Minor Changes
+
+- Generated JavaScript projects now use Codegen and JSDoc to enhance editor autocompletion. ([#1334](https://github.com/Shopify/hydrogen/pull/1334)) by [@frandiox](https://github.com/frandiox)
+
+### Patch Changes
+
+- Fix the starter template blog route to include a required `startCursor` in the GraphQL query. ([#1441](https://github.com/Shopify/hydrogen/pull/1441)) by [@blittle](https://github.com/blittle)
+
+- Updated dependencies [[`e992de2c`](https://github.com/Shopify/hydrogen/commit/e992de2c73462a954620c3ef896849782d18e506), [`f6469d11`](https://github.com/Shopify/hydrogen/commit/f6469d11248543c98e5166f8d8c1a2e2d9e5764c), [`b81b452d`](https://github.com/Shopify/hydrogen/commit/b81b452d010c650b1de1678f729945d1d4394820)]:
+  - @shopify/cli-hydrogen@5.5.0
+
+## 4.2.6
+
+### Patch Changes
+
+- Add check to render collection images when available ([#1373](https://github.com/Shopify/hydrogen/pull/1373)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies [[`e148cfca`](https://github.com/Shopify/hydrogen/commit/e148cfca004d6bb2981d136231e3825509d52305), [`06da5570`](https://github.com/Shopify/hydrogen/commit/06da5570c25a64b1afc4cce093c3ba3d2d7da2ca), [`425791ce`](https://github.com/Shopify/hydrogen/commit/425791ced37ddb50f71fbdc78760905555716444)]:
+  - @shopify/cli-hydrogen@5.4.0
+
+## 4.2.5
+
+### Patch Changes
+
+- Add magic cart and discount routes to skeleton template ([#1309](https://github.com/Shopify/hydrogen/pull/1309)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Filter out `fbclid` from the URL params on the product detail page ([#1353](https://github.com/Shopify/hydrogen/pull/1353)) by [@blittle](https://github.com/blittle)
+
+- Fix `--routes` and `--markets` flag when creating new projects. ([#1342](https://github.com/Shopify/hydrogen/pull/1342)) by [@frandiox](https://github.com/frandiox)
+
+- Improved types of `HydrogenSession` when accessing `session.get('customerAccessToken')`. ([#1341](https://github.com/Shopify/hydrogen/pull/1341)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`33ae6ab6`](https://github.com/Shopify/hydrogen/commit/33ae6ab6029213ba34e8c7441d99c7eb8d31721b), [`d8dc1acf`](https://github.com/Shopify/hydrogen/commit/d8dc1acf96fae571115908973a47cab3e85f2f2a), [`e62a4db1`](https://github.com/Shopify/hydrogen/commit/e62a4db1f54866868d76b450a285d19360fbf83b), [`305862ff`](https://github.com/Shopify/hydrogen/commit/305862ff20ca1db2cdecebe2fff34452189d04e8), [`33258210`](https://github.com/Shopify/hydrogen/commit/33258210b494b7627c9035c0c54561a3f7a865b2), [`be4994fe`](https://github.com/Shopify/hydrogen/commit/be4994feaee7834edd6e58c0bfe585fafa5a48a0), [`e62a4db1`](https://github.com/Shopify/hydrogen/commit/e62a4db1f54866868d76b450a285d19360fbf83b), [`384a4267`](https://github.com/Shopify/hydrogen/commit/384a4267a56d9386ba4f59b82c0705010ddba590), [`113821e5`](https://github.com/Shopify/hydrogen/commit/113821e57bc46ef5fe926889473399f2dc54bbdb)]:
+  - @shopify/cli-hydrogen@5.3.0
+
+## 4.2.4
+
+### Patch Changes
+
+- (Unstable) server-side network request debug virtual route ([#1284](https://github.com/Shopify/hydrogen/pull/1284)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  1. Update your `server.ts` so that it also passes in the `waitUntil` and `env`.
+
+     ```diff
+       const handleRequest = createRequestHandler({
+         build: remixBuild,
+         mode: process.env.NODE_ENV,
+     +    getLoadContext: () => ({session, storefront, env, waitUntil}),
+       });
+     ```
+
+     If you are using typescript, make sure to update `remix.env.d.ts`
+
+     ```diff
+       declare module '@shopify/remix-oxygen' {
+         export interface AppLoadContext {
+     +     env: Env;
+           cart: HydrogenCart;
+           storefront: Storefront;
+           session: HydrogenSession;
+     +      waitUntil: ExecutionContext['waitUntil'];
+         }
+       }
+     ```
+
+  2. Run `npm run dev` and you should see terminal log information about a new virtual route that you can view server-side network requests at http://localhost:3000/debug-network
+
+  3. Open http://localhost:3000/debug-network in a tab and your app another tab. When you navigate around your app, you should see server network requests being logged in the debug-network tab
+
+- Updated dependencies [[`291115da`](https://github.com/Shopify/hydrogen/commit/291115da68625c5f992b7bc6e10480d4ec54c246), [`71a07374`](https://github.com/Shopify/hydrogen/commit/71a0737438d51bae79330d3251f47355e814a453)]:
+  - @shopify/cli-hydrogen@5.2.3
+
+## 4.2.3
+
+### Patch Changes
+
+- Add functionality for creating a Content Security Policy. See the [guide on Content Security Policies](https://shopify.dev/docs/custom-storefronts/hydrogen/content-security-policy) for more details. ([#1235](https://github.com/Shopify/hydrogen/pull/1235)) by [@blittle](https://github.com/blittle)
+
+- Updated dependencies [[`3491fd5c`](https://github.com/Shopify/hydrogen/commit/3491fd5cef5586dbf7dc44243124649bfad4df5a), [`06516ee9`](https://github.com/Shopify/hydrogen/commit/06516ee91f20153902c2b8ef79c0f6690ba385bb), [`d67ce6aa`](https://github.com/Shopify/hydrogen/commit/d67ce6aaaa93791fee4b82e722bd2fad8dcefec0), [`ee6e2920`](https://github.com/Shopify/hydrogen/commit/ee6e2920389b6cc103642b43a17af2311d347e13), [`1a7762bc`](https://github.com/Shopify/hydrogen/commit/1a7762bc4c99ff35ee6392ab7627a0ef13f97e6f), [`1f8acd7b`](https://github.com/Shopify/hydrogen/commit/1f8acd7b6ab0aa78e2a882e59cf69887109504be)]:
+  - @shopify/cli-hydrogen@5.2.1
+
+## 4.2.2
+
+### Patch Changes
+
+- Add default exported route to enable the error to be caught in the root.tsx ErrorBoundary ([#1215](https://github.com/Shopify/hydrogen/pull/1215)) by [@josh-sanger](https://github.com/josh-sanger)
+
+- Add shouldRevalidate export to limit root loaders revalidation on mutations only ([#1237](https://github.com/Shopify/hydrogen/pull/1237)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Removed quantityAvailable field from skeleton PDP graphql query so that it works with default Storefront API permissions. ([#1236](https://github.com/Shopify/hydrogen/pull/1236)) by [@abecciu](https://github.com/abecciu)
+
+- Updated dependencies [[`a06b5093`](https://github.com/Shopify/hydrogen/commit/a06b509339bb749a27f5dcf3555c7c2d6ebde3af), [`d053978d`](https://github.com/Shopify/hydrogen/commit/d053978dc49a12651a5c7c15efd543884b9f03db), [`9fcfc500`](https://github.com/Shopify/hydrogen/commit/9fcfc5000d4df6745ad4c0a05a4cb6d039feed71), [`ec21cfd6`](https://github.com/Shopify/hydrogen/commit/ec21cfd64d82d3d2d2ee2ee54cf93d372bc5d927), [`867866d1`](https://github.com/Shopify/hydrogen/commit/867866d18cba0324c240c15422c890ccb4fc1546), [`bdac4c22`](https://github.com/Shopify/hydrogen/commit/bdac4c2253c45772da0b6b475703c3d97e599cbb), [`46d5f8ff`](https://github.com/Shopify/hydrogen/commit/46d5f8ff279dd7e18fa817eeb04206e08122fced), [`632a7a38`](https://github.com/Shopify/hydrogen/commit/632a7a385f13a987990f554b907dfb6f421f1351), [`e536ae04`](https://github.com/Shopify/hydrogen/commit/e536ae04641c41b56580f69dab454c20f2931cbf)]:
+  - @shopify/cli-hydrogen@5.2.0
+
+## 4.2.1
+
+### Patch Changes
+
+- Update @shopify/oxygen-workers-types dependencies ([#1208](https://github.com/Shopify/hydrogen/pull/1208)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Update create-hydrogen cli dependency ([#1208](https://github.com/Shopify/hydrogen/pull/1208)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies [[`21eb9dac`](https://github.com/Shopify/hydrogen/commit/21eb9dac935722fd8d0d385b00c3bbcfb4693baa)]:
+  - @shopify/cli-hydrogen@5.1.2
+
+## 4.2.0
+
+### What’s new
+
+⭐️ Check out our [blog post](https://hydrogen.shopify.dev/updates) with all the latest updates on Hydrogen, and what’s coming on the roadmap.
+
+Shopify CLI now gives you [more options](https://shopify.dev/docs/custom-storefronts/hydrogen/getting-started/quickstart) when creating a new Hydrogen app on the command line:
+
+- Create a new Shopify storefront and connect it to the local project, or use [Mock.shop](https://mock.shop).
+- Pick your styling method: Tailwind, CSS Modules, Vanilla Extract, PostCSS.
+- URL strategies to support language and currency options with Shopify Markets.
+- Automatically scaffold standard Shopify routes.
+
+### Minor Changes
+
+- The onboarding process when creating new Hydrogen apps has been updated. ([#913](https://github.com/Shopify/hydrogen/pull/913)) by [@frandiox](https://github.com/frandiox)
+
+### Patch Changes
+
+- Updated dependencies [[`2a036d72`](https://github.com/Shopify/hydrogen/commit/2a036d72c79ef3e40aecfb1832635898208c6d54), [`667ea4fb`](https://github.com/Shopify/hydrogen/commit/667ea4fbf30e632529984c8262010d35e5df38b0), [`ed9782bc`](https://github.com/Shopify/hydrogen/commit/ed9782bc43921d02a2fdbc951c1df1d200812f2d), [`11ab64a8`](https://github.com/Shopify/hydrogen/commit/11ab64a88966dd7b90522f15836abfff6f5d595f), [`00f3e592`](https://github.com/Shopify/hydrogen/commit/00f3e59283d3a413a6acd89722bb71580f73aff5), [`5530d987`](https://github.com/Shopify/hydrogen/commit/5530d98756503878fbf5ac013e2103259ffc0443), [`63d17266`](https://github.com/Shopify/hydrogen/commit/63d172665cf97fae62629f8019d9b2dad29c7d40), [`5530d987`](https://github.com/Shopify/hydrogen/commit/5530d98756503878fbf5ac013e2103259ffc0443)]:
+  - @shopify/cli-hydrogen@6.0.0
+
+## 4.1.3
+
+### Patch Changes
+
+- Updated dependencies [[`b2195520`](https://github.com/Shopify/hydrogen/commit/b219552030ed9cdb3fcd3343deaf5c502d12411b), [`42683d0a`](https://github.com/Shopify/hydrogen/commit/42683d0a1b6288d8f6a6e58bfbf2e2650f0d82d2), [`808ceb51`](https://github.com/Shopify/hydrogen/commit/808ceb518a30389d0df4226bed23aead65ccd11f), [`428c78dc`](https://github.com/Shopify/hydrogen/commit/428c78dcb6005c369c0c60e4c4cffb869afa7eb1)]:
+  - @shopify/cli-hydrogen@5.0.0
+
+## 4.1.2
+
+### Patch Changes
+
+- Fix release ([#926](https://github.com/Shopify/hydrogen/pull/926)) by [@blittle](https://github.com/blittle)
+
+- Updated dependencies [[`7aaa4e86`](https://github.com/Shopify/hydrogen/commit/7aaa4e86739e22b2d9a517e2b2cfc20110c87acd)]:
+  - @shopify/cli-hydrogen@4.2.1
+
 ## 4.1.1
 
 ### Patch Changes

@@ -1,22 +1,17 @@
-import {SyntheticEvent, useMemo, useState} from 'react';
-import {Menu} from '@headlessui/react';
-
-import {Heading, IconFilters, IconCaret, IconXMark, Text} from '~/components';
+import type {SyntheticEvent} from 'react';
+import {useMemo, useState} from 'react';
+import {Menu, Disclosure} from '@headlessui/react';
+import type {Location} from '@remix-run/react';
 import {
   Link,
   useLocation,
   useSearchParams,
-  Location,
   useNavigate,
 } from '@remix-run/react';
 import {useDebounce} from 'react-use';
-import {Disclosure} from '@headlessui/react';
+import type {FilterType, Filter} from '@shopify/hydrogen/storefront-api-types';
 
-import type {
-  FilterType,
-  Filter,
-  Collection,
-} from '@shopify/hydrogen/storefront-api-types';
+import {Heading, IconFilters, IconCaret, IconXMark, Text} from '~/components';
 
 export type AppliedFilter = {
   label: string;
@@ -37,7 +32,7 @@ type Props = {
   filters: Filter[];
   appliedFilters?: AppliedFilter[];
   children: React.ReactNode;
-  collections?: Collection[];
+  collections?: Array<{handle: string; title: string}>;
 };
 
 export function SortFilter({
@@ -83,12 +78,7 @@ export function SortFilter({
 export function FiltersDrawer({
   filters = [],
   appliedFilters = [],
-  collections = [],
-}: {
-  filters: Filter[];
-  appliedFilters: AppliedFilter[];
-  collections: Collection[];
-}) {
+}: Omit<Props, 'children'>) {
   const [params] = useSearchParams();
   const location = useLocation();
 
@@ -125,21 +115,6 @@ export function FiltersDrawer({
         );
     }
   };
-
-  const collectionsMarkup = collections.map((collection) => {
-    return (
-      <li key={collection.handle} className="pb-4">
-        <Link
-          to={`/collections/${collection.handle}`}
-          className="focus:underline hover:underline"
-          key={collection.handle}
-          prefetch="intent"
-        >
-          {collection.title}
-        </Link>
-      </li>
-    );
-  });
 
   return (
     <>
@@ -330,7 +305,9 @@ function filterInputToParams(
   rawInput: string | Record<string, any>,
   params: URLSearchParams,
 ) {
-  const input = typeof rawInput === 'string' ? JSON.parse(rawInput) : rawInput;
+  const input = (
+    typeof rawInput === 'string' ? JSON.parse(rawInput) : rawInput
+  ) as Record<string, any>;
   switch (type) {
     case 'PRICE_RANGE':
       if (input.price.min) params.set('minPrice', input.price.min);

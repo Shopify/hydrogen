@@ -19,10 +19,12 @@ export interface CustomBaseButtonProps<AsType> {
 
 export type BaseButtonProps<AsType extends React.ElementType> =
   CustomBaseButtonProps<AsType> &
-    Omit<
-      React.ComponentPropsWithoutRef<AsType>,
-      keyof CustomBaseButtonProps<AsType>
-    >;
+    (AsType extends keyof React.JSX.IntrinsicElements
+      ? Omit<
+          React.ComponentPropsWithoutRef<AsType>,
+          keyof CustomBaseButtonProps<AsType>
+        >
+      : React.ComponentPropsWithoutRef<AsType>);
 
 export function BaseButton<AsType extends React.ElementType = 'button'>(
   props: BaseButtonProps<AsType>,

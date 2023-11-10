@@ -5,8 +5,8 @@
   "fixed": [],
   "linked": [],
   "access": "public",
-  "baseBranch": "2023-04",
+  "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["hello-world", "skeleton"],
+  "ignore": ["hello-world", "demo-store"],
   "privatePackages": {"version": true, "tag": true}
 }

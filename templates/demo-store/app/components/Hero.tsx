@@ -1,25 +1,19 @@
 import clsx from 'clsx';
-import type {SerializeFrom} from '@shopify/remix-oxygen';
 import {MediaFile} from '@shopify/hydrogen';
 import type {
   MediaImage,
   Media,
-  Metafield,
   Video as MediaVideo,
 } from '@shopify/hydrogen/storefront-api-types';
+
+import type {CollectionContentFragment} from 'storefrontapi.generated';
 import {Heading, Text, Link} from '~/components';
 
-export interface CollectionHero {
-  byline: Metafield;
-  cta: Metafield;
-  handle: string;
-  heading: Metafield;
+type HeroProps = CollectionContentFragment & {
   height?: 'full';
-  loading?: 'eager' | 'lazy';
-  spread: Metafield;
-  spreadSecondary: Metafield;
   top?: boolean;
-}
+  loading?: HTMLImageElement['loading'];
+};
 
 /**
  * Hero component that renders metafields attached to collection resources
@@ -34,7 +28,7 @@ export function Hero({
   spread,
   spreadSecondary,
   top,
-}: SerializeFrom<CollectionHero>) {
+}: HeroProps) {
   return (
     <Link to={`/collections/${handle}`}>
       <section
@@ -88,11 +82,11 @@ export function Hero({
   );
 }
 
-interface SpreadMediaProps {
+type SpreadMediaProps = {
   data: Media | MediaImage | MediaVideo;
   loading?: HTMLImageElement['loading'];
   sizes: string;
-}
+};
 
 function SpreadMedia({data, loading, sizes}: SpreadMediaProps) {
   return (

@@ -157,7 +157,7 @@ function formatProductPayload(products?: ShopifyAnalyticsProduct[]): string[] {
             name: p.name,
             variant: p.variantName || '',
             brand: p.brand,
-            price: p.price,
+            price: parseFloat(p.price),
             quantity: Number(p.quantity || 0),
           },
         );

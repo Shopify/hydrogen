@@ -1,10 +1,11 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src"],
+  "include": ["src", "./hydrogen.config.d.ts"],
   "compilerOptions": {
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "paths": {
       "@shopify/hydrogen": ["./src"]
     }
-  }
+  },
+  "exclude": ["src/cart/createCartHandler.example.ts"]
 }

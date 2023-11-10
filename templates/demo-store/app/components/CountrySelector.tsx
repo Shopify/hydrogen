@@ -1,17 +1,20 @@
 import {useFetcher, useLocation, useMatches} from '@remix-run/react';
-import {Heading, Button, IconCheck} from '~/components';
 import {useCallback, useEffect, useRef} from 'react';
 import {useInView} from 'react-intersection-observer';
-import {Localizations, Locale, CartAction} from '~/lib/type';
-import {DEFAULT_LOCALE} from '~/lib/utils';
 import clsx from 'clsx';
-import {CartBuyerIdentityInput} from '@shopify/hydrogen/storefront-api-types';
+import type {CartBuyerIdentityInput} from '@shopify/hydrogen/storefront-api-types';
+import {CartForm} from '@shopify/hydrogen';
+
+import {Heading, Button, IconCheck} from '~/components';
+import type {Localizations, Locale} from '~/lib/type';
+import {DEFAULT_LOCALE} from '~/lib/utils';
+import {useRootLoaderData} from '~/root';
 
 export function CountrySelector() {
-  const [root] = useMatches();
   const fetcher = useFetcher();
   const closeRef = useRef<HTMLDetailsElement>(null);
-  const selectedLocale = root.data?.selectedLocale ?? DEFAULT_LOCALE;
+  const rootData = useRootLoaderData();
+  const selectedLocale = rootData?.selectedLocale ?? DEFAULT_LOCALE;
   const {pathname, search} = useLocation();
   const pathWithoutLocale = `${pathname.replace(
     selectedLocale.pathPrefix,
@@ -141,23 +144,19 @@ function ChangeLocaleForm({
   buyerIdentity: CartBuyerIdentityInput;
   redirectTo: string;
 }) {
-  const fetcher = useFetcher();
-
   return (
-    <fetcher.Form action="/cart" method="post">
-      <input
-        type="hidden"
-        name="cartAction"
-        value={CartAction.UPDATE_BUYER_IDENTITY}
-      />
-      <input
-        type="hidden"
-        name="buyerIdentity"
-        value={JSON.stringify(buyerIdentity)}
-      />
-      <input type="hidden" name="redirectTo" value={redirectTo} />
-      {children}
-    </fetcher.Form>
+    <CartForm
+      route="/cart"
+      action={CartForm.ACTIONS.BuyerIdentityUpdate}
+      inputs={{
+        buyerIdentity,
+      }}
+    >
+      <>
+        <input type="hidden" name="redirectTo" value={redirectTo} />
+        {children}
+      </>
+    </CartForm>
   );
 }
 

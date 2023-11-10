@@ -7,7 +7,7 @@
 
 name: Oxygen Deployment
 
-on: [pull_request, workflow_dispatch]
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   deploy:
@@ -54,7 +54,7 @@ jobs:
           oxygen_deployment_token: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_28966968 }}
           oxygen_worker_dir: dist/worker
           oxygen_client_dir: dist/client
-          build_command: 'HYDROGEN_ASSET_BASE_URL=$OXYGEN_ASSET_BASE_URL npm run build'
+          build_command: 'HYDROGEN_ASSET_BASE_URL=$OXYGEN_ASSET_BASE_URL npm run build -- --no-lockfile-check'
           # Hardcode message and timestamp if manual dispatch
           commit_message: ${{ github.event.head_commit.message || 'Manual deployment' }}
           commit_timestamp: ${{ github.event.head_commit.timestamp || github.event.repository.updated_at }}

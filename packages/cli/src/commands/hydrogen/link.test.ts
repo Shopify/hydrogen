@@ -1,58 +1,74 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
-import type {AdminSession} from '@shopify/cli-kit/node/session';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {
   renderConfirmationPrompt,
   renderSelectPrompt,
+  renderTextPrompt,
 } from '@shopify/cli-kit/node/ui';
-
-import {adminRequest} from '../../lib/graphql.js';
-import {
-  LinkStorefrontQuery,
-  LinkStorefrontSchema,
-} from '../../lib/graphql/admin/link-storefront.js';
-import {getAdminSession} from '../../lib/admin-session.js';
-import {getConfig, setStorefront} from '../../lib/shopify-config.js';
-
-import {linkStorefront} from './link.js';
+import {type AdminSession, login} from '../../lib/auth.js';
+import {getStorefronts} from '../../lib/graphql/admin/link-storefront.js';
+import {runLink} from './link.js';
+import {createStorefront} from '../../lib/graphql/admin/create-storefront.js';
+import {waitForJob} from '../../lib/graphql/admin/fetch-job.js';
+import {setStorefront} from '../../lib/shopify-config.js';
 
 vi.mock('@shopify/cli-kit/node/ui', async () => {
   const original = await vi.importActual<
     typeof import('@shopify/cli-kit/node/ui')
   >('@shopify/cli-kit/node/ui');
+
   return {
     ...original,
     renderConfirmationPrompt: vi.fn(),
     renderSelectPrompt: vi.fn(),
+    renderTextPrompt: vi.fn(),
   };
 });
-vi.mock('../../lib/graphql.js');
+vi.mock('../../lib/auth.js');
 vi.mock('../../lib/shopify-config.js');
-vi.mock('../../lib/admin-session.js');
-vi.mock('../../lib/shop.js', () => ({
-  getHydrogenShop: () => 'my-shop',
-}));
-
-const ADMIN_SESSION: AdminSession = {
-  token: 'abc123',
-  storeFqdn: 'my-shop',
-};
+vi.mock('../../lib/graphql/admin/link-storefront.js');
+vi.mock('../../lib/graphql/admin/create-storefront.js');
+vi.mock('../../lib/graphql/admin/fetch-job.js');
+vi.mock('../../lib/shell.js', () => ({getCliCommand: () => 'h2'}));
 
 describe('link', () => {
   const outputMock = mockAndCaptureOutput();
 
+  const ADMIN_SESSION: AdminSession = {
+    token: 'abc123',
+    storeFqdn: 'my-shop.myshopify.com',
+  };
+
+  const FULL_SHOPIFY_CONFIG = {
+    shop: 'my-shop.myshopify.com',
+    shopName: 'My Shop',
+    email: 'email',
+    storefront: {
+      id: 'gid://shopify/HydrogenStorefront/1',
+      title: 'Hydrogen',
+    },
+  };
+
+  const UNLINKED_SHOPIFY_CONFIG = {
+    ...FULL_SHOPIFY_CONFIG,
+    storefront: undefined,
+  };
+
   beforeEach(async () => {
-    vi.mocked(getAdminSession).mockResolvedValue(ADMIN_SESSION);
-    vi.mocked(adminRequest<LinkStorefrontSchema>).mockResolvedValue({
-      hydrogenStorefronts: [
-        {
-          id: 'gid://shopify/HydrogenStorefront/1',
-          title: 'Hydrogen',
-          productionUrl: 'https://example.com',
-        },
-      ],
+    vi.mocked(login).mockResolvedValue({
+      session: ADMIN_SESSION,
+      config: UNLINKED_SHOPIFY_CONFIG,
     });
-    vi.mocked(getConfig).mockResolvedValue({});
+
+    vi.mocked(getStorefronts).mockResolvedValue([
+      {
+        ...FULL_SHOPIFY_CONFIG.storefront,
+        parsedId: '1',
+        productionUrl: 'https://example.com',
+      },
+    ]);
+
+    vi.mocked(renderSelectPrompt).mockResolvedValue(FULL_SHOPIFY_CONFIG.shop);
   });
 
   afterEach(() => {
@@ -60,74 +76,116 @@ describe('link', () => {
     outputMock.clear();
   });
 
-  it('makes a GraphQL call to fetch the storefronts', async () => {
-    await linkStorefront({});
+  it('fetches the storefronts', async () => {
+    await runLink({});
 
-    expect(adminRequest).toHaveBeenCalledWith(
-      LinkStorefrontQuery,
-      ADMIN_SESSION,
-    );
+    expect(getStorefronts).toHaveBeenCalledWith(ADMIN_SESSION);
   });
 
   it('renders a list of choices and forwards the selection to setStorefront', async () => {
     vi.mocked(renderSelectPrompt).mockResolvedValue(
-      'gid://shopify/HydrogenStorefront/1',
+      FULL_SHOPIFY_CONFIG.storefront.id,
     );
 
-    await linkStorefront({path: 'my-path'});
+    await runLink({path: 'my-path'});
 
-    expect(setStorefront).toHaveBeenCalledWith('my-path', {
-      id: 'gid://shopify/HydrogenStorefront/1',
-      title: 'Hydrogen',
-      productionUrl: 'https://example.com',
-    });
+    expect(setStorefront).toHaveBeenCalledWith(
+      'my-path',
+      expect.objectContaining(FULL_SHOPIFY_CONFIG.storefront),
+    );
   });
 
-  describe('when there are no Hydrogen storefronts', () => {
-    it('renders a message and returns early', async () => {
-      vi.mocked(adminRequest<LinkStorefrontSchema>).mockResolvedValue({
-        hydrogenStorefronts: [],
-      });
+  describe('when you want to link an existing Hydrogen storefront', () => {
+    beforeEach(async () => {
+      vi.mocked(renderSelectPrompt).mockResolvedValue(
+        'gid://shopify/HydrogenStorefront/1',
+      );
+    });
 
-      await linkStorefront({});
-
-      expect(outputMock.info()).toMatch(
-        /There are no Hydrogen storefronts on your Shop/g,
+    it('renders a list of choices and forwards the selection to setStorefront', async () => {
+      vi.mocked(renderSelectPrompt).mockResolvedValue(
+        FULL_SHOPIFY_CONFIG.storefront.id,
       );
 
-      expect(renderSelectPrompt).not.toHaveBeenCalled();
-      expect(setStorefront).not.toHaveBeenCalled();
+      await runLink({path: 'my-path'});
+
+      expect(setStorefront).toHaveBeenCalledWith(
+        'my-path',
+        expect.objectContaining(FULL_SHOPIFY_CONFIG.storefront),
+      );
+    });
+
+    it('renders a success message', async () => {
+      vi.mocked(renderSelectPrompt).mockResolvedValue(
+        FULL_SHOPIFY_CONFIG.storefront.id,
+      );
+
+      await runLink({path: 'my-path'});
+
+      expect(outputMock.info()).toMatch(/is now linked/i);
+      expect(outputMock.info()).toMatch(/Run `h2 dev`/i);
     });
   });
 
-  describe('when no storefront gets selected', () => {
-    it('does not call setStorefront', async () => {
-      vi.mocked(renderSelectPrompt).mockResolvedValue('');
+  describe('when you want to link a new Hydrogen storefront', () => {
+    const expectedStorefrontName = 'New Storefront';
+    const expectedJobId = 'gid://shopify/Job/1';
 
-      await linkStorefront({});
+    beforeEach(async () => {
+      vi.mocked(renderSelectPrompt).mockResolvedValue(null);
 
-      expect(setStorefront).not.toHaveBeenCalled();
+      vi.mocked(createStorefront).mockResolvedValue({
+        storefront: {
+          id: 'gid://shopify/HydrogenStorefront/1',
+          title: expectedStorefrontName,
+          productionUrl: 'https://example.com',
+        },
+        jobId: expectedJobId,
+      });
+    });
+
+    it('chooses to create a new storefront given the directory path', async () => {
+      await runLink({path: 'my-path'});
+
+      expect(renderTextPrompt).toHaveBeenCalledWith({
+        message: expect.stringMatching(/name/i),
+        defaultValue: 'My Path',
+      });
+    });
+
+    it('handles the successful creation of the storefront on Admin', async () => {
+      await runLink({});
+
+      expect(waitForJob).toHaveBeenCalledWith(ADMIN_SESSION, expectedJobId);
+
+      expect(outputMock.info()).toContain(
+        `${expectedStorefrontName} is now linked`,
+      );
+    });
+
+    it('handles the job errors when creating the storefront on Admin', async () => {
+      vi.mocked(waitForJob).mockRejectedValue(undefined);
+
+      await expect(runLink({})).rejects.toThrow(Error);
     });
   });
 
   describe('when a linked storefront already exists', () => {
     beforeEach(() => {
-      vi.mocked(getConfig).mockResolvedValue({
-        storefront: {
-          id: 'gid://shopify/HydrogenStorefront/2',
-          title: 'Existing Link',
-        },
+      vi.mocked(login).mockResolvedValue({
+        session: ADMIN_SESSION,
+        config: FULL_SHOPIFY_CONFIG,
       });
     });
 
     it('prompts the user to confirm', async () => {
       vi.mocked(renderConfirmationPrompt).mockResolvedValue(true);
 
-      await linkStorefront({});
+      await runLink({});
 
       expect(renderConfirmationPrompt).toHaveBeenCalledWith({
         message: expect.stringMatching(
-          /Do you want to link to a different Hydrogen storefront on Shopify\?/,
+          /link to a different Hydrogen storefront/i,
         ),
       });
     });
@@ -136,16 +194,16 @@ describe('link', () => {
       it('returns early', async () => {
         vi.mocked(renderConfirmationPrompt).mockResolvedValue(false);
 
-        await linkStorefront({});
+        await runLink({});
 
-        expect(adminRequest).not.toHaveBeenCalled();
+        expect(getStorefronts).not.toHaveBeenCalled();
         expect(setStorefront).not.toHaveBeenCalled();
       });
     });
 
     describe('and the --force flag is provided', () => {
       it('does not prompt the user to confirm', async () => {
-        await linkStorefront({force: true});
+        await runLink({force: true});
 
         expect(renderConfirmationPrompt).not.toHaveBeenCalled();
       });
@@ -154,21 +212,23 @@ describe('link', () => {
 
   describe('when the --storefront flag is provided', () => {
     it('does not prompt the user to make a selection', async () => {
-      await linkStorefront({path: 'my-path', storefront: 'Hydrogen'});
+      await runLink({path: 'my-path', storefront: 'Hydrogen'});
 
       expect(renderSelectPrompt).not.toHaveBeenCalled();
-      expect(setStorefront).toHaveBeenCalledWith('my-path', {
-        id: 'gid://shopify/HydrogenStorefront/1',
-        title: 'Hydrogen',
-        productionUrl: 'https://example.com',
-      });
+      expect(setStorefront).toHaveBeenCalledWith(
+        'my-path',
+        expect.objectContaining({
+          id: 'gid://shopify/HydrogenStorefront/1',
+          title: 'Hydrogen',
+        }),
+      );
     });
 
     describe('and there is no matching storefront', () => {
       it('renders a warning message and returns early', async () => {
         const outputMock = mockAndCaptureOutput();
 
-        await linkStorefront({storefront: 'Does not exist'});
+        await runLink({storefront: 'Does not exist'});
 
         expect(setStorefront).not.toHaveBeenCalled();
 

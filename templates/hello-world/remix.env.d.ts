@@ -2,8 +2,11 @@
 /// <reference types="@shopify/remix-oxygen" />
 /// <reference types="@shopify/oxygen-workers-types" />
 
+// Enhance TypeScript's built-in typings.
+import '@total-typescript/ts-reset';
+
 import type {Storefront} from '@shopify/hydrogen';
-import type {HydrogenSession} from '../server';
+import type {HydrogenSession} from './server';
 
 declare global {
   /**
@@ -18,7 +21,6 @@ declare global {
     SESSION_SECRET: string;
     PUBLIC_STOREFRONT_API_TOKEN: string;
     PRIVATE_STOREFRONT_API_TOKEN: string;
-    PUBLIC_STOREFRONT_API_VERSION: string;
     PUBLIC_STORE_DOMAIN: string;
     PUBLIC_STOREFRONT_ID: string;
   }
@@ -29,8 +31,9 @@ declare global {
  */
 declare module '@shopify/remix-oxygen' {
   export interface AppLoadContext {
-    session: HydrogenSession;
-    storefront: Storefront;
     env: Env;
+    storefront: Storefront;
+    session: HydrogenSession;
+    waitUntil: ExecutionContext['waitUntil'];
   }
 }

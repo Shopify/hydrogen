@@ -4,7 +4,14 @@ import {
   createRequestHandler,
   getStorefrontHeaders,
 } from '@shopify/remix-oxygen';
-import {createStorefrontClient, storefrontRedirect} from '@shopify/hydrogen';
+import {
+  cartGetIdDefault,
+  cartSetIdDefault,
+  createCartHandler,
+  createStorefrontClient,
+  storefrontRedirect,
+} from '@shopify/hydrogen';
+
 import {HydrogenSession} from '~/lib/session.server';
 import {getLocaleFromRequest} from '~/lib/utils';
 
@@ -36,7 +43,7 @@ export default {
         throw new Error('SESSION_SECRET environment variable is not set');
       }
 
-      const waitUntil = (p: Promise<any>) => executionContext.waitUntil(p);
+      const waitUntil = executionContext.waitUntil.bind(executionContext);
       const [cache, session] = await Promise.all([
         caches.open('hydrogen'),
         HydrogenSession.init(request, [env.SESSION_SECRET]),
@@ -51,10 +58,15 @@ export default {
         i18n: getLocaleFromRequest(request),
         publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
         privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
-        storeDomain: `https://${env.PUBLIC_STORE_DOMAIN}`,
-        storefrontApiVersion: env.PUBLIC_STOREFRONT_API_VERSION || '2023-04',
+        storeDomain: env.PUBLIC_STORE_DOMAIN,
         storefrontId: env.PUBLIC_STOREFRONT_ID,
         storefrontHeaders: getStorefrontHeaders(request),
+      });
+
+      const cart = createCartHandler({
+        storefront,
+        getCartId: cartGetIdDefault(request.headers),
+        setCartId: cartSetIdDefault(),
       });
 
       /**
@@ -68,6 +80,7 @@ export default {
           session,
           waitUntil,
           storefront,
+          cart,
           env,
         }),
       });

@@ -1,9 +1,10 @@
 import {flattenConnection, Image} from '@shopify/hydrogen';
-import type {Order} from '@shopify/hydrogen/storefront-api-types';
+
+import type {OrderCardFragment} from 'storefrontapi.generated';
 import {Heading, Text, Link} from '~/components';
 import {statusMessage} from '~/lib/utils';
 
-export function OrderCard({order}: {order: Order}) {
+export function OrderCard({order}: {order: OrderCardFragment}) {
   if (!order?.id) return null;
   const [legacyOrderId, key] = order!.id!.split('/').pop()!.split('?');
   const lineItems = flattenConnection(order?.lineItems);
@@ -80,3 +81,32 @@ export function OrderCard({order}: {order: Order}) {
     </li>
   );
 }
+
+export const ORDER_CARD_FRAGMENT = `#graphql
+  fragment OrderCard on Order {
+    id
+    orderNumber
+    processedAt
+    financialStatus
+    fulfillmentStatus
+    currentTotalPrice {
+      amount
+      currencyCode
+    }
+    lineItems(first: 2) {
+      edges {
+        node {
+          variant {
+            image {
+              url
+              altText
+              height
+              width
+            }
+          }
+          title
+        }
+      }
+    }
+  }
+`;

@@ -5,15 +5,15 @@
     "@shopify:registry": "https://registry.npmjs.org"
   },
   "type": "module",
-  "version": "1.0.5",
-  "license": "SEE LICENSE IN LICENSE.md",
+  "version": "2.0.1",
+  "license": "MIT",
   "main": "dist/index.cjs",
   "module": "dist/production/index.js",
   "types": "dist/production/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "build": "tsup --clean --config ../../tsup.config.ts",
-    "dev": "tsup --watch --config ../../tsup.config.ts",
+    "build": "tsup --clean",
+    "dev": "tsup --watch",
     "prepack": "npm run build",
     "typecheck": "tsc --noEmit"
   },
@@ -39,13 +39,12 @@
   "files": [
     "dist"
   ],
-  "dependencies": {
-    "@remix-run/server-runtime": "1.15.0"
-  },
   "devDependencies": {
-    "@shopify/oxygen-workers-types": "^3.17.2"
+    "@remix-run/server-runtime": "^2.1.0",
+    "@shopify/oxygen-workers-types": "^4.0.0"
   },
   "peerDependencies": {
-    "@shopify/oxygen-workers-types": "^3.17.2"
+    "@remix-run/server-runtime": "^2.1.0",
+    "@shopify/oxygen-workers-types": "^3.17.3 || ^4.0.0"
   }
 }

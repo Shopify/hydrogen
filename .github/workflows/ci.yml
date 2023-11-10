@@ -84,8 +84,8 @@ jobs:
       #     restore-keys: |
       #       turbo-${{ github.job }}-${{ github.ref_name }}-
 
-      - name: 📦 Build packages
-        run: npm run build
+      - name: 📦 Build packages, templates, and examples
+        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run build:all
 
       - name: ✅ Typecheck
         run: npm run typecheck
@@ -113,6 +113,9 @@ jobs:
 
       - name: 📥 Install dependencies
         run: npm ci
+
+      - name: 📦 Build packages, templates, and examples
+        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run build:all
 
       - name: 🔬 Test
         run: npm run test

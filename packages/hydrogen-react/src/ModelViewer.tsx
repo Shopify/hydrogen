@@ -23,7 +23,7 @@ type ModelViewerProps = Omit<
   ModelViewerBaseProps;
 
 type ModelViewerBaseProps = {
-  /** An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2023-04/objects/model3d). */
+  /** An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2023-10/objects/model3d). */
   data: PartialDeep<Model3d, {recurseIntoArrays: true}>;
   /** The callback to invoke when the 'error' event is triggered. Refer to [error in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-error). */
   onError?: (event: Event) => void;
@@ -221,10 +221,11 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
 
   return (
     <model-viewer
-      // @ts-expect-error ref should exist
       ref={callbackRef}
       {...passthroughProps}
-      className={className}
+      // @ts-expect-error src should exist
+      // @eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      class={className}
       id={passthroughProps.id ?? data.id}
       src={data.sources[0].url}
       alt={data.alt ?? null}

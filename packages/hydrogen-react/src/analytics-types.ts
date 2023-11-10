@@ -42,7 +42,7 @@ export type ClientBrowserParameters = {
    **/
   search: string;
   /**
-   * Value of `window.location.referrer`.
+   * Value of `window.document.referrer`.
    *
    * Use `getClientBrowserParameters()` to collect this value.
    **/
@@ -177,7 +177,8 @@ export type ShopifyCookies = {
   [SHOPIFY_S]: string;
 };
 
-export type ShopifyGId = {
+export type ShopifyGid = Pick<URL, 'search' | 'searchParams' | 'hash'> & {
   id: string;
   resource: string | null;
+  resourceId: string | null;
 };

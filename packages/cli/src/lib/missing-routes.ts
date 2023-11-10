@@ -1,11 +1,11 @@
-import type {RemixConfig} from '@remix-run/dev/dist/config.js';
 import {renderSuccess, renderWarning} from '@shopify/cli-kit/node/ui';
+import type {RemixConfig} from './remix-config.js';
 
 // Sorted by importance for better warnings.
 const REQUIRED_ROUTES = [
   '',
   'cart',
-  'products',
+  // 'products',
   'products/:productHandle',
 
   'collections',
@@ -26,7 +26,7 @@ const REQUIRED_ROUTES = [
   //   'variants/:variantId',
   'search',
   //   'gift_cards/:storeId/:cardId',
-  'discount/:discountCode',
+  // 'discount/:discountCode', => Handled in storefrontRedirect
 
   'account',
   'account/login',

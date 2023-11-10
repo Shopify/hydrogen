@@ -5,20 +5,22 @@
     "@shopify:registry": "https://registry.npmjs.org"
   },
   "type": "module",
-  "version": "2023.4.0",
-  "license": "SEE LICENSE IN LICENSE.md",
+  "version": "2023.10.2",
+  "license": "MIT",
   "main": "dist/index.cjs",
   "module": "dist/production/index.js",
   "types": "dist/production/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "build": "tsup --clean --config ../../tsup.config.ts && npm run copy-hydrogen-react",
-    "copy-hydrogen-react": "node ../../scripts/copy-hydrogen-react.mjs",
-    "dev": "tsup --watch --config ../../tsup.config.ts --watch ../../node_modules/@shopify/hydrogen-react/dist/browser-prod/index.mjs",
+    "build": "tsup --clean",
+    "dev": "tsup --watch ./src --watch ../../node_modules/@shopify/hydrogen-react/dist/browser-prod/index.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "prepack": "npm run build",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "build-docs": "sh ./docs/build-docs.sh && npm run format",
+    "format": "prettier --write \"{src,docs}/**/*\" --ignore-unknown",
+    "preview-docs": "node ../../docs/preview/bin/cli.js docs/generated/generated_docs_data.json"
   },
   "exports": {
     ".": {
@@ -52,17 +54,21 @@
     "dist"
   ],
   "dependencies": {
-    "@shopify/hydrogen-react": "2023.4.0",
-    "react": "^18.2.0"
+    "@shopify/hydrogen-react": "2023.10.0",
+    "content-security-policy-builder": "^2.1.1",
+    "type-fest": "^4.5.0"
   },
   "peerDependencies": {
-    "@remix-run/react": "^1.15.0",
-    "@remix-run/server-runtime": "^1.15.0"
+    "@remix-run/react": "^2.1.0",
+    "@remix-run/server-runtime": "^2.1.0",
+    "react": "^18.2.0"
   },
   "devDependencies": {
+    "@shopify/generate-docs": "0.11.1",
     "@testing-library/react": "^14.0.0",
     "happy-dom": "^8.9.0",
+    "react": "^18.2.0",
     "schema-dts": "^1.1.0",
-    "vitest": "^0.27.2"
+    "vitest": "^0.33.0"
   }
 }
