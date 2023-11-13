@@ -6,8 +6,12 @@ export {
   CacheNone,
   CacheShort,
   generateCacheControlHeader,
+  type AllCacheOptions,
+  type CachingStrategy,
+  type NoStoreStrategy,
 } from './cache/strategies';
 export {InMemoryCache} from './cache/in-memory';
+export {type CacheKey} from './cache/fetch';
 
 export {storefrontRedirect} from './routing/redirect';
 export {graphiqlLoader} from './routing/graphiql';
