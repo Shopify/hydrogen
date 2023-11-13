@@ -113,11 +113,12 @@ export function Pagination<NodesType>({
       pageInfo: {
         endCursor,
         hasPreviousPage,
+        hasNextPage,
         startCursor,
       },
       nodes,
     }),
-    [endCursor, hasPreviousPage, startCursor, nodes],
+    [endCursor, hasNextPage, hasPreviousPage, startCursor, nodes],
   );
 
   const NextLink = useMemo(
@@ -232,13 +233,64 @@ export function usePagination<NodesType>(
   const params = new URLSearchParams(search);
   const direction = params.get('direction');
   const isPrevious = direction === 'previous';
-  const [nodes, setNodes] = useState(flattenConnection(connection));
-  const [currentPageInfo, setCurrentPageInfo] = useState({
-    startCursor: connection.pageInfo.startCursor,
-    endCursor: connection.pageInfo.endCursor,
-    hasPreviousPage: connection.pageInfo.hasPreviousPage,
-    hasNextPage: connection.pageInfo.hasNextPage,
-  });
+
+  const nodes = useMemo(() => {
+    if (!state || !state?.nodes) {
+      return flattenConnection(connection);
+    }
+
+    if (isPrevious) {
+      return [...flattenConnection(connection), ...state.nodes];
+    } else {
+      return [...state.nodes, ...flattenConnection(connection)];
+    }
+  }, [state, connection]);
+
+  const currentPageInfo = useMemo(() => {
+    let pageStartCursor =
+      state?.pageInfo?.startCursor === undefined
+        ? connection.pageInfo.startCursor
+        : state.pageInfo.startCursor;
+
+    let pageEndCursor =
+      state?.pageInfo?.endCursor === undefined
+        ? connection.pageInfo.endCursor
+        : state.pageInfo.endCursor;
+
+    let previousPageExists =
+      state?.pageInfo?.hasPreviousPage === undefined
+        ? connection.pageInfo.hasPreviousPage
+        : state.pageInfo.hasPreviousPage;
+
+    let nextPageExists =
+      state?.pageInfo?.hasNextPage === undefined
+        ? connection.pageInfo.hasNextPage
+        : state.pageInfo.hasNextPage;
+
+    if (state?.nodes) {
+      if (isPrevious) {
+        pageStartCursor = connection.pageInfo.startCursor;
+        previousPageExists = connection.pageInfo.hasPreviousPage;
+      } else {
+        pageEndCursor = connection.pageInfo.endCursor;
+        nextPageExists = connection.pageInfo.hasNextPage;
+      }
+    }
+
+    return {
+      startCursor: pageStartCursor,
+      endCursor: pageEndCursor,
+      hasPreviousPage: previousPageExists,
+      hasNextPage: nextPageExists,
+    };
+  }, [
+    isPrevious,
+    state,
+    connection.pageInfo.hasNextPage,
+    connection.pageInfo.hasPreviousPage,
+    connection.pageInfo.startCursor,
+    connection.pageInfo.endCursor,
+  ]);
 
   // Keep track of the current URL state, to compare whenever the URL changes
   const urlRef = useRef({
@@ -246,7 +298,6 @@ export function usePagination<NodesType>(
     pathname,
   });
 
-  // Within an effect to prevent hydration errors
   useEffect(() => {
     if (
       // If the URL changes (independent of pagination params)
@@ -254,6 +305,7 @@ export function usePagination<NodesType>(
       getParamsWithoutPagination(search) !== urlRef.current.params ||
       pathname !== urlRef.current.pathname
     ) {
+      console.log('no match!');
       urlRef.current = {
         pathname,
         params: getParamsWithoutPagination(search),
@@ -263,62 +315,8 @@ export function usePagination<NodesType>(
         preventScrollReset: true,
         state: {nodes: undefined, pageInfo: undefined},
       });
-    } else if (state?.nodes) {
-      // Take existing nodes from history.state and append or prepend new nodes from the connection
-      setNodes(
-        isPrevious
-          ? [...flattenConnection(connection), ...state.nodes]
-          : [...state.nodes, ...flattenConnection(connection)],
-      );
-
-      if (state?.pageInfo) {
-        // Based on the direction we are going, only take the connection pageInfo in that direction,
-        // otherwise keep the existing pageInfo from history.state
-        let pageStartCursor =
-          state?.pageInfo?.startCursor === undefined
-            ? connection.pageInfo.startCursor
-            : state.pageInfo.startCursor;
-
-        let pageEndCursor =
-          state?.pageInfo?.endCursor === undefined
-            ? connection.pageInfo.endCursor
-            : state.pageInfo.endCursor;
-
-        let previousPageExists =
-          state?.pageInfo?.hasPreviousPage === undefined
-            ? connection.pageInfo.hasPreviousPage
-            : state.pageInfo.hasPreviousPage;
-
-        let nextPageExists =
-          state?.pageInfo?.hasNextPage === undefined
-            ? connection.pageInfo.hasNextPage
-            : state.pageInfo.hasNextPage;
-
-        if (isPrevious) {
-          pageStartCursor = connection.pageInfo.startCursor;
-          previousPageExists = connection.pageInfo.hasPreviousPage;
-        } else {
-          pageEndCursor = connection.pageInfo.endCursor;
-          nextPageExists = connection.pageInfo.hasNextPage;
-        }
-
-        setCurrentPageInfo({
-          startCursor: pageStartCursor,
-          endCursor: pageEndCursor,
-          hasPreviousPage: previousPageExists,
-          hasNextPage: nextPageExists,
-        });
-      }
-    } else {
-      setNodes(flattenConnection(connection));
-      setCurrentPageInfo({
-        startCursor: connection.pageInfo.startCursor,
-        endCursor: connection.pageInfo.endCursor,
-        hasPreviousPage: connection.pageInfo.hasPreviousPage,
-        hasNextPage: connection.pageInfo.hasNextPage,
-      });
     }
-  }, [state, connection, isPrevious, search, navigate, pathname]);
+  }, [pathname, search]);
 
   const previousPageUrl = useMemo(() => {
     const params = new URLSearchParams(search);
