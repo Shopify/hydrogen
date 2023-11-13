@@ -1,6 +1,11 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {HydrogenSession} from './auth.helpers';
 import {createCustomerClient} from './customer';
+import crypto from 'node:crypto';
+
+if (!globalThis.crypto) {
+  globalThis.crypto = crypto as any;
+}
 
 vi.mock('./BadRequest', () => {
   return {
