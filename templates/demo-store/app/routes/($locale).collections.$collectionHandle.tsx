@@ -152,7 +152,6 @@ export default function Collection() {
               <Text format width="narrow" as="p" className="inline-block">
                 {collection.description}
               </Text>
-              <Link to={`/collections/freestyle`}>Test</Link>
             </div>
           </div>
         )}
@@ -199,8 +198,6 @@ export default function Collection() {
               </>
             )}
           </Pagination>
-
-          <Link to={`/collections/freestyle`}>Test</Link>
         </SortFilter>
       </Section>
     </>
