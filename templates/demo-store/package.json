@@ -20,7 +20,7 @@
     "@headlessui/react": "^1.7.2",
     "@remix-run/react": "2.1.0",
     "@remix-run/server-runtime": "2.1.0",
-    "@shopify/cli": "3.50.0",
+    "@shopify/cli": "3.50.2",
     "@shopify/cli-hydrogen": "^6.0.2",
     "@shopify/hydrogen": "~2023.10.2",
     "@shopify/remix-oxygen": "^2.0.1",
