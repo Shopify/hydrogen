@@ -57,11 +57,11 @@ function createCSPHeader(
   ];
 
   const defaultDirectives: Record<string, string[] | string | boolean> = {
+    baseUri: ["'self'"],
     defaultSrc,
+    frameAncestors: ['none'],
     styleSrc,
     connectSrc,
-    baseUri: ["'self'"],
-    frameAncestors: ['none'],
   };
 
   // Support localhost in development
