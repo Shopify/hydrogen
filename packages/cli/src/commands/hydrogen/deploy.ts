@@ -7,13 +7,19 @@ import {
   outputWarn,
 } from '@shopify/cli-kit/node/output';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {getLatestGitCommit} from '@shopify/cli-kit/node/git';
+import {writeFile} from '@shopify/cli-kit/node/fs';
+import {
+  ensureIsClean,
+  getLatestGitCommit,
+  GitDirectoryNotCleanError,
+} from '@shopify/cli-kit/node/git';
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {
   renderFatalError,
   renderSelectPrompt,
   renderSuccess,
   renderTasks,
+  renderWarning,
 } from '@shopify/cli-kit/node/ui';
 import {Logger, LogLevel} from '@shopify/cli-kit/node/output';
 import {ciPlatform} from '@shopify/cli-kit/node/context/local';
@@ -45,6 +51,14 @@ export default class Deploy extends Command {
       description: 'Environment branch (tag) for environment to deploy to',
       required: false,
     }),
+    force: Flags.boolean({
+      char: 'f',
+      description:
+        'Forces a deployment to proceed if there are uncommited changes in its Git repository.',
+      default: false,
+      env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
+      required: false,
+    }),
     path: commonFlags.path,
     shop: commonFlags.shop,
     'public-deployment': Flags.boolean({
@@ -53,11 +67,23 @@ export default class Deploy extends Command {
       required: false,
       default: false,
     }),
+    'no-json-output': Flags.boolean({
+      description:
+        'Prevents the command from creating a JSON file containing the deployment URL (in CI environments).',
+      required: false,
+      default: false,
+    }),
     token: Flags.string({
       char: 't',
       description: 'Oxygen deployment token',
       env: 'SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN',
       required: false,
+    }),
+    'metadata-description': Flags.string({
+      description:
+        'Description of the changes in the deployment. Defaults to the commit message of the latest commit if there are no uncommited changes.',
+      required: false,
+      env: 'SHOPIFY_HYDROGEN_FLAG_METADATA_DESCRIPTION',
     }),
     'metadata-url': Flags.string({
       description:
@@ -112,10 +138,13 @@ export default class Deploy extends Command {
 
 interface OxygenDeploymentOptions {
   environmentTag?: string;
+  force: boolean;
+  noJsonOutput: boolean;
   path: string;
   publicDeployment: boolean;
   shop: string;
   token?: string;
+  metadataDescription?: string;
   metadataUrl?: string;
   metadataUser?: string;
   metadataVersion?: string;
@@ -123,6 +152,7 @@ interface OxygenDeploymentOptions {
 
 interface GitCommit {
   refs: string;
+  hash: string;
 }
 
 export async function oxygenDeploy(
@@ -130,6 +160,8 @@ export async function oxygenDeploy(
 ): Promise<void> {
   const {
     environmentTag,
+    force: forceOnUncommitedChanges,
+    noJsonOutput,
     path,
     shop,
     publicDeployment,
@@ -137,9 +169,34 @@ export async function oxygenDeploy(
     metadataUser,
     metadataVersion,
   } = options;
-  const ci = ciPlatform();
+  let {metadataDescription} = options;
+
+  let isCleanGit = true;
+  try {
+    await ensureIsClean(path);
+  } catch (error) {
+    if (error instanceof GitDirectoryNotCleanError) {
+      isCleanGit = false;
+    }
+    if (!forceOnUncommitedChanges && !isCleanGit) {
+      renderWarning({
+        body: 'Uncommitted changes detected.',
+        nextSteps: [
+          [
+            'Commit your changes before deploying or use the ',
+            {command: '--force'},
+            ' flag to deploy with uncommitted changes.',
+          ],
+        ],
+      });
+      return;
+    }
+  }
+
+  const isCI = ciPlatform().isCI;
   let token = options.token;
   let branch: string | undefined;
+  let commitHash: string | undefined;
   let deploymentData: OxygenDeploymentData | undefined;
   let deploymentEnvironmentTag: string | undefined = undefined;
   let gitCommit: GitCommit;
@@ -147,12 +204,32 @@ export async function oxygenDeploy(
   try {
     gitCommit = await getLatestGitCommit(path);
     branch = (/HEAD -> ([^,]*)/.exec(gitCommit.refs) || [])[1];
+    commitHash = gitCommit.hash;
   } catch (error) {
     outputWarn('Could not retrieve Git history.');
     branch = undefined;
   }
 
-  if (!ci.isCI) {
+  if (!metadataDescription && !isCleanGit) {
+    renderWarning({
+      body: 'Deploying uncommited changes, but no description has been provided.',
+      nextSteps: [
+        [
+          'Use the ',
+          {command: '--metadata-description'},
+          ' flag to provide a description.',
+        ],
+        [
+          'If no description is provided, the description defaults to ',
+          {userInput: '<sha> with additional changes'},
+          ' using the SHA of the last commit.',
+        ],
+      ],
+    });
+    metadataDescription = `${commitHash} with additional changes`;
+  }
+
+  if (!isCI) {
     deploymentData = await getOxygenDeploymentData({
       root: path,
       flagShop: shop,
@@ -166,7 +243,7 @@ export async function oxygenDeploy(
   }
 
   if (!token) {
-    const errMessage = ci.isCI
+    const errMessage = isCI
       ? [
           'No deployment token provided. Use the ',
           {command: '--token'},
@@ -176,7 +253,7 @@ export async function oxygenDeploy(
     throw new AbortError(errMessage);
   }
 
-  if (!ci.isCI && !environmentTag && deploymentData?.environments) {
+  if (!isCI && !environmentTag && deploymentData?.environments) {
     if (deploymentData.environments.length > 1) {
       const choices = [
         ...deploymentData.environments.map(({name, branch}) => ({
@@ -197,14 +274,23 @@ export async function oxygenDeploy(
     }
   }
 
+  let deploymentUrl = 'https://oxygen.shopifyapps.com';
+  if (process.env.UNSAFE_SHOPIFY_HYDROGEN_DEPLOYMENT_URL) {
+    deploymentUrl = process.env.UNSAFE_SHOPIFY_HYDROGEN_DEPLOYMENT_URL;
+    outputWarn(
+      "Using a custom deployment service. Don't do this in production!",
+    );
+  }
+
   const config: DeploymentConfig = {
     assetsDir: 'dist/client',
     bugsnag: true,
-    deploymentUrl: 'https://oxygen.shopifyapps.com',
+    deploymentUrl,
     deploymentToken: parseToken(token as string),
     environmentTag: environmentTag || deploymentEnvironmentTag || branch,
     verificationMaxDuration: 180,
     metadata: {
+      ...(metadataDescription ? {description: metadataDescription} : {}),
       ...(metadataUrl ? {url: metadataUrl} : {}),
       ...(metadataUser ? {user: metadataUser} : {}),
       ...(metadataVersion ? {version: metadataVersion} : {}),
@@ -281,7 +367,7 @@ export async function oxygenDeploy(
   };
 
   await createDeploy({config, hooks, logger: deploymentLogger})
-    .then((url: string | undefined) => {
+    .then(async (url: string | undefined) => {
       const deploymentType = config.publicDeployment ? 'public' : 'private';
       renderSuccess({
         body: ['Successfully deployed to Oxygen'],
@@ -291,6 +377,11 @@ export async function oxygenDeploy(
           ],
         ],
       });
+      // in CI environments, output to a file so consequent steps can access the URL
+      // the formatting of this file is likely to change in future versions.
+      if (isCI && !noJsonOutput) {
+        await writeFile('h2_deploy_output.log', JSON.stringify({url: url!}));
+      }
       resolveDeploy();
     })
     .catch((error) => {

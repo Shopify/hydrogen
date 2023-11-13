@@ -171,6 +171,14 @@
           "required": false,
           "multiple": false
         },
+        "force": {
+          "name": "force",
+          "type": "boolean",
+          "char": "f",
+          "description": "Allows a deployment to proceed if there are uncommited changes in the Git repository.",
+          "required": false,
+          "allowNo": false
+        },
         "path": {
           "name": "path",
           "type": "option",
@@ -196,6 +204,13 @@
           "type": "option",
           "char": "t",
           "description": "Oxygen deployment token",
+          "required": false,
+          "multiple": false
+        },
+        "metadata-description": {
+          "name": "metadata-description",
+          "type": "option",
+          "description": "Description of the changes in the deployment. Defaults to the commit message of the latest commit if there are no uncommited changes.",
           "required": false,
           "multiple": false
         },
