@@ -183,6 +183,10 @@ button:active {
   padding: 0px;
 }
 
+#request-waterfall {
+  overflow: hidden;
+}
+
 #request-info {
   display: flex;
   gap: 0.7rem;

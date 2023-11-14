@@ -70,7 +70,7 @@ export default function DebugNetwork() {
           setHidePutRequests={setHidePutRequests}
           setPreserveLog={setPreserveLog}
         />
-        <div className="panel">
+        <div id="request-waterfall" className="panel">
           <RequestWaterfall
             key={timestamp}
             serverEvents={serverEvents}
