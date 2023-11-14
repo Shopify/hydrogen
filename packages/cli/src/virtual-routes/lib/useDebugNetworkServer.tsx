@@ -24,6 +24,27 @@ export type ServerEvents = {
 
 let nextEventId = 0;
 
+const LOCAL_STORAGE_SETTINGS_KEY = 'h2-debug-network-settings';
+type DebugNetworkSettings = Pick<
+  ServerEvents,
+  'preserveLog' | 'hidePutRequests'
+>;
+
+function getSettings(): Partial<DebugNetworkSettings> {
+  try {
+    return JSON.parse(localStorage.getItem(LOCAL_STORAGE_SETTINGS_KEY) ?? '{}');
+  } catch {
+    return {};
+  }
+}
+
+function setSettings(settings: Partial<DebugNetworkSettings>) {
+  localStorage.setItem(
+    LOCAL_STORAGE_SETTINGS_KEY,
+    JSON.stringify({...getSettings(), ...settings}),
+  );
+}
+
 export function useDebugNetworkServer() {
   // Store server event data that can arrive at anytime across renders
   const serverEvents = useRef<ServerEvents>({
@@ -36,6 +57,17 @@ export function useDebugNetworkServer() {
     preserveLog: false,
     activeEventId: undefined,
   });
+
+  useEffect(() => {
+    try {
+      const debugNetworkSettings = getSettings();
+
+      serverEvents.current.hidePutRequests =
+        debugNetworkSettings.hidePutRequests ?? true;
+      serverEvents.current.preserveLog =
+        debugNetworkSettings.preserveLog ?? false;
+    } catch {}
+  }, []);
 
   // For triggering a react render
   const [timestamp, setTimestamp] = useState<number>();
@@ -142,11 +174,13 @@ export function useDebugNetworkServer() {
 
   function setHidePutRequests(hidePutRequests: boolean) {
     serverEvents.current.hidePutRequests = hidePutRequests;
+    setSettings({hidePutRequests});
     setTimestamp(new Date().getTime());
   }
 
   function setPreserveLog(preserveLog: boolean) {
     serverEvents.current.preserveLog = preserveLog;
+    setSettings({preserveLog});
     setTimestamp(new Date().getTime());
   }
 
