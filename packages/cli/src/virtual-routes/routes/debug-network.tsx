@@ -11,6 +11,7 @@ import faviconDark from '../assets/favicon-dark.svg';
 import styles from '../assets/debug-network.css';
 import {useDebugNetworkServer} from '../lib/useDebugNetworkServer.jsx';
 import {RequestDetails} from '../components/RequestInfo.jsx';
+import {IconClose} from '../components/IconClose.jsx';
 
 export const links: LinksFunction = () => {
   return [
@@ -79,13 +80,28 @@ export default function DebugNetwork() {
           />
         </div>
         <div id="request-info">
-          <div className="panel no-pad">
+          <div className="panel no-pad overflow-hidden">
             <RequestTable
               serverEvents={serverEvents}
               setActiveEventId={setActiveEventId}
             />
           </div>
-          <div id="request-details-panel" className="panel no-pad">
+          <div
+            id="request-details-panel"
+            className={`panel no-pad${
+              serverEvents.activeEventId ? ' active' : ''
+            }`}
+          >
+            <div id="close-request-detail">
+              <button
+                className="plain icon"
+                onClick={() => {
+                  setActiveEventId(undefined);
+                }}
+              >
+                <IconClose />
+              </button>
+            </div>
             <RequestDetails serverEvents={serverEvents} />
           </div>
         </div>

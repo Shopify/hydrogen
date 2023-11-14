@@ -102,6 +102,17 @@ button,
   padding: 0.375rem 0.75rem;
 }
 
+button.plain {
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+button.icon {
+  padding: 0.25rem;
+  line-height: 0;
+}
+
 button:hover {
   background-color: var(--button-state-color);
 }
@@ -183,6 +194,10 @@ button:active {
   padding: 0px;
 }
 
+.overflow-hidden {
+  overflow: hidden;
+}
+
 #request-waterfall {
   overflow: hidden;
 }
@@ -200,11 +215,15 @@ button:active {
 }
 
 #request-table {
+  height: 100%;
+}
+
+#request-table > div {
   padding: 0;
   font-size: var(--text-normal);
-  display: flex;
-  flex-direction: column;
-  min-height: 100%;
+  display: grid;
+  grid-template-rows: 2.75rem auto 2rem;
+  height: 100%;
 }
 
 #request-table .grid-row {
@@ -218,6 +237,7 @@ button:active {
   overflow: hidden;
   white-space: nowrap;
   place-self: stretch;
+  align-self: center;
   padding: 0.5rem 0;
 }
 
@@ -241,9 +261,6 @@ button:active {
 
 #request-table__content {
   overflow: scroll;
-  min-height: 20vh;
-  max-height: 30vh;
-  flex-grow: 1;
 }
 
 #request-table__content .grid-row.active {
@@ -263,6 +280,12 @@ button:active {
 }
 
 /** Tab panels */
+
+#close-request-detail {
+  position: absolute;
+  right: 1.5rem;
+  padding-top: 0.4rem;
+}
 
 .tabPanels .tabPanel {
   display: none;
@@ -297,14 +320,20 @@ details.panel summary {
 }
 
 #request-details-panel {
+  display: none;
   max-width: 50vw;
+}
+
+#request-details-panel.active {
+  display: block;
 }
 
 #request-detail {
   width: 100%;
   flex-wrap: wrap;
   gap: 0.25rem;
-  padding: 0.5rem;
+  padding: 0 0.5rem;
+  height: 100%;
 }
 
 #request-detail .tabPanels {
@@ -316,8 +345,8 @@ details.panel summary {
 }
 
 #request-detail .tab {
-  padding: 0.38rem 0.75rem;
-  line-height: 1rem;
+  margin-top: 0.5rem;
+  padding: 0.45rem 0.75rem;
   font-weight: 550;
 }
 

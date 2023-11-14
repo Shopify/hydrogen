@@ -54,28 +54,30 @@ export function RequestTable({
 
   return (
     <div id="request-table">
-      <div id="request-table__header" className="grid-row">
-        <div className="grid-cell">Name</div>
-        <div className="grid-cell">Cache</div>
-        <div className="grid-cell">Time</div>
-      </div>
-      <div id="request-table__content">
-        {items.map((row) => (
-          <div
-            key={row.id}
-            className={`grid-row${
-              serverEvents.activeEventId === row.id ? ' active' : ''
-            }`}
-            onClick={() => setActiveEventId(row.id)}
-          >
-            <div className="grid-cell">{row.url}</div>
-            <div className="grid-cell">{row.cacheStatus}</div>
-            <div className="grid-cell">{row.duration}ms</div>
-          </div>
-        ))}
-      </div>
-      <div id="request-table__footer">
-        {totalMainRequests} request | {totalSubRequest} sub request
+      <div>
+        <div id="request-table__header" className="grid-row">
+          <div className="grid-cell">Name</div>
+          <div className="grid-cell">Cache</div>
+          <div className="grid-cell">Time</div>
+        </div>
+        <div id="request-table__content">
+          {items.map((row) => (
+            <div
+              key={row.id}
+              className={`grid-row${
+                serverEvents.activeEventId === row.id ? ' active' : ''
+              }`}
+              onClick={() => setActiveEventId(row.id)}
+            >
+              <div className="grid-cell">{row.url}</div>
+              <div className="grid-cell">{row.cacheStatus}</div>
+              <div className="grid-cell">{row.duration}ms</div>
+            </div>
+          ))}
+        </div>
+        <div id="request-table__footer">
+          {totalMainRequests} request | {totalSubRequest} sub request
+        </div>
       </div>
     </div>
   );
