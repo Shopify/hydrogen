@@ -1,4 +1,4 @@
-import {WaterfallItem, type Waterfall} from 'flame-chart-js';
+import type {WaterfallItem, Waterfall} from 'flame-chart-js';
 import {useMemo} from 'react';
 
 import {FlameChartWrapper} from './FlameChartWrapper.jsx';

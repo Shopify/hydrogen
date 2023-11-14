@@ -1,3 +1,4 @@
+import {useEffect} from 'react';
 import type {LinksFunction} from '@remix-run/server-runtime';
 import {Script} from '@shopify/hydrogen';
 
@@ -45,6 +46,12 @@ export default function DebugNetwork() {
     setActiveEventId,
   } = useDebugNetworkServer();
 
+  useEffect(() => {
+    if (!serverEvents.activeEventId) {
+      setActiveEventId(undefined);
+    }
+  }, [serverEvents.activeEventId]);
+
   return (
     <>
       <Script
@@ -79,10 +86,7 @@ export default function DebugNetwork() {
             />
           </div>
           <div id="request-details-panel" className="panel no-pad">
-            <RequestDetails
-              serverEvents={serverEvents}
-              setActiveEventId={setActiveEventId}
-            />
+            <RequestDetails serverEvents={serverEvents} />
           </div>
         </div>
         <p className="footnote">

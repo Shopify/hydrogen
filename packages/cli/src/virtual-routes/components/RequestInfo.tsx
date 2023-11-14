@@ -1,15 +1,8 @@
 import {type ServerEvents} from '../lib/useDebugNetworkServer.jsx';
 import {Link} from '@remix-run/react';
 
-export function RequestDetails({
-  serverEvents,
-  setActiveEventId,
-}: {
-  serverEvents: ServerEvents;
-  setActiveEventId: (eventId: string | undefined) => void;
-}) {
+export function RequestDetails({serverEvents}: {serverEvents: ServerEvents}) {
   if (!serverEvents.activeEventId) {
-    setActiveEventId(undefined);
     return null;
   }
 
@@ -22,7 +15,7 @@ export function RequestDetails({
   return (
     <div id="request-detail" className="flex-row">
       {/** Tab 1 */}
-      <input type="radio" name="tabset" id="tab1" checked />
+      <input type="radio" name="tabset" id="tab1" defaultChecked />
       <label htmlFor="tab1" className="tab">
         Header
       </label>
