@@ -186,7 +186,11 @@ export function buildRequestData<T>({
   const calcDuration = (time: number) => time - serverEvents.smallestStartTime;
   let items: T[] = [];
 
-  serverEvents.mainRequests.forEach((mainRequest: ServerEvent) => {
+  const requests = serverEvents.mainRequests.slice(
+    serverEvents.preserveLog ? undefined : -1,
+  );
+
+  requests.forEach((mainRequest: ServerEvent) => {
     const mainResponseStart = calcDuration(mainRequest.endTime);
     let mainResponseEnd = mainResponseStart;
 

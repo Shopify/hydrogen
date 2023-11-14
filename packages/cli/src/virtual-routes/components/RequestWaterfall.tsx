@@ -1,3 +1,4 @@
+import {useEffect} from 'react';
 import type {WaterfallItem, Waterfall} from 'flame-chart-js';
 import {useMemo} from 'react';
 
@@ -86,6 +87,19 @@ export function RequestWaterfall({
       } satisfies WaterfallItem;
     },
   });
+
+  useEffect(() => {
+    // Remove selection of active event if it's not in the list anymore
+    if (!serverEvents.preserveLog && serverEvents.activeEventId) {
+      const selectedItem = items.find(
+        (item) => item.meta?.[0]?.value === serverEvents.activeEventId,
+      );
+
+      if (!selectedItem) {
+        setActiveEventId(undefined);
+      }
+    }
+  }, [serverEvents.preserveLog]);
 
   const data: Waterfall = {
     items,
