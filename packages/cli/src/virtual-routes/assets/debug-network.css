@@ -198,6 +198,9 @@ button:active {
 #request-table {
   padding: 0;
   font-size: var(--text-normal);
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
 }
 
 #request-table .grid-row {
@@ -236,6 +239,7 @@ button:active {
   overflow: scroll;
   min-height: 20vh;
   max-height: 30vh;
+  flex-grow: 1;
 }
 
 #request-table__content .grid-row.active {
