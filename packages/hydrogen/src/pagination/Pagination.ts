@@ -3,7 +3,6 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useState,
   forwardRef,
   type ReactNode,
   type Ref,
@@ -305,7 +304,6 @@ export function usePagination<NodesType>(
       getParamsWithoutPagination(search) !== urlRef.current.params ||
       pathname !== urlRef.current.pathname
     ) {
-      console.log('no match!');
       urlRef.current = {
         pathname,
         params: getParamsWithoutPagination(search),

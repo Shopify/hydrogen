@@ -1,6 +1,6 @@
 import {useEffect} from 'react';
 import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {Link, useLoaderData, useNavigate} from '@remix-run/react';
+import {useLoaderData, useNavigate} from '@remix-run/react';
 import {useInView} from 'react-intersection-observer';
 import type {
   Filter,
