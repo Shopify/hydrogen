@@ -9,7 +9,7 @@
   "type": "module",
   "scripts": {
     "build": "tsup && node scripts/build-check.mjs",
-    "dev": "tsup --watch",
+    "dev": "tsup --watch ./src",
     "typecheck": "tsc --noEmit",
     "generate:manifest": "node scripts/generate-manifest.mjs",
     "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run --test-timeout=20000",
