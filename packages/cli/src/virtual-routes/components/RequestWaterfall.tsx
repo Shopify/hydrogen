@@ -143,6 +143,9 @@ export function RequestWaterfall({
     )[0];
     if (eventIdMeta) {
       setActiveEventId(eventIdMeta.value);
+      document
+        .querySelector(`#request-table__row-${eventIdMeta.value}`)
+        ?.scrollIntoView();
     }
   };
 

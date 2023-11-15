@@ -63,6 +63,7 @@ export function RequestTable({
         <div id="request-table__content">
           {items.map((row) => (
             <div
+              id={`request-table__row-${row.id}`}
               key={row.id}
               className={`grid-row${
                 serverEvents.activeEventId === row.id ? ' active' : ''
