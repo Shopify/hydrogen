@@ -125,10 +125,15 @@ export function useDebugNetworkServer() {
         ...data,
         url: data.url.replace(location.origin, ''),
       };
-      serverEvents.current.mainRequests = [
-        ...serverEvents.current.mainRequests,
-        cleanData,
-      ];
+      if (serverEvents.current.preserveLog) {
+        serverEvents.current.mainRequests = [
+          ...serverEvents.current.mainRequests,
+          cleanData,
+        ];
+      } else {
+        serverEvents.current.mainRequests = [cleanData];
+        serverEvents.current.smallestStartTime = cleanData.startTime;
+      }
       serverEvents.current.allRequests[cleanData.id] = cleanData;
     });
     evtSource.addEventListener('Request', mainRequestHandler);
@@ -221,11 +226,7 @@ export function buildRequestData<T>({
   const calcDuration = (time: number) => time - serverEvents.smallestStartTime;
   let items: T[] = [];
 
-  const requests = serverEvents.mainRequests.slice(
-    serverEvents.preserveLog ? undefined : -1,
-  );
-
-  requests.forEach((mainRequest: ServerEvent) => {
+  serverEvents.mainRequests.forEach((mainRequest: ServerEvent) => {
     const mainResponseStart = calcDuration(mainRequest.endTime);
     let mainResponseEnd = mainResponseStart;
 
