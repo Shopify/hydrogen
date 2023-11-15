@@ -6,6 +6,7 @@ import colors from '@shopify/cli-kit/node/colors';
 import type {CamelCasedProperties} from 'type-fest';
 import {STYLING_CHOICES} from './setups/css/index.js';
 import {I18N_CHOICES} from './setups/i18n/index.js';
+import {DEFAULT_INSPECTOR_PORT} from './mini-oxygen/common.js';
 
 export const DEFAULT_PORT = 3000;
 
@@ -88,6 +89,16 @@ export const commonFlags = {
     description: 'Create a shortcut to the Shopify Hydrogen CLI.',
     env: 'SHOPIFY_HYDROGEN_FLAG_SHORTCUT',
     allowNo: true,
+  }),
+  debug: Flags.boolean({
+    description: 'Enables inspector connections with a debugger.',
+    env: 'SHOPIFY_HYDROGEN_FLAG_DEBUG',
+    default: false,
+  }),
+  inspectorPort: Flags.integer({
+    description: 'Port where the inspector will be available.',
+    env: 'SHOPIFY_HYDROGEN_FLAG_INSPECTOR_PORT',
+    default: DEFAULT_INSPECTOR_PORT,
   }),
 };
 
