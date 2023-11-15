@@ -172,6 +172,17 @@ export function RequestWaterfall({
       waterfall={data}
       onSelect={onSelect}
       settings={settings}
+      onResize={(flameChart, _, height) => {
+        flameChart?.setSettings({
+          ...settings,
+          styles: {
+            ...settings.styles,
+            waterfallPlugin: {
+              defaultHeight: height,
+            },
+          },
+        });
+      }}
     />
   );
 }

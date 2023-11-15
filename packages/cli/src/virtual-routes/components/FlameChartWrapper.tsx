@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useRef} from 'react';
+import {useCallback, useEffect, useRef, type MutableRefObject} from 'react';
 import type {
   FlameChartNodes,
   FlameChartSettings,
@@ -45,6 +45,11 @@ export type FlameChartProps = {
   className?: string;
 
   onSelect?: (data: NodeTypes) => void;
+  onResize?: (
+    flameChart: FlameChart | null,
+    width: number,
+    height: number,
+  ) => void;
 };
 
 export const FlameChartWrapper = (props: FlameChartProps) => {
@@ -56,6 +61,10 @@ export const FlameChartWrapper = (props: FlameChartProps) => {
     ref: boxRef,
     onResize: ({width = 0, height = 0}) => {
       flameChart.current?.resize(width, height - 3);
+
+      if (props.onResize) {
+        props.onResize(flameChart.current, width, height);
+      }
     },
   });
 
