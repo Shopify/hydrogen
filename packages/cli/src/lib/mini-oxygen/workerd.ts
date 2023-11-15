@@ -28,7 +28,9 @@ import {
   setConstructors,
 } from '../request-events.js';
 
-const PRIVATE_WORKERD_INSPECTOR_PORT = 9229;
+// This should probably be `0` and let workerd find a free port,
+// but at the moment we can't get the port from workerd (afaik?).
+const PRIVATE_WORKERD_INSPECTOR_PORT = 9222;
 
 export async function startWorkerdServer({
   root,
