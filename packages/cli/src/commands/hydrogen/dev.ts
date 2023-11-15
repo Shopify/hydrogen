@@ -249,6 +249,7 @@ async function runDev({
             type: 0,
             message:
               'MiniOxygen cannot start because the server bundle has not been generated.',
+            skipOclifErrorHandling: true,
             tryMessage:
               'This is likely due to an error in your app and Remix is unable to compile. Try fixing the app and MiniOxygen will start.',
           });

@@ -175,7 +175,7 @@
           "name": "force",
           "type": "boolean",
           "char": "f",
-          "description": "Allows a deployment to proceed if there are uncommited changes in the Git repository.",
+          "description": "Forces a deployment to proceed if there are uncommited changes in its Git repository.",
           "required": false,
           "allowNo": false
         },
@@ -196,6 +196,13 @@
           "name": "public-deployment",
           "type": "boolean",
           "description": "Marks a preview deployment as publicly accessible.",
+          "required": false,
+          "allowNo": false
+        },
+        "no-json-output": {
+          "name": "no-json-output",
+          "type": "boolean",
+          "description": "Prevents the command from creating a JSON file containing the deployment URL (in CI environments).",
           "required": false,
           "allowNo": false
         },

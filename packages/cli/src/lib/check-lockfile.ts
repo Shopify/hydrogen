@@ -33,6 +33,7 @@ function missingLockfileWarning(shouldExit: boolean) {
 
 function multipleLockfilesWarning(lockfiles: Lockfile[], shouldExit: boolean) {
   const packageManagers = {
+    'bun.lockb': 'bun',
     'yarn.lock': 'yarn',
     'package-lock.json': 'npm',
     'pnpm-lock.yaml': 'pnpm',
