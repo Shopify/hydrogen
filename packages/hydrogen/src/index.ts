@@ -6,7 +6,6 @@ export {
   CacheNone,
   CacheShort,
   generateCacheControlHeader,
-  type AllCacheOptions,
   type CachingStrategy,
   type NoStoreStrategy,
 } from './cache/strategies';
