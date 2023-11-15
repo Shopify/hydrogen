@@ -1,6 +1,7 @@
 import {type CacheKey, runWithCache} from './cache/fetch';
 import type {CachingStrategy} from './cache/strategies';
 import {type CrossRuntimeRequest, getDebugHeaders} from './utils/request';
+import {getCallerStackLine} from './utils/callsites';
 
 type CreateWithCacheOptions = {
   /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */
@@ -32,7 +33,10 @@ export function createWithCache<T = unknown>({
       strategy,
       cacheInstance: cache,
       waitUntil,
-      debugInfo: getDebugHeaders(request),
+      debugInfo: {
+        ...getDebugHeaders(request),
+        stackInfo: getCallerStackLine?.(),
+      },
     });
   };
 }

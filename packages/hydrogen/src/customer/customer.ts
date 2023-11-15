@@ -24,6 +24,7 @@ import {
 import {parseJSON} from '../utils/parse-json';
 import {hashKey} from '../utils/hash';
 import {CrossRuntimeRequest, getDebugHeaders} from '../utils/request';
+import {getCallerStackLine} from '../utils/callsites';
 
 export type CustomerClient = {
   /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. */
@@ -83,7 +84,7 @@ export function createCustomerClient({
   const logSubRequestEvent =
     process.env.NODE_ENV === 'development'
       ? (query: string, startTime: number) => {
-          (globalThis as any).__H2O_LOG_EVENT?.({
+          globalThis.__H2O_LOG_EVENT?.({
             eventType: 'subrequest',
             url: `https://shopify.dev/?${hashKey([
               `Customer Account `,
@@ -92,6 +93,7 @@ export function createCustomerClient({
             ])}`,
             startTime,
             waitUntil,
+            stackInfo: getCallerStackLine?.(2),
             ...getDebugHeaders(request),
           });
         }

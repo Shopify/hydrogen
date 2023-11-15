@@ -2,6 +2,7 @@
 
 import {hashKey} from '../utils/hash.js';
 import {CacheShort, CachingStrategy, NO_STORE} from './strategies';
+import type {StackInfo} from '../utils/callsites.js';
 import {
   getItemFromCache,
   setItemInCache,
@@ -18,6 +19,7 @@ export type FetchDebugInfo = {
   requestId?: string | null;
   graphql?: string | null;
   purpose?: string | null;
+  stackInfo?: StackInfo;
 };
 
 export type WithCacheOptions<T = unknown> = {

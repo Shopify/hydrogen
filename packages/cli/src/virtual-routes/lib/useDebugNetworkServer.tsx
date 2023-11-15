@@ -8,6 +8,7 @@ export type ServerEvent = {
   endTime: number;
   cacheStatus: string;
   stackLine?: string;
+  stackLink?: string;
   graphiqlLink?: string;
 };
 

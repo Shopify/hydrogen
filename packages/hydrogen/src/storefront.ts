@@ -42,6 +42,7 @@ import {
   type GraphQLApiResponse,
   type GraphQLErrorOptions,
 } from './utils/graphql';
+import {getCallerStackLine} from './utils/callsites';
 
 export type I18nBase = {
   language: LanguageCode;
@@ -340,6 +341,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         graphql: graphqlData,
         requestId: requestInit.headers[STOREFRONT_REQUEST_GROUP_ID_HEADER],
         purpose: storefrontHeaders?.purpose,
+        stackInfo: getCallerStackLine?.(1),
       },
     });
 

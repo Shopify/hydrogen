@@ -1,3 +1,4 @@
+import path from 'node:path';
 import {EventEmitter} from 'node:events';
 import {ReadableStream} from 'node:stream/web';
 import {getGraphiQLUrl} from './graphiql-url.js';
@@ -7,6 +8,7 @@ import type {
   Response as WorkerdResponse,
   ResponseInit,
 } from 'miniflare';
+import {mapSourcePosition} from 'source-map-support';
 
 export const H2O_BINDING_NAME = 'H2O_LOG_EVENT';
 
@@ -44,6 +46,12 @@ export type H2OEvent = {
   cacheStatus?: 'MISS' | 'HIT' | 'STALE' | 'PUT';
   waitUntil?: ExecutionContext['waitUntil'];
   graphql?: string;
+  stackInfo?: {
+    file?: string;
+    func?: string;
+    line?: number;
+    column?: number;
+  };
 };
 
 async function getRequestInfo(request: RequestKind) {
@@ -56,6 +64,7 @@ async function getRequestInfo(request: RequestKind) {
     endTime: data.endTime || Date.now(),
     purpose: data.purpose === 'prefetch' ? '(prefetch)' : '',
     cacheStatus: data.cacheStatus ?? '',
+    stackInfo: data.stackInfo,
     graphql: data.graphql
       ? (JSON.parse(data.graphql) as {query: string; variables: object})
       : null,
@@ -87,7 +96,8 @@ export async function logRequestEvent<R extends RequestKind>(
     return createResponse<R>();
   }
 
-  const {eventType, purpose, graphql, ...data} = await getRequestInfo(request);
+  const {eventType, purpose, graphql, stackInfo, ...data} =
+    await getRequestInfo(request);
 
   let graphiqlLink = '';
   let description = request.url;
@@ -103,12 +113,33 @@ export async function logRequestEvent<R extends RequestKind>(
     }
   }
 
+  let stackLine: string | null = null;
+  let stackLink: string | null = null;
+
+  if (stackInfo?.file) {
+    const {source, line, column} = mapSourcePosition({
+      source: stackInfo.file,
+      line: stackInfo.line ?? 0,
+      column: stackInfo.column ?? 0,
+    });
+
+    stackLine = `${source}:${line}:${column + 1}`;
+    stackLink = `vscode://${path.join('file', stackLine)}`;
+
+    stackLine = stackLine.split(path.sep + 'app' + path.sep)[1] ?? stackLine;
+    if (stackInfo.func) {
+      stackLine = `${stackInfo.func.replace(/\d+$/, '')} (${stackLine})`;
+    }
+  }
+
   const event = {
     event: EVENT_MAP[eventType] || eventType,
     data: JSON.stringify({
       ...data,
       url: `${purpose} ${description}`.trim(),
       graphiqlLink,
+      stackLine,
+      stackLink,
     }),
   };
 

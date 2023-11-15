@@ -46,8 +46,9 @@ export function RequestDetails({serverEvents}: {serverEvents: ServerEvents}) {
                 type="url"
               />
               <DetailsRow
-                rowName="GraphiQL"
-                value={requestInfo.graphiqlLink}
+                rowName="Location"
+                text={requestInfo.stackLine}
+                value={requestInfo.stackLink}
                 type="url"
               />
             </div>
@@ -93,10 +94,12 @@ export function Details({
 function DetailsRow({
   rowName,
   value,
+  text,
   type = 'string',
 }: {
   rowName: string;
   value: string | undefined;
+  text?: string;
   type?: 'url' | 'string';
 }) {
   if (!rowName || !value) {
@@ -106,8 +109,8 @@ function DetailsRow({
   return (
     <>
       <div>{rowName}</div>
-      {type === 'url' && <Link to={value}>{value}</Link>}
-      {type === 'string' && <div>{value}</div>}
+      {type === 'url' && <Link to={value}>{text ?? value}</Link>}
+      {type === 'string' && <div>{text ?? value}</div>}
     </>
   );
 }
