@@ -30,26 +30,6 @@ export function RequestWaterfall({
   config: RequestWaterfallConfig;
   setActiveEventId: (eventId: string | undefined) => void;
 }) {
-  if (serverEvents.mainRequests.length === 0)
-    return (
-      <div
-        style={{
-          // height: `${panelHeight}px`,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: '#FAFAFA',
-        }}
-      >
-        <p style={{fontWeight: 'bold', color: '#777'}}>
-          Navigate your{' '}
-          <Link to="/" target="_blank">
-            app
-          </Link>
-        </p>
-      </div>
-    );
-
   const items = buildRequestData<WaterfallItem>({
     serverEvents,
     buildMainRequest: (

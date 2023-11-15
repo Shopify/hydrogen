@@ -8,14 +8,15 @@
   --secondary-text-color: #616161;
   --active-highlight-color: #ebebeb;
 
-  --text-normal: 0.813rem;
-  --text-small: 0.688rem;
+  --text-large: 0.813rem;
+  --text-normal: 0.688rem;
+  --font-bold: 650;
 }
 
 body {
   color: var(--primary-color);
   background-color: var(--background-color);
-  font-size: var(--text-small);
+  font-size: var(--text-normal);
 }
 
 input[type='checkbox'] {
@@ -29,11 +30,15 @@ input[type='checkbox'] {
 }
 
 .text-normal {
-  font-size: var(--text-small);
+  font-size: var(--text-normal);
 }
 
 .text-large {
-  font-size: var(--text-normal);
+  font-size: var(--text-large);
+}
+
+.bold {
+  font-weight: var(--font-bold);
 }
 
 .flex-row {
@@ -69,7 +74,7 @@ header .logo {
 }
 
 header h1 {
-  font-size: var(--text-normal);
+  font-size: var(--text-large);
   font-weight: normal;
   padding-left: 1rem;
   color: #000;
@@ -156,9 +161,17 @@ button:active {
   grid-template-rows: 2.5rem auto 300px 2.5rem;
 }
 
+#main.empty {
+  grid-template-rows: 2.5rem auto 2.5rem;
+}
+
 .pad {
   padding-left: 1rem;
   padding-right: 1rem;
+}
+
+.margin-top {
+  margin-top: 1rem;
 }
 
 #options-and-legend {
@@ -166,7 +179,7 @@ button:active {
 }
 
 #options-and-legend p {
-  font-size: var(--text-small);
+  font-size: var(--text-normal);
 }
 
 .legend {
@@ -210,6 +223,10 @@ button:active {
   margin-top: 1rem;
 }
 
+#request-info.empty {
+  display: none;
+}
+
 #request-info .panel {
   flex: 1;
 }
@@ -220,7 +237,7 @@ button:active {
 
 #request-table > div {
   padding: 0;
-  font-size: var(--text-normal);
+  font-size: var(--text-large);
   display: grid;
   grid-template-rows: 2.75rem auto 2rem;
   height: 100%;
@@ -298,12 +315,12 @@ button:active {
 .tabPanels .tabPanel .panel {
   background-color: transparent;
   box-shadow: none;
-  font-size: var(--text-normal);
+  font-size: var(--text-large);
   padding: 0 1rem 0 1rem;
 }
 
 details.panel summary {
-  font-weight: 650;
+  font-weight: var(--font-bold);
   padding: 1rem 0;
 }
 
@@ -374,6 +391,15 @@ p.footnote {
   align-items: center;
   justify-content: center;
 
-  font-size: var(--text-normal);
+  font-size: var(--text-large);
   color: var(--secondary-text-color);
+}
+
+#empty-view {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  flex-direction: column;
+  gap: 0.5rem;
 }

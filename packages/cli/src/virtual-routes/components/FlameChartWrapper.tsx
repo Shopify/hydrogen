@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useRef, type MutableRefObject} from 'react';
+import {useCallback, useEffect, useRef} from 'react';
 import type {
   FlameChartNodes,
   FlameChartSettings,

@@ -5,6 +5,7 @@ import {Script} from '@shopify/hydrogen';
 import {RequestWaterfall} from '../components/RequestWaterfall.jsx';
 import {type ServerEvents} from '../lib/useDebugNetworkServer.jsx';
 import {RequestTable} from '../components/RequestTable.jsx';
+import {Link} from '@remix-run/react';
 
 import favicon from '../assets/favicon.svg';
 import faviconDark from '../assets/favicon-dark.svg';
@@ -53,10 +54,12 @@ export default function DebugNetwork() {
     }
   }, [serverEvents.activeEventId]);
 
+  const isEmptyState = serverEvents.mainRequests.length === 0;
+
   return (
     <>
       <Script
-        src="https://unpkg.com/flame-chart-js@2.3.1/dist/index.min.js"
+        src="https://unpkg.com/flame-chart-js@3.1.3/dist/index.min.js"
         suppressHydrationWarning
       />
       <DebugHeader
@@ -65,21 +68,25 @@ export default function DebugNetwork() {
         stopCallback={stop}
         recordCallback={record}
       />
-      <div id="main" className="pad">
+      <div id="main" className={`pad${isEmptyState ? ' empty' : ''}`}>
         <OptionsAndLegend
           serverEvents={serverEvents}
           setHidePutRequests={setHidePutRequests}
           setPreserveLog={setPreserveLog}
         />
         <div id="request-waterfall" className="panel">
-          <RequestWaterfall
-            key={timestamp}
-            serverEvents={serverEvents}
-            setActiveEventId={setActiveEventId}
-            config={WATERFALL_CONFIG}
-          />
+          {isEmptyState ? (
+            <EmptyState />
+          ) : (
+            <RequestWaterfall
+              key={timestamp}
+              serverEvents={serverEvents}
+              setActiveEventId={setActiveEventId}
+              config={WATERFALL_CONFIG}
+            />
+          )}
         </div>
-        <div id="request-info">
+        <div id="request-info" className={`${isEmptyState ? 'empty' : ''}`}>
           <div className="panel no-pad overflow-hidden">
             <RequestTable
               serverEvents={serverEvents}
@@ -111,6 +118,20 @@ export default function DebugNetwork() {
         </p>
       </div>
     </>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div id="empty-view">
+      <p className="text-large bold">Navigate to your app</p>
+      <p className="text-normal">
+        Open your localhost to initiate server network timing
+      </p>
+      <Link to="/" target="_blank" className="margin-top">
+        <button className="primary">Open app</button>
+      </Link>
+    </div>
   );
 }
 
