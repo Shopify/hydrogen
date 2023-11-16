@@ -230,7 +230,6 @@ export async function runUpgrade({
     // Display a summary of the upgrade and next steps
     await displayUpgradeSummary({
       currentVersion,
-      dryRun,
       instrunctionsFilePath,
       selectedRelease,
     });
@@ -798,12 +797,10 @@ async function displayDryRunSummary({
  */
 async function displayUpgradeSummary({
   currentVersion,
-  dryRun,
   selectedRelease,
   instrunctionsFilePath,
 }: {
   currentVersion: string;
-  dryRun: boolean;
   selectedRelease: Release;
   instrunctionsFilePath?: string;
 }) {
@@ -831,28 +828,19 @@ async function displayUpgradeSummary({
   const selectedPinnedVersion = getAbsoluteVersion(selectedRelease.version);
 
   const upgradedDependenciesOnly =
-    currentPinnedVersion !== selectedPinnedVersion;
+    currentPinnedVersion === selectedPinnedVersion;
 
   const fromToMsg = `${currentPinnedVersion} → ${selectedPinnedVersion}`;
 
-  // TODO: when we only upgrade dependencies the message should be different
-
-  // TODO: should have a total different message if its a dry run
-  const headlines = {
-    dryRun: `Dry run upgrade ${fromToMsg}`,
-    upgradedDependenciesOnly: `You've have upgraded dependencies for ${selectedPinnedVersion}`,
-    upgradedAll: `You've have upgraded from ${fromToMsg}`,
-  };
-
-  const headline = dryRun
-    ? `Dry run upgrade ${fromToMsg}`
+  const headline = upgradedDependenciesOnly
+    ? `You've have upgraded Hydrogen ${selectedPinnedVersion} dependencies`
     : `You've have upgraded from ${fromToMsg}`;
 
   return renderSuccess({
     headline,
     // @ts-ignore we know that filter(Boolean) will always return an array
     customSections: [
-      !dryRun && {
+      {
         title: 'Updated dependencies',
         body: [
           {
