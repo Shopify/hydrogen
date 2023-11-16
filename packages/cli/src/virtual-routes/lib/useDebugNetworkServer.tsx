@@ -10,6 +10,13 @@ export type ServerEvent = {
   stackLine?: string;
   stackLink?: string;
   graphiqlLink?: string;
+  responsePayload?: unknown;
+  responseInit?: ResponseInit;
+  cache?: {
+    status?: string;
+    strategy?: string;
+    key?: string | readonly unknown[];
+  };
 };
 
 export type ServerEvents = {
@@ -92,6 +99,8 @@ export function useDebugNetworkServer() {
     return (event: MessageEvent) => {
       if (serverEvents.current.recordEvents) {
         const data = JSON.parse(event.data) as unknown as ServerEvent;
+
+        console.log(data);
 
         if (serverEvents.current.smallestStartTime === 0) {
           serverEvents.current.smallestStartTime = data.startTime;

@@ -1,7 +1,12 @@
 /// <reference types="@shopify/remix-oxygen" />
 
 import {hashKey} from '../utils/hash.js';
-import {CacheShort, CachingStrategy, NO_STORE} from './strategies';
+import {
+  CacheShort,
+  CachingStrategy,
+  NO_STORE,
+  generateCacheControlHeader,
+} from './strategies';
 import type {StackInfo} from '../utils/callsites.js';
 import {
   getItemFromCache,
@@ -85,25 +90,37 @@ export async function runWithCache<T = unknown>(
 
   const logSubRequestEvent =
     process.env.NODE_ENV === 'development'
-      ? (
-          cacheStatus?: 'MISS' | 'HIT' | 'STALE' | 'PUT',
-          overrideStartTime?: number,
-        ) => {
+      ? ({
+          result,
+          cacheStatus,
+          overrideStartTime,
+        }: {
+          result?: any;
+          cacheStatus?: 'MISS' | 'HIT' | 'STALE' | 'PUT';
+          overrideStartTime?: number;
+        }) => {
           globalThis.__H2O_LOG_EVENT?.({
             eventType: 'subrequest',
             url: getKeyUrl(key),
             startTime: overrideStartTime || startTime,
             cacheStatus,
+            responsePayload: result && result[0],
+            responseInit: result && result[1],
+            cache: {
+              status: cacheStatus,
+              strategy: generateCacheControlHeader(strategy || {}),
+              key,
+            },
             waitUntil,
             ...debugInfo,
-          });
+          } as any);
         }
       : undefined;
 
   if (!cacheInstance || !strategy || strategy.mode === NO_STORE) {
     const result = await actionFn();
     // Log non-cached requests
-    logSubRequestEvent?.();
+    logSubRequestEvent?.({result});
     return result;
   }
 
@@ -127,7 +144,11 @@ export async function runWithCache<T = unknown>(
             await setItemInCache(cacheInstance, key, result, strategy);
 
             // Log PUT requests with the revalidate start time
-            logSubRequestEvent?.('PUT', revalidateStartTime);
+            logSubRequestEvent?.({
+              result,
+              cacheStatus: 'PUT',
+              overrideStartTime: revalidateStartTime,
+            });
           }
         } catch (error: any) {
           if (error.message) {
@@ -145,7 +166,10 @@ export async function runWithCache<T = unknown>(
     }
 
     // Log HIT/STALE requests
-    logSubRequestEvent?.(cacheStatus);
+    logSubRequestEvent?.({
+      result: cachedResult,
+      cacheStatus,
+    });
 
     return cachedResult;
   }
@@ -153,7 +177,10 @@ export async function runWithCache<T = unknown>(
   const result = await actionFn();
 
   // Log MISS requests
-  logSubRequestEvent?.('MISS');
+  logSubRequestEvent?.({
+    result,
+    cacheStatus: 'MISS',
+  });
 
   /**
    * Important: Do this async
@@ -162,7 +189,11 @@ export async function runWithCache<T = unknown>(
     const setItemInCachePromise = Promise.resolve().then(async () => {
       const putStartTime = Date.now();
       await setItemInCache(cacheInstance, key, result, strategy);
-      logSubRequestEvent?.('PUT', putStartTime);
+      logSubRequestEvent?.({
+        result,
+        cacheStatus: 'PUT',
+        overrideStartTime: putStartTime,
+      });
     });
 
     waitUntil?.(setItemInCachePromise);

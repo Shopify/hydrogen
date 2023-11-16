@@ -86,6 +86,10 @@ header h1 {
   padding: 0.2rem 0.8rem;
 }
 
+.word-break-all {
+  word-break: break-all;
+}
+
 /* Button */
 button,
 [role='button'] {
@@ -325,10 +329,15 @@ details.panel summary {
 }
 
 #tab1:checked ~ .tabPanels > #tab1-panel,
-#tab2:checked ~ .tabPanels > #tab2-panel {
+#tab2:checked ~ .tabPanels > #tab2-panel,
+#tab3:checked ~ .tabPanels > #tab3-panel {
   display: flex;
   gap: 0.75rem;
   flex-direction: column;
+}
+
+#tab3-panel .panel {
+  overflow: scroll;
 }
 
 .flex-break {
@@ -381,7 +390,6 @@ details.panel summary {
 #request-detail .grid-layout {
   display: grid;
   gap: 0.7rem;
-  align-items: center;
   grid-template-columns: max-content auto;
   margin-bottom: 1rem;
 }
@@ -402,4 +410,9 @@ p.footnote {
   height: 100%;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.code-json {
+  white-space: pre-wrap;
+  font-size: var(--text-normal);
 }

@@ -52,19 +52,25 @@ export type H2OEvent = {
     line?: number;
     column?: number;
   };
+  responsePayload?: any;
+  responseInit?: ResponseInit;
+  cache?: {
+    status?: string;
+    strategy?: string;
+    key?: string | readonly unknown[];
+  };
 };
 
 async function getRequestInfo(request: RequestKind) {
   const data = (await request.json()) as H2OEvent;
 
   return {
+    ...data,
     requestId: data.requestId ?? '',
     eventType: data.eventType || 'unknown',
-    startTime: data.startTime,
     endTime: data.endTime || Date.now(),
     purpose: data.purpose === 'prefetch' ? '(prefetch)' : '',
     cacheStatus: data.cacheStatus ?? '',
-    stackInfo: data.stackInfo,
     graphql: data.graphql
       ? (JSON.parse(data.graphql) as {query: string; variables: object})
       : null,

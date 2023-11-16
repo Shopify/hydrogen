@@ -20,10 +20,23 @@ export function RequestDetails({serverEvents}: {serverEvents: ServerEvents}) {
         Header
       </label>
       {/** Tab 2 */}
-      <input type="radio" name="tabset" id="tab2" />
-      <label htmlFor="tab2" className="tab">
-        Cache
-      </label>
+      {!!requestInfo.cache && (
+        <>
+          <input type="radio" name="tabset" id="tab2" />
+          <label htmlFor="tab2" className="tab">
+            Cache
+          </label>
+        </>
+      )}
+      {/** Tab 3 */}
+      {!!requestInfo.responsePayload && (
+        <>
+          <input type="radio" name="tabset" id="tab3" />
+          <label htmlFor="tab3" className="tab">
+            Data
+          </label>
+        </>
+      )}
       <div className="flex-break"></div>
       <div className="tabPanels">
         <div id="tab1-panel" className="tabPanel">
@@ -31,14 +44,8 @@ export function RequestDetails({serverEvents}: {serverEvents: ServerEvents}) {
             <div className="grid-layout">
               <DetailsRow rowName="Request URL" value={requestInfo.url} />
               <DetailsRow
-                rowName="GraphiQL"
-                value={requestInfo.graphiqlLink}
-                type="url"
-              />
-              <DetailsRow
-                rowName="GraphiQL"
-                value={requestInfo.graphiqlLink}
-                type="url"
+                rowName="Status"
+                value={`${requestInfo.responseInit?.status} ${requestInfo.responseInit?.statusText}`}
               />
               <DetailsRow
                 rowName="GraphiQL"
@@ -53,24 +60,47 @@ export function RequestDetails({serverEvents}: {serverEvents: ServerEvents}) {
               />
             </div>
           </Details>
-          <Details title="Headers">
-            <div className="grid-layout">
-              <DetailsRow rowName="Request URL" value={requestInfo.url} />
-              <DetailsRow
-                rowName="GraphiQL"
-                value={requestInfo.graphiqlLink}
-                type="url"
-              />
-            </div>
-          </Details>
+          {requestInfo.responseInit?.headers && (
+            <Details title="Headers">
+              <div className="grid-layout">
+                {Object.entries(requestInfo.responseInit?.headers).map(
+                  ([key, value]) => (
+                    <DetailsRow key={key} rowName={value[0]} value={value[1]} />
+                  ),
+                )}
+              </div>
+            </Details>
+          )}
         </div>
-        <div id="tab2-panel" className="tabPanel">
-          <Details title="General">
-            <div className="grid-layout">
-              <DetailsRow rowName="Status" value={requestInfo.cacheStatus} />
+        {!!requestInfo.cache && (
+          <div id="tab2-panel" className="tabPanel">
+            <Details title="General">
+              <div className="grid-layout">
+                <DetailsRow
+                  rowName="Status"
+                  value={requestInfo.cache?.status}
+                />
+                <DetailsRow
+                  rowName="Cache-Control"
+                  value={requestInfo.cache?.strategy}
+                />
+                <DetailsRow
+                  rowName="Cache Key"
+                  value={requestInfo.cache?.key?.toString()}
+                />
+              </div>
+            </Details>
+          </div>
+        )}
+        {!!requestInfo.responsePayload && (
+          <div id="tab3-panel" className="tabPanel">
+            <div className="panel">
+              <pre className="code-json">
+                {JSON.stringify(requestInfo.responsePayload, undefined, 2)}
+              </pre>
             </div>
-          </Details>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -110,7 +140,9 @@ function DetailsRow({
     <>
       <div>{rowName}</div>
       {type === 'url' && <Link to={value}>{text ?? value}</Link>}
-      {type === 'string' && <div>{text ?? value}</div>}
+      {type === 'string' && (
+        <div className="word-break-all">{text ?? value}</div>
+      )}
     </>
   );
 }
