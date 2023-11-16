@@ -490,7 +490,73 @@ describe('upgrade', () => {
       expect(args).toEqual(expect.arrayContaining(result));
     });
 
-    it('does not upgrade remix deps if the current version is higher than that of the selected release', async () => {
+    it('upgrades and syncs up all available Remix deps if they are out-of-date', async () => {
+      const releases = changelog.releases as unknown as ChangeLog['releases'];
+
+      const selectedRelease = releases.find(
+        (release) => release.version === '2023.10.0',
+      ) as (typeof releases)[0];
+
+      const currentDependencies = {
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies,
+        '@remix-run/react': '1.3.0',
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON.devDependencies,
+        '@remix-run/dev': '1.2.0',
+        '@remix-run/css-bundle': '1.7.0',
+      } as Dependencies;
+
+      const result: string[] = [
+        '@shopify/cli-hydrogen@6.0.0',
+        '@shopify/hydrogen@2023.10.0',
+        '@shopify/remix-oxygen@2.0.0',
+        'typescript@5.2.2',
+        '@remix-run/react@2.1.0',
+        '@remix-run/dev@2.1.0',
+        '@remix-run/css-bundle@2.1.0',
+      ];
+
+      const args = buildUpgradeCommandArgs({
+        selectedRelease,
+        currentDependencies,
+      });
+
+      expect(args).toEqual(result);
+    });
+
+    it('upgrades all available Remix deps if they are out-of-date', async () => {
+      const releases = changelog.releases as unknown as ChangeLog['releases'];
+
+      const selectedRelease = releases.find(
+        (release) => release.version === '2023.10.0',
+      ) as (typeof releases)[0];
+
+      const currentDependencies = {
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies,
+        '@remix-run/react': '1.8.0',
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON.devDependencies,
+        '@remix-run/dev': '1.8.0',
+        '@remix-run/css-bundle': '1.8.0',
+      } as Dependencies;
+
+      const result: string[] = [
+        '@shopify/cli-hydrogen@6.0.0',
+        '@shopify/hydrogen@2023.10.0',
+        '@shopify/remix-oxygen@2.0.0',
+        'typescript@5.2.2',
+        '@remix-run/react@2.1.0',
+        '@remix-run/dev@2.1.0',
+        '@remix-run/css-bundle@2.1.0',
+      ];
+
+      const args = buildUpgradeCommandArgs({
+        selectedRelease,
+        currentDependencies,
+      });
+
+      expect(args).toEqual(result);
+    });
+
+    it('does not upgrade Remix deps if they are more up-to-date', async () => {
       const releases = changelog.releases as unknown as ChangeLog['releases'];
 
       const selectedRelease = releases.find(
@@ -505,8 +571,8 @@ describe('upgrade', () => {
       } as Dependencies;
 
       const result: string[] = [
-        '@shopify/hydrogen@2023.10.0',
         '@shopify/cli-hydrogen@6.0.0',
+        '@shopify/hydrogen@2023.10.0',
         '@shopify/remix-oxygen@2.0.0',
         'typescript@5.2.2',
       ];
@@ -516,7 +582,7 @@ describe('upgrade', () => {
         currentDependencies,
       });
 
-      expect(args).toEqual(expect.arrayContaining(result));
+      expect(args).toEqual(result);
     });
 
     it('does not install an optional dependency that was not installed', async () => {
@@ -594,7 +660,7 @@ describe('upgrade', () => {
       expect(args).toEqual(expect.arrayContaining(result));
     });
 
-    it('does not upgrade a required dependency that is more up-to-date', async () => {
+    it('does not upgrade a required dependency that is further up-to-date', async () => {
       const releases = changelog.releases as unknown as ChangeLog['releases'];
 
       const selectedRelease = releases.find(
@@ -621,6 +687,38 @@ describe('upgrade', () => {
       });
 
       expect(args).toEqual(expect.arrayContaining(result));
+    });
+
+    it('does not upgrade @next dependencies', async () => {
+      const releases = changelog.releases as unknown as ChangeLog['releases'];
+
+      const selectedRelease = releases.find(
+        (release) => release.version === '2023.10.0',
+      ) as (typeof releases)[0];
+
+      const currentDependencies = {
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies,
+        '@remix-run/react': '2.1.0',
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON.devDependencies,
+        '@remix-run/dev': '2.1.0',
+        '@shopify/hydrogen': 'next',
+      } as Dependencies;
+
+      const result: string[] = [
+        '@shopify/cli-hydrogen@6.0.0',
+        '@shopify/remix-oxygen@2.0.0',
+        `typescript@${getAbsoluteVersion(
+          // @ts-ignore - we know this release version exists
+          selectedRelease.devDependencies.typescript,
+        )}`,
+      ];
+
+      const args = buildUpgradeCommandArgs({
+        selectedRelease,
+        currentDependencies,
+      });
+
+      expect(args).toEqual(result);
     });
   });
 });

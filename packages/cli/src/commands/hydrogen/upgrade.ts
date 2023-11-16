@@ -556,10 +556,16 @@ function maybeIncludeDependency({
   currentDependencies: Dependencies;
   selectedRelease: Release;
 }) {
+  const existingDependencyVersion = currentDependencies[name];
+
   const isRemixPackage = isRemixDependency([name, version]);
 
-  // Remix dependencies are handled separately
+  // Remix dependencies are handled later
   if (isRemixPackage) return false;
+
+  const isNextVersion = existingDependencyVersion === 'next';
+
+  if (isNextVersion) return false;
 
   // Handle required/conditional dependenciesMeta deps
   const depMeta = selectedRelease.dependenciesMeta?.[name];
@@ -572,13 +578,11 @@ function maybeIncludeDependency({
 
   if (!isRequired) return false;
 
-  // Is required...
-  const existingDependency = currentDependencies[name];
-
-  if (!existingDependency) return true;
+  // Dep meta is required...
+  if (!existingDependencyVersion) return true;
 
   const isOlderVersion = semver.lt(
-    getAbsoluteVersion(existingDependency),
+    getAbsoluteVersion(existingDependencyVersion),
     getAbsoluteVersion(version),
   );
 
