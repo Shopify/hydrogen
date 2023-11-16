@@ -75,52 +75,21 @@ async function inTemporaryHydrogenRepo(
 describe('upgrade', () => {
   describe('checkIsGitRepo', () => {
     it('renders an error message when not in a git repo', async () => {
-      vi.mock('@shopify/cli-kit/node/ui', async () => {
-        const actual = await vi.importActual<
-          typeof import('@shopify/cli-kit/node/ui')
-        >('@shopify/cli-kit/node/ui');
-        return {
-          ...actual,
-          renderFatalError: vi.fn(),
-        };
-      });
-
       await inTemporaryDirectory(async (appPath) => {
-        await runUpgrade({dryRun: false, appPath}).catch(() => {});
-        expect(renderFatalError).toHaveBeenCalled();
-        expect(renderFatalError).toHaveBeenCalledWith({
-          name: 'error',
-          type: 1,
-          message: 'The upgrade command can only be run on a git repository',
-          tryMessage: `Please run the command inside a git repository or run 'git init' to create one`,
-        });
+        await expect(runUpgrade({dryRun: false, appPath})).rejects.toThrowError(
+          'git repository',
+        );
       });
     });
   });
 
   describe('checkDirtyGitBranch', () => {
     it('renders error message if the target git repo is dirty', async () => {
-      vi.mock('@shopify/cli-kit/node/ui', async () => {
-        const actual = await vi.importActual<
-          typeof import('@shopify/cli-kit/node/ui')
-        >('@shopify/cli-kit/node/ui');
-        return {
-          ...actual,
-          renderFatalError: vi.fn(),
-          renderSelectPrompt: vi.fn(),
-        };
-      });
       await inTemporaryHydrogenRepo(
         async (appPath) => {
-          await runUpgrade({dryRun: false, appPath}).catch(() => {});
-          expect(renderFatalError).toHaveBeenCalled();
-          expect(renderFatalError).toHaveBeenCalledWith({
-            name: 'error',
-            type: 0,
-            message:
-              'The upgrade command can only be run on a clean git branch',
-            tryMessage: `Please commit your changes or re-run the command on a clean branch`,
-          });
+          await expect(
+            runUpgrade({dryRun: false, appPath}),
+          ).rejects.toThrowError('clean git');
         },
         {cleanGitRepo: false, packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON},
       );
@@ -143,14 +112,9 @@ describe('upgrade', () => {
     it('throws if no package.json is found', async () => {
       await inTemporaryHydrogenRepo(
         async (appPath) => {
-          await runUpgrade({dryRun: false, appPath}).catch(() => {});
-          expect(renderFatalError).toHaveBeenCalled();
-          expect(renderFatalError).toHaveBeenCalledWith({
-            name: 'error',
-            type: 0,
-            message: 'Could not find a valid package.json',
-            tryMessage: `Please make sure you are running the command in a npm project`,
-          });
+          await expect(
+            runUpgrade({dryRun: false, appPath}),
+          ).rejects.toThrowError('valid package.json');
         },
         {packageJson: null},
       );
@@ -159,14 +123,9 @@ describe('upgrade', () => {
     it('throws if no hydrogen version is found in package.json', async () => {
       await inTemporaryHydrogenRepo(
         async (appPath) => {
-          await runUpgrade({dryRun: false, appPath}).catch(() => {});
-          expect(renderFatalError).toHaveBeenCalled();
-          expect(renderFatalError).toHaveBeenCalledWith({
-            name: 'error',
-            type: 0,
-            message: 'Could not find a valid Hydrogen version in package.json',
-            tryMessage: `Please make sure you are running the command in a Hydrogen project`,
-          });
+          await expect(
+            runUpgrade({dryRun: false, appPath}),
+          ).rejects.toThrowError('version in package.json');
         },
         {
           cleanGitRepo: true,
@@ -181,9 +140,7 @@ describe('upgrade', () => {
           const hydrogen = await getHydrogenVersion({appPath});
 
           expect(hydrogen).toBeDefined();
-          // @ts-expect-error - we know this release version exists
           expect(hydrogen.currentVersion).toMatch('^2023.1.6');
-          // @ts-expect-error - we know this release version exists
           expect(hydrogen.currentDependencies).toMatchObject({
             ...OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies,
             ...OUTDATED_HYDROGEN_PACKAGE_JSON.devDependencies,
