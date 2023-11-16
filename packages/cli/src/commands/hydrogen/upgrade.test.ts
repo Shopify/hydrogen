@@ -78,7 +78,6 @@ async function createOutdatedSkeletonPackageJson() {
   packageJson.devDependencies['@remix-run/dev'] = '1.12.0';
   packageJson.devDependencies['typescript'] = '^4.9.5';
 
-  console.log({packageJson});
   return packageJson;
 }
 
@@ -426,7 +425,7 @@ describe('upgrade', async () => {
   describe('displayConfirmation', () => {
     it('renders a confirmation prompt to continue or return to the previous menu', async () => {
       await inTemporaryHydrogenRepo(
-        async (appPath) => {
+        async () => {
           const releases =
             changelog.releases as unknown as ChangeLog['releases'];
 

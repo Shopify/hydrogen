@@ -202,6 +202,15 @@ export async function runUpgrade({
       }));
   } while (!confirmed);
 
+  // Generate a markdown file with upgrade instructions
+  const instrunctionsFilePathPromise = generateUpgradeInstructionsFile({
+    appPath,
+    cumulativeRelease,
+    currentVersion,
+    dryRun,
+    selectedRelease,
+  });
+
   if (!dryRun) {
     await upgradeNodeModules({appPath, selectedRelease, currentDependencies});
     await validateUpgrade({
@@ -210,14 +219,7 @@ export async function runUpgrade({
     });
   }
 
-  // Generate a markdown file with upgrade instructions
-  const instrunctionsFilePath = await generateUpgradeInstructionsFile({
-    appPath,
-    cumulativeRelease,
-    currentVersion,
-    dryRun,
-    selectedRelease,
-  });
+  const instrunctionsFilePath = await instrunctionsFilePathPromise;
 
   if (dryRun) {
     await displayDryRunSummary({
@@ -705,9 +707,11 @@ function appendRemixDependencies({
  * Gets the absolute version from a pinned or unpinned version
  */
 export function getAbsoluteVersion(version: string) {
-  const isPinned = /^[\d\.]+$/.test(version);
-  const currentPinnedVersion = isPinned ? version : version.slice(1);
-  return currentPinnedVersion;
+  const result = semver.minVersion(version);
+  if (!result) {
+    throw new AbortError(`Invalid version: ${version}`);
+  }
+  return result.version;
 }
 
 /**
