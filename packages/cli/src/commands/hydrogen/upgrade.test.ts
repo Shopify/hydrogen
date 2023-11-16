@@ -22,7 +22,7 @@ import {
   buildUpgradeCommandArgs,
   getHydrogenVersion,
   type ChangeLog,
-  type CummulativeRelease,
+  type CumulativeRelease,
   type Dependencies,
   type Release,
 } from './upgrade.js';
@@ -735,4 +735,4 @@ const CUMMLATIVE_RELEASE = {
       id: '642',
     },
   ],
-} as CummulativeRelease;
+} as CumulativeRelease;

@@ -27,7 +27,7 @@ import {
   getPackageManager,
 } from '@shopify/cli-kit/node/node-package-manager';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {commonFlags} from '../../lib/flags.js';
+import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {PackageJson} from 'type-fest';
 import {getProjectPaths} from '../../lib/remix-config.js';
 
@@ -89,7 +89,7 @@ export type ChangeLog = {
   version: string;
 };
 
-export type CummulativeRelease = {
+export type CumulativeRelease = {
   features: Array<ReleaseItem>;
   fixes: Array<ReleaseItem>;
 };
@@ -111,31 +111,44 @@ export default class Upgrade extends Command {
       default: false,
       char: 'd',
     }),
+    force: Flags.boolean({
+      description:
+        'Ignore warnings and force the upgrade to the target version',
+      env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
+      char: 'f',
+    }),
   };
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Upgrade);
-    const appPath = flags.path ? path.resolve(flags.path) : process.cwd();
-    const version = flags.version;
-    const dryRun = Boolean(flags['dry-run']);
-    await runUpgrade({appPath, version, dryRun});
+
+    await runUpgrade({
+      ...flagsToCamelObject(flags),
+      appPath: flags.path ? path.resolve(flags.path) : process.cwd(),
+    });
   }
 }
 
 let CACHED_CHANGELOG: ChangeLog | null = null;
 
+type UpgradeOptions = {
+  appPath: string;
+  dryRun: boolean;
+  version?: string;
+  force?: boolean;
+};
+
 export async function runUpgrade({
   appPath,
   dryRun,
   version: targetVersion,
-}: {
-  appPath: string;
-  dryRun: boolean;
-  version?: string;
-}) {
-  await checkIsGitRepo(appPath);
+  force,
+}: UpgradeOptions) {
+  if (!force) {
+    await checkIsGitRepo(appPath);
 
-  await checkDirtyGitBranch(appPath);
+    await checkDirtyGitBranch(appPath);
+  }
 
   const {currentVersion, currentDependencies} = await getHydrogenVersion({
     appPath,
@@ -163,7 +176,7 @@ export async function runUpgrade({
 
   let confirmed = false;
   let selectedRelease: Release | undefined = undefined;
-  let cumulativeRelease: CummulativeRelease | undefined = undefined;
+  let cumulativeRelease: CumulativeRelease | undefined = undefined;
 
   do {
     // Prompt the user to select a version from the list of available upgrades
@@ -253,10 +266,6 @@ async function checkDirtyGitBranch(appPath: string) {
  * Gets the current @shopify/hydrogen version from the app's package.json
  */
 export async function getHydrogenVersion({appPath}: {appPath: string}) {
-  if (!appPath) {
-    throw new Error('No app path provided');
-  }
-
   const {root} = getProjectPaths(appPath);
   const packageJsonPath = path.join(root, 'package.json');
 
@@ -447,7 +456,7 @@ export function getCummulativeRelease({
   selectedRelease: Release;
   currentVersion: string;
   currentDependencies?: Dependencies;
-}): CummulativeRelease {
+}): CumulativeRelease {
   const currentPinnedVersion = getAbsoluteVersion(currentVersion);
 
   if (!availableUpgrades?.length) {
@@ -475,7 +484,7 @@ export function getCummulativeRelease({
       acc.fixes = [...acc.fixes, ...release.fixes];
       return acc;
     },
-    {features: [], fixes: []} as CummulativeRelease,
+    {features: [], fixes: []} as CumulativeRelease,
   );
 }
 
@@ -488,7 +497,7 @@ export function displayConfirmation({
   cumulativeRelease,
   selectedRelease,
 }: {
-  cumulativeRelease: CummulativeRelease;
+  cumulativeRelease: CumulativeRelease;
   selectedRelease: Release;
 }) {
   const {features, fixes} = cumulativeRelease;
@@ -876,7 +885,7 @@ async function generateUpgradeInstructionsFile({
   selectedRelease,
 }: {
   appPath: string;
-  cumulativeRelease: CummulativeRelease;
+  cumulativeRelease: CumulativeRelease;
   currentVersion: string;
   dryRun: boolean;
   selectedRelease: Release;

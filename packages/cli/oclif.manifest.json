@@ -642,6 +642,13 @@
           "description": "Generate a summary and .md file with upgrade instructions without actually upgrading the dependencies",
           "required": false,
           "allowNo": false
+        },
+        "force": {
+          "name": "force",
+          "type": "boolean",
+          "char": "f",
+          "description": "Ignore warnings and force the upgrade to the target version",
+          "allowNo": false
         }
       },
       "args": {}
