@@ -20,6 +20,14 @@ import {
   useNavigate,
 } from '@remix-run/react';
 
+declare global {
+  interface Window {
+    // Use a global variable to keep track
+    // of when the page finishes hydrating
+    __hydrogenHydrated?: boolean;
+  }
+}
+
 type Connection<NodesType> =
   | {
       nodes: Array<NodesType>;
@@ -234,7 +242,7 @@ export function usePagination<NodesType>(
   const isPrevious = direction === 'previous';
 
   const nodes = useMemo(() => {
-    if (!state || !state?.nodes) {
+    if (!globalThis?.window?.__hydrogenHydrated || !state || !state?.nodes) {
       return flattenConnection(connection);
     }
 
@@ -246,26 +254,28 @@ export function usePagination<NodesType>(
   }, [state, connection]);
 
   const currentPageInfo = useMemo(() => {
+    const hydrogenHydrated = globalThis?.window?.__hydrogenHydrated;
     let pageStartCursor =
-      state?.pageInfo?.startCursor === undefined
+      !hydrogenHydrated || state?.pageInfo?.startCursor === undefined
         ? connection.pageInfo.startCursor
         : state.pageInfo.startCursor;
 
     let pageEndCursor =
-      state?.pageInfo?.endCursor === undefined
+      !hydrogenHydrated || state?.pageInfo?.endCursor === undefined
         ? connection.pageInfo.endCursor
         : state.pageInfo.endCursor;
 
     let previousPageExists =
-      state?.pageInfo?.hasPreviousPage === undefined
+      !hydrogenHydrated || state?.pageInfo?.hasPreviousPage === undefined
         ? connection.pageInfo.hasPreviousPage
         : state.pageInfo.hasPreviousPage;
 
     let nextPageExists =
-      state?.pageInfo?.hasNextPage === undefined
+      !hydrogenHydrated || state?.pageInfo?.hasNextPage === undefined
         ? connection.pageInfo.hasNextPage
         : state.pageInfo.hasNextPage;
 
+    // if (!hydrogenHydrated) {
     if (state?.nodes) {
       if (isPrevious) {
         pageStartCursor = connection.pageInfo.startCursor;
@@ -275,6 +285,7 @@ export function usePagination<NodesType>(
         nextPageExists = connection.pageInfo.hasNextPage;
       }
     }
+    // }
 
     return {
       startCursor: pageStartCursor,
@@ -296,6 +307,10 @@ export function usePagination<NodesType>(
     params: getParamsWithoutPagination(search),
     pathname,
   });
+
+  useEffect(() => {
+    window.__hydrogenHydrated = true;
+  }, []);
 
   useEffect(() => {
     if (
