@@ -38,16 +38,16 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
 
   return {
     ...original,
-    renderTasks: vi.fn(),
-    renderSelectPrompt: vi.fn(),
-    renderConfirmationPrompt: vi.fn(),
+    renderTasks: vi.fn(() => Promise.resolve()),
+    renderSelectPrompt: vi.fn(() => Promise.resolve()),
+    renderConfirmationPrompt: vi.fn(() => Promise.resolve(false)),
   };
 });
 
 const outputMock = mockAndCaptureOutput();
 
 beforeEach(() => {
-  vi.resetAllMocks();
+  vi.restoreAllMocks();
   vi.resetModules();
   vi.clearAllMocks();
   outputMock.clear();
@@ -399,16 +399,12 @@ describe('upgrade', () => {
             (release) => release.version === '2023.10.0',
           ) as (typeof releases)[0];
 
-          // TODO this should not throw -- related to recursivity
           await expect(
             displayConfirmation({
-              appPath,
               cumulativeRelease: CUMMLATIVE_RELEASE,
               selectedRelease,
-              targetVersion: undefined,
-              dryRun: false,
             }),
-          ).rejects.toThrowError('No Hydrogen version selected');
+          ).resolves.toEqual(false);
 
           const info = outputMock.info();
           expect(info).toMatch('Included in this upgrade');

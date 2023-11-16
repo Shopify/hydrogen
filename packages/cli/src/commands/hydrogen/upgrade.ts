@@ -161,43 +161,35 @@ export async function runUpgrade({
     return;
   }
 
-  // Prompt the user to select a version from the list of available upgrades
-  const selectedRelease = await getSelectedRelease({
-    currentVersion,
-    targetVersion,
-    availableUpgrades,
-  });
+  let confirmed = false;
+  let selectedRelease: Release | undefined = undefined;
+  let cumulativeRelease: CummulativeRelease | undefined = undefined;
 
-  if (!selectedRelease) {
-    throw new AbortError(
-      'No Hydrogen version selected',
-      'Plase try again later',
-    );
-  }
-
-  // Get an aggregate list of features and fixes included in the upgrade versions range
-  const cumulativeRelease = getCummulativeRelease({
-    availableUpgrades,
-    currentVersion,
-    currentDependencies,
-    selectedRelease,
-  });
-
-  if (!dryRun) {
-    // Prompt the user to confirm the upgrade and display a list of features and fixes
-    const confirmed = await displayConfirmation({
-      appPath,
-      cumulativeRelease,
-      dryRun,
-      selectedRelease,
+  do {
+    // Prompt the user to select a version from the list of available upgrades
+    selectedRelease = await getSelectedRelease({
+      currentVersion,
       targetVersion,
+      availableUpgrades,
     });
 
-    // Exit if the user chose to return to the version selection prompt
-    if (!confirmed) {
-      return;
-    }
+    // Get an aggregate list of features and fixes included in the upgrade versions range
+    cumulativeRelease = getCummulativeRelease({
+      availableUpgrades,
+      currentVersion,
+      currentDependencies,
+      selectedRelease,
+    });
 
+    confirmed =
+      dryRun ||
+      (await displayConfirmation({
+        cumulativeRelease,
+        selectedRelease,
+      }));
+  } while (!confirmed);
+
+  if (!dryRun) {
     await upgradeNodeModules({appPath, selectedRelease, currentDependencies});
     await validateUpgrade({
       appPath,
@@ -492,18 +484,12 @@ export function getCummulativeRelease({
  * included in the upgrade versions range. The user can also return to the
  * version selection prompt if they want to choose a different version.
  **/
-export async function displayConfirmation({
-  appPath,
+export function displayConfirmation({
   cumulativeRelease,
   selectedRelease,
-  targetVersion,
-  dryRun,
 }: {
-  appPath: string;
   cumulativeRelease: CummulativeRelease;
   selectedRelease: Release;
-  targetVersion?: string;
-  dryRun: boolean;
 }) {
   const {features, fixes} = cumulativeRelease;
   if (features.length || fixes.length) {
@@ -535,22 +521,11 @@ export async function displayConfirmation({
     });
   }
 
-  const confirmedUpgrade = await renderConfirmationPrompt({
+  return renderConfirmationPrompt({
     message: `Are you sure you want to upgrade to ${selectedRelease.version}?`,
     cancellationMessage: `No, choose another version`,
     defaultValue: true,
   });
-
-  if (!confirmedUpgrade) {
-    // Go back to the version selection prompt
-    return await runUpgrade({
-      appPath,
-      dryRun,
-      version: targetVersion,
-    });
-  }
-
-  return true;
 }
 
 function isRemixDependency([name]: [string, string]) {
