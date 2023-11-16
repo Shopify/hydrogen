@@ -8,11 +8,10 @@ import {
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {
   renderSelectPrompt,
-  renderInfo,
   renderConfirmationPrompt,
   renderTasks,
-  renderSuccess,
 } from '@shopify/cli-kit/node/ui';
+import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {
   runUpgrade,
   upgradeNodeModules,
@@ -32,19 +31,26 @@ import changelog from '../../changelog.json';
 vi.mock('../../lib/shell.js');
 vi.mock('@shopify/cli-kit/node/session');
 
-vi.mock('@shopify/cli-kit/node/ui', () => ({
-  renderTasks: vi.fn(),
-  renderSelectPrompt: vi.fn(),
-  renderFatalError: vi.fn(),
-  renderSuccess: vi.fn(),
-  renderInfo: vi.fn(),
-  renderConfirmationPrompt: vi.fn(),
-}));
+vi.mock('@shopify/cli-kit/node/ui', async () => {
+  const original = await vi.importActual<
+    typeof import('@shopify/cli-kit/node/ui')
+  >('@shopify/cli-kit/node/ui');
+
+  return {
+    ...original,
+    renderTasks: vi.fn(),
+    renderSelectPrompt: vi.fn(),
+    renderConfirmationPrompt: vi.fn(),
+  };
+});
+
+const outputMock = mockAndCaptureOutput();
 
 beforeEach(() => {
   vi.resetAllMocks();
   vi.resetModules();
   vi.clearAllMocks();
+  outputMock.clear();
 });
 
 /**
@@ -167,10 +173,9 @@ describe('upgrade', () => {
       await inTemporaryHydrogenRepo(
         async (appPath) => {
           await runUpgrade({dryRun: false, appPath});
-          expect(renderSuccess).toHaveBeenCalled();
-          expect(renderSuccess).toHaveBeenCalledWith({
-            headline: expect.stringContaining(`You are on the latest Hydrogen`),
-          });
+          expect(outputMock.info()).toMatch(
+            / success.+ latest Hydrogen version/is,
+          );
         },
         {
           cleanGitRepo: true,
@@ -383,12 +388,7 @@ describe('upgrade', () => {
   });
 
   describe('displayConfirmation', () => {
-    beforeEach(() => {
-      vi.resetAllMocks();
-      vi.resetModules();
-      vi.clearAllMocks();
-    });
-    it('renders a confirmation prompt that prompts to continue or return to the previous menu', async () => {
+    it('renders a confirmation prompt to continue or return to the previous menu', async () => {
       await inTemporaryHydrogenRepo(
         async (appPath) => {
           const releases =
@@ -399,56 +399,25 @@ describe('upgrade', () => {
             (release) => release.version === '2023.10.0',
           ) as (typeof releases)[0];
 
-          const targetVersion = undefined;
-          const dryRun = false;
+          // TODO this should not throw -- related to recursivity
+          await expect(
+            displayConfirmation({
+              appPath,
+              cumulativeRelease: CUMMLATIVE_RELEASE,
+              selectedRelease,
+              targetVersion: undefined,
+              dryRun: false,
+            }),
+          ).rejects.toThrowError('No Hydrogen version selected');
 
-          const confimed = await displayConfirmation({
-            appPath,
-            cumulativeRelease: CUMMLATIVE_RELEASE,
-            selectedRelease,
-            targetVersion,
-            dryRun,
-          }).catch((error) => {
-            console.log('error', error);
-          });
+          const info = outputMock.info();
+          expect(info).toMatch('Included in this upgrade');
 
-          if (!confimed) return;
-
-          expect(renderInfo).toHaveBeenCalledWith({
-            headline: `Included in this upgrade:`,
-            customSections: expect.arrayContaining([
-              {
-                title: 'Features',
-                body: [
-                  {
-                    list: {
-                      items: expect.arrayContaining(
-                        CUMMLATIVE_RELEASE.features.map(
-                          // @ts-ignore
-                          (feature) => feature.title,
-                        ),
-                      ),
-                    },
-                  },
-                ],
-              },
-              {
-                title: 'Fixes',
-                body: [
-                  {
-                    list: {
-                      items: expect.arrayContaining(
-                        CUMMLATIVE_RELEASE.fixes.map(
-                          // @ts-ignore
-                          (feature) => feature.title,
-                        ),
-                      ),
-                    },
-                  },
-                ],
-              },
-            ]),
-          });
+          [...CUMMLATIVE_RELEASE.features, ...CUMMLATIVE_RELEASE.fixes].forEach(
+            (feat) =>
+              // Cut the string to avoid matching the banner
+              expect(info).toMatch(feat.title.slice(0, 15)),
+          );
 
           expect(renderConfirmationPrompt).toHaveBeenCalledWith({
             message: `Are you sure you want to upgrade to ${selectedRelease.version}?`,
