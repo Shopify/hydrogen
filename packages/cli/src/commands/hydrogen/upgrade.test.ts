@@ -28,6 +28,7 @@ import {
   upgradeNodeModules,
 } from './upgrade.js';
 import changelog from '../../changelog.json';
+import {type PackageJson} from 'type-fest';
 
 vi.mock('../../lib/shell.js');
 vi.mock('@shopify/cli-kit/node/session');
@@ -53,6 +54,33 @@ beforeEach(() => {
   vi.clearAllMocks();
   outputMock.clear();
 });
+
+async function createOutdatedSkeletonPackageJson() {
+  const response = await fetch(
+    'https://raw.githubusercontent.com/Shopify/hydrogen/main/templates/skeleton/package.json',
+  );
+  if (!response.ok) throw new Error('Could not fetch package.json');
+  const packageJson = JSON.parse(
+    await response.text(),
+  ) as unknown as PackageJson;
+
+  if (!packageJson) throw new Error('Could not parse package.json');
+  if (!packageJson?.dependencies)
+    throw new Error('Could not parse package.json dependencies');
+  if (!packageJson?.devDependencies)
+    throw new Error('Could not parse package.json devDependencies');
+
+  // bump the versions to be outdated
+  packageJson.dependencies['@shopify/hydrogen'] = '^2023.1.6';
+  packageJson.dependencies['@remix-run/react'] = '1.12.0';
+  packageJson.devDependencies['@shopify/cli-hydrogen'] = '^4.0.8';
+  packageJson.devDependencies['@shopify/remix-oxygen'] = '^1.0.3';
+  packageJson.devDependencies['@remix-run/dev'] = '1.12.0';
+  packageJson.devDependencies['typescript'] = '^4.9.5';
+
+  console.log({packageJson});
+  return packageJson;
+}
 
 /**
  * Creates a temporary directory with a git repo and a package.json
@@ -92,7 +120,11 @@ async function inTemporaryHydrogenRepo(
   });
 }
 
-describe('upgrade', () => {
+describe('upgrade', async () => {
+  // Create an outdated skeleton package.json for all tests
+  const OUTDATED_HYDROGEN_PACKAGE_JSON =
+    await createOutdatedSkeletonPackageJson();
+
   describe('checkIsGitRepo', () => {
     it('renders an error message when not in a git repo', async () => {
       await inTemporaryDirectory(async (appPath) => {
@@ -137,7 +169,10 @@ describe('upgrade', () => {
         },
         {
           cleanGitRepo: true,
-          packageJson: INVALID_HYDROGEN_PACKAGE_JSON,
+          packageJson: {
+            name: 'hello-world',
+            dependencies: {},
+          },
         },
       );
     });
@@ -511,7 +546,9 @@ describe('upgrade', () => {
         '@shopify/remix-oxygen@2.0.0',
         'typescript@5.2.2',
         '@remix-run/react@2.1.0',
+        '@remix-run/server-runtime@2.1.0',
         '@remix-run/dev@2.1.0',
+        '@remix-run/eslint-config@2.1.0',
         '@remix-run/css-bundle@2.1.0',
       ];
 
@@ -544,7 +581,9 @@ describe('upgrade', () => {
         '@shopify/remix-oxygen@2.0.0',
         'typescript@5.2.2',
         '@remix-run/react@2.1.0',
+        '@remix-run/server-runtime@2.1.0',
         '@remix-run/dev@2.1.0',
+        '@remix-run/eslint-config@2.1.0',
         '@remix-run/css-bundle@2.1.0',
       ];
 
@@ -722,54 +761,6 @@ describe('upgrade', () => {
     });
   });
 });
-
-const OUTDATED_HYDROGEN_PACKAGE_JSON = {
-  name: 'hello-world',
-  private: true,
-  sideEffects: false,
-  version: '0.0.0',
-  scripts: {
-    build: 'shopify hydrogen build',
-    dev: 'shopify hydrogen dev',
-    preview: 'npm run build && shopify hydrogen preview',
-    lint: 'eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .',
-    typecheck: 'tsc --noEmit',
-    g: 'shopify hydrogen generate',
-  },
-  prettier: '@shopify/prettier-config',
-  dependencies: {
-    '@remix-run/react': '1.12.0',
-    '@shopify/cli': '3.29.0',
-    '@shopify/cli-hydrogen': '^4.0.8',
-    '@shopify/hydrogen': '^2023.1.6',
-    '@shopify/remix-oxygen': '^1.0.3',
-    graphql: '^16.6.0',
-    'graphql-tag': '^2.12.6',
-    react: '^18.2.0',
-    'react-dom': '^18.2.0',
-    'tiny-invariant': '^1.3.1',
-  },
-  devDependencies: {
-    '@remix-run/dev': '1.12.0',
-    '@shopify/oxygen-workers-types': '^3.17.2',
-    '@shopify/prettier-config': '^1.1.2',
-    '@types/eslint': '^8.4.10',
-    '@types/react': '^18.0.20',
-    '@types/react-dom': '^18.0.6',
-    eslint: '^8.20.0',
-    'eslint-plugin-hydrogen': '0.12.2',
-    prettier: '^2.8.4',
-    typescript: '^4.9.5',
-  },
-  engines: {
-    node: '>=16.13',
-  },
-};
-
-const INVALID_HYDROGEN_PACKAGE_JSON = {
-  name: 'hello-world',
-  dependencies: {},
-};
 
 // cummlative result when upgrading from 2023.1.6 (outdated) to 2023.4.1
 const CUMMLATIVE_RELEASE = {
