@@ -82,7 +82,20 @@ export function RequestWaterfall({
   }, [serverEvents.preserveLog]);
 
   const data: Waterfall = {
-    items,
+    items: [
+      {
+        // Workaround a bug in flame-chart-js where the first item onSelect is not triggered
+        name: 'padding-request',
+        intervals: 'request',
+        timing: {
+          requestStart: 0,
+          responseStart: 0,
+          responseEnd: 0,
+          requestEnd: -1,
+        },
+      } satisfies WaterfallItem,
+      ...items,
+    ],
     intervals: {
       mainRequest: [
         {
@@ -112,10 +125,6 @@ export function RequestWaterfall({
     },
   };
 
-  // const tooltipRenderer = (data: any, renderEngine: RenderEngine | OffscreenRenderEngine, mouse: Mouse | null) => {
-  //   console.log({data, renderEngine, mouse});
-  // }
-
   const onSelect = (data: any) => {
     console.log(data);
     const eventIdMeta = data.node.meta.filter(
@@ -131,9 +140,9 @@ export function RequestWaterfall({
 
   const settings = useMemo(
     () => ({
-      // options: {
-      //   tooltip: tooltipRenderer,
-      // },
+      options: {
+        tooltip: () => {},
+      },
       styles: {
         main: {
           blockHeight: 22,
