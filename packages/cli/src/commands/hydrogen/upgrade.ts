@@ -1006,27 +1006,13 @@ export async function displayDevUpgradeNotice({
 
   const changelog = await fetchTempChangelog();
 
-  if (!changelog?.releases) return;
-
   const {availableUpgrades, uniqueAvailableUpgrades} = getAvailableUpgrades({
     releases: changelog.releases,
     currentVersion,
   });
 
-  if (!availableUpgrades?.length) {
-    renderSuccess({
-      headline: `You are on the latest Hydrogen version: ${getAbsoluteVersion(
-        currentVersion,
-      )}`,
-    });
-    return;
-  }
-
-  if (!availableUpgrades[0]?.version) {
-    renderError({
-      headline: `Failed to find the latest Hydrogen version`,
-      body: `Please try again later`,
-    });
+  if (availableUpgrades.length === 0 || !availableUpgrades[0]?.version) {
+    // Using latest version already or changelog fetch errored
     return;
   }
 
