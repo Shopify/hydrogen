@@ -1,4 +1,5 @@
 import semver from 'semver';
+import cliTruncate from 'cli-truncate';
 import path from 'path';
 import {Flags} from '@oclif/core';
 import {isClean, ensureInsideGitDirectory} from '@shopify/cli-kit/node/git';
@@ -151,6 +152,7 @@ export async function runUpgrade({
   const {availableUpgrades} = getAvailableUpgrades({
     releases: changelog.releases,
     currentVersion,
+    currentDependencies,
   });
 
   if (!availableUpgrades?.length) {
@@ -191,27 +193,27 @@ export async function runUpgrade({
 
   // Get an aggregate list of features and fixes included in the upgrade versions range
   const cumulativeRelease = getCummulativeRelease({
-    releases: changelog.releases,
+    availableUpgrades,
     currentVersion,
+    currentDependencies,
     selectedRelease,
   });
 
-  // Prompt the user to confirm the upgrade and display a list of features and fixes
-  const confirmed = await displayConfirmation({
-    appPath,
-    cumulativeRelease,
-    dryRun,
-    selectedRelease,
-    targetVersion,
-  });
-
-  // Exit if the user chose to return to the version selection prompt
-  if (!confirmed) {
-    return;
-  }
-
-  // skip the dependency upgrade step and validation if we're doing a dry run
   if (!dryRun) {
+    // Prompt the user to confirm the upgrade and display a list of features and fixes
+    const confirmed = await displayConfirmation({
+      appPath,
+      cumulativeRelease,
+      dryRun,
+      selectedRelease,
+      targetVersion,
+    });
+
+    // Exit if the user chose to return to the version selection prompt
+    if (!confirmed) {
+      return;
+    }
+
     await upgradeNodeModules({appPath, selectedRelease, currentDependencies});
     await validateUpgrade({
       appPath,
@@ -228,13 +230,20 @@ export async function runUpgrade({
     selectedRelease,
   });
 
-  // Display a summary of the upgrade and next steps
-  await displaySummary({
-    currentVersion,
-    dryRun,
-    instrunctionsFilePath,
-    selectedRelease,
-  });
+  if (dryRun) {
+    await displayDryRunSummary({
+      instrunctionsFilePath,
+      selectedRelease,
+    });
+  } else {
+    // Display a summary of the upgrade and next steps
+    await displayUpgradeSummary({
+      currentVersion,
+      dryRun,
+      instrunctionsFilePath,
+      selectedRelease,
+    });
+  }
 }
 
 /**
@@ -374,26 +383,77 @@ export async function fetchChangelog(): Promise<ChangeLog | undefined> {
   }
 }
 
+export function hasOutdatedDependencies({
+  release,
+  currentDependencies,
+}: {
+  release: Release;
+  currentDependencies: Dependencies;
+}) {
+  return Object.entries(release.dependencies).some(([name, version]) => {
+    const currentDependencyVersion = currentDependencies?.[name];
+    if (!currentDependencyVersion) return false;
+    const isDependencyOutdated = semver.gt(
+      getAbsoluteVersion(version),
+      getAbsoluteVersion(currentDependencyVersion),
+    );
+    return isDependencyOutdated;
+  });
+}
+
+export function isUpgradeableRelease({
+  currentDependencies,
+  currentPinnedVersion,
+  release,
+}: {
+  currentDependencies?: Dependencies;
+  currentPinnedVersion: string;
+  release: Release;
+}) {
+  if (!currentDependencies) return false;
+
+  const isHydrogenOutdated = semver.gt(release.version, currentPinnedVersion);
+
+  if (isHydrogenOutdated) return true;
+
+  // check if any of the other dependencies of the selected release are outdated
+  const isCurrentHydrogen =
+    getAbsoluteVersion(release.version) === currentPinnedVersion;
+
+  if (!isCurrentHydrogen) return false;
+
+  return hasOutdatedDependencies({release, currentDependencies});
+}
+
 /**
  * Gets the list of available upgrades based on the current version
  */
 export function getAvailableUpgrades({
   releases,
   currentVersion,
+  currentDependencies,
 }: {
   releases: ChangeLog['releases'];
   currentVersion: string;
+  currentDependencies?: Dependencies;
 }) {
   const currentPinnedVersion = getAbsoluteVersion(currentVersion);
   let currentMajorVersion = '';
 
   const availableUpgrades = releases.filter((release) => {
-    const isUpgrade = semver.gt(release.version, currentPinnedVersion);
-    if (!isUpgrade) return false;
+    const isUpgradeable = isUpgradeableRelease({
+      release,
+      currentPinnedVersion,
+      currentDependencies,
+    });
+
+    if (!isUpgradeable) return false;
+
     if (currentMajorVersion !== release.version) {
       currentMajorVersion = release.version;
-      return isUpgrade;
+      return true;
     }
+
     return false;
   }) as Array<Release>;
 
@@ -446,24 +506,31 @@ export async function getSelectedRelease({
  * Gets an aggregate list of features and fixes included in the upgrade versions range
  */
 export function getCummulativeRelease({
-  releases,
+  availableUpgrades,
   selectedRelease,
   currentVersion,
+  currentDependencies,
 }: {
-  releases: Array<Release>;
+  availableUpgrades: Array<Release>;
   selectedRelease: Release;
   currentVersion: string;
+  currentDependencies?: Dependencies;
 }): CummulativeRelease {
   const currentPinnedVersion = getAbsoluteVersion(currentVersion);
 
-  const upgradingReleases = releases.filter((release) => {
-    const isUpgrade =
+  const upgradingReleases = availableUpgrades.filter((release) => {
+    const isHydrogenUpgrade =
       semver.gt(release.version, currentPinnedVersion) &&
       semver.lte(release.version, selectedRelease.version);
 
-    if (!isUpgrade) return false;
+    if (isHydrogenUpgrade) return true;
 
-    return true;
+    const isSameHydrogenVersion =
+      getAbsoluteVersion(release.version) === currentPinnedVersion;
+
+    if (!isSameHydrogenVersion || !currentDependencies) return false;
+
+    return hasOutdatedDependencies({release, currentDependencies});
   });
 
   return upgradingReleases.reduce(
@@ -684,16 +751,32 @@ async function promptUpgradeOptions(
       isLatest = true;
     }
 
-    // TODO: add group sorting function to cli-kit select prompt
-    const majorVersion = `${semver.major(version)}.${semver.minor(version)}`;
-
     const isFirstMajorVersion = semver.patch(version) === 0;
+    const isCurrentVersion =
+      getAbsoluteVersion(currentVersion) === getAbsoluteVersion(version);
+
+    let tag = '';
+    switch (true) {
+      case isLatest:
+        tag = '(latest)';
+        break;
+      case isFirstMajorVersion:
+        tag = '(major)';
+        break;
+      case isCurrentVersion:
+        tag = '(outdated)';
+        break;
+      default:
+        tag = '';
+    }
+
+    // TODO: add group sorting function to cli-kit select prompt
+    // so that we can group by major version
+    const majorVersion = `${semver.major(version)}.${semver.minor(version)}`;
 
     return {
       // group: majorVersion,
-      label: `${version} ${
-        isLatest ? '(latest)' : isFirstMajorVersion ? '(major)' : ''
-      } - ${title}`,
+      label: `${version} ${tag} - ${cliTruncate(title, 54)}`,
       value: version,
     };
   }) as Array<Choice<string>>;
@@ -721,10 +804,47 @@ async function promptUpgradeOptions(
   return selectedRelease;
 }
 
+async function displayDryRunSummary({
+  selectedRelease,
+  instrunctionsFilePath,
+}: {
+  selectedRelease: Release;
+  instrunctionsFilePath?: string;
+}) {
+  let nextSteps = [];
+
+  if (typeof instrunctionsFilePath === 'string') {
+    let instructions = `Preview the upgrade instructions at:\nfile://${instrunctionsFilePath}`;
+    nextSteps.push(instructions);
+  }
+
+  const releaseNotesUrl = `https://hydrogen.shopify.dev/releases/${selectedRelease.version}`;
+
+  nextSteps.push(`Release notes:\n${releaseNotesUrl}`);
+
+  return renderSuccess({
+    headline:
+      'This was a dry run. So, nothing was changed in your Hydrogen configuration.',
+    // @ts-ignore we know that filter(Boolean) will always return an array
+    customSections: [
+      {
+        title: 'What’s next?',
+        body: [
+          {
+            list: {
+              items: nextSteps,
+            },
+          },
+        ],
+      },
+    ].filter(Boolean),
+  });
+}
+
 /**
  * Displays a summary of the upgrade and next steps
  */
-async function displaySummary({
+async function displayUpgradeSummary({
   currentVersion,
   dryRun,
   selectedRelease,
@@ -755,18 +875,32 @@ async function displaySummary({
 
   nextSteps.push(`Release notes:\n${releaseNotesUrl}`);
 
-  const versionsChange = `${getAbsoluteVersion(
-    currentVersion,
-  )} → ${getAbsoluteVersion(`${selectedRelease.version}`)}`;
+  const currentPinnedVersion = getAbsoluteVersion(currentVersion);
+  const selectedPinnedVersion = getAbsoluteVersion(selectedRelease.version);
+
+  const upgradedDependenciesOnly =
+    currentPinnedVersion !== selectedPinnedVersion;
+
+  const fromToMsg = `${currentPinnedVersion} → ${selectedPinnedVersion}`;
+
+  // TODO: when we only upgrade dependencies the message should be different
+
+  // TODO: should have a total different message if its a dry run
+  const headlines = {
+    dryRun: `Dry run upgrade ${fromToMsg}`,
+    upgradedDependenciesOnly: `You've have upgraded dependencies for ${selectedPinnedVersion}`,
+    upgradedAll: `You've have upgraded from ${fromToMsg}`,
+  };
 
   const headline = dryRun
-    ? `Dry run upgrade ${versionsChange}`
-    : `You've updated from ${versionsChange}`;
+    ? `Dry run upgrade ${fromToMsg}`
+    : `You've have upgraded from ${fromToMsg}`;
 
   return renderSuccess({
     headline,
+    // @ts-ignore we know that filter(Boolean) will always return an array
     customSections: [
-      {
+      !dryRun && {
         title: 'Updated dependencies',
         body: [
           {
@@ -956,8 +1090,12 @@ export async function displayDevUpgradeNotice({
   targetPath?: string;
 }) {
   const appPath = targetPath ? path.resolve(targetPath) : process.cwd();
-  const {currentVersion} = await getHydrogenVersion({appPath});
+  const hydrogen = await getHydrogenVersion({appPath});
 
+  if (!hydrogen?.currentVersion) {
+    return;
+  }
+  const {currentVersion} = hydrogen;
   const changelog = await fetchTempChangelog();
 
   if (!changelog?.releases) return;
