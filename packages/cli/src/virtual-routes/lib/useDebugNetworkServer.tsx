@@ -100,8 +100,6 @@ export function useDebugNetworkServer() {
       if (serverEvents.current.recordEvents) {
         const data = JSON.parse(event.data) as unknown as ServerEvent;
 
-        console.log(data);
-
         if (serverEvents.current.smallestStartTime === 0) {
           serverEvents.current.smallestStartTime = data.startTime;
         } else {

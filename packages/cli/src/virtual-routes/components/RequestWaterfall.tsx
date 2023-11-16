@@ -126,7 +126,6 @@ export function RequestWaterfall({
   };
 
   const onSelect = (data: any) => {
-    console.log(data);
     const eventIdMeta = data.node.meta.filter(
       (meta: any) => meta.name === 'id',
     )[0];
