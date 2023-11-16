@@ -19,6 +19,11 @@
         "@remix-run/dev": "2.1.0",
         "typescript": "^5.2.2"
       },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        }
+      },
       "fixes": [
         {
           "title": "Moved @remix-run/server-runtime to peer dependency",
@@ -44,6 +49,11 @@
       "devDependencies": {
         "@remix-run/dev": "2.1.0",
         "typescript": "^5.2.2"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        }
       },
       "fixes": [
         {
@@ -75,6 +85,11 @@
       "devDependencies": {
         "@remix-run/dev": "2.1.0",
         "typescript": "^5.2.2"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        }
       },
       "fixes": [
         {

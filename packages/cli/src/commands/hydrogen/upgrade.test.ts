@@ -13,18 +13,19 @@ import {
 } from '@shopify/cli-kit/node/ui';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {
-  runUpgrade,
-  upgradeNodeModules,
-  getAvailableUpgrades,
-  getSelectedRelease,
-  getCummulativeRelease,
-  displayConfirmation,
   buildUpgradeCommandArgs,
+  displayConfirmation,
+  getAbsoluteVersion,
+  getAvailableUpgrades,
+  getCummulativeRelease,
   getHydrogenVersion,
+  getSelectedRelease,
+  runUpgrade,
   type ChangeLog,
   type CumulativeRelease,
   type Dependencies,
   type Release,
+  upgradeNodeModules,
 } from './upgrade.js';
 import changelog from '../../changelog.json';
 
@@ -508,6 +509,110 @@ describe('upgrade', () => {
         '@shopify/cli-hydrogen@6.0.0',
         '@shopify/remix-oxygen@2.0.0',
         'typescript@5.2.2',
+      ];
+
+      const args = buildUpgradeCommandArgs({
+        selectedRelease,
+        currentDependencies,
+      });
+
+      expect(args).toEqual(expect.arrayContaining(result));
+    });
+
+    it('does not install an optional dependency that was not installed', async () => {
+      const releases = changelog.releases as unknown as ChangeLog['releases'];
+
+      const selectedRelease = Object.create(
+        // @ts-ignore - we know this release version exists
+        releases.find((release) => release.version === '2023.10.0'),
+      ) as (typeof releases)[0];
+
+      // simulate a missing optional dependency
+      selectedRelease.dependenciesMeta = {
+        typescript: {
+          required: false,
+        },
+      };
+
+      const currentDependencies = {
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies,
+        '@remix-run/react': '2.1.0',
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON.devDependencies,
+        '@remix-run/dev': '2.1.0',
+      } as Dependencies;
+
+      // simulate a missing required dependency
+      delete currentDependencies['typescript'];
+
+      const result: string[] = [
+        '@shopify/cli-hydrogen@6.0.0',
+        '@shopify/hydrogen@2023.10.0',
+        '@shopify/remix-oxygen@2.0.0',
+      ];
+
+      const args = buildUpgradeCommandArgs({
+        selectedRelease,
+        currentDependencies,
+      });
+
+      expect(args).toEqual(result);
+    });
+
+    it('adds a required dependency that was not installed', async () => {
+      const releases = changelog.releases as unknown as ChangeLog['releases'];
+
+      // has typescript as a required dependency
+      const selectedRelease = releases.find(
+        (release) => release.version === '2023.10.0',
+      ) as (typeof releases)[0];
+
+      const currentDependencies = {
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies,
+        '@remix-run/react': '2.1.0',
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON.devDependencies,
+        '@remix-run/dev': '2.1.0',
+      } as Dependencies;
+
+      // simulate a missing required dependency
+      delete currentDependencies['typescript'];
+
+      const result: string[] = [
+        '@shopify/cli-hydrogen@6.0.0',
+        '@shopify/hydrogen@2023.10.0',
+        '@shopify/remix-oxygen@2.0.0',
+        `typescript@${getAbsoluteVersion(
+          // @ts-ignore - we know this release version exists
+          selectedRelease.devDependencies.typescript,
+        )}`,
+      ];
+
+      const args = buildUpgradeCommandArgs({
+        selectedRelease,
+        currentDependencies,
+      });
+
+      expect(args).toEqual(expect.arrayContaining(result));
+    });
+
+    it('does not upgrade a required dependency that is more up-to-date', async () => {
+      const releases = changelog.releases as unknown as ChangeLog['releases'];
+
+      const selectedRelease = releases.find(
+        (release) => release.version === '2023.10.0',
+      ) as (typeof releases)[0];
+
+      const currentDependencies = {
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies,
+        '@remix-run/react': '2.1.0',
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON.devDependencies,
+        '@remix-run/dev': '2.1.0',
+        typescript: '5.3.0', // more up-to-date than that of 2023.10.0
+      } as Dependencies;
+
+      const result: string[] = [
+        '@shopify/cli-hydrogen@6.0.0',
+        '@shopify/hydrogen@2023.10.0',
+        '@shopify/remix-oxygen@2.0.0',
       ];
 
       const args = buildUpgradeCommandArgs({

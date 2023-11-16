@@ -6,7 +6,6 @@ import {isClean, ensureInsideGitDirectory} from '@shopify/cli-kit/node/git';
 import Command from '@shopify/cli-kit/node/base-command';
 import {
   renderConfirmationPrompt,
-  renderError,
   renderInfo,
   renderSelectPrompt,
   renderSuccess,
@@ -75,6 +74,7 @@ export type Release = {
   date: string;
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
+  dependenciesMeta?: Record<string, {required: boolean}>;
   features: Array<ReleaseItem>;
   fixes: Array<ReleaseItem>;
   hash: string;
@@ -545,6 +545,49 @@ function isRemixDependency([name]: [string, string]) {
 }
 
 /**
+ * Checks if a dependency should be included in the upgrade command
+ */
+function maybeIncludeDependency({
+  currentDependencies,
+  dependency: [name, version],
+  selectedRelease,
+}: {
+  dependency: [string, string];
+  currentDependencies: Dependencies;
+  selectedRelease: Release;
+}) {
+  const isRemixPackage = isRemixDependency([name, version]);
+
+  // Remix dependencies are handled separately
+  if (isRemixPackage) return false;
+
+  // Handle required/conditional dependenciesMeta deps
+  const depMeta = selectedRelease.dependenciesMeta?.[name];
+
+  if (!depMeta) return true;
+
+  const isRequired = Boolean(
+    selectedRelease.dependenciesMeta?.[name]?.required,
+  );
+
+  if (!isRequired) return false;
+
+  // Is required...
+  const existingDependency = currentDependencies[name];
+
+  if (!existingDependency) return true;
+
+  const isOlderVersion = semver.lt(
+    getAbsoluteVersion(existingDependency),
+    getAbsoluteVersion(version),
+  );
+
+  if (isOlderVersion) return true;
+
+  return false;
+}
+
+/**
  * Builds the arguments for the `npm|yarn|pnpm install` command
  */
 export function buildUpgradeCommandArgs({
@@ -557,21 +600,25 @@ export function buildUpgradeCommandArgs({
   const args: string[] = [];
 
   // upgrade dependencies
-  for (const [name, version] of Object.entries(selectedRelease.dependencies)) {
-    const isRemixPackage = isRemixDependency([name, version]);
-    const dependencyExists = currentDependencies[name];
-    if (isRemixPackage || !dependencyExists) continue;
-    args.push(`${name}@${getAbsoluteVersion(version)}`);
+  for (const dependency of Object.entries(selectedRelease.dependencies)) {
+    const shouldUpgradeDep = maybeIncludeDependency({
+      currentDependencies,
+      dependency,
+      selectedRelease,
+    });
+    if (!shouldUpgradeDep) continue;
+    args.push(`${dependency[0]}@${getAbsoluteVersion(dependency[1])}`);
   }
 
   // upgrade devDependencies
-  for (const [name, version] of Object.entries(
-    selectedRelease.devDependencies,
-  )) {
-    const isRemixPackage = isRemixDependency([name, version]);
-    const dependencyExists = currentDependencies[name];
-    if (isRemixPackage || !dependencyExists) continue;
-    args.push(`${name}@${getAbsoluteVersion(version)}`);
+  for (const dependency of Object.entries(selectedRelease.devDependencies)) {
+    const shouldUpgradeDep = maybeIncludeDependency({
+      currentDependencies,
+      dependency,
+      selectedRelease,
+    });
+    if (!shouldUpgradeDep) continue;
+    args.push(`${dependency[0]}@${getAbsoluteVersion(dependency[1])}`);
   }
 
   // Maybe upgrade Remix dependencies
@@ -1097,6 +1144,11 @@ const TEMP_CHANGELOG: ChangeLog = {
         '@remix-run/dev': '2.1.0',
         typescript: '^5.2.2',
       },
+      dependenciesMeta: {
+        typescript: {
+          required: true,
+        },
+      },
       fixes: [
         {
           title: 'Moved @remix-run/server-runtime to peer dependency',
@@ -1123,6 +1175,11 @@ const TEMP_CHANGELOG: ChangeLog = {
       devDependencies: {
         '@remix-run/dev': '2.1.0',
         typescript: '^5.2.2',
+      },
+      dependenciesMeta: {
+        typescript: {
+          required: true,
+        },
       },
       fixes: [
         {
@@ -1157,6 +1214,11 @@ const TEMP_CHANGELOG: ChangeLog = {
       devDependencies: {
         '@remix-run/dev': '2.1.0',
         typescript: '^5.2.2',
+      },
+      dependenciesMeta: {
+        typescript: {
+          required: true,
+        },
       },
       fixes: [
         {
