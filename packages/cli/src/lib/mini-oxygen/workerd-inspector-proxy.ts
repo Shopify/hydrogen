@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import {readFileSync} from 'node:fs';
 import {
   createServer,
   type IncomingMessage,
@@ -10,6 +11,7 @@ import {type InspectorWebSocketTarget} from './workerd-inspector.js';
 
 export function createInspectorProxy(
   port: number,
+  sourceFilePath: string,
   inspectorConnection?: {ws?: WebSocket},
 ) {
   /**
@@ -24,6 +26,10 @@ export function createInspectorProxy(
    * WebSocket connection to the Workerd inspector.
    */
   let inspectorWs: WebSocket | undefined = inspectorConnection?.ws;
+  /**
+   * Whether the connected debugger is running in the browser (e.g. DevTools).
+   */
+  let isDevToolsInBrowser = false;
 
   const server = createServer((req: IncomingMessage, res: ServerResponse) => {
     // Remove query params. E.g. `/json/list?for_tab`
@@ -66,6 +72,13 @@ export function createInspectorProxy(
           );
         }
         return;
+      case '/__index.js.map':
+        // Handle proxied sourcemaps
+        res.setHeader('Content-Type', 'text/plain');
+        res.setHeader('Cache-Control', 'no-store');
+        res.setHeader('Access-Control-Allow-Origin', 'devtools://devtools');
+        res.end(readFileSync(sourceFilePath + '.map', 'utf-8'));
+        break;
       default:
         break;
     }
@@ -97,6 +110,9 @@ export function createInspectorProxy(
 
       debuggerWs?.removeEventListener('message', sendMessageToInspector);
       debuggerWs = ws;
+
+      // This user-agent is, so far, unique to DevTools in the browser.
+      isDevToolsInBrowser = /mozilla/i.test(req.headers['user-agent'] ?? '');
 
       debuggerWs.addEventListener('message', sendMessageToInspector);
       debuggerWs.addEventListener('close', () => {
@@ -144,6 +160,23 @@ export function createInspectorProxy(
   }
 
   function sendMessageToDebugger(event: MessageEvent) {
+    // Intercept Debugger.scriptParsed responses to inject URL schemes
+    // so that DevTools can fetch source maps from the proxy server.
+    // This is only required when opening DevTools in the browser.
+    if (isDevToolsInBrowser) {
+      const message = JSON.parse(event.data as string);
+      if (
+        message.method === 'Debugger.scriptParsed' &&
+        message.params.sourceMapURL === 'index.js.map'
+      ) {
+        // The browser can't download source maps from file:// URLs due to security restrictions.
+        // Force the DevTools to fetch the source map using http:// instead of file://
+        // This endpoint is handled in our proxy server above.
+        message.params.sourceMapURL = `http://localhost:${port}/__index.js.map`;
+        event = {...event, data: JSON.stringify(message)};
+      }
+    }
+
     if (debuggerWs) {
       debuggerWs.send(event.data);
     } else {
