@@ -12,7 +12,6 @@ import {
   renderConfirmationPrompt,
   renderTasks,
   renderSuccess,
-  renderFatalError,
 } from '@shopify/cli-kit/node/ui';
 import {
   runUpgrade,
@@ -30,9 +29,23 @@ import {
 } from './upgrade.js';
 import changelog from '../../changelog.json';
 
-vi.mock('@shopify/cli-kit/node/ui');
 vi.mock('../../lib/shell.js');
 vi.mock('@shopify/cli-kit/node/session');
+
+vi.mock('@shopify/cli-kit/node/ui', () => ({
+  renderTasks: vi.fn(),
+  renderSelectPrompt: vi.fn(),
+  renderFatalError: vi.fn(),
+  renderSuccess: vi.fn(),
+  renderInfo: vi.fn(),
+  renderConfirmationPrompt: vi.fn(),
+}));
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.resetModules();
+  vi.clearAllMocks();
+});
 
 /**
  * Creates a temporary directory with a git repo and a package.json
@@ -97,18 +110,6 @@ describe('upgrade', () => {
   });
 
   describe('getHydrogenVersion', () => {
-    beforeEach(() => {
-      vi.mock('@shopify/cli-kit/node/ui', async () => {
-        const actual = await vi.importActual<
-          typeof import('@shopify/cli-kit/node/ui')
-        >('@shopify/cli-kit/node/ui');
-        return {
-          ...actual,
-          renderFatalError: vi.fn(),
-        };
-      });
-    });
-
     it('throws if no package.json is found', async () => {
       await inTemporaryHydrogenRepo(
         async (appPath) => {
@@ -163,16 +164,6 @@ describe('upgrade', () => {
 
   describe('getAvailableUpgrades', async () => {
     it('renders "already in the latest version" success message if no upgrades are available', async () => {
-      vi.mock('@shopify/cli-kit/node/ui', async () => {
-        const actual = await vi.importActual<
-          typeof import('@shopify/cli-kit/node/ui')
-        >('@shopify/cli-kit/node/ui');
-        return {
-          ...actual,
-          renderSuccess: vi.fn(),
-        };
-      });
-
       await inTemporaryHydrogenRepo(
         async (appPath) => {
           await runUpgrade({dryRun: false, appPath});
@@ -234,17 +225,7 @@ describe('upgrade', () => {
   });
 
   describe('getSelectedRelease', () => {
-    beforeEach(() => {
-      vi.resetAllMocks();
-      vi.resetModules();
-      vi.clearAllMocks();
-    });
-
     it('prioritizes a passed target --version over a select prompt if available', async () => {
-      vi.mock('@shopify/cli-kit/node/ui', () => ({
-        renderSelectPrompt: vi.fn(),
-      }));
-
       await inTemporaryHydrogenRepo(
         async (appPath) => {
           const releases = changelog.releases;
@@ -280,11 +261,6 @@ describe('upgrade', () => {
     });
 
     it('prompts if a passed target --version is not a valid upgradable version', async () => {
-      vi.mock('@shopify/cli-kit/node/ui', () => ({
-        renderSelectPrompt: vi.fn(),
-        renderFatalError: vi.fn(),
-        renderSuccess: vi.fn(),
-      }));
       await inTemporaryHydrogenRepo(
         async (appPath) => {
           const releases = changelog.releases;
@@ -321,12 +297,6 @@ describe('upgrade', () => {
     });
 
     it('prompts to select a release if no target --version is passed', async () => {
-      vi.mock('@shopify/cli-kit/node/ui', () => ({
-        renderSelectPrompt: vi.fn(),
-        renderFatalError: vi.fn(),
-        renderSuccess: vi.fn(),
-      }));
-
       await inTemporaryHydrogenRepo(
         async (appPath) => {
           const releases = changelog.releases;
@@ -417,10 +387,6 @@ describe('upgrade', () => {
       vi.resetAllMocks();
       vi.resetModules();
       vi.clearAllMocks();
-      vi.mock('@shopify/cli-kit/node/ui', () => ({
-        renderInfo: vi.fn(),
-        renderConfirmationPrompt: vi.fn(),
-      }));
     });
     it('renders a confirmation prompt that prompts to continue or return to the previous menu', async () => {
       await inTemporaryHydrogenRepo(
@@ -499,17 +465,6 @@ describe('upgrade', () => {
   });
 
   describe('upgradeNodeModules', () => {
-    beforeEach(() => {
-      vi.mock('@shopify/cli-kit/node/ui', () => ({
-        renderTasks: vi.fn(),
-        renderSelectPrompt: vi.fn(),
-        renderFatalError: vi.fn(),
-        renderSuccess: vi.fn(),
-        renderInfo: vi.fn(),
-        renderConfirmationPrompt: vi.fn(),
-      }));
-    });
-
     it('runs the upgrade command task', async () => {
       await inTemporaryHydrogenRepo(
         async (appPath) => {
