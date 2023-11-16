@@ -115,7 +115,11 @@ export async function startWorkerdServer({
     : undefined;
 
   const inspectorProxy = debug
-    ? createInspectorProxy(publicInspectorPort, inspectorConnection)
+    ? createInspectorProxy(
+        publicInspectorPort,
+        absoluteBundlePath,
+        inspectorConnection,
+      )
     : undefined;
 
   return {
