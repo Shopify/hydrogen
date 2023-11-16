@@ -178,18 +178,15 @@ export async function oxygenDeploy(
     if (error instanceof GitDirectoryNotCleanError) {
       isCleanGit = false;
     }
+
     if (!forceOnUncommitedChanges && !isCleanGit) {
-      renderWarning({
-        body: 'Uncommitted changes detected.',
-        nextSteps: [
-          [
-            'Commit your changes before deploying or use the ',
-            {command: '--force'},
-            ' flag to deploy with uncommitted changes.',
-          ],
+      throw new AbortError('Uncommitted changes detected.', null, [
+        [
+          'Commit your changes before deploying or use the ',
+          {command: '--force'},
+          ' flag to deploy with uncommitted changes.',
         ],
-      });
-      return;
+      ]);
     }
   }
 
@@ -212,18 +209,13 @@ export async function oxygenDeploy(
 
   if (!metadataDescription && !isCleanGit) {
     renderWarning({
-      body: 'Deploying uncommited changes, but no description has been provided.',
-      nextSteps: [
-        [
-          'Use the ',
-          {command: '--metadata-description'},
-          ' flag to provide a description.',
-        ],
-        [
-          'If no description is provided, the description defaults to ',
-          {userInput: '<sha> with additional changes'},
-          ' using the SHA of the last commit.',
-        ],
+      headline: 'No deployment description provided',
+      body: [
+        'Deploying uncommited changes, but no description has been provided. Use the ',
+        {command: '--metadata-description'},
+        'flag to provide a description. If no description is provided, the description defaults to ',
+        {userInput: '<sha> with additional changes'},
+        ' using the SHA of the last commit.',
       ],
     });
     metadataDescription = `${commitHash} with additional changes`;
@@ -380,7 +372,7 @@ export async function oxygenDeploy(
       // in CI environments, output to a file so consequent steps can access the URL
       // the formatting of this file is likely to change in future versions.
       if (isCI && !noJsonOutput) {
-        await writeFile('h2_deploy_output.log', JSON.stringify({url: url!}));
+        await writeFile('h2_deploy_log.json', JSON.stringify({url: url!}));
       }
       resolveDeploy();
     })

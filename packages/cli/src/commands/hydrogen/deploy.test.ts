@@ -176,18 +176,20 @@ describe('deploy', () => {
     expect(vi.mocked(renderSuccess)).toHaveBeenCalled;
   });
 
-  it('returns when there are uncommited changes', async () => {
+  it('errors when there are uncommited changes', async () => {
     vi.mocked(ensureIsClean).mockRejectedValue(
       new GitDirectoryNotCleanError('Uncommitted changes'),
     );
 
-    await oxygenDeploy(deployParams);
+    try {
+      await oxygenDeploy(deployParams);
+    } catch (error) {
+      expect(error).toBeInstanceOf(AbortError);
+      const abortError = error as AbortError;
+      expect(abortError.message).toBe('Uncommitted changes detected.');
+    }
 
     expect(vi.mocked(createDeploy)).not.toHaveBeenCalled;
-    expect(vi.mocked(renderWarning)).toHaveBeenCalledWith({
-      body: expect.stringContaining('Uncommitted changes detected'),
-      nextSteps: expect.anything(),
-    });
   });
 
   it('proceeds with warning and modified description when there are uncommited changes and the force flag is used', async () => {
@@ -210,8 +212,8 @@ describe('deploy', () => {
     });
 
     expect(vi.mocked(renderWarning)).toHaveBeenCalledWith({
-      body: expect.stringContaining('no description has been provided'),
-      nextSteps: expect.anything(),
+      headline: 'No deployment description provided',
+      body: expect.anything(),
     });
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
       config: {
@@ -318,7 +320,7 @@ describe('deploy', () => {
     await oxygenDeploy(ciDeployParams);
 
     expect(vi.mocked(writeFile)).toHaveBeenCalledWith(
-      'h2_deploy_output.log',
+      'h2_deploy_log.json',
       JSON.stringify({url: 'https://a-lovely-deployment.com'}),
     );
 
