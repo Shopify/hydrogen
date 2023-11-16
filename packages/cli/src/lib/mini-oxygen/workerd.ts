@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import {
   Miniflare,
   Request,
@@ -6,7 +7,7 @@ import {
   NoOpLog,
   type MiniflareOptions,
 } from 'miniflare';
-import {resolvePath} from '@shopify/cli-kit/node/path';
+import {dirname, resolvePath} from '@shopify/cli-kit/node/path';
 import {
   glob,
   readFile,
@@ -16,7 +17,7 @@ import {
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {lookupMimeType} from '@shopify/cli-kit/node/mimes';
 import {connectToInspector, findInspectorUrl} from './workerd-inspector.js';
-import {DEFAULT_PORT} from '../flags.js';
+import {createInspectorProxy} from './workerd-inspector-proxy.js';
 import {findPort} from '../find-port.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
 import {OXYGEN_HEADERS_MAP, logRequestLine} from './common.js';
@@ -27,18 +28,21 @@ import {
   setConstructors,
 } from '../request-events.js';
 
-const DEFAULT_INSPECTOR_PORT = 8787;
+// This should probably be `0` and let workerd find a free port,
+// but at the moment we can't get the port from workerd (afaik?).
+const PRIVATE_WORKERD_INSPECTOR_PORT = 9222;
 
 export async function startWorkerdServer({
   root,
-  port = DEFAULT_PORT,
+  port: appPort,
+  inspectorPort: publicInspectorPort,
+  debug = false,
   watch = false,
   buildPathWorkerFile,
   buildPathClient,
   env,
 }: MiniOxygenOptions): Promise<MiniOxygenInstance> {
-  const appPort = await findPort(port);
-  const inspectorPort = await findPort(DEFAULT_INSPECTOR_PORT);
+  const workerdInspectorPort = await findPort(PRIVATE_WORKERD_INSPECTOR_PORT);
 
   const oxygenHeadersMap = Object.values(OXYGEN_HEADERS_MAP).reduce(
     (acc, item) => {
@@ -50,12 +54,14 @@ export async function startWorkerdServer({
 
   setConstructors({Response});
 
+  const absoluteBundlePath = resolvePath(root, buildPathWorkerFile);
+
   const buildMiniOxygenOptions = async () =>
     ({
       cf: false,
       verbose: false,
       port: appPort,
-      inspectorPort,
+      inspectorPort: workerdInspectorPort,
       log: new NoOpLog(),
       liveReload: watch,
       host: 'localhost',
@@ -77,11 +83,12 @@ export async function startWorkerdServer({
         },
         {
           name: 'hydrogen',
+          modulesRoot: dirname(absoluteBundlePath),
           modules: [
             {
               type: 'ESModule',
-              path: resolvePath(root, buildPathWorkerFile),
-              contents: await readFile(resolvePath(root, buildPathWorkerFile)),
+              path: absoluteBundlePath,
+              contents: await readFile(absoluteBundlePath),
             },
           ],
           compatibilityFlags: ['streams_enable_constructors'],
@@ -101,9 +108,18 @@ export async function startWorkerdServer({
   const listeningAt = (await miniOxygen.ready).origin;
 
   const sourceMapPath = buildPathWorkerFile + '.map';
-  let inspectorUrl = await findInspectorUrl(inspectorPort);
-  let cleanupInspector = inspectorUrl
+
+  let inspectorUrl = await findInspectorUrl(workerdInspectorPort);
+  let inspectorConnection = inspectorUrl
     ? connectToInspector({inspectorUrl, sourceMapPath})
+    : undefined;
+
+  const inspectorProxy = debug
+    ? createInspectorProxy(
+        publicInspectorPort,
+        absoluteBundlePath,
+        inspectorConnection,
+      )
     : undefined;
 
   return {
@@ -122,12 +138,14 @@ export async function startWorkerdServer({
         }
       }
 
-      cleanupInspector?.();
+      inspectorConnection?.close();
+
       // @ts-expect-error
       await miniOxygen.setOptions(miniOxygenOptions);
-      inspectorUrl ??= await findInspectorUrl(inspectorPort);
+      inspectorUrl ??= await findInspectorUrl(workerdInspectorPort);
       if (inspectorUrl) {
-        cleanupInspector = connectToInspector({inspectorUrl, sourceMapPath});
+        inspectorConnection = connectToInspector({inspectorUrl, sourceMapPath});
+        inspectorProxy?.updateInspectorConnection(inspectorConnection);
       }
     },
     showBanner(options) {
@@ -141,6 +159,13 @@ export async function startWorkerdServer({
         body: [
           `View ${options?.appName ?? 'Hydrogen'} app: ${listeningAt}`,
           ...(options?.extraLines ?? []),
+          ...(debug
+            ? [
+                {
+                  warn: `\n\nDebugger listening on ws://localhost:${publicInspectorPort}`,
+                },
+              ]
+            : []),
         ],
       });
       console.log('');

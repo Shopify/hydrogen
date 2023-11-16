@@ -31,6 +31,7 @@ import {setupLiveReload} from '../../lib/live-reload.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
+import {findPort} from '../../lib/find-port.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -55,11 +56,8 @@ export default class Dev extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_VIRTUAL_ROUTES',
       default: false,
     }),
-    debug: Flags.boolean({
-      description: 'Attaches a Node inspector',
-      env: 'SHOPIFY_HYDROGEN_FLAG_DEBUG',
-      default: false,
-    }),
+    debug: commonFlags.debug,
+    'inspector-port': commonFlags.inspectorPort,
     host: deprecated('--host')(),
     ['env-branch']: commonFlags.envBranch,
     ['disable-version-check']: Flags.boolean({
@@ -82,8 +80,22 @@ export default class Dev extends Command {
   }
 }
 
+type DevOptions = {
+  port: number;
+  path?: string;
+  useCodegen?: boolean;
+  workerRuntime?: boolean;
+  codegenConfigPath?: string;
+  disableVirtualRoutes?: boolean;
+  disableVersionCheck?: boolean;
+  envBranch?: string;
+  debug?: boolean;
+  sourcemap?: boolean;
+  inspectorPort: number;
+};
+
 async function runDev({
-  port: portFlag = DEFAULT_PORT,
+  port: appPort,
   path: appPath,
   useCodegen = false,
   workerRuntime = false,
@@ -93,23 +105,11 @@ async function runDev({
   debug = false,
   sourcemap = true,
   disableVersionCheck = false,
-}: {
-  port?: number;
-  path?: string;
-  useCodegen?: boolean;
-  workerRuntime?: boolean;
-  codegenConfigPath?: string;
-  disableVirtualRoutes?: boolean;
-  envBranch?: string;
-  debug?: boolean;
-  sourcemap?: boolean;
-  disableVersionCheck: boolean;
-}) {
+  inspectorPort,
+}: DevOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
   muteDevLogs();
-
-  if (debug) (await import('node:inspector')).open();
 
   const {root, publicPath, buildPathClient, buildPathWorkerFile} =
     getProjectPaths(appPath);
@@ -139,6 +139,9 @@ async function runDev({
   };
 
   const serverBundleExists = () => fileExists(buildPathWorkerFile);
+
+  inspectorPort = debug ? await findPort(inspectorPort) : inspectorPort;
+  appPort = workerRuntime ? await findPort(appPort) : appPort; // findPort is already called for Node sandbox
 
   const [remixConfig, {shop, storefront}] = await Promise.all([
     reloadConfig(),
@@ -170,7 +173,9 @@ async function runDev({
     miniOxygen = await startMiniOxygen(
       {
         root,
-        port: portFlag,
+        debug,
+        inspectorPort,
+        port: appPort,
         watch: !liveReload,
         buildPathWorkerFile,
         buildPathClient,

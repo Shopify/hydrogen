@@ -41,10 +41,10 @@
   ],
   "devDependencies": {
     "@remix-run/server-runtime": "^2.1.0",
-    "@shopify/oxygen-workers-types": "^3.17.3"
+    "@shopify/oxygen-workers-types": "^4.0.0"
   },
   "peerDependencies": {
     "@remix-run/server-runtime": "^2.1.0",
-    "@shopify/oxygen-workers-types": "^3.17.3"
+    "@shopify/oxygen-workers-types": "^3.17.3 || ^4.0.0"
   }
 }
