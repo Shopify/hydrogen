@@ -237,13 +237,13 @@ describe('upgrade', () => {
 
     it('returns available upgrades and uniqueAvailableUpgrades if they exist', async () => {
       await inTemporaryHydrogenRepo(
-        async () => {
+        async (appPath) => {
           const releases = changelog.releases;
+          const current = await getHydrogenVersion({appPath});
           const availableUpgrades = getAvailableUpgrades({
-            // @ts-expect-error - we know this release version exists
-            currentVersion: changelog.releases[2].version,
             // @ts-expect-error
             releases,
+            ...current,
           });
 
           const uniqueAvailableUpgrades = releases
@@ -287,25 +287,37 @@ describe('upgrade', () => {
         renderSelectPrompt: vi.fn(),
       }));
 
-      const releases = changelog.releases;
-      const {availableUpgrades} = getAvailableUpgrades({
-        currentVersion:
-          OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies['@shopify/hydrogen'],
-        // @ts-expect-error
-        releases,
-      });
+      await inTemporaryHydrogenRepo(
+        async (appPath) => {
+          const releases = changelog.releases;
+          const current = await getHydrogenVersion({appPath});
 
-      const selectedRelease = await getSelectedRelease({
-        availableUpgrades,
-        currentVersion:
-          OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies['@shopify/hydrogen'],
-        targetVersion: '2023.7.10',
-      });
+          expect(current?.currentVersion).toBeDefined();
 
-      expect(selectedRelease).toMatchObject({
-        version: '2023.7.10',
-      });
-      expect(renderSelectPrompt).not.toHaveBeenCalled();
+          const {availableUpgrades} = getAvailableUpgrades({
+            ...current,
+            // @ts-expect-error
+            releases,
+          });
+
+          const selectedRelease = await getSelectedRelease({
+            availableUpgrades,
+            // @ts-ignore - we know this release version exists
+            currentVersion: current.currentVersion,
+            // OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies['@shopify/hydrogen'],
+            targetVersion: '2023.7.10',
+          });
+
+          expect(selectedRelease).toMatchObject({
+            version: '2023.7.10',
+          });
+          expect(renderSelectPrompt).not.toHaveBeenCalled();
+        },
+        {
+          cleanGitRepo: true,
+          packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON,
+        },
+      );
     });
 
     it('prompts if a passed target --version is not a valid upgradable version', async () => {
@@ -314,24 +326,33 @@ describe('upgrade', () => {
         renderFatalError: vi.fn(),
         renderSuccess: vi.fn(),
       }));
+      await inTemporaryHydrogenRepo(
+        async (appPath) => {
+          const releases = changelog.releases;
+          const current = await getHydrogenVersion({appPath});
 
-      const releases = changelog.releases;
-      const {availableUpgrades} = getAvailableUpgrades({
-        currentVersion:
-          // e.g '@shopify/hydrogen': '^2023.1.6',
-          OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies['@shopify/hydrogen'],
-        // @ts-expect-error
-        releases,
-      });
+          expect(current?.currentVersion).toBeDefined();
 
-      await getSelectedRelease({
-        availableUpgrades,
-        currentVersion:
-          OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies['@shopify/hydrogen'],
-        targetVersion: '2023.1.5', // fails because this version is in the past
-      }).catch(() => {});
+          const {availableUpgrades} = getAvailableUpgrades({
+            ...current,
+            // @ts-expect-error
+            releases,
+          });
 
-      expect(renderSelectPrompt).toHaveBeenCalled();
+          await getSelectedRelease({
+            availableUpgrades,
+            // @ts-ignore - we know this release version exists
+            currentVersion: current.currentVersion,
+            targetVersion: '2023.1.5', // fails because this version is in the past
+          }).catch(() => {});
+
+          expect(renderSelectPrompt).toHaveBeenCalled();
+        },
+        {
+          cleanGitRepo: true,
+          packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON,
+        },
+      );
     });
 
     it('prompts to select a release if no target --version is passed', async () => {
@@ -342,7 +363,7 @@ describe('upgrade', () => {
       }));
 
       await inTemporaryHydrogenRepo(
-        async () => {
+        async (appPath) => {
           const releases = changelog.releases;
 
           //@ts-expect-error - we know this release version exists
@@ -351,8 +372,12 @@ describe('upgrade', () => {
           //@ts-expect-error - we know this release version exists
           const latestHydrogenVersion = releases[0].version;
 
+          const current = await getHydrogenVersion({appPath});
+
+          expect(current?.currentVersion).toBeDefined();
+
           const {availableUpgrades} = getAvailableUpgrades({
-            currentVersion: previousHydrogenVersion,
+            ...current,
             // @ts-expect-error
             releases,
           });
@@ -385,20 +410,22 @@ describe('upgrade', () => {
       vi.mocked(renderSelectPrompt).mockResolvedValue(selectedVersion);
 
       await inTemporaryHydrogenRepo(
-        async () => {
+        async (appPath) => {
           const releases = changelog.releases;
-          const currentVersion =
-            OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies['@shopify/hydrogen'];
+          const current = await getHydrogenVersion({appPath});
+
+          expect(current?.currentVersion).toBeDefined();
 
           const {availableUpgrades} = getAvailableUpgrades({
-            currentVersion,
+            ...current,
             // @ts-expect-error
             releases,
           });
 
           const selectedRelease = await getSelectedRelease({
             availableUpgrades,
-            currentVersion,
+            // @ts-ignore - we know this release version exists
+            currentVersion: current.currentVersion,
           });
 
           const release = releases.find(
@@ -417,23 +444,31 @@ describe('upgrade', () => {
   });
 
   describe('getCummulativeRelease', () => {
-    it('returns the correct fixes and features for a release range', async () => {
+    it('returns the correct fixes and features for a release range thats outdated', async () => {
       await inTemporaryHydrogenRepo(
-        async () => {
-          const releases =
-            changelog.releases as unknown as ChangeLog['releases'];
+        async (appPath) => {
+          const releases = changelog.releases;
+          const current = await getHydrogenVersion({appPath});
 
-          const currentVersion = '2023.7.10';
+          expect(current?.currentVersion).toBeDefined();
 
-          // 2023.10.0
-          const selectedRelease = releases.find(
-            (release) => release.version === '2023.10.0',
-          ) as (typeof releases)[0];
-
-          const {features, fixes} = getCummulativeRelease({
-            currentVersion,
-            selectedRelease,
+          const {availableUpgrades} = getAvailableUpgrades({
+            ...current,
+            // @ts-expect-error
             releases,
+          });
+
+          // 2023.4.1
+          const selectedRelease = releases.find(
+            (release) => release.version === '2023.4.1',
+          );
+
+          // testing from 2023.1.6 (outdated) to 2023.4.1
+          const {features, fixes} = getCummulativeRelease({
+            availableUpgrades,
+            ...current,
+            // @ts-ignore - we know this release version exists
+            selectedRelease,
           });
 
           expect(features).toMatchObject(CUMMLATIVE_RELEASE.features);
@@ -683,256 +718,171 @@ const INVALID_HYDROGEN_PACKAGE_JSON = {
   dependencies: {},
 };
 
+// cummlative result when upgrading from 2023.1.6 (outdated) to 2023.4.1
 const CUMMLATIVE_RELEASE = {
   fixes: [
     {
-      title: 'Fix template dist package due to CI error',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1451',
-      id: '1451',
-    },
-    {
-      title: 'Custom cart methods are now stable',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1440',
-      id: '1440',
-      steps: [
-        {
-          title: 'Update `createCartHandler` if needed',
-          code: 'Ly8gc2VydmVyLnRzCgpgYGBkaWZmCmNvbnN0IGNhcnQgPSBjcmVhdGVDYXJ0SGFuZGxlcih7CiAgIHN0b3JlZnJvbnQsCiAgIGdldENhcnRJZCwKICAgc2V0Q2FydElkOiBjYXJ0U2V0SWREZWZhdWx0KCksCi0gIGN1c3RvbU1ldGhvZHNfX3Vuc3RhYmxlOiB7CisgIGN1c3RvbU1ldGhvZHM6IHsKICAgICBhZGRMaW5lczogYXN5bmMgKGxpbmVzLCBvcHRpb25hbFBhcmFtcykgPT4gewogICAgICAvLyAuLi4KICAgICB9LAogICB9LAogfSk7CmBgYA==',
-        },
-      ],
-    },
-    {
-      title: 'Remove deprecated parameters and props',
-      info: '`createStorefrontClient` parameters `buyerIp` and `requestGroupId`. <Image> props `loaderOptions` and `widths`',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1435',
-      id: '1435',
-    },
-    {
-      title: 'Updated CLI dependencies to improve terminal output.',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1456',
-      id: '1456',
-      breaking: true,
-      steps: [
-        {
-          title: 'Upgrade `@shopify/cli dependency`',
-          code: 'YGBgYmFzaApucG0gYWRkIEBzaG9waWZ5L2NsaUAzLjUwLjAKYGBg',
-        },
-      ],
-    },
-    {
-      title:
-        'Updated the starter template `Header` and `Footer` menu components for 2023.10.0',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1465',
-      id: '1465',
-      breaking: true,
-      info: 'The Storefront API 2023-10 now returns menu item URLs that include the `primaryDomainUrl`, instead of defaulting to the Shopify store ID URL (example.myshopify.com). The skeleton template requires changes to check for the `primaryDomainUrl`:',
+      title: 'Add a default Powered-By: Shopify-Hydrogen header',
+      pr: 'https://github.com/Shopify/hydrogen/pull/872',
+      id: '872',
       steps: [
         {
           title:
-            'Update the HeaderMenu component to accept a primaryDomainUrl and include it in the internal url check',
-          code: 'YGBgZGlmZgovLyBhcHAvY29tcG9uZW50cy9IZWFkZXIudHN4CgorIGltcG9ydCB0eXBlIHtIZWFkZXJRdWVyeX0gZnJvbSAnc3RvcmVmcm9udGFwaS5nZW5lcmF0ZWQnOwoKZXhwb3J0IGZ1bmN0aW9uIEhlYWRlck1lbnUoewogIG1lbnUsCisgIHByaW1hcnlEb21haW5VcmwsCiAgdmlld3BvcnQsCn06IHsKICBtZW51OiBIZWFkZXJQcm9wc1snaGVhZGVyJ11bJ21lbnUnXTsKKyAgcHJpbWFyeURvbWFpblVybDogSGVhZGVyUXVlcnlbJ3Nob3AnXVsncHJpbWFyeURvbWFpbiddWyd1cmwnXTsKICB2aWV3cG9ydDogVmlld3BvcnQ7Cn0pIHsKCiAgLy8gLi4uY29kZQoKICAvLyBpZiB0aGUgdXJsIGlzIGludGVybmFsLCB3ZSBzdHJpcCB0aGUgZG9tYWluCiAgY29uc3QgdXJsID0KICAgIGl0ZW0udXJsLmluY2x1ZGVzKCdteXNob3BpZnkuY29tJykgfHwKICAgIGl0ZW0udXJsLmluY2x1ZGVzKHB1YmxpY1N0b3JlRG9tYWluKSB8fAorICAgaXRlbS51cmwuaW5jbHVkZXMocHJpbWFyeURvbWFpblVybCkKICAgICAgPyBuZXcgVVJMKGl0ZW0udXJsKS5wYXRobmFtZQogICAgICA6IGl0ZW0udXJsOwoKICAgLy8gLi4uY29kZQoKfQpgYGA=',
-          file: 'app/components/Header.tsx',
-        },
-        {
-          title:
-            'Update the FooterMenu component to accept a primaryDomainUrl prop and include it in the internal url check',
-          code: 'YGBgZGlmZgovLyBhcHAvY29tcG9uZW50cy9Gb290ZXIudHN4CgotIGltcG9ydCB0eXBlIHtGb290ZXJRdWVyeX0gZnJvbSAnc3RvcmVmcm9udGFwaS5nZW5lcmF0ZWQnOworIGltcG9ydCB0eXBlIHtGb290ZXJRdWVyeSwgSGVhZGVyUXVlcnl9IGZyb20gJ3N0b3JlZnJvbnRhcGkuZ2VuZXJhdGVkJzsKCmZ1bmN0aW9uIEZvb3Rlck1lbnUoewogIG1lbnUsCisgIHByaW1hcnlEb21haW5VcmwsCn06IHsKICBtZW51OiBGb290ZXJRdWVyeVsnbWVudSddOworICBwcmltYXJ5RG9tYWluVXJsOiBIZWFkZXJRdWVyeVsnc2hvcCddWydwcmltYXJ5RG9tYWluJ11bJ3VybCddOwp9KSB7CiAgLy8gY29kZS4uLgoKICAvLyBpZiB0aGUgdXJsIGlzIGludGVybmFsLCB3ZSBzdHJpcCB0aGUgZG9tYWluCiAgY29uc3QgdXJsID0KICAgIGl0ZW0udXJsLmluY2x1ZGVzKCdteXNob3BpZnkuY29tJykgfHwKICAgIGl0ZW0udXJsLmluY2x1ZGVzKHB1YmxpY1N0b3JlRG9tYWluKSB8fAorICAgaXRlbS51cmwuaW5jbHVkZXMocHJpbWFyeURvbWFpblVybCkKICAgICAgPyBuZXcgVVJMKGl0ZW0udXJsKS5wYXRobmFtZQogICAgICA6IGl0ZW0udXJsOwoKICAgLy8gLi4uY29kZQoKICApOwp9CmBgYA==',
-          file: 'app/components/Footer.tsx',
-        },
-        {
-          title: 'Update the Footer component to accept a shop prop',
-          code: 'YGBgZGlmZgpleHBvcnQgZnVuY3Rpb24gRm9vdGVyKHsKICBtZW51LAorIHNob3AsCn06IEZvb3RlclF1ZXJ5ICYge3Nob3A6IEhlYWRlclF1ZXJ5WydzaG9wJ119KSB7CiAgcmV0dXJuICgKICAgIDxmb290ZXIgY2xhc3NOYW1lPSJmb290ZXIiPgotICAgICAgPEZvb3Rlck1lbnUgbWVudT17bWVudX0gLz4KKyAgICAgIDxGb290ZXJNZW51IG1lbnU9e21lbnV9IHByaW1hcnlEb21haW5Vcmw9e3Nob3AucHJpbWFyeURvbWFpbi51cmx9IC8+CiAgICA8L2Zvb3Rlcj4KICApOwp9CmBgYA==',
-          file: 'app/components/Footer.tsx',
-        },
-        {
-          title: 'Update Layout.tsx to pass the shop prop',
-          code: 'YGBgZGlmZgpleHBvcnQgZnVuY3Rpb24gTGF5b3V0KHsKICBjYXJ0LAogIGNoaWxkcmVuID0gbnVsbCwKICBmb290ZXIsCiAgaGVhZGVyLAogIGlzTG9nZ2VkSW4sCn06IExheW91dFByb3BzKSB7CiAgcmV0dXJuICgKICAgIDw+CiAgICAgIDxDYXJ0QXNpZGUgY2FydD17Y2FydH0gLz4KICAgICAgPFNlYXJjaEFzaWRlIC8+CiAgICAgIDxNb2JpbGVNZW51QXNpZGUgbWVudT17aGVhZGVyLm1lbnV9IHNob3A9e2hlYWRlci5zaG9wfSAvPgogICAgICA8SGVhZGVyIGhlYWRlcj17aGVhZGVyfSBjYXJ0PXtjYXJ0fSBpc0xvZ2dlZEluPXtpc0xvZ2dlZElufSAvPgogICAgICA8bWFpbj57Y2hpbGRyZW59PC9tYWluPgogICAgICA8U3VzcGVuc2U+CiAgICAgICAgPEF3YWl0IHJlc29sdmU9e2Zvb3Rlcn0+Ci0gICAgICAgICAgeyhmb290ZXIpID0+IDxGb290ZXIgbWVudT17Zm9vdGVyLm1lbnV9ICAvPn0KKyAgICAgICAgICB7KGZvb3RlcikgPT4gPEZvb3RlciBtZW51PXtmb290ZXIubWVudX0gc2hvcD17aGVhZGVyLnNob3B9IC8+fQogICAgICAgIDwvQXdhaXQ+CiAgICAgIDwvU3VzcGVuc2U+CiAgICA8Lz4KICApOwp9CmBgYA==',
-          file: 'app/components/Layout.tsx',
-        },
-      ],
-    },
-    {
-      title: 'Enhance useMatches returned type inference',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1289',
-      id: '1289',
-      steps: [
-        {
-          title:
-            'If you are calling `useMatches()` in different places of your app to access the data returned by the root loader, you may want to update it to the following pattern to enhance types:',
-          code: 'YGBgdHMKLy8gcm9vdC50c3gKCmltcG9ydCB7dXNlTWF0Y2hlc30gZnJvbSAnQHJlbWl4LXJ1bi9yZWFjdCc7CmltcG9ydCB7dHlwZSBTZXJpYWxpemVGcm9tfSBmcm9tICdAc2hvcGlmeS9yZW1peC1veHlnZW4nOwoKZXhwb3J0IGNvbnN0IHVzZVJvb3RMb2FkZXJEYXRhID0gKCkgPT4gewogIGNvbnN0IFtyb290XSA9IHVzZU1hdGNoZXMoKTsKICByZXR1cm4gcm9vdD8uZGF0YSBhcyBTZXJpYWxpemVGcm9tPHR5cGVvZiBsb2FkZXI+Owp9OwoKZXhwb3J0IGZ1bmN0aW9uIGxvYWRlcihjb250ZXh0KSB7CiAgLy8gLi4uCn0KYGBg',
-        },
-      ],
-    },
-    {
-      title: 'Fix template dist package due to CI error',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1451',
-      id: '1451',
-    },
-    {
-      title:
-        'Integrate the debug-network tooling with the new --worker-unstable runtime CLI flag',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1387',
-      id: '1387',
-    },
-    {
-      title:
-        'Fix the starter template blog route to include a required startCursor in the GraphQL query',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1441',
-      id: '1441',
-    },
-    {
-      title: 'Move react to peer dependencies',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1439',
-      id: '1439',
-    },
-    {
-      title: 'Fix subrequest performance in development',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1411',
-      id: '1411',
-    },
-    {
-      title: 'Increase request body size limit to 100mb in development',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1421',
-      id: '1421',
-    },
-  ],
-  features: [
-    {
-      title: 'Added a client to query the Customer Account API',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1430',
-      id: '1430',
-      docs: 'https://shopify.dev/docs/api/hydrogen/latest/utilities/createcustomerclient',
-    },
-    {
-      title: 'Update Storefront API version to 2023-10',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1431',
-      id: '1431',
-      docs: 'https://shopify.dev/docs/api/release-notes/2023-10#graphql-storefront-api-changes',
-    },
-    {
-      title: 'Add query explorer plugin to GraphiQL',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1470',
-      id: '1470',
-      info: 'Start your dev server and load `http://localhost:3000/graphiql` to use GraphiQL',
-    },
-    {
-      title: 'Added support for Remix v2.1.0 and now a peer dependency',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1289',
-      id: '1289',
-      breaking: true,
-      info: 'Remix is now a peer dependency. This means that you can upgrade to newer Remix 2.x versions without upgrading Hydrogen',
-      docs: 'https://github.com/remix-run/remix/releases/tag/remix%402.0.0',
-    },
-    {
-      title:
-        'The Codegen feature is now considered stable and related dependencies have been updated',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1108',
-      id: '1108',
-      breaking: true,
-      info: 'Use --codegen flag instead of --codegen-unstable to generate code from your GraphQL queries',
-      steps: [
-        {
-          title: 'Update the `dev` script',
-          code: 'Ly8gcGFja2FnZS5qc29uCgpgYGBkaWZmCiJzY3JpcHRzIjogewogICAgIC8vLi4uLi4uCi0gICAgICJkZXYiOiAic2hvcGlmeSBoeWRyb2dlbiBkZXYgLS1jb2RlZ2VuLXVuc3RhYmxlIiwKKyAgICAiZGV2IjogInNob3BpZnkgaHlkcm9nZW4gZGV2IC0tY29kZWdlbiIsCn0KYGBg',
-        },
-        {
-          title: 'Update the `codegen` script',
-          code: 'Ly8gcGFja2FnZS5qc29uCgpgYGBkaWZmCiJzY3JpcHRzIjogewogICAgIC8vLi4uLi4uCi0gICAgImNvZGVnZW4iOiAic2hvcGlmeSBoeWRyb2dlbiBjb2RlZ2VuLXVuc3RhYmxlIiwKKyAgICJjb2RlZ2VuIjogInNob3BpZnkgaHlkcm9nZW4gY29kZWdlbiIKfQpgYGA=',
-        },
-      ],
-    },
-    {
-      title:
-        'The Storefront API types included are now generated using @graphql-codegen/typescript@4',
-      docs: 'https://github.com/dotansimha/graphql-code-generator/blob/master/packages/plugins/typescript/typescript/CHANGELOG.md#400',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1108',
-      id: '1108',
-      breaking: true,
-      steps: [
-        {
-          title:
-            'This results in a breaking change if you were importing `Scalars` directly from `@shopify/hydrogen-react` or `@shopify/hydrogen`',
-          code: 'Ly8gYWxsIGluc3RhbmNlcyBvZiBgU2NhbGFyc2AgaW1wb3J0cwoKYGBgZGlmZgppbXBvcnQgdHlwZSB7U2NhbGFyc30gZnJvbSAnQHNob3BpZnkvaHlkcm9nZW4vc3RvcmVmcm9udC1hcGktdHlwZXMnOwoKdHlwZSBQcm9wcyA9IHsKLSAgaWQ6IFNjYWxhcnNbJ0lEJ107IC8vIFRoaXMgd2FzIGEgc3RyaW5nCisgIGlkOiBTY2FsYXJzWydJRCddWydpbnB1dCddOyAvLyBOZWVkIHRvIGFjY2VzcyAnaW5wdXQnIG9yICdvdXRwdXQnIHRvIGdldCB0aGUgc3RyaW5nCiB9OwpgYGA=',
-        },
-      ],
-    },
-    {
-      title:
-        'The skeleton starter template is now versioned instead of the demo-store template',
-      pr: null,
-      id: null,
-    },
-    {
-      title: 'Storefront client the default caching strategy has been updated ',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1336',
-      id: '1336',
-      steps: [
-        {
-          title:
-            'The new default caching strategy provides a max-age value of 1 second, and a stale-while-revalidate value of 1 day. If you would keep the old caching values, update your queries to use `CacheShort`',
-          code: 'Ly8gYWxsIGluc3RhbmNlcyBvZiBzdG9yZWZyb250LnF1ZXJ5CgpgYGBkaWZmCiBjb25zdCB7cHJvZHVjdH0gPSBhd2FpdCBzdG9yZWZyb250LnF1ZXJ5KAogICBgI2dyYXBocWwKICAgICBxdWVyeSBQcm9kdWN0KCRoYW5kbGU6IFN0cmluZyEpIHsKICAgICAgIHByb2R1Y3QoaGFuZGxlOiAkaGFuZGxlKSB7IGlkIHRpdGxlIH0KICAgICB9CiAgIGAsCiAgIHsKICAgICB2YXJpYWJsZXM6IHtoYW5kbGU6IHBhcmFtcy5wcm9kdWN0SGFuZGxlfSwKKyAgICAvKioKKyAgICAgKiBPdmVycmlkZSB0aGUgZGVmYXVsdCBjYWNoaW5nIHN0cmF0ZWd5IHdpdGggdGhlIG9sZCBjYWNoaW5nIHZhbHVlcworICAgICAqLworICAgIGNhY2hlOiBzdG9yZWZyb250LkNhY2hlU2hvcnQoKSwKICAgfSwKICk7CmBgYA==',
-        },
-      ],
-    },
-    {
-      title:
-        'JavaScript projects now use Codegen and JSDoc to enhance editor autocompletion',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1334',
-      id: '1334',
-    },
-    {
-      title:
-        'Added `h2 debug cpu` command to profile CPU startup times (experimental)',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1352',
-      info: 'This is useful for debugging slow startup times when Oxygen deployments fail with related errors.',
-      id: '1352',
-      steps: [
-        {
-          title: 'Run `h2 debug cpu`',
-          code: 'YGBgYmFzaApoMiBkZWJ1ZyBjcHUKYGBg',
-          info: 'This command builds + watches your app and generates a `startup.cpuprofile` file that you can open in DevTools or VSCode to see a flamegraph of CPU usage',
-        },
-      ],
-    },
-    {
-      title: 'Added support for `withCache` request in debug-network tool',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1438',
-      id: '1438',
-      steps: [
-        {
-          title:
-            'Calls to withCache can now be shown in the `/debug-network` tool when using the Worker runtime. For this to work, use the new `request` parameter in `createWithCache`',
-          code: 'Ly8gc2VydmVyLnRzCgpgYGBkaWZmCmV4cG9ydCBkZWZhdWx0IHsKICBmZXRjaChyZXF1ZXN0LCBlbnYsIGV4ZWN1dGlvbkNvbnRleHQpIHsKICAgIC8vIC4uLgogICAgY29uc3Qgd2l0aENhY2hlID0gY3JlYXRlV2l0aENhY2hlKHsKICAgICAgY2FjaGUsCiAgICAgIHdhaXRVbnRpbCwKKyAgICAgcmVxdWVzdCwKICAgIH0pOwogICAgLy8gLi4uCiAgfSwKfQpgYGA=',
+            ' It can be disabled by passing poweredByHeader: false in the configuration object of createRequestHandler',
+          code: 'YGBgdHMKaW1wb3J0IHtjcmVhdGVSZXF1ZXN0SGFuZGxlcn0gZnJvbSAnQHNob3BpZnkvcmVtaXgtb3h5Z2VuJzsKCmV4cG9ydCBkZWZhdWx0IHsKICBhc3luYyBmZXRjaChyZXF1ZXN0KSB7CiAgICAvLyAuLi4KICAgIGNvbnN0IGhhbmRsZVJlcXVlc3QgPSBjcmVhdGVSZXF1ZXN0SGFuZGxlcih7CiAgICAgIC8vIC4uLiBvdGhlciBwcm9wZXJ0aWVzIGluY2x1ZGVkCiAgICAgIHBvd2VyZWRCeUhlYWRlcjogZmFsc2UsCiAgICB9KTsKICAgIC8vIC4uLgogIH0sCn07CmBgYA',
           file: 'server.ts',
         },
       ],
     },
     {
-      title: 'Add LanguageCode support to hdyrogen-react CartProvider',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1408',
-      id: '1408',
-    },
-    {
-      title: 'Support custom attributes with `useLoadScript`',
-      pr: 'https://github.com/Shopify/hydrogen/pull/1442',
-      id: '1442',
+      title: 'Updated CLI prompts',
+      pr: 'https://github.com/Shopify/hydrogen/pull/733',
+      id: '733',
       steps: [
         {
-          title: 'Pass `attributes` to any script',
-          code: 'Ly8gYW55IGluc3RhbmNlIG9mIHVzZUxvYWRTY3JpcHQKCmBgYGRpZmYKKyBjb25zdCBhdHRyaWJ1dGVzID0geworICAgICdkYXRhLXRlc3QnOiAndGVzdCcsCisgICAgdGVzdDogJ3Rlc3QnLAorICB9CgotIGNvbnN0IHNjcmlwdFN0YXR1cyA9IHVzZUxvYWRTY3JpcHQoJ3Rlc3QuanMnICkKY29uc3Qgc2NyaXB0U3RhdHVzID0gdXNlTG9hZFNjcmlwdCgndGVzdC5qcycsIHsgIGF0dHJpYnV0ZXMgfSApCmBgYA==',
-        },
-        {
-          title: 'Would append a DOM element',
-          code: 'YGBgaHRtbAo8c2NyaXB0IHNyYz0idGVzdC5qcyIgZGF0YS10ZXN0PSJ0ZXN0IiB0ZXN0PSJ0ZXN0IiAvPgpgYGA=',
+          title: 'Update package.json',
+          code: 'YGBgZGlmZgoiZGVwZW5kZW5jaWVzIjogewotICAiQHNob3BpZnkvY2xpIjogIjMueC54IiwKKyAgIkBzaG9waWZ5L2NsaSI6ICIzLjQ1LjAiLAp9CmBgYA==',
+          file: 'package.json',
         },
       ],
     },
     {
       title:
-        'Unlock hydrogen-react package.json exports to make it easier to use with NextJS and other frameworks.',
-      info: 'Note: Using Hydrogen internals is not officially supported, and those internal APIs could change at anytime outside our usual calendar versioning.',
-      pr: 'https://github.com/Shopify/hydrogen/pull/994',
-      id: '994',
+        'Added support for the Remix future flags v2_meta, v2_errorBoundary and v2_routeConvention to the generate command',
+      pr: 'https://github.com/Shopify/hydrogen/pull/756',
+      id: '756',
+    },
+    {
+      title: 'Update virtual route to use Remix V2 route name conventions',
+      pr: 'https://github.com/Shopify/hydrogen/pull/792',
+      id: '792',
+    },
+    {
+      title: 'Update internal Remix dependencies to 1.15.0',
+      pr: 'https://github.com/Shopify/hydrogen/pull/728',
+      id: '728',
+      docs: 'https://github.com/remix-run/remix/releases/tag/remix%401.15.0',
+    },
+    {
+      title: 'Improve type safety in SEO data generators',
+      pr: 'https://github.com/Shopify/hydrogen/pull/763',
+      id: '763',
+    },
+    {
+      title: 'Stop hydrating with requestIdleCallback',
+      pr: 'https://github.com/Shopify/hydrogen/pull/667',
+      id: '667',
+    },
+    {
+      title: 'Fix active cart session event in Live View',
+      pr: 'https://github.com/Shopify/hydrogen/pull/614',
+      id: '614',
+      steps: [
+        {
+          title:
+            'Introducing getStorefrontHeaders that collects the required Shopify headers for making a Storefront API call.',
+          code: 'YGBgdHMKKyBpbXBvcnQge2dldFN0b3JlZnJvbnRIZWFkZXJzfSBmcm9tICdAc2hvcGlmeS9yZW1peC1veHlnZW4nOwppbXBvcnQge2NyZWF0ZVN0b3JlZnJvbnRDbGllbnQsIHN0b3JlZnJvbnRSZWRpcmVjdH0gZnJvbSAnQHNob3BpZnkvaHlkcm9nZW4nOwoKZXhwb3J0IGRlZmF1bHQgewogIGFzeW5jIGZldGNoKAogICAgcmVxdWVzdDogUmVxdWVzdCwKICAgIGVudjogRW52LAogICAgZXhlY3V0aW9uQ29udGV4dDogRXhlY3V0aW9uQ29udGV4dCwKICApOiBQcm9taXNlPFJlc3BvbnNlPiB7CgogICAgY29uc3Qge3N0b3JlZnJvbnR9ID0gY3JlYXRlU3RvcmVmcm9udENsaWVudCh7CiAgICAgIGNhY2hlLAogICAgICB3YWl0VW50aWwsCi0gICAgIGJ1eWVySXA6IGdldEJ1eWVySXAocmVxdWVzdCksCiAgICAgIGkxOG46IHtsYW5ndWFnZTogJ0VOJywgY291bnRyeTogJ1VTJ30sCiAgICAgIHB1YmxpY1N0b3JlZnJvbnRUb2tlbjogZW52LlBVQkxJQ19TVE9SRUZST05UX0FQSV9UT0tFTiwKICAgICAgcHJpdmF0ZVN0b3JlZnJvbnRUb2tlbjogZW52LlBSSVZBVEVfU1RPUkVGUk9OVF9BUElfVE9LRU4sCiAgICAgIHN0b3JlRG9tYWluOiBgaHR0cHM6Ly8ke2Vudi5QVUJMSUNfU1RPUkVfRE9NQUlOfWAsCiAgICAgIHN0b3JlZnJvbnRBcGlWZXJzaW9uOiBlbnYuUFVCTElDX1NUT1JFRlJPTlRfQVBJX1ZFUlNJT04gfHwgJzIwMjMtMDEnLAogICAgICBzdG9yZWZyb250SWQ6IGVudi5QVUJMSUNfU1RPUkVGUk9OVF9JRCwKLSAgICAgcmVxdWVzdEdyb3VwSWQ6IHJlcXVlc3QuaGVhZGVycy5nZXQoJ3JlcXVlc3QtaWQnKSwKKyAgICAgc3RvcmVmcm9udEhlYWRlcnM6IGdldFN0b3JlZnJvbnRIZWFkZXJzKHJlcXVlc3QpLAogICAgfSk7CmBgYA==',
+          file: 'server.ts',
+        },
+      ],
+    },
+  ],
+  features: [
+    {
+      title:
+        'Add command to pull environment variables from a Hydrogen storefront',
+      pr: 'https://github.com/Shopify/hydrogen/pull/809',
+      id: '809',
+    },
+    {
+      title:
+        'New --debug flag for the dev command that attaches a Node inspector to the development server',
+      pr: 'https://github.com/Shopify/hydrogen/pull/869',
+      id: '869',
+    },
+    {
+      title:
+        'Add new commands for merchants to be able to list and link Hydrogen storefronts',
+      pr: 'https://github.com/Shopify/hydrogen/pull/784',
+      id: '784',
+    },
+    {
+      title: 'Added parseGid() utility',
+      pr: 'https://github.com/Shopify/hydrogen/pull/845',
+      id: '845',
+      steps: [
+        {
+          title: 'Example usage',
+          code: 'YGBgdHMKaW1wb3J0IHtwYXJzZUdpZH0gZnJvbSAnQHNob3BpZnkvaHlkcm9nZW4tcmVhY3QnOwoKY29uc3Qge2lkLCByZXNvdXJjZX0gPSBwYXJzZUdpZCgnZ2lkOi8vc2hvcGlmeS9PcmRlci8xMjMnKTsKCmNvbnNvbGUubG9nKGlkKTsgLy8gMTIzCmNvbnNvbGUubG9nKHJlc291cmNlKTsgLy8gT3JkZXIKYGBg',
+        },
+      ],
+    },
+    {
+      title:
+        'Added a new shortcut command that creates a global h2 alias for the Hydrogen CLI',
+      pr: 'https://github.com/Shopify/hydrogen/pull/679',
+      id: '679',
+      steps: [
+        {
+          title: 'Create the h2 alias',
+          code: 'YGBgYmFzaApucHggc2hvcGlmeSBoeWRyb2dlbiBzaG9ydGN1dApgYGA=',
+        },
+        {
+          title: 'After that, you can run commands using the new alias:',
+          code: 'YGBgYmFzaApoMiBnZW5lcmF0ZSByb3V0ZSBob21lCmgyIGcgciBob21lICMgU2FtZSBhcyB0aGUgYWJvdmUKaDIgY2hlY2sgcm91dGVzCmBgYA==',
+        },
+      ],
+    },
+    {
+      title: 'Add an experimental createWithCache_unstable',
+      info: 'This utility creates a function similar to useQuery from Hydrogen v1. Use this utility to query third-party APIs and apply custom cache options',
+      pr: 'https://github.com/Shopify/hydrogen/pull/600',
+      id: '600',
+      steps: [
+        {
+          title: 'To setup the utility, update your server.ts',
+          file: 'server.ts',
+          code: 'YGBgdHMKaW1wb3J0IHsKICBjcmVhdGVTdG9yZWZyb250Q2xpZW50LAogIGNyZWF0ZVdpdGhDYWNoZV91bnN0YWJsZSwKICBDYWNoZUxvbmcsCn0gZnJvbSAnQHNob3BpZnkvaHlkcm9nZW4nOwoKLy8gLi4uCgogIGNvbnN0IGNhY2hlID0gYXdhaXQgY2FjaGVzLm9wZW4oJ2h5ZHJvZ2VuJyk7CiAgY29uc3Qgd2l0aENhY2hlID0gY3JlYXRlV2l0aENhY2hlX3Vuc3RhYmxlKHtjYWNoZSwgd2FpdFVudGlsfSk7CgogIC8vIENyZWF0ZSBjdXN0b20gdXRpbGl0aWVzIHRvIHF1ZXJ5IHRoaXJkLXBhcnR5IEFQSXM6CiAgY29uc3QgZmV0Y2hNeUNNUyA9IChxdWVyeSkgPT4gewogICAgLy8gUHJlZml4IHRoZSBjYWNoZSBrZXkgYW5kIG1ha2UgaXQgdW5pcXVlIGJhc2VkIG9uIGFyZ3VtZW50cy4KICAgIHJldHVybiB3aXRoQ2FjaGUoWydteS1jbXMnLCBxdWVyeV0sIENhY2hlTG9uZygpLCAoKSA9PiB7CiAgICAgIGNvbnN0IGNtc0RhdGEgPSBhd2FpdCAoYXdhaXQgZmV0Y2goJ215LWNtcy5jb20vYXBpJywgewogICAgICAgIG1ldGhvZDogJ1BPU1QnLAogICAgICAgIGJvZHk6IHF1ZXJ5CiAgICAgIH0pKS5qc29uKCk7CgogICAgICBjb25zdCBuZXh0UGFnZSA9IChhd2FpdCBmZXRjaCgnbXktY21zLmNvbS9hcGknLCB7CiAgICAgICAgbWV0aG9kOiAnUE9TVCcsCiAgICAgICAgYm9keTogY21zRGF0YTEubmV4dFBhZ2VRdWVyeSwKICAgICAgfSkpLmpzb24oKTsKCiAgICAgIHJldHVybiB7Li4uY21zRGF0YSwgbmV4dFBhZ2V9CiAgICB9KTsKICB9OwoKICBjb25zdCBoYW5kbGVSZXF1ZXN0ID0gY3JlYXRlUmVxdWVzdEhhbmRsZXIoewogICAgYnVpbGQ6IHJlbWl4QnVpbGQsCiAgICBtb2RlOiBwcm9jZXNzLmVudi5OT0RFX0VOViwKICAgIGdldExvYWRDb250ZXh0OiAoKSA9PiAoewogICAgICBzZXNzaW9uLAogICAgICB3YWl0VW50aWwsCiAgICAgIHN0b3JlZnJvbnQsCiAgICAgIGVudiwKICAgICAgZmV0Y2hNeUNNUywKICAgIH0pLAogIH0pOwpgYGA=',
+        },
+      ],
+    },
+    {
+      title: 'Update Remix to 1.14.0',
+      pr: 'https://github.com/Shopify/hydrogen/pull/599',
+      id: '599',
+    },
+    {
+      title: 'Added Cache-Control defaults to all the demo store routes',
+      pr: 'https://github.com/Shopify/hydrogen/pull/599',
+      id: '599',
+    },
+    {
+      title: 'Added new loader API for setting SEO tags within route module',
+      pr: 'https://github.com/Shopify/hydrogen/pull/591',
+      id: '591',
+    },
+    {
+      title: 'ShopPayButton component now can receive a storeDomain',
+      pr: 'https://github.com/Shopify/hydrogen/pull/645',
+      id: '645',
+    },
+    {
+      title:
+        'Added robots option to SEO config that allows users granular control over the robots meta tag.',
+      pr: 'https://github.com/Shopify/hydrogen/pull/572',
+      id: '572',
+      steps: [
+        {
+          title: 'Example usage',
+          code: 'YGBgdHMKZXhwb3J0IGhhbmRsZSA9IHsKICBzZW86IHsKICAgIHJvYm90czogewogICAgICBub0luZGV4OiBmYWxzZSwKICAgICAgbm9Gb2xsb3c6IGZhbHNlLAogICAgfQogIH0KfQpgYGA=',
+          file: 'All files that use SEO config',
+        },
+      ],
+    },
+    {
+      title: 'Added decoding prop to the SpreadMedia component',
+      pr: 'https://github.com/Shopify/hydrogen/pull/642',
+      id: '642',
     },
   ],
 } as CummulativeRelease;

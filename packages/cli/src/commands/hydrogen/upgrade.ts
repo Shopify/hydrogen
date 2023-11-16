@@ -518,6 +518,10 @@ export function getCummulativeRelease({
 }): CummulativeRelease {
   const currentPinnedVersion = getAbsoluteVersion(currentVersion);
 
+  if (!availableUpgrades?.length) {
+    return {features: [], fixes: []};
+  }
+
   const upgradingReleases = availableUpgrades.filter((release) => {
     const isHydrogenUpgrade =
       semver.gt(release.version, currentPinnedVersion) &&
