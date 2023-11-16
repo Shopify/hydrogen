@@ -294,7 +294,7 @@
           "type": "option",
           "description": "Port where the inspector will be available.",
           "multiple": false,
-          "default": 9222
+          "default": 9229
         },
         "host": {
           "name": "host",
@@ -536,7 +536,7 @@
           "type": "option",
           "description": "Port where the inspector will be available.",
           "multiple": false,
-          "default": 9222
+          "default": 9229
         },
         "debug": {
           "name": "debug",
