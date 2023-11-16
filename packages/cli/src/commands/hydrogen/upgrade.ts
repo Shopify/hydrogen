@@ -471,35 +471,24 @@ export function getAvailableUpgrades({
  */
 export async function getSelectedRelease({
   targetVersion,
-  availableUpgrades: upgradesAvailable,
+  availableUpgrades,
   currentVersion,
 }: {
   targetVersion?: string;
   availableUpgrades: Array<Release>;
   currentVersion: string;
 }) {
-  let flagRelease; // holds a valid release based on the --version flag
-  let selectedRelease = null;
+  const targetRelease = targetVersion
+    ? availableUpgrades.find(
+        (release) =>
+          getAbsoluteVersion(release.version) ===
+          getAbsoluteVersion(targetVersion),
+      )
+    : undefined;
 
-  if (targetVersion) {
-    flagRelease = upgradesAvailable.find((release) => {
-      return (
-        getAbsoluteVersion(release.version) ===
-        getAbsoluteVersion(targetVersion)
-      );
-    });
-  }
-
-  if (flagRelease) {
-    selectedRelease = flagRelease;
-  } else {
-    selectedRelease = await promptUpgradeOptions(
-      currentVersion,
-      upgradesAvailable,
-    );
-  }
-
-  return selectedRelease;
+  return (
+    targetRelease ?? promptUpgradeOptions(currentVersion, availableUpgrades)
+  );
 }
 
 /**
@@ -740,39 +729,24 @@ export function getAbsoluteVersion(version: string) {
  */
 async function promptUpgradeOptions(
   currentVersion: string,
-  upgradesAvailable: Array<Release>,
+  availableUpgrades: Release[],
 ) {
-  if (!upgradesAvailable?.length) {
-    return null;
+  if (!availableUpgrades?.length) {
+    throw new AbortError('No upgrade options available');
   }
 
   // Build the list of upgrade options to display to the user
-  const choices = upgradesAvailable.map((release, index) => {
+  const choices = availableUpgrades.map((release, index) => {
     const {version, title} = release;
-    let isLatest = false;
 
-    if (index === 0) {
-      isLatest = true;
-    }
-
-    const isFirstMajorVersion = semver.patch(version) === 0;
-    const isCurrentVersion =
-      getAbsoluteVersion(currentVersion) === getAbsoluteVersion(version);
-
-    let tag = '';
-    switch (true) {
-      case isLatest:
-        tag = '(latest)';
-        break;
-      case isFirstMajorVersion:
-        tag = '(major)';
-        break;
-      case isCurrentVersion:
-        tag = '(outdated)';
-        break;
-      default:
-        tag = '';
-    }
+    const tag =
+      index === 0
+        ? '(latest)'
+        : semver.patch(version) === 0
+        ? '(major)'
+        : getAbsoluteVersion(currentVersion) === getAbsoluteVersion(version)
+        ? '(outdated)'
+        : '';
 
     // TODO: add group sorting function to cli-kit select prompt
     // so that we can group by major version
@@ -781,31 +755,15 @@ async function promptUpgradeOptions(
     return {
       // group: majorVersion,
       label: `${version} ${tag} - ${cliTruncate(title, 54)}`,
-      value: version,
-    };
-  }) as Array<Choice<string>>;
-
-  if (!choices[0] || !choices[0].value) {
-    return null;
-  }
-
-  const latestVersion = choices[0].value;
-
-  const selectedVersion = await renderSelectPrompt({
-    message: `Available Hydrogen versions (current: ${currentVersion})`,
-    choices: choices,
-    defaultValue: latestVersion,
+      value: release,
+    } as Choice<Release>;
   });
 
-  const selectedRelease = upgradesAvailable.find(
-    (release) => release.version === selectedVersion,
-  );
-
-  if (!selectedRelease) {
-    throw new Error('No version selected');
-  }
-
-  return selectedRelease;
+  return renderSelectPrompt({
+    message: `Available Hydrogen versions (current: ${currentVersion})`,
+    choices: choices,
+    defaultValue: choices[0]?.value, // Latest version
+  });
 }
 
 async function displayDryRunSummary({

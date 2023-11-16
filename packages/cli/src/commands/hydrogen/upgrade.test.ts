@@ -26,6 +26,7 @@ import {
   type ChangeLog,
   type CummulativeRelease,
   type Dependencies,
+  type Release,
 } from './upgrade.js';
 import changelog from '../../changelog.json';
 
@@ -300,17 +301,18 @@ describe('upgrade', () => {
             releases,
           });
 
-          const selectedRelease = await getSelectedRelease({
-            availableUpgrades,
-            // @ts-ignore - we know this release version exists
-            currentVersion: current.currentVersion,
-            // OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies['@shopify/hydrogen'],
-            targetVersion: '2023.7.10',
-          });
-
-          expect(selectedRelease).toMatchObject({
+          await expect(
+            getSelectedRelease({
+              availableUpgrades,
+              // @ts-ignore - we know this release version exists
+              currentVersion: current.currentVersion,
+              // OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies['@shopify/hydrogen'],
+              targetVersion: '2023.7.10',
+            }),
+          ).resolves.toMatchObject({
             version: '2023.7.10',
           });
+
           expect(renderSelectPrompt).not.toHaveBeenCalled();
         },
         {
@@ -339,12 +341,18 @@ describe('upgrade', () => {
             releases,
           });
 
-          await getSelectedRelease({
-            availableUpgrades,
-            // @ts-ignore - we know this release version exists
-            currentVersion: current.currentVersion,
-            targetVersion: '2023.1.5', // fails because this version is in the past
-          }).catch(() => {});
+          // Choose latest release
+          vi.mocked(renderSelectPrompt<Release>).mockImplementationOnce(
+            ({choices}) => Promise.resolve(choices[0]?.value!),
+          );
+
+          await expect(
+            getSelectedRelease({
+              availableUpgrades,
+              currentVersion: current!.currentVersion!,
+              targetVersion: '2023.1.5', // fails because this version is in the past
+            }),
+          ).resolves.toMatchObject(availableUpgrades[0]!);
 
           expect(renderSelectPrompt).toHaveBeenCalled();
         },
@@ -365,13 +373,8 @@ describe('upgrade', () => {
       await inTemporaryHydrogenRepo(
         async (appPath) => {
           const releases = changelog.releases;
-
-          //@ts-expect-error - we know this release version exists
-          const previousHydrogenVersion = releases[1].version;
-
-          //@ts-expect-error - we know this release version exists
-          const latestHydrogenVersion = releases[0].version;
-
+          const previousRelease = releases[1];
+          const latestRelease = releases[0];
           const current = await getHydrogenVersion({appPath});
 
           expect(current?.currentVersion).toBeDefined();
@@ -382,58 +385,28 @@ describe('upgrade', () => {
             releases,
           });
 
-          await getSelectedRelease({
-            availableUpgrades,
-            currentVersion: previousHydrogenVersion,
-          }).catch(() => {});
+          // Choose latest release
+          vi.mocked(renderSelectPrompt<Release>).mockImplementationOnce(
+            ({choices}) => Promise.resolve(choices[0]?.value!),
+          );
+
+          await expect(
+            getSelectedRelease({
+              availableUpgrades,
+              currentVersion: previousRelease!.version,
+            }),
+          ).resolves.toMatchObject(availableUpgrades[0]!);
 
           expect(renderSelectPrompt).toHaveBeenCalledWith({
-            message: expect.stringContaining(previousHydrogenVersion),
+            message: expect.stringContaining(previousRelease!.version),
             choices: expect.arrayContaining([
               {
-                label: expect.stringContaining(latestHydrogenVersion),
-                value: expect.stringContaining(latestHydrogenVersion),
+                label: expect.stringContaining(latestRelease!.version),
+                value: latestRelease,
               },
             ]),
-            defaultValue: latestHydrogenVersion,
+            defaultValue: latestRelease,
           });
-        },
-        {
-          cleanGitRepo: true,
-          packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON,
-        },
-      );
-    });
-
-    it('returns the prompted/selected release', async () => {
-      const selectedVersion = '2023.7.10';
-      vi.mocked(renderSelectPrompt).mockResolvedValue(selectedVersion);
-
-      await inTemporaryHydrogenRepo(
-        async (appPath) => {
-          const releases = changelog.releases;
-          const current = await getHydrogenVersion({appPath});
-
-          expect(current?.currentVersion).toBeDefined();
-
-          const {availableUpgrades} = getAvailableUpgrades({
-            ...current,
-            // @ts-expect-error
-            releases,
-          });
-
-          const selectedRelease = await getSelectedRelease({
-            availableUpgrades,
-            // @ts-ignore - we know this release version exists
-            currentVersion: current.currentVersion,
-          });
-
-          const release = releases.find(
-            (release) => release.version === selectedVersion,
-          ) as (typeof releases)[0];
-
-          expect(renderSelectPrompt).toHaveBeenCalled();
-          expect(selectedRelease).toMatchObject(release);
         },
         {
           cleanGitRepo: true,
