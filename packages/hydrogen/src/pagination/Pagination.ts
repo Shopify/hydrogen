@@ -309,6 +309,11 @@ export function usePagination<NodesType>(
   });
 
   useEffect(() => {
+    // Set a global variable to keep track of when the page finishes hydrating.
+    // We can't use local state or a ref because it will be reset on soft navigations
+    // to the page. This variable allows us to use the SSR'd data on the first render,
+    // preventing hydration errors. On soft navigations, like browser back/forward
+    // navigation, instead of using the SSR'd data, we use the data from location state.
     window.__hydrogenHydrated = true;
   }, []);
 
