@@ -96,6 +96,8 @@ export type CumulativeRelease = {
   fixes: Array<ReleaseItem>;
 };
 
+const INSTRUCTIONS_FOLDER = '.hydrogen';
+
 export default class Upgrade extends Command {
   static description = 'Upgrade Remix and Hydrogen npm dependencies.';
 
@@ -970,7 +972,7 @@ async function generateUpgradeInstructionsFile({
     dryRun ? 'preview-' : ''
   }upgrade-${absoluteFrom}-to-${absoluteTo}.md`;
 
-  const dotShopifyFolderPath = path.join(appPath, '.shopify/');
+  const instructionsFolderPath = path.join(appPath, INSTRUCTIONS_FOLDER);
 
   const h1 = `# Hydrogen upgrade guide: ${absoluteFrom} to ${absoluteTo}`;
 
@@ -990,12 +992,12 @@ async function generateUpgradeInstructionsFile({
     )}`;
   }
 
-  const filePath = path.join(dotShopifyFolderPath, filename);
+  const filePath = path.join(instructionsFolderPath, filename);
 
   try {
-    await isDirectory(dotShopifyFolderPath);
+    await isDirectory(instructionsFolderPath);
   } catch (error) {
-    await mkdir(dotShopifyFolderPath);
+    await mkdir(instructionsFolderPath);
   }
 
   if (!(await fileExists(filePath))) {
@@ -1016,7 +1018,7 @@ async function generateUpgradeInstructionsFile({
 
   await writeFile(filePath, md);
 
-  return `.shopify/${filename}`;
+  return `${INSTRUCTIONS_FOLDER}/${filename}`;
 }
 
 /**
