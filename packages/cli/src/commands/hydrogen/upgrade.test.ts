@@ -1,7 +1,15 @@
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import {execa} from 'execa';
-import {describe, it, expect, vi, beforeEach} from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  beforeAll,
+  afterAll,
+} from 'vitest';
 import {
   inTemporaryDirectory,
   writeFile,
@@ -23,13 +31,12 @@ import {
   getHydrogenVersion,
   getSelectedRelease,
   runUpgrade,
-  type ChangeLog,
   type CumulativeRelease,
   type Dependencies,
   type Release,
   upgradeNodeModules,
+  getChangelog,
 } from './upgrade.js';
-import changelog from '../../changelog.json';
 import {type PackageJson} from 'type-fest';
 
 vi.mock('../../lib/shell.js');
@@ -55,6 +62,14 @@ beforeEach(() => {
   vi.resetModules();
   vi.clearAllMocks();
   outputMock.clear();
+});
+
+beforeAll(() => {
+  process.env.FORCE_CHANGELOG_SOURCE = 'local';
+});
+
+afterAll(() => {
+  delete process.env.FORCE_CHANGELOG_SOURCE;
 });
 
 function createOutdatedSkeletonPackageJson() {
@@ -203,6 +218,8 @@ describe('upgrade', async () => {
 
   describe('getAvailableUpgrades', async () => {
     it('renders "already in the latest version" success message if no upgrades are available', async () => {
+      const {releases} = await getChangelog();
+
       await inTemporaryHydrogenRepo(
         async (appPath) => {
           await runUpgrade({dryRun: false, appPath});
@@ -215,7 +232,7 @@ describe('upgrade', async () => {
           packageJson: {
             dependencies: {
               // @ts-expect-error - we know this release version exists
-              '@shopify/hydrogen': changelog.releases[0].version,
+              '@shopify/hydrogen': releases[0].version,
             },
           },
         },
@@ -223,12 +240,12 @@ describe('upgrade', async () => {
     });
 
     it('returns available upgrades and uniqueAvailableUpgrades if they exist', async () => {
+      const {releases} = await getChangelog();
+
       await inTemporaryHydrogenRepo(
         async (appPath) => {
-          const releases = changelog.releases;
           const current = await getHydrogenVersion({appPath});
           const availableUpgrades = getAvailableUpgrades({
-            // @ts-expect-error
             releases,
             ...current,
           });
@@ -254,7 +271,7 @@ describe('upgrade', async () => {
           packageJson: {
             dependencies: {
               // @ts-ignore
-              '@shopify/hydrogen': changelog.releases[2].version,
+              '@shopify/hydrogen': releases[2].version,
             },
           },
         },
@@ -266,14 +283,13 @@ describe('upgrade', async () => {
     it('prioritizes a passed target --version over a select prompt if available', async () => {
       await inTemporaryHydrogenRepo(
         async (appPath) => {
-          const releases = changelog.releases;
+          const {releases} = await getChangelog();
           const current = await getHydrogenVersion({appPath});
 
           expect(current?.currentVersion).toBeDefined();
 
           const {availableUpgrades} = getAvailableUpgrades({
             ...current,
-            // @ts-expect-error
             releases,
           });
 
@@ -301,14 +317,13 @@ describe('upgrade', async () => {
     it('prompts if a passed target --version is not a valid upgradable version', async () => {
       await inTemporaryHydrogenRepo(
         async (appPath) => {
-          const releases = changelog.releases;
+          const {releases} = await getChangelog();
           const current = await getHydrogenVersion({appPath});
 
           expect(current?.currentVersion).toBeDefined();
 
           const {availableUpgrades} = getAvailableUpgrades({
             ...current,
-            // @ts-expect-error
             releases,
           });
 
@@ -337,7 +352,7 @@ describe('upgrade', async () => {
     it('prompts to select a release if no target --version is passed', async () => {
       await inTemporaryHydrogenRepo(
         async (appPath) => {
-          const releases = changelog.releases;
+          const {releases} = await getChangelog();
           const previousRelease = releases[1];
           const latestRelease = releases[0];
           const current = await getHydrogenVersion({appPath});
@@ -346,7 +361,6 @@ describe('upgrade', async () => {
 
           const {availableUpgrades} = getAvailableUpgrades({
             ...current,
-            // @ts-expect-error
             releases,
           });
 
@@ -385,14 +399,13 @@ describe('upgrade', async () => {
     it('returns the correct fixes and features for a release range thats outdated', async () => {
       await inTemporaryHydrogenRepo(
         async (appPath) => {
-          const releases = changelog.releases;
+          const {releases} = await getChangelog();
           const current = await getHydrogenVersion({appPath});
 
           expect(current?.currentVersion).toBeDefined();
 
           const {availableUpgrades} = getAvailableUpgrades({
             ...current,
-            // @ts-expect-error
             releases,
           });
 
@@ -424,8 +437,7 @@ describe('upgrade', async () => {
     it('renders a confirmation prompt to continue or return to the previous menu', async () => {
       await inTemporaryHydrogenRepo(
         async () => {
-          const releases =
-            changelog.releases as unknown as ChangeLog['releases'];
+          const {releases} = await getChangelog();
 
           // 2023.10.0
           const selectedRelease = releases.find(
@@ -466,8 +478,7 @@ describe('upgrade', async () => {
     it('runs the upgrade command task', async () => {
       await inTemporaryHydrogenRepo(
         async (appPath) => {
-          const releases =
-            changelog.releases as unknown as ChangeLog['releases'];
+          const {releases} = await getChangelog();
 
           const selectedRelease = releases.find(
             (release) => release.version === '2023.10.0',
@@ -494,7 +505,7 @@ describe('upgrade', async () => {
     });
 
     it('builds the upgrade command args', async () => {
-      const releases = changelog.releases as unknown as ChangeLog['releases'];
+      const {releases} = await getChangelog();
 
       const selectedRelease = releases.find(
         (release) => release.version === '2023.10.0',
@@ -523,7 +534,7 @@ describe('upgrade', async () => {
     });
 
     it('upgrades and syncs up all available Remix deps if they are out-of-date', async () => {
-      const releases = changelog.releases as unknown as ChangeLog['releases'];
+      const {releases} = await getChangelog();
 
       const selectedRelease = releases.find(
         (release) => release.version === '2023.10.0',
@@ -558,7 +569,7 @@ describe('upgrade', async () => {
     });
 
     it('upgrades all available Remix deps if they are out-of-date', async () => {
-      const releases = changelog.releases as unknown as ChangeLog['releases'];
+      const {releases} = await getChangelog();
 
       const selectedRelease = releases.find(
         (release) => release.version === '2023.10.0',
@@ -593,7 +604,7 @@ describe('upgrade', async () => {
     });
 
     it('does not upgrade Remix deps if they are more up-to-date', async () => {
-      const releases = changelog.releases as unknown as ChangeLog['releases'];
+      const {releases} = await getChangelog();
 
       const selectedRelease = releases.find(
         (release) => release.version === '2023.10.0',
@@ -622,7 +633,7 @@ describe('upgrade', async () => {
     });
 
     it('does not install an optional dependency that was not installed', async () => {
-      const releases = changelog.releases as unknown as ChangeLog['releases'];
+      const {releases} = await getChangelog();
 
       const selectedRelease = Object.create(
         // @ts-ignore - we know this release version exists
@@ -661,7 +672,7 @@ describe('upgrade', async () => {
     });
 
     it('adds a required dependency that was not installed', async () => {
-      const releases = changelog.releases as unknown as ChangeLog['releases'];
+      const {releases} = await getChangelog();
 
       // has typescript as a required dependency
       const selectedRelease = releases.find(
@@ -697,7 +708,7 @@ describe('upgrade', async () => {
     });
 
     it('does not upgrade a required dependency that is further up-to-date', async () => {
-      const releases = changelog.releases as unknown as ChangeLog['releases'];
+      const {releases} = await getChangelog();
 
       const selectedRelease = releases.find(
         (release) => release.version === '2023.10.0',
@@ -726,7 +737,7 @@ describe('upgrade', async () => {
     });
 
     it('does not upgrade @next dependencies', async () => {
-      const releases = changelog.releases as unknown as ChangeLog['releases'];
+      const {releases} = await getChangelog();
 
       const selectedRelease = releases.find(
         (release) => release.version === '2023.10.0',
