@@ -80,6 +80,7 @@ export function spawnCodegenProcess({
         type: 0,
         name: 'CodegenError',
         message: `Codegen process exited with code ${code}`,
+        skipOclifErrorHandling: true,
         tryMessage: 'Try restarting the dev server.',
       });
 

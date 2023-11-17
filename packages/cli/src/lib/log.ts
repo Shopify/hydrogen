@@ -372,6 +372,7 @@ export function createRemixLogger() {
         name: 'error',
         type: 0,
         message: buildMessageBody(message, options?.details),
+        skipOclifErrorHandling: true,
         tryMessage: '',
       });
     },

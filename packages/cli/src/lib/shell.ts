@@ -206,17 +206,18 @@ async function createShortcutsForWindows() {
 
 export async function getCliCommand(
   directory = process.cwd(),
-  forcePkgManager?: 'npm' | 'pnpm' | 'yarn' | 'unknown',
+  forcePkgManager?: 'npm' | 'pnpm' | 'yarn' | 'bun' | 'unknown',
 ) {
   if (!forcePkgManager && (await hasCliAlias())) {
     return ALIAS_NAME;
   }
 
-  let cli: 'npx' | 'pnpm' | 'yarn' = 'npx';
+  let cli: 'bun' | 'npx' | 'pnpm' | 'yarn' = 'npx';
   const pkgManager =
     forcePkgManager ?? (await getPackageManager(directory).catch(() => null));
 
-  if (pkgManager === 'pnpm' || pkgManager === 'yarn') cli = pkgManager;
+  if (pkgManager === 'bun' || pkgManager === 'pnpm' || pkgManager === 'yarn')
+    cli = pkgManager;
 
   return `${cli} shopify hydrogen` as const;
 }

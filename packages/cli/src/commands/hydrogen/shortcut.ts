@@ -24,6 +24,7 @@ export async function runCreateShortcut() {
       name: 'error',
       type: 0,
       message: 'No supported shell found.',
+      skipOclifErrorHandling: true,
       tryMessage: 'Please create a shortcut manually.',
     });
   }
