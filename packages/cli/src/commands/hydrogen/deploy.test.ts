@@ -180,15 +180,9 @@ describe('deploy', () => {
     vi.mocked(ensureIsClean).mockRejectedValue(
       new GitDirectoryNotCleanError('Uncommitted changes'),
     );
-
-    try {
-      await oxygenDeploy(deployParams);
-    } catch (error) {
-      expect(error).toBeInstanceOf(AbortError);
-      const abortError = error as AbortError;
-      expect(abortError.message).toBe('Uncommitted changes detected.');
-    }
-
+    await expect(oxygenDeploy(deployParams)).rejects.toThrowError(
+      'Uncommitted changes detected',
+    );
     expect(vi.mocked(createDeploy)).not.toHaveBeenCalled;
   });
 
