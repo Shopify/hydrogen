@@ -1,3 +1,5 @@
+import {createRequire} from 'node:module';
+import {fileURLToPath} from 'node:url';
 import {execa} from 'execa';
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {
@@ -55,14 +57,11 @@ beforeEach(() => {
   outputMock.clear();
 });
 
-async function createOutdatedSkeletonPackageJson() {
-  const response = await fetch(
-    'https://raw.githubusercontent.com/Shopify/hydrogen/main/templates/skeleton/package.json',
-  );
-  if (!response.ok) throw new Error('Could not fetch package.json');
-  const packageJson = JSON.parse(
-    await response.text(),
-  ) as unknown as PackageJson;
+function createOutdatedSkeletonPackageJson() {
+  const require = createRequire(import.meta.url);
+  const packageJson = require(fileURLToPath(
+    new URL('../../../../../templates/skeleton/package.json', import.meta.url),
+  )) as PackageJson;
 
   if (!packageJson) throw new Error('Could not parse package.json');
   if (!packageJson?.dependencies)
@@ -121,8 +120,7 @@ async function inTemporaryHydrogenRepo(
 
 describe('upgrade', async () => {
   // Create an outdated skeleton package.json for all tests
-  const OUTDATED_HYDROGEN_PACKAGE_JSON =
-    await createOutdatedSkeletonPackageJson();
+  const OUTDATED_HYDROGEN_PACKAGE_JSON = createOutdatedSkeletonPackageJson();
 
   describe('checkIsGitRepo', () => {
     it('renders an error message when not in a git repo', async () => {
