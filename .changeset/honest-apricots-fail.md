@@ -2,7 +2,7 @@
 '@shopify/cli-hydrogen': patch
 ---
 
-# New `h2 upgrade` command
+New `h2 upgrade` command
 
 We are introducing a new hydrogen cli `upgrade` command that:
 
@@ -17,14 +17,7 @@ We are introducing a new hydrogen cli `upgrade` command that:
 
 ```bash
 # from the base of the project run
-
 h2 upgrade
-```
-
-Alternatively, you can upgrade from another folder by using the `--path` flag
-
-```bash
-h2 upgrade --path /path-to-a-outdated-hydrogen-project
 ```
 
 ### `--version` flag
@@ -37,25 +30,6 @@ version via a CLI prompt
 h2 upgrade --version 2023.10.0
 ```
 
-### Dev upgrade notice
-
-Simply run dev as normal
-
-```bash
-npm run dev
-
-# or
-h2 dev
-```
-
-### `---no-version-check` flag
-
-If you want to disable the development notice, simply run
-
-```bash
-h2 dev --no-version-check
-```
-
 ### `--dry-run` flag
 
 If your are unsure about upgrading or just want to preview the TODO list of
@@ -64,5 +38,5 @@ changes to a given hydrogen version you can run
 ```bash
 h2 upgrade --dry-run
 
-# this will output a new .md file inside the .shopify/ folder for a given upgrade
+# this will output a new .md file inside the .hydrogen/ folder for a given upgrade
 ```
