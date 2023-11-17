@@ -151,6 +151,8 @@ export function RequestWaterfall({
         },
         timeframeSelectorPlugin: {
           font: STYLE_FONT,
+          waterfallStrokeOpacity: 1,
+          waterfallFillOpacity: 0.1,
         },
         timeGridPlugin: {
           font: STYLE_FONT,
