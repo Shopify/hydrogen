@@ -96,6 +96,7 @@ type IsOptionalVariables<OperationTypeValue extends {variables: any}> = Omit<
 type StorefrontCommonOptions<Variables extends GenericVariables> = {
   headers?: HeadersInit;
   storefrontApiVersion?: string;
+  /** The name to be shown in the Server Network Timing tool */
   displayName?: string;
 } & (IsOptionalVariables<{variables: Variables}> extends true
   ? {variables?: Variables}
@@ -207,6 +208,7 @@ type StorefrontHeaders = {
 type StorefrontQueryOptions = StorefrontQuerySecondParam & {
   query: string;
   mutation?: never;
+  /** The name to be shown in the Server Network Timing tool */
   displayName?: string;
 };
 
@@ -214,6 +216,7 @@ type StorefrontMutationOptions = StorefrontMutateSecondParam & {
   query?: never;
   mutation: string;
   cache?: never;
+  /** The name to be shown in the Server Network Timing tool */
   displayName?: string;
 };
 
