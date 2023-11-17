@@ -1006,7 +1006,7 @@ async function generateUpgradeInstructionsFile({
     await touchFile(filePath);
   } else {
     const overwriteMdFile = await renderConfirmationPrompt({
-      message: `A previous upgrade instrunctions file already exists for this version.\nDo you want to overwrite it?`,
+      message: `A previous upgrade instructions file already exists for this version.\nDo you want to overwrite it?`,
       defaultValue: false,
     });
 
