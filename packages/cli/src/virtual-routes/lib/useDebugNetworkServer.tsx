@@ -17,10 +17,10 @@ export type ServerEvent = {
     strategy?: string;
     key?: string | readonly unknown[];
   };
+  displayName?: string;
 };
 
 export type ServerEvents = {
-  smallestStartTime: number;
   mainRequests: ServerEvent[];
   subRequests: Record<string, ServerEvent[]>;
   allRequests: Record<string, ServerEvent>;
@@ -56,7 +56,6 @@ function setSettings(settings: Partial<DebugNetworkSettings>) {
 export function useDebugNetworkServer() {
   // Store server event data that can arrive at anytime across renders
   const serverEvents = useRef<ServerEvents>({
-    smallestStartTime: 0,
     mainRequests: [],
     subRequests: {},
     allRequests: {},
@@ -87,7 +86,6 @@ export function useDebugNetworkServer() {
 
     serverEvents.current = {
       ...serverEvents.current,
-      smallestStartTime: 0,
       mainRequests: [],
       subRequests: {},
       allRequests: {},
@@ -99,16 +97,6 @@ export function useDebugNetworkServer() {
     return (event: MessageEvent) => {
       if (serverEvents.current.recordEvents) {
         const data = JSON.parse(event.data) as unknown as ServerEvent;
-
-        if (serverEvents.current.smallestStartTime === 0) {
-          serverEvents.current.smallestStartTime = data.startTime;
-        } else {
-          serverEvents.current.smallestStartTime = Math.min(
-            data.startTime,
-            serverEvents.current.smallestStartTime,
-          );
-        }
-
         const id = `event-${nextEventId++}`;
         onEvent({
           ...data,
@@ -139,7 +127,6 @@ export function useDebugNetworkServer() {
         ];
       } else {
         serverEvents.current.mainRequests = [cleanData];
-        serverEvents.current.smallestStartTime = cleanData.startTime;
       }
       serverEvents.current.allRequests[cleanData.id] = cleanData;
     });
@@ -230,7 +217,8 @@ export function buildRequestData<T>({
   buildMainRequest: (mainRequest: ServerEvent, timing: RequestTimings) => T;
   buildSubRequest: (subRequest: ServerEvent, timing: RequestTimings) => T;
 }): T[] {
-  const calcDuration = (time: number) => time - serverEvents.smallestStartTime;
+  const calcDuration = (time: number) =>
+    time - (serverEvents.mainRequests[0]?.startTime ?? 0);
   let items: T[] = [];
 
   serverEvents.mainRequests.forEach((mainRequest: ServerEvent) => {

@@ -45,7 +45,7 @@ export function RequestTable({
       return {
         id: subRequest.id,
         requestId: subRequest.requestId,
-        url: subRequest.url,
+        url: subRequest.displayName ?? subRequest.url,
         cacheStatus: subRequest.cacheStatus,
         duration: timing.requestEnd - timing.requestStart,
       };

@@ -25,6 +25,7 @@ export type FetchDebugInfo = {
   graphql?: string | null;
   purpose?: string | null;
   stackInfo?: StackInfo;
+  displayName?: string;
 };
 
 export type WithCacheOptions<T = unknown> = {

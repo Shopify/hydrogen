@@ -37,6 +37,7 @@ export async function loader({params, context}: LoaderFunctionArgs) {
     featuredProducts: context.storefront.query(
       HOMEPAGE_FEATURED_PRODUCTS_QUERY,
       {
+        displayName: 'Feature products',
         variables: {
           /**
            * Country and language properties are automatically injected
@@ -49,6 +50,7 @@ export async function loader({params, context}: LoaderFunctionArgs) {
       },
     ),
     secondaryHero: context.storefront.query(COLLECTION_HERO_QUERY, {
+      displayName: 'Collection hero',
       variables: {
         handle: 'backcountry',
         country,
@@ -72,6 +74,7 @@ export async function loader({params, context}: LoaderFunctionArgs) {
       pageType: AnalyticsPageType.home,
     },
     seo,
+    catFact: context.catFact(),
   });
 }
 
@@ -82,7 +85,10 @@ export default function Homepage() {
     tertiaryHero,
     featuredCollections,
     featuredProducts,
+    catFact,
   } = useLoaderData<typeof loader>();
+
+  console.log(catFact);
 
   // TODO: skeletons vs placeholders
   const skeletons = getHeroPlaceholder([{}, {}, {}]);

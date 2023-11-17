@@ -54,7 +54,9 @@ export function RequestWaterfall({
       timing: Record<string, number>,
     ) => {
       return {
-        name: `${subRequest.cacheStatus} ${subRequest.url}`.trim(),
+        name: `${subRequest.cacheStatus} ${
+          subRequest.displayName ?? subRequest.url
+        }`.trim(),
         intervals: 'request',
         timing,
         meta: [

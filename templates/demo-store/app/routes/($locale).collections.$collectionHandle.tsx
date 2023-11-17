@@ -106,6 +106,7 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
   const {collection, collections} = await context.storefront.query(
     COLLECTION_QUERY,
     {
+      displayName: `${collectionHandle} collection`,
       variables: {
         ...paginationVariables,
         handle: collectionHandle,

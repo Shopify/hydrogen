@@ -34,6 +34,7 @@ declare module '@shopify/remix-oxygen' {
     storefront: Storefront;
     cart: HydrogenCart;
     env: Env;
+    catFact: WithCache<() => {fact: string; length: number}>;
   }
 
   /**

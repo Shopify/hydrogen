@@ -42,6 +42,7 @@ export function RequestDetails({serverEvents}: {serverEvents: ServerEvents}) {
         <div id="tab1-panel" className="tabPanel">
           <Details title="General">
             <div className="grid-layout">
+              <DetailsRow rowName="Name" value={requestInfo.displayName} />
               <DetailsRow rowName="Request URL" value={requestInfo.url} />
               <DetailsRow
                 rowName="Status"

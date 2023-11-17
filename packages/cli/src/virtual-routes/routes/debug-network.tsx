@@ -59,7 +59,7 @@ export default function DebugNetwork() {
   return (
     <>
       <Script
-        src="https://unpkg.com/flame-chart-js@3.1.3/dist/index.min.js"
+        src="https://unpkg.com/flame-chart-js@2.3.2/dist/index.min.js"
         suppressHydrationWarning
       />
       <DebugHeader

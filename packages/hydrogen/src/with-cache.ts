@@ -28,6 +28,7 @@ export function createWithCache<T = unknown>({
     cacheKey: CacheKey,
     strategy: CachingStrategy,
     actionFn: () => T | Promise<T>,
+    displayName?: string,
   ) {
     return runWithCache<T>(cacheKey, actionFn, {
       strategy,
@@ -36,6 +37,7 @@ export function createWithCache<T = unknown>({
       debugInfo: {
         ...getDebugHeaders(request),
         stackInfo: getCallerStackLine?.(),
+        displayName,
       },
     });
   };
@@ -50,6 +52,7 @@ type CreateWithCacheReturn<T> = <U = T>(
   cacheKey: CacheKey,
   strategy: CachingStrategy,
   actionFn: () => U | Promise<U>,
+  displayName?: string,
 ) => Promise<U>;
 
 export type WithCache = ReturnType<typeof createWithCache>;

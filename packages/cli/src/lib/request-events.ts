@@ -59,6 +59,7 @@ export type H2OEvent = {
     strategy?: string;
     key?: string | readonly unknown[];
   };
+  displayName?: string;
 };
 
 async function getRequestInfo(request: RequestKind) {

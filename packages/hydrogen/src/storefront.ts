@@ -96,6 +96,7 @@ type IsOptionalVariables<OperationTypeValue extends {variables: any}> = Omit<
 type StorefrontCommonOptions<Variables extends GenericVariables> = {
   headers?: HeadersInit;
   storefrontApiVersion?: string;
+  displayName?: string;
 } & (IsOptionalVariables<{variables: Variables}> extends true
   ? {variables?: Variables}
   : {variables: Variables});
@@ -206,12 +207,14 @@ type StorefrontHeaders = {
 type StorefrontQueryOptions = StorefrontQuerySecondParam & {
   query: string;
   mutation?: never;
+  displayName?: string;
 };
 
 type StorefrontMutationOptions = StorefrontMutateSecondParam & {
   query?: never;
   mutation: string;
   cache?: never;
+  displayName?: string;
 };
 
 export const StorefrontApiError = class extends Error {} as ErrorConstructor;
@@ -294,6 +297,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     cache: cacheOptions,
     headers = [],
     storefrontApiVersion,
+    displayName,
   }: StorefrontQueryOptions | StorefrontMutationOptions): Promise<T> {
     const userHeaders =
       headers instanceof Headers
@@ -342,6 +346,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         requestId: requestInit.headers[STOREFRONT_REQUEST_GROUP_ID_HEADER],
         purpose: storefrontHeaders?.purpose,
         stackInfo: getCallerStackLine?.(1),
+        displayName,
       },
     });
 
