@@ -36,7 +36,6 @@ export {cartMetafieldsSetDefault} from './cart/queries/cartMetafieldsSetDefault'
 export {cartMetafieldDeleteDefault} from './cart/queries/cartMetafieldDeleteDefault';
 export {cartGetIdDefault} from './cart/cartGetIdDefault';
 export {cartSetIdDefault, type CookieOptions} from './cart/cartSetIdDefault';
-export {createChangelogHandler} from './createChangelogHandler';
 export {
   type HydrogenCartCustom,
   type HydrogenCart,
