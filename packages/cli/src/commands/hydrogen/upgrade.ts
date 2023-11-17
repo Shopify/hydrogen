@@ -316,11 +316,7 @@ export async function getChangelog(): Promise<ChangeLog> {
   }
 
   try {
-    const response = await fetch(
-      // TODO: https://github.com/Shopify/hydrogen-shopify-dev/pull/154
-      // TODO: https://github.com/Shopify/hydrogen/blob/main/packages/cli/src/changelog.json
-      'https://hydrogen.shopify.dev/changelog.json',
-    );
+    const response = await fetch('https://hydrogen.shopify.dev/changelog.json');
 
     if (!response.ok) {
       throw new Error('Failed to fetch changelog.json');
