@@ -90,36 +90,40 @@ export function createInspectorProxy(
       case '/favicon.ico':
         proxyHttp(H2_FAVICON_URL, req.headers, res);
         break;
+      case '/':
+        if (!queryString) {
+          // Redirect to the DevTools UI with proper query params.
+          res.statusCode = 302;
+          res.setHeader(
+            'Location',
+            `/?experiments=true&v8only=true&debugger=true&ws=localhost:${port}/ws`,
+          );
+          res.end();
+        } else {
+          // Proxy CFW DevTools UI.
+          proxyHttp(
+            CFW_DEVTOOLS + '/js_app',
+            req.headers,
+            res,
+            (content) =>
+              // HTML from DevTools comes without closing <body> and <html> tags.
+              // The browser closes them automatically, then modifies the DOM with JS.
+              // This adds a loading indicator before the JS kicks in and modifies the DOM.
+              content +
+              '<div style="display: flex; flex-direction: column; align-items: center; padding-top: 20px; font-family: Arial; color: white">Loading DevTools...</div>' +
+              '</body></html>',
+          );
+        }
+        break;
       default:
         if (url.startsWith('/core/i18n/locales/') && url.endsWith('.json')) {
           // Replace tab names in the sources section
           proxyHttp(CFW_DEVTOOLS + url, req.headers, res, (content) =>
             content.replace('"Cloudflare"', '"Hydrogen"'),
           );
-        } else if (url === '/') {
-          if (!queryString) {
-            // Redirect to the DevTools UI with proper query params.
-            res.statusCode = 302;
-            res.setHeader(
-              'Location',
-              `/?experiments=true&v8only=true&debugger=true&ws=localhost:${port}/ws`,
-            );
-            res.end();
-          } else {
-            // Proxy CFW DevTools UI and add a loading indicator.
-            proxyHttp(
-              `${CFW_DEVTOOLS}/js_app`,
-              req.headers,
-              res,
-              (content) =>
-                content +
-                '<div style="display: flex; flex-direction: column; align-items: center; padding-top: 20px; font-family: Arial; color: white">Loading DevTools...</div>' +
-                '</body></html>',
-            );
-          }
         } else {
           // Proxy all other assets to the CFW DevTools CDN.
-          proxyHttp(CFW_DEVTOOLS + url + '?' + queryString, req.headers, res);
+          proxyHttp(CFW_DEVTOOLS + url, req.headers, res);
         }
 
         break;
@@ -270,7 +274,7 @@ function proxyHttp(
           .then(nodeResponse.end.bind(nodeResponse));
       }
 
-      return response.body?.pipe(nodeResponse);
+      return response.body.pipe(nodeResponse);
     })
     .catch((err) => {
       console.error(err);
