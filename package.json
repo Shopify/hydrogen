@@ -73,9 +73,6 @@
     "*.html": [
       "prettier --write"
     ],
-    "*.md": [
-      "prettier --write"
-    ],
     "*.css": [
       "prettier --write"
     ]
