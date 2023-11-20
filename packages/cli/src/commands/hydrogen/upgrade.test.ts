@@ -216,6 +216,24 @@ describe('upgrade', async () => {
         },
       );
     });
+
+    it('exists when run over a prerelease "next" version', async () => {
+      await inTemporaryHydrogenRepo(
+        async (appPath) => {
+          await runUpgrade({dryRun: false, appPath}).catch((e) => {
+            expect(e.message).toMatch('prerelease');
+          });
+        },
+        {
+          cleanGitRepo: true,
+          packageJson: {
+            dependencies: {
+              '@shopify/hydrogen': '0.0.0-next-74ea1db-20231120210149',
+            },
+          },
+        },
+      );
+    });
   });
 
   // TODO: finish this test once merged and published so that package.json is accessible
