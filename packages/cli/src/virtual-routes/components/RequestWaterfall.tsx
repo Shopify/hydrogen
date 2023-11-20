@@ -118,10 +118,9 @@ export function RequestWaterfall({
     if (eventIdMeta) {
       setTimeout(() => {
         window.setActiveEventId && window.setActiveEventId(eventIdMeta.value);
-        const row = document.querySelector(
-          `#request-table__row-${eventIdMeta.value}`,
-        );
-        row?.scrollIntoView();
+        document
+          .querySelector(`#request-table__row-${eventIdMeta.value}`)
+          ?.scrollIntoView();
       }, 0);
     }
   };
