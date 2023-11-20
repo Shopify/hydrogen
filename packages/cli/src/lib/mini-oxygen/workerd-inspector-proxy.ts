@@ -8,6 +8,11 @@ import {
 import {WebSocketServer, type WebSocket, type MessageEvent} from 'ws';
 import {type Protocol} from 'devtools-protocol';
 import {type InspectorWebSocketTarget} from './workerd-inspector.js';
+import {request} from 'undici';
+
+const CFW_DEVTOOLS = 'https://devtools.devprod.cloudflare.dev';
+const H2_FAVICON_URL =
+  'https://cdn.shopify.com/s/files/1/0598/4822/8886/files/favicon.svg';
 
 export function createInspectorProxy(
   port: number,
@@ -33,7 +38,7 @@ export function createInspectorProxy(
 
   const server = createServer((req: IncomingMessage, res: ServerResponse) => {
     // Remove query params. E.g. `/json/list?for_tab`
-    const url = req.url?.split('?')[0] ?? '';
+    const [url = '/', queryString = ''] = req.url?.split('?') || [];
 
     switch (url) {
       // We implement a couple of well known end points
@@ -62,8 +67,7 @@ export function createInspectorProxy(
                 devtoolsFrontendUrlCompat,
                 // Below are fields that are visible in the DevTools UI.
                 title: 'Hydrogen / Oxygen Worker',
-                faviconUrl:
-                  'https://cdn.shopify.com/s/files/1/0598/4822/8886/files/favicon.svg',
+                faviconUrl: H2_FAVICON_URL,
                 url:
                   'https://' +
                   (inspectorWs ? new URL(inspectorWs.url).host : localHost),
@@ -76,10 +80,48 @@ export function createInspectorProxy(
         // Handle proxied sourcemaps
         res.setHeader('Content-Type', 'text/plain');
         res.setHeader('Cache-Control', 'no-store');
-        res.setHeader('Access-Control-Allow-Origin', 'devtools://devtools');
+        res.setHeader(
+          'Access-Control-Allow-Origin',
+          req.headers.origin ?? 'devtools://devtools',
+        );
+
         res.end(readFileSync(sourceFilePath + '.map', 'utf-8'));
         break;
+      case '/favicon.ico':
+        proxyHttp(H2_FAVICON_URL, req.headers, res);
+        break;
       default:
+        if (url.startsWith('/core/i18n/locales/') && url.endsWith('.json')) {
+          // Replace tab names in the sources section
+          proxyHttp(CFW_DEVTOOLS + url, req.headers, res, (content) =>
+            content.replace('"Cloudflare"', '"Hydrogen"'),
+          );
+        } else if (url === '/') {
+          if (!queryString) {
+            // Redirect to the DevTools UI with proper query params.
+            res.statusCode = 302;
+            res.setHeader(
+              'Location',
+              `/?experiments=true&v8only=true&debugger=true&ws=localhost:${port}/ws`,
+            );
+            res.end();
+          } else {
+            // Proxy CFW DevTools UI and add a loading indicator.
+            proxyHttp(
+              `${CFW_DEVTOOLS}/js_app`,
+              req.headers,
+              res,
+              (content) =>
+                content +
+                '<div style="display: flex; flex-direction: column; align-items: center; padding-top: 20px; font-family: Arial; color: white">Loading DevTools...</div>' +
+                '</body></html>',
+            );
+          }
+        } else {
+          // Proxy all other assets to the CFW DevTools CDN.
+          proxyHttp(CFW_DEVTOOLS + url + '?' + queryString, req.headers, res);
+        }
+
         break;
     }
   });
@@ -190,4 +232,49 @@ export function createInspectorProxy(
       onInspectorConnection();
     },
   };
+}
+
+function proxyHttp(
+  url: string,
+  originalHeaders: IncomingMessage['headers'],
+  nodeResponse: ServerResponse,
+  contentReplacer?: (content: string) => string,
+) {
+  const headers = Object.fromEntries(Object.entries(originalHeaders));
+  delete headers['host'];
+  delete headers['cookie'];
+  // If the response is going to be awaited and modified,
+  // we can't ask for an encoded response (we can't decode it here).
+  if (contentReplacer) delete headers['accept-encoding'];
+
+  // Use `request` instead of `fetch` to avoid decompressing
+  // the response body. We want to forward the raw response.
+  // https://github.com/nodejs/undici/issues/1462
+  return request(url, {responseHeader: 'raw', headers})
+    .then((response) => {
+      nodeResponse.statusCode = response.statusCode;
+      if (nodeResponse.statusCode === 404) {
+        return nodeResponse.end('Not found');
+      }
+
+      Object.entries(response.headers).forEach(([key, value]) => {
+        if (value) {
+          nodeResponse.setHeader(key, value);
+        }
+      });
+
+      if (contentReplacer) {
+        return response.body
+          ?.text()
+          .then(contentReplacer)
+          .then(nodeResponse.end.bind(nodeResponse));
+      }
+
+      return response.body?.pipe(nodeResponse);
+    })
+    .catch((err) => {
+      console.error(err);
+      nodeResponse.statusCode = 500;
+      nodeResponse.end('Internal error');
+    });
 }
