@@ -116,10 +116,14 @@ export function createInspectorProxy(
         }
         break;
       default:
-        if (url.startsWith('/core/i18n/locales/') && url.endsWith('.json')) {
-          // Replace tab names in the sources section
+        if (
+          url === '/panels/sources/sources-meta.js' ||
+          (url.startsWith('/core/i18n/locales/') && url.endsWith('.json'))
+        ) {
+          // Replace tab names in the sources section. Locales might
+          // overwrite the original name, so we modify them too.
           proxyHttp(CFW_DEVTOOLS + url, req.headers, res, (content) =>
-            content.replace('"Cloudflare"', '"Hydrogen"'),
+            content.replace(/['"]Cloudflare['"]/g, '"Hydrogen"'),
           );
         } else {
           // Proxy all other assets to the CFW DevTools CDN.
