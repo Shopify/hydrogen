@@ -3,7 +3,6 @@ import type {WaterfallItem, Waterfall} from 'flame-chart-js';
 import {useMemo} from 'react';
 
 import {FlameChartWrapper} from './FlameChartWrapper.jsx';
-import {Link} from '@remix-run/react';
 import {
   buildRequestData,
   type ServerEvent,
@@ -128,9 +127,10 @@ export function RequestWaterfall({
   };
 
   const onSelect = (data: any) => {
-    const eventIdMeta = data.node.meta.filter(
+    const eventIdMeta = data?.node?.meta?.filter(
       (meta: any) => meta.name === 'id',
-    )[0];
+    )?.[0];
+
     if (eventIdMeta) {
       setActiveEventId(eventIdMeta.value);
       document
