@@ -125,6 +125,13 @@ async function inTemporaryHydrogenRepo(
     expect(await fileExists(joinPath(tmpDir, '/.git/config'))).toBeTruthy();
 
     if (cleanGitRepo) {
+      await execa('git', [
+        'config',
+        '--global',
+        'user.email',
+        'test@hydrogen.shop',
+      ]);
+      await execa('git', ['config', '--global', 'user.name', 'Hydrogen Test']);
       await execa('git', ['add', 'package.json'], {cwd: tmpDir});
       await execa('git', ['commit', '-m', 'initial commit'], {cwd: tmpDir});
     }
