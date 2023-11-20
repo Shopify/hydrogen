@@ -126,6 +126,15 @@ async function inTemporaryHydrogenRepo(
 
     if (cleanGitRepo) {
       await execa('git', ['add', 'package.json'], {cwd: tmpDir});
+
+      if (process.env.NODE_ENV === 'test' && process.env.CI) {
+        await execa('git', ['config', 'user.email', 'test@hydrogen.shop'], {
+          cwd: tmpDir,
+        });
+        await execa('git', ['config', 'user.name', 'Hydrogen Test'], {
+          cwd: tmpDir,
+        });
+      }
       await execa('git', ['commit', '-m', 'initial commit'], {cwd: tmpDir});
     }
 

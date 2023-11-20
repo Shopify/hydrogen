@@ -254,10 +254,7 @@ function checkIsGitRepo(appPath: string) {
  * Checks if the current git branch is clean and throws an error if it's not
  */
 async function checkDirtyGitBranch(appPath: string) {
-  // TODO: remove type cast when we upgrade cli-kit to a version that includes https://github.com/Shopify/cli/pull/3022
-  const cleanBranch = (await isClean(appPath)) as unknown as () => boolean;
-
-  if (!cleanBranch()) {
+  if (!(await isClean(appPath))) {
     throw new AbortError(
       'The upgrade command can only be run on a clean git branch',
       'Please commit your changes or re-run the command on a clean branch',
