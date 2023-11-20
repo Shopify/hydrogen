@@ -1,4 +1,3 @@
-import {useEffect} from 'react';
 import type {WaterfallItem, Waterfall} from 'flame-chart-js';
 import {useMemo} from 'react';
 
@@ -23,11 +22,9 @@ const STYLE_FONT =
 export function RequestWaterfall({
   serverEvents,
   config,
-  setActiveEventId,
 }: {
   serverEvents: ServerEvents;
   config: RequestWaterfallConfig;
-  setActiveEventId: (eventId: string | undefined) => void;
 }) {
   const items = buildRequestData<WaterfallItem>({
     serverEvents,
@@ -68,19 +65,6 @@ export function RequestWaterfall({
       } satisfies WaterfallItem;
     },
   });
-
-  useEffect(() => {
-    // Remove selection of active event if it's not in the list anymore
-    if (!serverEvents.preserveLog && serverEvents.activeEventId) {
-      const selectedItem = items.find(
-        (item) => item.meta?.[0]?.value === serverEvents.activeEventId,
-      );
-
-      if (!selectedItem) {
-        setActiveEventId(undefined);
-      }
-    }
-  }, [serverEvents.preserveLog]);
 
   const data: Waterfall = {
     items: [
@@ -132,10 +116,13 @@ export function RequestWaterfall({
     )?.[0];
 
     if (eventIdMeta) {
-      setActiveEventId(eventIdMeta.value);
-      document
-        .querySelector(`#request-table__row-${eventIdMeta.value}`)
-        ?.scrollIntoView();
+      setTimeout(() => {
+        window.setActiveEventId && window.setActiveEventId(eventIdMeta.value);
+        const row = document.querySelector(
+          `#request-table__row-${eventIdMeta.value}`,
+        );
+        row?.scrollIntoView();
+      }, 0);
     }
   };
 
@@ -156,6 +143,9 @@ export function RequestWaterfall({
         },
         timeGridPlugin: {
           font: STYLE_FONT,
+        },
+        waterfallPlugin: {
+          defaultHeight: 500,
         },
       },
     }),

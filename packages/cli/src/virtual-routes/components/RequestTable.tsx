@@ -1,3 +1,4 @@
+import {useEffect} from 'react';
 import {
   buildRequestData,
   type RequestTimings,
@@ -15,9 +16,11 @@ type RequestRow = {
 
 export function RequestTable({
   serverEvents,
+  activeEventId,
   setActiveEventId,
 }: {
   serverEvents: ServerEvents;
+  activeEventId: string | undefined;
   setActiveEventId: (eventId: string | undefined) => void;
 }) {
   let totalMainRequests = 0;
@@ -52,6 +55,17 @@ export function RequestTable({
     },
   });
 
+  useEffect(() => {
+    // Remove selection of active event if it's not in the list anymore
+    if (!serverEvents.preserveLog && activeEventId) {
+      const selectedItem = items.find((item) => item.id === activeEventId);
+
+      if (!selectedItem) {
+        setActiveEventId(undefined);
+      }
+    }
+  }, [serverEvents.preserveLog]);
+
   return (
     <div id="request-table">
       <div>
@@ -65,9 +79,7 @@ export function RequestTable({
             <div
               id={`request-table__row-${row.id}`}
               key={row.id}
-              className={`grid-row${
-                serverEvents.activeEventId === row.id ? ' active' : ''
-              }`}
+              className={`grid-row${activeEventId === row.id ? ' active' : ''}`}
               onClick={() => setActiveEventId(row.id)}
             >
               <div className="grid-cell">{row.url}</div>

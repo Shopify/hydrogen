@@ -1,4 +1,4 @@
-import {useEffect} from 'react';
+import {useEffect, useState} from 'react';
 import type {LinksFunction} from '@remix-run/server-runtime';
 import {Script} from '@shopify/hydrogen';
 
@@ -36,6 +36,10 @@ const WATERFALL_CONFIG = {
   },
 };
 
+declare global {
+  var setActiveEventId: (eventId: string) => void;
+}
+
 export default function DebugNetwork() {
   const {
     serverEvents,
@@ -45,14 +49,7 @@ export default function DebugNetwork() {
     timestamp,
     setHidePutRequests,
     setPreserveLog,
-    setActiveEventId,
   } = useDebugNetworkServer();
-
-  useEffect(() => {
-    if (!serverEvents.activeEventId) {
-      setActiveEventId(undefined);
-    }
-  }, [serverEvents.activeEventId]);
 
   const isEmptyState = serverEvents.mainRequests.length === 0;
 
@@ -81,37 +78,11 @@ export default function DebugNetwork() {
             <RequestWaterfall
               key={timestamp}
               serverEvents={serverEvents}
-              setActiveEventId={setActiveEventId}
               config={WATERFALL_CONFIG}
             />
           )}
         </div>
-        <div id="request-info" className={`${isEmptyState ? 'empty' : ''}`}>
-          <div className="panel no-pad overflow-hidden">
-            <RequestTable
-              serverEvents={serverEvents}
-              setActiveEventId={setActiveEventId}
-            />
-          </div>
-          <div
-            id="request-details-panel"
-            className={`panel no-pad${
-              serverEvents.activeEventId ? ' active' : ''
-            }`}
-          >
-            <div id="close-request-detail">
-              <button
-                className="plain icon"
-                onClick={() => {
-                  setActiveEventId(undefined);
-                }}
-              >
-                <IconClose />
-              </button>
-            </div>
-            <RequestDetails serverEvents={serverEvents} />
-          </div>
-        </div>
+        <RequestInfo serverEvents={serverEvents} isEmptyState={isEmptyState} />
         <p className="footnote">
           Note: You may need to turn on 'Disable Cache' for your navigating
           window.
@@ -238,6 +209,58 @@ function OptionsAndLegend({
             Sub request
           </p>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function RequestInfo({
+  serverEvents,
+  isEmptyState,
+}: {
+  serverEvents: ServerEvents;
+  isEmptyState: boolean;
+}) {
+  const [activeEventId, setActiveEventId] = useState<string | undefined>();
+
+  useEffect(() => {
+    // Exposing setActiveEventId to the window for the flame chart
+    window.setActiveEventId = setActiveEventId;
+  }, []);
+
+  useEffect(() => {
+    if (!activeEventId) {
+      setActiveEventId(undefined);
+    }
+  }, [activeEventId]);
+
+  return (
+    <div id="request-info" className={`${isEmptyState ? 'empty' : ''}`}>
+      <div className="panel no-pad overflow-hidden">
+        <RequestTable
+          serverEvents={serverEvents}
+          activeEventId={activeEventId}
+          setActiveEventId={setActiveEventId}
+        />
+      </div>
+      <div
+        id="request-details-panel"
+        className={`panel no-pad${activeEventId ? ' active' : ''}`}
+      >
+        <div id="close-request-detail">
+          <button
+            className="plain icon"
+            onClick={() => {
+              setActiveEventId(undefined);
+            }}
+          >
+            <IconClose />
+          </button>
+        </div>
+        <RequestDetails
+          serverEvents={serverEvents}
+          activeEventId={activeEventId}
+        />
       </div>
     </div>
   );

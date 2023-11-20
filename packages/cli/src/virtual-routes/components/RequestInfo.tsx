@@ -1,12 +1,18 @@
 import {type ServerEvents} from '../lib/useDebugNetworkServer.jsx';
 import {Link} from '@remix-run/react';
 
-export function RequestDetails({serverEvents}: {serverEvents: ServerEvents}) {
-  if (!serverEvents.activeEventId) {
+export function RequestDetails({
+  serverEvents,
+  activeEventId,
+}: {
+  serverEvents: ServerEvents;
+  activeEventId: string | undefined;
+}) {
+  if (!activeEventId) {
     return null;
   }
 
-  const requestInfo = serverEvents.allRequests[serverEvents.activeEventId];
+  const requestInfo = serverEvents.allRequests[activeEventId];
 
   if (!requestInfo) {
     return null;

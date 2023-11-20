@@ -79,6 +79,11 @@ export function useDebugNetworkServer() {
   // For triggering a react render
   const [timestamp, setTimestamp] = useState<number>();
 
+  // Trigger a render when the server events change
+  function triggerRender() {
+    setTimestamp(new Date().getTime());
+  }
+
   function clearServerEvents() {
     fetch('/debug-network-server', {method: 'DELETE'}).catch((error) =>
       console.error('Could not clear history:', error),
@@ -103,9 +108,7 @@ export function useDebugNetworkServer() {
           id,
         });
 
-        setTimeout(() => {
-          setTimestamp(new Date().getTime());
-        }, 0);
+        setTimeout(triggerRender, 0);
       }
     };
   }
@@ -152,7 +155,7 @@ export function useDebugNetworkServer() {
 
   function clear() {
     clearServerEvents();
-    setTimestamp(new Date().getTime());
+    triggerRender();
   }
 
   function stop() {
@@ -160,7 +163,7 @@ export function useDebugNetworkServer() {
       ...serverEvents.current,
       recordEvents: false,
     };
-    setTimestamp(new Date().getTime());
+    triggerRender();
   }
 
   function record() {
@@ -169,24 +172,23 @@ export function useDebugNetworkServer() {
       ...serverEvents.current,
       recordEvents: true,
     };
-    setTimestamp(new Date().getTime());
+    triggerRender();
   }
 
   function setHidePutRequests(hidePutRequests: boolean) {
     serverEvents.current.hidePutRequests = hidePutRequests;
     setSettings({hidePutRequests});
-    setTimestamp(new Date().getTime());
+    triggerRender();
   }
 
   function setPreserveLog(preserveLog: boolean) {
     serverEvents.current.preserveLog = preserveLog;
     setSettings({preserveLog});
-    setTimestamp(new Date().getTime());
+    triggerRender();
   }
 
   function setActiveEventId(eventId: string | undefined) {
     serverEvents.current.activeEventId = eventId;
-    setTimestamp(new Date().getTime());
   }
 
   return {
