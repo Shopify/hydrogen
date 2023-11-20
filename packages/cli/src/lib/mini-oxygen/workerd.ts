@@ -149,7 +149,12 @@ export async function startWorkerdServer({
       }
     },
     showBanner(options) {
-      console.log('');
+      console.log(''); // New line
+
+      const debuggerMessage = `\n\nDebug mode enabled. Attach a ${
+        process.env.TERM_PROGRAM === 'vscode' ? 'VSCode ' : ''
+      }debugger to port ${publicInspectorPort}\nor open DevTools in http://localhost:${publicInspectorPort}`;
+
       renderSuccess({
         headline: `${
           options?.headlinePrefix ?? ''
@@ -159,13 +164,7 @@ export async function startWorkerdServer({
         body: [
           `View ${options?.appName ?? 'Hydrogen'} app: ${listeningAt}`,
           ...(options?.extraLines ?? []),
-          ...(debug
-            ? [
-                {
-                  warn: `\n\nDebugger listening on ws://localhost:${publicInspectorPort}`,
-                },
-              ]
-            : []),
+          ...(debug ? [{warn: debuggerMessage}] : []),
         ],
       });
       console.log('');
