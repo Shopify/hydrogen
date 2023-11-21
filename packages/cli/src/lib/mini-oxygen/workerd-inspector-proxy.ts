@@ -6,13 +6,24 @@ import {
   type ServerResponse,
 } from 'node:http';
 import {WebSocketServer, type WebSocket, type MessageEvent} from 'ws';
-import {type Protocol} from 'devtools-protocol';
-import {type InspectorWebSocketTarget} from './workerd-inspector.js';
+import type {Protocol} from 'devtools-protocol';
+import type {
+  MessageData,
+  InspectorWebSocketTarget,
+  InspectorConnection,
+} from './workerd-inspector.js';
+import {request} from 'undici';
+
+const CFW_DEVTOOLS = 'https://devtools.devprod.cloudflare.dev';
+const H2_FAVICON_URL =
+  'https://cdn.shopify.com/s/files/1/0598/4822/8886/files/favicon.svg';
+
+export type InspectorProxy = ReturnType<typeof createInspectorProxy>;
 
 export function createInspectorProxy(
   port: number,
   sourceFilePath: string,
-  inspectorConnection?: {ws?: WebSocket},
+  newInspectorConnection: InspectorConnection,
 ) {
   /**
    * A unique identifier for this debugging session.
@@ -23,17 +34,20 @@ export function createInspectorProxy(
    */
   let debuggerWs: WebSocket | undefined = undefined;
   /**
-   * WebSocket connection to the Workerd inspector.
+   * Workerd inspector connection.
    */
-  let inspectorWs: WebSocket | undefined = inspectorConnection?.ws;
+  let inspector = newInspectorConnection;
   /**
    * Whether the connected debugger is running in the browser (e.g. DevTools).
    */
   let isDevToolsInBrowser = false;
 
+  const sourceMapPathname = '/__index.js.map';
+  const sourceMapURL = `http://localhost:${port}${sourceMapPathname}`;
+
   const server = createServer((req: IncomingMessage, res: ServerResponse) => {
     // Remove query params. E.g. `/json/list?for_tab`
-    const url = req.url?.split('?')[0] ?? '';
+    const [url = '/', queryString = ''] = req.url?.split('?') || [];
 
     switch (url) {
       // We implement a couple of well known end points
@@ -62,24 +76,67 @@ export function createInspectorProxy(
                 devtoolsFrontendUrlCompat,
                 // Below are fields that are visible in the DevTools UI.
                 title: 'Hydrogen / Oxygen Worker',
-                faviconUrl:
-                  'https://cdn.shopify.com/s/files/1/0598/4822/8886/files/favicon.svg',
-                url:
-                  'https://' +
-                  (inspectorWs ? new URL(inspectorWs.url).host : localHost),
+                faviconUrl: H2_FAVICON_URL,
+                url: 'https://' + new URL(inspector.ws.url).host,
               } satisfies InspectorWebSocketTarget,
             ]),
           );
         }
         return;
-      case '/__index.js.map':
+      case sourceMapPathname:
         // Handle proxied sourcemaps
         res.setHeader('Content-Type', 'text/plain');
         res.setHeader('Cache-Control', 'no-store');
-        res.setHeader('Access-Control-Allow-Origin', 'devtools://devtools');
+        res.setHeader(
+          'Access-Control-Allow-Origin',
+          req.headers.origin ?? 'devtools://devtools',
+        );
+
         res.end(readFileSync(sourceFilePath + '.map', 'utf-8'));
         break;
+      case '/favicon.ico':
+        proxyHttp(H2_FAVICON_URL, req.headers, res);
+        break;
+      case '/':
+        if (!queryString) {
+          // Redirect to the DevTools UI with proper query params.
+          res.statusCode = 302;
+          res.setHeader(
+            'Location',
+            `/?experiments=true&v8only=true&debugger=true&ws=localhost:${port}/ws`,
+          );
+          res.end();
+        } else {
+          // Proxy CFW DevTools UI.
+          proxyHttp(
+            CFW_DEVTOOLS + '/js_app',
+            req.headers,
+            res,
+            (content) =>
+              // HTML from DevTools comes without closing <body> and <html> tags.
+              // The browser closes them automatically, then modifies the DOM with JS.
+              // This adds a loading indicator before the JS kicks in and modifies the DOM.
+              content +
+              '<div style="display: flex; flex-direction: column; align-items: center; padding-top: 20px; font-family: Arial; color: white">Loading DevTools...</div>' +
+              '</body></html>',
+          );
+        }
+        break;
       default:
+        if (
+          url === '/panels/sources/sources-meta.js' ||
+          (url.startsWith('/core/i18n/locales/') && url.endsWith('.json'))
+        ) {
+          // Replace tab names in the sources section. Locales might
+          // overwrite the original name, so we modify them too.
+          proxyHttp(CFW_DEVTOOLS + url, req.headers, res, (content) =>
+            content.replace(/['"]Cloudflare['"]/g, '"Hydrogen"'),
+          );
+        } else {
+          // Proxy all other assets to the CFW DevTools CDN.
+          proxyHttp(CFW_DEVTOOLS + url, req.headers, res);
+        }
+
         break;
     }
   });
@@ -104,7 +161,7 @@ export function createInspectorProxy(
     } else {
       // Ensure debugger is restarted in workerd before connecting
       // a new client to receive `Debugger.scriptParsed` events.
-      inspectorWs?.send(
+      inspector.ws.send(
         JSON.stringify({id: 100_000_000, method: 'Debugger.disable'}),
       );
 
@@ -126,10 +183,10 @@ export function createInspectorProxy(
     }
   });
 
-  if (inspectorWs) onInspectorConnection();
+  if (inspector.ws) onInspectorConnection();
 
   function onInspectorConnection() {
-    inspectorWs?.addEventListener('message', sendMessageToDebugger);
+    inspector.ws.addEventListener('message', sendMessageToDebugger);
 
     // In case this is a DevTools connection, send a warning
     // message to the console to inform about reconnection.
@@ -156,25 +213,12 @@ export function createInspectorProxy(
   }
 
   function sendMessageToInspector(event: MessageEvent) {
-    inspectorWs?.send(event.data);
+    inspector.ws.send(event.data);
   }
 
   function sendMessageToDebugger(event: MessageEvent) {
-    // Intercept Debugger.scriptParsed responses to inject URL schemes
-    // so that DevTools can fetch source maps from the proxy server.
-    // This is only required when opening DevTools in the browser.
     if (isDevToolsInBrowser) {
-      const message = JSON.parse(event.data as string);
-      if (
-        message.method === 'Debugger.scriptParsed' &&
-        message.params.sourceMapURL === 'index.js.map'
-      ) {
-        // The browser can't download source maps from file:// URLs due to security restrictions.
-        // Force the DevTools to fetch the source map using http:// instead of file://
-        // This endpoint is handled in our proxy server above.
-        message.params.sourceMapURL = `http://localhost:${port}/__index.js.map`;
-        event = {...event, data: JSON.stringify(message)};
-      }
+      event = enhanceDevToolsEvent(event, sourceMapURL);
     }
 
     if (debuggerWs) {
@@ -185,9 +229,72 @@ export function createInspectorProxy(
   }
 
   return {
-    updateInspectorConnection(newConnection?: {ws?: WebSocket}) {
-      inspectorWs = newConnection?.ws;
+    updateInspectorConnection(newConnection: InspectorConnection) {
+      inspector = newConnection;
       onInspectorConnection();
     },
   };
+}
+
+function enhanceDevToolsEvent(event: MessageEvent, sourceMapUrl: string) {
+  const message = JSON.parse(event.data as string) as MessageData;
+
+  if (message.method === 'Debugger.scriptParsed') {
+    // Intercept Debugger.scriptParsed responses to inject URL schemes
+    // so that DevTools can fetch source maps from the proxy server.
+    // This is only required when opening DevTools in the browser.
+    if (message.params.sourceMapURL === 'index.js.map') {
+      // The browser can't download source maps from file:// URLs due to security restrictions.
+      // Force the DevTools to fetch the source map using http:// instead of file://
+      // This endpoint is handled in our proxy server above.
+      message.params.sourceMapURL = sourceMapUrl;
+    }
+  }
+
+  return {...event, data: JSON.stringify(message)};
+}
+
+function proxyHttp(
+  url: string,
+  originalHeaders: IncomingMessage['headers'],
+  nodeResponse: ServerResponse,
+  contentReplacer?: (content: string) => string,
+) {
+  const headers = Object.fromEntries(Object.entries(originalHeaders));
+  delete headers['host'];
+  delete headers['cookie'];
+  // If the response is going to be awaited and modified,
+  // we can't ask for an encoded response (we can't decode it here).
+  if (contentReplacer) delete headers['accept-encoding'];
+
+  // Use `request` instead of `fetch` to avoid decompressing
+  // the response body. We want to forward the raw response.
+  // https://github.com/nodejs/undici/issues/1462
+  return request(url, {responseHeader: 'raw', headers})
+    .then((response) => {
+      nodeResponse.statusCode = response.statusCode;
+      if (nodeResponse.statusCode === 404) {
+        return nodeResponse.end('Not found');
+      }
+
+      Object.entries(response.headers).forEach(([key, value]) => {
+        if (value) {
+          nodeResponse.setHeader(key, value);
+        }
+      });
+
+      if (contentReplacer) {
+        return response.body
+          ?.text()
+          .then(contentReplacer)
+          .then(nodeResponse.end.bind(nodeResponse));
+      }
+
+      return response.body.pipe(nodeResponse);
+    })
+    .catch((err) => {
+      console.error(err);
+      nodeResponse.statusCode = 500;
+      nodeResponse.end('Internal error');
+    });
 }
