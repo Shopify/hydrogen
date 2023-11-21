@@ -220,9 +220,9 @@ describe('upgrade', async () => {
     it('exists when run over a prerelease "next" version', async () => {
       await inTemporaryHydrogenRepo(
         async (appPath) => {
-          await runUpgrade({dryRun: false, appPath}).catch((e) => {
-            expect(e.message).toMatch('prerelease');
-          });
+          await expect(
+            runUpgrade({dryRun: false, appPath}),
+          ).rejects.toThrowError('prerelease');
         },
         {
           cleanGitRepo: true,
