@@ -6,8 +6,12 @@ import {
   type ServerResponse,
 } from 'node:http';
 import {WebSocketServer, type WebSocket, type MessageEvent} from 'ws';
-import {type Protocol} from 'devtools-protocol';
-import {type InspectorWebSocketTarget} from './workerd-inspector.js';
+import type {Protocol} from 'devtools-protocol';
+import type {
+  MessageData,
+  InspectorWebSocketTarget,
+  InspectorConnection,
+} from './workerd-inspector.js';
 import {request} from 'undici';
 
 const CFW_DEVTOOLS = 'https://devtools.devprod.cloudflare.dev';
@@ -19,7 +23,7 @@ export type InspectorProxy = ReturnType<typeof createInspectorProxy>;
 export function createInspectorProxy(
   port: number,
   sourceFilePath: string,
-  inspectorConnection?: {ws?: WebSocket},
+  newInspectorConnection: InspectorConnection,
 ) {
   /**
    * A unique identifier for this debugging session.
@@ -30,13 +34,16 @@ export function createInspectorProxy(
    */
   let debuggerWs: WebSocket | undefined = undefined;
   /**
-   * WebSocket connection to the Workerd inspector.
+   * Workerd inspector connection.
    */
-  let inspectorWs: WebSocket | undefined = inspectorConnection?.ws;
+  let inspector = newInspectorConnection;
   /**
    * Whether the connected debugger is running in the browser (e.g. DevTools).
    */
   let isDevToolsInBrowser = false;
+
+  const sourceMapPathname = '/__index.js.map';
+  const sourceMapURL = `http://localhost:${port}${sourceMapPathname}`;
 
   const server = createServer((req: IncomingMessage, res: ServerResponse) => {
     // Remove query params. E.g. `/json/list?for_tab`
@@ -70,15 +77,13 @@ export function createInspectorProxy(
                 // Below are fields that are visible in the DevTools UI.
                 title: 'Hydrogen / Oxygen Worker',
                 faviconUrl: H2_FAVICON_URL,
-                url:
-                  'https://' +
-                  (inspectorWs ? new URL(inspectorWs.url).host : localHost),
+                url: 'https://' + new URL(inspector.ws.url).host,
               } satisfies InspectorWebSocketTarget,
             ]),
           );
         }
         return;
-      case '/__index.js.map':
+      case sourceMapPathname:
         // Handle proxied sourcemaps
         res.setHeader('Content-Type', 'text/plain');
         res.setHeader('Cache-Control', 'no-store');
@@ -156,7 +161,7 @@ export function createInspectorProxy(
     } else {
       // Ensure debugger is restarted in workerd before connecting
       // a new client to receive `Debugger.scriptParsed` events.
-      inspectorWs?.send(
+      inspector.ws.send(
         JSON.stringify({id: 100_000_000, method: 'Debugger.disable'}),
       );
 
@@ -178,10 +183,10 @@ export function createInspectorProxy(
     }
   });
 
-  if (inspectorWs) onInspectorConnection();
+  if (inspector.ws) onInspectorConnection();
 
   function onInspectorConnection() {
-    inspectorWs?.addEventListener('message', sendMessageToDebugger);
+    inspector.ws.addEventListener('message', sendMessageToDebugger);
 
     // In case this is a DevTools connection, send a warning
     // message to the console to inform about reconnection.
@@ -208,25 +213,12 @@ export function createInspectorProxy(
   }
 
   function sendMessageToInspector(event: MessageEvent) {
-    inspectorWs?.send(event.data);
+    inspector.ws.send(event.data);
   }
 
   function sendMessageToDebugger(event: MessageEvent) {
-    // Intercept Debugger.scriptParsed responses to inject URL schemes
-    // so that DevTools can fetch source maps from the proxy server.
-    // This is only required when opening DevTools in the browser.
     if (isDevToolsInBrowser) {
-      const message = JSON.parse(event.data as string);
-      if (
-        message.method === 'Debugger.scriptParsed' &&
-        message.params.sourceMapURL === 'index.js.map'
-      ) {
-        // The browser can't download source maps from file:// URLs due to security restrictions.
-        // Force the DevTools to fetch the source map using http:// instead of file://
-        // This endpoint is handled in our proxy server above.
-        message.params.sourceMapURL = `http://localhost:${port}/__index.js.map`;
-        event = {...event, data: JSON.stringify(message)};
-      }
+      event = enhanceDevToolsEvent(event, sourceMapURL);
     }
 
     if (debuggerWs) {
@@ -237,11 +229,29 @@ export function createInspectorProxy(
   }
 
   return {
-    updateInspectorConnection(newConnection?: {ws?: WebSocket}) {
-      inspectorWs = newConnection?.ws;
+    updateInspectorConnection(newConnection: InspectorConnection) {
+      inspector = newConnection;
       onInspectorConnection();
     },
   };
+}
+
+function enhanceDevToolsEvent(event: MessageEvent, sourceMapUrl: string) {
+  const message = JSON.parse(event.data as string) as MessageData;
+
+  if (message.method === 'Debugger.scriptParsed') {
+    // Intercept Debugger.scriptParsed responses to inject URL schemes
+    // so that DevTools can fetch source maps from the proxy server.
+    // This is only required when opening DevTools in the browser.
+    if (message.params.sourceMapURL === 'index.js.map') {
+      // The browser can't download source maps from file:// URLs due to security restrictions.
+      // Force the DevTools to fetch the source map using http:// instead of file://
+      // This endpoint is handled in our proxy server above.
+      message.params.sourceMapURL = sourceMapUrl;
+    }
+  }
+
+  return {...event, data: JSON.stringify(message)};
 }
 
 function proxyHttp(
