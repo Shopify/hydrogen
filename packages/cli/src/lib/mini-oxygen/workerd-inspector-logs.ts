@@ -1,7 +1,89 @@
 import {type Protocol} from 'devtools-protocol';
-import {type ErrorProperties} from './workerd-inspector.js';
+import type {
+  InspectorConnection,
+  ErrorProperties,
+  MessageData,
+} from './workerd-inspector.js';
 import {SourceMapConsumer} from 'source-map';
 import {parse as parseStackTrace} from 'stack-trace';
+
+export function addInspectorConsoleLogger(inspector: InspectorConnection) {
+  inspector.ws.addEventListener('message', async (event) => {
+    if (typeof event.data !== 'string') {
+      // We should never get here, but who know...
+      console.error('Unrecognised devtools event:', event);
+      return;
+    }
+
+    const evt = JSON.parse(event.data) as MessageData;
+    inspector.cleanupMessageQueue(evt);
+
+    if (evt.method === 'Runtime.consoleAPICalled') {
+      await logConsoleMessage(evt.params, inspector);
+    } else if (evt.method === 'Runtime.exceptionThrown') {
+      console.error(
+        await createErrorFromException(evt.params.exceptionDetails, inspector),
+      );
+    }
+  });
+}
+
+export async function createErrorFromException(
+  exceptionDetails: Protocol.Runtime.ExceptionDetails,
+  inspector: InspectorConnection,
+) {
+  const errorProperties: ErrorProperties = {};
+
+  const sourceMapConsumer = await inspector.getSourceMapConsumer();
+  if (sourceMapConsumer !== undefined) {
+    // Create the lines for the exception details log
+    const message = exceptionDetails.exception?.description?.split('\n')[0];
+    const stack = exceptionDetails.stackTrace?.callFrames;
+    const formatted = formatStructuredError(sourceMapConsumer, message, stack);
+
+    errorProperties.message = exceptionDetails.text;
+    errorProperties.stack = formatted;
+  } else {
+    errorProperties.message =
+      exceptionDetails.text +
+      ' ' +
+      (exceptionDetails.exception?.description ?? '');
+  }
+
+  return inspector.reconstructError(
+    errorProperties,
+    exceptionDetails.exception,
+  );
+}
+
+export async function createErrorFromLog(
+  ro: Protocol.Runtime.RemoteObject,
+  inspector: InspectorConnection,
+) {
+  if (ro.subtype !== 'error' || ro.preview?.subtype !== 'error') {
+    throw new Error('Not an error object');
+  }
+
+  const errorProperties = {
+    message:
+      ro.preview.description
+        ?.split('\n')
+        .filter((line) => !/^\s+at\s/.test(line))
+        .join('\n') ??
+      ro.preview.properties.find(({name}) => name === 'message')?.value ??
+      '',
+    stack:
+      ro.preview.description ??
+      ro.description ??
+      ro.preview.properties.find(({name}) => name === 'stack')?.value,
+    cause: ro.preview.properties.find(({name}) => name === 'cause')
+      ?.value as unknown,
+  } satisfies ErrorProperties;
+
+  // Even though we have gathered all the properties, they are likely
+  // truncated so we need to fetch their full version.
+  return inspector.reconstructError(errorProperties, ro);
+}
 
 /**
  * This function converts a message serialised as a devtools event
@@ -11,7 +93,7 @@ import {parse as parseStackTrace} from 'stack-trace';
  * directly in the terminal.
  */
 
-export const mapConsoleAPIMessageTypeToConsoleMethod: {
+const mapConsoleAPIMessageTypeToConsoleMethod: {
   [key in Protocol.Runtime.ConsoleAPICalledEvent['type']]: Exclude<
     keyof Console,
     'Console'
@@ -37,12 +119,9 @@ export const mapConsoleAPIMessageTypeToConsoleMethod: {
   endGroup: 'groupEnd',
 };
 
-export async function logConsoleMessage(
+async function logConsoleMessage(
   evt: Protocol.Runtime.ConsoleAPICalledEvent,
-  reconstructError: (
-    initialProperties: ErrorProperties,
-    ro: Protocol.Runtime.RemoteObject,
-  ) => Promise<Error>,
+  inspector: InspectorConnection,
 ) {
   const args: Array<string | Error> = [];
   for (const ro of evt.args) {
@@ -141,28 +220,7 @@ export async function logConsoleMessage(
             case 'wasmvalue':
               break;
             case 'error':
-              const errorProperties = {
-                message:
-                  ro.preview.description
-                    ?.split('\n')
-                    .filter((line) => !/^\s+at\s/.test(line))
-                    .join('\n') ??
-                  ro.preview.properties.find(({name}) => name === 'message')
-                    ?.value ??
-                  '',
-                stack:
-                  ro.preview.description ??
-                  ro.description ??
-                  ro.preview.properties.find(({name}) => name === 'stack')
-                    ?.value,
-                cause: ro.preview.properties.find(({name}) => name === 'cause')
-                  ?.value as unknown,
-              };
-
-              // Even though we have gathered all the properties, they are likely
-              // truncated so we need to fetch their full version.
-              const error = await reconstructError(errorProperties, ro);
-
+              const error = await createErrorFromLog(ro, inspector);
               // Replace its description in args
               args.splice(-1, 1, error);
 

@@ -7,13 +7,17 @@ import {dirname} from 'node:path';
 import {readFile} from 'node:fs/promises';
 import {fetch} from '@shopify/cli-kit/node/http';
 import {SourceMapConsumer} from 'source-map';
-import {WebSocket, type MessageEvent} from 'ws';
+import {WebSocket} from 'ws';
 import {type Protocol} from 'devtools-protocol';
 import {
+  addInspectorConsoleLogger,
   formatStack,
-  formatStructuredError,
-  logConsoleMessage,
 } from './workerd-inspector-logs.js';
+import {AbortError} from '@shopify/cli-kit/node/error';
+import {
+  createInspectorProxy,
+  type InspectorProxy,
+} from './workerd-inspector-proxy.js';
 
 // https://chromedevtools.github.io/devtools-protocol/#endpoints
 export interface InspectorWebSocketTarget {
@@ -28,7 +32,67 @@ export interface InspectorWebSocketTarget {
   url: string;
 }
 
-export async function findInspectorUrl(inspectorPort: number) {
+export type MessageData = {id: number; result: unknown} & (
+  | {
+      method: 'Debugger.scriptParsed';
+      params: Protocol.Debugger.ScriptParsedEvent;
+    }
+  | {
+      method: 'Runtime.consoleAPICalled';
+      params: Protocol.Runtime.ConsoleAPICalledEvent;
+    }
+  | {
+      method: 'Runtime.exceptionThrown';
+      params: Protocol.Runtime.ExceptionThrownEvent;
+    }
+);
+
+export interface ErrorProperties {
+  message?: string;
+  cause?: unknown;
+  stack?: string;
+}
+
+export function createInspectorConnector(options: {
+  privateInspectorPort: number;
+  publicInspectorPort: number;
+  absoluteBundlePath: string;
+  sourceMapPath: string;
+  debug: boolean;
+}) {
+  let inspectorUrl: string | undefined;
+  let inspectorConnection: InspectorConnection | undefined;
+  let inspectorProxy: InspectorProxy | undefined;
+
+  return async (onBeforeConnect?: () => void | Promise<void>) => {
+    inspectorConnection?.close();
+
+    inspectorUrl ??= await findInspectorUrl(options.privateInspectorPort);
+
+    await onBeforeConnect?.();
+
+    inspectorConnection = connectToInspector({
+      inspectorUrl,
+      sourceMapPath: options.sourceMapPath,
+    });
+
+    addInspectorConsoleLogger(inspectorConnection);
+
+    if (options.debug) {
+      if (inspectorProxy) {
+        inspectorProxy.updateInspectorConnection(inspectorConnection);
+      } else {
+        inspectorProxy = createInspectorProxy(
+          options.publicInspectorPort,
+          options.absoluteBundlePath,
+          inspectorConnection,
+        );
+      }
+    }
+  };
+}
+
+async function findInspectorUrl(inspectorPort: number) {
   try {
     // Fetch the inspector JSON response from the DevTools Inspector protocol
     const jsonUrl = `http://127.0.0.1:${inspectorPort}/json`;
@@ -36,12 +100,27 @@ export async function findInspectorUrl(inspectorPort: number) {
       await fetch(jsonUrl)
     ).json()) as InspectorWebSocketTarget[];
 
-    return body?.find(({id}) => id === 'core:user:hydrogen')
-      ?.webSocketDebuggerUrl;
+    const url = body?.find(
+      ({id}) => id === 'core:user:hydrogen',
+    )?.webSocketDebuggerUrl;
+
+    if (!url) {
+      throw new Error('Unable to find inspector URL');
+    }
+
+    return url;
   } catch (error: unknown) {
-    console.error('Error attempting to retrieve debugger URL:', error);
+    const abortError = new AbortError(
+      'Unable to connect to Worker inspector',
+      `Please report this issue. ${(error as Error).stack}`,
+    );
+
+    abortError.stack = (error as Error).stack;
+    throw abortError;
   }
 }
+
+export type InspectorConnection = ReturnType<typeof connectToInspector>;
 
 interface InspectorOptions {
   /**
@@ -54,16 +133,7 @@ interface InspectorOptions {
   sourceMapPath?: string | undefined;
 }
 
-export interface ErrorProperties {
-  message?: string;
-  cause?: unknown;
-  stack?: string;
-}
-
-export function connectToInspector({
-  inspectorUrl,
-  sourceMapPath,
-}: InspectorOptions) {
+function connectToInspector({inspectorUrl, sourceMapPath}: InspectorOptions) {
   /**
    * A simple decrementing id to attach to messages sent to DevTools.
    * Use negative ids to void collisions with DevTools messages.
@@ -272,70 +342,15 @@ export function connectToInspector({
     })());
   };
 
-  ws.addEventListener('message', async (event: MessageEvent) => {
-    if (typeof event.data === 'string') {
-      const evt = JSON.parse(event.data);
-      cleanupMessageQueue(evt);
-
-      if (evt.method === 'Runtime.exceptionThrown') {
-        const params = evt.params as Protocol.Runtime.ExceptionThrownEvent;
-
-        const errorProperties: ErrorProperties = {};
-
-        const sourceMapConsumer = await getSourceMapConsumer();
-        if (sourceMapConsumer !== undefined) {
-          // Create the lines for the exception details log
-          const message =
-            params.exceptionDetails.exception?.description?.split('\n')[0];
-          const stack = params.exceptionDetails.stackTrace?.callFrames;
-          const formatted = formatStructuredError(
-            sourceMapConsumer,
-            message,
-            stack,
-          );
-
-          errorProperties.message = params.exceptionDetails.text;
-          errorProperties.stack = formatted;
-        } else {
-          errorProperties.message =
-            params.exceptionDetails.text +
-            ' ' +
-            (params.exceptionDetails.exception?.description ?? '');
-        }
-
-        console.error(
-          await reconstructError(
-            errorProperties,
-            params.exceptionDetails.exception,
-          ),
-        );
-      }
-
-      if (evt.method === 'Runtime.consoleAPICalled') {
-        const params = evt.params as Protocol.Runtime.ConsoleAPICalledEvent;
-        await logConsoleMessage(params, reconstructError);
-      }
-    } else {
-      // We should never get here, but who know is 2022...
-      console.error('Unrecognised devtools event:', event);
-    }
-  });
-
   ws.once('open', () => {
     send('Runtime.enable');
-    // TODO: Why does this need a timeout?
-    // setTimeout(() => send('Network.enable'), 2000);
 
+    // Keep the websocket alive by sending a message every 10 seconds
     keepAliveInterval = setInterval(() => send('Runtime.getIsolateId'), 10_000);
   });
 
   ws.on('unexpected-response', () => {
     console.log('Waiting for connection...');
-    /**
-     * This usually means the worker is not "ready" yet
-     * so we'll just retry the connection process
-     */
-    //   retryRemoteWebSocketConnection();
   });
 
   ws.once('close', () => {
@@ -345,6 +360,11 @@ export function connectToInspector({
 
   return {
     ws,
+    send,
+    reconstructError,
+    getSourceMapConsumer,
+    cleanupMessageQueue,
+    isClosed,
     close: () => {
       clearInterval(keepAliveInterval);
 
