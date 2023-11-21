@@ -158,6 +158,14 @@ export async function runUpgrade({
     appPath,
   });
 
+  const isPrerelease = semver.prerelease(currentVersion);
+
+  if (isPrerelease) {
+    throw new AbortError(
+      'The upgrade command cannot be run over a prerelease Hydrogen version',
+    );
+  }
+
   const changelog = await getChangelog();
 
   const {availableUpgrades} = getAvailableUpgrades({
@@ -1029,6 +1037,12 @@ export async function displayDevUpgradeNotice({
 }) {
   const appPath = targetPath ? path.resolve(targetPath) : process.cwd();
   const {currentVersion} = await getHydrogenVersion({appPath});
+
+  const isPrerelease = semver.prerelease(currentVersion);
+
+  if (isPrerelease) {
+    return;
+  }
 
   const changelog = await getChangelog();
 
