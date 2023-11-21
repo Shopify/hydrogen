@@ -6,8 +6,11 @@ export {
   CacheNone,
   CacheShort,
   generateCacheControlHeader,
+  type CachingStrategy,
+  type NoStoreStrategy,
 } from './cache/strategies';
 export {InMemoryCache} from './cache/in-memory';
+export {type CacheKey} from './cache/fetch';
 
 export {storefrontRedirect} from './routing/redirect';
 export {graphiqlLoader} from './routing/graphiql';
@@ -17,6 +20,7 @@ export type {SeoHandleFunction} from './seo/seo';
 export {Pagination, getPaginationVariables} from './pagination/Pagination';
 export {createCustomerClient as createCustomerClient__unstable} from './customer/customer';
 export type {CustomerClient} from './customer/customer';
+export {changelogHandler} from './changelogHandler';
 
 export {CartForm, type CartActionInput} from './cart/CartForm';
 export {cartCreateDefault} from './cart/queries/cartCreateDefault';

@@ -22,6 +22,8 @@ export async function startNodeServer({
   buildPathWorkerFile,
   buildPathClient,
   env,
+  debug = false,
+  inspectorPort,
 }: MiniOxygenOptions): Promise<MiniOxygenInstance> {
   const oxygenHeaders = Object.fromEntries(
     Object.entries(OXYGEN_HEADERS_MAP).map(([key, value]) => {
@@ -44,6 +46,10 @@ export async function startNodeServer({
         ),
     },
   };
+
+  if (debug) {
+    (await import('node:inspector')).open(inspectorPort);
+  }
 
   const miniOxygen = await startServer({
     script: await readFile(buildPathWorkerFile),
@@ -118,6 +124,13 @@ export async function startNodeServer({
         body: [
           `View ${options?.appName ?? 'Hydrogen'} app: ${listeningAt}`,
           ...(options?.extraLines ?? []),
+          ...(debug
+            ? [
+                {
+                  warn: `\n\nDebugger listening on ws://localhost:${inspectorPort}`,
+                },
+              ]
+            : []),
         ],
       });
       console.log('');

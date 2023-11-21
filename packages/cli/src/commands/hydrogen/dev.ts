@@ -23,7 +23,6 @@ import {
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
 import {type MiniOxygen, startMiniOxygen} from '../../lib/mini-oxygen/index.js';
-import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
@@ -31,6 +30,8 @@ import {getConfig} from '../../lib/shopify-config.js';
 import {setupLiveReload} from '../../lib/live-reload.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
+import {displayDevUpgradeNotice} from './upgrade.js';
+import {findPort} from '../../lib/find-port.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -55,13 +56,15 @@ export default class Dev extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_VIRTUAL_ROUTES',
       default: false,
     }),
-    debug: Flags.boolean({
-      description: 'Attaches a Node inspector',
-      env: 'SHOPIFY_HYDROGEN_FLAG_DEBUG',
-      default: false,
-    }),
+    debug: commonFlags.debug,
+    'inspector-port': commonFlags.inspectorPort,
     host: deprecated('--host')(),
     ['env-branch']: commonFlags.envBranch,
+    ['disable-version-check']: Flags.boolean({
+      description: 'Skip the version check when running `hydrogen dev`',
+      default: false,
+      required: false,
+    }),
   };
 
   async run(): Promise<void> {
@@ -77,8 +80,22 @@ export default class Dev extends Command {
   }
 }
 
+type DevOptions = {
+  port: number;
+  path?: string;
+  useCodegen?: boolean;
+  workerRuntime?: boolean;
+  codegenConfigPath?: string;
+  disableVirtualRoutes?: boolean;
+  disableVersionCheck?: boolean;
+  envBranch?: string;
+  debug?: boolean;
+  sourcemap?: boolean;
+  inspectorPort: number;
+};
+
 async function runDev({
-  port: portFlag = DEFAULT_PORT,
+  port: appPort,
   path: appPath,
   useCodegen = false,
   workerRuntime = false,
@@ -87,27 +104,15 @@ async function runDev({
   envBranch,
   debug = false,
   sourcemap = true,
-}: {
-  port?: number;
-  path?: string;
-  useCodegen?: boolean;
-  workerRuntime?: boolean;
-  codegenConfigPath?: string;
-  disableVirtualRoutes?: boolean;
-  envBranch?: string;
-  debug?: boolean;
-  sourcemap?: boolean;
-}) {
+  disableVersionCheck = false,
+  inspectorPort,
+}: DevOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
   muteDevLogs();
 
-  if (debug) (await import('node:inspector')).open();
-
   const {root, publicPath, buildPathClient, buildPathWorkerFile} =
     getProjectPaths(appPath);
-
-  const checkingHydrogenVersion = checkHydrogenVersion(root);
 
   const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
   const reloadConfig = async () => {
@@ -134,6 +139,9 @@ async function runDev({
   };
 
   const serverBundleExists = () => fileExists(buildPathWorkerFile);
+
+  inspectorPort = debug ? await findPort(inspectorPort) : inspectorPort;
+  appPort = workerRuntime ? await findPort(appPort) : appPort; // findPort is already called for Node sandbox
 
   const [remixConfig, {shop, storefront}] = await Promise.all([
     reloadConfig(),
@@ -165,7 +173,9 @@ async function runDev({
     miniOxygen = await startMiniOxygen(
       {
         root,
-        port: portFlag,
+        debug,
+        inspectorPort,
+        port: appPort,
         watch: !liveReload,
         buildPathWorkerFile,
         buildPathClient,
@@ -199,8 +209,10 @@ async function runDev({
     }
 
     checkRemixVersions();
-    const showUpgrade = await checkingHydrogenVersion;
-    if (showUpgrade) showUpgrade();
+
+    if (!disableVersionCheck) {
+      displayDevUpgradeNotice({targetPath: appPath});
+    }
   }
 
   const fileWatchCache = createFileWatchCache();
@@ -244,6 +256,7 @@ async function runDev({
             type: 0,
             message:
               'MiniOxygen cannot start because the server bundle has not been generated.',
+            skipOclifErrorHandling: true,
             tryMessage:
               'This is likely due to an error in your app and Remix is unable to compile. Try fixing the app and MiniOxygen will start.',
           });
