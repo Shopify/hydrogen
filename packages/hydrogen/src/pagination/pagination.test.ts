@@ -224,7 +224,7 @@ describe('<Pagination>', () => {
           <a
             data-preventscrollreset="true"
             href="?direction=next&cursor=abc"
-            state="{\\"pageInfo\\":{\\"endCursor\\":\\"abc\\",\\"hasPreviousPage\\":false,\\"startCursor\\":\\"cde\\"},\\"nodes\\":[1,2,3]}"
+            state="{\\"pageInfo\\":{\\"endCursor\\":\\"abc\\",\\"hasPreviousPage\\":false,\\"hasNextPage\\":true,\\"startCursor\\":\\"cde\\"},\\"nodes\\":[1,2,3]}"
           />
         </div>
       </DocumentFragment>
@@ -258,7 +258,7 @@ describe('<Pagination>', () => {
           <a
             data-preventscrollreset="true"
             href="?direction=previous&cursor=cde"
-            state="{\\"pageInfo\\":{\\"endCursor\\":\\"abc\\",\\"hasPreviousPage\\":true,\\"startCursor\\":\\"cde\\"},\\"nodes\\":[1,2,3]}"
+            state="{\\"pageInfo\\":{\\"endCursor\\":\\"abc\\",\\"hasPreviousPage\\":true,\\"hasNextPage\\":false,\\"startCursor\\":\\"cde\\"},\\"nodes\\":[1,2,3]}"
           />
         </div>
       </DocumentFragment>
@@ -313,6 +313,7 @@ describe('<Pagination>', () => {
           "pageInfo": {
             "endCursor": "abc",
             "hasPreviousPage": true,
+            "hasNextPage": false,
             "startCursor": "cde"
           },
           "nodes": [

@@ -11,8 +11,7 @@ import {
 import {dirname, resolvePath} from '@shopify/cli-kit/node/path';
 import {readFile} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
-import {connectToInspector, findInspectorUrl} from './workerd-inspector.js';
-import {createInspectorProxy} from './workerd-inspector-proxy.js';
+import {createInspectorConnector} from './workerd-inspector.js';
 import {findPort} from '../find-port.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
 import {OXYGEN_HEADERS_MAP, logRequestLine} from './common.js';
@@ -43,7 +42,7 @@ export async function startWorkerdServer({
   buildPathClient,
   env,
 }: MiniOxygenOptions): Promise<MiniOxygenInstance> {
-  const workerdInspectorPort = await findPort(PRIVATE_WORKERD_INSPECTOR_PORT);
+  const privateInspectorPort = await findPort(PRIVATE_WORKERD_INSPECTOR_PORT);
 
   const oxygenHeadersMap = Object.values(OXYGEN_HEADERS_MAP).reduce(
     (acc, item) => {
@@ -64,7 +63,7 @@ export async function startWorkerdServer({
       cf: false,
       verbose: false,
       port: appPort,
-      inspectorPort: workerdInspectorPort,
+      inspectorPort: privateInspectorPort,
       log: new NoOpLog(),
       liveReload: watch,
       host: 'localhost',
@@ -112,18 +111,15 @@ export async function startWorkerdServer({
 
   const sourceMapPath = buildPathWorkerFile + '.map';
 
-  let inspectorUrl = await findInspectorUrl(workerdInspectorPort);
-  let inspectorConnection = inspectorUrl
-    ? connectToInspector({inspectorUrl, sourceMapPath})
-    : undefined;
+  const reconnect = createInspectorConnector({
+    debug,
+    sourceMapPath,
+    absoluteBundlePath,
+    privateInspectorPort,
+    publicInspectorPort,
+  });
 
-  const inspectorProxy = debug
-    ? createInspectorProxy(
-        publicInspectorPort,
-        absoluteBundlePath,
-        inspectorConnection,
-      )
-    : undefined;
+  await reconnect();
 
   const assetsServer = createAssetsServer(buildPathClient);
   assetsServer.listen(assetsPort);
@@ -144,18 +140,15 @@ export async function startWorkerdServer({
         }
       }
 
-      inspectorConnection?.close();
-
-      // @ts-expect-error
-      await miniOxygen.setOptions(miniOxygenOptions);
-      inspectorUrl ??= await findInspectorUrl(workerdInspectorPort);
-      if (inspectorUrl) {
-        inspectorConnection = connectToInspector({inspectorUrl, sourceMapPath});
-        inspectorProxy?.updateInspectorConnection(inspectorConnection);
-      }
+      await reconnect(() => miniOxygen.setOptions(miniOxygenOptions as any));
     },
     showBanner(options) {
-      console.log('');
+      console.log(''); // New line
+
+      const debuggerMessage = `\n\nDebug mode enabled. Attach a ${
+        process.env.TERM_PROGRAM === 'vscode' ? 'VSCode ' : ''
+      }debugger to port ${publicInspectorPort}\nor open DevTools in http://localhost:${publicInspectorPort}`;
+
       renderSuccess({
         headline: `${
           options?.headlinePrefix ?? ''
@@ -165,13 +158,7 @@ export async function startWorkerdServer({
         body: [
           `View ${options?.appName ?? 'Hydrogen'} app: ${listeningAt}`,
           ...(options?.extraLines ?? []),
-          ...(debug
-            ? [
-                {
-                  warn: `\n\nDebugger listening on ws://localhost:${publicInspectorPort}`,
-                },
-              ]
-            : []),
+          ...(debug ? [{warn: debuggerMessage}] : []),
         ],
       });
       console.log('');

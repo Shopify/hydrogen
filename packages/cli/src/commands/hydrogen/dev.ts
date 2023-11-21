@@ -26,7 +26,6 @@ import {
   startMiniOxygen,
   buildAssetsUrl,
 } from '../../lib/mini-oxygen/index.js';
-import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
@@ -34,6 +33,7 @@ import {getConfig} from '../../lib/shopify-config.js';
 import {setupLiveReload} from '../../lib/live-reload.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
+import {displayDevUpgradeNotice} from './upgrade.js';
 import {findPort} from '../../lib/find-port.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
@@ -63,6 +63,11 @@ export default class Dev extends Command {
     'inspector-port': commonFlags.inspectorPort,
     host: deprecated('--host')(),
     ['env-branch']: commonFlags.envBranch,
+    ['disable-version-check']: Flags.boolean({
+      description: 'Skip the version check when running `hydrogen dev`',
+      default: false,
+      required: false,
+    }),
   };
 
   async run(): Promise<void> {
@@ -85,6 +90,7 @@ type DevOptions = {
   workerRuntime?: boolean;
   codegenConfigPath?: string;
   disableVirtualRoutes?: boolean;
+  disableVersionCheck?: boolean;
   envBranch?: string;
   debug?: boolean;
   sourcemap?: boolean;
@@ -101,6 +107,7 @@ async function runDev({
   envBranch,
   debug = false,
   sourcemap = true,
+  disableVersionCheck = false,
   inspectorPort,
 }: DevOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
@@ -109,8 +116,6 @@ async function runDev({
 
   const {root, publicPath, buildPathClient, buildPathWorkerFile} =
     getProjectPaths(appPath);
-
-  const checkingHydrogenVersion = checkHydrogenVersion(root);
 
   const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
   const reloadConfig = async () => {
@@ -214,8 +219,10 @@ async function runDev({
     }
 
     checkRemixVersions();
-    const showUpgrade = await checkingHydrogenVersion;
-    if (showUpgrade) showUpgrade();
+
+    if (!disableVersionCheck) {
+      displayDevUpgradeNotice({targetPath: appPath});
+    }
   }
 
   const fileWatchCache = createFileWatchCache();
@@ -259,6 +266,7 @@ async function runDev({
             type: 0,
             message:
               'MiniOxygen cannot start because the server bundle has not been generated.',
+            skipOclifErrorHandling: true,
             tryMessage:
               'This is likely due to an error in your app and Remix is unable to compile. Try fixing the app and MiniOxygen will start.',
           });
