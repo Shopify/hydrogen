@@ -28,6 +28,21 @@ export interface InspectorWebSocketTarget {
   url: string;
 }
 
+export type MessageData = {id: number; result: unknown} & (
+  | {
+      method: 'Debugger.scriptParsed';
+      params: Protocol.Debugger.ScriptParsedEvent;
+    }
+  | {
+      method: 'Runtime.consoleAPICalled';
+      params: Protocol.Runtime.ConsoleAPICalledEvent;
+    }
+  | {
+      method: 'Runtime.exceptionThrown';
+      params: Protocol.Runtime.ExceptionThrownEvent;
+    }
+);
+
 export async function findInspectorUrl(inspectorPort: number) {
   try {
     // Fetch the inspector JSON response from the DevTools Inspector protocol
@@ -274,11 +289,11 @@ export function connectToInspector({
 
   ws.addEventListener('message', async (event: MessageEvent) => {
     if (typeof event.data === 'string') {
-      const evt = JSON.parse(event.data);
+      const evt = JSON.parse(event.data) as MessageData;
       cleanupMessageQueue(evt);
 
       if (evt.method === 'Runtime.exceptionThrown') {
-        const params = evt.params as Protocol.Runtime.ExceptionThrownEvent;
+        const {params} = evt;
 
         const errorProperties: ErrorProperties = {};
 
@@ -312,8 +327,7 @@ export function connectToInspector({
       }
 
       if (evt.method === 'Runtime.consoleAPICalled') {
-        const params = evt.params as Protocol.Runtime.ConsoleAPICalledEvent;
-        await logConsoleMessage(params, reconstructError);
+        await logConsoleMessage(evt.params, reconstructError);
       }
     } else {
       // We should never get here, but who know is 2022...
