@@ -14,6 +14,8 @@ const CFW_DEVTOOLS = 'https://devtools.devprod.cloudflare.dev';
 const H2_FAVICON_URL =
   'https://cdn.shopify.com/s/files/1/0598/4822/8886/files/favicon.svg';
 
+export type InspectorProxy = ReturnType<typeof createInspectorProxy>;
+
 export function createInspectorProxy(
   port: number,
   sourceFilePath: string,

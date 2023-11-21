@@ -1,7 +1,60 @@
 import {type Protocol} from 'devtools-protocol';
-import {type ErrorProperties} from './workerd-inspector.js';
+import type {
+  InspectorConnection,
+  ErrorProperties,
+  MessageData,
+} from './workerd-inspector.js';
 import {SourceMapConsumer} from 'source-map';
 import {parse as parseStackTrace} from 'stack-trace';
+
+export function addInspectorConsoleLogger(inspector: InspectorConnection) {
+  inspector.ws.addEventListener('message', async (event) => {
+    if (typeof event.data !== 'string') {
+      // We should never get here, but who knows...
+      console.error('Unrecognised devtools event:', event);
+      return;
+    }
+
+    const evt = JSON.parse(event.data) as MessageData;
+    inspector.cleanupMessageQueue(evt);
+
+    if (evt.method === 'Runtime.consoleAPICalled') {
+      await logConsoleMessage(evt.params, inspector.reconstructError);
+    } else if (evt.method === 'Runtime.exceptionThrown') {
+      const {params} = evt;
+
+      const errorProperties: ErrorProperties = {};
+
+      const sourceMapConsumer = await inspector.getSourceMapConsumer();
+      if (sourceMapConsumer !== undefined) {
+        // Create the lines for the exception details log
+        const message =
+          params.exceptionDetails.exception?.description?.split('\n')[0];
+        const stack = params.exceptionDetails.stackTrace?.callFrames;
+        const formatted = formatStructuredError(
+          sourceMapConsumer,
+          message,
+          stack,
+        );
+
+        errorProperties.message = params.exceptionDetails.text;
+        errorProperties.stack = formatted;
+      } else {
+        errorProperties.message =
+          params.exceptionDetails.text +
+          ' ' +
+          (params.exceptionDetails.exception?.description ?? '');
+      }
+
+      console.error(
+        await inspector.reconstructError(
+          errorProperties,
+          params.exceptionDetails.exception,
+        ),
+      );
+    }
+  });
+}
 
 /**
  * This function converts a message serialised as a devtools event
@@ -11,7 +64,7 @@ import {parse as parseStackTrace} from 'stack-trace';
  * directly in the terminal.
  */
 
-export const mapConsoleAPIMessageTypeToConsoleMethod: {
+const mapConsoleAPIMessageTypeToConsoleMethod: {
   [key in Protocol.Runtime.ConsoleAPICalledEvent['type']]: Exclude<
     keyof Console,
     'Console'
