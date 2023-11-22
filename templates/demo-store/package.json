@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "shopify hydrogen dev --worker --codegen",
     "build": "shopify hydrogen build",
-    "preview": "npm run build && shopify hydrogen preview",
+    "preview": "npm run build && shopify hydrogen preview --worker",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "format": "prettier --write --ignore-unknown .",
     "format:check": "prettier --check --ignore-unknown .",
