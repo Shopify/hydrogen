@@ -5,11 +5,12 @@ import {useInView} from 'react-intersection-observer';
 import type {
   Filter,
   ProductCollectionSortKeys,
+  ProductFilter,
 } from '@shopify/hydrogen/storefront-api-types';
 import {
-  flattenConnection,
   AnalyticsPageType,
   Pagination,
+  flattenConnection,
   getPaginationVariables,
 } from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
@@ -26,82 +27,39 @@ import {
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {routeHeaders} from '~/data/cache';
 import {seoPayload} from '~/lib/seo.server';
-import type {AppliedFilter, SortParam} from '~/components/SortFilter';
+import type {SortParam} from '~/components/SortFilter';
+import {FILTER_URL_PREFIX} from '~/components/SortFilter';
 import {getImageLoadingPriority} from '~/lib/const';
+import {parseAsCurrency} from '~/lib/utils';
 
 export const headers = routeHeaders;
-
-type VariantFilterParam = Record<string, string | boolean>;
-type PriceFiltersQueryParam = Record<'price', {max?: number; min?: number}>;
-type VariantOptionFiltersQueryParam = Record<
-  'variantOption',
-  {name: string; value: string}
->;
-type FiltersQueryParams = Array<
-  VariantFilterParam | PriceFiltersQueryParam | VariantOptionFiltersQueryParam
->;
 
 export async function loader({params, request, context}: LoaderFunctionArgs) {
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 8,
   });
   const {collectionHandle} = params;
+  const {currency, country, language} = context.storefront.i18n;
 
   invariant(collectionHandle, 'Missing collectionHandle param');
 
   const searchParams = new URL(request.url).searchParams;
-  const knownFilters = ['productVendor', 'productType'];
-  const available = 'available';
-  const variantOption = 'variantOption';
+
   const {sortKey, reverse} = getSortValuesFromParam(
     searchParams.get('sort') as SortParam,
   );
-  const filters: FiltersQueryParams = [];
-  const appliedFilters: AppliedFilter[] = [];
-
-  for (const [key, value] of searchParams.entries()) {
-    if (available === key) {
-      filters.push({available: value === 'true'});
-      appliedFilters.push({
-        label: value === 'true' ? 'In stock' : 'Out of stock',
-        urlParam: {
-          key: available,
-          value,
-        },
-      });
-    } else if (knownFilters.includes(key)) {
-      filters.push({[key]: value});
-      appliedFilters.push({label: value, urlParam: {key, value}});
-    } else if (key.includes(variantOption)) {
-      const [name, val] = value.split(':');
-      filters.push({variantOption: {name, value: val}});
-      appliedFilters.push({label: val, urlParam: {key, value}});
-    }
-  }
-
-  // Builds min and max price filter since we can't stack them separately into
-  // the filters array. See price filters limitations:
-  // https://shopify.dev/custom-storefronts/products-collections/filter-products#limitations
-  if (searchParams.has('minPrice') || searchParams.has('maxPrice')) {
-    const price: {min?: number; max?: number} = {};
-    if (searchParams.has('minPrice')) {
-      price.min = Number(searchParams.get('minPrice')) || 0;
-      appliedFilters.push({
-        label: `Min: $${price.min}`,
-        urlParam: {key: 'minPrice', value: searchParams.get('minPrice')!},
-      });
-    }
-    if (searchParams.has('maxPrice')) {
-      price.max = Number(searchParams.get('maxPrice')) || 0;
-      appliedFilters.push({
-        label: `Max: $${price.max}`,
-        urlParam: {key: 'maxPrice', value: searchParams.get('maxPrice')!},
-      });
-    }
-    filters.push({
-      price,
-    });
-  }
+  const filters = [...searchParams.entries()].reduce(
+    (filters, [key, value]) => {
+      if (key.startsWith(FILTER_URL_PREFIX)) {
+        const filterKey = key.substring(FILTER_URL_PREFIX.length);
+        filters.push({
+          [filterKey]: JSON.parse(value),
+        });
+      }
+      return filters;
+    },
+    [] as ProductFilter[],
+  );
 
   const {collection, collections} = await context.storefront.query(
     COLLECTION_QUERY,
@@ -123,6 +81,58 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
   }
 
   const seo = seoPayload.collection({collection, url: request.url});
+
+  const allFilterValues = collection.products.filters.flatMap(
+    (filter) => filter.values,
+  );
+
+  const appliedFilters = filters
+    .map((filter) => {
+      const foundValue = allFilterValues.find((value) => {
+        const valueInput = JSON.parse(value.input as string) as ProductFilter;
+        // special case for price, the user can enter something freeform (still a number, though)
+        // that may not make sense for the locale/currency.
+        // Basically just check if the price filter is applied at all.
+        if (valueInput.price && filter.price) {
+          return true;
+        }
+        return (
+          // This comparison should be okay as long as we're not manipulating the input we
+          // get from the API before using it as a URL param.
+          JSON.stringify(valueInput) === JSON.stringify(filter)
+        );
+      });
+      if (!foundValue) {
+        // eslint-disable-next-line no-console
+        console.error('Could not find filter value for filter', filter);
+        return null;
+      }
+
+      if (foundValue.id === 'filter.v.price') {
+        // Special case for price, we want to show the min and max values as the label.
+        const input = JSON.parse(foundValue.input as string) as ProductFilter;
+        const min = parseAsCurrency(
+          input?.price?.min ?? 0,
+          currency,
+          country,
+          language,
+        );
+        const max = input?.price?.max
+          ? parseAsCurrency(input.price.max, currency, country, language)
+          : '';
+        const label = min && max ? `${min} - ${max}` : 'Price';
+
+        return {
+          filter,
+          label,
+        };
+      }
+      return {
+        filter,
+        label: foundValue.label,
+      };
+    })
+    .filter((filter): filter is NonNullable<typeof filter> => filter !== null);
 
   return json({
     collection,

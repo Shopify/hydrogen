@@ -3,8 +3,8 @@ import {useWindowScroll} from 'react-use';
 import {Disclosure} from '@headlessui/react';
 import {Suspense, useEffect, useMemo} from 'react';
 import {CartForm} from '@shopify/hydrogen';
-
 import type {LayoutQuery} from 'storefrontapi.generated';
+
 import {
   Drawer,
   useDrawer,
@@ -34,14 +34,15 @@ import {useRootLoaderData} from '~/root';
 
 type LayoutProps = {
   children: React.ReactNode;
-  layout: LayoutQuery & {
+  layout?: LayoutQuery & {
     headerMenu?: EnhancedMenu | null;
     footerMenu?: EnhancedMenu | null;
   };
 };
 
 export function Layout({children, layout}: LayoutProps) {
-  const {headerMenu, footerMenu} = layout;
+  const headerMenu = layout?.headerMenu;
+  const footerMenu = layout?.footerMenu;
   return (
     <>
       <div className="flex flex-col min-h-screen">

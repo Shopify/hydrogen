@@ -1,16 +1,16 @@
 import {useLocation, useMatches} from '@remix-run/react';
 import type {MoneyV2} from '@shopify/hydrogen/storefront-api-types';
 import typographicBase from 'typographic-base';
-
 import type {
   ChildMenuItemFragment,
   MenuFragment,
   ParentMenuItemFragment,
 } from 'storefrontapi.generated';
-import {countries} from '~/data/countries';
-import {useRootLoaderData} from '~/root';
 
 import type {I18nLocale} from './type';
+
+import {countries} from '~/data/countries';
+import {useRootLoaderData} from '~/root';
 
 type EnhancedMenuItemProps = {
   to: string;
@@ -311,6 +311,19 @@ export function useIsHomePath() {
   const selectedLocale = rootData?.selectedLocale ?? DEFAULT_LOCALE;
   const strippedPathname = pathname.replace(selectedLocale.pathPrefix, '');
   return strippedPathname === '/';
+}
+
+export function parseAsCurrency(
+  value: number,
+  currency: string,
+  country: string,
+  language: string,
+) {
+  const locale = language + '-' + country;
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency,
+  }).format(value);
 }
 
 /**
