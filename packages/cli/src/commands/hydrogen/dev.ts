@@ -42,7 +42,7 @@ export default class Dev extends Command {
   static flags = {
     path: commonFlags.path,
     port: commonFlags.port,
-    ['worker-unstable']: commonFlags.workerRuntime,
+    worker: commonFlags.workerRuntime,
     codegen: overrideFlag(commonFlags.codegen, {
       description:
         commonFlags.codegen.description! +
@@ -73,8 +73,6 @@ export default class Dev extends Command {
 
     await runDev({
       ...flagsToCamelObject(flags),
-      useCodegen: flags.codegen,
-      workerRuntime: flags['worker-unstable'],
       path: directory,
     });
   }
@@ -83,8 +81,8 @@ export default class Dev extends Command {
 type DevOptions = {
   port: number;
   path?: string;
-  useCodegen?: boolean;
-  workerRuntime?: boolean;
+  codegen?: boolean;
+  worker?: boolean;
   codegenConfigPath?: string;
   disableVirtualRoutes?: boolean;
   disableVersionCheck?: boolean;
@@ -97,8 +95,8 @@ type DevOptions = {
 async function runDev({
   port: appPort,
   path: appPath,
-  useCodegen = false,
-  workerRuntime = false,
+  codegen: useCodegen = false,
+  worker: workerRuntime = false,
   codegenConfigPath,
   disableVirtualRoutes,
   envBranch,

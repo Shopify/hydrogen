@@ -146,7 +146,7 @@ export async function startWorkerdServer({
       renderSuccess({
         headline: `${
           options?.headlinePrefix ?? ''
-        }MiniOxygen (Unstable Worker Runtime) ${
+        }MiniOxygen (Worker Runtime) ${
           options?.mode ?? 'development'
         } server running.`,
         body: [
