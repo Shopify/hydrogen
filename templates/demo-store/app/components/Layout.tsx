@@ -3,8 +3,8 @@ import {useWindowScroll} from 'react-use';
 import {Disclosure} from '@headlessui/react';
 import {Suspense, useEffect, useMemo} from 'react';
 import {CartForm} from '@shopify/hydrogen';
-import type {LayoutQuery} from 'storefrontapi.generated';
 
+import {type LayoutQuery} from 'storefrontapi.generated';
 import {
   Drawer,
   useDrawer,
