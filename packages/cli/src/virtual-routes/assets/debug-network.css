@@ -122,6 +122,17 @@ button.icon {
   line-height: 0;
 }
 
+button.tab {
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+button.tab.active {
+  border-radius: 0.5rem;
+  background-color: var(--active-highlight-color);
+}
+
 button:hover {
   background-color: var(--button-state-color);
 }
@@ -154,7 +165,7 @@ button:focus.primary {
   color: var(--secondary-color);
 }
 
-button:active {
+button:active.primary {
   box-shadow: 0px -1px 0px var(--shadow-color);
   background-color: #1a1a1a;
   color: #cccccc;
@@ -315,7 +326,6 @@ button:active {
   display: none;
 
   overflow: scroll;
-  height: 240px;
   padding-bottom: 0.75rem;
 }
 
@@ -331,9 +341,7 @@ details.panel summary {
   padding: 1rem 0;
 }
 
-#tab1:checked ~ .tabPanels > #tab1-panel,
-#tab2:checked ~ .tabPanels > #tab2-panel,
-#tab3:checked ~ .tabPanels > #tab3-panel {
+.tabPanels > .tabPanel.active{
   display: flex;
   gap: 0.75rem;
   flex-direction: column;
@@ -358,15 +366,17 @@ details.panel summary {
 }
 
 #request-detail {
-  width: 100%;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  padding: 0 0.5rem;
+  display: grid;
+  grid-template-rows: 2.75rem auto;
   height: 100%;
+  overflow: hidden;
+  padding: 0 0.75rem;
 }
 
 #request-detail .tabPanels {
   width: 100%;
+  height: 100%;
+  overflow: scroll;
 }
 
 #request-detail input[name='tabset'] {
@@ -374,9 +384,7 @@ details.panel summary {
 }
 
 #request-detail .tab {
-  margin-top: 0.5rem;
   padding: 0.45rem 0.75rem;
-  font-weight: 550;
 }
 
 #request-detail input[name='tabset']:checked + .tab {
@@ -393,7 +401,7 @@ details.panel summary {
 #request-detail .grid-layout {
   display: grid;
   gap: 0.7rem;
-  grid-template-columns: max-content auto;
+  grid-template-columns: minmax(50px, 100px) auto;
   margin-bottom: 1rem;
 }
 

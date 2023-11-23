@@ -1,3 +1,4 @@
+import {useState} from 'react';
 import {type ServerEvents} from '../lib/useDebugNetworkServer.jsx';
 import {Link} from '@remix-run/react';
 
@@ -8,6 +9,8 @@ export function RequestDetails({
   serverEvents: ServerEvents;
   activeEventId: string | undefined;
 }) {
+  const [activeTab, setActiveTab] = useState(1);
+
   if (!activeEventId) {
     return null;
   }
@@ -18,34 +21,32 @@ export function RequestDetails({
     return null;
   }
 
+  function activeTabClass(tab: number) {
+    return activeTab === tab ? ' active' : '';
+  }
+
   return (
-    <div id="request-detail" className="flex-row">
-      {/** Tab 1 */}
-      <input type="radio" name="tabset" id="tab1" defaultChecked />
-      <label htmlFor="tab1" className="tab">
-        Header
-      </label>
-      {/** Tab 2 */}
-      {!!requestInfo.cache && (
-        <>
-          <input type="radio" name="tabset" id="tab2" />
-          <label htmlFor="tab2" className="tab">
+    <div id="request-detail">
+      <div className="flex-row">
+        {/** Tab 1 */}
+        <button type="button" className={`tab${activeTabClass(1)}`} onClick={() => setActiveTab(1)}>
+          Header
+        </button>
+        {/** Tab 2 */}
+        {!!requestInfo.cache && (
+          <button type="button" className={`tab${activeTabClass(2)}`} onClick={() => setActiveTab(2)}>
             Cache
-          </label>
-        </>
-      )}
-      {/** Tab 3 */}
-      {!!requestInfo.responsePayload && (
-        <>
-          <input type="radio" name="tabset" id="tab3" />
-          <label htmlFor="tab3" className="tab">
+          </button>
+        )}
+        {/** Tab 3 */}
+        {!!requestInfo.responsePayload && (
+          <button type="button" className={`tab${activeTabClass(3)}`} onClick={() => setActiveTab(3)}>
             Data
-          </label>
-        </>
-      )}
-      <div className="flex-break"></div>
+          </button>
+        )}
+      </div>
       <div className="tabPanels">
-        <div id="tab1-panel" className="tabPanel">
+        <div id="tab1-panel" className={`tabPanel${activeTabClass(1)}`}>
           <Details title="General">
             <div className="grid-layout">
               <DetailsRow rowName="Name" value={requestInfo.displayName} />
@@ -80,7 +81,7 @@ export function RequestDetails({
           )}
         </div>
         {!!requestInfo.cache && (
-          <div id="tab2-panel" className="tabPanel">
+          <div id="tab2-panel" className={`tabPanel${activeTabClass(2)}`}>
             <Details title="General">
               <div className="grid-layout">
                 <DetailsRow
@@ -100,7 +101,7 @@ export function RequestDetails({
           </div>
         )}
         {!!requestInfo.responsePayload && (
-          <div id="tab3-panel" className="tabPanel">
+          <div id="tab3-panel" className={`tabPanel${activeTabClass(3)}`}>
             <div className="panel">
               <pre className="code-json">
                 {JSON.stringify(requestInfo.responsePayload, undefined, 2)}
