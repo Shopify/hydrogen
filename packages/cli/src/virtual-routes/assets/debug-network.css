@@ -7,6 +7,8 @@
   --button-state-color: #fafafa;
   --secondary-text-color: #616161;
   --active-highlight-color: #ebebeb;
+  --row-hover-highlight-color: #f7f7f7;
+  --row-active-highlight-color: #f3f3f3;
 
   --text-large: 0.813rem;
   --text-normal: 0.688rem;
@@ -267,6 +269,14 @@ button:active.primary {
   border-bottom: 1px solid var(--secondary-color);
 }
 
+#request-table .grid-row:hover {
+  background-color: var(--row-hover-highlight-color);
+}
+
+#request-table .grid-row:active {
+  background-color: var(--row-active-highlight-color);
+}
+
 #request-table .grid-cell {
   text-overflow: ellipsis;
   overflow: hidden;
@@ -299,7 +309,7 @@ button:active.primary {
 }
 
 #request-table__content .grid-row.active {
-  background-color: var(--active-highlight-color);
+  background-color: var(--background-color);
   font-weight: 600;
 }
 
