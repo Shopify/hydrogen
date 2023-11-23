@@ -29,18 +29,30 @@ export function RequestDetails({
     <div id="request-detail">
       <div className="flex-row">
         {/** Tab 1 */}
-        <button type="button" className={`tab${activeTabClass(1)}`} onClick={() => setActiveTab(1)}>
+        <button
+          type="button"
+          className={`tab${activeTabClass(1)}`}
+          onClick={() => setActiveTab(1)}
+        >
           Header
         </button>
         {/** Tab 2 */}
         {!!requestInfo.cache && (
-          <button type="button" className={`tab${activeTabClass(2)}`} onClick={() => setActiveTab(2)}>
+          <button
+            type="button"
+            className={`tab${activeTabClass(2)}`}
+            onClick={() => setActiveTab(2)}
+          >
             Cache
           </button>
         )}
         {/** Tab 3 */}
         {!!requestInfo.responsePayload && (
-          <button type="button" className={`tab${activeTabClass(3)}`} onClick={() => setActiveTab(3)}>
+          <button
+            type="button"
+            className={`tab${activeTabClass(3)}`}
+            onClick={() => setActiveTab(3)}
+          >
             Data
           </button>
         )}
@@ -147,7 +159,11 @@ function DetailsRow({
   return (
     <>
       <div>{rowName}</div>
-      {type === 'url' && <Link target='_blank' to={value}>{text ?? value}</Link>}
+      {type === 'url' && (
+        <Link target="_blank" to={value}>
+          {text ?? value}
+        </Link>
+      )}
       {type === 'string' && (
         <div className="word-break-all">{text ?? value}</div>
       )}

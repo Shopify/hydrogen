@@ -7,7 +7,6 @@ import {
   type ServerEvent,
   type ServerEvents,
 } from '../lib/useDebugNetworkServer.jsx';
-import { T } from 'vitest/dist/types-198fd1d9.js';
 
 export type RequestWaterfallConfig = {
   colors: {

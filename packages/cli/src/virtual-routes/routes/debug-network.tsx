@@ -41,13 +41,8 @@ declare global {
 }
 
 export default function DebugNetwork() {
-  const {
-    serverEvents,
-    clear,
-    timestamp,
-    setHidePutRequests,
-    setPreserveLog,
-  } = useDebugNetworkServer();
+  const {serverEvents, clear, timestamp, setHidePutRequests, setPreserveLog} =
+    useDebugNetworkServer();
 
   const isEmptyState = serverEvents.mainRequests.length === 0;
 
@@ -57,9 +52,7 @@ export default function DebugNetwork() {
         src="https://unpkg.com/flame-chart-js@2.3.2/dist/index.min.js"
         suppressHydrationWarning
       />
-      <DebugHeader
-        clearCallback={clear}
-      />
+      <DebugHeader clearCallback={clear} />
       <div id="main" className={`pad${isEmptyState ? ' empty' : ''}`}>
         <OptionsAndLegend
           serverEvents={serverEvents}
@@ -103,11 +96,7 @@ function EmptyState() {
   );
 }
 
-function DebugHeader({
-  clearCallback,
-}: {
-  clearCallback: () => void;
-}) {
+function DebugHeader({clearCallback}: {clearCallback: () => void}) {
   return (
     <header className="justify-between text-large">
       <div className="flex-row">

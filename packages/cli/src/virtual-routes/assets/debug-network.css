@@ -13,6 +13,8 @@
   --text-large: 0.813rem;
   --text-normal: 0.688rem;
   --font-bold: 650;
+
+  --box-shadow: 0 0.125rem 0.0625rem #0000000d, 0 0 0.0625rem #42474c73;
 }
 
 body {
@@ -68,7 +70,7 @@ input[type='checkbox'] {
 
 header {
   height: 3.5rem;
-  box-shadow: 0px 2px 5px var(--shadow-color);
+  box-shadow: var(--box-shadow);
 }
 
 header .logo {
@@ -212,7 +214,7 @@ button:active.primary {
   background-color: #fff;
   border-radius: 0.75rem;
   padding: 1rem 0.75rem;
-  box-shadow: 0px 1px 0px var(--shadow-color);
+  box-shadow: var(--box-shadow);
   border: 1px solid var(--secondary-color);
 }
 
@@ -351,7 +353,7 @@ details.panel summary {
   padding: 1rem 0;
 }
 
-.tabPanels > .tabPanel.active{
+.tabPanels > .tabPanel.active {
   display: flex;
   gap: 0.75rem;
   flex-direction: column;
@@ -389,17 +391,8 @@ details.panel summary {
   overflow: scroll;
 }
 
-#request-detail input[name='tabset'] {
-  display: none;
-}
-
 #request-detail .tab {
   padding: 0.45rem 0.75rem;
-}
-
-#request-detail input[name='tabset']:checked + .tab {
-  background-color: var(--active-highlight-color);
-  border-radius: 0.5rem;
 }
 
 #request-detail .tabPanels .panel a {
