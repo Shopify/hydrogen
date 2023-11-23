@@ -25,7 +25,6 @@ export type ServerEvents = {
   subRequests: Record<string, ServerEvent[]>;
   allRequests: Record<string, ServerEvent>;
   hidePutRequests: boolean;
-  recordEvents: boolean;
   preserveLog: boolean;
   activeEventId: string | undefined;
 };
@@ -60,7 +59,6 @@ export function useDebugNetworkServer() {
     subRequests: {},
     allRequests: {},
     hidePutRequests: true,
-    recordEvents: true,
     preserveLog: false,
     activeEventId: undefined,
   });
@@ -100,16 +98,14 @@ export function useDebugNetworkServer() {
   // Handle server events
   function serverEventHandler(onEvent: (data: ServerEvent) => void) {
     return (event: MessageEvent) => {
-      if (serverEvents.current.recordEvents) {
-        const data = JSON.parse(event.data) as unknown as ServerEvent;
-        const id = `event-${nextEventId++}`;
-        onEvent({
-          ...data,
-          id,
-        });
+      const data = JSON.parse(event.data) as unknown as ServerEvent;
+      const id = `event-${nextEventId++}`;
+      onEvent({
+        ...data,
+        id,
+      });
 
-        setTimeout(triggerRender, 0);
-      }
+      setTimeout(triggerRender, 0);
     };
   }
 
@@ -158,23 +154,6 @@ export function useDebugNetworkServer() {
     triggerRender();
   }
 
-  function stop() {
-    serverEvents.current = {
-      ...serverEvents.current,
-      recordEvents: false,
-    };
-    triggerRender();
-  }
-
-  function record() {
-    clearServerEvents();
-    serverEvents.current = {
-      ...serverEvents.current,
-      recordEvents: true,
-    };
-    triggerRender();
-  }
-
   function setHidePutRequests(hidePutRequests: boolean) {
     serverEvents.current.hidePutRequests = hidePutRequests;
     setSettings({hidePutRequests});
@@ -194,8 +173,6 @@ export function useDebugNetworkServer() {
   return {
     serverEvents: serverEvents.current,
     clear,
-    stop,
-    record,
     setHidePutRequests,
     setPreserveLog,
     setActiveEventId,

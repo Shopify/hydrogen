@@ -160,12 +160,8 @@ button:active {
   color: #cccccc;
 }
 
-#main {
-  display: grid;
-  grid-template-rows: 2.5rem auto 300px 2.5rem;
-}
-
 #main.empty {
+  display: grid;
   grid-template-rows: 2.5rem auto 2.5rem;
 }
 
@@ -219,12 +215,19 @@ button:active {
   overflow: hidden;
 }
 
+#request-waterfall .request-waterfall-chart {
+  height: calc(60vh - 6rem);
+  width: calc(99.8vw - 3.5rem);
+}
+
 #request-info {
   display: flex;
   gap: 0.7rem;
   align-items: stretch;
   flex-direction: row;
   margin-top: 1rem;
+
+  height: calc(40vh - 6rem);
 }
 
 #request-info.empty {
@@ -401,6 +404,8 @@ p.footnote {
 
   font-size: var(--text-large);
   color: var(--secondary-text-color);
+
+  height: 2.5rem;
 }
 
 #empty-view {

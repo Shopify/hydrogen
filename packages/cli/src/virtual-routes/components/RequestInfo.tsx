@@ -146,7 +146,7 @@ function DetailsRow({
   return (
     <>
       <div>{rowName}</div>
-      {type === 'url' && <Link to={value}>{text ?? value}</Link>}
+      {type === 'url' && <Link target='_blank' to={value}>{text ?? value}</Link>}
       {type === 'string' && (
         <div className="word-break-all">{text ?? value}</div>
       )}

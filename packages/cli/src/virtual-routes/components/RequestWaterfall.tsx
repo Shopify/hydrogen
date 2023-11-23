@@ -7,6 +7,7 @@ import {
   type ServerEvent,
   type ServerEvents,
 } from '../lib/useDebugNetworkServer.jsx';
+import { T } from 'vitest/dist/types-198fd1d9.js';
 
 export type RequestWaterfallConfig = {
   colors: {
@@ -18,6 +19,8 @@ export type RequestWaterfallConfig = {
 
 const STYLE_FONT =
   '10px Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Open Sans, Helvetica Neue, sans-serif';
+
+let resizeTimeout: NodeJS.Timeout;
 
 export function RequestWaterfall({
   serverEvents,
@@ -134,6 +137,7 @@ export function RequestWaterfall({
         main: {
           blockHeight: 22,
           font: STYLE_FONT,
+          tooltipShadowBlur: 1,
         },
         timeframeSelectorPlugin: {
           font: STYLE_FONT,
@@ -156,7 +160,7 @@ export function RequestWaterfall({
       waterfall={data}
       onSelect={onSelect}
       settings={settings}
-      onResize={(flameChart, _, height) => {
+      onResize={(flameChart, width, height) => {
         flameChart?.setSettings({
           ...settings,
           styles: {
@@ -166,6 +170,11 @@ export function RequestWaterfall({
             },
           },
         });
+
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          flameChart?.resize(width, height);
+        }, 50);
       }}
     />
   );

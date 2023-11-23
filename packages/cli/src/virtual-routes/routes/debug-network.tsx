@@ -44,8 +44,6 @@ export default function DebugNetwork() {
   const {
     serverEvents,
     clear,
-    stop,
-    record,
     timestamp,
     setHidePutRequests,
     setPreserveLog,
@@ -60,10 +58,7 @@ export default function DebugNetwork() {
         suppressHydrationWarning
       />
       <DebugHeader
-        serverEvents={serverEvents}
         clearCallback={clear}
-        stopCallback={stop}
-        recordCallback={record}
       />
       <div id="main" className={`pad${isEmptyState ? ' empty' : ''}`}>
         <OptionsAndLegend
@@ -75,11 +70,13 @@ export default function DebugNetwork() {
           {isEmptyState ? (
             <EmptyState />
           ) : (
-            <RequestWaterfall
-              key={timestamp}
-              serverEvents={serverEvents}
-              config={WATERFALL_CONFIG}
-            />
+            <div className="request-waterfall-chart">
+              <RequestWaterfall
+                key={timestamp}
+                serverEvents={serverEvents}
+                config={WATERFALL_CONFIG}
+              />
+            </div>
           )}
         </div>
         <RequestInfo serverEvents={serverEvents} isEmptyState={isEmptyState} />
@@ -107,15 +104,9 @@ function EmptyState() {
 }
 
 function DebugHeader({
-  serverEvents,
   clearCallback,
-  stopCallback,
-  recordCallback,
 }: {
-  serverEvents: ServerEvents;
   clearCallback: () => void;
-  stopCallback: () => void;
-  recordCallback: () => void;
 }) {
   return (
     <header className="justify-between text-large">
@@ -125,14 +116,6 @@ function DebugHeader({
         <span className="pill">Dev</span>
       </div>
       <div className="flex-row">
-        <button
-          style={{width: '70px'}}
-          onClick={() =>
-            serverEvents.recordEvents ? stopCallback() : recordCallback()
-          }
-        >
-          {serverEvents.recordEvents ? 'Stop' : 'Record'}
-        </button>
         <button className="primary" onClick={() => clearCallback()}>
           Clear
         </button>

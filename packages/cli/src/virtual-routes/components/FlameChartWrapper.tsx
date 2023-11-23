@@ -60,10 +60,10 @@ export const FlameChartWrapper = (props: FlameChartProps) => {
   useResizeObserver({
     ref: boxRef,
     onResize: ({width = 0, height = 0}) => {
-      flameChart.current?.resize(width, height - 3);
-
       if (props.onResize) {
         props.onResize(flameChart.current, width, height);
+      } else {
+        flameChart.current?.resize(width, height - 3);
       }
     },
   });
