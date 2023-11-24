@@ -338,6 +338,16 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       requestInit.body,
     ];
 
+    let stackOffset = 1;
+    if (process.env.NODE_ENV === 'development') {
+      if (/fragment CartApi(Query|Mutation) on Cart/.test(query)) {
+        // The cart handler is wrapping storefront.query/mutate,
+        // so we need to go up one more stack frame to show
+        // the caller in /debug-network
+        stackOffset = 2;
+      }
+    }
+
     const [body, response] = await fetchWithServerCache(url, requestInit, {
       cacheInstance: mutation ? undefined : cache,
       cache: cacheOptions || CacheDefault(),
@@ -348,7 +358,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         graphql: graphqlData,
         requestId: requestInit.headers[STOREFRONT_REQUEST_GROUP_ID_HEADER],
         purpose: storefrontHeaders?.purpose,
-        stackInfo: getCallerStackLine?.(1),
+        stackInfo: getCallerStackLine?.(stackOffset),
         displayName,
       },
     });
