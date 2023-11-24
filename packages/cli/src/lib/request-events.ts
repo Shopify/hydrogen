@@ -95,67 +95,73 @@ async function clearHistory<R extends RequestKind>(
   return createResponse<R>();
 }
 
-export async function logRequestEvent<R extends RequestKind>(
-  request: R,
-): Promise<InferredResponse<R>> {
-  const url = new URL(request.url);
-  if (DEV_ROUTES.has(url.pathname)) {
+export function createLogRequestEvent(options?: {absoluteBundlePath?: string}) {
+  return async function logRequestEvent<R extends RequestKind>(
+    request: R,
+  ): Promise<InferredResponse<R>> {
+    const url = new URL(request.url);
+    if (DEV_ROUTES.has(url.pathname)) {
+      return createResponse<R>();
+    }
+
+    const {eventType, purpose, graphql, stackInfo, ...data} =
+      await getRequestInfo(request);
+
+    let graphiqlLink = '';
+    let description = request.url;
+
+    if (eventType === 'subrequest') {
+      description =
+        graphql?.query
+          .match(/(query|mutation)\s+(\w+)/)?.[0]
+          ?.replace(/\s+/, ' ') || decodeURIComponent(url.search.slice(1));
+
+      if (graphql) {
+        graphiqlLink = getGraphiQLUrl({graphql});
+      }
+    }
+
+    let stackLine: string | null = null;
+    let stackLink: string | null = null;
+
+    if (stackInfo?.file) {
+      if (!path.isAbsolute(stackInfo.file) && options?.absoluteBundlePath) {
+        stackInfo.file = options.absoluteBundlePath;
+      }
+
+      const {source, line, column} = mapSourcePosition({
+        source: stackInfo.file,
+        line: stackInfo.line ?? 0,
+        column: stackInfo.column ?? 0,
+      });
+
+      stackLine = `${source}:${line}:${column + 1}`;
+      stackLink = `vscode://${path.join('file', stackLine)}`;
+
+      stackLine = stackLine.split(path.sep + 'app' + path.sep)[1] ?? stackLine;
+      if (stackInfo.func) {
+        stackLine = `${stackInfo.func.replace(/\d+$/, '')} (${stackLine})`;
+      }
+    }
+
+    const event = {
+      event: EVENT_MAP[eventType] || eventType,
+      data: JSON.stringify({
+        ...data,
+        url: `${purpose} ${description}`.trim(),
+        graphiqlLink,
+        stackLine,
+        stackLink,
+      }),
+    };
+
+    eventHistory.push(event);
+    if (eventHistory.length > 100) eventHistory.shift();
+
+    eventEmitter.emit('request', event);
+
     return createResponse<R>();
-  }
-
-  const {eventType, purpose, graphql, stackInfo, ...data} =
-    await getRequestInfo(request);
-
-  let graphiqlLink = '';
-  let description = request.url;
-
-  if (eventType === 'subrequest') {
-    description =
-      graphql?.query
-        .match(/(query|mutation)\s+(\w+)/)?.[0]
-        ?.replace(/\s+/, ' ') || decodeURIComponent(url.search.slice(1));
-
-    if (graphql) {
-      graphiqlLink = getGraphiQLUrl({graphql});
-    }
-  }
-
-  let stackLine: string | null = null;
-  let stackLink: string | null = null;
-
-  if (stackInfo?.file) {
-    const {source, line, column} = mapSourcePosition({
-      source: stackInfo.file,
-      line: stackInfo.line ?? 0,
-      column: stackInfo.column ?? 0,
-    });
-
-    stackLine = `${source}:${line}:${column + 1}`;
-    stackLink = `vscode://${path.join('file', stackLine)}`;
-
-    stackLine = stackLine.split(path.sep + 'app' + path.sep)[1] ?? stackLine;
-    if (stackInfo.func) {
-      stackLine = `${stackInfo.func.replace(/\d+$/, '')} (${stackLine})`;
-    }
-  }
-
-  const event = {
-    event: EVENT_MAP[eventType] || eventType,
-    data: JSON.stringify({
-      ...data,
-      url: `${purpose} ${description}`.trim(),
-      graphiqlLink,
-      stackLine,
-      stackLink,
-    }),
   };
-
-  eventHistory.push(event);
-  if (eventHistory.length > 100) eventHistory.shift();
-
-  eventEmitter.emit('request', event);
-
-  return createResponse<R>();
 }
 
 function streamRequestEvents<R extends RequestKind>(

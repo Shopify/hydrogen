@@ -12,7 +12,7 @@ import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
 import {OXYGEN_HEADERS_MAP, logRequestLine} from './common.js';
 import {
   H2O_BINDING_NAME,
-  logRequestEvent,
+  createLogRequestEvent,
   handleDebugNetworkRequest,
 } from '../request-events.js';
 
@@ -31,6 +31,7 @@ export async function startNodeServer({
     }),
   );
 
+  const logRequestEvent = createLogRequestEvent();
   const asyncLocalStorage = new AsyncLocalStorage();
   const serviceBindings = {
     [H2O_BINDING_NAME]: {
