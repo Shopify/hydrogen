@@ -141,7 +141,7 @@ export class Multipassify {
     );
 
     const customerText = decryptedCustomer.toString(CryptoJS.enc.Utf8);
-    const customer = JSON.parse(customerText);
+    const customer = JSON.parse(customerText) as MultipassCustomer;
 
     // Check if the token is still valid
     const now = new Date().toISOString();

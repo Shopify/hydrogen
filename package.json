@@ -32,6 +32,7 @@
     "examples/express",
     "examples/customer-api",
     "examples/bun",
+    "examples/multipass",
     "docs/preview",
     "packages/remix-oxygen",
     "packages/hydrogen",

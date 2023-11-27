@@ -1,23 +1,21 @@
 import {
   json,
   redirect,
-  type ActionArgs,
-  type LoaderArgs,
+  type ActionFunctionArgs,
+  type LoaderFunctionArgs,
 } from '@shopify/remix-oxygen';
-import jwtDecode from 'jwt-decode';
-import {Multipassify} from '~/lib/multipass/multipassify.server';
+import {Multipassify} from '~/utils/multipass/multipassify.server';
 import type {
   CustomerInfoType,
-  GoogleJwtCredentialsType,
   MultipassRequestBody,
   NotLoggedInResponseType,
-} from '~/lib/multipass/types';
+} from '~/utils/multipass/types';
 
 /*
   Redirect document GET requests to the login page (housekeeping)
 */
-export async function loader({params, context}: LoaderArgs) {
-  const customerAccessToken = await context.session.get('customerAccessToken');
+export async function loader({params, context}: LoaderFunctionArgs) {
+  const customerAccessToken = context.session.get('customerAccessToken');
 
   if (customerAccessToken) {
     return redirect(params.lang ? `${params.lang}/account` : '/account');
@@ -27,16 +25,16 @@ export async function loader({params, context}: LoaderArgs) {
 
 /*
   Generates a multipass token for a given customer and return_to url.
-  Handles POST `/account/login/multipass` requests.
+  Handles POST requests to `/account/login/multipass`
   expects body: { return_to?: string, customer }
 */
-export async function action({request, context}: ActionArgs) {
+export async function action({request, context}: ActionFunctionArgs) {
   const {session, storefront, env} = context;
   const origin = request.headers.get('Origin') || '';
   const isOptionsReq = request.method === 'OPTIONS';
   const isPostReq = request.method === 'POST';
   let customerAccessToken;
-  let customer: CustomerInfoType | undefined;
+  let customer: CustomerInfoType | undefined | null;
 
   try {
     // only POST and OPTIONS allowed
@@ -49,71 +47,51 @@ export async function action({request, context}: ActionArgs) {
       return handleOptionsPreflight(origin);
     }
 
-    // POST requests handler
-    // Get the request body
-    const body: MultipassRequestBody = await request.json();
-    const token = body?.token;
-    const provider = body?.provider;
+    const body = (await request.json()) as MultipassRequestBody;
 
     if (!session) {
-      return NotLoggedInResponse({
+      return notLoggedInResponse({
         url: body?.return_to ?? null,
         error: 'MISSING_SESSION',
       });
     }
 
     // try to grab the customerAccessToken from the session if available
-    customerAccessToken = await session.get('customerAccessToken');
+    customerAccessToken = session.get('customerAccessToken')?.accessToken;
 
-    // attempmt to get the customer info from a thrid party token e.g google signin
-    if (token) {
-      if (provider === 'google') {
-        const account: GoogleJwtCredentialsType = jwtDecode(token);
-
-        // google derived jwt customer info
-        customer = {
-          first_name: account.given_name,
-          last_name: account.family_name,
-          email: account.email,
-          multipass_identifier: account.sub,
-          return_to: `/account`,
-        };
-      } else {
-        // provider not supported
-        return NotLoggedInResponse({
-          url: body?.return_to ?? null,
-          error: 'PROVIDER_NOT_SUPPORTED',
-        });
-      }
-    } else if (customerAccessToken) {
-      // Have a customerAccessToken, get the customer so we can find their email.
-      const response: {customer: CustomerInfoType} = await storefront.query(
-        CUSTOMER_INFO_QUERY,
-        {
-          variables: {
-            customerAccessToken,
-          },
-        },
-      );
-
-      customer = response?.customer ?? null;
-    } else {
+    if (!customerAccessToken) {
       return handleLoggedOutResponse({
         return_to: body?.return_to ?? null,
         checkoutDomain: env.PRIVATE_SHOPIFY_CHECKOUT_DOMAIN,
       });
     }
 
+    if (customerAccessToken) {
+      // Have a customerAccessToken, get the customer
+      const response = await storefront.query(CUSTOMER_INFO_QUERY, {
+        variables: {
+          customerAccessToken,
+        },
+      });
+
+      customer = response?.customer
+        ? ({
+            ...response.customer,
+            return_to: '',
+          } as CustomerInfoType)
+        : null;
+    }
+
     // Check if customer has the required fields to create a multipass token
-    if (!customer?.email) {
-      return NotLoggedInResponse({
+    if (!customer || !customer?.email) {
+      return notLoggedInResponse({
         url: body?.return_to ?? null,
         error: 'MISSING_EMAIL',
       });
     }
 
-    if (!customer?.return_to && !body?.return_to) {
-      return NotLoggedInResponse({
+    if (typeof customer?.return_to === 'undefined' && !body?.return_to) {
+      return notLoggedInResponse({
         url: body?.return_to ?? null,
         error: 'MISSING_RETURN_TO_URL',
       });
@@ -125,11 +103,11 @@ export async function action({request, context}: ActionArgs) {
         env.PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET,
       );
 
-      const customerInfo: CustomerInfoType = {
+      const customerInfo = {
         ...customer,
         created_at: new Date().toISOString(),
         return_to: customer?.return_to || body?.return_to || '',
-      };
+      } as CustomerInfoType;
 
       // Generating a token for customer
       const data = multipassify.generate(
@@ -139,7 +117,7 @@ export async function action({request, context}: ActionArgs) {
       );
 
       if (!data?.url) {
-        return NotLoggedInResponse({
+        return notLoggedInResponse({
           url: body?.return_to ?? null,
           error: 'FAILED_GENERATING_MULTIPASS',
         });
@@ -161,7 +139,7 @@ export async function action({request, context}: ActionArgs) {
         message = JSON.stringify(error);
       }
 
-      return NotLoggedInResponse({
+      return notLoggedInResponse({
         url: body?.return_to ?? null,
         error: message,
       });
@@ -176,7 +154,7 @@ export async function action({request, context}: ActionArgs) {
       message = JSON.stringify(error);
     }
 
-    return NotLoggedInResponse({
+    return notLoggedInResponse({
       url: null,
       error: message,
     });
@@ -213,10 +191,12 @@ async function handleLoggedOutResponse(options: {
   checkoutDomain: string | undefined;
 }) {
   const {return_to, checkoutDomain} = options;
-  const isCheckoutReq = /\/[\w-]{32}$/g.test(return_to || '');
+  // Match checkout urls such as:
+  // https://checkout.example.com/cart/c/c1-dd274dd3e6dca2f6a6ea899e8fe9b90f?key=6900d0a8b227761f88cf2e523ae2e662
+  const isCheckoutReq = /[\w-]{32}\?key/g.test(return_to || '');
 
   if (!return_to || !isCheckoutReq) {
-    return NotLoggedInResponse({
+    return notLoggedInResponse({
       url: null,
       error: 'NOT_AUTHORIZED',
     });
@@ -233,7 +213,7 @@ async function handleLoggedOutResponse(options: {
 /*
   Helper response when errors occur.
 */
-function NotLoggedInResponse(options: NotLoggedInResponseType) {
+function notLoggedInResponse(options: NotLoggedInResponseType) {
   interface ErrorsType {
     [key: string]: string;
   }
@@ -245,7 +225,6 @@ function NotLoggedInResponse(options: NotLoggedInResponseType) {
       'Required customer `return_to` URL was not provided.',
     FAILED_GENERATING_MULTIPASS: 'Could not generate a multipass url.',
     'Invalid Secret': 'Invalid Secret',
-    PROVIDER_NOT_SUPPORTED: 'Provider not supported.',
     NOT_AUTHORIZED: 'Not authorized.',
   };
 
@@ -257,8 +236,6 @@ function NotLoggedInResponse(options: NotLoggedInResponseType) {
   } else {
     error = ERRORS[errorKey] ?? 'UNKNOWN_ERROR';
   }
-
-  console.error('Multipass not logged in error:', error);
 
   // Always return the original URL.
   return json({data: {url}, error});

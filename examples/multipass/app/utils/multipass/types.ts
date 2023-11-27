@@ -28,24 +28,10 @@ export interface NotAuthResponseType {
   error: string | null;
 }
 
-interface MultipassBaseOptions {
+export type MultipassOptions = {
   redirect: boolean;
-}
-
-interface MultipassTokenOption extends MultipassBaseOptions {
-  token: string;
-  provider: string;
-  return_to?: never;
-}
-
-interface MultipassReturnToOption extends MultipassBaseOptions {
   return_to: string;
-  token?: never;
-  provider?: never;
-}
-
-/* `redirect_to` is required with either `customer` or `return_to` */
-export type MultipassOptions = MultipassTokenOption | MultipassReturnToOption;
+};
 
 /*
   api handlers
@@ -63,14 +49,6 @@ export interface CustomerInfoType {
 }
 
 export type MultipassRequestBody = MultipassOptions;
-
-export interface GoogleJwtCredentialsType {
-  given_name: string;
-  family_name: string;
-  email: string;
-  picture: string;
-  sub: string;
-}
 
 export interface CustomerDataResponseType {
   data: MultipassRequestBody;
