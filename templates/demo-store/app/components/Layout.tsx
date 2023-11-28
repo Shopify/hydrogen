@@ -41,8 +41,7 @@ type LayoutProps = {
 };
 
 export function Layout({children, layout}: LayoutProps) {
-  const headerMenu = layout?.headerMenu;
-  const footerMenu = layout?.footerMenu;
+  const {headerMenu, footerMenu} = layout || {};
   return (
     <>
       <div className="flex flex-col min-h-screen">
@@ -51,7 +50,9 @@ export function Layout({children, layout}: LayoutProps) {
             Skip to content
           </a>
         </div>
-        {headerMenu && <Header title={layout.shop.name} menu={headerMenu} />}
+        {headerMenu && layout?.shop.name && (
+          <Header title={layout.shop.name} menu={headerMenu} />
+        )}
         <main role="main" id="mainContent" className="flex-grow">
           {children}
         </main>
