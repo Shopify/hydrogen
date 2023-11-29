@@ -10,7 +10,7 @@ import type {
   ParentMenuItemFragment,
 } from 'storefrontapi.generated';
 
-import type {I18nLocale} from './type';
+import type {I18nLocale, Locale} from './type';
 
 type EnhancedMenuItemProps = {
   to: string;
@@ -313,16 +313,10 @@ export function useIsHomePath() {
   return strippedPathname === '/';
 }
 
-export function parseAsCurrency(
-  value: number,
-  currency: string,
-  country: string,
-  language: string,
-) {
-  const locale = language + '-' + country;
-  return new Intl.NumberFormat(locale, {
+export function parseAsCurrency(value: number, locale: Locale) {
+  return new Intl.NumberFormat(locale.language + '-' + locale.country, {
     style: 'currency',
-    currency,
+    currency: locale.currency,
   }).format(value);
 }
 

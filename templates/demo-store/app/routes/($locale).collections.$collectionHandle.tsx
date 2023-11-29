@@ -31,6 +31,7 @@ import type {SortParam} from '~/components/SortFilter';
 import {FILTER_URL_PREFIX} from '~/components/SortFilter';
 import {getImageLoadingPriority} from '~/lib/const';
 import {parseAsCurrency} from '~/lib/utils';
+import type {Locale} from '~/lib/type';
 
 export const headers = routeHeaders;
 
@@ -39,7 +40,7 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
     pageBy: 8,
   });
   const {collectionHandle} = params;
-  const {currency, country, language} = context.storefront.i18n;
+  const locale: Locale = context.storefront.i18n;
 
   invariant(collectionHandle, 'Missing collectionHandle param');
 
@@ -111,14 +112,9 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
       if (foundValue.id === 'filter.v.price') {
         // Special case for price, we want to show the min and max values as the label.
         const input = JSON.parse(foundValue.input as string) as ProductFilter;
-        const min = parseAsCurrency(
-          input?.price?.min ?? 0,
-          currency,
-          country,
-          language,
-        );
-        const max = input?.price?.max
-          ? parseAsCurrency(input.price.max, currency, country, language)
+        const min = parseAsCurrency(input.price?.min ?? 0, locale);
+        const max = input.price?.max
+          ? parseAsCurrency(input.price.max, locale)
           : '';
         const label = min && max ? `${min} - ${max}` : 'Price';
 

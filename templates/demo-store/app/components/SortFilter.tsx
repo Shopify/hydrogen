@@ -222,11 +222,11 @@ function PriceRangeFilter({max, min}: {max?: number; min?: number}) {
 
   useDebounce(
     () => {
-      if (
-        (minPrice === undefined || minPrice === min) &&
-        (maxPrice === undefined || maxPrice === max)
-      )
+      if (minPrice === undefined && maxPrice === undefined) {
+        const newParams = removeFilterFromParams('price', params);
+        navigate(`${location.pathname}?${newParams.toString()}`);
         return;
+      }
 
       const price = {
         ...(minPrice === undefined ? {} : {min: minPrice}),
@@ -240,12 +240,18 @@ function PriceRangeFilter({max, min}: {max?: number; min?: number}) {
   );
 
   const onChangeMax = (event: SyntheticEvent) => {
-    const newMaxPrice = parseFloat((event.target as HTMLInputElement).value);
+    const value = (event.target as HTMLInputElement).value;
+    const newMaxPrice = Number.isNaN(parseFloat(value))
+      ? undefined
+      : parseFloat(value);
     setMaxPrice(newMaxPrice);
   };
 
   const onChangeMin = (event: SyntheticEvent) => {
-    const newMinPrice = parseFloat((event.target as HTMLInputElement).value);
+    const value = (event.target as HTMLInputElement).value;
+    const newMinPrice = Number.isNaN(parseFloat(value))
+      ? undefined
+      : parseFloat(value);
     setMinPrice(newMinPrice);
   };
 
@@ -254,10 +260,10 @@ function PriceRangeFilter({max, min}: {max?: number; min?: number}) {
       <label className="mb-4">
         <span>from</span>
         <input
-          name="maxPrice"
+          name="minPrice"
           className="text-black"
           type="number"
-          defaultValue={min}
+          value={minPrice ?? ''}
           placeholder={'$'}
           onChange={onChangeMin}
         />
@@ -265,10 +271,10 @@ function PriceRangeFilter({max, min}: {max?: number; min?: number}) {
       <label>
         <span>to</span>
         <input
-          name="minPrice"
+          name="maxPrice"
           className="text-black"
           type="number"
-          defaultValue={max}
+          value={maxPrice ?? ''}
           placeholder={'$'}
           onChange={onChangeMax}
         />
@@ -290,11 +296,21 @@ function filterInputToParams(
     if (key === 'price') {
       // For price, we want to overwrite
       params.set(`${FILTER_URL_PREFIX}${key}`, JSON.stringify(value));
-    } else {
+    } else if (
+      !params.has(`${FILTER_URL_PREFIX}${key}`, JSON.stringify(value))
+    ) {
       params.append(`${FILTER_URL_PREFIX}${key}`, JSON.stringify(value));
     }
   });
 
+  return params;
+}
+
+function removeFilterFromParams(
+  key: string,
+  params: URLSearchParams,
+): URLSearchParams {
+  params.delete(`${FILTER_URL_PREFIX}${key}`);
   return params;
 }
 
