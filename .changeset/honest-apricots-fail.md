@@ -29,14 +29,3 @@ version via a CLI prompt
 ```bash
 h2 upgrade --version 2023.10.0
 ```
-
-### `--dry-run` flag
-
-If your are unsure about upgrading or just want to preview the TODO list of
-changes to a given hydrogen version you can run
-
-```bash
-h2 upgrade --dry-run
-
-# this will output a new .md file inside the .hydrogen/ folder for a given upgrade
-```

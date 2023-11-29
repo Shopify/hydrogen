@@ -149,7 +149,7 @@ describe('upgrade', async () => {
   describe('checkIsGitRepo', () => {
     it('renders an error message when not in a git repo', async () => {
       await inTemporaryDirectory(async (appPath) => {
-        await expect(runUpgrade({dryRun: false, appPath})).rejects.toThrowError(
+        await expect(runUpgrade({appPath})).rejects.toThrowError(
           'git repository',
         );
       });
@@ -160,9 +160,7 @@ describe('upgrade', async () => {
     it('renders error message if the target git repo is dirty', async () => {
       await inTemporaryHydrogenRepo(
         async (appPath) => {
-          await expect(
-            runUpgrade({dryRun: false, appPath}),
-          ).rejects.toThrowError('clean git');
+          await expect(runUpgrade({appPath})).rejects.toThrowError('clean git');
         },
         {cleanGitRepo: false, packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON},
       );
@@ -173,9 +171,9 @@ describe('upgrade', async () => {
     it('throws if no package.json is found', async () => {
       await inTemporaryHydrogenRepo(
         async (appPath) => {
-          await expect(
-            runUpgrade({dryRun: false, appPath}),
-          ).rejects.toThrowError('valid package.json');
+          await expect(runUpgrade({appPath})).rejects.toThrowError(
+            'valid package.json',
+          );
         },
         {packageJson: null},
       );
@@ -184,9 +182,9 @@ describe('upgrade', async () => {
     it('throws if no hydrogen version is found in package.json', async () => {
       await inTemporaryHydrogenRepo(
         async (appPath) => {
-          await expect(
-            runUpgrade({dryRun: false, appPath}),
-          ).rejects.toThrowError('version in package.json');
+          await expect(runUpgrade({appPath})).rejects.toThrowError(
+            'version in package.json',
+          );
         },
         {
           cleanGitRepo: true,
@@ -220,9 +218,9 @@ describe('upgrade', async () => {
     it('exists when run over a prerelease "next" version', async () => {
       await inTemporaryHydrogenRepo(
         async (appPath) => {
-          await expect(
-            runUpgrade({dryRun: false, appPath}),
-          ).rejects.toThrowError('prerelease');
+          await expect(runUpgrade({appPath})).rejects.toThrowError(
+            'prerelease',
+          );
         },
         {
           cleanGitRepo: true,
@@ -249,7 +247,7 @@ describe('upgrade', async () => {
 
       await inTemporaryHydrogenRepo(
         async (appPath) => {
-          await runUpgrade({dryRun: false, appPath});
+          await runUpgrade({appPath});
           expect(outputMock.info()).toMatch(
             / success.+ latest Hydrogen version/is,
           );

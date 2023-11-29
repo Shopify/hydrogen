@@ -108,13 +108,6 @@ export default class Upgrade extends Command {
       required: false,
       char: 'v',
     }),
-    ['dry-run']: Flags.boolean({
-      description:
-        'Generate a summary and .md file with upgrade instructions without actually upgrading the dependencies',
-      required: false,
-      default: false,
-      char: 'd',
-    }),
     force: Flags.boolean({
       description:
         'Ignore warnings and force the upgrade to the target version',
@@ -137,14 +130,12 @@ let CACHED_CHANGELOG: ChangeLog | null = null;
 
 type UpgradeOptions = {
   appPath: string;
-  dryRun: boolean;
   version?: string;
   force?: boolean;
 };
 
 export async function runUpgrade({
   appPath,
-  dryRun,
   version: targetVersion,
   force,
 }: UpgradeOptions) {
@@ -204,12 +195,10 @@ export async function runUpgrade({
       selectedRelease,
     });
 
-    confirmed =
-      dryRun ||
-      (await displayConfirmation({
-        cumulativeRelease,
-        selectedRelease,
-      }));
+    confirmed = await displayConfirmation({
+      cumulativeRelease,
+      selectedRelease,
+    });
   } while (!confirmed);
 
   // Generate a markdown file with upgrade instructions
@@ -217,33 +206,23 @@ export async function runUpgrade({
     appPath,
     cumulativeRelease,
     currentVersion,
-    dryRun,
     selectedRelease,
   });
 
-  if (!dryRun) {
-    await upgradeNodeModules({appPath, selectedRelease, currentDependencies});
-    await validateUpgrade({
-      appPath,
-      selectedRelease,
-    });
-  }
+  await upgradeNodeModules({appPath, selectedRelease, currentDependencies});
+  await validateUpgrade({
+    appPath,
+    selectedRelease,
+  });
 
   const instrunctionsFilePath = await instrunctionsFilePathPromise;
 
-  if (dryRun) {
-    await displayDryRunSummary({
-      instrunctionsFilePath,
-      selectedRelease,
-    });
-  } else {
-    // Display a summary of the upgrade and next steps
-    await displayUpgradeSummary({
-      currentVersion,
-      instrunctionsFilePath,
-      selectedRelease,
-    });
-  }
+  // Display a summary of the upgrade and next steps
+  await displayUpgradeSummary({
+    currentVersion,
+    instrunctionsFilePath,
+    selectedRelease,
+  });
 }
 
 /**
@@ -762,43 +741,6 @@ async function promptUpgradeOptions(
   });
 }
 
-async function displayDryRunSummary({
-  selectedRelease,
-  instrunctionsFilePath,
-}: {
-  selectedRelease: Release;
-  instrunctionsFilePath?: string;
-}) {
-  let nextSteps = [];
-
-  if (typeof instrunctionsFilePath === 'string') {
-    let instructions = `Preview the upgrade instructions at:\nfile://${instrunctionsFilePath}`;
-    nextSteps.push(instructions);
-  }
-
-  const releaseNotesUrl = `https://hydrogen.shopify.dev/releases/${selectedRelease.version}`;
-
-  nextSteps.push(`Release notes:\n${releaseNotesUrl}`);
-
-  return renderSuccess({
-    headline:
-      'This was a dry run. So, nothing was changed in your Hydrogen configuration.',
-    // @ts-ignore we know that filter(Boolean) will always return an array
-    customSections: [
-      {
-        title: 'What’s next?',
-        body: [
-          {
-            list: {
-              items: nextSteps,
-            },
-          },
-        ],
-      },
-    ].filter(Boolean),
-  });
-}
-
 /**
  * Displays a summary of the upgrade and next steps
  */
@@ -931,13 +873,11 @@ async function generateUpgradeInstructionsFile({
   appPath,
   cumulativeRelease,
   currentVersion,
-  dryRun,
   selectedRelease,
 }: {
   appPath: string;
   cumulativeRelease: CumulativeRelease;
   currentVersion: string;
-  dryRun: boolean;
   selectedRelease: Release;
 }) {
   let filename = '';
@@ -973,9 +913,7 @@ async function generateUpgradeInstructionsFile({
 
   const absoluteFrom = getAbsoluteVersion(currentVersion);
   const absoluteTo = getAbsoluteVersion(selectedRelease.version);
-  filename = `${
-    dryRun ? 'preview-' : ''
-  }upgrade-${absoluteFrom}-to-${absoluteTo}.md`;
+  filename = `upgrade-${absoluteFrom}-to-${absoluteTo}.md`;
 
   const instructionsFolderPath = path.join(appPath, INSTRUCTIONS_FOLDER);
 
