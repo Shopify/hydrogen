@@ -677,14 +677,6 @@
           "required": false,
           "multiple": false
         },
-        "dry-run": {
-          "name": "dry-run",
-          "type": "boolean",
-          "char": "d",
-          "description": "Generate a summary and .md file with upgrade instructions without actually upgrading the dependencies",
-          "required": false,
-          "allowNo": false
-        },
         "force": {
           "name": "force",
           "type": "boolean",
