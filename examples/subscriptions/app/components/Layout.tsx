@@ -1,46 +1,23 @@
 import {Await} from '@remix-run/react';
 import {Suspense} from 'react';
-import type {
-  CartApiQueryFragment,
-  FooterQuery,
-  HeaderQuery,
-} from 'storefrontapi.generated';
+import type {CartApiQueryFragment, HeaderQuery} from 'storefrontapi.generated';
 import {Aside} from '~/components/Aside';
-import {Footer} from '~/components/Footer';
 import {Header, HeaderMenu} from '~/components/Header';
 import {CartMain} from '~/components/Cart';
-import {
-  PredictiveSearchForm,
-  PredictiveSearchResults,
-} from '~/components/Search';
 
 export type LayoutProps = {
   cart: Promise<CartApiQueryFragment | null>;
   children?: React.ReactNode;
-  footer: Promise<FooterQuery>;
   header: HeaderQuery;
-  isLoggedIn: boolean;
 };
 
-export function Layout({
-  cart,
-  children = null,
-  footer,
-  header,
-  isLoggedIn,
-}: LayoutProps) {
+export function Layout({cart, children = null, header}: LayoutProps) {
   return (
     <>
       <CartAside cart={cart} />
-      <SearchAside />
-      <MobileMenuAside menu={header.menu} shop={header.shop} />
-      <Header header={header} cart={cart} isLoggedIn={isLoggedIn} />
+      <MobileMenuAside />
+      <Header header={header} cart={cart} />
       <main>{children}</main>
-      <Suspense>
-        <Await resolve={footer}>
-          {(footer) => <Footer menu={footer.menu} shop={header.shop} />}
-        </Await>
-      </Suspense>
     </>
   );
 }
@@ -59,47 +36,10 @@ function CartAside({cart}: {cart: LayoutProps['cart']}) {
   );
 }
 
-function SearchAside() {
-  return (
-    <Aside id="search-aside" heading="SEARCH">
-      <div className="predictive-search">
-        <br />
-        <PredictiveSearchForm>
-          {({fetchResults, inputRef}) => (
-            <div>
-              <input
-                name="q"
-                onChange={fetchResults}
-                onFocus={fetchResults}
-                placeholder="Search"
-                ref={inputRef}
-                type="search"
-              />
-              &nbsp;
-              <button type="submit">Search</button>
-            </div>
-          )}
-        </PredictiveSearchForm>
-        <PredictiveSearchResults />
-      </div>
-    </Aside>
-  );
-}
-
-function MobileMenuAside({
-  menu,
-  shop,
-}: {
-  menu: HeaderQuery['menu'];
-  shop: HeaderQuery['shop'];
-}) {
+function MobileMenuAside() {
   return (
     <Aside id="mobile-menu-aside" heading="MENU">
-      <HeaderMenu
-        menu={menu}
-        viewport="mobile"
-        primaryDomainUrl={shop.primaryDomain.url}
-      />
+      <HeaderMenu viewport="mobile" />
     </Aside>
   );
 }

@@ -100,18 +100,26 @@ function CartLineItem({
           <p>
             <strong>{product.title}</strong>
             <br />
-            {sellingPlanAllocation && sellingPlanAllocation.sellingPlan.name}
           </p>
         </Link>
         <CartLinePrice line={line} as="span" />
         <ul>
-          {selectedOptions.map((option) => (
-            <li key={option.name}>
-              <small>
-                {option.name}: {option.value}
-              </small>
+          {/* Optionally render the selling plan name if available */}
+          {sellingPlanAllocation && (
+            <li key={sellingPlanAllocation.sellingPlan.name}>
+              <small>{sellingPlanAllocation.sellingPlan.name}</small>
             </li>
-          ))}
+          )}
+          {selectedOptions.map(
+            (option) =>
+              option.value !== 'Default Title' && (
+                <li key={option.name}>
+                  <small>
+                    {option.name}: {option.value}
+                  </small>
+                </li>
+              ),
+          )}
         </ul>
         <CartLineQuantity line={line} />
       </div>
@@ -169,7 +177,9 @@ function CartLineRemoveButton({lineIds}: {lineIds: string[]}) {
       action={CartForm.ACTIONS.LinesRemove}
       inputs={{lineIds}}
     >
-      <button type="submit">Remove</button>
+      <button type="submit">
+        <small>Remove</small>
+      </button>
     </CartForm>
   );
 }
@@ -285,7 +295,9 @@ function CartDiscounts({
             <div className="cart-discount">
               <code>{codes?.join(', ')}</code>
               &nbsp;
-              <button>Remove</button>
+              <button>
+                <small>Remove</small>
+              </button>
             </div>
           </UpdateDiscountForm>
         </div>
