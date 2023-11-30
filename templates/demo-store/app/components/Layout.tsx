@@ -289,6 +289,9 @@ function DesktopHeader({
             </Link>
           ))}
         </nav>
+        <Link to="/inp">
+          INP
+        </Link>
       </div>
       <div className="flex items-center gap-1">
         <Form

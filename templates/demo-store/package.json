@@ -35,7 +35,8 @@
     "react-use": "^17.4.0",
     "schema-dts": "^1.1.0",
     "tiny-invariant": "^1.2.0",
-    "typographic-base": "^1.0.4"
+    "typographic-base": "^1.0.4",
+    "web-vitals": "3.5.0-soft-navs-10"
   },
   "devDependencies": {
     "@remix-run/dev": "2.1.0",

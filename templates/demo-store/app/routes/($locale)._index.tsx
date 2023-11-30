@@ -85,10 +85,7 @@ export default function Homepage() {
     tertiaryHero,
     featuredCollections,
     featuredProducts,
-    catFact,
   } = useLoaderData<typeof loader>();
-
-  console.log(catFact);
 
   // TODO: skeletons vs placeholders
   const skeletons = getHeroPlaceholder([{}, {}, {}]);
