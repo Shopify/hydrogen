@@ -223,8 +223,8 @@ function PriceRangeFilter({max, min}: {max?: number; min?: number}) {
   useDebounce(
     () => {
       if (minPrice === undefined && maxPrice === undefined) {
-        const newParams = removeFilterFromParams('price', params);
-        navigate(`${location.pathname}?${newParams.toString()}`);
+        params.delete(`${FILTER_URL_PREFIX}price`);
+        navigate(`${location.pathname}?${params.toString()}`);
         return;
       }
 
@@ -293,24 +293,17 @@ function filterInputToParams(
       : rawInput;
 
   Object.entries(input).forEach(([key, value]) => {
+    if (params.has(`${FILTER_URL_PREFIX}${key}`, JSON.stringify(value))) {
+      return;
+    }
     if (key === 'price') {
       // For price, we want to overwrite
       params.set(`${FILTER_URL_PREFIX}${key}`, JSON.stringify(value));
-    } else if (
-      !params.has(`${FILTER_URL_PREFIX}${key}`, JSON.stringify(value))
-    ) {
+    } else {
       params.append(`${FILTER_URL_PREFIX}${key}`, JSON.stringify(value));
     }
   });
 
-  return params;
-}
-
-function removeFilterFromParams(
-  key: string,
-  params: URLSearchParams,
-): URLSearchParams {
-  params.delete(`${FILTER_URL_PREFIX}${key}`);
   return params;
 }
 

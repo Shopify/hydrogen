@@ -40,7 +40,7 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
     pageBy: 8,
   });
   const {collectionHandle} = params;
-  const locale: Locale = context.storefront.i18n;
+  const locale = context.storefront.i18n;
 
   invariant(collectionHandle, 'Missing collectionHandle param');
 
