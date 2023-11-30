@@ -31,7 +31,6 @@ import type {SortParam} from '~/components/SortFilter';
 import {FILTER_URL_PREFIX} from '~/components/SortFilter';
 import {getImageLoadingPriority} from '~/lib/const';
 import {parseAsCurrency} from '~/lib/utils';
-import type {Locale} from '~/lib/type';
 
 export const headers = routeHeaders;
 
