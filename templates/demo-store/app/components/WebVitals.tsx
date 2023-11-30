@@ -28,6 +28,13 @@ export default function WebVitals() {
       webVitals.onLCP(onReport('LCP'), {reportSoftNavs: true});
       // webVitals.onCLS(onReport('CLS'), {reportSoftNavs: true});
     });
+
+    const observer = new PerformanceObserver((list) => {
+      list.getEntries().forEach((entry) => {
+        console.log(entry);
+      });
+    });
+    observer.observe({ type: 'event', buffered: true, durationThreshold:40 });
   }, []);
 
   return null;
