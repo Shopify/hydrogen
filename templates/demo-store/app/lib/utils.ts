@@ -2,13 +2,13 @@ import {useLocation, useMatches} from '@remix-run/react';
 import type {MoneyV2} from '@shopify/hydrogen/storefront-api-types';
 import typographicBase from 'typographic-base';
 
+import {useRootLoaderData} from '~/root';
+import {countries} from '~/data/countries';
 import type {
   ChildMenuItemFragment,
   MenuFragment,
   ParentMenuItemFragment,
 } from 'storefrontapi.generated';
-import {countries} from '~/data/countries';
-import {useRootLoaderData} from '~/root';
 
 import type {I18nLocale} from './type';
 
@@ -311,6 +311,13 @@ export function useIsHomePath() {
   const selectedLocale = rootData?.selectedLocale ?? DEFAULT_LOCALE;
   const strippedPathname = pathname.replace(selectedLocale.pathPrefix, '');
   return strippedPathname === '/';
+}
+
+export function parseAsCurrency(value: number, locale: I18nLocale) {
+  return new Intl.NumberFormat(locale.language + '-' + locale.country, {
+    style: 'currency',
+    currency: locale.currency,
+  }).format(value);
 }
 
 /**
