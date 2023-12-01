@@ -1,5 +1,5 @@
 ---
-'@shopify/hydrogen-react': minor
+'@shopify/hydrogen-react': patch
 ---
 
 Added React.forwardRef to Video and ExternalVideo components
