@@ -3,35 +3,152 @@
   "version": "1",
   "releases": [
     {
-      "title": "Moved @remix-run/server-runtime to peer dependency",
-      "version": "2023.10.2",
+      "title": "New upgrade command, enhanced dev --debug, Pagination component fix and `ShopPayButton` attribution prop",
+      "version": "2023.10.3",
       "date": "",
-      "hash": "875d35f52fcfd8006e78217cfac0096122f98a54",
-      "pr": "https://github.com/Shopify/hydrogen/pull/1486",
-      "commit": "https://github.com/Shopify/hydrogen/pull/1486/commits/875d35f52fcfd8006e78217cfac0096122f98a54",
+      "hash": "",
+      "pr": "",
+      "commit": "",
       "dependencies": {
         "@remix-run/react": "2.1.0",
         "@shopify/cli-hydrogen": "^6.0.2",
-        "@shopify/hydrogen": "^2023.10.2",
+        "@shopify/hydrogen": "^2023.10.3",
         "@shopify/remix-oxygen": "^2.0.1"
       },
       "devDependencies": {
         "@remix-run/dev": "2.1.0",
-        "typescript": "^5.2.2"
+        "typescript": "^5.2.2",
+        "@shopify/cli": "3.51.0",
+        "@shopify/oxygen-workers-types": "^4.0.0",
+        "@remix-run/server-runtime": "2.1.0"
       },
       "dependenciesMeta": {
         "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
           "required": true
         }
       },
       "fixes": [
         {
-          "title": "Moved @remix-run/server-runtime to peer dependency",
-          "pr": "https://github.com/Shopify/hydrogen/pull/1484",
-          "id": "1484"
+          "title": "Change peer dependency of `@shopify/oxygen-workers-types` to allow for `^4.0.0` versions",
+          "pr": "",
+          "id": ""
+        },
+        {
+          "title": "Remove error boundary from robots.txt in hydrogen template",
+          "pr": "",
+          "id": ""
+        },
+        {
+          "title": "Fix the Pagination component to always restore scroll correctly on back/forth navigation. ",
+          "description": "This has the side effect of causing a hydration error _only_ when the user refreshes an already paginated page. This is because during refresh the Paginated list is rendered with navigation state, _not_ the state returned by the server. Navigation state might contain many pages of data, so all of it is necessary to properly render the page height and restore scroll. The side effect of this is the hydration mismatch. We feel it isn't often the user would hard refresh the page, and when doing so, a hydration mismatch and flash of rendered content is an acceptable downside to accurately maintaining scroll location",
+          "pr": "",
+          "id": ""
+        },
+        {
+          "title": "In TypeScript projects, when updating to the latest `@shopify/remix-oxygen` adapter release, please update also to the latest version of `@shopify/oxygen-workers-types`",
+          "pr": "",
+          "id": "",
+          "steps": [
+            {
+              "title": "Upgrade @shopify/oxygen-workers-types dependency",
+              "code": "YGBgZGlmZgoiZGV2RGVwZW5kZW5jaWVzIjogewogICJAcmVtaXgtcnVuL2RldiI6ICIyLjEuMCIsCiAgIkByZW1peC1ydW4vZXNsaW50LWNvbmZpZyI6ICIyLjEuMCIsCi0gIkBzaG9waWZ5L294eWdlbi13b3JrZXJzLXR5cGVzIjogIl4zLjE3LjMiLAorICJAc2hvcGlmeS9veHlnZW4td29ya2Vycy10eXBlcyI6ICJeNC4wLjAiLAogICJAc2hvcGlmeS9wcmV0dGllci1jb25maWciOiAiXjEuMS4yIiwKICAuLi4KfSwKYGBg"
+            }
+          ]
+        },
+        {
+          "title": "Export caching types to make creating custom clients easier in typescript",
+          "pr": "",
+          "id": ""
+        },
+        {
+          "title": "Updated internal dependencies for bug resolution",
+          "pr": "",
+          "id": "",
+          "steps": [
+            {
+              "title": "Update the `@shopify/cli` dependency in your app to avoid duplicated subdependencies: ",
+              "code": "YGBgZGlmZgogICJkZXBlbmRlbmNpZXMiOiB7Ci0gICAiQHNob3BpZnkvY2xpIjogIjMuNTAuMiIsCisgICAiQHNob3BpZnkvY2xpIjogIjMuNTEuMCIsCiAgfQpgYGA="
+            }
+          ]
+        },
+        {
+          "title": "Fix peer dependencies across packages",
+          "id": "",
+          "pr": ""
+        },
+        {
+          "title": "Resolves an issue with the verification check in the `deploy` command",
+          "pr": "",
+          "id": ""
+        },
+        {
+          "title": "Add `@remix-run/server-runtime` as a dev dependency. ",
+          "id": "",
+          "pr": "",
+          "steps": [
+            {
+              "title": "Since Remix is now a peer dependency of `@shopify/remix-oxygen`, you need to add `@remix-run/server-runtime` to your dependencies with the same version you have for the rest of Remix dependencies",
+              "code": "YGBgZGlmZgoiZGVwZW5kZW5jaWVzIjogewogICJAcmVtaXgtcnVuL3JlYWN0IjogIjIuMS4wIgorICJAcmVtaXgtcnVuL3NlcnZlci1ydW50aW1lIjogIjIuMS4wIgogIC4uLgp9CmBgYA=="
+            }
+          ]
         }
       ],
-      "features": []
+      "features": [
+        {
+          "title": "New `h2 upgrade` command",
+          "docs": "https://shopify.dev/docs/custom-storefronts/hydrogen/cli#upgrade",
+          "pr": "",
+          "id": "",
+          "steps": [
+            {
+              "title": "Try the upgrade command via",
+              "code": "YGBgYmFzaAojIGZyb20gdGhlIGJhc2Ugb2YgdGhlIHByb2plY3QgcnVuCmgyIHVwZ3JhZGUKYGBg"
+            },
+            {
+              "title": "Upgrade to a specific Hydrogen version with the --version flag",
+              "code": "YGBgYmFzaApoMiB1cGdyYWRlIC0tdmVyc2lvbiAyMDIzLjEwLjMKYGBg"
+            }
+          ]
+        },
+        {
+          "title": "Enable debugger connections by passing `--debug` flag to the `h2 dev` command",
+          "id": "",
+          "description": "You can then connect to the port `9229` (configurable with the new `--inspector-port` flag) to start step debugging. When using `--worker-unstable`, an improved version of the DevTools will be available in `localhost:9229`. Otherwise, in Chrome you can go to `chrome://inspect` to open the DevTools -- make sure the inspector port is added to the network targets.",
+          "pr": "",
+          "steps": [
+            {
+              "title": "Debugging on the default runtime (Node.js sandbox):",
+
+              "code": "YGBgYmFzaApoMiBkZXYgLS1kZWJ1ZwpgYGA="
+            },
+            {
+              "title": "Debugging on the new worker runtime:",
+              "code": "YGBgYmFzaApoMiBkZXYgLS1kZWJ1ZyAtLXdvcmtlci11bnN0YWJsZQpgYGA="
+            }
+          ]
+        },
+        {
+          "title": "Added an optional prop to the `ShopPayButton` to enable order attribution support for either the Headless or Hydrogen sales channel.",
+          "id": "",
+          "pr": "",
+          "steps": [
+            {
+              "title": "Customize the order attribution via the `channel` prop",
+              "docs": "https://shopify.dev/docs/api/hydrogen-react/latest/components/shoppaybutton",
+              "code": "YGBgZGlmZgo8U2hvcFBheUJ1dHRvbgogICAgdmFyaWFudElkcz17W3ZhcmlhbnRJZF19CiAgICBzdG9yZURvbWFpbj17c3RvcmVEb21haW59CisgIGNoYW5uZWw9ImhlYWRsZXNzIHx8IGh5ZHJvZ2VuIgovPgpgYGA="
+            }
+          ]
+        }
+      ]
     },
     {
       "title": "Fix h2 init flow and SEO canonical tags",
