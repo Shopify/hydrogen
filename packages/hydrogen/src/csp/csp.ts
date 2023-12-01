@@ -51,13 +51,14 @@ function createCSPHeader(
     defaultSrc: [
       "'self'",
       nonceString,
-      'https://cdn.shopify.com',
+      'cdn.shopify.com',
       // Used for the Customer Account API
-      'https://shopify.com',
+      'shopify.com',
     ],
     frameAncestors: ['none'],
-    styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.shopify.com'],
-    connectSrc: ["'self'", 'https://monorail-edge.shopifysvc.com'],
+    styleSrc: ["'self'", "'unsafe-inline'", 'cdn.shopify.com'],
+    connectSrc: ["'self'", 'monorail-edge.shopifysvc.com'],
+    imgSrc: ["'self'", 'cdn.shopify.com'],
   };
 
   // Support HMR in local development
