@@ -6,16 +6,11 @@ import {
   fetch,
   NoOpLog,
   type MiniflareOptions,
+  RequestInit,
 } from 'miniflare';
 import {dirname, resolvePath} from '@shopify/cli-kit/node/path';
-import {
-  glob,
-  readFile,
-  fileSize,
-  createFileReadStream,
-} from '@shopify/cli-kit/node/fs';
+import {readFile} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
-import {lookupMimeType} from '@shopify/cli-kit/node/mimes';
 import {createInspectorConnector} from './workerd-inspector.js';
 import {findPort} from '../find-port.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
@@ -26,6 +21,11 @@ import {
   logRequestEvent,
   setConstructors,
 } from '../request-events.js';
+import {
+  buildAssetsUrl,
+  createAssetsServer,
+  STATIC_ASSET_EXTENSIONS,
+} from './assets.js';
 
 // This should probably be `0` and let workerd find a free port,
 // but at the moment we can't get the port from workerd (afaik?).
@@ -35,6 +35,7 @@ export async function startWorkerdServer({
   root,
   port: appPort,
   inspectorPort: publicInspectorPort,
+  assetsPort,
   debug = false,
   watch = false,
   buildPathWorkerFile,
@@ -54,6 +55,8 @@ export async function startWorkerdServer({
   setConstructors({Response});
 
   const absoluteBundlePath = resolvePath(root, buildPathWorkerFile);
+  const handleAssets = createAssetHandler(assetsPort);
+  const staticAssetExtensions = STATIC_ASSET_EXTENSIONS.slice();
 
   const buildMiniOxygenOptions = async () =>
     ({
@@ -70,12 +73,12 @@ export async function startWorkerdServer({
           modules: true,
           script: `export default { fetch: ${miniOxygenHandler.toString()} }`,
           bindings: {
-            initialAssets: await glob('**/*', {cwd: buildPathClient}),
+            staticAssetExtensions,
             oxygenHeadersMap,
           },
           serviceBindings: {
             hydrogen: 'hydrogen',
-            assets: createAssetHandler(buildPathClient),
+            assets: handleAssets,
             debugNetwork: handleDebugNetworkRequest,
             logRequest,
           },
@@ -118,6 +121,9 @@ export async function startWorkerdServer({
 
   await reconnect();
 
+  const assetsServer = createAssetsServer(buildPathClient);
+  assetsServer.listen(assetsPort);
+
   return {
     port: appPort,
     listeningAt,
@@ -158,6 +164,8 @@ export async function startWorkerdServer({
       console.log('');
     },
     async close() {
+      assetsServer.closeAllConnections();
+      assetsServer.close();
       await miniOxygen.dispose();
     },
   };
@@ -171,7 +179,7 @@ async function miniOxygenHandler(
     assets: Service;
     logRequest: Service;
     debugNetwork: Service;
-    initialAssets: string[];
+    staticAssetExtensions: string[];
     oxygenHeadersMap: Record<string, string>;
   },
   context: ExecutionContext,
@@ -183,7 +191,13 @@ async function miniOxygenHandler(
   }
 
   if (request.method === 'GET') {
-    if (new Set(env.initialAssets).has(pathname.slice(1))) {
+    const staticAssetExtensions = new Set(env.staticAssetExtensions);
+    const wellKnown = pathname.startsWith('/.well-known');
+    const extension = pathname.split('.').at(-1) ?? '';
+    const isAsset =
+      wellKnown || !!staticAssetExtensions.has(extension.toUpperCase());
+
+    if (isAsset) {
       const response = await env.assets.fetch(
         new Request(request.url, {
           signal: request.signal,
@@ -225,30 +239,16 @@ async function miniOxygenHandler(
   return response;
 }
 
-function createAssetHandler(buildPathClient: string) {
+function createAssetHandler(assetsPort: number) {
+  const assetsServerOrigin = buildAssetsUrl(assetsPort);
+
   return async (request: Request): Promise<Response> => {
-    const relativeAssetPath = new URL(request.url).pathname.replace('/', '');
-    if (relativeAssetPath) {
-      try {
-        const absoluteAssetPath = resolvePath(
-          buildPathClient,
-          relativeAssetPath,
-        );
-
-        return new Response(createFileReadStream(absoluteAssetPath), {
-          headers: {
-            'Content-Type': lookupMimeType(relativeAssetPath) || 'text/plain',
-            'Content-Length': String(await fileSize(absoluteAssetPath)),
-          },
-        });
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-          throw error;
-        }
-      }
-    }
-
-    return new Response('Not Found', {status: 404});
+    return fetch(
+      new Request(
+        request.url.replace(new URL(request.url).origin, assetsServerOrigin),
+        request as RequestInit,
+      ),
+    );
   };
 }
 

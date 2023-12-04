@@ -58,11 +58,17 @@ export async function runPreview({
 
   appPort = workerRuntime ? await findPort(appPort) : appPort;
   inspectorPort = debug ? await findPort(inspectorPort) : inspectorPort;
+  const assetsPort = workerRuntime ? await findPort(appPort + 100) : 0;
+
+  // Note: we don't need to add any asset prefix in preview because
+  // we don't control the build at this point. However, the assets server
+  // still need to be started to serve redirections from the worker runtime.
 
   const miniOxygen = await startMiniOxygen(
     {
       root,
       port: appPort,
+      assetsPort,
       env,
       buildPathClient,
       buildPathWorkerFile,
