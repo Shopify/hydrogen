@@ -23,8 +23,8 @@ export const commonFlags = {
   }),
   workerRuntime: Flags.boolean({
     description:
-      'Run the app in a worker environment closer to Oxygen production instead of a Node.js sandbox. This flag is unstable and may change without notice.',
-    env: 'SHOPIFY_HYDROGEN_FLAG_WORKER_UNSTABLE',
+      'Run the app in a worker environment closer to Oxygen production instead of a Node.js sandbox.',
+    env: 'SHOPIFY_HYDROGEN_FLAG_WORKER',
   }),
   force: Flags.boolean({
     description:
