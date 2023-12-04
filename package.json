@@ -33,6 +33,7 @@
     "examples/customer-api",
     "examples/bun",
     "examples/multipass",
+    "examples/third-party-queries-caching",
     "docs/preview",
     "packages/remix-oxygen",
     "packages/hydrogen",
