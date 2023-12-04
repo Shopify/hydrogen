@@ -25,6 +25,27 @@ import {parseJSON} from '../utils/parse-json';
 import {hashKey} from '../utils/hash';
 import {CrossRuntimeRequest, getDebugHeaders} from '../utils/request';
 
+type CustomerAPIResponse<ReturnType> = {
+  data: ReturnType;
+  errors: Array<{
+    message: string;
+    locations: Array<{line: number; column: number}>;
+    path: Array<string>;
+    extensions: {code: string};
+  }>;
+  extensions: {
+    cost: {
+      requestQueryCost: number;
+      actualQueryCakes: number;
+      throttleStatus: {
+        maximumAvailable: number;
+        currentAvailable: number;
+        restoreRate: number;
+      };
+    };
+  };
+};
+
 export type CustomerClient = {
   /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. */
   login: () => Promise<Response>;
@@ -38,12 +59,12 @@ export type CustomerClient = {
   query: <ReturnType = any, RawGqlString extends string = string>(
     query: RawGqlString,
     options?: {variables: Record<string, any>},
-  ) => Promise<ReturnType>;
+  ) => Promise<CustomerAPIResponse<ReturnType>>;
   /** Execute a GraphQL mutation against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
   mutate: <ReturnType = any, RawGqlString extends string = string>(
     mutation: RawGqlString,
     options?: {variables: Record<string, any>},
-  ) => Promise<ReturnType>;
+  ) => Promise<CustomerAPIResponse<ReturnType>>;
 };
 
 type CustomerClientOptions = {
@@ -173,7 +194,7 @@ export function createCustomerClient({
     }
 
     try {
-      return parseJSON(body).data;
+      return parseJSON(body);
     } catch (e) {
       throwGraphQLError({...errorOptions, errors: [{message: body}]});
     }
