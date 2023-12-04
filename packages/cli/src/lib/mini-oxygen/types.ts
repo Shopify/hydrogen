@@ -8,6 +8,7 @@ export type MiniOxygenOptions = {
   env: {[key: string]: string};
   debug?: boolean;
   inspectorPort: number;
+  assetsPort: number;
 };
 
 export type MiniOxygenInstance = {
