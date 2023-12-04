@@ -393,7 +393,7 @@ describe('customer', () => {
       fetch.mockResolvedValue(createFetchResponse(someJson, {ok: true}));
 
       const response = await customer.query(`query {...}`);
-      expect(response).toBe('json');
+      expect(response).toStrictEqual({data: 'json'});
       // Session not updated because it's not expired
       expect(session.set).not.toHaveBeenCalled();
     });
@@ -416,7 +416,7 @@ describe('customer', () => {
       fetch.mockResolvedValue(createFetchResponse(someJson, {ok: true}));
 
       const response = await customer.query(`query {...}`);
-      expect(response).toBe('json');
+      expect(response).toStrictEqual({data: 'json'});
       // Session updated because token was refreshed
       expect(session.set).toHaveBeenCalled();
     });
