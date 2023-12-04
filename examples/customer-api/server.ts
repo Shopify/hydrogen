@@ -59,7 +59,6 @@ export default {
         session,
         customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_ID,
         customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_URL,
-        customerApiVersion: '2024-01',
       });
 
       /**

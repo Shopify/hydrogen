@@ -82,14 +82,22 @@ type CustomerClientOptions = {
   waitUntil?: ExecutionContext['waitUntil'];
 };
 
+const DEFAULT_CUSTOMER_API_VERSION = '2024-01';
+
 export function createCustomerClient({
   session,
   customerAccountId,
   customerAccountUrl,
-  customerApiVersion = '2023-10',
+  customerApiVersion = '2024-01',
   request,
   waitUntil,
 }: CustomerClientOptions): CustomerClient {
+  if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
+    console.log(
+      `[h2:warn:createCustomerClient] You are using Customer Account API version ${customerApiVersion} when this version of Hydrogen was built for ${DEFAULT_CUSTOMER_API_VERSION}.`,
+    );
+  }
+
   if (!request?.url) {
     throw new Error(
       '[h2:error:createCustomerClient] The request object does not contain a URL.',
