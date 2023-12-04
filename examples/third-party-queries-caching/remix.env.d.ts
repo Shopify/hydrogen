@@ -8,10 +8,11 @@ import '@total-typescript/ts-reset';
 import type {Storefront, HydrogenCart} from '@shopify/hydrogen';
 import type {CustomerAccessToken} from '@shopify/hydrogen/storefront-api-types';
 import type {HydrogenSession} from './server';
+import {createRickAndMortyClient} from './app/lib/createRickAndMortyClient.server';
 
 declare global {
   /**
-   * A global `process` object is only available during build to access NODE_ENV.
+   * A global `process` object is only available during build to access NODE_ENV
    */
   const process: {env: {NODE_ENV: 'production' | 'development'}};
 
@@ -35,6 +36,7 @@ declare module '@shopify/remix-oxygen' {
     env: Env;
     cart: HydrogenCart;
     storefront: Storefront;
+    rickAndMorty: ReturnType<typeof createRickAndMortyClient>;
     session: HydrogenSession;
     waitUntil: ExecutionContext['waitUntil'];
   }
