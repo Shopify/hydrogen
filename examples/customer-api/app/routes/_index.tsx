@@ -3,9 +3,9 @@ import {type LoaderFunctionArgs, json} from '@shopify/remix-oxygen';
 
 export async function loader({context}: LoaderFunctionArgs) {
   if (await context.customer.isLoggedIn()) {
-    const {customer} = await context.customer.query<{
+    const {data} = await context.customer.query<{
       customer: {firstName: string; lastName: string};
-    }>(`#graphql
+    }>(`#graphql:customer
       query getCustomer {
         customer {
           firstName
@@ -16,7 +16,7 @@ export async function loader({context}: LoaderFunctionArgs) {
 
     return json(
       {
-        customer,
+        customer: data.customer,
       },
       {
         headers: {

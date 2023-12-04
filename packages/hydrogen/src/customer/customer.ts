@@ -25,6 +25,27 @@ import {parseJSON} from '../utils/parse-json';
 import {hashKey} from '../utils/hash';
 import {CrossRuntimeRequest, getDebugHeaders} from '../utils/request';
 
+type CustomerAPIResponse<ReturnType> = {
+  data: ReturnType;
+  errors: Array<{
+    message: string;
+    locations?: Array<{line: number; column: number}>;
+    path?: Array<string>;
+    extensions: {code: string};
+  }>;
+  extensions: {
+    cost: {
+      requestQueryCost: number;
+      actualQueryCakes: number;
+      throttleStatus: {
+        maximumAvailable: number;
+        currentAvailable: number;
+        restoreRate: number;
+      };
+    };
+  };
+};
+
 export type CustomerClient = {
   /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. */
   login: () => Promise<Response>;
@@ -38,12 +59,12 @@ export type CustomerClient = {
   query: <ReturnType = any, RawGqlString extends string = string>(
     query: RawGqlString,
     options?: {variables: Record<string, any>},
-  ) => Promise<ReturnType>;
+  ) => Promise<CustomerAPIResponse<ReturnType>>;
   /** Execute a GraphQL mutation against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
   mutate: <ReturnType = any, RawGqlString extends string = string>(
     mutation: RawGqlString,
     options?: {variables: Record<string, any>},
-  ) => Promise<ReturnType>;
+  ) => Promise<CustomerAPIResponse<ReturnType>>;
 };
 
 type CustomerClientOptions = {
@@ -61,14 +82,22 @@ type CustomerClientOptions = {
   waitUntil?: ExecutionContext['waitUntil'];
 };
 
+const DEFAULT_CUSTOMER_API_VERSION = '2024-01';
+
 export function createCustomerClient({
   session,
   customerAccountId,
   customerAccountUrl,
-  customerApiVersion = '2023-10',
+  customerApiVersion = DEFAULT_CUSTOMER_API_VERSION,
   request,
   waitUntil,
 }: CustomerClientOptions): CustomerClient {
+  if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
+    console.log(
+      `[h2:warn:createCustomerClient] You are using Customer Account API version ${customerApiVersion} when this version of Hydrogen was built for ${DEFAULT_CUSTOMER_API_VERSION}.`,
+    );
+  }
+
   if (!request?.url) {
     throw new Error(
       '[h2:error:createCustomerClient] The request object does not contain a URL.',
@@ -173,7 +202,7 @@ export function createCustomerClient({
     }
 
     try {
-      return parseJSON(body).data;
+      return parseJSON(body);
     } catch (e) {
       throwGraphQLError({...errorOptions, errors: [{message: body}]});
     }
