@@ -88,7 +88,7 @@ export function createCustomerClient({
   session,
   customerAccountId,
   customerAccountUrl,
-  customerApiVersion = '2024-01',
+  customerApiVersion = DEFAULT_CUSTOMER_API_VERSION,
   request,
   waitUntil,
 }: CustomerClientOptions): CustomerClient {
