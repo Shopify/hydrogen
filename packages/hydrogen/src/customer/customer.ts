@@ -29,8 +29,8 @@ type CustomerAPIResponse<ReturnType> = {
   data: ReturnType;
   errors: Array<{
     message: string;
-    locations: Array<{line: number; column: number}>;
-    path: Array<string>;
+    locations?: Array<{line: number; column: number}>;
+    path?: Array<string>;
     extensions: {code: string};
   }>;
   extensions: {
