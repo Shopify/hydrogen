@@ -33,6 +33,7 @@
     "examples/customer-api",
     "examples/bun",
     "examples/multipass",
+    "examples/partytown",
     "docs/preview",
     "packages/remix-oxygen",
     "packages/hydrogen",
