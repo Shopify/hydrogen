@@ -5,7 +5,7 @@
   "homepage": "https://github.com/Shopify/hydrogen/tree/main/packages/hydrogen-react",
   "license": "MIT",
   "engines": {
-    "node": ">=14"
+    "node": ">=18.0.0"
   },
   "publishConfig": {
     "access": "public",

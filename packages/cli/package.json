@@ -76,7 +76,7 @@
     "oclif.manifest.json"
   ],
   "engines": {
-    "node": ">=16.13"
+    "node": ">=18.0.0"
   },
   "oclif": {
     "commands": "dist/commands",
