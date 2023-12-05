@@ -9,6 +9,8 @@
     "dev": "npm run dev:pkg",
     "dev:pkg": "cross-env LOCAL_DEV=true turbo dev --parallel --filter=./packages/*",
     "dev:app": "cd templates/skeleton && cross-env LOCAL_DEV=true npm run dev --",
+    "docs:build": "turbo run build-docs",
+    "docs:preview": "turbo run preview-docs",
     "preview": "turbo build --filter=./packages/* && npm run preview -w demo-store",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx ./packages & npm run lint -w demo-store",
     "format": "prettier --write --ignore-unknown ./packages && npm run format -w demo-store",

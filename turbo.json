@@ -11,6 +11,16 @@
       "cache": false,
       "persistent": true
     },
+    "build-docs": {
+      "outputs": [
+        "docs/**/*.json"
+      ]
+    },
+    "preview-docs": {
+      "outputs": [
+        "docs/**/*.json"
+      ]
+    },
     "lint": {
       "outputs": []
     },
