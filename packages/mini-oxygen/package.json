@@ -24,7 +24,7 @@
     "dist"
   ],
   "engines": {
-    "node": ">=16.13.0"
+    "node": ">=18.0.0"
   },
   "dependencies": {
     "@miniflare/cache": "^2.14.1",
