@@ -33,12 +33,12 @@ export function Layout({
     <>
       <CartAside cart={cart} />
       <SearchAside />
-      <MobileMenuAside menu={header.menu} shop={header.shop} />
-      <Header header={header} cart={cart} isLoggedIn={isLoggedIn} />
+      <MobileMenuAside menu={header?.menu} shop={header?.shop} />
+      {header && <Header header={header} cart={cart} isLoggedIn={isLoggedIn} />}
       <main>{children}</main>
       <Suspense>
         <Await resolve={footer}>
-          {(footer) => <Footer menu={footer.menu} shop={header.shop} />}
+          {(footer) => <Footer menu={footer?.menu} shop={header?.shop} />}
         </Await>
       </Suspense>
     </>
@@ -94,12 +94,15 @@ function MobileMenuAside({
   shop: HeaderQuery['shop'];
 }) {
   return (
-    <Aside id="mobile-menu-aside" heading="MENU">
-      <HeaderMenu
-        menu={menu}
-        viewport="mobile"
-        primaryDomainUrl={shop.primaryDomain.url}
-      />
-    </Aside>
+    menu &&
+    shop?.primaryDomain?.url && (
+      <Aside id="mobile-menu-aside" heading="MENU">
+        <HeaderMenu
+          menu={menu}
+          viewport="mobile"
+          primaryDomainUrl={shop.primaryDomain.url}
+        />
+      </Aside>
+    )
   );
 }
