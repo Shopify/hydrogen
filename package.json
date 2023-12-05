@@ -59,7 +59,7 @@
     "yorkie": "^2.0.0"
   },
   "engines": {
-    "node": ">=16.13"
+    "node": ">=18.0.0"
   },
   "gitHooks": {
     "pre-commit": "lint-staged"
