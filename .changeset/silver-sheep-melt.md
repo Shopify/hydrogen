@@ -2,32 +2,6 @@
 '@shopify/cli-hydrogen': minor
 ---
 
-Enable debugger connections by passing `--debug` flag to the `h2 dev` command:
+Add the `--debug` flag to the [`dev` command](https://h2o.fyi/cli#dev) to enable step debugging in browser dev tools.
 
-- Current default runtime (Node.js sandbox): `h2 dev --debug`.
-- New Worker runtime: `h2 dev --debug --worker`.
-
-You can then connect to the port `9229` (configurable with the new `--inspector-port` flag) to start step debugging.
-
-When using `--worker`, an improved version of the DevTools will be available in `localhost:9229`. Otherwise, in Chrome you can go to `chrome://inspect` to open the DevTools -- make sure the inspector port is added to the network targets.
-
-Alternatively, in VSCode, you can add the following to your `.vscode/launch.json`:
-
-```
-{
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Hydrogen",
-      "type": "node",
-      "request": "attach",
-      "port": 9229,
-      "cwd": "/",
-      "resolveSourceMapLocations": null,
-      "attachExistingChildren": false,
-      "autoAttachChildProcesses": false,
-      "restart": true
-    }
-  ]
-}
-```
+To enable debugger connections for the Hydrogen app worker file, run `npx shopify hydrogen dev --debug --worker`, then open [localhost:9229](http://localhost:9229) in your browser.

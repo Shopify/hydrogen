@@ -1,6 +1,5 @@
 ---
-'@shopify/cli-hydrogen': patch
-'@shopify/create-hydrogen': patch
+'skeleton': patch
 ---
 
-Remove error boundary from robots.txt in hydrogen template
+Remove error boundary from robots.txt file in the Skeleton template
