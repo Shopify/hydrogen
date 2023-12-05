@@ -7,32 +7,31 @@ This is an example using the new Shopify [Customer Accounts API](https://shopify
 ## Requirements
 
 1. Hydrogen 2023.7 or later
-2. [Ngrok](https://ngrok.com/) for pointing a public https domain to your local machine required for oAuth
-
-## Environment variables
-
-Create a `.env` file at the root of your project
-
-```toml
-PUBLIC_CUSTOMER_ACCOUNT_ID=shp_<your-id>
-PUBLIC_CUSTOMER_ACCOUNT_URL=https://shopify.com/<your-url-id>
-PUBLIC_STOREFRONT_API_TOKEN=<your-storefront-api-token>
-PUBLIC_STORE_DOMAIN=<your-store>.myshopify.com
-SESSION_SECRET=foobar
-```
+1. A `Hydrogen` or `Headless` app/channel installed to your store and a storefront created
+1. [Ngrok](https://ngrok.com/) for pointing a public https domain to your local machine required for oAuth
 
 ## Setup
 
-1. Setup a [ngrok](https://ngrok.com/) account and add a permanent domain.
-2. Add the `Hydrogen` or `Headless` app/channel to your store via the Shopify admin
-3. Create a storefront if one doesn't exist
-4. Access the `Customer Account API` settings via the storefront settings page
-5. Copy the permanent domain from ngrok and add it as a `callback URI`: `https://your-ngrok-domain.app/authorize`
-6. Add a `JavaScript origin` with your ngrok domain: `https://your-ngrok-domain.app`
-7. Add a logout URI to your ngrok domain: `https://your-ngrok-domain.app`
-8. Copy the `Client ID` from the Customer Account API credentials to the `.env` `PUBLIC_CUSTOMER_ACCOUNT_ID` variable
-9. Copy the Customer Account API url to the `.env` `PUBLIC_CUSTOMER_ACCOUNT_URL` variable
-10. Update the ngrok npm script within `package.json` to use your ngrok domain
-11. Install the [ngrok CLI](https://ngrok.com/download)
-12. In a terminal start ngrok with `npm run ngrok`
-13. In another terminal, start hydrogen with `npm run dev`
+### Setup public domain using ngrok
+
+1. Setup a [ngrok](https://ngrok.com/) account and add a permanent domain (ie. `https://<your-ngrok-domain>.app`).
+1. Install the [ngrok CLI](https://ngrok.com/download) to use in terminal
+1. Start ngrok using `npm run ngrok --domain=<your-ngrok-domain>.app`
+
+### Include public domain in Customer Account API settings
+
+1. Go to your Shopify admin => `Hydrogen` or `Headless` app/channel => Customer Account API => Application setup
+1. Edit `Callback URI(s)` to include `https://<your-ngrok-domain>.app/authorize`
+1. Edit `Javascript origin(s)` to include your public domain `https://<your-ngrok-domain>.app` or keep it blank
+1. Edit `Logout URI` to include your public domain `https://<your-ngrok-domain>.app` or keep it blank
+
+### Prepare Environment variables
+
+To preview this example with mock data, copy `example.env` and rename it to `.env` in the root of your project.
+
+Alternatly, run [`npx shopify hydrogen link`](https://shopify.dev/docs/custom-storefronts/hydrogen/cli#link) or [`npx shopify hydrogen env pull`](https://shopify.dev/docs/custom-storefronts/hydrogen/cli#env-pull) to link this example to your own test shop
+
+### Start example
+
+1. In a seperate terminal, start hydrogen with `npm run dev`
+1. Goto `https://<your-ngrok-domain>.app` to start the login process
