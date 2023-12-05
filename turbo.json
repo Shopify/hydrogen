@@ -69,7 +69,7 @@
     "customer-api#build": {
       "dependsOn": ["@shopify/hydrogen#build"]
     },
-    "multi#build": {
+    "multipass#build": {
       "dependsOn": ["@shopify/hydrogen#build"]
     }
   }
