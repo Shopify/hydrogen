@@ -8,7 +8,9 @@ export function Footer({
 }: FooterQuery & {shop: HeaderQuery['shop']}) {
   return (
     <footer className="footer">
-      <FooterMenu menu={menu} primaryDomainUrl={shop.primaryDomain.url} />
+      {menu && shop?.primaryDomain?.url && (
+        <FooterMenu menu={menu} primaryDomainUrl={shop.primaryDomain.url} />
+      )}
     </footer>
   );
 }
