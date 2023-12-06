@@ -122,7 +122,7 @@ jobs:
 
   e2e:
     name: ⚫️ Playwright tests
-    runs-on: shopify-ubuntu-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency:
       group: ci-e2e-${{ github.ref }}
