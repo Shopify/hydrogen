@@ -134,3 +134,5 @@ yarn.lock
 
 admin.schema.json
 business-platform.schema.json
+
+examples/**/*.generated.d.ts

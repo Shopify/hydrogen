@@ -337,6 +337,13 @@
           "description": "Skip the version check when running `hydrogen dev`",
           "required": false,
           "allowNo": false
+        },
+        "diff": {
+          "name": "diff",
+          "type": "boolean",
+          "description": "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
+          "required": false,
+          "allowNo": false
         }
       },
       "args": {}

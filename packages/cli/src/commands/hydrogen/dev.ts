@@ -1,5 +1,5 @@
-import path from 'path';
-import fs from 'fs/promises';
+import path from 'node:path';
+import fs from 'node:fs/promises';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
@@ -35,6 +35,7 @@ import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {findPort} from '../../lib/find-port.js';
+import {prepareDiffDirectory} from '../../lib/dev-diff.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -68,11 +69,21 @@ export default class Dev extends Command {
       default: false,
       required: false,
     }),
+    ['diff']: Flags.boolean({
+      description:
+        "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
+      default: false,
+      required: false,
+    }),
   };
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Dev);
-    const directory = flags.path ? path.resolve(flags.path) : process.cwd();
+    let directory = flags.path ? path.resolve(flags.path) : process.cwd();
+
+    if (flags.diff) {
+      directory = await prepareDiffDirectory(directory);
+    }
 
     await runDev({
       ...flagsToCamelObject(flags),
