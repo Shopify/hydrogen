@@ -1,4 +1,5 @@
 {
+  "name": "hydrogen",
   "private": true,
   "sideEffects": false,
   "scripts": {
