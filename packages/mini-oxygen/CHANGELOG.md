@@ -1,5 +1,13 @@
 # @shopify/mini-oxygen
 
+## 2.2.4
+
+### Patch Changes
+
+- Update all Node.js dependencies to version 18. (Not a breaking change, since Node.js 18 is already required by Remix v2.) ([#1543](https://github.com/Shopify/hydrogen/pull/1543)) by [@michenly](https://github.com/michenly)
+
+- Fix how peer dependencies are resolved. ([#1489](https://github.com/Shopify/hydrogen/pull/1489)) by [@frandiox](https://github.com/frandiox)
+
 ## 2.2.3
 
 ### Patch Changes

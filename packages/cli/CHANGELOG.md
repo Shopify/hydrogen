@@ -1,5 +1,41 @@
 # @shopify/cli-hydrogen
 
+## 6.1.0
+
+### Minor Changes
+
+- Add the [`upgrade` command](https://h2o.fyi/cli#upgrade) to make it easier to upgrade from older versions of Hydrogen. Features: ([#1458](https://github.com/Shopify/hydrogen/pull/1458)) by [@juanpprieto](https://github.com/juanpprieto)
+
+  - Automatically updates dependencies in your package.json file.
+  - Generates a customized instruction file in the `/.shopify` directory, outlining any code changes required to complete the upgrade.
+  - Adds a warning when running the `dev` command with an outdated version.
+  - Defaults to the latest version. Pass a `--version` flag and a version number to select a specific one.
+
+  To get started, run `npx shopify hydrogen upgrade` in your Hydrogen project.
+
+- The worker runtime for development is now stable. This makes your development environment closer to parity with Oxygen’s production runtime. Pass the `--worker` flag with the `dev` or `preview` commands to enable it. This runtime will be enabled by default in the next major release. ([#1525](https://github.com/Shopify/hydrogen/pull/1525)) by [@frandiox](https://github.com/frandiox)
+
+- Add the `--debug` flag to the [`dev` command](https://h2o.fyi/cli#dev) to enable step debugging in browser dev tools. ([#1480](https://github.com/Shopify/hydrogen/pull/1480)) by [@frandiox](https://github.com/frandiox)
+
+  To enable debugger connections for the Hydrogen app worker file, run `npx shopify hydrogen dev --debug --worker`, then open [localhost:9229](http://localhost:9229) in your browser.
+
+### Patch Changes
+
+- Sync up environment variable names across all example & type files. ([#1542](https://github.com/Shopify/hydrogen/pull/1542)) by [@michenly](https://github.com/michenly)
+
+- Serve assets from a separate domain when running the dev server, to better simulate cross-domain behaviors. This makes it more realistic to work with CORS requests, content security policies, and CDN paths in development. ([#1503](https://github.com/Shopify/hydrogen/pull/1503)) by [@frandiox](https://github.com/frandiox)
+
+- Update all Node.js dependencies to version 18. (Not a breaking change, since Node.js 18 is already required by Remix v2.) ([#1543](https://github.com/Shopify/hydrogen/pull/1543)) by [@michenly](https://github.com/michenly)
+
+- 🐛 fix undefined menu error ([#1533](https://github.com/Shopify/hydrogen/pull/1533)) by [@michenly](https://github.com/michenly)
+
+- Fix how peer dependencies are resolved. ([#1489](https://github.com/Shopify/hydrogen/pull/1489)) by [@frandiox](https://github.com/frandiox)
+
+- Update Shopify CLI versions. ([#1504](https://github.com/Shopify/hydrogen/pull/1504)) by [@vincentezw](https://github.com/vincentezw)
+
+- Updated dependencies [[`848c6260`](https://github.com/Shopify/hydrogen/commit/848c6260a2db3a9cb0c86351f0f7128f61e028f0), [`8fce70de`](https://github.com/Shopify/hydrogen/commit/8fce70de32bd61ee86a6d895ac43cc1f78f1bf49)]:
+  - @shopify/mini-oxygen@2.2.4
+
 ## 6.0.2
 
 ### Patch Changes

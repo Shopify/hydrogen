@@ -1,5 +1,13 @@
 # @shopify/remix-oxygen
 
+## 2.0.2
+
+### Patch Changes
+
+- Change peer dependency of `@shopify/oxygen-workers-types` to allow for `^4.0.0` versions. ([#1494](https://github.com/Shopify/hydrogen/pull/1494)) by [@frandiox](https://github.com/frandiox)
+
+- Fix how peer dependencies are resolved. ([#1489](https://github.com/Shopify/hydrogen/pull/1489)) by [@frandiox](https://github.com/frandiox)
+
 ## 2.0.1
 
 ### Patch Changes

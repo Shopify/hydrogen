@@ -1,5 +1,15 @@
 # @shopify/hydrogen-react
 
+## 2023.10.1
+
+### Patch Changes
+
+- Update all Node.js dependencies to version 18. (Not a breaking change, since Node.js 18 is already required by Remix v2.) ([#1543](https://github.com/Shopify/hydrogen/pull/1543)) by [@michenly](https://github.com/michenly)
+
+- Skip private access token warning when using mock.shop. ([#1538](https://github.com/Shopify/hydrogen/pull/1538)) by [@frandiox](https://github.com/frandiox)
+
+- Add an optional `channel` prop to the `ShopPayButton` component, which adds order attribution support for either the Headless or Hydrogen sales channel. ([#1447](https://github.com/Shopify/hydrogen/pull/1447)) by [@QuintonC](https://github.com/QuintonC)
+
 ## 2023.10.0
 
 ### Major Changes

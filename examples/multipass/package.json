@@ -2,7 +2,7 @@
   "name": "multipass",
   "private": true,
   "sideEffects": false,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "scripts": {
     "build": "shopify hydrogen build",
     "dev": "shopify hydrogen dev --codegen",
@@ -15,9 +15,9 @@
   "dependencies": {
     "@remix-run/react": "2.1.0",
     "@shopify/cli": "3.50.0",
-    "@shopify/cli-hydrogen": "^6.0.0",
-    "@shopify/hydrogen": "^2023.10.0",
-    "@shopify/remix-oxygen": "^2.0.1",
+    "@shopify/cli-hydrogen": "^6.1.0",
+    "@shopify/hydrogen": "^2023.10.3",
+    "@shopify/remix-oxygen": "^2.0.2",
     "crypto-js": "^4.2.0",
     "graphql": "^16.6.0",
     "graphql-tag": "^2.12.6",
