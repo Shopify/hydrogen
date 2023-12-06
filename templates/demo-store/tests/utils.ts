@@ -9,12 +9,7 @@ import type {Page, Request} from '@playwright/test';
  * @param action Fn
  */
 export async function waitForLoaders(page: Page, action: () => Promise<any>) {
-  return waitForNetworkSettled(
-    page,
-    action,
-    (request) => /\?_data=root/.test(request.url()),
-    1,
-  );
+  return waitForNetworkSettled(page, action);
 }
 
 // Based on https://gist.github.com/dgozman/d1c46f966eb9854ee1fe24960b603b28
@@ -23,7 +18,7 @@ export async function waitForNetworkSettled(
   page: Page,
   action: () => Promise<any>,
   requestFilter?: (request: Request) => boolean,
-  minimumRequests = 0,
+  minimumRequests = 1,
 ) {
   const skipRequest = (request: Request) =>
     !!requestFilter && !requestFilter(request);
@@ -38,8 +33,9 @@ export async function waitForNetworkSettled(
   const pending = new Set<Request>();
 
   const maybeSettle = () => {
-    if (actionDone && requestCounter <= 0 && minimumRequests <= 0)
+    if (actionDone && requestCounter <= 0 && minimumRequests <= 0) {
       networkSettledCallback();
+    }
   };
 
   const onRequest = (request: Request) => {
