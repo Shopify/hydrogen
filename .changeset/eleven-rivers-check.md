@@ -2,7 +2,9 @@
 'skeleton': patch
 ---
 
-In TypeScript projects, when updating to the latest `@shopify/remix-oxygen` adapter release, please update also to the latest version of `@shopify/oxygen-workers-types`:
+Update to the latest version of `@shopify/oxygen-workers-types`.
+
+In TypeScript projects, when updating to the latest `@shopify/remix-oxygen` adapter release, you should also update to the latest version of `@shopify/oxygen-workers-types`:
 
 ```diff
 "devDependencies": {
