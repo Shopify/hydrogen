@@ -29,7 +29,7 @@ The following files have been added (🆕) or changed from the default Hydration
 
 | Module                                                                          | Description                                                                                                                                                                                                                                                      |
 | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 🆕 [@builder.io/partytown](https://www.npmjs.com/package/@builder.io/partytown) | Partytown is a lazy-loaded library to help relocate resource intensive scripts into a web worker, and off of the main thread. Its goal is to help speed up sites by dedicating the main thread to your code, and offloading third-party scripts to a web worker. |
+| 🆕 [@builder.io/partytown](https://www.npmjs.com/package/@builder.io/partytown) | Party town helps relocate resource intensive scripts off the main thread into a web worker. |
 
 ## Instructions
 
