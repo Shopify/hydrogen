@@ -1,5 +1,24 @@
 # @shopify/hydrogen
 
+## 2023.10.3
+
+### Patch Changes
+
+- Fix the Pagination component to always restore scroll correctly on back/forth navigation. ([#1508](https://github.com/Shopify/hydrogen/pull/1508)) by [@blittle](https://github.com/blittle)
+
+- Serve assets from a separate domain when running the dev server, to better simulate cross-domain behaviors. This makes it more realistic to work with CORS requests, content security policies, and CDN paths in development. ([#1503](https://github.com/Shopify/hydrogen/pull/1503)) by [@frandiox](https://github.com/frandiox)
+
+- Export caching types to make creating custom clients easier in TypeScript. ([#1507](https://github.com/Shopify/hydrogen/pull/1507)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Update the return types of the Customer Account API query and mutation methods. Also update Customer Account API default version to 2024-01. ([#1537](https://github.com/Shopify/hydrogen/pull/1537)) by [@blittle](https://github.com/blittle)
+
+- Fix how peer dependencies are resolved. ([#1489](https://github.com/Shopify/hydrogen/pull/1489)) by [@frandiox](https://github.com/frandiox)
+
+- Add default `channel` value of `hydrogen` to Hydrogen’s `ShopPayButton` component. ([#1447](https://github.com/Shopify/hydrogen/pull/1447)) by [@QuintonC](https://github.com/QuintonC)
+
+- Updated dependencies [[`848c6260`](https://github.com/Shopify/hydrogen/commit/848c6260a2db3a9cb0c86351f0f7128f61e028f0), [`62f67873`](https://github.com/Shopify/hydrogen/commit/62f67873359982ffa08f617085787a1fc174c3fa), [`e8cc49fe`](https://github.com/Shopify/hydrogen/commit/e8cc49feff18f5ee72d5f6965ff2094addc23466)]:
+  - @shopify/hydrogen-react@2023.10.1
+
 ## 2023.10.2
 
 ### Patch Changes
