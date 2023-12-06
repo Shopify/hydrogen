@@ -8,3 +8,6 @@ node_modules
 .env
 .vscode
 .shopify
+/test-results/
+/playwright-report/
+/playwright/.cache/
