@@ -315,7 +315,6 @@ function AddToCartButton({
             type="submit"
             onClick={onClick}
             disabled={disabled ?? fetcher.state !== 'idle'}
-            data-test="add-to-cart"
           >
             {children}
           </button>
