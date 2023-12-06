@@ -5,4 +5,4 @@
 '@shopify/cli-hydrogen': patch
 ---
 
-Fix peer dependencies across packages.
+Fix how peer dependencies are resolved.
