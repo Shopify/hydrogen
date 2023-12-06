@@ -12,9 +12,7 @@ Party town helps relocate resource intensive scripts off the main thread into a 
 
 ## Key files
 
-This folder contains the minimal set of files needed to showcase the implementation.
-Files that aren’t included by default with Hydrogen and that you’ll need to
-create are labeled with 🆕.
+The following files have been added (🆕) or changed from the default Hydration template:
 
 | File                                                                                              | Description                                                                                                                                                                                       |
 | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
