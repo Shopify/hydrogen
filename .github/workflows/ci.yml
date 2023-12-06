@@ -141,6 +141,9 @@ jobs:
       - name: 📥 Install dependencies
         run: npm ci
 
+      - name: 📋 Copy package-lock
+        run: cp package-lock.json templates/demo-store
+
       - name: 💾 Turbo cache
         id: turbo-cache
         uses: actions/cache@v3
