@@ -84,6 +84,9 @@ type CustomerClientOptions = {
 
 const DEFAULT_CUSTOMER_API_VERSION = '2024-01';
 
+export const CustomerAccountApiError =
+  class extends Error {} as ErrorConstructor;
+
 export function createCustomerClient({
   session,
   customerAccountId,
@@ -201,11 +204,22 @@ export function createCustomerClient({
       throwGraphQLError({...errorOptions, errors});
     }
 
+    let bodyJSON;
     try {
-      return parseJSON(body);
+      bodyJSON = parseJSON(body);
     } catch (e) {
       throwGraphQLError({...errorOptions, errors: [{message: body}]});
     }
+
+    if (bodyJSON.errors?.length) {
+      throwGraphQLError({
+        ...errorOptions,
+        errors: bodyJSON.errors,
+        ErrorConstructor: CustomerAccountApiError,
+      });
+    }
+
+    return bodyJSON;
   }
 
   return {
