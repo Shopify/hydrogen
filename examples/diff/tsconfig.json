@@ -1,0 +1,4 @@
+{
+  "extends": "../../templates/skeleton/tsconfig.json",
+  "include": ["./**/*.d.ts", "./**/*.ts", "./**/*.tsx"]
+}
