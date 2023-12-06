@@ -125,7 +125,7 @@ jobs:
     runs-on: shopify-ubuntu-latest
     timeout-minutes: 15
     concurrency:
-      group: ci-test-${{ github.ref }}
+      group: ci-e2e-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: ⬇️ Checkout repo
