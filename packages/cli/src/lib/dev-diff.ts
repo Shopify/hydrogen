@@ -71,16 +71,15 @@ export async function prepareDiffDirectory(diffDirectory: string) {
         }
 
         await events.map((event) => {
+          const targetFile = joinPath(
+            targetDirectory,
+            relativePath(diffDirectory, event.path),
+          );
+
           if (event.type === 'delete') {
-            return removeFile(event.path);
+            return removeFile(targetFile).catch(() => {});
           } else {
-            return copyFile(
-              event.path,
-              joinPath(
-                targetDirectory,
-                relativePath(diffDirectory, event.path),
-              ),
-            );
+            return copyFile(event.path, targetFile);
           }
         });
       },
