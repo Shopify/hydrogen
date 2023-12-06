@@ -3,7 +3,7 @@
 This folder contains a peformance-oriented example lazy-loading [Google Tag Manager](https://support.google.com/tagmanager)
 using [Partytown](https://partytown.builder.io/).
 
-Party town helps relocate resource intensive scripts into a web worker, and off of the main thread.
+Party town helps relocate resource intensive scripts off the main thread into a web worker.
 Its goal is to help speed up sites by dedicating the main thread to your code, and offloading third-party scripts to a web worker.
 
 ## Requirements
