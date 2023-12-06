@@ -1,31 +1,12 @@
 ---
-'@shopify/cli-hydrogen': patch
+'@shopify/cli-hydrogen': minor
 ---
 
-New `h2 upgrade` command
+Add the [`upgrade` command](https://h2o.fyi/cli#upgrade) to make it easier to upgrade from older versions of Hydrogen. Features:
 
-We are introducing a new hydrogen cli `upgrade` command that:
+- Automatically updates dependencies in your package.json file.
+- Generates a customized instruction file in the `/.shopify` directory, outlining any code changes required to complete the upgrade.
+- Adds a warning when running the `dev` command with an outdated version.
+- Defaults to the latest version. Pass a `--version` flag and a version number to select a specific one.
 
-- Makes upgrading hydrogen as easy as typing `h2 upgrade` in your terminal
-- Provides a quick summary of the key `features` and `fixes` of any available
-  hydrogen version(s)
-- Generates a `TODO` instructions file detailing all cumulative code changes required
-  to adopt a given hydrogen version
-- Provides a gentle notice during development detailing when a hydrogen is outdated, as well as a quick glance into the number of hydrogen version available
-
-## Basic use
-
-```bash
-# from the base of the project run
-h2 upgrade
-```
-
-### `--version` flag
-
-The version flag let's you upgrade to a specific release version without any further
-prompts. If an invalid version is provided you will be prompted to choose a hydrogen
-version via a CLI prompt
-
-```bash
-h2 upgrade --version 2023.10.0
-```
+To get started, run `npx shopify hydrogen upgrade` in your Hydrogen project.

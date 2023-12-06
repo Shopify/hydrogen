@@ -2,8 +2,9 @@
 'skeleton': patch
 ---
 
-Updated internal dependencies for bug resolution.
-Please update the `@shopify/cli` dependency in your app to avoid duplicated subdependencies:
+Update internal dependencies for bug resolution.
+
+Update your `@shopify/cli` dependency to avoid duplicated sub-dependencies:
 
 ```diff
   "dependencies": {

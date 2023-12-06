@@ -2,7 +2,9 @@
 'skeleton': patch
 ---
 
-Since Remix is now a peer dependency of `@shopify/remix-oxygen`, you need to add `@remix-run/server-runtime` to your dependencies with the same version you have for the rest of Remix dependencies.
+Add `@remix-run/server-runtime` dependency.
+
+Since Remix is now a peer dependency of `@shopify/remix-oxygen`, you need to add `@remix-run/server-runtime` to your dependencies, with the same version as the rest of your Remix dependencies.
 
 ```diff
 "dependencies": {

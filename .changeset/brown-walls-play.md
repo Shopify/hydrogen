@@ -2,9 +2,9 @@
 'skeleton': patch
 ---
 
-The Worker Runtime for development is now considered stable. This runtime provides an environment closer to Oxygen production.
+Use the worker runtime by default when running the `dev` or `preview` commands.
 
-Enable it in your project by adding the `--worker` flag:
+Enable it in your project by adding the `--worker` flag to your package.json scripts:
 
 ```diff
 "scripts": {

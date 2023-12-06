@@ -2,4 +2,4 @@
 '@shopify/cli-hydrogen': patch
 ---
 
-Resolves an issue with the verification check in the "deploy" command.
+Update Shopify CLI versions.

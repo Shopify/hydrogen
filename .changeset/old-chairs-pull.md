@@ -7,4 +7,4 @@
 '@shopify/cli-hydrogen': patch
 ---
 
-Update required Node dependency to v18. This should not cause any breaking change since v18 is required by Remix v2 but this update makes it official.
+Update all Node.js dependencies to version 18. (Not a breaking change, since Node.js 18 is already required by Remix v2.)
