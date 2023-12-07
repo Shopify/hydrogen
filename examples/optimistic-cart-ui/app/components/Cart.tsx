@@ -77,7 +77,7 @@ function CartLineItem({
   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
 
   // 3. Use the OptimisticInput hook to get the optimistic data for the line item
-  const optimisticData = useOptimisticData<{
+  const optimistic = useOptimisticData<{
     action?: 'removing';
     quantity?: number;
   }>(id);
@@ -88,7 +88,7 @@ function CartLineItem({
       className="cart-line"
       style={{
         // 4. Hide the line item if the optimistic data action is remove
-        display: optimisticData?.action === 'removing' ? 'none' : 'flex',
+        display: optimistic?.action === 'removing' ? 'none' : 'flex',
       }}
     >
       {image && (
