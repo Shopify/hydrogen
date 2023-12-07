@@ -2,7 +2,7 @@
 
 This folder contains an example implementation of [subscriptions](https://shopify.dev/docs/apps/selling-strategies/subscriptions) for Hydrogen. It shows how to display selling plans on a product page.
 
-<img width="1386" alt="Screenshot 2023-11-29 at 12 52 47 PM" src="https://github.com/Shopify/hydrogen/assets/12080141/d22ddf3e-a30c-40f7-b115-30e61cbdfa9e">
+![subscribtion-example](https://github.com/Shopify/hydrogen/assets/12080141/13afebb6-7fb8-408a-bf29-c35cc0d80ef2)
 
 ## Requirements
 
@@ -77,110 +77,202 @@ const CART_QUERY_FRAGMENT = `#graphql
 
 [View the complete component file](server.ts) to see these updates in context.
 
-### 3. Adjust the `product` route to support `sellingPLans`
+### 3. Adjust the `/app/routes/products.$handle.tsx` route to support `sellingPLans`
 
-In `/app/routes/products.$handle.tsx`
+### 3.1 Import the `SellingPlanSelector` component and type
 
 ```diff
-const CART_QUERY_FRAGMENT = `#graphql
-  # ...other code
++ import { SellingPlanSelector, type SellingPlanGroup } from '~/components/SellingPlanSelector';
+```
 
-  fragment CartLine on CartLine {
-    id
-    quantity
-    attributes {
-      key
-      value
-    }
-    cost {
-      totalAmount {
-        ...Money
-      }
-      amountPerQuantity {
-        ...Money
-      }
-      compareAtAmountPerQuantity {
-        ...Money
-      }
-    }
-+   sellingPlanAllocation {
-+     sellingPlan {
-+        name
+### 3.2 Update the product query to fetch subscriptions data
+
+First, add the `SELLING_PLAN_FRAGMENT` and `SELLING_PLAN_GROUP_FRAGMENT` fragments
+
+```diff
++ const SELLING_PLAN_FRAGMENT = `#graphql
++   fragment SellingPlan on SellingPlan {
++     id
++     options {
++       name
++       value
 +     }
-+    }
-  }
-  fragment CartApiQuery on Cart {
-    lines(first: $numCartLines) {
-      nodes {
-        ...CartLine
-      }
-    }
++   }
++ ` as const;
+
++ const SELLING_PLAN_GROUP_FRAGMENT = `#graphql
++   ${SELLING_PLAN_FRAGMENT}
++   fragment SellingPlanGroup on SellingPlanGroup {
++     name
++     options {
++       name
++       values
++     }
++     sellingPlans(first:10) {
++       nodes {
++         ...SellingPlan
++       }
++     }
++   }
++ ` as const;
+```
+
+Next, update the `PRODUCT_FRAGMENT` to include `sellinPlanGroups` in the query
+
+```diff
+const PRODUCT_FRAGMENT = `#graphql
+  ${PRODUCT_VARIANT_FRAGMENT}
++  ${SELLING_PLAN_GROUP_FRAGMENT}
+
+  fragment Product on Product {
     # ...other code
++   sellingPlanGroups(first:10) {
++     nodes {
++       ...SellingPlanGroup
++     }
++   }
   }
 ` as const;
 ```
 
-[View the complete component file](server.ts) to see these updates in context.
+### 3.3 Update the `loader` logic
 
-## 6. (Optional) - Update Content Securirt Policy
+```ts
+export async function loader({params, request, context}: LoaderFunctionArgs) {
+  const {handle} = params;
+  const {storefront} = context;
 
-Add `wwww.googletagmanager.com` domain to the `scriptSrc` directive
+  // 1. Get the selected selling plan id from the request url
+  const selectedSellingPlanId =
+    new URL(request.url).searchParams.get('selling_plan') ?? null;
 
-```diff
-//...other code
-
-export default async function handleRequest(
-  request: Request,
-  responseStatusCode: number,
-  responseHeaders: Headers,
-  remixContext: EntryContext,
-) {
-- const {nonce, header, NonceProvider} = createContentSecurityPolicy();
-+  const {nonce, header, NonceProvider} = createContentSecurityPolicy({
-+    scriptSrc: ["'self'", 'cdn.shopify.com', 'www.googletagmanager.com'],
-+ });
-
-  //...other code
-
-  responseHeaders.set('Content-Security-Policy', header);
-
-  return new Response(body, {
-    headers: responseHeaders,
-    status: responseStatusCode,
-  });
-}
-
-```
-
-[View the complete component file](app/entry.server.tsx) to see these updates in context.
-
-## 7. (TypeScript only) - Add the new environment variable to the `ENV` type definition
-
-Update the `remix.d.ts` file
-
-```diff
-// ...other code
-
-declare global {
-  /**
-   * A global `process` object is only available during build to access NODE_ENV.
-   */
-  const process: {env: {NODE_ENV: 'production' | 'development'}};
-
-  /**
-   * Declare expected Env parameter in fetch handler.
-   */
-  interface Env {
-    SESSION_SECRET: string;
-    PUBLIC_STOREFRONT_API_TOKEN: string;
-    PRIVATE_STOREFRONT_API_TOKEN: string;
-    PUBLIC_STORE_DOMAIN: string;
-    PUBLIC_STOREFRONT_ID: string;
-+   GTM_CONTAINER_ID: `GTM-${string}`;
+  if (!handle) {
+    throw new Error('Expected product handle to be defined');
   }
-}
 
-// ...other code
+  const {product} = await storefront.query(PRODUCT_QUERY, {
+    variables: {handle},
+  });
+
+  if (!product?.id) {
+    throw new Response(null, {status: 404});
+  }
+
+  const selectedVariant = product.variants.nodes[0];
+
+  // 2. Pass the selectedSellingPlanId to the client
+  return json({product, selectedVariant, selectedSellingPlanId});
+}
 ```
 
-[View the complete component file](remix.d.ts) to see these updates in context.
+### 3.4 Add the `<SellingPlanGroup />` component
+
+> [!NOTE]
+> Update as you see fit to match your design and requirements
+
+```ts
+//
+function SellingPlanGroup({
+  sellingPlanGroup,
+}: {
+  sellingPlanGroup: SellingPlanGroup;
+}) {
+  return (
+    <div key={sellingPlanGroup.name}>
+      <p className="mb-2">
+        <strong>{sellingPlanGroup.name}:</strong>
+      </p>
+      {sellingPlanGroup.sellingPlans.nodes.map((sellingPlan) => {
+        return (
+          <Link
+            key={sellingPlan.id}
+            prefetch="intent"
+            to={sellingPlan.url}
+            className={`border inline-block p-4 mr-2 leading-none py-1 border-b-[1.5px] hover:no-underline cursor-pointer transition-all duration-200
+                  ${
+                    sellingPlan.isSelected
+                      ? 'border-gray-500'
+                      : 'border-neutral-50'
+                  }`}
+            preventScrollReset
+            replace
+          >
+            <p>
+              {sellingPlan.options.map(
+                (option) => `${option.name} ${option.value}`,
+              )}
+            </p>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+```
+
+### 3.4 Update the `ProductForm` component to support subscriptions selection
+
+```ts
+function ProductForm({
+  // 1. Pass in the selectedSellingPlanId from the loader
+  selectedSellingPlanId,
+  selectedVariant,
+  sellingPlanGroups,
+}: {
+  selectedSellingPlanId: string | null;
+  selectedVariant: ProductFragment['variants']['nodes'][0];
+  sellingPlanGroups: ProductFragment['sellingPlanGroups'];
+}) {
+  return (
+    <div className="product-form">
+      {/* 2. Add the SellingPlanSelector component inside the ProductForm */}
+      <SellingPlanSelector
+        sellingPlanGroups={sellingPlanGroups}
+        selectedSellingPlanId={selectedSellingPlanId}
+      >
+        {({sellingPlanGroup}) => (
+          /* 3. Render the SellingPlanGroup component inside the SellingPlanSelector */
+          <SellingPlanGroup
+            key={sellingPlanGroup.name}
+            sellingPlanGroup={sellingPlanGroup}
+          />
+        )}
+      </SellingPlanSelector>
+      <br />
+
+      {/* 4. Update the AddToCart button text and pass in the sellingPlanId */}
+      <AddToCartButton
+        disabled={
+          !selectedVariant ||
+          !selectedVariant.availableForSale ||
+          !selectedSellingPlanId
+        }
+        onClick={() => {
+          window.location.href = window.location.href + '#cart-aside';
+        }}
+        lines={
+          selectedVariant
+            ? [
+                {
+                  merchandiseId: selectedVariant?.id,
+                  sellingPlanId: selectedSellingPlanId,
+                  quantity: 1,
+                },
+              ]
+            : []
+        }
+      >
+        {sellingPlanGroups.nodes
+          ? selectedSellingPlanId
+            ? 'Subscribe'
+            : 'Select a subscription'
+          : selectedVariant?.availableForSale
+          ? 'Add to cart'
+          : 'Sold out'}
+      </AddToCartButton>
+    </div>
+  );
+}
+```
+
+[View the complete product file](app/routes/product.$handle.tsx) to see these updates in context.

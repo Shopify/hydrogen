@@ -196,6 +196,7 @@ function ProductForm({
   );
 }
 
+// Update as you see fit to match your design and requirements
 function SellingPlanGroup({
   sellingPlanGroup,
 }: {
@@ -306,9 +307,8 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
   }
 ` as const;
 
-const PRODUCT_FRAGMENT = `#graphql
-  ${PRODUCT_VARIANT_FRAGMENT}
-  # 7. Add the SellingPlanGroup fragment to the Product fragment
+// 7. Add the SellingPlanGroup fragment to the Product fragment
+const SELLING_PLAN_FRAGMENT = `#graphql
   fragment SellingPlan on SellingPlan {
     id
     options {
@@ -316,8 +316,11 @@ const PRODUCT_FRAGMENT = `#graphql
       value
     }
   }
+` as const;
 
-  # 8. Add the SellingPlanGroup fragment to the Product fragment
+//  8. Add the SellingPlanGroup fragment to the Product fragment
+const SELLING_PLAN_GROUP_FRAGMENT = `#graphql
+  ${SELLING_PLAN_FRAGMENT}
   fragment SellingPlanGroup on SellingPlanGroup {
     name
     options {
@@ -330,6 +333,11 @@ const PRODUCT_FRAGMENT = `#graphql
       }
     }
   }
+` as const;
+
+const PRODUCT_FRAGMENT = `#graphql
+  ${PRODUCT_VARIANT_FRAGMENT}
+  ${SELLING_PLAN_GROUP_FRAGMENT}
 
   fragment Product on Product {
     id
