@@ -69,12 +69,7 @@ export default class Dev extends Command {
       default: false,
       required: false,
     }),
-    ['diff']: Flags.boolean({
-      description:
-        "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
-      default: false,
-      required: false,
-    }),
+    diff: commonFlags.diff,
   };
 
   async run(): Promise<void> {
@@ -82,7 +77,7 @@ export default class Dev extends Command {
     let directory = flags.path ? path.resolve(flags.path) : process.cwd();
 
     if (flags.diff) {
-      directory = await prepareDiffDirectory(directory);
+      directory = await prepareDiffDirectory(directory, true);
     }
 
     await runDev({

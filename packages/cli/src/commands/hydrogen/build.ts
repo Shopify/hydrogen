@@ -38,6 +38,7 @@ import {
 } from '../../lib/bundle/analyzer.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {isCI} from '../../lib/is-ci.js';
+import {copyDiffBuild, prepareDiffDirectory} from '../../lib/dev-diff.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
 const MAX_WORKER_BUNDLE_SIZE = 10;
@@ -70,6 +71,7 @@ export default class Build extends Command {
     }),
     codegen: commonFlags.codegen,
     'codegen-config-path': commonFlags.codegenConfigPath,
+    diff: commonFlags.diff,
 
     base: deprecated('--base')(),
     entry: deprecated('--entry')(),
@@ -78,13 +80,29 @@ export default class Build extends Command {
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Build);
-    const directory = flags.path ? resolvePath(flags.path) : process.cwd();
+    const originalDirectory = flags.path
+      ? resolvePath(flags.path)
+      : process.cwd();
+    let directory = originalDirectory;
+
+    if (flags.diff) {
+      directory = await prepareDiffDirectory(originalDirectory, false);
+    }
 
     await runBuild({
       ...flagsToCamelObject(flags),
       useCodegen: flags.codegen,
       directory,
     });
+
+    if (flags.diff) {
+      await copyDiffBuild(directory, originalDirectory);
+    }
+
+    // The Remix compiler hangs due to a bug in ESBuild:
+    // https://github.com/evanw/esbuild/issues/2727
+    // The actual build has already finished so we can kill the process.
+    process.exit(0);
   }
 }
 
@@ -200,13 +218,6 @@ export async function runBuild({
 
   if (process.env.NODE_ENV !== 'development') {
     await cleanClientSourcemaps(buildPathClient);
-  }
-
-  // The Remix compiler hangs due to a bug in ESBuild:
-  // https://github.com/evanw/esbuild/issues/2727
-  // The actual build has already finished so we can kill the process.
-  if (!process.env.SHOPIFY_UNIT_TEST && !assetPath) {
-    process.exit(0);
   }
 }
 

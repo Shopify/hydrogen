@@ -1,6 +1,10 @@
 import {rmdirSync} from 'node:fs';
 import {temporaryDirectory} from 'tempy';
-import {copy as copyWithFilter, createSymlink} from 'fs-extra/esm';
+import {
+  createSymlink,
+  copy as copyDirectory,
+  remove as removeDirectory,
+} from 'fs-extra/esm';
 import {copyFile, removeFile} from '@shopify/cli-kit/node/fs';
 import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
 import colors from '@shopify/cli-kit/node/colors';
@@ -12,7 +16,10 @@ import {getRepoNodeModules, getStarterDir} from './build.js';
  * @param diffDirectory Directory with files to apply to the starter template
  * @returns Temporary directory with the starter template and diff applied
  */
-export async function prepareDiffDirectory(diffDirectory: string) {
+export async function prepareDiffDirectory(
+  diffDirectory: string,
+  watch: boolean,
+) {
   const targetDirectory = temporaryDirectory({prefix: 'tmp-hydrogen-diff-'});
   process.on('exit', () => rmdirSync(targetDirectory, {recursive: true}));
 
@@ -29,8 +36,8 @@ export async function prepareDiffDirectory(diffDirectory: string) {
     );
   };
 
-  await copyWithFilter(templateDir, targetDirectory, {filter});
-  await copyWithFilter(diffDirectory, targetDirectory, {filter});
+  await copyDirectory(templateDir, targetDirectory, {filter});
+  await copyDirectory(diffDirectory, targetDirectory, {filter});
   await copyFile(
     joinPath(templateDir, 'tsconfig.json'),
     joinPath(targetDirectory, 'tsconfig.json'),
@@ -41,10 +48,12 @@ export async function prepareDiffDirectory(diffDirectory: string) {
     joinPath(targetDirectory, 'node_modules'),
   );
 
-  try {
-    const pw = await import('@parcel/watcher');
+  if (watch) {
+    const pw = await import('@parcel/watcher').catch((error) => {
+      console.log('Could not watch for file changes.', error);
+    });
 
-    pw.subscribe(
+    pw?.subscribe(
       targetDirectory,
       (error, events) => {
         if (error) {
@@ -62,7 +71,7 @@ export async function prepareDiffDirectory(diffDirectory: string) {
       {ignore: ['!*.generated.d.ts']},
     );
 
-    pw.subscribe(
+    pw?.subscribe(
       diffDirectory,
       async (error, events) => {
         if (error) {
@@ -85,9 +94,18 @@ export async function prepareDiffDirectory(diffDirectory: string) {
       },
       {ignore: ['*.generated.d.ts']},
     );
-  } catch (error) {
-    console.log('Could not watch for file changes.', error);
   }
 
   return targetDirectory;
+}
+
+export async function copyDiffBuild(
+  targetDirectory: string,
+  diffDirectory: string,
+) {
+  const targetDist = joinPath(diffDirectory, 'dist');
+  await removeDirectory(targetDist);
+  await copyDirectory(joinPath(targetDirectory, 'dist'), targetDist, {
+    overwrite: true,
+  });
 }
