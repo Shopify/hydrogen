@@ -22,11 +22,9 @@ export default function Homepage() {
       <h1>Rick & Morty Characters</h1>
       {/* 2. Render data from the Rick & Morty GraphQL API: */}
       <ul>
-        {(characters.results || []).map(
-          (character: Character, index: number) => (
-            <li key={character.name + index}>{character.name}</li>
-          ),
-        )}
+        {(characters.results || []).map((character: Character) => (
+          <li key={character.name}>{character.name}</li>
+        ))}
       </ul>
     </div>
   );

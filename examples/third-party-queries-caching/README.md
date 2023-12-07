@@ -97,7 +97,7 @@ declare module '@shopify/remix-oxygen' {
 
 ## 4. Query the Rick & Morty API on the home route `/app/routes/_index.tsx`
 
-Query the Rick & Morty characters in the `loader` function
+Add the query to fetch Rick & Morty characters
 
 ```ts
 const CHARACTERS_QUERY = `#graphql:rickAndMorty
@@ -110,7 +110,11 @@ const CHARACTERS_QUERY = `#graphql:rickAndMorty
     }
   }
 `;
+```
 
+Query the Rick & Morty API inisde the `loader` function
+
+```ts
 export async function loader({context}: LoaderFunctionArgs) {
   const {characters} = await context.rickAndMorty.query(CHARACTERS_QUERY, {
     cache: CacheShort(),
@@ -132,12 +136,11 @@ export default function Homepage() {
   return (
     <div>
       <h1>Rick & Morty Characters</h1>
+      {/* 2. Render data from the Rick & Morty GraphQL API: */}
       <ul>
-        {(characters.results || []).map(
-          (character: Character, index: number) => (
-            <li key={character.name + index}>{character.name}</li>
-          ),
-        )}
+        {(characters.results || []).map((character: Character) => (
+          <li key={character.name}>{character.name}</li>
+        ))}
       </ul>
     </div>
   );
