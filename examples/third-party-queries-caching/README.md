@@ -24,9 +24,15 @@ create are labeled with 🆕.
 
 ## Instructions
 
-### 1. Copy over the new file `createRickAndMortyClient.server.ts` to `app/utils/`
+### 1. Connect to your store to link the required environment variables
 
-### 2. Edit the worker file `server.ts`
+```bash
+h2 link
+```
+
+### 2. Copy over the new file `createRickAndMortyClient.server.ts` to `app/utils/`
+
+### 3. Edit the worker file `server.ts`
 
 import `createRickAndMortyClient`, create a client instance and pass it to the `getLoadedContext`.
 
@@ -73,7 +79,7 @@ and add the `rickAndMorty` property to the `AppLoadContext` interface.
 
 ```ts
 // ...other code
-import {createRickAndMortyClient} from './app/lib/createRickAndMortyClient.server';
+import {createRickAndMortyClient} from './app/utils/createRickAndMortyClient.server';
 
 // ...other code
 
@@ -89,7 +95,7 @@ declare module '@shopify/remix-oxygen' {
 
 [View the complete remix.d.ts file](remix.d.ts) to see these updates in context.
 
-## 3. Query the Rick & Morty API on the home route `/app/routes/_index.tsx`
+## 4. Query the Rick & Morty API on the home route `/app/routes/_index.tsx`
 
 Query the Rick & Morty characters in the `loader` function
 
@@ -137,3 +143,5 @@ export default function Homepage() {
   );
 }
 ```
+
+[View the complete remix.d.ts file](/app/routes/_index.tsx) to see these updates in context.

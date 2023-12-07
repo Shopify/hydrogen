@@ -11,7 +11,7 @@ export function createRickAndMortyClient({
 }) {
   const withCache = createWithCache({cache, waitUntil});
 
-  async function query(
+  async function query<T = any>(
     query: `#graphql:rickAndMorty${string}`,
     options: {
       variables?: object;
@@ -29,7 +29,7 @@ export function createRickAndMortyClient({
             'Content-type': 'application/json',
           },
           body: JSON.stringify({
-            query: query.replace('#graphql:rickAndMorty', ''),
+            query: minifyQuery(query),
             variables: options.variables,
           }),
         });
@@ -40,10 +40,7 @@ export function createRickAndMortyClient({
           );
         }
 
-        const json = (await response.json()) as unknown as {
-          data: any;
-          error: string;
-        };
+        const json = await response.json<{data: T; error: string}>();
 
         return json.data;
       },
@@ -51,4 +48,11 @@ export function createRickAndMortyClient({
   }
 
   return {query};
+}
+
+function minifyQuery<T extends string>(string: T) {
+  return string
+    .replace(/\s*#.*$/gm, '') // Remove GQL comments
+    .replace(/\s+/gm, ' ') // Minify spaces
+    .trim() as T;
 }
