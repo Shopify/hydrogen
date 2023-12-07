@@ -35,6 +35,7 @@
     "examples/express",
     "examples/customer-api",
     "examples/subscriptions",
+    "examples/optimistic-cart-ui",
     "examples/bun",
     "examples/multipass",
     "docs/preview",
