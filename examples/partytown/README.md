@@ -158,7 +158,7 @@ export default function App() {
 
 [View the complete component file](app/root.tsx) to see these updates in context.
 
-## 6. (Optional) - Update Content Securirt Policy
+## 6. (Optional) - Update Content Security Policy
 
 Add `wwww.googletagmanager.com` domain to the `scriptSrc` directive
 
