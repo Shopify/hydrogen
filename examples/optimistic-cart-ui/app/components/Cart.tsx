@@ -4,6 +4,9 @@ import {Link} from '@remix-run/react';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import {useVariantUrl} from '~/utils';
 
+// 1. Import the OptimisticInput and useOptimisticData hooks from @shopify/hydrogen
+import {OptimisticInput, useOptimisticData} from '@shopify/hydrogen';
+
 type CartLine = CartApiQueryFragment['lines']['nodes'][0];
 
 type CartMainProps = {
@@ -73,16 +76,28 @@ function CartLineItem({
   const {product, title, image, selectedOptions} = merchandise;
   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
 
+  // 3. Use the OptimisticInput hook to get the optimistic data for the line item
+  const optimisticData = useOptimisticData<{
+    action?: 'removing';
+    quantity?: number;
+  }>(id);
+
   return (
-    <li key={id} className="cart-line">
+    <li
+      key={id}
+      className="cart-line"
+      style={{
+        // 4. Hide the line item if the optimistic data action is remove
+        display: optimisticData?.action === 'removing' ? 'none' : 'flex',
+      }}
+    >
       {image && (
         <Image
           alt={title}
-          aspectRatio="1/1"
           data={image}
-          height={100}
-          loading="lazy"
+          height={60}
           width={100}
+          loading="lazy"
         />
       )}
 
@@ -167,6 +182,8 @@ function CartLineRemoveButton({lineIds}: {lineIds: string[]}) {
       action={CartForm.ACTIONS.LinesRemove}
       inputs={{lineIds}}
     >
+      {/* 2. Use the OptimisticInput component to remove the line item */}
+      <OptimisticInput id={lineIds[0]} data={{action: 'removing'}} />
       <button type="submit">Remove</button>
     </CartForm>
   );
