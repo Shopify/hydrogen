@@ -99,7 +99,7 @@ declare module '@shopify/remix-oxygen' {
 
 Query the Rick & Morty characters in the `loader` function
 
-```tsx
+```ts
 const CHARACTERS_QUERY = `#graphql:rickAndMorty
   query {
     characters(page: 1) {
