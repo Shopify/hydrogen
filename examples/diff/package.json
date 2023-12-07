@@ -4,6 +4,7 @@
   "sideEffects": false,
   "version": "1.0.0",
   "scripts": {
+    "build": "shopify hydrogen build --diff",
     "dev": "shopify hydrogen dev --codegen --diff",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "typecheck": "tsc --noEmit"
