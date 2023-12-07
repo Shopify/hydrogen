@@ -3,6 +3,7 @@ import {useLoaderData} from '@remix-run/react';
 import {CacheShort} from '@shopify/hydrogen';
 
 export async function loader({context}: LoaderFunctionArgs) {
+  // 1. Fetch characters from the Rick & Morty GraphQL API
   const {characters} = await context.rickAndMorty.query(CHARACTERS_QUERY, {
     cache: CacheShort(),
   });
@@ -19,6 +20,7 @@ export default function Homepage() {
   return (
     <div>
       <h1>Rick & Morty Characters</h1>
+      {/* 2. Render data from the Rick & Morty GraphQL API: */}
       <ul>
         {(characters.results || []).map(
           (character: Character, index: number) => (
@@ -30,6 +32,8 @@ export default function Homepage() {
   );
 }
 
+// 3. The Rick & Morty characters GraphQL query
+// NOTE: https://rickandmortyapi.com/documentation/#graphql
 const CHARACTERS_QUERY = `#graphql:rickAndMorty
   query {
     characters(page: 1) {
