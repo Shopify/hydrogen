@@ -12,14 +12,10 @@
       "persistent": true
     },
     "build-docs": {
-      "outputs": [
-        "docs/**/*.json"
-      ]
+      "outputs": ["docs/**/*.json"]
     },
     "preview-docs": {
-      "outputs": [
-        "docs/**/*.json"
-      ]
+      "outputs": ["docs/**/*.json"]
     },
     "lint": {
       "outputs": []
@@ -80,6 +76,9 @@
       "dependsOn": ["@shopify/hydrogen#build"]
     },
     "multipass#build": {
+      "dependsOn": ["@shopify/hydrogen#build"]
+    },
+    "subscriptions#build": {
       "dependsOn": ["@shopify/hydrogen#build"]
     },
     "third-party-queries-caching#build": {

@@ -34,6 +34,7 @@
     "templates/skeleton",
     "examples/express",
     "examples/customer-api",
+    "examples/subscriptions",
     "examples/bun",
     "examples/multipass",
     "examples/third-party-queries-caching",
