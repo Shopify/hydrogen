@@ -71,6 +71,9 @@
     },
     "multipass#build": {
       "dependsOn": ["@shopify/hydrogen#build"]
+    },
+    "diff#build": {
+      "dependsOn": ["@shopify/hydrogen#build"]
     }
   }
 }
