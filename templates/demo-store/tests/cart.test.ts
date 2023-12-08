@@ -1,8 +1,23 @@
 import {test, expect} from '@playwright/test';
 
-import {waitForLoaders} from './utils';
+import {
+  formatPrice,
+  normalizePrice,
+  createNetworkWatcher,
+  type NetworkWatcher,
+} from './utils';
 
 test.describe('Cart', () => {
+  let network: NetworkWatcher;
+
+  test.beforeEach(({page}) => {
+    network = createNetworkWatcher(page);
+  });
+
+  test.afterEach(() => {
+    network.stop();
+  });
+
   test('From home to checkout flow', async ({page}) => {
     // Home => Collections => First collection => First product
     await page.goto(`/`);
@@ -11,18 +26,24 @@ test.describe('Cart', () => {
     await page.locator(`[data-test=product-grid] a  >> nth=0`).click();
     await page.locator(`[data-test=add-to-cart]`).click();
 
-    const firstItemPrice = await waitForLoaders(page, () =>
-      page.locator('[data-test=subtotal]').textContent(),
-    );
+    // Wait for the cart to update before reading subtotal
+    await network.settled();
+    const firstItemPrice = await page
+      .locator('[data-test=subtotal]')
+      .textContent();
 
     // Add an extra unit by increasing quantity
-    await waitForLoaders(page, () =>
-      page.locator(`button :text-is("+")`).click({clickCount: 1, delay: 600}),
-    );
+    await page
+      .locator(`button :text-is("+")`)
+      .click({clickCount: 1, delay: 600});
+
+    // Wait for the cart to update before reading subtotal
+    await network.settled();
     await expect(
       page.locator('[data-test=subtotal]'),
       'should double the price',
-    ).toContainText(usdFormatter.format(2 * normalizePrice(firstItemPrice)));
+    ).toContainText(formatPrice(2 * normalizePrice(firstItemPrice)));
+
     await expect(
       page.locator('[data-test=item-quantity]'),
       'should increase quantity',
@@ -34,13 +55,15 @@ test.describe('Cart', () => {
     await page.locator(`[data-test=product-grid] a  >> nth=0`).click();
 
     // Add another unit by adding to cart the same item
-    await waitForLoaders(page, () =>
-      page.locator(`[data-test=add-to-cart]`).click(),
-    );
+    await page.locator(`[data-test=add-to-cart]`).click();
+
+    // Wait for the cart to update before reading subtotal
+    await network.settled();
     await expect(
       page.locator('[data-test=subtotal]'),
       'should triple the price',
     ).toContainText(formatPrice(3 * normalizePrice(firstItemPrice)));
+
     const quantities = await page
       .locator('[data-test=item-quantity]')
       .allTextContents();
@@ -70,25 +93,3 @@ test.describe('Cart', () => {
     ).toEqual(normalizePrice(priceInStore));
   });
 });
-
-const usdFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-});
-
-function formatPrice(price: string | number) {
-  return usdFormatter.format(Number(price));
-}
-
-function normalizePrice(price: string | null) {
-  if (!price) throw new Error('Price was not found');
-
-  return Number(
-    price
-      .replace('$', '')
-      .trim()
-      .replace(/[.,](\d\d)$/, '-$1')
-      .replace(/[.,]/g, '')
-      .replace('-', '.'),
-  );
-}
