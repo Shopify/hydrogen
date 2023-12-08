@@ -39,7 +39,6 @@
     "examples/third-party-queries-caching",
     "examples/bun",
     "examples/multipass",
-    "examples/diff",
     "docs/preview",
     "packages/remix-oxygen",
     "packages/hydrogen",
