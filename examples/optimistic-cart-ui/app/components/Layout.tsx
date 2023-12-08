@@ -8,15 +8,14 @@ import {CartMain} from '~/components/Cart';
 export type LayoutProps = {
   cart: Promise<CartApiQueryFragment | null>;
   children?: React.ReactNode;
-  isLoggedIn: boolean;
 };
 
-export function Layout({cart, children = null, isLoggedIn}: LayoutProps) {
+export function Layout({cart, children = null}: LayoutProps) {
   return (
     <>
       <CartAside cart={cart} />
       <MobileMenuAside />
-      <Header cart={cart} isLoggedIn={isLoggedIn} />
+      <Header cart={cart} />
       <main>{children}</main>
     </>
   );
