@@ -29,13 +29,6 @@ export default function WebVitals() {
       // webVitals.onCLS(onReport('CLS'), {reportSoftNavs: true});
     });
 
-    // const observer = new PerformanceObserver((list) => {
-    //   list.getEntries().forEach((entry) => {
-    //     console.log(entry);
-    //   });
-    // });
-    // observer.observe({ type: 'event', buffered: true, durationThreshold:40 });
-
     // Report all available metrics whenever the page is backgrounded or unloaded.
     addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') {
