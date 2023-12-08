@@ -83,6 +83,9 @@
     },
     "optimistic-cart-ui#build": {
       "dependsOn": ["@shopify/hydrogen#build"]
+    },
+    "third-party-queries-caching#build": {
+      "dependsOn": ["@shopify/hydrogen#build"]
     }
   }
 }

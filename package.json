@@ -36,6 +36,7 @@
     "examples/customer-api",
     "examples/subscriptions",
     "examples/optimistic-cart-ui",
+    "examples/third-party-queries-caching",
     "examples/bun",
     "examples/multipass",
     "docs/preview",
