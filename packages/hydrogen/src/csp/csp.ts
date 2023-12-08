@@ -46,23 +46,35 @@ function createCSPHeader(
   directives: Record<string, string[] | string | boolean> = {},
 ): string {
   const nonceString = `'nonce-${nonce}'`;
+  const styleSrc = ["'self'", "'unsafe-inline'", 'https://cdn.shopify.com'];
+  const connectSrc = ["'self'", 'https://monorail-edge.shopifysvc.com'];
+  const defaultSrc = [
+    "'self'",
+    nonceString,
+    'https://cdn.shopify.com',
+    // Used for the Customer Account API
+    'https://shopify.com',
+  ];
+
   const defaultDirectives: Record<string, string[] | string | boolean> = {
     baseUri: ["'self'"],
-    defaultSrc: [
-      "'self'",
-      nonceString,
-      'https://cdn.shopify.com',
-      // Used for the Customer Account API
-      'https://shopify.com',
-    ],
+    defaultSrc,
     frameAncestors: ['none'],
-    styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.shopify.com'],
-    connectSrc: ["'self'", 'https://monorail-edge.shopifysvc.com'],
+    styleSrc,
+    connectSrc,
   };
 
-  // Support HMR in local development
+  // Support localhost in development
   if (process.env.NODE_ENV === 'development') {
-    defaultDirectives.connectSrc = ['*'];
+    defaultDirectives.styleSrc = [...styleSrc, 'localhost:*'];
+    defaultDirectives.defaultSrc = [...defaultSrc, 'localhost:*'];
+    defaultDirectives.connectSrc = [
+      ...connectSrc,
+      'localhost:*',
+      // For HMR:
+      'ws://localhost:*',
+      'ws://127.0.0.1:*',
+    ];
   }
 
   const combinedDirectives = Object.assign({}, defaultDirectives, directives);

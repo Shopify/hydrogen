@@ -1,5 +1,5 @@
 {
-  "version": "6.0.2",
+  "version": "6.1.0",
   "commands": {
     "hydrogen:build": {
       "id": "hydrogen:build",
@@ -267,10 +267,10 @@
           "multiple": false,
           "default": 3000
         },
-        "worker-unstable": {
-          "name": "worker-unstable",
+        "worker": {
+          "name": "worker",
           "type": "boolean",
-          "description": "Run the app in a worker environment closer to Oxygen production instead of a Node.js sandbox. This flag is unstable and may change without notice.",
+          "description": "Run the app in a worker environment closer to Oxygen production instead of a Node.js sandbox.",
           "allowNo": false
         },
         "codegen": {
@@ -547,10 +547,10 @@
           "multiple": false,
           "default": 3000
         },
-        "worker-unstable": {
-          "name": "worker-unstable",
+        "worker": {
+          "name": "worker",
           "type": "boolean",
-          "description": "Run the app in a worker environment closer to Oxygen production instead of a Node.js sandbox. This flag is unstable and may change without notice.",
+          "description": "Run the app in a worker environment closer to Oxygen production instead of a Node.js sandbox.",
           "allowNo": false
         },
         "env-branch": {
@@ -676,14 +676,6 @@
           "description": "A target hydrogen version to update to",
           "required": false,
           "multiple": false
-        },
-        "dry-run": {
-          "name": "dry-run",
-          "type": "boolean",
-          "char": "d",
-          "description": "Generate a summary and .md file with upgrade instructions without actually upgrading the dependencies",
-          "required": false,
-          "allowNo": false
         },
         "force": {
           "name": "force",

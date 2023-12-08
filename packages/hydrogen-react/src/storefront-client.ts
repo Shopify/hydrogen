@@ -17,6 +17,8 @@ export type StorefrontClientProps = {
   contentType?: 'json' | 'graphql';
 };
 
+const isMockShop = (domain: string): boolean => domain.includes('mock.shop');
+
 /**
  * The `createStorefrontClient()` function creates helpers that enable you to quickly query the Shopify Storefront API.
  *
@@ -48,7 +50,12 @@ export function createStorefrontClient(
   }
 
   // only warn if not in a browser environment
-  if (__HYDROGEN_DEV__ && !privateStorefrontToken && !globalThis.document) {
+  if (
+    __HYDROGEN_DEV__ &&
+    !privateStorefrontToken &&
+    !globalThis.document &&
+    !isMockShop(storeDomain)
+  ) {
     warnOnce(
       `Using a private storefront token is recommended for server environments.` +
         `\nRefer to the authentication https://shopify.dev/api/storefront#authentication documentation for more details.`,
@@ -63,7 +70,6 @@ export function createStorefrontClient(
     );
   }
 
-  const isMockShop = (domain: string): boolean => domain.includes('mock.shop');
   const getShopifyDomain: StorefrontClientReturn['getShopifyDomain'] = (
     overrideProps,
   ) => {

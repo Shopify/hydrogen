@@ -1,14 +1,11 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
-import crypto from 'node:crypto';
-import {
-  HydrogenSession,
-  checkExpires,
-  clearSession,
-  refreshToken,
-} from './auth.helpers';
+import {HydrogenSession} from './auth.helpers';
 import {createCustomerClient} from './customer';
+import crypto from 'node:crypto';
 
-global.crypto = crypto as any;
+if (!globalThis.crypto) {
+  globalThis.crypto = crypto as any;
+}
 
 vi.mock('./BadRequest', () => {
   return {
@@ -396,7 +393,7 @@ describe('customer', () => {
       fetch.mockResolvedValue(createFetchResponse(someJson, {ok: true}));
 
       const response = await customer.query(`query {...}`);
-      expect(response).toBe('json');
+      expect(response).toStrictEqual({data: 'json'});
       // Session not updated because it's not expired
       expect(session.set).not.toHaveBeenCalled();
     });
@@ -419,7 +416,7 @@ describe('customer', () => {
       fetch.mockResolvedValue(createFetchResponse(someJson, {ok: true}));
 
       const response = await customer.query(`query {...}`);
-      expect(response).toBe('json');
+      expect(response).toStrictEqual({data: 'json'});
       // Session updated because token was refreshed
       expect(session.set).toHaveBeenCalled();
     });

@@ -119,7 +119,7 @@ export async function startNodeServer({
     showBanner(options) {
       console.log('');
       renderSuccess({
-        headline: `${options?.headlinePrefix ?? ''}MiniOxygen ${
+        headline: `${options?.headlinePrefix ?? ''}MiniOxygen (Node Sandbox) ${
           options?.mode ?? 'development'
         } server running.`,
         body: [

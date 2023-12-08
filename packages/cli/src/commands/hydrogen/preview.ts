@@ -14,7 +14,7 @@ export default class Preview extends Command {
   static flags = {
     path: commonFlags.path,
     port: commonFlags.port,
-    'worker-unstable': commonFlags.workerRuntime,
+    worker: commonFlags.workerRuntime,
     'env-branch': commonFlags.envBranch,
     'inspector-port': commonFlags.inspectorPort,
     debug: commonFlags.debug,
@@ -25,7 +25,6 @@ export default class Preview extends Command {
 
     await runPreview({
       ...flagsToCamelObject(flags),
-      workerRuntime: flags['worker-unstable'],
     });
   }
 }
@@ -33,7 +32,7 @@ export default class Preview extends Command {
 type PreviewOptions = {
   port: number;
   path?: string;
-  workerRuntime?: boolean;
+  worker?: boolean;
   envBranch?: string;
   inspectorPort: number;
   debug: boolean;
@@ -42,7 +41,7 @@ type PreviewOptions = {
 export async function runPreview({
   port: appPort,
   path: appPath,
-  workerRuntime = false,
+  worker: workerRuntime = false,
   envBranch,
   inspectorPort,
   debug,
@@ -58,11 +57,17 @@ export async function runPreview({
 
   appPort = workerRuntime ? await findPort(appPort) : appPort;
   inspectorPort = debug ? await findPort(inspectorPort) : inspectorPort;
+  const assetsPort = workerRuntime ? await findPort(appPort + 100) : 0;
+
+  // Note: we don't need to add any asset prefix in preview because
+  // we don't control the build at this point. However, the assets server
+  // still need to be started to serve redirections from the worker runtime.
 
   const miniOxygen = await startMiniOxygen(
     {
       root,
       port: appPort,
+      assetsPort,
       env,
       buildPathClient,
       buildPathWorkerFile,

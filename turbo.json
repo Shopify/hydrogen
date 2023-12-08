@@ -11,6 +11,12 @@
       "cache": false,
       "persistent": true
     },
+    "build-docs": {
+      "outputs": ["docs/**/*.json"]
+    },
+    "preview-docs": {
+      "outputs": ["docs/**/*.json"]
+    },
     "lint": {
       "outputs": []
     },
@@ -67,6 +73,18 @@
       "dependsOn": ["@shopify/hydrogen#build"]
     },
     "customer-api#build": {
+      "dependsOn": ["@shopify/hydrogen#build"]
+    },
+    "multipass#build": {
+      "dependsOn": ["@shopify/hydrogen#build"]
+    },
+    "subscriptions#build": {
+      "dependsOn": ["@shopify/hydrogen#build"]
+    },
+    "optimistic-cart-ui#build": {
+      "dependsOn": ["@shopify/hydrogen#build"]
+    },
+    "third-party-queries-caching#build": {
       "dependsOn": ["@shopify/hydrogen#build"]
     }
   }

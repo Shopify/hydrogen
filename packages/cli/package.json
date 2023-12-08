@@ -4,7 +4,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "6.0.2",
+  "version": "6.1.0",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -37,7 +37,7 @@
     "@oclif/core": "2.11.7",
     "@shopify/cli-kit": "3.51.0",
     "@shopify/hydrogen-codegen": "^0.1.0",
-    "@shopify/mini-oxygen": "^2.2.3",
+    "@shopify/mini-oxygen": "^2.2.4",
     "@shopify/oxygen-cli": "2.6.2",
     "ansi-escapes": "^6.2.0",
     "cli-truncate": "^4.0.0",
@@ -76,7 +76,7 @@
     "oclif.manifest.json"
   ],
   "engines": {
-    "node": ">=16.13"
+    "node": ">=18.0.0"
   },
   "oclif": {
     "commands": "dist/commands",

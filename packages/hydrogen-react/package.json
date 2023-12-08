@@ -1,11 +1,11 @@
 {
   "name": "@shopify/hydrogen-react",
-  "version": "2023.10.0",
+  "version": "2023.10.1",
   "description": "React components, hooks, and utilities for creating custom Shopify storefronts",
   "homepage": "https://github.com/Shopify/hydrogen/tree/main/packages/hydrogen-react",
   "license": "MIT",
   "engines": {
-    "node": ">=14"
+    "node": ">=18.0.0"
   },
   "publishConfig": {
     "access": "public",
@@ -126,7 +126,7 @@
     "typecheck": "run-p typecheck:*",
     "typecheck:code": "tsc --noEmit",
     "typecheck:examples": "tsc --noEmit --project tsconfig.examples.json",
-    "preview-docs": "node ../docs-preview/bin/cli.js docs/generated/generated_docs_data.json"
+    "preview-docs": "node ../../docs/preview/bin/cli.js docs/generated/generated_docs_data.json"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
