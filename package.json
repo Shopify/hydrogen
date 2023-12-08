@@ -1,4 +1,5 @@
 {
+  "name": "hydrogen",
   "private": true,
   "sideEffects": false,
   "scripts": {
@@ -9,6 +10,8 @@
     "dev": "npm run dev:pkg",
     "dev:pkg": "cross-env LOCAL_DEV=true turbo dev --parallel --filter=./packages/*",
     "dev:app": "cd templates/skeleton && cross-env LOCAL_DEV=true npm run dev --",
+    "docs:build": "turbo run build-docs",
+    "docs:preview": "turbo run preview-docs",
     "preview": "turbo build --filter=./packages/* && npm run preview -w demo-store",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx ./packages & npm run lint -w demo-store",
     "format": "prettier --write --ignore-unknown ./packages && npm run format -w demo-store",
@@ -31,6 +34,9 @@
     "templates/skeleton",
     "examples/express",
     "examples/customer-api",
+    "examples/subscriptions",
+    "examples/optimistic-cart-ui",
+    "examples/third-party-queries-caching",
     "examples/bun",
     "examples/multipass",
     "examples/diff",
@@ -59,7 +65,7 @@
     "yorkie": "^2.0.0"
   },
   "engines": {
-    "node": ">=16.13"
+    "node": ">=18.0.0"
   },
   "gitHooks": {
     "pre-commit": "lint-staged"

@@ -4,7 +4,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "2.2.3",
+  "version": "2.2.4",
   "license": "MIT",
   "type": "module",
   "description": "Development assistant for custom Shopify Oxygen hosted storefronts",
@@ -24,7 +24,7 @@
     "dist"
   ],
   "engines": {
-    "node": ">=16.13.0"
+    "node": ">=18.0.0"
   },
   "dependencies": {
     "@miniflare/cache": "^2.14.1",
