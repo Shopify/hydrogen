@@ -80,6 +80,9 @@
     },
     "subscriptions#build": {
       "dependsOn": ["@shopify/hydrogen#build"]
+    },
+    "optimistic-cart-ui#build": {
+      "dependsOn": ["@shopify/hydrogen#build"]
     }
   }
 }
