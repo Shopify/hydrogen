@@ -13,25 +13,25 @@ export function createNetworkWatcher(page: Page) {
 
   const onRequest = () => {
     if (requestCounter === 0) lock = deferLock();
-    ++requestCounter;
+    requestCounter++;
   };
 
   const onRequestDone = async () => {
     // Let the page handle responses asynchronously
     await page
-      .evaluate(() => new Promise((f) => setTimeout(f, 0)))
+      .evaluate(() => new Promise((resolve) => setTimeout(resolve, 0)))
       .catch(() => {});
 
-    --requestCounter;
+    requestCounter--;
     if (requestCounter <= 0) {
       requestCounter = 0;
       lock.resolve();
     }
   };
 
-  page.on('request', onRequest);
-  page.on('requestfinished', onRequestDone);
-  page.on('requestfailed', onRequestDone);
+  page.addListener('request', onRequest);
+  page.addListener('requestfinished', onRequestDone);
+  page.addListener('requestfailed', onRequestDone);
 
   return {
     settled: () => lock.promise,
@@ -72,7 +72,9 @@ export function formatPrice(
  * Removes symbols and decimals from a price and converts to number.
  */
 export function normalizePrice(price: string | null) {
-  if (!price) throw new Error('Price was not found');
+  if (!price || !/^[$\d.,]+$/.test(price)) {
+    throw new Error('Price was not found');
+  }
 
   return Number(
     price

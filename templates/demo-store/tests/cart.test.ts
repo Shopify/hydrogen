@@ -24,13 +24,19 @@ test.describe('Cart', () => {
     await page.locator(`header nav a:text-is("Collections")`).click();
     await page.locator(`[data-test=collection-grid] a  >> nth=0`).click();
     await page.locator(`[data-test=product-grid] a  >> nth=0`).click();
+
+    const firstItemPrice = normalizePrice(
+      await page.locator(`[data-test=price]`).textContent(),
+    );
+
     await page.locator(`[data-test=add-to-cart]`).click();
 
     // Wait for the cart to update before reading subtotal
     await network.settled();
-    const firstItemPrice = await page
-      .locator('[data-test=subtotal]')
-      .textContent();
+    await expect(
+      page.locator('[data-test=subtotal]'),
+      'should show the correct price',
+    ).toContainText(formatPrice(firstItemPrice));
 
     // Add an extra unit by increasing quantity
     await page
@@ -42,7 +48,7 @@ test.describe('Cart', () => {
     await expect(
       page.locator('[data-test=subtotal]'),
       'should double the price',
-    ).toContainText(formatPrice(2 * normalizePrice(firstItemPrice)));
+    ).toContainText(formatPrice(2 * firstItemPrice));
 
     await expect(
       page.locator('[data-test=item-quantity]'),
@@ -54,6 +60,10 @@ test.describe('Cart', () => {
     await page.locator(`header nav a:text-is("Products")`).click();
     await page.locator(`[data-test=product-grid] a  >> nth=0`).click();
 
+    const secondItemPrice = normalizePrice(
+      await page.locator(`[data-test=price]`).textContent(),
+    );
+
     // Add another unit by adding to cart the same item
     await page.locator(`[data-test=add-to-cart]`).click();
 
@@ -61,8 +71,8 @@ test.describe('Cart', () => {
     await network.settled();
     await expect(
       page.locator('[data-test=subtotal]'),
-      'should triple the price',
-    ).toContainText(formatPrice(3 * normalizePrice(firstItemPrice)));
+      'should add the price of the second item',
+    ).toContainText(formatPrice(2 * firstItemPrice + secondItemPrice));
 
     const quantities = await page
       .locator('[data-test=item-quantity]')
