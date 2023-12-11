@@ -1,23 +1,8 @@
 import {test, expect} from '@playwright/test';
 
-import {
-  formatPrice,
-  normalizePrice,
-  createNetworkWatcher,
-  type NetworkWatcher,
-} from './utils';
+import {formatPrice, normalizePrice} from './utils';
 
 test.describe('Cart', () => {
-  let network: NetworkWatcher;
-
-  test.beforeEach(({page}) => {
-    network = createNetworkWatcher(page);
-  });
-
-  test.afterEach(() => {
-    network.stop();
-  });
-
   test('From home to checkout flow', async ({page}) => {
     // Home => Collections => First collection => First product
     await page.goto(`/`);
@@ -31,8 +16,6 @@ test.describe('Cart', () => {
 
     await page.locator(`[data-test=add-to-cart]`).click();
 
-    // Wait for the cart to update before reading subtotal
-    await network.settled();
     await expect(
       page.locator('[data-test=subtotal]'),
       'should show the correct price',
@@ -43,8 +26,6 @@ test.describe('Cart', () => {
       .locator(`button :text-is("+")`)
       .click({clickCount: 1, delay: 600});
 
-    // Wait for the cart to update before reading subtotal
-    await network.settled();
     await expect(
       page.locator('[data-test=subtotal]'),
       'should double the price',
@@ -67,8 +48,6 @@ test.describe('Cart', () => {
     // Add another unit by adding to cart the same item
     await page.locator(`[data-test=add-to-cart]`).click();
 
-    // Wait for the cart to update before reading subtotal
-    await network.settled();
     await expect(
       page.locator('[data-test=subtotal]'),
       'should add the price of the second item',
