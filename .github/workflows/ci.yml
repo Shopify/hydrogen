@@ -94,7 +94,7 @@ jobs:
         run: 'test -z "$(git status --porcelain "packages/cli/oclif.manifest.json" )" || { echo -e "Run npm generate:manifest in packages/cli before pushing new commands or flags. Diff here:\n\n$(git diff)" ; exit 1; }'
 
   test:
-    name: ⬣ Test
+    name: ⬣ Unit tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency:
@@ -134,7 +134,7 @@ jobs:
       - name: ⎔ Setup node
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version-file: '.nvmrc'
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
 
@@ -143,6 +143,9 @@ jobs:
 
       - name: 📋 Copy package-lock
         run: cp package-lock.json templates/demo-store
+
+      - name: 📦 Build packages
+        run: npm run build:pkg && (cd templates/demo-store && npm run build)
 
       - name: 💾 Turbo cache
         id: turbo-cache
@@ -154,8 +157,6 @@ jobs:
           key: turbo-${{ github.job }}-${{ github.ref_name }}-${{ github.sha }}
           restore-keys: |
             turbo-${{ github.job }}-${{ github.ref_name }}-
-      - name: 📦 Build packages
-        run: npm run build:pkg
 
       - name: 📄 Get installed Playwright version
         run: echo "PLAYWRIGHT_VERSION=$(npm ls @playwright/test | grep @playwright -m 1 | sed 's/.*@//')"  >> $GITHUB_ENV
