@@ -52,14 +52,15 @@ export default function DebugNetwork() {
         src="https://unpkg.com/flame-chart-js@2.3.2/dist/index.min.js"
         suppressHydrationWarning
       />
-      <DebugHeader clearCallback={clear} />
-      <div id="main" className={`pad${isEmptyState ? ' empty' : ''}`}>
+      <DebugHeader />
+      <div id="main" className={`${isEmptyState ? ' empty' : ''}`}>
         <OptionsAndLegend
           serverEvents={serverEvents}
+          clearCallback={clear}
           setHidePutRequests={setHidePutRequests}
           setPreserveLog={setPreserveLog}
         />
-        <div id="request-waterfall" className="panel">
+        <div id="request-waterfall" className="pad">
           {isEmptyState ? (
             <EmptyState />
           ) : (
@@ -89,25 +90,20 @@ function EmptyState() {
       <p className="text-normal">
         Open your localhost to initiate server network timing
       </p>
-      <Link to="/" target="_blank" className="margin-top">
+      <Link to="/" target="_blank" className="link-margin-top">
         <button className="primary">Open app</button>
       </Link>
     </div>
   );
 }
 
-function DebugHeader({clearCallback}: {clearCallback: () => void}) {
+function DebugHeader() {
   return (
     <header className="justify-between text-large">
       <div className="flex-row">
         <img className="logo" src={faviconDark} alt="Hydrogen logo" />
         <h1>Server Network Timing</h1>
-        <span className="pill">Dev</span>
-      </div>
-      <div className="flex-row">
-        <button className="primary" onClick={() => clearCallback()}>
-          Clear
-        </button>
+        <span className="pill">Development</span>
       </div>
     </header>
   );
@@ -115,16 +111,21 @@ function DebugHeader({clearCallback}: {clearCallback: () => void}) {
 
 function OptionsAndLegend({
   serverEvents,
+  clearCallback,
   setHidePutRequests,
   setPreserveLog,
 }: {
   serverEvents: ServerEvents;
+  clearCallback: () => void;
   setHidePutRequests: (checked: boolean) => void;
   setPreserveLog: (checked: boolean) => void;
 }) {
   return (
-    <div id="options-and-legend" className="justify-between">
+    <div id="options-and-legend" className="justify-between pad">
       <div className="flex-row text-large">
+        <button onClick={() => clearCallback()}>
+          Clear
+        </button>
         <div className="form-control">
           <input
             id="hidePutRequests"
@@ -207,8 +208,8 @@ function RequestInfo({
   }, [activeEventId]);
 
   return (
-    <div id="request-info" className={`${isEmptyState ? 'empty' : ''}`}>
-      <div className="panel no-pad overflow-hidden">
+    <div id="request-info" className={`${isEmptyState ? ' empty' : ''}`}>
+      <div className="overflow-hidden">
         <RequestTable
           serverEvents={serverEvents}
           activeEventId={activeEventId}
@@ -217,7 +218,7 @@ function RequestInfo({
       </div>
       <div
         id="request-details-panel"
-        className={`panel no-pad${activeEventId ? ' active' : ''}`}
+        className={`${activeEventId ? 'active' : ''}`}
       >
         <div id="close-request-detail">
           <button

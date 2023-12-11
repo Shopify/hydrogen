@@ -27,21 +27,31 @@ export function RequestDetails({
 
   return (
     <div id="request-detail">
-      <div className="flex-row">
+      <div className="flex-row pad">
         {/** Tab 1 */}
         <button
           type="button"
           className={`tab${activeTabClass(1)}`}
           onClick={() => setActiveTab(1)}
         >
-          Header
+          General
         </button>
         {/** Tab 2 */}
-        {!!requestInfo.cache && (
+        {!!requestInfo.responseInit?.headers && (
           <button
             type="button"
             className={`tab${activeTabClass(2)}`}
             onClick={() => setActiveTab(2)}
+          >
+            Header
+          </button>
+        )}
+        {/** Tab 2 */}
+        {!!requestInfo.cache && (
+          <button
+            type="button"
+            className={`tab${activeTabClass(3)}`}
+            onClick={() => setActiveTab(3)}
           >
             Cache
           </button>
@@ -50,75 +60,69 @@ export function RequestDetails({
         {!!requestInfo.responsePayload && (
           <button
             type="button"
-            className={`tab${activeTabClass(3)}`}
-            onClick={() => setActiveTab(3)}
+            className={`tab${activeTabClass(4)}`}
+            onClick={() => setActiveTab(4)}
           >
             Data
           </button>
         )}
       </div>
-      <div className="tabPanels">
+      <div className="tabPanels pad">
         <div id="tab1-panel" className={`tabPanel${activeTabClass(1)}`}>
-          <Details title="General">
+          <div className="grid-layout">
+            <DetailsRow rowName="Name" value={requestInfo.displayName} />
+            <DetailsRow rowName="Request URL" value={requestInfo.url} />
+            <DetailsRow
+              rowName="Status"
+              value={`${requestInfo.responseInit?.status} ${requestInfo.responseInit?.statusText}`}
+            />
+            <DetailsRow
+              rowName="GraphiQL"
+              value={requestInfo.graphiqlLink}
+              type="url"
+            />
+            <DetailsRow
+              rowName="Location"
+              text={requestInfo.stackLine}
+              value={requestInfo.stackLink}
+              type="url"
+            />
+          </div>
+        </div>
+        {!!requestInfo.responseInit?.headers && (
+          <div id="tab2-panel" className={`tabPanel${activeTabClass(2)}`}>
             <div className="grid-layout">
-              <DetailsRow rowName="Name" value={requestInfo.displayName} />
-              <DetailsRow rowName="Request URL" value={requestInfo.url} />
-              <DetailsRow
-                rowName="Status"
-                value={`${requestInfo.responseInit?.status} ${requestInfo.responseInit?.statusText}`}
-              />
-              <DetailsRow
-                rowName="GraphiQL"
-                value={requestInfo.graphiqlLink}
-                type="url"
-              />
-              <DetailsRow
-                rowName="Location"
-                text={requestInfo.stackLine}
-                value={requestInfo.stackLink}
-                type="url"
-              />
-            </div>
-          </Details>
-          {requestInfo.responseInit?.headers && (
-            <Details title="Headers">
-              <div className="grid-layout">
                 {Object.entries(requestInfo.responseInit?.headers).map(
                   ([key, value]) => (
                     <DetailsRow key={key} rowName={value[0]} value={value[1]} />
                   ),
                 )}
               </div>
-            </Details>
-          )}
-        </div>
+          </div>
+        )}
         {!!requestInfo.cache && (
-          <div id="tab2-panel" className={`tabPanel${activeTabClass(2)}`}>
-            <Details title="General">
-              <div className="grid-layout">
-                <DetailsRow
-                  rowName="Status"
-                  value={requestInfo.cache?.status}
-                />
-                <DetailsRow
-                  rowName="Cache-Control"
-                  value={requestInfo.cache?.strategy}
-                />
-                <DetailsRow
-                  rowName="Cache Key"
-                  value={requestInfo.cache?.key?.toString()}
-                />
-              </div>
-            </Details>
+          <div id="tab3-panel" className={`tabPanel${activeTabClass(3)}`}>
+            <div className="grid-layout">
+              <DetailsRow
+                rowName="Status"
+                value={requestInfo.cache?.status}
+              />
+              <DetailsRow
+                rowName="Cache-Control"
+                value={requestInfo.cache?.strategy}
+              />
+              <DetailsRow
+                rowName="Cache Key"
+                value={requestInfo.cache?.key?.toString()}
+              />
+            </div>
           </div>
         )}
         {!!requestInfo.responsePayload && (
-          <div id="tab3-panel" className={`tabPanel${activeTabClass(3)}`}>
-            <div className="panel">
-              <pre className="code-json">
-                {JSON.stringify(requestInfo.responsePayload, undefined, 2)}
-              </pre>
-            </div>
+          <div id="tab4-panel" className={`tabPanel${activeTabClass(4)}`}>
+            <pre className="code-json">
+              {JSON.stringify(requestInfo.responsePayload, undefined, 2)}
+            </pre>
           </div>
         )}
       </div>
