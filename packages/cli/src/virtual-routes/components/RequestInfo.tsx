@@ -130,21 +130,6 @@ export function RequestDetails({
   );
 }
 
-export function Details({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <details className="panel" open>
-      <summary>{title}</summary>
-      {children}
-    </details>
-  );
-}
-
 function DetailsRow({
   rowName,
   value,

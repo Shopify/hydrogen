@@ -211,18 +211,6 @@ button:active.primary {
   border-radius: 0.125rem;
 }
 
-.panel {
-  background-color: #fff;
-  border-radius: 0.75rem;
-  padding: 1rem 0.75rem;
-  box-shadow: var(--box-shadow);
-  border: 1px solid var(--secondary-color);
-}
-
-.panel.no-pad {
-  padding: 0px;
-}
-
 .overflow-hidden {
   overflow: hidden;
 }
@@ -340,26 +328,10 @@ button:active.primary {
   padding-bottom: 0.75rem;
 }
 
-.tabPanels .tabPanel .panel {
-  background-color: transparent;
-  box-shadow: none;
-  font-size: var(--text-large);
-  padding: 0 1rem 0 1rem;
-}
-
-details.panel summary {
-  font-weight: var(--font-bold);
-  padding: 1rem 0;
-}
-
 .tabPanels > .tabPanel.active {
   display: flex;
   gap: 0.75rem;
   flex-direction: column;
-}
-
-#tab3-panel .panel {
-  overflow: scroll;
 }
 
 .flex-break {
@@ -402,7 +374,7 @@ details.panel summary {
   padding: 0.45rem 0.75rem;
 }
 
-#request-detail .tabPanels .panel a {
+#request-detail .tabPanels .grid-layout a {
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
