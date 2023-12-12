@@ -427,7 +427,7 @@ button:active.primary {
 
 #close-notification {
   position: absolute;
-  right: 1rem;
+  right: 0.5rem;
 }
 
 #empty-view {
@@ -442,4 +442,53 @@ button:active.primary {
 .code-json {
   white-space: pre;
   font-size: var(--text-normal);
+}
+
+@media (max-width: 940px) {
+  #main.empty {
+    display: grid;
+    grid-template-rows: 6.59rem auto;
+  }
+
+  #options-and-legend {
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 1rem;
+
+    padding: 1rem;
+    height: 6.59rem;
+    width: 100vw;
+    overflow-x: scroll;
+  }
+
+  #options-and-legend > .flex-row {
+    min-width: 453px;
+  }
+
+  #request-waterfall .request-waterfall-chart {
+    height: calc(60vh - 5.145rem);
+  }
+
+  #server-network-timing.withNotification #request-waterfall .request-waterfall-chart {
+    height: calc(60vh - 6.645rem);
+  }
+
+  #request-info {
+    height: calc(40vh - 5.145rem);
+  }
+
+  #server-network-timing.withNotification #request-info {
+    height: calc(40vh - 6.645rem);
+  }
+
+  #request-table .grid-row {
+    grid-template-columns: 1fr 55px 55px;
+  }
+}
+
+@media (max-width: 575px) {
+ #request-detail .tabPanel .grid-layout {
+  display: flex;
+  flex-direction: column;
+ }
 }
