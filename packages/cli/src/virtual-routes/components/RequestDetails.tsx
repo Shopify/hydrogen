@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {type ServerEvents} from '../lib/useDebugNetworkServer.jsx';
+import {type ServerEvents} from '../lib/useDebugNetworkServer.js';
 import {Link} from '@remix-run/react';
 
 export function RequestDetails({

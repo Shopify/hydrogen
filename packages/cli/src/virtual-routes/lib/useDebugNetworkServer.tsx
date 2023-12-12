@@ -27,6 +27,7 @@ export type ServerEvents = {
   hidePutRequests: boolean;
   preserveLog: boolean;
   activeEventId: string | undefined;
+  hideNotification?: boolean;
 };
 
 let nextEventId = 0;
@@ -34,7 +35,7 @@ let nextEventId = 0;
 const LOCAL_STORAGE_SETTINGS_KEY = 'h2-debug-network-settings';
 type DebugNetworkSettings = Pick<
   ServerEvents,
-  'preserveLog' | 'hidePutRequests'
+  'preserveLog' | 'hidePutRequests' | 'hideNotification'
 >;
 
 function getSettings(): Partial<DebugNetworkSettings> {
@@ -61,7 +62,16 @@ export function useDebugNetworkServer() {
     hidePutRequests: true,
     preserveLog: false,
     activeEventId: undefined,
+    hideNotification: undefined,
   });
+
+  // For triggering a react render
+  const [timestamp, setTimestamp] = useState<number>();
+
+  // Trigger a render when the server events change
+  function triggerRender() {
+    setTimestamp(new Date().getTime());
+  }
 
   useEffect(() => {
     try {
@@ -71,16 +81,12 @@ export function useDebugNetworkServer() {
         debugNetworkSettings.hidePutRequests ?? true;
       serverEvents.current.preserveLog =
         debugNetworkSettings.preserveLog ?? false;
+      serverEvents.current.hideNotification =
+        debugNetworkSettings.hideNotification ?? undefined;
+
+      triggerRender();
     } catch {}
   }, []);
-
-  // For triggering a react render
-  const [timestamp, setTimestamp] = useState<number>();
-
-  // Trigger a render when the server events change
-  function triggerRender() {
-    setTimestamp(new Date().getTime());
-  }
 
   function clearServerEvents() {
     fetch('/debug-network-server', {method: 'DELETE'}).catch((error) =>
@@ -170,12 +176,19 @@ export function useDebugNetworkServer() {
     serverEvents.current.activeEventId = eventId;
   }
 
+  function setHideNotification(hideNotification: boolean) {
+    serverEvents.current.hideNotification = hideNotification;
+    setSettings({hideNotification});
+    triggerRender();
+  }
+
   return {
     serverEvents: serverEvents.current,
     clear,
     setHidePutRequests,
     setPreserveLog,
     setActiveEventId,
+    setHideNotification,
     timestamp,
   };
 }

@@ -176,9 +176,29 @@ button:active.primary {
   color: #fff;
 }
 
+#buttonClear {
+  display: flex;
+  align-items: center;
+  padding-left: 0.5rem;
+}
+
+#server-network-timing {
+  display: grid;
+  grid-template-rows: 3.5rem auto;
+  min-height: 100vh;
+}
+
+#server-network-timing.withNotification {
+  grid-template-rows: 3rem 3.5rem auto;
+}
+
 #main.empty {
   display: grid;
-  grid-template-rows: 4rem auto 2.5rem;
+  grid-template-rows: 4rem auto;
+}
+
+#main.empty #request-info {
+  display: none;
 }
 
 .pad {
@@ -222,8 +242,12 @@ button:active.primary {
 }
 
 #request-waterfall .request-waterfall-chart {
-  height: calc(60vh - 5rem);
+  height: calc(60vh - 3.85rem);
   width: calc(99.8vw - 1.75rem);
+}
+
+#server-network-timing.withNotification #request-waterfall .request-waterfall-chart {
+  height: calc(60vh - 5.35rem);
 }
 
 #request-info {
@@ -231,11 +255,11 @@ button:active.primary {
   align-items: stretch;
   flex-direction: row;
 
-  height: calc(40vh - 5rem);
+  height: calc(40vh - 3.85rem);
 }
 
-#request-info.empty {
-  display: none;
+#server-network-timing.withNotification #request-info {
+  height: calc(40vh - 5.35rem);
 }
 
 #request-info > div {
@@ -388,15 +412,22 @@ button:active.primary {
   font-size: var(--text-large);
 }
 
-p.footnote {
+.notification {
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: var(--highlight-color);
+  height: 3rem;
+}
 
-  font-size: var(--text-large);
+.notification p {
+  font-size: var(--text-normal);
   color: var(--secondary-text-color);
+}
 
-  height: 2.5rem;
+#close-notification {
+  position: absolute;
+  right: 1rem;
 }
 
 #empty-view {

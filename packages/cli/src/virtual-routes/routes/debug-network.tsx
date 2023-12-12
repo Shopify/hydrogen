@@ -11,8 +11,9 @@ import favicon from '../assets/favicon.svg';
 import faviconDark from '../assets/favicon-dark.svg';
 import styles from '../assets/debug-network.css';
 import {useDebugNetworkServer} from '../lib/useDebugNetworkServer.jsx';
-import {RequestDetails} from '../components/RequestInfo.jsx';
+import {RequestDetails} from '../components/RequestDetails.jsx';
 import {IconClose} from '../components/IconClose.jsx';
+import {IconDiscard} from '../components/IconDiscard.jsx';
 
 export const links: LinksFunction = () => {
   return [
@@ -41,17 +42,18 @@ declare global {
 }
 
 export default function DebugNetwork() {
-  const {serverEvents, clear, timestamp, setHidePutRequests, setPreserveLog} =
+  const {serverEvents, clear, timestamp, setHidePutRequests, setPreserveLog, setHideNotification} =
     useDebugNetworkServer();
 
   const isEmptyState = serverEvents.mainRequests.length === 0;
 
   return (
-    <>
+    <div id="server-network-timing" className={`${serverEvents.hideNotification ? '' : 'withNotification'}`}>
       <Script
         src="https://unpkg.com/flame-chart-js@2.3.2/dist/index.min.js"
         suppressHydrationWarning
       />
+      <NotificationBanner hideNotification={serverEvents.hideNotification} setHideNotification={setHideNotification} />
       <DebugHeader />
       <div id="main" className={`${isEmptyState ? ' empty' : ''}`}>
         <OptionsAndLegend
@@ -73,13 +75,38 @@ export default function DebugNetwork() {
             </div>
           )}
         </div>
-        <RequestInfo serverEvents={serverEvents} isEmptyState={isEmptyState} />
-        <p className="footnote">
-          Note: You may need to turn on 'Disable Cache' for your navigating
-          window.
-        </p>
+        <RequestInfo serverEvents={serverEvents} />
       </div>
-    </>
+    </div>
+  );
+}
+
+function NotificationBanner({
+  hideNotification,
+  setHideNotification
+}: {
+  hideNotification: boolean | undefined;
+  setHideNotification: (hideNotification: boolean) => void
+}) {
+  if (hideNotification) {
+    return null;
+  }
+
+  return (
+    <div className="notification">
+      <div id="close-notification">
+        <button
+          className="plain icon"
+          onClick={() => {
+            setHideNotification(true);
+          }}
+        >
+          <IconClose />
+        </button>
+      </div>
+      <p>Note: You may need to turn on 'Disable Cache' for your navigating
+      window.</p>
+    </div>
   );
 }
 
@@ -123,8 +150,8 @@ function OptionsAndLegend({
   return (
     <div id="options-and-legend" className="justify-between pad">
       <div className="flex-row text-large">
-        <button onClick={() => clearCallback()}>
-          Clear
+        <button id='buttonClear' onClick={() => clearCallback()}>
+          <IconDiscard /> Clear
         </button>
         <div className="form-control">
           <input
@@ -189,10 +216,8 @@ function OptionsAndLegend({
 
 function RequestInfo({
   serverEvents,
-  isEmptyState,
 }: {
   serverEvents: ServerEvents;
-  isEmptyState: boolean;
 }) {
   const [activeEventId, setActiveEventId] = useState<string | undefined>();
 
@@ -208,7 +233,7 @@ function RequestInfo({
   }, [activeEventId]);
 
   return (
-    <div id="request-info" className={`${isEmptyState ? ' empty' : ''}`}>
+    <div id="request-info">
       <div className="overflow-hidden">
         <RequestTable
           serverEvents={serverEvents}
