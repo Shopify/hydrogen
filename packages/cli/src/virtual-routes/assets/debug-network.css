@@ -46,6 +46,10 @@ input[type='checkbox'] {
   font-weight: var(--font-bold);
 }
 
+.bold-1 {
+  font-weight: 550;
+}
+
 .flex-row {
   display: flex;
   gap: 0.75rem;
@@ -73,6 +77,15 @@ input[type='checkbox'] {
   align-items: center;
 }
 
+.form-control > * {
+  opacity: 75%;
+}
+
+.form-control > input:checked,
+.form-control > input:checked + label {
+  opacity: 100%;
+}
+
 header {
   height: 3.5rem;
   box-shadow: var(--box-shadow);
@@ -93,6 +106,7 @@ header h1 {
   background-color: #f4f4f4;
   border-radius: 4rem;
   padding: 0.2rem 0.8rem;
+  font-size: 0.75rem;
 }
 
 .word-break-all {
@@ -184,6 +198,10 @@ button:active.primary {
   display: flex;
   align-items: center;
   padding-left: 0.5rem;
+}
+
+#buttonClear span {
+  padding-left: 2px;;
 }
 
 #server-network-timing {
@@ -292,7 +310,7 @@ button:active.primary {
   border-bottom: 1px solid var(--secondary-color);
 }
 
-#request-table .grid-row:hover {
+#request-table__content .grid-row:hover {
   background-color: var(--row-hover-highlight-color);
 }
 
@@ -306,7 +324,7 @@ button:active.primary {
 }
 
 #request-table .grid-cell:first-child {
-  padding-left: 0.75rem;
+  padding-left: 1rem;
 }
 
 #request-table .grid-cell:last-child {
@@ -339,9 +357,15 @@ button:active.primary {
   display: flex;
   align-items: center;
   justify-content: center;
+
+  font-size: var(--text-normal);
 }
 
 /** Tab panels */
+
+#close-request-detail {
+  padding-left: 3px;
+}
 
 #request-detail-header {
   display: grid;
@@ -373,7 +397,7 @@ button:active.primary {
   height: 100%;
 
   --gradient-color-start: rgba(255, 255, 255, 1);
-  --gradient-color-end: rgba(255, 255, 255, 0.5);
+  --gradient-color-end: transparent;
   --background-color: transparent;
 
   background-image: linear-gradient(to right, var(--background-color), var(--background-color)),
@@ -383,8 +407,20 @@ button:active.primary {
   background-position: left center, right center, left center, right center;
   background-repeat: no-repeat;
   background-color: var(--background-color);
-  background-size: 20px 100%, 20px 100%, 0px 100%, 40px 100%;
+  background-size: 20px 100%, 20px 100%, 0px 100%, 0px 100%;
   background-attachment: local, local, scroll, scroll;
+}
+
+#tab-buttons-wrapper .fadCover.fadeLeft {
+  background-size: 20px 100%, 20px 100%, 40px 100%, 0px 100%;
+}
+
+#tab-buttons-wrapper .fadCover.fadeRight {
+  background-size: 20px 100%, 20px 100%, 0px 100%, 40px 100%;
+}
+
+#tab-buttons-wrapper .fadCover.fadeLeftRight {
+  background-size: 20px 100%, 20px 100%, 40px 100%, 40px 100%;
 }
 
 .tabPanels .tabPanel {
@@ -447,6 +483,11 @@ button:active.primary {
   grid-template-columns: minmax(50px, 100px) auto;
   margin-bottom: 1rem;
   font-size: var(--text-large);
+}
+
+.tabPanel .gridTitle {
+  font-weight: 550;
+  opacity: 75%;
 }
 
 .notification {

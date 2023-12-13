@@ -69,7 +69,7 @@ export function RequestTable({
   return (
     <div id="request-table">
       <div>
-        <div id="request-table__header" className="grid-row">
+        <div id="request-table__header" className="grid-row bold-1">
           <div className="grid-cell">Name</div>
           <div className="grid-cell">Cache</div>
           <div className="grid-cell">Time</div>
@@ -79,6 +79,7 @@ export function RequestTable({
             <div
               id={`request-table__row-${row.id}`}
               key={row.id}
+              tabIndex={0}
               className={`grid-row${activeEventId === row.id ? ' active' : ''}`}
               onClick={() => setActiveEventId(row.id)}
             >

@@ -1,7 +1,12 @@
-import {useState} from 'react';
+import {useState, useRef, useEffect} from 'react';
 import {type ServerEvents} from '../lib/useDebugNetworkServer.js';
 import {Link} from '@remix-run/react';
 import {IconClose} from './IconClose.jsx';
+
+// Type is broken in use-resize-observer
+import _useResizeObserver from 'use-resize-observer';
+const useResizeObserver =
+  _useResizeObserver as unknown as typeof import('use-resize-observer').default;
 
 const TABS: Record<number, string> = {
   1: 'General',
@@ -50,15 +55,12 @@ export function RequestDetails({
   return (
     <div id="request-detail">
       <div id="request-detail-header">
-        <div id="tab-buttons-wrapper">
-          <div id="tabButtons" className="flex-row gap-tiny">
-            {TabButton(1)}
-            {!!requestInfo.responseInit?.headers && TabButton(2)}
-            {!!requestInfo.cache && TabButton(3)}
-            {!!requestInfo.responsePayload && TabButton(4)}
-          </div>
-          <div className="fadCover" />
-        </div>
+        <TabButtonsBar>
+          {TabButton(1)}
+          {!!requestInfo.responseInit?.headers && TabButton(2)}
+          {!!requestInfo.cache && TabButton(3)}
+          {!!requestInfo.responsePayload && TabButton(4)}
+        </TabButtonsBar>
         <div id="close-request-detail">
           <button
             className="plain icon"
@@ -133,6 +135,52 @@ export function RequestDetails({
   );
 }
 
+function TabButtonsBar({children}: {children: React.ReactNode}) {
+  const [fadeClass, setFadeClass] = useState('');
+  const scrollBarRef = useRef<HTMLDivElement>(null);
+
+  useResizeObserver({
+    ref: scrollBarRef,
+    onResize: () => {
+      if (scrollBarRef.current) {
+        setFade(scrollBarRef.current);
+      }
+    },
+  });
+
+  function setFade(target: HTMLDivElement) {
+    if (target.scrollWidth === target.clientWidth) {
+      setFadeClass('');
+      return;
+    }
+
+    const scrollRange = target.scrollWidth - target.clientWidth;
+    if (target.scrollLeft > 10 && target.scrollLeft < scrollRange - 10) {
+      setFadeClass('fadeLeftRight');
+    }
+    else if (target.scrollLeft <= 10) {
+      setFadeClass('fadeRight');
+    }
+    else if (target.scrollLeft > scrollRange - 10) {
+      setFadeClass('fadeLeft');
+    }
+  }
+
+  return (
+    <div id="tab-buttons-wrapper" onResize={(event) => setFade(event.currentTarget)}>
+      <div
+        id="tabButtons"
+        ref={scrollBarRef}
+        className="flex-row gap-tiny"
+        onScroll={(event) => setFade(event.currentTarget)}
+      >
+        {children}
+      </div>
+      <div className={`fadCover ${fadeClass}`} />
+    </div>
+  );
+}
+
 function DetailsRow({
   rowName,
   value,
@@ -150,7 +198,7 @@ function DetailsRow({
 
   return (
     <>
-      <div>{rowName}</div>
+      <div className='gridTitle'>{rowName}</div>
       {type === 'url' && (
         <Link target="_blank" to={value}>
           {text ?? value}

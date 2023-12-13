@@ -151,7 +151,7 @@ function OptionsAndLegend({
     <div id="options-and-legend" className="justify-between pad">
       <div className="flex-row text-large">
         <button id='buttonClear' onClick={() => clearCallback()}>
-          <IconDiscard /> Clear
+          <IconDiscard /><span>Clear</span>
         </button>
         <div className="form-control">
           <input
@@ -176,9 +176,7 @@ function OptionsAndLegend({
       </div>
       <div className="flex-row text-normal gap-small">
         <div className="legend flex-row">
-          <p>
-            <b>Main Request</b>
-          </p>
+          <p className="bold-1">Main Request</p>
           <p className="flex-row gap-small">
             <span
               className="swatch"
