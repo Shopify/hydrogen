@@ -42,13 +42,16 @@ export function RequestDetails({
 
   function TabButton(key: number) {
     return (
-      <button
-        type="button"
+      <div
+        tabIndex={0}
         className={`tab${activeTabClass(key)}`}
         onClick={() => setActiveTab(key)}
+        onKeyUp={(event) => {
+          if (event.code === 'Space') setActiveTab(key);
+        }}
       >
         {TABS[key]}
-      </button>
+      </div>
     );
   }
 

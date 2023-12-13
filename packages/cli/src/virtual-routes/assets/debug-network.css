@@ -142,20 +142,15 @@ button.icon {
   line-height: 0;
 }
 
-button.tab {
+div.tab {
   background-color: transparent;
-  border: none;
-  box-shadow: none;
+  padding: 0.375rem 0.75rem;
   font-size: var(--text-normal);
 }
 
-button.tab.active {
+div.tab.active {
   border-radius: 0.25rem;
   background-color: var(--active-highlight-color);
-}
-
-button:focus.tab {
-  outline-offset: 0px;
 }
 
 button:hover {
@@ -332,7 +327,7 @@ button:active.primary {
 }
 
 #request-table__header.grid-row {
-  font-weight: 450;
+  font-weight: 550;
   font-size: var(--text-normal);
 }
 
@@ -340,6 +335,7 @@ button:active.primary {
   border-top: none;
   padding-top: 0.75rem;
   padding-bottom: 0.75rem;
+  opacity: 75%;
 }
 
 #request-table__content {
