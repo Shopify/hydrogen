@@ -59,7 +59,7 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
   }
 
   if (!product.selectedVariant) {
-    throw redirectToFirstVariant({product, request});
+    throw redirectToFirstVariant({product});
   }
 
   // In order to show which variants are available in the UI, we need to query
@@ -113,14 +113,8 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
   });
 }
 
-function redirectToFirstVariant({
-  product,
-  request,
-}: {
-  product: ProductQuery['product'];
-  request: Request;
-}) {
-  const searchParams = new URLSearchParams(new URL(request.url).search);
+function redirectToFirstVariant({product}: {product: ProductQuery['product']}) {
+  const searchParams = new URLSearchParams();
   const firstVariant = product!.variants.nodes[0];
   for (const option of firstVariant.selectedOptions) {
     searchParams.set(option.name, option.value);
