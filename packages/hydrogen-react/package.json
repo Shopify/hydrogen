@@ -13,7 +13,8 @@
   },
   "files": [
     "dist",
-    "storefront.schema.json"
+    "storefront.schema.json",
+    "customer.schema.json"
   ],
   "type": "commonjs",
   "exports": {
@@ -50,6 +51,7 @@
     },
     "./storefront-api-types": "./dist/types/storefront-api-types.d.ts",
     "./storefront.schema.json": "./storefront.schema.json",
+    "./customer.schema.json": "./customer.schema.json",
     "./package.json": "./package.json",
     "./*": {
       "node": {

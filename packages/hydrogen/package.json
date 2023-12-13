@@ -41,12 +41,17 @@
     },
     "./storefront-api-types": "./dist/storefront-api-types.d.ts",
     "./storefront.schema.json": "./dist/storefront.schema.json",
+    "./customer-account-api-types": "./dist/customer-account-api-types.d.ts",
+    "./customer.schema.json": "./dist/customer.schema.json",
     "./package.json": "./package.json"
   },
   "typesVersions": {
     "*": {
       "storefront-api-types": [
         "./dist/storefront-api-types.d.ts"
+      ],
+      "customer-account-api-types": [
+        "./dist/customer-account-api-types.d.ts"
       ]
     }
   },

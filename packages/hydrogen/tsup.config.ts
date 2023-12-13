@@ -29,19 +29,37 @@ export default [
       await fs.writeFile(cjsEntryFile, cjsEntryContent, 'utf-8');
 
       const hydrogenReact = path.resolve('..', 'hydrogen-react');
-      const schemaFile = 'storefront.schema.json';
-      const typeFile = 'storefront-api-types.d.ts';
+      const sfSchemaFile = 'storefront.schema.json';
+      const sfTypeFile = 'storefront-api-types.d.ts';
 
       await fs.copyFile(
-        path.resolve(hydrogenReact, schemaFile),
-        path.resolve(outDir, schemaFile),
+        path.resolve(hydrogenReact, sfSchemaFile),
+        path.resolve(outDir, sfSchemaFile),
       );
       await fs.copyFile(
-        path.resolve(hydrogenReact, 'src', typeFile),
-        path.resolve(outDir, typeFile),
+        path.resolve(hydrogenReact, 'src', sfTypeFile),
+        path.resolve(outDir, sfTypeFile),
       );
 
-      console.log('\n', 'SFAPI types copied from hydrogen-react', '\n');
+      console.log(
+        '\n',
+        'Storefront API types copied from hydrogen-react',
+        '\n',
+      );
+
+      const caSchemaFile = 'customer.schema.json';
+      const caTypeFile = 'customer-account-api-types.d.ts';
+
+      await fs.copyFile(
+        path.resolve(hydrogenReact, caSchemaFile),
+        path.resolve(outDir, caSchemaFile),
+      );
+      await fs.copyFile(
+        path.resolve(hydrogenReact, 'src', caTypeFile),
+        path.resolve(outDir, caTypeFile),
+      );
+
+      console.log('\n', 'Customer API types copied from hydrogen-react', '\n');
     },
   }),
 ];
