@@ -57,6 +57,10 @@ input[type='checkbox'] {
   gap: 0.5rem;
 }
 
+.gap-tiny {
+  gap: 0.25rem;
+}
+
 .justify-between {
   display: flex;
   justify-content: space-between;
@@ -339,10 +343,48 @@ button:active.primary {
 
 /** Tab panels */
 
-#close-request-detail {
+#request-detail-header {
+  display: grid;
+  grid-template-columns: auto min-content;
+  align-items: center;
+  padding-left: calc(1rem - 2px);
+  padding-right: 1rem;
+}
+
+#tabButtons {
+  overflow-x: scroll;
+  padding: 2px;
+}
+
+#tabButtons::-webkit-scrollbar {
+  display: none;
+}
+
+#tab-buttons-wrapper {
+  position: relative;
+  width: 100%;
+  overflow-x: scroll;
+}
+#tab-buttons-wrapper .fadCover {
   position: absolute;
-  right: 1rem;
-  padding-top: 0.4rem;
+  top: 0;
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+
+  --gradient-color-start: rgba(255, 255, 255, 1);
+  --gradient-color-end: rgba(255, 255, 255, 0.5);
+  --background-color: transparent;
+
+  background-image: linear-gradient(to right, var(--background-color), var(--background-color)),
+    linear-gradient(to right, var(--background-color), var(--background-color)),
+    linear-gradient(to right, var(--gradient-color-start), var(--gradient-color-end)),
+    linear-gradient(to left, var(--gradient-color-start), var(--gradient-color-end));
+  background-position: left center, right center, left center, right center;
+  background-repeat: no-repeat;
+  background-color: var(--background-color);
+  background-size: 20px 100%, 20px 100%, 0px 100%, 40px 100%;
+  background-attachment: local, local, scroll, scroll;
 }
 
 .tabPanels .tabPanel {
@@ -356,11 +398,6 @@ button:active.primary {
   display: flex;
   gap: 0.75rem;
   flex-direction: column;
-}
-
-.flex-break {
-  flex-basis: 100%;
-  height: 0;
 }
 
 #request-details-panel {

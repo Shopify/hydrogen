@@ -245,19 +245,10 @@ function RequestInfo({
         id="request-details-panel"
         className={`${activeEventId ? 'active' : ''}`}
       >
-        <div id="close-request-detail">
-          <button
-            className="plain icon"
-            onClick={() => {
-              setActiveEventId(undefined);
-            }}
-          >
-            <IconClose />
-          </button>
-        </div>
         <RequestDetails
           serverEvents={serverEvents}
           activeEventId={activeEventId}
+          setActiveEventId={setActiveEventId}
         />
       </div>
     </div>

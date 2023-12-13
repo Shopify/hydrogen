@@ -1,13 +1,23 @@
 import {useState} from 'react';
 import {type ServerEvents} from '../lib/useDebugNetworkServer.js';
 import {Link} from '@remix-run/react';
+import {IconClose} from './IconClose.jsx';
+
+const TABS: Record<number, string> = {
+  1: 'General',
+  2: 'Header',
+  3: 'Cache',
+  4: 'Data',
+};
 
 export function RequestDetails({
   serverEvents,
   activeEventId,
+  setActiveEventId,
 }: {
   serverEvents: ServerEvents;
   activeEventId: string | undefined;
+  setActiveEventId: (eventId: string | undefined) => void;
 }) {
   const [activeTab, setActiveTab] = useState(1);
 
@@ -25,47 +35,40 @@ export function RequestDetails({
     return activeTab === tab ? ' active' : '';
   }
 
+  function TabButton(key: number) {
+    return (
+      <button
+        type="button"
+        className={`tab${activeTabClass(key)}`}
+        onClick={() => setActiveTab(key)}
+      >
+        {TABS[key]}
+      </button>
+    );
+  }
+
   return (
     <div id="request-detail">
-      <div className="flex-row pad">
-        {/** Tab 1 */}
-        <button
-          type="button"
-          className={`tab${activeTabClass(1)}`}
-          onClick={() => setActiveTab(1)}
-        >
-          General
-        </button>
-        {/** Tab 2 */}
-        {!!requestInfo.responseInit?.headers && (
+      <div id="request-detail-header">
+        <div id="tab-buttons-wrapper">
+          <div id="tabButtons" className="flex-row gap-tiny">
+            {TabButton(1)}
+            {!!requestInfo.responseInit?.headers && TabButton(2)}
+            {!!requestInfo.cache && TabButton(3)}
+            {!!requestInfo.responsePayload && TabButton(4)}
+          </div>
+          <div className="fadCover" />
+        </div>
+        <div id="close-request-detail">
           <button
-            type="button"
-            className={`tab${activeTabClass(2)}`}
-            onClick={() => setActiveTab(2)}
+            className="plain icon"
+            onClick={() => {
+              setActiveEventId(undefined);
+            }}
           >
-            Header
+            <IconClose />
           </button>
-        )}
-        {/** Tab 2 */}
-        {!!requestInfo.cache && (
-          <button
-            type="button"
-            className={`tab${activeTabClass(3)}`}
-            onClick={() => setActiveTab(3)}
-          >
-            Cache
-          </button>
-        )}
-        {/** Tab 3 */}
-        {!!requestInfo.responsePayload && (
-          <button
-            type="button"
-            className={`tab${activeTabClass(4)}`}
-            onClick={() => setActiveTab(4)}
-          >
-            Data
-          </button>
-        )}
+        </div>
       </div>
       <div className="tabPanels pad">
         <div id="tab1-panel" className={`tabPanel${activeTabClass(1)}`}>
