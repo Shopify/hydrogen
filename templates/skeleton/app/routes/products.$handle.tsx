@@ -60,20 +60,20 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
     throw new Response(null, {status: 404});
   }
 
-  const firstVariant = product.variants.nodes[0];
-  const firstVariantIsDefault = Boolean(
-    firstVariant.selectedOptions.find(
-      (option: SelectedOption) =>
-        option.name === 'Title' && option.value === 'Default Title',
-    ),
-  );
+  if (!product.selectedVariant) {
+    const firstVariant = product.variants.nodes[0];
+    const firstVariantIsDefault = Boolean(
+      firstVariant.selectedOptions.find(
+        (option: SelectedOption) =>
+          option.name === 'Title' && option.value === 'Default Title',
+      ),
+    );
 
-  if (firstVariantIsDefault) {
-    product.selectedVariant = firstVariant;
-  } else {
-    // if no selected variant was returned from the selected options,
-    // we redirect to the first variant's url with it's selected options applied
-    if (!product.selectedVariant) {
+    if (firstVariantIsDefault) {
+      product.selectedVariant = firstVariant;
+    } else {
+      // If no selected variant was returned from the selected options,
+      // we redirect to the first variant's url with its selected options applied
       throw redirectToFirstVariant({product, request});
     }
   }
