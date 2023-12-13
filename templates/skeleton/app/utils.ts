@@ -12,7 +12,6 @@ export function useVariantUrl(
     return getVariantUrl({
       handle,
       pathname,
-      searchParams: new URLSearchParams(),
       selectedOptions,
     });
   }, [handle, selectedOptions, pathname]);
@@ -21,12 +20,12 @@ export function useVariantUrl(
 export function getVariantUrl({
   handle,
   pathname,
-  searchParams,
+  searchParams = new URLSearchParams(),
   selectedOptions,
 }: {
   handle: string;
   pathname: string;
-  searchParams: URLSearchParams;
+  searchParams?: URLSearchParams;
   selectedOptions: SelectedOption[];
 }) {
   const match = /(\/[a-zA-Z]{2}-[a-zA-Z]{2}\/)/g.exec(pathname);

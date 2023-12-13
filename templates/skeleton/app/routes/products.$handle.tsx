@@ -105,11 +105,8 @@ function redirectToFirstVariant({
       pathname: url.pathname,
       handle: product.handle,
       selectedOptions: firstVariant.selectedOptions,
-      searchParams: new URLSearchParams(url.search),
     }),
-    {
-      status: 302,
-    },
+    {status: 302},
   );
 }
 
