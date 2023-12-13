@@ -100,21 +100,18 @@ export function RequestDetails({
         {!!requestInfo.responseInit?.headers && (
           <div id="tab2-panel" className={`tabPanel${activeTabClass(2)}`}>
             <div className="grid-layout">
-                {Object.entries(requestInfo.responseInit?.headers).map(
-                  ([key, value]) => (
-                    <DetailsRow key={key} rowName={value[0]} value={value[1]} />
-                  ),
-                )}
-              </div>
+              {Object.entries(requestInfo.responseInit?.headers).map(
+                ([key, value]) => (
+                  <DetailsRow key={key} rowName={value[0]} value={value[1]} />
+                ),
+              )}
+            </div>
           </div>
         )}
         {!!requestInfo.cache && (
           <div id="tab3-panel" className={`tabPanel${activeTabClass(3)}`}>
             <div className="grid-layout">
-              <DetailsRow
-                rowName="Status"
-                value={requestInfo.cache?.status}
-              />
+              <DetailsRow rowName="Status" value={requestInfo.cache?.status} />
               <DetailsRow
                 rowName="Cache-Control"
                 value={requestInfo.cache?.strategy}
@@ -160,17 +157,18 @@ function TabButtonsBar({children}: {children: React.ReactNode}) {
     const scrollRange = target.scrollWidth - target.clientWidth;
     if (target.scrollLeft > 10 && target.scrollLeft < scrollRange - 10) {
       setFadeClass('fadeLeftRight');
-    }
-    else if (target.scrollLeft <= 10) {
+    } else if (target.scrollLeft <= 10) {
       setFadeClass('fadeRight');
-    }
-    else if (target.scrollLeft > scrollRange - 10) {
+    } else if (target.scrollLeft > scrollRange - 10) {
       setFadeClass('fadeLeft');
     }
   }
 
   return (
-    <div id="tab-buttons-wrapper" onResize={(event) => setFade(event.currentTarget)}>
+    <div
+      id="tab-buttons-wrapper"
+      onResize={(event) => setFade(event.currentTarget)}
+    >
       <div
         id="tabButtons"
         ref={scrollBarRef}
@@ -201,7 +199,7 @@ function DetailsRow({
 
   return (
     <>
-      <div className='gridTitle'>{rowName}</div>
+      <div className="gridTitle">{rowName}</div>
       {type === 'url' && (
         <Link target="_blank" to={value}>
           {text ?? value}

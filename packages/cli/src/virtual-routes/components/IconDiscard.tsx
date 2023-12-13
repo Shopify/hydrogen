@@ -3,7 +3,8 @@ import {SVGProps} from 'react';
 export function IconDiscard(props: SVGProps<SVGSVGElement>) {
   const fillColor = props.fill || '#333333';
   return (
-    <svg xmlns="http://www.w3.org/2000/svg"
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
       width="20"
       height="20"
       viewBox="0 0 20 20"

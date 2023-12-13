@@ -42,18 +42,30 @@ declare global {
 }
 
 export default function DebugNetwork() {
-  const {serverEvents, clear, timestamp, setHidePutRequests, setPreserveLog, setHideNotification} =
-    useDebugNetworkServer();
+  const {
+    serverEvents,
+    clear,
+    timestamp,
+    setHidePutRequests,
+    setPreserveLog,
+    setHideNotification,
+  } = useDebugNetworkServer();
 
   const isEmptyState = serverEvents.mainRequests.length === 0;
 
   return (
-    <div id="server-network-timing" className={`${serverEvents.hideNotification ? '' : 'withNotification'}`}>
+    <div
+      id="server-network-timing"
+      className={`${serverEvents.hideNotification ? '' : 'withNotification'}`}
+    >
       <Script
         src="https://unpkg.com/flame-chart-js@2.3.2/dist/index.min.js"
         suppressHydrationWarning
       />
-      <NotificationBanner hideNotification={serverEvents.hideNotification} setHideNotification={setHideNotification} />
+      <NotificationBanner
+        hideNotification={serverEvents.hideNotification}
+        setHideNotification={setHideNotification}
+      />
       <DebugHeader />
       <div id="main" className={`${isEmptyState ? ' empty' : ''}`}>
         <OptionsAndLegend
@@ -83,10 +95,10 @@ export default function DebugNetwork() {
 
 function NotificationBanner({
   hideNotification,
-  setHideNotification
+  setHideNotification,
 }: {
   hideNotification: boolean | undefined;
-  setHideNotification: (hideNotification: boolean) => void
+  setHideNotification: (hideNotification: boolean) => void;
 }) {
   if (hideNotification) {
     return null;
@@ -104,8 +116,10 @@ function NotificationBanner({
           <IconClose />
         </button>
       </div>
-      <p>Note: You may need to turn on 'Disable Cache' for your navigating
-      window.</p>
+      <p>
+        Note: You may need to turn on 'Disable Cache' for your navigating
+        window.
+      </p>
     </div>
   );
 }
@@ -150,8 +164,9 @@ function OptionsAndLegend({
   return (
     <div id="options-and-legend" className="justify-between pad">
       <div className="flex-row text-large">
-        <button id='buttonClear' onClick={() => clearCallback()}>
-          <IconDiscard /><span>Clear</span>
+        <button id="buttonClear" onClick={() => clearCallback()}>
+          <IconDiscard />
+          <span>Clear</span>
         </button>
         <div className="form-control">
           <input
@@ -212,11 +227,7 @@ function OptionsAndLegend({
   );
 }
 
-function RequestInfo({
-  serverEvents,
-}: {
-  serverEvents: ServerEvents;
-}) {
+function RequestInfo({serverEvents}: {serverEvents: ServerEvents}) {
   const [activeEventId, setActiveEventId] = useState<string | undefined>();
 
   useEffect(() => {

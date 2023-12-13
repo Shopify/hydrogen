@@ -6,8 +6,8 @@
   --dark-border-color: #666;
   --button-state-color: #fafafa;
   --secondary-text-color: #616161;
-  --row-hover-highlight-color: rgba(230, 238, 254, 0.50);
-  --row-active-highlight-color: #E6EEFE;
+  --row-hover-highlight-color: rgba(230, 238, 254, 0.5);
+  --row-active-highlight-color: #e6eefe;
   --highlight-color: #f5f5f5;
   --active-highlight-color: #e6eefe;
   --button-border: 1px solid rgba(51, 51, 51, 0.75);
@@ -127,7 +127,7 @@ button,
   appearance: button;
   border-radius: 0.375rem;
   border: var(--button-border);
-  background: #FFF;
+  background: #fff;
   padding: 0.375rem 0.75rem;
 }
 
@@ -164,28 +164,28 @@ button:focus {
 }
 
 button:active {
-  box-shadow: 0px 2px 0px 0px #C1C2C2 inset;
+  box-shadow: 0px 2px 0px 0px #c1c2c2 inset;
   background-color: #ccc;
 }
 
 button.primary {
-  background-color: #0554F2;
+  background-color: #0554f2;
   color: #fff;
   border: none;
   font-weight: 600;
 }
 
 button:hover.primary {
-  background-color: #0C54E6;
+  background-color: #0c54e6;
 }
 
 button:focus.primary {
-  background-color: #0E50D4;
+  background-color: #0e50d4;
 }
 
 button:active.primary {
-  box-shadow: 0px 3px 4px 0px #0446CB inset;;
-  background-color: #0E50D4;
+  box-shadow: 0px 3px 4px 0px #0446cb inset;
+  background-color: #0e50d4;
   color: #fff;
 }
 
@@ -196,7 +196,7 @@ button:active.primary {
 }
 
 #buttonClear span {
-  padding-left: 2px;;
+  padding-left: 2px;
 }
 
 #server-network-timing {
@@ -263,7 +263,9 @@ button:active.primary {
   width: calc(99.8vw - 1.75rem);
 }
 
-#server-network-timing.withNotification #request-waterfall .request-waterfall-chart {
+#server-network-timing.withNotification
+  #request-waterfall
+  .request-waterfall-chart {
   height: calc(60vh - 5.35rem);
 }
 
@@ -396,10 +398,22 @@ button:active.primary {
   --gradient-color-end: transparent;
   --background-color: transparent;
 
-  background-image: linear-gradient(to right, var(--background-color), var(--background-color)),
+  background-image: linear-gradient(
+      to right,
+      var(--background-color),
+      var(--background-color)
+    ),
     linear-gradient(to right, var(--background-color), var(--background-color)),
-    linear-gradient(to right, var(--gradient-color-start), var(--gradient-color-end)),
-    linear-gradient(to left, var(--gradient-color-start), var(--gradient-color-end));
+    linear-gradient(
+      to right,
+      var(--gradient-color-start),
+      var(--gradient-color-end)
+    ),
+    linear-gradient(
+      to left,
+      var(--gradient-color-start),
+      var(--gradient-color-end)
+    );
   background-position: left center, right center, left center, right center;
   background-repeat: no-repeat;
   background-color: var(--background-color);
@@ -543,7 +557,9 @@ button:active.primary {
     height: calc(60vh - 5.145rem);
   }
 
-  #server-network-timing.withNotification #request-waterfall .request-waterfall-chart {
+  #server-network-timing.withNotification
+    #request-waterfall
+    .request-waterfall-chart {
     height: calc(60vh - 6.645rem);
   }
 
@@ -561,8 +577,8 @@ button:active.primary {
 }
 
 @media (max-width: 575px) {
- #request-detail .tabPanel .grid-layout {
-  display: flex;
-  flex-direction: column;
- }
+  #request-detail .tabPanel .grid-layout {
+    display: flex;
+    flex-direction: column;
+  }
 }
