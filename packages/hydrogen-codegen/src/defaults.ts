@@ -1,7 +1,7 @@
 import {
   GENERATED_MUTATION_INTERFACE_NAME,
   GENERATED_QUERY_INTERFACE_NAME,
-} from './plugin';
+} from './plugin.js';
 
 const sfapiDefaultInterfaceExtensionCode = `
 declare module '@shopify/hydrogen' {
