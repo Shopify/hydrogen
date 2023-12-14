@@ -77,15 +77,17 @@ export default {
           CacheLong(),
           ({addDebugData}) => {
             return fetch('https://catfact.ninja/fact').then(async (res) => {
-              addDebugData({
-                displayName: 'Cat fact',
-                url: 'https://catfact.ninja/fact',
-                responseInit: {
-                  status: res.status,
-                  statusText: res.statusText,
-                  headers: Array.from(res.headers.entries()),
-                }
-              });
+              if (process.env.NODE_ENV === 'development') {
+                addDebugData({
+                  displayName: 'Cat fact',
+                  url: 'https://catfact.ninja/fact',
+                  responseInit: {
+                    status: res.status,
+                    statusText: res.statusText,
+                    headers: Array.from(res.headers.entries()),
+                  }
+                });
+              }
 
               return await res.json() as CatFact;
             });
