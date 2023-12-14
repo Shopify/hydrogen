@@ -5,7 +5,7 @@ describe('Hydrogen Codegen', async () => {
   // Patch dependency before importing the Codegen CLI
   await import('../src/patch.js');
   const {preset, schema, pluckConfig} = await import('../src/index.js');
-  const {defaultInterfaceExtensionCode} = await import('../src/preset.js');
+  const {getDefaultOptions} = await import('../src/defaults.js');
   const {executeCodegen} = await import('@graphql-codegen/cli');
 
   const getCodegenOptions = (fixture: string, output = 'out.d.ts') => ({
@@ -64,7 +64,7 @@ describe('Hydrogen Codegen', async () => {
     );
 
     // Augments query/mutation types
-    expect(generatedCode).toMatch(defaultInterfaceExtensionCode);
+    expect(generatedCode).toMatch(getDefaultOptions().interfaceExtensionCode);
 
     expect(generatedCode).toMatchInlineSnapshot(`
       "/* eslint-disable eslint-comments/disable-enable-pair */
