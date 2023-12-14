@@ -464,7 +464,7 @@ button:active.primary {
   width: 100%;
   height: 100%;
   overflow: scroll;
-  padding-left: 0.75rem;
+  padding-left: 1rem;
   padding-right: 1rem;
   padding-top: 0.5rem;
 }

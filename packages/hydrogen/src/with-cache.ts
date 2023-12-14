@@ -1,4 +1,4 @@
-import {type CacheKey, runWithCache, type DebugInfo} from './cache/fetch';
+import {type CacheKey, runWithCache, type CacheActionFunctionParam} from './cache/fetch';
 import type {CachingStrategy} from './cache/strategies';
 import {type CrossRuntimeRequest, getDebugHeaders} from './utils/request';
 import {getCallerStackLine} from './utils/callsites';
@@ -27,7 +27,7 @@ export function createWithCache<T = unknown>({
   return function withCache<T = unknown>(
     cacheKey: CacheKey,
     strategy: CachingStrategy,
-    actionFn: (addDebugData: (info: DebugInfo) => void) => T | Promise<T>,
+    actionFn: ({addDebugData}: CacheActionFunctionParam) => T | Promise<T>,
     displayName?: string,
   ) {
     return runWithCache<T>(cacheKey, actionFn, {
@@ -51,7 +51,7 @@ export function createWithCache<T = unknown>({
 type CreateWithCacheReturn<T> = <U = T>(
   cacheKey: CacheKey,
   strategy: CachingStrategy,
-  actionFn: (addDebugData: (info: DebugInfo) => void) => U | Promise<U>,
+  actionFn: ({addDebugData}: CacheActionFunctionParam) => U | Promise<U>,
   displayName?: string,
 ) => Promise<U>;
 

@@ -4,7 +4,7 @@
   "sideEffects": false,
   "version": "2.1.6",
   "scripts": {
-    "dev": "shopify hydrogen dev --worker --codegen",
+    "dev": "cross-env LOCAL_DEV=true shopify hydrogen dev --worker --codegen",
     "build": "shopify hydrogen build",
     "preview": "npm run build && shopify hydrogen preview --worker",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",

@@ -38,6 +38,10 @@ export type DebugInfo ={
   };
 }
 
+export type CacheActionFunctionParam = {
+  addDebugData: (info: DebugInfo) => void
+}
+
 export type WithCacheOptions<T = unknown> = {
   strategy?: CachingStrategy | null;
   cacheInstance?: Cache;
@@ -84,7 +88,7 @@ const swrLock = new Set<string>();
 
 export async function runWithCache<T = unknown>(
   cacheKey: CacheKey,
-  actionFn: (addDebugData: (info: DebugInfo) => void) => T | Promise<T>,
+  actionFn: ({addDebugData}: CacheActionFunctionParam) => T | Promise<T>,
   {
     strategy = CacheShort(),
     cacheInstance,
@@ -135,7 +139,7 @@ export async function runWithCache<T = unknown>(
       : undefined;
 
   if (!cacheInstance || !strategy || strategy.mode === NO_STORE) {
-    const result = await actionFn(addDebugData);
+    const result = await actionFn({addDebugData});
     // Log non-cached requests
     logSubRequestEvent?.({result});
     return result;
@@ -155,7 +159,7 @@ export async function runWithCache<T = unknown>(
       const revalidatingPromise = Promise.resolve().then(async () => {
         const revalidateStartTime = Date.now();
         try {
-          const result = await actionFn(addDebugData);
+          const result = await actionFn({addDebugData});
 
           if (shouldCacheResult(result)) {
             await setItemInCache(cacheInstance, key, result, strategy);
@@ -191,7 +195,7 @@ export async function runWithCache<T = unknown>(
     return cachedResult;
   }
 
-  const result = await actionFn(addDebugData);
+  const result = await actionFn({addDebugData});
 
   // Log MISS requests
   logSubRequestEvent?.({

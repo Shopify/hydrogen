@@ -75,7 +75,7 @@ export default {
         return await withCache<CatFact>(
           ['Random cat facts'],
           CacheLong(),
-          (addDebugData) => {
+          ({addDebugData}) => {
             return fetch('https://catfact.ninja/fact').then(async (res) => {
               addDebugData({
                 displayName: 'Cat fact',
