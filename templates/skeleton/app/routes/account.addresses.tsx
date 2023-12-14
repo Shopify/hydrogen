@@ -1,5 +1,8 @@
-import type {MailingAddressInput} from '@shopify/hydrogen/storefront-api-types';
-import type {AddressFragment, CustomerFragment} from 'storefrontapi.generated';
+import type {CustomerAddressInput} from '@shopify/hydrogen/customer-account-api-types';
+import type {
+  AddressFragment,
+  CustomerFragment,
+} from 'customer-accountapi.generated';
 import {
   json,
   redirect,
@@ -13,6 +16,11 @@ import {
   useOutletContext,
   type MetaFunction,
 } from '@remix-run/react';
+import {
+  UPDATE_ADDRESS_MUTATION,
+  DELETE_ADDRESS_MUTATION,
+  CREATE_ADDRESS_MUTATION,
+} from 'app/graphql/customer-account/CustomerAddressMutations';
 
 export type ActionResponse = {
   addressId?: string | null;
@@ -28,16 +36,26 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({context}: LoaderFunctionArgs) {
-  const {session} = context;
-  const customerAccessToken = await session.get('customerAccessToken');
-  if (!customerAccessToken) {
-    return redirect('/account/login');
+  if (!(await context.customerAccount.isLoggedIn())) {
+    return redirect('/account/login', {
+      headers: {
+        'Set-Cookie': await context.session.commit(),
+      },
+    });
   }
-  return json({});
+
+  return json(
+    {},
+    {
+      headers: {
+        'Set-Cookie': await context.session.commit(),
+      },
+    },
+  );
 }
 
 export async function action({request, context}: ActionFunctionArgs) {
-  const {storefront, session} = context;
+  const {customerAccount} = context;
 
   try {
     const form = await request.formData();
@@ -49,26 +67,33 @@ export async function action({request, context}: ActionFunctionArgs) {
       throw new Error('You must provide an address id.');
     }
 
-    const customerAccessToken = await session.get('customerAccessToken');
-    if (!customerAccessToken) {
-      return json({error: {[addressId]: 'Unauthorized'}}, {status: 401});
+    const isLoggedIn = await customerAccount.isLoggedIn();
+    if (!isLoggedIn) {
+      return json(
+        {error: {[addressId]: 'Unauthorized'}},
+        {
+          status: 401,
+          headers: {
+            'Set-Cookie': await context.session.commit(),
+          },
+        },
+      );
     }
-    const {accessToken} = customerAccessToken;
 
     const defaultAddress = form.has('defaultAddress')
       ? String(form.get('defaultAddress')) === 'on'
-      : null;
-    const address: MailingAddressInput = {};
-    const keys: (keyof MailingAddressInput)[] = [
+      : false;
+    const address: CustomerAddressInput = {};
+    const keys: (keyof CustomerAddressInput)[] = [
       'address1',
       'address2',
       'city',
       'company',
-      'country',
+      'territoryCode',
       'firstName',
       'lastName',
-      'phone',
-      'province',
+      'phoneNumber',
+      'zoneCode',
       'zip',
     ];
 
@@ -83,134 +108,210 @@ export async function action({request, context}: ActionFunctionArgs) {
       case 'POST': {
         // handle new address creation
         try {
-          const {customerAddressCreate} = await storefront.mutate(
+          const {data, errors} = await customerAccount.mutate(
             CREATE_ADDRESS_MUTATION,
             {
-              variables: {customerAccessToken: accessToken, address},
+              variables: {address, defaultAddress},
             },
           );
 
-          if (customerAddressCreate?.customerUserErrors?.length) {
-            const error = customerAddressCreate.customerUserErrors[0];
-            throw new Error(error.message);
+          if (errors?.length) {
+            throw new Error(errors[0].message);
           }
 
-          const createdAddress = customerAddressCreate?.customerAddress;
-          if (!createdAddress?.id) {
-            throw new Error(
-              'Expected customer address to be created, but the id is missing',
-            );
+          if (data?.customerAddressCreate?.userErrors?.length) {
+            throw new Error(data?.customerAddressCreate?.userErrors[0].message);
           }
 
-          if (defaultAddress) {
-            const createdAddressId = decodeURIComponent(createdAddress.id);
-            const {customerDefaultAddressUpdate} = await storefront.mutate(
-              UPDATE_DEFAULT_ADDRESS_MUTATION,
+          if (!data?.customerAddressCreate?.customerAddress) {
+            throw new Error('Customer address create failed.');
+          }
+
+          return json(
+            {
+              error: null,
+              createdAddress: data?.customerAddressCreate?.customerAddress,
+              defaultAddress,
+            },
+            {
+              headers: {
+                'Set-Cookie': await context.session.commit(),
+              },
+            },
+          );
+        } catch (error: unknown) {
+          if (error instanceof Error) {
+            return json(
+              {error: {[addressId]: error.message}},
               {
-                variables: {
-                  customerAccessToken: accessToken,
-                  addressId: createdAddressId,
+                status: 400,
+                headers: {
+                  'Set-Cookie': await context.session.commit(),
                 },
               },
             );
-
-            if (customerDefaultAddressUpdate?.customerUserErrors?.length) {
-              const error = customerDefaultAddressUpdate.customerUserErrors[0];
-              throw new Error(error.message);
-            }
           }
-
-          return json({error: null, createdAddress, defaultAddress});
-        } catch (error: unknown) {
-          if (error instanceof Error) {
-            return json({error: {[addressId]: error.message}}, {status: 400});
-          }
-          return json({error: {[addressId]: error}}, {status: 400});
+          return json(
+            {error: {[addressId]: error}},
+            {
+              status: 400,
+              headers: {
+                'Set-Cookie': await context.session.commit(),
+              },
+            },
+          );
         }
       }
 
       case 'PUT': {
         // handle address updates
         try {
-          const {customerAddressUpdate} = await storefront.mutate(
+          const {data, errors} = await customerAccount.mutate(
             UPDATE_ADDRESS_MUTATION,
             {
               variables: {
                 address,
-                customerAccessToken: accessToken,
-                id: decodeURIComponent(addressId),
+                addressId: decodeURIComponent(addressId),
+                defaultAddress,
               },
             },
           );
 
-          const updatedAddress = customerAddressUpdate?.customerAddress;
-
-          if (customerAddressUpdate?.customerUserErrors?.length) {
-            const error = customerAddressUpdate.customerUserErrors[0];
-            throw new Error(error.message);
+          if (errors?.length) {
+            throw new Error(errors[0].message);
           }
 
-          if (defaultAddress) {
-            const {customerDefaultAddressUpdate} = await storefront.mutate(
-              UPDATE_DEFAULT_ADDRESS_MUTATION,
+          if (data?.customerAddressUpdate?.userErrors?.length) {
+            throw new Error(data?.customerAddressUpdate?.userErrors[0].message);
+          }
+
+          if (!data?.customerAddressUpdate?.customerAddress) {
+            throw new Error('Customer address update failed.');
+          }
+
+          return json(
+            {
+              error: null,
+              updatedAddress: address,
+              defaultAddress,
+            },
+            {
+              headers: {
+                'Set-Cookie': await context.session.commit(),
+              },
+            },
+          );
+        } catch (error: unknown) {
+          if (error instanceof Error) {
+            return json(
+              {error: {[addressId]: error.message}},
               {
-                variables: {
-                  customerAccessToken: accessToken,
-                  addressId: decodeURIComponent(addressId),
+                status: 400,
+                headers: {
+                  'Set-Cookie': await context.session.commit(),
                 },
               },
             );
-
-            if (customerDefaultAddressUpdate?.customerUserErrors?.length) {
-              const error = customerDefaultAddressUpdate.customerUserErrors[0];
-              throw new Error(error.message);
-            }
           }
-
-          return json({error: null, updatedAddress, defaultAddress});
-        } catch (error: unknown) {
-          if (error instanceof Error) {
-            return json({error: {[addressId]: error.message}}, {status: 400});
-          }
-          return json({error: {[addressId]: error}}, {status: 400});
+          return json(
+            {error: {[addressId]: error}},
+            {
+              status: 400,
+              headers: {
+                'Set-Cookie': await context.session.commit(),
+              },
+            },
+          );
         }
       }
 
       case 'DELETE': {
         // handles address deletion
         try {
-          const {customerAddressDelete} = await storefront.mutate(
+          const {data, errors} = await customerAccount.mutate(
             DELETE_ADDRESS_MUTATION,
             {
-              variables: {customerAccessToken: accessToken, id: addressId},
+              variables: {addressId: decodeURIComponent(addressId)},
             },
           );
 
-          if (customerAddressDelete?.customerUserErrors?.length) {
-            const error = customerAddressDelete.customerUserErrors[0];
-            throw new Error(error.message);
+          if (errors?.length) {
+            throw new Error(errors[0].message);
           }
-          return json({error: null, deletedAddress: addressId});
+
+          if (data?.customerAddressDelete?.userErrors?.length) {
+            throw new Error(data?.customerAddressDelete?.userErrors[0].message);
+          }
+
+          if (!data?.customerAddressDelete?.deletedAddressId) {
+            throw new Error('Customer address delete failed.');
+          }
+
+          return json(
+            {error: null, deletedAddress: addressId},
+            {
+              headers: {
+                'Set-Cookie': await context.session.commit(),
+              },
+            },
+          );
         } catch (error: unknown) {
           if (error instanceof Error) {
-            return json({error: {[addressId]: error.message}}, {status: 400});
+            return json(
+              {error: {[addressId]: error.message}},
+              {
+                status: 400,
+                headers: {
+                  'Set-Cookie': await context.session.commit(),
+                },
+              },
+            );
           }
-          return json({error: {[addressId]: error}}, {status: 400});
+          return json(
+            {error: {[addressId]: error}},
+            {
+              status: 400,
+              headers: {
+                'Set-Cookie': await context.session.commit(),
+              },
+            },
+          );
         }
       }
 
       default: {
         return json(
           {error: {[addressId]: 'Method not allowed'}},
-          {status: 405},
+          {
+            status: 405,
+            headers: {
+              'Set-Cookie': await context.session.commit(),
+            },
+          },
         );
       }
     }
   } catch (error: unknown) {
     if (error instanceof Error) {
-      return json({error: error.message}, {status: 400});
+      return json(
+        {error: error.message},
+        {
+          status: 400,
+          headers: {
+            'Set-Cookie': await context.session.commit(),
+          },
+        },
+      );
     }
-    return json({error}, {status: 400});
+    return json(
+      {error},
+      {
+        status: 400,
+        headers: {
+          'Set-Cookie': await context.session.commit(),
+        },
+      },
+    );
   }
 }
 
@@ -249,17 +350,21 @@ function NewAddressForm() {
     address2: '',
     city: '',
     company: '',
-    country: '',
+    territoryCode: '',
     firstName: '',
     id: 'new',
     lastName: '',
-    phone: '',
-    province: '',
+    phoneNumber: '',
+    zoneCode: '',
     zip: '',
-  } as AddressFragment;
+  } as CustomerAddressInput;
 
   return (
-    <AddressForm address={newAddress} defaultAddress={null}>
+    <AddressForm
+      addressId={'NEW_ADDRESS_ID'}
+      address={newAddress}
+      defaultAddress={null}
+    >
       {({stateForMethod}) => (
         <div>
           <button
@@ -285,6 +390,7 @@ function ExistingAddresses({
       {addresses.nodes.map((address) => (
         <AddressForm
           key={address.id}
+          addressId={address.id}
           address={address}
           defaultAddress={defaultAddress}
         >
@@ -313,26 +419,28 @@ function ExistingAddresses({
 }
 
 export function AddressForm({
+  addressId,
   address,
   defaultAddress,
   children,
 }: {
+  addressId: AddressFragment['id'];
+  address: CustomerAddressInput;
+  defaultAddress: CustomerFragment['defaultAddress'];
   children: (props: {
     stateForMethod: (
       method: 'PUT' | 'POST' | 'DELETE',
     ) => ReturnType<typeof useNavigation>['state'];
   }) => React.ReactNode;
-  defaultAddress: CustomerFragment['defaultAddress'];
-  address: AddressFragment;
 }) {
   const {state, formMethod} = useNavigation();
   const action = useActionData<ActionResponse>();
-  const error = action?.error?.[address.id];
-  const isDefaultAddress = defaultAddress?.id === address.id;
+  const error = action?.error?.[addressId];
+  const isDefaultAddress = defaultAddress?.id === addressId;
   return (
-    <Form id={address.id}>
+    <Form id={addressId}>
       <fieldset>
-        <input type="hidden" name="addressId" defaultValue={address.id} />
+        <input type="hidden" name="addressId" defaultValue={addressId} />
         <label htmlFor="firstName">First name*</label>
         <input
           aria-label="First name"
@@ -397,13 +505,13 @@ export function AddressForm({
           required
           type="text"
         />
-        <label htmlFor="province">State / Province*</label>
+        <label htmlFor="zoneCode">State / Province*</label>
         <input
-          aria-label="State"
+          aria-label="State/Province"
           autoComplete="address-level1"
-          defaultValue={address?.province ?? ''}
-          id="province"
-          name="province"
+          defaultValue={address?.zoneCode ?? ''}
+          id="zoneCode"
+          name="zoneCode"
           placeholder="State / Province"
           required
           type="text"
@@ -419,24 +527,25 @@ export function AddressForm({
           required
           type="text"
         />
-        <label htmlFor="country">Country*</label>
+        <label htmlFor="territoryCode">Country Code*</label>
         <input
-          aria-label="Country"
-          autoComplete="country-name"
-          defaultValue={address?.country ?? ''}
-          id="country"
-          name="country"
+          aria-label="territoryCode"
+          autoComplete="country"
+          defaultValue={address?.territoryCode ?? ''}
+          id="territoryCode"
+          name="territoryCode"
           placeholder="Country"
           required
           type="text"
+          maxLength={2}
         />
-        <label htmlFor="phone">Phone</label>
+        <label htmlFor="phoneNumber">Phone</label>
         <input
-          aria-label="Phone"
+          aria-label="Phone Number"
           autoComplete="tel"
-          defaultValue={address?.phone ?? ''}
-          id="phone"
-          name="phone"
+          defaultValue={address?.phoneNumber ?? ''}
+          id="phoneNumber"
+          name="phoneNumber"
           placeholder="+16135551111"
           pattern="^\+?[1-9]\d{3,14}$"
           type="tel"
@@ -466,98 +575,3 @@ export function AddressForm({
     </Form>
   );
 }
-
-// NOTE: https://shopify.dev/docs/api/storefront/2023-04/mutations/customeraddressupdate
-const UPDATE_ADDRESS_MUTATION = `#graphql
-  mutation customerAddressUpdate(
-    $address: MailingAddressInput!
-    $customerAccessToken: String!
-    $id: ID!
-    $country: CountryCode
-    $language: LanguageCode
- ) @inContext(country: $country, language: $language) {
-    customerAddressUpdate(
-      address: $address
-      customerAccessToken: $customerAccessToken
-      id: $id
-    ) {
-      customerAddress {
-        id
-      }
-      customerUserErrors {
-        code
-        field
-        message
-      }
-    }
-  }
-` as const;
-
-// NOTE: https://shopify.dev/docs/api/storefront/latest/mutations/customerAddressDelete
-const DELETE_ADDRESS_MUTATION = `#graphql
-  mutation customerAddressDelete(
-    $customerAccessToken: String!,
-    $id: ID!,
-    $country: CountryCode,
-    $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
-    customerAddressDelete(customerAccessToken: $customerAccessToken, id: $id) {
-      customerUserErrors {
-        code
-        field
-        message
-      }
-      deletedCustomerAddressId
-    }
-  }
-` as const;
-
-// NOTE: https://shopify.dev/docs/api/storefront/latest/mutations/customerdefaultaddressupdate
-const UPDATE_DEFAULT_ADDRESS_MUTATION = `#graphql
-  mutation customerDefaultAddressUpdate(
-    $addressId: ID!
-    $customerAccessToken: String!
-    $country: CountryCode
-    $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
-    customerDefaultAddressUpdate(
-      addressId: $addressId
-      customerAccessToken: $customerAccessToken
-    ) {
-      customer {
-        defaultAddress {
-          id
-        }
-      }
-      customerUserErrors {
-        code
-        field
-        message
-      }
-    }
-  }
-` as const;
-
-// NOTE: https://shopify.dev/docs/api/storefront/latest/mutations/customeraddresscreate
-const CREATE_ADDRESS_MUTATION = `#graphql
-  mutation customerAddressCreate(
-    $address: MailingAddressInput!
-    $customerAccessToken: String!
-    $country: CountryCode
-    $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
-    customerAddressCreate(
-      address: $address
-      customerAccessToken: $customerAccessToken
-    ) {
-      customerAddress {
-        id
-      }
-      customerUserErrors {
-        code
-        field
-        message
-      }
-    }
-  }
-` as const;

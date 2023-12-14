@@ -1,5 +1,6 @@
-import type {CustomerFragment} from 'storefrontapi.generated';
-import type {CustomerUpdateInput} from '@shopify/hydrogen/storefront-api-types';
+import type {CustomerFragment} from 'customer-accountapi.generated';
+import type {CustomerUpdateInput} from '@shopify/hydrogen/customer-account-api-types';
+import {CUSTOMER_UPDATE_MUTATION} from 'app/graphql/customer-account/CustomerUpdateMutation';
 import {
   json,
   redirect,
@@ -24,86 +25,80 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({context}: LoaderFunctionArgs) {
-  const customerAccessToken = await context.session.get('customerAccessToken');
-  if (!customerAccessToken) {
+  if (!(await context.customerAccount.isLoggedIn())) {
     return redirect('/account/login');
   }
-  return json({});
+
+  return json(
+    {},
+    {
+      headers: {
+        'Set-Cookie': await context.session.commit(),
+      },
+    },
+  );
 }
 
 export async function action({request, context}: ActionFunctionArgs) {
-  const {session, storefront} = context;
+  const {customerAccount} = context;
 
   if (request.method !== 'PUT') {
     return json({error: 'Method not allowed'}, {status: 405});
   }
 
   const form = await request.formData();
-  const customerAccessToken = await session.get('customerAccessToken');
-  if (!customerAccessToken) {
-    return json({error: 'Unauthorized'}, {status: 401});
-  }
 
   try {
-    const password = getPassword(form);
     const customer: CustomerUpdateInput = {};
-    const validInputKeys = [
-      'firstName',
-      'lastName',
-      'email',
-      'password',
-      'phone',
-    ] as const;
+    const validInputKeys = ['firstName', 'lastName'] as const;
     for (const [key, value] of form.entries()) {
       if (!validInputKeys.includes(key as any)) {
         continue;
-      }
-      if (key === 'acceptsMarketing') {
-        customer.acceptsMarketing = value === 'on';
       }
       if (typeof value === 'string' && value.length) {
         customer[key as (typeof validInputKeys)[number]] = value;
       }
     }
 
-    if (password) {
-      customer.password = password;
-    }
-
     // update customer and possibly password
-    const updated = await storefront.mutate(CUSTOMER_UPDATE_MUTATION, {
-      variables: {
-        customerAccessToken: customerAccessToken.accessToken,
-        customer,
+    const {data, errors} = await customerAccount.mutate(
+      CUSTOMER_UPDATE_MUTATION,
+      {
+        variables: {
+          customer,
+        },
       },
-    });
+    );
 
-    // check for mutation errors
-    if (updated.customerUpdate?.customerUserErrors?.length) {
-      return json(
-        {error: updated.customerUpdate?.customerUserErrors[0]},
-        {status: 400},
-      );
+    if (errors?.length) {
+      throw new Error(errors[0].message);
     }
 
-    // update session with the updated access token
-    if (updated.customerUpdate?.customerAccessToken?.accessToken) {
-      session.set(
-        'customerAccessToken',
-        updated.customerUpdate?.customerAccessToken,
-      );
+    if (!data?.customerUpdate?.customer) {
+      throw new Error('Customer profile update failed.');
     }
 
     return json(
-      {error: null, customer: updated.customerUpdate?.customer},
+      {
+        error: null,
+        customer: data?.customerUpdate?.customer,
+      },
       {
         headers: {
-          'Set-Cookie': await session.commit(),
+          'Set-Cookie': await context.session.commit(),
         },
       },
     );
   } catch (error: any) {
-    return json({error: error.message, customer: null}, {status: 400});
+    return json(
+      {error: error.message, customer: null},
+      {
+        status: 400,
+        headers: {
+          'Set-Cookie': await context.session.commit(),
+        },
+      },
+    );
   }
 }
 
@@ -142,75 +137,6 @@ export default function AccountProfile() {
             defaultValue={customer.lastName ?? ''}
             minLength={2}
           />
-          <label htmlFor="phone">Mobile</label>
-          <input
-            id="phone"
-            name="phone"
-            type="tel"
-            autoComplete="tel"
-            placeholder="Mobile"
-            aria-label="Mobile"
-            defaultValue={customer.phone ?? ''}
-          />
-          <label htmlFor="email">Email address</label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            placeholder="Email address"
-            aria-label="Email address"
-            defaultValue={customer.email ?? ''}
-          />
-          <div className="account-profile-marketing">
-            <input
-              id="acceptsMarketing"
-              name="acceptsMarketing"
-              type="checkbox"
-              placeholder="Accept marketing"
-              aria-label="Accept marketing"
-              defaultChecked={customer.acceptsMarketing}
-            />
-            <label htmlFor="acceptsMarketing">
-              &nbsp; Subscribed to marketing communications
-            </label>
-          </div>
-        </fieldset>
-        <br />
-        <legend>Change password (optional)</legend>
-        <fieldset>
-          <label htmlFor="currentPassword">Current password</label>
-          <input
-            id="currentPassword"
-            name="currentPassword"
-            type="password"
-            autoComplete="current-password"
-            placeholder="Current password"
-            aria-label="Current password"
-            minLength={8}
-          />
-
-          <label htmlFor="newPassword">New password</label>
-          <input
-            id="newPassword"
-            name="newPassword"
-            type="password"
-            placeholder="New password"
-            aria-label="New password"
-            minLength={8}
-          />
-
-          <label htmlFor="newPasswordConfirm">New password (confirm)</label>
-          <input
-            id="newPasswordConfirm"
-            name="newPasswordConfirm"
-            type="password"
-            placeholder="New password (confirm)"
-            aria-label="New password confirm"
-            minLength={8}
-          />
-          <small>Passwords must be at least 8 characters.</small>
         </fieldset>
         {action?.error ? (
           <p>
@@ -228,67 +154,3 @@ export default function AccountProfile() {
     </div>
   );
 }
-
-function getPassword(form: FormData): string | undefined {
-  let password;
-  const currentPassword = form.get('currentPassword');
-  const newPassword = form.get('newPassword');
-  const newPasswordConfirm = form.get('newPasswordConfirm');
-
-  let passwordError;
-  if (newPassword && !currentPassword) {
-    passwordError = new Error('Current password is required.');
-  }
-
-  if (newPassword && newPassword !== newPasswordConfirm) {
-    passwordError = new Error('New passwords must match.');
-  }
-
-  if (newPassword && currentPassword && newPassword === currentPassword) {
-    passwordError = new Error(
-      'New password must be different than current password.',
-    );
-  }
-
-  if (passwordError) {
-    throw passwordError;
-  }
-
-  if (currentPassword && newPassword) {
-    password = newPassword;
-  } else {
-    password = currentPassword;
-  }
-
-  return String(password);
-}
-
-const CUSTOMER_UPDATE_MUTATION = `#graphql
-  # https://shopify.dev/docs/api/storefront/latest/mutations/customerUpdate
-  mutation customerUpdate(
-    $customerAccessToken: String!,
-    $customer: CustomerUpdateInput!
-    $country: CountryCode
-    $language: LanguageCode
-  ) @inContext(language: $language, country: $country) {
-    customerUpdate(customerAccessToken: $customerAccessToken, customer: $customer) {
-      customer {
-        acceptsMarketing
-        email
-        firstName
-        id
-        lastName
-        phone
-      }
-      customerAccessToken {
-        accessToken
-        expiresAt
-      }
-      customerUserErrors {
-        code
-        field
-        message
-      }
-    }
-  }
-` as const;
