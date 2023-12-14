@@ -125,7 +125,7 @@ export async function runWithCache<T = unknown>(
             startTime: overrideStartTime || startTime,
             cacheStatus,
             responsePayload: (result && result[0]) || result,
-            responseInit: (result && result[1]) || debugData.responseInit,
+            responseInit: (result && result[1]) || debugData?.responseInit,
             cache: {
               status: cacheStatus,
               strategy: generateCacheControlHeader(strategy || {}),
