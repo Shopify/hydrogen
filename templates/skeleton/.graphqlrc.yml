@@ -1,1 +1,6 @@
-schema: node_modules/@shopify/hydrogen-react/storefront.schema.json
+projects:
+  default:
+    schema: 'node_modules/@shopify/hydrogen/storefront.schema.json'
+    documents:
+     - '*!(*.d).{ts,tsx,js,jsx}'
+     - 'app/**/*!(*.d).{ts,tsx,js,jsx}'
