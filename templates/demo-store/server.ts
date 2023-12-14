@@ -85,11 +85,11 @@ export default {
                     status: res.status,
                     statusText: res.statusText,
                     headers: Array.from(res.headers.entries()),
-                  }
+                  },
                 });
               }
 
-              return await res.json() as CatFact;
+              return (await res.json()) as CatFact;
             });
           },
         );

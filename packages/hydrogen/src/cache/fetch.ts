@@ -28,19 +28,19 @@ export type FetchDebugInfo = {
   displayName?: string;
 };
 
-export type DebugInfo ={
+export type DebugInfo = {
   displayName?: string;
   url?: string;
   responseInit?: {
-    status: number,
+    status: number;
     statusText: string;
-    headers?: [string, string][]
+    headers?: [string, string][];
   };
-}
+};
 
 export type CacheActionFunctionParam = {
-  addDebugData: (info: DebugInfo) => void
-}
+  addDebugData: (info: DebugInfo) => void;
+};
 
 export type WithCacheOptions<T = unknown> = {
   strategy?: CachingStrategy | null;
@@ -106,7 +106,7 @@ export async function runWithCache<T = unknown>(
   let debugData: DebugInfo;
   const addDebugData = (info: DebugInfo) => {
     debugData = info;
-  }
+  };
 
   const logSubRequestEvent =
     process.env.NODE_ENV === 'development'
@@ -124,8 +124,8 @@ export async function runWithCache<T = unknown>(
             url: debugData?.url || getKeyUrl(key),
             startTime: overrideStartTime || startTime,
             cacheStatus,
-            responsePayload: result && result[0] || result,
-            responseInit: result && result[1] || debugData.responseInit,
+            responsePayload: (result && result[0]) || result,
+            responseInit: (result && result[1]) || debugData.responseInit,
             cache: {
               status: cacheStatus,
               strategy: generateCacheControlHeader(strategy || {}),
