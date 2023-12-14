@@ -86,6 +86,7 @@ export {
   sendShopifyAnalytics,
   ShopifySalesChannel,
   storefrontApiCustomScalars,
+  customerApiCustomScalars,
   useLoadScript,
   useMoney,
   useShopifyCookies,
