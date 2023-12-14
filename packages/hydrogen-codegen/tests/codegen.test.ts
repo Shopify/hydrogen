@@ -64,9 +64,7 @@ describe('Hydrogen Codegen', async () => {
     );
 
     // Augments query/mutation types
-    expect(generatedCode).toMatch(
-      getDefaultOptions('sfapi').interfaceExtensionCode,
-    );
+    expect(generatedCode).toMatch(getDefaultOptions().interfaceExtensionCode);
 
     expect(generatedCode).toMatchInlineSnapshot(`
       "/* eslint-disable eslint-comments/disable-enable-pair */

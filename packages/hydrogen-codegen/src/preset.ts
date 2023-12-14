@@ -58,9 +58,7 @@ export const preset: Types.OutputPreset<HydrogenPresetConfig> = {
     const sourcesWithOperations = processSources(options.documents);
     const sources = sourcesWithOperations.map(({source}) => source);
 
-    const defaultOptions = getDefaultOptions(
-      /^(customer|caapi\.)/i.test(options.baseOutputDir) ? 'caapi' : 'sfapi',
-    );
+    const defaultOptions = getDefaultOptions(options.baseOutputDir);
 
     const importTypes = options.presetConfig.importTypes ?? true;
     const namespacedImportName =

@@ -15,18 +15,26 @@ declare module '@shopify/hydrogen' {
   interface CustomerAccountMutations extends ${GENERATED_MUTATION_INTERFACE_NAME} {}
 }`;
 
-const defaultValues = Object.freeze({
-  sfapi: {
-    importTypesFrom: '@shopify/hydrogen/storefront-api-types',
-    namespacedImportName: 'StorefrontAPI',
-    interfaceExtensionCode: sfapiDefaultInterfaceExtensionCode,
-  },
-  caapi: {
-    importTypesFrom: '@shopify/hydrogen/customer-account-api-types',
-    namespacedImportName: 'CustomerAccountAPI',
-    interfaceExtensionCode: caapiDefaultInterfaceExtensionCode,
-  },
-});
+type DefaultValues = {
+  importTypesFrom: string;
+  namespacedImportName: string;
+  interfaceExtensionCode: string;
+};
 
-export const getDefaultOptions = (target: keyof typeof defaultValues) =>
-  defaultValues[target];
+const sfapiDefaultValues: DefaultValues = {
+  importTypesFrom: '@shopify/hydrogen/storefront-api-types',
+  namespacedImportName: 'StorefrontAPI',
+  interfaceExtensionCode: sfapiDefaultInterfaceExtensionCode,
+};
+
+const caapiDefaultValues: DefaultValues = {
+  importTypesFrom: '@shopify/hydrogen/customer-account-api-types',
+  namespacedImportName: 'CustomerAccountAPI',
+  interfaceExtensionCode: caapiDefaultInterfaceExtensionCode,
+};
+
+export function getDefaultOptions(outputFile = '') {
+  return /^(customer|caapi\.)/i.test(outputFile)
+    ? caapiDefaultValues
+    : sfapiDefaultValues;
+}
