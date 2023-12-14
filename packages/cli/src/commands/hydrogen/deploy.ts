@@ -323,9 +323,11 @@ export async function oxygenDeploy(
   });
 
   let resolveDeploymentCompletedVerification: () => void;
-  const deploymentCompletedVerificationPromise = new Promise<void>((resolve) => {
-    resolveDeploymentCompletedVerification = resolve;
-  });
+  const deploymentCompletedVerificationPromise = new Promise<void>(
+    (resolve) => {
+      resolveDeploymentCompletedVerification = resolve;
+    },
+  );
 
   let deployError: AbortError | null = null;
   let resolveDeploy: () => void;
@@ -347,8 +349,7 @@ export async function oxygenDeploy(
         useCodegen: false,
       });
     },
-    onDeploymentCompleted: () =>
-      resolveDeploymentCompletedVerification(),
+    onDeploymentCompleted: () => resolveDeploymentCompletedVerification(),
     onVerificationComplete: () => resolveRoutableCheck(),
     onDeploymentCompletedVerificationError() {
       deployError = new AbortError(
@@ -402,7 +403,7 @@ export async function oxygenDeploy(
     .then(async (completedDeployment: CompletedDeployment | undefined) => {
       const deploymentType = config.publicDeployment ? 'public' : 'private';
 
-      const nextSteps: (string | { info: string })[][]  = [
+      const nextSteps: (string | {info: string})[][] = [
         [
           'Open',
           {info: completedDeployment!.url},
@@ -424,7 +425,10 @@ export async function oxygenDeploy(
       // in CI environments, output to a file so consequent steps can access the URL
       // the formatting of this file is likely to change in future versions.
       if (isCI && !noJsonOutput) {
-        await writeFile('h2_deploy_log.json', JSON.stringify(completedDeployment!));
+        await writeFile(
+          'h2_deploy_log.json',
+          JSON.stringify(completedDeployment!),
+        );
       }
       resolveDeploy();
     })

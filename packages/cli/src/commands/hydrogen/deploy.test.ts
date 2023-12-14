@@ -17,7 +17,11 @@ import {
 
 import {deploymentLogger, oxygenDeploy} from './deploy.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
-import {CompletedDeployment, createDeploy, parseToken} from '@shopify/oxygen-cli/deploy';
+import {
+  CompletedDeployment,
+  createDeploy,
+  parseToken,
+} from '@shopify/oxygen-cli/deploy';
 import {ciPlatform} from '@shopify/cli-kit/node/context/local';
 
 vi.mock('../../lib/get-oxygen-deployment-data.js');
@@ -323,7 +327,10 @@ describe('deploy', () => {
 
     expect(vi.mocked(writeFile)).toHaveBeenCalledWith(
       'h2_deploy_log.json',
-      JSON.stringify({authBypassToken: 'some-token', url: 'https://a-lovely-deployment.com'}),
+      JSON.stringify({
+        authBypassToken: 'some-token',
+        url: 'https://a-lovely-deployment.com',
+      }),
     );
 
     vi.mocked(writeFile).mockClear();
@@ -401,7 +408,10 @@ describe('deploy', () => {
       options.hooks?.onUploadFilesStart?.();
       options.hooks?.onUploadFilesComplete?.();
       options.hooks?.onDeploymentCompletedVerificationStart?.();
-      options.hooks?.onDeploymentFailed?.({status: "oh shit", url: "https://a-lovely-deployment.com"});
+      options.hooks?.onDeploymentFailed?.({
+        status: 'oh shit',
+        url: 'https://a-lovely-deployment.com',
+      });
 
       return new Promise((_resolve, reject) => {
         reject();
@@ -413,7 +423,7 @@ describe('deploy', () => {
       expect(true).toBe(false);
     } catch (err) {
       if (err instanceof AbortError) {
-        expect(err.message).toBe("oh shit");
+        expect(err.message).toBe('oh shit');
         expect(err.tryMessage).toBe(
           'Please verify the deployment status in the Shopify Admin and retry deploying if necessary.',
         );
