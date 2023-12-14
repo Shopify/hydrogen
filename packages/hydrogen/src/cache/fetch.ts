@@ -28,6 +28,16 @@ export type FetchDebugInfo = {
   displayName?: string;
 };
 
+export type DebugInfo ={
+  displayName?: string;
+  url?: string;
+  responseInit?: {
+    status: number,
+    statusText: string;
+    headers?: [string, string][]
+  };
+}
+
 export type WithCacheOptions<T = unknown> = {
   strategy?: CachingStrategy | null;
   cacheInstance?: Cache;
@@ -74,7 +84,7 @@ const swrLock = new Set<string>();
 
 export async function runWithCache<T = unknown>(
   cacheKey: CacheKey,
-  actionFn: () => T | Promise<T>,
+  actionFn: (addDebugData: (info: DebugInfo) => void) => T | Promise<T>,
   {
     strategy = CacheShort(),
     cacheInstance,
@@ -89,6 +99,11 @@ export async function runWithCache<T = unknown>(
     ...(typeof cacheKey === 'string' ? [cacheKey] : cacheKey),
   ]);
 
+  let debugData: DebugInfo;
+  const addDebugData = (info: DebugInfo) => {
+    debugData = info;
+  }
+
   const logSubRequestEvent =
     process.env.NODE_ENV === 'development'
       ? ({
@@ -102,11 +117,11 @@ export async function runWithCache<T = unknown>(
         }) => {
           globalThis.__H2O_LOG_EVENT?.({
             eventType: 'subrequest',
-            url: getKeyUrl(key),
+            url: debugData?.url || getKeyUrl(key),
             startTime: overrideStartTime || startTime,
             cacheStatus,
-            responsePayload: result && result[0],
-            responseInit: result && result[1],
+            responsePayload: result && result[0] || result,
+            responseInit: result && result[1] || debugData.responseInit,
             cache: {
               status: cacheStatus,
               strategy: generateCacheControlHeader(strategy || {}),
@@ -114,12 +129,13 @@ export async function runWithCache<T = unknown>(
             },
             waitUntil,
             ...debugInfo,
+            displayName: debugInfo?.displayName || debugData?.displayName,
           } as any);
         }
       : undefined;
 
   if (!cacheInstance || !strategy || strategy.mode === NO_STORE) {
-    const result = await actionFn();
+    const result = await actionFn(addDebugData);
     // Log non-cached requests
     logSubRequestEvent?.({result});
     return result;
@@ -139,7 +155,7 @@ export async function runWithCache<T = unknown>(
       const revalidatingPromise = Promise.resolve().then(async () => {
         const revalidateStartTime = Date.now();
         try {
-          const result = await actionFn();
+          const result = await actionFn(addDebugData);
 
           if (shouldCacheResult(result)) {
             await setItemInCache(cacheInstance, key, result, strategy);
@@ -175,7 +191,7 @@ export async function runWithCache<T = unknown>(
     return cachedResult;
   }
 
-  const result = await actionFn();
+  const result = await actionFn(addDebugData);
 
   // Log MISS requests
   logSubRequestEvent?.({

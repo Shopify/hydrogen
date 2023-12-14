@@ -17,6 +17,11 @@ import {
 import {HydrogenSession} from '~/lib/session.server';
 import {getLocaleFromRequest} from '~/lib/utils';
 
+type CatFact = {
+  fact: string;
+  length: number;
+};
+
 /**
  * Export a fetch handler in module format.
  */
@@ -67,32 +72,25 @@ export default {
       });
 
       const catFact = async () => {
-        const data = await withCache<
-          [
-            {
-              fact: string;
-              length: number;
-            },
-            ResponseInit,
-          ]
-        >(
-          ['https://catfact.ninja/fact'],
+        return await withCache<CatFact>(
+          ['Random cat facts'],
           CacheLong(),
-          () => {
+          (addDebugData) => {
             return fetch('https://catfact.ninja/fact').then(async (res) => {
-              return [
-                (await res.json()) as {fact: string; length: number},
-                {
+              addDebugData({
+                displayName: 'Cat fact',
+                url: 'https://catfact.ninja/fact',
+                responseInit: {
                   status: res.status,
                   statusText: res.statusText,
                   headers: Array.from(res.headers.entries()),
-                } satisfies ResponseInit,
-              ];
+                }
+              });
+
+              return await res.json() as CatFact;
             });
           },
-          'Cat fact',
         );
-        return data[0];
       };
 
       /**

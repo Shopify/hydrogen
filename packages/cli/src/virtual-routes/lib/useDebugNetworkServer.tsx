@@ -98,6 +98,7 @@ export function useDebugNetworkServer() {
       mainRequests: [],
       subRequests: {},
       allRequests: {},
+      activeEventId: undefined,
     };
   }
 

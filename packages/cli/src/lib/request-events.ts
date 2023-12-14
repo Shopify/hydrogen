@@ -114,7 +114,7 @@ export function createLogRequestEvent(options?: {absoluteBundlePath?: string}) {
       description =
         graphql?.query
           .match(/(query|mutation)\s+(\w+)/)?.[0]
-          ?.replace(/\s+/, ' ') || decodeURIComponent(url.search.slice(1));
+          ?.replace(/\s+/, ' ') || decodeURIComponent(url.search.slice(1)) || request.url;
 
       if (graphql) {
         graphiqlLink = getGraphiQLUrl({graphql});

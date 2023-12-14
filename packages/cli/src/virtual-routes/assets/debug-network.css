@@ -6,9 +6,8 @@
   --dark-border-color: #666;
   --button-state-color: #fafafa;
   --secondary-text-color: #616161;
-  --row-hover-highlight-color: rgba(230, 238, 254, 0.5);
-  --row-active-highlight-color: #e6eefe;
   --highlight-color: #f5f5f5;
+  --hover-highlight-color: rgba(230, 238, 254, 0.5);
   --active-highlight-color: #e6eefe;
   --button-border: 1px solid rgba(51, 51, 51, 0.75);
 
@@ -140,17 +139,6 @@ button.plain {
 button.icon {
   padding: 0.25rem;
   line-height: 0;
-}
-
-div.tab {
-  background-color: transparent;
-  padding: 0.375rem 0.75rem;
-  font-size: var(--text-normal);
-}
-
-div.tab.active {
-  border-radius: 0.25rem;
-  background-color: var(--active-highlight-color);
 }
 
 button:hover {
@@ -307,8 +295,12 @@ button:active.primary {
   border-bottom: 1px solid var(--secondary-color);
 }
 
+#request-table__content .grid-row {
+  cursor: pointer;
+}
+
 #request-table__content .grid-row:hover {
-  background-color: var(--row-hover-highlight-color);
+  background-color: var(--hover-highlight-color);
 }
 
 #request-table .grid-cell {
@@ -345,7 +337,7 @@ button:active.primary {
 }
 
 #request-table__content .grid-row.active {
-  background-color: var(--row-active-highlight-color);
+  background-color: var(--active-highlight-color);
 }
 
 #request-table__footer {
@@ -477,8 +469,20 @@ button:active.primary {
   padding-top: 0.5rem;
 }
 
-#request-detail .tab {
-  padding: 0.45rem 0.75rem;
+#request-detail div.tab {
+  background-color: transparent;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.25rem;
+  font-size: var(--text-normal);
+  cursor: pointer;
+}
+
+#request-detail div.tab.active {
+  background-color: var(--active-highlight-color);
+}
+
+#request-detail div.tab:hover {
+  background-color: var(--hover-highlight-color);
 }
 
 #request-detail .tabPanels .grid-layout a {
