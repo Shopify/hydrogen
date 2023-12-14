@@ -44,6 +44,7 @@
     "diff": "^5.1.0",
     "fs-extra": "^11.1.0",
     "get-port": "^7.0.0",
+    "graphql-config": "5.0.3",
     "gunzip-maybe": "^1.4.2",
     "miniflare": "3.20231016.0",
     "prettier": "^2.8.4",
