@@ -33,7 +33,7 @@ import {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import type {
   ClientReturn,
-  ClientVariablesInArray,
+  ClientVariablesInRestParams,
   CodegenOperations,
   GenericVariables,
 } from '@shopify/hydrogen-codegen';
@@ -88,7 +88,7 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
   /** The function to run a query on Storefront API. */
   query: <OverrideReturnType = any, RawGqlString extends string = string>(
     query: RawGqlString,
-    ...options: ClientVariablesInArray<
+    ...options: ClientVariablesInRestParams<
       StorefrontQueries,
       RawGqlString,
       StorefrontCommonOptions & Pick<StorefrontQueryOptions, 'cache'>,
@@ -100,7 +100,7 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
   /** The function to run a mutation on Storefront API. */
   mutate: <OverrideReturnType = any, RawGqlString extends string = string>(
     mutation: RawGqlString,
-    ...options: ClientVariablesInArray<
+    ...options: ClientVariablesInRestParams<
       StorefrontMutations,
       RawGqlString,
       StorefrontCommonOptions,

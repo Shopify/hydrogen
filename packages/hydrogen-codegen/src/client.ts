@@ -81,10 +81,10 @@ export type ClientVariables<
 /**
  * Similar to ClientVariables, but makes the whole wrapper optional:
  * @example
- * graphqlQuery: (query: string, ...params: ClientVariablesInArray<...>) => Promise<...>
+ * graphqlQuery: (query: string, ...params: ClientVariablesInRestParams<...>) => Promise<...>
  * Where the first item in `params` might be optional depending on the query.
  */
-export type ClientVariablesInArray<
+export type ClientVariablesInRestParams<
   GeneratedOperations extends CodegenOperations,
   RawGqlString extends string,
   OtherParams extends Record<string, any> = {},
