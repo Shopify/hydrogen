@@ -163,11 +163,9 @@ async function generateTypes({
 
   return Object.entries(codegenConfig.generates).reduce((acc, [key, value]) => {
     if ('documents' in value) {
-      const documents = (
+      acc[key] = (
         Array.isArray(value.documents) ? value.documents : [value.documents]
       ).filter((document) => typeof document === 'string') as string[];
-
-      acc[key] = documents;
     }
 
     return acc;
