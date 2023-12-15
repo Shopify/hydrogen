@@ -82,8 +82,8 @@ describe('deploy', () => {
   const originalExit = process.exit;
 
   const deployParams = {
+    authBypassToken: true,
     force: false,
-    generateAuthBypassToken: true,
     noJsonOutput: false,
     path: './',
     shop: 'snowdevil.myshopify.com',
@@ -424,9 +424,7 @@ describe('deploy', () => {
     } catch (err) {
       if (err instanceof AbortError) {
         expect(err.message).toBe('oh shit');
-        expect(err.tryMessage).toBe(
-          'Please verify the deployment status in the Shopify Admin and retry deploying if necessary.',
-        );
+        expect(err.tryMessage).toBe('Retrying the deployement may succeed.');
       } else {
         expect(true).toBe(false);
       }

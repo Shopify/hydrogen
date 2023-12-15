@@ -28,6 +28,7 @@ import {
   createDeploy,
   DeploymentConfig,
   DeploymentHooks,
+  DeploymentVerificationDetailsResponse,
   parseToken,
 } from '@shopify/oxygen-cli/deploy';
 
@@ -60,7 +61,7 @@ export default class Deploy extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
       required: false,
     }),
-    'generate-auth-bypass-token': Flags.boolean({
+    'auth-bypass-token': Flags.boolean({
       description:
         'Generate an authentication bypass token, which can be used to perform end-to-end tests against the deployment.',
       required: false,
@@ -144,9 +145,9 @@ export default class Deploy extends Command {
 }
 
 interface OxygenDeploymentOptions {
+  authBypassToken: boolean;
   environmentTag?: string;
   force: boolean;
-  generateAuthBypassToken: boolean;
   noJsonOutput: boolean;
   path: string;
   publicDeployment: boolean;
@@ -163,20 +164,32 @@ interface GitCommit {
   hash: string;
 }
 
-// Have PRd this to export this interface from oxygen-cli
-interface DeploymentVerificationDetailsResponse {
-  url: string;
-  status: string;
-  error?: string;
+function createUnexpectedAbortError(message?: string): AbortError {
+  return new AbortError(
+    message || 'The deployment failed due to an unexpected error.',
+    'Retrying the deployement may succeed.',
+    [
+      [
+        'If the issue persits, please check the',
+        {
+          link: {
+            label: 'Shopify status page',
+            url: 'https://status.shopify.com/',
+          },
+        },
+        'for any known issues.',
+      ],
+    ],
+  );
 }
 
 export async function oxygenDeploy(
   options: OxygenDeploymentOptions,
 ): Promise<void> {
   const {
+    authBypassToken: generateAuthBypassToken,
     environmentTag,
     force: forceOnUncommitedChanges,
-    generateAuthBypassToken,
     noJsonOutput,
     path,
     shop,
@@ -358,10 +371,7 @@ export async function oxygenDeploy(
       );
     },
     onDeploymentFailed: (details: DeploymentVerificationDetailsResponse) => {
-      deployError = new AbortError(
-        details.error || details.status,
-        'Please verify the deployment status in the Shopify Admin and retry deploying if necessary.',
-      );
+      deployError = createUnexpectedAbortError(details.error || details.status);
     },
     onUploadFilesStart: () => uploadStart(),
     onUploadFilesComplete: () => resolveUpload(),
@@ -393,7 +403,7 @@ export async function oxygenDeploy(
         task: async () => await deploymentCompletedVerificationPromise,
       },
       {
-        title: 'Verifying worker deployment is routable',
+        title: 'Verifying deployment is routable',
         task: async () => await routableCheckPromise,
       },
     ]);
@@ -401,20 +411,29 @@ export async function oxygenDeploy(
 
   await createDeploy({config, hooks, logger: deploymentLogger})
     .then(async (completedDeployment: CompletedDeployment | undefined) => {
+      if (!completedDeployment) {
+        rejectDeploy(createUnexpectedAbortError());
+        return;
+      }
+
       const deploymentType = config.publicDeployment ? 'public' : 'private';
 
-      const nextSteps: (string | {info: string})[][] = [
+      const nextSteps: (
+        | string
+        | {subdued: string}
+        | {link: {url: string}}
+      )[][] = [
         [
           'Open',
-          {info: completedDeployment!.url},
-          `in your browser to view your ${deploymentType} deployment`,
+          {link: {url: completedDeployment!.url}},
+          `in your browser to view your ${deploymentType} deployment.`,
         ],
       ];
       if (completedDeployment?.authBypassToken) {
         nextSteps.push([
           'Use the',
-          {info: completedDeployment.authBypassToken},
-          'token to perform end-to-end tests against the deployment',
+          {subdued: completedDeployment.authBypassToken},
+          'token to perform end-to-end tests against the deployment.',
         ]);
       }
 
@@ -427,7 +446,7 @@ export async function oxygenDeploy(
       if (isCI && !noJsonOutput) {
         await writeFile(
           'h2_deploy_log.json',
-          JSON.stringify(completedDeployment!),
+          JSON.stringify(completedDeployment),
         );
       }
       resolveDeploy();

@@ -179,8 +179,8 @@
           "required": false,
           "allowNo": false
         },
-        "generate-auth-bypass-token": {
-          "name": "generate-auth-bypass-token",
+        "auth-bypass-token": {
+          "name": "auth-bypass-token",
           "type": "boolean",
           "description": "Generate an authentication bypass token, which can be used to perform end-to-end tests against the deployment.",
           "required": false,
