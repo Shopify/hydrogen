@@ -217,23 +217,31 @@ async function addHooksToHydrogenOptions(
   codegenConfig: LoadCodegenConfigResult['config'],
   {rootDirectory}: ProjectDirs,
 ) {
-  const {schema} = await import('@shopify/hydrogen-codegen');
+  // Find generated files that use the Hydrogen preset
+  const hydrogenProjectsOptions = Object.values(codegenConfig.generates).filter(
+    (value) => {
+      const foundPreset = (Array.isArray(value) ? value[0] : value)?.preset;
+      if (typeof foundPreset === 'object') {
+        const name = Symbol.for('name');
+        if (name in foundPreset) {
+          return foundPreset[name] === 'hydrogen';
+        }
+      }
+    },
+  );
 
-  const [, options] =
-    Object.entries(codegenConfig.generates).find(
-      ([, value]) =>
-        (Array.isArray(value) ? value[0] : value)?.schema === schema,
-    ) || [];
+  // Add hooks to run Prettier before writing files
+  for (const options of hydrogenProjectsOptions) {
+    const hydrogenOptions = Array.isArray(options) ? options[0] : options;
 
-  const hydrogenOptions = Array.isArray(options) ? options[0] : options;
+    if (hydrogenOptions) {
+      const formatConfig = await getCodeFormatOptions(rootDirectory);
 
-  if (hydrogenOptions) {
-    const formatConfig = await getCodeFormatOptions(rootDirectory);
-
-    hydrogenOptions.hooks = {
-      beforeOneFileWrite: (file: string, content: string) =>
-        formatCode(content, formatConfig, file), // Run Prettier before writing files
-      ...hydrogenOptions.hooks,
-    };
+      hydrogenOptions.hooks = {
+        beforeOneFileWrite: (file: string, content: string) =>
+          formatCode(content, formatConfig, file),
+        ...hydrogenOptions.hooks,
+      };
+    }
   }
 }
