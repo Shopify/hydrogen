@@ -34,10 +34,10 @@ export interface CodegenOperations {
 export type ClientReturn<
   GeneratedOperations extends CodegenOperations,
   RawGqlString extends string,
-  OverrideReturnType = any,
-> = RawGqlString extends keyof GeneratedOperations // Do we have any generated query types?
-  ? GeneratedOperations[RawGqlString]['return']
-  : OverrideReturnType; // No codegen, let user specify return type
+  OverrideReturnType extends any,
+> = IsAny<GeneratedOperations[RawGqlString]['return']> extends true
+  ? OverrideReturnType
+  : GeneratedOperations[RawGqlString]['return'];
 
 /**
  * Checks if the generated variables for an operation
@@ -98,7 +98,9 @@ export type ClientVariablesInRestParams<
     : [ProcessedVariables] // Using codegen, query needs variables
   : [ProcessedVariables?]; // No codegen, variables always optional
 
-// Utilities for the types above:
+// --- Utilities for the types above:
+type IsAny<T> = 0 extends 1 & T ? true : false;
+
 type RequiredKeysOf<BaseType extends object> = Exclude<
   {
     [Key in keyof BaseType]: BaseType extends Record<Key, BaseType[Key]>
