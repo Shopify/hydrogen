@@ -1,4 +1,4 @@
-import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {json, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {
   Link,
   useLoaderData,
@@ -8,9 +8,13 @@ import {
 import type {
   ProductFragment,
   ProductVariantFragment,
+  SellingPlanFragment,
 } from 'storefrontapi.generated';
 import {Image, Money, CartForm} from '@shopify/hydrogen';
-import type {CartLineInput} from '@shopify/hydrogen/storefront-api-types';
+import type {
+  CartLineInput,
+  CurrencyCode,
+} from '@shopify/hydrogen/storefront-api-types';
 
 // 1. Import the SellingPlanSelector component and type
 import {
@@ -42,21 +46,39 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
     throw new Response(null, {status: 404});
   }
 
+  // 3. Get the selected selling plan from the product
+  const selectedSellingPlan =
+    product.sellingPlanGroups.nodes?.[0]?.sellingPlans.nodes?.find(
+      (sellingPlan) => sellingPlan.id === selectedSellingPlanId,
+    ) ?? null;
+
+  /**
+    4. If the product includes selling plans but no selling plan is selected, we
+    redirect to the first selling plan, so that's is selected by default
+  **/
+  if (product.sellingPlanGroups.nodes?.length && !selectedSellingPlan) {
+    const firstSellingPlanId =
+      product.sellingPlanGroups.nodes[0].sellingPlans.nodes[0].id;
+    return redirect(
+      `/products/${product.handle}?selling_plan=${firstSellingPlanId}`,
+    );
+  }
+
   const selectedVariant = product.variants.nodes[0];
 
-  // 3. Pass the selectedSellingPlanId to the client
-  return json({product, selectedVariant, selectedSellingPlanId});
+  // 5. Pass the selectedSellingPlan to the client
+  return json({product, selectedVariant, selectedSellingPlan});
 }
 
 export default function Product() {
-  const {product, selectedSellingPlanId, selectedVariant} =
+  const {product, selectedSellingPlan, selectedVariant} =
     useLoaderData<typeof loader>();
   return (
     <div className="product">
       <ProductImage image={selectedVariant?.image} />
       <ProductMain
         selectedVariant={selectedVariant}
-        selectedSellingPlanId={selectedSellingPlanId}
+        selectedSellingPlan={selectedSellingPlan}
         product={product}
       />
     </div>
@@ -82,22 +104,26 @@ function ProductImage({image}: {image: ProductVariantFragment['image']}) {
 
 function ProductMain({
   selectedVariant,
-  selectedSellingPlanId,
+  selectedSellingPlan,
   product,
 }: {
   product: ProductFragment;
   selectedVariant: ProductFragment['variants']['nodes'][0];
-  selectedSellingPlanId: string | null;
+  selectedSellingPlan: SellingPlanFragment | null;
 }) {
   const {title, descriptionHtml, sellingPlanGroups} = product;
+
   return (
     <div className="product-main">
       <h1>{title}</h1>
-      <ProductPrice selectedVariant={selectedVariant} />
+      <ProductPrice
+        selectedVariant={selectedVariant}
+        selectedSellingPlan={selectedSellingPlan}
+      />
       <br />
       <ProductForm
         selectedVariant={selectedVariant}
-        selectedSellingPlanId={selectedSellingPlanId}
+        selectedSellingPlan={selectedSellingPlan}
         sellingPlanGroups={sellingPlanGroups}
       />
       <br />
@@ -113,36 +139,123 @@ function ProductMain({
 
 function ProductPrice({
   selectedVariant,
+  selectedSellingPlan,
 }: {
-  selectedVariant: ProductFragment['variants']['nodes'][0];
+  selectedVariant: ProductVariantFragment;
+  selectedSellingPlan: SellingPlanFragment | null;
 }) {
   return (
     <div className="product-price">
-      {selectedVariant?.compareAtPrice ? (
-        <>
-          <p>Sale</p>
-          <br />
-          <div className="product-price-on-sale">
-            {selectedVariant ? <Money data={selectedVariant.price} /> : null}
-            <s>
-              <Money data={selectedVariant.compareAtPrice} />
-            </s>
-          </div>
-        </>
+      {selectedSellingPlan ? (
+        <SellingPlanPrice
+          selectedSellingPlan={selectedSellingPlan}
+          selectedVariant={selectedVariant}
+        />
       ) : (
-        selectedVariant?.price && <Money data={selectedVariant?.price} />
+        <ProductVariantPrice selectedVariant={selectedVariant} />
       )}
     </div>
   );
 }
 
+type SellingPlanPrice = {
+  amount: number;
+  currencyCode: CurrencyCode;
+};
+
+/*
+  Render the selected selling plan price is available
+*/
+function SellingPlanPrice({
+  selectedSellingPlan,
+  selectedVariant,
+}: {
+  selectedSellingPlan: SellingPlanFragment;
+  selectedVariant: ProductVariantFragment;
+}) {
+  const sellingPlanPriceAdjustments = selectedSellingPlan?.priceAdjustments;
+
+  if (!sellingPlanPriceAdjustments?.length) {
+    return <Money data={selectedVariant.price} />;
+  }
+
+  const selectedVariantPrice: SellingPlanPrice = {
+    amount: parseFloat(selectedVariant.price.amount),
+    currencyCode: selectedVariant.price.currencyCode,
+  };
+
+  const sellingPlanPrice: SellingPlanPrice = sellingPlanPriceAdjustments.reduce(
+    (acc, adjustment) => {
+      switch (adjustment.adjustmentValue.__typename) {
+        case 'SellingPlanFixedAmountPriceAdjustment':
+          return {
+            amount:
+              acc.amount +
+              parseFloat(adjustment.adjustmentValue.adjustmentAmount.amount),
+            currencyCode: acc.currencyCode,
+          };
+        case 'SellingPlanFixedPriceAdjustment':
+          return {
+            amount: parseFloat(adjustment.adjustmentValue.price.amount),
+            currencyCode: acc.currencyCode,
+          };
+        case 'SellingPlanPercentagePriceAdjustment':
+          return {
+            amount:
+              acc.amount *
+              (1 - adjustment.adjustmentValue.adjustmentPercentage),
+            currencyCode: acc.currencyCode,
+          };
+        default:
+          return acc;
+      }
+    },
+    selectedVariantPrice,
+  );
+
+  return (
+    <div className="selling-plan-price">
+      <Money
+        data={{
+          amount: `${sellingPlanPrice.amount}`,
+          currencyCode: sellingPlanPrice.currencyCode,
+        }}
+      />
+    </div>
+  );
+}
+
+/**
+  Render the price of a product that does not have selling plans
+**/
+function ProductVariantPrice({
+  selectedVariant,
+}: {
+  selectedVariant: ProductVariantFragment;
+}) {
+  return selectedVariant?.compareAtPrice ? (
+    <>
+      <p>Sale</p>
+      <br />
+      <div className="product-price-on-sale">
+        {selectedVariant ? <Money data={selectedVariant.price} /> : null}
+        <s>
+          <Money data={selectedVariant.compareAtPrice} />
+        </s>
+      </div>
+    </>
+  ) : (
+    selectedVariant?.price && <Money data={selectedVariant?.price} />
+  );
+}
+
 function ProductForm({
-  selectedSellingPlanId,
+  selectedSellingPlan,
   selectedVariant,
   sellingPlanGroups,
 }: {
-  selectedSellingPlanId: string | null;
-  selectedVariant: ProductFragment['variants']['nodes'][0];
+  selectedSellingPlan: SellingPlanFragment | null;
+  selectedVariant: ProductVariantFragment;
   sellingPlanGroups: ProductFragment['sellingPlanGroups'];
 }) {
   return (
@@ -150,7 +263,7 @@ function ProductForm({
       {/* 4. Add the SellingPlanSelector component inside the ProductForm */}
       <SellingPlanSelector
         sellingPlanGroups={sellingPlanGroups}
-        selectedSellingPlanId={selectedSellingPlanId}
+        selectedSellingPlan={selectedSellingPlan}
       >
         {({sellingPlanGroup}) => (
           /* 5. Render the SellingPlanGroup component inside the SellingPlanSelector */
@@ -167,7 +280,7 @@ function ProductForm({
         disabled={
           !selectedVariant ||
           !selectedVariant.availableForSale ||
-          !selectedSellingPlanId
+          !selectedSellingPlan
         }
         onClick={() => {
           window.location.href = window.location.href + '#cart-aside';
@@ -177,7 +290,7 @@ function ProductForm({
             ? [
                 {
                   merchandiseId: selectedVariant?.id,
-                  sellingPlanId: selectedSellingPlanId,
+                  sellingPlanId: selectedSellingPlan?.id,
                   quantity: 1,
                 },
               ]
@@ -185,7 +298,7 @@ function ProductForm({
         }
       >
         {sellingPlanGroups.nodes
-          ? selectedSellingPlanId
+          ? selectedSellingPlan
             ? 'Subscribe'
             : 'Select a subscription'
           : selectedVariant?.availableForSale
@@ -309,18 +422,58 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
 
 // 7. Add the SellingPlanGroup fragment to the Product fragment
 const SELLING_PLAN_FRAGMENT = `#graphql
+  fragment SellingPlanMoney on MoneyV2 {
+    amount
+    currencyCode
+  }
   fragment SellingPlan on SellingPlan {
     id
     options {
       name
       value
     }
-  }
+    priceAdjustments {
+      adjustmentValue {
+        ... on SellingPlanFixedAmountPriceAdjustment {
+          __typename
+          adjustmentAmount {
+            ... on MoneyV2 {
+               ...SellingPlanMoney
+            }
+          }
+        }
+        ... on SellingPlanFixedPriceAdjustment {
+          __typename
+          price {
+            ... on MoneyV2 {
+              ...SellingPlanMoney
+            }
+          }
+        }
+        ... on SellingPlanPercentagePriceAdjustment {
+          __typename
+          adjustmentPercentage
+        }
+      }
+      orderCount
+    }
+    recurringDeliveries
+    checkoutCharge {
+      type
+      value {
+        ... on MoneyV2 {
+          ...SellingPlanMoney
+        }
+        ... on SellingPlanCheckoutChargePercentageValue {
+          percentage
+        }
+      }
+    }
+ }
 ` as const;
 
 //  8. Add the SellingPlanGroup fragment to the Product fragment
 const SELLING_PLAN_GROUP_FRAGMENT = `#graphql
-  ${SELLING_PLAN_FRAGMENT}
   fragment SellingPlanGroup on SellingPlanGroup {
     name
     options {
@@ -333,12 +486,10 @@ const SELLING_PLAN_GROUP_FRAGMENT = `#graphql
       }
     }
   }
+  ${SELLING_PLAN_FRAGMENT}
 ` as const;
 
 const PRODUCT_FRAGMENT = `#graphql
-  ${PRODUCT_VARIANT_FRAGMENT}
-  ${SELLING_PLAN_GROUP_FRAGMENT}
-
   fragment Product on Product {
     id
     title
@@ -367,10 +518,11 @@ const PRODUCT_FRAGMENT = `#graphql
       }
     }
   }
+  ${PRODUCT_VARIANT_FRAGMENT}
+  ${SELLING_PLAN_GROUP_FRAGMENT}
 ` as const;
 
 const PRODUCT_QUERY = `#graphql
-  ${PRODUCT_FRAGMENT}
   query Product(
     $country: CountryCode
     $handle: String!
@@ -380,4 +532,5 @@ const PRODUCT_QUERY = `#graphql
       ...Product
     }
   }
+  ${PRODUCT_FRAGMENT}
 ` as const;
