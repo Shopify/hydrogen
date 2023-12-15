@@ -194,6 +194,20 @@ async function generateDefaultConfig(
   const defaultGlob = '*!(*.d).{ts,tsx,js,jsx}'; // No d.ts files
   const appDirRelative = relativePath(rootDirectory, appDirectory);
 
+  const caapiSchema = getSchema('customer');
+  const customerAPIProject = findGqlProject(caapiSchema, gqlConfig);
+
+  var customerAPIConfig;
+  if (customerAPIProject?.documents) {
+    customerAPIConfig = {
+      ['customerapi.generated.d.ts']: {
+        preset,
+        schema: caapiSchema,
+        documents: customerAPIProject?.documents,
+      },
+    };
+  }
+
   return {
     filepath: 'virtual:codegen',
     config: {
@@ -228,6 +242,7 @@ async function generateDefaultConfig(
             },
           }),
         },
+        ...customerAPIConfig,
       },
     },
   };
