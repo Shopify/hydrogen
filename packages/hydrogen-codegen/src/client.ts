@@ -62,21 +62,16 @@ export type IsOptionalVariables<
 export type ClientVariables<
   GeneratedOperations extends CodegenOperations,
   RawGqlString extends string,
-  OtherParams extends Record<string, any> = {},
   OptionalVariableNames extends string = never,
   VariablesKey extends string = 'variables',
   // The following are just extracted repeated types, not parameters:
   GeneratedVariables = GeneratedOperations[RawGqlString]['variables'],
   GeneratedVariablesWrapper = Record<VariablesKey, GeneratedVariables>,
-> = OtherParams &
-  (RawGqlString extends keyof GeneratedOperations
-    ? IsOptionalVariables<
-        GeneratedVariables,
-        OptionalVariableNames
-      > extends true
-      ? Partial<GeneratedVariablesWrapper>
-      : GeneratedVariablesWrapper
-    : Partial<GeneratedVariablesWrapper>);
+> = RawGqlString extends keyof GeneratedOperations
+  ? IsOptionalVariables<GeneratedVariables, OptionalVariableNames> extends true
+    ? Partial<GeneratedVariablesWrapper>
+    : GeneratedVariablesWrapper
+  : Partial<GeneratedVariablesWrapper>;
 
 /**
  * Similar to ClientVariables, but makes the whole wrapper optional:
@@ -90,13 +85,11 @@ export type ClientVariablesInRestParams<
   OtherParams extends Record<string, any> = {},
   OptionalVariableNames extends string = never,
   // The following are just extracted repeated types, not parameters:
-  ProcessedVariables = ClientVariables<
-    GeneratedOperations,
-    RawGqlString,
-    OtherParams,
-    OptionalVariableNames
-  >,
-> = RawGqlString extends keyof GeneratedOperations // Do we have any generated query types?
+  ProcessedVariables = OtherParams &
+    ClientVariables<GeneratedOperations, RawGqlString, OptionalVariableNames>,
+> = HasRequiredKeys<OtherParams> extends true
+  ? [ProcessedVariables]
+  : RawGqlString extends keyof GeneratedOperations // Do we have any generated query types?
   ? IsOptionalVariables<
       GeneratedOperations[RawGqlString]['variables'],
       OptionalVariableNames
@@ -104,3 +97,16 @@ export type ClientVariablesInRestParams<
     ? [ProcessedVariables?] // Using codegen, query has no variables
     : [ProcessedVariables] // Using codegen, query needs variables
   : [ProcessedVariables?]; // No codegen, variables always optional
+
+// Utilities for the types above:
+type RequiredKeysOf<BaseType extends object> = Exclude<
+  {
+    [Key in keyof BaseType]: BaseType extends Record<Key, BaseType[Key]>
+      ? Key
+      : never;
+  }[keyof BaseType],
+  undefined
+>;
+
+type HasRequiredKeys<BaseType extends object> =
+  RequiredKeysOf<BaseType> extends never ? false : true;
