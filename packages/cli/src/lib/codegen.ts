@@ -161,7 +161,17 @@ async function generateTypes({
 
   await generate(codegenContext, true);
 
-  return Object.keys(codegenConfig.generates);
+  return Object.entries(codegenConfig.generates).reduce((acc, [key, value]) => {
+    if ('documents' in value) {
+      const documents = (
+        Array.isArray(value.documents) ? value.documents : [value.documents]
+      ).filter((document) => typeof document === 'string') as string[];
+
+      acc[key] = documents;
+    }
+
+    return acc;
+  }, {} as Record<string, string[]>);
 }
 
 async function generateDefaultConfig(
