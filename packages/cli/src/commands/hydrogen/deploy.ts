@@ -24,9 +24,11 @@ import {
 import {Logger, LogLevel} from '@shopify/cli-kit/node/output';
 import {ciPlatform} from '@shopify/cli-kit/node/context/local';
 import {
+  CompletedDeployment,
   createDeploy,
   DeploymentConfig,
   DeploymentHooks,
+  DeploymentVerificationDetailsResponse,
   parseToken,
 } from '@shopify/oxygen-cli/deploy';
 
@@ -48,7 +50,7 @@ export default class Deploy extends Command {
   static flags: any = {
     'env-branch': Flags.string({
       char: 'e',
-      description: 'Environment branch (tag) for environment to deploy to',
+      description: 'Environment branch (tag) for environment to deploy to.',
       required: false,
     }),
     force: Flags.boolean({
@@ -58,6 +60,12 @@ export default class Deploy extends Command {
       default: false,
       env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
       required: false,
+    }),
+    'auth-bypass-token': Flags.boolean({
+      description:
+        'Generate an authentication bypass token, which can be used to perform end-to-end tests against the deployment.',
+      required: false,
+      default: false,
     }),
     path: commonFlags.path,
     shop: commonFlags.shop,
@@ -137,6 +145,7 @@ export default class Deploy extends Command {
 }
 
 interface OxygenDeploymentOptions {
+  authBypassToken: boolean;
   environmentTag?: string;
   force: boolean;
   noJsonOutput: boolean;
@@ -155,10 +164,30 @@ interface GitCommit {
   hash: string;
 }
 
+function createUnexpectedAbortError(message?: string): AbortError {
+  return new AbortError(
+    message || 'The deployment failed due to an unexpected error.',
+    'Retrying the deployement may succeed.',
+    [
+      [
+        'If the issue persits, please check the',
+        {
+          link: {
+            label: 'Shopify status page',
+            url: 'https://status.shopify.com/',
+          },
+        },
+        'for any known issues.',
+      ],
+    ],
+  );
+}
+
 export async function oxygenDeploy(
   options: OxygenDeploymentOptions,
 ): Promise<void> {
   const {
+    authBypassToken: generateAuthBypassToken,
     environmentTag,
     force: forceOnUncommitedChanges,
     noJsonOutput,
@@ -280,6 +309,7 @@ export async function oxygenDeploy(
     deploymentUrl,
     deploymentToken: parseToken(token as string),
     environmentTag: environmentTag || deploymentEnvironmentTag || branch,
+    generateAuthBypassToken,
     verificationMaxDuration: 180,
     metadata: {
       ...(metadataDescription ? {description: metadataDescription} : {}),
@@ -300,10 +330,17 @@ export async function oxygenDeploy(
     resolveUpload = resolve;
   });
 
-  let resolveHealthCheck: () => void;
-  const healthCheckPromise = new Promise<void>((resolve) => {
-    resolveHealthCheck = resolve;
+  let resolveRoutableCheck: () => void;
+  const routableCheckPromise = new Promise<void>((resolve) => {
+    resolveRoutableCheck = resolve;
   });
+
+  let resolveDeploymentCompletedVerification: () => void;
+  const deploymentCompletedVerificationPromise = new Promise<void>(
+    (resolve) => {
+      resolveDeploymentCompletedVerification = resolve;
+    },
+  );
 
   let deployError: AbortError | null = null;
   let resolveDeploy: () => void;
@@ -325,7 +362,17 @@ export async function oxygenDeploy(
         useCodegen: false,
       });
     },
-    onVerificationComplete: () => resolveHealthCheck(),
+    onDeploymentCompleted: () => resolveDeploymentCompletedVerification(),
+    onVerificationComplete: () => resolveRoutableCheck(),
+    onDeploymentCompletedVerificationError() {
+      deployError = new AbortError(
+        'Unable to verify the deployment was completed successfully',
+        'Please verify the deployment status in the Shopify Admin and retry deploying if necessary.',
+      );
+    },
+    onDeploymentFailed: (details: DeploymentVerificationDetailsResponse) => {
+      deployError = createUnexpectedAbortError(details.error || details.status);
+    },
     onUploadFilesStart: () => uploadStart(),
     onUploadFilesComplete: () => resolveUpload(),
     onVerificationError: (error: Error) => {
@@ -352,27 +399,55 @@ export async function oxygenDeploy(
         task: async () => await uploadPromise,
       },
       {
-        title: 'Verifying deployment',
-        task: async () => await healthCheckPromise,
+        title: 'Verifying deployment has been completed',
+        task: async () => await deploymentCompletedVerificationPromise,
+      },
+      {
+        title: 'Verifying deployment is routable',
+        task: async () => await routableCheckPromise,
       },
     ]);
   };
 
   await createDeploy({config, hooks, logger: deploymentLogger})
-    .then(async (url: string | undefined) => {
+    .then(async (completedDeployment: CompletedDeployment | undefined) => {
+      if (!completedDeployment) {
+        rejectDeploy(createUnexpectedAbortError());
+        return;
+      }
+
       const deploymentType = config.publicDeployment ? 'public' : 'private';
+
+      const nextSteps: (
+        | string
+        | {subdued: string}
+        | {link: {url: string}}
+      )[][] = [
+        [
+          'Open',
+          {link: {url: completedDeployment!.url}},
+          `in your browser to view your ${deploymentType} deployment.`,
+        ],
+      ];
+      if (completedDeployment?.authBypassToken) {
+        nextSteps.push([
+          'Use the',
+          {subdued: completedDeployment.authBypassToken},
+          'token to perform end-to-end tests against the deployment.',
+        ]);
+      }
+
       renderSuccess({
         body: ['Successfully deployed to Oxygen'],
-        nextSteps: [
-          [
-            `Open ${url!} in your browser to view your ${deploymentType} deployment`,
-          ],
-        ],
+        nextSteps,
       });
       // in CI environments, output to a file so consequent steps can access the URL
       // the formatting of this file is likely to change in future versions.
       if (isCI && !noJsonOutput) {
-        await writeFile('h2_deploy_log.json', JSON.stringify({url: url!}));
+        await writeFile(
+          'h2_deploy_log.json',
+          JSON.stringify(completedDeployment),
+        );
       }
       resolveDeploy();
     })
