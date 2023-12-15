@@ -8,7 +8,6 @@ import {
   SHOPIFY_STOREFRONT_S_HEADER,
   type StorefrontClientProps,
 } from '@shopify/hydrogen-react';
-import type {ExecutionArgs} from 'graphql';
 import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
 import {
   SDK_VARIANT_HEADER,
@@ -32,6 +31,12 @@ import {
   CountryCode,
   LanguageCode,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import type {
+  ClientReturn,
+  ClientVariablesInArray,
+  CodegenOperations,
+  GenericVariables,
+} from '@shopify/hydrogen-codegen';
 import {warnOnce} from './utils/warning';
 import {LIB_VERSION} from './version';
 import {
@@ -55,10 +60,6 @@ export type StorefrontClient<TI18n extends I18nBase> = {
   storefront: Storefront<TI18n>;
 };
 
-interface CodegenOperations {
-  [key: string]: {return: any; variables: any};
-}
-
 /**
  * Maps all the queries found in the project to variables and return types.
  */
@@ -75,74 +76,10 @@ export interface StorefrontMutations extends CodegenOperations {
   // '#graphql mutation m1 {...}': {return: M1Mutation; variables: M1MutationVariables};
 }
 
-// Default type for `variables` in storefront client
-type GenericVariables = ExecutionArgs['variableValues'];
-
-// Use this type to make parameters optional in storefront client
-// when no variables need to be passed.
-type EmptyVariables = {[key: string]: never};
-
 // These are the variables that are automatically added to the storefront API.
 // We use this type to make parameters optional in storefront client
 // when these are the only variables that can be passed.
 type AutoAddedVariableNames = 'country' | 'language';
-
-type ClientReturn<
-  GeneratedOperations extends CodegenOperations,
-  RawGqlString extends string,
-  OverrideReturnType = any,
-> = RawGqlString extends keyof GeneratedOperations // Do we have any generated query types?
-  ? GeneratedOperations[RawGqlString]['return']
-  : OverrideReturnType; // No codegen, let user specify return type
-
-type IsOptionalVariables<
-  VariablesParam,
-  OptionalVariableNames extends string = never,
-> = Omit<VariablesParam, OptionalVariableNames> extends EmptyVariables
-  ? true // No need to pass variables
-  : GenericVariables extends VariablesParam
-  ? true // We don't know what variables are needed
-  : false; // Variables are known and required
-
-type ClientVariables<
-  GeneratedOperations extends CodegenOperations,
-  RawGqlString extends string,
-  OtherParams extends Record<string, any> = {},
-  OptionalVariableNames extends string = never,
-  VariablesKey extends string = 'variables',
-  // The following are just extracted repeated types, not parameters:
-  GeneratedVariables = GeneratedOperations[RawGqlString]['variables'],
-  GeneratedVariablesWrapper = Record<VariablesKey, GeneratedVariables>,
-> = OtherParams &
-  (RawGqlString extends keyof GeneratedOperations
-    ? IsOptionalVariables<
-        GeneratedVariables,
-        OptionalVariableNames
-      > extends true
-      ? Partial<GeneratedVariablesWrapper>
-      : GeneratedVariablesWrapper
-    : Partial<GeneratedVariablesWrapper>);
-
-type ClientVariablesInArray<
-  GeneratedOperations extends CodegenOperations,
-  RawGqlString extends string,
-  OtherParams extends Record<string, any> = {},
-  OptionalVariableNames extends string = never,
-  // The following are just extracted repeated types, not parameters:
-  ProcessedVariables = ClientVariables<
-    GeneratedOperations,
-    RawGqlString,
-    OtherParams,
-    OptionalVariableNames
-  >,
-> = RawGqlString extends keyof GeneratedOperations // Do we have any generated query types?
-  ? IsOptionalVariables<
-      GeneratedOperations[RawGqlString]['variables'],
-      OptionalVariableNames
-    > extends true
-    ? [ProcessedVariables?] // Using codegen, query has no variables
-    : [ProcessedVariables] // Using codegen, query needs variables
-  : [ProcessedVariables?]; // No codegen, variables always optional
 
 /**
  * Interface to interact with the Storefront API.
