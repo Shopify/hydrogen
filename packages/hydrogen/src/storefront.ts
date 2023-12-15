@@ -55,10 +55,14 @@ export type StorefrontClient<TI18n extends I18nBase> = {
   storefront: Storefront<TI18n>;
 };
 
+interface CodegenOperations {
+  [key: string]: {return: any; variables: any};
+}
+
 /**
  * Maps all the queries found in the project to variables and return types.
  */
-export interface StorefrontQueries {
+export interface StorefrontQueries extends CodegenOperations {
   // Example of how a generated query type looks like:
   // '#graphql query q1 {...}': {return: Q1Query; variables: Q1QueryVariables};
 }
@@ -66,7 +70,7 @@ export interface StorefrontQueries {
 /**
  * Maps all the mutations found in the project to variables and return types.
  */
-export interface StorefrontMutations {
+export interface StorefrontMutations extends CodegenOperations {
   // Example of how a generated mutation type looks like:
   // '#graphql mutation m1 {...}': {return: M1Mutation; variables: M1MutationVariables};
 }
@@ -83,33 +87,62 @@ type EmptyVariables = {[key: string]: never};
 // when these are the only variables that can be passed.
 type AutoAddedVariableNames = 'country' | 'language';
 
-type IsOptionalVariables<OperationTypeValue extends {variables: any}> = Omit<
-  OperationTypeValue['variables'],
-  AutoAddedVariableNames
-> extends EmptyVariables
+type ClientReturn<
+  GeneratedOperations extends CodegenOperations,
+  RawGqlString extends string,
+  OverrideReturnType = any,
+> = RawGqlString extends keyof GeneratedOperations // Do we have any generated query types?
+  ? GeneratedOperations[RawGqlString]['return']
+  : OverrideReturnType; // No codegen, let user specify return type
+
+type IsOptionalVariables<
+  VariablesParam,
+  OptionalVariableNames extends string = never,
+> = Omit<VariablesParam, OptionalVariableNames> extends EmptyVariables
   ? true // No need to pass variables
-  : GenericVariables extends OperationTypeValue['variables']
+  : GenericVariables extends VariablesParam
   ? true // We don't know what variables are needed
   : false; // Variables are known and required
 
-type StorefrontCommonOptions<Variables extends GenericVariables> = {
-  headers?: HeadersInit;
-  storefrontApiVersion?: string;
-} & (IsOptionalVariables<{variables: Variables}> extends true
-  ? {variables?: Variables}
-  : {variables: Variables});
+type ClientVariables<
+  GeneratedOperations extends CodegenOperations,
+  RawGqlString extends string,
+  OtherParams extends Record<string, any> = {},
+  OptionalVariableNames extends string = never,
+  VariablesKey extends string = 'variables',
+  // The following are just extracted repeated types, not parameters:
+  GeneratedVariables = GeneratedOperations[RawGqlString]['variables'],
+  GeneratedVariablesWrapper = Record<VariablesKey, GeneratedVariables>,
+> = OtherParams &
+  (RawGqlString extends keyof GeneratedOperations
+    ? IsOptionalVariables<
+        GeneratedVariables,
+        OptionalVariableNames
+      > extends true
+      ? Partial<GeneratedVariablesWrapper>
+      : GeneratedVariablesWrapper
+    : Partial<GeneratedVariablesWrapper>);
 
-type StorefrontQuerySecondParam<
-  RawGqlString extends keyof StorefrontQueries | string = string,
-> = (RawGqlString extends keyof StorefrontQueries
-  ? StorefrontCommonOptions<StorefrontQueries[RawGqlString]['variables']>
-  : StorefrontCommonOptions<GenericVariables>) & {cache?: CachingStrategy};
-
-type StorefrontMutateSecondParam<
-  RawGqlString extends keyof StorefrontMutations | string = string,
-> = RawGqlString extends keyof StorefrontMutations
-  ? StorefrontCommonOptions<StorefrontMutations[RawGqlString]['variables']>
-  : StorefrontCommonOptions<GenericVariables>;
+type ClientVariablesInArray<
+  GeneratedOperations extends CodegenOperations,
+  RawGqlString extends string,
+  OtherParams extends Record<string, any> = {},
+  OptionalVariableNames extends string = never,
+  // The following are just extracted repeated types, not parameters:
+  ProcessedVariables = ClientVariables<
+    GeneratedOperations,
+    RawGqlString,
+    OtherParams,
+    OptionalVariableNames
+  >,
+> = RawGqlString extends keyof GeneratedOperations // Do we have any generated query types?
+  ? IsOptionalVariables<
+      GeneratedOperations[RawGqlString]['variables'],
+      OptionalVariableNames
+    > extends true
+    ? [ProcessedVariables?] // Using codegen, query has no variables
+    : [ProcessedVariables] // Using codegen, query needs variables
+  : [ProcessedVariables?]; // No codegen, variables always optional
 
 /**
  * Interface to interact with the Storefront API.
@@ -118,28 +151,26 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
   /** The function to run a query on Storefront API. */
   query: <OverrideReturnType = any, RawGqlString extends string = string>(
     query: RawGqlString,
-    ...options: RawGqlString extends keyof StorefrontQueries // Do we have any generated query types?
-      ? IsOptionalVariables<StorefrontQueries[RawGqlString]> extends true
-        ? [StorefrontQuerySecondParam<RawGqlString>?] // Using codegen, query has no variables
-        : [StorefrontQuerySecondParam<RawGqlString>] // Using codegen, query needs variables
-      : [StorefrontQuerySecondParam?] // No codegen, variables always optional
+    ...options: ClientVariablesInArray<
+      StorefrontQueries,
+      RawGqlString,
+      StorefrontCommonOptions & Pick<StorefrontQueryOptions, 'cache'>,
+      AutoAddedVariableNames
+    >
   ) => Promise<
-    RawGqlString extends keyof StorefrontQueries // Do we have any generated query types?
-      ? StorefrontQueries[RawGqlString]['return'] // Using codegen, return type is known
-      : OverrideReturnType // No codegen, let user specify return type
+    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType>
   >;
   /** The function to run a mutation on Storefront API. */
   mutate: <OverrideReturnType = any, RawGqlString extends string = string>(
     mutation: RawGqlString,
-    ...options: RawGqlString extends keyof StorefrontMutations // Do we have any generated mutation types?
-      ? IsOptionalVariables<StorefrontMutations[RawGqlString]> extends true
-        ? [StorefrontMutateSecondParam<RawGqlString>?] // Using codegen, mutation has no variables
-        : [StorefrontMutateSecondParam<RawGqlString>] // Using codegen, mutation needs variables
-      : [StorefrontMutateSecondParam?] // No codegen, variables always optional
+    ...options: ClientVariablesInArray<
+      StorefrontMutations,
+      RawGqlString,
+      StorefrontCommonOptions,
+      AutoAddedVariableNames
+    >
   ) => Promise<
-    RawGqlString extends keyof StorefrontMutations // Do we have any generated mutation types?
-      ? StorefrontMutations[RawGqlString]['return'] // Using codegen, return type is known
-      : OverrideReturnType // No codegen, let user specify return type
+    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType>
   >;
   /** The cache instance passed in from the `createStorefrontClient` argument. */
   cache?: Cache;
@@ -202,15 +233,23 @@ type StorefrontHeaders = {
   purpose: string | null;
 };
 
-type StorefrontQueryOptions = StorefrontQuerySecondParam & {
-  query: string;
-  mutation?: never;
+type StorefrontCommonOptions = {
+  headers?: HeadersInit;
+  storefrontApiVersion?: string;
 };
 
-type StorefrontMutationOptions = StorefrontMutateSecondParam & {
+type StorefrontQueryOptions = StorefrontCommonOptions & {
+  query: string;
+  mutation?: never;
+  cache?: CachingStrategy;
+  variables?: GenericVariables;
+};
+
+type StorefrontMutationOptions = StorefrontCommonOptions & {
   query?: never;
   mutation: string;
   cache?: never;
+  variables?: GenericVariables;
 };
 
 export const StorefrontApiError = class extends Error {} as ErrorConstructor;
