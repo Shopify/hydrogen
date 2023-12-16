@@ -69,10 +69,12 @@ export type ClientVariables<
   VariablesKey extends string = 'variables',
   // The following are just extracted repeated types, not parameters:
   GeneratedVariables = GeneratedOperations[RawGqlString]['variables'],
-  ActualVariables = SetOptional<
-    GeneratedVariables,
-    Extract<keyof GeneratedVariables, OptionalVariableNames>
-  >,
+  ActualVariables = GenericVariables extends GeneratedVariables
+    ? GenericVariables
+    : SetOptional<
+        GeneratedVariables,
+        Extract<keyof GeneratedVariables, OptionalVariableNames>
+      >,
   VariablesWrapper = Record<VariablesKey, ActualVariables>,
 > = IsOptionalVariables<ActualVariables, OptionalVariableNames> extends true
   ? Partial<VariablesWrapper>
