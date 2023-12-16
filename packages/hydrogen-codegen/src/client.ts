@@ -4,6 +4,7 @@
  */
 
 import type {ExecutionArgs} from 'graphql';
+import type {SetOptional, HasRequiredKeys, IsAny} from 'type-fest';
 
 /**
  * A generic type for `variables` in GraphQL clients
@@ -46,11 +47,15 @@ export type ClientReturn<
 export type IsOptionalVariables<
   VariablesParam,
   OptionalVariableNames extends string = never,
-> = Omit<VariablesParam, OptionalVariableNames> extends EmptyVariables
+> = IsAny<VariablesParam> extends true
+  ? true
+  : Omit<VariablesParam, OptionalVariableNames> extends EmptyVariables
   ? true // No need to pass variables
   : GenericVariables extends VariablesParam
   ? true // We don't know what variables are needed
-  : false; // Variables are known and required
+  : HasRequiredKeys<Omit<VariablesParam, OptionalVariableNames>> extends true
+  ? false
+  : true;
 
 /**
  * Used as the type for the GraphQL client's variables. It checks
@@ -66,12 +71,16 @@ export type ClientVariables<
   VariablesKey extends string = 'variables',
   // The following are just extracted repeated types, not parameters:
   GeneratedVariables = GeneratedOperations[RawGqlString]['variables'],
-  GeneratedVariablesWrapper = Record<VariablesKey, GeneratedVariables>,
-> = RawGqlString extends keyof GeneratedOperations
-  ? IsOptionalVariables<GeneratedVariables, OptionalVariableNames> extends true
-    ? Partial<GeneratedVariablesWrapper>
-    : GeneratedVariablesWrapper
-  : Partial<GeneratedVariablesWrapper>;
+  ActualVariables = IsAny<GeneratedVariables> extends true
+    ? GeneratedVariables
+    : SetOptional<
+        GeneratedVariables,
+        Extract<keyof GeneratedVariables, OptionalVariableNames>
+      >,
+  VariablesWrapper = Record<VariablesKey, ActualVariables>,
+> = IsOptionalVariables<ActualVariables, OptionalVariableNames> extends true
+  ? Partial<VariablesWrapper>
+  : VariablesWrapper;
 
 /**
  * Similar to ClientVariables, but makes the whole wrapper optional:
@@ -89,26 +98,9 @@ export type ClientVariablesInRestParams<
     ClientVariables<GeneratedOperations, RawGqlString, OptionalVariableNames>,
 > = HasRequiredKeys<OtherParams> extends true
   ? [ProcessedVariables]
-  : RawGqlString extends keyof GeneratedOperations // Do we have any generated query types?
-  ? IsOptionalVariables<
+  : IsOptionalVariables<
       GeneratedOperations[RawGqlString]['variables'],
       OptionalVariableNames
     > extends true
-    ? [ProcessedVariables?] // Using codegen, query has no variables
-    : [ProcessedVariables] // Using codegen, query needs variables
-  : [ProcessedVariables?]; // No codegen, variables always optional
-
-// --- Utilities for the types above:
-type IsAny<T> = 0 extends 1 & T ? true : false;
-
-type RequiredKeysOf<BaseType extends object> = Exclude<
-  {
-    [Key in keyof BaseType]: BaseType extends Record<Key, BaseType[Key]>
-      ? Key
-      : never;
-  }[keyof BaseType],
-  undefined
->;
-
-type HasRequiredKeys<BaseType extends object> =
-  RequiredKeysOf<BaseType> extends never ? false : true;
+  ? [ProcessedVariables?] // Using codegen, query has no variables
+  : [ProcessedVariables]; // Using codegen, query needs variables

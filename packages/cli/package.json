@@ -28,7 +28,7 @@
     "fast-glob": "^3.2.12",
     "flame-chart-js": "2.3.1",
     "get-port": "^7.0.0",
-    "type-fest": "^3.6.0",
+    "type-fest": "^4.5.0",
     "vitest": "^0.33.0"
   },
   "dependencies": {
