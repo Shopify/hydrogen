@@ -22,7 +22,7 @@ export type EmptyVariables = {[key: string]: never};
  * GraphQL client's generic operation interfaces.
  */
 export interface CodegenOperations {
-  [key: string]: {return: any; variables: any};
+  [key: string]: {return: any; variables: GenericVariables};
 }
 
 /**
@@ -47,9 +47,7 @@ export type ClientReturn<
 export type IsOptionalVariables<
   VariablesParam,
   OptionalVariableNames extends string = never,
-> = IsAny<VariablesParam> extends true
-  ? true
-  : Omit<VariablesParam, OptionalVariableNames> extends EmptyVariables
+> = Omit<VariablesParam, OptionalVariableNames> extends EmptyVariables
   ? true // No need to pass variables
   : GenericVariables extends VariablesParam
   ? true // We don't know what variables are needed
@@ -71,12 +69,10 @@ export type ClientVariables<
   VariablesKey extends string = 'variables',
   // The following are just extracted repeated types, not parameters:
   GeneratedVariables = GeneratedOperations[RawGqlString]['variables'],
-  ActualVariables = IsAny<GeneratedVariables> extends true
-    ? GeneratedVariables
-    : SetOptional<
-        GeneratedVariables,
-        Extract<keyof GeneratedVariables, OptionalVariableNames>
-      >,
+  ActualVariables = SetOptional<
+    GeneratedVariables,
+    Extract<keyof GeneratedVariables, OptionalVariableNames>
+  >,
   VariablesWrapper = Record<VariablesKey, ActualVariables>,
 > = IsOptionalVariables<ActualVariables, OptionalVariableNames> extends true
   ? Partial<VariablesWrapper>
