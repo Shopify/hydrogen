@@ -29,6 +29,7 @@ import {
 import {parseJSON} from '../utils/parse-json';
 import {hashKey} from '../utils/hash';
 import {CrossRuntimeRequest, getDebugHeaders} from '../utils/request';
+import {CustomerAccessToken} from '@shopify/hydrogen-react/storefront-api-types';
 
 type CustomerAPIResponse<ReturnType> = {
   data: ReturnType;
@@ -68,6 +69,8 @@ export type CustomerClient = {
   authorize: (redirectPath?: string) => Promise<Response>;
   /** Returns if the user is logged in. It also checks if the access token is expired and refreshes it if needed. */
   isLoggedIn: () => Promise<boolean>;
+  /** Returns CustomerAccessToken if the user is logged in. It always run a isLoggedIn refresh as well. */
+  getAccessToken: () => Promise<string | undefined>;
   /** Logout the user by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. */
   logout: () => Promise<Response>;
   /** Execute a GraphQL query against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
@@ -243,6 +246,31 @@ export function createCustomerClient({
     }
   }
 
+  async function isLoggedIn() {
+    const expiresAt = session.get('expires_at');
+
+    if (!session.get('customer_access_token') || !expiresAt) return false;
+
+    const startTime = new Date().getTime();
+
+    try {
+      await checkExpires({
+        locks,
+        expiresAt,
+        session,
+        customerAccountId,
+        customerAccountUrl,
+        origin,
+      });
+
+      logSubRequestEvent?.(' check expires', startTime);
+    } catch {
+      return false;
+    }
+
+    return true;
+  }
+
   return {
     login: async () => {
       const loginUrl = new URL(customerAccountUrl + '/auth/oauth/authorize');
@@ -293,29 +321,15 @@ export function createCustomerClient({
         },
       );
     },
-    isLoggedIn: async () => {
-      const expiresAt = session.get('expires_at');
+    isLoggedIn,
+    getAccessToken: async () => {
+      const hasAccessToken = await isLoggedIn;
 
-      if (!session.get('customer_access_token') || !expiresAt) return false;
-
-      const startTime = new Date().getTime();
-
-      try {
-        await checkExpires({
-          locks,
-          expiresAt,
-          session,
-          customerAccountId,
-          customerAccountUrl,
-          origin,
-        });
-
-        logSubRequestEvent?.(' check expires', startTime);
-      } catch {
-        return false;
+      if (!hasAccessToken) {
+        return;
+      } else {
+        return session.get('customer_access_token');
       }
-
-      return true;
     },
     mutate(mutation, options?) {
       mutation = minifyQuery(mutation);
