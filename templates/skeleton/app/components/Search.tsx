@@ -211,7 +211,7 @@ function SearchResultArticleGrid({articles}: Pick<SearchQuery, 'articles'>) {
       <div>
         {articles?.nodes?.map((article) => (
           <div className="search-results-item" key={article.id}>
-            <Link prefetch="intent" to={`/blog/${article.handle}`}>
+            <Link prefetch="intent" to={`/blogs/${article.handle}`}>
               {article.title}
             </Link>
           </div>
