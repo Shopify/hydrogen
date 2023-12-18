@@ -6,9 +6,7 @@ describe('cartSetIdDefault', () => {
     const setCartId = cartSetIdDefault();
     const headers = setCartId('gid://shopify/Cart/c1-123');
 
-    expectTypeOf(setCartId).toEqualTypeOf<
-      (cartId: string, headers: Headers) => void
-    >;
+    expectTypeOf(setCartId).toEqualTypeOf<(cartId: string) => Headers>;
     expect(headers.get('Set-Cookie')).toBe('cart=c1-123; Path=/');
   });
 
@@ -16,9 +14,7 @@ describe('cartSetIdDefault', () => {
     const setCartId = cartSetIdDefault({maxage: 1000});
     const headers = setCartId('gid://shopify/Cart/c1-123');
 
-    expectTypeOf(setCartId).toEqualTypeOf<
-      (cartId: string, headers: Headers) => void
-    >;
+    expectTypeOf(setCartId).toEqualTypeOf<(cartId: string) => Headers>;
     expect(headers.get('Set-Cookie')).toBe('cart=c1-123; Max-Age=1000; Path=/');
   });
 });

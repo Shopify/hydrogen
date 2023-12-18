@@ -32,7 +32,7 @@ vi.stubGlobal(
   },
 );
 
-const fetch = (global.fetch = vi.fn() as any);
+const fetch = (globalThis.fetch = vi.fn() as any);
 
 function createFetchResponse<T>(data: T, options: {ok: boolean}) {
   return {
