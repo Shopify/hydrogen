@@ -1,3 +1,9 @@
+import type {
+  ClientReturn,
+  ClientVariablesInRestParams,
+  CodegenOperations,
+  GenericVariables,
+} from '@shopify/hydrogen-codegen';
 import {
   clearSession,
   generateCodeChallenge,
@@ -46,6 +52,16 @@ type CustomerAPIResponse<ReturnType> = {
   };
 };
 
+export interface CustomerAccountQueries extends CodegenOperations {
+  // Example of how a generated query type looks like:
+  // '#graphql query q1 {...}': {return: Q1Query; variables: Q1QueryVariables};
+}
+
+export interface CustomerAccountMutations extends CodegenOperations {
+  // Example of how a generated mutation type looks like:
+  // '#graphql mutation m1 {...}': {return: M1Mutation; variables: M1MutationVariables};
+}
+
 export type CustomerClient = {
   /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. */
   login: () => Promise<Response>;
@@ -56,15 +72,29 @@ export type CustomerClient = {
   /** Logout the user by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. */
   logout: () => Promise<Response>;
   /** Execute a GraphQL query against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
-  query: <ReturnType = any, RawGqlString extends string = string>(
+  query: <OverrideReturnType = any, RawGqlString extends string = string>(
     query: RawGqlString,
-    options?: {variables: Record<string, any>},
-  ) => Promise<CustomerAPIResponse<ReturnType>>;
+    ...options: ClientVariablesInRestParams<
+      CustomerAccountQueries,
+      RawGqlString
+    >
+  ) => Promise<
+    CustomerAPIResponse<
+      ClientReturn<CustomerAccountQueries, RawGqlString, OverrideReturnType>
+    >
+  >;
   /** Execute a GraphQL mutation against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
-  mutate: <ReturnType = any, RawGqlString extends string = string>(
+  mutate: <OverrideReturnType = any, RawGqlString extends string = string>(
     mutation: RawGqlString,
-    options?: {variables: Record<string, any>},
-  ) => Promise<CustomerAPIResponse<ReturnType>>;
+    ...options: ClientVariablesInRestParams<
+      CustomerAccountMutations,
+      RawGqlString
+    >
+  ) => Promise<
+    CustomerAPIResponse<
+      ClientReturn<CustomerAccountMutations, RawGqlString, OverrideReturnType>
+    >
+  >;
 };
 
 type CustomerClientOptions = {
@@ -133,7 +163,7 @@ export function createCustomerClient({
   }: {
     query: string;
     type: 'query' | 'mutation';
-    variables?: Record<string, any>;
+    variables?: GenericVariables;
   }) {
     const accessToken = session.get('customer_access_token');
     const expiresAt = session.get('expires_at');
