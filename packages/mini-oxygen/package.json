@@ -51,6 +51,6 @@
     "@types/ws": "^8.5.3",
     "eventsource": "^2.0.2",
     "fs-extra": "^11.1.0",
-    "vitest": "^0.33.0"
+    "vitest": "^1.0.4"
   }
 }
