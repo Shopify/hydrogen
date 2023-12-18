@@ -4,7 +4,7 @@ import {defineConfig} from 'vite';
 import react from '@vitejs/plugin-react';
 import packageJson from './package.json';
 
-export default defineConfig(({mode, ssrBuild}) => {
+export default defineConfig(({mode, isSsrBuild}) => {
   if (mode.includes('umdbuild')) {
     // config for our UMD builds, which are distinct enough that they need their own
     return {
@@ -48,7 +48,7 @@ export default defineConfig(({mode, ssrBuild}) => {
 
   return {
     build: {
-      outDir: `dist/${ssrBuild ? 'node' : 'browser'}-${
+      outDir: `dist/${isSsrBuild ? 'node' : 'browser'}-${
         mode === 'devbuild' ? 'dev' : 'prod'
       }/`,
       lib: {
@@ -61,7 +61,7 @@ export default defineConfig(({mode, ssrBuild}) => {
          * So the package.json doesn't transfer the settings from this package to the nested node_modules package.
          */
         fileName: (format) => `[name].${format === 'cjs' ? '' : 'm'}js`,
-        formats: ssrBuild ? ['es', 'cjs'] : ['es'],
+        formats: isSsrBuild ? ['es', 'cjs'] : ['es'],
       },
       sourcemap: true,
       minify: false,

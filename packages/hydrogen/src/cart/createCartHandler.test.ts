@@ -58,7 +58,7 @@ describe('createCartHandler', () => {
       },
     });
 
-    expectTypeOf(cart).toEqualTypeOf<HydrogenCartCustom<{}>>;
+    expectTypeOf(cart).toEqualTypeOf<HydrogenCartCustom<{foo: () => 'bar'}>>;
     expect(Object.keys(cart)).toHaveLength(15);
     expect(cart.foo()).toBe('bar');
   });

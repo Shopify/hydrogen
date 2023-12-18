@@ -240,6 +240,12 @@ describe('getFormInput', () => {
         ],
       },
     });
+
+    if (result.action !== 'LinesAdd') {
+      // Just to narrow down the type
+      throw new Error('Wrong action');
+    }
+
     expectTypeOf(result.inputs.lines).toEqualTypeOf<CartLineInput[]>;
   });
 });

@@ -18,7 +18,7 @@ const createFetchSpy = ({
   failResponse?: boolean;
 }) => {
   const mockFetch = async (
-    input: NodeJS.fetch.RequestInfo,
+    input: URL | RequestInfo,
     init?: RequestInit,
   ): Promise<Response> => {
     // Mock Monorail endpoint
@@ -81,7 +81,7 @@ const createFetchSpy = ({
 
     throw new Error('Analytics fetch mock - request not handled');
   };
-  return vi.spyOn(global, 'fetch').mockImplementation(mockFetch);
+  return vi.spyOn(globalThis, 'fetch').mockImplementation(mockFetch);
 };
 const createConsoleErrorSpy = () => {
   // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -89,7 +89,7 @@ const createConsoleErrorSpy = () => {
 };
 const originalDocument = document;
 const originalPerformance = performance;
-const originalPerformanceNavigation = global.PerformanceNavigation;
+const originalPerformanceNavigation = globalThis.PerformanceNavigation;
 
 describe('analytics', () => {
   afterEach(() => {
@@ -97,7 +97,7 @@ describe('analytics', () => {
     /* eslint-disable no-global-assign */
     document = originalDocument;
     performance = originalPerformance;
-    global.PerformanceNavigation = originalPerformanceNavigation;
+    globalThis.PerformanceNavigation = originalPerformanceNavigation;
     /* eslint-enable no-global-assign */
   });
 
@@ -330,7 +330,7 @@ describe('analytics', () => {
         referrer: '',
       };
       // @ts-ignore
-      global.PerformanceNavigation = {
+      globalThis.PerformanceNavigation = {
         TYPE_NAVIGATE: 0,
         TYPE_RELOAD: 1,
         TYPE_BACK_FORWARD: 2,

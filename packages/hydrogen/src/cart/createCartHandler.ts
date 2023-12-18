@@ -79,8 +79,9 @@ export type HydrogenCart = {
   deleteMetafield: ReturnType<typeof cartMetafieldDeleteDefault>;
 };
 
-export type HydrogenCartCustom<TCustomMethods extends Partial<HydrogenCart>> =
-  Omit<HydrogenCart, keyof TCustomMethods> & TCustomMethods;
+export type HydrogenCartCustom<
+  TCustomMethods extends Partial<HydrogenCart> & CustomMethodsBase,
+> = Omit<HydrogenCart, keyof TCustomMethods> & TCustomMethods;
 export type CartHandlerReturn<TCustomMethods extends CustomMethodsBase> =
   | HydrogenCartCustom<TCustomMethods>
   | HydrogenCart;
