@@ -53,7 +53,7 @@ export default {
       /**
        * Create a customer client for the new customer API.
        */
-      const customer = createCustomerClient__unstable({
+      const customerAccount = createCustomerClient__unstable({
         waitUntil,
         request,
         session,
@@ -68,7 +68,13 @@ export default {
       const handleRequest = createRequestHandler({
         build: remixBuild,
         mode: process.env.NODE_ENV,
-        getLoadContext: () => ({session, storefront, customer, env, waitUntil}),
+        getLoadContext: () => ({
+          session,
+          storefront,
+          customerAccount,
+          env,
+          waitUntil,
+        }),
       });
 
       const response = await handleRequest(request);
