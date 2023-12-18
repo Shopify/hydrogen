@@ -1,4 +1,4 @@
-import {describe, it, expectTypeOf, assertType} from 'vitest';
+import {describe, it, expectTypeOf} from 'vitest';
 import type {
   CodegenOperations,
   ClientReturn,
@@ -92,7 +92,7 @@ describe('Client types', async () => {
         ...options: ClientVariablesInRestParams<
           GeneratedQueryTypes,
           RawGqlString,
-          {},
+          {}, // No extra params, only 'variables'
           'country' | 'language'
         >
       ) => Promise.resolve();

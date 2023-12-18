@@ -15,8 +15,8 @@
     "build": "tsup --clean",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
-    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run",
-    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest"
+    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run --typecheck",
+    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest --typecheck"
   },
   "exports": {
     ".": {
