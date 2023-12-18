@@ -24,7 +24,7 @@ describe('adminRequest', () => {
       storeFqdn: '',
     });
 
-    expect(response).toContain(fakeResponse);
+    expect(response).toMatchObject(fakeResponse);
   });
 
   describe('when there is an unknown error response', () => {
@@ -44,7 +44,7 @@ describe('adminRequest', () => {
         storeFqdn: '',
       });
 
-      await expect(response).rejects.toContain(fakeGraphqlError);
+      await expect(response).rejects.toMatchObject(fakeGraphqlError);
     });
   });
 

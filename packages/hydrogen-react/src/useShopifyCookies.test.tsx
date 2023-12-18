@@ -173,11 +173,11 @@ describe(`useShopifyCookies`, () => {
     expect(cookieJar['_shopify_s'].value).not.toBe(
       cookieJar['_shopify_y'].value,
     );
-    expect(cookieJar['_shopify_s']).toContain({
+    expect(cookieJar['_shopify_s']).toMatchObject({
       domain,
       maxage: 1800,
     });
-    expect(cookieJar['_shopify_y']).toContain({
+    expect(cookieJar['_shopify_y']).toMatchObject({
       domain,
       maxage: 31104000,
     });
