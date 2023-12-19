@@ -1,6 +1,5 @@
 import {describe, it, expectTypeOf} from 'vitest';
 import type {
-  CodegenOperations,
   ClientReturn,
   ClientVariablesInRestParams,
   GenericVariables,
@@ -14,7 +13,7 @@ enum Queries {
   WithAutoAddedVars = '#graphql\n query Test2Query($country: CountryCode!, $language: LanguageCode) { test }',
 }
 
-interface GeneratedQueryTypes extends CodegenOperations {
+interface GeneratedQueryTypes {
   [Queries.Simple]: {
     return: {test: number};
     variables: {};
@@ -39,7 +38,7 @@ interface GeneratedQueryTypes extends CodegenOperations {
 describe('Client types', async () => {
   describe('ClientReturn', () => {
     const clientQuery = <
-      OverrideReturnType = any,
+      OverrideReturnType extends any = never,
       RawGqlString extends string = string,
     >(
       query: RawGqlString,
@@ -85,7 +84,7 @@ describe('Client types', async () => {
   describe('ClientVariablesInRestParams', () => {
     describe('when there are not extra params', () => {
       const clientQuery = <
-        OverrideReturnType = any,
+        OverrideReturnType extends any = never,
         RawGqlString extends string = string,
       >(
         query: RawGqlString,
@@ -158,7 +157,7 @@ describe('Client types', async () => {
       type WithExtraParam = {extraParam?: number};
 
       const clientQuery = <
-        OverrideReturnType = any,
+        OverrideReturnType extends any = never,
         RawGqlString extends string = string,
       >(
         query: RawGqlString,
@@ -241,7 +240,7 @@ describe('Client types', async () => {
       type WithExtraParam = {extraParam: number};
 
       const clientQuery = <
-        OverrideReturnType = any,
+        OverrideReturnType extends any = never,
         RawGqlString extends string = string,
       >(
         query: RawGqlString,

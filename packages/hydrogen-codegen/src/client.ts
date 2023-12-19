@@ -4,7 +4,7 @@
  */
 
 import type {ExecutionArgs} from 'graphql';
-import type {SetOptional, HasRequiredKeys, IsAny} from 'type-fest';
+import type {SetOptional, IsNever} from 'type-fest';
 
 /**
  * A generic type for `variables` in GraphQL clients
@@ -18,11 +18,15 @@ export type GenericVariables = ExecutionArgs['variableValues'];
 export type EmptyVariables = {[key: string]: never};
 
 /**
- * This interface must be extended by the
- * GraphQL client's generic operation interfaces.
+ * GraphQL client's generic operation interface.
  */
-export interface CodegenOperations {
-  [key: string]: {return: any; variables: GenericVariables};
+interface CodegenOperations {
+  // Real example:
+  // '#graphql\n query TestQuery { test }': {return: R; variables: V};
+  // --
+  // However, since the interface passed as CodegenOperations might sitll be empty
+  // (if the user hasn't generated the code yet), we use `any` here.
+  [key: string]: any;
 }
 
 /**
@@ -35,10 +39,16 @@ export interface CodegenOperations {
 export type ClientReturn<
   GeneratedOperations extends CodegenOperations,
   RawGqlString extends string,
-  OverrideReturnType extends any,
-> = IsAny<GeneratedOperations[RawGqlString]['return']> extends true
-  ? OverrideReturnType
-  : GeneratedOperations[RawGqlString]['return'];
+  OverrideReturnType extends any = never,
+> = IsNever<OverrideReturnType> extends true
+  ? // Nothing passed to override the return type
+    RawGqlString extends keyof GeneratedOperations
+    ? // Known query, use generated return type
+      GeneratedOperations[RawGqlString]['return']
+    : // Unknown query, return 'any' to avoid red squiggly underlines in editor
+      any
+  : // Override return type is passed, use it
+    OverrideReturnType;
 
 /**
  * Checks if the generated variables for an operation
@@ -47,13 +57,19 @@ export type ClientReturn<
 export type IsOptionalVariables<
   VariablesParam,
   OptionalVariableNames extends string = never,
-> = Omit<VariablesParam, OptionalVariableNames> extends EmptyVariables
-  ? true // No need to pass variables
+  // The following are just extracted repeated types, not parameters:
+  VariablesWithoutOptionals = Omit<VariablesParam, OptionalVariableNames>,
+> = VariablesWithoutOptionals extends EmptyVariables
+  ? // No expected required variables, object is optional
+    true
   : GenericVariables extends VariablesParam
-  ? true // We don't know what variables are needed
-  : HasRequiredKeys<Omit<VariablesParam, OptionalVariableNames>> extends true
-  ? false
-  : true;
+  ? // We don't have information about the variables, so we assume object is optional
+    true
+  : Partial<VariablesWithoutOptionals> extends VariablesWithoutOptionals
+  ? // All known variables are optional, object is optional
+    true
+  : // Some known variables are required, object is required
+    false;
 
 /**
  * Used as the type for the GraphQL client's variables. It checks
@@ -68,17 +84,21 @@ export type ClientVariables<
   OptionalVariableNames extends string = never,
   VariablesKey extends string = 'variables',
   // The following are just extracted repeated types, not parameters:
-  GeneratedVariables = GeneratedOperations[RawGqlString]['variables'],
-  ActualVariables = GenericVariables extends GeneratedVariables
-    ? GenericVariables
-    : SetOptional<
-        GeneratedVariables,
-        Extract<keyof GeneratedVariables, OptionalVariableNames>
-      >,
-  VariablesWrapper = Record<VariablesKey, ActualVariables>,
-> = IsOptionalVariables<ActualVariables, OptionalVariableNames> extends true
-  ? Partial<VariablesWrapper>
-  : VariablesWrapper;
+  GeneratedVariables = RawGqlString extends keyof GeneratedOperations
+    ? SetOptional<
+        GeneratedOperations[RawGqlString]['variables'],
+        Extract<
+          keyof GeneratedOperations[RawGqlString]['variables'],
+          OptionalVariableNames
+        >
+      >
+    : GenericVariables,
+  VariablesWrapper = Record<VariablesKey, GeneratedVariables>,
+> = IsOptionalVariables<GeneratedVariables, OptionalVariableNames> extends true
+  ? // Variables are all optional: object wrapper is optional
+    Partial<VariablesWrapper>
+  : // Some variables are required: object wrapper is required
+    VariablesWrapper;
 
 /**
  * Similar to ClientVariables, but makes the whole wrapper optional:
@@ -94,11 +114,15 @@ export type ClientVariablesInRestParams<
   // The following are just extracted repeated types, not parameters:
   ProcessedVariables = OtherParams &
     ClientVariables<GeneratedOperations, RawGqlString, OptionalVariableNames>,
-> = HasRequiredKeys<OtherParams> extends true
-  ? [ProcessedVariables]
-  : IsOptionalVariables<
+> = Partial<OtherParams> extends OtherParams
+  ? // No required keys in OtherParams: keep checking
+    IsOptionalVariables<
       GeneratedOperations[RawGqlString]['variables'],
       OptionalVariableNames
     > extends true
-  ? [ProcessedVariables?] // Using codegen, query has no variables
-  : [ProcessedVariables]; // Using codegen, query needs variables
+    ? // No required keys in OtherParams and variables are also optional: rest param is optional
+      [ProcessedVariables?]
+    : // No required keys in OtherParams but variables are required: rest param is required
+      [ProcessedVariables]
+  : // There are required keys in OtherParams: rest param is required
+    [ProcessedVariables];
