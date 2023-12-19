@@ -34,7 +34,6 @@ import {
 import type {
   ClientReturn,
   ClientVariablesInRestParams,
-  CodegenOperations,
   GenericVariables,
 } from '@shopify/hydrogen-codegen';
 import {warnOnce} from './utils/warning';
@@ -63,7 +62,7 @@ export type StorefrontClient<TI18n extends I18nBase> = {
 /**
  * Maps all the queries found in the project to variables and return types.
  */
-export interface StorefrontQueries extends CodegenOperations {
+export interface StorefrontQueries {
   // Example of how a generated query type looks like:
   // '#graphql query q1 {...}': {return: Q1Query; variables: Q1QueryVariables};
 }
@@ -71,7 +70,7 @@ export interface StorefrontQueries extends CodegenOperations {
 /**
  * Maps all the mutations found in the project to variables and return types.
  */
-export interface StorefrontMutations extends CodegenOperations {
+export interface StorefrontMutations {
   // Example of how a generated mutation type looks like:
   // '#graphql mutation m1 {...}': {return: M1Mutation; variables: M1MutationVariables};
 }
@@ -81,29 +80,40 @@ export interface StorefrontMutations extends CodegenOperations {
 // when these are the only variables that can be passed.
 type AutoAddedVariableNames = 'country' | 'language';
 
+type StorefrontCommonExtraParams = {
+  headers?: HeadersInit;
+  storefrontApiVersion?: string;
+};
+
 /**
  * Interface to interact with the Storefront API.
  */
 export type Storefront<TI18n extends I18nBase = I18nBase> = {
   /** The function to run a query on Storefront API. */
-  query: <OverrideReturnType = any, RawGqlString extends string = string>(
+  query: <
+    OverrideReturnType extends any = never,
+    RawGqlString extends string = string,
+  >(
     query: RawGqlString,
     ...options: ClientVariablesInRestParams<
       StorefrontQueries,
       RawGqlString,
-      StorefrontCommonOptions & Pick<StorefrontQueryOptions, 'cache'>,
+      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,
       AutoAddedVariableNames
     >
   ) => Promise<
     ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType>
   >;
   /** The function to run a mutation on Storefront API. */
-  mutate: <OverrideReturnType = any, RawGqlString extends string = string>(
+  mutate: <
+    OverrideReturnType extends any = never,
+    RawGqlString extends string = string,
+  >(
     mutation: RawGqlString,
     ...options: ClientVariablesInRestParams<
       StorefrontMutations,
       RawGqlString,
-      StorefrontCommonOptions,
+      StorefrontCommonExtraParams,
       AutoAddedVariableNames
     >
   ) => Promise<
@@ -170,23 +180,16 @@ type StorefrontHeaders = {
   purpose: string | null;
 };
 
-type StorefrontCommonOptions = {
-  headers?: HeadersInit;
-  storefrontApiVersion?: string;
-};
-
-type StorefrontQueryOptions = StorefrontCommonOptions & {
+type StorefrontQueryOptions = StorefrontCommonExtraParams & {
   query: string;
   mutation?: never;
   cache?: CachingStrategy;
-  variables?: GenericVariables;
 };
 
-type StorefrontMutationOptions = StorefrontCommonOptions & {
+type StorefrontMutationOptions = StorefrontCommonExtraParams & {
   query?: never;
   mutation: string;
   cache?: never;
-  variables?: GenericVariables;
 };
 
 export const StorefrontApiError = class extends Error {} as ErrorConstructor;
@@ -269,7 +272,10 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     cache: cacheOptions,
     headers = [],
     storefrontApiVersion,
-  }: StorefrontQueryOptions | StorefrontMutationOptions): Promise<T> {
+  }: {variables?: GenericVariables} & (
+    | StorefrontQueryOptions
+    | StorefrontMutationOptions
+  )): Promise<T> {
     const userHeaders =
       headers instanceof Headers
         ? Object.fromEntries(headers.entries())
