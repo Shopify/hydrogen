@@ -317,13 +317,13 @@ export function createCustomerClient({
 
       return true;
     },
-    mutate(mutation, options) {
+    mutate(mutation, options?) {
       mutation = minifyQuery(mutation);
       assertMutation(mutation, 'customer.mutate');
 
       return fetchCustomerAPI({query: mutation, type: 'mutation', ...options});
     },
-    query(query, options) {
+    query(query, options?) {
       query = minifyQuery(query);
       assertQuery(query, 'customer.query');
 
