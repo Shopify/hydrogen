@@ -265,7 +265,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       defaultHeaders[STOREFRONT_ACCESS_TOKEN_HEADER],
   });
 
-  async function fetchStorefrontApi<T>({
+  async function fetchStorefrontApi<T = any>({
     query,
     mutation,
     variables,
@@ -377,12 +377,12 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        * }
        * ```
        */
-      query: <Storefront['query']>((query: string, payload) => {
+      query(query, options?) {
         query = minifyQuery(query);
         assertQuery(query, 'storefront.query');
 
         const result = fetchStorefrontApi({
-          ...payload,
+          ...options,
           query,
         });
 
@@ -391,7 +391,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         result.catch(() => {});
 
         return result;
-      }),
+      },
       /**
        * Sends a GraphQL mutation to the Storefront API.
        *
@@ -405,12 +405,12 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        * }
        * ```
        */
-      mutate: <Storefront['mutate']>((mutation: string, payload) => {
+      mutate(mutation, options?) {
         mutation = minifyQuery(mutation);
         assertMutation(mutation, 'storefront.mutate');
 
         const result = fetchStorefrontApi({
-          ...payload,
+          ...options,
           mutation,
         });
 
@@ -419,7 +419,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         result.catch(() => {});
 
         return result;
-      }),
+      },
       cache,
       CacheNone,
       CacheLong,
