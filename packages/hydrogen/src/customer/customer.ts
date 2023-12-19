@@ -1,7 +1,6 @@
 import type {
   ClientReturn,
   ClientVariablesInRestParams,
-  CodegenOperations,
   GenericVariables,
 } from '@shopify/hydrogen-codegen';
 import {
@@ -52,12 +51,12 @@ type CustomerAPIResponse<ReturnType> = {
   };
 };
 
-export interface CustomerAccountQueries extends CodegenOperations {
+export interface CustomerAccountQueries {
   // Example of how a generated query type looks like:
   // '#graphql query q1 {...}': {return: Q1Query; variables: Q1QueryVariables};
 }
 
-export interface CustomerAccountMutations extends CodegenOperations {
+export interface CustomerAccountMutations {
   // Example of how a generated mutation type looks like:
   // '#graphql mutation m1 {...}': {return: M1Mutation; variables: M1MutationVariables};
 }
@@ -72,7 +71,10 @@ export type CustomerClient = {
   /** Logout the user by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. */
   logout: () => Promise<Response>;
   /** Execute a GraphQL query against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
-  query: <OverrideReturnType = any, RawGqlString extends string = string>(
+  query: <
+    OverrideReturnType extends any = never,
+    RawGqlString extends string = string,
+  >(
     query: RawGqlString,
     ...options: ClientVariablesInRestParams<
       CustomerAccountQueries,
@@ -84,7 +86,10 @@ export type CustomerClient = {
     >
   >;
   /** Execute a GraphQL mutation against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
-  mutate: <OverrideReturnType = any, RawGqlString extends string = string>(
+  mutate: <
+    OverrideReturnType extends any = never,
+    RawGqlString extends string = string,
+  >(
     mutation: RawGqlString,
     ...options: ClientVariablesInRestParams<
       CustomerAccountMutations,
