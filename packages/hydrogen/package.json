@@ -70,6 +70,7 @@
   },
   "devDependencies": {
     "@shopify/generate-docs": "0.11.1",
+    "@shopify/hydrogen-codegen": "*",
     "@testing-library/react": "^14.0.0",
     "happy-dom": "^8.9.0",
     "react": "^18.2.0",

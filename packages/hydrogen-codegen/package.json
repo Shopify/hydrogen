@@ -15,8 +15,8 @@
     "build": "tsup --clean",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
-    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run",
-    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest"
+    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run --typecheck",
+    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest --typecheck"
   },
   "exports": {
     ".": {
@@ -51,7 +51,8 @@
   "dependencies": {
     "@graphql-codegen/add": "^5.0.0",
     "@graphql-codegen/typescript": "^4.0.1",
-    "@graphql-codegen/typescript-operations": "^4.0.1"
+    "@graphql-codegen/typescript-operations": "^4.0.1",
+    "type-fest": "^4.5.0"
   },
   "peerDependencies": {
     "graphql": "^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0"
