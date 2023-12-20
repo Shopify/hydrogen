@@ -362,6 +362,7 @@ export function ProductForm({
                     withoutTrailingZeros
                     data={selectedVariant?.price!}
                     as="span"
+                    data-test="price"
                   />
                   {isOnSale && (
                     <Money
