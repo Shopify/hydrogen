@@ -4,13 +4,17 @@ import type {Hook} from '@oclif/core';
 
 const EXPERIMENTAL_VM_MODULES_FLAG = '--experimental-vm-modules';
 
+function commandNeedsVM(id = '', argv: string[] = []) {
+  return (
+    // All the commands that rely on MiniOxygen's Node sandbox:
+    ['hydrogen:dev', 'hydrogen:preview', 'hydrogen:debug:cpu'].includes(id) &&
+    !argv.includes('--worker')
+  );
+}
+
 const hook: Hook<'init'> = async function (options) {
   if (
-    options.id &&
-    // All the commands that rely on MiniOxygen:
-    ['hydrogen:dev', 'hydrogen:preview', 'hydrogen:debug:cpu'].includes(
-      options.id,
-    ) &&
+    commandNeedsVM(options.id, options.argv) &&
     !process.execArgv.includes(EXPERIMENTAL_VM_MODULES_FLAG) &&
     !(process.env.NODE_OPTIONS ?? '').includes(EXPERIMENTAL_VM_MODULES_FLAG)
   ) {
