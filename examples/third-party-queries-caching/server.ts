@@ -6,6 +6,7 @@ import {
   createCartHandler,
   createStorefrontClient,
   storefrontRedirect,
+  type HydrogenSession as DefaultHydrogenSession,
 } from '@shopify/hydrogen';
 import {
   createRequestHandler,
@@ -117,7 +118,7 @@ export default {
  * Feel free to customize it to your needs, add helper methods, or
  * swap out the cookie-based implementation with something else!
  */
-export class HydrogenSession {
+export class HydrogenSession implements DefaultHydrogenSession {
   #sessionStorage;
   #session;
 

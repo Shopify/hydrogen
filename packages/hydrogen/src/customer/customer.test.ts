@@ -1,5 +1,5 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
-import {HydrogenSession} from './auth.helpers';
+import type {HydrogenSession} from '../hydrogen';
 import {createCustomerClient} from './customer';
 import crypto from 'node:crypto';
 
@@ -49,7 +49,7 @@ describe('customer', () => {
     beforeEach(() => {
       session = {
         commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
-        get: vi.fn(() => 'id_token'),
+        get: vi.fn(() => 'id_token') as HydrogenSession['get'],
         set: vi.fn(),
         unset: vi.fn(),
       };
@@ -164,7 +164,7 @@ describe('customer', () => {
     beforeEach(() => {
       session = {
         commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
-        get: vi.fn((v) => v),
+        get: vi.fn((v) => v) as HydrogenSession['get'],
         set: vi.fn(),
         unset: vi.fn(),
       };
@@ -323,7 +323,7 @@ describe('customer', () => {
     beforeEach(() => {
       session = {
         commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
-        get: vi.fn((v) => v),
+        get: vi.fn((v) => v) as HydrogenSession['get'],
         set: vi.fn(),
         unset: vi.fn(),
       };
