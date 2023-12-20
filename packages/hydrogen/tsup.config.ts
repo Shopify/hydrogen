@@ -22,7 +22,9 @@ export default [
   defineConfig({
     ...commonConfig,
     env: {NODE_ENV: 'production'},
-    dts: true,
+    // Bundle types from hydrogen-codgen so that we
+    // don't need to add it as a dependency in Hydrogen.
+    dts: {resolve: ['@shopify/hydrogen-codegen']},
     outDir: path.join(outDir, 'production'),
     minify: true,
     onSuccess: async () => {
