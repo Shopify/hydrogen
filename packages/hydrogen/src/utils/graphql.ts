@@ -1,4 +1,5 @@
 import type {StorefrontApiResponseOk} from '@shopify/hydrogen-react';
+import type {GenericVariables} from '@shopify/hydrogen-codegen';
 
 export function minifyQuery<T extends string>(string: T) {
   return string
@@ -29,7 +30,7 @@ export type GraphQLErrorOptions<T> = {
   errors: GraphQLApiResponse<T>['errors'];
   type: 'query' | 'mutation';
   query: string;
-  queryVariables: Record<string, any>;
+  queryVariables: GenericVariables;
   ErrorConstructor?: ErrorConstructor;
   client?: string;
 };
