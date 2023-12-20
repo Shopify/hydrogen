@@ -41,6 +41,7 @@ export type HydrogenPresetConfig = {
 };
 
 export const preset: Types.OutputPreset<HydrogenPresetConfig> = {
+  [Symbol.for('name')]: 'hydrogen',
   buildGeneratesSection: (options) => {
     if (!options.baseOutputDir.endsWith('.d.ts')) {
       throw new Error('[hydrogen-preset] target output should be a .d.ts file');
