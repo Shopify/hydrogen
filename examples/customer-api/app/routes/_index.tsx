@@ -2,8 +2,8 @@ import {Form, useLoaderData, useRouteError} from '@remix-run/react';
 import {type LoaderFunctionArgs, json} from '@shopify/remix-oxygen';
 
 export async function loader({context}: LoaderFunctionArgs) {
-  if (await context.customer.isLoggedIn()) {
-    const {data} = await context.customer.query<{
+  if (await context.customerAccount.isLoggedIn()) {
+    const {data} = await context.customerAccount.query<{
       customer: {firstName: string; lastName: string};
     }>(`#graphql:customer
       query getCustomer {
