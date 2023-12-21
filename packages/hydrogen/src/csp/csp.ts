@@ -26,9 +26,10 @@ type ContentSecurityPolicy = {
  */
 export function createContentSecurityPolicy(
   directives: Record<string, string[] | string | boolean> = {},
+  options: {applyDefault?: boolean} = {},
 ): ContentSecurityPolicy {
   const nonce = generateNonce();
-  const header = createCSPHeader(nonce, directives);
+  const header = createCSPHeader(nonce, directives, options?.applyDefault);
 
   const Provider = ({children}: {children: ReactNode}) => {
     return createElement(NonceProvider, {value: nonce}, children);
@@ -44,6 +45,7 @@ export function createContentSecurityPolicy(
 function createCSPHeader(
   nonce: string,
   directives: Record<string, string[] | string | boolean> = {},
+  applyDefault = false,
 ): string {
   const nonceString = `'nonce-${nonce}'`;
   const styleSrc = ["'self'", "'unsafe-inline'", 'https://cdn.shopify.com'];
@@ -78,6 +80,14 @@ function createCSPHeader(
   }
 
   const combinedDirectives = Object.assign({}, defaultDirectives, directives);
+  if (applyDefault) {
+    for (const key in defaultDirectives) {
+      combinedDirectives[key] = addCspDirective(
+        directives[key],
+        defaultDirectives[key],
+      );
+    }
+  }
 
   // Make sure that at least script-src includes a nonce directive.
   // If someone doesn't want a nonce in their CSP, they probably
@@ -97,4 +107,20 @@ function createCSPHeader(
   return cspBuilder({
     directives: combinedDirectives,
   });
+}
+
+function addCspDirective(
+  currentValue: string[] | string | boolean,
+  value: string[] | string | boolean,
+): boolean | string[] {
+  const normalizedValue = typeof value === 'string' ? [value] : value;
+  const normalizedCurrentValue = Array.isArray(currentValue)
+    ? currentValue
+    : [String(currentValue)];
+
+  const newValue = Array.isArray(normalizedValue)
+    ? [...normalizedCurrentValue, ...normalizedValue]
+    : normalizedValue;
+
+  return newValue;
 }
