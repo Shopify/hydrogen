@@ -66,11 +66,11 @@ function createCSPHeader(
 
   // Support localhost in development
   if (process.env.NODE_ENV === 'development') {
-    defaultDirectives.styleSrc = [...styleSrc, 'localhost:*'];
-    defaultDirectives.defaultSrc = [...defaultSrc, 'localhost:*'];
+    defaultDirectives.styleSrc = [...styleSrc, 'http://localhost:*'];
+    defaultDirectives.defaultSrc = [...defaultSrc, 'http://localhost:*'];
     defaultDirectives.connectSrc = [
       ...connectSrc,
-      'localhost:*',
+      'http://localhost:*',
       // For HMR:
       'ws://localhost:*',
       'ws://127.0.0.1:*',
