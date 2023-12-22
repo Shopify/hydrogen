@@ -28,7 +28,7 @@ export function createCustomerClient({
   customerApiVersion?: string;
   request: Request;
 }): CustomerClient {
-  const origin = new URL(request.url).origin.replace('http', 'https');
+  const origin = new URL(request.url).origin.replace('http:', 'https:');
   return {
     login: async () => {
       const loginUrl = new URL(customerAccountUrl + '/auth/oauth/authorize');
@@ -150,7 +150,7 @@ export function createCustomerClient({
       body.append('client_id', clientId);
       body.append(
         'redirect_uri',
-        new URL(request.url).origin.replace('http', 'https') + '/authorize',
+        new URL(request.url).origin.replace('http:', 'https:') + '/authorize',
       );
       body.append('code', code);
 
@@ -161,7 +161,7 @@ export function createCustomerClient({
       const headers = {
         'content-type': 'application/x-www-form-urlencoded',
         'User-Agent': userAgent,
-        Origin: new URL(request.url).origin.replace('http', 'https'),
+        Origin: new URL(request.url).origin.replace('http:', 'https:'),
       };
 
       const response = await fetch(`${customerAccountUrl}/auth/oauth/token`, {
