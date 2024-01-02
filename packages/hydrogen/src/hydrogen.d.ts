@@ -2,6 +2,7 @@ import type {
   SessionStorage,
   Session,
   SessionData,
+  FlashSessionData,
 } from '@remix-run/server-runtime';
 
 export interface HydrogenSessionData {
@@ -16,12 +17,14 @@ export interface HydrogenSessionData {
   state: string;
 }
 
-/** session must implements these interface for hydrogen utilities to work properly */
-export interface HydrogenSession<Data = SessionData> {
-  get: Session<HydrogenSessionData & Data>['get'];
-  set: Session<HydrogenSessionData & Data>['set'];
-  unset: Session<HydrogenSessionData & Data>['unset'];
+export interface HydrogenSession<
+  Data = SessionData,
+  FlashData = FlashSessionData,
+> {
+  get: Session<HydrogenSessionData & Data, FlashData>['get'];
+  set: Session<HydrogenSessionData & Data, FlashData>['set'];
+  unset: Session<HydrogenSessionData & Data, FlashData>['unset'];
   commit: () => ReturnType<
-    SessionStorage<HydrogenSessionData & Data>['commitSession']
+    SessionStorage<HydrogenSessionData & Data, FlashData>['commitSession']
   >;
 }
