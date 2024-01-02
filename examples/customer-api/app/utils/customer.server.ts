@@ -150,7 +150,7 @@ export function createCustomerClient({
       body.append('client_id', clientId);
       body.append(
         'redirect_uri',
-        new URL(request.url).origin.replace('http:', 'https:') + '/authorize',
+        origin + '/authorize',
       );
       body.append('code', code);
 
@@ -161,7 +161,7 @@ export function createCustomerClient({
       const headers = {
         'content-type': 'application/x-www-form-urlencoded',
         'User-Agent': userAgent,
-        Origin: new URL(request.url).origin.replace('http:', 'https:'),
+        Origin: origin,
       };
 
       const response = await fetch(`${customerAccountUrl}/auth/oauth/token`, {
