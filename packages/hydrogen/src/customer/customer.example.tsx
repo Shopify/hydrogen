@@ -1,4 +1,7 @@
-import {createCustomerClient__unstable} from '@shopify/hydrogen';
+import {
+  createCustomerClient__unstable,
+  type HydrogenSession,
+} from '@shopify/hydrogen';
 import * as remixBuild from '@remix-run/dev/server-build';
 import {
   createRequestHandler,
@@ -13,7 +16,7 @@ export default {
     env: Record<string, string>,
     executionContext: ExecutionContext,
   ) {
-    const session = await HydrogenSession.init(request, [env.SESSION_SECRET]);
+    const session = await AppSession.init(request, [env.SESSION_SECRET]);
 
     /* Create a Customer API client with your credentials and options */
     const customer = createCustomerClient__unstable({
@@ -38,7 +41,7 @@ export default {
   },
 };
 
-class HydrogenSession {
+class AppSession implements HydrogenSession {
   constructor(
     private sessionStorage: SessionStorage,
     private session: Session,

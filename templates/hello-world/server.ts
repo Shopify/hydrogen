@@ -3,7 +3,7 @@ import * as remixBuild from '@remix-run/dev/server-build';
 import {
   createStorefrontClient,
   storefrontRedirect,
-  type HydrogenSession as DefaultHydrogenSession,
+  type HydrogenSession,
 } from '@shopify/hydrogen';
 import {
   createRequestHandler,
@@ -33,7 +33,7 @@ export default {
       const waitUntil = (p: Promise<any>) => executionContext.waitUntil(p);
       const [cache, session] = await Promise.all([
         caches.open('hydrogen'),
-        HydrogenSession.init(request, [env.SESSION_SECRET]),
+        AppSession.init(request, [env.SESSION_SECRET]),
       ]);
 
       /**
@@ -85,7 +85,7 @@ export default {
  * Feel free to customize it to your needs, add helper methods, or
  * swap out the cookie-based implementation with something else!
  */
-export class HydrogenSession implements DefaultHydrogenSession {
+export class AppSession implements HydrogenSession {
   constructor(
     private sessionStorage: SessionStorage,
     private session: Session,

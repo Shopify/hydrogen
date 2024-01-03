@@ -18,10 +18,10 @@ Update implementation of HydrogenSession using type
 
 ```diff
 import {
-+ type HydrogenSession as DefaultHydrogenSession,
++ type HydrogenSession,
 } from '@shopify/hydrogen';
 - class HydrogenSession {
-+ class HydrogenSession implements DefaultHydrogenSession {
++ class AppSession implements HydrogenSession {
     ...
 }
 ```
