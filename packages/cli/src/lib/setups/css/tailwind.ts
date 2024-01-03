@@ -2,8 +2,9 @@ import {outputInfo} from '@shopify/cli-kit/node/output';
 import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
 import {canWriteFiles, copyAssets, mergePackageJson} from './assets.js';
 import {getCodeFormatOptions} from '../../format-code.js';
-import type {CssSetupConfig, CssSetupResult} from './common.js';
 import {replaceRootLinks} from './replacers.js';
+import {getAssetDir} from '../../build.js';
+import type {CssSetupConfig, CssSetupResult} from './common.js';
 
 const tailwindCssPath = 'styles/tailwind.css';
 
@@ -33,7 +34,7 @@ export async function setupTailwind(
   }
 
   const workPromise = Promise.all([
-    mergePackageJson('tailwind', rootDirectory),
+    mergePackageJson(getAssetDir('tailwind'), rootDirectory),
     copyAssets('tailwind', assetMap, rootDirectory, (content, filepath) =>
       filepath === 'tailwind.config.js'
         ? content.replace('{src-dir}', relativeAppDirectory)

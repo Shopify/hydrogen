@@ -1,14 +1,15 @@
 import {mergePackageJson} from './assets.js';
 import {getCodeFormatOptions} from '../../format-code.js';
-import type {CssSetupConfig, CssSetupResult} from './common.js';
 import {injectCssBundlingLink} from './replacers.js';
+import {getAssetDir} from '../../build.js';
+import type {CssSetupConfig, CssSetupResult} from './common.js';
 
 export async function setupVanillaExtract({
   rootDirectory,
   appDirectory,
 }: CssSetupConfig): Promise<undefined | CssSetupResult> {
   const workPromise = Promise.all([
-    mergePackageJson('vanilla-extract', rootDirectory),
+    mergePackageJson(getAssetDir('vanilla-extract'), rootDirectory),
     getCodeFormatOptions(rootDirectory).then((formatConfig) =>
       injectCssBundlingLink(appDirectory, formatConfig),
     ),

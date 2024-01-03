@@ -81,12 +81,16 @@ const MANAGED_PACKAGE_JSON_KEYS = Object.freeze([
 
 type ManagedKey = (typeof MANAGED_PACKAGE_JSON_KEYS)[number];
 
-export async function mergePackageJson(feature: AssetDir, projectDir: string) {
+export async function mergePackageJson(
+  sourceDir: string,
+  targetDir: string,
+  options?: {ignoredKeys?: string[]},
+) {
   const targetPkgJson: PackageJson = await readAndParsePackageJson(
-    joinPath(projectDir, 'package.json'),
+    joinPath(targetDir, 'package.json'),
   );
   const sourcePkgJson: PackageJson = await readAndParsePackageJson(
-    joinPath(getAssetDir(feature), 'package.json'),
+    joinPath(sourceDir, 'package.json'),
   );
 
   delete sourcePkgJson.comment;
@@ -96,6 +100,8 @@ export async function mergePackageJson(feature: AssetDir, projectDir: string) {
   ) as Exclude<keyof PackageJson, ManagedKey>[];
 
   for (const key of unmanagedKeys) {
+    if (options?.ignoredKeys?.includes(key)) continue;
+
     const sourceValue = sourcePkgJson[key];
     const targetValue = targetPkgJson[key];
 
@@ -114,6 +120,8 @@ export async function mergePackageJson(feature: AssetDir, projectDir: string) {
   )?.[1];
 
   for (const key of MANAGED_PACKAGE_JSON_KEYS) {
+    if (options?.ignoredKeys?.includes(key)) continue;
+
     if (sourcePkgJson[key]) {
       targetPkgJson[key] = [
         ...new Set([
@@ -136,5 +144,5 @@ export async function mergePackageJson(feature: AssetDir, projectDir: string) {
     }
   }
 
-  await writePackageJSON(projectDir, targetPkgJson);
+  await writePackageJSON(targetDir, targetPkgJson);
 }
