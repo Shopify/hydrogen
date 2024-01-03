@@ -174,7 +174,7 @@
           "name": "env-branch",
           "type": "option",
           "char": "e",
-          "description": "Environment branch (tag) for environment to deploy to",
+          "description": "Environment branch (tag) for environment to deploy to.",
           "required": false,
           "multiple": false
         },
@@ -183,6 +183,13 @@
           "type": "boolean",
           "char": "f",
           "description": "Forces a deployment to proceed if there are uncommited changes in its Git repository.",
+          "required": false,
+          "allowNo": false
+        },
+        "auth-bypass-token": {
+          "name": "auth-bypass-token",
+          "type": "boolean",
+          "description": "Generate an authentication bypass token, which can be used to perform end-to-end tests against the deployment.",
           "required": false,
           "allowNo": false
         },

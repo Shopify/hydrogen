@@ -36,18 +36,18 @@ export type SellingPlanGroup = Omit<
  **/
 export function SellingPlanSelector({
   sellingPlanGroups,
-  selectedSellingPlanId,
+  selectedSellingPlan,
   children,
   paramKey = 'selling_plan',
 }: {
   sellingPlanGroups: ProductFragment['sellingPlanGroups'];
-  selectedSellingPlanId: string | null;
+  selectedSellingPlan: SellingPlanFragment | null;
   paramKey?: string;
   children: ({
     sellingPlanGroup,
   }: {
     sellingPlanGroup: SellingPlanGroup;
-    selectedSellingPlanId: string | null;
+    selectedSellingPlan: SellingPlanFragment | null;
   }) => React.ReactNode;
 }) {
   const {search, pathname} = useLocation();
@@ -69,13 +69,13 @@ export function SellingPlanSelector({
             }
             if (!sellingPlan.id) return null;
             params.set(paramKey, sellingPlan.id);
-            sellingPlan.isSelected = selectedSellingPlanId === sellingPlan.id;
+            sellingPlan.isSelected = selectedSellingPlan?.id === sellingPlan.id;
             sellingPlan.url = `${pathname}?${params.toString()}`;
             return sellingPlan as SellingPlan;
           })
           .filter(Boolean);
         sellingPlanGroup.sellingPlans.nodes = sellingPlans;
-        return children({sellingPlanGroup, selectedSellingPlanId});
+        return children({sellingPlanGroup, selectedSellingPlan});
       }),
     [sellingPlanGroups],
   );

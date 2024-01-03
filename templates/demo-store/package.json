@@ -7,6 +7,8 @@
     "dev": "shopify hydrogen dev --worker --codegen",
     "build": "shopify hydrogen build",
     "preview": "npm run build && shopify hydrogen preview --worker",
+    "e2e": "npx playwright test",
+    "e2e:ui": "npx playwright test --ui",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "format": "prettier --write --ignore-unknown .",
     "format:check": "prettier --check --ignore-unknown .",
@@ -20,7 +22,7 @@
     "@headlessui/react": "^1.7.2",
     "@remix-run/react": "2.1.0",
     "@remix-run/server-runtime": "2.1.0",
-    "@shopify/cli": "3.51.0",
+    "@shopify/cli": "3.52.0",
     "@shopify/cli-hydrogen": "^6.1.0",
     "@shopify/hydrogen": "~2023.10.3",
     "@shopify/remix-oxygen": "^2.0.2",
@@ -38,6 +40,7 @@
     "typographic-base": "^1.0.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.40.1",
     "@remix-run/dev": "2.1.0",
     "@remix-run/eslint-config": "2.1.0",
     "@shopify/eslint-plugin": "^42.0.1",
