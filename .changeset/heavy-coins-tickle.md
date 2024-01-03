@@ -2,7 +2,7 @@
 '@shopify/hydrogen': patch
 ---
 
-✨ add applyDefault option to createContentSecurityPolicy which allow use to add policy in front of the existing rules instead of overriding them. The default value of applyDefault option is false which is the current behaviour.
+✨ add `applyDefault` option to `createContentSecurityPolicy` which automatically adds Shopify domains to the content security policy, extending whatever rules are passed instead of overriding them. The default value of `applyDefault` option is false which is the current behavior.
 
 Example usage:
 
