@@ -26,10 +26,9 @@ type ContentSecurityPolicy = {
  */
 export function createContentSecurityPolicy(
   directives: Record<string, string[] | string | boolean> = {},
-  options: {applyDefault?: boolean} = {},
 ): ContentSecurityPolicy {
   const nonce = generateNonce();
-  const header = createCSPHeader(nonce, directives, options?.applyDefault);
+  const header = createCSPHeader(nonce, directives);
 
   const Provider = ({children}: {children: ReactNode}) => {
     return createElement(NonceProvider, {value: nonce}, children);
@@ -45,7 +44,6 @@ export function createContentSecurityPolicy(
 function createCSPHeader(
   nonce: string,
   directives: Record<string, string[] | string | boolean> = {},
-  applyDefault = false,
 ): string {
   const nonceString = `'nonce-${nonce}'`;
   const styleSrc = ["'self'", "'unsafe-inline'", 'https://cdn.shopify.com'];
@@ -80,8 +78,10 @@ function createCSPHeader(
   }
 
   const combinedDirectives = Object.assign({}, defaultDirectives, directives);
-  if (applyDefault) {
-    for (const key in defaultDirectives) {
+
+  //add defaults if it was override
+  for (const key in defaultDirectives) {
+    if (directives[key]) {
       combinedDirectives[key] = addCspDirective(
         directives[key],
         defaultDirectives[key],
