@@ -7,10 +7,12 @@
  * @param api
  * @returns
  */
-export const getSchema = (api = 'storefront' as 'storefront' | 'customer') => {
-  if (api !== 'storefront' && api !== 'customer') {
+export const getSchema = (
+  api = 'storefront' as 'storefront' | 'customer-account',
+) => {
+  if (api !== 'storefront' && api !== 'customer-account') {
     throw new Error(
-      `The provided API type "${api}" is unknown. Please use "storefront" or "customer".`,
+      `The provided API type "${api}" is unknown. Please use "storefront" or "customer-account".`,
     );
   }
 

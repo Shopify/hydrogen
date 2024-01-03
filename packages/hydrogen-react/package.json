@@ -14,7 +14,7 @@
   "files": [
     "dist",
     "storefront.schema.json",
-    "customer.schema.json"
+    "customer-account.schema.json"
   ],
   "type": "commonjs",
   "exports": {
@@ -51,7 +51,8 @@
     },
     "./storefront-api-types": "./dist/types/storefront-api-types.d.ts",
     "./storefront.schema.json": "./storefront.schema.json",
-    "./customer.schema.json": "./customer.schema.json",
+    "./customer-account.schema.json": "./customer-account.schema.json",
+    "./customer-account-api-types": "./dist/types/customer-account-api-types.d.ts",
     "./package.json": "./package.json",
     "./*": {
       "node": {

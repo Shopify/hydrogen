@@ -90,7 +90,7 @@ export {
   sendShopifyAnalytics,
   ShopifySalesChannel,
   storefrontApiCustomScalars,
-  customerApiCustomScalars,
+  customerAccountApiCustomScalars,
   useLoadScript,
   useMoney,
   useShopifyCookies,
