@@ -1,6 +1,7 @@
 import {outputInfo} from '@shopify/cli-kit/node/output';
 import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
-import {canWriteFiles, copyAssets, mergePackageJson} from './assets.js';
+import {mergePackageJson} from '../../file.js';
+import {canWriteFiles, copyAssets} from './assets.js';
 import {getCodeFormatOptions} from '../../format-code.js';
 import {replaceRootLinks} from './replacers.js';
 import {getAssetDir} from '../../build.js';

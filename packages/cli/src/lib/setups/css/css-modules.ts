@@ -1,4 +1,4 @@
-import {mergePackageJson} from './assets.js';
+import {mergePackageJson} from '../../file.js';
 import {getCodeFormatOptions} from '../../format-code.js';
 import type {CssSetupConfig, CssSetupResult} from './common.js';
 import {injectCssBundlingLink} from './replacers.js';

@@ -1,5 +1,6 @@
 import {outputInfo} from '@shopify/cli-kit/node/output';
-import {canWriteFiles, copyAssets, mergePackageJson} from './assets.js';
+import {mergePackageJson} from '../../file.js';
+import {canWriteFiles, copyAssets} from './assets.js';
 import {getAssetDir} from '../../build.js';
 import type {CssSetupConfig, CssSetupResult} from './common.js';
 

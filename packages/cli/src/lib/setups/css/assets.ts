@@ -2,11 +2,6 @@ import {fileExists, readFile, writeFile} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 import {
-  readAndParsePackageJson,
-  writePackageJSON,
-  type PackageJson as _PackageJson,
-} from '@shopify/cli-kit/node/node-package-manager';
-import {
   type AssetDir,
   getAssetDir,
   GENERATOR_SETUP_ASSETS_SUB_DIRS,
@@ -66,83 +61,4 @@ export async function canWriteFiles(
   }
 
   return true;
-}
-
-type PackageJson = _PackageJson & {
-  peerDependencies?: _PackageJson['dependencies'];
-  comment?: string;
-};
-
-const MANAGED_PACKAGE_JSON_KEYS = Object.freeze([
-  'dependencies',
-  'devDependencies',
-  'peerDependencies',
-] as const);
-
-type ManagedKey = (typeof MANAGED_PACKAGE_JSON_KEYS)[number];
-
-export async function mergePackageJson(
-  sourceDir: string,
-  targetDir: string,
-  options?: {ignoredKeys?: string[]},
-) {
-  const targetPkgJson: PackageJson = await readAndParsePackageJson(
-    joinPath(targetDir, 'package.json'),
-  );
-  const sourcePkgJson: PackageJson = await readAndParsePackageJson(
-    joinPath(sourceDir, 'package.json'),
-  );
-
-  delete sourcePkgJson.comment;
-
-  const unmanagedKeys = Object.keys(sourcePkgJson).filter(
-    (key) => !MANAGED_PACKAGE_JSON_KEYS.includes(key as ManagedKey),
-  ) as Exclude<keyof PackageJson, ManagedKey>[];
-
-  for (const key of unmanagedKeys) {
-    if (options?.ignoredKeys?.includes(key)) continue;
-
-    const sourceValue = sourcePkgJson[key];
-    const targetValue = targetPkgJson[key];
-
-    const newValue =
-      Array.isArray(sourceValue) && Array.isArray(targetValue)
-        ? [...targetValue, ...sourceValue]
-        : typeof sourceValue === 'object' && typeof targetValue === 'object'
-        ? {...targetValue, ...sourceValue}
-        : sourceValue;
-
-    targetPkgJson[key] = newValue as any;
-  }
-
-  const remixVersion = Object.entries(targetPkgJson.dependencies || {}).find(
-    ([dep]) => dep.startsWith('@remix-run/'),
-  )?.[1];
-
-  for (const key of MANAGED_PACKAGE_JSON_KEYS) {
-    if (options?.ignoredKeys?.includes(key)) continue;
-
-    if (sourcePkgJson[key]) {
-      targetPkgJson[key] = [
-        ...new Set([
-          ...Object.keys(targetPkgJson[key] ?? {}),
-          ...Object.keys(sourcePkgJson[key] ?? {}),
-        ]),
-      ]
-        .sort()
-        .reduce((acc, dep) => {
-          let version = (sourcePkgJson[key]?.[dep] ??
-            targetPkgJson[key]?.[dep])!;
-
-          if (dep.startsWith('@remix-run/') && remixVersion) {
-            version = remixVersion;
-          }
-
-          acc[dep] = version;
-          return acc;
-        }, {} as Record<string, string>);
-    }
-  }
-
-  await writePackageJSON(targetDir, targetPkgJson);
 }
