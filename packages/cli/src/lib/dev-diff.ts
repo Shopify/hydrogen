@@ -31,22 +31,17 @@ export async function prepareDiffDirectory(
   );
 
   const templateDir = getStarterDir();
-  const filter = (filepath: string) => {
-    return !/[\/\\](dist|node_modules|\.cache)(\/|\\|$)/i.test(
-      relativePath(templateDir, filepath),
-    );
-  };
+  const createFilter = (re: RegExp) => (filepath: string) =>
+    !re.test(relativePath(templateDir, filepath));
 
-  await copyDirectory(templateDir, targetDirectory, {filter});
-  await copyDirectory(diffDirectory, targetDirectory, {filter});
-
-  // Restore original files
-  for (const file of ['tsconfig.json', 'package.json']) {
-    await copyFile(
-      joinPath(templateDir, file),
-      joinPath(targetDirectory, file),
-    );
-  }
+  await copyDirectory(templateDir, targetDirectory, {
+    filter: createFilter(/[\/\\](dist|node_modules|\.cache)(\/|\\|$)/i),
+  });
+  await copyDirectory(diffDirectory, targetDirectory, {
+    filter: createFilter(
+      /[\/\\](dist|node_modules|\.cache|package\.json|tsconfig\.json)(\/|\\|$)/i,
+    ),
+  });
 
   await mergePackageJson(diffDirectory, targetDirectory, {
     ignoredKeys: ['scripts'],
