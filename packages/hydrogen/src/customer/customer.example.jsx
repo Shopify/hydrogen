@@ -7,7 +7,7 @@ import {
 
 export default {
   async fetch(request, env, executionContext) {
-    const session = await HydrogenSession.init(request, [env.SESSION_SECRET]);
+    const session = await AppSession.init(request, [env.SESSION_SECRET]);
 
     /* Create a Customer API client with your credentials and options */
     const customer = createCustomerClient__unstable({
@@ -32,7 +32,7 @@ export default {
   },
 };
 
-class HydrogenSession {
+class AppSession {
   static async init(request, secrets) {
     const storage = createCookieSessionStorage({
       cookie: {
