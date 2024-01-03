@@ -4,7 +4,7 @@
 
 import type {WithCache, HydrogenCart} from '@shopify/hydrogen';
 import type {Storefront} from '~/lib/type';
-import type {HydrogenSession} from '~/lib/session.server';
+import type {AppSession} from '~/lib/session.server';
 
 declare global {
   /**
@@ -30,7 +30,7 @@ declare module '@shopify/remix-oxygen' {
    */
   export interface AppLoadContext {
     waitUntil: ExecutionContext['waitUntil'];
-    session: HydrogenSession;
+    session: AppSession;
     storefront: Storefront;
     cart: HydrogenCart;
     env: Env;

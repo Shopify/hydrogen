@@ -1,10 +1,6 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
-import {
-  HydrogenSession,
-  checkExpires,
-  clearSession,
-  refreshToken,
-} from './auth.helpers';
+import type {HydrogenSession} from '../hydrogen';
+import {checkExpires, clearSession, refreshToken} from './auth.helpers';
 
 vi.mock('./BadRequest', () => {
   return {

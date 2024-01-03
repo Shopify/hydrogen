@@ -3,6 +3,7 @@ import type {
   ClientVariablesInRestParams,
   GenericVariables,
 } from '@shopify/hydrogen-codegen';
+import type {HydrogenSession} from '../hydrogen';
 import {
   clearSession,
   generateCodeChallenge,
@@ -15,7 +16,6 @@ import {
   getNonce,
   redirect,
   Locks,
-  type HydrogenSession,
 } from './auth.helpers';
 import {BadRequest} from './BadRequest';
 import {generateNonce} from '../csp/nonce';

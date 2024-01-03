@@ -1,3 +1,4 @@
+import {type HydrogenSession} from '@shopify/hydrogen';
 import {
   createCookieSessionStorage,
   type SessionStorage,
@@ -9,7 +10,7 @@ import {
  * Feel free to customize it to your needs, add helper methods, or
  * swap out the cookie-based implementation with something else!
  */
-export class HydrogenSession {
+export class AppSession implements HydrogenSession {
   #sessionStorage;
   #session;
 

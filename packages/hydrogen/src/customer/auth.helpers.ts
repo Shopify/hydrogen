@@ -1,3 +1,4 @@
+import type {HydrogenSession} from '../hydrogen';
 import {BadRequest} from './BadRequest';
 import {LIB_VERSION} from '../version';
 
@@ -8,13 +9,6 @@ export interface Locks {
 export const USER_AGENT = `Shopify Hydrogen ${LIB_VERSION}`;
 
 const CUSTOMER_API_CLIENT_ID = '30243aa5-17c1-465a-8493-944bcc4e88aa';
-
-export interface HydrogenSession {
-  get: (key: string) => string | undefined;
-  set: (key: string, value: string) => void;
-  unset: (key: string) => void;
-  commit: () => Promise<string>;
-}
 
 export function redirect(
   path: string,
