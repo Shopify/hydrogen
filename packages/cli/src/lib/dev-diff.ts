@@ -9,6 +9,7 @@ import {copyFile, removeFile} from '@shopify/cli-kit/node/fs';
 import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
 import colors from '@shopify/cli-kit/node/colors';
 import {getRepoNodeModules, getStarterDir} from './build.js';
+import {mergePackageJson} from './file.js';
 
 /**
  * Creates a new temporary project directory with the starter template and diff applied.
@@ -38,10 +39,18 @@ export async function prepareDiffDirectory(
 
   await copyDirectory(templateDir, targetDirectory, {filter});
   await copyDirectory(diffDirectory, targetDirectory, {filter});
-  await copyFile(
-    joinPath(templateDir, 'tsconfig.json'),
-    joinPath(targetDirectory, 'tsconfig.json'),
-  );
+
+  // Restore original files
+  for (const file of ['tsconfig.json', 'package.json']) {
+    await copyFile(
+      joinPath(templateDir, file),
+      joinPath(targetDirectory, file),
+    );
+  }
+
+  await mergePackageJson(diffDirectory, targetDirectory, {
+    ignoredKeys: ['scripts'],
+  });
 
   await createSymlink(
     await getRepoNodeModules(),
@@ -85,14 +94,12 @@ export async function prepareDiffDirectory(
             relativePath(diffDirectory, event.path),
           );
 
-          if (event.type === 'delete') {
-            return removeFile(targetFile).catch(() => {});
-          } else {
-            return copyFile(event.path, targetFile);
-          }
+          return event.type === 'delete'
+            ? removeFile(targetFile).catch(() => {})
+            : copyFile(event.path, targetFile);
         });
       },
-      {ignore: ['*.generated.d.ts']},
+      {ignore: ['*.generated.d.ts', 'package.json', 'tsconfig.json']},
     );
   }
 
