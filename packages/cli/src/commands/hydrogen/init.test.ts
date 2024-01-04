@@ -33,6 +33,9 @@ vi.mock('../../lib/template-downloader.js', async () => ({
       templatesDir: fileURLToPath(
         new URL('../../../../../templates', import.meta.url),
       ),
+      examplesDir: fileURLToPath(
+        new URL('../../../../../examples', import.meta.url),
+      ),
     }),
 }));
 
@@ -131,6 +134,10 @@ describe('init', () => {
 
   describe('remote templates', () => {
     it('throws for unknown templates', async () => {
+      const processExit = vi
+        .spyOn(process, 'exit')
+        .mockImplementationOnce((() => {}) as any);
+
       await inTemporaryDirectory(async (tmpDir) => {
         await expect(
           runInit({
@@ -139,8 +146,13 @@ describe('init', () => {
             language: 'ts',
             template: 'https://github.com/some/repo',
           }),
-        ).rejects.toThrow('supported');
+        ).resolves;
       });
+
+      expect(outputMock.error()).toMatch('--template');
+      expect(processExit).toHaveBeenCalledWith(1);
+
+      processExit.mockRestore();
     });
 
     it('creates basic projects', async () => {
