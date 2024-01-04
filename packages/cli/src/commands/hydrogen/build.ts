@@ -38,7 +38,7 @@ import {
 } from '../../lib/bundle/analyzer.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {isCI} from '../../lib/is-ci.js';
-import {copyDiffBuild, prepareDiffDirectory} from '../../lib/dev-diff.js';
+import {copyDiffBuild, prepareDiffDirectory} from '../../lib/template-diff.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
 const MAX_WORKER_BUNDLE_SIZE = 10;

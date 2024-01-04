@@ -30,22 +30,7 @@ export async function prepareDiffDirectory(
     )}\n`,
   );
 
-  const templateDir = getStarterDir();
-  const createFilter = (re: RegExp) => (filepath: string) =>
-    !re.test(relativePath(templateDir, filepath));
-
-  await copyDirectory(templateDir, targetDirectory, {
-    filter: createFilter(/[\/\\](dist|node_modules|\.cache)(\/|\\|$)/i),
-  });
-  await copyDirectory(diffDirectory, targetDirectory, {
-    filter: createFilter(
-      /[\/\\](dist|node_modules|\.cache|package\.json|tsconfig\.json)(\/|\\|$)/i,
-    ),
-  });
-
-  await mergePackageJson(diffDirectory, targetDirectory, {
-    ignoredKeys: ['scripts'],
-  });
+  await applyTemplateDiff(targetDirectory, diffDirectory);
 
   await createSymlink(
     await getRepoNodeModules(),
@@ -99,6 +84,28 @@ export async function prepareDiffDirectory(
   }
 
   return targetDirectory;
+}
+
+export async function applyTemplateDiff(
+  targetDirectory: string,
+  diffDirectory: string,
+  templateDir = getStarterDir(),
+) {
+  const createFilter = (re: RegExp) => (filepath: string) =>
+    !re.test(relativePath(templateDir, filepath));
+
+  await copyDirectory(templateDir, targetDirectory, {
+    filter: createFilter(/[\/\\](dist|node_modules|\.cache)(\/|\\|$)/i),
+  });
+  await copyDirectory(diffDirectory, targetDirectory, {
+    filter: createFilter(
+      /[\/\\](dist|node_modules|\.cache|package\.json|tsconfig\.json)(\/|\\|$)/i,
+    ),
+  });
+
+  await mergePackageJson(diffDirectory, targetDirectory, {
+    ignoredKeys: ['scripts'],
+  });
 }
 
 export async function copyDiffBuild(

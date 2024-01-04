@@ -35,7 +35,7 @@ import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {findPort} from '../../lib/find-port.js';
-import {prepareDiffDirectory} from '../../lib/dev-diff.js';
+import {prepareDiffDirectory} from '../../lib/template-diff.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
