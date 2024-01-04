@@ -3,6 +3,7 @@ import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {runInit} from './init.js';
 import {exec} from '@shopify/cli-kit/node/system';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
+import {readAndParsePackageJson} from '@shopify/cli-kit/node/node-package-manager';
 import {
   fileExists,
   isDirectory,
@@ -164,24 +165,24 @@ describe('init', () => {
           template: 'hello-world',
         });
 
-        const helloWorldFiles = await glob('**/*', {
+        const templateFiles = await glob('**/*', {
           cwd: getSkeletonSourceDir().replace('skeleton', 'hello-world'),
           ignore: ['**/node_modules/**', '**/dist/**'],
         });
-        const projectFiles = await glob('**/*', {cwd: tmpDir});
-        const nonAppFiles = helloWorldFiles.filter(
+        const resultFiles = await glob('**/*', {cwd: tmpDir});
+        const nonAppFiles = templateFiles.filter(
           (item) => !item.startsWith('app/'),
         );
 
-        expect(projectFiles).toEqual(expect.arrayContaining(nonAppFiles));
+        expect(resultFiles).toEqual(expect.arrayContaining(nonAppFiles));
 
-        expect(projectFiles).toContain('app/root.tsx');
-        expect(projectFiles).toContain('app/entry.client.tsx');
-        expect(projectFiles).toContain('app/entry.server.tsx');
-        expect(projectFiles).not.toContain('app/components/Layout.tsx');
+        expect(resultFiles).toContain('app/root.tsx');
+        expect(resultFiles).toContain('app/entry.client.tsx');
+        expect(resultFiles).toContain('app/entry.server.tsx');
+        expect(resultFiles).not.toContain('app/components/Layout.tsx');
 
         // Skip routes:
-        expect(projectFiles).not.toContain('app/routes/_index.tsx');
+        expect(resultFiles).not.toContain('app/routes/_index.tsx');
 
         await expect(readFile(`${tmpDir}/package.json`)).resolves.toMatch(
           `"name": "hello-world"`,
@@ -210,15 +211,15 @@ describe('init', () => {
           template: 'hello-world',
         });
 
-        const helloWorldFiles = await glob('**/*', {
+        const templateFiles = await glob('**/*', {
           cwd: getSkeletonSourceDir().replace('skeleton', 'hello-world'),
           ignore: ['**/node_modules/**', '**/dist/**'],
         });
-        const projectFiles = await glob('**/*', {cwd: tmpDir});
+        const resultFiles = await glob('**/*', {cwd: tmpDir});
 
-        expect(projectFiles).toEqual(
+        expect(resultFiles).toEqual(
           expect.arrayContaining(
-            helloWorldFiles
+            templateFiles
               .filter((item) => !item.endsWith('.d.ts'))
               .map((item) =>
                 item
@@ -251,24 +252,24 @@ describe('init', () => {
           mockShop: true,
         });
 
-        const skeletonFiles = await glob('**/*', {
+        const templateFiles = await glob('**/*', {
           cwd: getSkeletonSourceDir(),
           ignore: ['**/node_modules/**', '**/dist/**'],
         });
-        const projectFiles = await glob('**/*', {cwd: tmpDir});
-        const nonAppFiles = skeletonFiles.filter(
+        const resultFiles = await glob('**/*', {cwd: tmpDir});
+        const nonAppFiles = templateFiles.filter(
           (item) => !item.startsWith('app/'),
         );
 
-        expect(projectFiles).toEqual(expect.arrayContaining(nonAppFiles));
+        expect(resultFiles).toEqual(expect.arrayContaining(nonAppFiles));
 
-        expect(projectFiles).toContain('app/root.tsx');
-        expect(projectFiles).toContain('app/entry.client.tsx');
-        expect(projectFiles).toContain('app/entry.server.tsx');
-        expect(projectFiles).toContain('app/components/Layout.tsx');
+        expect(resultFiles).toContain('app/root.tsx');
+        expect(resultFiles).toContain('app/entry.client.tsx');
+        expect(resultFiles).toContain('app/entry.server.tsx');
+        expect(resultFiles).toContain('app/components/Layout.tsx');
 
         // Skip routes:
-        expect(projectFiles).not.toContain('app/routes/_index.tsx');
+        expect(resultFiles).not.toContain('app/routes/_index.tsx');
 
         // Not modified:
         await expect(readFile(`${tmpDir}/server.ts`)).resolves.toEqual(
@@ -304,14 +305,14 @@ describe('init', () => {
       await inTemporaryDirectory(async (tmpDir) => {
         await runInit({path: tmpDir, git: false, routes: true, language: 'ts'});
 
-        const skeletonFiles = await glob('**/*', {
+        const templateFiles = await glob('**/*', {
           cwd: getSkeletonSourceDir(),
           ignore: ['**/node_modules/**', '**/dist/**'],
         });
-        const projectFiles = await glob('**/*', {cwd: tmpDir});
+        const resultFiles = await glob('**/*', {cwd: tmpDir});
 
-        expect(projectFiles).toEqual(expect.arrayContaining(skeletonFiles));
-        expect(projectFiles).toContain('app/routes/_index.tsx');
+        expect(resultFiles).toEqual(expect.arrayContaining(templateFiles));
+        expect(resultFiles).toContain('app/routes/_index.tsx');
 
         // Not modified:
         await expect(readFile(`${tmpDir}/server.ts`)).resolves.toEqual(
@@ -333,15 +334,15 @@ describe('init', () => {
       await inTemporaryDirectory(async (tmpDir) => {
         await runInit({path: tmpDir, git: false, routes: true, language: 'js'});
 
-        const skeletonFiles = await glob('**/*', {
+        const templateFiles = await glob('**/*', {
           cwd: getSkeletonSourceDir(),
           ignore: ['**/node_modules/**', '**/dist/**'],
         });
-        const projectFiles = await glob('**/*', {cwd: tmpDir});
+        const resultFiles = await glob('**/*', {cwd: tmpDir});
 
-        expect(projectFiles).toEqual(
+        expect(resultFiles).toEqual(
           expect.arrayContaining(
-            skeletonFiles
+            templateFiles
               .filter((item) => !item.endsWith('.d.ts'))
               .map((item) =>
                 item
@@ -351,7 +352,7 @@ describe('init', () => {
           ),
         );
 
-        expect(projectFiles).toContain('app/routes/_index.jsx');
+        expect(resultFiles).toContain('app/routes/_index.jsx');
 
         // No types but JSDocs:
         await expect(readFile(`${tmpDir}/server.js`)).resolves.toMatch(
@@ -466,8 +467,8 @@ describe('init', () => {
             routes: true,
           });
 
-          const projectFiles = await glob('**/*', {cwd: tmpDir});
-          expect(projectFiles).toContain('app/routes/_index.tsx');
+          const resultFiles = await glob('**/*', {cwd: tmpDir});
+          expect(resultFiles).toContain('app/routes/_index.tsx');
 
           // Injects styles in Root
           const serverFile = await readFile(`${tmpDir}/server.ts`);
@@ -491,8 +492,8 @@ describe('init', () => {
             routes: true,
           });
 
-          const projectFiles = await glob('**/*', {cwd: tmpDir});
-          expect(projectFiles).toContain('app/routes/_index.tsx');
+          const resultFiles = await glob('**/*', {cwd: tmpDir});
+          expect(resultFiles).toContain('app/routes/_index.tsx');
 
           // Injects styles in Root
           const serverFile = await readFile(`${tmpDir}/server.ts`);
@@ -516,9 +517,9 @@ describe('init', () => {
             routes: true,
           });
 
-          const projectFiles = await glob('**/*', {cwd: tmpDir});
+          const resultFiles = await glob('**/*', {cwd: tmpDir});
           // Adds locale to the path
-          expect(projectFiles).toContain('app/routes/($locale)._index.tsx');
+          expect(resultFiles).toContain('app/routes/($locale)._index.tsx');
 
           // Injects styles in Root
           const serverFile = await readFile(`${tmpDir}/server.ts`);
