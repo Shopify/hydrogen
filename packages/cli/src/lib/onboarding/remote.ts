@@ -38,11 +38,11 @@ export async function setupRemoteTemplate(
       const examplePath = joinPath(examplesDir, appTemplate);
 
       if (await fileExists(templatePath)) {
-        return {sourcePath: templatePath, isExample: false, templatesDir};
+        return {templatesDir, sourcePath: templatePath};
       }
 
       if (await fileExists(examplePath)) {
-        return {sourcePath: examplePath, isExample: true, templatesDir};
+        return {templatesDir, sourcePath: examplePath};
       }
 
       throw new AbortError(
@@ -64,20 +64,18 @@ export async function setupRemoteTemplate(
       // do not continue if it's already aborted
       if (controller.signal.aborted) return;
 
-      const {sourcePath, isExample, templatesDir} = result;
+      const {sourcePath, templatesDir} = result;
 
-      if (isExample) {
-        const pkgJson = await readAndParsePackageJson(
-          joinPath(sourcePath, 'package.json'),
+      const pkgJson = await readAndParsePackageJson(
+        joinPath(sourcePath, 'package.json'),
+      );
+
+      if (pkgJson.scripts?.dev?.includes('--diff')) {
+        return applyTemplateDiff(
+          project.directory,
+          sourcePath,
+          joinPath(templatesDir, 'skeleton'),
         );
-
-        if (pkgJson.scripts?.dev?.includes('--diff')) {
-          return applyTemplateDiff(
-            project.directory,
-            sourcePath,
-            joinPath(templatesDir, 'skeleton'),
-          );
-        }
       }
 
       return copyFile(sourcePath, project.directory);
