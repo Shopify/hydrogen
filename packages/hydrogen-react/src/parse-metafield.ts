@@ -2,12 +2,13 @@ import type {
   Collection,
   GenericFile,
   Metafield as MetafieldBaseType,
+  Metaobject as MetaobjectBaseType,
   MoneyV2,
   Page,
   Product,
   ProductVariant,
 } from './storefront-api-types.js';
-import type {PartialDeep, Simplify} from 'type-fest';
+import type {PartialDeep, Simplify, ValueOf} from 'type-fest';
 import {flattenConnection} from './flatten-connection.js';
 
 /**
@@ -51,6 +52,31 @@ export function parseMetafield<ReturnGeneric>(
         ...metafield,
         parsedValue: metafield.reference,
       } as ReturnGeneric;
+
+    case 'mixed_reference':
+    case 'metaobject_reference': {
+      let parsedFields: Record<string, ValueOf<ParsedMetafields> | undefined> =
+        {};
+      if (metafield.reference && 'fields' in metafield.reference) {
+        if (metafield.reference?.fields) {
+          parsedFields = metafield.reference.fields.reduce<
+            Record<string, ValueOf<ParsedMetafields> | undefined>
+          >((obj, field) => {
+            if (field && field.key) {
+              obj[field.key] = parseMetafield(field as MetafieldBaseType);
+            }
+            return obj;
+          }, {});
+        }
+      }
+      return {
+        ...metafield,
+        parsedValue: {
+          ...metafield.reference,
+          parsedFields,
+        },
+      } as ReturnGeneric;
+    }
 
     case 'color':
     case 'multi_line_text_field':
@@ -167,6 +193,8 @@ export const allMetafieldTypesArray = [
   'dimension',
   'file_reference',
   'json',
+  'metaobject_reference',
+  'mixed_reference',
   'money',
   'multi_line_text_field',
   'number_decimal',
@@ -233,6 +261,10 @@ export type ParsedMetafields<ExtraTypeGeneric = void> = {
    * ```
    */
   json: Simplify<JsonParsedMetafield<ExtraTypeGeneric>>;
+  /** A Metafield that's been parsed, with a `parsedValue` of a `Metaobject` object (as defined by the Storefront API) */
+  metaobject_reference: Simplify<MetaobjectParsedRefMetafield>;
+  /** A Metafield that's been parsed, with a `parsedValue` of a `Metaobject` object (as defined by the Storefront API) */
+  mixed_reference: Simplify<MetaobjectParsedRefMetafield>;
   /** A Metafield that's been parsed, with a `parsedValue` of type `Money` */
   money: Simplify<MoneyParsedMetafield>;
   /** A Metafield that's been parsed, with a `parsedValue` of type `string` */
@@ -417,6 +449,15 @@ type RatingListParsedMetafield = MetafieldBaseType & {
 type VariantListParsedRefMetafield = MetafieldBaseType & {
   type: 'list.variant_reference';
   parsedValue: Array<ProductVariant> | null;
+};
+
+type MetaobjectParsedRefMetafield = MetafieldBaseType & {
+  type: 'metaobject_reference' | 'mixed_reference';
+  parsedValue:
+    | (MetaobjectBaseType & {
+        parsedFields: Record<string, ValueOf<ParsedMetafields>>;
+      })
+    | null;
 };
 
 export type Measurement = {
