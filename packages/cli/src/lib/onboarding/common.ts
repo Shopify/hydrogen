@@ -713,6 +713,8 @@ export function createAbortHandler(
       console.error(error);
     }
 
+    // This code runs asynchronously so throwing here
+    // turns into an unhandled rejection. Exit process instead:
     process.exit(1);
   };
 }
