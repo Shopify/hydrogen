@@ -202,6 +202,77 @@ describe('init', () => {
       });
     });
 
+    it('applies diff for examples', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        const exampleName = 'third-party-queries-caching';
+
+        await runInit({
+          path: tmpDir,
+          git: false,
+          language: 'ts',
+          template: exampleName,
+        });
+
+        const templatePath = getSkeletonSourceDir();
+        const examplePath = templatePath
+          .replace('templates', 'examples')
+          .replace('skeleton', exampleName);
+
+        // --- Test file diff
+        const ignore = ['**/node_modules/**', '**/dist/**'];
+        const resultFiles = await glob('**/*', {ignore, cwd: tmpDir});
+        const templateFiles = await glob('**/*', {ignore, cwd: templatePath});
+        const exampleFiles = await glob('**/*', {ignore, cwd: examplePath});
+
+        expect(resultFiles).toEqual(
+          expect.arrayContaining([
+            ...new Set([...templateFiles, ...exampleFiles]),
+          ]),
+        );
+
+        // --- Test package.json merge
+        const templatePkgJson = await readAndParsePackageJson(
+          `${templatePath}/package.json`,
+        );
+        const examplePkgJson = await readAndParsePackageJson(
+          `${examplePath}/package.json`,
+        );
+        const resultPkgJson = await readAndParsePackageJson(
+          `${tmpDir}/package.json`,
+        );
+
+        expect(resultPkgJson.name).toEqual(exampleName);
+
+        expect(resultPkgJson.scripts).toEqual(
+          expect.objectContaining(templatePkgJson.scripts),
+        );
+
+        expect(resultPkgJson.dependencies).toEqual(
+          expect.objectContaining({
+            ...templatePkgJson.dependencies,
+            ...examplePkgJson.dependencies,
+          }),
+        );
+        expect(resultPkgJson.devDependencies).toEqual(
+          expect.objectContaining({
+            ...templatePkgJson.devDependencies,
+            ...examplePkgJson.devDependencies,
+          }),
+        );
+        expect(resultPkgJson.peerDependencies).toEqual(
+          expect.objectContaining({
+            ...templatePkgJson.peerDependencies,
+            ...examplePkgJson.peerDependencies,
+          }),
+        );
+
+        // --- Keeps original tsconfig.json
+        expect(await readFile(joinPath(templatePath, 'tsconfig.json'))).toEqual(
+          await readFile(joinPath(tmpDir, 'tsconfig.json')),
+        );
+      });
+    });
+
     it('transpiles projects to JS', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
         await runInit({
