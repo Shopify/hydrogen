@@ -2,7 +2,6 @@
   "name": "example-third-party-queries-caching",
   "private": true,
   "sideEffects": false,
-  "version": "1.0.0",
   "scripts": {
     "build": "shopify hydrogen build",
     "dev": "shopify hydrogen dev --worker --codegen",

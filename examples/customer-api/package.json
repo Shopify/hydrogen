@@ -2,7 +2,6 @@
   "name": "example-customer-api",
   "private": true,
   "sideEffects": false,
-  "version": "0.0.2",
   "scripts": {
     "build": "shopify hydrogen build",
     "dev": "shopify hydrogen dev --worker",

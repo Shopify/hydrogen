@@ -2,7 +2,6 @@
   "name": "example-optimistic-cart-ui",
   "private": true,
   "sideEffects": false,
-  "version": "1.0.1",
   "scripts": {
     "build": "shopify hydrogen build",
     "dev": "shopify hydrogen dev --worker --codegen",
