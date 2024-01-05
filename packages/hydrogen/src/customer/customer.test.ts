@@ -1,6 +1,7 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
-import type {HydrogenSession} from '../hydrogen';
+import type {HydrogenSession, HydrogenSessionData} from '../hydrogen';
 import {createCustomerClient} from './customer';
+import {CUSTOMER_ACCOUNT_SESSION_KEY} from './constants';
 import crypto from 'node:crypto';
 
 if (!globalThis.crypto) {
@@ -44,21 +45,31 @@ function createFetchResponse<T>(data: T, options: {ok: boolean}) {
 
 let session: HydrogenSession;
 
+const mockCustomerAccountSession: HydrogenSessionData['customerAccount'] = {
+  accessToken: 'access_token',
+  expiresAt: new Date(new Date().getTime() + 120 * 1000).getTime().toString(),
+  refreshToken: 'refresh_token',
+  codeVerifier: 'code_verifier',
+  idToken: 'id_token',
+  state: 'state',
+  nonce: 'nonce',
+};
+
 describe('customer', () => {
+  beforeEach(() => {
+    session = {
+      commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
+      get: vi.fn(() => mockCustomerAccountSession) as HydrogenSession['get'],
+      set: vi.fn(),
+      unset: vi.fn(),
+    };
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe('login & logout', () => {
-    beforeEach(() => {
-      session = {
-        commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
-        get: vi.fn(() => 'id_token') as HydrogenSession['get'],
-        set: vi.fn(),
-        unset: vi.fn(),
-      };
-    });
-
-    afterEach(() => {
-      vi.clearAllMocks();
-    });
-
     it('returns true if logged in', async () => {
       const customer = createCustomerClient({
         session,
@@ -96,11 +107,13 @@ describe('customer', () => {
 
       const response = await customer.login();
 
-      expect(session.set).toHaveBeenCalledWith('state', expect.any(String));
-      expect(session.set).toHaveBeenCalledWith('nonce', expect.any(String));
       expect(session.set).toHaveBeenCalledWith(
-        'code-verifier',
-        expect.any(String),
+        CUSTOMER_ACCOUNT_SESSION_KEY,
+        expect.objectContaining({
+          state: expect.any(String),
+          nonce: expect.any(String),
+          codeVerifier: expect.any(String),
+        }),
       );
 
       expect(response.status).toBe(302);
@@ -147,33 +160,11 @@ describe('customer', () => {
       expect(params.get('id_token_hint')).toBe('id_token');
 
       // Session is cleared
-      expect(session.unset).toHaveBeenCalledWith('code-verifier');
-      expect(session.unset).toHaveBeenCalledWith(
-        'customer_authorization_code_token',
-      );
-      expect(session.unset).toHaveBeenCalledWith('expires_at');
-      expect(session.unset).toHaveBeenCalledWith('id_token');
-      expect(session.unset).toHaveBeenCalledWith('refresh_token');
-      expect(session.unset).toHaveBeenCalledWith('customer_access_token');
-      expect(session.unset).toHaveBeenCalledWith('state');
-      expect(session.unset).toHaveBeenCalledWith('nonce');
+      expect(session.unset).toHaveBeenCalledWith(CUSTOMER_ACCOUNT_SESSION_KEY);
     });
   });
 
   describe('authorize', () => {
-    beforeEach(() => {
-      session = {
-        commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
-        get: vi.fn((v) => v) as HydrogenSession['get'],
-        set: vi.fn(),
-        unset: vi.fn(),
-      };
-    });
-
-    afterEach(() => {
-      vi.clearAllMocks();
-    });
-
     it('Throws unauthorized if no code or state params are passed', async () => {
       const customer = createCustomerClient({
         session,
@@ -287,52 +278,19 @@ describe('customer', () => {
         expect.any(String),
       );
 
-      expect(session.set).toHaveBeenNthCalledWith(
-        1,
-        'customer_authorization_code_token',
-        'access_token',
-      );
-
-      expect(session.set).toHaveBeenNthCalledWith(
-        2,
-        'expires_at',
-        expect.anything(),
-      );
-
-      expect(session.set).toHaveBeenNthCalledWith(
-        3,
-        'id_token',
-        'e30=.eyJub25jZSI6ICJub25jZSJ9.signature',
-      );
-
-      expect(session.set).toHaveBeenNthCalledWith(
-        4,
-        'refresh_token',
-        'refresh_token',
-      );
-
-      expect(session.set).toHaveBeenNthCalledWith(
-        5,
-        'customer_access_token',
-        'access_token',
+      expect(session.set).toHaveBeenCalledWith(
+        CUSTOMER_ACCOUNT_SESSION_KEY,
+        expect.objectContaining({
+          accessToken: 'access_token',
+          expiresAt: expect.any(String),
+          idToken: 'e30=.eyJub25jZSI6ICJub25jZSJ9.signature',
+          refreshToken: 'refresh_token',
+        }),
       );
     });
   });
 
   describe('query', () => {
-    beforeEach(() => {
-      session = {
-        commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
-        get: vi.fn((v) => v) as HydrogenSession['get'],
-        set: vi.fn(),
-        unset: vi.fn(),
-      };
-    });
-
-    afterEach(() => {
-      vi.clearAllMocks();
-    });
-
     it('Throws unauthorized if no access token is in the session', async () => {
       const customer = createCustomerClient({
         session,
@@ -362,16 +320,18 @@ describe('customer', () => {
         waitUntil: vi.fn(),
       });
 
-      (session.get as any).mockImplementation((v: string) =>
-        v === 'expires_at' ? '100' : v === 'refresh_token' ? null : v,
-      );
+      (session.get as any).mockImplementation(() => ({
+        ...mockCustomerAccountSession,
+        expiresAt: '100',
+        refreshToken: undefined,
+      }));
 
       async function run() {
         await customer.query(`query {...}`);
       }
 
       await expect(run).rejects.toThrowError(
-        'Unauthorized No refresh_token in the session. Make sure your session is configured correctly and passed to `createCustomerClient`',
+        'Unauthorized No refreshToken found in the session. Make sure your session is configured correctly and passed to `createCustomerClient`.',
       );
     });
 
@@ -384,9 +344,10 @@ describe('customer', () => {
         waitUntil: vi.fn(),
       });
 
-      (session.get as any).mockImplementation((v: string) =>
-        v === 'expires_at' ? new Date().getTime() + 10000 + '' : v,
-      );
+      (session.get as any).mockImplementation(() => ({
+        ...mockCustomerAccountSession,
+        expiresAt: new Date().getTime() + 10000 + '',
+      }));
 
       const someJson = {data: 'json'};
 
@@ -407,16 +368,20 @@ describe('customer', () => {
         waitUntil: vi.fn(),
       });
 
-      (session.get as any).mockImplementation((v: string) =>
-        v === 'expires_at' ? '100' : v,
+      (session.get as any).mockImplementation(() => ({
+        ...mockCustomerAccountSession,
+        expiresAt: '100',
+      }));
+
+      fetch.mockResolvedValueOnce(
+        createFetchResponse({access_token: 'access_token'}, {ok: true}),
       );
 
       const someJson = {data: 'json'};
-
       fetch.mockResolvedValue(createFetchResponse(someJson, {ok: true}));
 
       const response = await customer.query(`query {...}`);
-      expect(response).toStrictEqual({data: 'json'});
+      expect(response).toStrictEqual(someJson);
       // Session updated because token was refreshed
       expect(session.set).toHaveBeenCalled();
     });
