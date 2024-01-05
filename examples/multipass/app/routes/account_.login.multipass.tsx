@@ -4,12 +4,12 @@ import {
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
 } from '@shopify/remix-oxygen';
-import {Multipassify} from '~/utils/multipass/multipassify.server';
+import {Multipassify} from '~/lib/multipass/multipassify.server';
 import type {
   CustomerInfoType,
   MultipassRequestBody,
   NotLoggedInResponseType,
-} from '~/utils/multipass/types';
+} from '~/lib/multipass/types';
 
 /*
   Redirect document GET requests to the login page (housekeeping)
