@@ -18,7 +18,7 @@ export const storefrontApiCustomScalars = {
  * Reference for the GraphQL types: https://shopify.dev/docs/api/customer/current/scalars/HTML
  * Note: JSON is generated as 'unknown' by default.
  */
-export const customerApiCustomScalars = {
+export const customerAccountApiCustomScalars = {
   DateTime: 'string',
   Decimal: 'string',
   HTML: 'string',
