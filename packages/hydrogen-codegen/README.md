@@ -34,14 +34,14 @@ export default {
       documents: [
         './*.{ts,tsx,js,jsx}',
         './app/**/*.{ts,tsx,js,jsx}',
-        '!./app/graphql/customer/*.{ts,tsx,js,jsx}',
+        '!./app/graphql/customer-account/*.{ts,tsx,js,jsx}',
         '!./app/graphql/my-cms/*.{ts,tsx,js,jsx}',
       ],
     },
-    'customerapi.generated.d.ts': {
+    'customeraccountapi.generated.d.ts': {
       preset,
-      schema: getSchema('customer'),
-      documents: ['./app/graphql/customer/*.{ts,tsx,js,jsx}'],
+      schema: getSchema('customer-account'),
+      documents: ['./app/graphql/customer-account/*.{ts,tsx,js,jsx}'],
     },
     'mycms.generated.d.ts': {
       preset,

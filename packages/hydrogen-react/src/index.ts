@@ -39,7 +39,7 @@ export {CartLineQuantity} from './CartLineQuantity.js';
 export {CartLineQuantityAdjustButton} from './CartLineQuantityAdjustButton.js';
 export {CartProvider, useCart} from './CartProvider.js';
 export {
-  customerApiCustomScalars,
+  customerAccountApiCustomScalars,
   storefrontApiCustomScalars,
 } from './codegen.helpers.js';
 export {getShopifyCookies} from './cookies-utils.js';

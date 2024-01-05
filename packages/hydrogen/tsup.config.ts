@@ -49,7 +49,7 @@ export default [
         '\n',
       );
 
-      const caSchemaFile = 'customer.schema.json';
+      const caSchemaFile = 'customer-account.schema.json';
       const caTypeFile = 'customer-account-api-types.d.ts';
 
       await fs.copyFile(

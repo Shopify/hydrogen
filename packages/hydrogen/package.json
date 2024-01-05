@@ -42,7 +42,7 @@
     "./storefront-api-types": "./dist/storefront-api-types.d.ts",
     "./storefront.schema.json": "./dist/storefront.schema.json",
     "./customer-account-api-types": "./dist/customer-account-api-types.d.ts",
-    "./customer.schema.json": "./dist/customer.schema.json",
+    "./customer-account.schema.json": "./dist/customer-account.schema.json",
     "./package.json": "./package.json"
   },
   "typesVersions": {
