@@ -21,7 +21,6 @@ import {
   renderProjectReady,
 } from '../../lib/onboarding/common.js';
 import {getCliCommand} from '../../lib/shell.js';
-import {generateProjectFile} from '../../lib/setups/routes/generate.js';
 import {getTemplateAppFile} from '../../lib/build.js';
 
 export default class Setup extends Command {
