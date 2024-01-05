@@ -5,7 +5,9 @@
   "scripts": {
     "build": "npm run build:pkg",
     "build:pkg": "turbo build --parallel --filter=./packages/*",
-    "build:all": "turbo build --parallel",
+    "build:examples": "turbo build --parallel --filter=./examples/*",
+    "build:templates": "turbo build --parallel --filter=./templates/*",
+    "build:all": "npm run build:pkg && npm run build:templates && npm run build:examples",
     "ci:checks": "turbo run lint test format:check typecheck",
     "dev": "npm run dev:pkg",
     "dev:pkg": "cross-env LOCAL_DEV=true turbo dev --parallel --filter=./packages/*",
