@@ -11,12 +11,9 @@ export const meta: MetaFunction = () => {
 };
 
 export async function action({request, context}: ActionFunctionArgs) {
-  const {session, cart} = context;
+  const {cart} = context;
 
-  const [formData, customerAccessToken] = await Promise.all([
-    request.formData(),
-    session.get('customerAccessToken'),
-  ]);
+  const formData = await request.formData();
 
   const {action, inputs} = CartForm.getFormInput(formData);
 
@@ -54,7 +51,6 @@ export async function action({request, context}: ActionFunctionArgs) {
     case CartForm.ACTIONS.BuyerIdentityUpdate: {
       result = await cart.updateBuyerIdentity({
         ...inputs.buyerIdentity,
-        customerAccessToken: customerAccessToken?.accessToken,
       });
       break;
     }

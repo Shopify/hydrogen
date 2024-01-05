@@ -3,7 +3,7 @@ import * as remixBuild from '@remix-run/dev/server-build';
 import {
   createStorefrontClient,
   storefrontRedirect,
-  createCustomerClient__unstable,
+  createCustomerClient,
   type HydrogenSession,
 } from '@shopify/hydrogen';
 import {
@@ -54,7 +54,7 @@ export default {
       /**
        * Create a customer client for the new customer API.
        */
-      const customerAccount = createCustomerClient__unstable({
+      const customerAccount = createCustomerClient({
         waitUntil,
         request,
         session,

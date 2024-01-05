@@ -17,7 +17,6 @@ import {
   isRouteErrorResponse,
   type ShouldRevalidateFunction,
 } from '@remix-run/react';
-import type {CustomerAccessToken} from '@shopify/hydrogen/storefront-api-types';
 import favicon from '../public/favicon.svg';
 import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
@@ -66,25 +65,15 @@ export const useRootLoaderData = () => {
 };
 
 export async function loader({context}: LoaderFunctionArgs) {
-  const {session, cart} = context;
-  const customerAccessToken = session.get('customerAccessToken');
+  const {cart} = context;
   const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
-
-  const {isLoggedIn, headers} = await validateCustomerAccessToken(
-    session,
-    customerAccessToken,
-  );
 
   const cartPromise = cart.get();
 
-  return defer(
-    {
-      cart: cartPromise,
-      isLoggedIn,
-      publicStoreDomain,
-    },
-    {headers},
-  );
+  return defer({
+    cart: cartPromise,
+    publicStoreDomain,
+  });
 }
 
 export default function App() {
@@ -151,40 +140,4 @@ export function ErrorBoundary() {
       </body>
     </html>
   );
-}
-
-/**
- * Validates the customer access token and returns a boolean and headers
- * @see https://shopify.dev/docs/api/storefront/latest/objects/CustomerAccessToken
- *
- * @example
- * ```js
- * const {isLoggedIn, headers} = await validateCustomerAccessToken(
- *  customerAccessToken,
- *  session,
- * );
- * ```
- */
-async function validateCustomerAccessToken(
-  session: LoaderFunctionArgs['context']['session'],
-  customerAccessToken?: CustomerAccessToken,
-) {
-  let isLoggedIn = false;
-  const headers = new Headers();
-  if (!customerAccessToken?.accessToken || !customerAccessToken?.expiresAt) {
-    return {isLoggedIn, headers};
-  }
-
-  const expiresAt = new Date(customerAccessToken.expiresAt).getTime();
-  const dateNow = Date.now();
-  const customerAccessTokenExpired = expiresAt < dateNow;
-
-  if (customerAccessTokenExpired) {
-    session.unset('customerAccessToken');
-    headers.append('Set-Cookie', await session.commit());
-  } else {
-    isLoggedIn = true;
-  }
-
-  return {isLoggedIn, headers};
 }
