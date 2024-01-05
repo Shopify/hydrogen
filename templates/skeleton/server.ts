@@ -10,6 +10,7 @@ import {
 import {
   createRequestHandler,
   getStorefrontHeaders,
+  type AppLoadContext,
 } from '@shopify/remix-oxygen';
 import {AppSession} from '~/lib/session';
 import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
@@ -69,7 +70,13 @@ export default {
       const handleRequest = createRequestHandler({
         build: remixBuild,
         mode: process.env.NODE_ENV,
-        getLoadContext: () => ({session, storefront, cart, env, waitUntil}),
+        getLoadContext: (): AppLoadContext => ({
+          session,
+          storefront,
+          cart,
+          env,
+          waitUntil,
+        }),
       });
 
       const response = await handleRequest(request);
