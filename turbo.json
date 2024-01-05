@@ -69,22 +69,7 @@
       ],
       "outputs": ["dist/**"]
     },
-    "hydrogen-express#build": {
-      "dependsOn": ["@shopify/hydrogen#build"]
-    },
-    "customer-api#build": {
-      "dependsOn": ["@shopify/hydrogen#build"]
-    },
-    "multipass#build": {
-      "dependsOn": ["@shopify/hydrogen#build"]
-    },
-    "subscriptions#build": {
-      "dependsOn": ["@shopify/hydrogen#build"]
-    },
-    "optimistic-cart-ui#build": {
-      "dependsOn": ["@shopify/hydrogen#build"]
-    },
-    "third-party-queries-caching#build": {
+    "example-*#build": {
       "dependsOn": ["@shopify/hydrogen#build"]
     }
   }
