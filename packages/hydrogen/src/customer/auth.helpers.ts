@@ -1,14 +1,14 @@
 import type {HydrogenSession} from '../hydrogen';
 import {BadRequest} from './BadRequest';
-import {LIB_VERSION} from '../version';
+import {
+  USER_AGENT,
+  CUSTOMER_API_CLIENT_ID,
+  CUSTOMER_ACCOUNT_SESSION_KEY,
+} from './constants';
 
 export interface Locks {
   refresh?: Promise<any>;
 }
-
-export const USER_AGENT = `Shopify Hydrogen ${LIB_VERSION}`;
-
-const CUSTOMER_API_CLIENT_ID = '30243aa5-17c1-465a-8493-944bcc4e88aa';
 
 export function redirect(
   path: string,
@@ -44,12 +44,13 @@ export async function refreshToken({
 }) {
   const newBody = new URLSearchParams();
 
-  const refreshToken = session.get('refresh_token');
+  const customerAccount = session.get(CUSTOMER_ACCOUNT_SESSION_KEY);
+  const refreshToken = customerAccount?.refreshToken;
 
   if (!refreshToken)
     throw new BadRequest(
       'Unauthorized',
-      'No refresh_token in the session. Make sure your session is configured correctly and passed to `createCustomerClient`.',
+      'No refreshToken found in the session. Make sure your session is configured correctly and passed to `createCustomerClient`.',
     );
 
   newBody.append('grant_type', 'refresh_token');
@@ -81,34 +82,25 @@ export async function refreshToken({
   const {access_token, expires_in, id_token, refresh_token} =
     await response.json<AccessTokenResponse>();
 
-  session.set('customer_authorization_code_token', access_token);
-  // Store the date in future the token expires, separated by two minutes
-  session.set(
-    'expires_at',
-    new Date(new Date().getTime() + (expires_in - 120) * 1000).getTime() + '',
-  );
-  session.set('id_token', id_token);
-  session.set('refresh_token', refresh_token);
-
-  const customerAccessToken = await exchangeAccessToken(
-    session,
+  const accessToken = await exchangeAccessToken(
+    access_token,
     customerAccountId,
     customerAccountUrl,
     origin,
   );
 
-  session.set('customer_access_token', customerAccessToken);
+  session.set(CUSTOMER_ACCOUNT_SESSION_KEY, {
+    accessToken,
+    // Store the date in future the token expires, separated by two minutes
+    expiresAt:
+      new Date(new Date().getTime() + (expires_in - 120) * 1000).getTime() + '',
+    refreshToken: refresh_token,
+    idToken: id_token,
+  });
 }
 
 export function clearSession(session: HydrogenSession): void {
-  session.unset('code-verifier');
-  session.unset('customer_authorization_code_token');
-  session.unset('expires_at');
-  session.unset('id_token');
-  session.unset('refresh_token');
-  session.unset('customer_access_token');
-  session.unset('state');
-  session.unset('nonce');
+  session.unset(CUSTOMER_ACCOUNT_SESSION_KEY);
 }
 
 export async function checkExpires({
@@ -193,18 +185,17 @@ export async function generateState(): Promise<string> {
 }
 
 export async function exchangeAccessToken(
-  session: HydrogenSession,
+  authAccessToken: string | undefined,
   customerAccountId: string,
   customerAccountUrl: string,
   origin: string,
 ) {
   const clientId = customerAccountId;
-  const accessToken = session.get('customer_authorization_code_token');
 
-  if (!accessToken)
+  if (!authAccessToken)
     throw new BadRequest(
       'Unauthorized',
-      'No access token found in the session. Make sure your session is configured correctly and passed to `createCustomerClient`.',
+      'oAuth access token was not provided during token exchange.',
     );
 
   const body = new URLSearchParams();
@@ -212,7 +203,7 @@ export async function exchangeAccessToken(
   body.append('grant_type', 'urn:ietf:params:oauth:grant-type:token-exchange');
   body.append('client_id', clientId);
   body.append('audience', CUSTOMER_API_CLIENT_ID);
-  body.append('subject_token', accessToken);
+  body.append('subject_token', authAccessToken);
   body.append(
     'subject_token_type',
     'urn:ietf:params:oauth:token-type:access_token',

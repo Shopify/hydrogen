@@ -6,15 +6,15 @@ import type {
 } from '@remix-run/server-runtime';
 
 export interface HydrogenSessionData {
-  /** session data for customer account auth*/
-  'code-verifier': string;
-  customer_access_token: string;
-  customer_authorization_code_token: string;
-  expires_at: string;
-  id_token: string;
-  nonce: string;
-  refresh_token: string;
-  state: string;
+  customerAccount: {
+    accessToken?: string;
+    expiresAt?: string;
+    refreshToken?: string;
+    codeVerifier?: string;
+    idToken?: string;
+    nonce?: string;
+    state?: string;
+  };
 }
 
 export interface HydrogenSession<
