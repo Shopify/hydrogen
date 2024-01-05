@@ -1,5 +1,5 @@
 {
-  "name": "customer-api",
+  "name": "example-customer-api",
   "private": true,
   "sideEffects": false,
   "version": "0.0.2",

@@ -1,5 +1,5 @@
 {
-  "name": "subscriptions",
+  "name": "example-subscriptions",
   "private": true,
   "sideEffects": false,
   "version": "1.0.0",

@@ -1,5 +1,5 @@
 {
-  "name": "third-party-queries-caching",
+  "name": "example-third-party-queries-caching",
   "private": true,
   "sideEffects": false,
   "version": "1.0.0",

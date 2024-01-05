@@ -1,5 +1,5 @@
 {
-  "name": "multipass",
+  "name": "example-multipass",
   "private": true,
   "sideEffects": false,
   "version": "1.0.1",
