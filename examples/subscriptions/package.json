@@ -1,8 +1,7 @@
 {
-  "name": "subscriptions",
+  "name": "example-subscriptions",
   "private": true,
   "sideEffects": false,
-  "version": "1.0.0",
   "scripts": {
     "build": "shopify hydrogen build",
     "dev": "shopify hydrogen dev --codegen",

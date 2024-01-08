@@ -1,9 +1,4 @@
 ---
-'third-party-queries-caching': patch
-'optimistic-cart-ui': patch
-'subscriptions': patch
-'customer-api': patch
-'multipass': patch
 'skeleton': patch
 '@shopify/hydrogen': patch
 '@shopify/cli-hydrogen': patch
