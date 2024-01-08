@@ -1,5 +1,5 @@
 {
-  "name": "hydrogen-express",
+  "name": "example-hydrogen-express",
   "private": true,
   "sideEffects": false,
   "scripts": {
@@ -43,6 +43,5 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "version": null
+  }
 }

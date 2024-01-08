@@ -1,7 +1,6 @@
 {
-  "name": "optimistic-cart-ui",
+  "name": "example-optimistic-cart-ui",
   "private": true,
-  "version": "1.0.1",
   "prettier": "@shopify/prettier-config",
   "scripts": {
     "build": "shopify hydrogen build --diff",

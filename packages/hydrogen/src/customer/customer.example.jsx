@@ -1,4 +1,4 @@
-import {createCustomerClient__unstable} from '@shopify/hydrogen';
+import {createCustomerClient} from '@shopify/hydrogen';
 import * as remixBuild from '@remix-run/dev/server-build';
 import {
   createRequestHandler,
@@ -7,10 +7,10 @@ import {
 
 export default {
   async fetch(request, env, executionContext) {
-    const session = await HydrogenSession.init(request, [env.SESSION_SECRET]);
+    const session = await AppSession.init(request, [env.SESSION_SECRET]);
 
     /* Create a Customer API client with your credentials and options */
-    const customer = createCustomerClient__unstable({
+    const customer = createCustomerClient({
       /* Runtime utility in serverless environments */
       waitUntil: (p) => executionContext.waitUntil(p),
       /* Public Customer Account API token for your store */
@@ -32,7 +32,7 @@ export default {
   },
 };
 
-class HydrogenSession {
+class AppSession {
   static async init(request, secrets) {
     const storage = createCookieSessionStorage({
       cookie: {
