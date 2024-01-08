@@ -4,6 +4,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
+      "*": ["./*", "../../templates/skeleton/*"],
       "~/*": ["app/*", "../../templates/skeleton/app/*"]
     }
   }
