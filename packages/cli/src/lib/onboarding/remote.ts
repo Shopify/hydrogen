@@ -85,9 +85,9 @@ export async function setupRemoteTemplate(
   if (controller.signal.aborted) return;
 
   const {sourcePath} = await backgroundDownloadPromise;
-  const supportsTranspilation = !(await fileExists(
-    joinPath(sourcePath, 'server.js'),
-  ));
+  const supportsTranspilation = await fileExists(
+    joinPath(sourcePath, 'tsconfig.json'),
+  );
 
   const {language, transpileProject} = supportsTranspilation
     ? await handleLanguage(project.directory, controller, options.language)
