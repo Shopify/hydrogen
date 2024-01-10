@@ -536,6 +536,10 @@ button:active.primary {
   font-size: var(--text-normal);
 }
 
+.error {
+  color: #ff0000;
+}
+
 @media (max-width: 940px) {
   #main.empty {
     display: grid;

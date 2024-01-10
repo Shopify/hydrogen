@@ -12,6 +12,7 @@ type RequestRow = {
   url: string;
   cacheStatus: string;
   duration: number;
+  status: number;
 };
 
 export function RequestTable({
@@ -34,6 +35,7 @@ export function RequestTable({
         id: mainRequest.id,
         requestId: mainRequest.requestId,
         url: mainRequest.url,
+        status: mainRequest.responseInit?.status ?? 0,
         cacheStatus: mainRequest.cacheStatus,
         duration: timing.responseEnd - timing.requestStart,
       };
@@ -49,6 +51,7 @@ export function RequestTable({
         id: subRequest.id,
         requestId: subRequest.requestId,
         url: subRequest.displayName ?? subRequest.url,
+        status: subRequest.responseInit?.status ?? 0,
         cacheStatus: subRequest.cacheStatus,
         duration: timing.requestEnd - timing.requestStart,
       };
@@ -80,7 +83,7 @@ export function RequestTable({
               id={`request-table__row-${row.id}`}
               key={row.id}
               tabIndex={0}
-              className={`grid-row${activeEventId === row.id ? ' active' : ''}`}
+              className={`grid-row${activeEventId === row.id ? ' active' : ''}${row.status >= 400 ? ' error' : ''}`}
               onClick={() => setActiveEventId(row.id)}
               onKeyUp={(event) => {
                 if (event.code === 'Space') setActiveEventId(row.id);
