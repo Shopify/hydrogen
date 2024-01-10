@@ -5,22 +5,15 @@ import {
   getStorefrontHeaders,
 } from '@shopify/remix-oxygen';
 import {
-  CacheLong,
   cartGetIdDefault,
   cartSetIdDefault,
   createCartHandler,
   createStorefrontClient,
-  createWithCache,
   storefrontRedirect,
 } from '@shopify/hydrogen';
 
 import {HydrogenSession} from '~/lib/session.server';
 import {getLocaleFromRequest} from '~/lib/utils';
-
-type CatFact = {
-  fact: string;
-  length: number;
-};
 
 /**
  * Export a fetch handler in module format.
@@ -65,36 +58,6 @@ export default {
         setCartId: cartSetIdDefault(),
       });
 
-      const withCache = createWithCache({
-        cache,
-        waitUntil,
-        request,
-      });
-
-      const catFact = async () => {
-        return await withCache<CatFact>(
-          ['Random cat facts'],
-          CacheLong(),
-          ({addDebugData}) => {
-            return fetch('https://catfact.ninja/fact').then(async (res) => {
-              if (process.env.NODE_ENV === 'development') {
-                addDebugData({
-                  displayName: 'Cat fact',
-                  url: 'https://catfact.ninja/fact',
-                  responseInit: {
-                    status: res.status,
-                    statusText: res.statusText,
-                    headers: Array.from(res.headers.entries()),
-                  },
-                });
-              }
-
-              return (await res.json()) as CatFact;
-            });
-          },
-        );
-      };
-
       /**
        * Create a Remix request handler and pass
        * Hydrogen's Storefront client to the loader context.
@@ -108,7 +71,6 @@ export default {
           storefront,
           cart,
           env,
-          catFact,
         }),
       });
 
