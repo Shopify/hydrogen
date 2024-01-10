@@ -4,8 +4,8 @@
   "sideEffects": false,
   "scripts": {
     "build": "shopify hydrogen build",
-    "dev": "shopify hydrogen dev --worker --codegen",
-    "preview": "npm run build && shopify hydrogen preview --worker",
+    "dev": "shopify hydrogen dev --codegen",
+    "preview": "npm run build && shopify hydrogen preview",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "typecheck": "tsc --noEmit",
     "codegen": "shopify hydrogen codegen"
