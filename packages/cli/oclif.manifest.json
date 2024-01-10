@@ -276,9 +276,8 @@
         },
         "worker": {
           "name": "worker",
-          "type": "option",
-          "hidden": true,
-          "multiple": false
+          "type": "boolean",
+          "hidden": true
         },
         "legacy-runtime": {
           "name": "legacy-runtime",
@@ -562,9 +561,8 @@
         },
         "worker": {
           "name": "worker",
-          "type": "option",
-          "hidden": true,
-          "multiple": false
+          "type": "boolean",
+          "hidden": true
         },
         "legacy-runtime": {
           "name": "legacy-runtime",

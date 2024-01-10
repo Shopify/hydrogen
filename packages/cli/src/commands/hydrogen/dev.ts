@@ -45,7 +45,7 @@ export default class Dev extends Command {
   static flags = {
     path: commonFlags.path,
     port: commonFlags.port,
-    worker: deprecated('--worker')(),
+    worker: deprecated('--worker', {isBoolean: true}),
     'legacy-runtime': commonFlags.legacyRuntime,
     codegen: overrideFlag(commonFlags.codegen, {
       description:
@@ -62,7 +62,7 @@ export default class Dev extends Command {
     }),
     debug: commonFlags.debug,
     'inspector-port': commonFlags.inspectorPort,
-    host: deprecated('--host')(),
+    host: deprecated('--host'),
     ['env-branch']: commonFlags.envBranch,
     ['disable-version-check']: Flags.boolean({
       description: 'Skip the version check when running `hydrogen dev`',

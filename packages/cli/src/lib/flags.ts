@@ -149,19 +149,25 @@ export function parseProcessFlags(
  * Displays an info message when the flag is used.
  * @param name The name of the flag.
  */
-export function deprecated(name: string) {
-  return Flags.custom<unknown>({
+export function deprecated(name: string, {isBoolean = false} = {}) {
+  const customFlag = Flags.custom<unknown>({
     parse: () => {
       renderInfo({
         headline: `The ${colors.bold(
           name,
-        )} flag is deprecated and will be removed in a future version of Shopify CLI.`,
+        )} flag is deprecated and will be removed in a future version of Shopify Hydrogen CLI.`,
       });
 
       return Promise.resolve(' ');
     },
     hidden: true,
   });
+
+  // Overwrite `type:'option'` to avoid requiring values for this flag
+  return {
+    ...customFlag(),
+    type: (isBoolean ? 'boolean' : 'option') as unknown as 'option',
+  };
 }
 
 export function overrideFlag<T extends Record<string, any>>(

@@ -14,7 +14,7 @@ export default class Preview extends Command {
   static flags = {
     path: commonFlags.path,
     port: commonFlags.port,
-    worker: deprecated('--worker')(),
+    worker: deprecated('--worker', {isBoolean: true}),
     'legacy-runtime': commonFlags.legacyRuntime,
     'env-branch': commonFlags.envBranch,
     'inspector-port': commonFlags.inspectorPort,

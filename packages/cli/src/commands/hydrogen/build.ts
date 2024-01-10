@@ -70,9 +70,9 @@ export default class Build extends Command {
     codegen: commonFlags.codegen,
     'codegen-config-path': commonFlags.codegenConfigPath,
 
-    base: deprecated('--base')(),
-    entry: deprecated('--entry')(),
-    target: deprecated('--target')(),
+    base: deprecated('--base'),
+    entry: deprecated('--entry'),
+    target: deprecated('--target'),
   };
 
   async run(): Promise<void> {
