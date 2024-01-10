@@ -30,12 +30,16 @@ const REQUIRED_ROUTES = [
 
   'account',
   'account/login',
-  'account/register',
   // 'account/addresses',
   // 'account/orders',
   'account/orders/:orderId',
-  'account/reset/:id/:token',
-  'account/activate/:id/:token',
+
+  // -- These were removed when migrating to CAAPI:
+  // 'account/register',
+  // 'account/reset/:id/:token',
+  // 'account/activate/:id/:token',
+  // -- Added for CAAPI:
+  'authorize',
 
   //   'password',
   //   'opening_soon',

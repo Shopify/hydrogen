@@ -171,7 +171,11 @@ export async function runBuild({
       fileWatchCache: createFileWatchCache(),
     }).catch((thrown) => {
       logThrown(thrown);
-      process.exit(1);
+      if (process.env.SHOPIFY_UNIT_TEST) {
+        throw thrown;
+      } else {
+        process.exit(1);
+      }
     }),
     useCodegen && codegen({...remixConfig, configFilePath: codegenConfigPath}),
   ]);

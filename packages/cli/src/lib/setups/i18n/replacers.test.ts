@@ -59,7 +59,11 @@ describe('i18n replacers', () => {
         // Enhance TypeScript's built-in typings.
         import "@total-typescript/ts-reset";
 
-        import type { Storefront, HydrogenCart } from "@shopify/hydrogen";
+        import type {
+          Storefront,
+          CustomerClient,
+          HydrogenCart,
+        } from "@shopify/hydrogen";
         import type {
           LanguageCode,
           CountryCode,
@@ -100,15 +104,9 @@ describe('i18n replacers', () => {
             env: Env;
             cart: HydrogenCart;
             storefront: Storefront<I18nLocale>;
+            customerAccount: CustomerClient;
             session: AppSession;
             waitUntil: ExecutionContext["waitUntil"];
-          }
-
-          /**
-           * Declare the data we expect to access via \`context.session\`.
-           */
-          export interface SessionData {
-            customerAccessToken: CustomerAccessToken;
           }
         }
         "
@@ -149,6 +147,7 @@ describe('i18n replacers', () => {
           createCartHandler,
           createStorefrontClient,
           storefrontRedirect,
+          createCustomerClient,
         } from "@shopify/hydrogen";
         import {
           createRequestHandler,
@@ -195,6 +194,17 @@ describe('i18n replacers', () => {
                 storefrontHeaders: getStorefrontHeaders(request),
               });
 
+              /**
+               * Create a client for Customer Account API.
+               */
+              const customerAccount = createCustomerClient({
+                waitUntil,
+                request,
+                session,
+                customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID,
+                customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_API_URL,
+              });
+
               /*
                * Create a cart handler that will be used to
                * create and update the cart in the session.
@@ -216,6 +226,7 @@ describe('i18n replacers', () => {
                 getLoadContext: (): AppLoadContext => ({
                   session,
                   storefront,
+                  customerAccount,
                   cart,
                   env,
                   waitUntil,
