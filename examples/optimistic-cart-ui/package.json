@@ -1,8 +1,7 @@
 {
-  "name": "optimistic-cart-ui",
+  "name": "example-optimistic-cart-ui",
   "private": true,
   "sideEffects": false,
-  "version": "1.0.1",
   "scripts": {
     "build": "shopify hydrogen build",
     "dev": "shopify hydrogen dev --worker --codegen",
@@ -15,7 +14,7 @@
   "dependencies": {
     "@remix-run/react": "2.1.0",
     "@remix-run/server-runtime": "2.1.0",
-    "@shopify/cli": "3.51.0",
+    "@shopify/cli": "3.52.0",
     "@shopify/cli-hydrogen": "^6.1.0",
     "@shopify/hydrogen": "~2023.10.3",
     "@shopify/remix-oxygen": "^2.0.2",

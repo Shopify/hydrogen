@@ -6,6 +6,7 @@ import {
   createCartHandler,
   createStorefrontClient,
   storefrontRedirect,
+  type HydrogenSession,
 } from '@shopify/hydrogen';
 import {
   createRequestHandler,
@@ -16,7 +17,7 @@ import {
 } from '@shopify/remix-oxygen';
 
 // 1. Import the Rick and Morty client.
-import {createRickAndMortyClient} from './app/utils/createRickAndMortyClient.server';
+import {createRickAndMortyClient} from './app/lib/createRickAndMortyClient.server';
 
 /**
  * Export a fetch handler in module format.
@@ -39,7 +40,7 @@ export default {
 
       const [cache, session] = await Promise.all([
         caches.open('hydrogen'),
-        HydrogenSession.init(request, [env.SESSION_SECRET]),
+        AppSession.init(request, [env.SESSION_SECRET]),
       ]);
 
       /**
@@ -117,7 +118,7 @@ export default {
  * Feel free to customize it to your needs, add helper methods, or
  * swap out the cookie-based implementation with something else!
  */
-export class HydrogenSession {
+export class AppSession implements HydrogenSession {
   #sessionStorage;
   #session;
 

@@ -17,7 +17,7 @@ create are labeled with 🆕.
 
 | File                                                                                              | Description                                                      |
 | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| 🆕 [`app/utils/createRickAndMortyClient.server.ts`](app/utils/createRickAndMortyClient.server.ts) | Rick & Morty GraphQL client factory function with Oxygen caching |
+| 🆕 [`app/lib/createRickAndMortyClient.server.ts`](app/lib/createRickAndMortyClient.server.ts) | Rick & Morty GraphQL client factory function with Oxygen caching |
 | [`server.ts`](server.ts)                                                                          | Oxygen server worker                                             |
 | [`remix.env.d.ts`](remix.env.d.ts)                                                                | (Optional) Oxygen/Hydrogen TypeScript types                      |
 | [`app/routes/_index.tsx`](app/routes/_index.tsx)                                                  | Hydrogen homepage route                                          |
@@ -30,14 +30,14 @@ create are labeled with 🆕.
 h2 link
 ```
 
-### 2. Copy over the new file `createRickAndMortyClient.server.ts` to `app/utils/`
+### 2. Copy over the new file `createRickAndMortyClient.server.ts` to `app/lib/`
 
 ### 3. Edit the worker file `server.ts`
 
 import `createRickAndMortyClient`, create a client instance and pass it to the `getLoadedContext`.
 
 ```ts
-import {createRickAndMortyClient} from './app/utils/createRickAndMortyClient.server';
+import {createRickAndMortyClient} from './app/lib/createRickAndMortyClient.server';
 // ...other imports
 
 export default {
@@ -79,7 +79,7 @@ and add the `rickAndMorty` property to the `AppLoadContext` interface.
 
 ```ts
 // ...other code
-import {createRickAndMortyClient} from './app/utils/createRickAndMortyClient.server';
+import {createRickAndMortyClient} from './app/lib/createRickAndMortyClient.server';
 
 // ...other code
 

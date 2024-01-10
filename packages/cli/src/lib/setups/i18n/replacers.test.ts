@@ -52,26 +52,26 @@ describe('i18n replacers', () => {
       expect(() => checkTypes(newContent)).not.toThrow();
 
       expect(newContent).toMatchInlineSnapshot(`
-        "/// <reference types=\\"@remix-run/dev\\" />
-        /// <reference types=\\"@shopify/remix-oxygen\\" />
-        /// <reference types=\\"@shopify/oxygen-workers-types\\" />
+        "/// <reference types="@remix-run/dev" />
+        /// <reference types="@shopify/remix-oxygen" />
+        /// <reference types="@shopify/oxygen-workers-types" />
 
         // Enhance TypeScript's built-in typings.
-        import \\"@total-typescript/ts-reset\\";
+        import "@total-typescript/ts-reset";
 
-        import type { Storefront, HydrogenCart } from \\"@shopify/hydrogen\\";
+        import type { Storefront, HydrogenCart } from "@shopify/hydrogen";
         import type {
           LanguageCode,
           CountryCode,
-        } from \\"@shopify/hydrogen/storefront-api-types\\";
-        import type { CustomerAccessToken } from \\"@shopify/hydrogen/storefront-api-types\\";
-        import type { HydrogenSession } from \\"./server\\";
+        } from "@shopify/hydrogen/storefront-api-types";
+        import type { CustomerAccessToken } from "@shopify/hydrogen/storefront-api-types";
+        import type { AppSession } from "~/lib/session";
 
         declare global {
           /**
            * A global \`process\` object is only available during build to access NODE_ENV.
            */
-          const process: { env: { NODE_ENV: \\"production\\" | \\"development\\" } };
+          const process: { env: { NODE_ENV: "production" | "development" } };
 
           /**
            * Declare expected Env parameter in fetch handler.
@@ -92,7 +92,7 @@ describe('i18n replacers', () => {
           type I18nLocale = { language: LanguageCode; country: CountryCode };
         }
 
-        declare module \\"@shopify/remix-oxygen\\" {
+        declare module "@shopify/remix-oxygen" {
           /**
            * Declare local additions to the Remix loader context.
            */
@@ -100,8 +100,8 @@ describe('i18n replacers', () => {
             env: Env;
             cart: HydrogenCart;
             storefront: Storefront<I18nLocale>;
-            session: HydrogenSession;
-            waitUntil: ExecutionContext[\\"waitUntil\\"];
+            session: AppSession;
+            waitUntil: ExecutionContext["waitUntil"];
           }
 
           /**
@@ -122,7 +122,7 @@ describe('i18n replacers', () => {
 
       await writeFile(
         joinPath(tmpDir, serverTs),
-        // Remove the part that is not needed for this test (HydrogenSession, Cart query, etc);
+        // Remove the part that is not needed for this test (AppSession, Cart query, etc);
         (
           await readFile(joinPath(skeletonDir, serverTs))
         ).replace(/^};$.*/ms, '};'),
@@ -142,21 +142,21 @@ describe('i18n replacers', () => {
 
       expect(newContent).toMatchInlineSnapshot(`
         "// Virtual entry point for the app
-        import * as remixBuild from \\"@remix-run/dev/server-build\\";
+        import * as remixBuild from "@remix-run/dev/server-build";
         import {
           cartGetIdDefault,
           cartSetIdDefault,
           createCartHandler,
           createStorefrontClient,
           storefrontRedirect,
-        } from \\"@shopify/hydrogen\\";
+        } from "@shopify/hydrogen";
         import {
           createRequestHandler,
           getStorefrontHeaders,
-          createCookieSessionStorage,
-          type SessionStorage,
-          type Session,
-        } from \\"@shopify/remix-oxygen\\";
+          type AppLoadContext,
+        } from "@shopify/remix-oxygen";
+        import { AppSession } from "~/lib/session";
+        import { CART_QUERY_FRAGMENT } from "~/lib/fragments";
 
         /**
          * Export a fetch handler in module format.
@@ -172,13 +172,13 @@ describe('i18n replacers', () => {
                * Open a cache instance in the worker and a custom session instance.
                */
               if (!env?.SESSION_SECRET) {
-                throw new Error(\\"SESSION_SECRET environment variable is not set\\");
+                throw new Error("SESSION_SECRET environment variable is not set");
               }
 
               const waitUntil = executionContext.waitUntil.bind(executionContext);
               const [cache, session] = await Promise.all([
-                caches.open(\\"hydrogen\\"),
-                HydrogenSession.init(request, [env.SESSION_SECRET]),
+                caches.open("hydrogen"),
+                AppSession.init(request, [env.SESSION_SECRET]),
               ]);
 
               /**
@@ -213,7 +213,13 @@ describe('i18n replacers', () => {
               const handleRequest = createRequestHandler({
                 build: remixBuild,
                 mode: process.env.NODE_ENV,
-                getLoadContext: () => ({ session, storefront, cart, env, waitUntil }),
+                getLoadContext: (): AppLoadContext => ({
+                  session,
+                  storefront,
+                  cart,
+                  env,
+                  waitUntil,
+                }),
               });
 
               const response = await handleRequest(request);
@@ -231,23 +237,23 @@ describe('i18n replacers', () => {
             } catch (error) {
               // eslint-disable-next-line no-console
               console.error(error);
-              return new Response(\\"An unexpected error occurred\\", { status: 500 });
+              return new Response("An unexpected error occurred", { status: 500 });
             }
           },
         };
 
         function getLocaleFromRequest(request: Request): I18nLocale {
-          const defaultLocale: I18nLocale = { language: \\"EN\\", country: \\"US\\" };
+          const defaultLocale: I18nLocale = { language: "EN", country: "US" };
           const supportedLocales = {
-            ES: \\"ES\\",
-            FR: \\"FR\\",
-            DE: \\"DE\\",
-            JP: \\"JA\\",
-          } as Record<I18nLocale[\\"country\\"], I18nLocale[\\"language\\"]>;
+            ES: "ES",
+            FR: "FR",
+            DE: "DE",
+            JP: "JA",
+          } as Record<I18nLocale["country"], I18nLocale["language"]>;
 
           const url = new URL(request.url);
           const domain = url.hostname
-            .split(\\".\\")
+            .split(".")
             .pop()
             ?.toUpperCase() as keyof typeof supportedLocales;
 

@@ -235,7 +235,7 @@ function ProductsLoadedOnScroll({
   }, [inView, navigate, state, nextPageUrl, hasNextPage]);
 
   return (
-    <Grid layout="products">
+    <Grid layout="products" data-test="product-grid">
       {nodes.map((product: any, i: number) => (
         <ProductCard
           key={product.id}

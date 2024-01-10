@@ -38,7 +38,10 @@ export {CartLineProvider, useCartLine} from './CartLineProvider.js';
 export {CartLineQuantity} from './CartLineQuantity.js';
 export {CartLineQuantityAdjustButton} from './CartLineQuantityAdjustButton.js';
 export {CartProvider, useCart} from './CartProvider.js';
-export {storefrontApiCustomScalars} from './codegen.helpers.js';
+export {
+  customerAccountApiCustomScalars,
+  storefrontApiCustomScalars,
+} from './codegen.helpers.js';
 export {getShopifyCookies} from './cookies-utils.js';
 export {ExternalVideo} from './ExternalVideo.js';
 export {flattenConnection} from './flatten-connection.js';

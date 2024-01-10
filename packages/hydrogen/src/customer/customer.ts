@@ -1,16 +1,25 @@
+import type {
+  ClientReturn,
+  ClientVariablesInRestParams,
+  GenericVariables,
+} from '@shopify/hydrogen-codegen';
+import type {HydrogenSession} from '../hydrogen';
+import {
+  DEFAULT_CUSTOMER_API_VERSION,
+  CUSTOMER_ACCOUNT_SESSION_KEY,
+  USER_AGENT,
+} from './constants';
 import {
   clearSession,
   generateCodeChallenge,
   generateCodeVerifier,
   generateState,
   checkExpires,
-  USER_AGENT,
   exchangeAccessToken,
   AccessTokenResponse,
   getNonce,
   redirect,
   Locks,
-  type HydrogenSession,
 } from './auth.helpers';
 import {BadRequest} from './BadRequest';
 import {generateNonce} from '../csp/nonce';
@@ -47,6 +56,16 @@ type CustomerAPIResponse<ReturnType> = {
   };
 };
 
+export interface CustomerAccountQueries {
+  // Example of how a generated query type looks like:
+  // '#graphql query q1 {...}': {return: Q1Query; variables: Q1QueryVariables};
+}
+
+export interface CustomerAccountMutations {
+  // Example of how a generated mutation type looks like:
+  // '#graphql mutation m1 {...}': {return: M1Mutation; variables: M1MutationVariables};
+}
+
 export type CustomerClient = {
   /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. */
   login: () => Promise<Response>;
@@ -54,18 +73,40 @@ export type CustomerClient = {
   authorize: (redirectPath?: string) => Promise<Response>;
   /** Returns if the user is logged in. It also checks if the access token is expired and refreshes it if needed. */
   isLoggedIn: () => Promise<boolean>;
+  /** Returns CustomerAccessToken if the user is logged in. It also run a expirey check and does a token refresh if needed. */
+  getAccessToken: () => Promise<string | undefined>;
   /** Logout the user by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. */
   logout: () => Promise<Response>;
   /** Execute a GraphQL query against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
-  query: <ReturnType = any, RawGqlString extends string = string>(
+  query: <
+    OverrideReturnType extends any = never,
+    RawGqlString extends string = string,
+  >(
     query: RawGqlString,
-    options?: {variables: Record<string, any>},
-  ) => Promise<CustomerAPIResponse<ReturnType>>;
+    ...options: ClientVariablesInRestParams<
+      CustomerAccountQueries,
+      RawGqlString
+    >
+  ) => Promise<
+    CustomerAPIResponse<
+      ClientReturn<CustomerAccountQueries, RawGqlString, OverrideReturnType>
+    >
+  >;
   /** Execute a GraphQL mutation against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
-  mutate: <ReturnType = any, RawGqlString extends string = string>(
+  mutate: <
+    OverrideReturnType extends any = never,
+    RawGqlString extends string = string,
+  >(
     mutation: RawGqlString,
-    options?: {variables: Record<string, any>},
-  ) => Promise<CustomerAPIResponse<ReturnType>>;
+    ...options: ClientVariablesInRestParams<
+      CustomerAccountMutations,
+      RawGqlString
+    >
+  ) => Promise<
+    CustomerAPIResponse<
+      ClientReturn<CustomerAccountMutations, RawGqlString, OverrideReturnType>
+    >
+  >;
 };
 
 type CustomerClientOptions = {
@@ -82,8 +123,6 @@ type CustomerClientOptions = {
   /** The waitUntil function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
   waitUntil?: ExecutionContext['waitUntil'];
 };
-
-const DEFAULT_CUSTOMER_API_VERSION = '2024-01';
 
 export function createCustomerClient({
   session,
@@ -135,10 +174,11 @@ export function createCustomerClient({
   }: {
     query: string;
     type: 'query' | 'mutation';
-    variables?: Record<string, any>;
+    variables?: GenericVariables;
   }) {
-    const accessToken = session.get('customer_access_token');
-    const expiresAt = session.get('expires_at');
+    const customerAccount = session.get(CUSTOMER_ACCOUNT_SESSION_KEY);
+    const accessToken = customerAccount?.accessToken;
+    const expiresAt = customerAccount?.expiresAt;
 
     if (!accessToken || !expiresAt)
       throw new BadRequest(
@@ -210,6 +250,33 @@ export function createCustomerClient({
     }
   }
 
+  async function isLoggedIn() {
+    const customerAccount = session.get(CUSTOMER_ACCOUNT_SESSION_KEY);
+    const accessToken = customerAccount?.accessToken;
+    const expiresAt = customerAccount?.expiresAt;
+
+    if (!accessToken || !expiresAt) return false;
+
+    const startTime = new Date().getTime();
+
+    try {
+      await checkExpires({
+        locks,
+        expiresAt,
+        session,
+        customerAccountId,
+        customerAccountUrl,
+        origin,
+      });
+
+      logSubRequestEvent?.(' check expires', startTime);
+    } catch {
+      return false;
+    }
+
+    return true;
+  }
+
   return {
     login: async () => {
       const loginUrl = new URL(customerAccountUrl + '/auth/oauth/authorize');
@@ -231,9 +298,12 @@ export function createCustomerClient({
       const verifier = await generateCodeVerifier();
       const challenge = await generateCodeChallenge(verifier);
 
-      session.set('code-verifier', verifier);
-      session.set('state', state);
-      session.set('nonce', nonce);
+      session.set(CUSTOMER_ACCOUNT_SESSION_KEY, {
+        ...session.get(CUSTOMER_ACCOUNT_SESSION_KEY),
+        codeVerifier: verifier,
+        state,
+        nonce,
+      });
 
       loginUrl.searchParams.append('code_challenge', challenge);
       loginUrl.searchParams.append('code_challenge_method', 'S256');
@@ -245,7 +315,7 @@ export function createCustomerClient({
       });
     },
     logout: async () => {
-      const idToken = session.get('id_token');
+      const idToken = session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.idToken;
 
       clearSession(session);
 
@@ -260,37 +330,23 @@ export function createCustomerClient({
         },
       );
     },
-    isLoggedIn: async () => {
-      const expiresAt = session.get('expires_at');
+    isLoggedIn,
+    getAccessToken: async () => {
+      const hasAccessToken = await isLoggedIn;
 
-      if (!session.get('customer_access_token') || !expiresAt) return false;
-
-      const startTime = new Date().getTime();
-
-      try {
-        await checkExpires({
-          locks,
-          expiresAt,
-          session,
-          customerAccountId,
-          customerAccountUrl,
-          origin,
-        });
-
-        logSubRequestEvent?.(' check expires', startTime);
-      } catch {
-        return false;
+      if (!hasAccessToken) {
+        return;
+      } else {
+        return session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.accessToken;
       }
-
-      return true;
     },
-    mutate(mutation, options) {
+    mutate(mutation, options?) {
       mutation = minifyQuery(mutation);
       assertMutation(mutation, 'customer.mutate');
 
       return fetchCustomerAPI({query: mutation, type: 'mutation', ...options});
     },
-    query(query, options) {
+    query(query, options?) {
       query = minifyQuery(query);
       assertQuery(query, 'customer.query');
 
@@ -308,7 +364,7 @@ export function createCustomerClient({
         );
       }
 
-      if (session.get('state') !== state) {
+      if (session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.state !== state) {
         clearSession(session);
         throw new BadRequest(
           'Unauthorized',
@@ -325,7 +381,9 @@ export function createCustomerClient({
       body.append('code', code);
 
       // Public Client
-      const codeVerifier = session.get('code-verifier');
+      const codeVerifier = session.get(
+        CUSTOMER_ACCOUNT_SESSION_KEY,
+      )?.codeVerifier;
 
       if (!codeVerifier)
         throw new BadRequest(
@@ -359,7 +417,7 @@ export function createCustomerClient({
       const {access_token, expires_in, id_token, refresh_token} =
         await response.json<AccessTokenResponse>();
 
-      const sessionNonce = session.get('nonce');
+      const sessionNonce = session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.nonce;
       const responseNonce = await getNonce(id_token);
 
       if (sessionNonce !== responseNonce) {
@@ -369,23 +427,22 @@ export function createCustomerClient({
         );
       }
 
-      session.set('customer_authorization_code_token', access_token);
-      session.set(
-        'expires_at',
-        new Date(new Date().getTime() + (expires_in! - 120) * 1000).getTime() +
-          '',
-      );
-      session.set('id_token', id_token);
-      session.set('refresh_token', refresh_token);
-
       const customerAccessToken = await exchangeAccessToken(
-        session,
+        access_token,
         customerAccountId,
         customerAccountUrl,
         origin,
       );
 
-      session.set('customer_access_token', customerAccessToken);
+      session.set(CUSTOMER_ACCOUNT_SESSION_KEY, {
+        accessToken: customerAccessToken,
+        expiresAt:
+          new Date(
+            new Date().getTime() + (expires_in! - 120) * 1000,
+          ).getTime() + '',
+        refreshToken: refresh_token,
+        idToken: id_token,
+      });
 
       return redirect(redirectPath, {
         headers: {

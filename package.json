@@ -5,7 +5,9 @@
   "scripts": {
     "build": "npm run build:pkg",
     "build:pkg": "turbo build --parallel --filter=./packages/*",
-    "build:all": "turbo build --parallel",
+    "build:examples": "turbo build --parallel --filter=./examples/*",
+    "build:templates": "turbo build --parallel --filter=./templates/*",
+    "build:all": "npm run build:pkg && npm run build:templates && npm run build:examples",
     "ci:checks": "turbo run lint test format:check typecheck",
     "dev": "npm run dev:pkg",
     "dev:pkg": "cross-env LOCAL_DEV=true turbo dev --parallel --filter=./packages/*",
@@ -52,6 +54,7 @@
   "devDependencies": {
     "@changesets/changelog-github": "^0.4.8",
     "@changesets/cli": "^2.26.0",
+    "@playwright/test": "^1.40.1",
     "@types/eslint": "^8.4.10",
     "cross-env": "^7.0.3",
     "eslint": "^8.20.0",

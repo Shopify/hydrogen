@@ -17,7 +17,11 @@ import {
 
 import {deploymentLogger, oxygenDeploy} from './deploy.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
-import {createDeploy, parseToken} from '@shopify/oxygen-cli/deploy';
+import {
+  CompletedDeployment,
+  createDeploy,
+  parseToken,
+} from '@shopify/oxygen-cli/deploy';
 import {ciPlatform} from '@shopify/cli-kit/node/context/local';
 
 vi.mock('../../lib/get-oxygen-deployment-data.js');
@@ -78,6 +82,7 @@ describe('deploy', () => {
   const originalExit = process.exit;
 
   const deployParams = {
+    authBypassToken: true,
     force: false,
     noJsonOutput: false,
     path: './',
@@ -103,6 +108,7 @@ describe('deploy', () => {
     bugsnag: true,
     deploymentUrl: 'https://oxygen.shopifyapps.com',
     deploymentToken: mockToken,
+    generateAuthBypassToken: true,
     verificationMaxDuration: 180,
     metadata: {
       url: deployParams.metadataUrl,
@@ -119,10 +125,13 @@ describe('deploy', () => {
 
   const expectedHooks = {
     buildFunction: expect.any(Function),
+    onDeploymentCompleted: expect.any(Function),
+    onDeploymentFailed: expect.any(Function),
+    onDeploymentCompletedVerificationError: expect.any(Function),
     onVerificationComplete: expect.any(Function),
+    onVerificationError: expect.any(Function),
     onUploadFilesStart: expect.any(Function),
     onUploadFilesComplete: expect.any(Function),
-    onVerificationError: expect.any(Function),
     onUploadFilesError: expect.any(Function),
   };
 
@@ -141,9 +150,10 @@ describe('deploy', () => {
       },
     ]);
     vi.mocked(renderSelectPrompt).mockResolvedValue(FULL_SHOPIFY_CONFIG.shop);
-    vi.mocked(createDeploy).mockResolvedValue(
-      'https://a-lovely-deployment.com',
-    );
+    vi.mocked(createDeploy).mockResolvedValue({
+      authBypassToken: 'some-token',
+      url: 'https://a-lovely-deployment.com',
+    });
     vi.mocked(getOxygenDeploymentData).mockResolvedValue({
       oxygenDeploymentToken: 'some-encoded-token',
       environments: [],
@@ -305,17 +315,22 @@ describe('deploy', () => {
       name: 'github',
       metadata: {},
     });
+
     const ciDeployParams = {
       ...deployParams,
       token: 'some-token',
       metadataDescription: 'cool new stuff',
+      generateAuthBypassToken: true,
     };
 
     await oxygenDeploy(ciDeployParams);
 
     expect(vi.mocked(writeFile)).toHaveBeenCalledWith(
       'h2_deploy_log.json',
-      JSON.stringify({url: 'https://a-lovely-deployment.com'}),
+      JSON.stringify({
+        authBypassToken: 'some-token',
+        url: 'https://a-lovely-deployment.com',
+      }),
     );
 
     vi.mocked(writeFile).mockClear();
@@ -336,7 +351,7 @@ describe('deploy', () => {
 
       return new Promise((_resolve, reject) => {
         reject(error);
-      }) as Promise<string | undefined>;
+      }) as Promise<CompletedDeployment | undefined>;
     });
 
     try {
@@ -354,7 +369,7 @@ describe('deploy', () => {
     }
   });
 
-  it('handles error during deployment verification', async () => {
+  it('handles error during deployment routability verification', async () => {
     const mockRenderFatalError = vi.fn();
     vi.mocked(renderFatalError).mockImplementation(mockRenderFatalError);
 
@@ -367,7 +382,7 @@ describe('deploy', () => {
 
       return new Promise((_resolve, reject) => {
         reject(error);
-      }) as Promise<string | undefined>;
+      }) as Promise<CompletedDeployment | undefined>;
     });
 
     try {
@@ -379,6 +394,37 @@ describe('deploy', () => {
         expect(err.tryMessage).toBe(
           'Please verify the deployment status in the Shopify Admin and retry deploying if necessary.',
         );
+      } else {
+        expect(true).toBe(false);
+      }
+    }
+  });
+
+  it('handles error during deployment completion verification', async () => {
+    const mockRenderFatalError = vi.fn();
+    vi.mocked(renderFatalError).mockImplementation(mockRenderFatalError);
+
+    vi.mocked(createDeploy).mockImplementation((options) => {
+      options.hooks?.onUploadFilesStart?.();
+      options.hooks?.onUploadFilesComplete?.();
+      options.hooks?.onDeploymentCompletedVerificationStart?.();
+      options.hooks?.onDeploymentFailed?.({
+        status: 'oh shit',
+        url: 'https://a-lovely-deployment.com',
+      });
+
+      return new Promise((_resolve, reject) => {
+        reject();
+      }) as Promise<CompletedDeployment | undefined>;
+    });
+
+    try {
+      await oxygenDeploy(deployParams);
+      expect(true).toBe(false);
+    } catch (err) {
+      if (err instanceof AbortError) {
+        expect(err.message).toBe('oh shit');
+        expect(err.tryMessage).toBe('Retrying the deployement may succeed.');
       } else {
         expect(true).toBe(false);
       }

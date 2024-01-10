@@ -1,6 +1,7 @@
 import path from 'path';
 import Command from '@shopify/cli-kit/node/base-command';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
+import colors from '@shopify/cli-kit/node/colors';
 import {Flags} from '@oclif/core';
 import {getProjectPaths, getRemixConfig} from '../../lib/remix-config.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
@@ -69,7 +70,16 @@ export async function runCodegen({
   if (!watch) {
     renderSuccess({
       headline: 'Generated types for GraphQL:',
-      body: generatedFiles.map((file) => `- ${file}`).join('\n'),
+      body: {
+        list: {
+          items: Object.entries(generatedFiles).map(
+            ([key, value]) =>
+              key +
+              '\n' +
+              value.map((item) => colors.dim(`- ${item}`)).join('\n'),
+          ),
+        },
+      },
     });
   }
 }

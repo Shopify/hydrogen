@@ -3,7 +3,7 @@
 /// <reference types="@shopify/oxygen-workers-types" />
 
 import type {Storefront} from '@shopify/hydrogen';
-import type {HydrogenSession} from './server';
+import type {AppSession} from './server';
 import type {CustomerClient} from '@shopify/hydrogen';
 
 declare global {
@@ -31,10 +31,10 @@ declare global {
  */
 declare module '@shopify/remix-oxygen' {
   export interface AppLoadContext {
-    session: HydrogenSession;
+    session: AppSession;
     storefront: Storefront;
     env: Env;
-    customer: CustomerClient;
+    customerAccount: CustomerClient;
     waitUntil: ExecutionContext['waitUntil'];
   }
 }
