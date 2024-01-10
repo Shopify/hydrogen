@@ -60,6 +60,9 @@ export function links() {
   ];
 }
 
+/**
+ * Access the result of the root loader from a React component.
+ */
 export const useRootLoaderData = () => {
   const [root] = useMatches();
   return root?.data as SerializeFrom<typeof loader>;

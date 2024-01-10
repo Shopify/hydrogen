@@ -7,7 +7,7 @@ import '@total-typescript/ts-reset';
 
 import type {Storefront, HydrogenCart} from '@shopify/hydrogen';
 import type {CustomerAccessToken} from '@shopify/hydrogen/storefront-api-types';
-import type {AppSession} from './server';
+import type {AppSession} from '~/lib/session';
 
 declare global {
   /**

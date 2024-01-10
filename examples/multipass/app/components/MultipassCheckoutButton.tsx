@@ -1,5 +1,5 @@
 import React, {useCallback} from 'react';
-import {multipass} from '~/utils/multipass/multipass';
+import {multipass} from '~/lib/multipass/multipass';
 
 type MultipassCheckoutButtonProps = {
   checkoutUrl: string;
