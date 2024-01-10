@@ -397,7 +397,7 @@ describe('init', () => {
         expect(output).toMatch(/Language:\s*TypeScript/);
         expect(output).toMatch('Routes');
         expect(output).toMatch('Home (/ & /:catchAll)');
-        expect(output).toMatch('Account (/account/*)');
+        expect(output).toMatch('Account (/account/* & /authorize/*)');
       });
     });
 
@@ -437,7 +437,7 @@ describe('init', () => {
         expect(output).toMatch(/Language:\s*JavaScript/);
         expect(output).toMatch('Routes');
         expect(output).toMatch('Home (/ & /:catchAll)');
-        expect(output).toMatch('Account (/account/*)');
+        expect(output).toMatch('Account (/account/* & /authorize/*)');
       });
     });
 

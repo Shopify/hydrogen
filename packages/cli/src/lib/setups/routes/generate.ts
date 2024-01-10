@@ -42,7 +42,7 @@ const ROUTE_MAP = {
   collections: 'collections*',
   policies: 'policies*',
   blogs: 'blogs*',
-  account: 'account*',
+  account: ['account*', 'authorize'],
   search: ['search', 'api.predictive-search'],
   robots: '[robots.txt]',
   sitemap: '[sitemap.xml]',
