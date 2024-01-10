@@ -276,8 +276,14 @@
         },
         "worker": {
           "name": "worker",
+          "type": "option",
+          "hidden": true,
+          "multiple": false
+        },
+        "legacy-runtime": {
+          "name": "legacy-runtime",
           "type": "boolean",
-          "description": "Run the app in a worker environment closer to Oxygen production instead of a Node.js sandbox.",
+          "description": "Run the app in a Node.js sandbox instead of an Oxygen worker.",
           "allowNo": false
         },
         "codegen": {
@@ -556,8 +562,14 @@
         },
         "worker": {
           "name": "worker",
+          "type": "option",
+          "hidden": true,
+          "multiple": false
+        },
+        "legacy-runtime": {
+          "name": "legacy-runtime",
           "type": "boolean",
-          "description": "Run the app in a worker environment closer to Oxygen production instead of a Node.js sandbox.",
+          "description": "Run the app in a Node.js sandbox instead of an Oxygen worker.",
           "allowNo": false
         },
         "env-branch": {
