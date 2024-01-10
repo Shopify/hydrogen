@@ -17,7 +17,7 @@ import {
 } from '@shopify/remix-oxygen';
 
 // 1. Import the Rick and Morty client.
-import {createRickAndMortyClient} from './app/utils/createRickAndMortyClient.server';
+import {createRickAndMortyClient} from './app/lib/createRickAndMortyClient.server';
 
 /**
  * Export a fetch handler in module format.

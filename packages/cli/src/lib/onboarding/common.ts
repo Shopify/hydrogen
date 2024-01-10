@@ -164,7 +164,7 @@ export function generateProjectEntries(
   options: Parameters<typeof generateProjectFile>[1],
 ) {
   return Promise.all(
-    ['root', 'entry.server', 'entry.client'].map((filename) =>
+    ['root', 'entry.server', 'entry.client', '../server.ts'].map((filename) =>
       generateProjectFile(filename, options),
     ),
   );

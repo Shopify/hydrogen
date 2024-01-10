@@ -21,7 +21,6 @@ import {
   renderProjectReady,
 } from '../../lib/onboarding/common.js';
 import {getCliCommand} from '../../lib/shell.js';
-import {generateProjectFile} from '../../lib/setups/routes/generate.js';
 import {getTemplateAppFile} from '../../lib/build.js';
 
 export default class Setup extends Command {
@@ -94,9 +93,6 @@ export async function runSetup(options: RunSetupOptions) {
     backgroundWorkPromise = backgroundWorkPromise
       .then(() =>
         Promise.all([
-          // When starting from hello-world, the server entry point won't
-          // include all the cart logic from skeleton, so we need to copy it.
-          generateProjectFile('../server.ts', {...remixConfig, typescript}),
           ...(typescript
             ? [
                 copyFile(

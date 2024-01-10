@@ -65,7 +65,7 @@ describe('i18n replacers', () => {
           CountryCode,
         } from "@shopify/hydrogen/storefront-api-types";
         import type { CustomerAccessToken } from "@shopify/hydrogen/storefront-api-types";
-        import type { AppSession } from "./server";
+        import type { AppSession } from "~/lib/session";
 
         declare global {
           /**
@@ -149,15 +149,14 @@ describe('i18n replacers', () => {
           createCartHandler,
           createStorefrontClient,
           storefrontRedirect,
-          type HydrogenSession,
         } from "@shopify/hydrogen";
         import {
           createRequestHandler,
           getStorefrontHeaders,
-          createCookieSessionStorage,
-          type SessionStorage,
-          type Session,
+          type AppLoadContext,
         } from "@shopify/remix-oxygen";
+        import { AppSession } from "~/lib/session";
+        import { CART_QUERY_FRAGMENT } from "~/lib/fragments";
 
         /**
          * Export a fetch handler in module format.
@@ -214,7 +213,13 @@ describe('i18n replacers', () => {
               const handleRequest = createRequestHandler({
                 build: remixBuild,
                 mode: process.env.NODE_ENV,
-                getLoadContext: () => ({ session, storefront, cart, env, waitUntil }),
+                getLoadContext: (): AppLoadContext => ({
+                  session,
+                  storefront,
+                  cart,
+                  env,
+                  waitUntil,
+                }),
               });
 
               const response = await handleRequest(request);

@@ -6,15 +6,14 @@ import {
   createCartHandler,
   createStorefrontClient,
   storefrontRedirect,
-  type HydrogenSession,
 } from '@shopify/hydrogen';
 import {
   createRequestHandler,
   getStorefrontHeaders,
-  createCookieSessionStorage,
-  type SessionStorage,
-  type Session,
+  type AppLoadContext,
 } from '@shopify/remix-oxygen';
+import {AppSession} from '~/lib/session';
+import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
 
 /**
  * Export a fetch handler in module format.
@@ -71,7 +70,13 @@ export default {
       const handleRequest = createRequestHandler({
         build: remixBuild,
         mode: process.env.NODE_ENV,
-        getLoadContext: () => ({session, storefront, cart, env, waitUntil}),
+        getLoadContext: (): AppLoadContext => ({
+          session,
+          storefront,
+          cart,
+          env,
+          waitUntil,
+        }),
       });
 
       const response = await handleRequest(request);
@@ -93,165 +98,3 @@ export default {
     }
   },
 };
-
-/**
- * This is a custom session implementation for your Hydrogen shop.
- * Feel free to customize it to your needs, add helper methods, or
- * swap out the cookie-based implementation with something else!
- */
-export class AppSession implements HydrogenSession {
-  #sessionStorage;
-  #session;
-
-  constructor(sessionStorage: SessionStorage, session: Session) {
-    this.#sessionStorage = sessionStorage;
-    this.#session = session;
-  }
-
-  static async init(request: Request, secrets: string[]) {
-    const storage = createCookieSessionStorage({
-      cookie: {
-        name: 'session',
-        httpOnly: true,
-        path: '/',
-        sameSite: 'lax',
-        secrets,
-      },
-    });
-
-    const session = await storage.getSession(request.headers.get('Cookie'));
-
-    return new this(storage, session);
-  }
-
-  get has() {
-    return this.#session.has;
-  }
-
-  get get() {
-    return this.#session.get;
-  }
-
-  get flash() {
-    return this.#session.flash;
-  }
-
-  get unset() {
-    return this.#session.unset;
-  }
-
-  get set() {
-    return this.#session.set;
-  }
-
-  destroy() {
-    return this.#sessionStorage.destroySession(this.#session);
-  }
-
-  commit() {
-    return this.#sessionStorage.commitSession(this.#session);
-  }
-}
-
-// NOTE: https://shopify.dev/docs/api/storefront/latest/queries/cart
-const CART_QUERY_FRAGMENT = `#graphql
-  fragment Money on MoneyV2 {
-    currencyCode
-    amount
-  }
-  fragment CartLine on CartLine {
-    id
-    quantity
-    attributes {
-      key
-      value
-    }
-    cost {
-      totalAmount {
-        ...Money
-      }
-      amountPerQuantity {
-        ...Money
-      }
-      compareAtAmountPerQuantity {
-        ...Money
-      }
-    }
-    merchandise {
-      ... on ProductVariant {
-        id
-        availableForSale
-        compareAtPrice {
-          ...Money
-        }
-        price {
-          ...Money
-        }
-        requiresShipping
-        title
-        image {
-          id
-          url
-          altText
-          width
-          height
-
-        }
-        product {
-          handle
-          title
-          id
-        }
-        selectedOptions {
-          name
-          value
-        }
-      }
-    }
-  }
-  fragment CartApiQuery on Cart {
-    id
-    checkoutUrl
-    totalQuantity
-    buyerIdentity {
-      countryCode
-      customer {
-        id
-        email
-        firstName
-        lastName
-        displayName
-      }
-      email
-      phone
-    }
-    lines(first: $numCartLines) {
-      nodes {
-        ...CartLine
-      }
-    }
-    cost {
-      subtotalAmount {
-        ...Money
-      }
-      totalAmount {
-        ...Money
-      }
-      totalDutyAmount {
-        ...Money
-      }
-      totalTaxAmount {
-        ...Money
-      }
-    }
-    note
-    attributes {
-      key
-      value
-    }
-    discountCodes {
-      code
-      applicable
-    }
-  }
-` as const;
