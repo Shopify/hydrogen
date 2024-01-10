@@ -38,8 +38,13 @@ export type DebugInfo = {
   };
 };
 
+type AddDebugDataParam = {
+  displayName?: string;
+  response?: Response;
+}
+
 export type CacheActionFunctionParam = {
-  addDebugData: (info: DebugInfo) => void;
+  addDebugData: (info: AddDebugDataParam) => void;
 };
 
 export type WithCacheOptions<T = unknown> = {
@@ -104,8 +109,16 @@ export async function runWithCache<T = unknown>(
   ]);
 
   let debugData: DebugInfo;
-  const addDebugData = (info: DebugInfo) => {
-    debugData = info;
+  const addDebugData = (info: AddDebugDataParam) => {
+    debugData = {
+      displayName: info.displayName,
+      url: info.response?.url,
+      responseInit: {
+        status: info.response?.status || 0,
+        statusText: info.response?.statusText || '',
+        headers: Array.from(info.response?.headers.entries() || []),
+      },
+    };
   };
 
   const logSubRequestEvent =

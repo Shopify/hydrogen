@@ -36,25 +36,20 @@ const withCache = createWithCache({
   request,
 });
 
-const catFact = async () => {
-  return await withCache<CatFact>(
+const data3p = async () => {
+  return await withCache(
     ['Some unique cache keys'],
     CacheLong(),
     ({addDebugData}) => {
-      return fetch('https://some-3p-endpoint.com').then(async (res) => {
+      return fetch('https://some-3p-endpoint.com').then(async (response) => {
         if (process.env.NODE_ENV === 'development') {
           addDebugData({
             displayName: '3p endpoint display name',
-            url: 'https://some-3p-endpoint.com',
-            responseInit: {
-              status: res.status,
-              statusText: res.statusText,
-              headers: Array.from(res.headers.entries()),
-            }
+            response,
           });
         }
 
-        return await res.json() as CatFact;
+        return await response.json();
       });
     },
   );
