@@ -129,7 +129,7 @@ function EmptyState() {
     <div id="empty-view">
       <p className="text-large bold">Navigate to your app</p>
       <p className="text-normal">
-        Open your localhost to initiate server network timing
+        Open your localhost to initiate subrequest profiler
       </p>
       <Link to="/" target="_blank" className="link-margin-top">
         <button className="primary">Open app</button>
@@ -143,7 +143,7 @@ function DebugHeader() {
     <header className="justify-between text-large">
       <div className="flex-row">
         <img className="logo" src={faviconDark} alt="Hydrogen logo" />
-        <h1>Server Network Timing</h1>
+        <h1>Subrequest Profiler</h1>
         <span className="pill">Development</span>
       </div>
     </header>

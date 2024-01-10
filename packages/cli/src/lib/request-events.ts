@@ -25,7 +25,7 @@ export function setConstructors(constructors: {
   ResponseConstructor = constructors.Response;
 }
 
-export const DEV_ROUTES = new Set(['/graphiql', '/debug-network']);
+export const DEV_ROUTES = new Set(['/graphiql', '/subrequest-profiler']);
 
 type RequestEvent = {
   event: string;

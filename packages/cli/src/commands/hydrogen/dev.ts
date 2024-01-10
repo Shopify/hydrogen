@@ -207,7 +207,7 @@ async function runDev({
           })}`,
         ),
         colors.dim(
-          `\nView server-side network requests: ${miniOxygen.listeningAt}/debug-network`,
+          `\nView server network requests: ${miniOxygen.listeningAt}/subrequest-profiler`,
         ),
       ],
     });

@@ -185,7 +185,7 @@ type StorefrontQueryOptions = StorefrontCommonExtraParams & {
   query: string;
   mutation?: never;
   cache?: CachingStrategy;
-  /** The name to be shown in the Server Network Timing tool */
+  /** The name to be shown in the Subrequest Profiler */
   displayName?: string;
 };
 
@@ -193,7 +193,7 @@ type StorefrontMutationOptions = StorefrontCommonExtraParams & {
   query?: never;
   mutation: string;
   cache?: never;
-  /** The name to be shown in the Server Network Timing tool */
+  /** The name to be shown in the Subrequest Profiler */
   displayName?: string;
 };
 
@@ -323,7 +323,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       if (/fragment CartApi(Query|Mutation) on Cart/.test(query)) {
         // The cart handler is wrapping storefront.query/mutate,
         // so we need to go up one more stack frame to show
-        // the caller in /debug-network
+        // the caller in /subrequest-profiler
         stackOffset = 2;
       }
     }

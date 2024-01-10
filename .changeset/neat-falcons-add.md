@@ -5,12 +5,12 @@
 '@shopify/create-hydrogen': patch
 ---
 
-Server Network Timing tool (stable) - Provides an overview of network requests happening on the server side
+Subrequest Profiler (stable) - Provides an overview of network requests happening on the server side
 
 #### How to use:
 
 1. Run `h2 dev`
-2. Visit http://localhost:3000/debug-network
+2. Visit http://localhost:3000/subrequest-profiler
 
 #### Set request display name with `storefront.query`:
 
