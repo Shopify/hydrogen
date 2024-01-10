@@ -83,7 +83,9 @@ export function RequestTable({
               id={`request-table__row-${row.id}`}
               key={row.id}
               tabIndex={0}
-              className={`grid-row${activeEventId === row.id ? ' active' : ''}${row.status >= 400 ? ' error' : ''}`}
+              className={`grid-row${activeEventId === row.id ? ' active' : ''}${
+                row.status >= 400 ? ' error' : ''
+              }`}
               onClick={() => setActiveEventId(row.id)}
               onKeyUp={(event) => {
                 if (event.code === 'Space') setActiveEventId(row.id);

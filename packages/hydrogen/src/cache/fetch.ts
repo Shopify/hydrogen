@@ -41,7 +41,7 @@ export type DebugInfo = {
 type AddDebugDataParam = {
   displayName?: string;
   response?: Response;
-}
+};
 
 export type CacheActionFunctionParam = {
   addDebugData: (info: AddDebugDataParam) => void;
