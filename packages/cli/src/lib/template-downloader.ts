@@ -63,8 +63,8 @@ async function downloadTarball(
       filter: (name) => {
         name = name.replace(storageDir, '');
         return (
-          !name.startsWith(path.normalize('/templates/')) ||
-          name.startsWith(path.normalize('/templates/skeleton/'))
+          !name.startsWith(path.normalize('/templates/')) &&
+          !name.startsWith(path.normalize('/examples/'))
         );
       },
     }),
@@ -92,6 +92,7 @@ export async function getLatestTemplates({
     return {
       version,
       templatesDir: path.join(templateStorageVersionPath, 'templates'),
+      examplesDir: path.join(templateStorageVersionPath, 'examples'),
     };
   } catch (e) {
     const error = e as AbortError;

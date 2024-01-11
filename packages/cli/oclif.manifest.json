@@ -405,7 +405,7 @@
         "template": {
           "name": "template",
           "type": "option",
-          "description": "Sets the template to use. Pass `demo-store` for a fully-featured store template or `hello-world` for a barebones project.",
+          "description": "Scaffolds project based on an existing template or example from the Hydrogen repository.",
           "multiple": false
         },
         "install-deps": {

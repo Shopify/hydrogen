@@ -2,7 +2,7 @@ import {CartForm, Image, Money} from '@shopify/hydrogen';
 import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
 import {Link} from '@remix-run/react';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
-import {useVariantUrl} from '~/utils';
+import {useVariantUrl} from '~/lib/variants';
 
 // 1. Import the OptimisticInput and useOptimisticData hooks from @shopify/hydrogen
 import {OptimisticInput, useOptimisticData} from '@shopify/hydrogen';
