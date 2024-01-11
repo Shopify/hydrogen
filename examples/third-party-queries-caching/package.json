@@ -1,7 +1,6 @@
 {
-  "name": "third-party-queries-caching",
+  "name": "example-third-party-queries-caching",
   "private": true,
-  "version": "1.0.0",
   "prettier": "@shopify/prettier-config",
   "scripts": {
     "build": "shopify hydrogen build --diff",

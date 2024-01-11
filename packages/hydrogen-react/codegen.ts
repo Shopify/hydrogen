@@ -1,7 +1,7 @@
 import {CodegenConfig} from '@graphql-codegen/cli';
 import {
   storefrontApiCustomScalars,
-  customerApiCustomScalars,
+  customerAccountApiCustomScalars,
 } from './src/codegen.helpers';
 
 const SF_API_VERSION = '2023-10';
@@ -18,7 +18,7 @@ const storefrontAPISchema: CodegenConfig['schema'] = {
 };
 
 // API Key used is specific for Hydrogen App
-const customerAPISchema: CodegenConfig['schema'] = {
+const customerAccountAPISchema: CodegenConfig['schema'] = {
   [`https://app.myshopify.com/services/graphql/introspection/customer?api_client_api_key=159a99b8a7289a72f68603f2f4de40ac&api_version=${CA_API_VERSION}`]:
     {method: 'GET'},
 };
@@ -67,7 +67,7 @@ const config: CodegenConfig = {
       ],
     },
     'src/customer-account-api-types.d.ts': {
-      schema: customerAPISchema,
+      schema: customerAccountAPISchema,
       plugins: [
         {
           add: {
@@ -87,13 +87,13 @@ const config: CodegenConfig = {
             defaultScalarType: 'unknown',
             useImplementingTypes: true,
             enumsAsTypes: true,
-            scalars: customerApiCustomScalars,
+            scalars: customerAccountApiCustomScalars,
           },
         },
       ],
     },
-    './customer.schema.json': {
-      schema: customerAPISchema,
+    './customer-account.schema.json': {
+      schema: customerAccountAPISchema,
       plugins: [
         {
           introspection: {

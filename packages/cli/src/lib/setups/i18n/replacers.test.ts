@@ -65,7 +65,7 @@ describe('i18n replacers', () => {
           CountryCode,
         } from "@shopify/hydrogen/storefront-api-types";
         import type { CustomerAccessToken } from "@shopify/hydrogen/storefront-api-types";
-        import type { HydrogenSession } from "./server";
+        import type { AppSession } from "~/lib/session";
 
         declare global {
           /**
@@ -100,7 +100,7 @@ describe('i18n replacers', () => {
             env: Env;
             cart: HydrogenCart;
             storefront: Storefront<I18nLocale>;
-            session: HydrogenSession;
+            session: AppSession;
             waitUntil: ExecutionContext["waitUntil"];
           }
 
@@ -122,7 +122,7 @@ describe('i18n replacers', () => {
 
       await writeFile(
         joinPath(tmpDir, serverTs),
-        // Remove the part that is not needed for this test (HydrogenSession, Cart query, etc);
+        // Remove the part that is not needed for this test (AppSession, Cart query, etc);
         (
           await readFile(joinPath(skeletonDir, serverTs))
         ).replace(/^};$.*/ms, '};'),
@@ -153,10 +153,10 @@ describe('i18n replacers', () => {
         import {
           createRequestHandler,
           getStorefrontHeaders,
-          createCookieSessionStorage,
-          type SessionStorage,
-          type Session,
+          type AppLoadContext,
         } from "@shopify/remix-oxygen";
+        import { AppSession } from "~/lib/session";
+        import { CART_QUERY_FRAGMENT } from "~/lib/fragments";
 
         /**
          * Export a fetch handler in module format.
@@ -178,7 +178,7 @@ describe('i18n replacers', () => {
               const waitUntil = executionContext.waitUntil.bind(executionContext);
               const [cache, session] = await Promise.all([
                 caches.open("hydrogen"),
-                HydrogenSession.init(request, [env.SESSION_SECRET]),
+                AppSession.init(request, [env.SESSION_SECRET]),
               ]);
 
               /**
@@ -213,7 +213,13 @@ describe('i18n replacers', () => {
               const handleRequest = createRequestHandler({
                 build: remixBuild,
                 mode: process.env.NODE_ENV,
-                getLoadContext: () => ({ session, storefront, cart, env, waitUntil }),
+                getLoadContext: (): AppLoadContext => ({
+                  session,
+                  storefront,
+                  cart,
+                  env,
+                  waitUntil,
+                }),
               });
 
               const response = await handleRequest(request);

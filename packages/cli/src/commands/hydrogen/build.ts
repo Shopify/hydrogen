@@ -41,7 +41,6 @@ import {isCI} from '../../lib/is-ci.js';
 import {copyDiffBuild, prepareDiffDirectory} from '../../lib/template-diff.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
-const MAX_WORKER_BUNDLE_SIZE = 10;
 
 export default class Build extends Command {
   static description = 'Builds a Hydrogen storefront for production.';
@@ -253,7 +252,7 @@ async function writeBundleAnalysis(
     )}\n`,
   );
 
-  if (bundleStats && sizeMB < MAX_WORKER_BUNDLE_SIZE) {
+  if (bundleStats) {
     outputInfo(
       outputContent`${
         (await getBundleAnalysisSummary(buildPathWorkerFile)) || '\n'
@@ -264,15 +263,7 @@ async function writeBundleAnalysis(
     );
   }
 
-  if (sizeMB >= MAX_WORKER_BUNDLE_SIZE) {
-    throw new AbortError(
-      '🚨 Worker bundle exceeds 10 MB! Oxygen has a maximum worker bundle size of 10 MB.',
-      outputContent`See the bundle analysis for a breakdown of what is contributing to the bundle size:\n${outputToken.link(
-        bundleAnalysisPath,
-        bundleAnalysisPath,
-      )}`,
-    );
-  } else if (sizeMB >= 5) {
+  if (sizeMB >= 5) {
     outputWarn(
       `🚨 Worker bundle exceeds 5 MB! This can delay your worker response.${
         remixConfig.serverMinify
@@ -295,11 +286,7 @@ async function writeSimpleBuildStatus(
     )}  ${colors.yellow(sizeMB.toFixed(2) + ' MB')}\n`,
   );
 
-  if (sizeMB >= MAX_WORKER_BUNDLE_SIZE) {
-    throw new AbortError(
-      '🚨 Worker bundle exceeds 10 MB! Oxygen has a maximum worker bundle size of 10 MB.',
-    );
-  } else if (sizeMB >= 5) {
+  if (sizeMB >= 5) {
     outputWarn(
       `🚨 Worker bundle exceeds 5 MB! This can delay your worker response.${
         remixConfig.serverMinify

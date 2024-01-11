@@ -358,7 +358,7 @@ export async function oxygenDeploy(
       await runBuild({
         directory: path,
         assetPath,
-        sourcemap: false,
+        sourcemap: true,
         useCodegen: false,
       });
     },

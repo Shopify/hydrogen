@@ -1,10 +1,7 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
-import {
-  HydrogenSession,
-  checkExpires,
-  clearSession,
-  refreshToken,
-} from './auth.helpers';
+import type {HydrogenSession} from '../hydrogen';
+import {CUSTOMER_ACCOUNT_SESSION_KEY} from './constants';
+import {checkExpires, clearSession, refreshToken} from './auth.helpers';
 
 vi.mock('./BadRequest', () => {
   return {
@@ -65,12 +62,12 @@ describe('auth.helpers', () => {
       }
 
       await expect(run).rejects.toThrowError(
-        'Unauthorized No refresh_token in the session. Make sure your session is configured correctly and passed to `createCustomerClient`.',
+        'Unauthorized No refreshToken found in the session. Make sure your session is configured correctly and passed to `createCustomerClient`.',
       );
     });
 
     it('Throws Unauthorized when refresh token fails', async () => {
-      (session.get as any).mockResolvedValueOnce('refresh_token');
+      (session.get as any).mockReturnValueOnce({refreshToken: undefined});
 
       fetch.mockResolvedValue(createFetchResponse('Unauthorized', {ok: false}));
 
@@ -87,7 +84,9 @@ describe('auth.helpers', () => {
     });
 
     it('Throws when there is no valid authorization code in the session', async () => {
-      (session.get as any).mockResolvedValueOnce('refresh_token');
+      (session.get as any).mockReturnValueOnce({
+        refreshToken: 'refreshToken',
+      });
 
       fetch.mockResolvedValue(
         createFetchResponse(
@@ -111,12 +110,14 @@ describe('auth.helpers', () => {
       }
 
       await expect(run).rejects.toThrowError(
-        'Unauthorized No access token found in the session. Make sure your session is configured correctly and passed to `createCustomerClient`',
+        'Unauthorized oAuth access token was not provided during token exchange.',
       );
     });
 
     it('Refreshes the token', async () => {
-      (session.get as any).mockResolvedValue('value');
+      (session.get as any).mockReturnValueOnce({
+        refreshToken: 'old_refresh_token',
+      });
 
       fetch.mockResolvedValue(
         createFetchResponse(
@@ -139,24 +140,13 @@ describe('auth.helpers', () => {
 
       expect(session.set).toHaveBeenNthCalledWith(
         1,
-        'customer_authorization_code_token',
-        'access_token',
-      );
-      expect(session.set).toHaveBeenNthCalledWith(
-        2,
-        'expires_at',
-        expect.anything(),
-      );
-      expect(session.set).toHaveBeenNthCalledWith(3, 'id_token', 'id_token');
-      expect(session.set).toHaveBeenNthCalledWith(
-        4,
-        'refresh_token',
-        'refresh_token',
-      );
-      expect(session.set).toHaveBeenNthCalledWith(
-        5,
-        'customer_access_token',
-        'access_token',
+        CUSTOMER_ACCOUNT_SESSION_KEY,
+        {
+          accessToken: 'access_token',
+          expiresAt: expect.any(String),
+          refreshToken: 'refresh_token',
+          idToken: 'id_token',
+        },
       );
     });
   });
@@ -177,16 +167,7 @@ describe('auth.helpers', () => {
 
     it('Clears the session', async () => {
       clearSession(session);
-      expect(session.unset).toHaveBeenCalledWith('code-verifier');
-      expect(session.unset).toHaveBeenCalledWith(
-        'customer_authorization_code_token',
-      );
-      expect(session.unset).toHaveBeenCalledWith('expires_at');
-      expect(session.unset).toHaveBeenCalledWith('id_token');
-      expect(session.unset).toHaveBeenCalledWith('refresh_token');
-      expect(session.unset).toHaveBeenCalledWith('customer_access_token');
-      expect(session.unset).toHaveBeenCalledWith('state');
-      expect(session.unset).toHaveBeenCalledWith('nonce');
+      expect(session.unset).toHaveBeenCalledWith(CUSTOMER_ACCOUNT_SESSION_KEY);
     });
   });
 
@@ -220,7 +201,9 @@ describe('auth.helpers', () => {
     });
 
     it('Refreshes the token', async () => {
-      (session.get as any).mockResolvedValue('value');
+      (session.get as any).mockReturnValueOnce({
+        refreshToken: 'old_refresh_token',
+      });
 
       fetch.mockResolvedValue(
         createFetchResponse(
@@ -245,29 +228,20 @@ describe('auth.helpers', () => {
 
       expect(session.set).toHaveBeenNthCalledWith(
         1,
-        'customer_authorization_code_token',
-        'access_token',
-      );
-      expect(session.set).toHaveBeenNthCalledWith(
-        2,
-        'expires_at',
-        expect.anything(),
-      );
-      expect(session.set).toHaveBeenNthCalledWith(3, 'id_token', 'id_token');
-      expect(session.set).toHaveBeenNthCalledWith(
-        4,
-        'refresh_token',
-        'refresh_token',
-      );
-      expect(session.set).toHaveBeenNthCalledWith(
-        5,
-        'customer_access_token',
-        'access_token',
+        CUSTOMER_ACCOUNT_SESSION_KEY,
+        {
+          accessToken: 'access_token',
+          expiresAt: expect.any(String),
+          refreshToken: 'refresh_token',
+          idToken: 'id_token',
+        },
       );
     });
 
     it('does not refresh the token when a refresh is already in process', async () => {
-      (session.get as any).mockResolvedValue('value');
+      (session.get as any).mockReturnValueOnce({
+        refreshToken: 'old_refresh_token',
+      });
 
       fetch.mockResolvedValue(
         createFetchResponse(
@@ -293,31 +267,12 @@ describe('auth.helpers', () => {
         origin: 'https://localhost',
       });
 
-      expect(session.set).not.toHaveBeenNthCalledWith(
-        1,
-        'customer_authorization_code_token',
-        'access_token',
-      );
-      expect(session.set).not.toHaveBeenNthCalledWith(
-        2,
-        'expires_at',
-        expect.anything(),
-      );
-      expect(session.set).not.toHaveBeenNthCalledWith(
-        3,
-        'id_token',
-        'id_token',
-      );
-      expect(session.set).not.toHaveBeenNthCalledWith(
-        4,
-        'refresh_token',
-        'refresh_token',
-      );
-      expect(session.set).not.toHaveBeenNthCalledWith(
-        5,
-        'customer_access_token',
-        'access_token',
-      );
+      expect(session.set).not.toHaveBeenNthCalledWith(1, 'customerAccount', {
+        accessToken: 'access_token',
+        expiresAt: expect.any(String),
+        refreshToken: 'refresh_token',
+        idToken: 'id_token',
+      });
     });
   });
 });
