@@ -1,4 +1,3 @@
-import crypto from 'node:crypto';
 import {
   Miniflare,
   Request,
@@ -245,7 +244,10 @@ function createAssetHandler(assetsPort: number) {
   return async (request: Request): Promise<Response> => {
     return fetch(
       new Request(
-        request.url.replace(new URL(request.url).origin, assetsServerOrigin),
+        request.url.replace(
+          new URL(request.url).origin + '/',
+          assetsServerOrigin,
+        ),
         request as RequestInit,
       ),
     );
