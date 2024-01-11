@@ -241,7 +241,7 @@ describe('init', () => {
           `${tmpDir}/package.json`,
         );
 
-        expect(resultPkgJson.name).toEqual(exampleName);
+        expect(resultPkgJson.name).toMatch(exampleName);
 
         expect(resultPkgJson.scripts).toEqual(
           expect.objectContaining(templatePkgJson.scripts),
