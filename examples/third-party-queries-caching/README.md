@@ -1,6 +1,6 @@
 # Hydrogen example: Third-party Queries and Caching
 
-This folder contains shows how to leverage Oxygen's sub-request caching when querying
+This folder shows how to leverage Oxygen's sub-request caching when querying
 third-party GraphQL API in Hydrogen. This example uses the public [Rick & Morty API](https://rickandmortyapi.com/documentation/#graphql)
 
 <img width="981" alt="Screenshot 2023-11-13 at 3 51 32 PM" src="https://github.com/juanpprieto/hydrogen-third-party-api/assets/12080141/fe648c70-a979-4862-a173-4c0244543dec">
@@ -146,5 +146,3 @@ export default function Homepage() {
   );
 }
 ```
-
-[View the complete remix.d.ts file](/app/routes/_index.tsx) to see these updates in context.

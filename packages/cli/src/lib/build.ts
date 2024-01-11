@@ -1,4 +1,5 @@
 import {fileURLToPath} from 'node:url';
+import {execAsync} from './process.js';
 
 export const GENERATOR_TEMPLATES_DIR = 'generator-templates';
 export const GENERATOR_STARTER_DIR = 'starter';
@@ -53,5 +54,13 @@ export function getStarterDir() {
 export function getSkeletonSourceDir() {
   return fileURLToPath(
     new URL(`../../../../templates/skeleton`, import.meta.url),
+  );
+}
+
+export async function getRepoNodeModules() {
+  const {stdout} = await execAsync('npm root');
+  return (
+    stdout.trim() ||
+    fileURLToPath(new URL(`../../../../node_modules`, import.meta.url))
   );
 }

@@ -15,9 +15,9 @@ import {basename, joinPath} from '@shopify/cli-kit/node/path';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {handleProjectLocation} from '../../lib/onboarding/common.js';
 import glob from 'fast-glob';
-import {getSkeletonSourceDir} from '../../lib/build.js';
+import {getRepoNodeModules, getSkeletonSourceDir} from '../../lib/build.js';
 import {execAsync} from '../../lib/process.js';
-import {symlink, rmdir} from 'fs-extra';
+import {createSymlink, remove as rmdir} from 'fs-extra/esm';
 import {runCheckRoutes} from './check.js';
 import {runCodegen} from './codegen.js';
 import {runBuild} from './build.js';
@@ -73,10 +73,8 @@ vi.mock(
 
         // "Install" dependencies by linking to monorepo's node_modules
         await rmdir(joinPath(directory, 'node_modules')).catch(() => {});
-        await symlink(
-          fileURLToPath(
-            new URL('../../../../../node_modules', import.meta.url),
-          ),
+        await createSymlink(
+          await getRepoNodeModules(),
           joinPath(directory, 'node_modules'),
         );
       }),

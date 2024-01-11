@@ -100,6 +100,12 @@ export const commonFlags = {
     env: 'SHOPIFY_HYDROGEN_FLAG_INSPECTOR_PORT',
     default: DEFAULT_INSPECTOR_PORT,
   }),
+  diff: Flags.boolean({
+    description:
+      "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
+    default: false,
+    required: false,
+  }),
 };
 
 export function flagsToCamelObject<T extends Record<string, any>>(obj: T) {
