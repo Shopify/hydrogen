@@ -57,6 +57,15 @@ export async function startWorkerdServer({
   const handleAssets = createAssetHandler(assetsPort);
   const staticAssetExtensions = STATIC_ASSET_EXTENSIONS.slice();
 
+  let stringifiedOxygenHandler = miniOxygenHandler.toString();
+  if (process.env.NODE_ENV === 'test') {
+    // Vitest adds namespaces to imports
+    stringifiedOxygenHandler = stringifiedOxygenHandler.replace(
+      /\w*vite_ssr_import[\w\d]*\./g,
+      '',
+    );
+  }
+
   const buildMiniOxygenOptions = async () =>
     ({
       cf: false,
@@ -70,7 +79,7 @@ export async function startWorkerdServer({
         {
           name: 'mini-oxygen',
           modules: true,
-          script: `export default { fetch: ${miniOxygenHandler.toString()} }`,
+          script: `export default { fetch: ${stringifiedOxygenHandler} }`,
           bindings: {
             staticAssetExtensions,
             oxygenHeadersMap,
