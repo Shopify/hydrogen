@@ -690,12 +690,15 @@ export async function renderProjectReady(
 
 export function createAbortHandler(
   controller: AbortController,
-  project: {directory: string},
+  project?: {directory: string},
 ) {
   return async function abort(error: AbortError): Promise<never> {
     controller.abort();
 
-    if (typeof project !== 'undefined') {
+    // Give time to hide prompts before showing error
+    await Promise.resolve();
+
+    if (project?.directory) {
       await rmdir(project!.directory, {force: true}).catch(() => {});
     }
 
@@ -710,6 +713,8 @@ export function createAbortHandler(
       console.error(error);
     }
 
+    // This code runs asynchronously so throwing here
+    // turns into an unhandled rejection. Exit process instead:
     process.exit(1);
   };
 }

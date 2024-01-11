@@ -37,7 +37,7 @@ import {ALIAS_NAME, getCliCommand} from '../shell.js';
 import {CSS_STRATEGY_NAME_MAP} from '../setups/css/index.js';
 
 /**
- * Flow for setting up a project from the locally bundled starter template (hello-world).
+ * Flow for setting up a project from the locally bundled starter template (skeleton).
  */
 export async function setupLocalStarterTemplate(
   options: InitOptions,

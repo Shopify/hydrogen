@@ -60,6 +60,13 @@
             "codegen"
           ]
         },
+        "diff": {
+          "name": "diff",
+          "type": "boolean",
+          "description": "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
+          "required": false,
+          "allowNo": false
+        },
         "base": {
           "name": "base",
           "type": "option",
@@ -344,6 +351,13 @@
           "description": "Skip the version check when running `hydrogen dev`",
           "required": false,
           "allowNo": false
+        },
+        "diff": {
+          "name": "diff",
+          "type": "boolean",
+          "description": "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
+          "required": false,
+          "allowNo": false
         }
       },
       "args": {}
@@ -391,7 +405,7 @@
         "template": {
           "name": "template",
           "type": "option",
-          "description": "Sets the template to use. Pass `demo-store` for a fully-featured store template or `hello-world` for a barebones project.",
+          "description": "Scaffolds project based on an existing template or example from the Hydrogen repository.",
           "multiple": false
         },
         "install-deps": {

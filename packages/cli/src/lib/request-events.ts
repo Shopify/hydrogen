@@ -2,7 +2,7 @@ import path from 'node:path';
 import {EventEmitter} from 'node:events';
 import {ReadableStream} from 'node:stream/web';
 import {getGraphiQLUrl} from './graphiql-url.js';
-import {Request, Response} from '@shopify/mini-oxygen';
+import type {Request, Response} from '@shopify/mini-oxygen';
 import type {
   Request as WorkerdRequest,
   Response as WorkerdResponse,
@@ -18,7 +18,7 @@ type InferredResponse<R extends RequestKind> = R extends WorkerdRequest
   ? WorkerdResponse
   : Response;
 
-let ResponseConstructor = Response as typeof Response | typeof WorkerdResponse;
+let ResponseConstructor: typeof Response | typeof WorkerdResponse;
 export function setConstructors(constructors: {
   Response: typeof ResponseConstructor;
 }) {
