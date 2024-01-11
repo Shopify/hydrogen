@@ -21,6 +21,7 @@ import {symlink, rmdir} from 'fs-extra';
 import {runCheckRoutes} from './check.js';
 import {runCodegen} from './codegen.js';
 import {runBuild} from './build.js';
+import {runDev} from './dev.js';
 
 const {renderTasksHook} = vi.hoisted(() => ({renderTasksHook: vi.fn()}));
 
@@ -666,21 +667,21 @@ describe('init', () => {
           const clientAnalysisPath = 'dist/worker/client-bundle-analyzer.html';
           const workerAnalysisPath = 'dist/worker/worker-bundle-analyzer.html';
 
-          expect(
+          await expect(
             fileExists(joinPath(tmpDir, clientAnalysisPath)),
           ).resolves.toBeTruthy();
 
-          expect(
+          await expect(
             fileExists(joinPath(tmpDir, workerAnalysisPath)),
           ).resolves.toBeTruthy();
 
-          expect(await readFile(joinPath(tmpDir, clientAnalysisPath))).toMatch(
-            /globalThis\.METAFILE = '.+';/g,
-          );
+          await expect(
+            readFile(joinPath(tmpDir, clientAnalysisPath)),
+          ).resolves.toMatch(/globalThis\.METAFILE = '.+';/g);
 
-          expect(await readFile(joinPath(tmpDir, workerAnalysisPath))).toMatch(
-            /globalThis\.METAFILE = '.+';/g,
-          );
+          await expect(
+            readFile(joinPath(tmpDir, workerAnalysisPath)),
+          ).resolves.toMatch(/globalThis\.METAFILE = '.+';/g);
         });
       });
     });
