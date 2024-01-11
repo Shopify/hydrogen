@@ -46,6 +46,7 @@ import {
   type GraphQLApiResponse,
   type GraphQLErrorOptions,
 } from './utils/graphql';
+import {getCallerStackLine} from './utils/callsites';
 
 export type I18nBase = {
   language: LanguageCode;
@@ -184,12 +185,16 @@ type StorefrontQueryOptions = StorefrontCommonExtraParams & {
   query: string;
   mutation?: never;
   cache?: CachingStrategy;
+  /** The name to be shown in the Subrequest Profiler */
+  displayName?: string;
 };
 
 type StorefrontMutationOptions = StorefrontCommonExtraParams & {
   query?: never;
   mutation: string;
   cache?: never;
+  /** The name to be shown in the Subrequest Profiler */
+  displayName?: string;
 };
 
 export const StorefrontApiError = class extends Error {} as ErrorConstructor;
@@ -272,6 +277,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     cache: cacheOptions,
     headers = [],
     storefrontApiVersion,
+    displayName,
   }: {variables?: GenericVariables} & (
     | StorefrontQueryOptions
     | StorefrontMutationOptions
@@ -312,6 +318,16 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       requestInit.body,
     ];
 
+    let stackOffset = 1;
+    if (process.env.NODE_ENV === 'development') {
+      if (/fragment CartApi(Query|Mutation) on Cart/.test(query)) {
+        // The cart handler is wrapping storefront.query/mutate,
+        // so we need to go up one more stack frame to show
+        // the caller in /subrequest-profiler
+        stackOffset = 2;
+      }
+    }
+
     const [body, response] = await fetchWithServerCache(url, requestInit, {
       cacheInstance: mutation ? undefined : cache,
       cache: cacheOptions || CacheDefault(),
@@ -322,6 +338,8 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         graphql: graphqlData,
         requestId: requestInit.headers[STOREFRONT_REQUEST_GROUP_ID_HEADER],
         purpose: storefrontHeaders?.purpose,
+        stackInfo: getCallerStackLine?.(stackOffset),
+        displayName,
       },
     });
 

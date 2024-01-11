@@ -18,7 +18,7 @@ import {OXYGEN_HEADERS_MAP, logRequestLine} from './common.js';
 import {
   H2O_BINDING_NAME,
   handleDebugNetworkRequest,
-  logRequestEvent,
+  createLogRequestEvent,
   setConstructors,
 } from '../request-events.js';
 import {
@@ -97,7 +97,7 @@ export async function startWorkerdServer({
           compatibilityDate: '2022-10-31',
           bindings: {...env},
           serviceBindings: {
-            [H2O_BINDING_NAME]: logRequestEvent,
+            [H2O_BINDING_NAME]: createLogRequestEvent({absoluteBundlePath}),
           },
         },
       ],
