@@ -1,6 +1,11 @@
-import {type CacheKey, runWithCache} from './cache/fetch';
+import {
+  type CacheKey,
+  runWithCache,
+  type CacheActionFunctionParam,
+} from './cache/fetch';
 import type {CachingStrategy} from './cache/strategies';
 import {type CrossRuntimeRequest, getDebugHeaders} from './utils/request';
+import {getCallerStackLine} from './utils/callsites';
 
 type CreateWithCacheOptions = {
   /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */
@@ -26,13 +31,16 @@ export function createWithCache<T = unknown>({
   return function withCache<T = unknown>(
     cacheKey: CacheKey,
     strategy: CachingStrategy,
-    actionFn: () => T | Promise<T>,
+    actionFn: ({addDebugData}: CacheActionFunctionParam) => T | Promise<T>,
   ) {
     return runWithCache<T>(cacheKey, actionFn, {
       strategy,
       cacheInstance: cache,
       waitUntil,
-      debugInfo: getDebugHeaders(request),
+      debugInfo: {
+        ...getDebugHeaders(request),
+        stackInfo: getCallerStackLine?.(),
+      },
     });
   };
 }
@@ -45,7 +53,7 @@ export function createWithCache<T = unknown>({
 type CreateWithCacheReturn<T> = <U = T>(
   cacheKey: CacheKey,
   strategy: CachingStrategy,
-  actionFn: () => U | Promise<U>,
+  actionFn: ({addDebugData}: CacheActionFunctionParam) => U | Promise<U>,
 ) => Promise<U>;
 
 export type WithCache = ReturnType<typeof createWithCache>;

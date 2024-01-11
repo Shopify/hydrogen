@@ -1,0 +1,592 @@
+:root {
+  --background-color: #f1f1f1;
+  --primary-color: #333333;
+  --secondary-color: #e3e3e3;
+  --shadow-color: #999;
+  --dark-border-color: #666;
+  --button-state-color: #fafafa;
+  --secondary-text-color: #616161;
+  --highlight-color: #f5f5f5;
+  --hover-highlight-color: rgba(230, 238, 254, 0.5);
+  --active-highlight-color: #e6eefe;
+  --button-border: 1px solid rgba(51, 51, 51, 0.75);
+
+  --text-large: 0.813rem;
+  --text-normal: 0.688rem;
+  --font-bold: 650;
+
+  --box-shadow: 0 0.125rem 0.0625rem #0000000d, 0 0 0.0625rem #42474c73;
+}
+
+body {
+  color: var(--primary-color);
+  font-size: var(--text-normal);
+}
+
+input[type='checkbox'] {
+  display: grid;
+  place-content: center;
+
+  accent-color: var(--primary-color);
+
+  width: 1.15em;
+  height: 1.15em;
+}
+
+.text-normal {
+  font-size: var(--text-normal);
+}
+
+.text-large {
+  font-size: var(--text-large);
+}
+
+.bold {
+  font-weight: var(--font-bold);
+}
+
+.bold-1 {
+  font-weight: 550;
+}
+
+.flex-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-direction: row;
+}
+
+.gap-small {
+  gap: 0.5rem;
+}
+
+.gap-tiny {
+  gap: 0.25rem;
+}
+
+.justify-between {
+  display: flex;
+  justify-content: space-between;
+}
+
+.form-control {
+  display: grid;
+  grid-template-columns: 1rem auto;
+  gap: 0.7rem;
+  align-items: center;
+}
+
+.form-control > * {
+  opacity: 75%;
+}
+
+.form-control > input:checked,
+.form-control > input:checked + label {
+  opacity: 100%;
+}
+
+header {
+  height: 3.5rem;
+  box-shadow: var(--box-shadow);
+}
+
+header .logo {
+  width: 16.7px;
+}
+
+header h1 {
+  font-size: var(--text-large);
+  font-weight: normal;
+  padding-left: 0.75rem;
+  color: #000;
+}
+
+.pill {
+  background-color: #f4f4f4;
+  border-radius: 4rem;
+  padding: 0.2rem 0.8rem;
+  font-size: 0.75rem;
+}
+
+.word-break-all {
+  word-break: break-all;
+}
+
+/* Button */
+button,
+[role='button'] {
+  cursor: pointer;
+}
+
+button,
+[type='button'],
+[type='reset'],
+[type='submit'] {
+  -webkit-appearance: button;
+  appearance: button;
+  border-radius: 0.375rem;
+  border: var(--button-border);
+  background: #fff;
+  padding: 0.375rem 0.75rem;
+}
+
+button.plain {
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+button.icon {
+  padding: 0.25rem;
+  line-height: 0;
+}
+
+button:hover {
+  background-color: #fafafa;
+}
+
+button:focus {
+  outline: 2px solid #005bd3;
+  outline-offset: 1px;
+  background-color: #fff;
+}
+
+button:active {
+  box-shadow: 0px 2px 0px 0px #c1c2c2 inset;
+  background-color: #ccc;
+}
+
+button.primary {
+  background-color: #0554f2;
+  color: #fff;
+  border: none;
+  font-weight: 600;
+}
+
+button:hover.primary {
+  background-color: #0c54e6;
+}
+
+button:focus.primary {
+  background-color: #0e50d4;
+}
+
+button:active.primary {
+  box-shadow: 0px 3px 4px 0px #0446cb inset;
+  background-color: #0e50d4;
+  color: #fff;
+}
+
+#buttonClear {
+  display: flex;
+  align-items: center;
+  padding-left: 0.5rem;
+}
+
+#buttonClear span {
+  padding-left: 2px;
+}
+
+#server-network-timing {
+  display: grid;
+  grid-template-rows: 3.5rem auto;
+  min-height: 100vh;
+}
+
+#server-network-timing.withNotification {
+  grid-template-rows: 3rem 3.5rem auto;
+}
+
+#main.empty {
+  display: grid;
+  grid-template-rows: 4rem auto;
+}
+
+#main.empty #request-info {
+  display: none;
+}
+
+.pad {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.link-margin-top {
+  margin-top: 0.5rem;
+}
+
+#options-and-legend {
+  height: 4rem;
+}
+
+#options-and-legend p {
+  font-size: var(--text-normal);
+}
+
+.legend {
+  background-color: var(--highlight-color);
+  border-radius: 0.125rem;
+  padding: 0.25rem 0.5rem;
+  gap: 0.75rem;
+}
+
+.swatch {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 0.125rem;
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+#request-waterfall {
+  border-top: 1px solid var(--secondary-color);
+  border-bottom: 1px solid var(--secondary-color);
+  overflow: hidden;
+}
+
+#request-waterfall .request-waterfall-chart {
+  height: calc(60vh - 3.85rem);
+  width: calc(99.8vw - 1.75rem);
+}
+
+#server-network-timing.withNotification
+  #request-waterfall
+  .request-waterfall-chart {
+  height: calc(60vh - 5.35rem);
+}
+
+#request-info {
+  display: flex;
+  align-items: stretch;
+  flex-direction: row;
+
+  height: calc(40vh - 3.85rem);
+}
+
+#server-network-timing.withNotification #request-info {
+  height: calc(40vh - 5.35rem);
+}
+
+#request-info > div {
+  flex: 1;
+}
+
+#request-table__content .grid-row:nth-child(odd) {
+  background-color: var(--highlight-color);
+}
+
+#request-table {
+  height: 100%;
+}
+
+#request-table > div {
+  padding: 0;
+  font-size: var(--text-large);
+  display: grid;
+  grid-template-rows: 2.75rem auto 2rem;
+  height: 100%;
+}
+
+#request-table .grid-row {
+  display: grid;
+  grid-template-columns: 1fr 80px 80px;
+  border-bottom: 1px solid var(--secondary-color);
+}
+
+#request-table__content .grid-row {
+  cursor: pointer;
+}
+
+#request-table__content .grid-row:hover {
+  background-color: var(--hover-highlight-color);
+}
+
+#request-table .grid-cell {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  place-self: stretch;
+  align-self: center;
+  padding: 0.5rem 0;
+}
+
+#request-table .grid-cell:first-child {
+  padding-left: 1rem;
+}
+
+#request-table .grid-cell:last-child {
+  padding-right: 0.75rem;
+}
+
+#request-table__header.grid-row {
+  font-weight: 550;
+  font-size: var(--text-normal);
+}
+
+#request-table__header.grid-cell {
+  border-top: none;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  opacity: 75%;
+}
+
+#request-table__content {
+  overflow: scroll;
+}
+
+#request-table__content .grid-row.active {
+  background-color: var(--active-highlight-color);
+}
+
+#request-table__footer {
+  border-top: 1px solid var(--secondary-color);
+  padding: 0.5rem 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: var(--text-normal);
+}
+
+/** Tab panels */
+
+#close-request-detail {
+  padding-left: 3px;
+}
+
+#request-detail-header {
+  display: grid;
+  grid-template-columns: auto min-content;
+  align-items: center;
+  padding-left: calc(1rem - 2px);
+  padding-right: 1rem;
+}
+
+#tabButtons {
+  overflow-x: scroll;
+  padding: 2px;
+}
+
+#tabButtons::-webkit-scrollbar {
+  display: none;
+}
+
+#tab-buttons-wrapper {
+  position: relative;
+  width: 100%;
+  overflow-x: scroll;
+}
+#tab-buttons-wrapper .fadCover {
+  position: absolute;
+  top: 0;
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+
+  --gradient-color-start: rgba(255, 255, 255, 1);
+  --gradient-color-end: transparent;
+  --background-color: transparent;
+
+  background-image: linear-gradient(
+      to right,
+      var(--background-color),
+      var(--background-color)
+    ),
+    linear-gradient(to right, var(--background-color), var(--background-color)),
+    linear-gradient(
+      to right,
+      var(--gradient-color-start),
+      var(--gradient-color-end)
+    ),
+    linear-gradient(
+      to left,
+      var(--gradient-color-start),
+      var(--gradient-color-end)
+    );
+  background-position: left center, right center, left center, right center;
+  background-repeat: no-repeat;
+  background-color: var(--background-color);
+  background-size: 20px 100%, 20px 100%, 0px 100%, 0px 100%;
+  background-attachment: local, local, scroll, scroll;
+}
+
+#tab-buttons-wrapper .fadCover.fadeLeft {
+  background-size: 20px 100%, 20px 100%, 40px 100%, 0px 100%;
+}
+
+#tab-buttons-wrapper .fadCover.fadeRight {
+  background-size: 20px 100%, 20px 100%, 0px 100%, 40px 100%;
+}
+
+#tab-buttons-wrapper .fadCover.fadeLeftRight {
+  background-size: 20px 100%, 20px 100%, 40px 100%, 40px 100%;
+}
+
+.tabPanels .tabPanel {
+  display: none;
+
+  overflow: scroll;
+  padding-bottom: 0.75rem;
+}
+
+.tabPanels > .tabPanel.active {
+  display: flex;
+  gap: 0.75rem;
+  flex-direction: column;
+}
+
+#request-details-panel {
+  display: none;
+  max-width: 50vw;
+}
+
+#request-details-panel.active {
+  display: block;
+}
+
+#request-detail {
+  display: grid;
+  grid-template-rows: 2.75rem auto;
+  height: 100%;
+  overflow: hidden;
+  border-left: 1px solid var(--secondary-color);
+}
+
+#request-detail > .flex-row {
+  padding-left: 0.75rem;
+  padding-right: 1rem;
+}
+
+#request-detail .tabPanels {
+  width: 100%;
+  height: 100%;
+  overflow: scroll;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 0.5rem;
+}
+
+#request-detail div.tab {
+  background-color: transparent;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.25rem;
+  font-size: var(--text-normal);
+  cursor: pointer;
+}
+
+#request-detail div.tab.active {
+  background-color: var(--active-highlight-color);
+}
+
+#request-detail div.tab:hover {
+  background-color: var(--hover-highlight-color);
+}
+
+#request-detail .tabPanels .grid-layout a {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+#request-detail .grid-layout {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: minmax(50px, 100px) auto;
+  margin-bottom: 1rem;
+  font-size: var(--text-large);
+}
+
+.tabPanel .gridTitle {
+  font-weight: 550;
+  opacity: 75%;
+}
+
+.notification {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--highlight-color);
+  height: 3rem;
+}
+
+.notification p {
+  font-size: var(--text-normal);
+  color: var(--secondary-text-color);
+}
+
+#close-notification {
+  position: absolute;
+  right: 0.5rem;
+}
+
+#empty-view {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.code-json {
+  white-space: pre;
+  font-size: var(--text-normal);
+}
+
+.error {
+  color: #ff0000;
+}
+
+@media (max-width: 940px) {
+  #main.empty {
+    display: grid;
+    grid-template-rows: 6.59rem auto;
+  }
+
+  #options-and-legend {
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 1rem;
+
+    padding: 1rem;
+    height: 6.59rem;
+    width: 100vw;
+    overflow-x: scroll;
+  }
+
+  #options-and-legend > .flex-row {
+    min-width: 453px;
+  }
+
+  #request-waterfall .request-waterfall-chart {
+    height: calc(60vh - 5.145rem);
+  }
+
+  #server-network-timing.withNotification
+    #request-waterfall
+    .request-waterfall-chart {
+    height: calc(60vh - 6.645rem);
+  }
+
+  #request-info {
+    height: calc(40vh - 5.145rem);
+  }
+
+  #server-network-timing.withNotification #request-info {
+    height: calc(40vh - 6.645rem);
+  }
+
+  #request-table .grid-row {
+    grid-template-columns: 1fr 55px 55px;
+  }
+}
+
+@media (max-width: 575px) {
+  #request-detail .tabPanel .grid-layout {
+    display: flex;
+    flex-direction: column;
+  }
+}
