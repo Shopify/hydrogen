@@ -684,6 +684,56 @@ describe('init', () => {
           ).resolves.toMatch(/globalThis\.METAFILE = '.+';/g);
         });
       });
+
+      it('runs dev in the generated project', async () => {
+        await inTemporaryDirectory(async (tmpDir) => {
+          await runInit({
+            path: tmpDir,
+            git: true,
+            language: 'ts',
+            styling: 'postcss',
+            i18n: 'subfolders',
+            routes: true,
+            installDeps: true,
+          });
+
+          // Clear previous success messages
+          outputMock.clear();
+
+          const port = 1337;
+
+          const {close} = await runDev({
+            path: tmpDir,
+            port,
+            inspectorPort: 9000,
+            worker: true,
+            disableVirtualRoutes: true,
+            disableVersionCheck: true,
+          });
+
+          try {
+            await vi.waitFor(
+              () => expect(outputMock.output()).toMatch('success'),
+              {timeout: 5000},
+            );
+
+            expect(outputMock.output()).toMatch(/View Hydrogen app/i);
+
+            await expect(
+              fileExists(joinPath(tmpDir, 'dist', 'worker', 'index.js')),
+            ).resolves.toBeTruthy();
+
+            // await expect(runBuild({directory: tmpDir})).resolves.not.toThrow();
+
+            const response = await fetch(`http://localhost:${port}`);
+            expect(response.status).toEqual(200);
+            expect(response.headers.get('content-type')).toEqual('text/html');
+            await expect(response.text()).resolves.toMatch('Mock.shop');
+          } finally {
+            await close();
+          }
+        });
+      });
     });
   });
 });

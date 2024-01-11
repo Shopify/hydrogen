@@ -1,5 +1,6 @@
-import path from 'path';
-import fs from 'fs/promises';
+import path from 'node:path';
+import fs from 'node:fs/promises';
+import type {ChildProcess} from 'node:child_process';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
@@ -95,7 +96,7 @@ type DevOptions = {
   inspectorPort: number;
 };
 
-async function runDev({
+export async function runDev({
   port: appPort,
   path: appPath,
   codegen: useCodegen = false,
@@ -174,6 +175,7 @@ async function runDev({
     : undefined;
 
   let miniOxygen: MiniOxygen;
+  let codegenProcess: ChildProcess;
   async function safeStartMiniOxygen() {
     if (miniOxygen) return;
 
@@ -213,7 +215,10 @@ async function runDev({
     });
 
     if (useCodegen) {
-      spawnCodegenProcess({...remixConfig, configFilePath: codegenConfigPath});
+      codegenProcess = spawnCodegenProcess({
+        ...remixConfig,
+        configFilePath: codegenConfigPath,
+      });
     }
 
     checkRemixVersions();
@@ -226,7 +231,7 @@ async function runDev({
   const fileWatchCache = createFileWatchCache();
   let skipRebuildLogs = false;
 
-  await watch(
+  const closeWatcher = await watch(
     {
       config: remixConfig,
       options: {
@@ -327,4 +332,11 @@ async function runDev({
       },
     },
   );
+
+  return {
+    async close() {
+      codegenProcess?.kill(0);
+      await Promise.all([closeWatcher(), miniOxygen?.close()]);
+    },
+  };
 }
