@@ -396,6 +396,9 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        * ```
        */
       query(query, options?) {
+        // Store an error with a stack trace so we can see where the error originated from
+        const errorWithStack = new Error();
+
         query = minifyQuery(query);
         assertQuery(query, 'storefront.query');
 
@@ -404,11 +407,10 @@ export function createStorefrontClient<TI18n extends I18nBase>(
           query,
         });
 
-        // This is a no-op, but we need to catch the promise to avoid unhandled rejections
-        // we cannot return the catch no-op, or it would swallow the error
-        result.catch(() => {});
-
-        return result;
+        return result.catch((error) => {
+          errorWithStack.message = error.message;
+          throw errorWithStack;
+        });
       },
       /**
        * Sends a GraphQL mutation to the Storefront API.
@@ -424,6 +426,9 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        * ```
        */
       mutate(mutation, options?) {
+        // Store an error with a stack trace so we can see where the error originated from
+        const errorWithStack = new Error();
+
         mutation = minifyQuery(mutation);
         assertMutation(mutation, 'storefront.mutate');
 
@@ -432,11 +437,10 @@ export function createStorefrontClient<TI18n extends I18nBase>(
           mutation,
         });
 
-        // This is a no-op, but we need to catch the promise to avoid unhandled rejections
-        // we cannot return the catch no-op, or it would swallow the error
-        result.catch(() => {});
-
-        return result;
+        return result.catch((error) => {
+          errorWithStack.message = error.message;
+          throw errorWithStack;
+        });
       },
       cache,
       CacheNone,
