@@ -44,7 +44,7 @@ jobs:
         uses: changesets/action@v1
         with:
           version: npm run version
-          publish: npm run changeset publish
+          publish: npm run changeset -- publish --tag ${{ github.ref_name }}
           commit: '[ci] back-fix release ${{ github.ref_name }}'
           title: '[ci] back-fix release ${{ github.ref_name }}'
         env:
