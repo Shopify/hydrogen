@@ -79,9 +79,6 @@ function isLocalPath(requestUrl: string, redirectUrl: string) {
   // doing so could create phishing vulnerability
   // Test for protocols, e.g. https://, http://, //
   // and uris: mailto:, tel:, javascript:, etc.
-  //
-  // Testing url: http://localhost:3000/missing?return_to=%01http%3A%2F%2Fexample.com
-  // Expected result: Should not redirect
   try {
     return (
       new URL(requestUrl).origin === new URL(redirectUrl, requestUrl).origin
