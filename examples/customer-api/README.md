@@ -2,7 +2,7 @@
 
 **Caution: The Customer API and this example are both in an unstable pre-release state and may have breaking changes in a future release.**
 
-This is an example using the new Shopify [Customer Accounts API](https://shopify.dev/docs/api/customer)
+This is an example using the new Shopify [Customer Account API](https://shopify.dev/docs/api/customer)
 
 ## Requirements
 
