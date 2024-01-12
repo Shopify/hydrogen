@@ -1,5 +1,11 @@
 # @shopify/hydrogen
 
+## 2023.10.4
+
+### Patch Changes
+
+- Fix redirect bug ([#1631](https://github.com/Shopify/hydrogen/pull/1631)) by [@shopify-github-actions-access](https://github.com/apps/shopify-github-actions-access)
+
 ## 2023.10.3
 
 ### Patch Changes
