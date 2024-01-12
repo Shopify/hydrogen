@@ -1,4 +1,4 @@
-# Hydrogen Customer API Example
+# Hydrogen Customer Account API Example
 
 **Caution: The Customer API and this example are both in an unstable pre-release state and may have breaking changes in a future release.**
 
