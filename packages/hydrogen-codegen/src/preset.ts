@@ -2,7 +2,7 @@ import type {Types} from '@graphql-codegen/plugin-helpers';
 import * as addPlugin from '@graphql-codegen/add';
 import * as typescriptPlugin from '@graphql-codegen/typescript';
 import * as typescriptOperationPlugin from '@graphql-codegen/typescript-operations';
-import {processSources} from './sources.js';
+import {processSources, type BuildTypeName} from './sources.js';
 import {getDefaultOptions} from './defaults.js';
 import {
   plugin as dtsPlugin,
@@ -38,6 +38,19 @@ export type HydrogenPresetConfig = {
     queryType: string;
     mutationType: string;
   }) => string;
+  /**
+   * Suffix to filter query documents: `#graphql:<suffix>`.
+   * Documents that don't match the prefix are excluded. Passing
+   * `undefined` or `''` matches only plain comments: `#graphl`
+   */
+  gqlSuffix?: string;
+  /**
+   * Override the way that type names are created from queries.
+   * The names must match the ones generated in typescript-operations.
+   * Use this option to keep the names in sync if you are customizing them in typescript-operations.
+   * https://the-guild.dev/graphql/codegen/plugins/typescript/typescript-operations
+   */
+  buildTypeName?: BuildTypeName;
 };
 
 export const preset: Types.OutputPreset<HydrogenPresetConfig> = {
@@ -55,8 +68,10 @@ export const preset: Types.OutputPreset<HydrogenPresetConfig> = {
         '[hydrogen-preset] providing additional typescript-based `plugins` leads to duplicated generated types',
       );
     }
-
-    const sourcesWithOperations = processSources(options.documents);
+    const sourcesWithOperations = processSources(
+      options.documents,
+      options.presetConfig,
+    );
     const sources = sourcesWithOperations.map(({source}) => source);
 
     const defaultOptions = getDefaultOptions(options.baseOutputDir);

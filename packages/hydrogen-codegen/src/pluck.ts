@@ -11,7 +11,7 @@ export const pluckConfig = {
     // Check for internal gql comment: const QUERY = `#graphql ...`
     const hasInternalGqlComment =
       node.type === 'TemplateLiteral' &&
-      /\s*#graphql\s*\n/i.test(node.quasis[0]?.value?.raw || '');
+      /\s*#graphql(:[\w.\-]+)?\s*\n/i.test(node.quasis[0]?.value?.raw || '');
 
     if (hasInternalGqlComment) return true;
 
