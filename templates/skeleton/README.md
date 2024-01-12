@@ -50,7 +50,7 @@ npm run dev
 ### Include public domain in Customer Account API settings
 
 1. Go to your Shopify admin => `Hydrogen` or `Headless` app/channel => Customer Account API => Application setup
-1. Edit `Callback URI(s)` to include `https://<your-ngrok-domain>.app/authorize`
+1. Edit `Callback URI(s)` to include `https://<your-ngrok-domain>.app/account/authorize`
 1. Edit `Javascript origin(s)` to include your public domain `https://<your-ngrok-domain>.app` or keep it blank
 1. Edit `Logout URI` to include your public domain `https://<your-ngrok-domain>.app` or keep it blank
 

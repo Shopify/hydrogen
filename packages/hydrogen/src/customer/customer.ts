@@ -122,6 +122,8 @@ type CustomerClientOptions = {
   request: CrossRuntimeRequest;
   /** The waitUntil function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
   waitUntil?: ExecutionContext['waitUntil'];
+  /** This is the url where the auth method should live in the loader. Can be a full url or start with / for relative url. Default is `/authorize` if not provided. */
+  authUrl?: string;
 };
 
 export function createCustomerClient({
@@ -131,6 +133,7 @@ export function createCustomerClient({
   customerApiVersion = DEFAULT_CUSTOMER_API_VERSION,
   request,
   waitUntil,
+  authUrl = '/authorize',
 }: CustomerClientOptions): CustomerClient {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.log(
@@ -152,6 +155,7 @@ export function createCustomerClient({
   const url = new URL(request.url);
   const origin =
     url.protocol === 'http:' ? url.origin.replace('http', 'https') : url.origin;
+  const redirectUri = authUrl.startsWith('/') ? origin + authUrl : authUrl;
 
   const locks: Locks = {};
 
@@ -293,7 +297,7 @@ export function createCustomerClient({
       loginUrl.searchParams.set('client_id', customerAccountId);
       loginUrl.searchParams.set('scope', 'openid email');
       loginUrl.searchParams.append('response_type', 'code');
-      loginUrl.searchParams.append('redirect_uri', origin + '/authorize');
+      loginUrl.searchParams.append('redirect_uri', redirectUri);
       loginUrl.searchParams.set(
         'scope',
         'openid email https://api.customers.com/auth/customer.graphql',
@@ -383,7 +387,7 @@ export function createCustomerClient({
 
       body.append('grant_type', 'authorization_code');
       body.append('client_id', clientId);
-      body.append('redirect_uri', origin + '/authorize');
+      body.append('redirect_uri', redirectUri);
       body.append('code', code);
 
       // Public Client
