@@ -138,7 +138,9 @@ export class AppSession implements HydrogenSession {
       },
     });
 
-    const session = await storage.getSession(request.headers.get('Cookie'));
+    const session = await storage
+      .getSession(request.headers.get('Cookie'))
+      .catch(() => storage.getSession());
 
     return new this(storage, session);
   }
