@@ -1,4 +1,4 @@
-name: Back-fix publish
+name: Back-fix Release
 
 on:
   push:
