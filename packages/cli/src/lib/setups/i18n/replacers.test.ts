@@ -68,7 +68,6 @@ describe('i18n replacers', () => {
           LanguageCode,
           CountryCode,
         } from "@shopify/hydrogen/storefront-api-types";
-        import type { CustomerAccessToken } from "@shopify/hydrogen/storefront-api-types";
         import type { AppSession } from "~/lib/session";
 
         declare global {
@@ -203,6 +202,7 @@ describe('i18n replacers', () => {
                 session,
                 customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID,
                 customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_API_URL,
+                authUrl: "/account/authorize",
               });
 
               /*
