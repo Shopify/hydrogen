@@ -83,7 +83,7 @@ function isLocalPath(requestUrl: string, redirectUrl: string) {
   // Testing url: http://localhost:3000/missing?return_to=%01http%3A%2F%2Fexample.com
   // Expected result: Should not redirect
   try {
-    return new URL(requestUrl).origin === new URL(redirectUrl).origin;
+    return new URL(requestUrl).origin === new URL(redirectUrl, requestUrl).origin;
   } catch (e) {
     return false;
   }
