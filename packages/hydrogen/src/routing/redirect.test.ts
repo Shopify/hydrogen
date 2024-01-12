@@ -166,6 +166,16 @@ describe('storefrontRedirect', () => {
           headers: {location: '/some-page?param=https://another.com'},
         }),
       );
+
+      await expect(
+        storefrontRedirect({
+          response,
+          storefront: storefrontMock,
+          request: new Request(
+            'http://localhost:3000/missing?return_to=%01http%3A%2F%2Fexample.com',
+          ),
+        }),
+      ).resolves.toEqual(response);
     });
   });
 });
