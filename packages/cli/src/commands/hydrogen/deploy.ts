@@ -47,6 +47,7 @@ export const deploymentLogger: Logger = (
 };
 
 export default class Deploy extends Command {
+  static description = 'Builds and deploys a Hydrogen storefront to Oxygen.';
   static flags: any = {
     'env-branch': Flags.string({
       char: 'e',
@@ -77,13 +78,14 @@ export default class Deploy extends Command {
     }),
     'no-json-output': Flags.boolean({
       description:
-        'Prevents the command from creating a JSON file containing the deployment URL (in CI environments).',
+        'Prevents the command from creating a JSON file containing the deployment URL in CI environments.',
       required: false,
       default: false,
     }),
     token: Flags.string({
       char: 't',
-      description: 'Oxygen deployment token',
+      description:
+        "Oxygen deployment token. Defaults to the linked storefront's token if available.",
       env: 'SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN',
       required: false,
     }),
@@ -94,10 +96,9 @@ export default class Deploy extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_METADATA_DESCRIPTION',
     }),
     'metadata-url': Flags.string({
-      description:
-        'URL that links to the deployment. Will be saved and displayed in the Shopify admin',
       required: false,
       env: 'SHOPIFY_HYDROGEN_FLAG_METADATA_URL',
+      hidden: true,
     }),
     'metadata-user': Flags.string({
       description:
@@ -106,14 +107,11 @@ export default class Deploy extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_METADATA_USER',
     }),
     'metadata-version': Flags.string({
-      description:
-        'A version identifier for the deployment. Will be saved and displayed in the Shopify admin',
       required: false,
       env: 'SHOPIFY_HYDROGEN_FLAG_METADATA_VERSION',
+      hidden: true,
     }),
   };
-
-  static hidden = true;
 
   async run() {
     const {flags} = await this.parse(Deploy);
