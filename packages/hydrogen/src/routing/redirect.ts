@@ -56,7 +56,7 @@ export async function storefrontRedirect(
       searchParams.get('return_to') || searchParams.get('redirect');
 
     if (redirectTo) {
-      if (isLocalPath(redirectTo)) {
+      if (isLocalPath(request.url, redirectTo)) {
         return redirect(redirectTo);
       } else {
         console.warn(
@@ -74,12 +74,18 @@ export async function storefrontRedirect(
   return response;
 }
 
-function isLocalPath(url: string) {
+function isLocalPath(requestUrl: string, redirectUrl: string) {
   // We don't want to redirect cross domain,
   // doing so could create phishing vulnerability
   // Test for protocols, e.g. https://, http://, //
   // and uris: mailto:, tel:, javascript:, etc.
-  return !/^(([a-z+-]+:)?\/\/|[a-z+-]+:)/i.test(url.trim());
+  try {
+    return (
+      new URL(requestUrl).origin === new URL(redirectUrl, requestUrl).origin
+    );
+  } catch (e) {
+    return false;
+  }
 }
 
 const REDIRECT_QUERY = `#graphql
