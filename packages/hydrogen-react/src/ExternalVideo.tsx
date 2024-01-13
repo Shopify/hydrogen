@@ -1,6 +1,6 @@
 import type {ExternalVideo as ExternalVideoType} from './storefront-api-types.js';
 import type {Entries, PartialDeep} from 'type-fest';
-import {forwardRef} from 'react';
+import {forwardRef, IframeHTMLAttributes} from 'react';
 
 interface ExternalVideoBaseProps {
   /**
@@ -14,7 +14,10 @@ interface ExternalVideoBaseProps {
   options?: YouTube | Vimeo;
 }
 
-export type ExternalVideoProps = Omit<JSX.IntrinsicElements['iframe'], 'src'> &
+export type ExternalVideoProps = Omit<
+  IframeHTMLAttributes<HTMLIFrameElement>,
+  'src'
+> &
   ExternalVideoBaseProps;
 
 /**
