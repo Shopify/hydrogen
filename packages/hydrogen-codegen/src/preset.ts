@@ -3,6 +3,7 @@ import * as addPlugin from '@graphql-codegen/add';
 import * as typescriptPlugin from '@graphql-codegen/typescript';
 import * as typescriptOperationPlugin from '@graphql-codegen/typescript-operations';
 import {processSources} from './sources.js';
+import {getDefaultOptions} from './defaults.js';
 import {
   plugin as dtsPlugin,
   GENERATED_MUTATION_INTERFACE_NAME,
@@ -39,13 +40,8 @@ export type HydrogenPresetConfig = {
   }) => string;
 };
 
-export const defaultInterfaceExtensionCode = `
-declare module '@shopify/hydrogen' {
-  interface StorefrontQueries extends ${GENERATED_QUERY_INTERFACE_NAME} {}
-  interface StorefrontMutations extends ${GENERATED_MUTATION_INTERFACE_NAME} {}
-}`;
-
 export const preset: Types.OutputPreset<HydrogenPresetConfig> = {
+  [Symbol.for('name')]: 'hydrogen',
   buildGeneratesSection: (options) => {
     if (!options.baseOutputDir.endsWith('.d.ts')) {
       throw new Error('[hydrogen-preset] target output should be a .d.ts file');
@@ -63,18 +59,20 @@ export const preset: Types.OutputPreset<HydrogenPresetConfig> = {
     const sourcesWithOperations = processSources(options.documents);
     const sources = sourcesWithOperations.map(({source}) => source);
 
+    const defaultOptions = getDefaultOptions(options.baseOutputDir);
+
     const importTypes = options.presetConfig.importTypes ?? true;
     const namespacedImportName =
-      options.presetConfig.namespacedImportName ?? 'StorefrontAPI';
+      options.presetConfig.namespacedImportName ??
+      defaultOptions.namespacedImportName;
     const importTypesFrom =
-      options.presetConfig.importTypesFrom ??
-      '@shopify/hydrogen/storefront-api-types';
+      options.presetConfig.importTypesFrom ?? defaultOptions.importTypesFrom;
 
     const interfaceExtensionCode =
       options.presetConfig.interfaceExtension?.({
         queryType: GENERATED_QUERY_INTERFACE_NAME,
         mutationType: GENERATED_MUTATION_INTERFACE_NAME,
-      }) ?? defaultInterfaceExtensionCode;
+      }) ?? defaultOptions.interfaceExtensionCode;
 
     const pluginMap = {
       ...options.pluginMap,

@@ -13,7 +13,11 @@ import {flattenConnection} from './flatten-connection.js';
 import {useCartActions} from './useCartActions.js';
 import {useMemo} from 'react';
 import {InitEvent} from '@xstate/fsm/lib/types.js';
-import {CountryCode, Cart as CartType} from './storefront-api-types.js';
+import {
+  CountryCode,
+  Cart as CartType,
+  LanguageCode,
+} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 
 function invokeCart(
@@ -184,6 +188,7 @@ export function useCartAPIStateMachine({
   data: cart,
   cartFragment,
   countryCode,
+  languageCode,
 }: {
   /**  Maximum number of cart lines to fetch. Defaults to 250 cart lines. */
   numCartLines?: number;
@@ -202,12 +207,14 @@ export function useCartAPIStateMachine({
     context: CartMachineContext,
     event: CartMachineFetchResultEvent,
   ) => void;
-  /** An object with fields that correspond to the Storefront API's [Cart object](https://shopify.dev/api/storefront/2023-07/objects/cart). */
+  /** An object with fields that correspond to the Storefront API's [Cart object](https://shopify.dev/api/storefront/2023-10/objects/cart). */
   data?: PartialDeep<CartType, {recurseIntoArrays: true}>;
-  /** A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/2023-07/objects/cart) for all queries and mutations. A default value is used if no argument is provided. */
+  /** A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/2023-10/objects/cart) for all queries and mutations. A default value is used if no argument is provided. */
   cartFragment: string;
   /** The ISO country code for i18n. */
   countryCode?: CountryCode;
+  /** The ISO language code for i18n. */
+  languageCode?: LanguageCode;
 }) {
   const {
     cartFetch,
@@ -223,6 +230,7 @@ export function useCartAPIStateMachine({
     numCartLines,
     cartFragment,
     countryCode,
+    languageCode,
   });
 
   const cartMachine = useMemo(() => createCartMachine(cart), [cart]);

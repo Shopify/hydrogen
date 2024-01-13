@@ -8,12 +8,13 @@ import {CartForm} from '@shopify/hydrogen';
 import {Heading, Button, IconCheck} from '~/components';
 import type {Localizations, Locale} from '~/lib/type';
 import {DEFAULT_LOCALE} from '~/lib/utils';
+import {useRootLoaderData} from '~/root';
 
 export function CountrySelector() {
-  const [root] = useMatches();
   const fetcher = useFetcher();
   const closeRef = useRef<HTMLDetailsElement>(null);
-  const selectedLocale = root.data?.selectedLocale ?? DEFAULT_LOCALE;
+  const rootData = useRootLoaderData();
+  const selectedLocale = rootData?.selectedLocale ?? DEFAULT_LOCALE;
   const {pathname, search} = useLocation();
   const pathWithoutLocale = `${pathname.replace(
     selectedLocale.pathPrefix,

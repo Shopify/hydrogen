@@ -5,6 +5,9 @@ node_modules
 .vscode
 .turbo
 .cache
+/test-results/
+/playwright-report/
+/playwright/.cache/
 **/dist
 # Logs
 logs
@@ -134,3 +137,5 @@ yarn.lock
 
 admin.schema.json
 business-platform.schema.json
+
+examples/**/*.generated.d.ts

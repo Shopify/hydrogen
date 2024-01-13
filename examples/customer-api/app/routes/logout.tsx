@@ -1,5 +1,6 @@
-import {ActionArgs} from '@shopify/remix-oxygen';
+import {ActionFunctionArgs} from '@shopify/remix-oxygen';
 
-export async function action({context}: ActionArgs) {
-  return context.customer.logout();
+// Do not put logout on a loader (GET request) in case it get trigger during prefetch
+export async function action({context}: ActionFunctionArgs) {
+  return context.customerAccount.logout();
 }

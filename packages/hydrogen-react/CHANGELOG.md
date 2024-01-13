@@ -1,5 +1,53 @@
 # @shopify/hydrogen-react
 
+## 2023.10.1
+
+### Patch Changes
+
+- Update all Node.js dependencies to version 18. (Not a breaking change, since Node.js 18 is already required by Remix v2.) ([#1543](https://github.com/Shopify/hydrogen/pull/1543)) by [@michenly](https://github.com/michenly)
+
+- Skip private access token warning when using mock.shop. ([#1538](https://github.com/Shopify/hydrogen/pull/1538)) by [@frandiox](https://github.com/frandiox)
+
+- Add an optional `channel` prop to the `ShopPayButton` component, which adds order attribution support for either the Headless or Hydrogen sales channel. ([#1447](https://github.com/Shopify/hydrogen/pull/1447)) by [@QuintonC](https://github.com/QuintonC)
+
+## 2023.10.0
+
+### Major Changes
+
+- The Storefront API types included are now generated using `@graphql-codegen/typescript@4` ([changelog](https://github.com/dotansimha/graphql-code-generator/blob/master/packages/plugins/typescript/typescript/CHANGELOG.md#400)). This results in a breaking change if you were importing `Scalars` directly from `@shopify/hydrogen-react` or `@shopify/hydrogen`: ([#1108](https://github.com/Shopify/hydrogen/pull/1108)) by [@frandiox](https://github.com/frandiox)
+
+  ```diff
+   import type {Scalars} from '@shopify/hydrogen/storefront-api-types';
+
+   type Props = {
+  -  id: Scalars['ID']; // This was a string
+  +  id: Scalars['ID']['input']; // Need to access 'input' or 'output' to get the string
+   };
+  ```
+
+### Patch Changes
+
+- Remove deprecated parameters and props (#1455 and #1435): ([#1435](https://github.com/Shopify/hydrogen/pull/1435)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  - `createStorefrontClient` parameters `buyerIp` and `requestGroupId`
+  - `<Image>` props `loaderOptions` and `widths`
+
+## 2023.7.6
+
+### Patch Changes
+
+- Fix template dist package due to CI error ([#1451](https://github.com/Shopify/hydrogen/pull/1451)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+## 2023.7.5
+
+### Patch Changes
+
+- Add Language to CartProvider ([#1408](https://github.com/Shopify/hydrogen/pull/1408)) by [@Qubica](https://github.com/Qubica)
+
+- Add attributes option to useLoadScript ([#1442](https://github.com/Shopify/hydrogen/pull/1442)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Unlock `hydrogen-react` package.json exports to make it easier to use with NextJS and other frameworks. **Note**: Using Hydrogen internals is not officially supported, and those internal APIs could change at anytime outside our usual calendar versioning. ([#994](https://github.com/Shopify/hydrogen/pull/994)) by [@blittle](https://github.com/blittle)
+
 ## 2023.7.4
 
 ### Patch Changes

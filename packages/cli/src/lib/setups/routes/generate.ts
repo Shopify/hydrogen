@@ -17,7 +17,7 @@ import {
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortSignal} from '@shopify/cli-kit/node/abort';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
-import {transpileFile} from '../../../lib/transpile-ts.js';
+import {transpileFile} from '../../transpile/index.js';
 import {
   type FormatOptions,
   formatCode,
@@ -28,13 +28,7 @@ import {
   getStarterDir,
   getTemplateAppFile,
 } from '../../../lib/build.js';
-import {
-  convertRouteToV1,
-  convertTemplateToRemixVersion,
-  getV2Flags,
-  type RemixV2Flags,
-  type RequiredRemixFutureFlags,
-} from '../../../lib/remix-version-interop.js';
+import {convertRouteToV1} from '../../../lib/remix-version-interop.js';
 import {type RemixConfig, getRemixConfig} from '../../remix-config.js';
 import {findFileWithExtension} from '../../file.js';
 
@@ -111,12 +105,10 @@ type GenerateRoutesOptions = Omit<
   routeName: string | string[];
   directory: string;
   localePrefix?: GenerateProjectFileOptions['localePrefix'] | false;
+  v1RouteConvention?: boolean;
 };
 
-type RemixConfigParam = Pick<RemixConfig, 'rootDirectory' | 'appDirectory'> &
-  Pick<Partial<RemixConfig>, 'tsconfigPath'> & {
-    future: RequiredRemixFutureFlags;
-  };
+type RemixConfigParam = Pick<RemixConfig, 'rootDirectory' | 'appDirectory'>;
 
 export async function generateRoutes(
   options: GenerateRoutesOptions,
@@ -127,22 +119,18 @@ export async function generateRoutes(
       ? await getResolvedRoutes()
       : await getResolvedRoutes([options.routeName as RouteKey]);
 
-  const {rootDirectory, appDirectory, future, tsconfigPath} =
+  const {rootDirectory, appDirectory} =
     remixConfig || (await getRemixConfig(options.directory));
 
   const routesArray = resolvedRouteFiles.flatMap(
     (item) => GENERATOR_ROUTE_DIR + '/' + item,
   );
 
-  const v2Flags = await getV2Flags(rootDirectory, future);
   const formatOptions = await getCodeFormatOptions(rootDirectory);
-  const localePrefix = await getLocalePrefix(
-    appDirectory,
-    options,
-    v2Flags.isV2RouteConvention,
-  );
+  const localePrefix = await getLocalePrefix(appDirectory, options);
   const typescript = !!(
-    options.typescript ?? tsconfigPath?.endsWith('tsconfig.json')
+    options.typescript ??
+    (await fileExists(joinPath(rootDirectory, 'tsconfig.json')))
   );
 
   const routes: GenerateRoutesResult[] = [];
@@ -155,7 +143,6 @@ export async function generateRoutes(
         rootDirectory,
         appDirectory,
         formatOptions,
-        v2Flags,
       }),
     );
   }
@@ -164,7 +151,6 @@ export async function generateRoutes(
     routes,
     routeGroups,
     isTypescript: typescript,
-    v2Flags,
     formatOptions,
   };
 }
@@ -185,8 +171,7 @@ type GenerateProjectFileOptions = {
  */
 async function getLocalePrefix(
   appDirectory: string,
-  {localePrefix, routeName}: GenerateRoutesOptions,
-  isV2RouteConvention = true,
+  {localePrefix, routeName, v1RouteConvention}: GenerateRoutesOptions,
 ) {
   if (localePrefix) return localePrefix;
   if (localePrefix !== undefined || routeName === 'all') return;
@@ -195,9 +180,9 @@ async function getLocalePrefix(
     () => [],
   );
 
-  const coreRouteWithLocaleRE = isV2RouteConvention
-    ? /^\(\$(\w+)\)\.(_index|\$|cart).[jt]sx?$/
-    : /^\(\$(\w+)\)$/;
+  const coreRouteWithLocaleRE = v1RouteConvention
+    ? /^\(\$(\w+)\)$/
+    : /^\(\$(\w+)\)\.(_index|\$|cart).[jt]sx?$/;
 
   const coreRouteWithLocale = existingFiles.find((file) =>
     coreRouteWithLocaleRE.test(file),
@@ -223,13 +208,13 @@ export async function generateProjectFile(
     templatesRoot = getStarterDir(),
     formatOptions,
     localePrefix,
-    v2Flags = {},
+    v1RouteConvention = false,
     signal,
   }: GenerateProjectFileOptions & {
     rootDirectory: string;
     appDirectory: string;
     formatOptions?: FormatOptions;
-    v2Flags?: RemixV2Flags;
+    v1RouteConvention?: boolean;
   },
 ): Promise<GenerateRoutesResult> {
   const extension = (routeFrom.match(/(\.[jt]sx?)$/) ?? [])[1] ?? '.tsx';
@@ -246,7 +231,7 @@ export async function generateProjectFile(
 
   const routeDestinationPath = joinPath(
     appDirectory,
-    getDestinationRoute(routeFrom, localePrefix, v2Flags) +
+    getDestinationRoute(routeFrom, localePrefix, {v1RouteConvention}) +
       (typescript ? extension : extension.replace('.ts', '.js')),
   );
 
@@ -292,14 +277,14 @@ export async function generateProjectFile(
       continue;
     }
 
-    let templateContent = convertTemplateToRemixVersion(
-      await readFile(templateAppFilePath),
-      v2Flags,
-    );
+    let templateContent = await readFile(templateAppFilePath);
 
     // If the project is not using TS, we need to compile the template to JS.
     if (!typescript) {
-      templateContent = await transpileFile(templateContent);
+      templateContent = await transpileFile(
+        templateContent,
+        templateAppFilePath,
+      );
     }
 
     // If the command was run with an adapter flag, we replace the default
@@ -333,13 +318,13 @@ export async function generateProjectFile(
 function getDestinationRoute(
   routeFrom: string,
   localePrefix: string | undefined,
-  v2Flags: RemixV2Flags,
+  options: {v1RouteConvention?: boolean},
 ) {
   const routePath = routeFrom.replace(GENERATOR_ROUTE_DIR + '/', '');
   const filePrefix =
     localePrefix &&
     !NO_LOCALE_PATTERNS.some((pattern) => pattern.test(routePath))
-      ? `($${localePrefix})` + (v2Flags.isV2RouteConvention ? '.' : '/')
+      ? `($${localePrefix})` + (options.v1RouteConvention ? '/' : '.')
       : '';
 
   return (
@@ -348,7 +333,7 @@ function getDestinationRoute(
     filePrefix +
     // The template file uses the v2 route convention, so we need to convert
     // it to v1 if the user is not using v2.
-    (v2Flags.isV2RouteConvention ? routePath : convertRouteToV1(routePath))
+    (options.v1RouteConvention ? convertRouteToV1(routePath) : routePath)
   );
 }
 

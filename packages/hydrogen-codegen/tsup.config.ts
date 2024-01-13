@@ -14,7 +14,9 @@ export default defineConfig([
   {
     ...commonConfig,
     format: 'esm',
-    dts: true,
+    // Force bundling types in files here so that they can later be
+    // bundled in Hydrogen. Otherwise, TSUP fails to bundle them later.
+    dts: {entry: ['src/index.ts', 'src/patch.ts']},
     entry: ['src/**/*.ts'],
     outDir: 'dist/esm',
     async onSuccess() {

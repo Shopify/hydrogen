@@ -1,11 +1,14 @@
 import {useNonce} from '@shopify/hydrogen';
-import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
+import {
+  defer,
+  type SerializeFrom,
+  type LoaderFunctionArgs,
+} from '@shopify/remix-oxygen';
 import {
   Links,
   Meta,
   Outlet,
   Scripts,
-  useCatch,
   LiveReload,
   useMatches,
   useRouteError,
@@ -15,13 +18,14 @@ import {
   type ShouldRevalidateFunction,
 } from '@remix-run/react';
 import type {CustomerAccessToken} from '@shopify/hydrogen/storefront-api-types';
-import type {HydrogenSession} from '../server';
 import favicon from '../public/favicon.svg';
 import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
 
-// This is important to avoid re-fetching root queries on sub-navigations
+/**
+ * This is important to avoid re-fetching root queries on sub-navigations
+ */
 export const shouldRevalidate: ShouldRevalidateFunction = ({
   formMethod,
   currentUrl,
@@ -56,7 +60,15 @@ export function links() {
   ];
 }
 
-export async function loader({context}: LoaderArgs) {
+/**
+ * Access the result of the root loader from a React component.
+ */
+export const useRootLoaderData = () => {
+  const [root] = useMatches();
+  return root?.data as SerializeFrom<typeof loader>;
+};
+
+export async function loader({context}: LoaderFunctionArgs) {
   const {storefront, session, cart} = context;
   const customerAccessToken = await session.get('customerAccessToken');
   const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
@@ -124,7 +136,7 @@ export default function App() {
 
 export function ErrorBoundary() {
   const error = useRouteError();
-  const [root] = useMatches();
+  const rootData = useRootLoaderData();
   const nonce = useNonce();
   let errorMessage = 'Unknown error';
   let errorStatus = 500;
@@ -145,7 +157,7 @@ export function ErrorBoundary() {
         <Links />
       </head>
       <body>
-        <Layout {...root.data}>
+        <Layout {...rootData}>
           <div className="route-error">
             <h1>Oops</h1>
             <h2>{errorStatus}</h2>
@@ -164,26 +176,6 @@ export function ErrorBoundary() {
   );
 }
 
-export const ErrorBoundaryV1 = ({error}: {error: Error}) => {
-  // eslint-disable-next-line no-console
-  console.error(error);
-
-  return <div>There was an error.</div>;
-};
-
-export function CatchBoundary() {
-  const caught = useCatch();
-  // eslint-disable-next-line no-console
-  console.error(caught);
-
-  return (
-    <div>
-      There was an error. Status: {caught.status}. Message:{' '}
-      {caught.data?.message}
-    </div>
-  );
-}
-
 /**
  * Validates the customer access token and returns a boolean and headers
  * @see https://shopify.dev/docs/api/storefront/latest/objects/CustomerAccessToken
@@ -197,7 +189,7 @@ export function CatchBoundary() {
  * ```
  */
 async function validateCustomerAccessToken(
-  session: HydrogenSession,
+  session: LoaderFunctionArgs['context']['session'],
   customerAccessToken?: CustomerAccessToken,
 ) {
   let isLoggedIn = false;

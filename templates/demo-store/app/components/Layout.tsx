@@ -1,10 +1,10 @@
-import {useParams, Form, Await, useMatches} from '@remix-run/react';
+import {useParams, Form, Await} from '@remix-run/react';
 import {useWindowScroll} from 'react-use';
 import {Disclosure} from '@headlessui/react';
 import {Suspense, useEffect, useMemo} from 'react';
 import {CartForm} from '@shopify/hydrogen';
 
-import type {LayoutQuery} from 'storefrontapi.generated';
+import {type LayoutQuery} from 'storefrontapi.generated';
 import {
   Drawer,
   useDrawer,
@@ -30,17 +30,18 @@ import {
 } from '~/lib/utils';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import {useCartFetchers} from '~/hooks/useCartFetchers';
+import {useRootLoaderData} from '~/root';
 
 type LayoutProps = {
   children: React.ReactNode;
-  layout: LayoutQuery & {
+  layout?: LayoutQuery & {
     headerMenu?: EnhancedMenu | null;
     footerMenu?: EnhancedMenu | null;
   };
 };
 
 export function Layout({children, layout}: LayoutProps) {
-  const {headerMenu, footerMenu} = layout;
+  const {headerMenu, footerMenu} = layout || {};
   return (
     <>
       <div className="flex flex-col min-h-screen">
@@ -49,7 +50,9 @@ export function Layout({children, layout}: LayoutProps) {
             Skip to content
           </a>
         </div>
-        {headerMenu && <Header title={layout.shop.name} menu={headerMenu} />}
+        {headerMenu && layout?.shop.name && (
+          <Header title={layout.shop.name} menu={headerMenu} />
+        )}
         <main role="main" id="mainContent" className="flex-grow">
           {children}
         </main>
@@ -105,13 +108,13 @@ function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
 }
 
 function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
-  const [root] = useMatches();
+  const rootData = useRootLoaderData();
 
   return (
     <Drawer open={isOpen} onClose={onClose} heading="Cart" openFrom="right">
       <div className="grid">
         <Suspense fallback={<CartLoading />}>
-          <Await resolve={root.data?.cart}>
+          <Await resolve={rootData?.cart}>
             {(cart) => <Cart layout="drawer" onClose={onClose} cart={cart} />}
           </Await>
         </Suspense>
@@ -321,8 +324,9 @@ function DesktopHeader({
 }
 
 function AccountLink({className}: {className?: string}) {
-  const [root] = useMatches();
-  const isLoggedIn = root.data?.isLoggedIn;
+  const rootData = useRootLoaderData();
+  const isLoggedIn = rootData?.isLoggedIn;
+
   return isLoggedIn ? (
     <Link to="/account" className={className}>
       <IconAccount />
@@ -341,11 +345,11 @@ function CartCount({
   isHome: boolean;
   openCart: () => void;
 }) {
-  const [root] = useMatches();
+  const rootData = useRootLoaderData();
 
   return (
     <Suspense fallback={<Badge count={0} dark={isHome} openCart={openCart} />}>
-      <Await resolve={root.data?.cart}>
+      <Await resolve={rootData?.cart}>
         {(cart) => (
           <Badge
             dark={isHome}

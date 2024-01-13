@@ -1,29 +1,29 @@
 import {describe, it, expect} from 'vitest';
-import path from 'path';
-import {preset, schema, pluckConfig, patchGqlPluck} from '../src/index.js';
-import {defaultInterfaceExtensionCode} from '../src/preset.js';
-
-const getCodegenOptions = (fixture: string, output = 'out.d.ts') => ({
-  pluckConfig: pluckConfig as any,
-  generates: {
-    [output]: {
-      preset,
-      schema,
-      documents: path.join(__dirname, `fixtures/${fixture}`),
-    },
-  },
-});
+import path from 'node:path';
 
 describe('Hydrogen Codegen', async () => {
   // Patch dependency before importing the Codegen CLI
-  await patchGqlPluck();
+  await import('../src/patch.js');
+  const {preset, schema, pluckConfig} = await import('../src/index.js');
+  const {getDefaultOptions} = await import('../src/defaults.js');
   const {executeCodegen} = await import('@graphql-codegen/cli');
+
+  const getCodegenOptions = (fixture: string, output = 'out.d.ts') => ({
+    pluckConfig: pluckConfig as any,
+    generates: {
+      [output]: {
+        preset,
+        schema,
+        documents: path.join(__dirname, `fixtures/${fixture}`),
+      },
+    },
+  });
 
   it('requires .d.ts extension', async () => {
     await expect(
       executeCodegen(getCodegenOptions('simple-operations.ts', 'out')),
     ).rejects.toThrowErrorMatchingInlineSnapshot(
-      '"[hydrogen-preset] target output should be a .d.ts file"',
+      `[AggregateError: [hydrogen-preset] target output should be a .d.ts file]`,
     );
   });
 
@@ -64,7 +64,7 @@ describe('Hydrogen Codegen', async () => {
     );
 
     // Augments query/mutation types
-    expect(generatedCode).toMatch(defaultInterfaceExtensionCode);
+    expect(generatedCode).toMatch(getDefaultOptions().interfaceExtensionCode);
 
     expect(generatedCode).toMatchInlineSnapshot(`
       "/* eslint-disable eslint-comments/disable-enable-pair */
@@ -85,11 +85,11 @@ describe('Hydrogen Codegen', async () => {
       export type CartCreateMutation = { cartCreate?: StorefrontAPI.Maybe<{ cart?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Cart, 'id'>> }> };
 
       interface GeneratedQueryTypes {
-        \\"#graphql\\\\n  query layout {\\\\n    shop {\\\\n      name\\\\n      description\\\\n    }\\\\n  }\\\\n\\": {return: LayoutQuery, variables: LayoutQueryVariables},
+        "#graphql\\n  query layout {\\n    shop {\\n      name\\n      description\\n    }\\n  }\\n": {return: LayoutQuery, variables: LayoutQueryVariables},
       }
 
       interface GeneratedMutationTypes {
-        \\"#graphql\\\\n  mutation cartCreate($input: CartInput!) {\\\\n    cartCreate(input: $input) {\\\\n      cart {\\\\n        id\\\\n      }\\\\n    }\\\\n  }\\\\n\\": {return: CartCreateMutation, variables: CartCreateMutationVariables},
+        "#graphql\\n  mutation cartCreate($input: CartInput!) {\\n    cartCreate(input: $input) {\\n      cart {\\n        id\\n      }\\n    }\\n  }\\n": {return: CartCreateMutation, variables: CartCreateMutationVariables},
       }
 
       declare module '@shopify/hydrogen' {
@@ -165,7 +165,7 @@ describe('Hydrogen Codegen', async () => {
       );
 
       export type CollectionContentTestQueryVariables = StorefrontAPI.Exact<{
-        handle?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
+        handle?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']['input']>;
         country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
         language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
       }>;
@@ -193,7 +193,7 @@ describe('Hydrogen Codegen', async () => {
         )>, shop: Pick<StorefrontAPI.Shop, 'name' | 'description'> };
 
       interface GeneratedQueryTypes {
-        \\"#graphql\\\\n  query collectionContentTest($handle: String, $country: CountryCode, $language: LanguageCode)\\\\n  @inContext(country: $country, language: $language) {\\\\n    hero: collection(handle: $handle) {\\\\n      ...CollectionContent\\\\n    }\\\\n    shop {\\\\n      name\\\\n      description\\\\n    }\\\\n  }\\\\n  #graphql\\\\n  fragment CollectionContent on Collection {\\\\n    id\\\\n    handle\\\\n    title\\\\n    descriptionHtml\\\\n    heading: metafield(namespace: \\\\\\"hero\\\\\\", key: \\\\\\"title\\\\\\") {\\\\n      value\\\\n    }\\\\n    byline: metafield(namespace: \\\\\\"hero\\\\\\", key: \\\\\\"byline\\\\\\") {\\\\n      value\\\\n    }\\\\n    cta: metafield(namespace: \\\\\\"hero\\\\\\", key: \\\\\\"cta\\\\\\") {\\\\n      value\\\\n    }\\\\n    spread: metafield(namespace: \\\\\\"hero\\\\\\", key: \\\\\\"spread\\\\\\") {\\\\n      reference {\\\\n        ...Media\\\\n      }\\\\n    }\\\\n    spreadSecondary: metafield(namespace: \\\\\\"hero\\\\\\", key: \\\\\\"spread_secondary\\\\\\") {\\\\n      reference {\\\\n        ...Media\\\\n      }\\\\n    }\\\\n  }\\\\n  #graphql\\\\n  fragment Media on Media {\\\\n    __typename\\\\n    mediaContentType\\\\n    alt\\\\n    previewImage {\\\\n      url\\\\n    }\\\\n    ... on MediaImage {\\\\n      id\\\\n      image {\\\\n        url\\\\n        width\\\\n        height\\\\n      }\\\\n    }\\\\n    ... on Video {\\\\n      id\\\\n      sources {\\\\n        mimeType\\\\n        url\\\\n      }\\\\n    }\\\\n    ... on Model3d {\\\\n      id\\\\n      sources {\\\\n        mimeType\\\\n        url\\\\n      }\\\\n    }\\\\n    ... on ExternalVideo {\\\\n      id\\\\n      embedUrl\\\\n      host\\\\n    }\\\\n  }\\\\n\\\\n\\\\n\\": {return: CollectionContentTestQuery, variables: CollectionContentTestQueryVariables},
+        "#graphql\\n  query collectionContentTest($handle: String, $country: CountryCode, $language: LanguageCode)\\n  @inContext(country: $country, language: $language) {\\n    hero: collection(handle: $handle) {\\n      ...CollectionContent\\n    }\\n    shop {\\n      name\\n      description\\n    }\\n  }\\n  #graphql\\n  fragment CollectionContent on Collection {\\n    id\\n    handle\\n    title\\n    descriptionHtml\\n    heading: metafield(namespace: \\"hero\\", key: \\"title\\") {\\n      value\\n    }\\n    byline: metafield(namespace: \\"hero\\", key: \\"byline\\") {\\n      value\\n    }\\n    cta: metafield(namespace: \\"hero\\", key: \\"cta\\") {\\n      value\\n    }\\n    spread: metafield(namespace: \\"hero\\", key: \\"spread\\") {\\n      reference {\\n        ...Media\\n      }\\n    }\\n    spreadSecondary: metafield(namespace: \\"hero\\", key: \\"spread_secondary\\") {\\n      reference {\\n        ...Media\\n      }\\n    }\\n  }\\n  #graphql\\n  fragment Media on Media {\\n    __typename\\n    mediaContentType\\n    alt\\n    previewImage {\\n      url\\n    }\\n    ... on MediaImage {\\n      id\\n      image {\\n        url\\n        width\\n        height\\n      }\\n    }\\n    ... on Video {\\n      id\\n      sources {\\n        mimeType\\n        url\\n      }\\n    }\\n    ... on Model3d {\\n      id\\n      sources {\\n        mimeType\\n        url\\n      }\\n    }\\n    ... on ExternalVideo {\\n      id\\n      embedUrl\\n      host\\n    }\\n  }\\n\\n\\n": {return: CollectionContentTestQuery, variables: CollectionContentTestQueryVariables},
       }
 
       interface GeneratedMutationTypes {

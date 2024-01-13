@@ -23,6 +23,7 @@ import {
 } from './shopify-config.js';
 import {getUserAccount} from './graphql/business-platform/user-account.js';
 import {muteAuthLogs} from './log.js';
+import {deferPromise} from './defer.js';
 
 export type {AdminSession};
 
@@ -107,10 +108,7 @@ export async function login(root?: string, shop?: string | true) {
 }
 
 function showLoginInfo() {
-  let deferredResolve: (value?: unknown) => void;
-  const promise = new Promise((resolve) => {
-    deferredResolve = resolve;
-  });
+  const deferred = deferPromise();
 
   console.log('');
 
@@ -152,7 +150,7 @@ function showLoginInfo() {
           {
             title: 'Waiting for Shopify authentication',
             task: async () => {
-              await promise;
+              await deferred.promise;
             },
           },
         ]);
@@ -160,7 +158,7 @@ function showLoginInfo() {
     },
   });
 
-  promise.then(() => {
+  deferred.promise.then(() => {
     restoreLogs();
     if (hasLoggedPressKey) {
       process.stdout.write(ansiEscapes.eraseLines(hasLoggedTimeout ? 11 : 10));
@@ -168,9 +166,11 @@ function showLoginInfo() {
   });
 
   return async () => {
-    deferredResolve();
+    deferred.resolve();
     // Without this timeout the process exits
     // right after `renderTasks` is done.
+    // In some cases, it makes renderPrompt to return
+    // `undefined` without showing the prompt.
     await new Promise((resolve) => setTimeout(resolve, 0));
   };
 }

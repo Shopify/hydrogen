@@ -9,7 +9,8 @@ export default {
     const cache = await caches.open('my-cms');
     const withCache = createWithCache({
       cache,
-      waitUntil: executionContext.waitUntil,
+      waitUntil: executionContext.waitUntil.bind(executionContext),
+      request,
     });
 
     // Create a custom utility to query a third-party API:

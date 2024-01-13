@@ -15,6 +15,7 @@ import {
   CartLineInput,
   CartLineUpdateInput,
   CountryCode,
+  LanguageCode,
   Cart as CartType,
   MutationCartNoteUpdateArgs,
 } from './storefront-api-types.js';
@@ -87,14 +88,16 @@ type CartProviderProps = {
   onAttributesUpdateComplete?: () => void;
   /** A callback that is invoked when the process to update the cart discount codes completes */
   onDiscountCodesUpdateComplete?: () => void;
-  /** An object with fields that correspond to the Storefront API's [Cart object](https://shopify.dev/api/storefront/2023-07/objects/cart). */
+  /** An object with fields that correspond to the Storefront API's [Cart object](https://shopify.dev/api/storefront/2023-10/objects/cart). */
   data?: PartialDeep<CartType, {recurseIntoArrays: true}>;
-  /** A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/2023-07/objects/cart) for all queries and mutations. A default value is used if no argument is provided. */
+  /** A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/2023-10/objects/cart) for all queries and mutations. A default value is used if no argument is provided. */
   cartFragment?: string;
   /** A customer access token that's accessible on the server if there's a customer login. */
   customerAccessToken?: CartBuyerIdentityInput['customerAccessToken'];
   /** The ISO country code for i18n. */
   countryCode?: CountryCode;
+  /** The ISO luanguage code for i18n. */
+  languageCode?: LanguageCode;
 };
 
 /**
@@ -130,6 +133,7 @@ export function CartProvider({
   cartFragment = defaultCartFragment,
   customerAccessToken,
   countryCode,
+  languageCode,
 }: CartProviderProps): JSX.Element {
   const shop = useShop();
 
@@ -144,7 +148,14 @@ export function CartProvider({
     'US'
   ).toUpperCase() as CountryCode;
 
+  languageCode = (
+    (languageCode as string) ??
+    shop.languageIsoCode ??
+    'EN'
+  ).toUpperCase() as LanguageCode;
+
   if (countryCode) countryCode = countryCode.toUpperCase() as CountryCode;
+
   const [prevCountryCode, setPrevCountryCode] = useState(countryCode);
   const [prevCustomerAccessToken, setPrevCustomerAccessToken] =
     useState(customerAccessToken);
@@ -164,6 +175,7 @@ export function CartProvider({
     data: cart,
     cartFragment,
     countryCode,
+    languageCode,
     onCartActionEntry(_, event) {
       try {
         switch (event.type) {

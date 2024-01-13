@@ -26,8 +26,8 @@ interface FeaturedProductsProps {
  * @param query a filtering query
  * @param reverse wether to reverse the product results
  * @param sortKey Sort the underlying list by the given key.
- * @see query https://shopify.dev/api/storefront/2023-07/queries/products
- * @see filters https://shopify.dev/api/storefront/2023-07/queries/products#argument-products-query
+ * @see query https://shopify.dev/api/storefront/current/queries/products
+ * @see filters https://shopify.dev/api/storefront/current/queries/products#argument-products-query
  */
 export function FeaturedProducts({
   count = 4,
@@ -38,7 +38,7 @@ export function FeaturedProducts({
   reverse,
   sortKey = 'BEST_SELLING',
 }: FeaturedProductsProps) {
-  const {load, data} = useFetcher();
+  const {load, data} = useFetcher<{products: Product[]}>();
   const queryString = useMemo(
     () =>
       Object.entries({count, sortKey, query, reverse})
@@ -69,7 +69,7 @@ export function FeaturedProducts({
         <FeatureProductsContent
           count={count}
           onClick={onClose}
-          products={data?.products as Product[]}
+          products={data?.products}
         />
       </div>
     </>

@@ -1,0 +1,35 @@
+{
+  "name": "docs-preview",
+  "private": true,
+  "sideEffects": false,
+  "scripts": {
+    "build": "remix build",
+    "dev": "remix dev",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@remix-run/css-bundle": "2.1.0",
+    "@remix-run/node": "2.1.0",
+    "@remix-run/react": "2.1.0",
+    "@remix-run/serve": "2.1.0",
+    "he": "^1.2.0",
+    "isbot": "^3.6.8",
+    "marked": "^9.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-syntax-highlighter": "^15.5.0"
+  },
+  "devDependencies": {
+    "@remix-run/dev": "2.1.0",
+    "@remix-run/eslint-config": "2.1.0",
+    "@types/he": "^1.2.1",
+    "@types/react": "^18.2.20",
+    "@types/react-dom": "^18.2.7",
+    "@types/react-syntax-highlighter": "^15.5.7",
+    "eslint": "^8.38.0",
+    "typescript": "^5.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

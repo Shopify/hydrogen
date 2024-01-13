@@ -1,6 +1,11 @@
 // Virtual entry point for the app
 import * as remixBuild from '@remix-run/dev/server-build';
-import {createStorefrontClient, storefrontRedirect} from '@shopify/hydrogen';
+import {
+  createStorefrontClient,
+  storefrontRedirect,
+  createCustomerClient,
+  type HydrogenSession,
+} from '@shopify/hydrogen';
 import {
   createRequestHandler,
   getStorefrontHeaders,
@@ -8,7 +13,6 @@ import {
   type SessionStorage,
   type Session,
 } from '@shopify/remix-oxygen';
-import {createCustomerClient} from '~/utils/customer.server';
 
 /**
  * Export a fetch handler in module format.
@@ -30,7 +34,7 @@ export default {
       const waitUntil = (p: Promise<any>) => executionContext.waitUntil(p);
       const [cache, session] = await Promise.all([
         caches.open('hydrogen'),
-        HydrogenSession.init(request, [env.SESSION_SECRET]),
+        AppSession.init(request, [env.SESSION_SECRET]),
       ]);
 
       /**
@@ -50,11 +54,12 @@ export default {
       /**
        * Create a customer client for the new customer API.
        */
-      const customer = createCustomerClient({
+      const customerAccount = createCustomerClient({
+        waitUntil,
         request,
         session,
-        customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_ID,
-        customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_URL,
+        customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID,
+        customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_API_URL,
       });
 
       /**
@@ -64,7 +69,13 @@ export default {
       const handleRequest = createRequestHandler({
         build: remixBuild,
         mode: process.env.NODE_ENV,
-        getLoadContext: () => ({session, storefront, customer, env, waitUntil}),
+        getLoadContext: () => ({
+          session,
+          storefront,
+          customerAccount,
+          env,
+          waitUntil,
+        }),
       });
 
       const response = await handleRequest(request);
@@ -77,8 +88,6 @@ export default {
          */
         return storefrontRedirect({request, response, storefront});
       }
-
-      response.headers.set('Set-Cookie', await session.commit());
 
       return response;
     } catch (error) {
@@ -94,7 +103,7 @@ export default {
  * Feel free to customize it to your needs, add helper methods, or
  * swap out the cookie-based implementation with something else!
  */
-export class HydrogenSession {
+export class AppSession implements HydrogenSession {
   constructor(
     private sessionStorage: SessionStorage,
     private session: Session,
@@ -111,7 +120,9 @@ export class HydrogenSession {
       },
     });
 
-    const session = await storage.getSession(request.headers.get('Cookie'));
+    const session = await storage
+      .getSession(request.headers.get('Cookie'))
+      .catch(() => storage.getSession());
 
     return new this(storage, session);
   }

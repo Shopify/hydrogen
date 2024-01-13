@@ -1,5 +1,43 @@
 # @shopify/remix-oxygen
 
+## 2.0.2
+
+### Patch Changes
+
+- Change peer dependency of `@shopify/oxygen-workers-types` to allow for `^4.0.0` versions. ([#1494](https://github.com/Shopify/hydrogen/pull/1494)) by [@frandiox](https://github.com/frandiox)
+
+- Fix how peer dependencies are resolved. ([#1489](https://github.com/Shopify/hydrogen/pull/1489)) by [@frandiox](https://github.com/frandiox)
+
+## 2.0.1
+
+### Patch Changes
+
+- Change @remix-run/server-runtime to properly be a peer dependency ([#1484](https://github.com/Shopify/hydrogen/pull/1484)) by [@blittle](https://github.com/blittle)
+
+## 2.0.0
+
+### Major Changes
+
+- Remove the function export `getBuyerIp`, which was deprecated in 2023-07. ([#1455](https://github.com/Shopify/hydrogen/pull/1455)) by [@frandiox](https://github.com/frandiox)
+
+## 1.1.8
+
+### Patch Changes
+
+- Integrate the debug-network tooling with the new `--worker-unstable` runtime CLI flag. ([#1387](https://github.com/Shopify/hydrogen/pull/1387)) by [@frandiox](https://github.com/frandiox)
+
+## 1.1.7
+
+### Patch Changes
+
+- Fix subrequest performance in development. ([#1411](https://github.com/Shopify/hydrogen/pull/1411)) by [@frandiox](https://github.com/frandiox)
+
+## 1.1.6
+
+### Patch Changes
+
+- Update the Oxygen Remix adapter to make sure that stack traces are logged in production ([#1393](https://github.com/Shopify/hydrogen/pull/1393)) by [@blittle](https://github.com/blittle)
+
 ## 1.1.5
 
 ### Patch Changes

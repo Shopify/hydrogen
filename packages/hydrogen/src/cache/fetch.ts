@@ -1,7 +1,13 @@
 /// <reference types="@shopify/remix-oxygen" />
 
 import {hashKey} from '../utils/hash.js';
-import {CacheShort, CachingStrategy, NO_STORE} from './strategies';
+import {
+  CacheShort,
+  CachingStrategy,
+  NO_STORE,
+  generateCacheControlHeader,
+} from './strategies';
+import type {StackInfo} from '../utils/callsites.js';
 import {
   getItemFromCache,
   setItemInCache,
@@ -15,8 +21,30 @@ import {
 export type CacheKey = string | readonly unknown[];
 
 export type FetchDebugInfo = {
-  stackLine?: string;
-  graphql?: string;
+  requestId?: string | null;
+  graphql?: string | null;
+  purpose?: string | null;
+  stackInfo?: StackInfo;
+  displayName?: string;
+};
+
+export type DebugInfo = {
+  displayName?: string;
+  url?: string;
+  responseInit?: {
+    status: number;
+    statusText: string;
+    headers?: [string, string][];
+  };
+};
+
+type AddDebugDataParam = {
+  displayName?: string;
+  response?: Response;
+};
+
+export type CacheActionFunctionParam = {
+  addDebugData: (info: AddDebugDataParam) => void;
 };
 
 export type WithCacheOptions<T = unknown> = {
@@ -65,7 +93,7 @@ const swrLock = new Set<string>();
 
 export async function runWithCache<T = unknown>(
   cacheKey: CacheKey,
-  actionFn: () => T | Promise<T>,
+  actionFn: ({addDebugData}: CacheActionFunctionParam) => T | Promise<T>,
   {
     strategy = CacheShort(),
     cacheInstance,
@@ -80,27 +108,53 @@ export async function runWithCache<T = unknown>(
     ...(typeof cacheKey === 'string' ? [cacheKey] : cacheKey),
   ]);
 
+  let debugData: DebugInfo;
+  const addDebugData = (info: AddDebugDataParam) => {
+    debugData = {
+      displayName: info.displayName,
+      url: info.response?.url,
+      responseInit: {
+        status: info.response?.status || 0,
+        statusText: info.response?.statusText || '',
+        headers: Array.from(info.response?.headers.entries() || []),
+      },
+    };
+  };
+
   const logSubRequestEvent =
     process.env.NODE_ENV === 'development'
-      ? (
-          cacheStatus?: 'MISS' | 'HIT' | 'STALE' | 'PUT',
-          overrideStartTime?: number,
-        ) => {
+      ? ({
+          result,
+          cacheStatus,
+          overrideStartTime,
+        }: {
+          result?: any;
+          cacheStatus?: 'MISS' | 'HIT' | 'STALE' | 'PUT';
+          overrideStartTime?: number;
+        }) => {
           globalThis.__H2O_LOG_EVENT?.({
             eventType: 'subrequest',
-            url: getKeyUrl(key),
+            url: debugData?.url || getKeyUrl(key),
             startTime: overrideStartTime || startTime,
             cacheStatus,
+            responsePayload: (result && result[0]) || result,
+            responseInit: (result && result[1]) || debugData?.responseInit,
+            cache: {
+              status: cacheStatus,
+              strategy: generateCacheControlHeader(strategy || {}),
+              key,
+            },
             waitUntil,
             ...debugInfo,
-          });
+            displayName: debugInfo?.displayName || debugData?.displayName,
+          } as any);
         }
       : undefined;
 
   if (!cacheInstance || !strategy || strategy.mode === NO_STORE) {
-    const result = await actionFn();
+    const result = await actionFn({addDebugData});
     // Log non-cached requests
-    logSubRequestEvent?.();
+    logSubRequestEvent?.({result});
     return result;
   }
 
@@ -118,13 +172,17 @@ export async function runWithCache<T = unknown>(
       const revalidatingPromise = Promise.resolve().then(async () => {
         const revalidateStartTime = Date.now();
         try {
-          const result = await actionFn();
+          const result = await actionFn({addDebugData});
 
           if (shouldCacheResult(result)) {
             await setItemInCache(cacheInstance, key, result, strategy);
 
             // Log PUT requests with the revalidate start time
-            logSubRequestEvent?.('PUT', revalidateStartTime);
+            logSubRequestEvent?.({
+              result,
+              cacheStatus: 'PUT',
+              overrideStartTime: revalidateStartTime,
+            });
           }
         } catch (error: any) {
           if (error.message) {
@@ -142,15 +200,21 @@ export async function runWithCache<T = unknown>(
     }
 
     // Log HIT/STALE requests
-    logSubRequestEvent?.(cacheStatus);
+    logSubRequestEvent?.({
+      result: cachedResult,
+      cacheStatus,
+    });
 
     return cachedResult;
   }
 
-  const result = await actionFn();
+  const result = await actionFn({addDebugData});
 
   // Log MISS requests
-  logSubRequestEvent?.('MISS');
+  logSubRequestEvent?.({
+    result,
+    cacheStatus: 'MISS',
+  });
 
   /**
    * Important: Do this async
@@ -159,7 +223,11 @@ export async function runWithCache<T = unknown>(
     const setItemInCachePromise = Promise.resolve().then(async () => {
       const putStartTime = Date.now();
       await setItemInCache(cacheInstance, key, result, strategy);
-      logSubRequestEvent?.('PUT', putStartTime);
+      logSubRequestEvent?.({
+        result,
+        cacheStatus: 'PUT',
+        overrideStartTime: putStartTime,
+      });
     });
 
     waitUntil?.(setItemInCachePromise);
@@ -223,12 +291,3 @@ export async function fetchWithServerCache(
     },
   ).then(fromSerializableResponse);
 }
-
-export const getCallerStackLine =
-  process.env.NODE_ENV === 'development'
-    ? () => {
-        const stackInfo = {stack: ''};
-        Error.captureStackTrace(stackInfo);
-        return stackInfo.stack.split('\n').slice(3, 4).join('\n') || '';
-      }
-    : null;

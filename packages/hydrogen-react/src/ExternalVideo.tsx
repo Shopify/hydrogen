@@ -1,5 +1,5 @@
 import type {ExternalVideo as ExternalVideoType} from './storefront-api-types.js';
-import type {PartialDeep} from 'type-fest';
+import type {Entries, PartialDeep} from 'type-fest';
 import {forwardRef} from 'react';
 
 interface ExternalVideoBaseProps {
@@ -43,9 +43,14 @@ export const ExternalVideo = forwardRef<HTMLIFrameElement, ExternalVideoProps>(
 
     if (options) {
       const urlObject = new URL(data.embedUrl);
-      for (const key of Object.keys(options) as (keyof typeof options)[]) {
-        // @ts-expect-error https://github.com/microsoft/TypeScript/issues/32951
-        urlObject.searchParams.set(key, options[key]);
+      for (const [key, value] of Object.entries(options) as Entries<
+        typeof options
+      >) {
+        if (typeof value === 'undefined') {
+          continue;
+        }
+
+        urlObject.searchParams.set(key, value.toString());
       }
       finalUrl = urlObject.toString();
     }

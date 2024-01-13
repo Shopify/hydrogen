@@ -2,6 +2,7 @@ import {randomUUID} from 'node:crypto';
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {readFile} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
+import {Response} from '@shopify/mini-oxygen';
 import {
   startServer,
   Request,
@@ -11,9 +12,10 @@ import {DEFAULT_PORT} from '../flags.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
 import {OXYGEN_HEADERS_MAP, logRequestLine} from './common.js';
 import {
-  clearHistory,
-  logRequestEvent,
-  streamRequestEvents,
+  H2O_BINDING_NAME,
+  createLogRequestEvent,
+  handleDebugNetworkRequest,
+  setConstructors,
 } from '../request-events.js';
 
 export async function startNodeServer({
@@ -22,6 +24,8 @@ export async function startNodeServer({
   buildPathWorkerFile,
   buildPathClient,
   env,
+  debug = false,
+  inspectorPort,
 }: MiniOxygenOptions): Promise<MiniOxygenInstance> {
   const oxygenHeaders = Object.fromEntries(
     Object.entries(OXYGEN_HEADERS_MAP).map(([key, value]) => {
@@ -29,21 +33,28 @@ export async function startNodeServer({
     }),
   );
 
+  setConstructors({Response});
+
+  const logRequestEvent = createLogRequestEvent();
   const asyncLocalStorage = new AsyncLocalStorage();
   const serviceBindings = {
-    H2O_LOG_EVENT: {
+    [H2O_BINDING_NAME]: {
       fetch: async (request: Request) =>
         logRequestEvent(
           new Request(request.url, {
             method: 'POST',
             body: JSON.stringify({
-              ...(await request.json<Record<string, string>>()),
               ...(asyncLocalStorage.getStore() as Record<string, string>),
+              ...(await request.json<Record<string, string>>()),
             }),
           }),
         ),
     },
   };
+
+  if (debug) {
+    (await import('node:inspector')).open(inspectorPort);
+  }
 
   const miniOxygen = await startServer({
     script: await readFile(buildPathWorkerFile),
@@ -64,9 +75,7 @@ export async function startNodeServer({
     async onRequest(request, defaultDispatcher) {
       const url = new URL(request.url);
       if (url.pathname === '/debug-network-server') {
-        return request.method === 'DELETE'
-          ? clearHistory()
-          : streamRequestEvents(request);
+        return handleDebugNetworkRequest(request);
       }
 
       let requestId = request.headers.get('request-id');
@@ -114,12 +123,19 @@ export async function startNodeServer({
     showBanner(options) {
       console.log('');
       renderSuccess({
-        headline: `${options?.headlinePrefix ?? ''}MiniOxygen ${
+        headline: `${options?.headlinePrefix ?? ''}MiniOxygen (Node Sandbox) ${
           options?.mode ?? 'development'
         } server running.`,
         body: [
           `View ${options?.appName ?? 'Hydrogen'} app: ${listeningAt}`,
           ...(options?.extraLines ?? []),
+          ...(debug
+            ? [
+                {
+                  warn: `\n\nDebugger listening on ws://localhost:${inspectorPort}`,
+                },
+              ]
+            : []),
         ],
       });
       console.log('');

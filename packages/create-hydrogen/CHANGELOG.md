@@ -1,5 +1,52 @@
 # @shopify/create-hydrogen
 
+## 4.3.4
+
+### Patch Changes
+
+- 🐛 fix undefined menu error ([#1533](https://github.com/Shopify/hydrogen/pull/1533)) by [@michenly](https://github.com/michenly)
+
+- Updated dependencies [[`b2a350a7`](https://github.com/Shopify/hydrogen/commit/b2a350a754ea2d29bc267c260dc298a02f8f4470), [`2be9ce82`](https://github.com/Shopify/hydrogen/commit/2be9ce82fd4a5121f1772bbb7349e96ed530e84e), [`bca112ed`](https://github.com/Shopify/hydrogen/commit/bca112ed7db49e533fe49898b663fa0dd318e6ba), [`848c6260`](https://github.com/Shopify/hydrogen/commit/848c6260a2db3a9cb0c86351f0f7128f61e028f0), [`d53b4ed7`](https://github.com/Shopify/hydrogen/commit/d53b4ed752eb0530622a666ea7dcf4b40239cafa), [`961fd8c6`](https://github.com/Shopify/hydrogen/commit/961fd8c630727784f77b9f693d2e8ff8601969fc), [`2bff9fc7`](https://github.com/Shopify/hydrogen/commit/2bff9fc75916fa95f9a9279d069408fb7a33755c), [`8fce70de`](https://github.com/Shopify/hydrogen/commit/8fce70de32bd61ee86a6d895ac43cc1f78f1bf49), [`f90e4d47`](https://github.com/Shopify/hydrogen/commit/f90e4d4713c6c1fc1e921a7ecd08e95fe5da1744)]:
+  - @shopify/cli-hydrogen@6.1.0
+
+## 4.3.3
+
+### Patch Changes
+
+- Fix Shopify login during the init flow where the process would just exit when awaiting for a keypress. ([#1481](https://github.com/Shopify/hydrogen/pull/1481)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`f8626c8a`](https://github.com/Shopify/hydrogen/commit/f8626c8a6dd797a120b3d7278f821216badba7fe)]:
+  - @shopify/cli-hydrogen@6.0.1
+
+## 4.3.2
+
+### Patch Changes
+
+- Updated dependencies [[`3464ec04`](https://github.com/Shopify/hydrogen/commit/3464ec04a084e1ceb30ee19874dc1b9171ce2b34), [`ad45656c`](https://github.com/Shopify/hydrogen/commit/ad45656c5f663cc1a60eab5daab4da1dfd0e6cc3)]:
+  - @shopify/cli-hydrogen@6.0.0
+
+## 4.3.1
+
+### Patch Changes
+
+- Fix template dist package due to CI error ([#1451](https://github.com/Shopify/hydrogen/pull/1451)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Updated dependencies [[`3eb376fe`](https://github.com/Shopify/hydrogen/commit/3eb376fe8796b50131dc43845772ae555e07a1a6)]:
+  - @shopify/cli-hydrogen@5.5.1
+
+## 4.3.0
+
+### Minor Changes
+
+- Generated JavaScript projects now use Codegen and JSDoc to enhance editor autocompletion. ([#1334](https://github.com/Shopify/hydrogen/pull/1334)) by [@frandiox](https://github.com/frandiox)
+
+### Patch Changes
+
+- Fix the starter template blog route to include a required `startCursor` in the GraphQL query. ([#1441](https://github.com/Shopify/hydrogen/pull/1441)) by [@blittle](https://github.com/blittle)
+
+- Updated dependencies [[`e992de2c`](https://github.com/Shopify/hydrogen/commit/e992de2c73462a954620c3ef896849782d18e506), [`f6469d11`](https://github.com/Shopify/hydrogen/commit/f6469d11248543c98e5166f8d8c1a2e2d9e5764c), [`b81b452d`](https://github.com/Shopify/hydrogen/commit/b81b452d010c650b1de1678f729945d1d4394820)]:
+  - @shopify/cli-hydrogen@5.5.0
+
 ## 4.2.6
 
 ### Patch Changes

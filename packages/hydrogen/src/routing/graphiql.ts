@@ -1,11 +1,11 @@
-import type {LoaderArgs} from '@remix-run/server-runtime';
+import type {LoaderFunctionArgs} from '@remix-run/server-runtime';
 import type {Storefront} from '../storefront';
 
-type GraphiQLLoader = (args: LoaderArgs) => Promise<Response>;
+type GraphiQLLoader = (args: LoaderFunctionArgs) => Promise<Response>;
 
 export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
   context,
-}: LoaderArgs) {
+}: LoaderFunctionArgs) {
   const storefront = context?.storefront as Storefront | undefined;
   if (!storefront) {
     throw new Error(
@@ -20,76 +20,117 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
   // GraphiQL icon from their GitHub repo
   const favicon = `https://avatars.githubusercontent.com/u/12972006?s=48&v=4`;
 
+  // Add code highlighting to the HTML template
+  const html = String.raw;
+
   return new Response(
-    `
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <title>GraphiQL</title>
-    <link rel="icon" type="image/x-icon" href="${favicon}">
-    <style>
-      body {
-        height: 100%;
-        margin: 0;
-        width: 100%;
-        overflow: hidden;
-      }
+    html`
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <title>GraphiQL</title>
+          <link rel="icon" type="image/x-icon" href="${favicon}" />
+          <style>
+            body {
+              height: 100%;
+              margin: 0;
+              width: 100%;
+              overflow: hidden;
+              background-color: hsl(219, 29%, 18%);
+            }
 
-      #graphiql {
-        height: 100vh;
-      }
-    </style>
+            #graphiql {
+              height: 100vh;
+            }
 
-    <script
-      crossorigin
-      src="https://unpkg.com/react@18/umd/react.development.js"
-    ></script>
-    <script
-      crossorigin
-      src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
-    ></script>
-    <link rel="stylesheet" href="https://unpkg.com/graphiql@3/graphiql.min.css" />
-  </head>
+            #graphiql > .placeholder {
+              color: slategray;
+              width: fit-content;
+              margin: 40px auto;
+              font-family: Arial;
+            }
+          </style>
 
-  <body>
-    <div id="graphiql">Loading...</div>
-    <script
-      src="https://unpkg.com/graphiql@3/graphiql.min.js"
-      type="application/javascript"
-    ></script>
-    <script>
-      const windowUrl = new URL(document.URL);
+          <script
+            crossorigin
+            src="https://unpkg.com/react@18/umd/react.development.js"
+          ></script>
+          <script
+            crossorigin
+            src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+          ></script>
+          <link
+            rel="stylesheet"
+            href="https://unpkg.com/graphiql@3/graphiql.min.css"
+          />
+          <link
+            rel="stylesheet"
+            href="https://unpkg.com/@graphiql/plugin-explorer/dist/style.css"
+          />
+        </head>
 
-      let query = '{\\n  shop {\\n    name\\n  }\\n}';
-      if (windowUrl.searchParams.has('query')) {
-        query = decodeURIComponent(windowUrl.searchParams.get('query') ?? '');
-        // Prettify query
-        if (query) query = GraphiQL.GraphQL.print(GraphiQL.GraphQL.parse(query));
-      }
+        <body>
+          <div id="graphiql">
+            <div class="placeholder">Loading GraphiQL...</div>
+          </div>
 
-      let variables;
-      if (windowUrl.searchParams.has('variables')) {
-        variables = decodeURIComponent(windowUrl.searchParams.get('variables') ?? '');
-        // Prettify variables
-        if (variables) variables = JSON.stringify(JSON.parse(variables), null, 2);
-      }
+          <script
+            src="https://unpkg.com/graphiql@3/graphiql.min.js"
+            type="application/javascript"
+            crossorigin="anonymous"
+          ></script>
+          <script
+            src="https://unpkg.com/@graphiql/plugin-explorer/dist/index.umd.js"
+            type="application/javascript"
+            crossorigin="anonymous"
+          ></script>
 
-      const root = ReactDOM.createRoot(document.getElementById('graphiql'));
-      root.render(
-        React.createElement(GraphiQL, {
-          fetcher: GraphiQL.createFetcher({
-            url: '${url}',
-            headers: {'X-Shopify-Storefront-Access-Token': '${accessToken}'}
-          }),
-          defaultEditorToolsVisibility: true,
-          query,
-          variables
-        }),
-      );
-    </script>
-  </body>
-</html>
-  `,
+          <script>
+            const windowUrl = new URL(document.URL);
+
+            let query = '{ shop { name } }';
+            if (windowUrl.searchParams.has('query')) {
+              query = decodeURIComponent(
+                windowUrl.searchParams.get('query') ?? query,
+              );
+            }
+
+            // Prettify query
+            query = GraphiQL.GraphQL.print(GraphiQL.GraphQL.parse(query));
+
+            let variables;
+            if (windowUrl.searchParams.has('variables')) {
+              variables = decodeURIComponent(
+                windowUrl.searchParams.get('variables') ?? '',
+              );
+            }
+
+            // Prettify variables
+            if (variables) {
+              variables = JSON.stringify(JSON.parse(variables), null, 2);
+            }
+
+            const root = ReactDOM.createRoot(
+              document.getElementById('graphiql'),
+            );
+            root.render(
+              React.createElement(GraphiQL, {
+                fetcher: GraphiQL.createFetcher({
+                  url: '${url}',
+                  headers: {
+                    'X-Shopify-Storefront-Access-Token': '${accessToken}',
+                  },
+                }),
+                defaultEditorToolsVisibility: true,
+                query,
+                variables,
+                plugins: [GraphiQLPluginExplorer.explorerPlugin()],
+              }),
+            );
+          </script>
+        </body>
+      </html>
+    `,
     {status: 200, headers: {'content-type': 'text/html'}},
   );
 };

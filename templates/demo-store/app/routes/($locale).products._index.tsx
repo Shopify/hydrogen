@@ -1,4 +1,4 @@
-import {json, type LoaderArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import invariant from 'tiny-invariant';
 import {Pagination, getPaginationVariables} from '@shopify/hydrogen';
@@ -13,7 +13,10 @@ const PAGE_BY = 8;
 
 export const headers = routeHeaders;
 
-export async function loader({request, context: {storefront}}: LoaderArgs) {
+export async function loader({
+  request,
+  context: {storefront},
+}: LoaderFunctionArgs) {
   const variables = getPaginationVariables(request, {pageBy: PAGE_BY});
 
   const data = await storefront.query(ALL_PRODUCTS_QUERY, {

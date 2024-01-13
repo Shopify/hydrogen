@@ -38,9 +38,9 @@ import {
 } from '../../lib/bundle/analyzer.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {isCI} from '../../lib/is-ci.js';
+import {copyDiffBuild, prepareDiffDirectory} from '../../lib/template-diff.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
-const MAX_WORKER_BUNDLE_SIZE = 10;
 
 export default class Build extends Command {
   static description = 'Builds a Hydrogen storefront for production.';
@@ -68,13 +68,9 @@ export default class Build extends Command {
       description: 'Disable warning about missing standard routes.',
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
     }),
-    'codegen-unstable': Flags.boolean({
-      description:
-        'Generate types for the Storefront API queries found in your project.',
-      required: false,
-      default: false,
-    }),
+    codegen: commonFlags.codegen,
     'codegen-config-path': commonFlags.codegenConfigPath,
+    diff: commonFlags.diff,
 
     base: deprecated('--base')(),
     entry: deprecated('--entry')(),
@@ -83,13 +79,29 @@ export default class Build extends Command {
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Build);
-    const directory = flags.path ? resolvePath(flags.path) : process.cwd();
+    const originalDirectory = flags.path
+      ? resolvePath(flags.path)
+      : process.cwd();
+    let directory = originalDirectory;
+
+    if (flags.diff) {
+      directory = await prepareDiffDirectory(originalDirectory, false);
+    }
 
     await runBuild({
       ...flagsToCamelObject(flags),
-      useCodegen: flags['codegen-unstable'],
+      useCodegen: flags.codegen,
       directory,
     });
+
+    if (flags.diff) {
+      await copyDiffBuild(directory, originalDirectory);
+    }
+
+    // The Remix compiler hangs due to a bug in ESBuild:
+    // https://github.com/evanw/esbuild/issues/2727
+    // The actual build has already finished so we can kill the process.
+    process.exit(0);
   }
 }
 
@@ -206,13 +218,6 @@ export async function runBuild({
   if (process.env.NODE_ENV !== 'development') {
     await cleanClientSourcemaps(buildPathClient);
   }
-
-  // The Remix compiler hangs due to a bug in ESBuild:
-  // https://github.com/evanw/esbuild/issues/2727
-  // The actual build has already finished so we can kill the process.
-  if (!process.env.SHOPIFY_UNIT_TEST && !assetPath) {
-    process.exit(0);
-  }
 }
 
 async function cleanClientSourcemaps(buildPathClient: string) {
@@ -247,7 +252,7 @@ async function writeBundleAnalysis(
     )}\n`,
   );
 
-  if (bundleStats && sizeMB < MAX_WORKER_BUNDLE_SIZE) {
+  if (bundleStats) {
     outputInfo(
       outputContent`${
         (await getBundleAnalysisSummary(buildPathWorkerFile)) || '\n'
@@ -258,15 +263,7 @@ async function writeBundleAnalysis(
     );
   }
 
-  if (sizeMB >= MAX_WORKER_BUNDLE_SIZE) {
-    throw new AbortError(
-      '🚨 Worker bundle exceeds 10 MB! Oxygen has a maximum worker bundle size of 10 MB.',
-      outputContent`See the bundle analysis for a breakdown of what is contributing to the bundle size:\n${outputToken.link(
-        bundleAnalysisPath,
-        bundleAnalysisPath,
-      )}`,
-    );
-  } else if (sizeMB >= 5) {
+  if (sizeMB >= 5) {
     outputWarn(
       `🚨 Worker bundle exceeds 5 MB! This can delay your worker response.${
         remixConfig.serverMinify
@@ -289,11 +286,7 @@ async function writeSimpleBuildStatus(
     )}  ${colors.yellow(sizeMB.toFixed(2) + ' MB')}\n`,
   );
 
-  if (sizeMB >= MAX_WORKER_BUNDLE_SIZE) {
-    throw new AbortError(
-      '🚨 Worker bundle exceeds 10 MB! Oxygen has a maximum worker bundle size of 10 MB.',
-    );
-  } else if (sizeMB >= 5) {
+  if (sizeMB >= 5) {
     outputWarn(
       `🚨 Worker bundle exceeds 5 MB! This can delay your worker response.${
         remixConfig.serverMinify

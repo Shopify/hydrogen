@@ -11,7 +11,7 @@ import {
   json,
   defer,
   redirect,
-  type LoaderArgs,
+  type LoaderFunctionArgs,
   type AppLoadContext,
 } from '@shopify/remix-oxygen';
 import {flattenConnection} from '@shopify/hydrogen';
@@ -41,13 +41,13 @@ import {
 } from './($locale).featured-products';
 import {doLogout} from './($locale).account.logout';
 
-// Combining json + Response + defer in a loader breaks the
+// Combining json + defer in a loader breaks the
 // types returned by useLoaderData. This is a temporary fix.
 type TmpRemixFix = ReturnType<typeof defer<{isAuthenticated: false}>>;
 
 export const headers = routeHeaders;
 
-export async function loader({request, context, params}: LoaderArgs) {
+export async function loader({request, context, params}: LoaderFunctionArgs) {
   const {pathname} = new URL(request.url);
   const locale = params.locale;
   const customerAccessToken = await context.session.get('customerAccessToken');
@@ -57,7 +57,7 @@ export async function loader({request, context, params}: LoaderArgs) {
 
   if (!isAuthenticated) {
     if (isAccountPage) {
-      return redirect(loginPath) as unknown as TmpRemixFix;
+      throw redirect(loginPath);
     }
     // pass through to public routes
     return json({isAuthenticated: false}) as unknown as TmpRemixFix;
@@ -93,7 +93,8 @@ export default function Authenticated() {
 
   // routes that export handle { renderInModal: true }
   const renderOutletInModal = matches.some((match) => {
-    return match?.handle?.renderInModal;
+    const handle = match?.handle as {renderInModal?: boolean};
+    return handle?.renderInModal;
   });
 
   // Public routes

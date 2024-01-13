@@ -1,4 +1,4 @@
-import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
+import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {Suspense} from 'react';
 import {Await, useLoaderData} from '@remix-run/react';
 import {AnalyticsPageType} from '@shopify/hydrogen';
@@ -11,7 +11,7 @@ import {routeHeaders} from '~/data/cache';
 
 export const headers = routeHeaders;
 
-export async function loader({params, context}: LoaderArgs) {
+export async function loader({params, context}: LoaderFunctionArgs) {
   const {language, country} = context.storefront.i18n;
 
   if (
@@ -204,7 +204,7 @@ const COLLECTION_HERO_QUERY = `#graphql
   ${COLLECTION_CONTENT_FRAGMENT}
 ` as const;
 
-// @see: https://shopify.dev/api/storefront/2023-07/queries/products
+// @see: https://shopify.dev/api/storefront/current/queries/products
 export const HOMEPAGE_FEATURED_PRODUCTS_QUERY = `#graphql
   query homepageFeaturedProducts($country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
@@ -217,7 +217,7 @@ export const HOMEPAGE_FEATURED_PRODUCTS_QUERY = `#graphql
   ${PRODUCT_CARD_FRAGMENT}
 ` as const;
 
-// @see: https://shopify.dev/api/storefront/2023-07/queries/collections
+// @see: https://shopify.dev/api/storefront/current/queries/collections
 export const FEATURED_COLLECTIONS_QUERY = `#graphql
   query homepageFeaturedCollections($country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {

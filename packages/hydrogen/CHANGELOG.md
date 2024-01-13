@@ -1,5 +1,165 @@
 # @shopify/hydrogen
 
+## 2023.10.3
+
+### Patch Changes
+
+- Fix the Pagination component to always restore scroll correctly on back/forth navigation. ([#1508](https://github.com/Shopify/hydrogen/pull/1508)) by [@blittle](https://github.com/blittle)
+
+- Serve assets from a separate domain when running the dev server, to better simulate cross-domain behaviors. This makes it more realistic to work with CORS requests, content security policies, and CDN paths in development. ([#1503](https://github.com/Shopify/hydrogen/pull/1503)) by [@frandiox](https://github.com/frandiox)
+
+- Export caching types to make creating custom clients easier in TypeScript. ([#1507](https://github.com/Shopify/hydrogen/pull/1507)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Update the return types of the Customer Account API query and mutation methods. Also update Customer Account API default version to 2024-01. ([#1537](https://github.com/Shopify/hydrogen/pull/1537)) by [@blittle](https://github.com/blittle)
+
+- Fix how peer dependencies are resolved. ([#1489](https://github.com/Shopify/hydrogen/pull/1489)) by [@frandiox](https://github.com/frandiox)
+
+- Add default `channel` value of `hydrogen` to Hydrogen’s `ShopPayButton` component. ([#1447](https://github.com/Shopify/hydrogen/pull/1447)) by [@QuintonC](https://github.com/QuintonC)
+
+- Updated dependencies [[`848c6260`](https://github.com/Shopify/hydrogen/commit/848c6260a2db3a9cb0c86351f0f7128f61e028f0), [`62f67873`](https://github.com/Shopify/hydrogen/commit/62f67873359982ffa08f617085787a1fc174c3fa), [`e8cc49fe`](https://github.com/Shopify/hydrogen/commit/e8cc49feff18f5ee72d5f6965ff2094addc23466)]:
+  - @shopify/hydrogen-react@2023.10.1
+
+## 2023.10.2
+
+### Patch Changes
+
+- Change @remix-run/server-runtime to properly be a peer dependency by [@blittle](https://github.com/blittle)
+
+## 2023.10.1
+
+### Patch Changes
+
+- SEO component: remove URL params from canonical tags ([#1478](https://github.com/Shopify/hydrogen/pull/1478)) by [@scottdixon](https://github.com/scottdixon)
+
+## 2023.10.0
+
+### Major and Breaking Changes
+
+#### Remix v2 ([#1289](https://github.com/Shopify/hydrogen/pull/1289)) by [@frandiox](https://github.com/frandiox)
+
+Hydrogen 2023-10 has upgraded to Remix v2 and is now a peer dependency.
+
+- Please check the [Remix v2 release notes](https://github.com/remix-run/remix/releases/tag/remix%402.0.0) to see what needs to be changed in your app code. Common changes include:
+
+  - Renaming types prefixed with `V2_`. For example, `V2_MetaFunction` is now `MetaFunction`.
+  - Renaming other types like `LoaderArgs` and `ActionArgs`, which are now `LoaderFunctionArgs` and `ActionFunctionArgs` respectively.
+
+  If you were not already using v2 flags, follow the official [Remix migration guide](https://remix.run/docs/en/main/start/v2) before upgrading to v2.
+
+- Update to Remix v2. Remix is now a peer dependency and its version is no longer pinned. This means that you can upgrade to newer Remix 2.x versions without upgrading Hydrogen. ([#1289](https://github.com/Shopify/hydrogen/pull/1289)) by [@frandiox](https://github.com/frandiox)
+
+#### Other breaking changes
+
+- The default [caching strategy](https://shopify.dev/docs/custom-storefronts/hydrogen/data-fetching/cache#caching-strategies) has been updated. The new default caching strategy provides a `max-age` value of 1 second, and a `stale-while-revalidate` value of 1 day. If you would keep the old caching values, update your queries to use `CacheShort`: ([#1336](https://github.com/Shopify/hydrogen/pull/1336)) by [@benjaminsehl](https://github.com/benjaminsehl)
+
+  ```diff
+   const {product} = await storefront.query(
+     `#graphql
+       query Product($handle: String!) {
+         product(handle: $handle) { id title }
+       }
+     `,
+     {
+       variables: {handle: params.productHandle},
+  +    /**
+  +     * Override the default caching strategy with the old caching values
+  +     */
+  +    cache: storefront.CacheShort(),
+     },
+   );
+  ```
+
+- The Storefront API types included are now generated using `@graphql-codegen/typescript@4` ([changelog](https://github.com/dotansimha/graphql-code-generator/blob/master/packages/plugins/typescript/typescript/CHANGELOG.md#400)). This results in a breaking change if you were importing `Scalars` directly from `@shopify/hydrogen-react` or `@shopify/hydrogen`: ([#1108](https://github.com/Shopify/hydrogen/pull/1108)) by [@frandiox](https://github.com/frandiox)
+
+  ```diff
+   import type {Scalars} from '@shopify/hydrogen/storefront-api-types';
+
+   type Props = {
+  -  id: Scalars['ID']; // This was a string
+  +  id: Scalars['ID']['input']; // Need to access 'input' or 'output' to get the string
+   };
+  ```
+
+### Patch Changes
+
+- Add a client to query the [Customer Account API](https://shopify.dev/docs/api/customer) ([#1430](https://github.com/Shopify/hydrogen/pull/1430)) by [@blittle](https://github.com/blittle)
+
+- Update Storefront API version to 2023-10 ([#1431](https://github.com/Shopify/hydrogen/pull/1431)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Custom cart methods are now stable: ([#1440](https://github.com/Shopify/hydrogen/pull/1440)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  ```diff
+   const cart = createCartHandler({
+     storefront,
+     getCartId,
+     setCartId: cartSetIdDefault(),
+  -  customMethods__unstable: {
+  +  customMethods: {
+       addLines: async (lines, optionalParams) => {
+        // ...
+       },
+     },
+   });
+  ```
+
+- Remove deprecated parameters and props (#1455 and #1435): ([#1435](https://github.com/Shopify/hydrogen/pull/1435)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  - `createStorefrontClient` parameters `buyerIp` and `requestGroupId`
+  - `<Image>` props `loaderOptions` and `widths`
+
+- Add query explorer plugin to GraphiQL. Start your dev server and load `http://localhost:3000/graphiql` to use GraphiQL. ([#1470](https://github.com/Shopify/hydrogen/pull/1470)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`0ae7cbe2`](https://github.com/Shopify/hydrogen/commit/0ae7cbe280d8351126e11dc13f35d7277d9b2d86), [`ad45656c`](https://github.com/Shopify/hydrogen/commit/ad45656c5f663cc1a60eab5daab4da1dfd0e6cc3)]:
+  - @shopify/hydrogen-react@2023.10.0
+
+## 2023.7.13
+
+### Patch Changes
+
+- Fix template dist package due to CI error ([#1451](https://github.com/Shopify/hydrogen/pull/1451)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Updated dependencies [[`3eb376fe`](https://github.com/Shopify/hydrogen/commit/3eb376fe8796b50131dc43845772ae555e07a1a6)]:
+  - @shopify/hydrogen-react@2023.7.6
+
+## 2023.7.12
+
+### Patch Changes
+
+- Move `react` to peer dependencies. It had been added as a direct dependency by mistake in a previous version. ([#1439](https://github.com/Shopify/hydrogen/pull/1439)) by [@frandiox](https://github.com/frandiox)
+
+- Integrate the debug-network tooling with the new `--worker-unstable` runtime CLI flag. ([#1387](https://github.com/Shopify/hydrogen/pull/1387)) by [@frandiox](https://github.com/frandiox)
+
+- Calls to `withCache` can now be shown in the `/debug-network` tool when using the Worker runtime. For this to work, use the new `request` parameter in `createWithCache`: ([#1438](https://github.com/Shopify/hydrogen/pull/1438)) by [@frandiox](https://github.com/frandiox)
+
+  ```diff
+  export default {
+    fetch(request, env, executionContext) {
+      // ...
+      const withCache = createWithCache({
+        cache,
+        waitUntil,
+  +     request,
+      });
+      // ...
+    },
+  }
+  ```
+
+- Updated dependencies [[`d30e2651`](https://github.com/Shopify/hydrogen/commit/d30e265180e7856d2257d8cad0bd067c8a91e9cc), [`1b45311d`](https://github.com/Shopify/hydrogen/commit/1b45311d28b2ca941c479a1896efa89a9b71bec1), [`2627faa7`](https://github.com/Shopify/hydrogen/commit/2627faa7f09ba306506bb206d4d6624de5691961)]:
+  - @shopify/hydrogen-react@2023.7.5
+
+## 2023.7.11
+
+### Patch Changes
+
+- Fix subrequest performance in development. ([#1411](https://github.com/Shopify/hydrogen/pull/1411)) by [@frandiox](https://github.com/frandiox)
+
+## 2023.7.10
+
+### Patch Changes
+
+- Ensure `storefrontRedirect` fallback only redirects to relative URLs. ([#1399](https://github.com/Shopify/hydrogen/pull/1399)) by [@frandiox](https://github.com/frandiox)
+
 ## 2023.7.9
 
 ### Patch Changes

@@ -10,7 +10,7 @@ type MockCarthandler = {
   cartId?: string;
   cartQueryFragment?: string;
   cartMutateFragment?: string;
-  customMethods__unstable?: Record<string, Function>;
+  customMethods?: Record<string, Function>;
 };
 
 function getCartHandler(options: MockCarthandler = {}) {
@@ -51,21 +51,21 @@ describe('createCartHandler', () => {
       storefront: mockCreateStorefrontClient(),
       getCartId: () => undefined,
       setCartId: () => new Headers(),
-      customMethods__unstable: {
+      customMethods: {
         foo() {
           return 'bar';
         },
       },
     });
 
-    expectTypeOf(cart).toEqualTypeOf<HydrogenCartCustom<{}>>;
+    expectTypeOf(cart).toEqualTypeOf<HydrogenCartCustom<{foo: () => 'bar'}>>;
     expect(Object.keys(cart)).toHaveLength(15);
     expect(cart.foo()).toBe('bar');
   });
 
   it('can override default methods', async () => {
     const cart = getCartHandler({
-      customMethods__unstable: {
+      customMethods: {
         get() {
           return Promise.resolve('bar');
         },

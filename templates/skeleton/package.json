@@ -2,22 +2,23 @@
   "name": "skeleton",
   "private": true,
   "sideEffects": false,
-  "version": "0.0.0",
+  "version": "1.0.1",
   "scripts": {
     "build": "shopify hydrogen build",
-    "dev": "shopify hydrogen dev --codegen-unstable",
-    "preview": "npm run build && shopify hydrogen preview",
+    "dev": "shopify hydrogen dev --worker --codegen",
+    "preview": "npm run build && shopify hydrogen preview --worker",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "typecheck": "tsc --noEmit",
-    "codegen": "shopify hydrogen codegen-unstable"
+    "codegen": "shopify hydrogen codegen"
   },
   "prettier": "@shopify/prettier-config",
   "dependencies": {
-    "@remix-run/react": "1.19.1",
-    "@shopify/cli": "3.49.2",
-    "@shopify/cli-hydrogen": "^5.4.1",
-    "@shopify/hydrogen": "^2023.7.9",
-    "@shopify/remix-oxygen": "^1.1.5",
+    "@remix-run/react": "2.1.0",
+    "@remix-run/server-runtime": "2.1.0",
+    "@shopify/cli": "3.52.0",
+    "@shopify/cli-hydrogen": "^6.1.0",
+    "@shopify/hydrogen": "~2023.10.3",
+    "@shopify/remix-oxygen": "^2.0.2",
     "graphql": "^16.6.0",
     "graphql-tag": "^2.12.6",
     "isbot": "^3.6.6",
@@ -25,8 +26,9 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@remix-run/dev": "1.19.1",
-    "@shopify/oxygen-workers-types": "^3.17.3",
+    "@remix-run/dev": "2.1.0",
+    "@remix-run/eslint-config": "2.1.0",
+    "@shopify/oxygen-workers-types": "^4.0.0",
     "@shopify/prettier-config": "^1.1.2",
     "@total-typescript/ts-reset": "^0.4.2",
     "@types/eslint": "^8.4.10",
@@ -38,6 +40,6 @@
     "typescript": "^5.2.2"
   },
   "engines": {
-    "node": ">=16.13"
+    "node": ">=18.0.0"
   }
 }

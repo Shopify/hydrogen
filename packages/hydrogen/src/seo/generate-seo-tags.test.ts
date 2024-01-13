@@ -235,6 +235,30 @@ describe('generateSeoTags', () => {
         'Error in SEO input: `url` should be a valid URL',
       );
     });
+
+    it('should remove URL parameters from the url', () => {
+      // Given
+      const input = {
+        url: 'https://hydrogen.shop/products/snowboard?Size=154cm&Binding+mount=Nested&Material=Carbon-fiber',
+      };
+
+      // When
+      const output = generateSeoTags(input);
+
+      // Then
+      expect(output).toEqual(
+        expect.arrayContaining([
+          {
+            key: 'link-canonical',
+            props: {
+              href: 'https://hydrogen.shop/products/snowboard',
+              rel: 'canonical',
+            },
+            tag: 'link',
+          },
+        ]),
+      );
+    });
   });
 
   describe('media', () => {

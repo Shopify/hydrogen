@@ -1,6 +1,6 @@
 import {useRef, Suspense} from 'react';
 import {Disclosure, Listbox} from '@headlessui/react';
-import {defer, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
+import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, Await} from '@remix-run/react';
 import type {ShopifyAnalyticsProduct} from '@shopify/hydrogen';
 import {
@@ -39,7 +39,7 @@ import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 
 export const headers = routeHeaders;
 
-export async function loader({params, request, context}: LoaderArgs) {
+export async function loader({params, request, context}: LoaderFunctionArgs) {
   const {productHandle} = params;
   invariant(productHandle, 'Missing productHandle param, check route filename');
 
@@ -59,7 +59,7 @@ export async function loader({params, request, context}: LoaderArgs) {
   }
 
   if (!product.selectedVariant) {
-    return redirectToFirstVariant({product, request});
+    throw redirectToFirstVariant({product, request});
   }
 
   // In order to show which variants are available in the UI, we need to query
@@ -126,7 +126,7 @@ function redirectToFirstVariant({
     searchParams.set(option.name, option.value);
   }
 
-  throw redirect(
+  return redirect(
     `/products/${product!.handle}?${searchParams.toString()}`,
     302,
   );
@@ -362,6 +362,7 @@ export function ProductForm({
                     withoutTrailingZeros
                     data={selectedVariant?.price!}
                     as="span"
+                    data-test="price"
                   />
                   {isOnSale && (
                     <Money

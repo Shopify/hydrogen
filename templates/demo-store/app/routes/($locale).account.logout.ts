@@ -2,8 +2,8 @@ import {
   redirect,
   type ActionFunction,
   type AppLoadContext,
-  type LoaderArgs,
-  type ActionArgs,
+  type LoaderFunctionArgs,
+  type ActionFunctionArgs,
 } from '@shopify/remix-oxygen';
 
 export async function doLogout(context: AppLoadContext) {
@@ -18,10 +18,10 @@ export async function doLogout(context: AppLoadContext) {
   });
 }
 
-export async function loader({context}: LoaderArgs) {
+export async function loader({context}: LoaderFunctionArgs) {
   return redirect(context.storefront.i18n.pathPrefix);
 }
 
-export const action: ActionFunction = async ({context}: ActionArgs) => {
+export const action: ActionFunction = async ({context}: ActionFunctionArgs) => {
   return doLogout(context);
 };

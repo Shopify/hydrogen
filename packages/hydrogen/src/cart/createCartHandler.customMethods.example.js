@@ -11,11 +11,13 @@ const cartQueryOptions = {
   getCartId: cartGetIdDefault(request.headers),
 };
 
+const getCartId = cartGetIdDefault(request.headers);
+
 const cart = createCartHandler({
   storefront,
-  getCartId: cartGetIdDefault(request.headers),
+  getCartId,
   setCartId: cartSetIdDefault(),
-  customMethods__unstable: {
+  customMethods: {
     editInLine: async (addLines, removeLineIds, optionalParams) => {
       // Using Hydrogen default cart query methods
       await cartLinesAddDefault(cartQueryOptions)(addLines, optionalParams);
@@ -28,7 +30,7 @@ const cart = createCartHandler({
       // With your own Storefront API graphql query
       return await storefront.mutate(CART_LINES_ADD_MUTATION, {
         variables: {
-          id: optionalParams.cartId,
+          id: optionalParams.cartId || getCartId(),
           lines,
         },
       });

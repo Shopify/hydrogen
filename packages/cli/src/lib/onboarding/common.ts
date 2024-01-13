@@ -51,7 +51,7 @@ import {
   getCliCommand,
   type CliCommand,
 } from '../shell.js';
-import {transpileProject} from '../transpile-ts.js';
+import {transpileProject} from '../transpile/index.js';
 import {
   CSS_STRATEGY_NAME_MAP,
   setupCssStrategy,
@@ -151,11 +151,6 @@ export async function handleRouteGeneration(
           {
             rootDirectory: directory,
             appDirectory: joinPath(directory, 'app'),
-            future: {
-              v2_errorBoundary: true,
-              v2_meta: true,
-              v2_routeConvention: true,
-            },
           },
         );
 
@@ -169,15 +164,8 @@ export function generateProjectEntries(
   options: Parameters<typeof generateProjectFile>[1],
 ) {
   return Promise.all(
-    ['root', 'entry.server', 'entry.client'].map((filename) =>
-      generateProjectFile(filename, {
-        v2Flags: {
-          isV2ErrorBoundary: true,
-          isV2Meta: true,
-          isV2RouteConvention: true,
-        },
-        ...options,
-      }),
+    ['root', 'entry.server', 'entry.client', '../server.ts'].map((filename) =>
+      generateProjectFile(filename, options),
     ),
   );
 }
@@ -364,7 +352,7 @@ export async function handleLanguage(
   return {
     language,
     async transpileProject() {
-      if (language === 'js') {
+      if (language !== 'ts') {
         await transpileProject(projectDir);
       }
     },
@@ -515,7 +503,7 @@ export async function commitAll(directory: string, message: string) {
 
 export type SetupSummary = {
   language?: Language;
-  packageManager: 'npm' | 'pnpm' | 'yarn' | 'unknown';
+  packageManager: 'npm' | 'pnpm' | 'yarn' | 'bun' | 'unknown';
   cssStrategy?: CssStrategy;
   hasCreatedShortcut: boolean;
   depsInstalled: boolean;
@@ -702,12 +690,15 @@ export async function renderProjectReady(
 
 export function createAbortHandler(
   controller: AbortController,
-  project: {directory: string},
+  project?: {directory: string},
 ) {
   return async function abort(error: AbortError): Promise<never> {
     controller.abort();
 
-    if (typeof project !== 'undefined') {
+    // Give time to hide prompts before showing error
+    await Promise.resolve();
+
+    if (project?.directory) {
       await rmdir(project!.directory, {force: true}).catch(() => {});
     }
 
@@ -722,6 +713,8 @@ export function createAbortHandler(
       console.error(error);
     }
 
+    // This code runs asynchronously so throwing here
+    // turns into an unhandled rejection. Exit process instead:
     process.exit(1);
   };
 }

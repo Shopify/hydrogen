@@ -1,8 +1,8 @@
-import {type LoaderArgs} from '@shopify/remix-oxygen';
+import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useRouteError, isRouteErrorResponse} from '@remix-run/react';
 import {parseGid} from '@shopify/hydrogen';
 
-export async function loader({request, context}: LoaderArgs) {
+export async function loader({request, context}: LoaderFunctionArgs) {
   const url = new URL(request.url);
 
   const {shop} = await context.storefront.query(ROBOTS_QUERY);
@@ -18,33 +18,6 @@ export async function loader({request, context}: LoaderArgs) {
       'Cache-Control': `max-age=${60 * 60 * 24}`,
     },
   });
-}
-
-export function ErrorBoundary() {
-  const error = useRouteError();
-
-  if (isRouteErrorResponse(error)) {
-    return (
-      <div>
-        <h1>Oops</h1>
-        <p>Status: {error.status}</p>
-        <p>{error.data.message}</p>
-      </div>
-    );
-  }
-
-  let errorMessage = 'Unknown error';
-  if (error instanceof Error) {
-    errorMessage = error.message;
-  }
-
-  return (
-    <div>
-      <h1>Uh oh ...</h1>
-      <p>Something went wrong.</p>
-      <pre>{errorMessage}</pre>
-    </div>
-  );
 }
 
 function robotsTxtData({url, shopId}: {shopId?: string; url?: string}) {

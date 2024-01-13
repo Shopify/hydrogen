@@ -1,5 +1,129 @@
 # @shopify/cli-hydrogen
 
+## 6.1.0
+
+### Minor Changes
+
+- Add the [`upgrade` command](https://h2o.fyi/cli#upgrade) to make it easier to upgrade from older versions of Hydrogen. Features: ([#1458](https://github.com/Shopify/hydrogen/pull/1458)) by [@juanpprieto](https://github.com/juanpprieto)
+
+  - Automatically updates dependencies in your package.json file.
+  - Generates a customized instruction file in the `/.shopify` directory, outlining any code changes required to complete the upgrade.
+  - Adds a warning when running the `dev` command with an outdated version.
+  - Defaults to the latest version. Pass a `--version` flag and a version number to select a specific one.
+
+  To get started, run `npx shopify hydrogen upgrade` in your Hydrogen project.
+
+- The worker runtime for development is now stable. This makes your development environment closer to parity with Oxygen’s production runtime. Pass the `--worker` flag with the `dev` or `preview` commands to enable it. This runtime will be enabled by default in the next major release. ([#1525](https://github.com/Shopify/hydrogen/pull/1525)) by [@frandiox](https://github.com/frandiox)
+
+- Add the `--debug` flag to the [`dev` command](https://h2o.fyi/cli#dev) to enable step debugging in browser dev tools. ([#1480](https://github.com/Shopify/hydrogen/pull/1480)) by [@frandiox](https://github.com/frandiox)
+
+  To enable debugger connections for the Hydrogen app worker file, run `npx shopify hydrogen dev --debug --worker`, then open [localhost:9229](http://localhost:9229) in your browser.
+
+### Patch Changes
+
+- Sync up environment variable names across all example & type files. ([#1542](https://github.com/Shopify/hydrogen/pull/1542)) by [@michenly](https://github.com/michenly)
+
+- Serve assets from a separate domain when running the dev server, to better simulate cross-domain behaviors. This makes it more realistic to work with CORS requests, content security policies, and CDN paths in development. ([#1503](https://github.com/Shopify/hydrogen/pull/1503)) by [@frandiox](https://github.com/frandiox)
+
+- Update all Node.js dependencies to version 18. (Not a breaking change, since Node.js 18 is already required by Remix v2.) ([#1543](https://github.com/Shopify/hydrogen/pull/1543)) by [@michenly](https://github.com/michenly)
+
+- 🐛 fix undefined menu error ([#1533](https://github.com/Shopify/hydrogen/pull/1533)) by [@michenly](https://github.com/michenly)
+
+- Fix how peer dependencies are resolved. ([#1489](https://github.com/Shopify/hydrogen/pull/1489)) by [@frandiox](https://github.com/frandiox)
+
+- Update Shopify CLI versions. ([#1504](https://github.com/Shopify/hydrogen/pull/1504)) by [@vincentezw](https://github.com/vincentezw)
+
+- Updated dependencies [[`848c6260`](https://github.com/Shopify/hydrogen/commit/848c6260a2db3a9cb0c86351f0f7128f61e028f0), [`8fce70de`](https://github.com/Shopify/hydrogen/commit/8fce70de32bd61ee86a6d895ac43cc1f78f1bf49)]:
+  - @shopify/mini-oxygen@2.2.4
+
+## 6.0.2
+
+### Patch Changes
+
+- Updated dependencies [[`69624b32`](https://github.com/Shopify/hydrogen/commit/69624b3276fa18a654e222db226c7403ebdc8ead)]:
+  - @shopify/hydrogen@2023.10.2
+
+## 6.0.1
+
+### Patch Changes
+
+- Fix Shopify login during the init flow where the process would just exit when awaiting for a keypress. ([#1481](https://github.com/Shopify/hydrogen/pull/1481)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`074ef6e8`](https://github.com/Shopify/hydrogen/commit/074ef6e88412dc4f731c253f1dcd27cb73afcc3c)]:
+  - @shopify/hydrogen@2023.10.1
+
+## 6.0.0
+
+### Minor Changes
+
+- The Codegen feature is now considered stable and related dependencies have been updated. Use `--codegen` flag instead of `--codegen-unstable` to generate code from your GraphQL queries. ([#1108](https://github.com/Shopify/hydrogen/pull/1108)) by [@frandiox](https://github.com/frandiox)
+
+### Patch Changes
+
+- Updated internal dependencies to improve terminal output. ([#1456](https://github.com/Shopify/hydrogen/pull/1456)) by [@vincentezw](https://github.com/vincentezw)
+
+  Please update the `@shopify/cli` dependency in your app to avoid duplicated subdependencies:
+
+  ```diff
+    "dependencies": {
+  -   "@shopify/cli": "3.49.2",
+  +   "@shopify/cli": "3.50.0",
+    }
+  ```
+
+- Updated dependencies [[`a6f397b6`](https://github.com/Shopify/hydrogen/commit/a6f397b64dc6a0d856cb7961731ee1f86bf80292), [`ad45656c`](https://github.com/Shopify/hydrogen/commit/ad45656c5f663cc1a60eab5daab4da1dfd0e6cc3), [`ad45656c`](https://github.com/Shopify/hydrogen/commit/ad45656c5f663cc1a60eab5daab4da1dfd0e6cc3), [`58dc68de`](https://github.com/Shopify/hydrogen/commit/58dc68de2f71d12f1275961e160faa740387cdb5), [`0ae7cbe2`](https://github.com/Shopify/hydrogen/commit/0ae7cbe280d8351126e11dc13f35d7277d9b2d86), [`ad45656c`](https://github.com/Shopify/hydrogen/commit/ad45656c5f663cc1a60eab5daab4da1dfd0e6cc3)]:
+  - @shopify/remix-oxygen@2.0.0
+  - @shopify/hydrogen-codegen@0.1.0
+  - @shopify/hydrogen-react@2023.10.0
+
+## 5.5.1
+
+### Patch Changes
+
+- Fix template dist package due to CI error ([#1451](https://github.com/Shopify/hydrogen/pull/1451)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Updated dependencies [[`3eb376fe`](https://github.com/Shopify/hydrogen/commit/3eb376fe8796b50131dc43845772ae555e07a1a6)]:
+  - @shopify/hydrogen-react@2023.7.6
+
+## 5.5.0
+
+### Minor Changes
+
+- Generated JavaScript projects now use Codegen and JSDoc to enhance editor autocompletion. ([#1334](https://github.com/Shopify/hydrogen/pull/1334)) by [@frandiox](https://github.com/frandiox)
+
+- We've added an experimental tool for profiling the CPU at startup. This is useful for debugging slow startup times when Oxygen deployments fail with related errors. ([#1352](https://github.com/Shopify/hydrogen/pull/1352)) by [@frandiox](https://github.com/frandiox)
+
+  Run the new `h2 debug cpu` command to build + watch your app and generate a `startup.cpuprofile` file that you can open in DevTools or VSCode to see a flamegraph of CPU usage.
+
+### Patch Changes
+
+- Integrate the debug-network tooling with the new `--worker-unstable` runtime CLI flag. ([#1387](https://github.com/Shopify/hydrogen/pull/1387)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`d30e2651`](https://github.com/Shopify/hydrogen/commit/d30e265180e7856d2257d8cad0bd067c8a91e9cc), [`b81b452d`](https://github.com/Shopify/hydrogen/commit/b81b452d010c650b1de1678f729945d1d4394820), [`1b45311d`](https://github.com/Shopify/hydrogen/commit/1b45311d28b2ca941c479a1896efa89a9b71bec1), [`2627faa7`](https://github.com/Shopify/hydrogen/commit/2627faa7f09ba306506bb206d4d6624de5691961)]:
+  - @shopify/hydrogen-react@2023.7.5
+  - @shopify/remix-oxygen@1.1.8
+
+## 5.4.3
+
+### Patch Changes
+
+- Fix subrequest performance in development. ([#1411](https://github.com/Shopify/hydrogen/pull/1411)) by [@frandiox](https://github.com/frandiox)
+
+- Increase the request body size limit to 100mb when running locally. ([#1421](https://github.com/Shopify/hydrogen/pull/1421)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`29414664`](https://github.com/Shopify/hydrogen/commit/294146644df57592a775ae33cdf4359015155d72), [`832a0eaf`](https://github.com/Shopify/hydrogen/commit/832a0eafad331f61b7cfdf90dec6427f1aaaef6b)]:
+  - @shopify/remix-oxygen@1.1.7
+  - @shopify/mini-oxygen@2.2.3
+
+## 5.4.2
+
+### Patch Changes
+
+- Fix product search results header style ([#1405](https://github.com/Shopify/hydrogen/pull/1405)) by [@tatsuya](https://github.com/tatsuya)
+
+- Updated dependencies [[`4f735fd7`](https://github.com/Shopify/hydrogen/commit/4f735fd725aef26cd3bd5b50c87d2c028b93c598)]:
+  - @shopify/remix-oxygen@1.1.6
+
 ## 5.4.1
 
 ### Patch Changes

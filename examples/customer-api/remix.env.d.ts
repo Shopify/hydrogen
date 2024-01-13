@@ -3,8 +3,8 @@
 /// <reference types="@shopify/oxygen-workers-types" />
 
 import type {Storefront} from '@shopify/hydrogen';
-import type {HydrogenSession} from './server';
-import type {CustomerClient} from '~/utils/customer.server';
+import type {AppSession} from './server';
+import type {CustomerClient} from '@shopify/hydrogen';
 
 declare global {
   /**
@@ -21,8 +21,8 @@ declare global {
     PRIVATE_STOREFRONT_API_TOKEN: string;
     PUBLIC_STORE_DOMAIN: string;
     PUBLIC_STOREFRONT_ID: string;
-    PUBLIC_CUSTOMER_ACCOUNT_ID: string;
-    PUBLIC_CUSTOMER_ACCOUNT_URL: string;
+    PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID: string;
+    PUBLIC_CUSTOMER_ACCOUNT_API_URL: string;
   }
 }
 
@@ -31,10 +31,10 @@ declare global {
  */
 declare module '@shopify/remix-oxygen' {
   export interface AppLoadContext {
-    session: HydrogenSession;
+    session: AppSession;
     storefront: Storefront;
     env: Env;
-    customer: CustomerClient;
+    customerAccount: CustomerClient;
     waitUntil: ExecutionContext['waitUntil'];
   }
 }

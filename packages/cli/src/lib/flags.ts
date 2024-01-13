@@ -6,6 +6,7 @@ import colors from '@shopify/cli-kit/node/colors';
 import type {CamelCasedProperties} from 'type-fest';
 import {STYLING_CHOICES} from './setups/css/index.js';
 import {I18N_CHOICES} from './setups/i18n/index.js';
+import {DEFAULT_INSPECTOR_PORT} from './mini-oxygen/common.js';
 
 export const DEFAULT_PORT = 3000;
 
@@ -22,8 +23,8 @@ export const commonFlags = {
   }),
   workerRuntime: Flags.boolean({
     description:
-      'Run the app in a worker environment closer to Oxygen production instead of a Node.js sandbox. This flag is unstable and may change without notice.',
-    env: 'SHOPIFY_HYDROGEN_FLAG_WORKER_UNSTABLE',
+      'Run the app in a worker environment closer to Oxygen production instead of a Node.js sandbox.',
+    env: 'SHOPIFY_HYDROGEN_FLAG_WORKER',
   }),
   force: Flags.boolean({
     description:
@@ -56,11 +57,19 @@ export const commonFlags = {
     default: true,
     allowNo: true,
   }),
+  codegen: Flags.boolean({
+    description:
+      'Generate types for the Storefront API queries found in your project.',
+    required: false,
+    default: false,
+    deprecateAliases: true,
+    aliases: ['codegen-unstable'],
+  }),
   codegenConfigPath: Flags.string({
     description:
       'Specify a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if it exists.',
     required: false,
-    dependsOn: ['codegen-unstable'],
+    dependsOn: ['codegen'],
   }),
   styling: Flags.string({
     description: `Sets the styling strategy to use. One of ${STYLING_CHOICES.map(
@@ -80,6 +89,22 @@ export const commonFlags = {
     description: 'Create a shortcut to the Shopify Hydrogen CLI.',
     env: 'SHOPIFY_HYDROGEN_FLAG_SHORTCUT',
     allowNo: true,
+  }),
+  debug: Flags.boolean({
+    description: 'Enables inspector connections with a debugger.',
+    env: 'SHOPIFY_HYDROGEN_FLAG_DEBUG',
+    default: false,
+  }),
+  inspectorPort: Flags.integer({
+    description: 'Port where the inspector will be available.',
+    env: 'SHOPIFY_HYDROGEN_FLAG_INSPECTOR_PORT',
+    default: DEFAULT_INSPECTOR_PORT,
+  }),
+  diff: Flags.boolean({
+    description:
+      "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
+    default: false,
+    required: false,
   }),
 };
 
