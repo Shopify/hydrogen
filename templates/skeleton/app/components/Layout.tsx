@@ -19,7 +19,7 @@ export type LayoutProps = {
   children?: React.ReactNode;
   footer: Promise<FooterQuery>;
   header: HeaderQuery;
-  isLoggedIn: boolean;
+  isLoggedInPromise: Promise<boolean>;
 };
 
 export function Layout({
@@ -27,14 +27,20 @@ export function Layout({
   children = null,
   footer,
   header,
-  isLoggedIn,
+  isLoggedInPromise,
 }: LayoutProps) {
   return (
     <>
       <CartAside cart={cart} />
       <SearchAside />
       <MobileMenuAside menu={header?.menu} shop={header?.shop} />
-      {header && <Header header={header} cart={cart} isLoggedIn={isLoggedIn} />}
+      {header && (
+        <Header
+          header={header}
+          cart={cart}
+          isLoggedInPromise={isLoggedInPromise}
+        />
+      )}
       <main>{children}</main>
       <Suspense>
         <Await resolve={footer}>
