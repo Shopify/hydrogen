@@ -4,11 +4,11 @@ import type {HeaderQuery} from 'storefrontapi.generated';
 import type {LayoutProps} from './Layout';
 import {useRootLoaderData} from '~/root';
 
-type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'>;
+type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedInPromise'>;
 
 type Viewport = 'desktop' | 'mobile';
 
-export function Header({header, isLoggedIn, cart}: HeaderProps) {
+export function Header({header, isLoggedInPromise, cart}: HeaderProps) {
   const {shop, menu} = header;
   return (
     <header className="header">
@@ -20,7 +20,7 @@ export function Header({header, isLoggedIn, cart}: HeaderProps) {
         viewport="desktop"
         primaryDomainUrl={header.shop.primaryDomain.url}
       />
-      <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
+      <HeaderCtas isLoggedInPromise={isLoggedInPromise} cart={cart} />
     </header>
   );
 }
@@ -86,14 +86,18 @@ export function HeaderMenu({
 }
 
 function HeaderCtas({
-  isLoggedIn,
+  isLoggedInPromise,
   cart,
-}: Pick<HeaderProps, 'isLoggedIn' | 'cart'>) {
+}: Pick<HeaderProps, 'isLoggedInPromise' | 'cart'>) {
   return (
     <nav className="header-ctas" role="navigation">
       <HeaderMenuMobileToggle />
       <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
-        {isLoggedIn ? 'Account' : 'Sign in'}
+        <Suspense fallback="Sign in">
+          <Await resolve={isLoggedInPromise}>
+            {(isLoggedIn) => (isLoggedIn ? 'Account' : 'Sign in')}
+          </Await>
+        </Suspense>
       </NavLink>
       <SearchToggle />
       <CartToggle cart={cart} />
