@@ -150,7 +150,7 @@ export async function startWorkerdServer({
       const isVSCode = process.env.TERM_PROGRAM === 'vscode';
       const debuggingDocsLink =
         'https://shopify.dev/docs/custom-storefronts/hydrogen/debugging/server-code' +
-        (isVSCode ? '#vscode' : '#step-2-attach-a-debugger');
+        (isVSCode ? '#visual-studio-code' : '#step-2-attach-a-debugger');
 
       const debuggerMessage =
         outputContent`\n\nDebugging enabled on port ${String(
