@@ -4,7 +4,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "6.1.0",
+  "version": "6.2.0",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -36,7 +36,7 @@
     "@graphql-codegen/cli": "5.0.0",
     "@oclif/core": "2.11.7",
     "@shopify/cli-kit": "3.52.0",
-    "@shopify/hydrogen-codegen": "^0.1.0",
+    "@shopify/hydrogen-codegen": "^0.2.0",
     "@shopify/mini-oxygen": "^2.2.4",
     "@shopify/oxygen-cli": "^3.1.5",
     "ansi-escapes": "^6.2.0",

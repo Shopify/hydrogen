@@ -1,5 +1,13 @@
 # @shopify/hydrogen-react
 
+## 2023.10.2
+
+### Patch Changes
+
+- ♻️ renamed all customer reference to the API to customer-account by [@michenly](https://github.com/michenly)
+
+- ✨ add schema generation for customer account api in hydrogen-react and export these types in both hydrogen-react & hydrogen. Note the current CA API version is `2024-01` which is a release candidate and subject to change. ([#1572](https://github.com/Shopify/hydrogen/pull/1572)) by [@michenly](https://github.com/michenly)
+
 ## 2023.10.1
 
 ### Patch Changes

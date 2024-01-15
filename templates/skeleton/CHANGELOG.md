@@ -1,5 +1,62 @@
 # skeleton
 
+## 1.0.2
+
+### Patch Changes
+
+- Updated the GraphQL config in `.graphqlrc.yml` to use the more modern `projects` structure: ([#1577](https://github.com/Shopify/hydrogen/pull/1577)) by [@frandiox](https://github.com/frandiox)
+
+  ```diff
+  -schema: node_modules/@shopify/hydrogen/storefront.schema.json
+  +projects:
+  + default:
+  +    schema: 'node_modules/@shopify/hydrogen/storefront.schema.json'
+  ```
+
+  This allows you to add additional projects to the GraphQL config, such as third party CMS schemas.
+
+  Also, you can modify the document paths used for the Storefront API queries. This is useful if you have a large codebase and want to exclude certain files from being used for codegen or other GraphQL utilities:
+
+  ```yaml
+  projects:
+    default:
+      schema: 'node_modules/@shopify/hydrogen/storefront.schema.json'
+      documents:
+        - '!*.d.ts'
+        - '*.{ts,tsx,js,jsx}'
+        - 'app/**/*.{ts,tsx,js,jsx}'
+  ```
+
+- Change the default HydrogenSession to be more robust in parsing session cookies ([#1583](https://github.com/Shopify/hydrogen/pull/1583)) by [@blittle](https://github.com/blittle)
+
+- Update `@shopify/cli` dependency in `package.json`: ([#1579](https://github.com/Shopify/hydrogen/pull/1579)) by [@frandiox](https://github.com/frandiox)
+
+  ```diff
+  -   "@shopify/cli": "3.51.0",
+  +   "@shopify/cli": "3.52.0",
+  ```
+
+- 👩‍💻 improved HydrogenSession typing. ([#1590](https://github.com/Shopify/hydrogen/pull/1590)) by [@michenly](https://github.com/michenly)
+
+  In order to ensure utilies from @shopify/hydrogen will work properly using user implemented HydrogenSession class. We encourage the use of `HydrogenSession` type to ensure all the interface needed had been implemented.
+
+  Update implementation of HydrogenSession using type
+
+  ```diff
+  import {
+  + type HydrogenSession,
+  } from '@shopify/hydrogen';
+  - class HydrogenSession {
+  + class AppSession implements HydrogenSession {
+      ...
+  }
+  ```
+
+- Updated dependencies [[`810f48cf`](https://github.com/Shopify/hydrogen/commit/810f48cf5d55f0cfcac6e01fe481db8c76e77cd2), [`8c477cb5`](https://github.com/Shopify/hydrogen/commit/8c477cb565c3e018bf4e13bad01804c21611fb8a), [`fb38d3b7`](https://github.com/Shopify/hydrogen/commit/fb38d3b7cf108aecca6f7eb6f08c88bc7f46aa4c), [`07d1b0b5`](https://github.com/Shopify/hydrogen/commit/07d1b0b5e62ff2d149deac80ce6fbe95d2b0f8ce), [`4d6ba3ff`](https://github.com/Shopify/hydrogen/commit/4d6ba3ffc7ddc72f1b97eff3c7188fe72b8568e7), [`42ac4138`](https://github.com/Shopify/hydrogen/commit/42ac4138553c7e1a438b075c4f9cb781edffebc4), [`d6d01322`](https://github.com/Shopify/hydrogen/commit/d6d01322b430761c6ac3be71aa8fee798c85de37), [`6bc1d61c`](https://github.com/Shopify/hydrogen/commit/6bc1d61c17a9c9be13f52338d2ab940e64e73495), [`eb0f4bcc`](https://github.com/Shopify/hydrogen/commit/eb0f4bccb57966a00ecb2b88d17dd694599da340), [`a69c21ca`](https://github.com/Shopify/hydrogen/commit/a69c21caa15dfedb88afd50f262f17bf86f74836), [`970073e7`](https://github.com/Shopify/hydrogen/commit/970073e78258880505e0de563136b5379d5d24af), [`335371ce`](https://github.com/Shopify/hydrogen/commit/335371ceb6e1bd5aebb6104f131d3f22798a245f), [`94509b75`](https://github.com/Shopify/hydrogen/commit/94509b750afefd686971198ed86277e2c70f3176), [`36d6fa2c`](https://github.com/Shopify/hydrogen/commit/36d6fa2c4fa54ff79f06ef17aa41f60478977bc0), [`cce65795`](https://github.com/Shopify/hydrogen/commit/cce6579580f849bec9a28cf575f7130ba3627f6b), [`b1a1d7cb`](https://github.com/Shopify/hydrogen/commit/b1a1d7cba9f6eac50cbf459965e92814e4de1be9), [`da9e447b`](https://github.com/Shopify/hydrogen/commit/da9e447b87f6bdf377427ef69209f852d13581d3), [`9e3d88d4`](https://github.com/Shopify/hydrogen/commit/9e3d88d498efaa20fe23de9837e0f444180bc787), [`92840e51`](https://github.com/Shopify/hydrogen/commit/92840e51820e5c7822f731affd3f591c0099be10), [`b0d727d1`](https://github.com/Shopify/hydrogen/commit/b0d727d1f2bb643827e2fda438cfc447de7ee2e7), [`f6e6d194`](https://github.com/Shopify/hydrogen/commit/f6e6d1943680304b15f0892c64c726d79291fe0a), [`306d302a`](https://github.com/Shopify/hydrogen/commit/306d302ab401f22e5317fd84587c6a37cf931912)]:
+  - @shopify/hydrogen@2023.10.4
+  - @shopify/cli-hydrogen@6.2.0
+  - @shopify/remix-oxygen@2.0.3
+
 ## 1.0.1
 
 ### Patch Changes

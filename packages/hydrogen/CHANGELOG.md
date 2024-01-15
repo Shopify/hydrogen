@@ -1,5 +1,98 @@
 # @shopify/hydrogen
 
+## 2023.10.4
+
+### Patch Changes
+
+- Fix redirect bug ([#1629](https://github.com/Shopify/hydrogen/pull/1629)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Fix type when passing custom methods to `createCartHandler`. ([#1588](https://github.com/Shopify/hydrogen/pull/1588)) by [@frandiox](https://github.com/frandiox)
+
+- ♻️ renamed all customer reference to the API to customer-account by [@michenly](https://github.com/michenly)
+
+- The `customerAccount` client now supports codegen types similar to the `storefront` client. ([#1587](https://github.com/Shopify/hydrogen/pull/1587)) by [@frandiox](https://github.com/frandiox)
+
+- ✨ add schema generation for customer account api in hydrogen-react and export these types in both hydrogen-react & hydrogen. Note the current CA API version is `2024-01` which is a release candidate and subject to change. ([#1572](https://github.com/Shopify/hydrogen/pull/1572)) by [@michenly](https://github.com/michenly)
+
+- 💥 Change the behaviour of `createContentSecurityPolicy` where the custom rules passed in will extends the default Shopify and development domains instead of overriding them. ([#1593](https://github.com/Shopify/hydrogen/pull/1593)) by [@michenly](https://github.com/michenly)
+
+- 🐛 fix content security policy for local enviorment for not recognizing localhost asset server as a valid policy ([#1591](https://github.com/Shopify/hydrogen/pull/1591)) by [@michenly](https://github.com/michenly)
+
+- Subrequest Profiler (stable) - Provides an overview of network requests happening on the server side ([#1511](https://github.com/Shopify/hydrogen/pull/1511)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  #### How to use:
+
+  1. Run `h2 dev`
+  2. Visit http://localhost:3000/subrequest-profiler
+
+  #### Set request display name with `storefront.query`:
+
+  ```tsx
+  context.storefront.query(HOMEPAGE_FEATURED_PRODUCTS_QUERY, {
+    displayName: 'Feature products',
+    variables: {
+      country,
+      language,
+    },
+  });
+  ```
+
+  #### Set request debug information with `createWithCache`:
+
+  ```tsx
+  const withCache = createWithCache({
+    cache,
+    waitUntil,
+    request,
+  });
+
+  const data3p = async () => {
+    return await withCache(
+      ['Some unique cache keys'],
+      CacheLong(),
+      ({addDebugData}) => {
+        return fetch('https://some-3p-endpoint.com').then(async (response) => {
+          if (process.env.NODE_ENV === 'development') {
+            addDebugData({
+              displayName: '3p endpoint display name',
+              response,
+            });
+          }
+
+          return await response.json();
+        });
+      },
+    );
+  };
+  ```
+
+- ✨ Make customer client utility official. ([#1606](https://github.com/Shopify/hydrogen/pull/1606)) by [@michenly](https://github.com/michenly)
+
+- Fix the `<Seo />` component to render canonical URLs without trailing slashes. For example, both https://hydrogen.shop/collections/freestyle/ and https://hydrogen.shop/collections/freestyle return a canonical link of https://hydrogen.shop/collections/freestyle. ([#1622](https://github.com/Shopify/hydrogen/pull/1622)) by [@blittle](https://github.com/blittle)
+
+  Thank you @joshuafredrickson for reporting.
+
+- 👩‍💻 improved HydrogenSession typing. ([#1590](https://github.com/Shopify/hydrogen/pull/1590)) by [@michenly](https://github.com/michenly)
+
+  In order to ensure utilies from @shopify/hydrogen will work properly using user implemented HydrogenSession class. We encourage the use of `HydrogenSession` type to ensure all the interface needed had been implemented.
+
+  Update implementation of HydrogenSession using type
+
+  ```diff
+  import {
+  + type HydrogenSession,
+  } from '@shopify/hydrogen';
+  - class HydrogenSession {
+  + class AppSession implements HydrogenSession {
+      ...
+  }
+  ```
+
+- ✨ add a utility `getAccessToken` to customerClient ([#1607](https://github.com/Shopify/hydrogen/pull/1607)) by [@michenly](https://github.com/michenly)
+
+- Updated dependencies [[`07d1b0b5`](https://github.com/Shopify/hydrogen/commit/07d1b0b5e62ff2d149deac80ce6fbe95d2b0f8ce), [`d6d01322`](https://github.com/Shopify/hydrogen/commit/d6d01322b430761c6ac3be71aa8fee798c85de37)]:
+  - @shopify/hydrogen-react@2023.10.2
+
 ## 2023.10.3
 
 ### Patch Changes

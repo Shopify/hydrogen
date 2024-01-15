@@ -1,5 +1,98 @@
 # @shopify/cli-hydrogen
 
+## 6.2.0
+
+### Minor Changes
+
+- When generating Codegen, the CLI now looks first at the project GraphQL config (e.g. `.graphqlrc.yml` file) to find the documents for the Storefront API schema. ([#1577](https://github.com/Shopify/hydrogen/pull/1577)) by [@frandiox](https://github.com/frandiox)
+
+- Add `--diff` flag to dev and build commands to run examples in monorepo. Examples are now a diff applied on top of the starter template. ([#1549](https://github.com/Shopify/hydrogen/pull/1549)) by [@frandiox](https://github.com/frandiox)
+
+- Support scaffolding projects based on examples in Hydrogen repo using the `--template` flag. Example: `npm create @shopify/hydrogen@latest -- --template multipass`. ([#1608](https://github.com/Shopify/hydrogen/pull/1608)) by [@frandiox](https://github.com/frandiox)
+
+### Patch Changes
+
+- Minor update to the default organization of files and folders in the starter template. ([#1612](https://github.com/Shopify/hydrogen/pull/1612)) by [@frandiox](https://github.com/frandiox)
+
+- Fix the sourcemaps to be included on Oxygen deployments from the CLI ([#1623](https://github.com/Shopify/hydrogen/pull/1623)) by [@blittle](https://github.com/blittle)
+
+- Rely on server-side check for bundle size >10mb ([#1614](https://github.com/Shopify/hydrogen/pull/1614)) by [@benwolfram](https://github.com/benwolfram)
+
+- Subrequest Profiler (stable) - Provides an overview of network requests happening on the server side ([#1511](https://github.com/Shopify/hydrogen/pull/1511)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  #### How to use:
+
+  1. Run `h2 dev`
+  2. Visit http://localhost:3000/subrequest-profiler
+
+  #### Set request display name with `storefront.query`:
+
+  ```tsx
+  context.storefront.query(HOMEPAGE_FEATURED_PRODUCTS_QUERY, {
+    displayName: 'Feature products',
+    variables: {
+      country,
+      language,
+    },
+  });
+  ```
+
+  #### Set request debug information with `createWithCache`:
+
+  ```tsx
+  const withCache = createWithCache({
+    cache,
+    waitUntil,
+    request,
+  });
+
+  const data3p = async () => {
+    return await withCache(
+      ['Some unique cache keys'],
+      CacheLong(),
+      ({addDebugData}) => {
+        return fetch('https://some-3p-endpoint.com').then(async (response) => {
+          if (process.env.NODE_ENV === 'development') {
+            addDebugData({
+              displayName: '3p endpoint display name',
+              response,
+            });
+          }
+
+          return await response.json();
+        });
+      },
+    );
+  };
+  ```
+
+- 👩‍💻 improved HydrogenSession typing. ([#1590](https://github.com/Shopify/hydrogen/pull/1590)) by [@michenly](https://github.com/michenly)
+
+  In order to ensure utilies from @shopify/hydrogen will work properly using user implemented HydrogenSession class. We encourage the use of `HydrogenSession` type to ensure all the interface needed had been implemented.
+
+  Update implementation of HydrogenSession using type
+
+  ```diff
+  import {
+  + type HydrogenSession,
+  } from '@shopify/hydrogen';
+  - class HydrogenSession {
+  + class AppSession implements HydrogenSession {
+      ...
+  }
+  ```
+
+- Enhance startup time of CLI when using `--worker` runtime. ([#1560](https://github.com/Shopify/hydrogen/pull/1560)) by [@frandiox](https://github.com/frandiox)
+
+- Show link to docs in the terminal when debugging. ([#1568](https://github.com/Shopify/hydrogen/pull/1568)) by [@frandiox](https://github.com/frandiox)
+
+- Update cli-kit dependency for bug fixes. ([#1579](https://github.com/Shopify/hydrogen/pull/1579)) by [@frandiox](https://github.com/frandiox)
+
+- Run prettier in all the generated codegen files that use the Hydrogen preset, not only for Storefront API. ([#1578](https://github.com/Shopify/hydrogen/pull/1578)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`07d1b0b5`](https://github.com/Shopify/hydrogen/commit/07d1b0b5e62ff2d149deac80ce6fbe95d2b0f8ce), [`9ad7c5ef`](https://github.com/Shopify/hydrogen/commit/9ad7c5efee8bff63760b36a1a7c194f6bb8e07e5), [`306d302a`](https://github.com/Shopify/hydrogen/commit/306d302ab401f22e5317fd84587c6a37cf931912), [`3f3b8dbe`](https://github.com/Shopify/hydrogen/commit/3f3b8dbe8a72080791125154a71168a419c9ad13)]:
+  - @shopify/hydrogen-codegen@0.2.0
+
 ## 6.1.0
 
 ### Minor Changes

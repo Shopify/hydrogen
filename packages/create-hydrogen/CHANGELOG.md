@@ -1,5 +1,76 @@
 # @shopify/create-hydrogen
 
+## 4.3.5
+
+### Patch Changes
+
+- Subrequest Profiler (stable) - Provides an overview of network requests happening on the server side ([#1511](https://github.com/Shopify/hydrogen/pull/1511)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  #### How to use:
+
+  1. Run `h2 dev`
+  2. Visit http://localhost:3000/subrequest-profiler
+
+  #### Set request display name with `storefront.query`:
+
+  ```tsx
+  context.storefront.query(HOMEPAGE_FEATURED_PRODUCTS_QUERY, {
+    displayName: 'Feature products',
+    variables: {
+      country,
+      language,
+    },
+  });
+  ```
+
+  #### Set request debug information with `createWithCache`:
+
+  ```tsx
+  const withCache = createWithCache({
+    cache,
+    waitUntil,
+    request,
+  });
+
+  const data3p = async () => {
+    return await withCache(
+      ['Some unique cache keys'],
+      CacheLong(),
+      ({addDebugData}) => {
+        return fetch('https://some-3p-endpoint.com').then(async (response) => {
+          if (process.env.NODE_ENV === 'development') {
+            addDebugData({
+              displayName: '3p endpoint display name',
+              response,
+            });
+          }
+
+          return await response.json();
+        });
+      },
+    );
+  };
+  ```
+
+- 👩‍💻 improved HydrogenSession typing. ([#1590](https://github.com/Shopify/hydrogen/pull/1590)) by [@michenly](https://github.com/michenly)
+
+  In order to ensure utilies from @shopify/hydrogen will work properly using user implemented HydrogenSession class. We encourage the use of `HydrogenSession` type to ensure all the interface needed had been implemented.
+
+  Update implementation of HydrogenSession using type
+
+  ```diff
+  import {
+  + type HydrogenSession,
+  } from '@shopify/hydrogen';
+  - class HydrogenSession {
+  + class AppSession implements HydrogenSession {
+      ...
+  }
+  ```
+
+- Updated dependencies [[`8c477cb5`](https://github.com/Shopify/hydrogen/commit/8c477cb565c3e018bf4e13bad01804c21611fb8a), [`42ac4138`](https://github.com/Shopify/hydrogen/commit/42ac4138553c7e1a438b075c4f9cb781edffebc4), [`6bc1d61c`](https://github.com/Shopify/hydrogen/commit/6bc1d61c17a9c9be13f52338d2ab940e64e73495), [`eb0f4bcc`](https://github.com/Shopify/hydrogen/commit/eb0f4bccb57966a00ecb2b88d17dd694599da340), [`335371ce`](https://github.com/Shopify/hydrogen/commit/335371ceb6e1bd5aebb6104f131d3f22798a245f), [`cce65795`](https://github.com/Shopify/hydrogen/commit/cce6579580f849bec9a28cf575f7130ba3627f6b), [`b1a1d7cb`](https://github.com/Shopify/hydrogen/commit/b1a1d7cba9f6eac50cbf459965e92814e4de1be9), [`da9e447b`](https://github.com/Shopify/hydrogen/commit/da9e447b87f6bdf377427ef69209f852d13581d3), [`9e3d88d4`](https://github.com/Shopify/hydrogen/commit/9e3d88d498efaa20fe23de9837e0f444180bc787), [`92840e51`](https://github.com/Shopify/hydrogen/commit/92840e51820e5c7822f731affd3f591c0099be10), [`b0d727d1`](https://github.com/Shopify/hydrogen/commit/b0d727d1f2bb643827e2fda438cfc447de7ee2e7), [`306d302a`](https://github.com/Shopify/hydrogen/commit/306d302ab401f22e5317fd84587c6a37cf931912)]:
+  - @shopify/cli-hydrogen@6.2.0
+
 ## 4.3.4
 
 ### Patch Changes
