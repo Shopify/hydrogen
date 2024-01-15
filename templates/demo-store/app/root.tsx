@@ -21,9 +21,6 @@ import {
 import {ShopifySalesChannel, Seo, useNonce} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 
-import {Layout} from '~/components';
-import {seoPayload} from '~/lib/seo.server';
-
 import favicon from '../public/favicon.svg';
 
 import {GenericError} from './components/GenericError';
@@ -31,6 +28,9 @@ import {NotFound} from './components/NotFound';
 import styles from './styles/app.css';
 import {DEFAULT_LOCALE, parseMenu} from './lib/utils';
 import {useAnalytics} from './hooks/useAnalytics';
+
+import {Layout} from '~/components';
+import {seoPayload} from '~/lib/seo.server';
 
 // This is important to avoid re-fetching root queries on sub-navigations
 export const shouldRevalidate: ShouldRevalidateFunction = ({
@@ -72,25 +72,30 @@ export const useRootLoaderData = () => {
 };
 
 export async function loader({request, context}: LoaderFunctionArgs) {
-  const {session, storefront, cart} = context;
-  const [customerAccessToken, layout] = await Promise.all([
-    session.get('customerAccessToken'),
-    getLayoutData(context),
-  ]);
+  const {storefront, cart} = context;
+  const layout = await getLayoutData(context);
+  const isLoggedInPromise = context.customerAccount.isLoggedIn();
 
   const seo = seoPayload.root({shop: layout.shop, url: request.url});
 
-  return defer({
-    isLoggedIn: Boolean(customerAccessToken),
-    layout,
-    selectedLocale: storefront.i18n,
-    cart: cart.get(),
-    analytics: {
-      shopifySalesChannel: ShopifySalesChannel.hydrogen,
-      shopId: layout.shop.id,
+  return defer(
+    {
+      isLoggedInPromise,
+      layout,
+      selectedLocale: storefront.i18n,
+      cart: cart.get(),
+      analytics: {
+        shopifySalesChannel: ShopifySalesChannel.hydrogen,
+        shopId: layout.shop.id,
+      },
+      seo,
     },
-    seo,
-  });
+    {
+      headers: {
+        'Set-Cookie': await context.session.commit(),
+      },
+    },
+  );
 }
 
 export default function App() {
