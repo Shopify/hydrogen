@@ -207,9 +207,9 @@ export function useCartAPIStateMachine({
     context: CartMachineContext,
     event: CartMachineFetchResultEvent,
   ) => void;
-  /** An object with fields that correspond to the Storefront API's [Cart object](https://shopify.dev/api/storefront/2024-01/objects/cart). */
+  /** An object with fields that correspond to the Storefront API's [Cart object](https://shopify.dev/api/storefront/current/objects/cart). */
   data?: PartialDeep<CartType, {recurseIntoArrays: true}>;
-  /** A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/2024-01/objects/cart) for all queries and mutations. A default value is used if no argument is provided. */
+  /** A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/current/objects/cart) for all queries and mutations. A default value is used if no argument is provided. */
   cartFragment: string;
   /** The ISO country code for i18n. */
   countryCode?: CountryCode;

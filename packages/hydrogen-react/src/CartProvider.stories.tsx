@@ -246,7 +246,7 @@ Default.args = {
   numCartLines: 30,
   /** A callback that is invoked when the process to create a cart begins, but before the cart is created in the Storefront API. */
   data: undefined,
-  /** A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/2024-01/objects/cart) for all queries and mutations. A default value is used if no argument is provided. */
+  /** A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/current/objects/cart) for all queries and mutations. A default value is used if no argument is provided. */
   cartFragment: undefined,
   /** A customer access token that's accessible on the server if there's a customer login. */
   customerAccessToken: undefined,

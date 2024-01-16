@@ -26,9 +26,9 @@ export type VariantOptionValue = {
 type VariantSelectorProps = {
   /** The product handle for all of the variants */
   handle: string;
-  /** Product options from the [Storefront API](/docs/api/storefront/2024-01/objects/ProductOption). Make sure both `name` and `values` are apart of your query. */
+  /** Product options from the [Storefront API](/docs/api/storefront/current/objects/ProductOption). Make sure both `name` and `values` are apart of your query. */
   options: Array<PartialDeep<ProductOption>> | undefined;
-  /** Product variants from the [Storefront API](/docs/api/storefront/2024-01/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`. */
+  /** Product variants from the [Storefront API](/docs/api/storefront/current/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`. */
   variants?:
     | PartialDeep<ProductVariantConnection>
     | Array<PartialDeep<ProductVariant>>;
