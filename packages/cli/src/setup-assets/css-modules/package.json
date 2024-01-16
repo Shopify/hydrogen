@@ -1,6 +1,6 @@
 {
   "comment": "Remix version is automatically updated by the CLI",
   "dependencies": {
-    "@remix-run/css-bundle": "^1"
+    "@remix-run/css-bundle": "^2.5.0"
   }
 }
