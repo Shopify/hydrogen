@@ -219,6 +219,7 @@ export async function runUpgrade({
 
   // Display a summary of the upgrade and next steps
   await displayUpgradeSummary({
+    appPath,
     currentVersion,
     instrunctionsFilePath,
     selectedRelease,
@@ -745,10 +746,12 @@ async function promptUpgradeOptions(
  * Displays a summary of the upgrade and next steps
  */
 async function displayUpgradeSummary({
+  appPath,
   currentVersion,
   selectedRelease,
   instrunctionsFilePath,
 }: {
+  appPath: string;
   currentVersion: string;
   selectedRelease: Release;
   instrunctionsFilePath?: string;
@@ -773,6 +776,7 @@ async function displayUpgradeSummary({
 
   nextSteps.push(`Release notes:\n${releaseNotesUrl}`);
 
+
   const currentPinnedVersion = getAbsoluteVersion(currentVersion);
   const selectedPinnedVersion = getAbsoluteVersion(selectedRelease.version);
 
@@ -784,6 +788,8 @@ async function displayUpgradeSummary({
   const headline = upgradedDependenciesOnly
     ? `You've have upgraded Hydrogen ${selectedPinnedVersion} dependencies`
     : `You've have upgraded from ${fromToMsg}`;
+
+  const packageManager = await getPackageManager(appPath)
 
   return renderSuccess({
     headline,
@@ -809,6 +815,18 @@ async function displayUpgradeSummary({
           },
         ],
       },
+      {
+        title: 'Undo these upgrades?',
+        body: [
+          {
+            list: {
+              items: [
+                `Run \`git restore . && git clean -df && ${packageManager} i\``,
+              ]
+            },
+          },
+        ],
+      }
     ].filter(Boolean),
   });
 }
