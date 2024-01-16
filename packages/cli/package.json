@@ -61,7 +61,7 @@
     "@parcel/watcher": "^2.3.0"
   },
   "peerDependencies": {
-    "@remix-run/dev": "^2.5.0"
+    "@remix-run/dev": "^2.1.0"
   },
   "peerDependenciesMeta": {
     "@remix-run/dev": {
