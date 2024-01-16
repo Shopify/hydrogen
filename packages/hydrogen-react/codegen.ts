@@ -4,7 +4,7 @@ import {
   customerAccountApiCustomScalars,
 } from './src/codegen.helpers';
 
-const SF_API_VERSION = '2023-10';
+const SF_API_VERSION = '2024-01';
 const CA_API_VERSION = '2024-01';
 
 const storefrontAPISchema: CodegenConfig['schema'] = {
