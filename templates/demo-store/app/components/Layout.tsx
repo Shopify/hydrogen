@@ -326,24 +326,14 @@ function DesktopHeader({
 function AccountLink({className}: {className?: string}) {
   const {isLoggedInPromise} = useRootLoaderData();
 
-  const AccountMarkup = (
-    <Link to="/account" className={className}>
-      <IconAccount />
-    </Link>
-  );
-
-  const LogInMarkup = (
-    <Link to="/account/login" className={className}>
-      <IconLogin />
-    </Link>
-  );
-
   return (
-    <Suspense fallback={LogInMarkup}>
-      <Await resolve={isLoggedInPromise}>
-        {(isLoggedIn) => (isLoggedIn ? AccountMarkup : LogInMarkup)}
-      </Await>
-    </Suspense>
+    <Link to="/account" className={className}>
+      <Suspense fallback={<IconLogin />}>
+        <Await resolve={isLoggedInPromise}>
+          {(isLoggedIn) => (isLoggedIn ? <IconAccount /> : <IconLogin />)}
+        </Await>
+      </Suspense>
+    </Link>
   );
 }
 

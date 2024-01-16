@@ -1,4 +1,5 @@
-import type {CustomerDetailsFragment} from 'storefrontapi.generated';
+import type {CustomerDetailsFragment} from 'customer-accountapi.generated';
+
 import {Link} from '~/components';
 
 export function AccountDetails({
@@ -6,7 +7,7 @@ export function AccountDetails({
 }: {
   customer: CustomerDetailsFragment;
 }) {
-  const {firstName, lastName, email, phone} = customer;
+  const {firstName, lastName, emailAddress, phoneNumber} = customer;
 
   return (
     <>
@@ -31,10 +32,10 @@ export function AccountDetails({
           </p>
 
           <div className="mt-4 text-sm text-primary/50">Contact</div>
-          <p className="mt-1">{phone ?? 'Add mobile'}</p>
+          <p className="mt-1">{phoneNumber?.phoneNumber ?? 'Add mobile'}</p>
 
           <div className="mt-4 text-sm text-primary/50">Email address</div>
-          <p className="mt-1">{email}</p>
+          <p className="mt-1">{emailAddress?.emailAddress}</p>
 
           <div className="mt-4 text-sm text-primary/50">Password</div>
           <p className="mt-1">**************</p>

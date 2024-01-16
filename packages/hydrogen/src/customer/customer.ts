@@ -67,10 +67,10 @@ export interface CustomerAccountMutations {
 }
 
 export type CustomerClient = {
-  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. */
-  login: () => Promise<Response>;
-  /** On successful login, the user is redirect back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings. */
-  authorize: (redirectPath?: string) => Promise<Response>;
+  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. Optional redirectBack path can be pass in to redirect back at the end of oAuth. */
+  login: (redirectBack?: string) => Promise<Response>;
+  /** On successful login, the user is redirect back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings. Optional redirectBack path can be pass in to redirect back at the end of oAuth. redirectBack from login will take precedent. */
+  authorize: (redirectBack?: string) => Promise<Response>;
   /** Returns if the user is logged in. It also checks if the access token is expired and refreshes it if needed. */
   isLoggedIn: () => Promise<boolean>;
   /** Returns CustomerAccessToken if the user is logged in. It also run a expirey check and does a token refresh if needed. */
@@ -288,7 +288,7 @@ export function createCustomerClient({
   }
 
   return {
-    login: async () => {
+    login: async (redirectBack?: string) => {
       const loginUrl = new URL(customerAccountUrl + '/auth/oauth/authorize');
 
       const state = await generateState();
@@ -313,6 +313,7 @@ export function createCustomerClient({
         codeVerifier: verifier,
         state,
         nonce,
+        redirectBack,
       });
 
       loginUrl.searchParams.append('code_challenge', challenge);
@@ -362,7 +363,7 @@ export function createCustomerClient({
 
       return fetchCustomerAPI({query, type: 'query', ...options});
     },
-    authorize: async (redirectPath = '/') => {
+    authorize: async (redirectBack = '/') => {
       const code = url.searchParams.get('code');
       const state = url.searchParams.get('state');
 
@@ -444,6 +445,10 @@ export function createCustomerClient({
         origin,
       );
 
+      const redirectBackFromLogin = session.get(
+        CUSTOMER_ACCOUNT_SESSION_KEY,
+      )?.redirectBack;
+
       session.set(CUSTOMER_ACCOUNT_SESSION_KEY, {
         accessToken: customerAccessToken,
         expiresAt:
@@ -452,9 +457,10 @@ export function createCustomerClient({
           ).getTime() + '',
         refreshToken: refresh_token,
         idToken: id_token,
+        redirectBack: undefined,
       });
 
-      return redirect(redirectPath, {
+      return redirect(redirectBackFromLogin || redirectBack, {
         headers: {
           'Set-Cookie': await session.commit(),
         },

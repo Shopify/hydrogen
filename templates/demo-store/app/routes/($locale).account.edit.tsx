@@ -60,7 +60,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
 
   // Double-check current user is logged in.
   // Will throw a logout redirect if not.
-  await getCustomer(context, customerAccessToken);
+  await getCustomer(context);
 
   if (
     formDataHas(formData, 'newPassword') &&
