@@ -252,7 +252,7 @@ export function statusMessage(status: FulfillmentStatus) {
  * Errors can exist in an errors object, or nested in a data field.
  */
 export function assertApiErrors(data: Record<string, any> | null | undefined) {
-  const errorMessage = data?.customerUserErrors?.[0]?.message;
+  const errorMessage = data?.userErrors?.[0]?.message;
   if (errorMessage) {
     throw new Error(errorMessage);
   }

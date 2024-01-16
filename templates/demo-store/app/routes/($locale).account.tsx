@@ -58,7 +58,18 @@ export async function loader({request, context, params}: LoaderFunctionArgs) {
   }
 
   try {
-    const customer = await getCustomer(context);
+    const {data, errors} = await context.customerAccount.query(
+      CUSTOMER_DETAILS_QUERY,
+    );
+
+    /**
+     * If the customer failed to load, we assume their access token is invalid.
+     */
+    if (errors?.length || !data?.customer) {
+      throw await doLogout(context);
+    }
+
+    const customer = data?.customer;
 
     const heading = customer
       ? customer.firstName
@@ -204,21 +215,4 @@ function Orders({orders}: OrderCardsProps) {
       ))}
     </ul>
   );
-}
-
-export async function getCustomer(
-  context: AppLoadContext,
-): Promise<CustomerDetailsFragment> {
-  const {data, errors} = await context.customerAccount.query(
-    CUSTOMER_DETAILS_QUERY,
-  );
-
-  /**
-   * If the customer failed to load, we assume their access token is invalid.
-   */
-  if (errors?.length || !data?.customer) {
-    throw await doLogout(context);
-  }
-
-  return data.customer;
 }

@@ -15,7 +15,7 @@ export function AccountDetails({
         <h3 className="font-bold text-lead">Account Details</h3>
         <div className="lg:p-8 p-6 border border-gray-200 rounded">
           <div className="flex">
-            <h3 className="font-bold text-base flex-1">Profile & Security</h3>
+            <h3 className="font-bold text-base flex-1">Profile</h3>
             <Link
               prefetch="intent"
               className="underline text-sm font-normal"
@@ -31,14 +31,11 @@ export function AccountDetails({
               : 'Add name'}{' '}
           </p>
 
-          <div className="mt-4 text-sm text-primary/50">Contact</div>
-          <p className="mt-1">{phoneNumber?.phoneNumber ?? 'Add mobile'}</p>
+          <div className="mt-4 text-sm text-primary/50">Phone number</div>
+          <p className="mt-1">{phoneNumber?.phoneNumber ?? 'N/A'}</p>
 
           <div className="mt-4 text-sm text-primary/50">Email address</div>
-          <p className="mt-1">{emailAddress?.emailAddress}</p>
-
-          <div className="mt-4 text-sm text-primary/50">Password</div>
-          <p className="mt-1">**************</p>
+          <p className="mt-1">{emailAddress?.emailAddress ?? 'N/A'}</p>
         </div>
       </div>
     </>
