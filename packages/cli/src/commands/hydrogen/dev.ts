@@ -14,7 +14,6 @@ import {
 } from '../../lib/remix-config.js';
 import {createRemixLogger, enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
 import {
-  deprecated,
   commonFlags,
   flagsToCamelObject,
   overrideFlag,
@@ -62,7 +61,6 @@ export default class Dev extends Command {
     }),
     debug: commonFlags.debug,
     'inspector-port': commonFlags.inspectorPort,
-    host: deprecated('--host')(),
     ['env-branch']: commonFlags.envBranch,
     ['disable-version-check']: Flags.boolean({
       description: 'Skip the version check when running `hydrogen dev`',
