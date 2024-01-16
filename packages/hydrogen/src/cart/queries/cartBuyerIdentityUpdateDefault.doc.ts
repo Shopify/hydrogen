@@ -6,7 +6,7 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description:
-    'Creates a function that accepts an object of [CartBuyerIdentityInput](/docs/api/storefront/2023-10/input-objects/CartBuyerIdentityInput) and updates the buyer identity of a cart',
+    'Creates a function that accepts an object of [CartBuyerIdentityInput](/docs/api/storefront/2024-01/input-objects/CartBuyerIdentityInput) and updates the buyer identity of a cart',
   type: 'utility',
   defaultExample: {
     description: 'This is the default example',

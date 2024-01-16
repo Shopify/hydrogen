@@ -122,29 +122,29 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
   >;
   /** The cache instance passed in from the `createStorefrontClient` argument. */
   cache?: Cache;
-  /** Re-export of [`CacheNone`](/docs/api/hydrogen/2023-10/utilities/cachenone). */
+  /** Re-export of [`CacheNone`](/docs/api/hydrogen/2024-01/utilities/cachenone). */
   CacheNone: typeof CacheNone;
-  /** Re-export of [`CacheLong`](/docs/api/hydrogen/2023-10/utilities/cachelong). */
+  /** Re-export of [`CacheLong`](/docs/api/hydrogen/2024-01/utilities/cachelong). */
   CacheLong: typeof CacheLong;
-  /** Re-export of [`CacheShort`](/docs/api/hydrogen/2023-10/utilities/cacheshort). */
+  /** Re-export of [`CacheShort`](/docs/api/hydrogen/2024-01/utilities/cacheshort). */
   CacheShort: typeof CacheShort;
-  /** Re-export of [`CacheCustom`](/docs/api/hydrogen/2023-10/utilities/cachecustom). */
+  /** Re-export of [`CacheCustom`](/docs/api/hydrogen/2024-01/utilities/cachecustom). */
   CacheCustom: typeof CacheCustom;
-  /** Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/2023-10/utilities/generatecachecontrolheader). */
+  /** Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/2024-01/utilities/generatecachecontrolheader). */
   generateCacheControlHeader: typeof generateCacheControlHeader;
-  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2023-10/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details. */
+  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2024-01/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details. */
   getPublicTokenHeaders: ReturnType<
     typeof createStorefrontUtilities
   >['getPublicTokenHeaders'];
-  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2023-10/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.*/
+  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2024-01/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.*/
   getPrivateTokenHeaders: ReturnType<
     typeof createStorefrontUtilities
   >['getPrivateTokenHeaders'];
-  /** Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2023-10/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details. */
+  /** Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2024-01/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details. */
   getShopifyDomain: ReturnType<
     typeof createStorefrontUtilities
   >['getShopifyDomain'];
-  /** Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2023-10/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.*/
+  /** Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2024-01/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.*/
   getApiUrl: ReturnType<
     typeof createStorefrontUtilities
   >['getStorefrontApiUrl'];
@@ -204,7 +204,7 @@ export const isStorefrontApiError = (error: any) =>
 const defaultI18n: I18nBase = {language: 'EN', country: 'US'};
 
 /**
- *  This function extends `createStorefrontClient` from [Hydrogen React](/docs/api/hydrogen-react/2023-10/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.
+ *  This function extends `createStorefrontClient` from [Hydrogen React](/docs/api/hydrogen-react/2024-01/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.
  *
  *  Learn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).
  */
