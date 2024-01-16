@@ -8,7 +8,7 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'createStorefrontClient',
       type: 'utilities',
-      url: '/docs/api/hydrogen/2024-01/utilities/createstorefrontclient',
+      url: '/docs/api/hydrogen/current/utilities/createstorefrontclient',
     },
   ],
 

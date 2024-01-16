@@ -8,12 +8,12 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'createContentSecurityPolicy',
       type: 'utilities',
-      url: '/docs/api/hydrogen/2024-01/utilities/createcontentsecuritypolicy',
+      url: '/docs/api/hydrogen/current/utilities/createcontentsecuritypolicy',
     },
     {
       name: 'Script',
       type: 'components',
-      url: '/docs/api/hydrogen/2024-01/components/script',
+      url: '/docs/api/hydrogen/current/components/script',
     },
   ],
   description: `The \`useNonce\` hook returns the [content security policy](/docs/custom-storefronts/hydrogen/content-security-policy) nonce. Use the hook to manually add a nonce to third party scripts. The \`Script\` component automatically does this for you. Note, the nonce should never be available in the client, and should always return undefined in the browser.`,

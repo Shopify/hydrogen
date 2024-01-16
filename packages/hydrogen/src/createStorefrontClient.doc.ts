@@ -8,27 +8,27 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'CacheNone',
       type: 'utilities',
-      url: '/docs/api/hydrogen/2024-01/utilities/cachenone',
+      url: '/docs/api/hydrogen/current/utilities/cachenone',
     },
     {
       name: 'CacheShort',
       type: 'utilities',
-      url: '/docs/api/hydrogen/2024-01/utilities/cacheshort',
+      url: '/docs/api/hydrogen/current/utilities/cacheshort',
     },
     {
       name: 'CacheLong',
       type: 'utilities',
-      url: '/docs/api/hydrogen/2024-01/utilities/cachelong',
+      url: '/docs/api/hydrogen/current/utilities/cachelong',
     },
     {
       name: 'CacheCustom',
       type: 'utilities',
-      url: '/docs/api/hydrogen/2024-01/utilities/cachecustom',
+      url: '/docs/api/hydrogen/current/utilities/cachecustom',
     },
     {
       name: 'InMemoryCache',
       type: 'utilities',
-      url: '/docs/api/hydrogen/2024-01/utilities/inmemorycache',
+      url: '/docs/api/hydrogen/current/utilities/inmemorycache',
     },
   ],
   description: `This function extends \`createStorefrontClient\` from [Hydrogen React](/docs/api/hydrogen-react/2024-01/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.
