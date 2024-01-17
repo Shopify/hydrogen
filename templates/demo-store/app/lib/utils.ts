@@ -2,16 +2,16 @@ import {useLocation, useMatches} from '@remix-run/react';
 import type {MoneyV2} from '@shopify/hydrogen/storefront-api-types';
 import type {FulfillmentStatus} from '@shopify/hydrogen/customer-account-api-types';
 import typographicBase from 'typographic-base';
+
 import type {
   ChildMenuItemFragment,
   MenuFragment,
   ParentMenuItemFragment,
 } from 'storefrontapi.generated';
-
-import type {I18nLocale} from './type';
-
 import {useRootLoaderData} from '~/root';
 import {countries} from '~/data/countries';
+
+import type {I18nLocale} from './type';
 
 type EnhancedMenuItemProps = {
   to: string;

@@ -11,11 +11,11 @@ import type {
 } from '@shopify/hydrogen/customer-account-api-types';
 import invariant from 'tiny-invariant';
 
-import {doLogout} from './($locale).account_.logout';
-
 import {Button, Text} from '~/components';
 import {getInputStyleClasses} from '~/lib/utils';
 import {CUSTOMER_UPDATE_MUTATION} from '~/graphql/customer-account/CustomerUpdateMutation';
+
+import {doLogout} from './($locale).account_.logout';
 
 export interface AccountOutletContext {
   customer: Customer;

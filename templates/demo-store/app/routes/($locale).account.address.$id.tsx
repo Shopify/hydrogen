@@ -15,9 +15,6 @@ import {flattenConnection} from '@shopify/hydrogen';
 import type {CustomerAddressInput} from '@shopify/hydrogen/customer-account-api-types';
 import invariant from 'tiny-invariant';
 
-import type {AccountOutletContext} from './($locale).account.edit';
-import {doLogout} from './($locale).account_.logout';
-
 import {Button, Text} from '~/components';
 import {getInputStyleClasses} from '~/lib/utils';
 import {
@@ -25,6 +22,9 @@ import {
   DELETE_ADDRESS_MUTATION,
   CREATE_ADDRESS_MUTATION,
 } from '~/graphql/customer-account/CustomerAddressMutations';
+
+import {doLogout} from './($locale).account_.logout';
+import type {AccountOutletContext} from './($locale).account.edit';
 
 interface ActionData {
   formError?: string;

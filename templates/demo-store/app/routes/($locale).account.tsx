@@ -14,17 +14,11 @@ import {
   type AppLoadContext,
 } from '@shopify/remix-oxygen';
 import {flattenConnection} from '@shopify/hydrogen';
+
 import type {
   CustomerDetailsFragment,
   OrderCardFragment,
 } from 'customer-accountapi.generated';
-
-import {
-  getFeaturedData,
-  type FeaturedData,
-} from './($locale).featured-products';
-import {doLogout} from './($locale).account_.logout';
-
 import {
   Button,
   OrderCard,
@@ -39,6 +33,12 @@ import {FeaturedCollections} from '~/components/FeaturedCollections';
 import {usePrefixPathWithLocale} from '~/lib/utils';
 import {CACHE_NONE, routeHeaders} from '~/data/cache';
 import {CUSTOMER_DETAILS_QUERY} from '~/graphql/customer-account/CustomerDetailsQuery';
+
+import {doLogout} from './($locale).account_.logout';
+import {
+  getFeaturedData,
+  type FeaturedData,
+} from './($locale).featured-products';
 
 export const headers = routeHeaders;
 

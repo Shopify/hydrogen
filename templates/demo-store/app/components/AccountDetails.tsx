@@ -1,5 +1,4 @@
 import type {CustomerDetailsFragment} from 'customer-accountapi.generated';
-
 import {Link} from '~/components';
 
 export function AccountDetails({

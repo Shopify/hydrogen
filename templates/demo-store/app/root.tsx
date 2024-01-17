@@ -21,6 +21,9 @@ import {
 import {ShopifySalesChannel, Seo, useNonce} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 
+import {Layout} from '~/components';
+import {seoPayload} from '~/lib/seo.server';
+
 import favicon from '../public/favicon.svg';
 
 import {GenericError} from './components/GenericError';
@@ -28,9 +31,6 @@ import {NotFound} from './components/NotFound';
 import styles from './styles/app.css';
 import {DEFAULT_LOCALE, parseMenu} from './lib/utils';
 import {useAnalytics} from './hooks/useAnalytics';
-
-import {Layout} from '~/components';
-import {seoPayload} from '~/lib/seo.server';
 
 // This is important to avoid re-fetching root queries on sub-navigations
 export const shouldRevalidate: ShouldRevalidateFunction = ({
