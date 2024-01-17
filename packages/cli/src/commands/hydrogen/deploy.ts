@@ -267,14 +267,14 @@ export async function oxygenDeploy(
   if (!isCI && !environmentTag && deploymentData?.environments) {
     if (deploymentData.environments.length > 1) {
       const choices = [
-        ...deploymentData.environments.map(({name, branch}) => ({
+        ...deploymentData.environments.map(({name, branch, type}) => ({
           label: name,
           // The preview environment will never have an associated branch so
           // we're using a custom string here to identify it later in our code.
           // Using a period at the end of the value is an invalid branch name
           // in Git so we can be sure that this won't conflict with a merchant's
           // repository.
-          value: name === 'Preview' ? 'shopify-preview-environment.' : branch,
+          value: type === 'PREVIEW' ? 'shopify-preview-environment.' : branch,
         })),
       ];
 

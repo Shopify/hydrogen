@@ -291,8 +291,8 @@ describe('deploy', () => {
     vi.mocked(getOxygenDeploymentData).mockResolvedValue({
       oxygenDeploymentToken: 'some-encoded-token',
       environments: [
-        {name: 'Production', branch: 'main'},
-        {name: 'Preview', branch: null},
+        {name: 'Production', branch: 'main', type: 'PRODUCTION'},
+        {name: 'Preview', branch: null, type: 'PREVIEW'},
       ],
     });
 

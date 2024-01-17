@@ -7,6 +7,7 @@ export const GetDeploymentDataQuery = `#graphql
       environments {
         name
         branch
+        type
       }
     }
   }
@@ -17,6 +18,7 @@ export interface OxygenDeploymentData {
   environments: Array<{
     name: string;
     branch: string | null;
+    type: 'PREVIEW' | 'CUSTOM' | 'PRODUCTION';
   }> | null;
 }
 
