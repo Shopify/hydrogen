@@ -12,7 +12,7 @@ import {Cart} from '~/components';
 import {useRootLoaderData} from '~/root';
 
 export async function action({request, context}: ActionFunctionArgs) {
-  const {session, cart} = context;
+  const {session, cart, storefront} = context;
 
   const [formData, customerAccessToken] = await Promise.all([
     request.formData(),
@@ -25,15 +25,28 @@ export async function action({request, context}: ActionFunctionArgs) {
   let status = 200;
   let result: CartQueryData;
 
+  const ensureBuyerIdentityFix = async (previousResult: any) => {
+    await cart.updateBuyerIdentity({
+      countryCode: storefront.i18n.country,
+      customerAccessToken,
+    });
+
+    return previousResult;
+  };
+
   switch (action) {
     case CartForm.ACTIONS.LinesAdd:
-      result = await cart.addLines(inputs.lines);
+      result = await cart.addLines(inputs.lines).then(ensureBuyerIdentityFix);
       break;
     case CartForm.ACTIONS.LinesUpdate:
-      result = await cart.updateLines(inputs.lines);
+      result = await cart
+        .updateLines(inputs.lines)
+        .then(ensureBuyerIdentityFix);
       break;
     case CartForm.ACTIONS.LinesRemove:
-      result = await cart.removeLines(inputs.lineIds);
+      result = await cart
+        .removeLines(inputs.lineIds)
+        .then(ensureBuyerIdentityFix);
       break;
     case CartForm.ACTIONS.DiscountCodesUpdate:
       const formDiscountCode = inputs.discountCode;
@@ -46,7 +59,9 @@ export async function action({request, context}: ActionFunctionArgs) {
       // Combine discount codes already applied on cart
       discountCodes.push(...inputs.discountCodes);
 
-      result = await cart.updateDiscountCodes(discountCodes);
+      result = await cart
+        .updateDiscountCodes(discountCodes)
+        .then(ensureBuyerIdentityFix);
       break;
     case CartForm.ACTIONS.BuyerIdentityUpdate:
       result = await cart.updateBuyerIdentity({

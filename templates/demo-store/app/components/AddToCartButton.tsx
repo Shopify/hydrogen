@@ -11,6 +11,7 @@ import {useEffect} from 'react';
 
 import {Button} from '~/components';
 import {usePageAnalytics} from '~/hooks/usePageAnalytics';
+import {useRootLoaderData} from '~/root';
 
 export function AddToCartButton({
   children,
@@ -31,9 +32,11 @@ export function AddToCartButton({
   analytics?: unknown;
   [key: string]: any;
 }) {
+  const pathPrefix = useRootLoaderData()?.selectedLocale.pathPrefix ?? '';
+
   return (
     <CartForm
-      route="/cart"
+      route={pathPrefix + '/cart'}
       inputs={{
         lines,
       }}

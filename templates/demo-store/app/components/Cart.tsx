@@ -25,6 +25,7 @@ import {
   FeaturedProducts,
 } from '~/components';
 import {getInputStyleClasses} from '~/lib/utils';
+import {useRootLoaderData} from '~/root';
 
 type Layouts = 'page' | 'drawer';
 
@@ -139,9 +140,11 @@ function UpdateDiscountForm({
   discountCodes?: string[];
   children: React.ReactNode;
 }) {
+  const pathPrefix = useRootLoaderData()?.selectedLocale.pathPrefix ?? '';
+
   return (
     <CartForm
-      route="/cart"
+      route={pathPrefix + '/cart'}
       action={CartForm.ACTIONS.DiscountCodesUpdate}
       inputs={{
         discountCodes: discountCodes || [],
@@ -308,9 +311,11 @@ function CartLineItem({line}: {line: CartLine}) {
 }
 
 function ItemRemoveButton({lineId}: {lineId: CartLine['id']}) {
+  const pathPrefix = useRootLoaderData()?.selectedLocale.pathPrefix ?? '';
+
   return (
     <CartForm
-      route="/cart"
+      route={pathPrefix + '/cart'}
       action={CartForm.ACTIONS.LinesRemove}
       inputs={{
         lineIds: [lineId],
@@ -392,9 +397,11 @@ function UpdateCartButton({
   children: React.ReactNode;
   lines: CartLineUpdateInput[];
 }) {
+  const pathPrefix = useRootLoaderData()?.selectedLocale.pathPrefix ?? '';
+
   return (
     <CartForm
-      route="/cart"
+      route={pathPrefix + '/cart'}
       action={CartForm.ACTIONS.LinesUpdate}
       inputs={{
         lines,
