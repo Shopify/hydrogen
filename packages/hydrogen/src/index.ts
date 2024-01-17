@@ -48,7 +48,8 @@ export {
 } from './cart/createCartHandler';
 export type {
   MetafieldWithoutOwnerId,
-  CartQueryData,
+  CartReturn,
+  CartQueryDataReturn,
   CartQueryOptions,
   CartQueryReturn,
 } from './cart/queries/cart-types';

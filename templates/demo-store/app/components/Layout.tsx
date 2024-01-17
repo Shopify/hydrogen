@@ -290,6 +290,12 @@ function DesktopHeader({
               {item.title}
             </Link>
           ))}
+          <Link
+            key="network-error"
+            to="/network-error"
+          >
+            Network Error
+          </Link>
         </nav>
       </div>
       <div className="flex items-center gap-1">

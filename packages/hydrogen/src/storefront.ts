@@ -53,7 +53,10 @@ export type I18nBase = {
   country: CountryCode;
 };
 
-export type StorefrontApiErrors = unknown[]
+export type StorefrontApiErrors = unknown[];
+export type StorefrontError = {
+  errors?: StorefrontApiErrors;
+}
 
 /**
  * Wraps all the returned utilities from `createStorefrontClient`.
@@ -86,6 +89,7 @@ type AutoAddedVariableNames = 'country' | 'language';
 type StorefrontCommonExtraParams = {
   headers?: HeadersInit;
   storefrontApiVersion?: string;
+  displayName?: string;
 };
 
 /**
@@ -187,16 +191,12 @@ type StorefrontQueryOptions = StorefrontCommonExtraParams & {
   query: string;
   mutation?: never;
   cache?: CachingStrategy;
-  /** The name to be shown in the Subrequest Profiler */
-  displayName?: string;
 };
 
 type StorefrontMutationOptions = StorefrontCommonExtraParams & {
   query?: never;
   mutation: string;
   cache?: never;
-  /** The name to be shown in the Subrequest Profiler */
-  displayName?: string;
 };
 
 export const StorefrontApiError = class extends Error {} as ErrorConstructor;
@@ -283,7 +283,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
   }: {variables?: GenericVariables} & (
     | StorefrontQueryOptions
     | StorefrontMutationOptions
-  )): Promise<T> {
+  )): Promise<T & {error: StorefrontError}> {
     const userHeaders =
       headers instanceof Headers
         ? Object.fromEntries(headers.entries())
@@ -370,7 +370,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
     const {data, errors} = body as GraphQLApiResponse<T>;
 
-    return {...data, errors} as T & {errors?: StorefrontApiErrors};
+    return {...data, error: {errors}} as T & {error: StorefrontError};
   }
 
   return {

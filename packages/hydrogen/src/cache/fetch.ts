@@ -271,11 +271,7 @@ export async function fetchWithServerCache(
           data = await response.text();
         } catch {
           // Getting a response without a valid body
-          throw new Error(
-            `Storefront API response code: ${
-              response.status
-            } (Request Id: ${response.headers.get('x-request-id')})`,
-          );
+          return toSerializableResponse('', response);
         }
       }
 

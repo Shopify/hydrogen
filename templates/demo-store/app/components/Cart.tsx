@@ -8,6 +8,7 @@ import {
   Money,
   useOptimisticData,
   OptimisticInput,
+  CartReturn,
 } from '@shopify/hydrogen';
 import type {
   Cart as CartType,
@@ -35,8 +36,9 @@ export function Cart({
 }: {
   layout: Layouts;
   onClose?: () => void;
-  cart: CartType | null;
+  cart: CartReturn | null;
 }) {
+  console.log(cart);
   const linesCount = Boolean(cart?.lines?.edges?.length || 0);
 
   return (

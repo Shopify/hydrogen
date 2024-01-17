@@ -1,8 +1,12 @@
-import { StorefrontApiErrors } from '../../storefront';
+import { StorefrontApiErrors, StorefrontError } from '../../storefront';
 import {MINIMAL_CART_FRAGMENT, USER_ERROR_FRAGMENT} from './cart-fragments';
+import { formatError } from './cart-helper';
 import type {
+  CartErrors,
   CartOptionalInput,
   CartQueryData,
+  CartQueryDataReturn,
+  CartQueryDataReturnError,
   CartQueryOptions,
 } from './cart-types';
 import type {CartLineInput} from '@shopify/hydrogen-react/storefront-api-types';
@@ -10,15 +14,15 @@ import type {CartLineInput} from '@shopify/hydrogen-react/storefront-api-types';
 export type CartLinesAddFunction = (
   lines: CartLineInput[],
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryData>;
+) => Promise<CartQueryDataReturn>;
 
 export function cartLinesAddDefault(
   options: CartQueryOptions,
 ): CartLinesAddFunction {
   return async (lines, optionalParams) => {
-    const {cartLinesAdd, errors} = await options.storefront.mutate<{
+    const data = await options.storefront.mutate<{
       cartLinesAdd: CartQueryData;
-      errors: StorefrontApiErrors;
+      error: StorefrontError;
     }>(CART_LINES_ADD_MUTATION(options.cartFragment), {
       variables: {
         cartId: options.getCartId(),
@@ -26,7 +30,8 @@ export function cartLinesAddDefault(
         ...optionalParams,
       },
     });
-    return {...cartLinesAdd, errors};
+
+    return formatError(data.cartLinesAdd, data.error);
   };
 }
 

@@ -45,17 +45,33 @@ export type CartQueryOptions = {
   cartFragment?: string;
 };
 
-export type CartErrors = {
-  errors?:  StorefrontApiErrors;
+export type CartReturn = Cart & {
+  error?: {
+    errors?: StorefrontApiErrors;
+  }
+};
+
+export type CartUserErrors = {
   userErrors?:
     | CartUserError[]
     | MetafieldsSetUserError[]
     | MetafieldDeleteUserError[];
 };
 
+export type CartErrors = CartUserErrors & {
+  errors?:  StorefrontApiErrors;
+};
+
 export type CartQueryData = {
   cart: Cart;
-} & CartErrors;
+} & CartUserErrors;
+
+export type CartQueryDataReturnError = CartErrors | undefined;
+
+export type CartQueryDataReturn = {
+  cart: Cart;
+  error?: CartQueryDataReturnError;
+};
 
 export type CartQueryReturn<T> = (
   requiredParams: T,
