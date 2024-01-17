@@ -114,7 +114,7 @@ type CustomerClientOptions = {
   session: HydrogenSession;
   /** Unique UUID prefixed with `shp_` associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountId. Use h2 env pull to link your store credentials. */
   customerAccountId: string;
-  /** The account URL associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. mock.shop doesn't automatically supply customerAccountUrl. Use h2 env pull to link your store credentials. */
+  /** The account URL associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountUrl. Use h2 env pull to link your store credentials. */
   customerAccountUrl: string;
   /** Override the version of the API */
   customerApiVersion?: string;
