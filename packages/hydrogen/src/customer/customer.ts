@@ -122,7 +122,7 @@ type CustomerClientOptions = {
   request: CrossRuntimeRequest;
   /** The waitUntil function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
   waitUntil?: ExecutionContext['waitUntil'];
-  /** This is the url where the auth method should live in the loader. Can be a full url or start with / for relative url. Default is `/authorize` if not provided. */
+  /** This is the route in your app that authorizes the user after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/authorize`. */
   authUrl?: string;
 };
 
