@@ -365,7 +365,16 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         errors = [{message: body}];
       }
 
-      throwGraphQLError({...errorOptions, errors});
+      // throwGraphQLError({...errorOptions, errors});
+      return {error: {
+        response: {
+          status: response.status,
+          url,
+          statusText: response.statusText,
+          headers: Array.from(response.headers.entries()),
+        },
+        errors,
+      }} as T & {error: StorefrontError};
     }
 
     const {data, errors} = body as GraphQLApiResponse<T>;

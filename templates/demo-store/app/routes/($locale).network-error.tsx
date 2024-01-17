@@ -1,3 +1,4 @@
+import { useLoaderData } from '@remix-run/react';
 import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 
 export async function loader ({
@@ -12,6 +13,8 @@ export async function loader ({
 }
 
 export default function NetworkError() {
+  const data = useLoaderData<typeof loader>();
+  console.log('data', data);
   return (<p>Don't expect to reach here</p>)
 }
 
