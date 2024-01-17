@@ -248,16 +248,6 @@ export function statusMessage(status: FulfillmentStatus) {
   }
 }
 
-/**
- * Errors can exist in an errors object, or nested in a data field.
- */
-export function assertApiErrors(data: Record<string, any> | null | undefined) {
-  const errorMessage = data?.userErrors?.[0]?.message;
-  if (errorMessage) {
-    throw new Error(errorMessage);
-  }
-}
-
 export const DEFAULT_LOCALE: I18nLocale = Object.freeze({
   ...countries.default,
   pathPrefix: '',

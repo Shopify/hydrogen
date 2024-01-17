@@ -8,12 +8,13 @@ import {
 import type {
   Customer,
   CustomerUpdateInput,
-} from '@shopify/hydrogen/storefront-api-types';
+} from '@shopify/hydrogen/customer-account-api-types';
+import invariant from 'tiny-invariant';
 
 import {doLogout} from './($locale).account_.logout';
 
 import {Button, Text} from '~/components';
-import {getInputStyleClasses, assertApiErrors} from '~/lib/utils';
+import {getInputStyleClasses} from '~/lib/utils';
 import {CUSTOMER_UPDATE_MUTATION} from '~/graphql/customer-account/CustomerUpdateMutation';
 
 export interface AccountOutletContext {
@@ -34,8 +35,6 @@ export interface ActionData {
   };
 }
 
-const badRequest = (data: ActionData) => json(data, {status: 400});
-
 const formDataHas = (formData: FormData, key: string) => {
   if (!formData.has(key)) return false;
 
@@ -48,7 +47,6 @@ export const handle = {
 };
 
 export const action: ActionFunction = async ({request, context, params}) => {
-  const locale = params.locale;
   const formData = await request.formData();
 
   // Double-check current user is logged in.
@@ -74,11 +72,12 @@ export const action: ActionFunction = async ({request, context, params}) => {
       },
     );
 
-    if (errors?.length) {
-      throw new Error(errors[0].message);
-    }
+    invariant(!errors?.length, errors?.[0]?.message);
 
-    assertApiErrors(data.customerUpdate);
+    invariant(
+      !data?.customerUpdate?.userErrors?.length,
+      data?.customerUpdate?.userErrors?.[0]?.message,
+    );
 
     return redirect(params?.locale ? `${params.locale}/account` : '/account', {
       headers: {
@@ -87,7 +86,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
     });
   } catch (error: any) {
     return json(
-      {formError: error.message},
+      {formError: error?.message},
       {
         status: 400,
         headers: {
