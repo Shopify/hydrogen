@@ -122,7 +122,7 @@ type CustomerClientOptions = {
   request: CrossRuntimeRequest;
   /** The waitUntil function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
   waitUntil?: ExecutionContext['waitUntil'];
-  /** This is the route in your app that authorizes the user after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/authorize`. */
+  /** This is the route in your app that authorizes the user after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/account/authorize`. */
   authUrl?: string;
 };
 
@@ -133,7 +133,7 @@ export function createCustomerClient({
   customerApiVersion = DEFAULT_CUSTOMER_API_VERSION,
   request,
   waitUntil,
-  authUrl = '/authorize',
+  authUrl = '/account/authorize',
 }: CustomerClientOptions): CustomerClient {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.log(
