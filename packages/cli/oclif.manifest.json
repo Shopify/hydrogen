@@ -178,13 +178,6 @@
           "description": "Shop URL. It can be the shop prefix (janes-apparel) or the full myshopify.com URL (janes-apparel.myshopify.com, https://janes-apparel.myshopify.com).",
           "multiple": false
         },
-        "public-deployment": {
-          "name": "public-deployment",
-          "type": "boolean",
-          "description": "Marks a preview deployment as publicly accessible.",
-          "required": false,
-          "allowNo": false
-        },
         "no-json-output": {
           "name": "no-json-output",
           "type": "boolean",

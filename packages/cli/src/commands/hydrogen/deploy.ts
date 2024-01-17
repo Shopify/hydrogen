@@ -70,12 +70,6 @@ export default class Deploy extends Command {
     }),
     path: commonFlags.path,
     shop: commonFlags.shop,
-    'public-deployment': Flags.boolean({
-      env: 'SHOPIFY_HYDROGEN_FLAG_PUBLIC_DEPLOYMENT',
-      description: 'Marks a preview deployment as publicly accessible.',
-      required: false,
-      default: false,
-    }),
     'no-json-output': Flags.boolean({
       description:
         'Prevents the command from creating a JSON file containing the deployment URL in CI environments.',
@@ -148,7 +142,6 @@ interface OxygenDeploymentOptions {
   force: boolean;
   noJsonOutput: boolean;
   path: string;
-  publicDeployment: boolean;
   shop: string;
   token?: string;
   metadataDescription?: string;
@@ -191,7 +184,6 @@ export async function oxygenDeploy(
     noJsonOutput,
     path,
     shop,
-    publicDeployment,
     metadataUrl,
     metadataUser,
     metadataVersion,
@@ -315,7 +307,6 @@ export async function oxygenDeploy(
       ...(metadataUser ? {user: metadataUser} : {}),
       ...(metadataVersion ? {version: metadataVersion} : {}),
     },
-    publicDeployment: publicDeployment,
     skipVerification: false,
     rootPath: path,
     skipBuild: false,
@@ -414,8 +405,6 @@ export async function oxygenDeploy(
         return;
       }
 
-      const deploymentType = config.publicDeployment ? 'public' : 'private';
-
       const nextSteps: (
         | string
         | {subdued: string}
@@ -424,7 +413,7 @@ export async function oxygenDeploy(
         [
           'Open',
           {link: {url: completedDeployment!.url}},
-          `in your browser to view your ${deploymentType} deployment.`,
+          `in your browser to view your deployment.`,
         ],
       ];
       if (completedDeployment?.authBypassToken) {
