@@ -4,11 +4,14 @@ import type {HeaderQuery} from 'storefrontapi.generated';
 import type {LayoutProps} from './Layout';
 import {useRootLoaderData} from '~/root';
 
-type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedInPromise'>;
+type HeaderProps = Pick<
+  LayoutProps,
+  'header' | 'cartPromise' | 'isLoggedInPromise'
+>;
 
 type Viewport = 'desktop' | 'mobile';
 
-export function Header({header, isLoggedInPromise, cart}: HeaderProps) {
+export function Header({header, isLoggedInPromise, cartPromise}: HeaderProps) {
   const {shop, menu} = header;
   return (
     <header className="header">
@@ -20,7 +23,10 @@ export function Header({header, isLoggedInPromise, cart}: HeaderProps) {
         viewport="desktop"
         primaryDomainUrl={header.shop.primaryDomain.url}
       />
-      <HeaderCtas isLoggedInPromise={isLoggedInPromise} cart={cart} />
+      <HeaderCtas
+        isLoggedInPromise={isLoggedInPromise}
+        cartPromise={cartPromise}
+      />
     </header>
   );
 }
@@ -87,8 +93,8 @@ export function HeaderMenu({
 
 function HeaderCtas({
   isLoggedInPromise,
-  cart,
-}: Pick<HeaderProps, 'isLoggedInPromise' | 'cart'>) {
+  cartPromise,
+}: Pick<HeaderProps, 'isLoggedInPromise' | 'cartPromise'>) {
   return (
     <nav className="header-ctas" role="navigation">
       <HeaderMenuMobileToggle />
@@ -100,7 +106,7 @@ function HeaderCtas({
         </Suspense>
       </NavLink>
       <SearchToggle />
-      <CartToggle cart={cart} />
+      <CartToggle cartPromise={cartPromise} />
     </nav>
   );
 }
@@ -121,10 +127,10 @@ function CartBadge({count}: {count: number}) {
   return <a href="#cart-aside">Cart {count}</a>;
 }
 
-function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
+function CartToggle({cartPromise}: Pick<HeaderProps, 'cartPromise'>) {
   return (
     <Suspense fallback={<CartBadge count={0} />}>
-      <Await resolve={cart}>
+      <Await resolve={cartPromise}>
         {(cart) => {
           if (!cart) return <CartBadge count={0} />;
           return <CartBadge count={cart.totalQuantity || 0} />;

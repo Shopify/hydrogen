@@ -108,7 +108,7 @@ export default function CartRoute() {
   // @todo: finish on a separate PR
   return (
     <div className="grid w-full gap-8 p-6 py-8 md:p-8 lg:p-12 justify-items-start">
-      <Await resolve={rootData?.cart}>
+      <Await resolve={rootData?.cartPromise}>
         {(cart) => <Cart layout="page" cart={cart} />}
       </Await>
     </div>

@@ -83,7 +83,7 @@ export async function loader({request, context}: LoaderFunctionArgs) {
       isLoggedInPromise,
       layout,
       selectedLocale: storefront.i18n,
-      cart: cart.get(),
+      cartPromise: cart.get(),
       analytics: {
         shopifySalesChannel: ShopifySalesChannel.hydrogen,
         shopId: layout.shop.id,

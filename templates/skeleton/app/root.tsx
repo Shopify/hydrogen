@@ -94,8 +94,8 @@ export async function loader({context}: LoaderFunctionArgs) {
 
   return defer(
     {
-      cart: cartPromise,
-      footer: footerPromise,
+      cartPromise,
+      footerPromise,
       header: await headerPromise,
       isLoggedInPromise,
       publicStoreDomain,

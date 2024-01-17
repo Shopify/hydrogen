@@ -101,7 +101,7 @@ export async function action({request, context}: ActionFunctionArgs) {
 
 export default function Cart() {
   const rootData = useRootLoaderData();
-  const cartPromise = rootData.cart;
+  const cartPromise = rootData.cartPromise;
 
   return (
     <div className="cart">

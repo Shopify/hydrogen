@@ -114,7 +114,7 @@ function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
     <Drawer open={isOpen} onClose={onClose} heading="Cart" openFrom="right">
       <div className="grid">
         <Suspense fallback={<CartLoading />}>
-          <Await resolve={rootData?.cart}>
+          <Await resolve={rootData?.cartPromise}>
             {(cart) => <Cart layout="drawer" onClose={onClose} cart={cart} />}
           </Await>
         </Suspense>
@@ -348,7 +348,7 @@ function CartCount({
 
   return (
     <Suspense fallback={<Badge count={0} dark={isHome} openCart={openCart} />}>
-      <Await resolve={rootData?.cart}>
+      <Await resolve={rootData?.cartPromise}>
         {(cart) => (
           <Badge
             dark={isHome}
