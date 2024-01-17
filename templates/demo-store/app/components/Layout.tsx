@@ -324,16 +324,15 @@ function DesktopHeader({
 }
 
 function AccountLink({className}: {className?: string}) {
-  const rootData = useRootLoaderData();
-  const isLoggedIn = rootData?.isLoggedIn;
+  const {isLoggedInPromise} = useRootLoaderData();
 
-  return isLoggedIn ? (
+  return (
     <Link to="/account" className={className}>
-      <IconAccount />
-    </Link>
-  ) : (
-    <Link to="/account/login" className={className}>
-      <IconLogin />
+      <Suspense fallback={<IconLogin />}>
+        <Await resolve={isLoggedInPromise}>
+          {(isLoggedIn) => (isLoggedIn ? <IconAccount /> : <IconLogin />)}
+        </Await>
+      </Suspense>
     </Link>
   );
 }
