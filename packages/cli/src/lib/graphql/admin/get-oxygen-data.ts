@@ -16,7 +16,7 @@ export interface OxygenDeploymentData {
   oxygenDeploymentToken: string;
   environments: Array<{
     name: string;
-    branch: string;
+    branch: string | null;
   }> | null;
 }
 

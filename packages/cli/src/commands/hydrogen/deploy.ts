@@ -211,10 +211,10 @@ export async function oxygenDeploy(
 
   const isCI = ciPlatform().isCI;
   let token = options.token;
-  let branch: string | undefined;
+  let branch: string | undefined | null;
   let commitHash: string | undefined;
   let deploymentData: OxygenDeploymentData | undefined;
-  let deploymentEnvironmentTag: string | undefined = undefined;
+  let deploymentEnvironmentTag: string | undefined | null = undefined;
   let gitCommit: GitCommit;
 
   try {
@@ -269,7 +269,12 @@ export async function oxygenDeploy(
       const choices = [
         ...deploymentData.environments.map(({name, branch}) => ({
           label: name,
-          value: branch,
+          // The preview environment will never have an associated branch so
+          // we're using a custom string here to identify it later in our code.
+          // Using a period at the end of the value is an invalid branch name
+          // in Git so we can be sure that this won't conflict with a merchant's
+          // repository.
+          value: name === 'Preview' ? 'shopify-preview-environment.' : branch,
         })),
       ];
 

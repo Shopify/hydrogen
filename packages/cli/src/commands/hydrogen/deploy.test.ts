@@ -291,8 +291,8 @@ describe('deploy', () => {
     vi.mocked(getOxygenDeploymentData).mockResolvedValue({
       oxygenDeploymentToken: 'some-encoded-token',
       environments: [
-        {name: 'production', branch: 'main'},
-        {name: 'preview', branch: 'staging'},
+        {name: 'Production', branch: 'main'},
+        {name: 'Preview', branch: null},
       ],
     });
 
@@ -301,8 +301,8 @@ describe('deploy', () => {
     expect(vi.mocked(renderSelectPrompt)).toHaveBeenCalledWith({
       message: 'Select an environment to deploy to',
       choices: [
-        {label: 'production', value: 'main'},
-        {label: 'preview', value: 'staging'},
+        {label: 'Production', value: 'main'},
+        {label: 'Preview', value: 'shopify-preview-environment.'},
       ],
     });
   });
