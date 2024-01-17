@@ -1,3 +1,4 @@
+import { StorefrontApiErrors } from '../../storefront';
 import {MINIMAL_CART_FRAGMENT, USER_ERROR_FRAGMENT} from './cart-fragments';
 import type {
   CartOptionalInput,
@@ -15,8 +16,9 @@ export function cartLinesAddDefault(
   options: CartQueryOptions,
 ): CartLinesAddFunction {
   return async (lines, optionalParams) => {
-    const {cartLinesAdd} = await options.storefront.mutate<{
+    const {cartLinesAdd, errors} = await options.storefront.mutate<{
       cartLinesAdd: CartQueryData;
+      errors: StorefrontApiErrors;
     }>(CART_LINES_ADD_MUTATION(options.cartFragment), {
       variables: {
         cartId: options.getCartId(),
@@ -24,7 +26,7 @@ export function cartLinesAddDefault(
         ...optionalParams,
       },
     });
-    return cartLinesAdd;
+    return {...cartLinesAdd, errors};
   };
 }
 
@@ -42,7 +44,7 @@ export const CART_LINES_ADD_MUTATION = (
       cart {
         ...CartApiMutation
       }
-      errors: userErrors {
+      userErrors {
         ...CartApiError
       }
     }

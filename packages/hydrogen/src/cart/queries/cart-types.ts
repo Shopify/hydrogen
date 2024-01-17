@@ -8,7 +8,7 @@ import type {
   MetafieldsSetUserError,
   MetafieldDeleteUserError,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {type Storefront} from '../../storefront';
+import type {StorefrontApiErrors, Storefront} from '../../storefront';
 
 export type CartOptionalInput = {
   /**
@@ -45,13 +45,17 @@ export type CartQueryOptions = {
   cartFragment?: string;
 };
 
-export type CartQueryData = {
-  cart: Cart;
-  errors?:
+export type CartErrors = {
+  errors?:  StorefrontApiErrors;
+  userErrors?:
     | CartUserError[]
     | MetafieldsSetUserError[]
     | MetafieldDeleteUserError[];
 };
+
+export type CartQueryData = {
+  cart: Cart;
+} & CartErrors;
 
 export type CartQueryReturn<T> = (
   requiredParams: T,

@@ -53,6 +53,8 @@ export type I18nBase = {
   country: CountryCode;
 };
 
+export type StorefrontApiErrors = unknown[]
+
 /**
  * Wraps all the returned utilities from `createStorefrontClient`.
  */
@@ -368,15 +370,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
     const {data, errors} = body as GraphQLApiResponse<T>;
 
-    if (errors?.length) {
-      throwGraphQLError({
-        ...errorOptions,
-        errors,
-        ErrorConstructor: StorefrontApiError,
-      });
-    }
-
-    return data as T;
+    return {...data, errors} as T & {errors?: StorefrontApiErrors};
   }
 
   return {

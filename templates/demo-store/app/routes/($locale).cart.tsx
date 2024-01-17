@@ -58,6 +58,8 @@ export async function action({request, context}: ActionFunctionArgs) {
       invariant(false, `${action} cart action is not defined`);
   }
 
+  console.log('result', result);
+
   /**
    * The Cart ID may change after each mutation. We need to update it each time in the session.
    */
