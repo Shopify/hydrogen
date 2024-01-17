@@ -24,9 +24,13 @@ export const meta: MetaFunction = () => {
   return [{title: 'Profile'}];
 };
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader({context, request}: LoaderFunctionArgs) {
   if (!(await context.customerAccount.isLoggedIn())) {
-    return redirect('/account/login');
+    const loginUrl =
+      '/account/login' +
+      `?${new URLSearchParams(`redirectPath=${request.url}`).toString()}`;
+
+    return redirect(loginUrl);
   }
 
   return json(

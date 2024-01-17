@@ -35,13 +35,13 @@ export const meta: MetaFunction = () => {
   return [{title: 'Addresses'}];
 };
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader({context, request}: LoaderFunctionArgs) {
   if (!(await context.customerAccount.isLoggedIn())) {
-    return redirect('/account/login', {
-      headers: {
-        'Set-Cookie': await context.session.commit(),
-      },
-    });
+    const loginUrl =
+      '/account/login' +
+      `?${new URLSearchParams(`redirectPath=${request.url}`).toString()}`;
+
+    return redirect(loginUrl);
   }
 
   return json(

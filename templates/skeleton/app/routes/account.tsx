@@ -8,11 +8,11 @@ export function shouldRevalidate() {
 
 export async function loader({request, context}: LoaderFunctionArgs) {
   if (!(await context.customerAccount.isLoggedIn())) {
-    return redirect('/account/login', {
-      headers: {
-        'Set-Cookie': await context.session.commit(),
-      },
-    });
+    const loginUrl =
+      '/account/login' +
+      `?${new URLSearchParams(`redirectPath=${request.url}`).toString()}`;
+
+    return redirect(loginUrl);
   }
 
   try {

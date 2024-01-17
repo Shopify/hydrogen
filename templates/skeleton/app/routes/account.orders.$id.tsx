@@ -8,17 +8,17 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Order ${data?.order?.name}`}];
 };
 
-export async function loader({params, context}: LoaderFunctionArgs) {
+export async function loader({params, context, request}: LoaderFunctionArgs) {
   if (!params.id) {
     return redirect('/account/orders');
   }
 
   if (!(await context.customerAccount.isLoggedIn())) {
-    return redirect('/account/login', {
-      headers: {
-        'Set-Cookie': await context.session.commit(),
-      },
-    });
+    const loginUrl =
+      '/account/login' +
+      `?${new URLSearchParams(`redirectPath=${request.url}`).toString()}`;
+
+    return redirect(loginUrl);
   }
 
   try {
