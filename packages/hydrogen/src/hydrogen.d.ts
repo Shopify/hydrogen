@@ -14,7 +14,7 @@ export interface HydrogenSessionData {
     idToken?: string;
     nonce?: string;
     state?: string;
-    redirectBack?: string;
+    redirectPath?: string;
   };
 }
 

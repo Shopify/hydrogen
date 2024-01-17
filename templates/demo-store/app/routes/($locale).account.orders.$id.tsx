@@ -26,7 +26,7 @@ export async function loader({request, context, params}: LoaderFunctionArgs) {
   if (!(await context.customerAccount.isLoggedIn())) {
     const loginUrl =
       (params?.locale ? `/${params.locale}/account/login` : '/account/login') +
-      `?${new URLSearchParams(`redirectBack=${request.url}`).toString()}`;
+      `?${new URLSearchParams(`redirectPath=${request.url}`).toString()}`;
 
     return redirect(loginUrl, {
       headers: {
