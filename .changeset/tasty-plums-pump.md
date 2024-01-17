@@ -6,4 +6,4 @@
 
 ✨ Use the new Customer Account API in the account section of the skeleton template
 
-✨ add a `authUrl` option to customerClient. It is default to `/authorize`.
+✨ Add an `authUrl` option to `createCustomerClient` that defines the route in your app that authorizes a user after logging in. The default value is `/authorize`.
