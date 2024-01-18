@@ -12,13 +12,13 @@ const data: LandingTemplateSchema = {
       title: 'Setup',
       sectionContent: `
 1. Create a new Hydrogen project with your preferred package manager.
-1. Import components, hooks, or utilities that you want to use in your app. For more detailed instructions, see the Getting Started Guide.
+1. Import components, hooks, or utilities that you want to use in your app. For more, see the [getting started guide](/docs/custom-storefronts/hydrogen/getting-started).
       `,
       sectionCard: [
         {
           subtitle: 'Tutorial',
-          name: 'Getting started with Hydrogen',
-          url: '/docs/custom-storefronts/hydrogen/getting-started/quickstart',
+          name: 'Getting started with Hydrogen and Oxygen',
+          url: '/docs/custom-storefronts/hydrogen/getting-started',
           type: 'tutorial',
         },
       ],
