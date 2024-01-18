@@ -67,10 +67,10 @@ export interface CustomerAccountMutations {
 }
 
 export type CustomerClient = {
-  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. */
-  login: () => Promise<Response>;
-  /** On successful login, the user is redirect back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings. */
-  authorize: (redirectPath?: string) => Promise<Response>;
+  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. An optional `redirectPath` parameter defines the final path the user lands on at the end of the oAuth flow. It defaults to `/`. */
+  login: (redirectPath?: string) => Promise<Response>;
+  /** On successful login, the user redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings. */
+  authorize: () => Promise<Response>;
   /** Returns if the user is logged in. It also checks if the access token is expired and refreshes it if needed. */
   isLoggedIn: () => Promise<boolean>;
   /** Returns CustomerAccessToken if the user is logged in. It also run a expirey check and does a token refresh if needed. */
@@ -112,9 +112,9 @@ export type CustomerClient = {
 type CustomerClientOptions = {
   /** The client requires a session to persist the auth and refresh token. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */
   session: HydrogenSession;
-  /** Unique UUID prefixed with `shp_` associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. */
+  /** Unique UUID prefixed with `shp_` associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountId. Use h2 env pull to link your store credentials. */
   customerAccountId: string;
-  /** The account URL associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. */
+  /** The account URL associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountUrl. Use h2 env pull to link your store credentials. */
   customerAccountUrl: string;
   /** Override the version of the API */
   customerApiVersion?: string;
@@ -122,6 +122,8 @@ type CustomerClientOptions = {
   request: CrossRuntimeRequest;
   /** The waitUntil function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
   waitUntil?: ExecutionContext['waitUntil'];
+  /** This is the route in your app that authorizes the user after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/account/authorize`. */
+  authUrl?: string;
 };
 
 export function createCustomerClient({
@@ -131,10 +133,17 @@ export function createCustomerClient({
   customerApiVersion = DEFAULT_CUSTOMER_API_VERSION,
   request,
   waitUntil,
+  authUrl = '/account/authorize',
 }: CustomerClientOptions): CustomerClient {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.log(
       `[h2:warn:createCustomerClient] You are using Customer Account API version ${customerApiVersion} when this version of Hydrogen was built for ${DEFAULT_CUSTOMER_API_VERSION}.`,
+    );
+  }
+
+  if (!customerAccountId || !customerAccountUrl) {
+    console.log(
+      "[h2:warn:createCustomerClient] customerAccountId and customerAccountUrl need to be provided to use Customer Account API. mock.shop doesn't automatically supply these variables. Use `h2 env pull` to link your store credentials.",
     );
   }
 
@@ -146,6 +155,7 @@ export function createCustomerClient({
   const url = new URL(request.url);
   const origin =
     url.protocol === 'http:' ? url.origin.replace('http', 'https') : url.origin;
+  const redirectUri = authUrl.startsWith('/') ? origin + authUrl : authUrl;
 
   const locks: Locks = {};
 
@@ -279,7 +289,7 @@ export function createCustomerClient({
   }
 
   return {
-    login: async () => {
+    login: async (redirectPath?: string) => {
       const loginUrl = new URL(customerAccountUrl + '/auth/oauth/authorize');
 
       const state = await generateState();
@@ -288,7 +298,7 @@ export function createCustomerClient({
       loginUrl.searchParams.set('client_id', customerAccountId);
       loginUrl.searchParams.set('scope', 'openid email');
       loginUrl.searchParams.append('response_type', 'code');
-      loginUrl.searchParams.append('redirect_uri', origin + '/authorize');
+      loginUrl.searchParams.append('redirect_uri', redirectUri);
       loginUrl.searchParams.set(
         'scope',
         'openid email https://api.customers.com/auth/customer.graphql',
@@ -304,6 +314,7 @@ export function createCustomerClient({
         codeVerifier: verifier,
         state,
         nonce,
+        redirectPath,
       });
 
       loginUrl.searchParams.append('code_challenge', challenge);
@@ -353,7 +364,7 @@ export function createCustomerClient({
 
       return fetchCustomerAPI({query, type: 'query', ...options});
     },
-    authorize: async (redirectPath = '/') => {
+    authorize: async () => {
       const code = url.searchParams.get('code');
       const state = url.searchParams.get('state');
 
@@ -378,7 +389,7 @@ export function createCustomerClient({
 
       body.append('grant_type', 'authorization_code');
       body.append('client_id', clientId);
-      body.append('redirect_uri', origin + '/authorize');
+      body.append('redirect_uri', redirectUri);
       body.append('code', code);
 
       // Public Client
@@ -435,6 +446,10 @@ export function createCustomerClient({
         origin,
       );
 
+      const redirectPath = session.get(
+        CUSTOMER_ACCOUNT_SESSION_KEY,
+      )?.redirectPath;
+
       session.set(CUSTOMER_ACCOUNT_SESSION_KEY, {
         accessToken: customerAccessToken,
         expiresAt:
@@ -443,9 +458,10 @@ export function createCustomerClient({
           ).getTime() + '',
         refreshToken: refresh_token,
         idToken: id_token,
+        redirectPath: undefined,
       });
 
-      return redirect(redirectPath, {
+      return redirect(redirectPath || '/', {
         headers: {
           'Set-Cookie': await session.commit(),
         },

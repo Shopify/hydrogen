@@ -330,13 +330,13 @@ function AccountLink({className}: {className?: string}) {
   const rootData = useRootLoaderData();
   const isLoggedIn = rootData?.isLoggedIn;
 
-  return isLoggedIn ? (
+  return (
     <Link to="/account" className={className}>
-      <IconAccount />
-    </Link>
-  ) : (
-    <Link to="/account/login" className={className}>
-      <IconLogin />
+      <Suspense fallback={<IconLogin />}>
+        <Await resolve={isLoggedIn} errorElement={<IconLogin />}>
+          {(isLoggedIn) => (isLoggedIn ? <IconAccount /> : <IconLogin />)}
+        </Await>
+      </Suspense>
     </Link>
   );
 }

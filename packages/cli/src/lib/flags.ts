@@ -62,8 +62,6 @@ export const commonFlags = {
       'Generate types for the Storefront API queries found in your project.',
     required: false,
     default: false,
-    deprecateAliases: true,
-    aliases: ['codegen-unstable'],
   }),
   codegenConfigPath: Flags.string({
     description:
