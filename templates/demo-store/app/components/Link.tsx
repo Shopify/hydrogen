@@ -33,8 +33,10 @@ export function Link(props: LinkProps) {
 
   let toWithLocale = to;
 
-  if (typeof to === 'string') {
-    toWithLocale = selectedLocale ? `${selectedLocale.pathPrefix}${to}` : to;
+  if (typeof toWithLocale === 'string' && selectedLocale?.pathPrefix) {
+    if (!toWithLocale.toLowerCase().startsWith(selectedLocale.pathPrefix)) {
+      toWithLocale = `${selectedLocale.pathPrefix}${to}`;
+    }
   }
 
   if (typeof className === 'function') {
