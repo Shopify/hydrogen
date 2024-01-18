@@ -50,7 +50,6 @@ export default class Deploy extends Command {
   static description = 'Builds and deploys a Hydrogen storefront to Oxygen.';
   static flags: any = {
     'env-branch': Flags.string({
-      char: 'e',
       description: 'Environment branch (tag) for environment to deploy to.',
       required: false,
     }),
