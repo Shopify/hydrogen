@@ -1,5 +1,5 @@
 import {vi, describe, it, expect} from 'vitest';
-import {StorefrontApiError, createStorefrontClient} from './storefront';
+import {StorefrontApiError, StorefrontApiErrors, createStorefrontClient} from './storefront';
 import {fetchWithServerCache} from './cache/fetch';
 import {STOREFRONT_ACCESS_TOKEN_HEADER} from './constants';
 import {
@@ -155,7 +155,7 @@ describe('createStorefrontClient', () => {
       );
     });
 
-    it('throws when the response contains SFAPI errors', async () => {
+    it('does not throw when the response contains partial SFAPI errors', async () => {
       const {storefront} = createStorefrontClient({
         storeDomain,
         storefrontId,
@@ -164,13 +164,18 @@ describe('createStorefrontClient', () => {
       });
 
       vi.mocked(fetchWithServerCache).mockResolvedValueOnce([
-        {errors: [{message: 'first'}, {message: 'second'}]},
+        {
+          data: {cart: {}},
+          errors: [{message: 'first'}, {message: 'second'}]
+        },
         new Response('ok', {status: 200}),
       ]);
 
-      await expect(storefront.query('query {}')).rejects.toThrowError(
-        StorefrontApiError,
-      );
+      const data = await storefront.query('query {}');
+      expect(data).toMatchObject({
+        cart: {},
+        errors: [{message: 'first'}, {message: 'second'}]
+      });
     });
   });
 });
