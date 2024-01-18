@@ -22,7 +22,6 @@ import {
   Locks,
 } from './auth.helpers';
 import {BadRequest} from './BadRequest';
-import {NotLoggedInError} from './NotLoggedInError';
 import {generateNonce} from '../csp/nonce';
 import {
   minifyQuery,
@@ -39,6 +38,10 @@ import {
   withSyncStack,
   type StackInfo,
 } from '../utils/callsites';
+
+// Return type of handleNotLoggedIn = Return type of loader/action function
+// This type is not exported https://github.com/remix-run/react-router/blob/main/packages/router/utils.ts#L167
+type DataFunctionValue = Response | NonNullable<unknown> | null;
 
 type CustomerAPIResponse<ReturnType> = {
   data: ReturnType;
@@ -76,9 +79,6 @@ const isCustomerAccountApiError = (
   error: any,
 ): error is CustomerAccountApiError => error instanceof CustomerAccountApiError;
 
-const isAuthError = (error: any): error is NotLoggedInError =>
-  error instanceof NotLoggedInError;
-
 export type CustomerClient = {
   /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. An optional `redirectPath` parameter defines the final path the user lands on at the end of the oAuth flow. It defaults to `/`. */
   login: (redirectPath?: string) => Promise<Response>;
@@ -90,8 +90,6 @@ export type CustomerClient = {
   getAccessToken: () => Promise<string | undefined>;
   /** Logout the user by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. */
   logout: () => Promise<Response>;
-  /**  */
-  isAuthError: typeof isAuthError;
   /**  */
   isApiError: typeof isCustomerAccountApiError;
   /** Execute a GraphQL query against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
@@ -141,7 +139,31 @@ type CustomerClientOptions = {
   waitUntil?: ExecutionContext['waitUntil'];
   /** This is the route in your app that authorizes the user after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/account/authorize`. */
   authUrl?: string;
+  /** This is the route in your app that we redirect to whenever query/mutate was called with a not login user. Make sure to call `customer.login()` within the loader on this route. It defaults to `/account/login`. */
+  loginUrl?: string;
+  /** The behaviour when query/mutate is called without a LoggedIn customer. The default behaviour is redirecting to /account/login where login() is located and return to the current location after auth. */
+  handleNotLoggedIn?: () => DataFunctionValue;
 };
+
+const DEFAULT_LOGIN_URL = '/account/login';
+const DEFAULT_AUTH_URL = '/account/authorize';
+
+function defaultHandleNotLoggedIn(request: CrossRuntimeRequest) {
+  const redirectPath = request.url ? new URL(request.url).pathname : undefined;
+
+  const loginUrlWithRedirectPath =
+    DEFAULT_AUTH_URL +
+    (redirectPath
+      ? `?${new URLSearchParams(`redirectPath=${redirectPath}`).toString()}`
+      : '');
+
+  console.error(
+    '\x1b[46m%s\x1b[0m',
+    `loginUrlWithRedirectPath=${loginUrlWithRedirectPath}`,
+  );
+
+  return redirect(loginUrlWithRedirectPath);
+}
 
 export function createCustomerAccountClient({
   session,
@@ -150,7 +172,8 @@ export function createCustomerAccountClient({
   customerApiVersion = DEFAULT_CUSTOMER_API_VERSION,
   request,
   waitUntil,
-  authUrl = '/account/authorize',
+  authUrl = DEFAULT_LOGIN_URL,
+  handleNotLoggedIn = () => defaultHandleNotLoggedIn(request),
 }: CustomerClientOptions): CustomerClient {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.warn(
@@ -207,10 +230,9 @@ export function createCustomerAccountClient({
     const accessToken = customerAccount?.accessToken;
     const expiresAt = customerAccount?.expiresAt;
 
-    if (!accessToken || !expiresAt)
-      throw new NotLoggedInError(
-        'accessToken or expiresAt not found in session',
-      );
+    if (!accessToken || !expiresAt) {
+      throw handleNotLoggedIn();
+    }
 
     // Get stack trace before losing it with any async operation.
     // Since this is an internal function that is always called from
@@ -257,13 +279,16 @@ export function createCustomerAccountClient({
       client: 'customer',
     };
 
-    console.error('\x1b[42m%s\x1b[0m', `caapi response=${body}`);
+    console.error(
+      '\x1b[42m%s\x1b[0m',
+      `caapi status=${response.status}, response=${body}/n`,
+    );
 
     if (!response.ok) {
       if (response.status === 401) {
-        throw new NotLoggedInError(
-          'Customer Account API was called without a valid access token',
-        );
+        // clear session because current access token is invalid
+        clearSession(session);
+        throw handleNotLoggedIn();
       }
 
       /**
@@ -372,7 +397,6 @@ export function createCustomerAccountClient({
       );
     },
     isLoggedIn,
-    isAuthError,
     isApiError: isCustomerAccountApiError,
     getAccessToken: async () => {
       const hasAccessToken = await isLoggedIn;
