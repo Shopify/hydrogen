@@ -58,7 +58,7 @@ export async function action({request, context}: ActionFunctionArgs) {
       invariant(false, `${action} cart action is not defined`);
   }
 
-  console.log('result', result, result?.error);
+  console.log('result', result, result?.errors);
 
   /**
    * The Cart ID may change after each mutation. We need to update it each time in the session.
@@ -72,11 +72,12 @@ export async function action({request, context}: ActionFunctionArgs) {
     headers.set('Location', redirectTo);
   }
 
-  const {cart: cartResult, error} = result;
+  const {cart: cartResult, errors, userErrors} = result;
   return json(
     {
       cart: cartResult,
-      error,
+      userErrors,
+      errors,
       analytics: {
         cartId,
       },

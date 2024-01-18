@@ -283,7 +283,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
   }: {variables?: GenericVariables} & (
     | StorefrontQueryOptions
     | StorefrontMutationOptions
-  )): Promise<T & {error: StorefrontError}> {
+  )): Promise<T & StorefrontError> {
     const userHeaders =
       headers instanceof Headers
         ? Object.fromEntries(headers.entries())
@@ -370,7 +370,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
     const {data, errors} = body as GraphQLApiResponse<T>;
 
-    return {...data, error: {errors}} as T & {error: StorefrontError};
+    return {...data, errors} as T & StorefrontError;
   }
 
   return {

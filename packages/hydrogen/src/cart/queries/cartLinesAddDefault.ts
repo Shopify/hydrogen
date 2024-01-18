@@ -20,9 +20,9 @@ export function cartLinesAddDefault(
   options: CartQueryOptions,
 ): CartLinesAddFunction {
   return async (lines, optionalParams) => {
-    const data = await options.storefront.mutate<{
+    const {cartLinesAdd, errors} = await options.storefront.mutate<{
       cartLinesAdd: CartQueryData;
-      error: StorefrontError;
+      errors: StorefrontApiErrors;
     }>(CART_LINES_ADD_MUTATION(options.cartFragment), {
       variables: {
         cartId: options.getCartId(),
@@ -31,7 +31,9 @@ export function cartLinesAddDefault(
       },
     });
 
-    return formatError(data.cartLinesAdd, data.error);
+    console.log({cartLinesAdd});
+
+    return {...cartLinesAdd, errors};
   };
 }
 

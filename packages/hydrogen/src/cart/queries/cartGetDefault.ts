@@ -1,5 +1,5 @@
-import { StorefrontError } from '../../storefront';
-import type {CartQueryDataReturn, CartQueryOptions, CartReturn} from './cart-types';
+import {StorefrontApiErrors} from '../../storefront';
+import type {CartQueryOptions, CartReturn} from './cart-types';
 import type {
   Cart,
   CountryCode,
@@ -39,9 +39,9 @@ export function cartGetDefault(options: CartQueryOptions): CartGetFunction {
 
     if (!cartId) return null;
 
-    const {cart, error} = await options.storefront.query<{
+    const {cart, errors} = await options.storefront.query<{
       cart: Cart;
-      error: StorefrontError;
+      errors: StorefrontApiErrors;
     }>(
       CART_QUERY(options.cartFragment),
       {
@@ -53,7 +53,7 @@ export function cartGetDefault(options: CartQueryOptions): CartGetFunction {
       },
     );
 
-    return {...cart, error};
+    return {...cart, errors};
   };
 }
 
