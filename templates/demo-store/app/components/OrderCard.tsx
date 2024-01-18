@@ -1,6 +1,6 @@
 import {flattenConnection, Image} from '@shopify/hydrogen';
 
-import type {OrderCardFragment} from 'storefrontapi.generated';
+import type {OrderCardFragment} from 'customer-accountapi.generated';
 import {Heading, Text, Link} from '~/components';
 import {statusMessage} from '~/lib/utils';
 
@@ -8,6 +8,7 @@ export function OrderCard({order}: {order: OrderCardFragment}) {
   if (!order?.id) return null;
   const [legacyOrderId, key] = order!.id!.split('/').pop()!.split('?');
   const lineItems = flattenConnection(order?.lineItems);
+  const fulfillmentStatus = flattenConnection(order?.fulfillments)[0]?.status;
 
   return (
     <li className="grid text-center border rounded">
@@ -16,20 +17,20 @@ export function OrderCard({order}: {order: OrderCardFragment}) {
         to={`/account/orders/${legacyOrderId}?${key}`}
         prefetch="intent"
       >
-        {lineItems[0].variant?.image && (
+        {lineItems[0].image && (
           <div className="card-image aspect-square bg-primary/5">
             <Image
               width={168}
               height={168}
               className="w-full fadeIn cover"
-              alt={lineItems[0].variant?.image?.altText ?? 'Order image'}
-              src={lineItems[0].variant?.image.url}
+              alt={lineItems[0].image?.altText ?? 'Order image'}
+              src={lineItems[0].image.url}
             />
           </div>
         )}
         <div
           className={`flex-col justify-center text-left ${
-            !lineItems[0].variant?.image && 'md:col-span-2'
+            !lineItems[0].image && 'md:col-span-2'
           }`}
         >
           <Heading as="h3" format size="copy">
@@ -41,7 +42,7 @@ export function OrderCard({order}: {order: OrderCardFragment}) {
             <dt className="sr-only">Order ID</dt>
             <dd>
               <Text size="fine" color="subtle">
-                Order No. {order.orderNumber}
+                Order No. {order.number}
               </Text>
             </dd>
             <dt className="sr-only">Order Date</dt>
@@ -50,20 +51,22 @@ export function OrderCard({order}: {order: OrderCardFragment}) {
                 {new Date(order.processedAt).toDateString()}
               </Text>
             </dd>
-            <dt className="sr-only">Fulfillment Status</dt>
-            <dd className="mt-2">
-              <span
-                className={`px-3 py-1 text-xs font-medium rounded-full ${
-                  order.fulfillmentStatus === 'FULFILLED'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-primary/5 text-primary/50'
-                }`}
-              >
-                <Text size="fine">
-                  {statusMessage(order.fulfillmentStatus)}
-                </Text>
-              </span>
-            </dd>
+            {fulfillmentStatus && (
+              <>
+                <dt className="sr-only">Fulfillment Status</dt>
+                <dd className="mt-2">
+                  <span
+                    className={`px-3 py-1 text-xs font-medium rounded-full ${
+                      fulfillmentStatus === 'SUCCESS'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-primary/5 text-primary/50'
+                    }`}
+                  >
+                    <Text size="fine">{statusMessage(fulfillmentStatus)}</Text>
+                  </span>
+                </dd>
+              </>
+            )}
           </dl>
         </div>
       </Link>

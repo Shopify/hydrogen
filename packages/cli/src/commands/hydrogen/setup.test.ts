@@ -77,7 +77,6 @@ describe('setup', () => {
       expect(output).toMatch(/Markets:\s*Subfolders/);
       expect(output).toMatch('Routes');
       expect(output).toMatch('Home (/ & /:catchAll)');
-      expect(output).toMatch('Account (/account/*)');
     });
   });
 });

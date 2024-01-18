@@ -11,12 +11,21 @@ import {isLocalPath} from '~/lib/utils';
 import {Cart} from '~/components';
 import {useRootLoaderData} from '~/root';
 
+async function getAccessToken(context: ActionFunctionArgs['context']) {
+  try {
+    return await context.customerAccount.getAccessToken();
+  } catch {
+    // just ignore access token if error occur
+    return undefined;
+  }
+}
+
 export async function action({request, context}: ActionFunctionArgs) {
-  const {session, cart} = context;
+  const {cart} = context;
 
   const [formData, customerAccessToken] = await Promise.all([
     request.formData(),
-    session.get('customerAccessToken'),
+    getAccessToken(context),
   ]);
 
   const {action, inputs} = CartForm.getFormInput(formData);
@@ -71,6 +80,9 @@ export async function action({request, context}: ActionFunctionArgs) {
   }
 
   const {cart: cartResult, errors} = result;
+
+  headers.append('Set-Cookie', await context.session.commit());
+
   return json(
     {
       cart: cartResult,

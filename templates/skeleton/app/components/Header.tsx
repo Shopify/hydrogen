@@ -93,7 +93,11 @@ function HeaderCtas({
     <nav className="header-ctas" role="navigation">
       <HeaderMenuMobileToggle />
       <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
-        {isLoggedIn ? 'Account' : 'Sign in'}
+        <Suspense fallback="Sign in">
+          <Await resolve={isLoggedIn} errorElement="Sign in">
+            {(isLoggedIn) => (isLoggedIn ? 'Account' : 'Sign in')}
+          </Await>
+        </Suspense>
       </NavLink>
       <SearchToggle />
       <CartToggle cart={cart} />
