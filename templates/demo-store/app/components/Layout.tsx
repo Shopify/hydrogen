@@ -114,7 +114,7 @@ function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
     <Drawer open={isOpen} onClose={onClose} heading="Cart" openFrom="right">
       <div className="grid">
         <Suspense fallback={<CartLoading />}>
-          <Await resolve={rootData?.cartPromise}>
+          <Await resolve={rootData?.cart}>
             {(cart) => <Cart layout="drawer" onClose={onClose} cart={cart} />}
           </Await>
         </Suspense>
@@ -324,12 +324,13 @@ function DesktopHeader({
 }
 
 function AccountLink({className}: {className?: string}) {
-  const {isLoggedInPromise} = useRootLoaderData();
+  const rootData = useRootLoaderData();
+  const isLoggedIn = rootData?.isLoggedIn;
 
   return (
     <Link to="/account" className={className}>
       <Suspense fallback={<IconLogin />}>
-        <Await resolve={isLoggedInPromise}>
+        <Await resolve={isLoggedIn} errorElement={<IconLogin />}>
           {(isLoggedIn) => (isLoggedIn ? <IconAccount /> : <IconLogin />)}
         </Await>
       </Suspense>
@@ -348,7 +349,7 @@ function CartCount({
 
   return (
     <Suspense fallback={<Badge count={0} dark={isHome} openCart={openCart} />}>
-      <Await resolve={rootData?.cartPromise}>
+      <Await resolve={rootData?.cart}>
         {(cart) => (
           <Badge
             dark={isHome}

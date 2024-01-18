@@ -4,14 +4,11 @@ import type {HeaderQuery} from 'storefrontapi.generated';
 import type {LayoutProps} from './Layout';
 import {useRootLoaderData} from '~/root';
 
-type HeaderProps = Pick<
-  LayoutProps,
-  'header' | 'cartPromise' | 'isLoggedInPromise'
->;
+type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'>;
 
 type Viewport = 'desktop' | 'mobile';
 
-export function Header({header, isLoggedInPromise, cartPromise}: HeaderProps) {
+export function Header({header, isLoggedIn, cart}: HeaderProps) {
   const {shop, menu} = header;
   return (
     <header className="header">
@@ -23,10 +20,7 @@ export function Header({header, isLoggedInPromise, cartPromise}: HeaderProps) {
         viewport="desktop"
         primaryDomainUrl={header.shop.primaryDomain.url}
       />
-      <HeaderCtas
-        isLoggedInPromise={isLoggedInPromise}
-        cartPromise={cartPromise}
-      />
+      <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
     </header>
   );
 }
@@ -92,21 +86,21 @@ export function HeaderMenu({
 }
 
 function HeaderCtas({
-  isLoggedInPromise,
-  cartPromise,
-}: Pick<HeaderProps, 'isLoggedInPromise' | 'cartPromise'>) {
+  isLoggedIn,
+  cart,
+}: Pick<HeaderProps, 'isLoggedIn' | 'cart'>) {
   return (
     <nav className="header-ctas" role="navigation">
       <HeaderMenuMobileToggle />
       <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
         <Suspense fallback="Sign in">
-          <Await resolve={isLoggedInPromise}>
+          <Await resolve={isLoggedIn} errorElement="Sign in">
             {(isLoggedIn) => (isLoggedIn ? 'Account' : 'Sign in')}
           </Await>
         </Suspense>
       </NavLink>
       <SearchToggle />
-      <CartToggle cartPromise={cartPromise} />
+      <CartToggle cart={cart} />
     </nav>
   );
 }
@@ -127,10 +121,10 @@ function CartBadge({count}: {count: number}) {
   return <a href="#cart-aside">Cart {count}</a>;
 }
 
-function CartToggle({cartPromise}: Pick<HeaderProps, 'cartPromise'>) {
+function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
   return (
     <Suspense fallback={<CartBadge count={0} />}>
-      <Await resolve={cartPromise}>
+      <Await resolve={cart}>
         {(cart) => {
           if (!cart) return <CartBadge count={0} />;
           return <CartBadge count={cart.totalQuantity || 0} />;

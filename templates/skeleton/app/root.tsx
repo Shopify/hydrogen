@@ -17,6 +17,7 @@ import {
   isRouteErrorResponse,
   type ShouldRevalidateFunction,
 } from '@remix-run/react';
+import type {CustomerAccessToken} from '@shopify/hydrogen/storefront-api-types';
 import favicon from '../public/favicon.svg';
 import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
@@ -94,10 +95,10 @@ export async function loader({context}: LoaderFunctionArgs) {
 
   return defer(
     {
-      cartPromise,
-      footerPromise,
+      cart: cartPromise,
+      footer: footerPromise,
       header: await headerPromise,
-      isLoggedInPromise,
+      isLoggedIn: isLoggedInPromise,
       publicStoreDomain,
     },
     {

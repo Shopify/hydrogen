@@ -80,10 +80,10 @@ export async function loader({request, context}: LoaderFunctionArgs) {
 
   return defer(
     {
-      isLoggedInPromise,
+      isLoggedIn: isLoggedInPromise,
       layout,
       selectedLocale: storefront.i18n,
-      cartPromise: cart.get(),
+      cart: cart.get(),
       analytics: {
         shopifySalesChannel: ShopifySalesChannel.hydrogen,
         shopId: layout.shop.id,

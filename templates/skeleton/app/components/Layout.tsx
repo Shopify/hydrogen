@@ -15,35 +15,29 @@ import {
 } from '~/components/Search';
 
 export type LayoutProps = {
-  cartPromise: Promise<CartApiQueryFragment | null>;
+  cart: Promise<CartApiQueryFragment | null>;
   children?: React.ReactNode;
-  footerPromise: Promise<FooterQuery>;
+  footer: Promise<FooterQuery>;
   header: HeaderQuery;
-  isLoggedInPromise: Promise<boolean>;
+  isLoggedIn: Promise<boolean>;
 };
 
 export function Layout({
-  cartPromise,
+  cart,
   children = null,
-  footerPromise,
+  footer,
   header,
-  isLoggedInPromise,
+  isLoggedIn,
 }: LayoutProps) {
   return (
     <>
-      <CartAside cartPromise={cartPromise} />
+      <CartAside cart={cart} />
       <SearchAside />
       <MobileMenuAside menu={header?.menu} shop={header?.shop} />
-      {header && (
-        <Header
-          header={header}
-          cartPromise={cartPromise}
-          isLoggedInPromise={isLoggedInPromise}
-        />
-      )}
+      {header && <Header header={header} cart={cart} isLoggedIn={isLoggedIn} />}
       <main>{children}</main>
       <Suspense>
-        <Await resolve={footerPromise}>
+        <Await resolve={footer}>
           {(footer) => <Footer menu={footer?.menu} shop={header?.shop} />}
         </Await>
       </Suspense>
@@ -51,11 +45,11 @@ export function Layout({
   );
 }
 
-function CartAside({cartPromise}: {cartPromise: LayoutProps['cartPromise']}) {
+function CartAside({cart}: {cart: LayoutProps['cart']}) {
   return (
     <Aside id="cart-aside" heading="CART">
       <Suspense fallback={<p>Loading cart ...</p>}>
-        <Await resolve={cartPromise}>
+        <Await resolve={cart}>
           {(cart) => {
             return <CartMain cart={cart} layout="aside" />;
           }}
