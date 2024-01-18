@@ -71,6 +71,14 @@ export interface CustomerAccountMutations {
   // '#graphql mutation m1 {...}': {return: M1Mutation; variables: M1MutationVariables};
 }
 
+class CustomerAccountApiError extends Error {}
+const isCustomerAccountApiError = (
+  error: any,
+): error is CustomerAccountApiError => error instanceof CustomerAccountApiError;
+
+const isAuthError = (error: any): error is NotLoggedInError =>
+  error instanceof NotLoggedInError;
+
 export type CustomerClient = {
   /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. An optional `redirectPath` parameter defines the final path the user lands on at the end of the oAuth flow. It defaults to `/`. */
   login: (redirectPath?: string) => Promise<Response>;
@@ -82,6 +90,10 @@ export type CustomerClient = {
   getAccessToken: () => Promise<string | undefined>;
   /** Logout the user by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. */
   logout: () => Promise<Response>;
+  /**  */
+  isAuthError: typeof isAuthError;
+  /**  */
+  isApiError: typeof isCustomerAccountApiError;
   /** Execute a GraphQL query against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
   query: <
     OverrideReturnType extends any = never,
@@ -360,6 +372,8 @@ export function createCustomerAccountClient({
       );
     },
     isLoggedIn,
+    isAuthError,
+    isApiError: isCustomerAccountApiError,
     getAccessToken: async () => {
       const hasAccessToken = await isLoggedIn;
 
