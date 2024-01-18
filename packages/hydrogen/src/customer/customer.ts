@@ -22,6 +22,7 @@ import {
   Locks,
 } from './auth.helpers';
 import {BadRequest} from './BadRequest';
+import {NotLoggedInError} from './NotLoggedInError';
 import {generateNonce} from '../csp/nonce';
 import {
   minifyQuery,
@@ -195,9 +196,8 @@ export function createCustomerAccountClient({
     const expiresAt = customerAccount?.expiresAt;
 
     if (!accessToken || !expiresAt)
-      throw new BadRequest(
-        'Unauthorized',
-        'Login before querying the Customer Account API.',
+      throw new NotLoggedInError(
+        'accessToken or expiresAt not found in session',
       );
 
     // Get stack trace before losing it with any async operation.
@@ -245,7 +245,15 @@ export function createCustomerAccountClient({
       client: 'customer',
     };
 
+    console.error('\x1b[42m%s\x1b[0m', `caapi response=${body}`);
+
     if (!response.ok) {
+      if (response.status === 401) {
+        throw new NotLoggedInError(
+          'Customer Account API was called without a valid access token',
+        );
+      }
+
       /**
        * The Customer API might return a string error, or a JSON-formatted {error: string}.
        * We try both and conform them to a single {errors} format.

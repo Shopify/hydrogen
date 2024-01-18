@@ -19,6 +19,7 @@ export {type SeoConfig} from './seo/generate-seo-tags';
 export type {SeoHandleFunction} from './seo/seo';
 export {Pagination, getPaginationVariables} from './pagination/Pagination';
 export {createCustomerAccountClient} from './customer/customer';
+export {NotLoggedInError} from './customer/NotLoggedInError';
 export type {
   CustomerClient,
   CustomerAccountQueries,
