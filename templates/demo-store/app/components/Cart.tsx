@@ -8,7 +8,7 @@ import {
   Money,
   useOptimisticData,
   OptimisticInput,
-  CartReturn,
+  type CartReturn,
 } from '@shopify/hydrogen';
 import type {
   Cart as CartType,

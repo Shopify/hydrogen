@@ -10,7 +10,7 @@ export async function loader({context: {storefront}}: LoaderFunctionArgs) {
 }
 
 export default function NetworkError() {
-  return <p>Don't expect to reach here</p>;
+  return <p>Dont expect to reach here</p>;
 }
 
 export const FEATURED_COLLECTIONS_QUERY = `#graphql
