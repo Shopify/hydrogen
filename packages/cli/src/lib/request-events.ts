@@ -60,7 +60,7 @@ export type H2OEvent = {
     key?: string | readonly unknown[];
   };
   displayName?: string;
-  url?:string;
+  url?: string;
 };
 
 async function getRequestInfo(request: RequestKind) {
@@ -105,17 +105,26 @@ export function createLogRequestEvent(options?: {absoluteBundlePath?: string}) {
       return createResponse<R>();
     }
 
-    const {url: displayUrl, displayName: displayNameData, eventType, purpose, graphql, stackInfo, ...data} =
-      await getRequestInfo(request);
+    const {
+      url: displayUrl,
+      displayName: displayNameData,
+      eventType,
+      purpose,
+      graphql,
+      stackInfo,
+      ...data
+    } = await getRequestInfo(request);
 
     let graphiqlLink = '';
     let descriptionUrl = request.url;
     let displayName = displayNameData;
 
     if (eventType === 'subrequest') {
-      displayName = displayName ||
-        graphql?.query.match(/(query|mutation)\s+(\w+)/)?.[0]
-          ?.replace(/\s+/, ' ')
+      displayName =
+        displayName ||
+        graphql?.query
+          .match(/(query|mutation)\s+(\w+)/)?.[0]
+          ?.replace(/\s+/, ' ');
       descriptionUrl = displayUrl || request.url;
 
       if (graphql) {

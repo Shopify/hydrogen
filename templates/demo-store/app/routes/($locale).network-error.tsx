@@ -1,8 +1,6 @@
 import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 
-export async function loader ({
-  context: {storefront},
-}: LoaderFunctionArgs) {
+export async function loader({context: {storefront}}: LoaderFunctionArgs) {
   const data = await storefront.query(FEATURED_COLLECTIONS_QUERY, {
     displayName: 'Network Error Query',
     storefrontApiVersion: '123',
@@ -12,7 +10,7 @@ export async function loader ({
 }
 
 export default function NetworkError() {
-  return (<p>Don't expect to reach here</p>)
+  return <p>Don't expect to reach here</p>;
 }
 
 export const FEATURED_COLLECTIONS_QUERY = `#graphql

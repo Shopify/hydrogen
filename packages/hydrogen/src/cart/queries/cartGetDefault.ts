@@ -42,16 +42,13 @@ export function cartGetDefault(options: CartQueryOptions): CartGetFunction {
     const {cart, errors} = await options.storefront.query<{
       cart: Cart;
       errors: StorefrontApiErrors;
-    }>(
-      CART_QUERY(options.cartFragment),
-      {
-        variables: {
-          cartId,
-          ...cartInput,
-        },
-        cache: options.storefront.CacheNone(),
+    }>(CART_QUERY(options.cartFragment), {
+      variables: {
+        cartId,
+        ...cartInput,
       },
-    );
+      cache: options.storefront.CacheNone(),
+    });
 
     return {...cart, errors};
   };

@@ -56,7 +56,7 @@ export type I18nBase = {
 export type StorefrontApiErrors = unknown[];
 export type StorefrontError = {
   errors?: StorefrontApiErrors;
-}
+};
 
 /**
  * Wraps all the returned utilities from `createStorefrontClient`.

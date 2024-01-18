@@ -52,9 +52,9 @@ export type CartReturn = Cart & {
 export type CartQueryData = {
   cart: Cart;
   userErrors?:
-  | CartUserError[]
-  | MetafieldsSetUserError[]
-  | MetafieldDeleteUserError[];
+    | CartUserError[]
+    | MetafieldsSetUserError[]
+    | MetafieldDeleteUserError[];
 };
 
 export type CartQueryDataReturn = CartQueryData & {

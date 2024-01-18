@@ -290,10 +290,7 @@ function DesktopHeader({
               {item.title}
             </Link>
           ))}
-          <Link
-            key="network-error"
-            to="/network-error"
-          >
+          <Link key="network-error" to="/network-error">
             Network Error
           </Link>
         </nav>
