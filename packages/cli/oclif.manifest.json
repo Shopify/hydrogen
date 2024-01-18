@@ -150,6 +150,13 @@
           "required": false,
           "multiple": false
         },
+        "preview": {
+          "name": "preview",
+          "type": "boolean",
+          "description": "Deploys to the Preview environment. Overrides --env-branch and Git metadata.",
+          "required": false,
+          "allowNo": false
+        },
         "force": {
           "name": "force",
           "type": "boolean",

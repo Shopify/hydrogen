@@ -54,6 +54,12 @@ export default class Deploy extends Command {
       description: 'Environment branch (tag) for environment to deploy to.',
       required: false,
     }),
+    preview: Flags.boolean({
+      description:
+        'Deploys to the Preview environment. Overrides --env-branch and Git metadata.',
+      required: false,
+      default: false,
+    }),
     force: Flags.boolean({
       char: 'f',
       description:
@@ -130,6 +136,7 @@ export default class Deploy extends Command {
     const camelFlags = flagsToCamelObject(flags);
     return {
       ...camelFlags,
+      defaultEnvironment: flags.preview,
       environmentTag: flags['env-branch'],
       path: flags.path ? resolvePath(flags.path) : process.cwd(),
     } as OxygenDeploymentOptions;
@@ -138,6 +145,7 @@ export default class Deploy extends Command {
 
 interface OxygenDeploymentOptions {
   authBypassToken: boolean;
+  defaultEnvironment: boolean;
   environmentTag?: string;
   force: boolean;
   noJsonOutput: boolean;
@@ -179,6 +187,7 @@ export async function oxygenDeploy(
 ): Promise<void> {
   const {
     authBypassToken: generateAuthBypassToken,
+    defaultEnvironment,
     environmentTag,
     force: forceOnUncommitedChanges,
     noJsonOutput,
@@ -264,7 +273,12 @@ export async function oxygenDeploy(
     throw new AbortError(errMessage);
   }
 
-  if (!isCI && !environmentTag && deploymentData?.environments) {
+  if (
+    !isCI &&
+    !defaultEnvironment &&
+    !environmentTag &&
+    deploymentData?.environments
+  ) {
     if (deploymentData.environments.length > 1) {
       const choices = [
         ...deploymentData.environments.map(({name, branch, type}) => ({
@@ -298,12 +312,25 @@ export async function oxygenDeploy(
     );
   }
 
+  let fallbackEnvironmentTag = branch;
+  let isPreview = false;
+
+  // If the user has explicitly selected `Preview` then we should not pass an
+  // environment tag at all.
+  if (deploymentEnvironmentTag === 'shopify-preview-environment.') {
+    fallbackEnvironmentTag = undefined;
+    deploymentEnvironmentTag = undefined;
+    isPreview = true;
+  }
+
   const config: DeploymentConfig = {
     assetsDir: 'dist/client',
     bugsnag: true,
     deploymentUrl,
+    defaultEnvironment: defaultEnvironment || isPreview,
     deploymentToken: parseToken(token as string),
-    environmentTag: environmentTag || deploymentEnvironmentTag || branch,
+    environmentTag:
+      environmentTag || deploymentEnvironmentTag || fallbackEnvironmentTag,
     generateAuthBypassToken,
     verificationMaxDuration: 180,
     metadata: {
