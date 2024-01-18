@@ -196,9 +196,9 @@ export function createCustomerClient({
     });
 
     const startTime = new Date().getTime();
-
+    const url = `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`;
     const response = await fetch(
-      `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`,
+      url,
       {
         method: 'POST',
         headers: {
@@ -220,6 +220,7 @@ export function createCustomerClient({
     const body = await response.text();
 
     const errorOptions: GraphQLErrorOptions<T> = {
+      url,
       response,
       type,
       query,
