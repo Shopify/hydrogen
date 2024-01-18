@@ -297,11 +297,9 @@ export async function getChangelog(): Promise<ChangeLog> {
     (process.env.FORCE_CHANGELOG_SOURCE !== 'remote' && !!process.env.LOCAL_ENV)
   ) {
     const require = createRequire(import.meta.url);
-    return require(
-      fileURLToPath(
-        new URL('../../../../../docs/changelog.json', import.meta.url),
-      ),
-    ) as ChangeLog;
+    return require(fileURLToPath(
+      new URL('../../../../../docs/changelog.json', import.meta.url),
+    )) as ChangeLog;
   }
 
   try {
@@ -399,14 +397,11 @@ export function getAvailableUpgrades({
     return false;
   }) as Array<Release>;
 
-  const uniqueAvailableUpgrades = availableUpgrades.reduce(
-    (acc, release) => {
-      if (acc[release.version]) return acc;
-      acc[release.version] = release;
-      return acc;
-    },
-    {} as Record<string, Release>,
-  );
+  const uniqueAvailableUpgrades = availableUpgrades.reduce((acc, release) => {
+    if (acc[release.version]) return acc;
+    acc[release.version] = release;
+    return acc;
+  }, {} as Record<string, Release>);
 
   return {availableUpgrades, uniqueAvailableUpgrades};
 }
@@ -724,10 +719,10 @@ async function promptUpgradeOptions(
       index === 0
         ? '(latest)'
         : semver.patch(version) === 0
-          ? '(major)'
-          : getAbsoluteVersion(currentVersion) === getAbsoluteVersion(version)
-            ? '(outdated)'
-            : '';
+        ? '(major)'
+        : getAbsoluteVersion(currentVersion) === getAbsoluteVersion(version)
+        ? '(outdated)'
+        : '';
 
     // TODO: add group sorting function to cli-kit select prompt
     // so that we can group by major version
@@ -1026,14 +1021,11 @@ export async function displayDevUpgradeNotice({
   const uniqueNextReleases = changelog.releases
     .slice(0, currentReleaseIndex)
     .reverse()
-    .reduce(
-      (acc, release) => {
-        if (acc[release.version]) return acc;
-        acc[release.version] = release;
-        return acc;
-      },
-      {} as Record<string, Release>,
-    );
+    .reduce((acc, release) => {
+      if (acc[release.version]) return acc;
+      acc[release.version] = release;
+      return acc;
+    }, {} as Record<string, Release>);
 
   const nextReleases = Object.keys(uniqueNextReleases).length
     ? Object.entries(uniqueNextReleases)
