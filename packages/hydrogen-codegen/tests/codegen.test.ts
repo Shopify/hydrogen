@@ -4,17 +4,18 @@ import path from 'node:path';
 describe('Hydrogen Codegen', async () => {
   // Patch dependency before importing the Codegen CLI
   await import('../src/patch.js');
-  const {preset, schema, pluckConfig} = await import('../src/index.js');
+  const {preset, getSchema, pluckConfig} = await import('../src/index.js');
   const {getDefaultOptions} = await import('../src/defaults.js');
   const {executeCodegen} = await import('@graphql-codegen/cli');
 
   const getCodegenOptions = (fixture: string, output = 'out.d.ts') => ({
     pluckConfig: pluckConfig as any,
+    documents: path.join(__dirname, `fixtures/${fixture}`),
     generates: {
       [output]: {
         preset,
-        schema,
-        documents: path.join(__dirname, `fixtures/${fixture}`),
+        schema: getSchema('storefront'),
+        presetConfig: {},
       },
     },
   });
@@ -202,6 +203,89 @@ describe('Hydrogen Codegen', async () => {
       declare module '@shopify/hydrogen' {
         interface StorefrontQueries extends GeneratedQueryTypes {}
         interface StorefrontMutations extends GeneratedMutationTypes {}
+      }
+      "
+    `);
+  });
+
+  it('generates types for mixed queries using suffixes', async () => {
+    const codegenConfig = getCodegenOptions(
+      'mixed-operations.ts',
+      'storefront.out.d.ts',
+    );
+
+    codegenConfig.generates['customer-account.out.d.ts'] = {
+      preset,
+      schema: getSchema('customer-account'),
+      presetConfig: {
+        gqlSuffix: 'customer',
+      },
+    };
+
+    const result = await executeCodegen(codegenConfig);
+
+    expect(result).toHaveLength(2);
+
+    const generatedStorefrontCode = result.find(
+      (file) => file.filename === 'storefront.out.d.ts',
+    )!.content;
+
+    const generatedCustomerAccountCode = result.find(
+      (file) => file.filename === 'customer-account.out.d.ts',
+    )!.content;
+
+    expect(generatedStorefrontCode).toMatchInlineSnapshot(`
+      "/* eslint-disable eslint-comments/disable-enable-pair */
+      /* eslint-disable eslint-comments/no-unlimited-disable */
+      /* eslint-disable */
+      import * as StorefrontAPI from '@shopify/hydrogen/storefront-api-types';
+
+      export type ShopIdQueryVariables = StorefrontAPI.Exact<{ [key: string]: never; }>;
+
+
+      export type ShopIdQuery = { shop: Pick<StorefrontAPI.Shop, 'id'> };
+
+      export type ShopNameQueryVariables = StorefrontAPI.Exact<{ [key: string]: never; }>;
+
+
+      export type ShopNameQuery = { shop: Pick<StorefrontAPI.Shop, 'name'> };
+
+      interface GeneratedQueryTypes {
+        "#graphql\\n  query ShopId {\\n    shop {\\n      id\\n    }\\n  }\\n": {return: ShopIdQuery, variables: ShopIdQueryVariables},
+        "\\n  query ShopName {\\n    shop {\\n      name\\n    }\\n  }\\n": {return: ShopNameQuery, variables: ShopNameQueryVariables},
+      }
+
+      interface GeneratedMutationTypes {
+      }
+
+      declare module '@shopify/hydrogen' {
+        interface StorefrontQueries extends GeneratedQueryTypes {}
+        interface StorefrontMutations extends GeneratedMutationTypes {}
+      }
+      "
+    `);
+
+    expect(generatedCustomerAccountCode).toMatchInlineSnapshot(`
+      "/* eslint-disable eslint-comments/disable-enable-pair */
+      /* eslint-disable eslint-comments/no-unlimited-disable */
+      /* eslint-disable */
+      import * as CustomerAccountAPI from '@shopify/hydrogen/customer-account-api-types';
+
+      export type CustomerNameQueryVariables = CustomerAccountAPI.Exact<{ [key: string]: never; }>;
+
+
+      export type CustomerNameQuery = { customer: Pick<CustomerAccountAPI.Customer, 'firstName'> };
+
+      interface GeneratedQueryTypes {
+        "#graphql:customer\\n  query CustomerName {\\n    customer {\\n      firstName\\n    }\\n  }\\n": {return: CustomerNameQuery, variables: CustomerNameQueryVariables},
+      }
+
+      interface GeneratedMutationTypes {
+      }
+
+      declare module '@shopify/hydrogen' {
+        interface CustomerAccountQueries extends GeneratedQueryTypes {}
+        interface CustomerAccountMutations extends GeneratedMutationTypes {}
       }
       "
     `);

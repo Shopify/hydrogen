@@ -17,15 +17,26 @@ const capitalizeQueries = (
   return capitalize(node.name!.value) + capitalize(node.operation);
 };
 
+export type BuildTypeName = typeof capitalizeQueries;
+
 export function processSources(
   sources: Array<Source>,
-  buildName = capitalizeQueries,
+  {
+    gqlSuffix = '',
+    buildTypeName = capitalizeQueries,
+  }: {gqlSuffix?: string; buildTypeName?: BuildTypeName} = {},
 ) {
+  const gqlComment = '#graphql';
+  const suffixedGqlComment = `#graphql${gqlSuffix ? `:${gqlSuffix}` : ''}\n`;
   const sourcesWithOperations: Array<SourceWithOperations> = [];
 
-  for (const originalSource of sources) {
-    const source = fixLinebreaks(originalSource);
-    const {document} = source;
+  for (const {rawSDL, document, ...rest} of sources) {
+    if (rawSDL) {
+      const hasGqlComment = rawSDL.startsWith(gqlComment);
+      const hasGqlSuffix = rawSDL.startsWith(suffixedGqlComment);
+      if (!hasGqlSuffix && (gqlSuffix || hasGqlComment)) continue;
+    }
+
     const operations: Array<OperationOrFragment> = [];
 
     for (const definition of document?.definitions ?? []) {
@@ -38,7 +49,7 @@ export function processSources(
       if (definition.name?.kind !== `Name`) continue;
 
       operations.push({
-        initialName: buildName(definition),
+        initialName: buildTypeName(definition),
         definition,
       });
     }
@@ -46,7 +57,7 @@ export function processSources(
     if (operations.length === 0) continue;
 
     sourcesWithOperations.push({
-      source,
+      source: {rawSDL: fixLinebreaks(rawSDL), document, ...rest},
       operations,
     });
   }
@@ -97,10 +108,6 @@ export function processSources(
  *
  * @param source
  */
-function fixLinebreaks(source: Source) {
-  const fixedSource = {...source};
-
-  fixedSource.rawSDL = source.rawSDL?.replace(/\r\n/g, '\n');
-
-  return fixedSource;
+function fixLinebreaks(rawSDL: Source['rawSDL']) {
+  return rawSDL?.replace(/\r\n/g, '\n');
 }

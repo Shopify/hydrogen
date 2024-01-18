@@ -194,6 +194,24 @@ async function generateDefaultConfig(
   const defaultGlob = '*!(*.d).{ts,tsx,js,jsx}'; // No d.ts files
   const appDirRelative = relativePath(rootDirectory, appDirectory);
 
+  const caapiSchema = getSchema('customer-account');
+  const caapiProject = findGqlProject(caapiSchema, gqlConfig);
+
+  const customerAccountAPIConfig = caapiProject?.documents
+    ? {
+        ['customer-accountapi.generated.d.ts']: {
+          preset,
+          schema: caapiSchema,
+          documents: caapiProject?.documents,
+          presetConfig: {
+            gqlSuffix:
+              caapiProject?.extensions?.languageService?.gqlTagOptions
+                ?.annotationSuffix,
+          },
+        },
+      }
+    : undefined;
+
   return {
     filepath: 'virtual:codegen',
     config: {
@@ -207,6 +225,11 @@ async function generateDefaultConfig(
             defaultGlob, // E.g. ./server.(t|j)s
             joinPath(appDirRelative, '**', defaultGlob), // E.g. app/routes/_index.(t|j)sx
           ],
+          presetConfig: {
+            gqlSuffix:
+              sfapiProject?.extensions?.languageService?.gqlTagOptions
+                ?.annotationSuffix,
+          },
 
           ...(!!forceSfapiVersion && {
             presetConfig: {importTypes: false},
@@ -228,6 +251,7 @@ async function generateDefaultConfig(
             },
           }),
         },
+        ...customerAccountAPIConfig,
       },
     },
   };
