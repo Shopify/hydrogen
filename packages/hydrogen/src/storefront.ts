@@ -337,6 +337,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       shouldCacheResponse: checkGraphQLErrors,
       waitUntil,
       debugInfo: {
+        url,
         graphql: graphqlData,
         requestId: requestInit.headers[STOREFRONT_REQUEST_GROUP_ID_HEADER],
         purpose: storefrontHeaders?.purpose,
@@ -346,6 +347,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     });
 
     const errorOptions: GraphQLErrorOptions<T> = {
+      url,
       response,
       type: mutation ? 'mutation' : 'query',
       query,

@@ -60,6 +60,7 @@ export type H2OEvent = {
     key?: string | readonly unknown[];
   };
   displayName?: string;
+  url?:string;
 };
 
 async function getRequestInfo(request: RequestKind) {
@@ -104,19 +105,18 @@ export function createLogRequestEvent(options?: {absoluteBundlePath?: string}) {
       return createResponse<R>();
     }
 
-    const {eventType, purpose, graphql, stackInfo, ...data} =
+    const {url: displayUrl, displayName: displayNameData, eventType, purpose, graphql, stackInfo, ...data} =
       await getRequestInfo(request);
 
     let graphiqlLink = '';
-    let description = request.url;
+    let descriptionUrl = request.url;
+    let displayName = displayNameData;
 
     if (eventType === 'subrequest') {
-      description =
-        graphql?.query
-          .match(/(query|mutation)\s+(\w+)/)?.[0]
-          ?.replace(/\s+/, ' ') ||
-        decodeURIComponent(url.search.slice(1)) ||
-        request.url;
+      displayName = displayName ||
+        graphql?.query.match(/(query|mutation)\s+(\w+)/)?.[0]
+          ?.replace(/\s+/, ' ')
+      descriptionUrl = displayUrl || request.url;
 
       if (graphql) {
         graphiqlLink = getGraphiQLUrl({graphql});
@@ -150,7 +150,8 @@ export function createLogRequestEvent(options?: {absoluteBundlePath?: string}) {
       event: EVENT_MAP[eventType] || eventType,
       data: JSON.stringify({
         ...data,
-        url: `${purpose} ${description}`.trim(),
+        displayName,
+        url: `${purpose} ${descriptionUrl}`.trim(),
         graphiqlLink,
         stackLine,
         stackLink,

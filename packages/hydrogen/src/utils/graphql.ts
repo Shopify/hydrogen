@@ -26,6 +26,7 @@ export function assertMutation(query: string, callerName: string) {
 export type GraphQLApiResponse<T> = StorefrontApiResponseOk<T>;
 
 export type GraphQLErrorOptions<T> = {
+  url: string;
   response: Response;
   errors: GraphQLApiResponse<T>['errors'];
   type: 'query' | 'mutation';
@@ -36,6 +37,7 @@ export type GraphQLErrorOptions<T> = {
 };
 
 export function throwGraphQLError<T>({
+  url,
   response,
   errors,
   type,
@@ -49,7 +51,7 @@ export function throwGraphQLError<T>({
     (typeof errors === 'string'
       ? errors
       : errors?.map?.((error) => error.message).join('\n')) ||
-    `API response error: ${response.status}`;
+    `URL: ${url}\nAPI response error: ${response.status}`;
 
   throw new ErrorConstructor(
     `[h2:error:${client}.${type}] ` +
