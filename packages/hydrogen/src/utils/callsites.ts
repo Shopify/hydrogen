@@ -25,7 +25,7 @@ export const getCallerStackLine =
           // Skip both and find the first ancestor.
           const cs = callsites[2 + stackOffset];
 
-          stackInfo = {
+          stackInfo = cs && {
             file: cs.getFileName() ?? undefined,
             func: cs.getFunctionName() ?? undefined,
             line: cs.getLineNumber() ?? undefined,

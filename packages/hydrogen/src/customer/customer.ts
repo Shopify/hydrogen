@@ -33,7 +33,7 @@ import {
 import {parseJSON} from '../utils/parse-json';
 import {hashKey} from '../utils/hash';
 import {CrossRuntimeRequest, getDebugHeaders} from '../utils/request';
-import {getCallerStackLine} from '../utils/callsites';
+import {StackInfo, getCallerStackLine} from '../utils/callsites';
 
 type CustomerAPIResponse<ReturnType> = {
   data: ReturnType;
@@ -151,7 +151,7 @@ export function createCustomerClient({
 
   const logSubRequestEvent =
     process.env.NODE_ENV === 'development'
-      ? (query: string, startTime: number) => {
+      ? (query: string, startTime: number, stackInfo?: StackInfo) => {
           globalThis.__H2O_LOG_EVENT?.({
             eventType: 'subrequest',
             url: `https://shopify.dev/?${hashKey([
@@ -161,7 +161,7 @@ export function createCustomerClient({
             ])}`,
             startTime,
             waitUntil,
-            stackInfo: getCallerStackLine?.(2),
+            stackInfo,
             ...getDebugHeaders(request),
           });
         }
@@ -185,6 +185,11 @@ export function createCustomerClient({
         'Unauthorized',
         'Login before querying the Customer Account API.',
       );
+
+    // Get stack trace before losing it with any async operation.
+    // Since this is an internal function that is always called form
+    // the public query/mutate wrappers, add 1 to the stack offset.
+    const stackInfo = getCallerStackLine?.(1);
 
     await checkExpires({
       locks,
@@ -215,7 +220,7 @@ export function createCustomerClient({
       },
     );
 
-    logSubRequestEvent?.(query, startTime);
+    logSubRequestEvent?.(query, startTime, stackInfo);
 
     const body = await response.text();
 
@@ -257,6 +262,9 @@ export function createCustomerClient({
 
     if (!accessToken || !expiresAt) return false;
 
+    // Get stack trace before losing it with any async operation.
+    const stackInfo = getCallerStackLine?.();
+
     const startTime = new Date().getTime();
 
     try {
@@ -269,7 +277,7 @@ export function createCustomerClient({
         origin,
       });
 
-      logSubRequestEvent?.(' check expires', startTime);
+      logSubRequestEvent?.(' check expires', startTime, stackInfo);
     } catch {
       return false;
     }
