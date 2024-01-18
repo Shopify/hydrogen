@@ -49,29 +49,15 @@ export type CartReturn = Cart & {
   errors?: StorefrontApiErrors;
 };
 
-export type CartUserErrors = {
-  userErrors?:
-    | CartUserError[]
-    | MetafieldsSetUserError[]
-    | MetafieldDeleteUserError[];
-};
-
-export type CartErrors = CartUserErrors & {
-  errors?:  StorefrontApiErrors;
-};
-
 export type CartQueryData = {
-  cart: Cart;
-} & CartUserErrors;
-
-export type CartQueryDataReturnError = CartErrors | undefined;
-
-export type CartQueryDataReturn = {
   cart: Cart;
   userErrors?:
   | CartUserError[]
   | MetafieldsSetUserError[]
   | MetafieldDeleteUserError[];
+};
+
+export type CartQueryDataReturn = CartQueryData & {
   errors?: StorefrontApiErrors;
 };
 
