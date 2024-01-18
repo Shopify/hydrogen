@@ -1,29 +1,10 @@
-import {json, redirect, type ActionFunctionArgs} from '@shopify/remix-oxygen';
-import {type MetaFunction} from '@remix-run/react';
+import {redirect, type ActionFunctionArgs} from '@shopify/remix-oxygen';
 
-export const meta: MetaFunction = () => {
-  return [{title: 'Logout'}];
-};
-
+// if we dont implement this, /account/logout will get caught by account.$.tsx to do login
 export async function loader() {
-  return redirect('/account/login');
+  return redirect('/');
 }
 
-export async function action({request, context}: ActionFunctionArgs) {
-  const {session} = context;
-  session.unset('customerAccessToken');
-
-  if (request.method !== 'POST') {
-    return json({error: 'Method not allowed'}, {status: 405});
-  }
-
-  return redirect('/', {
-    headers: {
-      'Set-Cookie': await session.commit(),
-    },
-  });
-}
-
-export default function Logout() {
-  return null;
+export async function action({context}: ActionFunctionArgs) {
+  return context.customerAccount.logout();
 }

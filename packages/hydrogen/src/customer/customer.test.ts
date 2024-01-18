@@ -130,7 +130,9 @@ describe('customer', () => {
         'openid email https://api.customers.com/auth/customer.graphql',
       );
       expect(params.get('response_type')).toBe('code');
-      expect(params.get('redirect_uri')).toBe('https://localhost/authorize');
+      expect(params.get('redirect_uri')).toBe(
+        'https://localhost/account/authorize',
+      );
       expect(params.get('state')).toBeTruthy();
       expect(params.get('nonce')).toBeTruthy();
       expect(params.get('code_challenge')).toBeTruthy();
