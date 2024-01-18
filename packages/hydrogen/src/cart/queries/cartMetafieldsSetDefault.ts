@@ -1,8 +1,9 @@
+import {StorefrontApiErrors} from '../../storefront';
 import type {
-  CartQueryData,
   CartOptionalInput,
   CartQueryOptions,
   MetafieldWithoutOwnerId,
+  CartQueryDataReturn,
 } from './cart-types';
 import type {
   Cart,
@@ -12,7 +13,7 @@ import type {
 export type CartMetafieldsSetFunction = (
   metafields: MetafieldWithoutOwnerId[],
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryData>;
+) => Promise<CartQueryDataReturn>;
 
 export function cartMetafieldsSetDefault(
   options: CartQueryOptions,
@@ -25,11 +26,11 @@ export function cartMetafieldsSetDefault(
         ownerId,
       }),
     );
-    const {cartMetafieldsSet} = await options.storefront.mutate<{
+    const {cartMetafieldsSet, errors} = await options.storefront.mutate<{
       cartMetafieldsSet: {
-        cart: Cart;
-        errors: MetafieldsSetUserError[];
+        userErrors: MetafieldsSetUserError[];
       };
+      errors: StorefrontApiErrors;
     }>(CART_METAFIELD_SET_MUTATION(), {
       variables: {metafields: metafieldsWithOwnerId},
     });
@@ -38,7 +39,8 @@ export function cartMetafieldsSetDefault(
       cart: {
         id: ownerId,
       } as Cart,
-      errors: cartMetafieldsSet.errors as unknown as MetafieldsSetUserError[],
+      ...cartMetafieldsSet,
+      errors,
     };
   };
 }
@@ -51,7 +53,7 @@ export const CART_METAFIELD_SET_MUTATION = () => `#graphql
     $country: CountryCode
   ) @inContext(country: $country, language: $language) {
     cartMetafieldsSet(metafields: $metafields) {
-      errors: userErrors {
+      userErrors {
         code
         elementIndex
         field

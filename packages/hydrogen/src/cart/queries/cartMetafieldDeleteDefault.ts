@@ -1,8 +1,8 @@
+import {StorefrontApiErrors} from '../../storefront';
 import type {
-  CartQueryData,
   CartQueryOptions,
-  CartQueryReturn,
   CartOptionalInput,
+  CartQueryDataReturn,
 } from './cart-types';
 import type {
   Cart,
@@ -13,18 +13,18 @@ import type {
 export type CartMetafieldDeleteFunction = (
   key: Scalars['String']['input'],
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryData>;
+) => Promise<CartQueryDataReturn>;
 
 export function cartMetafieldDeleteDefault(
   options: CartQueryOptions,
 ): CartMetafieldDeleteFunction {
   return async (key, optionalParams) => {
     const ownerId = optionalParams?.cartId || options.getCartId();
-    const {cartMetafieldDelete} = await options.storefront.mutate<{
+    const {cartMetafieldDelete, errors} = await options.storefront.mutate<{
       cartMetafieldDelete: {
-        cart: Cart;
-        errors: MetafieldDeleteUserError[];
+        userErrors: MetafieldDeleteUserError[];
       };
+      errors: StorefrontApiErrors;
     }>(CART_METAFIELD_DELETE_MUTATION(), {
       variables: {
         input: {
@@ -37,8 +37,8 @@ export function cartMetafieldDeleteDefault(
       cart: {
         id: ownerId,
       } as Cart,
-      errors:
-        cartMetafieldDelete.errors as unknown as MetafieldDeleteUserError[],
+      ...cartMetafieldDelete,
+      errors,
     };
   };
 }
@@ -49,7 +49,7 @@ export const CART_METAFIELD_DELETE_MUTATION = () => `#graphql
     $input: CartMetafieldDeleteInput!
   ) {
     cartMetafieldDelete(input: $input) {
-      errors: userErrors {
+      userErrors {
         code
         field
         message

@@ -1,21 +1,24 @@
+import {StorefrontApiErrors} from '../../storefront';
 import {MINIMAL_CART_FRAGMENT, USER_ERROR_FRAGMENT} from './cart-fragments';
 import type {
   CartOptionalInput,
   CartQueryData,
+  CartQueryDataReturn,
   CartQueryOptions,
 } from './cart-types';
 
 export type CartNoteUpdateFunction = (
   note: string,
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryData>;
+) => Promise<CartQueryDataReturn>;
 
 export function cartNoteUpdateDefault(
   options: CartQueryOptions,
 ): CartNoteUpdateFunction {
   return async (note, optionalParams) => {
-    const {cartNoteUpdate} = await options.storefront.mutate<{
+    const {cartNoteUpdate, errors} = await options.storefront.mutate<{
       cartNoteUpdate: CartQueryData;
+      errors: StorefrontApiErrors;
     }>(CART_NOTE_UPDATE_MUTATION(options.cartFragment), {
       variables: {
         cartId: options.getCartId(),
@@ -23,7 +26,7 @@ export function cartNoteUpdateDefault(
         ...optionalParams,
       },
     });
-    return cartNoteUpdate;
+    return {...cartNoteUpdate, errors};
   };
 }
 
@@ -41,7 +44,7 @@ export const CART_NOTE_UPDATE_MUTATION = (
       cart {
         ...CartApiMutation
       }
-      errors: userErrors {
+      userErrors {
         ...CartApiError
       }
     }

@@ -1,15 +1,16 @@
+import {StorefrontApiErrors} from '../../storefront';
 import {MINIMAL_CART_FRAGMENT, USER_ERROR_FRAGMENT} from './cart-fragments';
 import type {
   CartOptionalInput,
   CartQueryData,
+  CartQueryDataReturn,
   CartQueryOptions,
-  CartQueryReturn,
 } from './cart-types';
 
 export type CartDiscountCodesUpdateFunction = (
   discountCodes: string[],
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryData>;
+) => Promise<CartQueryDataReturn>;
 
 export function cartDiscountCodesUpdateDefault(
   options: CartQueryOptions,
@@ -20,8 +21,9 @@ export function cartDiscountCodesUpdateDefault(
       return array.indexOf(value) === index;
     });
 
-    const {cartDiscountCodesUpdate} = await options.storefront.mutate<{
+    const {cartDiscountCodesUpdate, errors} = await options.storefront.mutate<{
       cartDiscountCodesUpdate: CartQueryData;
+      errors: StorefrontApiErrors;
     }>(CART_DISCOUNT_CODE_UPDATE_MUTATION(options.cartFragment), {
       variables: {
         cartId: options.getCartId(),
@@ -29,7 +31,7 @@ export function cartDiscountCodesUpdateDefault(
         ...optionalParams,
       },
     });
-    return cartDiscountCodesUpdate;
+    return {...cartDiscountCodesUpdate, errors};
   };
 }
 
@@ -47,7 +49,7 @@ export const CART_DISCOUNT_CODE_UPDATE_MUTATION = (
       cart {
         ...CartApiMutation
       }
-      errors: userErrors {
+      userErrors {
         ...CartApiError
       }
     }

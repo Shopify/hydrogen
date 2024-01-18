@@ -28,8 +28,6 @@ export function cartLinesAddDefault(
       },
     });
 
-    console.log({cartLinesAdd});
-
     return {...cartLinesAdd, errors};
   };
 }

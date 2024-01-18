@@ -1,7 +1,9 @@
+import {StorefrontApiErrors} from '../../storefront';
 import {MINIMAL_CART_FRAGMENT, USER_ERROR_FRAGMENT} from './cart-fragments';
 import type {
   CartOptionalInput,
   CartQueryData,
+  CartQueryDataReturn,
   CartQueryOptions,
 } from './cart-types';
 import type {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-api-types';
@@ -9,14 +11,15 @@ import type {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-ap
 export type CartBuyerIdentityUpdateFunction = (
   buyerIdentity: CartBuyerIdentityInput,
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryData>;
+) => Promise<CartQueryDataReturn>;
 
 export function cartBuyerIdentityUpdateDefault(
   options: CartQueryOptions,
 ): CartBuyerIdentityUpdateFunction {
   return async (buyerIdentity, optionalParams) => {
-    const {cartBuyerIdentityUpdate} = await options.storefront.mutate<{
+    const {cartBuyerIdentityUpdate, errors} = await options.storefront.mutate<{
       cartBuyerIdentityUpdate: CartQueryData;
+      errors: StorefrontApiErrors;
     }>(CART_BUYER_IDENTITY_UPDATE_MUTATION(options.cartFragment), {
       variables: {
         cartId: options.getCartId(),
@@ -24,7 +27,7 @@ export function cartBuyerIdentityUpdateDefault(
         ...optionalParams,
       },
     });
-    return cartBuyerIdentityUpdate;
+    return {...cartBuyerIdentityUpdate, errors};
   };
 }
 
@@ -42,7 +45,7 @@ export const CART_BUYER_IDENTITY_UPDATE_MUTATION = (
       cart {
         ...CartApiMutation
       }
-      errors: userErrors {
+      userErrors {
         ...CartApiError
       }
     }
