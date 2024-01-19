@@ -1,4 +1,4 @@
-import {StorefrontApiErrors} from '../../storefront';
+import {StorefrontApiErrors, formatAPIResult} from '../../storefront';
 import {MINIMAL_CART_FRAGMENT, USER_ERROR_FRAGMENT} from './cart-fragments';
 import type {
   CartOptionalInput,
@@ -26,7 +26,7 @@ export function cartLinesRemoveDefault(
         ...optionalParams,
       },
     });
-    return {...cartLinesRemove, errors};
+    return formatAPIResult(cartLinesRemove, errors);
   };
 }
 

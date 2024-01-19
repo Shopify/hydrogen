@@ -1,4 +1,4 @@
-import {StorefrontApiErrors} from '../../storefront';
+import {StorefrontApiErrors, formatAPIResult} from '../../storefront';
 import type {CartQueryOptions, CartReturn} from './cart-types';
 import type {
   Cart,
@@ -50,7 +50,7 @@ export function cartGetDefault(options: CartQueryOptions): CartGetFunction {
       cache: options.storefront.CacheNone(),
     });
 
-    return {...cart, errors};
+    return formatAPIResult(cart, errors);
   };
 }
 

@@ -1,4 +1,4 @@
-import {StorefrontApiErrors} from '../../storefront';
+import {StorefrontApiErrors, formatAPIResult} from '../../storefront';
 import type {
   CartOptionalInput,
   CartQueryOptions,
@@ -35,13 +35,15 @@ export function cartMetafieldsSetDefault(
       variables: {metafields: metafieldsWithOwnerId},
     });
 
-    return {
-      cart: {
-        id: ownerId,
-      } as Cart,
-      ...cartMetafieldsSet,
-      errors,
-    };
+    return formatAPIResult(
+      {
+        cart: {
+          id: ownerId,
+        } as Cart,
+        ...cartMetafieldsSet,
+      },
+      errors
+    );
   };
 }
 

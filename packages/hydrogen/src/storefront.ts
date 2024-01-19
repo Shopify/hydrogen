@@ -45,6 +45,7 @@ import {
   throwGraphQLError,
   type GraphQLApiResponse,
   type GraphQLErrorOptions,
+  GraphQLFormattedError,
 } from './utils/graphql';
 import {getCallerStackLine} from './utils/callsites';
 
@@ -53,7 +54,7 @@ export type I18nBase = {
   country: CountryCode;
 };
 
-export type StorefrontApiErrors = unknown[];
+export type StorefrontApiErrors = GraphQLFormattedError[] | undefined;
 export type StorefrontError = {
   errors?: StorefrontApiErrors;
 };
@@ -374,7 +375,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
     const {data, errors} = body as GraphQLApiResponse<T>;
 
-    return {...data, errors} as T & StorefrontError;
+    return formatAPIResult(data, errors as StorefrontApiErrors);
   }
 
   return {
@@ -469,4 +470,15 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       i18n: (i18n ?? defaultI18n) as TI18n,
     },
   };
+}
+
+export function formatAPIResult<T>(data: T, errors: StorefrontApiErrors) {
+  let result = data;
+  if (errors) {
+    result = {
+      ...data,
+      errors,
+    };
+  }
+  return result as T & StorefrontError;
 }
