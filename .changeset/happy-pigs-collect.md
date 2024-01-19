@@ -14,6 +14,8 @@ Better Hydrogen error handling
 
  The `errors` object will now be used for Graphql execution errors.
 
+ `storefront.isApiError` is deprecated.
+
  Updated types:
 
  * `cart.get()` used to return a `Cart` type. Now it returns `CartReturn` type to accommodate the `errors` object

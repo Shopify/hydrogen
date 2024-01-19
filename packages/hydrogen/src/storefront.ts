@@ -157,7 +157,10 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
   getApiUrl: ReturnType<
     typeof createStorefrontUtilities
   >['getStorefrontApiUrl'];
-  /** Determines if the error is resulted from a Storefront API call. */
+  /**
+   * @deprecated
+   * Determines if the error is resulted from a Storefront API call.
+   * */
   isApiError: (error: any) => boolean;
   /** The `i18n` object passed in from the `createStorefrontClient` argument. */
   i18n: TI18n;
@@ -201,10 +204,6 @@ type StorefrontMutationOptions = StorefrontCommonExtraParams & {
   mutation: string;
   cache?: never;
 };
-
-export const StorefrontApiError = class extends Error {} as ErrorConstructor;
-export const isStorefrontApiError = (error: any) =>
-  error instanceof StorefrontApiError;
 
 const defaultI18n: I18nBase = {language: 'EN', country: 'US'};
 
@@ -448,6 +447,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       getShopifyDomain,
       getApiUrl: getStorefrontApiUrl,
       /**
+       * @deprecated
        * Wether it's a GraphQL error returned in the Storefront API response.
        *
        * Example:
@@ -466,7 +466,14 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        * }
        * ```
        */
-      isApiError: isStorefrontApiError,
+      isApiError: (error: any) => {
+        if (process.env.NODE_ENV === 'development') {
+          warnOnce(
+            '`isApiError` is deprecated. An `errors` object would be returned from the API if there is an error.',
+          );
+        }
+        return false;
+      },
       i18n: (i18n ?? defaultI18n) as TI18n,
     },
   };
