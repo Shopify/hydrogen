@@ -109,7 +109,8 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
       AutoAddedVariableNames
     >
   ) => Promise<
-    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType>
+    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &
+      StorefrontError
   >;
   /** The function to run a mutation on Storefront API. */
   mutate: <
@@ -124,7 +125,8 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
       AutoAddedVariableNames
     >
   ) => Promise<
-    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType>
+    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &
+      StorefrontError
   >;
   /** The cache instance passed in from the `createStorefrontClient` argument. */
   cache?: Cache;
