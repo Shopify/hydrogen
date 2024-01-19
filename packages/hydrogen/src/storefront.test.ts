@@ -1,7 +1,5 @@
 import {vi, describe, it, expect} from 'vitest';
 import {
-  StorefrontApiError,
-  StorefrontApiErrors,
   createStorefrontClient,
 } from './storefront';
 import {fetchWithServerCache} from './cache/fetch';
