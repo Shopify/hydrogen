@@ -35,6 +35,6 @@ describe('cartSelectedDeliveryOptionsUpdateDefault', () => {
     ]);
 
     expect(result.cart).toHaveProperty('id', CART_ID);
-    expect(result.errors?.[0]).toContain(cartFragment);
+    expect(result.userErrors?.[0]).toContain(cartFragment);
   });
 });

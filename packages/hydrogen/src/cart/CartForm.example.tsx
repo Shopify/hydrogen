@@ -1,6 +1,6 @@
 import {type ActionFunctionArgs, json} from '@remix-run/server-runtime';
 import {
-  type CartQueryData,
+  type CartQueryDataReturn,
   type HydrogenCart,
   CartForm,
 } from '@shopify/hydrogen';
@@ -35,7 +35,7 @@ export async function action({request, context}: ActionFunctionArgs) {
   const {action, inputs} = CartForm.getFormInput(formData);
 
   let status = 200;
-  let result: CartQueryData;
+  let result: CartQueryDataReturn;
 
   if (action === CartForm.ACTIONS.LinesUpdate) {
     result = await cart.updateLines(inputs.lines);

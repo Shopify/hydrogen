@@ -35,14 +35,25 @@ function storefrontMutate(
     cartId = 'c1-new-cart-id';
   }
 
-  return Promise.resolve({
-    [keyWrapper]: {
-      cart: {
-        id: cartId,
+  if (
+    keyWrapper === 'cartMetafieldsSet' ||
+    keyWrapper === 'cartMetafieldDelete'
+  ) {
+    return Promise.resolve({
+      [keyWrapper]: {
+        userErrors: [query],
       },
-      errors: [query],
-    },
-  });
+    });
+  } else {
+    return Promise.resolve({
+      [keyWrapper]: {
+        cart: {
+          id: cartId,
+        },
+        userErrors: [query],
+      },
+    });
+  }
 }
 
 export function mockHeaders(cartId?: string) {

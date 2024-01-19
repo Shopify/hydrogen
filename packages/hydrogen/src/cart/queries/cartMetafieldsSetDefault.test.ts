@@ -25,6 +25,6 @@ describe('cartMetafieldsSetDefault', () => {
     const result = await cartMetafieldsSet([]);
 
     expect(result.cart).toHaveProperty('id', CART_ID);
-    expect(result.errors?.[0]).not.toContain(cartFragment);
+    expect(result.userErrors?.[0]).not.toContain(cartFragment);
   });
 });

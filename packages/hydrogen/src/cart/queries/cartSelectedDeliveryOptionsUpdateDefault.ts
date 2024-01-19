@@ -1,7 +1,9 @@
+import {StorefrontApiErrors, formatAPIResult} from '../../storefront';
 import {MINIMAL_CART_FRAGMENT, USER_ERROR_FRAGMENT} from './cart-fragments';
 import type {
   CartOptionalInput,
   CartQueryData,
+  CartQueryDataReturn,
   CartQueryOptions,
 } from './cart-types';
 import type {CartSelectedDeliveryOptionInput} from '@shopify/hydrogen-react/storefront-api-types';
@@ -9,15 +11,16 @@ import type {CartSelectedDeliveryOptionInput} from '@shopify/hydrogen-react/stor
 export type CartSelectedDeliveryOptionsUpdateFunction = (
   selectedDeliveryOptions: CartSelectedDeliveryOptionInput[],
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryData>;
+) => Promise<CartQueryDataReturn>;
 
 export function cartSelectedDeliveryOptionsUpdateDefault(
   options: CartQueryOptions,
 ): CartSelectedDeliveryOptionsUpdateFunction {
   return async (selectedDeliveryOptions, optionalParams) => {
-    const {cartSelectedDeliveryOptionsUpdate} =
+    const {cartSelectedDeliveryOptionsUpdate, errors} =
       await options.storefront.mutate<{
         cartSelectedDeliveryOptionsUpdate: CartQueryData;
+        errors: StorefrontApiErrors;
       }>(CART_SELECTED_DELIVERY_OPTIONS_UPDATE_MUTATION(options.cartFragment), {
         variables: {
           cartId: options.getCartId(),
@@ -25,7 +28,7 @@ export function cartSelectedDeliveryOptionsUpdateDefault(
           ...optionalParams,
         },
       });
-    return cartSelectedDeliveryOptionsUpdate;
+    return formatAPIResult(cartSelectedDeliveryOptionsUpdate, errors);
   };
 }
 
@@ -43,7 +46,7 @@ export const CART_SELECTED_DELIVERY_OPTIONS_UPDATE_MUTATION = (
       cart {
         ...CartApiMutation
       }
-      errors: userErrors {
+      userErrors {
         ...CartApiError
       }
     }
