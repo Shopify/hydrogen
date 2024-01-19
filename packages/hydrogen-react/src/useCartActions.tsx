@@ -30,7 +30,7 @@ type CartResponse = PartialDeep<CartType, {recurseIntoArrays: true}>;
 /**
  * The `useCartActions` hook returns helper graphql functions for Storefront Cart API
  *
- * See [cart API graphql mutations](https://shopify.dev/api/storefront/current/objects/Cart)
+ * See [cart API graphql mutations](https://shopify.dev/api/storefront/2024-01/objects/Cart)
  */
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function useCartActions({
@@ -41,7 +41,7 @@ export function useCartActions({
 }: {
   /**  Maximum number of cart lines to fetch. Defaults to 250 cart lines. */
   numCartLines?: number;
-  /** A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/current/objects/cart) for all queries and mutations. A default value is used if no argument is provided. */
+  /** A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/2024-01/objects/cart) for all queries and mutations. A default value is used if no argument is provided. */
   cartFragment: string;
   /** The ISO country code for i18n. Default to `US` */
   countryCode?: CountryCode;

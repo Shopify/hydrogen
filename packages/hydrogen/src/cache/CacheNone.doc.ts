@@ -8,22 +8,22 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'createStorefrontClient',
       type: 'utilities',
-      url: '/docs/api/hydrogen/current/utilities/createstorefrontclient',
+      url: '/docs/api/hydrogen/2024-01/utilities/createstorefrontclient',
     },
     {
       name: 'CacheShort',
       type: 'utilities',
-      url: '/docs/api/hydrogen/current/utilities/cacheshort',
+      url: '/docs/api/hydrogen/2024-01/utilities/cacheshort',
     },
     {
       name: 'CacheLong',
       type: 'utilities',
-      url: '/docs/api/hydrogen/current/utilities/cachelong',
+      url: '/docs/api/hydrogen/2024-01/utilities/cachelong',
     },
     {
       name: 'CacheCustom',
       type: 'utilities',
-      url: '/docs/api/hydrogen/current/utilities/cachecustom',
+      url: '/docs/api/hydrogen/2024-01/utilities/cachecustom',
     },
   ],
   description: `The CacheNone() strategy instructs caches not to store any data. The function accepts no arguments.

@@ -67,7 +67,7 @@ type HydrogenImageBaseProps = {
    * @defaultValue `center`
    */
   crop?: Crop;
-  /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/current/objects/Image) object. Must be an Image object.
+  /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2024-01/objects/Image) object. Must be an Image object.
    *
    * @example
    * ```

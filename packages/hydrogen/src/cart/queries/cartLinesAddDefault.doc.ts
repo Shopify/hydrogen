@@ -6,7 +6,7 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description:
-    'Creates a function that accepts an array of [CartLineInput](/docs/api/storefront/current/input-objects/CartLineInput) and adds the line items to a cart',
+    'Creates a function that accepts an array of [CartLineInput](/docs/api/storefront/2024-01/input-objects/CartLineInput) and adds the line items to a cart',
   type: 'utility',
   defaultExample: {
     description: 'This is the default example',

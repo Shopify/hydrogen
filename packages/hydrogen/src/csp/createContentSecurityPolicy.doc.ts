@@ -8,12 +8,12 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'useNonce',
       type: 'hooks',
-      url: '/docs/api/hydrogen/current/hooks/usenonce',
+      url: '/docs/api/hydrogen/2024-01/hooks/usenonce',
     },
     {
       name: 'Script',
       type: 'components',
-      url: '/docs/api/hydrogen/current/components/script',
+      url: '/docs/api/hydrogen/2024-01/components/script',
     },
   ],
   description: `Create a [content security policy](/docs/custom-storefronts/hydrogen/content-security-policy) to secure your application. The default content security policy includes exclusions for cdn.shopify.com and a script nonce.`,

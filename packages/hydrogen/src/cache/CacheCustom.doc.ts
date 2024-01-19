@@ -8,22 +8,22 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'createStorefrontClient',
       type: 'utilities',
-      url: '/docs/api/hydrogen/current/utilities/createstorefrontclient',
+      url: '/docs/api/hydrogen/2024-01/utilities/createstorefrontclient',
     },
     {
       name: 'CacheNone',
       type: 'utilities',
-      url: '/docs/api/hydrogen/current/utilities/cachenone',
+      url: '/docs/api/hydrogen/2024-01/utilities/cachenone',
     },
     {
       name: 'CacheShort',
       type: 'utilities',
-      url: '/docs/api/hydrogen/current/utilities/cacheshort',
+      url: '/docs/api/hydrogen/2024-01/utilities/cacheshort',
     },
     {
       name: 'CacheLong',
       type: 'utilities',
-      url: '/docs/api/hydrogen/current/utilities/cachelong',
+      url: '/docs/api/hydrogen/2024-01/utilities/cachelong',
     },
   ],
   description: `This allows you to create your own caching strategy, using any of the options available in a \`CachingStrategy\` object.
