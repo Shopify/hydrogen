@@ -46,7 +46,7 @@ import {
   type GraphQLApiResponse,
   type GraphQLErrorOptions,
 } from './utils/graphql';
-import {getCallerStackLine} from './utils/callsites';
+import {getCallerStackLine, withSyncStack} from './utils/callsites';
 
 export type I18nBase = {
   language: LanguageCode;
@@ -399,16 +399,10 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         query = minifyQuery(query);
         assertQuery(query, 'storefront.query');
 
-        const result = fetchStorefrontApi({
-          ...options,
-          query,
-        });
-
-        // This is a no-op, but we need to catch the promise to avoid unhandled rejections
-        // we cannot return the catch no-op, or it would swallow the error
-        result.catch(() => {});
-
-        return result;
+        return withSyncStack(
+          new Error(),
+          fetchStorefrontApi({...options, query}),
+        );
       },
       /**
        * Sends a GraphQL mutation to the Storefront API.
@@ -427,16 +421,10 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         mutation = minifyQuery(mutation);
         assertMutation(mutation, 'storefront.mutate');
 
-        const result = fetchStorefrontApi({
-          ...options,
-          mutation,
-        });
-
-        // This is a no-op, but we need to catch the promise to avoid unhandled rejections
-        // we cannot return the catch no-op, or it would swallow the error
-        result.catch(() => {});
-
-        return result;
+        return withSyncStack(
+          new Error(),
+          fetchStorefrontApi({...options, mutation}),
+        );
       },
       cache,
       CacheNone,

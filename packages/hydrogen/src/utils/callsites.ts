@@ -1,3 +1,21 @@
+/**
+ * Merges the error information thrown in a promise to a sync stack traced error.
+ * The sync stack traced error will have the same name, message, and cause as the
+ * original error but will have a stack trace that points to the caller function.
+ */
+export function withSyncStack<T>(
+  syncStackTracedError: Error,
+  promise: Promise<T>,
+): Promise<T> {
+  return promise.catch((error: Error) => {
+    // Avoid reading 'stack' property of error to avoid accessing sourcemaps.
+    syncStackTracedError.name = error.name;
+    syncStackTracedError.message = error.message;
+    syncStackTracedError.cause = error.cause;
+    throw syncStackTracedError;
+  });
+}
+
 export type StackInfo = {
   file?: string;
   func?: string;
