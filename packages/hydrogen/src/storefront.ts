@@ -158,8 +158,7 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
     typeof createStorefrontUtilities
   >['getStorefrontApiUrl'];
   /**
-   * @deprecated
-   * Determines if the error is resulted from a Storefront API call.
+   * @deprecated Use the `errors` object returned from the API if exists.
    * */
   isApiError: (error: any) => boolean;
   /** The `i18n` object passed in from the `createStorefrontClient` argument. */
