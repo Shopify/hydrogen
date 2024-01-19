@@ -208,7 +208,7 @@ export async function runBuild({
           remixConfig.serverMinify
             ? ''
             : ' Minify your bundle by adding `serverMinify: true` to remix.config.js.'
-        }\n`,
+        }\n   https://shopify.dev/docs/custom-storefronts/hydrogen/debugging/bundle-size\n`,
       );
     }
   }
