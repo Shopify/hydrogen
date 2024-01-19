@@ -26,7 +26,7 @@ import {
   RemixConfig,
   type ServerMode,
 } from '../../lib/remix-config.js';
-import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
+import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
 import {createRemixLogger, muteRemixLogs} from '../../lib/log.js';
@@ -71,10 +71,6 @@ export default class Build extends Command {
     codegen: commonFlags.codegen,
     'codegen-config-path': commonFlags.codegenConfigPath,
     diff: commonFlags.diff,
-
-    base: deprecated('--base')(),
-    entry: deprecated('--entry')(),
-    target: deprecated('--target')(),
   };
 
   async run(): Promise<void> {
@@ -171,7 +167,11 @@ export async function runBuild({
       fileWatchCache: createFileWatchCache(),
     }).catch((thrown) => {
       logThrown(thrown);
-      process.exit(1);
+      if (process.env.SHOPIFY_UNIT_TEST) {
+        throw thrown;
+      } else {
+        process.exit(1);
+      }
     }),
     useCodegen && codegen({...remixConfig, configFilePath: codegenConfigPath}),
   ]);
