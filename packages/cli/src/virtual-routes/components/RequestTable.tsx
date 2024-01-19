@@ -98,7 +98,9 @@ export function RequestTable({
           ))}
         </div>
         <div id="request-table__footer">
-          {totalMainRequests} request | {totalSubRequest} sub request
+          {totalMainRequests} request{totalMainRequests > 1 ? 's' : ''} |{' '}
+          {totalSubRequest} sub request
+          {totalSubRequest > 1 ? 's' : ''}
         </div>
       </div>
     </div>
