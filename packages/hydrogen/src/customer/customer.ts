@@ -356,7 +356,6 @@ export function createCustomerClient({
       assertMutation(mutation, 'customer.mutate');
 
       return withSyncStack(
-        new Error(),
         fetchCustomerAPI({query: mutation, type: 'mutation', ...options}),
       );
     },
@@ -365,7 +364,6 @@ export function createCustomerClient({
       assertQuery(query, 'customer.query');
 
       return withSyncStack(
-        new Error(),
         fetchCustomerAPI({query, type: 'query', ...options}),
       );
     },

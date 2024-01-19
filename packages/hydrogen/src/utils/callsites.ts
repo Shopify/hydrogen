@@ -1,16 +1,15 @@
 /**
- * Adds the stack trace of a synchronous error to an asynchronous error.
+ * Ensures that the error of an async rejected promise
+ * contains the entire synchronous stack trace.
  */
-export function withSyncStack<T>(
-  syncStackTracedError: Error,
-  promise: Promise<T>,
-): Promise<T> {
-  return promise.catch((error: Error) => {
-    const syncStack = syncStackTracedError.stack ?? '';
+export function withSyncStack<T>(promise: Promise<T>): Promise<T> {
+  const syncError = new Error();
 
-    error.stack =
-      `Error: ${error.message}\n` +
-      syncStack.slice(syncStack.indexOf('\n') + 1);
+  return promise.catch((error: Error) => {
+    // Remove error message, caller function and current function from the stack.
+    const syncStack = (syncError.stack ?? '').split('\n').slice(3).join('\n');
+
+    error.stack = `Error: ${error.message}\n` + syncStack;
 
     throw error;
   });

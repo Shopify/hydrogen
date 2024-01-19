@@ -399,10 +399,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         query = minifyQuery(query);
         assertQuery(query, 'storefront.query');
 
-        return withSyncStack(
-          new Error(),
-          fetchStorefrontApi({...options, query}),
-        );
+        return withSyncStack(fetchStorefrontApi({...options, query}));
       },
       /**
        * Sends a GraphQL mutation to the Storefront API.
@@ -421,10 +418,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         mutation = minifyQuery(mutation);
         assertMutation(mutation, 'storefront.mutate');
 
-        return withSyncStack(
-          new Error(),
-          fetchStorefrontApi({...options, mutation}),
-        );
+        return withSyncStack(fetchStorefrontApi({...options, mutation}));
       },
       cache,
       CacheNone,
