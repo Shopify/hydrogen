@@ -9,7 +9,8 @@ export function withSyncStack<T>(
     const syncStack = syncStackTracedError.stack ?? '';
 
     error.stack =
-      (error.stack ?? '') + syncStack.slice(syncStack.indexOf('\n') + 1);
+      `Error: ${error.message}\n` +
+      syncStack.slice(syncStack.indexOf('\n') + 1);
 
     throw error;
   });
