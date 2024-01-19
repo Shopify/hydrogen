@@ -1,7 +1,5 @@
 import {vi, describe, it, expect} from 'vitest';
-import {
-  createStorefrontClient,
-} from './storefront';
+import {createStorefrontClient} from './storefront';
 import {fetchWithServerCache} from './cache/fetch';
 import {STOREFRONT_ACCESS_TOKEN_HEADER} from './constants';
 import {
