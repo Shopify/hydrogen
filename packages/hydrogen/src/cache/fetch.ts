@@ -21,6 +21,7 @@ import {
 export type CacheKey = string | readonly unknown[];
 
 export type FetchDebugInfo = {
+  url?: string;
   requestId?: string | null;
   graphql?: string | null;
   purpose?: string | null;
@@ -134,7 +135,6 @@ export async function runWithCache<T = unknown>(
         }) => {
           globalThis.__H2O_LOG_EVENT?.({
             eventType: 'subrequest',
-            url: debugData?.url || getKeyUrl(key),
             startTime: overrideStartTime || startTime,
             cacheStatus,
             responsePayload: (result && result[0]) || result,
@@ -146,6 +146,7 @@ export async function runWithCache<T = unknown>(
             },
             waitUntil,
             ...debugInfo,
+            url: debugData?.url || debugInfo?.url,
             displayName: debugInfo?.displayName || debugData?.displayName,
           } as any);
         }
@@ -271,11 +272,7 @@ export async function fetchWithServerCache(
           data = await response.text();
         } catch {
           // Getting a response without a valid body
-          throw new Error(
-            `Storefront API response code: ${
-              response.status
-            } (Request Id: ${response.headers.get('x-request-id')})`,
-          );
+          return toSerializableResponse('', response);
         }
       }
 

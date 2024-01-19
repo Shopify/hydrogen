@@ -21,7 +21,7 @@ export async function loader({request, context}: LoaderFunctionArgs) {
     };
   }
 
-  const data = await context.storefront.query(SEARCH_QUERY, {
+  const {errors, ...data} = await context.storefront.query(SEARCH_QUERY, {
     variables: {
       query: searchTerm,
       ...variables,

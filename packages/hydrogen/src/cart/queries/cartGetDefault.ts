@@ -1,4 +1,5 @@
-import type {CartQueryOptions} from './cart-types';
+import {StorefrontApiErrors, formatAPIResult} from '../../storefront';
+import type {CartQueryOptions, CartReturn} from './cart-types';
 import type {
   Cart,
   CountryCode,
@@ -30,7 +31,7 @@ type CartGetProps = {
 
 export type CartGetFunction = (
   cartInput?: CartGetProps,
-) => Promise<Cart | null>;
+) => Promise<CartReturn | null>;
 
 export function cartGetDefault(options: CartQueryOptions): CartGetFunction {
   return async (cartInput?: CartGetProps) => {
@@ -38,18 +39,18 @@ export function cartGetDefault(options: CartQueryOptions): CartGetFunction {
 
     if (!cartId) return null;
 
-    const {cart} = await options.storefront.query<{cart: Cart}>(
-      CART_QUERY(options.cartFragment),
-      {
-        variables: {
-          cartId,
-          ...cartInput,
-        },
-        cache: options.storefront.CacheNone(),
+    const {cart, errors} = await options.storefront.query<{
+      cart: Cart;
+      errors: StorefrontApiErrors;
+    }>(CART_QUERY(options.cartFragment), {
+      variables: {
+        cartId,
+        ...cartInput,
       },
-    );
+      cache: options.storefront.CacheNone(),
+    });
 
-    return cart;
+    return formatAPIResult(cart, errors);
   };
 }
 

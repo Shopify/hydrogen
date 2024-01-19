@@ -45,12 +45,18 @@ import {
   throwGraphQLError,
   type GraphQLApiResponse,
   type GraphQLErrorOptions,
+  GraphQLFormattedError,
 } from './utils/graphql';
 import {getCallerStackLine} from './utils/callsites';
 
 export type I18nBase = {
   language: LanguageCode;
   country: CountryCode;
+};
+
+export type StorefrontApiErrors = GraphQLFormattedError[] | undefined;
+export type StorefrontError = {
+  errors?: StorefrontApiErrors;
 };
 
 /**
@@ -84,6 +90,7 @@ type AutoAddedVariableNames = 'country' | 'language';
 type StorefrontCommonExtraParams = {
   headers?: HeadersInit;
   storefrontApiVersion?: string;
+  displayName?: string;
 };
 
 /**
@@ -103,7 +110,8 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
       AutoAddedVariableNames
     >
   ) => Promise<
-    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType>
+    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &
+      StorefrontError
   >;
   /** The function to run a mutation on Storefront API. */
   mutate: <
@@ -118,7 +126,8 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
       AutoAddedVariableNames
     >
   ) => Promise<
-    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType>
+    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &
+      StorefrontError
   >;
   /** The cache instance passed in from the `createStorefrontClient` argument. */
   cache?: Cache;
@@ -148,7 +157,9 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
   getApiUrl: ReturnType<
     typeof createStorefrontUtilities
   >['getStorefrontApiUrl'];
-  /** Determines if the error is resulted from a Storefront API call. */
+  /**
+   * @deprecated Use the `errors` object returned from the API if exists.
+   * */
   isApiError: (error: any) => boolean;
   /** The `i18n` object passed in from the `createStorefrontClient` argument. */
   i18n: TI18n;
@@ -185,21 +196,13 @@ type StorefrontQueryOptions = StorefrontCommonExtraParams & {
   query: string;
   mutation?: never;
   cache?: CachingStrategy;
-  /** The name to be shown in the Subrequest Profiler */
-  displayName?: string;
 };
 
 type StorefrontMutationOptions = StorefrontCommonExtraParams & {
   query?: never;
   mutation: string;
   cache?: never;
-  /** The name to be shown in the Subrequest Profiler */
-  displayName?: string;
 };
-
-export const StorefrontApiError = class extends Error {} as ErrorConstructor;
-export const isStorefrontApiError = (error: any) =>
-  error instanceof StorefrontApiError;
 
 const defaultI18n: I18nBase = {language: 'EN', country: 'US'};
 
@@ -281,7 +284,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
   }: {variables?: GenericVariables} & (
     | StorefrontQueryOptions
     | StorefrontMutationOptions
-  )): Promise<T> {
+  )): Promise<T & StorefrontError> {
     const userHeaders =
       headers instanceof Headers
         ? Object.fromEntries(headers.entries())
@@ -335,6 +338,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       shouldCacheResponse: checkGraphQLErrors,
       waitUntil,
       debugInfo: {
+        url,
         graphql: graphqlData,
         requestId: requestInit.headers[STOREFRONT_REQUEST_GROUP_ID_HEADER],
         purpose: storefrontHeaders?.purpose,
@@ -344,6 +348,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     });
 
     const errorOptions: GraphQLErrorOptions<T> = {
+      url,
       response,
       type: mutation ? 'mutation' : 'query',
       query,
@@ -368,15 +373,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
     const {data, errors} = body as GraphQLApiResponse<T>;
 
-    if (errors?.length) {
-      throwGraphQLError({
-        ...errorOptions,
-        errors,
-        ErrorConstructor: StorefrontApiError,
-      });
-    }
-
-    return data as T;
+    return formatAPIResult(data, errors as StorefrontApiErrors);
   }
 
   return {
@@ -449,6 +446,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       getShopifyDomain,
       getApiUrl: getStorefrontApiUrl,
       /**
+       * @deprecated
        * Wether it's a GraphQL error returned in the Storefront API response.
        *
        * Example:
@@ -467,8 +465,26 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        * }
        * ```
        */
-      isApiError: isStorefrontApiError,
+      isApiError: (error: any) => {
+        if (process.env.NODE_ENV === 'development') {
+          warnOnce(
+            '`isApiError` is deprecated. An `errors` object would be returned from the API if there is an error.',
+          );
+        }
+        return false;
+      },
       i18n: (i18n ?? defaultI18n) as TI18n,
     },
   };
+}
+
+export function formatAPIResult<T>(data: T, errors: StorefrontApiErrors) {
+  let result = data;
+  if (errors) {
+    result = {
+      ...data,
+      errors,
+    };
+  }
+  return result as T & StorefrontError;
 }
