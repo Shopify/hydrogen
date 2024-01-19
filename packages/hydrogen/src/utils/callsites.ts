@@ -26,10 +26,10 @@ export const getCallerStackLine =
           const cs = callsites[2 + stackOffset];
 
           stackInfo = {
-            file: cs.getFileName() ?? undefined,
-            func: cs.getFunctionName() ?? undefined,
-            line: cs.getLineNumber() ?? undefined,
-            column: cs.getColumnNumber() ?? undefined,
+            file: cs?.getFileName() ?? undefined,
+            func: cs?.getFunctionName() ?? undefined,
+            line: cs?.getLineNumber() ?? undefined,
+            column: cs?.getColumnNumber() ?? undefined,
           };
 
           return '';

@@ -4,8 +4,15 @@ projects:
   default:
     schema: 'packages/hydrogen-react/storefront.schema.json'
     documents:
-     - 'templates/**/app/**/*.{graphql,js,ts,jsx,tsx}'
-     - 'examples/**/app/**/*.{graphql,js,ts,jsx,tsx}'
+      - 'templates/**/app/**/*.{graphql,js,ts,jsx,tsx}'
+      - 'examples/**/app/**/*.{graphql,js,ts,jsx,tsx}'
+      - '!templates/**/app/graphql/**/*.{graphql,js,ts,jsx,tsx}'
+      - '!examples/**/app/graphql/**/*.{graphql,js,ts,jsx,tsx}'
+  customer-account:
+    schema: 'packages/hydrogen-react/customer-account.schema.json'
+    documents:
+      - 'templates/**/app/graphql/customer-account/**/*.{graphql,js,ts,jsx,tsx}'
+      - 'examples/**/app/graphql/customer-account/**/*.{graphql,js,ts,jsx,tsx}'
   admin:
     schema: 'packages/cli/admin.schema.json'
     documents: 'packages/cli/src/**/graphql/admin/**/*.ts'

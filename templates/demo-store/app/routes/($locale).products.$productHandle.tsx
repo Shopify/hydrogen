@@ -120,16 +120,17 @@ function redirectToFirstVariant({
   product: ProductQuery['product'];
   request: Request;
 }) {
-  const searchParams = new URLSearchParams(new URL(request.url).search);
+  const url = new URL(request.url);
+  const searchParams = new URLSearchParams(url.search);
+
   const firstVariant = product!.variants.nodes[0];
   for (const option of firstVariant.selectedOptions) {
     searchParams.set(option.name, option.value);
   }
 
-  return redirect(
-    `/products/${product!.handle}?${searchParams.toString()}`,
-    302,
-  );
+  url.search = searchParams.toString();
+
+  return redirect(url.href.replace(url.origin, ''), 302);
 }
 
 export default function Product() {

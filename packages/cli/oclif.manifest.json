@@ -45,10 +45,7 @@
           "type": "boolean",
           "description": "Generate types for the Storefront API queries found in your project.",
           "required": false,
-          "allowNo": false,
-          "aliases": [
-            "codegen-unstable"
-          ]
+          "allowNo": false
         },
         "codegen-config-path": {
           "name": "codegen-config-path",
@@ -66,24 +63,6 @@
           "description": "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
           "required": false,
           "allowNo": false
-        },
-        "base": {
-          "name": "base",
-          "type": "option",
-          "hidden": true,
-          "multiple": false
-        },
-        "entry": {
-          "name": "entry",
-          "type": "option",
-          "hidden": true,
-          "multiple": false
-        },
-        "target": {
-          "name": "target",
-          "type": "option",
-          "hidden": true,
-          "multiple": false
         }
       },
       "args": {}
@@ -122,41 +101,34 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginAlias": "@shopify/cli-hydrogen",
       "pluginType": "core",
-      "aliases": [
-        "codegen-unstable"
-      ],
-      "deprecateAliases": true,
+      "aliases": [],
       "flags": {
         "path": {
           "name": "path",
           "type": "option",
           "description": "The path to the directory of the Hydrogen storefront. The default is the current directory.",
-          "multiple": false,
-          "deprecateAliases": true
+          "multiple": false
         },
         "codegen-config-path": {
           "name": "codegen-config-path",
           "type": "option",
           "description": "Specify a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if it exists.",
           "required": false,
-          "multiple": false,
-          "deprecateAliases": true
+          "multiple": false
         },
         "force-sfapi-version": {
           "name": "force-sfapi-version",
           "type": "option",
           "description": "Force generating Storefront API types for a specific version instead of using the one provided in Hydrogen. A token can also be provided with this format: `<version>:<token>`.",
           "hidden": true,
-          "multiple": false,
-          "deprecateAliases": true
+          "multiple": false
         },
         "watch": {
           "name": "watch",
           "type": "boolean",
           "description": "Watch the project for changes to update types on file save.",
           "required": false,
-          "allowNo": false,
-          "deprecateAliases": true
+          "allowNo": false
         }
       },
       "args": {}
@@ -292,10 +264,7 @@
           "type": "boolean",
           "description": "Generate types for the Storefront API queries found in your project. It updates the types on file save.",
           "required": false,
-          "allowNo": false,
-          "aliases": [
-            "codegen-unstable"
-          ]
+          "allowNo": false
         },
         "codegen-config-path": {
           "name": "codegen-config-path",
@@ -331,12 +300,6 @@
           "description": "Port where the inspector will be available.",
           "multiple": false,
           "default": 9229
-        },
-        "host": {
-          "name": "host",
-          "type": "option",
-          "hidden": true,
-          "multiple": false
         },
         "env-branch": {
           "name": "env-branch",
