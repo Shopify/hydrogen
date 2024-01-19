@@ -40,7 +40,7 @@ export function cartMetafieldDeleteDefault(
         } as Cart,
         ...cartMetafieldDelete,
       },
-      errors
+      errors,
     );
   };
 }

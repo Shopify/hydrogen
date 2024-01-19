@@ -42,7 +42,7 @@ export function cartMetafieldsSetDefault(
         } as Cart,
         ...cartMetafieldsSet,
       },
-      errors
+      errors,
     );
   };
 }
