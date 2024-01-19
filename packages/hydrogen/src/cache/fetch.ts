@@ -146,7 +146,7 @@ export async function runWithCache<T = unknown>(
             },
             waitUntil,
             ...debugInfo,
-            url: debugData?.url || debugInfo?.url,
+            url: debugData?.url || debugInfo?.url || getKeyUrl(key),
             displayName: debugInfo?.displayName || debugData?.displayName,
           } as any);
         }
