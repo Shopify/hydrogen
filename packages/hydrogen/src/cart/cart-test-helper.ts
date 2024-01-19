@@ -35,7 +35,10 @@ function storefrontMutate(
     cartId = 'c1-new-cart-id';
   }
 
-  if (keyWrapper === 'cartMetafieldsSet' || keyWrapper === 'cartMetafieldDelete') {
+  if (
+    keyWrapper === 'cartMetafieldsSet' ||
+    keyWrapper === 'cartMetafieldDelete'
+  ) {
     return Promise.resolve({
       [keyWrapper]: {
         userErrors: [query],

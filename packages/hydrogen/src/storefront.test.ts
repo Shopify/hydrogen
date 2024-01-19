@@ -1,5 +1,9 @@
 import {vi, describe, it, expect} from 'vitest';
-import {StorefrontApiError, StorefrontApiErrors, createStorefrontClient} from './storefront';
+import {
+  StorefrontApiError,
+  StorefrontApiErrors,
+  createStorefrontClient,
+} from './storefront';
 import {fetchWithServerCache} from './cache/fetch';
 import {STOREFRONT_ACCESS_TOKEN_HEADER} from './constants';
 import {
@@ -166,7 +170,7 @@ describe('createStorefrontClient', () => {
       vi.mocked(fetchWithServerCache).mockResolvedValueOnce([
         {
           data: {cart: {}},
-          errors: [{message: 'first'}, {message: 'second'}]
+          errors: [{message: 'first'}, {message: 'second'}],
         },
         new Response('ok', {status: 200}),
       ]);
@@ -174,7 +178,7 @@ describe('createStorefrontClient', () => {
       const data = await storefront.query('query {}');
       expect(data).toMatchObject({
         cart: {},
-        errors: [{message: 'first'}, {message: 'second'}]
+        errors: [{message: 'first'}, {message: 'second'}],
       });
     });
   });

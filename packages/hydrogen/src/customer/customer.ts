@@ -207,23 +207,20 @@ export function createCustomerClient({
 
     const startTime = new Date().getTime();
     const url = `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`;
-    const response = await fetch(
-      url,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': USER_AGENT,
-          Origin: origin,
-          Authorization: accessToken,
-        },
-        body: JSON.stringify({
-          operationName: 'SomeQuery',
-          query,
-          variables,
-        }),
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': USER_AGENT,
+        Origin: origin,
+        Authorization: accessToken,
       },
-    );
+      body: JSON.stringify({
+        operationName: 'SomeQuery',
+        query,
+        variables,
+      }),
+    });
 
     logSubRequestEvent?.(query, startTime);
 
