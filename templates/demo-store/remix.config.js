@@ -18,4 +18,8 @@ module.exports = {
   serverMinify: process.env.NODE_ENV === 'production',
   postcss: true,
   tailwind: true,
+  future: {
+    v3_fetcherPersist: true,
+    v3_relativeSplatpath: true,
+  },
 };
