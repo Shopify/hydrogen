@@ -33,7 +33,7 @@ import {
 import {parseJSON} from '../utils/parse-json';
 import {hashKey} from '../utils/hash';
 import {CrossRuntimeRequest, getDebugHeaders} from '../utils/request';
-import {getCallerStackLine} from '../utils/callsites';
+import {getCallerStackLine, withSyncStack} from '../utils/callsites';
 
 type CustomerAPIResponse<ReturnType> = {
   data: ReturnType;
@@ -353,13 +353,17 @@ export function createCustomerClient({
       mutation = minifyQuery(mutation);
       assertMutation(mutation, 'customer.mutate');
 
-      return fetchCustomerAPI({query: mutation, type: 'mutation', ...options});
+      return withSyncStack(
+        fetchCustomerAPI({query: mutation, type: 'mutation', ...options}),
+      );
     },
     query(query, options?) {
       query = minifyQuery(query);
       assertQuery(query, 'customer.query');
 
-      return fetchCustomerAPI({query, type: 'query', ...options});
+      return withSyncStack(
+        fetchCustomerAPI({query, type: 'query', ...options}),
+      );
     },
     authorize: async () => {
       const code = url.searchParams.get('code');
