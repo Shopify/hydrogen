@@ -29,6 +29,6 @@ describe('cartCreateDefault', () => {
     const result = await cartCreate({});
 
     expect(result.cart).toHaveProperty('id', NEW_CART_ID);
-    expect(result.errors?.[0]).toContain(cartFragment);
+    expect(result.userErrors?.[0]).toContain(cartFragment);
   });
 });

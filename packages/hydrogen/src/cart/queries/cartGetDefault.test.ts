@@ -22,7 +22,6 @@ describe('cartGetDefault', () => {
 
     const result = await cartGet();
 
-    console.log(result);
     expect(result).toStrictEqual(null);
   });
 

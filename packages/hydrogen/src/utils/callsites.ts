@@ -1,3 +1,20 @@
+/**
+ * Ensures that the error of an async rejected promise
+ * contains the entire synchronous stack trace.
+ */
+export function withSyncStack<T>(promise: Promise<T>): Promise<T> {
+  const syncError = new Error();
+
+  return promise.catch((error: Error) => {
+    // Remove error message, caller function and current function from the stack.
+    const syncStack = (syncError.stack ?? '').split('\n').slice(3).join('\n');
+
+    error.stack = `Error: ${error.message}\n` + syncStack;
+
+    throw error;
+  });
+}
+
 export type StackInfo = {
   file?: string;
   func?: string;
@@ -25,11 +42,11 @@ export const getCallerStackLine =
           // Skip both and find the first ancestor.
           const cs = callsites[2 + stackOffset];
 
-          stackInfo = {
-            file: cs?.getFileName() ?? undefined,
-            func: cs?.getFunctionName() ?? undefined,
-            line: cs?.getLineNumber() ?? undefined,
-            column: cs?.getColumnNumber() ?? undefined,
+          stackInfo = cs && {
+            file: cs.getFileName() ?? undefined,
+            func: cs.getFunctionName() ?? undefined,
+            line: cs.getLineNumber() ?? undefined,
+            column: cs.getColumnNumber() ?? undefined,
           };
 
           return '';
