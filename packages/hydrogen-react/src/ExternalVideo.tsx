@@ -1,5 +1,6 @@
 import type {ExternalVideo as ExternalVideoType} from './storefront-api-types.js';
 import type {Entries, PartialDeep} from 'type-fest';
+import {forwardRef, IframeHTMLAttributes} from 'react';
 
 interface ExternalVideoBaseProps {
   /**
@@ -13,58 +14,65 @@ interface ExternalVideoBaseProps {
   options?: YouTube | Vimeo;
 }
 
-export type ExternalVideoProps = Omit<JSX.IntrinsicElements['iframe'], 'src'> &
+export type ExternalVideoProps = Omit<
+  IframeHTMLAttributes<HTMLIFrameElement>,
+  'src'
+> &
   ExternalVideoBaseProps;
 
 /**
  * The `ExternalVideo` component renders an embedded video for the Storefront
  * API's [ExternalVideo object](https://shopify.dev/api/storefront/reference/products/externalvideo).
  */
-export function ExternalVideo(props: ExternalVideoProps): JSX.Element {
-  const {
-    data,
-    options,
-    id = data.id,
-    frameBorder = '0',
-    allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture',
-    allowFullScreen = true,
-    loading = 'lazy',
-    ...passthroughProps
-  } = props;
 
-  if (!data.embedUrl) {
-    throw new Error(`<ExternalVideo/> requires the 'embedUrl' property`);
-  }
+export const ExternalVideo = forwardRef<HTMLIFrameElement, ExternalVideoProps>(
+  (props, ref): JSX.Element => {
+    const {
+      data,
+      options,
+      id = data.id,
+      frameBorder = '0',
+      allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture',
+      allowFullScreen = true,
+      loading = 'lazy',
+      ...passthroughProps
+    } = props;
 
-  let finalUrl: string = data.embedUrl;
-
-  if (options) {
-    const urlObject = new URL(data.embedUrl);
-    for (const [key, value] of Object.entries(options) as Entries<
-      typeof options
-    >) {
-      if (typeof value === 'undefined') {
-        continue;
-      }
-
-      urlObject.searchParams.set(key, value.toString());
+    if (!data.embedUrl) {
+      throw new Error(`<ExternalVideo/> requires the 'embedUrl' property`);
     }
-    finalUrl = urlObject.toString();
-  }
 
-  return (
-    <iframe
-      {...passthroughProps}
-      id={id ?? data.embedUrl}
-      title={data.alt ?? data.id ?? 'external video'}
-      frameBorder={frameBorder}
-      allow={allow}
-      allowFullScreen={allowFullScreen}
-      src={finalUrl}
-      loading={loading}
-    ></iframe>
-  );
-}
+    let finalUrl: string = data.embedUrl;
+
+    if (options) {
+      const urlObject = new URL(data.embedUrl);
+      for (const [key, value] of Object.entries(options) as Entries<
+        typeof options
+      >) {
+        if (typeof value === 'undefined') {
+          continue;
+        }
+
+        urlObject.searchParams.set(key, value.toString());
+      }
+      finalUrl = urlObject.toString();
+    }
+
+    return (
+      <iframe
+        {...passthroughProps}
+        id={id ?? data.embedUrl}
+        title={data.alt ?? data.id ?? 'external video'}
+        frameBorder={frameBorder}
+        allow={allow}
+        allowFullScreen={allowFullScreen}
+        src={finalUrl}
+        loading={loading}
+        ref={ref}
+      ></iframe>
+    );
+  },
+);
 
 interface YouTube {
   autoplay?: 0 | 1;
