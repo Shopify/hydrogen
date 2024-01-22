@@ -90,6 +90,8 @@ export type CustomerClient = {
   authorize: () => Promise<Response>;
   /** Returns if the user is logged in. It also checks if the access token is expired and refreshes it if needed. */
   isLoggedIn: () => Promise<boolean>;
+  /** Check for unauthorized user and perform `unauthorizedHandler`. */
+  checkUnauthorized: () => void | DataFunctionValue;
   /** Returns CustomerAccessToken if the user is logged in. It also run a expirey check and does a token refresh if needed. */
   getAccessToken: () => Promise<string | undefined>;
   /** Logout the user by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. */
@@ -237,11 +239,8 @@ export function createCustomerAccountClient({
     type: 'query' | 'mutation';
     variables?: GenericVariables;
   }) {
-    const customerAccount = session.get(CUSTOMER_ACCOUNT_SESSION_KEY);
-    const accessToken = customerAccount?.accessToken;
-    const expiresAt = customerAccount?.expiresAt;
-
-    if (!accessToken || !expiresAt) {
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
       throw unauthorizedHandler();
     }
 
@@ -249,15 +248,6 @@ export function createCustomerAccountClient({
     // Since this is an internal function that is always called from
     // the public query/mutate wrappers, add 1 to the stack offset.
     const stackInfo = getCallerStackLine?.(1);
-
-    await checkExpires({
-      locks,
-      expiresAt,
-      session,
-      customerAccountId,
-      customerAccountUrl,
-      origin,
-    });
 
     const startTime = new Date().getTime();
     const url = `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`;
@@ -323,12 +313,14 @@ export function createCustomerAccountClient({
     }
   }
 
-  async function isLoggedIn() {
+  async function isLoggedIn(handleUnauthorized = false) {
     const customerAccount = session.get(CUSTOMER_ACCOUNT_SESSION_KEY);
     const accessToken = customerAccount?.accessToken;
     const expiresAt = customerAccount?.expiresAt;
 
-    if (!accessToken || !expiresAt) return false;
+    if (!accessToken || !expiresAt) {
+      return false;
+    }
 
     // Get stack trace before losing it with any async operation.
     const stackInfo = getCallerStackLine?.();
@@ -351,6 +343,22 @@ export function createCustomerAccountClient({
     }
 
     return true;
+  }
+
+  async function checkUnauthorized() {
+    if (!(await isLoggedIn())) {
+      throw unauthorizedHandler();
+    }
+  }
+
+  async function getAccessToken() {
+    const hasAccessToken = await isLoggedIn;
+
+    if (!hasAccessToken) {
+      return;
+    } else {
+      return session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.accessToken;
+    }
   }
 
   return {
@@ -408,16 +416,9 @@ export function createCustomerAccountClient({
       );
     },
     isLoggedIn,
+    checkUnauthorized,
     isApiError: isCustomerAccountApiError,
-    getAccessToken: async () => {
-      const hasAccessToken = await isLoggedIn;
-
-      if (!hasAccessToken) {
-        return;
-      } else {
-        return session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.accessToken;
-      }
-    },
+    getAccessToken,
     mutate(mutation, options?) {
       mutation = minifyQuery(mutation);
       assertMutation(mutation, 'customer.mutate');

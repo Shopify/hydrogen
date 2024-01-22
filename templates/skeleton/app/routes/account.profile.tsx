@@ -25,13 +25,7 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({context, request}: LoaderFunctionArgs) {
-  if (!(await context.customerAccount.isLoggedIn())) {
-    const loginUrl =
-      '/account/login' +
-      `?${new URLSearchParams(`redirectPath=${request.url}`).toString()}`;
-
-    return redirect(loginUrl);
-  }
+  await context.customerAccount.checkUnauthorized();
 
   return json(
     {},

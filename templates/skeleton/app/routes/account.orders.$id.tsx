@@ -13,64 +13,47 @@ export async function loader({params, context, request}: LoaderFunctionArgs) {
     return redirect('/account/orders');
   }
 
-  if (!(await context.customerAccount.isLoggedIn())) {
-    const loginUrl =
-      '/account/login' +
-      `?${new URLSearchParams(`redirectPath=${request.url}`).toString()}`;
+  const orderId = atob(params.id);
+  const {data, errors} = await context.customerAccount.query(
+    CUSTOMER_ORDER_QUERY,
+    {
+      variables: {orderId},
+    },
+  );
 
-    return redirect(loginUrl);
+  if (errors?.length || !data?.order) {
+    throw new Error('Order not found');
   }
 
-  try {
-    const orderId = atob(params.id);
-    const {data, errors} = await context.customerAccount.query(
-      CUSTOMER_ORDER_QUERY,
-      {
-        variables: {orderId},
-      },
-    );
+  const {order} = data;
 
-    if (errors?.length || !data?.order) {
-      throw new Error('Order not found');
-    }
+  const lineItems = flattenConnection(order.lineItems);
+  const discountApplications = flattenConnection(order.discountApplications);
+  const fulfillmentStatus = flattenConnection(order.fulfillments)[0].status;
 
-    const {order} = data;
+  const firstDiscount = discountApplications[0]?.value;
 
-    const lineItems = flattenConnection(order.lineItems);
-    const discountApplications = flattenConnection(order.discountApplications);
-    const fulfillmentStatus = flattenConnection(order.fulfillments)[0].status;
+  const discountValue =
+    firstDiscount?.__typename === 'MoneyV2' && firstDiscount;
 
-    const firstDiscount = discountApplications[0]?.value;
+  const discountPercentage =
+    firstDiscount?.__typename === 'PricingPercentageValue' &&
+    firstDiscount?.percentage;
 
-    const discountValue =
-      firstDiscount?.__typename === 'MoneyV2' && firstDiscount;
-
-    const discountPercentage =
-      firstDiscount?.__typename === 'PricingPercentageValue' &&
-      firstDiscount?.percentage;
-
-    return json(
-      {
-        order,
-        lineItems,
-        discountValue,
-        discountPercentage,
-        fulfillmentStatus,
-      },
-      {
-        headers: {
-          'Set-Cookie': await context.session.commit(),
-        },
-      },
-    );
-  } catch (error) {
-    throw new Response(error instanceof Error ? error.message : undefined, {
-      status: 404,
+  return json(
+    {
+      order,
+      lineItems,
+      discountValue,
+      discountPercentage,
+      fulfillmentStatus,
+    },
+    {
       headers: {
         'Set-Cookie': await context.session.commit(),
       },
-    });
-  }
+    },
+  );
 }
 
 export default function OrderRoute() {

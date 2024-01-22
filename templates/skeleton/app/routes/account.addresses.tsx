@@ -35,14 +35,8 @@ export const meta: MetaFunction = () => {
   return [{title: 'Addresses'}];
 };
 
-export async function loader({context, request}: LoaderFunctionArgs) {
-  if (!(await context.customerAccount.isLoggedIn())) {
-    const loginUrl =
-      '/account/login' +
-      `?${new URLSearchParams(`redirectPath=${request.url}`).toString()}`;
-
-    return redirect(loginUrl);
-  }
+export async function loader({context}: LoaderFunctionArgs) {
+  await context.customerAccount.checkUnauthorized();
 
   return json(
     {},
@@ -67,6 +61,7 @@ export async function action({request, context}: ActionFunctionArgs) {
       throw new Error('You must provide an address id.');
     }
 
+    // this will ensure redirecting to login never happen for mutatation
     const isLoggedIn = await customerAccount.isLoggedIn();
     if (!isLoggedIn) {
       return json(
