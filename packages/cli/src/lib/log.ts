@@ -86,7 +86,7 @@ function injectLogReplacer(
 }
 
 /**
- * Mute logs from Miniflare
+ * Mute logs from Miniflare / Workerd
  */
 export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
   injectLogReplacer('log');
@@ -118,20 +118,34 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
 
   addMessageReplacers(
     'dev-workerd',
+    // Workerd logs
     [
-      // Workerd logs
       ([first]) =>
         typeof first === 'string' &&
         /^\x1B\[31m(workerd\/|stack:( (0|[a-f\d]{4,})){3,})/.test(first),
       () => {},
     ],
+    [
+      ([first]) =>
+        typeof first === 'string' &&
+        /\$LLVM_SYMBOLIZER|recursive isolate lock/.test(first),
+      () => {},
+    ],
 
-    // Non-actionable warnings/errors:
+    // Non-actionable warnings:
     [
       ([first]) =>
         typeof first === 'string' && /^A promise rejection/i.test(first),
       () => {},
     ],
+    [
+      ([first]) =>
+        typeof first === 'string' &&
+        /resolved to multiple addresses/i.test(first), // For win32
+      () => {},
+    ],
+
+    // Non-actionable errors:
     [
       ([first]) => {
         const message = first?.message ?? first;
