@@ -84,7 +84,7 @@ const isCustomerAccountApiError = (
 ): error is CustomerAccountApiError => error instanceof CustomerAccountApiError;
 
 export type CustomerClient = {
-  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. An optional `redirectPath` parameter defines the final path the user lands on at the end of the oAuth flow. It defaults to `/`. */
+  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. An optional `redirectPath` parameter defines the final path the user lands on at the end of the oAuth flow. It defaults to the path passed in `redirectPath` param, Referer header, then `/account`. */
   login: (redirectPath?: string) => Promise<Response>;
   /** On successful login, the user redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings. */
   authorize: () => Promise<Response>;
@@ -143,9 +143,7 @@ type CustomerClientOptions = {
   waitUntil?: ExecutionContext['waitUntil'];
   /** This is the route in your app that authorizes the user after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/account/authorize`. */
   authUrl?: string;
-  /** This is the route in your app that we redirect to whenever query/mutate was called with a not login user. Make sure to call `customer.login()` within the loader on this route. It defaults to `/account/login`. */
-  loginUrl?: string;
-  /** The behaviour when query/mutate is called without a LoggedIn customer. The default behaviour is redirecting to /account/login where login() is located and return to the current location after auth. */
+  /** The behaviour when query/mutate is called without a logged in customer. The default behaviour is redirecting to `/account/login` where login() is located and return to the current location after auth. */
   unauthorizedHandler?: () => DataFunctionValue;
 };
 
@@ -533,7 +531,7 @@ export function createCustomerAccountClient({
         redirectPath: undefined,
       });
 
-      return redirect(redirectPath || '/', {
+      return redirect(redirectPath, {
         headers: {
           'Set-Cookie': await session.commit(),
         },
