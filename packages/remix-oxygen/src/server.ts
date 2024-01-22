@@ -20,12 +20,11 @@ export function createRequestHandler<Context = unknown>({
   poweredByHeader = true,
   getLoadContext,
 }: {
-  build: Omit<ServerBuild, 'isSpaMode'>;
+  build: ServerBuild;
   mode?: string;
   poweredByHeader?: boolean;
   getLoadContext?: (request: Request) => Promise<Context> | Context;
 }) {
-  // @ts-expect-error https://github.com/remix-run/remix/pull/8492
   const handleRequest = createRemixRequestHandler(build, mode);
 
   return async (request: Request) => {
