@@ -5,13 +5,13 @@
 // Enhance TypeScript's built-in typings.
 import '@total-typescript/ts-reset';
 
-import type {Storefront, HydrogenCart} from '@shopify/hydrogen';
-import type {AppSession} from './server';
+import type {Storefront, CustomerClient, HydrogenCart} from '@shopify/hydrogen';
+import type {AppSession} from '~/lib/session';
 import {createRickAndMortyClient} from './app/lib/createRickAndMortyClient.server';
 
 declare global {
   /**
-   * A global `process` object is only available during build to access NODE_ENV
+   * A global `process` object is only available during build to access NODE_ENV.
    */
   const process: {env: {NODE_ENV: 'production' | 'development'}};
 
@@ -24,6 +24,8 @@ declare global {
     PRIVATE_STOREFRONT_API_TOKEN: string;
     PUBLIC_STORE_DOMAIN: string;
     PUBLIC_STOREFRONT_ID: string;
+    PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID: string;
+    PUBLIC_CUSTOMER_ACCOUNT_API_URL: string;
   }
 }
 
@@ -35,6 +37,7 @@ declare module '@shopify/remix-oxygen' {
     env: Env;
     cart: HydrogenCart;
     storefront: Storefront;
+    customerAccount: CustomerClient;
     rickAndMorty: ReturnType<typeof createRickAndMortyClient>;
     session: AppSession;
     waitUntil: ExecutionContext['waitUntil'];
