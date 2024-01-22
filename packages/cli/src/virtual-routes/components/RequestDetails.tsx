@@ -10,7 +10,7 @@ const useResizeObserver =
 
 const TABS: Record<number, string> = {
   1: 'General',
-  2: 'Header',
+  2: 'Headers',
   3: 'Cache',
   4: 'Data',
 };

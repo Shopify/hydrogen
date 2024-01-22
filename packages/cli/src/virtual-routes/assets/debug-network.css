@@ -333,7 +333,7 @@ button:active.primary {
 }
 
 #request-table__content {
-  overflow: scroll;
+  overflow: auto;
 }
 
 #request-table__content .grid-row.active {
@@ -428,7 +428,7 @@ button:active.primary {
 .tabPanels .tabPanel {
   display: none;
 
-  overflow: scroll;
+  overflow: auto;
   padding-bottom: 0.75rem;
 }
 
@@ -463,7 +463,7 @@ button:active.primary {
 #request-detail .tabPanels {
   width: 100%;
   height: 100%;
-  overflow: scroll;
+  overflow: auto;
   padding-left: 1rem;
   padding-right: 1rem;
   padding-top: 0.5rem;
@@ -537,7 +537,7 @@ button:active.primary {
 }
 
 .error {
-  color: #ff0000;
+  color: #b32720;
 }
 
 @media (max-width: 940px) {

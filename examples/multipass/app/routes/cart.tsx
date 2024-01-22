@@ -1,6 +1,6 @@
 import {Await, type MetaFunction} from '@remix-run/react';
 import {Suspense} from 'react';
-import type {CartQueryData} from '@shopify/hydrogen';
+import type {CartQueryDataReturn} from '@shopify/hydrogen';
 import {CartForm} from '@shopify/hydrogen';
 import {json, type ActionFunctionArgs} from '@shopify/remix-oxygen';
 import {CartMain} from '~/components/Cart';
@@ -25,7 +25,7 @@ export async function action({request, context}: ActionFunctionArgs) {
   }
 
   let status = 200;
-  let result: CartQueryData;
+  let result: CartQueryDataReturn;
 
   switch (action) {
     case CartForm.ACTIONS.LinesAdd:
