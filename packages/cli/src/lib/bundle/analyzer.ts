@@ -2,41 +2,55 @@ import {joinPath, dirname} from '@shopify/cli-kit/node/path';
 import {fileURLToPath} from 'node:url';
 import {writeFile, readFile, fileExists} from '@shopify/cli-kit/node/fs';
 import colors from '@shopify/cli-kit/node/colors';
-
-export async function hasMetafile(buildPath: string): Promise<boolean> {
-  return (
-    await Promise.all([
-      fileExists(joinPath(buildPath, 'worker', 'metafile.server.json')),
-      fileExists(joinPath(buildPath, 'worker', 'metafile.js.json')),
-    ])
-  ).every(Boolean);
-}
+import {renderWarning} from '@shopify/cli-kit/node/ui';
 
 export async function buildBundleAnalysis(buildPath: string) {
-  await Promise.all([
-    writeBundleAnalyzerFile(
-      buildPath,
-      'metafile.server.json',
-      'worker-bundle-analyzer.html',
-    ),
-    writeBundleAnalyzerFile(
-      buildPath,
-      'metafile.js.json',
-      'client-bundle-analyzer.html',
-    ),
-  ]);
+  const workerBuildPath = joinPath(buildPath, 'worker');
+  const serverMetafile = 'metafile.server.json';
+  const clientMetafile = 'metafile.js.json';
 
-  return (
-    'file://' + joinPath(buildPath, 'worker', 'worker-bundle-analyzer.html')
-  );
+  const hasMetafile = (
+    await Promise.all([
+      fileExists(joinPath(workerBuildPath, serverMetafile)),
+      fileExists(joinPath(workerBuildPath, clientMetafile)),
+    ])
+  ).every(Boolean);
+
+  if (!hasMetafile) return null;
+
+  try {
+    await Promise.all([
+      writeBundleAnalyzerFile(
+        workerBuildPath,
+        serverMetafile,
+        'worker-bundle-analyzer.html',
+      ),
+      writeBundleAnalyzerFile(
+        workerBuildPath,
+        clientMetafile,
+        'client-bundle-analyzer.html',
+      ),
+    ]);
+
+    return 'file://' + joinPath(workerBuildPath, 'worker-bundle-analyzer.html');
+  } catch (thrown) {
+    const error = thrown as Error;
+
+    renderWarning({
+      headline: 'Could not generate bundle analysis',
+      body: error?.stack ?? error?.message ?? error,
+    });
+
+    return null;
+  }
 }
 
 async function writeBundleAnalyzerFile(
-  buildPath: string,
+  workerBuildPath: string,
   metafileName: string,
   outputFile: string,
 ) {
-  const metafile = await readFile(joinPath(buildPath, 'worker', metafileName), {
+  const metafile = await readFile(joinPath(workerBuildPath, metafileName), {
     encoding: 'utf8',
   });
 
@@ -53,10 +67,7 @@ async function writeBundleAnalyzerFile(
     `globalThis.METAFILE = '${metafile64}';`,
   );
 
-  await writeFile(
-    joinPath(buildPath, 'worker', outputFile),
-    templateWithMetafile,
-  );
+  await writeFile(joinPath(workerBuildPath, outputFile), templateWithMetafile);
 }
 
 export async function getBundleAnalysisSummary(bundlePath: string) {

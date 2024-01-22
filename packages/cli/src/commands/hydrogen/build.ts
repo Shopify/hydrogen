@@ -23,7 +23,6 @@ import {
   getProjectPaths,
   getRemixConfig,
   handleRemixImportFail,
-  RemixConfig,
   type ServerMode,
 } from '../../lib/remix-config.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
@@ -34,13 +33,12 @@ import {codegen} from '../../lib/codegen.js';
 import {
   buildBundleAnalysis,
   getBundleAnalysisSummary,
-  hasMetafile,
 } from '../../lib/bundle/analyzer.js';
-import {AbortError} from '@shopify/cli-kit/node/error';
 import {isCI} from '../../lib/is-ci.js';
 import {copyDiffBuild, prepareDiffDirectory} from '../../lib/template-diff.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
+const WORKER_BUILD_SIZE_LIMIT = 10;
 
 export default class Build extends Command {
   static description = 'Builds a Hydrogen storefront for production.';
@@ -178,23 +176,40 @@ export async function runBuild({
 
   if (process.env.NODE_ENV !== 'development') {
     console.timeEnd(LOG_WORKER_BUILT);
-    const sizeMB = (await fileSize(buildPathWorkerFile)) / (1024 * 1024);
 
-    if (await hasMetafile(buildPath)) {
-      await writeBundleAnalysis(
-        buildPath,
-        root,
-        buildPathWorkerFile,
-        sizeMB,
-        bundleStats,
-        remixConfig,
+    const bundleAnalysisPath = await buildBundleAnalysis(buildPath);
+
+    const sizeMB = (await fileSize(buildPathWorkerFile)) / (1024 * 1024);
+    const formattedSize = colors.yellow(sizeMB.toFixed(2) + ' MB');
+
+    outputInfo(
+      outputContent`   ${colors.dim(
+        relativePath(root, buildPathWorkerFile),
+      )}  ${
+        bundleAnalysisPath
+          ? outputToken.link(formattedSize, bundleAnalysisPath)
+          : formattedSize
+      }\n`,
+    );
+
+    if (bundleStats && bundleAnalysisPath) {
+      outputInfo(
+        outputContent`${
+          (await getBundleAnalysisSummary(buildPathWorkerFile)) || '\n'
+        }\n    │\n    └─── ${outputToken.link(
+          'Complete analysis: ' + bundleAnalysisPath,
+          bundleAnalysisPath,
+        )}\n\n`,
       );
-    } else {
-      await writeSimpleBuildStatus(
-        root,
-        buildPathWorkerFile,
-        sizeMB,
-        remixConfig,
+    }
+
+    if (sizeMB >= WORKER_BUILD_SIZE_LIMIT) {
+      outputWarn(
+        `🚨 Worker bundle exceeds ${WORKER_BUILD_SIZE_LIMIT} MB! This can delay your worker response.${
+          remixConfig.serverMinify
+            ? ''
+            : ' Minify your bundle by adding `serverMinify: true` to remix.config.js.'
+        }\n   https://shopify.dev/docs/custom-storefronts/hydrogen/debugging/bundle-size\n`,
       );
     }
   }
@@ -232,69 +247,6 @@ async function cleanClientSourcemaps(buildPathClient: string) {
       );
     }),
   );
-}
-
-async function writeBundleAnalysis(
-  buildPath: string,
-  root: string,
-  buildPathWorkerFile: string,
-  sizeMB: number,
-  bundleStats: boolean,
-  remixConfig: RemixConfig,
-) {
-  const bundleAnalysisPath = await buildBundleAnalysis(buildPath);
-  outputInfo(
-    outputContent`   ${colors.dim(
-      relativePath(root, buildPathWorkerFile),
-    )}  ${outputToken.link(
-      colors.yellow(sizeMB.toFixed(2) + ' MB'),
-      bundleAnalysisPath,
-    )}\n`,
-  );
-
-  if (bundleStats) {
-    outputInfo(
-      outputContent`${
-        (await getBundleAnalysisSummary(buildPathWorkerFile)) || '\n'
-      }\n    │\n    └─── ${outputToken.link(
-        'Complete analysis: ' + bundleAnalysisPath,
-        bundleAnalysisPath,
-      )}\n\n`,
-    );
-  }
-
-  if (sizeMB >= 5) {
-    outputWarn(
-      `🚨 Worker bundle exceeds 5 MB! This can delay your worker response.${
-        remixConfig.serverMinify
-          ? ''
-          : ' Minify your bundle by adding `serverMinify: true` to remix.config.js.'
-      }\n`,
-    );
-  }
-}
-
-async function writeSimpleBuildStatus(
-  root: string,
-  buildPathWorkerFile: string,
-  sizeMB: number,
-  remixConfig: RemixConfig,
-) {
-  outputInfo(
-    outputContent`   ${colors.dim(
-      relativePath(root, buildPathWorkerFile),
-    )}  ${colors.yellow(sizeMB.toFixed(2) + ' MB')}\n`,
-  );
-
-  if (sizeMB >= 5) {
-    outputWarn(
-      `🚨 Worker bundle exceeds 5 MB! This can delay your worker response.${
-        remixConfig.serverMinify
-          ? ''
-          : ' Minify your bundle by adding `serverMinify: true` to remix.config.js.'
-      }\n`,
-    );
-  }
 }
 
 export async function copyPublicFiles(
