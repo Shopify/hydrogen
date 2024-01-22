@@ -201,7 +201,7 @@ export function createCustomerClient({
       );
 
     // Get stack trace before losing it with any async operation.
-    // Since this is an internal function that is always called form
+    // Since this is an internal function that is always called from
     // the public query/mutate wrappers, add 1 to the stack offset.
     const stackInfo = getCallerStackLine?.(1);
 
