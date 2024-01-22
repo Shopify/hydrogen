@@ -32,7 +32,11 @@ import {
 } from '../utils/graphql';
 import {parseJSON} from '../utils/parse-json';
 import {hashKey} from '../utils/hash';
-import {CrossRuntimeRequest, getDebugHeaders} from '../utils/request';
+import {
+  CrossRuntimeRequest,
+  getHeader,
+  getDebugHeaders,
+} from '../utils/request';
 import {
   getCallerStackLine,
   withSyncStack,
@@ -142,17 +146,18 @@ type CustomerClientOptions = {
   /** This is the route in your app that we redirect to whenever query/mutate was called with a not login user. Make sure to call `customer.login()` within the loader on this route. It defaults to `/account/login`. */
   loginUrl?: string;
   /** The behaviour when query/mutate is called without a LoggedIn customer. The default behaviour is redirecting to /account/login where login() is located and return to the current location after auth. */
-  handleNotLoggedIn?: () => DataFunctionValue;
+  unauthorizedHandler?: () => DataFunctionValue;
 };
 
 const DEFAULT_LOGIN_URL = '/account/login';
 const DEFAULT_AUTH_URL = '/account/authorize';
+const DEFAULT_REDIRECT_PATH = '/account';
 
-function defaultHandleNotLoggedIn(request: CrossRuntimeRequest) {
+function defaultUnauthorizedHandler(request: CrossRuntimeRequest) {
   const redirectPath = request.url ? new URL(request.url).pathname : undefined;
 
   const loginUrlWithRedirectPath =
-    DEFAULT_AUTH_URL +
+    DEFAULT_LOGIN_URL +
     (redirectPath
       ? `?${new URLSearchParams(`redirectPath=${redirectPath}`).toString()}`
       : '');
@@ -165,6 +170,14 @@ function defaultHandleNotLoggedIn(request: CrossRuntimeRequest) {
   return redirect(loginUrlWithRedirectPath);
 }
 
+function defaultRedirectPath(request: CrossRuntimeRequest): string {
+  const fromParam = request.url
+    ? new URL(request.url).searchParams.get('redirectPath')
+    : undefined;
+
+  return fromParam || getHeader(request, 'Referer') || DEFAULT_REDIRECT_PATH;
+}
+
 export function createCustomerAccountClient({
   session,
   customerAccountId,
@@ -172,8 +185,8 @@ export function createCustomerAccountClient({
   customerApiVersion = DEFAULT_CUSTOMER_API_VERSION,
   request,
   waitUntil,
-  authUrl = DEFAULT_LOGIN_URL,
-  handleNotLoggedIn = () => defaultHandleNotLoggedIn(request),
+  authUrl = DEFAULT_AUTH_URL,
+  unauthorizedHandler = () => defaultUnauthorizedHandler(request),
 }: CustomerClientOptions): CustomerClient {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.warn(
@@ -231,7 +244,7 @@ export function createCustomerAccountClient({
     const expiresAt = customerAccount?.expiresAt;
 
     if (!accessToken || !expiresAt) {
-      throw handleNotLoggedIn();
+      throw unauthorizedHandler();
     }
 
     // Get stack trace before losing it with any async operation.
@@ -288,7 +301,7 @@ export function createCustomerAccountClient({
       if (response.status === 401) {
         // clear session because current access token is invalid
         clearSession(session);
-        throw handleNotLoggedIn();
+        throw unauthorizedHandler();
       }
 
       /**
@@ -343,7 +356,7 @@ export function createCustomerAccountClient({
   }
 
   return {
-    login: async (redirectPath?: string) => {
+    login: async (redirectPath = defaultRedirectPath(request)) => {
       const loginUrl = new URL(customerAccountUrl + '/auth/oauth/authorize');
 
       const state = await generateState();
