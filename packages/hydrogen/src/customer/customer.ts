@@ -116,9 +116,9 @@ export type CustomerClient = {
 type CustomerClientOptions = {
   /** The client requires a session to persist the auth and refresh token. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */
   session: HydrogenSession;
-  /** Unique UUID prefixed with `shp_` associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountId. Use h2 env pull to link your store credentials. */
+  /** Unique UUID prefixed with `shp_` associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountId. Use `h2 env pull` to link your store credentials. */
   customerAccountId: string;
-  /** The account URL associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountUrl. Use h2 env pull to link your store credentials. */
+  /** The account URL associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountUrl. Use `h2 env pull` to link your store credentials. */
   customerAccountUrl: string;
   /** Override the version of the API */
   customerApiVersion?: string;
@@ -147,7 +147,7 @@ export function createCustomerClient({
 
   if (!customerAccountId || !customerAccountUrl) {
     console.warn(
-      "[h2:warn:createCustomerClient] `customerAccountId` and `customerAccountUrl` need to be provided to use Customer Account API. mock.shop doesn't automatically supply these variables. Use `h2 env pull` to link your store credentials.",
+      "[h2:warn:createCustomerClient] `customerAccountId` and `customerAccountUrl` need to be provided to use Customer Account API. Mock.shop doesn't automatically supply these variables.\nUse `h2 env pull` to link your store credentials.",
     );
   }
 

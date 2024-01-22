@@ -259,10 +259,12 @@ export function enhanceH2Logs(options: {rootDirectory: string; host: string}) {
       const lines = message.split('\n');
       const lastLine = lines.at(-1) ?? '';
       const hasLinks = /https?:\/\//.test(lastLine);
-      if (hasLinks) lines.pop();
+      const hasCommands = /`h2 [^`]+`/.test(lastLine);
+
+      if (hasLinks || hasCommands) lines.pop();
 
       if (type === 'error' || errorObject) {
-        let tryMessage = hasLinks ? lastLine : undefined;
+        let tryMessage = hasLinks || hasCommands ? lastLine : undefined;
         let stack = errorObject?.stack;
         let cause = errorObject?.cause as
           | {[key: string]: any; graphql?: {query: string; variables: string}}
@@ -341,6 +343,13 @@ export function enhanceH2Logs(options: {rootDirectory: string; host: string}) {
       render({
         body: headline + colors.bold(lines.join('\n')),
         reference,
+        nextSteps: hasCommands
+          ? [
+              lastLine.replace(/`h2 [^`]+`/g, (cmd) =>
+                colors.bold(colors.yellow(cmd)),
+              ),
+            ]
+          : undefined,
       });
 
       return;
