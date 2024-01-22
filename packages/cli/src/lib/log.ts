@@ -121,7 +121,8 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
     [
       // Workerd logs
       ([first]) =>
-        typeof first === 'string' && /^\x1B\[31m(workerd\/|stack:)/.test(first),
+        typeof first === 'string' &&
+        /^\x1B\[31m(workerd\/|stack:( (0|[a-f\d]{4,})){3,})/.test(first),
       () => {},
     ],
 
