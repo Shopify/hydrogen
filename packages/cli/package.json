@@ -47,7 +47,7 @@
     "get-port": "^7.0.0",
     "graphql-config": "5.0.3",
     "gunzip-maybe": "^1.4.2",
-    "miniflare": "3.20231016.0",
+    "miniflare": "3.20231030.2",
     "prettier": "^2.8.4",
     "semver": "^7.5.3",
     "source-map": "^0.7.4",
