@@ -373,7 +373,7 @@ const PRODUCT_FRAGMENT = `#graphql
       name
       values
     }
-    selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions) {
+    selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
       ...ProductVariant
     }
     variants(first: 1) {

@@ -17,7 +17,7 @@
     "@remix-run/server-runtime": "^2.5.0",
     "@shopify/cli": "3.52.0",
     "@shopify/cli-hydrogen": "^6.1.0",
-    "@shopify/hydrogen": "~2023.10.3",
+    "@shopify/hydrogen": "~2024.1.0",
     "@shopify/remix-oxygen": "^2.0.2",
     "@total-typescript/ts-reset": "^0.4.2",
     "graphql": "^16.6.0",

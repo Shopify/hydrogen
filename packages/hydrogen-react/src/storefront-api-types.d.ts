@@ -1,6 +1,6 @@
 /**
  * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
- * Based on Storefront API 2023-10
+ * Based on Storefront API 2024-01
  * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run `npm run graphql-types`.
  * Except custom Scalars, which are defined in the `codegen.ts` file
  */
@@ -2673,7 +2673,7 @@ export type CountryCode =
   | 'TN'
   /** Tonga. */
   | 'TO'
-  /** Turkey. */
+  /** Türkiye. */
   | 'TR'
   /** Trinidad & Tobago. */
   | 'TT'
@@ -4800,6 +4800,7 @@ export type MenuItemResource =
   | Article
   | Blog
   | Collection
+  | Metaobject
   | Page
   | Product
   | ShopPolicy;
@@ -4820,6 +4821,8 @@ export type MenuItemType =
   | 'FRONTPAGE'
   /** An http link. */
   | 'HTTP'
+  /** A metaobject page link. */
+  | 'METAOBJECT'
   /** A page link. */
   | 'PAGE'
   /** A product link. */
@@ -6326,6 +6329,8 @@ export type ProductSellingPlanGroupsArgs = {
  *
  */
 export type ProductVariantBySelectedOptionsArgs = {
+  caseInsensitiveMatch?: InputMaybe<Scalars['Boolean']['input']>;
+  ignoreUnknownOptions?: InputMaybe<Scalars['Boolean']['input']>;
   selectedOptions: Array<SelectedOptionInput>;
 };
 
@@ -6559,6 +6564,8 @@ export type ProductVariant = HasMetafields &
     sku?: Maybe<Scalars['String']['output']>;
     /** The in-store pickup availability of this variant by location. */
     storeAvailability: StoreAvailabilityConnection;
+    /** Whether tax is charged when the product variant is sold. */
+    taxable: Scalars['Boolean']['output'];
     /** The product variant’s title. */
     title: Scalars['String']['output'];
     /** The unit price value for the variant based on the variant's measurement. */
