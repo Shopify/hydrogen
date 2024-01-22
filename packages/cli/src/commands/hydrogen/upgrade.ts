@@ -219,6 +219,7 @@ export async function runUpgrade({
 
   // Display a summary of the upgrade and next steps
   await displayUpgradeSummary({
+    appPath,
     currentVersion,
     instrunctionsFilePath,
     selectedRelease,
@@ -745,10 +746,12 @@ async function promptUpgradeOptions(
  * Displays a summary of the upgrade and next steps
  */
 async function displayUpgradeSummary({
+  appPath,
   currentVersion,
   selectedRelease,
   instrunctionsFilePath,
 }: {
+  appPath: string;
   currentVersion: string;
   selectedRelease: Release;
   instrunctionsFilePath?: string;
@@ -785,6 +788,8 @@ async function displayUpgradeSummary({
     ? `You've have upgraded Hydrogen ${selectedPinnedVersion} dependencies`
     : `You've have upgraded from ${fromToMsg}`;
 
+  const packageManager = await getPackageManager(appPath);
+
   return renderSuccess({
     headline,
     // @ts-ignore we know that filter(Boolean) will always return an array
@@ -805,6 +810,18 @@ async function displayUpgradeSummary({
           {
             list: {
               items: nextSteps,
+            },
+          },
+        ],
+      },
+      {
+        title: 'Undo these upgrades?',
+        body: [
+          {
+            list: {
+              items: [
+                `Run \`git restore . && git clean -df && ${packageManager} i\``,
+              ],
             },
           },
         ],
