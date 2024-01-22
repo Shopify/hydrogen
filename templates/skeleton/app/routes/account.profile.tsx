@@ -25,7 +25,7 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({context, request}: LoaderFunctionArgs) {
-  await context.customerAccount.checkUnauthorized();
+  await context.customerAccount.handleUnauthorized();
 
   return json(
     {},

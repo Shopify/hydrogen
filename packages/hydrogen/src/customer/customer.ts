@@ -91,7 +91,7 @@ export type CustomerClient = {
   /** Returns if the user is logged in. It also checks if the access token is expired and refreshes it if needed. */
   isLoggedIn: () => Promise<boolean>;
   /** Check for unauthorized user and perform `unauthorizedHandler`. */
-  checkUnauthorized: () => void | DataFunctionValue;
+  handleUnauthorized: () => void | DataFunctionValue;
   /** Returns CustomerAccessToken if the user is logged in. It also run a expirey check and does a token refresh if needed. */
   getAccessToken: () => Promise<string | undefined>;
   /** Logout the user by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. */
@@ -345,7 +345,7 @@ export function createCustomerAccountClient({
     return true;
   }
 
-  async function checkUnauthorized() {
+  async function handleUnauthorized() {
     if (!(await isLoggedIn())) {
       throw unauthorizedHandler();
     }
@@ -416,7 +416,7 @@ export function createCustomerAccountClient({
       );
     },
     isLoggedIn,
-    checkUnauthorized,
+    handleUnauthorized,
     isApiError: isCustomerAccountApiError,
     getAccessToken,
     mutate(mutation, options?) {
