@@ -1,3 +1,4 @@
+import {createRef} from 'react';
 import {describe, expect, it} from 'vitest';
 import {render, screen} from '@testing-library/react';
 import {Video} from './Video.js';
@@ -57,5 +58,15 @@ describe('<Video />', () => {
     const video = screen.getByTestId('video');
 
     expect(video).toHaveAttribute('class', 'testClass');
+  });
+
+  it('allows ref', () => {
+    const ref = createRef<HTMLVideoElement>();
+
+    render(<Video data={VIDEO_PROPS} ref={ref} data-testid="video" />);
+
+    const video = screen.getByTestId('video');
+
+    expect(video).toBe(ref.current);
   });
 });

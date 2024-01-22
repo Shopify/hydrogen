@@ -1,5 +1,6 @@
 import {vi, describe, expect, it} from 'vitest';
 
+import {createRef} from 'react';
 import {render, screen} from '@testing-library/react';
 import {ExternalVideo} from './ExternalVideo.js';
 import {getExternalVideoData} from './ExternalVideo.test.helpers.js';
@@ -110,5 +111,16 @@ describe('<ExternalVideo />', () => {
       'src',
       'https://www.youtube.com/embed/a2YSgfwXc9c?autoplay=true&color=red',
     );
+  });
+
+  it('allows ref', () => {
+    const video = getExternalVideoData();
+    const ref = createRef<HTMLIFrameElement>();
+
+    render(<ExternalVideo data={video} ref={ref} data-testid={testId} />);
+
+    const videoEl = screen.getByTestId(testId);
+
+    expect(videoEl).toBe(ref.current);
   });
 });
