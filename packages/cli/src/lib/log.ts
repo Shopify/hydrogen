@@ -59,6 +59,15 @@ function debounceMessage(args: unknown[], debounceFor?: true | number) {
   return false;
 }
 
+function warningDebouncer([first]: unknown[]) {
+  return typeof first === 'string' &&
+    // Show these warnings only once.
+    (first.includes('[h2:warn:createStorefrontClient]') ||
+      first.includes('[h2:warn:createCustomerClient]'))
+    ? true
+    : undefined;
+}
+
 function injectLogReplacer(
   method: ConsoleMethod,
   debouncer?: (args: unknown[]) => true | number | undefined,
@@ -91,7 +100,7 @@ function injectLogReplacer(
 export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
   injectLogReplacer('log');
   injectLogReplacer('error');
-  injectLogReplacer('warn');
+  injectLogReplacer('warn', warningDebouncer);
 
   let isFirstWorkerReload = true;
   addMessageReplacers('dev-node', [
@@ -224,12 +233,7 @@ export function muteAuthLogs({
  */
 export function enhanceH2Logs(options: {rootDirectory: string; host: string}) {
   injectLogReplacer('error');
-  injectLogReplacer('warn', ([first]) =>
-    // Show createStorefrontClient warnings only once.
-    (first as any)?.includes?.('[h2:warn:createStorefrontClient]')
-      ? true
-      : undefined,
-  );
+  injectLogReplacer('warn', warningDebouncer);
 
   addMessageReplacers('h2-warn', [
     ([first]) => {

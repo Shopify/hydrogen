@@ -140,14 +140,14 @@ export function createCustomerClient({
   authUrl = '/account/authorize',
 }: CustomerClientOptions): CustomerClient {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
-    console.log(
+    console.warn(
       `[h2:warn:createCustomerClient] You are using Customer Account API version ${customerApiVersion} when this version of Hydrogen was built for ${DEFAULT_CUSTOMER_API_VERSION}.`,
     );
   }
 
   if (!customerAccountId || !customerAccountUrl) {
-    console.log(
-      "[h2:warn:createCustomerClient] customerAccountId and customerAccountUrl need to be provided to use Customer Account API. mock.shop doesn't automatically supply these variables. Use `h2 env pull` to link your store credentials.",
+    console.warn(
+      "[h2:warn:createCustomerClient] `customerAccountId` and `customerAccountUrl` need to be provided to use Customer Account API. mock.shop doesn't automatically supply these variables. Use `h2 env pull` to link your store credentials.",
     );
   }
 
