@@ -27,7 +27,7 @@ import {
   minifyQuery,
   assertQuery,
   assertMutation,
-  throwGraphQLError,
+  throwErrorWithGqlLink,
   type GraphQLErrorOptions,
 } from '../utils/graphql';
 import {parseJSON} from '../utils/parse-json';
@@ -257,13 +257,13 @@ export function createCustomerClient({
         errors = [{message: body}];
       }
 
-      throwGraphQLError({...errorOptions, errors});
+      throwErrorWithGqlLink({...errorOptions, errors});
     }
 
     try {
       return parseJSON(body);
     } catch (e) {
-      throwGraphQLError({...errorOptions, errors: [{message: body}]});
+      throwErrorWithGqlLink({...errorOptions, errors: [{message: body}]});
     }
   }
 

@@ -69,7 +69,7 @@ export type GraphQLFormattedError = {
   readonly extensions?: {[key: string]: unknown};
 };
 
-export function throwGraphQLError<T>({
+export function throwErrorWithGqlLink<T>({
   url,
   response,
   errors,

@@ -42,7 +42,7 @@ import {
   minifyQuery,
   assertQuery,
   assertMutation,
-  throwGraphQLError,
+  throwErrorWithGqlLink,
   type GraphQLApiResponse,
   type GraphQLErrorOptions,
   GraphQLFormattedError,
@@ -368,7 +368,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         errors = [{message: body}];
       }
 
-      throwGraphQLError({...errorOptions, errors});
+      throwErrorWithGqlLink({...errorOptions, errors});
     }
 
     const {data, errors} = body as GraphQLApiResponse<T>;
