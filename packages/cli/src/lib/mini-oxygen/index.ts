@@ -2,6 +2,9 @@ import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
 
 export type MiniOxygen = MiniOxygenInstance;
 
+export {DEFAULT_INSPECTOR_PORT} from './common.js';
+export {buildAssetsUrl} from './assets.js';
+
 export async function startMiniOxygen(
   options: MiniOxygenOptions,
   useWorkerd = false,

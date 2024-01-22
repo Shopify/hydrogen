@@ -1,5 +1,6 @@
 import {useLocation, useMatches} from '@remix-run/react';
 import type {MoneyV2} from '@shopify/hydrogen/storefront-api-types';
+import type {FulfillmentStatus} from '@shopify/hydrogen/customer-account-api-types';
 import typographicBase from 'typographic-base';
 
 import type {
@@ -7,8 +8,8 @@ import type {
   MenuFragment,
   ParentMenuItemFragment,
 } from 'storefrontapi.generated';
-import {countries} from '~/data/countries';
 import {useRootLoaderData} from '~/root';
+import {countries} from '~/data/countries';
 
 import type {I18nLocale} from './type';
 
@@ -231,47 +232,19 @@ export const getInputStyleClasses = (isError?: string | null) => {
   }`;
 };
 
-export function statusMessage(status: string) {
-  const translations: Record<string, string> = {
-    ATTEMPTED_DELIVERY: 'Attempted delivery',
-    CANCELED: 'Canceled',
-    CONFIRMED: 'Confirmed',
-    DELIVERED: 'Delivered',
-    FAILURE: 'Failure',
-    FULFILLED: 'Fulfilled',
-    IN_PROGRESS: 'In Progress',
-    IN_TRANSIT: 'In transit',
-    LABEL_PRINTED: 'Label printed',
-    LABEL_PURCHASED: 'Label purchased',
-    LABEL_VOIDED: 'Label voided',
-    MARKED_AS_FULFILLED: 'Marked as fulfilled',
-    NOT_DELIVERED: 'Not delivered',
-    ON_HOLD: 'On Hold',
+export function statusMessage(status: FulfillmentStatus) {
+  const translations: Record<FulfillmentStatus, string> = {
+    SUCCESS: 'Success',
+    PENDING: 'Pending',
     OPEN: 'Open',
-    OUT_FOR_DELIVERY: 'Out for delivery',
-    PARTIALLY_FULFILLED: 'Partially Fulfilled',
-    PENDING_FULFILLMENT: 'Pending',
-    PICKED_UP: 'Displayed as Picked up',
-    READY_FOR_PICKUP: 'Ready for pickup',
-    RESTOCKED: 'Restocked',
-    SCHEDULED: 'Scheduled',
-    SUBMITTED: 'Submitted',
-    UNFULFILLED: 'Unfulfilled',
+    FAILURE: 'Failure',
+    ERROR: 'Error',
+    CANCELLED: 'Cancelled',
   };
   try {
     return translations?.[status];
   } catch (error) {
     return status;
-  }
-}
-
-/**
- * Errors can exist in an errors object, or nested in a data field.
- */
-export function assertApiErrors(data: Record<string, any> | null | undefined) {
-  const errorMessage = data?.customerUserErrors?.[0]?.message;
-  if (errorMessage) {
-    throw new Error(errorMessage);
   }
 }
 
@@ -311,6 +284,13 @@ export function useIsHomePath() {
   const selectedLocale = rootData?.selectedLocale ?? DEFAULT_LOCALE;
   const strippedPathname = pathname.replace(selectedLocale.pathPrefix, '');
   return strippedPathname === '/';
+}
+
+export function parseAsCurrency(value: number, locale: I18nLocale) {
+  return new Intl.NumberFormat(locale.language + '-' + locale.country, {
+    style: 'currency',
+    currency: locale.currency,
+  }).format(value);
 }
 
 /**

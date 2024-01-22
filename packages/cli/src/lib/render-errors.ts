@@ -22,6 +22,7 @@ export function renderMissingStorefront({
     message: outputContent`${outputToken.errorText(
       'Couldn’t find Hydrogen storefront.',
     )}`.value,
+    skipOclifErrorHandling: true,
     tryMessage: outputContent`Couldn’t find ${storefront.title} (ID: ${parseGid(
       storefront.id,
     )}) on ${
@@ -45,6 +46,7 @@ export function renderMissingLink({session, cliCommand}: MissingLink) {
     name: 'NoLinkedStorefrontError',
     type: 0,
     message: `No linked Hydrogen storefront on ${session.storeFqdn}`,
+    skipOclifErrorHandling: true,
     tryMessage: [
       'To pull environment variables or to deploy to Oxygen, link this project to a Hydrogen storefront. To select a storefront to link, run',
       {command: `${cliCommand} link`},

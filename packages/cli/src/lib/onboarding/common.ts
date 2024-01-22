@@ -164,7 +164,7 @@ export function generateProjectEntries(
   options: Parameters<typeof generateProjectFile>[1],
 ) {
   return Promise.all(
-    ['root', 'entry.server', 'entry.client'].map((filename) =>
+    ['root', 'entry.server', 'entry.client', '../server.ts'].map((filename) =>
       generateProjectFile(filename, options),
     ),
   );
@@ -503,7 +503,7 @@ export async function commitAll(directory: string, message: string) {
 
 export type SetupSummary = {
   language?: Language;
-  packageManager: 'npm' | 'pnpm' | 'yarn' | 'unknown';
+  packageManager: 'npm' | 'pnpm' | 'yarn' | 'bun' | 'unknown';
   cssStrategy?: CssStrategy;
   hasCreatedShortcut: boolean;
   depsInstalled: boolean;
@@ -690,12 +690,15 @@ export async function renderProjectReady(
 
 export function createAbortHandler(
   controller: AbortController,
-  project: {directory: string},
+  project?: {directory: string},
 ) {
   return async function abort(error: AbortError): Promise<never> {
     controller.abort();
 
-    if (typeof project !== 'undefined') {
+    // Give time to hide prompts before showing error
+    await Promise.resolve();
+
+    if (project?.directory) {
       await rmdir(project!.directory, {force: true}).catch(() => {});
     }
 
@@ -710,6 +713,8 @@ export function createAbortHandler(
       console.error(error);
     }
 
+    // This code runs asynchronously so throwing here
+    // turns into an unhandled rejection. Exit process instead:
     process.exit(1);
   };
 }

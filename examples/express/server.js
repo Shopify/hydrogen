@@ -76,7 +76,7 @@ function purgeRequireCache() {
 }
 
 async function getContext(req) {
-  const session = await HydrogenSession.init(req, [env.SESSION_SECRET]);
+  const session = await AppSession.init(req, [env.SESSION_SECRET]);
 
   const {storefront} = createStorefrontClient({
     // A [`cache` instance](https://developer.mozilla.org/en-US/docs/Web/API/Cache) is necessary for sub-request caching to work.
@@ -99,7 +99,7 @@ async function getContext(req) {
   return {session, storefront, env};
 }
 
-class HydrogenSession {
+class AppSession {
   constructor(sessionStorage, session) {
     this.sessionStorage = sessionStorage;
     this.session = session;
@@ -116,7 +116,9 @@ class HydrogenSession {
       },
     });
 
-    const session = await storage.getSession(request.get('Cookie'));
+    const session = await storage
+      .getSession(request.get('Cookie'))
+      .catch(() => storage.getSession());
 
     return new this(storage, session);
   }

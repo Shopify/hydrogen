@@ -4,7 +4,7 @@ import {Disclosure} from '@headlessui/react';
 import {Suspense, useEffect, useMemo} from 'react';
 import {CartForm} from '@shopify/hydrogen';
 
-import type {LayoutQuery} from 'storefrontapi.generated';
+import {type LayoutQuery} from 'storefrontapi.generated';
 import {
   Drawer,
   useDrawer,
@@ -34,14 +34,14 @@ import {useRootLoaderData} from '~/root';
 
 type LayoutProps = {
   children: React.ReactNode;
-  layout: LayoutQuery & {
+  layout?: LayoutQuery & {
     headerMenu?: EnhancedMenu | null;
     footerMenu?: EnhancedMenu | null;
   };
 };
 
 export function Layout({children, layout}: LayoutProps) {
-  const {headerMenu, footerMenu} = layout;
+  const {headerMenu, footerMenu} = layout || {};
   return (
     <>
       <div className="flex flex-col min-h-screen">
@@ -50,7 +50,9 @@ export function Layout({children, layout}: LayoutProps) {
             Skip to content
           </a>
         </div>
-        {headerMenu && <Header title={layout.shop.name} menu={headerMenu} />}
+        {headerMenu && layout?.shop.name && (
+          <Header title={layout.shop.name} menu={headerMenu} />
+        )}
         <main role="main" id="mainContent" className="flex-grow">
           {children}
         </main>
@@ -325,13 +327,13 @@ function AccountLink({className}: {className?: string}) {
   const rootData = useRootLoaderData();
   const isLoggedIn = rootData?.isLoggedIn;
 
-  return isLoggedIn ? (
+  return (
     <Link to="/account" className={className}>
-      <IconAccount />
-    </Link>
-  ) : (
-    <Link to="/account/login" className={className}>
-      <IconLogin />
+      <Suspense fallback={<IconLogin />}>
+        <Await resolve={isLoggedIn} errorElement={<IconLogin />}>
+          {(isLoggedIn) => (isLoggedIn ? <IconAccount /> : <IconLogin />)}
+        </Await>
+      </Suspense>
     </Link>
   );
 }

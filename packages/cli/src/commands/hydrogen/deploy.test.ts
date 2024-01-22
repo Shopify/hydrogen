@@ -2,19 +2,32 @@ import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {type AdminSession, login} from '../../lib/auth.js';
 import {getStorefronts} from '../../lib/graphql/admin/link-storefront.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
+import {writeFile} from '@shopify/cli-kit/node/fs';
 import {
   renderSelectPrompt,
   renderFatalError,
   renderSuccess,
+  renderWarning,
 } from '@shopify/cli-kit/node/ui';
-import {getLatestGitCommit} from '@shopify/cli-kit/node/git';
+import {
+  ensureIsClean,
+  getLatestGitCommit,
+  GitDirectoryNotCleanError,
+} from '@shopify/cli-kit/node/git';
 
 import {deploymentLogger, oxygenDeploy} from './deploy.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
-import {createDeploy, parseToken} from '@shopify/oxygen-cli/deploy';
+import {
+  CompletedDeployment,
+  createDeploy,
+  parseToken,
+} from '@shopify/oxygen-cli/deploy';
+import {ciPlatform} from '@shopify/cli-kit/node/context/local';
 
 vi.mock('../../lib/get-oxygen-deployment-data.js');
 vi.mock('@shopify/oxygen-cli/deploy');
+vi.mock('@shopify/cli-kit/node/fs');
+vi.mock('@shopify/cli-kit/node/context/local');
 vi.mock('../../lib/auth.js');
 vi.mock('../../lib/shopify-config.js');
 vi.mock('../../lib/graphql/admin/link-storefront.js');
@@ -34,16 +47,15 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
     renderSelectPrompt: vi.fn(),
     renderSuccess: vi.fn(),
     renderTasks: vi.fn(),
+    renderWarning: vi.fn(),
   };
 });
 vi.mock('@shopify/cli-kit/node/git', async () => {
+  const actual = await vi.importActual('@shopify/cli-kit/node/git');
   return {
+    ...(actual as object),
     getLatestGitCommit: vi.fn(),
-  };
-});
-vi.mock('@shopify/cli-kit/node/context/local', async () => {
-  return {
-    ciPlatform: () => ({isCI: false}),
+    ensureIsClean: vi.fn(),
   };
 });
 
@@ -70,6 +82,9 @@ describe('deploy', () => {
   const originalExit = process.exit;
 
   const deployParams = {
+    authBypassToken: true,
+    force: false,
+    noJsonOutput: false,
     path: './',
     shop: 'snowdevil.myshopify.com',
     publicDeployment: false,
@@ -93,6 +108,7 @@ describe('deploy', () => {
     bugsnag: true,
     deploymentUrl: 'https://oxygen.shopifyapps.com',
     deploymentToken: mockToken,
+    generateAuthBypassToken: true,
     verificationMaxDuration: 180,
     metadata: {
       url: deployParams.metadataUrl,
@@ -109,10 +125,13 @@ describe('deploy', () => {
 
   const expectedHooks = {
     buildFunction: expect.any(Function),
+    onDeploymentCompleted: expect.any(Function),
+    onDeploymentFailed: expect.any(Function),
+    onDeploymentCompletedVerificationError: expect.any(Function),
     onVerificationComplete: expect.any(Function),
+    onVerificationError: expect.any(Function),
     onUploadFilesStart: expect.any(Function),
     onUploadFilesComplete: expect.any(Function),
-    onVerificationError: expect.any(Function),
     onUploadFilesError: expect.any(Function),
   };
 
@@ -122,7 +141,7 @@ describe('deploy', () => {
       session: ADMIN_SESSION,
       config: UNLINKED_SHOPIFY_CONFIG,
     });
-
+    vi.mocked(ciPlatform).mockReturnValue({isCI: false});
     vi.mocked(getStorefronts).mockResolvedValue([
       {
         ...FULL_SHOPIFY_CONFIG.storefront,
@@ -131,9 +150,10 @@ describe('deploy', () => {
       },
     ]);
     vi.mocked(renderSelectPrompt).mockResolvedValue(FULL_SHOPIFY_CONFIG.shop);
-    vi.mocked(createDeploy).mockResolvedValue(
-      'https://a-lovely-deployment.com',
-    );
+    vi.mocked(createDeploy).mockResolvedValue({
+      authBypassToken: 'some-token',
+      url: 'https://a-lovely-deployment.com',
+    });
     vi.mocked(getOxygenDeploymentData).mockResolvedValue({
       oxygenDeploymentToken: 'some-encoded-token',
       environments: [],
@@ -164,6 +184,88 @@ describe('deploy', () => {
       logger: deploymentLogger,
     });
     expect(vi.mocked(renderSuccess)).toHaveBeenCalled;
+  });
+
+  it('errors when there are uncommited changes', async () => {
+    vi.mocked(ensureIsClean).mockRejectedValue(
+      new GitDirectoryNotCleanError('Uncommitted changes'),
+    );
+    await expect(oxygenDeploy(deployParams)).rejects.toThrowError(
+      'Uncommitted changes detected',
+    );
+    expect(vi.mocked(createDeploy)).not.toHaveBeenCalled;
+  });
+
+  it('proceeds with warning and modified description when there are uncommited changes and the force flag is used', async () => {
+    vi.mocked(ensureIsClean).mockRejectedValue(
+      new GitDirectoryNotCleanError('Uncommitted changes'),
+    );
+    vi.mocked(getLatestGitCommit).mockResolvedValue({
+      hash: '123',
+      message: 'test commit',
+      date: '2021-01-01',
+      author_name: 'test author',
+      author_email: 'test@author.com',
+      body: 'test body',
+      refs: 'HEAD -> main',
+    });
+
+    await oxygenDeploy({
+      ...deployParams,
+      force: true,
+    });
+
+    expect(vi.mocked(renderWarning)).toHaveBeenCalledWith({
+      headline: 'No deployment description provided',
+      body: expect.anything(),
+    });
+    expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
+      config: {
+        ...expectedConfig,
+        environmentTag: 'main',
+        metadata: {
+          ...expectedConfig.metadata,
+          description: '123 with additional changes',
+        },
+      },
+      hooks: expectedHooks,
+      logger: deploymentLogger,
+    });
+  });
+
+  it('proceeds with provided description without warning when there are uncommited changes and the force flag is used', async () => {
+    vi.mocked(ensureIsClean).mockRejectedValue(
+      new GitDirectoryNotCleanError('Uncommitted changes'),
+    );
+    vi.mocked(getLatestGitCommit).mockResolvedValue({
+      hash: '123',
+      message: 'test commit',
+      date: '2021-01-01',
+      author_name: 'test author',
+      author_email: 'test@author.com',
+      body: 'test body',
+      refs: 'HEAD -> main',
+    });
+
+    await oxygenDeploy({
+      ...deployParams,
+      force: true,
+      metadataDescription: 'cool new stuff',
+    });
+
+    expect(vi.mocked(renderWarning)).not.toHaveBeenCalled;
+    expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
+      config: {
+        ...expectedConfig,
+        environmentTag: 'main',
+        metadata: {
+          ...expectedConfig.metadata,
+          description: 'cool new stuff',
+        },
+      },
+      hooks: expectedHooks,
+      logger: deploymentLogger,
+    });
   });
 
   it('calls createDeploy with the checked out branch name', async () => {
@@ -207,6 +309,36 @@ describe('deploy', () => {
     });
   });
 
+  it('writes a file with JSON content in CI environments', async () => {
+    vi.mocked(ciPlatform).mockReturnValue({
+      isCI: true,
+      name: 'github',
+      metadata: {},
+    });
+
+    const ciDeployParams = {
+      ...deployParams,
+      token: 'some-token',
+      metadataDescription: 'cool new stuff',
+      generateAuthBypassToken: true,
+    };
+
+    await oxygenDeploy(ciDeployParams);
+
+    expect(vi.mocked(writeFile)).toHaveBeenCalledWith(
+      'h2_deploy_log.json',
+      JSON.stringify({
+        authBypassToken: 'some-token',
+        url: 'https://a-lovely-deployment.com',
+      }),
+    );
+
+    vi.mocked(writeFile).mockClear();
+    ciDeployParams.noJsonOutput = true;
+    await oxygenDeploy(ciDeployParams);
+    expect(vi.mocked(writeFile)).not.toHaveBeenCalled();
+  });
+
   it('handles error during uploadFiles', async () => {
     const mockRenderFatalError = vi.fn();
     vi.mocked(renderFatalError).mockImplementation(mockRenderFatalError);
@@ -219,7 +351,7 @@ describe('deploy', () => {
 
       return new Promise((_resolve, reject) => {
         reject(error);
-      }) as Promise<string | undefined>;
+      }) as Promise<CompletedDeployment | undefined>;
     });
 
     try {
@@ -237,7 +369,7 @@ describe('deploy', () => {
     }
   });
 
-  it('handles error during deployment verification', async () => {
+  it('handles error during deployment routability verification', async () => {
     const mockRenderFatalError = vi.fn();
     vi.mocked(renderFatalError).mockImplementation(mockRenderFatalError);
 
@@ -250,7 +382,7 @@ describe('deploy', () => {
 
       return new Promise((_resolve, reject) => {
         reject(error);
-      }) as Promise<string | undefined>;
+      }) as Promise<CompletedDeployment | undefined>;
     });
 
     try {
@@ -262,6 +394,37 @@ describe('deploy', () => {
         expect(err.tryMessage).toBe(
           'Please verify the deployment status in the Shopify Admin and retry deploying if necessary.',
         );
+      } else {
+        expect(true).toBe(false);
+      }
+    }
+  });
+
+  it('handles error during deployment completion verification', async () => {
+    const mockRenderFatalError = vi.fn();
+    vi.mocked(renderFatalError).mockImplementation(mockRenderFatalError);
+
+    vi.mocked(createDeploy).mockImplementation((options) => {
+      options.hooks?.onUploadFilesStart?.();
+      options.hooks?.onUploadFilesComplete?.();
+      options.hooks?.onDeploymentCompletedVerificationStart?.();
+      options.hooks?.onDeploymentFailed?.({
+        status: 'oh shit',
+        url: 'https://a-lovely-deployment.com',
+      });
+
+      return new Promise((_resolve, reject) => {
+        reject();
+      }) as Promise<CompletedDeployment | undefined>;
+    });
+
+    try {
+      await oxygenDeploy(deployParams);
+      expect(true).toBe(false);
+    } catch (err) {
+      if (err instanceof AbortError) {
+        expect(err.message).toBe('oh shit');
+        expect(err.tryMessage).toBe('Retrying the deployement may succeed.');
       } else {
         expect(true).toBe(false);
       }

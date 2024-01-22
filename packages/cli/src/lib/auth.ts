@@ -23,6 +23,7 @@ import {
 } from './shopify-config.js';
 import {getUserAccount} from './graphql/business-platform/user-account.js';
 import {muteAuthLogs} from './log.js';
+import {deferPromise} from './defer.js';
 
 export type {AdminSession};
 
@@ -62,20 +63,11 @@ export async function login(root?: string, shop?: string | true) {
     forcePrompt ||
     shop !== existingConfig.shop
   ) {
-    // There's some bug in cli-kit that causes the process to exit when
-    // waiting for `keypress` in some situations. It seems that Node gets
-    // in a state where the event loop is empty while awaiting, and then exits.
-    // Adding a dummy timeout here to keep the event loop busy fixes it.
-    // Ref: https://github.com/Shopify/cli/issues/3055
-    const dummyTimeout = setTimeout(() => {}, 600000);
-
     const token = await ensureAuthenticatedBusinessPlatform().catch(() => {
       throw new AbortError(
         'Unable to authenticate with Shopify. Please report this issue.',
       );
     });
-
-    clearTimeout(dummyTimeout);
 
     const userAccount = await getUserAccount(token);
     await hideLoginInfo();
@@ -116,10 +108,7 @@ export async function login(root?: string, shop?: string | true) {
 }
 
 function showLoginInfo() {
-  let deferredResolve: (value?: unknown) => void;
-  const promise = new Promise((resolve) => {
-    deferredResolve = resolve;
-  });
+  const deferred = deferPromise();
 
   console.log('');
 
@@ -161,7 +150,7 @@ function showLoginInfo() {
           {
             title: 'Waiting for Shopify authentication',
             task: async () => {
-              await promise;
+              await deferred.promise;
             },
           },
         ]);
@@ -169,7 +158,7 @@ function showLoginInfo() {
     },
   });
 
-  promise.then(() => {
+  deferred.promise.then(() => {
     restoreLogs();
     if (hasLoggedPressKey) {
       process.stdout.write(ansiEscapes.eraseLines(hasLoggedTimeout ? 11 : 10));
@@ -177,9 +166,11 @@ function showLoginInfo() {
   });
 
   return async () => {
-    deferredResolve();
+    deferred.resolve();
     // Without this timeout the process exits
     // right after `renderTasks` is done.
+    // In some cases, it makes renderPrompt to return
+    // `undefined` without showing the prompt.
     await new Promise((resolve) => setTimeout(resolve, 0));
   };
 }

@@ -2,11 +2,12 @@ import {spawn} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {formatCode, getCodeFormatOptions} from './format-code.js';
 import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
-import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
+import {joinPath, relativePath, basename} from '@shopify/cli-kit/node/path';
 import {AbortError} from '@shopify/cli-kit/node/error';
 
 // Do not import code synchronously from this dependency, it must be patched first
 import type {LoadCodegenConfigResult} from '@graphql-codegen/cli';
+import type {GraphQLConfig} from 'graphql-config';
 
 const nodePath = process.argv[1];
 const modulePath = fileURLToPath(import.meta.url);
@@ -80,6 +81,7 @@ export function spawnCodegenProcess({
         type: 0,
         name: 'CodegenError',
         message: `Codegen process exited with code ${code}`,
+        skipOclifErrorHandling: true,
         tryMessage: 'Try restarting the dev server.',
       });
 
@@ -159,19 +161,51 @@ async function generateTypes({
 
   await generate(codegenContext, true);
 
-  return Object.keys(codegenConfig.generates);
+  return Object.entries(codegenConfig.generates).reduce((acc, [key, value]) => {
+    if ('documents' in value) {
+      acc[key] = (
+        Array.isArray(value.documents) ? value.documents : [value.documents]
+      ).filter((document) => typeof document === 'string') as string[];
+    }
+
+    return acc;
+  }, {} as Record<string, string[]>);
 }
 
 async function generateDefaultConfig(
   {rootDirectory, appDirectory}: ProjectDirs,
   forceSfapiVersion?: string,
 ): Promise<LoadCodegenConfigResult> {
-  const {schema, preset, pluckConfig} = await import(
+  const {getSchema, preset, pluckConfig} = await import(
     '@shopify/hydrogen-codegen'
   );
 
+  const {loadConfig} = await import('graphql-config');
+  const gqlConfig = await loadConfig({
+    rootDir: rootDirectory,
+    throwOnEmpty: false,
+    throwOnMissing: false,
+    legacy: false,
+  }).catch(() => undefined);
+
+  const sfapiSchema = getSchema('storefront');
+  const sfapiProject = findGqlProject(sfapiSchema, gqlConfig);
+
   const defaultGlob = '*!(*.d).{ts,tsx,js,jsx}'; // No d.ts files
   const appDirRelative = relativePath(rootDirectory, appDirectory);
+
+  const caapiSchema = getSchema('customer-account');
+  const caapiProject = findGqlProject(caapiSchema, gqlConfig);
+
+  const customerAccountAPIConfig = caapiProject?.documents
+    ? {
+        ['customer-accountapi.generated.d.ts']: {
+          preset,
+          schema: caapiSchema,
+          documents: caapiProject?.documents,
+        },
+      }
+    : undefined;
 
   return {
     filepath: 'virtual:codegen',
@@ -181,8 +215,8 @@ async function generateDefaultConfig(
       generates: {
         ['storefrontapi.generated.d.ts']: {
           preset,
-          schema,
-          documents: [
+          schema: sfapiSchema,
+          documents: sfapiProject?.documents ?? [
             defaultGlob, // E.g. ./server.(t|j)s
             joinPath(appDirRelative, '**', defaultGlob), // E.g. app/routes/_index.(t|j)sx
           ],
@@ -207,32 +241,52 @@ async function generateDefaultConfig(
             },
           }),
         },
+        ...customerAccountAPIConfig,
       },
     },
   };
+}
+
+function findGqlProject(schemaFilepath: string, gqlConfig?: GraphQLConfig) {
+  if (!gqlConfig) return;
+
+  const schemaFilename = basename(schemaFilepath);
+  return Object.values(gqlConfig.projects || {}).find(
+    (project) =>
+      typeof project.schema === 'string' &&
+      project.schema.endsWith(schemaFilename),
+  ) as GraphQLConfig['projects'][number];
 }
 
 async function addHooksToHydrogenOptions(
   codegenConfig: LoadCodegenConfigResult['config'],
   {rootDirectory}: ProjectDirs,
 ) {
-  const {schema} = await import('@shopify/hydrogen-codegen');
+  // Find generated files that use the Hydrogen preset
+  const hydrogenProjectsOptions = Object.values(codegenConfig.generates).filter(
+    (value) => {
+      const foundPreset = (Array.isArray(value) ? value[0] : value)?.preset;
+      if (typeof foundPreset === 'object') {
+        const name = Symbol.for('name');
+        if (name in foundPreset) {
+          return foundPreset[name] === 'hydrogen';
+        }
+      }
+    },
+  );
 
-  const [, options] =
-    Object.entries(codegenConfig.generates).find(
-      ([, value]) =>
-        (Array.isArray(value) ? value[0] : value)?.schema === schema,
-    ) || [];
+  // Add hooks to run Prettier before writing files
+  for (const options of hydrogenProjectsOptions) {
+    const hydrogenOptions = Array.isArray(options) ? options[0] : options;
 
-  const hydrogenOptions = Array.isArray(options) ? options[0] : options;
+    if (hydrogenOptions) {
+      const formatConfig = await getCodeFormatOptions(rootDirectory);
 
-  if (hydrogenOptions) {
-    const formatConfig = await getCodeFormatOptions(rootDirectory);
-
-    hydrogenOptions.hooks = {
-      beforeOneFileWrite: (file: string, content: string) =>
-        formatCode(content, formatConfig, file), // Run Prettier before writing files
-      ...hydrogenOptions.hooks,
-    };
+      hydrogenOptions.hooks = {
+        beforeOneFileWrite: (file: string, content: string) =>
+          formatCode(content, formatConfig, file),
+        ...hydrogenOptions.hooks,
+      };
+    }
   }
 }

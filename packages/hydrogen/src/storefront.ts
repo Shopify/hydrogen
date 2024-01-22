@@ -8,7 +8,6 @@ import {
   SHOPIFY_STOREFRONT_S_HEADER,
   type StorefrontClientProps,
 } from '@shopify/hydrogen-react';
-import type {ExecutionArgs} from 'graphql';
 import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
 import {
   SDK_VARIANT_HEADER,
@@ -32,6 +31,11 @@ import {
   CountryCode,
   LanguageCode,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import type {
+  ClientReturn,
+  ClientVariablesInRestParams,
+  GenericVariables,
+} from '@shopify/hydrogen-codegen';
 import {warnOnce} from './utils/warning';
 import {LIB_VERSION} from './version';
 import {
@@ -41,11 +45,18 @@ import {
   throwGraphQLError,
   type GraphQLApiResponse,
   type GraphQLErrorOptions,
+  GraphQLFormattedError,
 } from './utils/graphql';
+import {getCallerStackLine, withSyncStack} from './utils/callsites';
 
 export type I18nBase = {
   language: LanguageCode;
   country: CountryCode;
+};
+
+export type StorefrontApiErrors = GraphQLFormattedError[] | undefined;
+export type StorefrontError = {
+  errors?: StorefrontApiErrors;
 };
 
 /**
@@ -71,75 +82,52 @@ export interface StorefrontMutations {
   // '#graphql mutation m1 {...}': {return: M1Mutation; variables: M1MutationVariables};
 }
 
-// Default type for `variables` in storefront client
-type GenericVariables = ExecutionArgs['variableValues'];
-
-// Use this type to make parameters optional in storefront client
-// when no variables need to be passed.
-type EmptyVariables = {[key: string]: never};
-
 // These are the variables that are automatically added to the storefront API.
 // We use this type to make parameters optional in storefront client
 // when these are the only variables that can be passed.
 type AutoAddedVariableNames = 'country' | 'language';
 
-type IsOptionalVariables<OperationTypeValue extends {variables: any}> = Omit<
-  OperationTypeValue['variables'],
-  AutoAddedVariableNames
-> extends EmptyVariables
-  ? true // No need to pass variables
-  : GenericVariables extends OperationTypeValue['variables']
-  ? true // We don't know what variables are needed
-  : false; // Variables are known and required
-
-type StorefrontCommonOptions<Variables extends GenericVariables> = {
+type StorefrontCommonExtraParams = {
   headers?: HeadersInit;
   storefrontApiVersion?: string;
-} & (IsOptionalVariables<{variables: Variables}> extends true
-  ? {variables?: Variables}
-  : {variables: Variables});
-
-type StorefrontQuerySecondParam<
-  RawGqlString extends keyof StorefrontQueries | string = string,
-> = (RawGqlString extends keyof StorefrontQueries
-  ? StorefrontCommonOptions<StorefrontQueries[RawGqlString]['variables']>
-  : StorefrontCommonOptions<GenericVariables>) & {cache?: CachingStrategy};
-
-type StorefrontMutateSecondParam<
-  RawGqlString extends keyof StorefrontMutations | string = string,
-> = RawGqlString extends keyof StorefrontMutations
-  ? StorefrontCommonOptions<StorefrontMutations[RawGqlString]['variables']>
-  : StorefrontCommonOptions<GenericVariables>;
+  displayName?: string;
+};
 
 /**
  * Interface to interact with the Storefront API.
  */
 export type Storefront<TI18n extends I18nBase = I18nBase> = {
   /** The function to run a query on Storefront API. */
-  query: <OverrideReturnType = any, RawGqlString extends string = string>(
+  query: <
+    OverrideReturnType extends any = never,
+    RawGqlString extends string = string,
+  >(
     query: RawGqlString,
-    ...options: RawGqlString extends keyof StorefrontQueries // Do we have any generated query types?
-      ? IsOptionalVariables<StorefrontQueries[RawGqlString]> extends true
-        ? [StorefrontQuerySecondParam<RawGqlString>?] // Using codegen, query has no variables
-        : [StorefrontQuerySecondParam<RawGqlString>] // Using codegen, query needs variables
-      : [StorefrontQuerySecondParam?] // No codegen, variables always optional
+    ...options: ClientVariablesInRestParams<
+      StorefrontQueries,
+      RawGqlString,
+      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,
+      AutoAddedVariableNames
+    >
   ) => Promise<
-    RawGqlString extends keyof StorefrontQueries // Do we have any generated query types?
-      ? StorefrontQueries[RawGqlString]['return'] // Using codegen, return type is known
-      : OverrideReturnType // No codegen, let user specify return type
+    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &
+      StorefrontError
   >;
   /** The function to run a mutation on Storefront API. */
-  mutate: <OverrideReturnType = any, RawGqlString extends string = string>(
+  mutate: <
+    OverrideReturnType extends any = never,
+    RawGqlString extends string = string,
+  >(
     mutation: RawGqlString,
-    ...options: RawGqlString extends keyof StorefrontMutations // Do we have any generated mutation types?
-      ? IsOptionalVariables<StorefrontMutations[RawGqlString]> extends true
-        ? [StorefrontMutateSecondParam<RawGqlString>?] // Using codegen, mutation has no variables
-        : [StorefrontMutateSecondParam<RawGqlString>] // Using codegen, mutation needs variables
-      : [StorefrontMutateSecondParam?] // No codegen, variables always optional
+    ...options: ClientVariablesInRestParams<
+      StorefrontMutations,
+      RawGqlString,
+      StorefrontCommonExtraParams,
+      AutoAddedVariableNames
+    >
   ) => Promise<
-    RawGqlString extends keyof StorefrontMutations // Do we have any generated mutation types?
-      ? StorefrontMutations[RawGqlString]['return'] // Using codegen, return type is known
-      : OverrideReturnType // No codegen, let user specify return type
+    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &
+      StorefrontError
   >;
   /** The cache instance passed in from the `createStorefrontClient` argument. */
   cache?: Cache;
@@ -169,7 +157,9 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
   getApiUrl: ReturnType<
     typeof createStorefrontUtilities
   >['getStorefrontApiUrl'];
-  /** Determines if the error is resulted from a Storefront API call. */
+  /**
+   * @deprecated Use the `errors` object returned from the API if exists.
+   * */
   isApiError: (error: any) => boolean;
   /** The `i18n` object passed in from the `createStorefrontClient` argument. */
   i18n: TI18n;
@@ -202,20 +192,17 @@ type StorefrontHeaders = {
   purpose: string | null;
 };
 
-type StorefrontQueryOptions = StorefrontQuerySecondParam & {
+type StorefrontQueryOptions = StorefrontCommonExtraParams & {
   query: string;
   mutation?: never;
+  cache?: CachingStrategy;
 };
 
-type StorefrontMutationOptions = StorefrontMutateSecondParam & {
+type StorefrontMutationOptions = StorefrontCommonExtraParams & {
   query?: never;
   mutation: string;
   cache?: never;
 };
-
-export const StorefrontApiError = class extends Error {} as ErrorConstructor;
-export const isStorefrontApiError = (error: any) =>
-  error instanceof StorefrontApiError;
 
 const defaultI18n: I18nBase = {language: 'EN', country: 'US'};
 
@@ -286,14 +273,18 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       defaultHeaders[STOREFRONT_ACCESS_TOKEN_HEADER],
   });
 
-  async function fetchStorefrontApi<T>({
+  async function fetchStorefrontApi<T = any>({
     query,
     mutation,
     variables,
     cache: cacheOptions,
     headers = [],
     storefrontApiVersion,
-  }: StorefrontQueryOptions | StorefrontMutationOptions): Promise<T> {
+    displayName,
+  }: {variables?: GenericVariables} & (
+    | StorefrontQueryOptions
+    | StorefrontMutationOptions
+  )): Promise<T & StorefrontError> {
     const userHeaders =
       headers instanceof Headers
         ? Object.fromEntries(headers.entries())
@@ -330,6 +321,16 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       requestInit.body,
     ];
 
+    let stackOffset = 1;
+    if (process.env.NODE_ENV === 'development') {
+      if (/fragment CartApi(Query|Mutation) on Cart/.test(query)) {
+        // The cart handler is wrapping storefront.query/mutate,
+        // so we need to go up one more stack frame to show
+        // the caller in /subrequest-profiler
+        stackOffset = 2;
+      }
+    }
+
     const [body, response] = await fetchWithServerCache(url, requestInit, {
       cacheInstance: mutation ? undefined : cache,
       cache: cacheOptions || CacheDefault(),
@@ -337,13 +338,17 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       shouldCacheResponse: checkGraphQLErrors,
       waitUntil,
       debugInfo: {
+        url,
         graphql: graphqlData,
         requestId: requestInit.headers[STOREFRONT_REQUEST_GROUP_ID_HEADER],
         purpose: storefrontHeaders?.purpose,
+        stackInfo: getCallerStackLine?.(stackOffset),
+        displayName,
       },
     });
 
     const errorOptions: GraphQLErrorOptions<T> = {
+      url,
       response,
       type: mutation ? 'mutation' : 'query',
       query,
@@ -368,15 +373,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
     const {data, errors} = body as GraphQLApiResponse<T>;
 
-    if (errors?.length) {
-      throwGraphQLError({
-        ...errorOptions,
-        errors,
-        ErrorConstructor: StorefrontApiError,
-      });
-    }
-
-    return data as T;
+    return formatAPIResult(data, errors as StorefrontApiErrors);
   }
 
   return {
@@ -395,21 +392,12 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        * }
        * ```
        */
-      query: <Storefront['query']>((query: string, payload) => {
+      query(query, options?) {
         query = minifyQuery(query);
         assertQuery(query, 'storefront.query');
 
-        const result = fetchStorefrontApi({
-          ...payload,
-          query,
-        });
-
-        // This is a no-op, but we need to catch the promise to avoid unhandled rejections
-        // we cannot return the catch no-op, or it would swallow the error
-        result.catch(() => {});
-
-        return result;
-      }),
+        return withSyncStack(fetchStorefrontApi({...options, query}));
+      },
       /**
        * Sends a GraphQL mutation to the Storefront API.
        *
@@ -423,21 +411,12 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        * }
        * ```
        */
-      mutate: <Storefront['mutate']>((mutation: string, payload) => {
+      mutate(mutation, options?) {
         mutation = minifyQuery(mutation);
         assertMutation(mutation, 'storefront.mutate');
 
-        const result = fetchStorefrontApi({
-          ...payload,
-          mutation,
-        });
-
-        // This is a no-op, but we need to catch the promise to avoid unhandled rejections
-        // we cannot return the catch no-op, or it would swallow the error
-        result.catch(() => {});
-
-        return result;
-      }),
+        return withSyncStack(fetchStorefrontApi({...options, mutation}));
+      },
       cache,
       CacheNone,
       CacheLong,
@@ -449,6 +428,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       getShopifyDomain,
       getApiUrl: getStorefrontApiUrl,
       /**
+       * @deprecated
        * Wether it's a GraphQL error returned in the Storefront API response.
        *
        * Example:
@@ -467,8 +447,26 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        * }
        * ```
        */
-      isApiError: isStorefrontApiError,
+      isApiError: (error: any) => {
+        if (process.env.NODE_ENV === 'development') {
+          warnOnce(
+            '`isApiError` is deprecated. An `errors` object would be returned from the API if there is an error.',
+          );
+        }
+        return false;
+      },
       i18n: (i18n ?? defaultI18n) as TI18n,
     },
   };
+}
+
+export function formatAPIResult<T>(data: T, errors: StorefrontApiErrors) {
+  let result = data;
+  if (errors) {
+    result = {
+      ...data,
+      errors,
+    };
+  }
+  return result as T & StorefrontError;
 }

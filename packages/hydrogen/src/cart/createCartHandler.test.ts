@@ -58,7 +58,7 @@ describe('createCartHandler', () => {
       },
     });
 
-    expectTypeOf(cart).toEqualTypeOf<HydrogenCartCustom<{}>>;
+    expectTypeOf(cart).toEqualTypeOf<HydrogenCartCustom<{foo: () => 'bar'}>>;
     expect(Object.keys(cart)).toHaveLength(15);
     expect(cart.foo()).toBe('bar');
   });
@@ -98,25 +98,25 @@ describe('createCartHandler', () => {
     });
 
     const result1 = await cart.create({});
-    expect(result1.errors?.[0]).toContain(cartMutateFragment);
+    expect(result1.userErrors?.[0]).toContain(cartMutateFragment);
 
     const result2 = await cart.addLines([]);
-    expect(result2.errors?.[0]).toContain(cartMutateFragment);
+    expect(result2.userErrors?.[0]).toContain(cartMutateFragment);
 
     const result3 = await cart.updateLines([]);
-    expect(result3.errors?.[0]).toContain(cartMutateFragment);
+    expect(result3.userErrors?.[0]).toContain(cartMutateFragment);
 
     const result4 = await cart.removeLines([]);
-    expect(result4.errors?.[0]).toContain(cartMutateFragment);
+    expect(result4.userErrors?.[0]).toContain(cartMutateFragment);
 
     const result5 = await cart.updateDiscountCodes([]);
-    expect(result5.errors?.[0]).toContain(cartMutateFragment);
+    expect(result5.userErrors?.[0]).toContain(cartMutateFragment);
 
     const result6 = await cart.updateBuyerIdentity({});
-    expect(result6.errors?.[0]).toContain(cartMutateFragment);
+    expect(result6.userErrors?.[0]).toContain(cartMutateFragment);
 
     const result7 = await cart.updateNote('');
-    expect(result7.errors?.[0]).toContain(cartMutateFragment);
+    expect(result7.userErrors?.[0]).toContain(cartMutateFragment);
 
     const result8 = await cart.updateSelectedDeliveryOption([
       {
@@ -124,16 +124,16 @@ describe('createCartHandler', () => {
         deliveryOptionHandle: 'Postal Service',
       },
     ]);
-    expect(result8.errors?.[0]).toContain(cartMutateFragment);
+    expect(result8.userErrors?.[0]).toContain(cartMutateFragment);
 
     const result9 = await cart.updateAttributes([]);
-    expect(result9.errors?.[0]).toContain(cartMutateFragment);
+    expect(result9.userErrors?.[0]).toContain(cartMutateFragment);
 
     const result10 = await cart.setMetafields([]);
-    expect(result10.errors?.[0]).not.toContain(cartMutateFragment);
+    expect(result10.userErrors?.[0]).not.toContain(cartMutateFragment);
 
     const result11 = await cart.deleteMetafield('some.key');
-    expect(result11.errors?.[0]).not.toContain(cartMutateFragment);
+    expect(result11.userErrors?.[0]).not.toContain(cartMutateFragment);
   });
 
   it('function get has a working default implementation', async () => {

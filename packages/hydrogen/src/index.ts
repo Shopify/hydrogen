@@ -6,8 +6,11 @@ export {
   CacheNone,
   CacheShort,
   generateCacheControlHeader,
+  type CachingStrategy,
+  type NoStoreStrategy,
 } from './cache/strategies';
 export {InMemoryCache} from './cache/in-memory';
+export {type CacheKey} from './cache/fetch';
 
 export {storefrontRedirect} from './routing/redirect';
 export {graphiqlLoader} from './routing/graphiql';
@@ -15,8 +18,13 @@ export {Seo} from './seo/seo';
 export {type SeoConfig} from './seo/generate-seo-tags';
 export type {SeoHandleFunction} from './seo/seo';
 export {Pagination, getPaginationVariables} from './pagination/Pagination';
-export {createCustomerClient as createCustomerClient__unstable} from './customer/customer';
-export type {CustomerClient} from './customer/customer';
+export {createCustomerClient} from './customer/customer';
+export type {
+  CustomerClient,
+  CustomerAccountQueries,
+  CustomerAccountMutations,
+} from './customer/customer';
+export {changelogHandler} from './changelogHandler';
 
 export {CartForm, type CartActionInput} from './cart/CartForm';
 export {cartCreateDefault} from './cart/queries/cartCreateDefault';
@@ -40,7 +48,8 @@ export {
 } from './cart/createCartHandler';
 export type {
   MetafieldWithoutOwnerId,
-  CartQueryData,
+  CartReturn,
+  CartQueryDataReturn,
   CartQueryOptions,
   CartQueryReturn,
 } from './cart/queries/cart-types';
@@ -82,6 +91,7 @@ export {
   sendShopifyAnalytics,
   ShopifySalesChannel,
   storefrontApiCustomScalars,
+  customerAccountApiCustomScalars,
   useLoadScript,
   useMoney,
   useShopifyCookies,
@@ -105,3 +115,5 @@ export type {
   StorefrontApiResponseOkPartial,
   StorefrontApiResponsePartial,
 } from '@shopify/hydrogen-react';
+
+export type {HydrogenSessionData, HydrogenSession} from './hydrogen';

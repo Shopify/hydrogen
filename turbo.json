@@ -11,6 +11,12 @@
       "cache": false,
       "persistent": true
     },
+    "build-docs": {
+      "outputs": ["docs/**/*.json"]
+    },
+    "preview-docs": {
+      "outputs": ["docs/**/*.json"]
+    },
     "lint": {
       "outputs": []
     },
@@ -62,12 +68,6 @@
         "@shopify/remix-oxygen#build"
       ],
       "outputs": ["dist/**"]
-    },
-    "hydrogen-express#build": {
-      "dependsOn": ["@shopify/hydrogen#build"]
-    },
-    "customer-api#build": {
-      "dependsOn": ["@shopify/hydrogen#build"]
     }
   }
 }
