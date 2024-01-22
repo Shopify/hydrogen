@@ -2641,7 +2641,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| created_at |\n| customer_id |\n| name |\n| purchasing_entity |\n| source |\n| status |\n| tag |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| created_at |\n| customer_id |\n| name |\n| purchasing_entity |\n| source |\n| status |\n| tag |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -2738,7 +2738,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| company_id |\n| created_at |\n| external_id |\n| ids |\n| name |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| company_id |\n| created_at |\n| external_id |\n| ids |\n| name |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -2827,7 +2827,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| created_at |\n| order_number |\n| processed_at |\n| purchasing_company_contact_id |\n| purchasing_company_id |\n| purchasing_company_location_id |\n| purchasing_entity |\n| shipment_status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| created_at |\n| order_number |\n| processed_at |\n| purchasing_company_contact_id |\n| purchasing_company_id |\n| purchasing_company_location_id |\n| purchasing_entity |\n| shipment_status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -3433,7 +3433,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| created_at |\n| customer_id |\n| name |\n| purchasing_entity |\n| source |\n| status |\n| tag |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| created_at |\n| customer_id |\n| name |\n| purchasing_entity |\n| source |\n| status |\n| tag |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -3591,7 +3591,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| company_id |\n| created_at |\n| external_id |\n| ids |\n| name |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| company_id |\n| created_at |\n| external_id |\n| ids |\n| name |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -3668,7 +3668,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| company_id |\n| created_at |\n| external_id |\n| ids |\n| name |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| company_id |\n| created_at |\n| external_id |\n| ids |\n| name |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -3745,7 +3745,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| created_at |\n| order_number |\n| processed_at |\n| purchasing_company_contact_id |\n| purchasing_company_id |\n| purchasing_company_location_id |\n| purchasing_entity |\n| shipment_status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| created_at |\n| order_number |\n| processed_at |\n| purchasing_company_contact_id |\n| purchasing_company_id |\n| purchasing_company_location_id |\n| purchasing_entity |\n| shipment_status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -4456,7 +4456,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| company_id |\n| company_location_id |\n| created_at |\n| email |\n| location_name |\n| name |\n| role_name |\n| status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| company_id |\n| company_location_id |\n| created_at |\n| email |\n| location_name |\n| name |\n| role_name |\n| status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -4533,7 +4533,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| company_id |\n| company_location_id |\n| created_at |\n| email |\n| location_name |\n| name |\n| role_name |\n| status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| company_id |\n| company_location_id |\n| created_at |\n| email |\n| location_name |\n| name |\n| role_name |\n| status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -4692,7 +4692,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| created_at |\n| customer_id |\n| name |\n| purchasing_entity |\n| source |\n| status |\n| tag |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| created_at |\n| customer_id |\n| name |\n| purchasing_entity |\n| source |\n| status |\n| tag |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -4813,7 +4813,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| created_at |\n| order_number |\n| processed_at |\n| purchasing_company_contact_id |\n| purchasing_company_id |\n| purchasing_company_location_id |\n| purchasing_entity |\n| shipment_status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| created_at |\n| order_number |\n| processed_at |\n| purchasing_company_contact_id |\n| purchasing_company_id |\n| purchasing_company_location_id |\n| purchasing_entity |\n| shipment_status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -4890,7 +4890,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| company_contact_role_id |\n| company_id |\n| company_location_id |\n| created_at |\n| location_name |\n| role_name |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| company_contact_role_id |\n| company_id |\n| company_location_id |\n| created_at |\n| location_name |\n| role_name |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -5285,7 +5285,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| created_at |\n| customer_id |\n| name |\n| purchasing_entity |\n| source |\n| status |\n| tag |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| created_at |\n| customer_id |\n| name |\n| purchasing_entity |\n| source |\n| status |\n| tag |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -5545,7 +5545,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| company_id |\n| created_at |\n| external_id |\n| ids |\n| name |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| company_id |\n| created_at |\n| external_id |\n| ids |\n| name |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -5622,7 +5622,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| company_id |\n| created_at |\n| external_id |\n| ids |\n| name |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| company_id |\n| created_at |\n| external_id |\n| ids |\n| name |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -5745,7 +5745,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| created_at |\n| order_number |\n| processed_at |\n| purchasing_company_contact_id |\n| purchasing_company_id |\n| purchasing_company_location_id |\n| purchasing_entity |\n| shipment_status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| created_at |\n| order_number |\n| processed_at |\n| purchasing_company_contact_id |\n| purchasing_company_id |\n| purchasing_company_location_id |\n| purchasing_entity |\n| shipment_status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -7359,7 +7359,7 @@
           },
           {
             "name": "TR",
-            "description": "Turkey.",
+            "description": "Türkiye.",
             "isDeprecated": false,
             "deprecationReason": null
           },
@@ -8971,7 +8971,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| created_at |\n| customer_id |\n| name |\n| purchasing_entity |\n| source |\n| status |\n| tag |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| created_at |\n| customer_id |\n| name |\n| purchasing_entity |\n| source |\n| status |\n| tag |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -9186,7 +9186,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| created_at |\n| order_number |\n| processed_at |\n| purchasing_company_contact_id |\n| purchasing_company_id |\n| purchasing_company_location_id |\n| purchasing_entity |\n| shipment_status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| created_at |\n| order_number |\n| processed_at |\n| purchasing_company_contact_id |\n| purchasing_company_id |\n| purchasing_company_location_id |\n| purchasing_entity |\n| shipment_status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -9333,7 +9333,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| created_at |\n| status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| created_at |\n| status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -9861,7 +9861,7 @@
           },
           {
             "name": "territoryCode",
-            "description": "The territory code for the country of the address.",
+            "description": "The country code, in ISO 3166-1 format. Accepts either a two-letter [alpha-2 code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2),\na three-letter [alpha-3 code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3), or a three-digit [numeric code](https://en.wikipedia.org/wiki/ISO_3166-1_numeric).\nFor example, `US`,  `USA`, or `840` represents the United States.\n",
             "type": {"kind": "SCALAR", "name": "String", "ofType": null},
             "defaultValue": null,
             "isDeprecated": false,
@@ -9877,7 +9877,7 @@
           },
           {
             "name": "zoneCode",
-            "description": "The code for the region of the address, such as the province,\nstate, or district. For example, QC for Quebec, Canada.\n",
+            "description": "The two-letter code ([ISO 3166-2 alpha-2]](https://en.wikipedia.org/wiki/ISO_3166-2) format)\nfor the region of the address, such as the province, state, or district. For example, 'ON' for Ontario,\nCanada.\n",
             "type": {"kind": "SCALAR", "name": "String", "ofType": null},
             "defaultValue": null,
             "isDeprecated": false,
@@ -9920,7 +9920,7 @@
                   "name": null,
                   "ofType": {
                     "kind": "OBJECT",
-                    "name": "UserErrorsAddressUserErrors",
+                    "name": "UserErrorsCustomerAddressUserErrors",
                     "ofType": null
                   }
                 }
@@ -10232,7 +10232,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| created_at |\n| status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| created_at |\n| status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -13393,7 +13393,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| status |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| status |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -15992,7 +15992,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| company_id |\n| company_location_id |\n| created_at |\n| email |\n| location_name |\n| name |\n| role_name |\n| status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| company_id |\n| company_location_id |\n| created_at |\n| email |\n| location_name |\n| name |\n| role_name |\n| status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -16069,7 +16069,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| company_id |\n| company_location_id |\n| created_at |\n| email |\n| location_name |\n| name |\n| role_name |\n| status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| company_id |\n| company_location_id |\n| created_at |\n| email |\n| location_name |\n| name |\n| role_name |\n| status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -16264,7 +16264,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| company_contact_role_id |\n| company_id |\n| company_location_id |\n| created_at |\n| location_name |\n| role_name |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| company_contact_role_id |\n| company_id |\n| company_location_id |\n| created_at |\n| location_name |\n| role_name |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -19099,7 +19099,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| order_id |\n| shipment_status |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| order_id |\n| shipment_status |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -22735,7 +22735,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| created_at |\n| status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| created_at |\n| status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -23204,7 +23204,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| created_at |\n| customer_id |\n| name |\n| purchasing_entity |\n| source |\n| status |\n| tag |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| company_contact_id |\n| created_at |\n| customer_id |\n| name |\n| purchasing_entity |\n| source |\n| status |\n| tag |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -23473,7 +23473,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| created_at |\n| order_number |\n| processed_at |\n| purchasing_company_contact_id |\n| purchasing_company_id |\n| purchasing_company_location_id |\n| purchasing_entity |\n| shipment_status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| created_at |\n| order_number |\n| processed_at |\n| purchasing_company_contact_id |\n| purchasing_company_id |\n| purchasing_company_location_id |\n| purchasing_entity |\n| shipment_status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -23616,7 +23616,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| created_at |\n| status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| created_at |\n| status |\n| updated_at |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -24231,7 +24231,7 @@
               },
               {
                 "name": "query",
-                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | type | example_use |\n| ---- | ---- | ---- | ---- | ---- | ---- |\n| order_id |\n| shipment_status |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
+                "description": "Apply one or multiple filters to the query.\n| name | description | acceptable_values | default_value | example_use |\n| ---- | ---- | ---- | ---- | ---- |\n| order_id |\n| shipment_status |\nRefer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.\n",
                 "type": {"kind": "SCALAR", "name": "String", "ofType": null},
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -33673,7 +33673,7 @@
           },
           {
             "name": "TR",
-            "description": "Turkey.",
+            "description": "Türkiye.",
             "isDeprecated": false,
             "deprecationReason": null
           },

@@ -1820,7 +1820,7 @@ export type CountryCode =
   | 'TN'
   /** Tonga. */
   | 'TO'
-  /** Turkey. */
+  /** Türkiye. */
   | 'TR'
   /** Trinidad & Tobago. */
   | 'TT'
@@ -2532,13 +2532,19 @@ export type CustomerAddressInput = {
   lastName?: InputMaybe<Scalars['String']['input']>;
   /** The customer's unique phone number, formatted using E.164 standard. For example, _+16135551111_. */
   phoneNumber?: InputMaybe<Scalars['String']['input']>;
-  /** The territory code for the country of the address. */
+  /**
+   * The country code, in ISO 3166-1 format. Accepts either a two-letter [alpha-2 code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2),
+   * a three-letter [alpha-3 code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3), or a three-digit [numeric code](https://en.wikipedia.org/wiki/ISO_3166-1_numeric).
+   * For example, `US`,  `USA`, or `840` represents the United States.
+   *
+   */
   territoryCode?: InputMaybe<Scalars['String']['input']>;
   /** The zip or postal code of the address. */
   zip?: InputMaybe<Scalars['String']['input']>;
   /**
-   * The code for the region of the address, such as the province,
-   * state, or district. For example, QC for Quebec, Canada.
+   * The two-letter code ([ISO 3166-2 alpha-2]](https://en.wikipedia.org/wiki/ISO_3166-2) format)
+   * for the region of the address, such as the province, state, or district. For example, 'ON' for Ontario,
+   * Canada.
    *
    */
   zoneCode?: InputMaybe<Scalars['String']['input']>;
@@ -2550,7 +2556,7 @@ export type CustomerAddressUpdatePayload = {
   /** The updated address. */
   customerAddress?: Maybe<CustomerAddress>;
   /** The list of errors that occurred from executing the mutation. */
-  userErrors: Array<UserErrorsAddressUserErrors>;
+  userErrors: Array<UserErrorsCustomerAddressUserErrors>;
 };
 
 /** The credit card payment instrument. */
@@ -8790,7 +8796,7 @@ export type TaxRegionCode =
   | 'TN'
   /** Tonga. */
   | 'TO'
-  /** Turkey. */
+  /** Türkiye. */
   | 'TR'
   /** Trinidad & Tobago. */
   | 'TT'
