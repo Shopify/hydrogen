@@ -9,13 +9,14 @@
   "type": "module",
   "scripts": {
     "build": "tsup && node scripts/build-check.mjs",
-    "dev": "tsup --watch",
+    "dev": "tsup --watch ./src",
     "typecheck": "tsc --noEmit",
     "generate:manifest": "node scripts/generate-manifest.mjs",
     "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run --test-timeout=20000",
     "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest --test-timeout=20000"
   },
   "devDependencies": {
+    "@remix-run/dev": "^2.5.1",
     "@types/diff": "^5.0.2",
     "@types/fs-extra": "^11.0.1",
     "@types/gunzip-maybe": "^1.4.0",
@@ -26,7 +27,7 @@
     "@vitest/coverage-v8": "^1.0.4",
     "devtools-protocol": "^0.0.1177611",
     "fast-glob": "^3.2.12",
-    "flame-chart-js": "2.3.1",
+    "flame-chart-js": "2.3.2",
     "get-port": "^7.0.0",
     "type-fest": "^4.5.0",
     "vitest": "^1.0.4"
@@ -52,6 +53,7 @@
     "source-map": "^0.7.4",
     "stack-trace": "^1.0.0-pre2",
     "tar-fs": "^2.1.1",
+    "tempy": "^3.0.0",
     "ts-morph": "20.0.0",
     "use-resize-observer": "^9.1.0",
     "ws": "^8.13.0"

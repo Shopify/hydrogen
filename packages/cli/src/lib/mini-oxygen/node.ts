@@ -2,6 +2,7 @@ import {randomUUID} from 'node:crypto';
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {readFile} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
+import {Response} from '@shopify/mini-oxygen';
 import {
   startServer,
   Request,
@@ -12,8 +13,9 @@ import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
 import {OXYGEN_HEADERS_MAP, logRequestLine} from './common.js';
 import {
   H2O_BINDING_NAME,
-  logRequestEvent,
+  createLogRequestEvent,
   handleDebugNetworkRequest,
+  setConstructors,
 } from '../request-events.js';
 
 export async function startNodeServer({
@@ -31,6 +33,9 @@ export async function startNodeServer({
     }),
   );
 
+  setConstructors({Response});
+
+  const logRequestEvent = createLogRequestEvent();
   const asyncLocalStorage = new AsyncLocalStorage();
   const serviceBindings = {
     [H2O_BINDING_NAME]: {

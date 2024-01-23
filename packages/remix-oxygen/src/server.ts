@@ -43,6 +43,10 @@ export function createRequestHandler<Context = unknown>({
 
     const response = await handleRequest(request, context);
 
+    if (poweredByHeader) {
+      response.headers.append('powered-by', 'Shopify, Hydrogen');
+    }
+
     if (process.env.NODE_ENV === 'development') {
       globalThis.__H2O_LOG_EVENT?.({
         eventType: 'request',
@@ -50,11 +54,12 @@ export function createRequestHandler<Context = unknown>({
         requestId: request.headers.get('request-id'),
         purpose: request.headers.get('purpose'),
         startTime,
-      });
-    }
-
-    if (poweredByHeader) {
-      response.headers.append('powered-by', 'Shopify, Hydrogen');
+        responseInit: {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Array.from(response.headers.entries()),
+        } satisfies ResponseInit,
+      } as any);
     }
 
     return response;

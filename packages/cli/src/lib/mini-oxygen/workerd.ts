@@ -11,6 +11,8 @@ import {
 import {dirname, resolvePath} from '@shopify/cli-kit/node/path';
 import {readFile} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
+import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
+import colors from '@shopify/cli-kit/node/colors';
 import {createInspectorConnector} from './workerd-inspector.js';
 import {findPort} from '../find-port.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
@@ -18,7 +20,7 @@ import {OXYGEN_HEADERS_MAP, logRequestLine} from './common.js';
 import {
   H2O_BINDING_NAME,
   handleDebugNetworkRequest,
-  logRequestEvent,
+  createLogRequestEvent,
   setConstructors,
 } from '../request-events.js';
 import {
@@ -97,7 +99,7 @@ export async function startWorkerdServer({
           compatibilityDate: '2022-10-31',
           bindings: {...env},
           serviceBindings: {
-            [H2O_BINDING_NAME]: logRequestEvent,
+            [H2O_BINDING_NAME]: createLogRequestEvent({absoluteBundlePath}),
           },
         },
       ],
@@ -145,9 +147,19 @@ export async function startWorkerdServer({
     showBanner(options) {
       console.log(''); // New line
 
-      const debuggerMessage = `\n\nDebug mode enabled. Attach a ${
-        process.env.TERM_PROGRAM === 'vscode' ? 'VSCode ' : ''
-      }debugger to port ${publicInspectorPort}\nor open DevTools in http://localhost:${publicInspectorPort}`;
+      const isVSCode = process.env.TERM_PROGRAM === 'vscode';
+      const debuggingDocsLink =
+        'https://shopify.dev/docs/custom-storefronts/hydrogen/debugging/server-code' +
+        (isVSCode ? '#visual-studio-code' : '#step-2-attach-a-debugger');
+
+      const debuggerMessage =
+        outputContent`\n\nDebugging enabled on port ${String(
+          publicInspectorPort,
+        )}.\nAttach a ${outputToken.link(
+          colors.yellow(isVSCode ? 'VSCode debugger' : 'debugger'),
+          debuggingDocsLink,
+        )} or open DevTools in http://localhost:${String(publicInspectorPort)}.`
+          .value;
 
       renderSuccess({
         headline: `${

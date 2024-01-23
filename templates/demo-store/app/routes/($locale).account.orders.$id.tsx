@@ -4,8 +4,10 @@ import {json, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, type MetaFunction} from '@remix-run/react';
 import {Money, Image, flattenConnection} from '@shopify/hydrogen';
 
+import type {OrderFragment} from 'customer-accountapi.generated';
 import {statusMessage} from '~/lib/utils';
 import {Link, Heading, PageHeader, Text} from '~/components';
+import {CUSTOMER_ORDER_QUERY} from '~/graphql/customer-account/CustomerOrderQuery';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Order ${data?.order?.name}`}];
@@ -21,48 +23,79 @@ export async function loader({request, context, params}: LoaderFunctionArgs) {
 
   invariant(orderToken, 'Order token is required');
 
-  const customerAccessToken = await context.session.get('customerAccessToken');
+  if (!(await context.customerAccount.isLoggedIn())) {
+    const loginUrl =
+      (params?.locale ? `/${params.locale}/account/login` : '/account/login') +
+      `?${new URLSearchParams(`redirectPath=${request.url}`).toString()}`;
 
-  if (!customerAccessToken) {
-    return redirect(
-      params.locale ? `${params.locale}/account/login` : '/account/login',
+    return redirect(loginUrl, {
+      headers: {
+        'Set-Cookie': await context.session.commit(),
+      },
+    });
+  }
+
+  try {
+    const orderId = `gid://shopify/Order/${params.id}?key=${orderToken}`;
+
+    const {data, errors} = await context.customerAccount.query(
+      CUSTOMER_ORDER_QUERY,
+      {variables: {orderId}},
     );
+
+    if (errors?.length || !data?.order || !data?.lineItems) {
+      throw new Error('Order not found');
+    }
+
+    const order: OrderFragment = data.order;
+
+    const lineItems = flattenConnection(order.lineItems);
+
+    const discountApplications = flattenConnection(order.discountApplications);
+
+    const firstDiscount = discountApplications[0]?.value;
+
+    const discountValue =
+      firstDiscount?.__typename === 'MoneyV2' && firstDiscount;
+
+    const discountPercentage =
+      firstDiscount?.__typename === 'PricingPercentageValue' &&
+      firstDiscount?.percentage;
+
+    const fulfillmentStatus = flattenConnection(order.fulfillments)[0].status;
+
+    return json(
+      {
+        order,
+        lineItems,
+        discountValue,
+        discountPercentage,
+        fulfillmentStatus,
+      },
+      {
+        headers: {
+          'Set-Cookie': await context.session.commit(),
+        },
+      },
+    );
+  } catch (error) {
+    throw new Response(error instanceof Error ? error.message : undefined, {
+      status: 404,
+      headers: {
+        'Set-Cookie': await context.session.commit(),
+      },
+    });
   }
+}
 
-  const orderId = `gid://shopify/Order/${params.id}?key=${orderToken}`;
-
-  const {node: order} = await context.storefront.query(CUSTOMER_ORDER_QUERY, {
-    variables: {orderId},
-  });
-
-  if (!order || !('lineItems' in order)) {
-    throw new Response('Order not found', {status: 404});
-  }
-
-  const lineItems = flattenConnection(order.lineItems);
-
-  const discountApplications = flattenConnection(order.discountApplications);
-
-  const firstDiscount = discountApplications[0]?.value;
-
-  const discountValue =
-    firstDiscount?.__typename === 'MoneyV2' && firstDiscount;
-
-  const discountPercentage =
-    firstDiscount?.__typename === 'PricingPercentageValue' &&
-    firstDiscount?.percentage;
-
-  return json({
+export default function OrderRoute() {
+  const {
     order,
     lineItems,
     discountValue,
     discountPercentage,
-  });
-}
-
-export default function OrderRoute() {
-  const {order, lineItems, discountValue, discountPercentage} =
-    useLoaderData<typeof loader>();
+    fulfillmentStatus,
+  } = useLoaderData<typeof loader>();
   return (
     <div>
       <PageHeader heading="Order detail">
@@ -110,26 +143,22 @@ export default function OrderRoute() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {lineItems.map((lineItem) => (
-                  <tr key={lineItem.variant!.id}>
+                  <tr key={lineItem.id}>
                     <td className="w-full py-4 pl-0 pr-3 align-top sm:align-middle max-w-0 sm:w-auto sm:max-w-none">
                       <div className="flex gap-6">
-                        <Link
-                          to={`/products/${lineItem.variant!.product!.handle}`}
-                        >
-                          {lineItem?.variant?.image && (
-                            <div className="w-24 card-image aspect-square">
-                              <Image
-                                data={lineItem.variant.image}
-                                width={96}
-                                height={96}
-                              />
-                            </div>
-                          )}
-                        </Link>
+                        {lineItem?.image && (
+                          <div className="w-24 card-image aspect-square">
+                            <Image
+                              data={lineItem.image}
+                              width={96}
+                              height={96}
+                            />
+                          </div>
+                        )}
                         <div className="flex-col justify-center hidden lg:flex">
                           <Text as="p">{lineItem.title}</Text>
                           <Text size="fine" className="mt-1" as="p">
-                            {lineItem.variant!.title}
+                            {lineItem.variantTitle}
                           </Text>
                         </div>
                         <dl className="grid">
@@ -139,13 +168,13 @@ export default function OrderRoute() {
                               {lineItem.title}
                             </Heading>
                             <Text size="fine" className="mt-1">
-                              {lineItem.variant!.title}
+                              {lineItem.variantTitle}
                             </Text>
                           </dd>
                           <dt className="sr-only">Price</dt>
                           <dd className="truncate sm:hidden">
                             <Text size="fine" className="mt-4">
-                              <Money data={lineItem.variant!.price!} />
+                              <Money data={lineItem.price!} />
                             </Text>
                           </dd>
                           <dt className="sr-only">Quantity</dt>
@@ -158,14 +187,14 @@ export default function OrderRoute() {
                       </div>
                     </td>
                     <td className="hidden px-3 py-4 text-right align-top sm:align-middle sm:table-cell">
-                      <Money data={lineItem.variant!.price!} />
+                      <Money data={lineItem.price!} />
                     </td>
                     <td className="hidden px-3 py-4 text-right align-top sm:align-middle sm:table-cell">
                       {lineItem.quantity}
                     </td>
                     <td className="px-3 py-4 text-right align-top sm:align-middle sm:table-cell">
                       <Text>
-                        <Money data={lineItem.discountedTotalPrice!} />
+                        <Money data={lineItem.totalDiscount!} />
                       </Text>
                     </td>
                   </tr>
@@ -214,7 +243,7 @@ export default function OrderRoute() {
                     <Text>Subtotal</Text>
                   </th>
                   <td className="pt-6 pl-3 pr-4 text-right md:pr-3">
-                    <Money data={order.subtotalPriceV2!} />
+                    <Money data={order.subtotal!} />
                   </td>
                 </tr>
                 <tr>
@@ -232,7 +261,7 @@ export default function OrderRoute() {
                     <Text>Tax</Text>
                   </th>
                   <td className="pt-4 pl-3 pr-4 text-right md:pr-3">
-                    <Money data={order.totalTaxV2!} />
+                    <Money data={order.totalTax!} />
                   </td>
                 </tr>
                 <tr>
@@ -250,7 +279,7 @@ export default function OrderRoute() {
                     <Text>Total</Text>
                   </th>
                   <td className="pt-4 pl-3 pr-4 font-semibold text-right md:pr-3">
-                    <Money data={order.totalPriceV2!} />
+                    <Money data={order.totalPrice!} />
                   </td>
                 </tr>
               </tfoot>
@@ -262,11 +291,7 @@ export default function OrderRoute() {
               {order?.shippingAddress ? (
                 <ul className="mt-6">
                   <li>
-                    <Text>
-                      {order.shippingAddress.firstName &&
-                        order.shippingAddress.firstName + ' '}
-                      {order.shippingAddress.lastName}
-                    </Text>
+                    <Text>{order.shippingAddress.name}</Text>
                   </li>
                   {order?.shippingAddress?.formatted ? (
                     order.shippingAddress.formatted.map((line: string) => (
@@ -284,18 +309,18 @@ export default function OrderRoute() {
               <Heading size="copy" className="mt-8 font-semibold" as="h3">
                 Status
               </Heading>
-              <div
-                className={clsx(
-                  `mt-3 px-3 py-1 text-xs font-medium rounded-full inline-block w-auto`,
-                  order.fulfillmentStatus === 'FULFILLED'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-primary/20 text-primary/50',
-                )}
-              >
-                <Text size="fine">
-                  {statusMessage(order.fulfillmentStatus!)}
-                </Text>
-              </div>
+              {fulfillmentStatus && (
+                <div
+                  className={clsx(
+                    `mt-3 px-3 py-1 text-xs font-medium rounded-full inline-block w-auto`,
+                    fulfillmentStatus === 'SUCCESS'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-primary/20 text-primary/50',
+                  )}
+                >
+                  <Text size="fine">{statusMessage(fulfillmentStatus!)}</Text>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -303,119 +328,3 @@ export default function OrderRoute() {
     </div>
   );
 }
-
-const CUSTOMER_ORDER_QUERY = `#graphql
-  fragment Money on MoneyV2 {
-    amount
-    currencyCode
-  }
-  fragment AddressFull on MailingAddress {
-    address1
-    address2
-    city
-    company
-    country
-    countryCodeV2
-    firstName
-    formatted
-    id
-    lastName
-    name
-    phone
-    province
-    provinceCode
-    zip
-  }
-  fragment DiscountApplication on DiscountApplication {
-    value {
-      __typename
-      ... on MoneyV2 {
-        amount
-        currencyCode
-      }
-      ... on PricingPercentageValue {
-        percentage
-      }
-    }
-  }
-  fragment Image on Image {
-    altText
-    height
-    src: url(transform: {crop: CENTER, maxHeight: 96, maxWidth: 96, scale: 2})
-    id
-    width
-  }
-  fragment ProductVariant on ProductVariant {
-    id
-    image {
-      ...Image
-    }
-    price {
-      ...Money
-    }
-    product {
-      handle
-    }
-    sku
-    title
-  }
-  fragment LineItemFull on OrderLineItem {
-    title
-    quantity
-    discountAllocations {
-      allocatedAmount {
-        ...Money
-      }
-      discountApplication {
-        ...DiscountApplication
-      }
-    }
-    originalTotalPrice {
-      ...Money
-    }
-    discountedTotalPrice {
-      ...Money
-    }
-    variant {
-      ...ProductVariant
-    }
-  }
-
-  query CustomerOrder(
-    $country: CountryCode
-    $language: LanguageCode
-    $orderId: ID!
-  ) @inContext(country: $country, language: $language) {
-    node(id: $orderId) {
-      ... on Order {
-        id
-        name
-        orderNumber
-        processedAt
-        fulfillmentStatus
-        totalTaxV2 {
-          ...Money
-        }
-        totalPriceV2 {
-          ...Money
-        }
-        subtotalPriceV2 {
-          ...Money
-        }
-        shippingAddress {
-          ...AddressFull
-        }
-        discountApplications(first: 100) {
-          nodes {
-            ...DiscountApplication
-          }
-        }
-        lineItems(first: 100) {
-          nodes {
-            ...LineItemFull
-          }
-        }
-      }
-    }
-  }
-`;

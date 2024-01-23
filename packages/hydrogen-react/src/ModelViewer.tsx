@@ -23,7 +23,7 @@ type ModelViewerProps = Omit<
   ModelViewerBaseProps;
 
 type ModelViewerBaseProps = {
-  /** An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2023-10/objects/model3d). */
+  /** An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2024-01/objects/model3d). */
   data: PartialDeep<Model3d, {recurseIntoArrays: true}>;
   /** The callback to invoke when the 'error' event is triggered. Refer to [error in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-error). */
   onError?: (event: Event) => void;
@@ -77,109 +77,45 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
     },
   );
 
+  const hydrogenEventListener = {
+    error: passthroughProps.onError,
+    load: passthroughProps.onLoad,
+    preload: passthroughProps.onPreload,
+    'model-visibility': passthroughProps.onModelVisibility,
+    progress: passthroughProps.onProgress,
+    'ar-status': passthroughProps.onArStatus,
+    'ar-tracking': passthroughProps.onArTracking,
+    'quick-look-button-tapped': passthroughProps.onQuickLookButtonTapped,
+    'camera-change': passthroughProps.onCameraChange,
+    'environment-change': passthroughProps.onEnvironmentChange,
+    play: passthroughProps.onPlay,
+    pause: passthroughProps.onPause,
+    'scene-graph-ready': passthroughProps.onSceneGraphReady,
+  };
+
   useEffect(() => {
     if (!modelViewer) {
       return;
     }
-    if (passthroughProps.onError)
-      modelViewer.addEventListener('error', passthroughProps.onError);
-    if (passthroughProps.onLoad)
-      modelViewer.addEventListener('load', passthroughProps.onLoad);
-    if (passthroughProps.onPreload)
-      modelViewer.addEventListener('preload', passthroughProps.onPreload);
-    if (passthroughProps.onModelVisibility)
-      modelViewer.addEventListener(
-        'model-visibility',
-        passthroughProps.onModelVisibility,
-      );
-    if (passthroughProps.onProgress)
-      modelViewer.addEventListener('progress', passthroughProps.onProgress);
-    if (passthroughProps.onArStatus)
-      modelViewer.addEventListener('ar-status', passthroughProps.onArStatus);
-    if (passthroughProps.onArTracking)
-      modelViewer.addEventListener(
-        'ar-tracking',
-        passthroughProps.onArTracking,
-      );
-    if (passthroughProps.onQuickLookButtonTapped)
-      modelViewer.addEventListener(
-        'quick-look-button-tapped',
-        passthroughProps.onQuickLookButtonTapped,
-      );
-    if (passthroughProps.onCameraChange)
-      modelViewer.addEventListener(
-        'camera-change',
-        passthroughProps.onCameraChange,
-      );
-    if (passthroughProps.onEnvironmentChange)
-      modelViewer.addEventListener(
-        'environment-change',
-        passthroughProps.onEnvironmentChange,
-      );
-    if (passthroughProps.onPlay)
-      modelViewer.addEventListener('play', passthroughProps.onPlay);
-    if (passthroughProps.onPause)
-      modelViewer.addEventListener('ar-status', passthroughProps.onPause);
-    if (passthroughProps.onSceneGraphReady)
-      modelViewer.addEventListener(
-        'scene-graph-ready',
-        passthroughProps.onSceneGraphReady,
-      );
+    Object.entries(hydrogenEventListener).forEach(
+      ([eventName, callbackFunc]) => {
+        if (callbackFunc) {
+          modelViewer.addEventListener(eventName, callbackFunc);
+        }
+      },
+    );
 
     return () => {
       if (modelViewer == null) {
         return;
       }
-      if (passthroughProps.onError)
-        modelViewer.removeEventListener('error', passthroughProps.onError);
-      if (passthroughProps.onLoad)
-        modelViewer.removeEventListener('load', passthroughProps.onLoad);
-      if (passthroughProps.onPreload)
-        modelViewer.removeEventListener('preload', passthroughProps.onPreload);
-      if (passthroughProps.onModelVisibility)
-        modelViewer.removeEventListener(
-          'model-visibility',
-          passthroughProps.onModelVisibility,
-        );
-      if (passthroughProps.onProgress)
-        modelViewer.removeEventListener(
-          'progress',
-          passthroughProps.onProgress,
-        );
-      if (passthroughProps.onArStatus)
-        modelViewer.removeEventListener(
-          'ar-status',
-          passthroughProps.onArStatus,
-        );
-      if (passthroughProps.onArTracking)
-        modelViewer.removeEventListener(
-          'ar-tracking',
-          passthroughProps.onArTracking,
-        );
-      if (passthroughProps.onQuickLookButtonTapped)
-        modelViewer.removeEventListener(
-          'quick-look-button-tapped',
-          passthroughProps.onQuickLookButtonTapped,
-        );
-      if (passthroughProps.onCameraChange)
-        modelViewer.removeEventListener(
-          'camera-change',
-          passthroughProps.onCameraChange,
-        );
-      if (passthroughProps.onEnvironmentChange)
-        modelViewer.removeEventListener(
-          'environment-change',
-          passthroughProps.onEnvironmentChange,
-        );
-      if (passthroughProps.onPlay)
-        modelViewer.removeEventListener('play', passthroughProps.onPlay);
-      if (passthroughProps.onPause)
-        modelViewer.removeEventListener('ar-status', passthroughProps.onPause);
-      if (passthroughProps.onSceneGraphReady)
-        modelViewer.removeEventListener(
-          'scene-graph-ready',
-          passthroughProps.onSceneGraphReady,
-        );
+      Object.entries(hydrogenEventListener).forEach(
+        ([eventName, callbackFunc]) => {
+          if (callbackFunc) {
+            modelViewer.removeEventListener(eventName, callbackFunc);
+          }
+        },
+      );
     };
   }, [
     modelViewer,

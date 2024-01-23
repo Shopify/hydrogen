@@ -62,8 +62,6 @@ export const commonFlags = {
       'Generate types for the Storefront API queries found in your project.',
     required: false,
     default: false,
-    deprecateAliases: true,
-    aliases: ['codegen-unstable'],
   }),
   codegenConfigPath: Flags.string({
     description:
@@ -99,6 +97,12 @@ export const commonFlags = {
     description: 'Port where the inspector will be available.',
     env: 'SHOPIFY_HYDROGEN_FLAG_INSPECTOR_PORT',
     default: DEFAULT_INSPECTOR_PORT,
+  }),
+  diff: Flags.boolean({
+    description:
+      "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
+    default: false,
+    required: false,
   }),
 };
 

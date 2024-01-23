@@ -8,13 +8,11 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'createStorefrontClient',
       type: 'utility',
-      url: '/docs/api/hydrogen/current/utilities/createstorefrontclient',
+      url: '/docs/api/hydrogen/2024-01/utilities/createstorefrontclient',
     },
   ],
   description: `
-The \`createCustomerClient\` function creates a GraphQL client for querying the [Customer Account API](https://shopify.dev/docs/api/customer). It also provides methods to authenticate and check if the user is logged in.
-
-See an end to end [example on using the Customer Account API client](https://github.com/Shopify/hydrogen/tree/main/examples/customer-api).`,
+The \`createCustomerClient\` function creates a GraphQL client for querying the [Customer Account API](https://shopify.dev/docs/api/customer). It also provides methods to authenticate and check if the user is logged in.`,
   type: 'utility',
   defaultExample: {
     description: 'I am the default example',
