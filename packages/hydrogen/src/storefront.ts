@@ -467,7 +467,7 @@ export type StorefrontForDoc<TI18n extends I18nBase = I18nBase> = {
   ) => Promise<TData & StorefrontError>;
   /** The function to run a mutation on Storefront API. */
   mutate?: <TData = any>(
-    query: string,
+    mutation: string,
     options: StorefrontMutationOptionsForDocs,
   ) => Promise<TData & StorefrontError>;
   /** The cache instance passed in from the `createStorefrontClient` argument. */
@@ -508,7 +508,7 @@ export type StorefrontForDoc<TI18n extends I18nBase = I18nBase> = {
 
 export type StorefrontQueryOptionsForDocs = {
   /** The variables for the GraphQL query statement. */
-  variables?: GenericVariables;
+  variables?: Record<string, unknown>;
   /** The cache strategy for this query. Default to max-age=1, stale-while-revalidate=86399. */
   cache?: CachingStrategy;
   /** Additional headers for this query. */
@@ -521,7 +521,7 @@ export type StorefrontQueryOptionsForDocs = {
 
 export type StorefrontMutationOptionsForDocs = {
   /** The variables for the GraphQL mutation statement. */
-  variables?: GenericVariables;
+  variables?: Record<string, unknown>;
   /** Additional headers for this query. */
   headers?: HeadersInit;
   /** Override the Storefront API version for this query. */
