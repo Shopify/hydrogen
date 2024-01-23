@@ -43,9 +43,9 @@ import {
   assertQuery,
   assertMutation,
   throwErrorWithGqlLink,
+  GraphQLError,
   type GraphQLApiResponse,
   type GraphQLErrorOptions,
-  GraphQLFormattedError,
 } from './utils/graphql';
 import {getCallerStackLine, withSyncStack} from './utils/callsites';
 
@@ -54,7 +54,7 @@ export type I18nBase = {
   country: CountryCode;
 };
 
-export type StorefrontApiErrors = GraphQLFormattedError[] | undefined;
+export type StorefrontApiErrors = GraphQLError[] | undefined;
 export type StorefrontError = {
   errors?: StorefrontApiErrors;
 };
@@ -465,7 +465,9 @@ export function formatAPIResult<T>(data: T, errors: StorefrontApiErrors) {
   if (errors) {
     result = {
       ...data,
-      errors,
+      errors: errors.map(
+        (errorOptions) => new GraphQLError(errorOptions.message, errorOptions),
+      ),
     };
   }
   return result as T & StorefrontError;

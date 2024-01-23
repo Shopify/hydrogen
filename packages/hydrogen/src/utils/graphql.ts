@@ -43,13 +43,7 @@ type SourceLocation = {
 };
 
 // Reference: https://github.com/graphql/graphql-js/blob/main/src/error/GraphQLError.ts#L218-L242
-export type GraphQLFormattedError = {
-  /**
-   * A short, human-readable summary of the problem that **SHOULD NOT** change
-   * from occurrence to occurrence of the problem, except for purposes of
-   * localization.
-   */
-  readonly message: string;
+export class GraphQLError extends Error {
   /**
    * If an error can be associated to a particular point in the requested
    * GraphQL document, it should contain a list of locations.
@@ -67,7 +61,39 @@ export type GraphQLFormattedError = {
    * and hence there are no additional restrictions on its contents.
    */
   readonly extensions?: {[key: string]: unknown};
-};
+
+  constructor(
+    message: string,
+    options: Pick<GraphQLError, 'locations' | 'path' | 'extensions'> = {},
+  ) {
+    super(message);
+    this.name = 'GraphQLError';
+    Object.assign(this, options);
+    Object.defineProperty(this, 'stack', {value: undefined});
+  }
+
+  get [Symbol.toStringTag]() {
+    return this.name;
+  }
+
+  override toString() {
+    let result = `${this.name}: ${this.message}\n`;
+
+    if (this.path) {
+      result += `  ${this.path.join(' > ')}\n`;
+    }
+
+    if (this.extensions) {
+      try {
+        result += `${JSON.stringify(this.extensions)}\n`;
+      } catch {
+        // skip
+      }
+    }
+
+    return result;
+  }
+}
 
 export function throwErrorWithGqlLink<T>({
   url,
