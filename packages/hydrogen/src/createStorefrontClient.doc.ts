@@ -55,8 +55,13 @@ Learn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/d
   },
   definitions: [
     {
-      title: 'Arguments',
-      type: 'CreateStorefrontClientGeneratedType',
+      title: 'Parameters',
+      type: 'CreateStorefrontClientOptions',
+      description: '',
+    },
+    {
+      title: 'Returns',
+      type: 'CreateStorefrontClientForDocs',
       description: '',
     },
   ],
