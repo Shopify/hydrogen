@@ -1,6 +1,6 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import type {HydrogenSession, HydrogenSessionData} from '../hydrogen';
-import {createCustomerClient} from './customer';
+import {createCustomerAccountClient} from './customer';
 import {CUSTOMER_ACCOUNT_SESSION_KEY} from './constants';
 import crypto from 'node:crypto';
 
@@ -71,7 +71,7 @@ describe('customer', () => {
 
   describe('login & logout', () => {
     it('returns true if logged in', async () => {
-      const customer = createCustomerClient({
+      const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
@@ -83,7 +83,7 @@ describe('customer', () => {
     });
 
     it('returns false if logged out', async () => {
-      const customer = createCustomerClient({
+      const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
@@ -97,7 +97,7 @@ describe('customer', () => {
     });
 
     it('Redirects to the customer account api login url', async () => {
-      const customer = createCustomerClient({
+      const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
@@ -140,7 +140,7 @@ describe('customer', () => {
     });
 
     it('Redirects to the customer account api logout url', async () => {
-      const customer = createCustomerClient({
+      const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
@@ -168,7 +168,7 @@ describe('customer', () => {
 
   describe('authorize', () => {
     it('Throws unauthorized if no code or state params are passed', async () => {
-      const customer = createCustomerClient({
+      const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
@@ -186,7 +186,7 @@ describe('customer', () => {
     });
 
     it("Throws unauthorized if state doesn't match session value", async () => {
-      const customer = createCustomerClient({
+      const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
@@ -199,12 +199,12 @@ describe('customer', () => {
       }
 
       await expect(run).rejects.toThrowError(
-        'Unauthorized The session state does not match the state parameter. Make sure that the session is configured correctly and passed to `createCustomerClient`.',
+        'Unauthorized The session state does not match the state parameter. Make sure that the session is configured correctly and passed to `createCustomerAccountClient`.',
       );
     });
 
     it('Throws if requesting the token fails', async () => {
-      const customer = createCustomerClient({
+      const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
@@ -222,7 +222,7 @@ describe('customer', () => {
     });
 
     it("Throws if the encoded nonce doesn't match the value in the session", async () => {
-      const customer = createCustomerClient({
+      const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
@@ -252,7 +252,7 @@ describe('customer', () => {
     });
 
     it('Redirects on successful authorization and updates session', async () => {
-      const customer = createCustomerClient({
+      const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
@@ -294,7 +294,7 @@ describe('customer', () => {
 
   describe('query', () => {
     it('Throws unauthorized if no access token is in the session', async () => {
-      const customer = createCustomerClient({
+      const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
@@ -314,7 +314,7 @@ describe('customer', () => {
     });
 
     it('Tries to refresh and throws if there is no refresh token', async () => {
-      const customer = createCustomerClient({
+      const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
@@ -333,12 +333,12 @@ describe('customer', () => {
       }
 
       await expect(run).rejects.toThrowError(
-        'Unauthorized No refreshToken found in the session. Make sure your session is configured correctly and passed to `createCustomerClient`.',
+        'Unauthorized No refreshToken found in the session. Make sure your session is configured correctly and passed to `createCustomerAccountClient`.',
       );
     });
 
     it('Makes query', async () => {
-      const customer = createCustomerClient({
+      const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
@@ -362,7 +362,7 @@ describe('customer', () => {
     });
 
     it('Refreshes the token and then makes query', async () => {
-      const customer = createCustomerClient({
+      const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',

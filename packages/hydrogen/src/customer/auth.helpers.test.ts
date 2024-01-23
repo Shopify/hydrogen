@@ -62,7 +62,7 @@ describe('auth.helpers', () => {
       }
 
       await expect(run).rejects.toThrowError(
-        'Unauthorized No refreshToken found in the session. Make sure your session is configured correctly and passed to `createCustomerClient`.',
+        'Unauthorized No refreshToken found in the session. Make sure your session is configured correctly and passed to `createCustomerAccountClient`.',
       );
     });
 

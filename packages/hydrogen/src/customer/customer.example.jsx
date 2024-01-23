@@ -1,4 +1,4 @@
-import {createCustomerClient} from '@shopify/hydrogen';
+import {createCustomerAccountClient} from '@shopify/hydrogen';
 import * as remixBuild from '@remix-run/dev/server-build';
 import {
   createRequestHandler,
@@ -10,7 +10,7 @@ export default {
     const session = await AppSession.init(request, [env.SESSION_SECRET]);
 
     /* Create a Customer API client with your credentials and options */
-    const customer = createCustomerClient({
+    const customer = createCustomerAccountClient({
       /* Runtime utility in serverless environments */
       waitUntil: (p) => executionContext.waitUntil(p),
       /* Public Customer Account API token for your store */
