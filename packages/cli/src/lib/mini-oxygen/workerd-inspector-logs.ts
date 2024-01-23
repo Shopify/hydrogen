@@ -282,7 +282,7 @@ export function formatStructuredError(
   // Pass each of the callframes into the consumer, and format the error
   frames?.forEach(({functionName, lineNumber, columnNumber}, i) => {
     try {
-      if (lineNumber) {
+      if (typeof lineNumber === 'number') {
         // `Protocol.Runtime.CallFrame` uses 0-indexed line and column
         // numbers, whereas `source-map` expects 1-indexing for lines and
         // 0-indexing for columns;
@@ -292,7 +292,7 @@ export function formatStructuredError(
         });
 
         // Print out line which caused error:
-        if (i === 0 && pos.source && pos.line) {
+        if (i === 0 && pos.source && pos.line !== null) {
           const fileSource = sourceMapConsumer.sourceContentFor(pos.source);
           const fileSourceLine = fileSource?.split('\n')[pos.line - 1] || '';
           lines.push(fileSourceLine.trim());
