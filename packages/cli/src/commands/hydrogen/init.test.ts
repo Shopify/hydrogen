@@ -788,7 +788,6 @@ describe('init', () => {
             path: tmpDir,
             port,
             inspectorPort: 9000,
-            worker: true,
             disableVirtualRoutes: true,
             disableVersionCheck: true,
           });

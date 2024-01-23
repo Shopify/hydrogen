@@ -284,7 +284,7 @@ function withFixtures(
       ...optionsFromSetup,
     };
 
-    const miniOxygen = await startMiniOxygen(miniOxygenOptions, true);
+    const miniOxygen = await startMiniOxygen(miniOxygenOptions);
 
     try {
       await runTest({
