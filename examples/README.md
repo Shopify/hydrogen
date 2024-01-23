@@ -10,9 +10,12 @@ Examples are kept intentionally minimal, containing only the new and updated cod
 
 These are some of the most commonly used Hydrogen examples. Browse the folders in this directory for the complete list.
 
-Example | Details |
---- | ---
-[Multipass](/examples/multipass/) | Connect your existing third-party authentication method to Shopify’s customer accounts, so buyers can use a single login across multiple services.
+| Example                                                                   | Details                                                                                                                                            |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Express](/examples/express/)                                             | Hydrogen example using NodeJS [Express](https://expressjs.com/)                                                                                    |
+| [Multipass](/examples/multipass/)                                         | Connect your existing third-party authentication method to Shopify’s customer accounts, so buyers can use a single login across multiple services. |
+| [Optimistic Cart UI](/examples/optimistic-cart-ui/)                       | How to optimistically remove a cart line item from the cart.                                                                                       |
+| [Third-party Queries and Caching](/examples/third-party-queries-caching/) | How to leverage Oxygen's sub-request caching when querying third-party GraphQL API in Hydrogen.                                                    |
 
 ## Request an example
 
