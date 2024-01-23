@@ -44,7 +44,7 @@ import {
 } from '../utils/callsites';
 import {getRedirectUrl} from '../utils/get-redirect-url';
 
-// Return type of handleNotLoggedIn = Return type of loader/action function
+// Return type of unauthorizedHandler = Return type of loader/action function
 // This type is not exported https://github.com/remix-run/react-router/blob/main/packages/router/utils.ts#L167
 type DataFunctionValue = Response | NonNullable<unknown> | null;
 
@@ -80,13 +80,13 @@ export interface CustomerAccountMutations {
 }
 
 export type CustomerClient = {
-  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. An optional `redirectPath` parameter defines the final path the user lands on at the end of the oAuth flow. It defaults to the path passed in `redirectPath` param, Referer header, then `/account`. */
+  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. An optional `redirectPath` parameter defines the final path the user lands on at the end of the oAuth flow. The default redirectPath is the page that ran handleUnauthorized, query or mutate with unauthorized customer, then `/account`. */
   login: (redirectPath?: string) => Promise<Response>;
   /** On successful login, the user redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings. */
   authorize: () => Promise<Response>;
   /** Returns if the user is logged in. It also checks if the access token is expired and refreshes it if needed. */
   isLoggedIn: () => Promise<boolean>;
-  /** Check for unauthorized user and perform `unauthorizedHandler`. */
+  /** Check for unauthorized customer and perform `unauthorizedHandler`. */
   handleUnauthorized: () => void | DataFunctionValue;
   /** Returns CustomerAccessToken if the user is logged in. It also run a expirey check and does a token refresh if needed. */
   getAccessToken: () => Promise<string | undefined>;
@@ -139,7 +139,9 @@ type CustomerClientOptions = {
   waitUntil?: ExecutionContext['waitUntil'];
   /** This is the route in your app that authorizes the user after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/account/authorize`. */
   authUrl?: string;
-  /** The behaviour when query/mutate is called without a logged in customer. The default behaviour is redirecting to `/account/login` where login() is located and return to the current location after auth. */
+  /** This is the route in your app that login() is located.It defaults to `/account/login`. */
+  loginUrl?: string;
+  /** The behaviour when handleUnauthorized, query or mutate is called with an unauthorized customer. The return of method will be throw. The default behaviour is redirecting to `/account/login` where login() is located and pass in current path as redirectPath. */
   unauthorizedHandler?: () => DataFunctionValue;
 };
 
@@ -147,14 +149,16 @@ const DEFAULT_LOGIN_URL = '/account/login';
 const DEFAULT_AUTH_URL = '/account/authorize';
 const DEFAULT_REDIRECT_PATH = '/account';
 
-function defaultUnauthorizedHandler(request: CrossRuntimeRequest) {
-  if (!request.url) return DEFAULT_LOGIN_URL;
+function defaultUnauthorizedHandler(
+  request: CrossRuntimeRequest,
+  loginUrl: string,
+) {
+  if (!request.url) return loginUrl;
 
   const {pathname} = new URL(request.url);
 
   const redirectTo =
-    DEFAULT_LOGIN_URL +
-    `?${new URLSearchParams({return_to: pathname}).toString()}`;
+    loginUrl + `?${new URLSearchParams({return_to: pathname}).toString()}`;
 
   return redirect(redirectTo);
 }
@@ -174,8 +178,9 @@ export function createCustomerAccountClient({
   customerApiVersion = DEFAULT_CUSTOMER_API_VERSION,
   request,
   waitUntil,
+  loginUrl = DEFAULT_LOGIN_URL,
   authUrl = DEFAULT_AUTH_URL,
-  unauthorizedHandler = () => defaultUnauthorizedHandler(request),
+  unauthorizedHandler = () => defaultUnauthorizedHandler(request, loginUrl),
 }: CustomerClientOptions): CustomerClient {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.warn(
@@ -329,6 +334,7 @@ export function createCustomerAccountClient({
 
   async function handleUnauthorized() {
     if (!(await isLoggedIn())) {
+      console.error('\x1b[45m%s\x1b[0m', `HEREEEE`);
       throw unauthorizedHandler();
     }
   }
@@ -510,7 +516,7 @@ export function createCustomerAccountClient({
         redirectPath: undefined,
       });
 
-      return redirect(redirectPath, {
+      return redirect(redirectPath || DEFAULT_REDIRECT_PATH, {
         headers: {
           'Set-Cookie': await session.commit(),
         },
