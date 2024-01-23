@@ -32,7 +32,7 @@ export type GraphQLErrorOptions<T> = {
   type: 'query' | 'mutation';
   query: string;
   queryVariables: GenericVariables;
-  ErrorConstructor?: new (message?: string, ...other: any) => Error;
+  ErrorConstructor?: ErrorConstructor;
   client?: string;
 };
 

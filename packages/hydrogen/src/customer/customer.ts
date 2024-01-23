@@ -42,6 +42,7 @@ import {
   withSyncStack,
   type StackInfo,
 } from '../utils/callsites';
+import {getRedirectUrl} from '../utils/get-redirect-url';
 
 // Return type of handleNotLoggedIn = Return type of loader/action function
 // This type is not exported https://github.com/remix-run/react-router/blob/main/packages/router/utils.ts#L167
@@ -78,11 +79,6 @@ export interface CustomerAccountMutations {
   // '#graphql mutation m1 {...}': {return: M1Mutation; variables: M1MutationVariables};
 }
 
-class CustomerAccountApiError extends Error {}
-const isCustomerAccountApiError = (
-  error: any,
-): error is CustomerAccountApiError => error instanceof CustomerAccountApiError;
-
 export type CustomerClient = {
   /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. An optional `redirectPath` parameter defines the final path the user lands on at the end of the oAuth flow. It defaults to the path passed in `redirectPath` param, Referer header, then `/account`. */
   login: (redirectPath?: string) => Promise<Response>;
@@ -96,8 +92,6 @@ export type CustomerClient = {
   getAccessToken: () => Promise<string | undefined>;
   /** Logout the user by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. */
   logout: () => Promise<Response>;
-  /**  */
-  isApiError: typeof isCustomerAccountApiError;
   /** Execute a GraphQL query against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
   query: <
     OverrideReturnType extends any = never,
@@ -154,28 +148,23 @@ const DEFAULT_AUTH_URL = '/account/authorize';
 const DEFAULT_REDIRECT_PATH = '/account';
 
 function defaultUnauthorizedHandler(request: CrossRuntimeRequest) {
-  const redirectPath = request.url ? new URL(request.url).pathname : undefined;
+  if (!request.url) return DEFAULT_LOGIN_URL;
 
-  const loginUrlWithRedirectPath =
+  const {pathname} = new URL(request.url);
+
+  const redirectTo =
     DEFAULT_LOGIN_URL +
-    (redirectPath
-      ? `?${new URLSearchParams(`redirectPath=${redirectPath}`).toString()}`
-      : '');
+    `?${new URLSearchParams({return_to: pathname}).toString()}`;
 
-  console.error(
-    '\x1b[46m%s\x1b[0m',
-    `loginUrlWithRedirectPath=${loginUrlWithRedirectPath}`,
-  );
-
-  return redirect(loginUrlWithRedirectPath);
+  return redirect(redirectTo);
 }
 
 function defaultRedirectPath(request: CrossRuntimeRequest): string {
-  const fromParam = request.url
-    ? new URL(request.url).searchParams.get('redirectPath')
-    : undefined;
-
-  return fromParam || getHeader(request, 'Referer') || DEFAULT_REDIRECT_PATH;
+  return (
+    getRedirectUrl(request.url) ||
+    getHeader(request, 'Referer') ||
+    DEFAULT_REDIRECT_PATH
+  );
 }
 
 export function createCustomerAccountClient({
@@ -280,11 +269,6 @@ export function createCustomerAccountClient({
       client: 'customer',
     };
 
-    console.error(
-      '\x1b[42m%s\x1b[0m',
-      `caapi status=${response.status}, response=${body}/n`,
-    );
-
     if (!response.ok) {
       if (response.status === 401) {
         // clear session because current access token is invalid
@@ -313,14 +297,12 @@ export function createCustomerAccountClient({
     }
   }
 
-  async function isLoggedIn(handleUnauthorized = false) {
+  async function isLoggedIn() {
     const customerAccount = session.get(CUSTOMER_ACCOUNT_SESSION_KEY);
     const accessToken = customerAccount?.accessToken;
     const expiresAt = customerAccount?.expiresAt;
 
-    if (!accessToken || !expiresAt) {
-      return false;
-    }
+    if (!accessToken || !expiresAt) return false;
 
     // Get stack trace before losing it with any async operation.
     const stackInfo = getCallerStackLine?.();
@@ -352,13 +334,10 @@ export function createCustomerAccountClient({
   }
 
   async function getAccessToken() {
-    const hasAccessToken = await isLoggedIn;
+    const hasAccessToken = await isLoggedIn();
 
-    if (!hasAccessToken) {
-      return;
-    } else {
+    if (hasAccessToken)
       return session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.accessToken;
-    }
   }
 
   return {
@@ -417,7 +396,6 @@ export function createCustomerAccountClient({
     },
     isLoggedIn,
     handleUnauthorized,
-    isApiError: isCustomerAccountApiError,
     getAccessToken,
     mutate(mutation, options?) {
       mutation = minifyQuery(mutation);
