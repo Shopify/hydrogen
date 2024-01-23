@@ -12,13 +12,13 @@ const data: LandingTemplateSchema = {
       title: 'Setup',
       sectionContent: `
 1. Create a new Hydrogen project with your preferred package manager.
-1. Import components, hooks, or utilities that you want to use in your app. For more detailed instructions, see the Getting Started Guide.
+1. Import components, hooks, or utilities that you want to use in your app. For more, see the [getting started guide](/docs/custom-storefronts/hydrogen/getting-started).
       `,
       sectionCard: [
         {
           subtitle: 'Tutorial',
-          name: 'Getting started with Hydrogen',
-          url: '/docs/custom-storefronts/hydrogen/getting-started/quickstart',
+          name: 'Getting started with Hydrogen and Oxygen',
+          url: '/docs/custom-storefronts/hydrogen/getting-started',
           type: 'tutorial',
         },
       ],
@@ -41,7 +41,7 @@ const data: LandingTemplateSchema = {
       anchorLink: 'authentication',
       title: 'Authentication',
       sectionContent:
-        'To make full use of Hydrogen, you need to authenticate with and make requests to the [Storefront API](/docs/api/storefront). Hydrogen includes a full-featured [API client](/docs/api/hydrogen/2024-01/utilities/createstorefrontclient) to securely handle API queries and mutations.\n\nYou can create access tokens for your own Shopify store by [installing the Hydrogen sales channel](/docs/custom-storefronts/oxygen/getting-started), which includes built-in support for Oxygen, Shopify’s global edge hosting platform. Or install the Headless sales channel to host your Hydrogen app anywhere.\n\nApps have access to [two kinds of tokens](/docs/api/usage/authentication#access-tokens-for-the-storefront-api): a public API token, which can be used in client-side code, and a private API token, which should only be used in server-side contexts and never exposed publicly.',
+        'To make full use of Hydrogen, you need to authenticate with and make requests to the [Storefront API](/docs/api/storefront) and the [Customer Account API](/docs/api/customer). Hydrogen includes full-featured API clients to securely handle API queries and mutations.\n\nYou can create access tokens for your own Shopify store by [installing the Hydrogen sales channel](/docs/custom-storefronts/oxygen/getting-started), which includes built-in support for Oxygen, Shopify’s global edge hosting platform. Or install the Headless sales channel to host your Hydrogen app anywhere.\n\nBoth the Storefront API and Customer Account API offer public credentials for client-side applications, as well as private credentials that should never be exposed publicly and only used server-side.',
       sectionCard: [
         {
           subtitle: 'Install',
