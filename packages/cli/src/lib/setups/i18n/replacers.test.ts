@@ -146,7 +146,7 @@ describe('i18n replacers', () => {
           createCartHandler,
           createStorefrontClient,
           storefrontRedirect,
-          createCustomerClient,
+          createCustomerAccountClient,
         } from "@shopify/hydrogen";
         import {
           createRequestHandler,
@@ -196,7 +196,7 @@ describe('i18n replacers', () => {
               /**
                * Create a client for Customer Account API.
                */
-              const customerAccount = createCustomerClient({
+              const customerAccount = createCustomerAccountClient({
                 waitUntil,
                 request,
                 session,
