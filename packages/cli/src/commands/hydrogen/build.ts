@@ -38,7 +38,7 @@ import {isCI} from '../../lib/is-ci.js';
 import {copyDiffBuild, prepareDiffDirectory} from '../../lib/template-diff.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
-const WORKER_BUILD_SIZE_LIMIT = 10;
+const WORKER_BUILD_SIZE_LIMIT = 5;
 
 export default class Build extends Command {
   static description = 'Builds a Hydrogen storefront for production.';
