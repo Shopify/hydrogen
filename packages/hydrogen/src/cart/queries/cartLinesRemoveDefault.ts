@@ -1,21 +1,24 @@
+import {StorefrontApiErrors, formatAPIResult} from '../../storefront';
 import {MINIMAL_CART_FRAGMENT, USER_ERROR_FRAGMENT} from './cart-fragments';
 import type {
   CartOptionalInput,
   CartQueryData,
+  CartQueryDataReturn,
   CartQueryOptions,
 } from './cart-types';
 
 export type CartLinesRemoveFunction = (
   lineIds: string[],
   optionalParams?: CartOptionalInput,
-) => Promise<CartQueryData>;
+) => Promise<CartQueryDataReturn>;
 
 export function cartLinesRemoveDefault(
   options: CartQueryOptions,
 ): CartLinesRemoveFunction {
   return async (lineIds, optionalParams) => {
-    const {cartLinesRemove} = await options.storefront.mutate<{
+    const {cartLinesRemove, errors} = await options.storefront.mutate<{
       cartLinesRemove: CartQueryData;
+      errors: StorefrontApiErrors;
     }>(CART_LINES_REMOVE_MUTATION(options.cartFragment), {
       variables: {
         cartId: options.getCartId(),
@@ -23,7 +26,7 @@ export function cartLinesRemoveDefault(
         ...optionalParams,
       },
     });
-    return cartLinesRemove;
+    return formatAPIResult(cartLinesRemove, errors);
   };
 }
 
@@ -41,7 +44,7 @@ export const CART_LINES_REMOVE_MUTATION = (
       cart {
         ...CartApiMutation
       }
-      errors: userErrors {
+      userErrors {
         ...CartApiError
       }
     }

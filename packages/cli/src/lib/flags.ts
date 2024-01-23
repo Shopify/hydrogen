@@ -21,9 +21,9 @@ export const commonFlags = {
     env: 'SHOPIFY_HYDROGEN_FLAG_PORT',
     default: DEFAULT_PORT,
   }),
-  workerRuntime: Flags.boolean({
+  legacyRuntime: Flags.boolean({
     description:
-      'Run the app in a worker environment closer to Oxygen production instead of a Node.js sandbox.',
+      'Run the app in a Node.js sandbox instead of an Oxygen worker.',
     env: 'SHOPIFY_HYDROGEN_FLAG_WORKER',
   }),
   force: Flags.boolean({
@@ -62,8 +62,6 @@ export const commonFlags = {
       'Generate types for the Storefront API queries found in your project.',
     required: false,
     default: false,
-    deprecateAliases: true,
-    aliases: ['codegen-unstable'],
   }),
   codegenConfigPath: Flags.string({
     description:
@@ -99,6 +97,12 @@ export const commonFlags = {
     description: 'Port where the inspector will be available.',
     env: 'SHOPIFY_HYDROGEN_FLAG_INSPECTOR_PORT',
     default: DEFAULT_INSPECTOR_PORT,
+  }),
+  diff: Flags.boolean({
+    description:
+      "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
+    default: false,
+    required: false,
   }),
 };
 
@@ -149,19 +153,25 @@ export function parseProcessFlags(
  * Displays an info message when the flag is used.
  * @param name The name of the flag.
  */
-export function deprecated(name: string) {
-  return Flags.custom<unknown>({
+export function deprecated(name: string, {isBoolean = false} = {}) {
+  const customFlag = Flags.custom<unknown>({
     parse: () => {
       renderInfo({
         headline: `The ${colors.bold(
           name,
-        )} flag is deprecated and will be removed in a future version of Shopify CLI.`,
+        )} flag is deprecated and will be removed in a future version of Shopify Hydrogen CLI.`,
       });
 
       return Promise.resolve(' ');
     },
     hidden: true,
   });
+
+  // Overwrite `type:'option'` to avoid requiring values for this flag
+  return {
+    ...customFlag(),
+    type: (isBoolean ? 'boolean' : 'option') as unknown as 'option',
+  };
 }
 
 export function overrideFlag<T extends Record<string, any>>(

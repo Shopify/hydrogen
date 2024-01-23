@@ -7,12 +7,9 @@ export {buildAssetsUrl} from './assets.js';
 
 export async function startMiniOxygen(
   options: MiniOxygenOptions,
-  useWorkerd = false,
+  useNodeRuntime = false,
 ): Promise<MiniOxygenInstance> {
-  if (useWorkerd) {
-    const {startWorkerdServer} = await import('./workerd.js');
-    return startWorkerdServer(options);
-  } else {
+  if (useNodeRuntime) {
     // @ts-expect-error Valid env var for Miniflare v2:
     // https://github.com/cloudflare/miniflare/blob/f919a2eaccf30d63f435154969e4233aa3b9531c/packages/shared/src/context.ts#L18
     // Note: this must be set before importing Miniflare
@@ -21,4 +18,7 @@ export async function startMiniOxygen(
     const {startNodeServer} = await import('./node.js');
     return startNodeServer(options);
   }
+
+  const {startWorkerdServer} = await import('./workerd.js');
+  return startWorkerdServer(options);
 }

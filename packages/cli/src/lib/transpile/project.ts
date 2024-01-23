@@ -135,7 +135,7 @@ export async function transpileProject(projectDir: string, keepTypes = true) {
         }
       }
 
-      const codegenFlag = /\s*--codegen(-unstable)?/;
+      const codegenFlag = /\s*--codegen/;
       if (pkgJson.scripts?.dev) {
         pkgJson.scripts.dev = pkgJson.scripts.dev.replace(codegenFlag, '');
       }
