@@ -20,6 +20,13 @@ type CorsHeaders = {
   'Access-Control-Allow-Headers'?: string;
 };
 
+const ALLOWED_PROXY_DOMAINS = new Set([
+  'https://cdn.jsdelivr.net',
+  'https://unpkg.com',
+  'https://google-analytics.com',
+  // other domains you may want to allow to proxy to
+]);
+
 // Handle CORS preflight for POST requests
 export async function actions({request}: ActionFunctionArgs) {
   const url = new URL(request.url);
@@ -99,7 +106,7 @@ function handleErrorResponse({
 function handleCorsOptions(request: LoaderFunctionArgs['request']) {
   // Make sure the necessary headers are present
   // for this to be a valid pre-flight request
-  let headers = request.headers;
+  const headers = request.headers;
 
   const requiredHeaders =
     headers.get('Origin') !== null &&
@@ -153,9 +160,18 @@ async function handleRequest(request: LoaderFunctionArgs['request']) {
     apiUrl = request.url;
   }
 
+  const apiUrlObj = new URL(apiUrl);
+
+  if (!ALLOWED_PROXY_DOMAINS.has(apiUrlObj.origin)) {
+    return handleErrorResponse({
+      status: 403,
+      statusText: 'Forbidden',
+    });
+  }
+
   try {
     // fetch the requested resource
-    let response = await fetch(apiUrl);
+    const response = await fetch(apiUrl);
 
     const respHeaders: HandleRequestResponHeaders = {
       'Access-Control-Allow-Origin': url.origin,
