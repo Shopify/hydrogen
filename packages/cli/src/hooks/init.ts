@@ -5,10 +5,11 @@ import type {Hook} from '@oclif/core';
 const EXPERIMENTAL_VM_MODULES_FLAG = '--experimental-vm-modules';
 
 function commandNeedsVM(id = '', argv: string[] = []) {
+  // All the commands that rely on MiniOxygen's Node sandbox:
   return (
-    // All the commands that rely on MiniOxygen's Node sandbox:
-    ['hydrogen:dev', 'hydrogen:preview', 'hydrogen:debug:cpu'].includes(id) &&
-    !argv.includes('--worker')
+    'hydrogen:debug:cpu' ||
+    (['hydrogen:dev', 'hydrogen:preview'].includes(id) &&
+      argv.includes('--legacy-runtime'))
   );
 }
 
