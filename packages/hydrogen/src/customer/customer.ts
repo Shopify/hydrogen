@@ -130,7 +130,7 @@ type CustomerClientOptions = {
   authUrl?: string;
 };
 
-export function createCustomerClient({
+export function createCustomerAccountClient({
   session,
   customerAccountId,
   customerAccountUrl,
@@ -141,19 +141,19 @@ export function createCustomerClient({
 }: CustomerClientOptions): CustomerClient {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.warn(
-      `[h2:warn:createCustomerClient] You are using Customer Account API version ${customerApiVersion} when this version of Hydrogen was built for ${DEFAULT_CUSTOMER_API_VERSION}.`,
+      `[h2:warn:createCustomerAccountClient] You are using Customer Account API version ${customerApiVersion} when this version of Hydrogen was built for ${DEFAULT_CUSTOMER_API_VERSION}.`,
     );
   }
 
   if (!customerAccountId || !customerAccountUrl) {
     console.warn(
-      "[h2:warn:createCustomerClient] `customerAccountId` and `customerAccountUrl` need to be provided to use Customer Account API. Mock.shop doesn't automatically supply these variables.\nUse `h2 env pull` to link your store credentials.",
+      "[h2:warn:createCustomerAccountClient] `customerAccountId` and `customerAccountUrl` need to be provided to use Customer Account API. Mock.shop doesn't automatically supply these variables.\nUse `h2 env pull` to link your store credentials.",
     );
   }
 
   if (!request?.url) {
     throw new Error(
-      '[h2:error:createCustomerClient] The request object does not contain a URL.',
+      '[h2:error:createCustomerAccountClient] The request object does not contain a URL.',
     );
   }
   const url = new URL(request.url);
@@ -393,7 +393,7 @@ export function createCustomerClient({
         clearSession(session);
         throw new BadRequest(
           'Unauthorized',
-          'The session state does not match the state parameter. Make sure that the session is configured correctly and passed to `createCustomerClient`.',
+          'The session state does not match the state parameter. Make sure that the session is configured correctly and passed to `createCustomerAccountClient`.',
         );
       }
 
@@ -413,7 +413,7 @@ export function createCustomerClient({
       if (!codeVerifier)
         throw new BadRequest(
           'Unauthorized',
-          'No code verifier found in the session. Make sure that the session is configured correctly and passed to `createCustomerClient`.',
+          'No code verifier found in the session. Make sure that the session is configured correctly and passed to `createCustomerAccountClient`.',
         );
 
       body.append('code_verifier', codeVerifier);

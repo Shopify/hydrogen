@@ -63,7 +63,7 @@ function warningDebouncer([first]: unknown[]) {
   return typeof first === 'string' &&
     // Show these warnings only once.
     (first.includes('[h2:warn:createStorefrontClient]') ||
-      first.includes('[h2:warn:createCustomerClient]'))
+      first.includes('[h2:warn:createCustomerAccountClient]'))
     ? true
     : undefined;
 }

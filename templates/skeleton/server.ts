@@ -6,7 +6,7 @@ import {
   createCartHandler,
   createStorefrontClient,
   storefrontRedirect,
-  createCustomerClient,
+  createCustomerAccountClient,
 } from '@shopify/hydrogen';
 import {
   createRequestHandler,
@@ -56,7 +56,7 @@ export default {
       /**
        * Create a client for Customer Account API.
        */
-      const customerAccount = createCustomerClient({
+      const customerAccount = createCustomerAccountClient({
         waitUntil,
         request,
         session,
