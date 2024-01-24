@@ -29,7 +29,7 @@ export function withSyncStack<T>(
       return result;
     })
     .catch((error: Error) => {
-      if (error) error.stack = getSyncStack(error.message);
+      if (error) error.stack = getSyncStack(error.message, error.name);
       throw error;
     });
 }
