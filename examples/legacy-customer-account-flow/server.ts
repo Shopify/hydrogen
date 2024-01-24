@@ -6,7 +6,6 @@ import {
   createCartHandler,
   createStorefrontClient,
   storefrontRedirect,
-  createCustomerAccountClient,
 } from '@shopify/hydrogen';
 import {
   createRequestHandler,
