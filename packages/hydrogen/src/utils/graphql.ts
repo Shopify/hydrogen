@@ -93,6 +93,20 @@ export class GraphQLError extends Error {
 
     return result;
   }
+
+  toJSON() {
+    type Writeable<T> = {-readonly [P in keyof T]: T[P]};
+
+    const formatted: Writeable<
+      Pick<GraphQLError, 'message' | 'path' | 'extensions' | 'locations'>
+    > = {message: this.message};
+
+    if (this.path) formatted.path = this.path;
+    if (this.locations) formatted.locations = this.locations;
+    if (this.extensions) formatted.extensions = this.extensions;
+
+    return formatted;
+  }
 }
 
 export function throwErrorWithGqlLink<T>({
