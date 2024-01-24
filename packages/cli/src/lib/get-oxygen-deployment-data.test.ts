@@ -6,7 +6,10 @@ import {login} from './auth.js';
 import {getConfig} from './shopify-config.js';
 import {renderMissingLink, renderMissingStorefront} from './render-errors.js';
 import {linkStorefront} from '../commands/hydrogen/link.js';
-import {getOxygenData} from './graphql/admin/get-oxygen-data.js';
+import {
+  getOxygenData,
+  type OxygenDeploymentData,
+} from './graphql/admin/get-oxygen-data.js';
 
 vi.mock('@shopify/cli-kit/node/ui', async () => {
   const original = await vi.importActual<
@@ -26,14 +29,16 @@ vi.mock('./graphql/admin/get-oxygen-data.js');
 
 describe('getOxygenDeploymentData', () => {
   const OXYGEN_DEPLOYMENT_TOKEN = 'a-lovely-token';
-  const environments = [
+  const environments: OxygenDeploymentData['environments'] = [
     {
       name: 'production',
       branch: 'main',
+      type: 'PRODUCTION',
     },
     {
       name: 'preview',
-      branch: 'staging',
+      branch: null,
+      type: 'PREVIEW',
     },
   ];
 

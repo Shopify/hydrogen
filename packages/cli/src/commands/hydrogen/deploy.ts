@@ -47,11 +47,17 @@ export const deploymentLogger: Logger = (
 };
 
 export default class Deploy extends Command {
+  static description = 'Builds and deploys a Hydrogen storefront to Oxygen.';
   static flags: any = {
     'env-branch': Flags.string({
-      char: 'e',
       description: 'Environment branch (tag) for environment to deploy to.',
       required: false,
+    }),
+    preview: Flags.boolean({
+      description:
+        'Deploys to the Preview environment. Overrides --env-branch and Git metadata.',
+      required: false,
+      default: false,
     }),
     force: Flags.boolean({
       char: 'f',
@@ -69,21 +75,16 @@ export default class Deploy extends Command {
     }),
     path: commonFlags.path,
     shop: commonFlags.shop,
-    'public-deployment': Flags.boolean({
-      env: 'SHOPIFY_HYDROGEN_FLAG_PUBLIC_DEPLOYMENT',
-      description: 'Marks a preview deployment as publicly accessible.',
-      required: false,
-      default: false,
-    }),
     'no-json-output': Flags.boolean({
       description:
-        'Prevents the command from creating a JSON file containing the deployment URL (in CI environments).',
+        'Prevents the command from creating a JSON file containing the deployment URL in CI environments.',
       required: false,
       default: false,
     }),
     token: Flags.string({
       char: 't',
-      description: 'Oxygen deployment token',
+      description:
+        "Oxygen deployment token. Defaults to the linked storefront's token if available.",
       env: 'SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN',
       required: false,
     }),
@@ -94,10 +95,9 @@ export default class Deploy extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_METADATA_DESCRIPTION',
     }),
     'metadata-url': Flags.string({
-      description:
-        'URL that links to the deployment. Will be saved and displayed in the Shopify admin',
       required: false,
       env: 'SHOPIFY_HYDROGEN_FLAG_METADATA_URL',
+      hidden: true,
     }),
     'metadata-user': Flags.string({
       description:
@@ -106,14 +106,11 @@ export default class Deploy extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_METADATA_USER',
     }),
     'metadata-version': Flags.string({
-      description:
-        'A version identifier for the deployment. Will be saved and displayed in the Shopify admin',
       required: false,
       env: 'SHOPIFY_HYDROGEN_FLAG_METADATA_VERSION',
+      hidden: true,
     }),
   };
-
-  static hidden = true;
 
   async run() {
     const {flags} = await this.parse(Deploy);
@@ -138,6 +135,7 @@ export default class Deploy extends Command {
     const camelFlags = flagsToCamelObject(flags);
     return {
       ...camelFlags,
+      defaultEnvironment: flags.preview,
       environmentTag: flags['env-branch'],
       path: flags.path ? resolvePath(flags.path) : process.cwd(),
     } as OxygenDeploymentOptions;
@@ -146,11 +144,11 @@ export default class Deploy extends Command {
 
 interface OxygenDeploymentOptions {
   authBypassToken: boolean;
+  defaultEnvironment: boolean;
   environmentTag?: string;
   force: boolean;
   noJsonOutput: boolean;
   path: string;
-  publicDeployment: boolean;
   shop: string;
   token?: string;
   metadataDescription?: string;
@@ -188,12 +186,12 @@ export async function oxygenDeploy(
 ): Promise<void> {
   const {
     authBypassToken: generateAuthBypassToken,
+    defaultEnvironment,
     environmentTag,
     force: forceOnUncommitedChanges,
     noJsonOutput,
     path,
     shop,
-    publicDeployment,
     metadataUrl,
     metadataUser,
     metadataVersion,
@@ -221,10 +219,10 @@ export async function oxygenDeploy(
 
   const isCI = ciPlatform().isCI;
   let token = options.token;
-  let branch: string | undefined;
+  let branch: string | undefined | null;
   let commitHash: string | undefined;
   let deploymentData: OxygenDeploymentData | undefined;
-  let deploymentEnvironmentTag: string | undefined = undefined;
+  let deploymentEnvironmentTag: string | undefined | null = undefined;
   let gitCommit: GitCommit;
 
   try {
@@ -274,12 +272,22 @@ export async function oxygenDeploy(
     throw new AbortError(errMessage);
   }
 
-  if (!isCI && !environmentTag && deploymentData?.environments) {
+  if (
+    !isCI &&
+    !defaultEnvironment &&
+    !environmentTag &&
+    deploymentData?.environments
+  ) {
     if (deploymentData.environments.length > 1) {
       const choices = [
-        ...deploymentData.environments.map(({name, branch}) => ({
+        ...deploymentData.environments.map(({name, branch, type}) => ({
           label: name,
-          value: branch,
+          // The preview environment will never have an associated branch so
+          // we're using a custom string here to identify it later in our code.
+          // Using a period at the end of the value is an invalid branch name
+          // in Git so we can be sure that this won't conflict with a merchant's
+          // repository.
+          value: type === 'PREVIEW' ? 'shopify-preview-environment.' : branch,
         })),
       ];
 
@@ -303,12 +311,25 @@ export async function oxygenDeploy(
     );
   }
 
+  let fallbackEnvironmentTag = branch;
+  let isPreview = false;
+
+  // If the user has explicitly selected `Preview` then we should not pass an
+  // environment tag at all.
+  if (deploymentEnvironmentTag === 'shopify-preview-environment.') {
+    fallbackEnvironmentTag = undefined;
+    deploymentEnvironmentTag = undefined;
+    isPreview = true;
+  }
+
   const config: DeploymentConfig = {
     assetsDir: 'dist/client',
     bugsnag: true,
     deploymentUrl,
+    defaultEnvironment: defaultEnvironment || isPreview,
     deploymentToken: parseToken(token as string),
-    environmentTag: environmentTag || deploymentEnvironmentTag || branch,
+    environmentTag:
+      environmentTag || deploymentEnvironmentTag || fallbackEnvironmentTag,
     generateAuthBypassToken,
     verificationMaxDuration: 180,
     metadata: {
@@ -317,7 +338,6 @@ export async function oxygenDeploy(
       ...(metadataUser ? {user: metadataUser} : {}),
       ...(metadataVersion ? {version: metadataVersion} : {}),
     },
-    publicDeployment: publicDeployment,
     skipVerification: false,
     rootPath: path,
     skipBuild: false,
@@ -416,8 +436,6 @@ export async function oxygenDeploy(
         return;
       }
 
-      const deploymentType = config.publicDeployment ? 'public' : 'private';
-
       const nextSteps: (
         | string
         | {subdued: string}
@@ -426,7 +444,7 @@ export async function oxygenDeploy(
         [
           'Open',
           {link: {url: completedDeployment!.url}},
-          `in your browser to view your ${deploymentType} deployment.`,
+          `in your browser to view your deployment.`,
         ],
       ];
       if (completedDeployment?.authBypassToken) {
