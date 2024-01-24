@@ -135,20 +135,26 @@
     },
     "hydrogen:deploy": {
       "id": "hydrogen:deploy",
+      "description": "Builds and deploys a Hydrogen storefront to Oxygen.",
       "strict": true,
       "pluginName": "@shopify/cli-hydrogen",
       "pluginAlias": "@shopify/cli-hydrogen",
       "pluginType": "core",
-      "hidden": true,
       "aliases": [],
       "flags": {
         "env-branch": {
           "name": "env-branch",
           "type": "option",
-          "char": "e",
           "description": "Environment branch (tag) for environment to deploy to.",
           "required": false,
           "multiple": false
+        },
+        "preview": {
+          "name": "preview",
+          "type": "boolean",
+          "description": "Deploys to the Preview environment. Overrides --env-branch and Git metadata.",
+          "required": false,
+          "allowNo": false
         },
         "force": {
           "name": "force",
@@ -178,17 +184,10 @@
           "description": "Shop URL. It can be the shop prefix (janes-apparel) or the full myshopify.com URL (janes-apparel.myshopify.com, https://janes-apparel.myshopify.com).",
           "multiple": false
         },
-        "public-deployment": {
-          "name": "public-deployment",
-          "type": "boolean",
-          "description": "Marks a preview deployment as publicly accessible.",
-          "required": false,
-          "allowNo": false
-        },
         "no-json-output": {
           "name": "no-json-output",
           "type": "boolean",
-          "description": "Prevents the command from creating a JSON file containing the deployment URL (in CI environments).",
+          "description": "Prevents the command from creating a JSON file containing the deployment URL in CI environments.",
           "required": false,
           "allowNo": false
         },
@@ -196,7 +195,7 @@
           "name": "token",
           "type": "option",
           "char": "t",
-          "description": "Oxygen deployment token",
+          "description": "Oxygen deployment token. Defaults to the linked storefront's token if available.",
           "required": false,
           "multiple": false
         },
@@ -210,7 +209,7 @@
         "metadata-url": {
           "name": "metadata-url",
           "type": "option",
-          "description": "URL that links to the deployment. Will be saved and displayed in the Shopify admin",
+          "hidden": true,
           "required": false,
           "multiple": false
         },
@@ -224,7 +223,7 @@
         "metadata-version": {
           "name": "metadata-version",
           "type": "option",
-          "description": "A version identifier for the deployment. Will be saved and displayed in the Shopify admin",
+          "hidden": true,
           "required": false,
           "multiple": false
         }
