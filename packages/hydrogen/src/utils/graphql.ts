@@ -73,6 +73,19 @@ export class GraphQLError extends Error {
     this.name = 'GraphQLError';
     Object.assign(this, options);
     this.stack = options.stack || undefined;
+
+    if (process.env.NODE_ENV === 'development') {
+      // During dev, workerd logs show 'cause' but hides other properties. Put them in cause.
+      if (options.extensions || options.path) {
+        try {
+          this.cause = JSON.stringify({
+            path: options.path,
+            locations: options.locations,
+            extensions: options.extensions,
+          });
+        } catch {}
+      }
+    }
   }
 
   get [Symbol.toStringTag]() {
