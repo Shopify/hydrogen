@@ -65,7 +65,6 @@ import {
   renderRoutePrompt,
 } from '../setups/routes/generate.js';
 import {execAsync} from '../process.js';
-import {getStorefronts} from '../graphql/admin/link-storefront.js';
 
 export type InitOptions = {
   path?: string;
@@ -222,7 +221,6 @@ export async function handleCliShortcut(
 }
 
 type StorefrontInfo = {
-  id?: string;
   title: string;
   shop: string;
   shopName: string;
@@ -240,56 +238,13 @@ export async function handleStorefrontLink(
   const {session, config} = await login();
   renderLoginSuccess(config);
 
-  const storefronts = await getStorefronts(session);
-
-  let selectedStorefront = await handleStorefrontSelection(storefronts);
-
-  let title;
-
-  if (selectedStorefront) {
-    title = selectedStorefront.title;
-  } else {
-    title = await renderTextPrompt({
-      message: 'New storefront name',
-      defaultValue: titleize(config.shopName),
-      abortSignal: controller.signal,
-    });
-  }
-
-  return {
-    ...config,
-    id: selectedStorefront?.id,
-    title,
-    session,
-  };
-}
-
-export type HydrogenStorefront = {
-  id: string;
-  title: string;
-  productionUrl: string;
-};
-
-export async function handleStorefrontSelection(
-  storefronts: HydrogenStorefront[],
-): Promise<HydrogenStorefront | undefined> {
-  const choices = [
-    {
-      label: 'Create a new storefront',
-      value: null,
-    },
-    ...storefronts.map(({id, title, productionUrl}) => ({
-      label: `${title} (${productionUrl})`,
-      value: id,
-    })),
-  ];
-
-  const storefrontId = await renderSelectPrompt({
-    message: 'Select a Hydrogen storefront to link',
-    choices,
+  const title = await renderTextPrompt({
+    message: 'New storefront name',
+    defaultValue: titleize(config.shopName),
+    abortSignal: controller.signal,
   });
 
-  return storefronts.find(({id}) => id === storefrontId)!;
+  return {...config, title, session};
 }
 
 type Project = {
