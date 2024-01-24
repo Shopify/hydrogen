@@ -21,15 +21,15 @@ export function withSyncStack<T>(
 
   return promise
     .then((result: any) => {
-      if (result?.errors && result.errors.length > 0) {
+      if (result?.errors && Array.isArray(result.errors)) {
         result.errors.forEach((error: Error) => {
-          error.stack = getSyncStack(error.message, error.name);
+          if (error) error.stack = getSyncStack(error.message, error.name);
         });
       }
       return result;
     })
     .catch((error: Error) => {
-      error.stack = getSyncStack(error.message);
+      if (error) error.stack = getSyncStack(error.message);
       throw error;
     });
 }
