@@ -77,6 +77,9 @@ export async function startWorkerdServer({
       log: new NoOpLog(),
       liveReload: watch,
       host: 'localhost',
+      handleRuntimeStdio() {
+        // TODO: handle runtime stdio and remove inspector logs
+      },
       workers: [
         {
           name: 'mini-oxygen',
