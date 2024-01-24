@@ -18,7 +18,6 @@ import {
   handleLanguage,
   handleProjectLocation,
   handleStorefrontLink,
-  type HydrogenStorefront,
   type SetupSummary,
   type InitOptions,
   handleCliShortcut,
@@ -79,7 +78,6 @@ export async function setupLocalStarterTemplate(
 
   const createStorefrontPromise =
     storefrontInfo &&
-    !storefrontInfo.id &&
     createStorefront(storefrontInfo.session, storefrontInfo.title)
       .then(async ({storefront, jobId}) => {
         if (jobId) await waitForJob(storefrontInfo.session, jobId);
@@ -143,25 +141,17 @@ export async function setupLocalStarterTemplate(
       '# Run `h2 link` to also inject environment variables from your storefront,\n' +
       '# or `h2 env pull` to populate this file.';
 
-    let storefrontToLink: {id: string; title: string} | undefined;
-
-    if (storefrontInfo) {
+    if (storefrontInfo && createStorefrontPromise) {
       promises.push(
         // Save linked storefront in project
         setUserAccount(project.directory, storefrontInfo),
+        createStorefrontPromise.then((storefront) =>
+          // Save linked storefront in project
+          setStorefront(project.directory, storefront),
+        ),
         // Write empty dotenv file to fallback to remote Oxygen variables
         writeFile(joinPath(project.directory, '.env'), envLeadingComment),
       );
-
-      if (storefrontInfo.id) {
-        storefrontToLink = {id: storefrontInfo.id, title: storefrontInfo.title};
-      } else if (createStorefrontPromise) {
-        promises.push(
-          createStorefrontPromise.then((createdStorefront) => {
-            storefrontToLink = createdStorefront;
-          }),
-        );
-      }
     } else if (templateAction === 'mock') {
       promises.push(
         // Set required env vars
@@ -180,14 +170,7 @@ export async function setupLocalStarterTemplate(
       );
     }
 
-    return Promise.all(promises)
-      .then(() => {
-        if (storefrontToLink) {
-          // Save linked storefront in project
-          setStorefront(project.directory, storefrontToLink);
-        }
-      })
-      .catch(abort);
+    return Promise.all(promises).catch(abort);
   });
 
   const {language, transpileProject} = await handleLanguage(

@@ -4,6 +4,7 @@ import {basename} from '@shopify/cli-kit/node/path';
 
 import {
   renderConfirmationPrompt,
+  renderSelectPrompt,
   renderSuccess,
   renderTasks,
   renderTextPrompt,
@@ -20,10 +21,6 @@ import {titleize} from '../../lib/string.js';
 import {getCliCommand} from '../../lib/shell.js';
 import {login} from '../../lib/auth.js';
 import type {AdminSession} from '../../lib/auth.js';
-import {
-  type HydrogenStorefront,
-  handleStorefrontSelection,
-} from '../../lib/onboarding/common.js';
 
 export default class Link extends Command {
   static description =
@@ -48,6 +45,12 @@ export interface LinkStorefrontArguments {
   force?: boolean;
   path?: string;
   storefront?: string;
+}
+
+interface HydrogenStorefront {
+  id: string;
+  title: string;
+  productionUrl: string;
 }
 
 export async function runLink({
@@ -131,14 +134,32 @@ export async function linkStorefront(
       return;
     }
   } else {
-    selectedStorefront = await handleStorefrontSelection(storefronts);
+    const choices = [
+      {
+        label: 'Create a new storefront',
+        value: null,
+      },
+      ...storefronts.map(({id, title, productionUrl}) => ({
+        label: `${title} (${productionUrl})`,
+        value: id,
+      })),
+    ];
 
-    if (!selectedStorefront) {
+    const storefrontId = await renderSelectPrompt({
+      message: 'Select a Hydrogen storefront to link',
+      choices,
+    });
+
+    if (storefrontId) {
+      selectedStorefront = storefronts.find(({id}) => id === storefrontId);
+    } else {
       selectedStorefront = await createNewStorefront(root, session);
     }
   }
 
-  await setStorefront(root, selectedStorefront);
+  if (selectedStorefront) {
+    await setStorefront(root, selectedStorefront);
+  }
 
   return selectedStorefront;
 }
