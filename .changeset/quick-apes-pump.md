@@ -2,4 +2,4 @@
 '@shopify/cli-hydrogen': major
 ---
 
-Remove deprecated CLI flags.
+Remove deprecated `build` command flags `--base`, `--entry`, `--target`. Additionally, `--codegen-unstable` is now `--codegen`.

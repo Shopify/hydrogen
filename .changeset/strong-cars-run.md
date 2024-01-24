@@ -1,9 +1,6 @@
 ---
-'@shopify/hydrogen-react': patch
-'skeleton': patch
-'@shopify/hydrogen': patch
-'@shopify/cli-hydrogen': patch
-'@shopify/create-hydrogen': patch
+'@shopify/hydrogen-react': major
+'@shopify/hydrogen': major
 ---
 
-Update to SFAPI 2024-01
+Upgrade to [Storefront API v2024-01](https://shopify.dev/docs/api/release-notes/2024-01#storefront-api-changes)

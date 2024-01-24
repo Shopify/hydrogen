@@ -1,22 +1,23 @@
 ---
-'@shopify/hydrogen': patch
-'@shopify/cli-hydrogen': patch
+'@shopify/hydrogen': major
 ---
 
 Better Hydrogen error handling
 
 * Fix storefront client throwing on partial successful errors
-* Fix subrequest profiler to better display network errors with url information for SFAPI requests
+* Fix subrequest profiler to better display network errors with URL information for Storefront API requests
 
 ### Breaking change
 
- Mutation methods of `createCartHandler` used to return an `errors` object that contains `userErrors`. This is now changed back to `userErrors` to be consistent with SFAPI schema.
+This update changes the shape of the error objects returned by the `createCartHandler` method.
 
- The `errors` object will now be used for Graphql execution errors.
+Previously, mutations could return an `errors` array that contained a `userErrors` array.
 
- `storefront.isApiError` is deprecated.
+With this change, these arrays are no longer nested. The response can contain both an `errors` array and a `userErrors` array. `errors` contains GraphQL execution errors. `userErrors` contains errors caused by the cart mutation itself (such as adding a product that has zero inventory).
 
- Updated types:
+`storefront.isApiError` is deprecated.
 
- * `cart.get()` used to return a `Cart` type. Now it returns `CartReturn` type to accommodate the `errors` object
- * All other `cart` methods (ie. `cart.addLines`) used to return a `CartQueryData` type. Now it returns `CartQueryDataReturn` type to accommodate the `errors` object.
+### Updated return types for `createCartHandler` methods
+
+* `cart.get()` used to return a `Cart` type. Now it returns `CartReturn` type to accommodate the `errors` object.
+* All other `cart` methods (ie. `cart.addLines`) used to return a `CartQueryData` type. Now it returns `CartQueryDataReturn` type to accommodate the `errors` object.

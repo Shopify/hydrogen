@@ -2,7 +2,7 @@
 'skeleton': patch
 ---
 
-Updated the GraphQL config in `.graphqlrc.yml` to use the more modern `projects` structure:
+Update the GraphQL config in `.graphqlrc.yml` to use the more modern `projects` structure:
 
 ```diff
 -schema: node_modules/@shopify/hydrogen/storefront.schema.json

@@ -2,4 +2,4 @@
 '@shopify/hydrogen': patch
 ---
 
-Fix redirect bug
+Fix a bug that allowed undesired redirect to external domains

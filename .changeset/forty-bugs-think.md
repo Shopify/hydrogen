@@ -1,9 +1,9 @@
 ---
-'@shopify/cli-hydrogen': patch
+'@shopify/cli-hydrogen': minor
 ---
 
-Remove hidden attribute from `deploy` command
+Add `deploy` command to Hydrogen CLI
 
-You can now deploy your Hydrogen storefront without connecting to GitHub. Run the `deploy` command from your local terminal or configure a CI/CD (e.g. Bitbucket) for continuous deployment.
+You can now deploy your Hydrogen app without connecting to GitHub. Run the `deploy` command from your local terminal or configure your own CI/CD workflows from any platform.
 
-Run `h2 deploy --help` to see additional features of the command.
+Run `npx shopify hydrogen deploy --help` for more details.
