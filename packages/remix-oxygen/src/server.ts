@@ -59,7 +59,7 @@ export function createRequestHandler<Context = unknown>({
           statusText: response.statusText,
           headers: Array.from(response.headers.entries()),
         } satisfies ResponseInit,
-      } as any);
+      });
     }
 
     return response;

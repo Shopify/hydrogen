@@ -37,6 +37,7 @@ const EVENT_MAP: Record<string, string> = {
   subrequest: 'Sub request',
 };
 
+// Make sure to match this type with the one in packages/remix-oxygen/src/event-logger.ts
 export type H2OEvent = {
   eventType: 'request' | 'subrequest';
   requestId?: string | null;
