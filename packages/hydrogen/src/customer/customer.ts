@@ -139,8 +139,6 @@ type CustomerClientOptions = {
   waitUntil?: ExecutionContext['waitUntil'];
   /** This is the route in your app that authorizes the user after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/account/authorize`. */
   authUrl?: string;
-  /** This is the route in your app that login() is located.It defaults to `/account/login`. */
-  loginUrl?: string;
   /** The behaviour when handleUnauthorized, query or mutate is called with an unauthorized customer. The return of method will be throw. The default behaviour is redirecting to `/account/login` where login() is located and pass in current path as redirectPath. */
   unauthorizedHandler?: () => DataFunctionValue;
 };
@@ -149,16 +147,14 @@ const DEFAULT_LOGIN_URL = '/account/login';
 const DEFAULT_AUTH_URL = '/account/authorize';
 const DEFAULT_REDIRECT_PATH = '/account';
 
-function defaultUnauthorizedHandler(
-  request: CrossRuntimeRequest,
-  loginUrl: string,
-) {
-  if (!request.url) return loginUrl;
+function defaultUnauthorizedHandler(request: CrossRuntimeRequest) {
+  if (!request.url) return DEFAULT_LOGIN_URL;
 
   const {pathname} = new URL(request.url);
 
   const redirectTo =
-    loginUrl + `?${new URLSearchParams({return_to: pathname}).toString()}`;
+    DEFAULT_LOGIN_URL +
+    `?${new URLSearchParams({return_to: pathname}).toString()}`;
 
   return redirect(redirectTo);
 }
@@ -178,9 +174,8 @@ export function createCustomerAccountClient({
   customerApiVersion = DEFAULT_CUSTOMER_API_VERSION,
   request,
   waitUntil,
-  loginUrl = DEFAULT_LOGIN_URL,
   authUrl = DEFAULT_AUTH_URL,
-  unauthorizedHandler = () => defaultUnauthorizedHandler(request, loginUrl),
+  unauthorizedHandler = () => defaultUnauthorizedHandler(request),
 }: CustomerClientOptions): CustomerClient {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.warn(
@@ -334,7 +329,6 @@ export function createCustomerAccountClient({
 
   async function handleUnauthorized() {
     if (!(await isLoggedIn())) {
-      console.error('\x1b[45m%s\x1b[0m', `HEREEEE`);
       throw unauthorizedHandler();
     }
   }

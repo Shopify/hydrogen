@@ -16,7 +16,7 @@ export async function action({request, context}: ActionFunctionArgs) {
 
   const [formData, customerAccessToken] = await Promise.all([
     request.formData(),
-    await context.customerAccount.getAccessToken(),
+    context.customerAccount.getAccessToken(),
   ]);
 
   const {action, inputs} = CartForm.getFormInput(formData);
