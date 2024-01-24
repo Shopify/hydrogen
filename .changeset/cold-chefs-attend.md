@@ -4,16 +4,15 @@
 '@shopify/cli-hydrogen': patch
 ---
 
-✨ Change how customerAccountClient handle unauthorized customer during query/mutate
+- ✨ Add `handleAuthStatus` method to `customerAccountClient` that check for a logged-out customer and redirect to a login page.
 
-When an unauthorized customer is presented during a query or mutate call. The customer will automatically be redirect to the login page and redirect back to current page when auth is complete.
+- ✨ Automatically redirect customer to the login page during the execution of `query` or `mutate` if a logged-out customer was found.
 
-`customerAccount.handleUnauthorized()` is also added to run login check and redirect customer if unauthorized.
+- ✨ Automatically redirect customer back to the url that execute `query`, `mutate`, or `handleAuthStatus` at the end of oAuth flow when a logged-out customer was found.
 
 ---
 
-A few opt out is provided if this default behaviour is not ideal.
+There are two ways to override the default behavior for logged-out customers, depending on the functionality you need.
 
-1. pass `loginUrl` during `createCustomerAccountClient` to change the default login page from `/account/login` to something else.
-1. pass `unauthorizedHandler` during `createCustomerAccountClient` to change auto redirect all together
-1. run `isLoggedIn` ahead of `unauthorizedHandler`, `query` or `mutate` to handle one off unauthorized behaviour
+- If you want to customize logged-out redirect behavior across your entire application, then pass an `customAuthStatusHandler` function when initializing with `createCustomerAccountClient`.
+- If you want to customize the redirect behavior on a case-by-base basis, anywhere in your app, run the `isLoggedIn` function to check whether the customer is logged in and log the customer in. This `isLoggedIn` check must be run before making any `query`, `mutate`, or `handleAuthStatus` calls.

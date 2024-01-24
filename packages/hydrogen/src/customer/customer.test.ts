@@ -232,27 +232,6 @@ describe('customer', () => {
         }),
       );
     });
-
-    it('Saved redirectPath passed in to session', async () => {
-      const redirectPath = '/account/orders';
-
-      const customer = createCustomerAccountClient({
-        session,
-        customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'https://customer-api',
-        request: new Request('https://localhost'),
-        waitUntil: vi.fn(),
-      });
-
-      await customer.login(redirectPath);
-
-      expect(session.set).toHaveBeenCalledWith(
-        CUSTOMER_ACCOUNT_SESSION_KEY,
-        expect.objectContaining({
-          redirectPath,
-        }),
-      );
-    });
   });
 
   describe('authorize', () => {
@@ -559,7 +538,7 @@ describe('customer', () => {
     });
   });
 
-  describe('handleUnauthorized()', async () => {
+  describe('handleAuthStatus()', async () => {
     it('throw redirect to login path and current path as param if logged out', async () => {
       const customer = createCustomerAccountClient({
         session,
@@ -571,7 +550,7 @@ describe('customer', () => {
       (session.get as any).mockReturnValueOnce(undefined);
 
       try {
-        await customer.handleUnauthorized();
+        await customer.handleAuthStatus();
       } catch (error) {
         expect((error as Response).status).toBe(302);
         expect((error as Response).headers.get('location')).toBe(
@@ -589,25 +568,25 @@ describe('customer', () => {
         waitUntil: vi.fn(),
       });
 
-      expect(await customer.handleUnauthorized()).toBeUndefined();
+      expect(await customer.handleAuthStatus()).toBeUndefined();
     });
 
     it('throw unauthorizedHandler() if logged out', async () => {
-      const unauthorizedHandler = vi.fn();
+      const customAuthStatusHandler = vi.fn();
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
         request: new Request('https://localhost/account/orders'),
         waitUntil: vi.fn(),
-        unauthorizedHandler,
+        customAuthStatusHandler,
       });
       (session.get as any).mockReturnValueOnce(undefined);
 
       try {
-        await customer.handleUnauthorized();
+        await customer.handleAuthStatus();
       } catch {
-        expect(unauthorizedHandler).toHaveBeenCalledOnce();
+        expect(customAuthStatusHandler).toHaveBeenCalledOnce();
       }
     });
   });
@@ -657,22 +636,22 @@ describe('customer', () => {
       }
     });
 
-    it('throw unauthorizedHandler() if logged out', async () => {
-      const unauthorizedHandler = vi.fn();
+    it('throw customAuthStatusHandler() if logged out', async () => {
+      const customAuthStatusHandler = vi.fn();
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
         request: new Request('https://localhost/account/orders'),
         waitUntil: vi.fn(),
-        unauthorizedHandler,
+        customAuthStatusHandler,
       });
       (session.get as any).mockReturnValueOnce(undefined);
 
       try {
         await customer.query(`query {...}`);
       } catch {
-        expect(unauthorizedHandler).toHaveBeenCalledOnce();
+        expect(customAuthStatusHandler).toHaveBeenCalledOnce();
       }
     });
   });

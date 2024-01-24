@@ -24,8 +24,8 @@ export const meta: MetaFunction = () => {
   return [{title: 'Profile'}];
 };
 
-export async function loader({context, request}: LoaderFunctionArgs) {
-  await context.customerAccount.handleUnauthorized();
+export async function loader({context}: LoaderFunctionArgs) {
+  await context.customerAccount.handleAuthStatus();
 
   return json(
     {},

@@ -44,6 +44,57 @@ The \`createCustomerAccountClient\` function creates a GraphQL client for queryi
       description: '',
     },
   ],
+  examples: {
+    description: 'Examples of how to opt out of default logged-out redirect',
+    exampleGroups: [
+      {
+        title: 'Customized logged-out behavior for the entire application',
+        examples: [
+          {
+            description: 'Throw error instead of redirect',
+            codeblock: {
+              title: 'Example',
+              tabs: [
+                {
+                  title: 'JavaScript',
+                  code: './customer.auth-handler.example.jsx',
+                  language: 'jsx',
+                },
+                {
+                  title: 'TypeScript',
+                  code: './customer.auth-handler.example.tsx',
+                  language: 'tsx',
+                },
+              ],
+            },
+          },
+        ],
+      },
+      {
+        title: 'Opt out of logged-out behavior for a single route',
+        examples: [
+          {
+            description: 'Handle logged-out ahead of query',
+            codeblock: {
+              title: 'Example',
+              tabs: [
+                {
+                  title: 'JavaScript',
+                  code: './customer.opt-out-handler.example.jsx',
+                  language: 'jsx',
+                },
+                {
+                  title: 'TypeScript',
+                  code: './customer.opt-out-handler.example.tsx',
+                  language: 'tsx',
+                },
+              ],
+            },
+          },
+        ],
+      },
+    ],
+  },
 };
 
 export default data;

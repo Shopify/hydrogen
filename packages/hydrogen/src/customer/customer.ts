@@ -44,7 +44,7 @@ const DEFAULT_LOGIN_URL = '/account/login';
 const DEFAULT_AUTH_URL = '/account/authorize';
 const DEFAULT_REDIRECT_PATH = '/account';
 
-function defaultUnauthorizedHandler(request: CrossRuntimeRequest) {
+function defaultAuthStatusHandler(request: CrossRuntimeRequest) {
   if (!request.url) return DEFAULT_LOGIN_URL;
 
   const {pathname} = new URL(request.url);
@@ -56,14 +56,6 @@ function defaultUnauthorizedHandler(request: CrossRuntimeRequest) {
   return redirect(redirectTo);
 }
 
-function defaultRedirectPath(request: CrossRuntimeRequest): string {
-  return (
-    getRedirectUrl(request.url) ||
-    getHeader(request, 'Referer') ||
-    DEFAULT_REDIRECT_PATH
-  );
-}
-
 export function createCustomerAccountClient({
   session,
   customerAccountId,
@@ -72,7 +64,7 @@ export function createCustomerAccountClient({
   request,
   waitUntil,
   authUrl = DEFAULT_AUTH_URL,
-  unauthorizedHandler = () => defaultUnauthorizedHandler(request),
+  customAuthStatusHandler,
 }: CustomerClientOptions): CustomerClient {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.warn(
@@ -91,6 +83,9 @@ export function createCustomerAccountClient({
       '[h2:error:createCustomerAccountClient] The request object does not contain a URL.',
     );
   }
+  const authStatusHandler = customAuthStatusHandler
+    ? customAuthStatusHandler
+    : () => defaultAuthStatusHandler(request);
   const url = new URL(request.url);
   const origin =
     url.protocol === 'http:' ? url.origin.replace('http', 'https') : url.origin;
@@ -127,7 +122,7 @@ export function createCustomerAccountClient({
   }) {
     const accessToken = await getAccessToken();
     if (!accessToken) {
-      throw unauthorizedHandler();
+      throw authStatusHandler();
     }
 
     // Get stack trace before losing it with any async operation.
@@ -170,7 +165,7 @@ export function createCustomerAccountClient({
       if (response.status === 401) {
         // clear session because current access token is invalid
         clearSession(session);
-        throw unauthorizedHandler();
+        throw authStatusHandler();
       }
 
       /**
@@ -224,9 +219,9 @@ export function createCustomerAccountClient({
     return true;
   }
 
-  async function handleUnauthorized() {
+  async function handleAuthStatus() {
     if (!(await isLoggedIn())) {
-      throw unauthorizedHandler();
+      throw authStatusHandler();
     }
   }
 
@@ -238,7 +233,7 @@ export function createCustomerAccountClient({
   }
 
   return {
-    login: async (redirectPath = defaultRedirectPath(request)) => {
+    login: async () => {
       const loginUrl = new URL(customerAccountUrl + '/auth/oauth/authorize');
 
       const state = await generateState();
@@ -263,7 +258,10 @@ export function createCustomerAccountClient({
         codeVerifier: verifier,
         state,
         nonce,
-        redirectPath,
+        redirectPath:
+          getRedirectUrl(request.url) ||
+          getHeader(request, 'Referer') ||
+          DEFAULT_REDIRECT_PATH,
       });
 
       loginUrl.searchParams.append('code_challenge', challenge);
@@ -292,7 +290,7 @@ export function createCustomerAccountClient({
       );
     },
     isLoggedIn,
-    handleUnauthorized,
+    handleAuthStatus,
     getAccessToken,
     mutate(mutation, options?) {
       mutation = minifyQuery(mutation);

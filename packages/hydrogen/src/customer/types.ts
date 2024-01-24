@@ -43,19 +43,19 @@ export interface CustomerAccountMutations {
 }
 
 export type CustomerClient = {
-  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. An optional `redirectPath` parameter defines the final path the user lands on at the end of the oAuth flow. The default redirectPath is the page that ran handleUnauthorized, query or mutate with unauthorized customer, then `/account`. */
-  login: (redirectPath?: string) => Promise<Response>;
-  /** On successful login, the user redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings. */
+  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use) */
+  login: () => Promise<Response>;
+  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */
   authorize: () => Promise<Response>;
-  /** Returns if the user is logged in. It also checks if the access token is expired and refreshes it if needed. */
+  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */
   isLoggedIn: () => Promise<boolean>;
-  /** Check for unauthorized customer and perform `unauthorizedHandler`. */
-  handleUnauthorized: () => void | DataFunctionValue;
-  /** Returns CustomerAccessToken if the user is logged in. It also run a expirey check and does a token refresh if needed. */
+  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */
+  handleAuthStatus: () => void | DataFunctionValue;
+  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */
   getAccessToken: () => Promise<string | undefined>;
-  /** Logout the user by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. */
+  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/
   logout: () => Promise<Response>;
-  /** Execute a GraphQL query against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
+  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */
   query: <
     OverrideReturnType extends any = never,
     RawGqlString extends string = string,
@@ -70,7 +70,7 @@ export type CustomerClient = {
       ClientReturn<CustomerAccountQueries, RawGqlString, OverrideReturnType>
     >
   >;
-  /** Execute a GraphQL mutation against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
+  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */
   mutate: <
     OverrideReturnType extends any = never,
     RawGqlString extends string = string,
@@ -100,33 +100,33 @@ export type CustomerClientOptions = {
   request: CrossRuntimeRequest;
   /** The waitUntil function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
   waitUntil?: ExecutionContext['waitUntil'];
-  /** This is the route in your app that authorizes the user after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/account/authorize`. */
+  /** This is the route in your app that authorizes the customer after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/account/authorize`. */
   authUrl?: string;
-  /** The behaviour when handleUnauthorized, query or mutate is called with an unauthorized customer. The return of method will be throw. The default behaviour is redirecting to `/account/login` where login() is located and pass in current path as redirectPath. */
-  unauthorizedHandler?: () => DataFunctionValue;
+  /** Use this method to overwrite the default logged-out redirect behavior. The default handler [throws a redirect](https://remix.run/docs/en/main/utils/redirect#:~:text=!session) to `/account/login` with current path as `return_to` query param. */
+  customAuthStatusHandler?: () => DataFunctionValue;
 };
 
-/** Below are types meant for documentation only. Ensure it stay in sycn with the type above. */
+/** Below are types meant for documentation only. Ensure it stay in sync with the type above. */
 
 export type CustomerClientForDocs = {
-  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. An optional `redirectPath` parameter defines the final path the user lands on at the end of the oAuth flow. The default redirectPath is the page that ran handleUnauthorized, query or mutate with unauthorized customer, then `/account`. */
-  login?: (redirectPath?: string) => Promise<Response>;
-  /** On successful login, the user redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings. */
-  authorize?: () => Promise<Response>;
-  /** Returns if the user is logged in. It also checks if the access token is expired and refreshes it if needed. */
-  isLoggedIn?: () => Promise<boolean>;
-  /** Check for unauthorized customer and perform `unauthorizedHandler`. */
-  handleUnauthorized: () => void | DataFunctionValue;
-  /** Returns CustomerAccessToken if the user is logged in. It also run a expirey check and does a token refresh if needed. */
-  getAccessToken?: () => Promise<string | undefined>;
-  /** Logout the user by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. */
-  logout?: () => Promise<Response>;
-  /** Execute a GraphQL query against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
+  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use) */
+  login: () => Promise<Response>;
+  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */
+  authorize: () => Promise<Response>;
+  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */
+  isLoggedIn: () => Promise<boolean>;
+  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */
+  handleAuthStatus: () => void | DataFunctionValue;
+  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */
+  getAccessToken: () => Promise<string | undefined>;
+  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/
+  logout: () => Promise<Response>;
+  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */
   query?: <TData = any>(
     query: string,
     options: CustomerClientQueryOptionsForDocs,
   ) => Promise<TData>;
-  /** Execute a GraphQL mutation against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
+  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */
   mutate?: <TData = any>(
     mutation: string,
     options: CustomerClientQueryOptionsForDocs,
