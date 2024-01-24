@@ -78,6 +78,6 @@ export const getCallerStackLine =
 
         Error.prepareStackTrace = original;
 
-        return stackInfo;
+        return stackInfo as StackInfo | undefined;
       }
     : undefined;
