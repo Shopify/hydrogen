@@ -366,14 +366,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       throwErrorWithGqlLink({...errorOptions, errors});
     }
 
-    let {data, errors} = body as GraphQLApiResponse<T>;
-    errors ??= [
-      {
-        message: 'Unknown error',
-        path: ['a', 'b'],
-        extensions: {something: true},
-      },
-    ];
+    const {data, errors} = body as GraphQLApiResponse<T>;
 
     return formatAPIResult(data, errors as StorefrontApiErrors);
   }
