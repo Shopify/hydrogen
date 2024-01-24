@@ -54,6 +54,9 @@ describe('link', () => {
     storefront: undefined,
   };
 
+  const expectedStorefrontName = 'New Storefront';
+  const expectedJobId = 'gid://shopify/Job/1';
+
   beforeEach(async () => {
     vi.mocked(login).mockResolvedValue({
       session: ADMIN_SESSION,
@@ -69,6 +72,15 @@ describe('link', () => {
     ]);
 
     vi.mocked(renderSelectPrompt).mockResolvedValue(FULL_SHOPIFY_CONFIG.shop);
+
+    vi.mocked(createStorefront).mockResolvedValue({
+      storefront: {
+        id: 'gid://shopify/HydrogenStorefront/1',
+        title: expectedStorefrontName,
+        productionUrl: 'https://example.com',
+      },
+      jobId: expectedJobId,
+    });
   });
 
   afterEach(() => {
@@ -128,20 +140,10 @@ describe('link', () => {
   });
 
   describe('when you want to link a new Hydrogen storefront', () => {
-    const expectedStorefrontName = 'New Storefront';
-    const expectedJobId = 'gid://shopify/Job/1';
+
 
     beforeEach(async () => {
       vi.mocked(renderSelectPrompt).mockResolvedValue(null);
-
-      vi.mocked(createStorefront).mockResolvedValue({
-        storefront: {
-          id: 'gid://shopify/HydrogenStorefront/1',
-          title: expectedStorefrontName,
-          productionUrl: 'https://example.com',
-        },
-        jobId: expectedJobId,
-      });
     });
 
     it('chooses to create a new storefront given the directory path', async () => {
