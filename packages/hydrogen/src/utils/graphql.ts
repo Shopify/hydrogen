@@ -64,12 +64,15 @@ export class GraphQLError extends Error {
 
   constructor(
     message: string,
-    options: Pick<GraphQLError, 'locations' | 'path' | 'extensions'> = {},
+    options: Pick<
+      GraphQLError,
+      'locations' | 'path' | 'extensions' | 'stack'
+    > = {},
   ) {
     super(message);
     this.name = 'GraphQLError';
     Object.assign(this, options);
-    Object.defineProperty(this, 'stack', {value: undefined});
+    this.stack = options.stack || undefined;
   }
 
   get [Symbol.toStringTag]() {
@@ -80,15 +83,20 @@ export class GraphQLError extends Error {
     let result = `${this.name}: ${this.message}\n`;
 
     if (this.path) {
-      result += `  ${this.path.join(' > ')}\n`;
+      try {
+        result += `    * path: ${JSON.stringify(this.path)}\n`;
+      } catch {}
     }
 
     if (this.extensions) {
       try {
-        result += `${JSON.stringify(this.extensions)}\n`;
-      } catch {
-        // skip
-      }
+        result += `    * extensions: ${JSON.stringify(this.extensions)}\n`;
+      } catch {}
+    }
+
+    if (this.stack) {
+      // Remove the message line from the stack.
+      result += `${this.stack.slice(this.stack.indexOf('\n') + 1)}\n`;
     }
 
     return result;
