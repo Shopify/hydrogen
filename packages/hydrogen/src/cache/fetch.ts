@@ -148,7 +148,7 @@ export async function runWithCache<T = unknown>(
             ...debugInfo,
             url: debugData?.url || debugInfo?.url || getKeyUrl(key),
             displayName: debugInfo?.displayName || debugData?.displayName,
-          } as any);
+          });
         }
       : undefined;
 

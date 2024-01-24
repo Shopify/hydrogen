@@ -15,6 +15,7 @@ import {
   getNonce,
   redirect,
   Locks,
+  logFetchEvent,
 } from './auth.helpers';
 import {BadRequest} from './BadRequest';
 import {generateNonce} from '../csp/nonce';
@@ -26,17 +27,12 @@ import {
   type GraphQLErrorOptions,
 } from '../utils/graphql';
 import {parseJSON} from '../utils/parse-json';
-import {hashKey} from '../utils/hash';
 import {
   CrossRuntimeRequest,
   getHeader,
   getDebugHeaders,
 } from '../utils/request';
-import {
-  getCallerStackLine,
-  withSyncStack,
-  type StackInfo,
-} from '../utils/callsites';
+import {getCallerStackLine, withSyncStack} from '../utils/callsites';
 import {getRedirectUrl} from '../utils/get-redirect-url';
 import type {CustomerClientOptions, CustomerClient} from './types';
 
@@ -86,30 +82,15 @@ export function createCustomerAccountClient({
   const authStatusHandler = customAuthStatusHandler
     ? customAuthStatusHandler
     : () => defaultAuthStatusHandler(request);
-  const url = new URL(request.url);
+
+  const requestUrl = new URL(request.url);
   const origin =
-    url.protocol === 'http:' ? url.origin.replace('http', 'https') : url.origin;
+    requestUrl.protocol === 'http:'
+      ? requestUrl.origin.replace('http', 'https')
+      : requestUrl.origin;
   const redirectUri = authUrl.startsWith('/') ? origin + authUrl : authUrl;
 
   const locks: Locks = {};
-
-  const logSubRequestEvent =
-    process.env.NODE_ENV === 'development'
-      ? (query: string, startTime: number, stackInfo?: StackInfo) => {
-          globalThis.__H2O_LOG_EVENT?.({
-            eventType: 'subrequest',
-            url: `https://shopify.dev/?${hashKey([
-              `Customer Account `,
-              /((query|mutation) [^\s\(]+)/g.exec(query)?.[0] ||
-                query.substring(0, 10),
-            ])}`,
-            startTime,
-            waitUntil,
-            stackInfo,
-            ...getDebugHeaders(request),
-          });
-        }
-      : undefined;
 
   async function fetchCustomerAPI<T>({
     query,
@@ -129,9 +110,11 @@ export function createCustomerAccountClient({
     // Since this is an internal function that is always called from
     // the public query/mutate wrappers, add 1 to the stack offset.
     const stackInfo = getCallerStackLine?.(1);
-
     const startTime = new Date().getTime();
+
     const url = `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`;
+    const graphqlData = JSON.stringify({query, variables});
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -140,14 +123,18 @@ export function createCustomerAccountClient({
         Origin: origin,
         Authorization: accessToken,
       },
-      body: JSON.stringify({
-        operationName: 'SomeQuery',
-        query,
-        variables,
-      }),
+      body: graphqlData,
     });
 
-    logSubRequestEvent?.(query, startTime, stackInfo);
+    logFetchEvent?.({
+      url,
+      startTime,
+      response,
+      waitUntil,
+      stackInfo,
+      graphql: graphqlData,
+      ...getDebugHeaders(request),
+    });
 
     const body = await response.text();
 
@@ -199,8 +186,6 @@ export function createCustomerAccountClient({
     // Get stack trace before losing it with any async operation.
     const stackInfo = getCallerStackLine?.();
 
-    const startTime = new Date().getTime();
-
     try {
       await checkExpires({
         locks,
@@ -209,9 +194,12 @@ export function createCustomerAccountClient({
         customerAccountId,
         customerAccountUrl,
         origin,
+        debugInfo: {
+          waitUntil,
+          stackInfo,
+          ...getDebugHeaders(request),
+        },
       });
-
-      logSubRequestEvent?.(' check expires', startTime, stackInfo);
     } catch {
       return false;
     }
@@ -309,8 +297,8 @@ export function createCustomerAccountClient({
       );
     },
     authorize: async () => {
-      const code = url.searchParams.get('code');
-      const state = url.searchParams.get('state');
+      const code = requestUrl.searchParams.get('code');
+      const state = requestUrl.searchParams.get('state');
 
       if (!code || !state) {
         clearSession(session);
@@ -355,10 +343,22 @@ export function createCustomerAccountClient({
         Origin: origin,
       };
 
-      const response = await fetch(`${customerAccountUrl}/auth/oauth/token`, {
+      const stackInfo = getCallerStackLine?.();
+      const startTime = new Date().getTime();
+      const url = `${customerAccountUrl}/auth/oauth/token`;
+      const response = await fetch(url, {
         method: 'POST',
         headers,
         body,
+      });
+
+      logFetchEvent?.({
+        url,
+        startTime,
+        response,
+        waitUntil,
+        stackInfo,
+        ...getDebugHeaders(request),
       });
 
       if (!response.ok) {
@@ -388,6 +388,11 @@ export function createCustomerAccountClient({
         customerAccountId,
         customerAccountUrl,
         origin,
+        {
+          waitUntil,
+          stackInfo,
+          ...getDebugHeaders(request),
+        },
       );
 
       const redirectPath = session.get(
