@@ -80,19 +80,21 @@ export class GraphQLError extends Error {
   }
 
   override toString() {
-    let result = `${this.name}: ${this.message}\n`;
+    let result = `${this.name}: ${this.message}`;
 
     if (this.path) {
       try {
-        result += `    * path: ${JSON.stringify(this.path)}\n`;
+        result += ` | path: ${JSON.stringify(this.path)}`;
       } catch {}
     }
 
     if (this.extensions) {
       try {
-        result += `    * extensions: ${JSON.stringify(this.extensions)}\n`;
+        result += ` | extensions: ${JSON.stringify(this.extensions)}`;
       } catch {}
     }
+
+    result += '\n';
 
     if (this.stack) {
       // Remove the message line from the stack.
