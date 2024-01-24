@@ -12,7 +12,8 @@ These are some of the most commonly used Hydrogen examples. Browse the folders i
 
 | Example                                                                   | Details                                                                                                                                            |
 | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Express](/examples/express/)                                             | Hydrogen example using NodeJS [Express](https://expressjs.com/)                                                                                    |
+| [Express](/examples/express/)                                             | Hydrogen example using NodeJS [Express](https://expressjs.com/).                                                                                   |
+| [Legacy Customer Account Flow](/examples/legacy-customer-account-flow/)   | The legacy customer account flow made with [Storefront API](https://shopify.dev/docs/api/storefront).                                              |
 | [Multipass](/examples/multipass/)                                         | Connect your existing third-party authentication method to Shopify’s customer accounts, so buyers can use a single login across multiple services. |
 | [Optimistic Cart UI](/examples/optimistic-cart-ui/)                       | How to optimistically remove a cart line item from the cart.                                                                                       |
 | [Third-party Queries and Caching](/examples/third-party-queries-caching/) | How to leverage Oxygen's sub-request caching when querying third-party GraphQL API in Hydrogen.                                                    |
@@ -37,4 +38,5 @@ Keep the following in mind when creating a new example diff:
 1. `dependencies`, `devDependencies`, and `peerDependencies` in `package.json` are also merged to those in skeleton. Therefore, only list new or modified dependencies in the example.
 1. The scripts in `package.json` must pass the `--diff` flag to the `dev` and `build` commands. Otherwise, it will be treated as a full Hydrogen app instead of a diff.
 1. The `tsconfig.json` must have special values. Copy it from another existing diff example.
-1. add the example package to `workspaces` option in the main repo package.json
+1. Add the example package to `workspaces` option in the main repo package.json
+1. Add the new example in this README
