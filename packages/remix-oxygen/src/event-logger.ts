@@ -1,10 +1,11 @@
 // Make sure to match this type with the one in packages/cli/src/lib/request-events.ts
 export type H2OEvent = {
+  url: string;
   eventType: 'request' | 'subrequest';
   requestId?: string | null;
   purpose?: string | null;
   startTime: number;
-  endTime: number;
+  endTime?: number;
   cacheStatus?: 'MISS' | 'HIT' | 'STALE' | 'PUT';
   waitUntil?: ExecutionContext['waitUntil'];
   graphql?: string;
@@ -22,7 +23,6 @@ export type H2OEvent = {
     key?: string | readonly unknown[];
   };
   displayName?: string;
-  url?: string;
 };
 
 let hasWarned = false;

@@ -39,6 +39,7 @@ const EVENT_MAP: Record<string, string> = {
 
 // Make sure to match this type with the one in packages/remix-oxygen/src/event-logger.ts
 export type H2OEvent = {
+  url: string;
   eventType: 'request' | 'subrequest';
   requestId?: string | null;
   purpose?: string | null;
@@ -61,7 +62,6 @@ export type H2OEvent = {
     key?: string | readonly unknown[];
   };
   displayName?: string;
-  url?: string;
 };
 
 async function getRequestInfo(request: RequestKind) {
