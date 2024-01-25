@@ -110,17 +110,17 @@ export type CustomerClientOptions = {
 
 export type CustomerClientForDocs = {
   /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use) */
-  login: () => Promise<Response>;
+  login?: () => Promise<Response>;
   /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */
-  authorize: () => Promise<Response>;
+  authorize?: () => Promise<Response>;
   /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */
-  isLoggedIn: () => Promise<boolean>;
+  isLoggedIn?: () => Promise<boolean>;
   /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */
-  handleAuthStatus: () => void | DataFunctionValue;
+  handleAuthStatus?: () => void | DataFunctionValue;
   /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */
-  getAccessToken: () => Promise<string | undefined>;
+  getAccessToken?: () => Promise<string | undefined>;
   /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/
-  logout: () => Promise<Response>;
+  logout?: () => Promise<Response>;
   /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */
   query?: <TData = any>(
     query: string,
