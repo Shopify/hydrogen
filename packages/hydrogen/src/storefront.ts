@@ -42,20 +42,32 @@ import {
   minifyQuery,
   assertQuery,
   assertMutation,
-  throwGraphQLError,
+  throwErrorWithGqlLink,
+  GraphQLError,
   type GraphQLApiResponse,
   type GraphQLErrorOptions,
-  GraphQLFormattedError,
 } from './utils/graphql';
-import {getCallerStackLine, withSyncStack} from './utils/callsites';
+import {
+  getCallerStackLine,
+  withSyncStack,
+  type StackInfo,
+} from './utils/callsites';
 
 export type I18nBase = {
   language: LanguageCode;
   country: CountryCode;
 };
 
-export type StorefrontApiErrors = GraphQLFormattedError[] | undefined;
-export type StorefrontError = {
+// When passing GraphQLError through Remix' `json` or `defer`,
+// the class instance is lost and it becomes a plain JSON object.
+// Therefore, we need make TS think this is a plain object instead of
+// a class to make it work in server and client.
+// Also, Remix' `Jsonify` type is broken and can't infer types of classes properly.
+export type StorefrontApiErrors =
+  | ReturnType<GraphQLError['toJSON']>[] // Equivalent to `Jsonify<GraphQLError>[]`
+  | undefined;
+
+type StorefrontError = {
   errors?: StorefrontApiErrors;
 };
 
@@ -265,7 +277,8 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     headers = [],
     storefrontApiVersion,
     displayName,
-  }: {variables?: GenericVariables} & (
+    stackInfo,
+  }: {variables?: GenericVariables; stackInfo?: StackInfo} & (
     | StorefrontQueryOptions
     | StorefrontMutationOptions
   )): Promise<T & StorefrontError> {
@@ -305,16 +318,6 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       requestInit.body,
     ];
 
-    let stackOffset = 1;
-    if (process.env.NODE_ENV === 'development') {
-      if (/fragment CartApi(Query|Mutation) on Cart/.test(query)) {
-        // The cart handler is wrapping storefront.query/mutate,
-        // so we need to go up one more stack frame to show
-        // the caller in /subrequest-profiler
-        stackOffset = 2;
-      }
-    }
-
     const [body, response] = await fetchWithServerCache(url, requestInit, {
       cacheInstance: mutation ? undefined : cache,
       cache: cacheOptions || CacheDefault(),
@@ -326,7 +329,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         graphql: graphqlData,
         requestId: requestInit.headers[STOREFRONT_REQUEST_GROUP_ID_HEADER],
         purpose: storefrontHeaders?.purpose,
-        stackInfo: getCallerStackLine?.(stackOffset),
+        stackInfo,
         displayName,
       },
     });
@@ -352,7 +355,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         errors = [{message: body}];
       }
 
-      throwGraphQLError({...errorOptions, errors});
+      throwErrorWithGqlLink({...errorOptions, errors});
     }
 
     const {data, errors} = body as GraphQLApiResponse<T>;
@@ -380,7 +383,16 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         query = minifyQuery(query);
         assertQuery(query, 'storefront.query');
 
-        return withSyncStack(fetchStorefrontApi({...options, query}));
+        const stackOffset = getStackOffset?.(query);
+
+        return withSyncStack(
+          fetchStorefrontApi({
+            ...options,
+            query,
+            stackInfo: getCallerStackLine?.(stackOffset),
+          }),
+          stackOffset,
+        );
       },
       /**
        * Sends a GraphQL mutation to the Storefront API.
@@ -399,7 +411,16 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         mutation = minifyQuery(mutation);
         assertMutation(mutation, 'storefront.mutate');
 
-        return withSyncStack(fetchStorefrontApi({...options, mutation}));
+        const stackOffset = getStackOffset?.(mutation);
+
+        return withSyncStack(
+          fetchStorefrontApi({
+            ...options,
+            mutation,
+            stackInfo: getCallerStackLine?.(stackOffset),
+          }),
+          stackOffset,
+        );
       },
       cache,
       CacheNone,
@@ -444,12 +465,29 @@ export function createStorefrontClient<TI18n extends I18nBase>(
   };
 }
 
+const getStackOffset =
+  process.env.NODE_ENV === 'development'
+    ? (query: string) => {
+        let stackOffset = 0;
+        if (/fragment CartApi(Query|Mutation) on Cart/.test(query)) {
+          // The cart handler is wrapping storefront.query/mutate,
+          // so we need to go up one more stack frame to show
+          // the caller in /subrequest-profiler
+          stackOffset = 1;
+        }
+
+        return stackOffset;
+      }
+    : undefined;
+
 export function formatAPIResult<T>(data: T, errors: StorefrontApiErrors) {
   let result = data;
   if (errors) {
     result = {
       ...data,
-      errors,
+      errors: errors.map(
+        (errorOptions) => new GraphQLError(errorOptions.message, errorOptions),
+      ),
     };
   }
   return result as T & StorefrontError;
