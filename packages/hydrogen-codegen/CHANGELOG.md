@@ -1,5 +1,11 @@
 # @shopify/hydrogen-codegen
 
+## 0.2.0
+
+### Minor Changes
+
+- Abstract type utilities so they can be reused by other GraphQL schemas ([#1584](https://github.com/Shopify/hydrogen/pull/1584)) by [@frandiox](https://github.com/frandiox)
+
 ## 0.1.0
 
 ### Minor Changes
