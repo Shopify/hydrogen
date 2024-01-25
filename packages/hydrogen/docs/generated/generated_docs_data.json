@@ -9410,12 +9410,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {createCustomerAccountClient} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  createCookieSessionStorage,\n} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(request, env, executionContext) {\n    const session = await AppSession.init(request, [env.SESSION_SECRET]);\n\n    /* Create a Customer API client with your credentials and options */\n    const customer = createCustomerAccountClient({\n      /* Runtime utility in serverless environments */\n      waitUntil: (p) =&gt; executionContext.waitUntil(p),\n      /* Public Customer Account API token for your store */\n      customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_ID,\n      /* Public account URL for your store */\n      customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_URL,\n      request,\n      session,\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      /* Inject the customer account client in the Remix context */\n      getLoadContext: () =&gt; ({customer}),\n    });\n\n    return handleRequest(request);\n  },\n};\n\nclass AppSession {\n  static async init(request, secrets) {\n    const storage = createCookieSessionStorage({\n      cookie: {\n        name: 'session',\n        httpOnly: true,\n        path: '/',\n        sameSite: 'lax',\n        secrets,\n      },\n    });\n\n    const session = await storage.getSession(request.headers.get('Cookie'));\n\n    return new this(storage, session);\n  }\n\n  get(key) {\n    return this.session.get(key);\n  }\n\n  destroy() {\n    return this.sessionStorage.destroySession(this.session);\n  }\n\n  flash(key, value) {\n    this.session.flash(key, value);\n  }\n\n  unset(key) {\n    this.session.unset(key);\n  }\n\n  set(key, value) {\n    this.session.set(key, value);\n  }\n\n  commit() {\n    return this.sessionStorage.commitSession(this.session);\n  }\n}\n",
+            "code": "import {createCustomerAccountClient} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  createCookieSessionStorage,\n} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(request, env, executionContext) {\n    const session = await AppSession.init(request, [env.SESSION_SECRET]);\n\n    /* Create a Customer API client with your credentials and options */\n    const customerAccount = createCustomerAccountClient({\n      /* Runtime utility in serverless environments */\n      waitUntil: (p) =&gt; executionContext.waitUntil(p),\n      /* Public Customer Account API token for your store */\n      customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_ID,\n      /* Public account URL for your store */\n      customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_URL,\n      request,\n      session,\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      /* Inject the customer account client in the Remix context */\n      getLoadContext: () =&gt; ({customerAccount}),\n    });\n\n    return handleRequest(request);\n  },\n};\n\nclass AppSession {\n  static async init(request, secrets) {\n    const storage = createCookieSessionStorage({\n      cookie: {\n        name: 'session',\n        httpOnly: true,\n        path: '/',\n        sameSite: 'lax',\n        secrets,\n      },\n    });\n\n    const session = await storage.getSession(request.headers.get('Cookie'));\n\n    return new this(storage, session);\n  }\n\n  get(key) {\n    return this.session.get(key);\n  }\n\n  destroy() {\n    return this.sessionStorage.destroySession(this.session);\n  }\n\n  flash(key, value) {\n    this.session.flash(key, value);\n  }\n\n  unset(key) {\n    this.session.unset(key);\n  }\n\n  set(key, value) {\n    this.session.set(key, value);\n  }\n\n  commit() {\n    return this.sessionStorage.commitSession(this.session);\n  }\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {\n  createCustomerAccountClient,\n  type HydrogenSession,\n} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  createCookieSessionStorage,\n  type SessionStorage,\n  type Session,\n} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(\n    request: Request,\n    env: Record&lt;string, string&gt;,\n    executionContext: ExecutionContext,\n  ) {\n    const session = await AppSession.init(request, [env.SESSION_SECRET]);\n\n    /* Create a Customer API client with your credentials and options */\n    const customer = createCustomerAccountClient({\n      /* Runtime utility in serverless environments */\n      waitUntil: (p) =&gt; executionContext.waitUntil(p),\n      /* Public Customer Account API client ID for your store */\n      customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_ID,\n      /* Public account URL for your store */\n      customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_URL,\n      request,\n      session,\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      /* Inject the customer account client in the Remix context */\n      getLoadContext: () =&gt; ({customer}),\n    });\n\n    return handleRequest(request);\n  },\n};\n\nclass AppSession implements HydrogenSession {\n  constructor(\n    private sessionStorage: SessionStorage,\n    private session: Session,\n  ) {}\n\n  static async init(request: Request, secrets: string[]) {\n    const storage = createCookieSessionStorage({\n      cookie: {\n        name: 'session',\n        httpOnly: true,\n        path: '/',\n        sameSite: 'lax',\n        secrets,\n      },\n    });\n\n    const session = await storage.getSession(request.headers.get('Cookie'));\n\n    return new this(storage, session);\n  }\n\n  get(key: string) {\n    return this.session.get(key);\n  }\n\n  destroy() {\n    return this.sessionStorage.destroySession(this.session);\n  }\n\n  flash(key: string, value: any) {\n    this.session.flash(key, value);\n  }\n\n  unset(key: string) {\n    this.session.unset(key);\n  }\n\n  set(key: string, value: any) {\n    this.session.set(key, value);\n  }\n\n  commit() {\n    return this.sessionStorage.commitSession(this.session);\n  }\n}\n",
+            "code": "import {\n  createCustomerAccountClient,\n  type HydrogenSession,\n} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  createCookieSessionStorage,\n  type SessionStorage,\n  type Session,\n} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(\n    request: Request,\n    env: Record&lt;string, string&gt;,\n    executionContext: ExecutionContext,\n  ) {\n    const session = await AppSession.init(request, [env.SESSION_SECRET]);\n\n    /* Create a Customer API client with your credentials and options */\n    const customerAccount = createCustomerAccountClient({\n      /* Runtime utility in serverless environments */\n      waitUntil: (p) =&gt; executionContext.waitUntil(p),\n      /* Public Customer Account API client ID for your store */\n      customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_ID,\n      /* Public account URL for your store */\n      customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_URL,\n      request,\n      session,\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      /* Inject the customer account client in the Remix context */\n      getLoadContext: () =&gt; ({customerAccount}),\n    });\n\n    return handleRequest(request);\n  },\n};\n\nclass AppSession implements HydrogenSession {\n  constructor(\n    private sessionStorage: SessionStorage,\n    private session: Session,\n  ) {}\n\n  static async init(request: Request, secrets: string[]) {\n    const storage = createCookieSessionStorage({\n      cookie: {\n        name: 'session',\n        httpOnly: true,\n        path: '/',\n        sameSite: 'lax',\n        secrets,\n      },\n    });\n\n    const session = await storage.getSession(request.headers.get('Cookie'));\n\n    return new this(storage, session);\n  }\n\n  get(key: string) {\n    return this.session.get(key);\n  }\n\n  destroy() {\n    return this.sessionStorage.destroySession(this.session);\n  }\n\n  flash(key: string, value: any) {\n    this.session.flash(key, value);\n  }\n\n  unset(key: string) {\n    this.session.unset(key);\n  }\n\n  set(key: string, value: any) {\n    this.session.set(key, value);\n  }\n\n  commit() {\n    return this.sessionStorage.commitSession(this.session);\n  }\n}\n",
             "language": "tsx"
           }
         ],
@@ -9429,35 +9429,35 @@
         "type": "CustomerClientOptions",
         "typeDefinitions": {
           "CustomerClientOptions": {
-            "filePath": "/customer/customer.ts",
+            "filePath": "/customer/types.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CustomerClientOptions",
-            "value": "{\n  /** The client requires a session to persist the auth and refresh token. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */\n  session: HydrogenSession;\n  /** Unique UUID prefixed with `shp_` associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountId. Use `h2 env pull` to link your store credentials. */\n  customerAccountId: string;\n  /** The account URL associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountUrl. Use `h2 env pull` to link your store credentials. */\n  customerAccountUrl: string;\n  /** Override the version of the API */\n  customerApiVersion?: string;\n  /** The object for the current Request. It should be provided by your platform. */\n  request: CrossRuntimeRequest;\n  /** The waitUntil function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */\n  waitUntil?: ExecutionContext['waitUntil'];\n  /** This is the route in your app that authorizes the user after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/account/authorize`. */\n  authUrl?: string;\n}",
+            "value": "{\n  /** The client requires a session to persist the auth and refresh token. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */\n  session: HydrogenSession;\n  /** Unique UUID prefixed with `shp_` associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountId. Use `h2 env pull` to link your store credentials. */\n  customerAccountId: string;\n  /** The account URL associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountUrl. Use `h2 env pull` to link your store credentials. */\n  customerAccountUrl: string;\n  /** Override the version of the API */\n  customerApiVersion?: string;\n  /** The object for the current Request. It should be provided by your platform. */\n  request: CrossRuntimeRequest;\n  /** The waitUntil function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */\n  waitUntil?: ExecutionContext['waitUntil'];\n  /** This is the route in your app that authorizes the customer after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/account/authorize`. */\n  authUrl?: string;\n  /** Use this method to overwrite the default logged-out redirect behavior. The default handler [throws a redirect](https://remix.run/docs/en/main/utils/redirect#:~:text=!session) to `/account/login` with current path as `return_to` query param. */\n  customAuthStatusHandler?: () => DataFunctionValue;\n}",
             "description": "",
             "members": [
               {
-                "filePath": "/customer/customer.ts",
+                "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "session",
                 "value": "HydrogenSession",
                 "description": "The client requires a session to persist the auth and refresh token. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation."
               },
               {
-                "filePath": "/customer/customer.ts",
+                "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "customerAccountId",
                 "value": "string",
                 "description": "Unique UUID prefixed with `shp_` associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountId. Use `h2 env pull` to link your store credentials."
               },
               {
-                "filePath": "/customer/customer.ts",
+                "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "customerAccountUrl",
                 "value": "string",
                 "description": "The account URL associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountUrl. Use `h2 env pull` to link your store credentials."
               },
               {
-                "filePath": "/customer/customer.ts",
+                "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "customerApiVersion",
                 "value": "string",
@@ -9465,14 +9465,14 @@
                 "isOptional": true
               },
               {
-                "filePath": "/customer/customer.ts",
+                "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "request",
                 "value": "CrossRuntimeRequest",
                 "description": "The object for the current Request. It should be provided by your platform."
               },
               {
-                "filePath": "/customer/customer.ts",
+                "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "waitUntil",
                 "value": "ExecutionContext",
@@ -9480,11 +9480,19 @@
                 "isOptional": true
               },
               {
-                "filePath": "/customer/customer.ts",
+                "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "authUrl",
                 "value": "string",
-                "description": "This is the route in your app that authorizes the user after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/account/authorize`.",
+                "description": "This is the route in your app that authorizes the customer after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/account/authorize`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/customer/types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "customAuthStatusHandler",
+                "value": "() => DataFunctionValue",
+                "description": "Use this method to overwrite the default logged-out redirect behavior. The default handler [throws a redirect](https://remix.run/docs/en/main/utils/redirect#:~:text=!session) to `/account/login` with current path as `return_to` query param.",
                 "isOptional": true
               }
             ]
@@ -9520,6 +9528,13 @@
                 "description": ""
               }
             ]
+          },
+          "DataFunctionValue": {
+            "filePath": "/customer/types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "DataFunctionValue",
+            "value": "Response | NonNullable<unknown> | null",
+            "description": ""
           }
         }
       },
@@ -9529,79 +9544,88 @@
         "type": "CustomerClientForDocs",
         "typeDefinitions": {
           "CustomerClientForDocs": {
-            "filePath": "/customer/customer.ts",
+            "filePath": "/customer/types.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CustomerClientForDocs",
-            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. An optional `redirectPath` parameter defines the final path the user lands on at the end of the oAuth flow. It defaults to `/`. */\n  login?: (redirectPath?: string) => Promise<Response>;\n  /** On successful login, the user redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings. */\n  authorize?: () => Promise<Response>;\n  /** Returns if the user is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn?: () => Promise<boolean>;\n  /** Returns CustomerAccessToken if the user is logged in. It also run a expirey check and does a token refresh if needed. */\n  getAccessToken?: () => Promise<string | undefined>;\n  /** Logout the user by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. */\n  logout?: () => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */\n  query?: <TData = any>(\n    query: string,\n    options: CustomerClientQueryOptionsForDocs,\n  ) => Promise<TData>;\n  /** Execute a GraphQL mutation against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: CustomerClientQueryOptionsForDocs,\n  ) => Promise<TData>;\n}",
-            "description": "",
+            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use) */\n  login: () => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken: () => Promise<string | undefined>;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/\n  logout: () => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query?: <TData = any>(\n    query: string,\n    options: CustomerClientQueryOptionsForDocs,\n  ) => Promise<TData>;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: CustomerClientQueryOptionsForDocs,\n  ) => Promise<TData>;\n}",
+            "description": "Below are types meant for documentation only. Ensure it stay in sync with the type above.",
             "members": [
               {
-                "filePath": "/customer/customer.ts",
+                "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "login",
-                "value": "(redirectPath?: string) => Promise<Response>",
-                "description": "Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. An optional `redirectPath` parameter defines the final path the user lands on at the end of the oAuth flow. It defaults to `/`.",
-                "isOptional": true
+                "value": "() => Promise<Response>",
+                "description": "Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use)"
               },
               {
-                "filePath": "/customer/customer.ts",
+                "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "authorize",
                 "value": "() => Promise<Response>",
-                "description": "On successful login, the user redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings.",
-                "isOptional": true
+                "description": "On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin."
               },
               {
-                "filePath": "/customer/customer.ts",
+                "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "isLoggedIn",
                 "value": "() => Promise<boolean>",
-                "description": "Returns if the user is logged in. It also checks if the access token is expired and refreshes it if needed.",
-                "isOptional": true
+                "description": "Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed."
               },
               {
-                "filePath": "/customer/customer.ts",
+                "filePath": "/customer/types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "handleAuthStatus",
+                "value": "() => void | DataFunctionValue",
+                "description": "Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option."
+              },
+              {
+                "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getAccessToken",
                 "value": "() => Promise<string>",
-                "description": "Returns CustomerAccessToken if the user is logged in. It also run a expirey check and does a token refresh if needed.",
-                "isOptional": true
+                "description": "Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed."
               },
               {
-                "filePath": "/customer/customer.ts",
+                "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "logout",
                 "value": "() => Promise<Response>",
-                "description": "Logout the user by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action.",
-                "isOptional": true
+                "description": "Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin."
               },
               {
-                "filePath": "/customer/customer.ts",
+                "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "query",
                 "value": "<TData = any>(query: string, options: CustomerClientQueryOptionsForDocs) => Promise<TData>",
-                "description": "Execute a GraphQL query against the Customer Account API. Usually you should first check if the user is logged in before querying the API.",
+                "description": "Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query.",
                 "isOptional": true
               },
               {
-                "filePath": "/customer/customer.ts",
+                "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "mutate",
                 "value": "<TData = any>(mutation: string, options: CustomerClientQueryOptionsForDocs) => Promise<TData>",
-                "description": "Execute a GraphQL mutation against the Customer Account API. Usually you should first check if the user is logged in before querying the API.",
+                "description": "Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation.",
                 "isOptional": true
               }
             ]
           },
+          "DataFunctionValue": {
+            "filePath": "/customer/types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "DataFunctionValue",
+            "value": "Response | NonNullable<unknown> | null",
+            "description": ""
+          },
           "CustomerClientQueryOptionsForDocs": {
-            "filePath": "/customer/customer.ts",
+            "filePath": "/customer/types.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CustomerClientQueryOptionsForDocs",
             "value": "{\n  /** The variables for the GraphQL statement. */\n  variables?: Record<string, unknown>;\n}",
             "description": "",
             "members": [
               {
-                "filePath": "/customer/customer.ts",
+                "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "variables",
                 "value": "Record<string, unknown>",
@@ -9612,7 +9636,58 @@
           }
         }
       }
-    ]
+    ],
+    "examples": {
+      "description": "Examples of how to opt out of default logged-out redirect",
+      "exampleGroups": [
+        {
+          "title": "Customized logged-out behavior for the entire application",
+          "examples": [
+            {
+              "description": "Throw error instead of redirect",
+              "codeblock": {
+                "title": "Example",
+                "tabs": [
+                  {
+                    "title": "JavaScript",
+                    "code": "import {createCustomerAccountClient} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  createCookieSessionStorage,\n} from '@shopify/remix-oxygen';\n\n// In server.ts\nexport default {\n  async fetch(request, env, executionContext) {\n    const session = await AppSession.init(request, [env.SESSION_SECRET]);\n\n    function customAuthStatusHandler() {\n      return new Response('Customer is not login', {\n        status: 401,\n      });\n    }\n\n    /* Create a Customer API client with your credentials and options */\n    const customerAccount = createCustomerAccountClient({\n      /* Runtime utility in serverless environments */\n      waitUntil: (p) =&gt; executionContext.waitUntil(p),\n      /* Public Customer Account API client ID for your store */\n      customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_ID,\n      /* Public account URL for your store */\n      customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_URL,\n      request,\n      session,\n      customAuthStatusHandler,\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      /* Inject the customer account client in the Remix context */\n      getLoadContext: () =&gt; ({customerAccount}),\n    });\n\n    return handleRequest(request);\n  },\n};\n\nclass AppSession {\n  static async init(request, secrets) {\n    const storage = createCookieSessionStorage({\n      cookie: {\n        name: 'session',\n        httpOnly: true,\n        path: '/',\n        sameSite: 'lax',\n        secrets,\n      },\n    });\n\n    const session = await storage.getSession(request.headers.get('Cookie'));\n\n    return new this(storage, session);\n  }\n\n  get(key) {\n    return this.session.get(key);\n  }\n\n  destroy() {\n    return this.sessionStorage.destroySession(this.session);\n  }\n\n  flash(key, value) {\n    this.session.flash(key, value);\n  }\n\n  unset(key) {\n    this.session.unset(key);\n  }\n\n  set(key, value) {\n    this.session.set(key, value);\n  }\n\n  commit() {\n    return this.sessionStorage.commitSession(this.session);\n  }\n}\n\n/////////////////////////////////\n// In a route\nimport {\n  useLoaderData,\n  useRouteError,\n  isRouteErrorResponse,\n  useLocation,\n} from '@remix-run/react';\nimport {json} from '@shopify/remix-oxygen';\n\nexport async function loader({context}) {\n  const {data} = await context.customerAccount.query(`#graphql\n    query getCustomer {\n      customer {\n        firstName\n        lastName\n      }\n    }\n    `);\n\n  return json(\n    {customer: data.customer},\n    {\n      headers: {\n        'Set-Cookie': await context.session.commit(),\n      },\n    },\n  );\n}\n\nexport function ErrorBoundary() {\n  const error = useRouteError();\n  const location = useLocation();\n\n  if (isRouteErrorResponse(error)) {\n    if (error.status == 401) {\n      return (\n        &lt;a\n          href={`/account/login?${new URLSearchParams({\n            return_to: location.pathname,\n          }).toString()}`}\n        &gt;\n          Login\n        &lt;/a&gt;\n      );\n    }\n  }\n}\n\n// this should be an default export\nexport function Route() {\n  const {customer} = useLoaderData();\n\n  return (\n    &lt;div style={{marginTop: 24}}&gt;\n      {customer ? (\n        &lt;&gt;\n          &lt;div style={{marginBottom: 24}}&gt;\n            &lt;b&gt;\n              Welcome {customer.firstName} {customer.lastName}\n            &lt;/b&gt;\n          &lt;/div&gt;\n        &lt;/&gt;\n      ) : null}\n    &lt;/div&gt;\n  );\n}\n",
+                    "language": "jsx"
+                  },
+                  {
+                    "title": "TypeScript",
+                    "code": "import {\n  createCustomerAccountClient,\n  type HydrogenSession,\n} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  createCookieSessionStorage,\n  type SessionStorage,\n  type Session,\n} from '@shopify/remix-oxygen';\n\n// In server.ts\nexport default {\n  async fetch(\n    request: Request,\n    env: Record&lt;string, string&gt;,\n    executionContext: ExecutionContext,\n  ) {\n    const session = await AppSession.init(request, [env.SESSION_SECRET]);\n\n    function customAuthStatusHandler() {\n      return new Response('Customer is not login', {\n        status: 401,\n      });\n    }\n\n    /* Create a Customer API client with your credentials and options */\n    const customerAccount = createCustomerAccountClient({\n      /* Runtime utility in serverless environments */\n      waitUntil: (p) =&gt; executionContext.waitUntil(p),\n      /* Public Customer Account API client ID for your store */\n      customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_ID,\n      /* Public account URL for your store */\n      customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_URL,\n      request,\n      session,\n      customAuthStatusHandler,\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      /* Inject the customer account client in the Remix context */\n      getLoadContext: () =&gt; ({customerAccount}),\n    });\n\n    return handleRequest(request);\n  },\n};\n\nclass AppSession implements HydrogenSession {\n  constructor(\n    private sessionStorage: SessionStorage,\n    private session: Session,\n  ) {}\n\n  static async init(request: Request, secrets: string[]) {\n    const storage = createCookieSessionStorage({\n      cookie: {\n        name: 'session',\n        httpOnly: true,\n        path: '/',\n        sameSite: 'lax',\n        secrets,\n      },\n    });\n\n    const session = await storage.getSession(request.headers.get('Cookie'));\n\n    return new this(storage, session);\n  }\n\n  get(key: string) {\n    return this.session.get(key);\n  }\n\n  destroy() {\n    return this.sessionStorage.destroySession(this.session);\n  }\n\n  flash(key: string, value: any) {\n    this.session.flash(key, value);\n  }\n\n  unset(key: string) {\n    this.session.unset(key);\n  }\n\n  set(key: string, value: any) {\n    this.session.set(key, value);\n  }\n\n  commit() {\n    return this.sessionStorage.commitSession(this.session);\n  }\n}\n\n/////////////////////////////////\n// In a route\nimport {\n  useLoaderData,\n  useRouteError,\n  isRouteErrorResponse,\n  useLocation,\n} from '@remix-run/react';\nimport {type LoaderFunctionArgs, json} from '@shopify/remix-oxygen';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const {data} = await context.customerAccount.query&lt;{\n    customer: {firstName: string; lastName: string};\n  }&gt;(`#graphql\n    query getCustomer {\n      customer {\n        firstName\n        lastName\n      }\n    }\n    `);\n\n  return json(\n    {customer: data.customer},\n    {\n      headers: {\n        'Set-Cookie': await context.session.commit(),\n      },\n    },\n  );\n}\n\nexport function ErrorBoundary() {\n  const error = useRouteError();\n  const location = useLocation();\n\n  if (isRouteErrorResponse(error)) {\n    if (error.status == 401) {\n      return (\n        &lt;a\n          href={`/account/login?${new URLSearchParams({\n            return_to: location.pathname,\n          }).toString()}`}\n        &gt;\n          Login\n        &lt;/a&gt;\n      );\n    }\n  }\n}\n\n// this should be an default export\nexport function Route() {\n  const {customer} = useLoaderData&lt;typeof loader&gt;();\n\n  return (\n    &lt;div style={{marginTop: 24}}&gt;\n      {customer ? (\n        &lt;&gt;\n          &lt;div style={{marginBottom: 24}}&gt;\n            &lt;b&gt;\n              Welcome {customer.firstName} {customer.lastName}\n            &lt;/b&gt;\n          &lt;/div&gt;\n        &lt;/&gt;\n      ) : null}\n    &lt;/div&gt;\n  );\n}\n",
+                    "language": "tsx"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "title": "Opt out of logged-out behavior for a single route",
+          "examples": [
+            {
+              "description": "Handle logged-out ahead of query",
+              "codeblock": {
+                "title": "Example",
+                "tabs": [
+                  {
+                    "title": "JavaScript",
+                    "code": "import {\n  useLoaderData,\n  useRouteError,\n  isRouteErrorResponse,\n  useLocation,\n} from '@remix-run/react';\nimport {json} from '@shopify/remix-oxygen';\n\nexport async function loader({context}) {\n  if (!(await context.customerAccount.isLoggedIn())) {\n    throw new Response('Customer is not login', {\n      status: 401,\n    });\n  }\n\n  const {data} = await context.customerAccount.query(\n    `#graphql\n    query getCustomer {\n      customer {\n        firstName\n        lastName\n      }\n    }\n    `,\n  );\n\n  return json(\n    {customer: data.customer},\n    {\n      headers: {\n        'Set-Cookie': await context.session.commit(),\n      },\n    },\n  );\n}\n\nexport function ErrorBoundary() {\n  const error = useRouteError();\n  const location = useLocation();\n\n  if (isRouteErrorResponse(error)) {\n    if (error.status == 401) {\n      return (\n        &lt;a\n          href={`/account/login?${new URLSearchParams({\n            return_to: location.pathname,\n          }).toString()}`}\n        &gt;\n          Login\n        &lt;/a&gt;\n      );\n    }\n  }\n}\n\nexport default function () {\n  const {customer} = useLoaderData();\n\n  return (\n    &lt;div style={{marginTop: 24}}&gt;\n      {customer ? (\n        &lt;&gt;\n          &lt;div style={{marginBottom: 24}}&gt;\n            &lt;b&gt;\n              Welcome {customer.firstName} {customer.lastName}\n            &lt;/b&gt;\n          &lt;/div&gt;\n        &lt;/&gt;\n      ) : null}\n    &lt;/div&gt;\n  );\n}\n",
+                    "language": "jsx"
+                  },
+                  {
+                    "title": "TypeScript",
+                    "code": "import {\n  useLoaderData,\n  useRouteError,\n  isRouteErrorResponse,\n  useLocation,\n} from '@remix-run/react';\nimport {type LoaderFunctionArgs, json} from '@shopify/remix-oxygen';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  if (!(await context.customerAccount.isLoggedIn())) {\n    throw new Response('Customer is not login', {\n      status: 401,\n    });\n  }\n\n  const {data} = await context.customerAccount.query&lt;{\n    customer: {firstName: string; lastName: string};\n  }&gt;(`#graphql\n    query getCustomer {\n      customer {\n        firstName\n        lastName\n      }\n    }\n    `);\n\n  return json(\n    {customer: data.customer},\n    {\n      headers: {\n        'Set-Cookie': await context.session.commit(),\n      },\n    },\n  );\n}\n\nexport function ErrorBoundary() {\n  const error = useRouteError();\n  const location = useLocation();\n\n  if (isRouteErrorResponse(error)) {\n    if (error.status == 401) {\n      return (\n        &lt;a\n          href={`/account/login?${new URLSearchParams({\n            return_to: location.pathname,\n          }).toString()}`}\n        &gt;\n          Login\n        &lt;/a&gt;\n      );\n    }\n  }\n}\n\nexport default function () {\n  const {customer} = useLoaderData&lt;typeof loader&gt;();\n\n  return (\n    &lt;div style={{marginTop: 24}}&gt;\n      {customer ? (\n        &lt;&gt;\n          &lt;div style={{marginBottom: 24}}&gt;\n            &lt;b&gt;\n              Welcome {customer.firstName} {customer.lastName}\n            &lt;/b&gt;\n          &lt;/div&gt;\n        &lt;/&gt;\n      ) : null}\n    &lt;/div&gt;\n  );\n}\n",
+                    "language": "tsx"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "name": "OptimisticInput",
@@ -10285,7 +10360,7 @@
               "name": "Promise<Response>",
               "value": "Promise<Response>"
             },
-            "value": "export async function storefrontRedirect(\n  options: StorefrontRedirect,\n): Promise<Response> {\n  const {\n    storefront,\n    request,\n    noAdminRedirect,\n    response = new Response('Not Found', {status: 404}),\n  } = options;\n\n  const {pathname, search} = new URL(request.url);\n  const redirectFrom = pathname + search;\n\n  if (pathname === '/admin' && !noAdminRedirect) {\n    return redirect(`${storefront.getShopifyDomain()}/admin`);\n  }\n\n  try {\n    const {urlRedirects} = await storefront.query<{\n      urlRedirects: UrlRedirectConnection;\n    }>(REDIRECT_QUERY, {\n      variables: {query: 'path:' + redirectFrom},\n    });\n\n    const location = urlRedirects?.edges?.[0]?.node?.target;\n\n    if (location) {\n      return new Response(null, {status: 301, headers: {location}});\n    }\n\n    const searchParams = new URLSearchParams(search);\n    const redirectTo =\n      searchParams.get('return_to') || searchParams.get('redirect');\n\n    if (redirectTo) {\n      if (isLocalPath(request.url, redirectTo)) {\n        return redirect(redirectTo);\n      } else {\n        console.warn(\n          `Cross-domain redirects are not supported. Tried to redirect from ${redirectFrom} to ${redirectTo}`,\n        );\n      }\n    }\n  } catch (error) {\n    console.error(\n      `Failed to fetch redirects from Storefront API for route ${redirectFrom}`,\n      error,\n    );\n  }\n\n  return response;\n}"
+            "value": "export async function storefrontRedirect(\n  options: StorefrontRedirect,\n): Promise<Response> {\n  const {\n    storefront,\n    request,\n    noAdminRedirect,\n    response = new Response('Not Found', {status: 404}),\n  } = options;\n\n  const {pathname, search} = new URL(request.url);\n  const redirectFrom = pathname + search;\n\n  if (pathname === '/admin' && !noAdminRedirect) {\n    return redirect(`${storefront.getShopifyDomain()}/admin`);\n  }\n\n  try {\n    const {urlRedirects} = await storefront.query<{\n      urlRedirects: UrlRedirectConnection;\n    }>(REDIRECT_QUERY, {\n      variables: {query: 'path:' + redirectFrom},\n    });\n\n    const location = urlRedirects?.edges?.[0]?.node?.target;\n\n    if (location) {\n      return new Response(null, {status: 301, headers: {location}});\n    }\n\n    const redirectTo = getRedirectUrl(request.url);\n\n    if (redirectTo) {\n      return redirect(redirectTo);\n    }\n  } catch (error) {\n    console.error(\n      `Failed to fetch redirects from Storefront API for route ${redirectFrom}`,\n      error,\n    );\n  }\n\n  return response;\n}"
           },
           "StorefrontRedirect": {
             "filePath": "/routing/redirect.ts",

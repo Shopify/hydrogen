@@ -17,48 +17,31 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({request, context}: LoaderFunctionArgs) {
-  if (!(await context.customerAccount.isLoggedIn())) {
-    const loginUrl =
-      '/account/login' +
-      `?${new URLSearchParams(`redirectPath=${request.url}`).toString()}`;
+  const paginationVariables = getPaginationVariables(request, {
+    pageBy: 20,
+  });
 
-    return redirect(loginUrl);
+  const {data, errors} = await context.customerAccount.query(
+    CUSTOMER_ORDERS_QUERY,
+    {
+      variables: {
+        ...paginationVariables,
+      },
+    },
+  );
+
+  if (errors?.length || !data?.customer) {
+    throw Error('Customer orders not found');
   }
 
-  try {
-    const paginationVariables = getPaginationVariables(request, {
-      pageBy: 20,
-    });
-
-    const {data, errors} = await context.customerAccount.query(
-      CUSTOMER_ORDERS_QUERY,
-      {
-        variables: {
-          ...paginationVariables,
-        },
-      },
-    );
-
-    if (errors?.length || !data?.customer) {
-      throw Error('Customer orders not found');
-    }
-
-    return json(
-      {customer: data.customer},
-      {
-        headers: {
-          'Set-Cookie': await context.session.commit(),
-        },
-      },
-    );
-  } catch (error) {
-    throw new Response(error instanceof Error ? error.message : undefined, {
-      status: 404,
+  return json(
+    {customer: data.customer},
+    {
       headers: {
         'Set-Cookie': await context.session.commit(),
       },
-    });
-  }
+    },
+  );
 }
 
 export default function Orders() {

@@ -11,21 +11,12 @@ import {isLocalPath} from '~/lib/utils';
 import {Cart} from '~/components';
 import {useRootLoaderData} from '~/root';
 
-async function getAccessToken(context: ActionFunctionArgs['context']) {
-  try {
-    return await context.customerAccount.getAccessToken();
-  } catch {
-    // just ignore access token if error occur
-    return undefined;
-  }
-}
-
 export async function action({request, context}: ActionFunctionArgs) {
   const {cart} = context;
 
   const [formData, customerAccessToken] = await Promise.all([
     request.formData(),
-    getAccessToken(context),
+    context.customerAccount.getAccessToken(),
   ]);
 
   const {action, inputs} = CartForm.getFormInput(formData);

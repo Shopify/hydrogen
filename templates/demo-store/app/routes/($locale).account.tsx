@@ -43,61 +43,38 @@ import {
 export const headers = routeHeaders;
 
 export async function loader({request, context, params}: LoaderFunctionArgs) {
-  const locale = params.locale;
+  const {data, errors} = await context.customerAccount.query(
+    CUSTOMER_DETAILS_QUERY,
+  );
 
-  if (!(await context.customerAccount.isLoggedIn())) {
-    const loginUrl =
-      (locale ? `/${locale}/account/login` : '/account/login') +
-      `?${new URLSearchParams(`redirectPath=${request.url}`).toString()}`;
-
-    return redirect(loginUrl, {
-      headers: {
-        'Set-Cookie': await context.session.commit(),
-      },
-    });
+  /**
+   * If the customer failed to load, we assume their access token is invalid.
+   */
+  if (errors?.length || !data?.customer) {
+    throw await doLogout(context);
   }
 
-  try {
-    const {data, errors} = await context.customerAccount.query(
-      CUSTOMER_DETAILS_QUERY,
-    );
+  const customer = data?.customer;
 
-    /**
-     * If the customer failed to load, we assume their access token is invalid.
-     */
-    if (errors?.length || !data?.customer) {
-      throw await doLogout(context);
-    }
+  const heading = customer
+    ? customer.firstName
+      ? `Welcome, ${customer.firstName}.`
+      : `Welcome to your account.`
+    : 'Account Details';
 
-    const customer = data?.customer;
-
-    const heading = customer
-      ? customer.firstName
-        ? `Welcome, ${customer.firstName}.`
-        : `Welcome to your account.`
-      : 'Account Details';
-
-    return defer(
-      {
-        customer,
-        heading,
-        featuredDataPromise: getFeaturedData(context.storefront),
-      },
-      {
-        headers: {
-          'Cache-Control': CACHE_NONE,
-          'Set-Cookie': await context.session.commit(),
-        },
-      },
-    );
-  } catch (error) {
-    throw new Response(error instanceof Error ? error.message : undefined, {
-      status: 404,
+  return defer(
+    {
+      customer,
+      heading,
+      featuredDataPromise: getFeaturedData(context.storefront),
+    },
+    {
       headers: {
+        'Cache-Control': CACHE_NONE,
         'Set-Cookie': await context.session.commit(),
       },
-    });
-  }
+    },
+  );
 }
 
 export default function Authenticated() {

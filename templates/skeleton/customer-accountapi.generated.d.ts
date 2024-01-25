@@ -18,7 +18,7 @@ export type CustomerAddressUpdateMutation = {
     >;
     userErrors: Array<
       Pick<
-        CustomerAccountAPI.UserErrorsAddressUserErrors,
+        CustomerAccountAPI.UserErrorsCustomerAddressUserErrors,
         'code' | 'field' | 'message'
       >
     >;

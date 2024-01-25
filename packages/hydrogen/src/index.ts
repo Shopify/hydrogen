@@ -23,7 +23,7 @@ export type {
   CustomerClient,
   CustomerAccountQueries,
   CustomerAccountMutations,
-} from './customer/customer';
+} from './customer/types';
 export {changelogHandler} from './changelogHandler';
 
 export {CartForm, type CartActionInput} from './cart/CartForm';

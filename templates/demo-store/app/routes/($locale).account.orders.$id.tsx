@@ -23,18 +23,6 @@ export async function loader({request, context, params}: LoaderFunctionArgs) {
 
   invariant(orderToken, 'Order token is required');
 
-  if (!(await context.customerAccount.isLoggedIn())) {
-    const loginUrl =
-      (params?.locale ? `/${params.locale}/account/login` : '/account/login') +
-      `?${new URLSearchParams(`redirectPath=${request.url}`).toString()}`;
-
-    return redirect(loginUrl, {
-      headers: {
-        'Set-Cookie': await context.session.commit(),
-      },
-    });
-  }
-
   try {
     const orderId = `gid://shopify/Order/${params.id}?key=${orderToken}`;
 

@@ -5,20 +5,28 @@ import {
   createCookieSessionStorage,
 } from '@shopify/remix-oxygen';
 
+// In server.ts
 export default {
   async fetch(request, env, executionContext) {
     const session = await AppSession.init(request, [env.SESSION_SECRET]);
+
+    function customAuthStatusHandler() {
+      return new Response('Customer is not login', {
+        status: 401,
+      });
+    }
 
     /* Create a Customer API client with your credentials and options */
     const customerAccount = createCustomerAccountClient({
       /* Runtime utility in serverless environments */
       waitUntil: (p) => executionContext.waitUntil(p),
-      /* Public Customer Account API token for your store */
+      /* Public Customer Account API client ID for your store */
       customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_ID,
       /* Public account URL for your store */
       customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_URL,
       request,
       session,
+      customAuthStatusHandler,
     });
 
     const handleRequest = createRequestHandler({
@@ -72,4 +80,72 @@ class AppSession {
   commit() {
     return this.sessionStorage.commitSession(this.session);
   }
+}
+
+/////////////////////////////////
+// In a route
+import {
+  useLoaderData,
+  useRouteError,
+  isRouteErrorResponse,
+  useLocation,
+} from '@remix-run/react';
+import {json} from '@shopify/remix-oxygen';
+
+export async function loader({context}) {
+  const {data} = await context.customerAccount.query(`#graphql
+    query getCustomer {
+      customer {
+        firstName
+        lastName
+      }
+    }
+    `);
+
+  return json(
+    {customer: data.customer},
+    {
+      headers: {
+        'Set-Cookie': await context.session.commit(),
+      },
+    },
+  );
+}
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+  const location = useLocation();
+
+  if (isRouteErrorResponse(error)) {
+    if (error.status == 401) {
+      return (
+        <a
+          href={`/account/login?${new URLSearchParams({
+            return_to: location.pathname,
+          }).toString()}`}
+        >
+          Login
+        </a>
+      );
+    }
+  }
+}
+
+// this should be an default export
+export function Route() {
+  const {customer} = useLoaderData();
+
+  return (
+    <div style={{marginTop: 24}}>
+      {customer ? (
+        <>
+          <div style={{marginBottom: 24}}>
+            <b>
+              Welcome {customer.firstName} {customer.lastName}
+            </b>
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
 }
