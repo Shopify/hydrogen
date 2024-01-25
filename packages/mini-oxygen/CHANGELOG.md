@@ -1,5 +1,11 @@
 # @shopify/mini-oxygen
 
+## 2.2.5
+
+### Patch Changes
+
+- Fix step-debugging when running in the Node.js sandbox ([#1501](https://github.com/Shopify/hydrogen/pull/1501)) by [@frandiox](https://github.com/frandiox)
+
 ## 2.2.4
 
 ### Patch Changes

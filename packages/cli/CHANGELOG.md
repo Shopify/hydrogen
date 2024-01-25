@@ -1,5 +1,51 @@
 # @shopify/cli-hydrogen
 
+## 7.0.0
+
+### Major Changes
+
+- Make the worker runtime the default for the local development server when running `dev` and `preview`. To access the legacy Node.js runtime, pass the `--legacy-runtime` flag. The legacy runtime will be deprecated and removed in a future release. ([#1625](https://github.com/Shopify/hydrogen/pull/1625)) by [@frandiox](https://github.com/frandiox)
+
+- Remove deprecated `build` command flags `--base`, `--entry`, `--target`. Additionally, `--codegen-unstable` is now `--codegen`. ([#1640](https://github.com/Shopify/hydrogen/pull/1640)) by [@frandiox](https://github.com/frandiox)
+
+### Minor Changes
+
+- Check for local project GraphQL config files (example: `.graphqlrc.yml`) when running in Codegen mode ([#1577](https://github.com/Shopify/hydrogen/pull/1577)) by [@frandiox](https://github.com/frandiox)
+
+- Add `deploy` command to Hydrogen CLI ([#1628](https://github.com/Shopify/hydrogen/pull/1628)) by [@graygilmore](https://github.com/graygilmore)
+
+  You can now deploy your Hydrogen app without connecting to GitHub. Run the `deploy` command from your local terminal or configure your own CI/CD workflows from any platform.
+
+  Run `npx shopify hydrogen deploy --help` for more details.
+
+- Add `--diff` flag to `dev` and `build` commands, used for building Hydrogen app examples. ([#1549](https://github.com/Shopify/hydrogen/pull/1549)) by [@frandiox](https://github.com/frandiox)
+
+- Add `--template` flag to enable scaffolding projects based on [examples](https://github.com/Shopify/hydrogen/tree/main/examples) from the Hydrogen repo. ([#1608](https://github.com/Shopify/hydrogen/pull/1608)) by [@frandiox](https://github.com/frandiox)
+
+  Example: `npm create @shopify/hydrogen@latest -- --template multipass`.
+
+### Patch Changes
+
+- Reorganize starter template file and folder structure ([#1612](https://github.com/Shopify/hydrogen/pull/1612)) by [@frandiox](https://github.com/frandiox)
+
+- Fix step-debugging when running in the Node.js sandbox ([#1501](https://github.com/Shopify/hydrogen/pull/1501)) by [@frandiox](https://github.com/frandiox)
+
+- Generate sourcemaps by default when running the `deploy` command ([#1623](https://github.com/Shopify/hydrogen/pull/1623)) by [@blittle](https://github.com/blittle)
+
+- Remove bundle-size check from the `build` command, in favor of checking server-side with `deploy` ([#1614](https://github.com/Shopify/hydrogen/pull/1614)) by [@benwolfram](https://github.com/benwolfram)
+
+- - Update example and template Remix versions to `^2.5.1` ([#1639](https://github.com/Shopify/hydrogen/pull/1639)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  - Enable Remix future flags:
+    - [`v3_fetcherPersist`](https://remix.run/docs/en/main/hooks/use-fetchers#additional-resources)
+    - [`v3_relativeSplatpath`](https://remix.run/docs/en/main/hooks/use-resolved-path#splat-paths)
+
+- Add the option to create a new storefront when running the `init` command ([#1681](https://github.com/Shopify/hydrogen/pull/1681)) by [@aswamy](https://github.com/aswamy)
+
+- Updated dependencies [[`0241b7d2`](https://github.com/Shopify/hydrogen/commit/0241b7d2dcb887d259ce9033aca356d391bc07df), [`9ad7c5ef`](https://github.com/Shopify/hydrogen/commit/9ad7c5efee8bff63760b36a1a7c194f6bb8e07e5)]:
+  - @shopify/mini-oxygen@2.2.5
+  - @shopify/hydrogen-codegen@0.2.0
+
 ## 6.1.0
 
 ### Minor Changes

@@ -1,5 +1,17 @@
 # @shopify/hydrogen-react
 
+## 2025.0.0
+
+### Major Changes
+
+- Upgrade to [Storefront API v2024-01](https://shopify.dev/docs/api/release-notes/2024-01#storefront-api-changes) ([#1642](https://github.com/Shopify/hydrogen/pull/1642)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+### Patch Changes
+
+- Fix `<model-viewer>`'s `onPause` event listener, with improved readability contributed by @sanjaiyan-dev ([#1669](https://github.com/Shopify/hydrogen/pull/1669)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Add `React.forwardRef` to `Video` and `ExternalVideo` components ([#1415](https://github.com/Shopify/hydrogen/pull/1415)) by [@andershagbard](https://github.com/andershagbard)
+
 ## 2023.10.1
 
 ### Patch Changes
