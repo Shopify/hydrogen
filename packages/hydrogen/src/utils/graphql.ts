@@ -36,40 +36,113 @@ export type GraphQLErrorOptions<T> = {
   client?: string;
 };
 
-// Reference: https://github.com/graphql/graphql-js/blob/main/src/language/location.ts#L10-L13
-type SourceLocation = {
-  readonly line: number;
-  readonly column: number;
-};
-
 // Reference: https://github.com/graphql/graphql-js/blob/main/src/error/GraphQLError.ts#L218-L242
-export type GraphQLFormattedError = {
-  /**
-   * A short, human-readable summary of the problem that **SHOULD NOT** change
-   * from occurrence to occurrence of the problem, except for purposes of
-   * localization.
-   */
-  readonly message: string;
+export class GraphQLError extends Error {
   /**
    * If an error can be associated to a particular point in the requested
    * GraphQL document, it should contain a list of locations.
    */
-  readonly locations?: ReadonlyArray<SourceLocation>;
+  locations?: Array<{line: number; column: number}>;
   /**
    * If an error can be associated to a particular field in the GraphQL result,
    * it _must_ contain an entry with the key `path` that details the path of
    * the response field which experienced the error. This allows clients to
    * identify whether a null result is intentional or caused by a runtime error.
    */
-  readonly path?: ReadonlyArray<string | number>;
+  path?: Array<string | number>;
   /**
    * Reserved for implementors to extend the protocol however they see fit,
    * and hence there are no additional restrictions on its contents.
    */
-  readonly extensions?: {[key: string]: unknown};
-};
+  extensions?: {[key: string]: unknown};
 
-export function throwGraphQLError<T>({
+  constructor(
+    message: string,
+    options: Pick<
+      GraphQLError,
+      'locations' | 'path' | 'extensions' | 'stack'
+    > = {},
+  ) {
+    super(message);
+    this.name = 'GraphQLError';
+    Object.assign(this, options);
+    this.stack = options.stack || undefined;
+
+    if (process.env.NODE_ENV === 'development') {
+      // During dev, workerd logs show 'cause' but hides other properties. Put them in cause.
+      if (options.extensions || options.path) {
+        try {
+          this.cause = JSON.stringify({
+            path: options.path,
+            locations: options.locations,
+            extensions: options.extensions,
+          });
+        } catch {}
+      }
+    }
+  }
+
+  get [Symbol.toStringTag]() {
+    return this.name;
+  }
+
+  /**
+   * Note: `toString()` is internally used by `console.log(...)` / `console.error(...)`
+   * when ingesting logs in Oxygen production. Therefore, we want to make sure that
+   * the error message is as informative as possible instead of `[object Object]`.
+   */
+  override toString() {
+    let result = `${this.name}: ${this.message}`;
+
+    if (this.path) {
+      try {
+        result += ` | path: ${JSON.stringify(this.path)}`;
+      } catch {}
+    }
+
+    if (this.extensions) {
+      try {
+        result += ` | extensions: ${JSON.stringify(this.extensions)}`;
+      } catch {}
+    }
+
+    result += '\n';
+
+    if (this.stack) {
+      // Remove the message line from the stack.
+      result += `${this.stack.slice(this.stack.indexOf('\n') + 1)}\n`;
+    }
+
+    return result;
+  }
+
+  /**
+   * Note: toJSON` is internally used by `JSON.stringify(...)`.
+   * The most common scenario when this error instance is going to be stringified is
+   * when it's passed to Remix' `json` and `defer` functions: e.g. `defer({promise: storefront.query(...)})`.
+   * In this situation, we don't want to expose private error information to the browser so we only
+   * do it in development.
+   */
+  toJSON() {
+    const formatted: Pick<
+      GraphQLError,
+      'name' | 'message' | 'path' | 'extensions' | 'locations' | 'stack'
+    > = {name: 'Error', message: ''};
+
+    if (process.env.NODE_ENV === 'development') {
+      formatted.name = this.name;
+      formatted.message = 'Development: ' + this.message;
+      if (this.path) formatted.path = this.path;
+      if (this.locations) formatted.locations = this.locations;
+      if (this.extensions) formatted.extensions = this.extensions;
+      // Skip stack on purpose because we don't want to expose it to the browser.
+    }
+
+    return formatted;
+  }
+}
+
+export function throwErrorWithGqlLink<T>({
   url,
   response,
   errors,
