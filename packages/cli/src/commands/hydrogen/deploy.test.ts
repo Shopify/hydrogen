@@ -83,11 +83,11 @@ describe('deploy', () => {
 
   const deployParams = {
     authBypassToken: true,
+    defaultEnvironment: false,
     force: false,
     noJsonOutput: false,
     path: './',
     shop: 'snowdevil.myshopify.com',
-    publicDeployment: false,
     metadataUrl: 'https://example.com',
     metadataUser: 'user',
     metadataVersion: '1.0.0',
@@ -106,6 +106,7 @@ describe('deploy', () => {
   const expectedConfig = {
     assetsDir: 'dist/client',
     bugsnag: true,
+    defaultEnvironment: false,
     deploymentUrl: 'https://oxygen.shopifyapps.com',
     deploymentToken: mockToken,
     generateAuthBypassToken: true,
@@ -115,7 +116,6 @@ describe('deploy', () => {
       user: deployParams.metadataUser,
       version: deployParams.metadataVersion,
     },
-    publicDeployment: deployParams.publicDeployment,
     skipVerification: false,
     rootPath: deployParams.path,
     skipBuild: false,
@@ -293,8 +293,8 @@ describe('deploy', () => {
     vi.mocked(getOxygenDeploymentData).mockResolvedValue({
       oxygenDeploymentToken: 'some-encoded-token',
       environments: [
-        {name: 'production', branch: 'main'},
-        {name: 'preview', branch: 'staging'},
+        {name: 'Production', branch: 'main', type: 'PRODUCTION'},
+        {name: 'Preview', branch: null, type: 'PREVIEW'},
       ],
     });
 
@@ -303,9 +303,46 @@ describe('deploy', () => {
     expect(vi.mocked(renderSelectPrompt)).toHaveBeenCalledWith({
       message: 'Select an environment to deploy to',
       choices: [
-        {label: 'production', value: 'main'},
-        {label: 'preview', value: 'staging'},
+        {label: 'Production', value: 'main'},
+        {label: 'Preview', value: 'shopify-preview-environment.'},
       ],
+    });
+  });
+
+  describe('when Preview is selected', () => {
+    it('calls createDeploy with defaultEnvironment and an undefined environmentTag', async () => {
+      vi.mocked(getLatestGitCommit).mockResolvedValue({
+        hash: '123',
+        message: 'test commit',
+        date: '2021-01-01',
+        author_name: 'test author',
+        author_email: 'test@author.com',
+        body: 'test body',
+        refs: 'HEAD -> main',
+      });
+      vi.mocked(getOxygenDeploymentData).mockResolvedValue({
+        oxygenDeploymentToken: 'some-encoded-token',
+        environments: [
+          {name: 'Production', branch: 'main', type: 'PRODUCTION'},
+          {name: 'Preview', branch: null, type: 'PREVIEW'},
+        ],
+      });
+
+      vi.mocked(renderSelectPrompt).mockResolvedValue(
+        'shopify-preview-environment.',
+      );
+
+      await oxygenDeploy(deployParams);
+
+      expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
+        config: {
+          ...expectedConfig,
+          defaultEnvironment: true,
+          environmentTag: undefined,
+        },
+        hooks: expectedHooks,
+        logger: deploymentLogger,
+      });
     });
   });
 

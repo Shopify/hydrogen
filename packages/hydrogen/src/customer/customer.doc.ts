@@ -1,18 +1,18 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'createCustomerClient',
+  name: 'createCustomerAccountClient',
   category: 'utilities',
   isVisualComponent: false,
   related: [
     {
       name: 'createStorefrontClient',
       type: 'utility',
-      url: '/docs/api/hydrogen/current/utilities/createstorefrontclient',
+      url: '/docs/api/hydrogen/2024-01/utilities/createstorefrontclient',
     },
   ],
   description: `
-The \`createCustomerClient\` function creates a GraphQL client for querying the [Customer Account API](https://shopify.dev/docs/api/customer). It also provides methods to authenticate and check if the user is logged in.`,
+The \`createCustomerAccountClient\` function creates a GraphQL client for querying the [Customer Account API](https://shopify.dev/docs/api/customer). It also provides methods to authenticate and check if the user is logged in.`,
   type: 'utility',
   defaultExample: {
     description: 'I am the default example',
@@ -34,8 +34,13 @@ The \`createCustomerClient\` function creates a GraphQL client for querying the 
   },
   definitions: [
     {
-      title: 'Props',
-      type: 'CreateCustomerClientGeneratedType',
+      title: 'createCustomerAccountClient(options)',
+      type: 'CustomerClientOptions',
+      description: '',
+    },
+    {
+      title: 'Returns',
+      type: 'CustomerClientForDocs',
       description: '',
     },
   ],

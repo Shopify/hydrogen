@@ -50,7 +50,7 @@ export async function refreshToken({
   if (!refreshToken)
     throw new BadRequest(
       'Unauthorized',
-      'No refreshToken found in the session. Make sure your session is configured correctly and passed to `createCustomerClient`.',
+      'No refreshToken found in the session. Make sure your session is configured correctly and passed to `createCustomerAccountClient`.',
     );
 
   newBody.append('grant_type', 'refresh_token');

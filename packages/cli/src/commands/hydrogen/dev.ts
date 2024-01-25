@@ -1,5 +1,6 @@
 import path from 'node:path';
 import fs from 'node:fs/promises';
+import type {ChildProcess} from 'node:child_process';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
@@ -15,6 +16,7 @@ import {
 import {createRemixLogger, enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
 import {
   commonFlags,
+  deprecated,
   flagsToCamelObject,
   overrideFlag,
 } from '../../lib/flags.js';
@@ -45,7 +47,8 @@ export default class Dev extends Command {
   static flags = {
     path: commonFlags.path,
     port: commonFlags.port,
-    worker: commonFlags.workerRuntime,
+    worker: deprecated('--worker', {isBoolean: true}),
+    'legacy-runtime': commonFlags.legacyRuntime,
     codegen: overrideFlag(commonFlags.codegen, {
       description:
         commonFlags.codegen.description! +
@@ -89,7 +92,7 @@ type DevOptions = {
   port: number;
   path?: string;
   codegen?: boolean;
-  worker?: boolean;
+  legacyRuntime?: boolean;
   codegenConfigPath?: string;
   disableVirtualRoutes?: boolean;
   disableVersionCheck?: boolean;
@@ -99,11 +102,11 @@ type DevOptions = {
   inspectorPort: number;
 };
 
-async function runDev({
+export async function runDev({
   port: appPort,
   path: appPath,
   codegen: useCodegen = false,
-  worker: workerRuntime = false,
+  legacyRuntime = false,
   codegenConfigPath,
   disableVirtualRoutes,
   envBranch,
@@ -146,9 +149,9 @@ async function runDev({
   const serverBundleExists = () => fileExists(buildPathWorkerFile);
 
   inspectorPort = debug ? await findPort(inspectorPort) : inspectorPort;
-  appPort = workerRuntime ? await findPort(appPort) : appPort; // findPort is already called for Node sandbox
+  appPort = legacyRuntime ? appPort : await findPort(appPort); // findPort is already called for Node sandbox
 
-  const assetsPort = workerRuntime ? await findPort(appPort + 100) : 0;
+  const assetsPort = legacyRuntime ? 0 : await findPort(appPort + 100);
   if (assetsPort) {
     // Note: Set this env before loading Remix config!
     process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
@@ -178,6 +181,7 @@ async function runDev({
     : undefined;
 
   let miniOxygen: MiniOxygen;
+  let codegenProcess: ChildProcess;
   async function safeStartMiniOxygen() {
     if (miniOxygen) return;
 
@@ -193,7 +197,7 @@ async function runDev({
         buildPathClient,
         env: await envPromise,
       },
-      workerRuntime,
+      legacyRuntime,
     );
 
     enhanceH2Logs({host: miniOxygen.listeningAt, ...remixConfig});
@@ -217,7 +221,10 @@ async function runDev({
     });
 
     if (useCodegen) {
-      spawnCodegenProcess({...remixConfig, configFilePath: codegenConfigPath});
+      codegenProcess = spawnCodegenProcess({
+        ...remixConfig,
+        configFilePath: codegenConfigPath,
+      });
     }
 
     checkRemixVersions();
@@ -230,7 +237,7 @@ async function runDev({
   const fileWatchCache = createFileWatchCache();
   let skipRebuildLogs = false;
 
-  await watch(
+  const closeWatcher = await watch(
     {
       config: remixConfig,
       options: {
@@ -331,4 +338,11 @@ async function runDev({
       },
     },
   );
+
+  return {
+    async close() {
+      codegenProcess?.kill(0);
+      await Promise.all([closeWatcher(), miniOxygen?.close()]);
+    },
+  };
 }

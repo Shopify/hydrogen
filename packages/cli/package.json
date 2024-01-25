@@ -16,6 +16,7 @@
     "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest --test-timeout=20000"
   },
   "devDependencies": {
+    "@remix-run/dev": "^2.5.1",
     "@types/diff": "^5.0.2",
     "@types/fs-extra": "^11.0.1",
     "@types/gunzip-maybe": "^1.4.0",
@@ -38,7 +39,7 @@
     "@shopify/cli-kit": "3.52.0",
     "@shopify/hydrogen-codegen": "^0.1.0",
     "@shopify/mini-oxygen": "^2.2.4",
-    "@shopify/oxygen-cli": "^3.1.5",
+    "@shopify/oxygen-cli": "^4.0.0",
     "ansi-escapes": "^6.2.0",
     "cli-truncate": "^4.0.0",
     "diff": "^5.1.0",
@@ -46,7 +47,7 @@
     "get-port": "^7.0.0",
     "graphql-config": "5.0.3",
     "gunzip-maybe": "^1.4.2",
-    "miniflare": "3.20231016.0",
+    "miniflare": "3.20231218.2",
     "prettier": "^2.8.4",
     "semver": "^7.5.3",
     "source-map": "^0.7.4",

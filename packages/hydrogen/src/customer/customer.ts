@@ -116,9 +116,9 @@ export type CustomerClient = {
 type CustomerClientOptions = {
   /** The client requires a session to persist the auth and refresh token. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */
   session: HydrogenSession;
-  /** Unique UUID prefixed with `shp_` associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountId. Use h2 env pull to link your store credentials. */
+  /** Unique UUID prefixed with `shp_` associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountId. Use `h2 env pull` to link your store credentials. */
   customerAccountId: string;
-  /** The account URL associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountUrl. Use h2 env pull to link your store credentials. */
+  /** The account URL associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountUrl. Use `h2 env pull` to link your store credentials. */
   customerAccountUrl: string;
   /** Override the version of the API */
   customerApiVersion?: string;
@@ -130,7 +130,7 @@ type CustomerClientOptions = {
   authUrl?: string;
 };
 
-export function createCustomerClient({
+export function createCustomerAccountClient({
   session,
   customerAccountId,
   customerAccountUrl,
@@ -140,20 +140,20 @@ export function createCustomerClient({
   authUrl = '/account/authorize',
 }: CustomerClientOptions): CustomerClient {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
-    console.log(
-      `[h2:warn:createCustomerClient] You are using Customer Account API version ${customerApiVersion} when this version of Hydrogen was built for ${DEFAULT_CUSTOMER_API_VERSION}.`,
+    console.warn(
+      `[h2:warn:createCustomerAccountClient] You are using Customer Account API version ${customerApiVersion} when this version of Hydrogen was built for ${DEFAULT_CUSTOMER_API_VERSION}.`,
     );
   }
 
   if (!customerAccountId || !customerAccountUrl) {
-    console.log(
-      "[h2:warn:createCustomerClient] customerAccountId and customerAccountUrl need to be provided to use Customer Account API. mock.shop doesn't automatically supply these variables. Use `h2 env pull` to link your store credentials.",
+    console.warn(
+      "[h2:warn:createCustomerAccountClient] `customerAccountId` and `customerAccountUrl` need to be provided to use Customer Account API. Mock.shop doesn't automatically supply these variables.\nUse `h2 env pull` to link your store credentials.",
     );
   }
 
   if (!request?.url) {
     throw new Error(
-      '[h2:error:createCustomerClient] The request object does not contain a URL.',
+      '[h2:error:createCustomerAccountClient] The request object does not contain a URL.',
     );
   }
   const url = new URL(request.url);
@@ -393,7 +393,7 @@ export function createCustomerClient({
         clearSession(session);
         throw new BadRequest(
           'Unauthorized',
-          'The session state does not match the state parameter. Make sure that the session is configured correctly and passed to `createCustomerClient`.',
+          'The session state does not match the state parameter. Make sure that the session is configured correctly and passed to `createCustomerAccountClient`.',
         );
       }
 
@@ -413,7 +413,7 @@ export function createCustomerClient({
       if (!codeVerifier)
         throw new BadRequest(
           'Unauthorized',
-          'No code verifier found in the session. Make sure that the session is configured correctly and passed to `createCustomerClient`.',
+          'No code verifier found in the session. Make sure that the session is configured correctly and passed to `createCustomerAccountClient`.',
         );
 
       body.append('code_verifier', codeVerifier);
@@ -482,3 +482,31 @@ export function createCustomerClient({
     },
   };
 }
+
+export type CustomerClientForDocs = {
+  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. An optional `redirectPath` parameter defines the final path the user lands on at the end of the oAuth flow. It defaults to `/`. */
+  login?: (redirectPath?: string) => Promise<Response>;
+  /** On successful login, the user redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings. */
+  authorize?: () => Promise<Response>;
+  /** Returns if the user is logged in. It also checks if the access token is expired and refreshes it if needed. */
+  isLoggedIn?: () => Promise<boolean>;
+  /** Returns CustomerAccessToken if the user is logged in. It also run a expirey check and does a token refresh if needed. */
+  getAccessToken?: () => Promise<string | undefined>;
+  /** Logout the user by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. */
+  logout?: () => Promise<Response>;
+  /** Execute a GraphQL query against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
+  query?: <TData = any>(
+    query: string,
+    options: CustomerClientQueryOptionsForDocs,
+  ) => Promise<TData>;
+  /** Execute a GraphQL mutation against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
+  mutate?: <TData = any>(
+    mutation: string,
+    options: CustomerClientQueryOptionsForDocs,
+  ) => Promise<TData>;
+};
+
+export type CustomerClientQueryOptionsForDocs = {
+  /** The variables for the GraphQL statement. */
+  variables?: Record<string, unknown>;
+};

@@ -22,6 +22,7 @@ import {createSymlink, remove as rmdir} from 'fs-extra/esm';
 import {runCheckRoutes} from './check.js';
 import {runCodegen} from './codegen.js';
 import {runBuild} from './build.js';
+import {runDev} from './dev.js';
 
 const {renderTasksHook} = vi.hoisted(() => ({renderTasksHook: vi.fn()}));
 
@@ -748,21 +749,70 @@ describe('init', () => {
           const clientAnalysisPath = 'dist/worker/client-bundle-analyzer.html';
           const workerAnalysisPath = 'dist/worker/worker-bundle-analyzer.html';
 
-          expect(
+          await expect(
             fileExists(joinPath(tmpDir, clientAnalysisPath)),
           ).resolves.toBeTruthy();
 
-          expect(
+          await expect(
             fileExists(joinPath(tmpDir, workerAnalysisPath)),
           ).resolves.toBeTruthy();
 
-          expect(await readFile(joinPath(tmpDir, clientAnalysisPath))).toMatch(
-            /globalThis\.METAFILE = '.+';/g,
-          );
+          await expect(
+            readFile(joinPath(tmpDir, clientAnalysisPath)),
+          ).resolves.toMatch(/globalThis\.METAFILE = '.+';/g);
 
-          expect(await readFile(joinPath(tmpDir, workerAnalysisPath))).toMatch(
-            /globalThis\.METAFILE = '.+';/g,
-          );
+          await expect(
+            readFile(joinPath(tmpDir, workerAnalysisPath)),
+          ).resolves.toMatch(/globalThis\.METAFILE = '.+';/g);
+        });
+      });
+
+      it('runs dev in the generated project', async () => {
+        await inTemporaryDirectory(async (tmpDir) => {
+          await runInit({
+            path: tmpDir,
+            git: true,
+            language: 'ts',
+            styling: 'postcss',
+            i18n: 'subfolders',
+            routes: true,
+            installDeps: true,
+          });
+
+          // Clear previous success messages
+          outputMock.clear();
+
+          const port = 1337;
+
+          const {close} = await runDev({
+            path: tmpDir,
+            port,
+            inspectorPort: 9000,
+            disableVirtualRoutes: true,
+            disableVersionCheck: true,
+          });
+
+          try {
+            await vi.waitFor(
+              () => expect(outputMock.output()).toMatch('success'),
+              {timeout: 5000},
+            );
+
+            expect(outputMock.output()).toMatch(/View Hydrogen app/i);
+
+            await expect(
+              fileExists(joinPath(tmpDir, 'dist', 'worker', 'index.js')),
+            ).resolves.toBeTruthy();
+
+            // await expect(runBuild({directory: tmpDir})).resolves.not.toThrow();
+
+            const response = await fetch(`http://localhost:${port}`);
+            expect(response.status).toEqual(200);
+            expect(response.headers.get('content-type')).toEqual('text/html');
+            await expect(response.text()).resolves.toMatch('Mock.shop');
+          } finally {
+            await close();
+          }
         });
       });
     });

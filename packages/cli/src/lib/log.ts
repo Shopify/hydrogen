@@ -59,6 +59,15 @@ function debounceMessage(args: unknown[], debounceFor?: true | number) {
   return false;
 }
 
+function warningDebouncer([first]: unknown[]) {
+  return typeof first === 'string' &&
+    // Show these warnings only once.
+    (first.includes('[h2:warn:createStorefrontClient]') ||
+      first.includes('[h2:warn:createCustomerAccountClient]'))
+    ? true
+    : undefined;
+}
+
 function injectLogReplacer(
   method: ConsoleMethod,
   debouncer?: (args: unknown[]) => true | number | undefined,
@@ -86,12 +95,12 @@ function injectLogReplacer(
 }
 
 /**
- * Mute logs from Miniflare
+ * Mute logs from Miniflare / Workerd
  */
 export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
   injectLogReplacer('log');
   injectLogReplacer('error');
-  injectLogReplacer('warn');
+  injectLogReplacer('warn', warningDebouncer);
 
   let isFirstWorkerReload = true;
   addMessageReplacers('dev-node', [
@@ -118,19 +127,34 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
 
   addMessageReplacers(
     'dev-workerd',
+    // Workerd logs
     [
-      // Workerd logs
       ([first]) =>
-        typeof first === 'string' && /^\x1B\[31m(workerd\/|stack:)/.test(first),
+        typeof first === 'string' &&
+        /^\x1B\[31m(workerd\/|stack:( (0|[a-f\d]{4,})){3,})/.test(first),
+      () => {},
+    ],
+    [
+      ([first]) =>
+        typeof first === 'string' &&
+        /\$LLVM_SYMBOLIZER|recursive isolate lock/.test(first),
       () => {},
     ],
 
-    // Non-actionable warnings/errors:
+    // Non-actionable warnings:
     [
       ([first]) =>
         typeof first === 'string' && /^A promise rejection/i.test(first),
       () => {},
     ],
+    [
+      ([first]) =>
+        typeof first === 'string' &&
+        /resolved to multiple addresses/i.test(first), // For win32
+      () => {},
+    ],
+
+    // Non-actionable errors:
     [
       ([first]) => {
         const message = first?.message ?? first;
@@ -224,12 +248,7 @@ export function muteAuthLogs({
  */
 export function enhanceH2Logs(options: {rootDirectory: string; host: string}) {
   injectLogReplacer('error');
-  injectLogReplacer('warn', ([first]) =>
-    // Show createStorefrontClient warnings only once.
-    (first as any)?.includes?.('[h2:warn:createStorefrontClient]')
-      ? true
-      : undefined,
-  );
+  injectLogReplacer('warn', warningDebouncer);
 
   addMessageReplacers('h2-warn', [
     ([first]) => {
@@ -255,10 +274,12 @@ export function enhanceH2Logs(options: {rootDirectory: string; host: string}) {
       const lines = message.split('\n');
       const lastLine = lines.at(-1) ?? '';
       const hasLinks = /https?:\/\//.test(lastLine);
-      if (hasLinks) lines.pop();
+      const hasCommands = /`h2 [^`]+`/.test(lastLine);
+
+      if (hasLinks || hasCommands) lines.pop();
 
       if (type === 'error' || errorObject) {
-        let tryMessage = hasLinks ? lastLine : undefined;
+        let tryMessage = hasLinks || hasCommands ? lastLine : undefined;
         let stack = errorObject?.stack;
         let cause = errorObject?.cause as
           | {[key: string]: any; graphql?: {query: string; variables: string}}
@@ -337,6 +358,13 @@ export function enhanceH2Logs(options: {rootDirectory: string; host: string}) {
       render({
         body: headline + colors.bold(lines.join('\n')),
         reference,
+        nextSteps: hasCommands
+          ? [
+              lastLine.replace(/`h2 [^`]+`/g, (cmd) =>
+                colors.bold(colors.yellow(cmd)),
+              ),
+            ]
+          : undefined,
       });
 
       return;
