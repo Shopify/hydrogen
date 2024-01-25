@@ -1,6 +1,6 @@
 # @shopify/hydrogen
 
-## 2025.0.0
+## 2024.1.0
 
 ### Major Changes
 
@@ -59,7 +59,7 @@
 - Fix error stack traces thrown by API clients if promises are not awaited ([#1656](https://github.com/Shopify/hydrogen/pull/1656)) by [@frandiox](https://github.com/frandiox)
 
 - Updated dependencies [[`0629bc77`](https://github.com/Shopify/hydrogen/commit/0629bc779b4dab3482b502cde0cc67d32f41f2f2), [`dc8f90de`](https://github.com/Shopify/hydrogen/commit/dc8f90de38d1bf7166bbf2e219f6d9e6f55250c6), [`ca1161b2`](https://github.com/Shopify/hydrogen/commit/ca1161b29ad7b4d0838953782fb114d5fe82193a)]:
-  - @shopify/hydrogen-react@2025.0.0
+  - @shopify/hydrogen-react@2024.1.0
 
 ## 2023.10.3
 
