@@ -14,10 +14,7 @@ function TrackPageView() {
   const location = useLocation();
 
   useEffect(() => {
-    window.gtag({
-      event: 'pageView',
-      data: {path: location.pathname, title: document.title},
-    });
+    window.gtag('event', 'page_view', {path: location.pathname, title: document.title});
   }, []);
 
   return <pre>pageView event tracked</pre>;

@@ -1,4 +1,4 @@
-/* Partytown 0.8.1 - MIT builder.io */
+/* Partytown 0.8.2 - MIT builder.io */
 const resolves = new Map;
 
 const swMessageError = (accessReq, $error$) => ({
@@ -52,7 +52,7 @@ self.onfetch = ev => {
     const url = new URL(req.url);
     const pathname = url.pathname;
     if (pathname.endsWith("sw.html")) {
-        ev.respondWith(response('<!DOCTYPE html><html><head><meta charset="utf-8"><script src="./partytown-sandbox-sw.js?v=0.8.1"><\/script></head></html>'));
+        ev.respondWith(response('<!DOCTYPE html><html><head><meta charset="utf-8"><script src="./partytown-sandbox-sw.js?v=0.8.2"><\/script></head></html>'));
     } else {
         pathname.endsWith("proxytown") && ev.respondWith(httpRequestFromWebWorker(req));
     }

@@ -1,4 +1,4 @@
-/* Partytown 0.8.1 - MIT builder.io */
+/* Partytown 0.8.2 - MIT builder.io */
 (window => {
     const isPromise = v => "object" == typeof v && v && v.then;
     const noop = () => {};
@@ -282,11 +282,12 @@
         let win = winCtx.$window$;
         let doc = win.document;
         let scriptSelector = 'script[type="text/partytown"]:not([data-ptid]):not([data-pterror])';
+        let blockingScriptSelector = scriptSelector + ":not([async]):not([defer])";
         let scriptElm;
         let $instanceId$;
         let scriptData;
         if (doc && doc.body) {
-            scriptElm = doc.querySelector('script[type="text/partytown"]:not([data-ptid]):not([data-pterror]):not([async]):not([defer])');
+            scriptElm = doc.querySelector(blockingScriptSelector);
             scriptElm || (scriptElm = doc.querySelector(scriptSelector));
             if (scriptElm) {
                 scriptElm.dataset.ptid = $instanceId$ = getAndSetInstanceId(scriptElm, $winId$);
@@ -367,16 +368,14 @@
             const pushState = history.pushState.bind(history);
             const replaceState = history.replaceState.bind(history);
             const onLocationChange = (type, state, newUrl, oldUrl) => () => {
-                setTimeout((() => {
-                    worker.postMessage([ 13, {
-                        $winId$: $winId$,
-                        type: type,
-                        state: state,
-                        url: doc.baseURI,
-                        newUrl: newUrl,
-                        oldUrl: oldUrl
-                    } ]);
-                }));
+                worker.postMessage([ 13, {
+                    $winId$: $winId$,
+                    type: type,
+                    state: state,
+                    url: doc.baseURI,
+                    newUrl: newUrl,
+                    oldUrl: oldUrl
+                } ]);
             };
             history.pushState = (state, _, newUrl) => {
                 pushState(state, _, newUrl);
@@ -557,14 +556,14 @@
         };
     })(((accessReq, responseCallback) => mainAccessHandler(worker, accessReq).then(responseCallback))).then((onMessageHandler => {
         if (onMessageHandler) {
-            worker = new Worker(libPath + "partytown-ww-atomics.js?v=0.8.1", {
+            worker = new Worker(libPath + "partytown-ww-atomics.js?v=0.8.2", {
                 name: "Partytown 🎉"
             });
             worker.onmessage = ev => {
                 const msg = ev.data;
                 12 === msg[0] ? mainAccessHandler(worker, msg[1]) : onMessageHandler(worker, msg);
             };
-            logMain("Created Partytown web worker (0.8.1)");
+            logMain("Created Partytown web worker (0.8.2)");
             worker.onerror = ev => console.error("Web Worker Error", ev);
             mainWindow.addEventListener("pt1", (ev => registerWindow(worker, getAndSetInstanceId(ev.detail.frameElement), ev.detail)));
         }

@@ -1,4 +1,4 @@
-/* Partytown 0.8.1 - MIT builder.io */
+/* Partytown 0.8.2 - MIT builder.io */
 (self => {
     const WinIdKey = Symbol();
     const InstanceIdKey = Symbol();
@@ -706,7 +706,11 @@
     };
     const run = (env, scriptContent, scriptUrl) => {
         env.$runWindowLoadEvent$ = 1;
-        scriptContent = `with(this){${scriptContent.replace(/\bthis\b/g, ((match, offset, originalStr) => offset > 0 && "$" !== originalStr[offset - 1] ? "(thi$(this)?window:this)" : match)).replace(/\/\/# so/g, "//Xso")}\n;function thi$(t){return t===this}};${(webWorkerCtx.$config$.globalFns || []).filter((globalFnName => /[a-zA-Z_$][0-9a-zA-Z_$]*/.test(globalFnName))).map((g => `(typeof ${g}=='function'&&(this.${g}=${g}))`)).join(";")};` + (scriptUrl ? "\n//# sourceURL=" + scriptUrl : "");
+        let sourceWithReplacedThis = ((scriptContent, newThis) => scriptContent.replace(/([a-zA-Z0-9_$\.\'\"\`])?(\.\.\.)?this(?![a-zA-Z0-9_$:])/g, ((match, p1, p2) => {
+            const prefix = (p1 || "") + (p2 || "");
+            return null != p1 ? prefix + "this" : prefix + newThis;
+        })))(scriptContent, "(thi$(this)?window:this)");
+        scriptContent = `with(this){${sourceWithReplacedThis.replace(/\/\/# so/g, "//Xso")}\n;function thi$(t){return t===this}};${(webWorkerCtx.$config$.globalFns || []).filter((globalFnName => /[a-zA-Z_$][0-9a-zA-Z_$]*/.test(globalFnName))).map((g => `(typeof ${g}=='function'&&(this.${g}=${g}))`)).join(";")};` + (scriptUrl ? "\n//# sourceURL=" + scriptUrl : "");
         env.$isSameOrigin$ || (scriptContent = scriptContent.replace(/.postMessage\(/g, `.postMessage('${env.$winId$}',`));
         new Function(scriptContent).call(env.$window$);
         env.$runWindowLoadEvent$ = 0;
@@ -736,7 +740,7 @@
         return resolvedUrl;
     };
     const resolveUrl = (env, url, type) => resolveToUrl(env, url, type) + "";
-    const getPartytownScript = () => `<script src="${partytownLibUrl("partytown.js?v=0.8.1")}"><\/script>`;
+    const getPartytownScript = () => `<script src="${partytownLibUrl("partytown.js?v=0.8.2")}"><\/script>`;
     const createImageConstructor = env => class HTMLImageElement {
         constructor() {
             this.s = "";
@@ -767,6 +771,10 @@
         addEventListener(eventName, cb) {
             "load" === eventName && this.l.push(cb);
             "error" === eventName && this.e.push(cb);
+        }
+        removeEventListener(eventName, cb) {
+            "load" === eventName && (this.l = this.l.filter((fn => fn !== cb)));
+            "error" === eventName && (this.e = this.e.filter((fn => fn !== cb)));
         }
         get onload() {
             return this.l[0];
@@ -844,7 +852,7 @@
                     setter(this, [ "src" ], url);
                     orgUrl !== url && setter(this, [ "dataset", "ptsrc" ], orgUrl);
                     if (this.type && config.loadScriptsOnMainThread) {
-                        const shouldExecuteScriptViaMainThread = config.loadScriptsOnMainThread.some((scriptUrl => scriptUrl === url));
+                        const shouldExecuteScriptViaMainThread = config.loadScriptsOnMainThread.some((scriptUrl => new RegExp(scriptUrl).test(url)));
                         shouldExecuteScriptViaMainThread && setter(this, [ "type" ], "text/javascript");
                     }
                 }
@@ -1053,6 +1061,11 @@
                     return getter(this, [ "images" ]);
                 }
             },
+            scripts: {
+                get() {
+                    return getter(this, [ "scripts" ]);
+                }
+            },
             implementation: {
                 get() {
                     return {
@@ -1147,6 +1160,9 @@
                     let href;
                     if ("string" != typeof value) {
                         href = getter(this, [ "href" ]);
+                        if ("" === href) {
+                            return "protocol" === anchorProp ? ":" : "";
+                        }
                         setInstanceStateValue(this, 4, href);
                         value = new URL(href)[anchorProp];
                     }
@@ -1356,6 +1372,11 @@
         const WorkerWindow = defineConstructorName(class extends WorkerBase {
             constructor() {
                 super($winId$, $winId$);
+                this.addEventListener = (...args) => {
+                    "load" === args[0] ? env.$runWindowLoadEvent$ && setTimeout((() => args[1]({
+                        type: "load"
+                    }))) : callMethod(this, [ "addEventListener" ], args, 2);
+                };
                 let win = this;
                 let value;
                 let historyState;
@@ -1365,7 +1386,7 @@
                         (() => {
                             if (!webWorkerCtx.$initWindowMedia$) {
                                 self.$bridgeToMedia$ = [ getter, setter, callMethod, constructGlobal, definePrototypePropertyDescriptor, randomId, WinIdKey, InstanceIdKey, ApplyPathKey ];
-                                webWorkerCtx.$importScripts$(partytownLibUrl("partytown-media.js?v=0.8.1"));
+                                webWorkerCtx.$importScripts$(partytownLibUrl("partytown-media.js?v=0.8.2"));
                                 webWorkerCtx.$initWindowMedia$ = self.$bridgeFromMedia$;
                                 delete self.$bridgeFromMedia$;
                             }
@@ -1560,11 +1581,6 @@
                     };
                 }
                 win.Worker = void 0;
-            }
-            addEventListener(...args) {
-                "load" === args[0] ? env.$runWindowLoadEvent$ && setTimeout((() => args[1]({
-                    type: "load"
-                }))) : callMethod(this, [ "addEventListener" ], args, 2);
             }
             get body() {
                 return env.$body$;

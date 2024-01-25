@@ -1,4 +1,4 @@
-/* Partytown 0.8.1 - MIT builder.io */
+/* Partytown 0.8.2 - MIT builder.io */
 (self => {
     const [getter, setter, callMethod, constructGlobal, definePrototypePropertyDescriptor, randomId, WinIdKey, InstanceIdKey, ApplyPathKey] = self.$bridgeToMedia$;
     delete self.$bridgeToMedia$;

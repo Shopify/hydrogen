@@ -1,6 +1,7 @@
 /// <reference types="@remix-run/dev" />
 /// <reference types="@shopify/remix-oxygen" />
 /// <reference types="@shopify/oxygen-workers-types" />
+/// <reference types="@types/gtag.js" />
 
 // Enhance TypeScript's built-in typings.
 import '@total-typescript/ts-reset';
