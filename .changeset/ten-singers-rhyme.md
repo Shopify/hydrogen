@@ -2,4 +2,6 @@
 '@shopify/cli-hydrogen': minor
 ---
 
-Support scaffolding projects based on examples in Hydrogen repo using the `--template` flag. Example: `npm create @shopify/hydrogen@latest -- --template multipass`.
+Add `--template` flag to enable scaffolding projects based on [examples](https://github.com/Shopify/hydrogen/tree/main/examples) from the Hydrogen repo.
+
+Example: `npm create @shopify/hydrogen@latest -- --template multipass`.

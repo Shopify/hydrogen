@@ -2,4 +2,4 @@
 '@shopify/hydrogen': patch
 ---
 
-🐛 fix content security policy for local enviorment for not recognizing localhost asset server as a valid policy
+Fix content security policy to recognize `localhost` asset server as a valid source when running the `dev` command

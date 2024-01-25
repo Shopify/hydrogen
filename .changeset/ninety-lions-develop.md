@@ -1,5 +1,5 @@
 ---
-'@shopify/hydrogen': patch
+'@shopify/hydrogen': minor
 ---
 
-✨ Make customer client utility official.
+Introduce the new [`createCustomerAccountClient`](https://shopify.dev/docs/api/hydrogen/2024-01/utilities/createcustomeraccountclient) for interacting with the Customer Account API
