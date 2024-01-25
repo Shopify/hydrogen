@@ -1,9 +1,4 @@
-import type {
-  ClientReturn,
-  ClientVariablesInRestParams,
-  GenericVariables,
-} from '@shopify/hydrogen-codegen';
-import type {HydrogenSession} from '../hydrogen';
+import type {GenericVariables} from '@shopify/hydrogen-codegen';
 import {
   DEFAULT_CUSTOMER_API_VERSION,
   CUSTOMER_ACCOUNT_SESSION_KEY,
@@ -27,108 +22,39 @@ import {
   minifyQuery,
   assertQuery,
   assertMutation,
-  throwGraphQLError,
+  throwErrorWithGqlLink,
   type GraphQLErrorOptions,
 } from '../utils/graphql';
 import {parseJSON} from '../utils/parse-json';
 import {hashKey} from '../utils/hash';
-import {CrossRuntimeRequest, getDebugHeaders} from '../utils/request';
+import {
+  CrossRuntimeRequest,
+  getHeader,
+  getDebugHeaders,
+} from '../utils/request';
 import {
   getCallerStackLine,
   withSyncStack,
   type StackInfo,
 } from '../utils/callsites';
+import {getRedirectUrl} from '../utils/get-redirect-url';
+import type {CustomerClientOptions, CustomerClient} from './types';
 
-type CustomerAPIResponse<ReturnType> = {
-  data: ReturnType;
-  errors: Array<{
-    message: string;
-    locations?: Array<{line: number; column: number}>;
-    path?: Array<string>;
-    extensions: {code: string};
-  }>;
-  extensions: {
-    cost: {
-      requestQueryCost: number;
-      actualQueryCakes: number;
-      throttleStatus: {
-        maximumAvailable: number;
-        currentAvailable: number;
-        restoreRate: number;
-      };
-    };
-  };
-};
+const DEFAULT_LOGIN_URL = '/account/login';
+const DEFAULT_AUTH_URL = '/account/authorize';
+const DEFAULT_REDIRECT_PATH = '/account';
 
-export interface CustomerAccountQueries {
-  // Example of how a generated query type looks like:
-  // '#graphql query q1 {...}': {return: Q1Query; variables: Q1QueryVariables};
+function defaultAuthStatusHandler(request: CrossRuntimeRequest) {
+  if (!request.url) return DEFAULT_LOGIN_URL;
+
+  const {pathname} = new URL(request.url);
+
+  const redirectTo =
+    DEFAULT_LOGIN_URL +
+    `?${new URLSearchParams({return_to: pathname}).toString()}`;
+
+  return redirect(redirectTo);
 }
-
-export interface CustomerAccountMutations {
-  // Example of how a generated mutation type looks like:
-  // '#graphql mutation m1 {...}': {return: M1Mutation; variables: M1MutationVariables};
-}
-
-export type CustomerClient = {
-  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. An optional `redirectPath` parameter defines the final path the user lands on at the end of the oAuth flow. It defaults to `/`. */
-  login: (redirectPath?: string) => Promise<Response>;
-  /** On successful login, the user redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings. */
-  authorize: () => Promise<Response>;
-  /** Returns if the user is logged in. It also checks if the access token is expired and refreshes it if needed. */
-  isLoggedIn: () => Promise<boolean>;
-  /** Returns CustomerAccessToken if the user is logged in. It also run a expirey check and does a token refresh if needed. */
-  getAccessToken: () => Promise<string | undefined>;
-  /** Logout the user by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. */
-  logout: () => Promise<Response>;
-  /** Execute a GraphQL query against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
-  query: <
-    OverrideReturnType extends any = never,
-    RawGqlString extends string = string,
-  >(
-    query: RawGqlString,
-    ...options: ClientVariablesInRestParams<
-      CustomerAccountQueries,
-      RawGqlString
-    >
-  ) => Promise<
-    CustomerAPIResponse<
-      ClientReturn<CustomerAccountQueries, RawGqlString, OverrideReturnType>
-    >
-  >;
-  /** Execute a GraphQL mutation against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
-  mutate: <
-    OverrideReturnType extends any = never,
-    RawGqlString extends string = string,
-  >(
-    mutation: RawGqlString,
-    ...options: ClientVariablesInRestParams<
-      CustomerAccountMutations,
-      RawGqlString
-    >
-  ) => Promise<
-    CustomerAPIResponse<
-      ClientReturn<CustomerAccountMutations, RawGqlString, OverrideReturnType>
-    >
-  >;
-};
-
-type CustomerClientOptions = {
-  /** The client requires a session to persist the auth and refresh token. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */
-  session: HydrogenSession;
-  /** Unique UUID prefixed with `shp_` associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountId. Use `h2 env pull` to link your store credentials. */
-  customerAccountId: string;
-  /** The account URL associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountUrl. Use `h2 env pull` to link your store credentials. */
-  customerAccountUrl: string;
-  /** Override the version of the API */
-  customerApiVersion?: string;
-  /** The object for the current Request. It should be provided by your platform. */
-  request: CrossRuntimeRequest;
-  /** The waitUntil function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
-  waitUntil?: ExecutionContext['waitUntil'];
-  /** This is the route in your app that authorizes the user after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/account/authorize`. */
-  authUrl?: string;
-};
 
 export function createCustomerAccountClient({
   session,
@@ -137,7 +63,8 @@ export function createCustomerAccountClient({
   customerApiVersion = DEFAULT_CUSTOMER_API_VERSION,
   request,
   waitUntil,
-  authUrl = '/account/authorize',
+  authUrl = DEFAULT_AUTH_URL,
+  customAuthStatusHandler,
 }: CustomerClientOptions): CustomerClient {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.warn(
@@ -156,6 +83,9 @@ export function createCustomerAccountClient({
       '[h2:error:createCustomerAccountClient] The request object does not contain a URL.',
     );
   }
+  const authStatusHandler = customAuthStatusHandler
+    ? customAuthStatusHandler
+    : () => defaultAuthStatusHandler(request);
   const url = new URL(request.url);
   const origin =
     url.protocol === 'http:' ? url.origin.replace('http', 'https') : url.origin;
@@ -190,29 +120,15 @@ export function createCustomerAccountClient({
     type: 'query' | 'mutation';
     variables?: GenericVariables;
   }) {
-    const customerAccount = session.get(CUSTOMER_ACCOUNT_SESSION_KEY);
-    const accessToken = customerAccount?.accessToken;
-    const expiresAt = customerAccount?.expiresAt;
-
-    if (!accessToken || !expiresAt)
-      throw new BadRequest(
-        'Unauthorized',
-        'Login before querying the Customer Account API.',
-      );
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      throw authStatusHandler();
+    }
 
     // Get stack trace before losing it with any async operation.
     // Since this is an internal function that is always called from
     // the public query/mutate wrappers, add 1 to the stack offset.
     const stackInfo = getCallerStackLine?.(1);
-
-    await checkExpires({
-      locks,
-      expiresAt,
-      session,
-      customerAccountId,
-      customerAccountUrl,
-      origin,
-    });
 
     const startTime = new Date().getTime();
     const url = `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`;
@@ -246,6 +162,12 @@ export function createCustomerAccountClient({
     };
 
     if (!response.ok) {
+      if (response.status === 401) {
+        // clear session because current access token is invalid
+        clearSession(session);
+        throw authStatusHandler();
+      }
+
       /**
        * The Customer API might return a string error, or a JSON-formatted {error: string}.
        * We try both and conform them to a single {errors} format.
@@ -257,13 +179,13 @@ export function createCustomerAccountClient({
         errors = [{message: body}];
       }
 
-      throwGraphQLError({...errorOptions, errors});
+      throwErrorWithGqlLink({...errorOptions, errors});
     }
 
     try {
       return parseJSON(body);
     } catch (e) {
-      throwGraphQLError({...errorOptions, errors: [{message: body}]});
+      throwErrorWithGqlLink({...errorOptions, errors: [{message: body}]});
     }
   }
 
@@ -297,8 +219,21 @@ export function createCustomerAccountClient({
     return true;
   }
 
+  async function handleAuthStatus() {
+    if (!(await isLoggedIn())) {
+      throw authStatusHandler();
+    }
+  }
+
+  async function getAccessToken() {
+    const hasAccessToken = await isLoggedIn();
+
+    if (hasAccessToken)
+      return session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.accessToken;
+  }
+
   return {
-    login: async (redirectPath?: string) => {
+    login: async () => {
       const loginUrl = new URL(customerAccountUrl + '/auth/oauth/authorize');
 
       const state = await generateState();
@@ -323,7 +258,10 @@ export function createCustomerAccountClient({
         codeVerifier: verifier,
         state,
         nonce,
-        redirectPath,
+        redirectPath:
+          getRedirectUrl(request.url) ||
+          getHeader(request, 'Referer') ||
+          DEFAULT_REDIRECT_PATH,
       });
 
       loginUrl.searchParams.append('code_challenge', challenge);
@@ -352,15 +290,8 @@ export function createCustomerAccountClient({
       );
     },
     isLoggedIn,
-    getAccessToken: async () => {
-      const hasAccessToken = await isLoggedIn;
-
-      if (!hasAccessToken) {
-        return;
-      } else {
-        return session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.accessToken;
-      }
-    },
+    handleAuthStatus,
+    getAccessToken,
     mutate(mutation, options?) {
       mutation = minifyQuery(mutation);
       assertMutation(mutation, 'customer.mutate');
@@ -474,7 +405,7 @@ export function createCustomerAccountClient({
         redirectPath: undefined,
       });
 
-      return redirect(redirectPath || '/', {
+      return redirect(redirectPath || DEFAULT_REDIRECT_PATH, {
         headers: {
           'Set-Cookie': await session.commit(),
         },
@@ -482,31 +413,3 @@ export function createCustomerAccountClient({
     },
   };
 }
-
-export type CustomerClientForDocs = {
-  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the user to a login domain. An optional `redirectPath` parameter defines the final path the user lands on at the end of the oAuth flow. It defaults to `/`. */
-  login?: (redirectPath?: string) => Promise<Response>;
-  /** On successful login, the user redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings. */
-  authorize?: () => Promise<Response>;
-  /** Returns if the user is logged in. It also checks if the access token is expired and refreshes it if needed. */
-  isLoggedIn?: () => Promise<boolean>;
-  /** Returns CustomerAccessToken if the user is logged in. It also run a expirey check and does a token refresh if needed. */
-  getAccessToken?: () => Promise<string | undefined>;
-  /** Logout the user by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. */
-  logout?: () => Promise<Response>;
-  /** Execute a GraphQL query against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
-  query?: <TData = any>(
-    query: string,
-    options: CustomerClientQueryOptionsForDocs,
-  ) => Promise<TData>;
-  /** Execute a GraphQL mutation against the Customer Account API. Usually you should first check if the user is logged in before querying the API. */
-  mutate?: <TData = any>(
-    mutation: string,
-    options: CustomerClientQueryOptionsForDocs,
-  ) => Promise<TData>;
-};
-
-export type CustomerClientQueryOptionsForDocs = {
-  /** The variables for the GraphQL statement. */
-  variables?: Record<string, unknown>;
-};

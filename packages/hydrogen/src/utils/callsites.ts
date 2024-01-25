@@ -2,17 +2,36 @@
  * Ensures that the error of an async rejected promise
  * contains the entire synchronous stack trace.
  */
-export function withSyncStack<T>(promise: Promise<T>): Promise<T> {
+export function withSyncStack<T>(
+  promise: Promise<T>,
+  stackOffset = 0,
+): Promise<T> {
   const syncError = new Error();
-
-  return promise.catch((error: Error) => {
+  const getSyncStack = (message: string, name = 'Error') => {
     // Remove error message, caller function and current function from the stack.
-    const syncStack = (syncError.stack ?? '').split('\n').slice(3).join('\n');
+    const syncStack = (syncError.stack ?? '')
+      .split('\n')
+      .slice(3 + stackOffset)
+      .join('\n')
+      // Sometimes stack traces show loaders with a number suffix due to ESBuild.
+      .replace(/ at loader(\d+) \(/, (all, m1) => all.replace(m1, ''));
 
-    error.stack = `Error: ${error.message}\n` + syncStack;
+    return `${name}: ${message}\n` + syncStack;
+  };
 
-    throw error;
-  });
+  return promise
+    .then((result: any) => {
+      if (result?.errors && Array.isArray(result.errors)) {
+        result.errors.forEach((error: Error) => {
+          if (error) error.stack = getSyncStack(error.message, error.name);
+        });
+      }
+      return result;
+    })
+    .catch((error: Error) => {
+      if (error) error.stack = getSyncStack(error.message, error.name);
+      throw error;
+    });
 }
 
 export type StackInfo = {
@@ -59,6 +78,6 @@ export const getCallerStackLine =
 
         Error.prepareStackTrace = original;
 
-        return stackInfo;
+        return stackInfo as StackInfo | undefined;
       }
     : undefined;

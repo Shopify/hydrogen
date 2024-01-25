@@ -150,11 +150,17 @@ describe('MiniOxygen Worker Runtime', () => {
         await expect(response.text()).resolves.toEqual('Error: test');
 
         // console.error from workerd is asynchronous
-        await vi.waitFor(() => expect(spy).toHaveBeenCalled());
+        await vi.waitFor(
+          () => expect(spy.mock.calls.length).toBeGreaterThan(1), // At least 2 calls
+        );
+
+        // Note: Logs come in random order due to the fact that
+        // workerd logs are ingested using the Inspector protocol,
+        // which is based on WebSockets. We can't guarantee the order
+        // until we start using stdio for logging.
 
         // console.error with stack:
-        expect(spy).toHaveBeenNthCalledWith(
-          1,
+        expect(spy, 'Logged with sourcemaps').toHaveBeenCalledWith(
           expect.objectContaining({
             stack: expect.stringMatching(
               // Shows `doStuff` and the offending line by mapping
@@ -165,7 +171,7 @@ describe('MiniOxygen Worker Runtime', () => {
         );
 
         // Thrown error is also logged
-        expect(spy).toHaveBeenNthCalledWith(2, new Error('test'));
+        expect(spy).toHaveBeenCalledWith(new Error('test'));
 
         spy.mockClear();
 
@@ -175,11 +181,12 @@ describe('MiniOxygen Worker Runtime', () => {
         await miniOxygen.reload();
 
         await fetch('/');
-        await vi.waitFor(() => expect(spy).toHaveBeenCalled());
+        await vi.waitFor(
+          () => expect(spy.mock.calls.length).toBeGreaterThan(1), // At least 2 calls
+        );
 
         // console.error with stack:
-        expect(spy, '').toHaveBeenNthCalledWith(
-          1,
+        expect(spy, 'Logged without sourcemaps').toHaveBeenCalledWith(
           expect.objectContaining({
             stack: expect.stringMatching(
               // Doesn't show `doStuff` because it's minified
@@ -189,7 +196,7 @@ describe('MiniOxygen Worker Runtime', () => {
         );
 
         // Thrown error is also logged
-        expect(spy).toHaveBeenNthCalledWith(2, new Error('test'));
+        expect(spy).toHaveBeenCalledWith(new Error('test'));
 
         spy.mockRestore();
       },
