@@ -2,4 +2,4 @@
 '@shopify/cli-hydrogen': major
 ---
 
-The worker runtime, previously used with `--worker` flag, is now the default runtime in the `dev` and `preview` commands. The legacy Node.js sandbox runtime can still be used with the `--legacy-runtime` but will be removed in a future release.
+Make the worker runtime the default for the local development server when running `dev` and `preview`. To access the legacy Node.js runtime, pass the `--legacy-runtime` flag. The legacy runtime will be deprecated and removed in a future release.

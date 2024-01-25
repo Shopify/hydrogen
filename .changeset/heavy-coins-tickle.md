@@ -1,5 +1,5 @@
 ---
-'@shopify/hydrogen': patch
+'@shopify/hydrogen': major
 ---
 
-💥 Change the behaviour of `createContentSecurityPolicy` where the custom rules passed in will extends the default Shopify and development domains instead of overriding them.
+Custom rules passed to `createContentSecurityPolicy` now extend the default Shopify and development domains, instead of overriding them

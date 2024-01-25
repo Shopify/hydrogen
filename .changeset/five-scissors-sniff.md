@@ -3,4 +3,4 @@
 '@shopify/cli-hydrogen': patch
 ---
 
-Fixed step-debugging when running in MiniOxygen's Node.js sandbox
+Fix step-debugging when running in the Node.js sandbox

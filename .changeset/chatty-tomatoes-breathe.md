@@ -2,5 +2,4 @@
 '@shopify/hydrogen-react': patch
 ---
 
-* Format code for improved readability contributed by @sanjaiyan-dev
-* Fix `<model-viewer>`'s `onPause` event listener
+Fix `<model-viewer>`'s `onPause` event listener, with improved readability contributed by @sanjaiyan-dev

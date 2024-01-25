@@ -2,4 +2,4 @@
 '@shopify/cli-hydrogen': patch
 ---
 
-Rely on server-side check for bundle size >10mb
+Remove bundle-size check from the `build` command, in favor of checking server-side with `deploy`

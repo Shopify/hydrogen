@@ -948,7 +948,7 @@
                 "filePath": "/cart/CartForm.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "inputs",
-                "value": "{ key: string; } & OtherFormData",
+                "value": "{ key: Scalars; } & OtherFormData",
                 "description": "",
                 "isOptional": true
               }
@@ -1413,28 +1413,28 @@
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPublicTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"publicStorefrontToken\">) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPrivateTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"privateStorefrontToken\"> & { buyerIp?: string; }) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getShopifyDomain",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
@@ -1577,7 +1577,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "GraphQLFormattedError[] | undefined",
+            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -1824,7 +1824,7 @@
                 "filePath": "/cart/queries/cart-types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "cartId",
-                "value": "string",
+                "value": "Scalars",
                 "description": "The cart id.",
                 "isOptional": true,
                 "defaultValue": "cart.getCartId();"
@@ -1912,7 +1912,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "GraphQLFormattedError[] | undefined",
+            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
             "description": ""
           },
           "CartCreateFunction": {
@@ -1957,7 +1957,7 @@
               {
                 "name": "key",
                 "description": "",
-                "value": "string",
+                "value": "Scalars",
                 "filePath": "/cart/queries/cartMetafieldDeleteDefault.ts"
               },
               {
@@ -2684,28 +2684,28 @@
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPublicTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"publicStorefrontToken\">) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPrivateTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"privateStorefrontToken\"> & { buyerIp?: string; }) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getShopifyDomain",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
@@ -2848,7 +2848,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "GraphQLFormattedError[] | undefined",
+            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -2967,7 +2967,7 @@
                 "filePath": "/cart/queries/cart-types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "cartId",
-                "value": "string",
+                "value": "Scalars",
                 "description": "The cart id.",
                 "isOptional": true,
                 "defaultValue": "cart.getCartId();"
@@ -3200,28 +3200,28 @@
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPublicTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"publicStorefrontToken\">) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPrivateTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"privateStorefrontToken\"> & { buyerIp?: string; }) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getShopifyDomain",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
@@ -3364,7 +3364,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "GraphQLFormattedError[] | undefined",
+            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -3483,7 +3483,7 @@
                 "filePath": "/cart/queries/cart-types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "cartId",
-                "value": "string",
+                "value": "Scalars",
                 "description": "The cart id.",
                 "isOptional": true,
                 "defaultValue": "cart.getCartId();"
@@ -3716,28 +3716,28 @@
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPublicTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"publicStorefrontToken\">) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPrivateTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"privateStorefrontToken\"> & { buyerIp?: string; }) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getShopifyDomain",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
@@ -3880,7 +3880,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "GraphQLFormattedError[] | undefined",
+            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -3999,7 +3999,7 @@
                 "filePath": "/cart/queries/cart-types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "cartId",
-                "value": "string",
+                "value": "Scalars",
                 "description": "The cart id.",
                 "isOptional": true,
                 "defaultValue": "cart.getCartId();"
@@ -4232,28 +4232,28 @@
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPublicTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"publicStorefrontToken\">) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPrivateTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"privateStorefrontToken\"> & { buyerIp?: string; }) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getShopifyDomain",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
@@ -4396,7 +4396,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "GraphQLFormattedError[] | undefined",
+            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -4508,7 +4508,7 @@
                 "filePath": "/cart/queries/cart-types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "cartId",
-                "value": "string",
+                "value": "Scalars",
                 "description": "The cart id.",
                 "isOptional": true,
                 "defaultValue": "cart.getCartId();"
@@ -4741,28 +4741,28 @@
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPublicTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"publicStorefrontToken\">) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPrivateTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"privateStorefrontToken\"> & { buyerIp?: string; }) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getShopifyDomain",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
@@ -4905,7 +4905,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "GraphQLFormattedError[] | undefined",
+            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -5208,28 +5208,28 @@
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPublicTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"publicStorefrontToken\">) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPrivateTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"privateStorefrontToken\"> & { buyerIp?: string; }) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getShopifyDomain",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
@@ -5372,7 +5372,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "GraphQLFormattedError[] | undefined",
+            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -5491,7 +5491,7 @@
                 "filePath": "/cart/queries/cart-types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "cartId",
-                "value": "string",
+                "value": "Scalars",
                 "description": "The cart id.",
                 "isOptional": true,
                 "defaultValue": "cart.getCartId();"
@@ -5724,28 +5724,28 @@
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPublicTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"publicStorefrontToken\">) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPrivateTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"privateStorefrontToken\"> & { buyerIp?: string; }) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getShopifyDomain",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
@@ -5888,7 +5888,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "GraphQLFormattedError[] | undefined",
+            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -6000,7 +6000,7 @@
                 "filePath": "/cart/queries/cart-types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "cartId",
-                "value": "string",
+                "value": "Scalars",
                 "description": "The cart id.",
                 "isOptional": true,
                 "defaultValue": "cart.getCartId();"
@@ -6233,28 +6233,28 @@
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPublicTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"publicStorefrontToken\">) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPrivateTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"privateStorefrontToken\"> & { buyerIp?: string; }) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getShopifyDomain",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
@@ -6397,7 +6397,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "GraphQLFormattedError[] | undefined",
+            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -6516,7 +6516,7 @@
                 "filePath": "/cart/queries/cart-types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "cartId",
-                "value": "string",
+                "value": "Scalars",
                 "description": "The cart id.",
                 "isOptional": true,
                 "defaultValue": "cart.getCartId();"
@@ -6749,28 +6749,28 @@
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPublicTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"publicStorefrontToken\">) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPrivateTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"privateStorefrontToken\"> & { buyerIp?: string; }) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getShopifyDomain",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
@@ -6913,7 +6913,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "GraphQLFormattedError[] | undefined",
+            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -6995,7 +6995,7 @@
               {
                 "name": "key",
                 "description": "",
-                "value": "string",
+                "value": "Scalars",
                 "filePath": "/cart/queries/cartMetafieldDeleteDefault.ts"
               },
               {
@@ -7025,7 +7025,7 @@
                 "filePath": "/cart/queries/cart-types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "cartId",
-                "value": "string",
+                "value": "Scalars",
                 "description": "The cart id.",
                 "isOptional": true,
                 "defaultValue": "cart.getCartId();"
@@ -7258,28 +7258,28 @@
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPublicTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"publicStorefrontToken\">) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPrivateTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"privateStorefrontToken\"> & { buyerIp?: string; }) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getShopifyDomain",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
@@ -7422,7 +7422,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "GraphQLFormattedError[] | undefined",
+            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -7541,7 +7541,7 @@
                 "filePath": "/cart/queries/cart-types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "cartId",
-                "value": "string",
+                "value": "Scalars",
                 "description": "The cart id.",
                 "isOptional": true,
                 "defaultValue": "cart.getCartId();"
@@ -7774,28 +7774,28 @@
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPublicTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"publicStorefrontToken\">) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPrivateTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"privateStorefrontToken\"> & { buyerIp?: string; }) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getShopifyDomain",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
@@ -7938,7 +7938,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "GraphQLFormattedError[] | undefined",
+            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -8050,7 +8050,7 @@
                 "filePath": "/cart/queries/cart-types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "cartId",
-                "value": "string",
+                "value": "Scalars",
                 "description": "The cart id.",
                 "isOptional": true,
                 "defaultValue": "cart.getCartId();"
@@ -8283,28 +8283,28 @@
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPublicTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"publicStorefrontToken\">) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPrivateTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"privateStorefrontToken\"> & { buyerIp?: string; }) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getShopifyDomain",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
@@ -8447,7 +8447,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "GraphQLFormattedError[] | undefined",
+            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -8566,7 +8566,7 @@
                 "filePath": "/cart/queries/cart-types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "cartId",
-                "value": "string",
+                "value": "Scalars",
                 "description": "The cart id.",
                 "isOptional": true,
                 "defaultValue": "cart.getCartId();"
@@ -8903,7 +8903,7 @@
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPublicTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"publicStorefrontToken\">) => Record<string, string>",
+                "value": "any",
                 "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2024-01/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details.",
                 "isOptional": true
               },
@@ -8911,7 +8911,7 @@
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPrivateTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"privateStorefrontToken\"> & { buyerIp?: string; }) => Record<string, string>",
+                "value": "any",
                 "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2024-01/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.",
                 "isOptional": true
               },
@@ -8919,7 +8919,7 @@
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getShopifyDomain",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\">>) => string",
+                "value": "any",
                 "description": "Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2024-01/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details.",
                 "isOptional": true
               },
@@ -8927,7 +8927,7 @@
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
+                "value": "any",
                 "description": "Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2024-01/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.",
                 "isOptional": true
               },
@@ -9069,7 +9069,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "GraphQLFormattedError[] | undefined",
+            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
             "description": ""
           },
           "StorefrontMutationOptionsForDocs": {
@@ -9415,7 +9415,7 @@
           },
           {
             "title": "TypeScript",
-            "code": "import {\n  createCustomerAccountClient,\n  type HydrogenSession,\n} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  createCookieSessionStorage,\n  type SessionStorage,\n  type Session,\n} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(\n    request: Request,\n    env: Record&lt;string, string&gt;,\n    executionContext: ExecutionContext,\n  ) {\n    const session = await AppSession.init(request, [env.SESSION_SECRET]);\n\n    /* Create a Customer API client with your credentials and options */\n    const customerAccount = createCustomerAccountClient({\n      /* Runtime utility in serverless environments */\n      waitUntil: (p) =&gt; executionContext.waitUntil(p),\n      /* Public Customer Account API client ID for your store */\n      customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_ID,\n      /* Public account URL for your store */\n      customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_URL,\n      request,\n      session,\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      /* Inject the customer account client in the Remix context */\n      getLoadContext: () =&gt; ({customerAccount}),\n    });\n\n    return handleRequest(request);\n  },\n};\n\nclass AppSession implements HydrogenSession {\n  constructor(\n    private sessionStorage: SessionStorage,\n    private session: Session,\n  ) {}\n\n  static async init(request: Request, secrets: string[]) {\n    const storage = createCookieSessionStorage({\n      cookie: {\n        name: 'session',\n        httpOnly: true,\n        path: '/',\n        sameSite: 'lax',\n        secrets,\n      },\n    });\n\n    const session = await storage.getSession(request.headers.get('Cookie'));\n\n    return new this(storage, session);\n  }\n\n  get(key: string) {\n    return this.session.get(key);\n  }\n\n  destroy() {\n    return this.sessionStorage.destroySession(this.session);\n  }\n\n  flash(key: string, value: any) {\n    this.session.flash(key, value);\n  }\n\n  unset(key: string) {\n    this.session.unset(key);\n  }\n\n  set(key: string, value: any) {\n    this.session.set(key, value);\n  }\n\n  commit() {\n    return this.sessionStorage.commitSession(this.session);\n  }\n}\n",
+            "code": "import type {CustomerClient} from '@shopify/hydrogen';\nimport {\n  createCustomerAccountClient,\n  type HydrogenSession,\n} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  createCookieSessionStorage,\n  type SessionStorage,\n  type Session,\n} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(\n    request: Request,\n    env: Record&lt;string, string&gt;,\n    executionContext: ExecutionContext,\n  ) {\n    const session = await AppSession.init(request, [env.SESSION_SECRET]);\n\n    /* Create a Customer API client with your credentials and options */\n    const customerAccount = createCustomerAccountClient({\n      /* Runtime utility in serverless environments */\n      waitUntil: (p) =&gt; executionContext.waitUntil(p),\n      /* Public Customer Account API client ID for your store */\n      customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_ID,\n      /* Public account URL for your store */\n      customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_URL,\n      request,\n      session,\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      /* Inject the customer account client in the Remix context */\n      getLoadContext: () =&gt; ({customerAccount}),\n    });\n\n    return handleRequest(request);\n  },\n};\n\nclass AppSession implements HydrogenSession {\n  constructor(\n    private sessionStorage: SessionStorage,\n    private session: Session,\n  ) {}\n\n  static async init(request: Request, secrets: string[]) {\n    const storage = createCookieSessionStorage({\n      cookie: {\n        name: 'session',\n        httpOnly: true,\n        path: '/',\n        sameSite: 'lax',\n        secrets,\n      },\n    });\n\n    const session = await storage.getSession(request.headers.get('Cookie'));\n\n    return new this(storage, session);\n  }\n\n  get(key: string) {\n    return this.session.get(key);\n  }\n\n  destroy() {\n    return this.sessionStorage.destroySession(this.session);\n  }\n\n  flash(key: string, value: any) {\n    this.session.flash(key, value);\n  }\n\n  unset(key: string) {\n    this.session.unset(key);\n  }\n\n  set(key: string, value: any) {\n    this.session.set(key, value);\n  }\n\n  commit() {\n    return this.sessionStorage.commitSession(this.session);\n  }\n}\n",
             "language": "tsx"
           }
         ],
@@ -9547,7 +9547,7 @@
             "filePath": "/customer/types.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CustomerClientForDocs",
-            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use) */\n  login: () => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken: () => Promise<string | undefined>;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/\n  logout: () => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query?: <TData = any>(\n    query: string,\n    options: CustomerClientQueryOptionsForDocs,\n  ) => Promise<TData>;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: CustomerClientQueryOptionsForDocs,\n  ) => Promise<TData>;\n}",
+            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use) */\n  login?: () => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize?: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn?: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus?: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken?: () => Promise<string | undefined>;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/\n  logout?: () => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query?: <TData = any>(\n    query: string,\n    options: CustomerClientQueryOptionsForDocs,\n  ) => Promise<TData>;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: CustomerClientQueryOptionsForDocs,\n  ) => Promise<TData>;\n}",
             "description": "Below are types meant for documentation only. Ensure it stay in sync with the type above.",
             "members": [
               {
@@ -9555,42 +9555,48 @@
                 "syntaxKind": "PropertySignature",
                 "name": "login",
                 "value": "() => Promise<Response>",
-                "description": "Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use)"
+                "description": "Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use)",
+                "isOptional": true
               },
               {
                 "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "authorize",
                 "value": "() => Promise<Response>",
-                "description": "On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin."
+                "description": "On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin.",
+                "isOptional": true
               },
               {
                 "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "isLoggedIn",
                 "value": "() => Promise<boolean>",
-                "description": "Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed."
+                "description": "Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed.",
+                "isOptional": true
               },
               {
                 "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "handleAuthStatus",
                 "value": "() => void | DataFunctionValue",
-                "description": "Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option."
+                "description": "Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option.",
+                "isOptional": true
               },
               {
                 "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getAccessToken",
                 "value": "() => Promise<string>",
-                "description": "Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed."
+                "description": "Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed.",
+                "isOptional": true
               },
               {
                 "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "logout",
                 "value": "() => Promise<Response>",
-                "description": "Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin."
+                "description": "Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.",
+                "isOptional": true
               },
               {
                 "filePath": "/customer/types.ts",
@@ -9678,7 +9684,7 @@
                   },
                   {
                     "title": "TypeScript",
-                    "code": "import {\n  useLoaderData,\n  useRouteError,\n  isRouteErrorResponse,\n  useLocation,\n} from '@remix-run/react';\nimport {type LoaderFunctionArgs, json} from '@shopify/remix-oxygen';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  if (!(await context.customerAccount.isLoggedIn())) {\n    throw new Response('Customer is not login', {\n      status: 401,\n    });\n  }\n\n  const {data} = await context.customerAccount.query&lt;{\n    customer: {firstName: string; lastName: string};\n  }&gt;(`#graphql\n    query getCustomer {\n      customer {\n        firstName\n        lastName\n      }\n    }\n    `);\n\n  return json(\n    {customer: data.customer},\n    {\n      headers: {\n        'Set-Cookie': await context.session.commit(),\n      },\n    },\n  );\n}\n\nexport function ErrorBoundary() {\n  const error = useRouteError();\n  const location = useLocation();\n\n  if (isRouteErrorResponse(error)) {\n    if (error.status == 401) {\n      return (\n        &lt;a\n          href={`/account/login?${new URLSearchParams({\n            return_to: location.pathname,\n          }).toString()}`}\n        &gt;\n          Login\n        &lt;/a&gt;\n      );\n    }\n  }\n}\n\nexport default function () {\n  const {customer} = useLoaderData&lt;typeof loader&gt;();\n\n  return (\n    &lt;div style={{marginTop: 24}}&gt;\n      {customer ? (\n        &lt;&gt;\n          &lt;div style={{marginBottom: 24}}&gt;\n            &lt;b&gt;\n              Welcome {customer.firstName} {customer.lastName}\n            &lt;/b&gt;\n          &lt;/div&gt;\n        &lt;/&gt;\n      ) : null}\n    &lt;/div&gt;\n  );\n}\n",
+                    "code": "import type {CustomerClient} from '@shopify/hydrogen';\nimport {type HydrogenSession} from '@shopify/hydrogen';\nimport {\n  createCookieSessionStorage,\n  type SessionStorage,\n  type Session,\n} from '@shopify/remix-oxygen';\nimport {\n  useLoaderData,\n  useRouteError,\n  isRouteErrorResponse,\n  useLocation,\n} from '@remix-run/react';\nimport {type LoaderFunctionArgs, json} from '@shopify/remix-oxygen';\n\ndeclare module '@shopify/remix-oxygen' {\n  /**\n   * Declare local additions to the Remix loader context.\n   */\n  export interface AppLoadContext {\n    customerAccount: CustomerClient;\n    session: AppSession;\n  }\n}\n\nclass AppSession implements HydrogenSession {\n  constructor(\n    private sessionStorage: SessionStorage,\n    private session: Session,\n  ) {}\n\n  static async init(request: Request, secrets: string[]) {\n    const storage = createCookieSessionStorage({\n      cookie: {\n        name: 'session',\n        httpOnly: true,\n        path: '/',\n        sameSite: 'lax',\n        secrets,\n      },\n    });\n\n    const session = await storage.getSession(request.headers.get('Cookie'));\n\n    return new this(storage, session);\n  }\n\n  get(key: string) {\n    return this.session.get(key);\n  }\n\n  destroy() {\n    return this.sessionStorage.destroySession(this.session);\n  }\n\n  flash(key: string, value: any) {\n    this.session.flash(key, value);\n  }\n\n  unset(key: string) {\n    this.session.unset(key);\n  }\n\n  set(key: string, value: any) {\n    this.session.set(key, value);\n  }\n\n  commit() {\n    return this.sessionStorage.commitSession(this.session);\n  }\n}\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  if (!(await context.customerAccount.isLoggedIn())) {\n    throw new Response('Customer is not login', {\n      status: 401,\n    });\n  }\n\n  const {data} = await context.customerAccount.query&lt;{\n    customer: {firstName: string; lastName: string};\n  }&gt;(`#graphql\n    query getCustomer {\n      customer {\n        firstName\n        lastName\n      }\n    }\n    `);\n\n  return json(\n    {customer: data.customer},\n    {\n      headers: {\n        'Set-Cookie': await context.session.commit(),\n      },\n    },\n  );\n}\n\nexport function ErrorBoundary() {\n  const error = useRouteError();\n  const location = useLocation();\n\n  if (isRouteErrorResponse(error)) {\n    if (error.status == 401) {\n      return (\n        &lt;a\n          href={`/account/login?${new URLSearchParams({\n            return_to: location.pathname,\n          }).toString()}`}\n        &gt;\n          Login\n        &lt;/a&gt;\n      );\n    }\n  }\n}\n\nexport default function () {\n  const {customer} = useLoaderData&lt;typeof loader&gt;();\n\n  return (\n    &lt;div style={{marginTop: 24}}&gt;\n      {customer ? (\n        &lt;&gt;\n          &lt;div style={{marginBottom: 24}}&gt;\n            &lt;b&gt;\n              Welcome {customer.firstName} {customer.lastName}\n            &lt;/b&gt;\n          &lt;/div&gt;\n        &lt;/&gt;\n      ) : null}\n    &lt;/div&gt;\n  );\n}\n",
                     "language": "tsx"
                   }
                 ]
@@ -9954,7 +9960,7 @@
                 "filePath": "/pagination/Pagination.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "state",
-                "value": "{ nodes: NodesType[]; pageInfo: { endCursor: string; startCursor: string; hasPreviousPage: boolean; }; }",
+                "value": "{ nodes: NodesType[]; pageInfo: { endCursor: any; startCursor: any; hasPreviousPage: boolean; }; }",
                 "description": "The `state` property is important to use when building your own `<Link>` component if you want paginated data to continuously append to the page. This means that every time the user clicks \"Next page\", the next page of data will be apppended inline with the previous page. If you want the whole page to re-render with only the next page results, do not pass the `state` prop to the Remix `<Link>` component."
               }
             ],
@@ -10088,14 +10094,14 @@
                 "filePath": "/product/VariantSelector.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "options",
-                "value": "PartialObjectDeep<ProductOption, {}>[]",
+                "value": "any[]",
                 "description": "Product options from the [Storefront API](/docs/api/storefront/2024-01/objects/ProductOption). Make sure both `name` and `values` are apart of your query."
               },
               {
                 "filePath": "/product/VariantSelector.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "variants",
-                "value": "PartialObjectDeep<ProductVariantConnection, {}> | PartialObjectDeep<ProductVariant, {}>[]",
+                "value": "any",
                 "description": "Product variants from the [Storefront API](/docs/api/storefront/2024-01/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`.",
                 "isOptional": true
               },
@@ -10469,28 +10475,28 @@
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPublicTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"publicStorefrontToken\">) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPrivateTokenHeaders",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"privateStorefrontToken\"> & { buyerIp?: string; }) => Record<string, string>",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getShopifyDomain",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
-                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
+                "value": "any",
                 "description": ""
               },
               {
@@ -10633,7 +10639,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "GraphQLFormattedError[] | undefined",
+            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -15412,14 +15418,14 @@
               {
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "MethodSignature",
-                "name": "__@iterator@450",
+                "name": "__@iterator@417",
                 "value": "() => IterableIterator<unknown>",
                 "description": "Iterator"
               },
               {
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "MethodSignature",
-                "name": "__@unscopables@452",
+                "name": "__@unscopables@419",
                 "value": "() => { copyWithin: boolean; entries: boolean; fill: boolean; find: boolean; findIndex: boolean; keys: boolean; values: boolean; }",
                 "description": "Returns an object whose properties have the value 'true'\r\nwhen they will be absent when used in a 'with' statement."
               },

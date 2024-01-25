@@ -2,4 +2,4 @@
 '@shopify/cli-hydrogen': patch
 ---
 
-Fix the sourcemaps to be included on Oxygen deployments from the CLI
+Generate sourcemaps by default when running the `deploy` command
