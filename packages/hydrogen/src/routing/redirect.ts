@@ -1,6 +1,7 @@
 import {redirect} from '@remix-run/server-runtime';
 import type {UrlRedirectConnection} from '@shopify/hydrogen-react/storefront-api-types';
 import type {I18nBase, Storefront} from '../storefront';
+import {getRedirectUrl} from '../utils/get-redirect-url';
 
 type StorefrontRedirect = {
   /** The [Storefront client](/docs/api/hydrogen/2024-01/utilities/createstorefrontclient) instance */
@@ -51,18 +52,10 @@ export async function storefrontRedirect(
       return new Response(null, {status: 301, headers: {location}});
     }
 
-    const searchParams = new URLSearchParams(search);
-    const redirectTo =
-      searchParams.get('return_to') || searchParams.get('redirect');
+    const redirectTo = getRedirectUrl(request.url);
 
     if (redirectTo) {
-      if (isLocalPath(request.url, redirectTo)) {
-        return redirect(redirectTo);
-      } else {
-        console.warn(
-          `Cross-domain redirects are not supported. Tried to redirect from ${redirectFrom} to ${redirectTo}`,
-        );
-      }
+      return redirect(redirectTo);
     }
   } catch (error) {
     console.error(
