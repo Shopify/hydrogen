@@ -126,13 +126,7 @@ export class GraphQLError extends Error {
   toJSON() {
     const formatted: Pick<
       GraphQLError,
-      | 'name'
-      | 'message'
-      | 'path'
-      | 'extensions'
-      | 'locations'
-      | 'stack'
-      | 'cause'
+      'name' | 'message' | 'path' | 'extensions' | 'locations' | 'stack'
     > = {name: 'Error', message: ''};
 
     if (process.env.NODE_ENV === 'development') {
