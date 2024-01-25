@@ -1,5 +1,66 @@
 # @shopify/hydrogen
 
+## 2024.1.0
+
+### Major Changes
+
+- Better Hydrogen error handling ([#1645](https://github.com/Shopify/hydrogen/pull/1645)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  - Fix storefront client throwing on partial successful errors
+  - Fix subrequest profiler to better display network errors with URL information for Storefront API requests
+
+  ### Breaking change
+
+  This update changes the shape of the error objects returned by the `createCartHandler` method.
+
+  Previously, mutations could return an `errors` array that contained a `userErrors` array.
+
+  With this change, these arrays are no longer nested. The response can contain both an `errors` array and a `userErrors` array. `errors` contains GraphQL execution errors. `userErrors` contains errors caused by the cart mutation itself (such as adding a product that has zero inventory).
+
+  `storefront.isApiError` is deprecated.
+
+  ### Updated return types for `createCartHandler` methods
+
+  - `cart.get()` used to return a `Cart` type. Now it returns `CartReturn` type to accommodate the `errors` object.
+  - All other `cart` methods (ie. `cart.addLines`) used to return a `CartQueryData` type. Now it returns `CartQueryDataReturn` type to accommodate the `errors` object.
+
+- Custom rules passed to `createContentSecurityPolicy` now extend the default Shopify and development domains, instead of overriding them ([#1593](https://github.com/Shopify/hydrogen/pull/1593)) by [@michenly](https://github.com/michenly)
+
+- Upgrade to [Storefront API v2024-01](https://shopify.dev/docs/api/release-notes/2024-01#storefront-api-changes) ([#1642](https://github.com/Shopify/hydrogen/pull/1642)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+### Minor Changes
+
+- Add [Subrequest Profiler](https://shopify.dev/docs/custom-storefronts/hydrogen/debugging/subrequest-profiler) developer tool to enable better observability of server-side network requests and caching behaviors ([#1511](https://github.com/Shopify/hydrogen/pull/1511)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Introduce the new [`createCustomerAccountClient`](https://shopify.dev/docs/api/hydrogen/2024-01/utilities/createcustomeraccountclient) for interacting with the Customer Account API ([#1606](https://github.com/Shopify/hydrogen/pull/1606)) by [@michenly](https://github.com/michenly)
+
+### Patch Changes
+
+- Fix a bug that allowed undesired redirect to external domains ([#1629](https://github.com/Shopify/hydrogen/pull/1629)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Fix content security policy to recognize `localhost` asset server as a valid source when running the `dev` command ([#1591](https://github.com/Shopify/hydrogen/pull/1591)) by [@michenly](https://github.com/michenly)
+
+- Fix the `<Seo />` component to render canonical URLs without trailing slashes. Thanks to @joshuafredrickson for reporting ([#1622](https://github.com/Shopify/hydrogen/pull/1622)) by [@blittle](https://github.com/blittle)
+
+- Make default `HydrogenSession` type extensible. ([#1590](https://github.com/Shopify/hydrogen/pull/1590)) by [@michenly](https://github.com/michenly)
+
+  Update implementation of HydrogenSession using type:
+
+  ```diff
+  import {
+  + type HydrogenSession,
+  } from '@shopify/hydrogen';
+  - class HydrogenSession {
+  + class AppSession implements HydrogenSession {
+      ...
+  }
+  ```
+
+- Fix error stack traces thrown by API clients if promises are not awaited ([#1656](https://github.com/Shopify/hydrogen/pull/1656)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`0629bc77`](https://github.com/Shopify/hydrogen/commit/0629bc779b4dab3482b502cde0cc67d32f41f2f2), [`dc8f90de`](https://github.com/Shopify/hydrogen/commit/dc8f90de38d1bf7166bbf2e219f6d9e6f55250c6), [`ca1161b2`](https://github.com/Shopify/hydrogen/commit/ca1161b29ad7b4d0838953782fb114d5fe82193a)]:
+  - @shopify/hydrogen-react@2024.1.0
+
 ## 2023.10.3
 
 ### Patch Changes
