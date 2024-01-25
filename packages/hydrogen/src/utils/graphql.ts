@@ -36,31 +36,25 @@ export type GraphQLErrorOptions<T> = {
   client?: string;
 };
 
-// Reference: https://github.com/graphql/graphql-js/blob/main/src/language/location.ts#L10-L13
-type SourceLocation = {
-  readonly line: number;
-  readonly column: number;
-};
-
 // Reference: https://github.com/graphql/graphql-js/blob/main/src/error/GraphQLError.ts#L218-L242
 export class GraphQLError extends Error {
   /**
    * If an error can be associated to a particular point in the requested
    * GraphQL document, it should contain a list of locations.
    */
-  readonly locations?: ReadonlyArray<SourceLocation>;
+  locations?: Array<{line: number; column: number}>;
   /**
    * If an error can be associated to a particular field in the GraphQL result,
    * it _must_ contain an entry with the key `path` that details the path of
    * the response field which experienced the error. This allows clients to
    * identify whether a null result is intentional or caused by a runtime error.
    */
-  readonly path?: ReadonlyArray<string | number>;
+  path?: Array<string | number>;
   /**
    * Reserved for implementors to extend the protocol however they see fit,
    * and hence there are no additional restrictions on its contents.
    */
-  readonly extensions?: {[key: string]: unknown};
+  extensions?: {[key: string]: unknown};
 
   constructor(
     message: string,
@@ -92,6 +86,11 @@ export class GraphQLError extends Error {
     return this.name;
   }
 
+  /**
+   * Note: `toString()` is internally used by `console.log(...)` / `console.error(...)`
+   * when ingesting logs in Oxygen production. Therefore, we want to make sure that
+   * the error message is as informative as possible instead of `[object Object]`.
+   */
   override toString() {
     let result = `${this.name}: ${this.message}`;
 
@@ -117,16 +116,33 @@ export class GraphQLError extends Error {
     return result;
   }
 
+  /**
+   * Note: toJSON` is internally used by `JSON.stringify(...)`.
+   * The most common scenario when this error instance is going to be stringified is
+   * when it's passed to Remix' `json` and `defer` functions: e.g. `defer({promise: storefront.query(...)})`.
+   * In this situation, we don't want to expose private error information to the browser so we only
+   * do it in development.
+   */
   toJSON() {
-    type Writeable<T> = {-readonly [P in keyof T]: T[P]};
+    const formatted: Pick<
+      GraphQLError,
+      | 'name'
+      | 'message'
+      | 'path'
+      | 'extensions'
+      | 'locations'
+      | 'stack'
+      | 'cause'
+    > = {name: 'Error', message: ''};
 
-    const formatted: Writeable<
-      Pick<GraphQLError, 'message' | 'path' | 'extensions' | 'locations'>
-    > = {message: this.message};
-
-    if (this.path) formatted.path = this.path;
-    if (this.locations) formatted.locations = this.locations;
-    if (this.extensions) formatted.extensions = this.extensions;
+    if (process.env.NODE_ENV === 'development') {
+      formatted.name = this.name;
+      formatted.message = 'Development: ' + this.message;
+      if (this.path) formatted.path = this.path;
+      if (this.locations) formatted.locations = this.locations;
+      if (this.extensions) formatted.extensions = this.extensions;
+      // Skip stack on purpose because we don't want to expose it to the browser.
+    }
 
     return formatted;
   }
