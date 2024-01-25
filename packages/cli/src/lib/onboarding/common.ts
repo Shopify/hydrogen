@@ -632,7 +632,7 @@ export async function renderProjectReady(
               {
                 link: {
                   label: 'Guides',
-                  url: 'https://shopify.dev/docs/custom-storefronts/hydrogen/building',
+                  url: 'https://h2o.fyi/building',
                 },
               },
               {

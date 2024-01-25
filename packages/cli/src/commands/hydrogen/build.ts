@@ -38,7 +38,7 @@ import {isCI} from '../../lib/is-ci.js';
 import {copyDiffBuild, prepareDiffDirectory} from '../../lib/template-diff.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
-const WORKER_BUILD_SIZE_LIMIT = 10;
+const WORKER_BUILD_SIZE_LIMIT = 5;
 
 export default class Build extends Command {
   static description = 'Builds a Hydrogen storefront for production.';
@@ -205,11 +205,11 @@ export async function runBuild({
 
     if (sizeMB >= WORKER_BUILD_SIZE_LIMIT) {
       outputWarn(
-        `🚨 Worker bundle exceeds ${WORKER_BUILD_SIZE_LIMIT} MB! This can delay your worker response.${
+        `🚨 Smaller worker bundles are faster to deploy and run.${
           remixConfig.serverMinify
             ? ''
-            : ' Minify your bundle by adding `serverMinify: true` to remix.config.js.'
-        }\n   https://shopify.dev/docs/custom-storefronts/hydrogen/debugging/bundle-size\n`,
+            : '\n   Minify your bundle by adding `serverMinify: true` to remix.config.js.'
+        }\n   Learn more about optimizing your worker bundle file: https://h2o.fyi/debugging/bundle-size\n`,
       );
     }
   }
