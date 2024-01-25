@@ -58,8 +58,16 @@ export type I18nBase = {
   country: CountryCode;
 };
 
-export type StorefrontApiErrors = GraphQLError[] | undefined;
-export type StorefrontError = {
+// When passing GraphQLError through Remix' `json` or `defer`,
+// the class instance is lost and it becomes a plain JSON object.
+// Therefore, we need make TS think this is a plain object instead of
+// a class to make it work in server and client.
+// Also, Remix' `Jsonify` type is broken and can't infer types of classes properly.
+export type StorefrontApiErrors =
+  | ReturnType<GraphQLError['toJSON']>[] // Equivalent to `Jsonify<GraphQLError>[]`
+  | undefined;
+
+type StorefrontError = {
   errors?: StorefrontApiErrors;
 };
 
