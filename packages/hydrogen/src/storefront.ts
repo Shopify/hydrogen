@@ -172,6 +172,8 @@ type HydrogenClientProps<TI18n> = {
   waitUntil?: ExecutionContext['waitUntil'];
   /** An object containing a country code and language code */
   i18n?: TI18n;
+  /** Whether it should print GraphQL errors automatically. Defaults to true */
+  logErrors?: boolean;
 };
 
 export type CreateStorefrontClientOptions<TI18n extends I18nBase> =
@@ -216,6 +218,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     waitUntil,
     i18n,
     storefrontId,
+    logErrors = true,
     ...clientOptions
   } = options;
   const H2_PREFIX_WARN = '[h2:warn:createStorefrontClient] ';
@@ -400,7 +403,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
             query,
             stackInfo: getCallerStackLine?.(stackOffset),
           }),
-          stackOffset,
+          {stackOffset, logErrors},
         );
       },
       /**
@@ -428,7 +431,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
             mutation,
             stackInfo: getCallerStackLine?.(stackOffset),
           }),
-          stackOffset,
+          {stackOffset, logErrors},
         );
       },
       cache,
