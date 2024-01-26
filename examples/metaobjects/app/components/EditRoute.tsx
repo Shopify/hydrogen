@@ -1,5 +1,5 @@
 import {useState, useEffect} from 'react';
-import {Link} from '@remix-run/react';
+import {Link, useMatches} from '@remix-run/react';
 
 /**
  * Displays an `Edit Route` button in the top right corner of the page
@@ -8,26 +8,28 @@ import {Link} from '@remix-run/react';
  */
 export function EditRoute({routeId}: {routeId: string}) {
   const [url, setUrl] = useState<URL | null>(null);
-  const storeSubdomain = 'hydrogen-lab';
+  const [root] = useMatches();
+  // @ts-ignore
+  const publictoreSubdomain = root?.data?.publictoreSubdomain;
 
   useEffect(() => {
     setUrl(new URL(window.location.href));
   }, []);
 
-  if (!url) return null;
+  if (!url || !publictoreSubdomain) return null;
 
   const isDev =
     url.hostname.includes('localhost') || url.hostname.includes('127.0.0.1');
   const isPreview = url.hostname.includes('preview');
   const legacyId = routeId.split('/').pop();
-  const adminUrl = `https://admin.shopify.com/store/${storeSubdomain}/content/entries/route/${legacyId}`;
+  const adminEditUrl = `https://admin.shopify.com/store/${publictoreSubdomain}/content/entries/route/${legacyId}`;
 
   const shouldShowEditLink = isDev || isPreview;
   if (!shouldShowEditLink) return null;
 
   return (
     <Link
-      to={adminUrl}
+      to={adminEditUrl}
       target="_blank"
       style={{
         position: 'absolute',

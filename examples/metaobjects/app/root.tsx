@@ -93,6 +93,7 @@ export async function loader({context}: LoaderFunctionArgs) {
       header: await headerPromise,
       isLoggedIn,
       publicStoreDomain,
+      publictoreSubdomain: context.env.PUBLIC_SHOPIFY_STORE_DOMAIN
     },
     {headers},
   );
