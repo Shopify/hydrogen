@@ -13,10 +13,8 @@ export function getHeader(request: CrossRuntimeRequest, key: string) {
 }
 
 export function getDebugHeaders(request?: CrossRuntimeRequest) {
-  return request
-    ? {
-        requestId: getHeader(request, 'request-id'),
-        purpose: getHeader(request, 'purpose'),
-      }
-    : {};
+  return {
+    requestId: request ? getHeader(request, 'request-id') : undefined,
+    purpose: request ? getHeader(request, 'purpose') : undefined,
+  };
 }

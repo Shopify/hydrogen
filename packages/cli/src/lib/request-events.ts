@@ -47,7 +47,7 @@ export type H2OEvent = {
   endTime: number;
   cacheStatus?: 'MISS' | 'HIT' | 'STALE' | 'PUT';
   waitUntil?: ExecutionContext['waitUntil'];
-  graphql?: string;
+  graphql?: string | null;
   stackInfo?: {
     file?: string;
     func?: string;
