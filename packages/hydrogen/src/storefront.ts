@@ -8,6 +8,7 @@ import {
   SHOPIFY_STOREFRONT_S_HEADER,
   type StorefrontClientProps,
 } from '@shopify/hydrogen-react';
+import type {WritableDeep} from 'type-fest';
 import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
 import {
   SDK_VARIANT_HEADER,
@@ -363,13 +364,15 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
     const {data, errors} = body as GraphQLApiResponse<T>;
 
-    const queryHint = errors
-      ? displayName || extractQueryName(query)
-      : undefined;
-
     const gqlErrors = errors?.map(
       ({message, ...rest}) =>
-        new GraphQLError((queryHint ? `[${queryHint}] ` : '') + message, rest),
+        new GraphQLError(message, {
+          ...(rest as WritableDeep<typeof rest>),
+          clientOperation: `storefront.${errorOptions.type}`,
+          requestId: response.headers.get('x-request-id'),
+          queryVariables,
+          query,
+        }),
     );
 
     return formatAPIResult(data, gqlErrors);
