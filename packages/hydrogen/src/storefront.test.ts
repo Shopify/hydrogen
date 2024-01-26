@@ -171,10 +171,13 @@ describe('createStorefrontClient', () => {
         new Response('ok', {status: 200}),
       ]);
 
-      const data = await storefront.query('query {}');
+      const data = await storefront.query('query test {}');
       expect(data).toMatchObject({
         cart: {},
-        errors: [{message: 'first'}, {message: 'second'}],
+        errors: [
+          {message: '[query test] first'},
+          {message: '[query test] second'},
+        ],
       });
     });
   });
