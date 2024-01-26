@@ -38,7 +38,7 @@ import {
   type StackInfo,
 } from '../utils/callsites';
 import {getRedirectUrl} from '../utils/get-redirect-url';
-import type {CustomerClientOptions, CustomerClient} from './types';
+import type {CustomerAccountOptions, CustomerAccount} from './types';
 
 const DEFAULT_LOGIN_URL = '/account/login';
 const DEFAULT_AUTH_URL = '/account/authorize';
@@ -65,7 +65,7 @@ export function createCustomerAccountClient({
   waitUntil,
   authUrl = DEFAULT_AUTH_URL,
   customAuthStatusHandler,
-}: CustomerClientOptions): CustomerClient {
+}: CustomerAccountOptions): CustomerAccount {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.warn(
       `[h2:warn:createCustomerAccountClient] You are using Customer Account API version ${customerApiVersion} when this version of Hydrogen was built for ${DEFAULT_CUSTOMER_API_VERSION}.`,
