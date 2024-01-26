@@ -63,9 +63,8 @@ export type I18nBase = {
 // Therefore, we need make TS think this is a plain object instead of
 // a class to make it work in server and client.
 // Also, Remix' `Jsonify` type is broken and can't infer types of classes properly.
-export type StorefrontApiErrors =
-  | ReturnType<GraphQLError['toJSON']>[] // Equivalent to `Jsonify<GraphQLError>[]`
-  | undefined;
+type JsonGraphQLError = ReturnType<GraphQLError['toJSON']>; // Equivalent to `Jsonify<GraphQLError>[]`
+export type StorefrontApiErrors = JsonGraphQLError[] | undefined;
 
 type StorefrontError = {
   errors?: StorefrontApiErrors;
@@ -359,8 +358,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     }
 
     const {data, errors} = body as GraphQLApiResponse<T>;
+    const gqlErrors = errors?.map(
+      (error) => new GraphQLError(error.message, error as JsonGraphQLError),
+    );
 
-    return formatAPIResult(data, errors as StorefrontApiErrors);
+    return formatAPIResult(data, gqlErrors);
   }
 
   return {
@@ -480,17 +482,14 @@ const getStackOffset =
       }
     : undefined;
 
-export function formatAPIResult<T>(data: T, errors: StorefrontApiErrors) {
-  let result = data;
-  if (errors) {
-    result = {
-      ...data,
-      errors: errors.map(
-        (errorOptions) => new GraphQLError(errorOptions.message, errorOptions),
-      ),
-    };
-  }
-  return result as T & StorefrontError;
+export function formatAPIResult<T>(
+  data: T,
+  errors: StorefrontApiErrors,
+): T & StorefrontError {
+  return {
+    ...data,
+    ...(errors && {errors}),
+  };
 }
 
 export type CreateStorefrontClientForDocs<TI18n extends I18nBase> = {
