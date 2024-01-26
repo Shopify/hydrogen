@@ -65,3 +65,5 @@ export type {
   UploadHandler,
   UploadHandlerPart,
 } from '@remix-run/server-runtime';
+
+export type {H2OEvent} from './event-logger';
