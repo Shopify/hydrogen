@@ -91,6 +91,8 @@ export function createCustomerAccountClient({
     url.protocol === 'http:' ? url.origin.replace('http', 'https') : url.origin;
   const redirectUri = authUrl.startsWith('/') ? origin + authUrl : authUrl;
 
+  const customerAccountApiUrl = `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`;
+
   const locks: Locks = {};
 
   const logSubRequestEvent =
@@ -131,8 +133,7 @@ export function createCustomerAccountClient({
     const stackInfo = getCallerStackLine?.(1);
 
     const startTime = new Date().getTime();
-    const url = `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`;
-    const response = await fetch(url, {
+    const response = await fetch(customerAccountApiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -152,7 +153,7 @@ export function createCustomerAccountClient({
     const body = await response.text();
 
     const errorOptions: GraphQLErrorOptions<T> = {
-      url,
+      url: customerAccountApiUrl,
       response,
       type,
       query,
@@ -292,6 +293,7 @@ export function createCustomerAccountClient({
     isLoggedIn,
     handleAuthStatus,
     getAccessToken,
+    getApiUrl: () => customerAccountApiUrl,
     mutate(mutation, options?) {
       mutation = minifyQuery(mutation);
       assertMutation(mutation, 'customer.mutate');

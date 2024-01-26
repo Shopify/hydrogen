@@ -1,21 +1,60 @@
 import type {LoaderFunctionArgs} from '@remix-run/server-runtime';
-import type {Storefront} from '../storefront';
 
 type GraphiQLLoader = (args: LoaderFunctionArgs) => Promise<Response>;
 
 export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
-  context,
+  request,
+  context: {storefront, customerAccount},
 }: LoaderFunctionArgs) {
-  const storefront = context?.storefront as Storefront | undefined;
+  const url = new URL(request.url);
+  const schemaName = url.searchParams.get('schema') ?? 'storefront';
+
   if (!storefront) {
     throw new Error(
       `GraphiQL: Hydrogen's storefront client must be injected in the loader context.`,
     );
   }
 
-  const url = storefront.getApiUrl();
-  const accessToken =
-    storefront.getPublicTokenHeaders()['X-Shopify-Storefront-Access-Token'];
+  const schemas: {
+    [key: string]: {
+      name: string;
+      value?: object;
+      accessToken?: string;
+      authHeader: string;
+      apiUrl: string;
+    };
+  } = {};
+
+  if (storefront) {
+    const authHeader = 'X-Shopify-Storefront-Access-Token';
+    schemas.storefront = {
+      name: 'Storefront API',
+      authHeader,
+      accessToken: storefront.getPublicTokenHeaders()[authHeader],
+      apiUrl: storefront.getApiUrl(),
+    };
+  }
+
+  if (customerAccount) {
+    // CustomerAccount API does not support introspection to the same URL.
+    // Read it from a file using the asset server:
+    const customerAccountSchema = await (
+      await fetch(url.origin + '/graphiql/customer-account.schema.json')
+    ).json();
+
+    // @ts-ignore This is recognized in editor but not at build time
+    const accessToken = await customerAccount.getAccessToken();
+
+    if (customerAccountSchema) {
+      schemas['customer-account'] = {
+        name: 'Customer Account API',
+        value: customerAccountSchema,
+        authHeader: 'Authorization',
+        accessToken,
+        apiUrl: customerAccount.getApiUrl(),
+      };
+    }
+  }
 
   // GraphiQL icon from their GitHub repo
   const favicon = `https://avatars.githubusercontent.com/u/12972006?s=48&v=4`;
@@ -87,6 +126,8 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
 
           <script>
             const windowUrl = new URL(document.URL);
+            const startingSchemaKey =
+              windowUrl.searchParams.get('schema') || 'storefront';
 
             let query = '{ shop { name } }';
             if (windowUrl.searchParams.has('query')) {
@@ -97,6 +138,10 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
 
             // Prettify query
             query = GraphiQL.GraphQL.print(GraphiQL.GraphQL.parse(query));
+
+            if (startingSchemaKey !== 'storefront') {
+              query += ' #schema:' + startingSchemaKey;
+            }
 
             let variables;
             if (windowUrl.searchParams.has('variables')) {
@@ -110,23 +155,87 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
               variables = JSON.stringify(JSON.parse(variables), null, 2);
             }
 
+            const schemas = ${JSON.stringify(schemas)};
+            let lastActiveTabIndex = -1;
+
             const root = ReactDOM.createRoot(
               document.getElementById('graphiql'),
             );
-            root.render(
-              React.createElement(GraphiQL, {
+
+            root.render(React.createElement(RootWrapper));
+
+            function RootWrapper() {
+              const [activeSchema, setActiveSchema] =
+                React.useState(startingSchemaKey);
+
+              const schema = schemas[activeSchema];
+              if (!schema) {
+                throw new Error('No schema found for ' + activeSchema);
+              }
+
+              const keys = Object.keys(schemas);
+
+              return React.createElement(GraphiQL, {
                 fetcher: GraphiQL.createFetcher({
-                  url: '${url}',
-                  headers: {
-                    'X-Shopify-Storefront-Access-Token': '${accessToken}',
-                  },
+                  url: schema.apiUrl,
+                  headers: {[schema.authHeader]: schema.accessToken},
                 }),
                 defaultEditorToolsVisibility: true,
                 query,
                 variables,
+                schema: schema.value,
                 plugins: [GraphiQLPluginExplorer.explorerPlugin()],
-              }),
-            );
+                onTabChange: ({tabs, activeTabIndex}) => {
+                  if (activeTabIndex === lastActiveTabIndex) return;
+
+                  lastActiveTabIndex = activeTabIndex;
+
+                  const activeTab = tabs[activeTabIndex];
+                  if (activeTab) {
+                    const nextSchema =
+                      activeTab.query.match(/#schema:([a-z-]+)/m)?.[1] ||
+                      'storefront';
+
+                    if (nextSchema !== activeSchema) {
+                      setActiveSchema(nextSchema);
+                    }
+                  }
+                },
+                children: [
+                  // React.createElement(GraphiQL.Toolbar, {}),
+                  React.createElement(GraphiQL.Logo, {
+                    key: 'Logo replacement',
+                    children: [
+                      React.createElement('div', {
+                        key: 'Logo wrapper',
+                        style: {display: 'flex', alignItems: 'center'},
+                        children: [
+                          React.createElement('div', {
+                            key: 'api',
+                            className: 'graphiql-logo',
+                            style: {
+                              paddingRight: 0,
+                              whiteSpace: 'nowrap',
+                              cursor: 'pointer',
+                            },
+                            onClick: () => {
+                              clicked = true;
+                              const activeKey = keys.indexOf(activeSchema);
+                              const nextKey =
+                                keys[(activeKey + 1) % keys.length];
+
+                              setActiveSchema(nextKey);
+                            },
+                            children: [schema.name],
+                          }),
+                          React.createElement(GraphiQL.Logo, {key: 'logo'}),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              });
+            }
           </script>
         </body>
       </html>
