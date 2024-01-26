@@ -34,7 +34,7 @@ Keep the following in mind when creating a new example diff:
 
 1. Start a new example diff by copying another minimal example and changing code.
    Only include and commit files that are different from the skeleton template.
-1. `package.json` must always be created with a unique name with example- prefix, and this name must be included in the NPM workspace (root `package.json`).
+1. `package.json` must always be created with a unique name with example- prefix.
 1. `dependencies`, `devDependencies`, and `peerDependencies` in `package.json` are also merged to those in skeleton. Therefore, only list new or modified dependencies in the example.
 1. The scripts in `package.json` must pass the `--diff` flag to the `dev` and `build` commands. Otherwise, it will be treated as a full Hydrogen app instead of a diff.
 1. The `tsconfig.json` must have special values. Copy it from another existing diff example.
