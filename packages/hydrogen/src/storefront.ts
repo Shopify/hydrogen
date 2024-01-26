@@ -42,6 +42,7 @@ import {
   minifyQuery,
   assertQuery,
   assertMutation,
+  extractQueryName,
   throwErrorWithGqlLink,
   GraphQLError,
   type GraphQLApiResponse,
@@ -358,8 +359,14 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     }
 
     const {data, errors} = body as GraphQLApiResponse<T>;
+
+    const queryHint = errors
+      ? displayName || extractQueryName(query)
+      : undefined;
+
     const gqlErrors = errors?.map(
-      (error) => new GraphQLError(error.message, error as JsonGraphQLError),
+      ({message, ...rest}) =>
+        new GraphQLError((queryHint ? `[${queryHint}] ` : '') + message, rest),
     );
 
     return formatAPIResult(data, gqlErrors);

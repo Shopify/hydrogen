@@ -1,5 +1,10 @@
 import type {StorefrontApiResponseOk} from '@shopify/hydrogen-react';
 import type {GenericVariables} from '@shopify/hydrogen-codegen';
+import type {ReadonlyDeep} from 'type-fest';
+
+export function extractQueryName(query: string) {
+  return query.match(/(query|mutation)\s+([^({]*)/)?.[0]?.trim();
+}
 
 export function minifyQuery<T extends string>(string: T) {
   return string
@@ -58,9 +63,8 @@ export class GraphQLError extends Error {
 
   constructor(
     message: string,
-    options: Pick<
-      GraphQLError,
-      'locations' | 'path' | 'extensions' | 'stack'
+    options: ReadonlyDeep<
+      Pick<GraphQLError, 'locations' | 'path' | 'extensions' | 'stack'>
     > = {},
   ) {
     super(message);
