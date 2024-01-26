@@ -1,0 +1,109 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "organizeImports": {
+    "enabled": true
+  },
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": true,
+    "indentStyle": "tab",
+    "indentWidth": 4,
+    "lineWidth": 140
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "jsxQuoteStyle": "single"
+    },
+    "globals": [
+      "__DEV__"
+    ]
+  },
+  "linter": {
+    "enabled": true,
+    "ignore": [
+      "node_modules"
+    ],
+    "rules": {
+      "all": true,
+      "complexity": {
+        "noUselessFragments": "off"
+      },
+      "style": {
+        "useSingleVarDeclarator": "off",
+        "noParameterAssign": "off",
+        "noNonNullAssertion": "off"
+      },
+      "suspicious": {
+        "noConsoleLog": "error",
+        "noExplicitAny": "error",
+        "useGetterReturn": "warn",
+        "noAssignInExpressions": "warn",
+        "noConstAssign": "error",
+        "noControlCharactersInRegex": "warn",
+        "noDuplicateParameters": "warn",
+        "noDuplicateClassMembers": "warn",
+        "noDuplicateObjectKeys": "warn",
+        "noDuplicateCase": "warn",
+        "noEmptyCharacterClassInRegex": "warn",
+        "noEmptyPattern": "warn",
+        "noEmptyBlockStatements": {
+          "level": "warn",
+          "options": {
+            "allowEmptyCatch": true
+          }
+        },
+        "noCatchAssign": "warn",
+        "noUselessLabel": "warn",
+        "noExtraBooleanCast": "warn",
+        "noFunctionAssign": "error",
+        "noLabelVar": "warn",
+        "noConfusingLabels": {
+          "level": "warn",
+          "options": {
+            "allowLoop": true,
+            "allowSwitch": false
+          }
+        },
+        "noUselessLoneBlockStatements": "warn",
+        "noUnsafeNegation": "warn",
+        "noRedeclare": "error",
+        "noSelfAssign": "warn",
+        "noSelfCompare": "warn",
+        "noCommaOperator": "warn",
+        "noShadowRestrictedNames": "warn",
+        "noUnreachableSuper": "warn",
+        "noUndeclaredVariables": "error",
+        "noUnreachable": "warn",
+        "noUnusedLabels": "warn",
+        "noUnusedVariables": {
+          "level": "warn",
+          "options": {
+            "ignoreRestSiblings": true,
+            "args": "none"
+          }
+        },
+        "noUselessRename": {
+          "level": "warn",
+          "options": {
+            "ignoreDestructuring": false,
+            "ignoreImport": false,
+            "ignoreExport": false
+          }
+        },
+        "useYield": "warn",
+        "useIsNan": "warn",
+        "useValidTypeof": "warn"
+      },
+      "correctness": {
+        "useExhaustiveDependencies": "off"
+      },
+      "performance": {
+        "noAccumulatingSpread": "off"
+      },
+      "nursery": {
+        "all": false
+      }
+    }
+  }
+}
