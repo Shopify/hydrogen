@@ -7,7 +7,6 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
   context: {storefront, customerAccount},
 }: LoaderFunctionArgs) {
   const url = new URL(request.url);
-  const schemaName = url.searchParams.get('schema') ?? 'storefront';
 
   if (!storefront) {
     throw new Error(

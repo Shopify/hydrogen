@@ -75,7 +75,11 @@ async function getRequestInfo(request: RequestKind) {
     purpose: data.purpose === 'prefetch' ? '(prefetch)' : '',
     cacheStatus: data.cacheStatus ?? '',
     graphql: data.graphql
-      ? (JSON.parse(data.graphql) as {query: string; variables: object})
+      ? (JSON.parse(data.graphql) as {
+          query: string;
+          variables: object;
+          schema?: string;
+        })
       : null,
   };
 }

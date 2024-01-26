@@ -95,19 +95,38 @@ export function createCustomerAccountClient({
 
   const locks: Locks = {};
 
+  type LogSubrequestOptions = {
+    startTime: number;
+    url?: string;
+    query?: string;
+    variables?: Record<string, any> | null;
+    stackInfo?: StackInfo;
+  };
+
   const logSubRequestEvent =
     process.env.NODE_ENV === 'development'
-      ? (query: string, startTime: number, stackInfo?: StackInfo) => {
+      ? ({
+          url,
+          query = '',
+          variables,
+          startTime,
+          stackInfo,
+        }: LogSubrequestOptions) => {
+          const shopifyDevUrl = 'https://shopify.dev/';
+          const cacheKey =
+            url ||
+            /((query|mutation) [^\s\(]+)/g.exec(query)?.[0] ||
+            query.substring(0, 10);
+
           globalThis.__H2O_LOG_EVENT?.({
             eventType: 'subrequest',
-            url: `https://shopify.dev/?${hashKey([
-              `Customer Account `,
-              /((query|mutation) [^\s\(]+)/g.exec(query)?.[0] ||
-                query.substring(0, 10),
-            ])}`,
+            url: `${shopifyDevUrl}?${hashKey([`Customer Account `, cacheKey])}`,
             startTime,
             waitUntil,
             stackInfo,
+            graphql:
+              query &&
+              JSON.stringify({query, variables, schema: 'customer-account'}),
             ...getDebugHeaders(request),
           });
         }
@@ -148,7 +167,7 @@ export function createCustomerAccountClient({
       }),
     });
 
-    logSubRequestEvent?.(query, startTime, stackInfo);
+    logSubRequestEvent?.({query, variables, startTime, stackInfo});
 
     const body = await response.text();
 
@@ -212,7 +231,11 @@ export function createCustomerAccountClient({
         origin,
       });
 
-      logSubRequestEvent?.(' check expires', startTime, stackInfo);
+      logSubRequestEvent?.({
+        url: ' check expires',
+        startTime,
+        stackInfo,
+      });
     } catch {
       return false;
     }
