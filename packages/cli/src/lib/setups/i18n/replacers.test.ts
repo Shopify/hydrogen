@@ -61,7 +61,7 @@ describe('i18n replacers', () => {
 
         import type {
           Storefront,
-          CustomerClient,
+          CustomerAccount,
           HydrogenCart,
         } from "@shopify/hydrogen";
         import type {
@@ -103,7 +103,7 @@ describe('i18n replacers', () => {
             env: Env;
             cart: HydrogenCart;
             storefront: Storefront<I18nLocale>;
-            customerAccount: CustomerClient;
+            customerAccount: CustomerAccount;
             session: AppSession;
             waitUntil: ExecutionContext["waitUntil"];
           }

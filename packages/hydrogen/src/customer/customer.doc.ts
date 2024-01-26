@@ -35,12 +35,12 @@ The \`createCustomerAccountClient\` function creates a GraphQL client for queryi
   definitions: [
     {
       title: 'createCustomerAccountClient(options)',
-      type: 'CustomerClientOptions',
+      type: 'CustomerAccountOptions',
       description: '',
     },
     {
       title: 'Returns',
-      type: 'CustomerClientForDocs',
+      type: 'CustomerAccountForDocs',
       description: '',
     },
   ],

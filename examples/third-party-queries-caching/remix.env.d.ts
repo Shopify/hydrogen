@@ -5,7 +5,11 @@
 // Enhance TypeScript's built-in typings.
 import '@total-typescript/ts-reset';
 
-import type {Storefront, CustomerClient, HydrogenCart} from '@shopify/hydrogen';
+import type {
+  Storefront,
+  CustomerAccount,
+  HydrogenCart,
+} from '@shopify/hydrogen';
 import type {AppSession} from '~/lib/session';
 import {createRickAndMortyClient} from './app/lib/createRickAndMortyClient.server';
 
@@ -37,7 +41,7 @@ declare module '@shopify/remix-oxygen' {
     env: Env;
     cart: HydrogenCart;
     storefront: Storefront;
-    customerAccount: CustomerClient;
+    customerAccount: CustomerAccount;
     rickAndMorty: ReturnType<typeof createRickAndMortyClient>;
     session: AppSession;
     waitUntil: ExecutionContext['waitUntil'];

@@ -1,4 +1,3 @@
-import type {CustomerClient} from '@shopify/hydrogen';
 import {
   createCustomerAccountClient,
   type HydrogenSession,
