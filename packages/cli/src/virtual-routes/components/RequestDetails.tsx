@@ -80,10 +80,12 @@ export function RequestDetails({
           <div className="grid-layout">
             <DetailsRow rowName="Name" value={requestInfo.displayName} />
             <DetailsRow rowName="Request URL" value={requestInfo.url} />
-            <DetailsRow
-              rowName="Status"
-              value={`${requestInfo.responseInit?.status} ${requestInfo.responseInit?.statusText}`}
-            />
+            {requestInfo.responseInit ? (
+              <DetailsRow
+                rowName="Status"
+                value={`${requestInfo.responseInit?.status} ${requestInfo.responseInit?.statusText}`}
+              />
+            ) : null}
             <DetailsRow
               rowName="GraphiQL"
               value={requestInfo.graphiqlLink}
@@ -205,9 +207,7 @@ function DetailsRow({
           {text ?? value}
         </Link>
       )}
-      {type === 'string' && (
-        <div className="word-break-all">{text ?? value}</div>
-      )}
+      {type === 'string' && <div className="word-break-all">{actualValue}</div>}
     </>
   );
 }
