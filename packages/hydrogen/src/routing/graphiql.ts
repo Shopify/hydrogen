@@ -50,6 +50,7 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
         value: customerAccountSchema,
         authHeader: 'Authorization',
         accessToken,
+        // @ts-ignore This is recognized in editor but not at build time
         apiUrl: customerAccount.getApiUrl(),
       };
     }

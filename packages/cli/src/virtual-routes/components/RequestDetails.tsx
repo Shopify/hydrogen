@@ -207,7 +207,9 @@ function DetailsRow({
           {text ?? value}
         </Link>
       )}
-      {type === 'string' && <div className="word-break-all">{actualValue}</div>}
+      {type === 'string' && (
+        <div className="word-break-all">{text ?? value}</div>
+      )}
     </>
   );
 }
