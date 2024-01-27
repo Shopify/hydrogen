@@ -280,49 +280,6 @@
       "features": []
     },
     {
-      "title": "Fix redirect bug",
-      "version": "2023.10.4",
-      "date": "",
-      "hash": "c1e66ef0071de0040da16eefb69b3b34ac5729b4",
-      "pr": "https://github.com/Shopify/hydrogen/pull/1631",
-      "commit": "https://github.com/Shopify/hydrogen/commit/c1e66ef0071de0040da16eefb69b3b34ac5729b4",
-      "dependencies": {
-        "@remix-run/react": "2.1.0",
-        "@shopify/cli-hydrogen": "^6.1.0",
-        "@shopify/hydrogen": "^2023.10.4",
-        "@shopify/remix-oxygen": "^2.0.2"
-      },
-      "devDependencies": {
-        "@remix-run/dev": "2.1.0",
-        "typescript": "^5.2.2",
-        "@shopify/cli": "3.51.0",
-        "@shopify/oxygen-workers-types": "^4.0.0",
-        "@remix-run/server-runtime": "2.1.0"
-      },
-      "dependenciesMeta": {
-        "typescript": {
-          "required": true
-        },
-        "@shopify/oxygen-workers-types": {
-          "required": true
-        },
-        "@shopify/cli": {
-          "required": true
-        },
-        "@remix-run/server-runtime": {
-          "required": true
-        }
-      },
-      "fixes": [
-        {
-          "title": "Fix redirect bug",
-          "pr": "https://github.com/Shopify/hydrogen/pull/1631",
-          "id": "1631"
-        }
-      ],
-      "features": []
-    },
-    {
       "title": "New upgrade command, enhanced dev --debug, Pagination component fix and `ShopPayButton` attribution prop",
       "version": "2023.10.3",
       "date": "",
