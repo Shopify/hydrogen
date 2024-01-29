@@ -20,7 +20,9 @@ export type {SeoHandleFunction} from './seo/seo';
 export {Pagination, getPaginationVariables} from './pagination/Pagination';
 export {createCustomerAccountClient} from './customer/customer';
 export type {
-  CustomerClient,
+  CustomerAccount,
+  // CustomerClient is a deprecated type that will be remove after 2024-01
+  CustomerAccount as CustomerClient,
   CustomerAccountQueries,
   CustomerAccountMutations,
 } from './customer/types';

@@ -15,6 +15,7 @@ import {
   getNonce,
   redirect,
   Locks,
+  logSubRequestEvent,
 } from './auth.helpers';
 import {BadRequest} from './BadRequest';
 import {generateNonce} from '../csp/nonce';
@@ -26,19 +27,14 @@ import {
   type GraphQLErrorOptions,
 } from '../utils/graphql';
 import {parseJSON} from '../utils/parse-json';
-import {hashKey} from '../utils/hash';
 import {
   CrossRuntimeRequest,
   getHeader,
   getDebugHeaders,
 } from '../utils/request';
-import {
-  getCallerStackLine,
-  withSyncStack,
-  type StackInfo,
-} from '../utils/callsites';
+import {getCallerStackLine, withSyncStack} from '../utils/callsites';
 import {getRedirectUrl} from '../utils/get-redirect-url';
-import type {CustomerClientOptions, CustomerClient} from './types';
+import type {CustomerAccountOptions, CustomerAccount} from './types';
 
 const DEFAULT_LOGIN_URL = '/account/login';
 const DEFAULT_AUTH_URL = '/account/authorize';
@@ -65,7 +61,7 @@ export function createCustomerAccountClient({
   waitUntil,
   authUrl = DEFAULT_AUTH_URL,
   customAuthStatusHandler,
-}: CustomerClientOptions): CustomerClient {
+}: CustomerAccountOptions): CustomerAccount {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.warn(
       `[h2:warn:createCustomerAccountClient] You are using Customer Account API version ${customerApiVersion} when this version of Hydrogen was built for ${DEFAULT_CUSTOMER_API_VERSION}.`,
@@ -86,51 +82,15 @@ export function createCustomerAccountClient({
   const authStatusHandler = customAuthStatusHandler
     ? customAuthStatusHandler
     : () => defaultAuthStatusHandler(request);
-  const url = new URL(request.url);
+
+  const requestUrl = new URL(request.url);
   const origin =
-    url.protocol === 'http:' ? url.origin.replace('http', 'https') : url.origin;
+    requestUrl.protocol === 'http:'
+      ? requestUrl.origin.replace('http', 'https')
+      : requestUrl.origin;
   const redirectUri = authUrl.startsWith('/') ? origin + authUrl : authUrl;
-
   const customerAccountApiUrl = `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`;
-
   const locks: Locks = {};
-
-  type LogSubrequestOptions = {
-    startTime: number;
-    url?: string;
-    query?: string;
-    variables?: Record<string, any> | null;
-    stackInfo?: StackInfo;
-  };
-
-  const logSubRequestEvent =
-    process.env.NODE_ENV === 'development'
-      ? ({
-          url,
-          query = '',
-          variables,
-          startTime,
-          stackInfo,
-        }: LogSubrequestOptions) => {
-          const shopifyDevUrl = 'https://shopify.dev/';
-          const cacheKey =
-            url ||
-            /((query|mutation) [^\s\(]+)/g.exec(query)?.[0] ||
-            query.substring(0, 10);
-
-          globalThis.__H2O_LOG_EVENT?.({
-            eventType: 'subrequest',
-            url: `${shopifyDevUrl}?${hashKey([`Customer Account `, cacheKey])}`,
-            startTime,
-            waitUntil,
-            stackInfo,
-            graphql:
-              query &&
-              JSON.stringify({query, variables, schema: 'customer-account'}),
-            ...getDebugHeaders(request),
-          });
-        }
-      : undefined;
 
   async function fetchCustomerAPI<T>({
     query,
@@ -152,6 +112,7 @@ export function createCustomerAccountClient({
     const stackInfo = getCallerStackLine?.();
 
     const startTime = new Date().getTime();
+
     const response = await fetch(customerAccountApiUrl, {
       method: 'POST',
       headers: {
@@ -160,14 +121,19 @@ export function createCustomerAccountClient({
         Origin: origin,
         Authorization: accessToken,
       },
-      body: JSON.stringify({
-        operationName: 'SomeQuery',
-        query,
-        variables,
-      }),
+      body: JSON.stringify({query, variables}),
     });
 
-    logSubRequestEvent?.({query, variables, startTime, stackInfo});
+    logSubRequestEvent?.({
+      url: customerAccountApiUrl,
+      startTime,
+      response,
+      waitUntil,
+      stackInfo,
+      query,
+      variables,
+      ...getDebugHeaders(request),
+    });
 
     const body = await response.text();
 
@@ -219,8 +185,6 @@ export function createCustomerAccountClient({
     // Get stack trace before losing it with any async operation.
     const stackInfo = getCallerStackLine?.();
 
-    const startTime = new Date().getTime();
-
     try {
       await checkExpires({
         locks,
@@ -229,12 +193,11 @@ export function createCustomerAccountClient({
         customerAccountId,
         customerAccountUrl,
         origin,
-      });
-
-      logSubRequestEvent?.({
-        url: ' check expires',
-        startTime,
-        stackInfo,
+        debugInfo: {
+          waitUntil,
+          stackInfo,
+          ...getDebugHeaders(request),
+        },
       });
     } catch {
       return false;
@@ -334,8 +297,8 @@ export function createCustomerAccountClient({
       );
     },
     authorize: async () => {
-      const code = url.searchParams.get('code');
-      const state = url.searchParams.get('state');
+      const code = requestUrl.searchParams.get('code');
+      const state = requestUrl.searchParams.get('state');
 
       if (!code || !state) {
         clearSession(session);
@@ -380,10 +343,22 @@ export function createCustomerAccountClient({
         Origin: origin,
       };
 
-      const response = await fetch(`${customerAccountUrl}/auth/oauth/token`, {
+      const stackInfo = getCallerStackLine?.();
+      const startTime = new Date().getTime();
+      const url = `${customerAccountUrl}/auth/oauth/token`;
+      const response = await fetch(url, {
         method: 'POST',
         headers,
         body,
+      });
+
+      logSubRequestEvent?.({
+        url,
+        startTime,
+        response,
+        waitUntil,
+        stackInfo,
+        ...getDebugHeaders(request),
       });
 
       if (!response.ok) {
@@ -413,6 +388,11 @@ export function createCustomerAccountClient({
         customerAccountId,
         customerAccountUrl,
         origin,
+        {
+          waitUntil,
+          stackInfo,
+          ...getDebugHeaders(request),
+        },
       );
 
       const redirectPath = session.get(

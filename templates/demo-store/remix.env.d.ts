@@ -3,7 +3,7 @@
 /// <reference types="@shopify/oxygen-workers-types" />
 
 import type {WithCache, HydrogenCart} from '@shopify/hydrogen';
-import type {Storefront, CustomerClient} from '~/lib/type';
+import type {Storefront, CustomerAccount} from '~/lib/type';
 import type {AppSession} from '~/lib/session.server';
 
 declare global {
@@ -34,7 +34,7 @@ declare module '@shopify/remix-oxygen' {
     waitUntil: ExecutionContext['waitUntil'];
     session: AppSession;
     storefront: Storefront;
-    customerAccount: CustomerClient;
+    customerAccount: CustomerAccount;
     cart: HydrogenCart;
     env: Env;
   }
