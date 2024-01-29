@@ -8,13 +8,15 @@ at a route and section level.
 
 ## Requirements
 
-
 - Basic understanding of metaobjects. Creating metaobject [definitions](https://help.shopify.com/en/manual/custom-data/metaobjects/building-a-metaobject),
 creating metaobject [entries](https://help.shopify.com/en/manual/custom-data/metaobjects/creating-entries).
 For more info, please refer to this [tutorial](https://help.shopify.com/en/manual/custom-data/metaobjects/using-metaobjects)
 - Must use the "mock.shop" store because it has the required definitions and entries
-to make this example work. To use this example in your own store please read the
-[Implementing it in your store](#Implementing in your store) section below.
+to make this example work.
+
+> [!NOTE]
+> (Optional) If you prefer to use your own store instead, please follow the [instructions](/docs/METAOBJECTS.md)
+to configure the same content architecture.
 
 
 ## Key files
@@ -77,7 +79,7 @@ import {ROUTE_CONTENT_QUERY, RouteContent} from '~/sections/RouteContent';
 
 Adjust the loader to query for the route metaobject content
 
-```
+```ts
 export async function loader({context}: LoaderFunctionArgs) {
   const {storefront} = context;
 
@@ -92,7 +94,7 @@ export async function loader({context}: LoaderFunctionArgs) {
 
 Render the route's content sections with RouteContent
 
-```
+```ts
 export default function Homepage() {
   const {route} = useLoaderData<typeof loader>();
 
@@ -120,7 +122,7 @@ h2 init --template metaobjects
 
 Create an environment file `.env` at the root of the project
 
-```
+```h
 SESSION_SECRET="foobar"
 PUBLIC_STORE_DOMAIN="mock.shop"
 ```
