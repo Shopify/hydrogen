@@ -4,8 +4,6 @@ import {formatCode, getCodeFormatOptions} from './format-code.js';
 import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
 import {joinPath, relativePath, basename} from '@shopify/cli-kit/node/path';
 import {AbortError} from '@shopify/cli-kit/node/error';
-
-// Do not import code synchronously from this dependency, it must be patched first
 import type {LoadCodegenConfigResult} from '@graphql-codegen/cli';
 import type {GraphQLConfig} from 'graphql-config';
 
@@ -103,14 +101,7 @@ type CodegenOptions = ProjectDirs & {
   forceSfapiVersion?: string;
 };
 
-export async function codegen(options: CodegenOptions) {
-  await import('@shopify/hydrogen-codegen/patch').catch((error: Error) => {
-    throw new AbortError(
-      `Failed to patch dependencies for codegen.\n${error.stack}`,
-      'Please report this issue.',
-    );
-  });
-
+export function codegen(options: CodegenOptions) {
   return generateTypes(options).catch((error: Error) => {
     const {message, details} = normalizeCodegenError(
       error.message,
