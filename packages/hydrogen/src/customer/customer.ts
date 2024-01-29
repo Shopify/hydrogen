@@ -15,7 +15,7 @@ import {
   getNonce,
   redirect,
   Locks,
-  logFetchEvent,
+  logSubRequestEvent,
 } from './auth.helpers';
 import {BadRequest} from './BadRequest';
 import {generateNonce} from '../csp/nonce';
@@ -89,7 +89,7 @@ export function createCustomerAccountClient({
       ? requestUrl.origin.replace('http', 'https')
       : requestUrl.origin;
   const redirectUri = authUrl.startsWith('/') ? origin + authUrl : authUrl;
-
+  const customerAccountApiUrl = `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`;
   const locks: Locks = {};
 
   async function fetchCustomerAPI<T>({
@@ -109,13 +109,11 @@ export function createCustomerAccountClient({
     // Get stack trace before losing it with any async operation.
     // Since this is an internal function that is always called from
     // the public query/mutate wrappers, add 1 to the stack offset.
-    const stackInfo = getCallerStackLine?.(1);
+    const stackInfo = getCallerStackLine?.();
+
     const startTime = new Date().getTime();
 
-    const url = `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`;
-    const graphqlData = JSON.stringify({query, variables});
-
-    const response = await fetch(url, {
+    const response = await fetch(customerAccountApiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -123,23 +121,24 @@ export function createCustomerAccountClient({
         Origin: origin,
         Authorization: accessToken,
       },
-      body: graphqlData,
+      body: JSON.stringify({query, variables}),
     });
 
-    logFetchEvent?.({
-      url,
+    logSubRequestEvent?.({
+      url: customerAccountApiUrl,
       startTime,
       response,
       waitUntil,
       stackInfo,
-      graphql: graphqlData,
+      query,
+      variables,
       ...getDebugHeaders(request),
     });
 
     const body = await response.text();
 
     const errorOptions: GraphQLErrorOptions<T> = {
-      url,
+      url: customerAccountApiUrl,
       response,
       type,
       query,
@@ -280,6 +279,7 @@ export function createCustomerAccountClient({
     isLoggedIn,
     handleAuthStatus,
     getAccessToken,
+    getApiUrl: () => customerAccountApiUrl,
     mutate(mutation, options?) {
       mutation = minifyQuery(mutation);
       assertMutation(mutation, 'customer.mutate');
@@ -352,8 +352,9 @@ export function createCustomerAccountClient({
         body,
       });
 
-      logFetchEvent?.({
+      logSubRequestEvent?.({
         url,
+        displayName: 'Customer Account API: authorize',
         startTime,
         response,
         waitUntil,

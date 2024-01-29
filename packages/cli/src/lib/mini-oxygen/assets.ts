@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {createRequire} from 'node:module';
 import {
   createServer,
   type IncomingMessage,
@@ -39,7 +40,15 @@ export function createAssetsServer(buildPathClient: string) {
       : pathname;
 
     if (isValidAssetPath) {
-      const filePath = path.join(buildPathClient, relativeAssetPath);
+      let filePath = path.join(buildPathClient, relativeAssetPath);
+
+      // Request coming from /graphiql
+      if (relativeAssetPath === '/graphiql/customer-account.schema.json') {
+        const require = createRequire(import.meta.url);
+        filePath = require.resolve(
+          '@shopify/hydrogen/customer-account.schema.json',
+        );
+      }
 
       // Ignore errors and just return 404
       const file = await fs.open(filePath).catch(() => {});

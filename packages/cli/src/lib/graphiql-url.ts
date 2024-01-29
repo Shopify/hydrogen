@@ -3,7 +3,11 @@ export function getGraphiQLUrl({
   graphql,
 }: {
   host?: string;
-  graphql?: {query: string; variables: string | Record<string, any>};
+  graphql?: {
+    query: string;
+    variables: string | Record<string, any>;
+    schema?: string;
+  };
 }) {
   let url = `${host.endsWith('/') ? host.slice(0, -1) : host}/graphiql`;
 
@@ -14,6 +18,10 @@ export function getGraphiQLUrl({
     url += `?query=${encodeURIComponent(query)}${
       variables ? `&variables=${encodeURIComponent(variables)}` : ''
     }`;
+
+    if (graphql.schema) {
+      url += `&schema=${graphql.schema}`;
+    }
   }
 
   return url;
