@@ -5,29 +5,37 @@ import {
   CUSTOMER_API_CLIENT_ID,
   CUSTOMER_ACCOUNT_SESSION_KEY,
 } from './constants';
-import type {H2OEvent} from '@shopify/remix-oxygen';
+
+type H2OEvent = Parameters<NonNullable<typeof __H2O_LOG_EVENT>>[0];
 
 export interface Locks {
   refresh?: Promise<any>;
 }
 
-export const logFetchEvent =
+export const logSubRequestEvent =
   process.env.NODE_ENV === 'development'
     ? ({
         url,
         response,
         startTime,
+        query,
+        variables,
         ...debugInfo
       }: {
         url: H2OEvent['url'];
         response: Response;
         startTime: H2OEvent['startTime'];
+        query?: string;
+        variables?: Record<string, any> | null;
       } & Partial<H2OEvent>) => {
         globalThis.__H2O_LOG_EVENT?.({
           ...debugInfo,
           eventType: 'subrequest',
           url,
           startTime,
+          graphql: query
+            ? JSON.stringify({query, variables, schema: 'customer-account'})
+            : undefined,
           responseInit: {
             status: response.status || 0,
             statusText: response.statusText || '',
@@ -100,7 +108,7 @@ export async function refreshToken({
     body: newBody,
   });
 
-  logFetchEvent?.({
+  logSubRequestEvent?.({
     displayName: 'Customer Account API: access token refresh',
     url,
     startTime,
@@ -268,7 +276,7 @@ export async function exchangeAccessToken(
     body,
   });
 
-  logFetchEvent?.({
+  logSubRequestEvent?.({
     displayName: 'Customer Account API: access token exchange',
     url,
     startTime,
