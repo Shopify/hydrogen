@@ -56,7 +56,7 @@ function parseMetafieldValue(node: Record<string, any>) {
         node,
       );
 
-    // TODO: add other types
+    // NOTE: expand with other field types as needed for your project
     default:
       parsed = node;
   }

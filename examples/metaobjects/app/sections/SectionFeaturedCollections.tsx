@@ -85,27 +85,3 @@ export const SECTION_FEATURED_COLLECTIONS_FRAGMENT = `#graphql
   }
   ${FEATURED_COLLECTION_FRAGMENT}
 `;
-
-/*
-function FeaturedCollection({
-  collection,
-}: {
-  collection: FeaturedCollectionFragment;
-}) {
-  if (!collection) return null;
-  const image = collection?.image;
-  return (
-    <Link
-      className="featured-collection"
-      to={`/collections/${collection.handle}`}
-    >
-      {image && (
-        <div className="featured-collection-image">
-          <Image data={image} sizes="100vw" />
-        </div>
-      )}
-      <h1>{collection.title}</h1>
-    </Link>
-  );
-}
-*/
