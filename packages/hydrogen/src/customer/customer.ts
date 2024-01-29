@@ -354,6 +354,7 @@ export function createCustomerAccountClient({
 
       logSubRequestEvent?.({
         url,
+        displayName: 'Customer Account API: authorize',
         startTime,
         response,
         waitUntil,
