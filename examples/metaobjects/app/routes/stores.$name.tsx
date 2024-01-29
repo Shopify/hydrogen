@@ -14,7 +14,6 @@ export async function loader({context, params}: LoaderFunctionArgs) {
   // 2. Query for the route's content metaobject
   const {route} = await storefront.query(ROUTE_CONTENT_QUERY, {
     variables: {handle: `route-${name}`},
-    cache: storefront.CacheNone(),
   });
 
   return json({route});

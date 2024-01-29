@@ -13,7 +13,7 @@ export async function loader({context}: LoaderFunctionArgs) {
 
   // 2. Query the static route metaobject
   const {route} = await storefront.query(ROUTE_CONTENT_QUERY, {
-    variables: {handle: 'content-management-with-metaobjects'},
+    variables: {handle: 'route-content-management-with-metaobjects'},
     cache: storefront.CacheNone(),
   });
 

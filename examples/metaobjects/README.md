@@ -56,6 +56,7 @@ Create or adjust the environment file `.env` at the root of the project
 ```
 SESSION_SECRET="foobar"
 PUBLIC_STORE_DOMAIN="mock.shop"
+PUBLIC_STORE
 ```
 
 > [!NOTE]
@@ -69,7 +70,27 @@ structure has been created.
 - components/
 - routes/
 
-### 3. Modify the homepage route
+### 3. Return the `PUBLIC_SHOPIFY_STORE_DOMAIN` from the root layout
+
+To enable the Edit Route button return the env variable as `publicStoreSubdomain`
+like so
+
+```ts
+export async function loader({context}: LoaderFunctionArgs) {
+  // other code ...
+  const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
+
+  return defer(
+    {
+      // other code ...
+      publicStoreSubdomain: context.env.PUBLIC_SHOPIFY_STORE_DOMAIN
+    },
+    {headers},
+  );
+}
+```
+
+### 4. Modify the homepage route
 
 Import the `RouteContent` component and query
 

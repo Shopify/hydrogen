@@ -10,19 +10,19 @@ export function EditRoute({routeId}: {routeId: string}) {
   const [url, setUrl] = useState<URL | null>(null);
   const [root] = useMatches();
   // @ts-ignore
-  const publictoreSubdomain = root?.data?.publictoreSubdomain;
+  const publicStoreSubdomain= root?.data?.publicStoreSubdomain;
 
   useEffect(() => {
     setUrl(new URL(window.location.href));
   }, []);
 
-  if (!url || !publictoreSubdomain) return null;
+  if (!url || !publicStoreSubdomain) return null;
 
   const isDev =
     url.hostname.includes('localhost') || url.hostname.includes('127.0.0.1');
   const isPreview = url.hostname.includes('preview');
   const legacyId = routeId.split('/').pop();
-  const adminEditUrl = `https://admin.shopify.com/store/${publictoreSubdomain}/content/entries/route/${legacyId}`;
+  const adminEditUrl = `https://admin.shopify.com/store/${publicStoreSubdomain}/content/entries/route/${legacyId}`;
 
   const shouldShowEditLink = isDev || isPreview;
   if (!shouldShowEditLink) return null;

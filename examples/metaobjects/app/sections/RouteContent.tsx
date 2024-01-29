@@ -4,6 +4,7 @@ import {EditRoute} from '~/components/EditRoute';
 import type {RouteContentQuery} from 'storefrontapi.generated';
 
 export function RouteContent({route}: {route: RouteContentQuery['route']}) {
+  console.log(route)
   return (
     <div>
       {route?.id && <EditRoute routeId={route.id} />}

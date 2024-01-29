@@ -32,7 +32,7 @@ export function Sections({sections}: {sections: SectionsFragment}) {
             return <SectionFeaturedCollections {...section} key={section.id} />;
           case 'section_richtext':
             return <SectionRichText {...section} key={section.id} />;
-          case 'section_stores':
+          case 'section_stores_grid':
             return <SectionStores {...section} key={section.id} />;
           case 'section_store_profile':
             return <SectionStoreProfile {...section} key={section.id} />;

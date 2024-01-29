@@ -95,7 +95,7 @@ of stores to display in grid.
 
 #### SectionStoreGrid fields
 
-![SectionStoreGrid Definition](./images/definition_section_store_grid.png "Metaobject SectionStoreGrid Definition")
+![SectionStoreGrid Definition](./images/definition_section_stores_grid.png "Metaobject SectionStoreGrid Definition")
 
 ---
 
