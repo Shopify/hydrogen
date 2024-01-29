@@ -1,5 +1,11 @@
 # @shopify/remix-oxygen
 
+## 2.0.3
+
+### Patch Changes
+
+- Bump dev dependency ([#1688](https://github.com/Shopify/hydrogen/pull/1688)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 2.0.2
 
 ### Patch Changes

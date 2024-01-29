@@ -5906,14 +5906,14 @@
               {
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "MethodSignature",
-                "name": "__@iterator@450",
+                "name": "__@iterator@417",
                 "value": "() => IterableIterator<unknown>",
                 "description": "Iterator"
               },
               {
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "MethodSignature",
-                "name": "__@unscopables@452",
+                "name": "__@unscopables@419",
                 "value": "() => { copyWithin: boolean; entries: boolean; fill: boolean; find: boolean; findIndex: boolean; keys: boolean; values: boolean; }",
                 "description": "Returns an object whose properties have the value 'true'\r\nwhen they will be absent when used in a 'with' statement."
               },

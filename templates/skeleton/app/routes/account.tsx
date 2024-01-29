@@ -6,41 +6,24 @@ export function shouldRevalidate() {
   return true;
 }
 
-export async function loader({request, context}: LoaderFunctionArgs) {
-  if (!(await context.customerAccount.isLoggedIn())) {
-    const loginUrl =
-      '/account/login' +
-      `?${new URLSearchParams(`redirectPath=${request.url}`).toString()}`;
+export async function loader({context}: LoaderFunctionArgs) {
+  const {data, errors} = await context.customerAccount.query(
+    CUSTOMER_DETAILS_QUERY,
+  );
 
-    return redirect(loginUrl);
+  if (errors?.length || !data?.customer) {
+    throw new Error('Customer not found');
   }
 
-  try {
-    const {data, errors} = await context.customerAccount.query(
-      CUSTOMER_DETAILS_QUERY,
-    );
-
-    if (errors?.length || !data?.customer) {
-      throw new Error('Customer not found');
-    }
-
-    return json(
-      {customer: data.customer},
-      {
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Set-Cookie': await context.session.commit(),
-        },
-      },
-    );
-  } catch (error) {
-    throw new Response(error instanceof Error ? error.message : undefined, {
-      status: 404,
+  return json(
+    {customer: data.customer},
+    {
       headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Set-Cookie': await context.session.commit(),
       },
-    });
-  }
+    },
+  );
 }
 
 export default function AccountLayout() {

@@ -1,7 +1,284 @@
 {
   "url": "https://github.com/Shopify/hydrogen/pulls?q=is%3Apr+is%3Aclosed+%5Bci%5D+release+in%3Atitle+is%3Amerged",
-  "version": "1.0",
+  "version": "1.1",
   "releases": [
+    {
+      "title": "SFAPI 2024-01, Remix 2.51, Customer Account API, Examples, and more",
+      "version": "2024.1.0",
+      "date": "",
+      "hash": "c1e66ef0071de0040da16eefb69b3b34ac5729b4",
+      "pr": "https://github.com/Shopify/hydrogen/pull/1631",
+      "commit": "https://github.com/Shopify/hydrogen/commit/c1e66ef0071de0040da16eefb69b3b34ac5729b4",
+      "dependencies": {
+        "@remix-run/react": "2.5.1",
+        "@shopify/cli-hydrogen": "^7.0.0",
+        "@shopify/hydrogen": "^2024.1.0",
+        "@shopify/remix-oxygen": "^2.0.3"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "2.5.1",
+        "typescript": "^5.2.2",
+        "@shopify/cli": "3.52.0",
+        "@shopify/oxygen-workers-types": "^4.0.0",
+        "@remix-run/server-runtime": "2.5.1"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Remove deprecated build command flags `--base`, `--entry`, `--target`. Additionally, `--codegen-unstable` is now `--codegen`",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1640",
+          "id": "1640"
+        },
+        {
+          "title": "Fix step-debugging when running in the Node.js sandbox",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1501",
+          "id": "1501"
+        },
+        {
+          "title": "Generate sourcemaps by default when running the deploy command",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1623",
+          "id": "1623"
+        },
+        {
+          "title": "Fix the <Seo /> component to render canonical URLs without trailing slashes",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1622",
+          "id": "1622"
+        },
+        {
+          "title": "Fix error stack traces thrown by API clients if promises are not awaited",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1656",
+          "id": "1656"
+        },
+        {
+          "title": "Fix <model-viewer>'s onPause event listener, with improved readability",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1669",
+          "id": "1669"
+        },
+        {
+          "title": "Add React.forwardRef to Video and ExternalVideo components",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1415",
+          "id": "1415"
+        },
+        {
+          "title": "Fix step-debugging when running in the Node.js sandbox",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1501",
+          "id": "1501"
+        },
+        {
+          "title": "Use new `variantBySelectedOptions` parameters introduced in Storefront API v2024-01 to fix redirection to the product's default variant when there are unknown query params in the URL.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1642",
+          "id": "1642",
+          "steps": [
+             {
+               "title": "Update the `product` query to include the `variantBySelectedOptions` parameters `ignoreUnknownOptions` and `caseInsensitiveMatch`",
+               "code": "YGBgZGlmZgotICAgc2VsZWN0ZWRWYXJpYW50OiB2YXJpYW50QnlTZWxlY3RlZE9wdGlvbnMoc2VsZWN0ZWRPcHRpb25zOiAkc2VsZWN0ZWRPcHRpb25zKSB7CisgICBzZWxlY3RlZFZhcmlhbnQ6IHZhcmlhbnRCeVNlbGVjdGVkT3B0aW9ucyhzZWxlY3RlZE9wdGlvbnM6ICRzZWxlY3RlZE9wdGlvbnMsIGlnbm9yZVVua25vd25PcHRpb25zOiB0cnVlLCBjYXNlSW5zZW5zaXRpdmVNYXRjaDogdHJ1ZSkgewogICAgICAuLi5Qcm9kdWN0VmFyaWFudAogICAgfQpgYGA="
+             }
+          ]
+        }
+      ],
+      "features": [
+        {
+          "title": "Use Customer Account API in templates/skeleton & template/demo-store",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1576",
+          "id": "1576"
+        },
+        {
+          "title": "Add Subscriptions / Selling Plans example",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1582",
+          "id": "1582"
+        },
+        {
+          "title": "Add Optimistic Cart UI item remove example",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1557",
+          "id": "1557"
+        },
+        {
+           "title": "Add multipass example",
+           "pr": "https://github.com/Shopify/hydrogen/pull/1540",
+           "id": "1540"
+        },
+        {
+           "title": "Add Third-party Queries and Caching example",
+           "pr": "https://github.com/Shopify/hydrogen/pull/1559",
+           "id": "1559"
+        },
+        {
+          "title": "Update the GraphQL config in .graphqlrc.yml to use the more modern projects structure:",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1577",
+          "id": "1577",
+          "steps": [
+             {
+               "title": "This allows you to add additional projects to the GraphQL config, such as third party CMS schemas.",
+               "code": "YGBgZGlmZgotc2NoZW1hOiBub2RlX21vZHVsZXMvQHNob3BpZnkvaHlkcm9nZW4vc3RvcmVmcm9udC5zY2hlbWEuanNvbgorcHJvamVjdHM6CisgZGVmYXVsdDoKKyAgICBzY2hlbWE6ICdub2RlX21vZHVsZXMvQHNob3BpZnkvaHlkcm9nZW4vc3RvcmVmcm9udC5zY2hlbWEuanNvbgpgYGA="
+             },
+             {
+               "title": "Also, you can modify the document paths used for the Storefront API queries. This is useful if you have a large codebase and want to exclude certain files from being used for codegen or other GraphQL utilities:",
+               "code": "IGBgYHlhbWwKICAgIHByb2plY3RzOgogICAgICBkZWZhdWx0OgogICAgICAgIHNjaGVtYTogJ25vZGVfbW9kdWxlcy9Ac2hvcGlmeS9oeWRyb2dlbi9zdG9yZWZyb250LnNjaGVtYS5qc29uJwogICAgICAgIGRvY3VtZW50czoKICAgICAgICAgIC0gJyEqLmQudHMnCiAgICAgICAgICAtICcqLnt0cyx0c3gsanMsanN4fScKICAgICAgICAgIC0gJ2FwcC8qKi8qLnt0cyx0c3gsanMsanN4fScKICAgIGBgYA=="
+             }
+          ]
+        },
+        {
+          "title": "Use new `variantBySelectedOptions` parameters introduced in Storefront API v2024-01 to fix redirection to the product's default variant when there are unknown query params in the URL.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1642",
+          "id": "1642",
+          "steps": [
+             {
+               "title": "Update the `product` query to include the `variantBySelectedOptions` parameters `ignoreUnknownOptions` and `caseInsensitiveMatch`",
+               "code": "YGBgZGlmZgotICAgc2VsZWN0ZWRWYXJpYW50OiB2YXJpYW50QnlTZWxlY3RlZE9wdGlvbnMoc2VsZWN0ZWRPcHRpb25zOiAkc2VsZWN0ZWRPcHRpb25zKSB7CisgICBzZWxlY3RlZFZhcmlhbnQ6IHZhcmlhbnRCeVNlbGVjdGVkT3B0aW9ucyhzZWxlY3RlZE9wdGlvbnM6ICRzZWxlY3RlZE9wdGlvbnMsIGlnbm9yZVVua25vd25PcHRpb25zOiB0cnVlLCBjYXNlSW5zZW5zaXRpdmVNYXRjaDogdHJ1ZSkgewogICAgICAuLi5Qcm9kdWN0VmFyaWFudAogICAgfQpgYGA="
+             }
+          ]
+
+        },
+        {
+          "title": "Add `createCustomerAccountClient` for interacting with the Customer Account API",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1606",
+          "id": "1606",
+          "docs": "https://shopify.dev/docs/api/hydrogen/2024-01/utilities/createcustomeraccountclient"
+        },
+        {
+          "title": "Enhanced Subrequest Profiler developer tool to enable better observability of server-side network requests and caching behaviors",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1511",
+          "id": "1511",
+          "docs": "https://shopify.dev/docs/custom-storefronts/hydrogen/debugging/subrequest-profiler"
+        },
+        {
+          "title": "Upgrade to Storefront API v2024-01",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1642",
+          "id": "1642"
+        },
+        {
+          "title": "Custom createContentSecurityPolicy directives now extend the default domains, instead of overriding them",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1593",
+          "id": "1593"
+        },
+        {
+          "title": "Better Hydrogen error handling",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1645",
+          "id": "1645",
+          "steps": [
+             {
+               "title": "Changed the shape of the error objects returned by createCartHandler. Previously, mutations could return an errors array that contained a userErrors array. With this change, these arrays are no longer nested. The response can contain both an errors array and a userErrors array. errors contains GraphQL execution errors. userErrors contains errors caused by the cart mutation itself (such as adding a product that has zero inventory). storefront.isApiError is deprecated.",
+               "code": "YGBgZGlmZgotIGNvbnN0IGRhdGEgPSBhd2FpdCBjb250ZXh0LnN0b3JlZnJvbnQucXVlcnkoRVhBTVBMRV9RVUVSWSkKKyBjb25zdCB7ZGF0YSwgZXJyb3JzLCB1c2VyRXJyb3JzfSA9IGF3YWl0IGNvbnRleHQuc3RvcmVmcm9udC5xdWVyeShFWEFNUExFX1FVRVJZKSAKYGBgCgpgYGBkaWZmCi0gY29uc3QgY2FydCA9IGF3YWl0IGNvbnRleHQuY2FydC5nZXQoKQorIGNvbnN0IHtjYXJ0LCBlcnJvcnMsIHVzZXJFcnJvcnN9ID0gYXdhaXQgY29udGV4dC5jYXJ0LmdldCgpCmBgYA=="
+             }
+          ]
+        },
+        {
+          "title": "Allow creating new storefront when running the init command",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1681",
+          "id": "1681"
+        },
+        {
+          "title": "Update to Remix version ^2.5.1 and enable `v3_fetcherPersist` and `v3_relativeSplatpath` future flags",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1639",
+          "id": "1639"
+        },
+        {
+          "title": "Add deploy command to Hydrogen CLI",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1628",
+          "id": "1628",
+          "steps": [
+            {
+              "title": "Use the new `h2 deploy` command to deploy your app",
+              "code": "YGBgYmFzaApucHggc2hvcGlmeSBoeWRyb2dlbiBkZXBsb3kgLS1oZWxwCmBgYA=="
+            }
+          ]
+        },
+        {
+          "title": "Add `--template` flag to enable scaffolding projects based on examples from the Hydrogen repo",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1608",
+          "id": "1608",
+          "steps": [
+            {
+              "title": "Use the new `--template` flag to scaffold your app",
+              "code": "YGBgYmFzaApucG0gY3JlYXRlIEBzaG9waWZ5L2h5ZHJvZ2VuQGxhdGVzdCAtLSAtLXRlbXBsYXRlIG11bHRpcGFzcwpgYGA="
+            }
+          ]
+        },
+        {
+          "title": "Add --diff flag to dev and build commands, used for building Hydrogen app examples",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1549",
+          "id": "1549"
+        },
+        {
+          "title": "Make the worker runtime the default environment for the local dev and preview.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1625",
+          "id": "1625",
+          "steps": [
+            {
+              "title": "To access the legacy Node.js runtime, pass the --legacy-runtime flag. The legacy runtime will be deprecated and removed in a future release.",
+              "code": "YGBgZGlmZgoic2NyaXB0cyI6IHsKLSAgICJkZXYiOiAic2hvcGlmeSBoeWRyb2dlbiBkZXYgLS1jb2RlZ2VuIiwKKyAgICJkZXYiOiAic2hvcGlmeSBoeWRyb2dlbiBkZXYgLS1jb2RlZ2VuIC0tbGVnYWN5LXJ1bnRpbWUiLAotICAgICJwcmV2aWV3IjogIm5wbSBydW4gYnVpbGQgJiYgc2hvcGlmeSBoeWRyb2dlbiBwcmV2aWV3IiwKKyAgICAicHJldmlldyI6ICJucG0gcnVuIGJ1aWxkICYmIHNob3BpZnkgaHlkcm9nZW4gcHJldmlldyAtLWxlZ2FjeS1ydW50aW1lIiwKfQpgYGA="
+            }
+          ]
+        },
+        {
+          "title": "Make default HydrogenSession type extensible",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1590",
+          "id": "1590",
+          "steps": [
+             {
+               "title": "New HydrogenSession type",
+               "code": "YGBgZGlmZgppbXBvcnQgeworIHR5cGUgSHlkcm9nZW5TZXNzaW9uLAp9IGZyb20gJ0BzaG9waWZ5L2h5ZHJvZ2VuJzsKCi0gY2xhc3MgSHlkcm9nZW5TZXNzaW9uIHsKKyBjbGFzcyBBcHBTZXNzaW9uIGltcGxlbWVudHMgSHlkcm9nZW5TZXNzaW9uIHsKICAgIC4uLgp9CmBgYA=="
+             }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Fix redirect bug",
+      "version": "2023.10.4",
+      "date": "",
+      "hash": "c1e66ef0071de0040da16eefb69b3b34ac5729b4",
+      "pr": "https://github.com/Shopify/hydrogen/pull/1631",
+      "commit": "https://github.com/Shopify/hydrogen/commit/c1e66ef0071de0040da16eefb69b3b34ac5729b4",
+      "dependencies": {
+        "@remix-run/react": "2.1.0",
+        "@shopify/cli-hydrogen": "^6.1.0",
+        "@shopify/hydrogen": "^2023.10.4",
+        "@shopify/remix-oxygen": "^2.0.2"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "2.1.0",
+        "typescript": "^5.2.2",
+        "@shopify/cli": "3.51.0",
+        "@shopify/oxygen-workers-types": "^4.0.0",
+        "@remix-run/server-runtime": "2.1.0"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Fix redirect bug",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1631",
+          "id": "1631"
+        }
+      ],
+      "features": []
+    },
     {
       "title": "New upgrade command, enhanced dev --debug, Pagination component fix and `ShopPayButton` attribution prop",
       "version": "2023.10.3",
@@ -137,7 +414,6 @@
           "steps": [
             {
               "title": "Debugging on the default runtime (Node.js sandbox):",
-
               "code": "YGBgYmFzaApoMiBkZXYgLS1kZWJ1ZwpgYGA="
             },
             {
