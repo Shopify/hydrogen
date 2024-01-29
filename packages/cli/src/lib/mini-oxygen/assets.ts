@@ -27,7 +27,19 @@ export function buildAssetsUrl(assetsPort: number) {
 export function createAssetsServer(buildPathClient: string) {
   return createServer(async (req: IncomingMessage, res: ServerResponse) => {
     // Similar headers to Shopify CDN
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    if (req.method === 'OPTIONS') {
+      // Setting PNA preflight headers
+      // https://developer.chrome.com/blog/private-network-access-preflight
+      res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Allow-Private-Network', 'true');
+      res.setHeader('Access-Control-Max-Age', '86400');
+      res.writeHead(204);
+      res.end();
+      return;
+    } else {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+    }
     res.setHeader('X-Content-Type-Options', 'nosniff');
 
     const pathname = req.url?.split('?')[0] || '';
