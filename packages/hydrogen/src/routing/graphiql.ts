@@ -182,94 +182,108 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
 
               const keys = Object.keys(schemas);
 
-              return React.createElement(GraphiQL, {
-                fetcher: GraphiQL.createFetcher({
-                  url: schema.apiUrl,
-                  headers: {[schema.authHeader]: schema.accessToken},
-                }),
-                defaultEditorToolsVisibility: true,
-                query,
-                variables,
-                schema: schema.value,
-                plugins: [GraphiQLPluginExplorer.explorerPlugin()],
-                onTabChange: (state) => {
-                  const {activeTabIndex, tabs} = state;
-                  const activeTab = tabs[activeTabIndex];
+              return React.createElement(
+                GraphiQL,
+                {
+                  fetcher: GraphiQL.createFetcher({
+                    url: schema.apiUrl,
+                    headers: {[schema.authHeader]: schema.accessToken},
+                  }),
+                  defaultEditorToolsVisibility: true,
+                  query,
+                  variables,
+                  schema: schema.value,
+                  plugins: [GraphiQLPluginExplorer.explorerPlugin()],
+                  onTabChange: (state) => {
+                    const {activeTabIndex, tabs} = state;
+                    const activeTab = tabs[activeTabIndex];
 
-                  if (
-                    activeTabIndex === lastActiveTabIndex &&
-                    lastTabAmount === tabs.length
-                  ) {
                     if (
-                      nextSchemaKey &&
-                      activeTab &&
-                      activeTab.schemaKey !== nextSchemaKey
+                      activeTabIndex === lastActiveTabIndex &&
+                      lastTabAmount === tabs.length
                     ) {
-                      activeTab.schemaKey = nextSchemaKey;
-                      nextSchemaKey = undefined;
+                      if (
+                        nextSchemaKey &&
+                        activeTab &&
+                        activeTab.schemaKey !== nextSchemaKey
+                      ) {
+                        activeTab.schemaKey = nextSchemaKey;
+                        nextSchemaKey = undefined;
 
-                      // Sync state to localStorage. GraphiQL resets the state
-                      // asynchronously, so we need to do it in a timeout.
-                      storage.setTabState(state);
-                      setTimeout(() => storage.setTabState(state), 500);
+                        // Sync state to localStorage. GraphiQL resets the state
+                        // asynchronously, so we need to do it in a timeout.
+                        storage.setTabState(state);
+                        setTimeout(() => storage.setTabState(state), 500);
+                      }
+
+                      // React rerrendering, skip
+                      return;
                     }
 
-                    // React rerrendering, skip
-                    return;
-                  }
+                    if (activeTab) {
+                      if (!activeTab.schemaKey) {
+                        // Creating a new tab
+                        if (lastTabAmount < tabs.length) {
+                          activeTab.schemaKey = activeSchema;
+                          storage.setTabState(state);
+                        }
+                      }
 
-                  if (activeTab) {
-                    if (!activeTab.schemaKey) {
-                      // Creating a new tab
-                      if (lastTabAmount < tabs.length) {
-                        activeTab.schemaKey = activeSchema;
-                        storage.setTabState(state);
+                      const nextSchema = activeTab.schemaKey || 'storefront';
+
+                      if (nextSchema !== activeSchema) {
+                        setActiveSchema(nextSchema);
                       }
                     }
 
-                    const nextSchema = activeTab.schemaKey || 'storefront';
-
-                    if (nextSchema !== activeSchema) {
-                      setActiveSchema(nextSchema);
-                    }
-                  }
-
-                  lastActiveTabIndex = activeTabIndex;
-                  lastTabAmount = tabs.length;
+                    lastActiveTabIndex = activeTabIndex;
+                    lastTabAmount = tabs.length;
+                  },
                 },
-                children: [
-                  React.createElement(GraphiQL.Logo, {
-                    key: 'Logo replacement',
-                    children: [
-                      React.createElement('div', {
-                        key: 'Logo wrapper',
-                        style: {display: 'flex', alignItems: 'center'},
-                        children: [
-                          React.createElement('div', {
-                            key: 'api',
-                            className: 'graphiql-logo',
-                            style: {
-                              paddingRight: 0,
-                              whiteSpace: 'nowrap',
-                              cursor: 'pointer',
-                            },
-                            onClick: () => {
-                              const activeKeyIndex = keys.indexOf(activeSchema);
-                              nextSchemaKey =
-                                keys[(activeKeyIndex + 1) % keys.length];
+                [
+                  React.createElement(
+                    GraphiQL.Logo,
+                    {
+                      key: 'Logo replacement',
+                    },
+                    [
+                      React.createElement(
+                        'div',
+                        {
+                          key: 'Logo wrapper',
+                          style: {display: 'flex', alignItems: 'center'},
+                        },
+                        [
+                          React.createElement(
+                            'div',
+                            {
+                              key: 'api',
+                              className: 'graphiql-logo',
+                              style: {
+                                paddingRight: 0,
+                                whiteSpace: 'nowrap',
+                                cursor: 'pointer',
+                              },
+                              onClick: () => {
+                                const activeKeyIndex =
+                                  keys.indexOf(activeSchema);
+                                nextSchemaKey =
+                                  keys[(activeKeyIndex + 1) % keys.length];
 
-                              // This triggers onTabChange
-                              if (nextSchemaKey) setActiveSchema(nextSchemaKey);
+                                // This triggers onTabChange
+                                if (nextSchemaKey)
+                                  setActiveSchema(nextSchemaKey);
+                              },
                             },
-                            children: [schema.name],
-                          }),
+                            [schema.name],
+                          ),
                           React.createElement(GraphiQL.Logo, {key: 'logo'}),
                         ],
-                      }),
+                      ),
                     ],
-                  }),
+                  ),
                 ],
-              });
+              );
             }
           </script>
         </body>
