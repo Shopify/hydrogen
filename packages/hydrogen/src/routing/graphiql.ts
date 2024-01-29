@@ -21,6 +21,7 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
       accessToken?: string;
       authHeader: string;
       apiUrl: string;
+      icon: string;
     };
   } = {};
 
@@ -31,6 +32,7 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
       authHeader,
       accessToken: storefront.getPublicTokenHeaders()[authHeader],
       apiUrl: storefront.getApiUrl(),
+      icon: 'SF',
     };
   }
 
@@ -52,6 +54,7 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
         accessToken,
         // @ts-ignore This is recognized in editor but not at build time
         apiUrl: customerAccount.getApiUrl(),
+        icon: 'CA',
       };
     }
   }
@@ -87,6 +90,13 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
               width: fit-content;
               margin: 40px auto;
               font-family: Arial;
+            }
+
+            .graphiql-api-toolbar-label {
+              position: absolute;
+              bottom: -6px;
+              right: -4px;
+              font-size: 8px;
             }
           </style>
 
@@ -239,6 +249,51 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
                     lastActiveTabIndex = activeTabIndex;
                     lastTabAmount = tabs.length;
                   },
+                  toolbar: {
+                    additionalComponent: function () {
+                      const schema = schemas[activeSchema];
+
+                      return React.createElement(
+                        GraphiQL.React.ToolbarButton,
+                        {
+                          onClick: () => {
+                            const activeKeyIndex = keys.indexOf(activeSchema);
+                            nextSchemaKey =
+                              keys[(activeKeyIndex + 1) % keys.length];
+
+                            // This triggers onTabChange
+                            if (nextSchemaKey) setActiveSchema(nextSchemaKey);
+                          },
+                          label: 'Toggle between different API schemas',
+                        },
+                        React.createElement(
+                          'div',
+                          {
+                            key: 'api-wrapper',
+                            className: 'graphiql-toolbar-icon',
+                            style: {position: 'relative', fontWeight: 'bolder'},
+                          },
+                          [
+                            React.createElement(
+                              'div',
+                              {key: 'icon', style: {textAlign: 'center'}},
+                              [
+                                schema.icon,
+                                React.createElement(
+                                  'div',
+                                  {
+                                    key: 'icon-label',
+                                    className: 'graphiql-api-toolbar-label',
+                                  },
+                                  'API',
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  },
                 },
                 [
                   React.createElement(
@@ -262,17 +317,6 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
                               style: {
                                 paddingRight: 0,
                                 whiteSpace: 'nowrap',
-                                cursor: 'pointer',
-                              },
-                              onClick: () => {
-                                const activeKeyIndex =
-                                  keys.indexOf(activeSchema);
-                                nextSchemaKey =
-                                  keys[(activeKeyIndex + 1) % keys.length];
-
-                                // This triggers onTabChange
-                                if (nextSchemaKey)
-                                  setActiveSchema(nextSchemaKey);
                               },
                             },
                             [schema.name],
