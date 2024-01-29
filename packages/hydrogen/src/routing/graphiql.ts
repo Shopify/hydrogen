@@ -139,10 +139,6 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
             // Prettify query
             query = GraphiQL.GraphQL.print(GraphiQL.GraphQL.parse(query));
 
-            if (startingSchemaKey !== 'storefront') {
-              query += ' #schema:' + startingSchemaKey;
-            }
-
             let variables;
             if (windowUrl.searchParams.has('variables')) {
               variables = decodeURIComponent(
@@ -157,12 +153,23 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
 
             const schemas = ${JSON.stringify(schemas)};
             let lastActiveTabIndex = -1;
+            let lastTabAmount = -1;
 
             const root = ReactDOM.createRoot(
               document.getElementById('graphiql'),
             );
 
             root.render(React.createElement(RootWrapper));
+
+            const TAB_STATE_KEY = 'graphiql:tabState';
+            const storage = {
+              getTabState: () =>
+                JSON.parse(localStorage.getItem(TAB_STATE_KEY)),
+              setTabState: (state) =>
+                localStorage.setItem(TAB_STATE_KEY, JSON.stringify(state)),
+            };
+
+            let nextSchemaKey;
 
             function RootWrapper() {
               const [activeSchema, setActiveSchema] =
@@ -185,24 +192,52 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
                 variables,
                 schema: schema.value,
                 plugins: [GraphiQLPluginExplorer.explorerPlugin()],
-                onTabChange: ({tabs, activeTabIndex}) => {
-                  if (activeTabIndex === lastActiveTabIndex) return;
-
-                  lastActiveTabIndex = activeTabIndex;
-
+                onTabChange: (state) => {
+                  const {activeTabIndex, tabs} = state;
                   const activeTab = tabs[activeTabIndex];
+
+                  if (
+                    activeTabIndex === lastActiveTabIndex &&
+                    lastTabAmount === tabs.length
+                  ) {
+                    if (
+                      nextSchemaKey &&
+                      activeTab &&
+                      activeTab.schemaKey !== nextSchemaKey
+                    ) {
+                      activeTab.schemaKey = nextSchemaKey;
+                      nextSchemaKey = undefined;
+
+                      // Sync state to localStorage. GraphiQL resets the state
+                      // asynchronously, so we need to do it in a timeout.
+                      storage.setTabState(state);
+                      setTimeout(() => storage.setTabState(state), 500);
+                    }
+
+                    // React rerrendering, skip
+                    return;
+                  }
+
                   if (activeTab) {
-                    const nextSchema =
-                      activeTab.query.match(/#schema:([a-z-]+)/m)?.[1] ||
-                      'storefront';
+                    if (!activeTab.schemaKey) {
+                      // Creating a new tab
+                      if (lastTabAmount < tabs.length) {
+                        activeTab.schemaKey = activeSchema;
+                        storage.setTabState(state);
+                      }
+                    }
+
+                    const nextSchema = activeTab.schemaKey || 'storefront';
 
                     if (nextSchema !== activeSchema) {
                       setActiveSchema(nextSchema);
                     }
                   }
+
+                  lastActiveTabIndex = activeTabIndex;
+                  lastTabAmount = tabs.length;
                 },
                 children: [
-                  // React.createElement(GraphiQL.Toolbar, {}),
                   React.createElement(GraphiQL.Logo, {
                     key: 'Logo replacement',
                     children: [
@@ -219,12 +254,12 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
                               cursor: 'pointer',
                             },
                             onClick: () => {
-                              clicked = true;
-                              const activeKey = keys.indexOf(activeSchema);
-                              const nextKey =
-                                keys[(activeKey + 1) % keys.length];
+                              const activeKeyIndex = keys.indexOf(activeSchema);
+                              nextSchemaKey =
+                                keys[(activeKeyIndex + 1) % keys.length];
 
-                              setActiveSchema(nextKey);
+                              // This triggers onTabChange
+                              if (nextSchemaKey) setActiveSchema(nextSchemaKey);
                             },
                             children: [schema.name],
                           }),
