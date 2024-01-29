@@ -1,5 +1,13 @@
 # @shopify/cli-hydrogen
 
+## 5.5.2
+
+### Patch Changes
+
+- Disable deploy command ([#1699](https://github.com/Shopify/hydrogen/pull/1699)) by [@graygilmore](https://github.com/graygilmore)
+
+  This command was marked as hidden and is unstable. To use the deploy command, upgrade cli-hydrogen to v7.0.0+.
+
 ## 5.5.1
 
 ### Patch Changes
