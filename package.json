@@ -40,6 +40,7 @@
     "examples/third-party-queries-caching",
     "examples/bun",
     "examples/multipass",
+    "examples/partytown",
     "docs/preview",
     "packages/remix-oxygen",
     "packages/hydrogen",
