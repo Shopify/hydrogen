@@ -106,7 +106,16 @@ export async function applyTemplateDiff(
   });
 
   await mergePackageJson(diffDirectory, targetDirectory, {
-    ignoredKeys: ['scripts'],
+    onResult: (pkgJson) => {
+      for (const key of ['build', 'dev']) {
+        const scriptLine = pkgJson.scripts?.[key];
+        if (pkgJson.scripts?.[key] && typeof scriptLine === 'string') {
+          pkgJson.scripts[key] = scriptLine.replace(/\s+--diff/, '');
+        }
+      }
+
+      return pkgJson;
+    },
   });
 }
 
