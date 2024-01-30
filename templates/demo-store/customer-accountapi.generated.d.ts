@@ -15,7 +15,7 @@ export type CustomerAddressUpdateMutation = {
   customerAddressUpdate?: CustomerAccountAPI.Maybe<{
     userErrors: Array<
       Pick<
-        CustomerAccountAPI.UserErrorsAddressUserErrors,
+        CustomerAccountAPI.UserErrorsCustomerAddressUserErrors,
         'code' | 'field' | 'message'
       >
     >;
