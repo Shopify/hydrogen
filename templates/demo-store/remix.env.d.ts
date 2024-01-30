@@ -37,6 +37,7 @@ declare module '@shopify/remix-oxygen' {
     customerAccount: CustomerAccount;
     cart: HydrogenCart;
     env: Env;
+    withCache: WithCache;
   }
 }
 

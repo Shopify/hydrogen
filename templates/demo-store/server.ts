@@ -9,6 +9,7 @@ import {
   cartSetIdDefault,
   createCartHandler,
   createStorefrontClient,
+  createWithCache,
   storefrontRedirect,
   createCustomerAccountClient,
 } from '@shopify/hydrogen';
@@ -70,6 +71,8 @@ export default {
         setCartId: cartSetIdDefault(),
       });
 
+      const withCache = createWithCache({cache, waitUntil});
+
       /**
        * Create a Remix request handler and pass
        * Hydrogen's Storefront client to the loader context.
@@ -84,6 +87,7 @@ export default {
           customerAccount,
           cart,
           env,
+          withCache,
         }),
       });
 
