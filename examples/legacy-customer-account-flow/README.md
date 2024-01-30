@@ -1,5 +1,7 @@
 # Hydrogen example: Legacy Customer Account Flow
 
+🚨 Caution: This legacy authentication strategy will not maintain authentication between your Hydrogen storefront and checkout; for support, use either the New Customer Accounts strategy or Multipass
+
 This example contains the legacy customer account flow made with [Storefront API](https://shopify.dev/docs/api/storefront) which is meant to be reference only.
 
 Passwordless login with [Customer Account API](<(https://shopify.dev/docs/api/customer)>) with the first version published in Jan 2024 is Shopify's recommended way to build headless customer experience.
