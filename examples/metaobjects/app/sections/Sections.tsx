@@ -7,10 +7,6 @@ import {
   SECTION_FEATURED_COLLECTIONS_FRAGMENT,
   SectionFeaturedCollections,
 } from '~/sections/SectionFeaturedCollections';
-import {
-  SECTION_RICHTEXT_FRAGMENT,
-  SectionRichText,
-} from '~/sections/SectionRichText';
 import {SECTION_STORES_FRAGMENT, SectionStores} from '~/sections/SectionStores';
 import {
   SECTION_STORE_PROFILE_FRAGMENT,
@@ -30,8 +26,6 @@ export function Sections({sections}: {sections: SectionsFragment}) {
             return <SectionFeaturedProducts {...section} key={section.id} />;
           case 'section_featured_collections':
             return <SectionFeaturedCollections {...section} key={section.id} />;
-          case 'section_richtext':
-            return <SectionRichText {...section} key={section.id} />;
           case 'section_stores_grid':
             return <SectionStores {...section} key={section.id} />;
           case 'section_store_profile':
@@ -59,7 +53,6 @@ export const SECTIONS_FRAGMENT = `#graphql
             ...SectionHero
             ...SectionFeaturedProducts
             ...SectionFeaturedCollections
-            ...SectionRichText
             ...SectionStores
             ...SectionStoreProfile
           }
@@ -71,7 +64,6 @@ export const SECTIONS_FRAGMENT = `#graphql
   ${SECTION_HERO_FRAGMENT}
   ${SECTION_FEATURED_PRODUCTS_FRAGMENT}
   ${SECTION_FEATURED_COLLECTIONS_FRAGMENT}
-  ${SECTION_RICHTEXT_FRAGMENT}
   ${SECTION_STORES_FRAGMENT}
   ${SECTION_STORE_PROFILE_FRAGMENT}
 `;

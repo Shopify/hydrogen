@@ -83,8 +83,6 @@ export default function Cart() {
   const rootData = useRootLoaderData();
   const cartPromise = rootData.cart;
 
-  console.log('cartPromise', cartPromise);
-
   return (
     <div className='cart'>
       <h1>Cart</h1>
