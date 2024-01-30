@@ -37,9 +37,9 @@ export function createAssetsServer(buildPathClient: string) {
       res.writeHead(204);
       res.end();
       return;
-    } else {
-      res.setHeader('Access-Control-Allow-Origin', '*');
     }
+
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('X-Content-Type-Options', 'nosniff');
 
     const pathname = req.url?.split('?')[0] || '';
