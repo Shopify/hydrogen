@@ -82,7 +82,10 @@ type ManagedKey = (typeof MANAGED_PACKAGE_JSON_KEYS)[number];
 export async function mergePackageJson(
   sourceDir: string,
   targetDir: string,
-  options?: {ignoredKeys?: string[]},
+  options?: {
+    ignoredKeys?: string[];
+    onResult?: (pkgJson: PackageJson) => PackageJson;
+  },
 ) {
   const targetPkgJson: PackageJson = await readAndParsePackageJson(
     joinPath(targetDir, 'package.json'),
@@ -142,5 +145,8 @@ export async function mergePackageJson(
     }
   }
 
-  await writePackageJSON(targetDir, targetPkgJson);
+  await writePackageJSON(
+    targetDir,
+    options?.onResult?.(targetPkgJson) ?? targetPkgJson,
+  );
 }
