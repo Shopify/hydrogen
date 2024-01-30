@@ -95,16 +95,27 @@ export async function applyTemplateDiff(
     !re.test(relativePath(templateDir, filepath));
 
   await copyDirectory(templateDir, targetDirectory, {
-    filter: createFilter(/[\/\\](dist|node_modules|\.cache)(\/|\\|$)/i),
+    filter: createFilter(
+      /(^|\/|\\)(dist|node_modules|\.cache|CHANGELOG\.md)(\/|\\|$)/i,
+    ),
   });
   await copyDirectory(diffDirectory, targetDirectory, {
     filter: createFilter(
-      /[\/\\](dist|node_modules|\.cache|package\.json|tsconfig\.json)(\/|\\|$)/i,
+      /(^|\/|\\)(dist|node_modules|\.cache|package\.json|tsconfig\.json)(\/|\\|$)/i,
     ),
   });
 
   await mergePackageJson(diffDirectory, targetDirectory, {
-    ignoredKeys: ['scripts'],
+    onResult: (pkgJson) => {
+      for (const key of ['build', 'dev']) {
+        const scriptLine = pkgJson.scripts?.[key];
+        if (pkgJson.scripts?.[key] && typeof scriptLine === 'string') {
+          pkgJson.scripts[key] = scriptLine.replace(/\s+--diff/, '');
+        }
+      }
+
+      return pkgJson;
+    },
   });
 }
 
