@@ -66,6 +66,7 @@ import {
 } from '../setups/routes/generate.js';
 import {execAsync} from '../process.js';
 import {getStorefronts} from '../graphql/admin/link-storefront.js';
+import { hasCliAlias } from '../../lib/shell.js';
 
 export type InitOptions = {
   path?: string;
@@ -180,6 +181,9 @@ export async function handleCliShortcut(
   cliCommand: CliCommand,
   flagShortcut?: boolean,
 ) {
+
+  if (await hasCliAlias()) return {};
+
   const shouldCreateShortcut =
     flagShortcut ??
     (await renderConfirmationPrompt({

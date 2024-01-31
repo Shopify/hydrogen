@@ -115,7 +115,7 @@ function isKnownUnixShell(shell: string): shell is UnixShell {
   return ['zsh', 'bash', 'fish'].includes(shell);
 }
 
-async function hasCliAlias() {
+export async function hasCliAlias() {
   try {
     if (isWindows() && !isGitBash()) {
       await execAsync(`Get-Alias -Name ${ALIAS_NAME}`);
