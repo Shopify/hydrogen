@@ -222,8 +222,10 @@ describe('init', () => {
         // --- Test file diff
         const ignore = ['**/node_modules/**', '**/dist/**'];
         const resultFiles = await glob('**/*', {ignore, cwd: tmpDir});
-        const templateFiles = await glob('**/*', {ignore, cwd: templatePath});
         const exampleFiles = await glob('**/*', {ignore, cwd: examplePath});
+        const templateFiles = (
+          await glob('**/*', {ignore, cwd: templatePath})
+        ).filter((item) => !item.endsWith('CHANGELOG.md'));
 
         expect(resultFiles).toEqual(
           expect.arrayContaining([

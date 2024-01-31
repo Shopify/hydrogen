@@ -53,6 +53,8 @@ export type CustomerAccount = {
   handleAuthStatus: () => void | DataFunctionValue;
   /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */
   getAccessToken: () => Promise<string | undefined>;
+  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/
+  getApiUrl: () => string;
   /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/
   logout: () => Promise<Response>;
   /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */
@@ -119,6 +121,8 @@ export type CustomerAccountForDocs = {
   handleAuthStatus?: () => void | DataFunctionValue;
   /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */
   getAccessToken?: () => Promise<string | undefined>;
+  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/
+  getApiUrl: () => string;
   /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/
   logout?: () => Promise<Response>;
   /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */

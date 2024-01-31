@@ -4,5 +4,6 @@ build
 packages/cli/oclif.manifest.json
 dist
 packages/hydrogen-react/storefront.schema.json
+packages/hydrogen-react/customer-account.schema.json
 coverage
 packages/cli/src/lib/build/bundle-analyzer.html
