@@ -1,13 +1,10 @@
 import {describe, it, expect} from 'vitest';
 import path from 'node:path';
+import {executeCodegen} from '@graphql-codegen/cli';
+import {preset, schema, pluckConfig} from '../src/index.js';
+import {getDefaultOptions} from '../src/defaults.js';
 
 describe('Hydrogen Codegen', async () => {
-  // Patch dependency before importing the Codegen CLI
-  await import('../src/patch.js');
-  const {preset, schema, pluckConfig} = await import('../src/index.js');
-  const {getDefaultOptions} = await import('../src/defaults.js');
-  const {executeCodegen} = await import('@graphql-codegen/cli');
-
   const getCodegenOptions = (fixture: string, output = 'out.d.ts') => ({
     pluckConfig: pluckConfig as any,
     generates: {
