@@ -41,6 +41,10 @@ npm run dev
 
 ## Setup for using Customer Account API (`/account` section)
 
+### Enabled new Customer Account Experience
+
+1. Go to your Shopify admin => Settings => Customer accounts => New customer account
+
 ### Setup public domain using ngrok
 
 1. Setup a [ngrok](https://ngrok.com/) account and add a permanent domain (ie. `https://<your-ngrok-domain>.app`).

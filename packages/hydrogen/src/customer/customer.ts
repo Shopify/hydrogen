@@ -151,7 +151,12 @@ export function createCustomerAccountClient({
       if (response.status === 401) {
         // clear session because current access token is invalid
         clearSession(session);
-        throw authStatusHandler();
+
+        const authFailResponse = authStatusHandler();
+        if (authFailResponse instanceof Response) {
+          authFailResponse.headers.set('Set-Cookie', await session.commit());
+        }
+        throw authFailResponse;
       }
 
       /**
@@ -302,18 +307,20 @@ export function createCustomerAccountClient({
 
       if (!code || !state) {
         clearSession(session);
+
         throw new BadRequest(
           'Unauthorized',
           'No code or state parameter found in the redirect URL.',
-        );
+        ).headers.set('Set-Cookie', await session.commit());
       }
 
       if (session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.state !== state) {
         clearSession(session);
+
         throw new BadRequest(
           'Unauthorized',
           'The session state does not match the state parameter. Make sure that the session is configured correctly and passed to `createCustomerAccountClient`.',
-        );
+        ).headers.set('Set-Cookie', await session.commit());
       }
 
       const clientId = customerAccountId;

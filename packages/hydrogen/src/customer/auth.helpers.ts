@@ -191,7 +191,7 @@ export async function checkExpires({
         throw new BadRequest(
           'Unauthorized',
           'Login before querying the Customer Account API.',
-        );
+        ).headers.set('Set-Cookie', await session.commit());
       }
     }
   }

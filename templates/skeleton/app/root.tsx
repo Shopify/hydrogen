@@ -75,7 +75,20 @@ export async function loader({context}: LoaderFunctionArgs) {
   const isLoggedInPromise = customerAccount.isLoggedIn();
 
   // defer the cart query by not awaiting it
-  const cartPromise = cart.get();
+  const cartPromise = (async function () {
+    const [isLoggedIn, cartResult] = await Promise.all([
+      isLoggedInPromise,
+      cart.get(),
+    ]);
+
+    if (isLoggedIn && cartResult && cartResult.checkoutUrl) {
+      const finalCheckoutUrl = new URL(cartResult.checkoutUrl);
+      finalCheckoutUrl.searchParams.set('logged_in', 'true');
+      cartResult.checkoutUrl = finalCheckoutUrl.toString();
+    }
+
+    return cartResult;
+  })();
 
   // defer the footer query (below the fold)
   const footerPromise = storefront.query(FOOTER_QUERY, {

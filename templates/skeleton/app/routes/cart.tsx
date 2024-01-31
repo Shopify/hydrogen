@@ -13,10 +13,7 @@ export const meta: MetaFunction = () => {
 export async function action({request, context}: ActionFunctionArgs) {
   const {cart} = context;
 
-  const [formData, customerAccessToken] = await Promise.all([
-    request.formData(),
-    await context.customerAccount.getAccessToken(),
-  ]);
+  const formData = await request.formData();
 
   const {action, inputs} = CartForm.getFormInput(formData);
 
@@ -49,13 +46,6 @@ export async function action({request, context}: ActionFunctionArgs) {
       discountCodes.push(...inputs.discountCodes);
 
       result = await cart.updateDiscountCodes(discountCodes);
-      break;
-    }
-    case CartForm.ACTIONS.BuyerIdentityUpdate: {
-      result = await cart.updateBuyerIdentity({
-        ...inputs.buyerIdentity,
-        customerAccessToken,
-      });
       break;
     }
     default:

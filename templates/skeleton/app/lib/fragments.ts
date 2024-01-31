@@ -58,18 +58,6 @@ export const CART_QUERY_FRAGMENT = `#graphql
     id
     checkoutUrl
     totalQuantity
-    buyerIdentity {
-      countryCode
-      customer {
-        id
-        email
-        firstName
-        lastName
-        displayName
-      }
-      email
-      phone
-    }
     lines(first: $numCartLines) {
       nodes {
         ...CartLine
