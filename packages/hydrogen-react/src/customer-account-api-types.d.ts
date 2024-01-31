@@ -4013,7 +4013,7 @@ export type LineItem = Node & {
   productType?: Maybe<Scalars['String']['output']>;
   /** The number of variant items ordered. */
   quantity: Scalars['Int']['output'];
-  /** The quantity of the line item, minus the removed quantity. */
+  /** The quantity of the line item, minus the refunded quantity. */
   refundableQuantity: Scalars['Int']['output'];
   /** Whether physical shipping is required for the variant. */
   requiresShipping: Scalars['Boolean']['output'];
@@ -4990,8 +4990,6 @@ export type Order = HasMetafields &
     processedAt: Scalars['DateTime']['output'];
     /** The purchasing entity for the order. */
     purchasingEntity?: Maybe<PurchasingEntity>;
-    /** The purchasing entity for the order. */
-    purchasingEntityV1?: Maybe<PurchasingEntityV1>;
     /** A list of refunds associated with the order. */
     refunds: Array<Refund>;
     /** The path to recreate the order in the cart and redirect to checkout. Will return nil if the line item count exceeds 100. */
@@ -6309,10 +6307,6 @@ export type PublicOrder = Node & {
    *
    */
   processedAt: Scalars['DateTime']['output'];
-  /** The purchasing entity for the order. */
-  purchasingEntity?: Maybe<PurchasingEntity>;
-  /** The purchasing entity for the order. */
-  purchasingEntityV1?: Maybe<PurchasingEntityV1>;
   /** A list of refunds associated with the order. */
   refunds: Array<Refund>;
   /** The path to recreate the order in the cart and redirect to checkout. Will return nil if the line item count exceeds 100. */

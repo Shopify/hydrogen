@@ -4038,15 +4038,15 @@ export type ImageTransformInput = {
 };
 
 /** Provide details about the contexts influenced by the @inContext directive on a field. */
-export type InContext = {
-  __typename?: 'InContext';
+export type InContextAnnotation = {
+  __typename?: 'InContextAnnotation';
   description: Scalars['String']['output'];
-  type: InContextType;
+  type: InContextAnnotationType;
 };
 
 /** This gives information about the type of context that impacts a field. For example, for a query with @inContext(language: "EN"), the type would point to the name: LanguageCode and kind: ENUM. */
-export type InContextType = {
-  __typename?: 'InContextType';
+export type InContextAnnotationType = {
+  __typename?: 'InContextAnnotationType';
   kind: Scalars['String']['output'];
   name: Scalars['String']['output'];
 };

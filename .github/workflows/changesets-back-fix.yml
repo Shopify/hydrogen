@@ -18,13 +18,13 @@ jobs:
     name: Back-fix changelog PR or Release
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
         with:
           fetch-depth: 0
 
       - name: ⎔ Setup node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
