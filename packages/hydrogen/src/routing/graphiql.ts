@@ -1,11 +1,20 @@
 import type {LoaderFunctionArgs} from '@remix-run/server-runtime';
+import type {Storefront} from '../storefront';
+import type {CustomerAccount} from '../customer/types';
 
 type GraphiQLLoader = (args: LoaderFunctionArgs) => Promise<Response>;
 
 export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
   request,
-  context: {storefront, customerAccount},
+  context,
 }: LoaderFunctionArgs) {
+  // For some reason, types are properly recognized by the editor,
+  // but not at build time on CI. Cast types here to ensure it builds.
+  const storefront = context.storefront as undefined | Storefront;
+  const customerAccount = context.customerAccount as
+    | undefined
+    | CustomerAccount;
+
   const url = new URL(request.url);
 
   if (!storefront) {
@@ -43,7 +52,6 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
       await fetch(url.origin + '/graphiql/customer-account.schema.json')
     ).json();
 
-    // @ts-ignore This is recognized in editor but not at build time
     const accessToken = await customerAccount.getAccessToken();
 
     if (customerAccountSchema) {
@@ -52,7 +60,6 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
         value: customerAccountSchema,
         authHeader: 'Authorization',
         accessToken,
-        // @ts-ignore This is recognized in editor but not at build time
         apiUrl: customerAccount.getApiUrl(),
         icon: 'CA',
       };
