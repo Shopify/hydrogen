@@ -12,6 +12,7 @@ These are some of the most commonly used Hydrogen examples. Browse the folders i
 
 | Example                                                                   | Details                                                                                                                                            |
 | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Custom Cart Method](/examples/custom-cart-method/)                       | How to implementation custom cart method by showing in-line product option edit in cart.                                                           |
 | [Express](/examples/express/)                                             | Hydrogen example using NodeJS [Express](https://expressjs.com/).                                                                                   |
 | [Legacy Customer Account Flow](/examples/legacy-customer-account-flow/)   | The legacy customer account flow made with [Storefront API](https://shopify.dev/docs/api/storefront).                                              |
 | [Multipass](/examples/multipass/)                                         | Connect your existing third-party authentication method to Shopify’s customer accounts, so buyers can use a single login across multiple services. |

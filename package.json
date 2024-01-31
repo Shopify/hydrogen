@@ -32,6 +32,7 @@
   },
   "workspaces": [
     "docs/preview",
+    "examples/custom-cart-method",
     "examples/express",
     "examples/legacy-customer-account-flow",
     "examples/multipass",
