@@ -233,7 +233,7 @@ export async function setupLocalStarterTemplate(
     packageManager,
     cssStrategy,
     depsInstalled: false,
-    hasCreatedShortcut: false,
+    cliCommand: await getCliCommand('', packageManager),
   };
 
   if (shouldInstallDeps) {
@@ -254,23 +254,21 @@ export async function setupLocalStarterTemplate(
     });
   }
 
-  const pkgManagerCommand = await getCliCommand('', packageManager);
-
   const {createShortcut, showShortcutBanner} = await handleCliShortcut(
     controller,
-    pkgManagerCommand,
+    setupSummary.cliCommand,
     options.shortcut,
   );
 
   if (createShortcut) {
     backgroundWorkPromise = backgroundWorkPromise.then(async () => {
-      setupSummary.hasCreatedShortcut = await createShortcut();
+      if (await createShortcut()) {
+        setupSummary.cliCommand = ALIAS_NAME;
+      }
     });
 
     showShortcutBanner();
   }
-
-  const cliCommand = createShortcut ? ALIAS_NAME : pkgManagerCommand;
 
   renderSuccess({
     headline: [
@@ -285,14 +283,15 @@ export async function setupLocalStarterTemplate(
       message: 'Do you want to scaffold routes and core functionality?',
       confirmationMessage: 'Yes, set up now',
       cancellationMessage:
-        'No, set up later ' + colors.dim(`(run \`${cliCommand} setup\`)`),
+        'No, set up later ' +
+        colors.dim(`(run \`${setupSummary.cliCommand} setup\`)`),
       abortSignal: controller.signal,
     }));
 
   if (continueWithSetup) {
     const {i18nStrategy, setupI18n} = await handleI18n(
       controller,
-      cliCommand,
+      setupSummary.cliCommand,
       options.i18n,
     );
 

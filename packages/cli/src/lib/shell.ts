@@ -115,7 +115,7 @@ function isKnownUnixShell(shell: string): shell is UnixShell {
   return ['zsh', 'bash', 'fish'].includes(shell);
 }
 
-export async function hasCliAlias() {
+async function hasCliAlias() {
   try {
     if (isWindows() && !isGitBash()) {
       await execAsync(`Get-Alias -Name ${ALIAS_NAME}`);
@@ -208,7 +208,7 @@ export async function getCliCommand(
   directory = process.cwd(),
   forcePkgManager?: 'npm' | 'pnpm' | 'yarn' | 'bun' | 'unknown',
 ) {
-  if (!forcePkgManager && (await hasCliAlias())) {
+  if (await hasCliAlias()) {
     return ALIAS_NAME;
   }
 
