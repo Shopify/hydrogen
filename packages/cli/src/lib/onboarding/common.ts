@@ -45,12 +45,7 @@ import {
   I18nChoice,
 } from '../setups/i18n/index.js';
 import {titleize} from '../string.js';
-import {
-  ALIAS_NAME,
-  createPlatformShortcut,
-  getCliCommand,
-  type CliCommand,
-} from '../shell.js';
+import {ALIAS_NAME, createPlatformShortcut, type CliCommand} from '../shell.js';
 import {transpileProject} from '../transpile/index.js';
 import {
   CSS_STRATEGY_NAME_MAP,
@@ -180,6 +175,8 @@ export async function handleCliShortcut(
   cliCommand: CliCommand,
   flagShortcut?: boolean,
 ) {
+  if (cliCommand === ALIAS_NAME) return {};
+
   const shouldCreateShortcut =
     flagShortcut ??
     (await renderConfirmationPrompt({
@@ -552,7 +549,7 @@ export type SetupSummary = {
   language?: Language;
   packageManager: 'npm' | 'pnpm' | 'yarn' | 'bun' | 'unknown';
   cssStrategy?: CssStrategy;
-  hasCreatedShortcut: boolean;
+  cliCommand: CliCommand;
   depsInstalled: boolean;
   depsError?: Error;
   i18n?: I18nStrategy;
@@ -571,7 +568,7 @@ export async function renderProjectReady(
     packageManager,
     depsInstalled,
     cssStrategy,
-    hasCreatedShortcut,
+    cliCommand,
     routes,
     i18n,
     depsError,
@@ -625,10 +622,6 @@ export async function renderProjectReady(
 
   const padMin =
     1 + bodyLines.reduce((max, [label]) => Math.max(max, label.length), 0);
-
-  const cliCommand = hasCreatedShortcut
-    ? ALIAS_NAME
-    : await getCliCommand(project.directory, packageManager);
 
   const render = hasErrors ? renderWarning : renderSuccess;
 
