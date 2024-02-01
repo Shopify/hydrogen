@@ -208,7 +208,7 @@ export async function getCliCommand(
   directory = process.cwd(),
   forcePkgManager?: 'npm' | 'pnpm' | 'yarn' | 'bun' | 'unknown',
 ) {
-  if (!forcePkgManager && (await hasCliAlias())) {
+  if (await hasCliAlias()) {
     return ALIAS_NAME;
   }
 

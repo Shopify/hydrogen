@@ -20,7 +20,7 @@ import {
   handleRouteGeneration,
   renderProjectReady,
 } from '../../lib/onboarding/common.js';
-import {getCliCommand} from '../../lib/shell.js';
+import {ALIAS_NAME, getCliCommand} from '../../lib/shell.js';
 import {getTemplateAppFile} from '../../lib/build.js';
 
 export default class Setup extends Command {
@@ -133,26 +133,25 @@ export async function runSetup(options: RunSetupOptions) {
     );
   }
 
-  let hasCreatedShortcut = false;
-  const cliCommand = await cliCommandPromise;
-  const needsAlias = cliCommand !== 'h2';
-  if (needsAlias) {
-    const {createShortcut, showShortcutBanner} = await handleCliShortcut(
-      controller,
-      await cliCommandPromise,
-      options.shortcut,
-    );
+  let cliCommand = await Promise.resolve(cliCommandPromise);
 
-    if (createShortcut) {
-      backgroundWorkPromise = backgroundWorkPromise.then(async () => {
-        hasCreatedShortcut = await createShortcut();
-      });
+  const {createShortcut, showShortcutBanner} = await handleCliShortcut(
+    controller,
+    cliCommand,
+    options.shortcut,
+  );
 
-      showShortcutBanner();
-    }
+  if (!i18n && !needsRouteGeneration && !createShortcut) return;
+
+  if (createShortcut) {
+    backgroundWorkPromise = backgroundWorkPromise.then(async () => {
+      if (await createShortcut()) {
+        cliCommand = ALIAS_NAME;
+      }
+    });
+
+    showShortcutBanner();
   }
-
-  if (!i18n && !needsRouteGeneration && !needsAlias) return;
 
   await renderTasks(tasks);
 
@@ -163,7 +162,7 @@ export async function runSetup(options: RunSetupOptions) {
       directory: remixConfig.rootDirectory,
     },
     {
-      hasCreatedShortcut,
+      cliCommand,
       depsInstalled: true,
       packageManager: 'npm',
       i18n,
