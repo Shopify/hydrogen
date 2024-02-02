@@ -19,5 +19,6 @@ module.exports = {
   future: {
     v3_fetcherPersist: true,
     v3_relativeSplatpath: true,
+    v3_throwAbortReason: true,
   },
 };
