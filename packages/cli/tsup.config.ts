@@ -32,7 +32,7 @@ const outDir = 'dist';
 export default defineConfig([
   {
     ...commonConfig,
-    entry: ['src/**/*.ts'],
+    entry: ['src/**/*.ts', '!src/**/vite/client.ts'],
     outDir,
     async onSuccess() {
       // Copy TS templates
@@ -55,6 +55,13 @@ export default defineConfig([
       await execAsync('node ./scripts/generate-manifest.mjs');
       console.log('', 'Oclif manifest generated.\n');
     },
+  },
+  {
+    entry: ['src/lib/mini-oxygen/vite/client.ts'],
+    outDir: 'dist/lib/mini-oxygen/vite',
+    format: 'esm',
+    noExternal: [/./],
+    esbuildPlugins: [esbuildNoSideEffectPlugin(['picomatch'])],
   },
   {
     ...commonConfig,
@@ -97,3 +104,26 @@ export default defineConfig([
     },
   },
 ]);
+
+function esbuildNoSideEffectPlugin(packageNames: string[]) {
+  return {
+    name: 'no-sideeffect',
+    setup({onResolve, resolve}) {
+      onResolve(
+        {filter: new RegExp(`^${packageNames.join('|')}$`)},
+        async (args) => {
+          if (args.pluginData?.skipNoSideEffectResolver) return;
+
+          const result = await resolve(args.path, {
+            kind: args.kind,
+            importer: args.importer,
+            namespace: args.namespace,
+            resolveDir: args.resolveDir,
+            pluginData: {...args.pluginData, skipNoSideEffectResolver: true},
+          });
+          return {...result, sideEffects: false};
+        },
+      );
+    },
+  };
+}
