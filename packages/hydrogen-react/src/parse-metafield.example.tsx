@@ -4,7 +4,7 @@ import type {Metafield} from '@shopify/hydrogen-react/storefront-api-types';
 export function DateMetafield({metafield}: {metafield: Metafield}) {
   const parsedMetafield = parseMetafield<ParsedMetafields['date']>(metafield);
 
-  return <div>Date: {parsedMetafield.parsedValue?.toDateString()}</div>;
+  return <div>Date: {parsedMetafield.parsedValue?.toLocaleDateString()}</div>;
 }
 
 export function VariantReferenceMetafield({metafield}: {metafield: Metafield}) {

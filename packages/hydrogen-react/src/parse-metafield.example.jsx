@@ -3,7 +3,7 @@ import {parseMetafield} from '@shopify/hydrogen-react';
 export function DateMetafield({metafield}) {
   const parsedMetafield = parseMetafield(metafield);
 
-  return <div>Date: {parsedMetafield.parsedValue?.toDateString()}</div>;
+  return <div>Date: {parsedMetafield.parsedValue?.toLocaleDateString()}</div>;
 }
 
 export function VariantReferenceMetafield({metafield}) {

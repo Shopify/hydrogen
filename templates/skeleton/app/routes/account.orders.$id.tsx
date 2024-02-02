@@ -67,7 +67,7 @@ export default function OrderRoute() {
   return (
     <div className="account-order">
       <h2>Order {order.name}</h2>
-      <p>Placed on {new Date(order.processedAt!).toDateString()}</p>
+      <p>Placed on {new Date(order.processedAt!).toLocaleDateString()}</p>
       <br />
       <div>
         <table>

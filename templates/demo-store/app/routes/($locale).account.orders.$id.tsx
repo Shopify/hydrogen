@@ -97,7 +97,7 @@ export default function OrderRoute() {
             Order No. {order.name}
           </Text>
           <Text className="mt-2" as="p">
-            Placed on {new Date(order.processedAt!).toDateString()}
+            Placed on {new Date(order.processedAt!).toLocaleDateString()}
           </Text>
           <div className="grid items-start gap-12 sm:grid-cols-1 md:grid-cols-4 md:gap-16 sm:divide-y sm:divide-gray-200">
             <table className="min-w-full my-8 divide-y divide-gray-300 md:col-span-3">

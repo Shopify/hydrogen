@@ -102,7 +102,7 @@ function OrderItem({order}: {order: OrderItemFragment}) {
         <Link to={`/account/orders/${order.id}`}>
           <strong>#{order.number}</strong>
         </Link>
-        <p>{new Date(order.processedAt).toDateString()}</p>
+        <p>{new Date(order.processedAt).toLocaleDateString()}</p>
         <p>{order.financialStatus}</p>
         <p>{fulfillmentStatus}</p>
         <Money data={order.totalPrice} />
