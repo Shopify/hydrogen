@@ -49,7 +49,8 @@
     "packages/remix-oxygen",
     "templates/demo-store",
     "templates/hello-world",
-    "templates/skeleton"
+    "templates/skeleton",
+    "templates/vite-skeleton"
   ],
   "prettier": "@shopify/prettier-config",
   "devDependencies": {
