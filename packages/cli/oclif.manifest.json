@@ -249,8 +249,8 @@
           "name": "port",
           "type": "option",
           "description": "Port to run the server on.",
-          "multiple": false,
-          "default": 3000
+          "required": false,
+          "multiple": false
         },
         "codegen": {
           "name": "codegen",
@@ -287,6 +287,13 @@
           "description": "Port where the inspector will be available.",
           "multiple": false,
           "default": 9229
+        },
+        "host": {
+          "name": "host",
+          "type": "boolean",
+          "description": "Expose the server to the network",
+          "required": false,
+          "allowNo": false
         },
         "env-branch": {
           "name": "env-branch",

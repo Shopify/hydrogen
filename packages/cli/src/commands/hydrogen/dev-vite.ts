@@ -1,4 +1,5 @@
 import path from 'node:path';
+import {statSync} from 'node:fs';
 import fs from 'node:fs/promises';
 import type {ChildProcess} from 'node:child_process';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
@@ -6,14 +7,7 @@ import {fileExists} from '@shopify/cli-kit/node/fs';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import {copyPublicFiles} from './build.js';
-import {
-  assertOxygenChecks,
-  getProjectPaths,
-  getRemixConfig,
-  handleRemixImportFail,
-  type ServerMode,
-} from '../../lib/remix-config.js';
-import {createRemixLogger, enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
+import {enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
 import {
   commonFlags,
   flagsToCamelObject,
@@ -21,17 +15,12 @@ import {
 } from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
-import {
-  type MiniOxygen,
-  startMiniOxygen,
-  buildAssetsUrl,
-} from '../../lib/mini-oxygen/index.js';
-import {setupRuntime} from '../../lib/mini-oxygen/vite/server.js';
+import {buildAssetsUrl} from '../../lib/mini-oxygen/index.js';
+import {startMiniOxygenVite} from '../../lib/mini-oxygen/vite/server.js';
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
-import {setupLiveReload} from '../../lib/live-reload.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
@@ -40,17 +29,15 @@ import {prepareDiffDirectory} from '../../lib/template-diff.js';
 
 import {createServer as createHattipServer} from '@hattip/adapter-node';
 import httpProxy from 'http-proxy';
-import {createServer} from 'vite';
-
-const LOG_REBUILDING = '🧱 Rebuilding...';
-const LOG_REBUILT = '🚀 Rebuilt';
+import {createServer as createViteServer} from 'vite';
+import type {RemixPluginContext} from '@remix-run/dev/dist/vite/plugin.js';
 
 export default class DevVite extends Command {
   static description =
     'Runs Hydrogen storefront in an Oxygen worker for development.';
   static flags = {
     path: commonFlags.path,
-    port: commonFlags.port,
+    port: overrideFlag(commonFlags.port, {default: undefined, required: false}),
     codegen: overrideFlag(commonFlags.codegen, {
       description:
         commonFlags.codegen.description! +
@@ -66,6 +53,11 @@ export default class DevVite extends Command {
     }),
     debug: commonFlags.debug,
     'inspector-port': commonFlags.inspectorPort,
+    host: Flags.boolean({
+      description: 'Expose the server to the network',
+      default: false,
+      required: false,
+    }),
     ['env-branch']: commonFlags.envBranch,
     ['disable-version-check']: Flags.boolean({
       description: 'Skip the version check when running `hydrogen dev`',
@@ -94,6 +86,7 @@ type DevOptions = {
   port: number;
   path?: string;
   codegen?: boolean;
+  host?: boolean;
   codegenConfigPath?: string;
   disableVirtualRoutes?: boolean;
   disableVersionCheck?: boolean;
@@ -106,6 +99,7 @@ type DevOptions = {
 export async function runDev({
   port: appPort,
   path: appPath,
+  host,
   codegen: useCodegen = false,
   codegenConfigPath,
   disableVirtualRoutes,
@@ -119,56 +113,65 @@ export async function runDev({
 
   muteDevLogs();
 
-  const {root, publicPath, buildPathClient, buildPathWorkerFile} =
-    getProjectPaths(appPath);
+  const root = appPath ?? process.cwd();
 
-  // const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
-  // const reloadConfig = async () => {
-  //   const config = await getRemixConfig(root);
+  const envPromise = getConfig(root).then(({shop, storefront}) => {
+    const fetchRemote = !!shop && !!storefront?.id;
+    return getAllEnvironmentVariables({root, fetchRemote, envBranch});
+  });
 
-  //   return disableVirtualRoutes
-  //     ? config
-  //     : addVirtualRoutes(config).catch((error) => {
-  //         // Seen this fail when somehow NPM doesn't publish
-  //         // the full 'virtual-routes' directory.
-  //         // E.g. https://unpkg.com/browse/@shopify/cli-hydrogen@0.0.0-next-aa15969-20230703072007/dist/virtual-routes/
-  //         outputDebug(
-  //           'Could not add virtual routes: ' +
-  //             (error?.stack ?? error?.message ?? error),
-  //         );
+  const viteServer = await createViteServer({
+    server: {host: host ? true : undefined},
+  });
 
-  //         return config;
-  //       });
-  // };
+  process.once('SIGTERM', async () => {
+    try {
+      await viteServer.close();
+    } finally {
+      process.exit();
+    }
+  });
 
-  inspectorPort = debug ? await findPort(inspectorPort) : inspectorPort;
-  appPort = await findPort(appPort); // findPort is already called for Node sandbox
-
-  const assetsPort = await findPort(appPort + 100);
-  if (assetsPort) {
-    // Note: Set this env before loading Remix config!
-    process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
-  }
-
-  const [{shop, storefront}] = await Promise.all([getConfig(root)]);
+  const viteConfig = viteServer.config;
+  const remixPluginContext = ((viteConfig as any)
+    .__remixPluginContext as RemixPluginContext) || {
+    rootDirectory: root,
+    remixConfig: {appDirectory: path.join(root, 'app')},
+  };
 
   // assertOxygenChecks(remixConfig);
 
-  const fetchRemote = !!shop && !!storefront?.id;
-  const envPromise = getAllEnvironmentVariables({root, fetchRemote, envBranch});
+  if (!disableVirtualRoutes) {
+    // Unfreeze remixConfig to extend it with virtual routes.
+    remixPluginContext.remixConfig = {...remixPluginContext.remixConfig};
+    // @ts-expect-error
+    remixPluginContext.remixConfig.routes = {
+      ...remixPluginContext.remixConfig.routes,
+    };
 
-  // let isInitialBuild = true;
-  // let initialBuildDurationMs = 0;
-  // let initialBuildStartTimeMs = Date.now();
+    await addVirtualRoutes(remixPluginContext.remixConfig).catch((error) => {
+      // Seen this fail when somehow NPM doesn't publish
+      // the full 'virtual-routes' directory.
+      // E.g. https://unpkg.com/browse/@shopify/cli-hydrogen@0.0.0-next-aa15969-20230703072007/dist/virtual-routes/
+      outputDebug(
+        'Could not add virtual routes: ' +
+          (error?.stack ?? error?.message ?? error),
+      );
+    });
 
-  // const liveReload = true // TODO: option to disable HMR?
-  //   ? await setupLiveReload(remixConfig.dev?.port ?? 8002)
-  //   : undefined;
+    Object.freeze(remixPluginContext.remixConfig.routes);
+    Object.freeze(remixPluginContext.remixConfig);
+  }
 
-  // let miniOxygen: MiniOxygen;
-  // let codegenProcess: ChildProcess;
-  // async function safeStartMiniOxygen() {
-  //   if (miniOxygen) return;
+  const {remixConfig, rootDirectory} = remixPluginContext;
+
+  const codegenProcess = useCodegen
+    ? spawnCodegenProcess({
+        rootDirectory,
+        appDirectory: remixConfig.appDirectory,
+        configFilePath: codegenConfigPath,
+      })
+    : undefined;
 
   //   miniOxygen = await startMiniOxygen({
   //     root,
@@ -202,32 +205,7 @@ export async function runDev({
   //     ],
   //   });
 
-  //   if (useCodegen) {
-  //     codegenProcess = spawnCodegenProcess({
-  //       ...remixConfig,
-  //       configFilePath: codegenConfigPath,
-  //     });
-  //   }
-
-  //   checkRemixVersions();
-
-  //   if (!disableVersionCheck) {
-  //     displayDevUpgradeNotice({targetPath: appPath});
-  //   }
-  // }
-
-  const viteServer = await createServer();
-  const publicPort = viteServer.config.server.port ?? 3000;
-
-  process.once('SIGTERM', async () => {
-    try {
-      await viteServer.close();
-    } finally {
-      process.exit();
-    }
-  });
-
-  const standaloneRuntime = await setupRuntime(viteServer, {
+  const workerRuntime = await startMiniOxygenVite(viteServer, {
     env: await envPromise,
   });
 
@@ -236,60 +214,70 @@ export async function runDev({
     console.log('Unhandled Rejection: ', err);
   });
 
-  // Get a random port
+  // Store the port passed by the user in the config.
+  const publicPort = appPort ?? viteServer.config.server.port ?? 3000;
+  // Start the internal Vite server with a random port.
   await viteServer.listen(0);
 
   const viteUrlString =
     viteServer.resolvedUrls!.local[0] ?? viteServer.resolvedUrls!.network[0]!;
   const viteUrl = new URL(viteUrlString);
-  const internalPort = viteUrlString.split(':').pop()?.replace('/', '')!;
+
+  const internalPort = viteUrl.origin.split(':').pop()?.replace('/', '')!;
   viteServer.config.server.port = Number(internalPort);
 
-  const proxyServer = httpProxy.createProxyServer({
+  inspectorPort = debug ? await findPort(inspectorPort) : inspectorPort;
+
+  // const assetsPort = await findPort(publicPort + 100);
+  // if (assetsPort) {
+  //   // Note: Set this env before loading Remix config!
+  //   process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
+  // }
+
+  const publicFacingServer = createHattipServer(async (ctx) => {
+    const url = new URL(ctx.request.url);
+
+    if (
+      /^\/(@\w+|node_modules)\//.test(url.pathname) ||
+      statSync(path.join(rootDirectory, url.pathname), {
+        throwIfNoEntry: false,
+      })?.isFile()
+    ) {
+      // This is a request for a static file or a virtual module:
+      // forward it to Vite server.
+      const newUrl = new URL(url);
+      newUrl.protocol = viteUrl.protocol;
+      newUrl.host = viteUrl.host;
+
+      return fetch(new Request(newUrl.href, ctx.request)).catch((error) => {
+        console.error('Failed to proxy request to Vite server:', error);
+        return new Response(null, {status: 500});
+      });
+    }
+
+    return workerRuntime
+      .handleRequest(ctx.request, {viteUrl: viteUrlString})
+      .catch((error) => {
+        console.error('Error during evaluation:', error);
+        return new Response(null, {status: 500});
+      });
+  });
+
+  const viteProxyServer = httpProxy.createProxyServer({
     target: viteUrlString,
     ws: true,
   });
 
-  const hattipServer = createHattipServer(async (ctx) => {
-    try {
-      const resolved = await standaloneRuntime.selectModule(
-        ctx.request,
-        viteServer.config.root,
-      );
-
-      if (resolved === undefined) {
-        // NOTE: If Vite uses Universal/Modern middlewares in the future,
-        //       we can avoid using actual HTTP requests.
-        //       It's difficult to convert Node middlewares into them.
-        //       https://github.com/fastly/http-compute-js#notes--known-issues
-        const newUrl = new URL(ctx.request.url);
-        newUrl.protocol = viteUrl.protocol;
-        newUrl.host = viteUrl.host;
-        try {
-          return await fetch(new Request(newUrl.href, ctx.request));
-        } catch (e) {
-          console.error('Failed to proxy request to Vite server: ', e);
-          return new Response(null, {status: 500});
-        }
-      }
-
-      const res = await standaloneRuntime.runModule(resolved, ctx.request, {
-        viteUrl: viteUrlString,
-      });
-      return res;
-    } catch (e) {
-      console.error('Error during evaluation: ', e);
-      return new Response(null, {status: 500});
-    }
+  publicFacingServer.on('upgrade', (req, socket, head) => {
+    viteProxyServer.ws(req, socket, head);
   });
 
-  hattipServer.on('upgrade', (req, socket, head) => {
-    proxyServer.ws(req, socket, head);
-  });
-
-  hattipServer.listen(publicPort, 'localhost', () => {
+  // Start the public facing server with the port passed by the user.
+  publicFacingServer.listen(publicPort, 'localhost', () => {
     if (viteServer.resolvedUrls) {
       if (internalPort) {
+        // Replace the internal port with the public port in the resolved URLs
+        // to print the correct URLs in the console.
         viteServer.resolvedUrls.local = viteServer.resolvedUrls.local.map(
           (url) => url.replace(internalPort, String(publicPort)),
         );
@@ -298,14 +286,24 @@ export async function runDev({
         );
       }
     }
+
+    console.log('');
     viteServer.printUrls();
     viteServer.bindCLIShortcuts({print: true});
+
+    checkRemixVersions();
+    if (!disableVersionCheck) {
+      displayDevUpgradeNotice({targetPath: appPath});
+    }
   });
 
   return {
     async close() {
-      // codegenProcess?.kill(0);
-      // await Promise.all([closeWatcher(), miniOxygen?.close()]);
+      codegenProcess?.kill(0);
+      await workerRuntime.teardown();
+      viteServer.close();
+      viteProxyServer.close();
+      publicFacingServer.close();
     },
   };
 }
