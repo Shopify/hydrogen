@@ -77,7 +77,7 @@ async function setupEnvironment(env: ViteEnv) {
               return !!hmrRpc;
             },
             send(messages: string) {
-              // console.log('send:', messages);
+              // TODO
             },
             onUpdate(h: any) {
               onHmrRecieve = h;
@@ -93,7 +93,21 @@ async function setupEnvironment(env: ViteEnv) {
   }
 
   if (!hmrRpc) {
-    await createHmrRpc(env);
+    const wsClient = await connectHmrWsClient(env);
+
+    hmrRpc = createBirpc<ServerFunctions, ClientFunctions>(
+      {
+        hmrSend(payload) {
+          onHmrRecieve?.(payload);
+        },
+      },
+      {
+        post: (data) => wsClient.send(data),
+        on: (data) => wsClient.addEventListener('message', (e) => data(e.data)),
+        serialize: (v) => JSON.stringify(v),
+        deserialize: (v) => JSON.parse(v),
+      },
+    );
   }
 
   runner.unsafeEval = env.__VITE_UNSAFE_EVAL;
@@ -176,27 +190,17 @@ class MiniOxygenRunner implements ViteModuleRunner {
   }
 }
 
-async function createHmrRpc(env: ViteEnv) {
+async function connectHmrWsClient(env: ViteEnv) {
   const response = (await fetch(env.__VITE_HMR_URL, {
     headers: {Upgrade: 'websocket'},
   })) as unknown as Response;
 
   const ws = response.webSocket;
   if (!ws) throw new Error('ws failed to connect');
+
   ws.accept();
 
-  const clientFunctions: ClientFunctions = {
-    hmrSend(payload) {
-      onHmrRecieve?.(payload);
-    },
-  };
-
-  hmrRpc = createBirpc<ServerFunctions, ClientFunctions>(clientFunctions, {
-    post: (data) => ws.send(data),
-    on: (data) => ws.addEventListener('message', (e) => data(e.data)),
-    serialize: (v) => JSON.stringify(v),
-    deserialize: (v) => JSON.parse(v),
-  });
+  return ws;
 }
 
 // Fix sourcemaps

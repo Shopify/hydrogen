@@ -66,6 +66,7 @@
     "tsup": "7.2.0",
     "turbo": "1.12.0",
     "typescript": "^5.2.2",
+    "vite": "5.1.0-beta.6",
     "yorkie": "^2.0.0"
   },
   "engines": {

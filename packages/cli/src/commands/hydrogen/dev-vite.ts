@@ -1,7 +1,5 @@
 import path from 'node:path';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
-import {renderFatalError} from '@shopify/cli-kit/node/ui';
-import colors from '@shopify/cli-kit/node/colors';
 import {enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
 import {
   commonFlags,
@@ -10,7 +8,6 @@ import {
 } from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
-import {buildAssetsUrl} from '../../lib/mini-oxygen/index.js';
 import {startMiniOxygenVite} from '../../lib/mini-oxygen/vite/server.js';
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
@@ -166,24 +163,6 @@ export async function runDev({
       })
     : undefined;
 
-  //   miniOxygen.showBanner({
-  //     appName: storefront ? colors.cyan(storefront?.title) : undefined,
-  //     headlinePrefix:
-  //       initialBuildDurationMs > 0
-  //         ? `Initial build: ${initialBuildDurationMs}ms\n`
-  //         : '',
-  //     extraLines: [
-  //       colors.dim(
-  //         `\nView GraphiQL API browser: ${getGraphiQLUrl({
-  //           host: miniOxygen.listeningAt,
-  //         })}`,
-  //       ),
-  //       colors.dim(
-  //         `\nView server network requests: ${miniOxygen.listeningAt}/subrequest-profiler`,
-  //       ),
-  //     ],
-  //   });
-
   // handle unhandledRejection so that the process won't exit
   process.on('unhandledRejection', (err) => {
     console.log('Unhandled Rejection: ', err);
@@ -191,6 +170,8 @@ export async function runDev({
 
   // Store the port passed by the user in the config.
   const publicPort = appPort ?? viteServer.config.server.port ?? 3000;
+
+  // TODO -- Need to change Remix' <Scripts/> component
   // const assetsPort = await findPort(publicPort + 100);
   // if (assetsPort) {
   //   // Note: Set this env before loading Remix config!

@@ -99,17 +99,15 @@ export async function startMiniOxygenVite({
   });
 
   mf.ready.then(() => {
-    const serverFunctions: ServerFunctions = {
-      hmrSend(_payload) {
-        // TODO: emit?
-      },
-    };
-
     viteServer.hot.addChannel(hmrChannel);
 
     wss.on('connection', (ws) => {
       const rpc = createBirpc<ClientFunctions, ServerFunctions>(
-        serverFunctions,
+        {
+          hmrSend(_payload) {
+            // TODO: emit?
+          },
+        },
         {
           post: (data) => ws.send(data),
           on: (data) => ws.on('message', data),
@@ -228,6 +226,10 @@ class WssHmrChannel implements HMRChannel {
       };
     } else {
       payload = arg0 as HMRPayload;
+      if (payload.type === 'update') {
+        // TODO: handle partial updates
+        payload = {type: 'full-reload', path: '*'};
+      }
     }
 
     this.clients.forEach((rpc) => {
