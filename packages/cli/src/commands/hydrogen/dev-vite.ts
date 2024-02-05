@@ -185,8 +185,6 @@ export async function runDev({
   //     env: await envPromise,
   //   });
 
-  //   enhanceH2Logs({host: miniOxygen.listeningAt, ...remixConfig});
-
   //   miniOxygen.showBanner({
   //     appName: storefront ? colors.cyan(storefront?.title) : undefined,
   //     headlinePrefix:
@@ -233,6 +231,8 @@ export async function runDev({
   setConstructors({Response: globalThis.Response});
 
   const workerRuntime = await startMiniOxygenVite({
+    debug,
+    inspectorPort,
     env: await envPromise,
     viteUrl,
     viteServer,
@@ -278,6 +278,8 @@ export async function runDev({
 
   // Start the public facing server with the port passed by the user.
   publicFacingServer.listen(publicPort, 'localhost', () => {
+    enhanceH2Logs({rootDirectory, host: `http://localhost:${publicPort}`});
+
     if (viteServer.resolvedUrls) {
       if (internalPort) {
         // Replace the internal port with the public port in the resolved URLs

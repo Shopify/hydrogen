@@ -5,13 +5,17 @@ import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
 import {createFileReadStream} from '@shopify/cli-kit/node/fs';
 import {createBirpc, type BirpcReturn} from 'birpc';
-import {Miniflare} from 'miniflare';
+import {Miniflare, NoOpLog} from 'miniflare';
 import {WebSocket, WebSocketServer} from 'ws';
 import type {ClientFunctions, ServerFunctions} from './common.js';
 import {H2O_BINDING_NAME, createLogRequestEvent} from '../../request-events.js';
 import {OXYGEN_HEADERS_MAP} from '../common.js';
 
 import type {ViteEnv} from './client.js';
+import {PRIVATE_WORKERD_INSPECTOR_PORT} from '../workerd.js';
+import {findPort} from '../../find-port.js';
+import {createInspectorConnector} from '../workerd-inspector.js';
+import {MiniOxygenOptions} from '../types.js';
 const clientPath = fileURLToPath(new URL('./client.js', import.meta.url));
 
 const AsyncFunction = async function () {}.constructor as typeof Function;
@@ -31,16 +35,20 @@ const oxygenHeadersMap = Object.values(OXYGEN_HEADERS_MAP).reduce(
   {} as Record<string, string>,
 );
 
-type MiniOxygenViteOptions = {
+type MiniOxygenViteOptions = Pick<
+  MiniOxygenOptions,
+  'env' | 'debug' | 'inspectorPort'
+> & {
   viteServer: ViteDevServer;
   viteUrl: URL;
-  env?: Record<string, any>;
 };
 
 export async function startMiniOxygenVite({
   viteServer,
   viteUrl,
   env,
+  debug = false,
+  inspectorPort: publicInspectorPort,
 }: MiniOxygenViteOptions) {
   const workerEntryFile =
     typeof viteServer.config.build.ssr === 'string'
@@ -50,12 +58,18 @@ export async function startMiniOxygenVite({
   const hmrPort = 9400;
   const wss = new WebSocketServer({host: 'localhost', port: hmrPort});
   const hmrChannel = new WssHmrChannel();
+  const privateInspectorPort = await findPort(PRIVATE_WORKERD_INSPECTOR_PORT);
 
   const mf = new Miniflare({
+    cf: false,
+    verbose: false,
+    log: new NoOpLog(),
+    name: 'hydrogen',
+    inspectorPort: privateInspectorPort,
+    modules: true,
+    modulesRoot: viteServer.config.root,
     script: await readFile(clientPath, 'utf-8'),
     scriptPath: path.join(viteServer.config.root, '_virtual-server-entry.js'),
-    modules: true,
-    unsafeEvalBinding: '__VITE_UNSAFE_EVAL',
     compatibilityFlags: ['streams_enable_constructors'],
     compatibilityDate: '2022-10-31',
     bindings: {
@@ -67,12 +81,15 @@ export async function startMiniOxygenVite({
       __VITE_FETCH_MODULE_URL: path.join(viteUrl.origin + fetchModulePathname),
       __VITE_HMR_URL: `http://localhost:${hmrPort}`,
     } satisfies Omit<ViteEnv, '__VITE_UNSAFE_EVAL'>,
+    unsafeEvalBinding: '__VITE_UNSAFE_EVAL',
     serviceBindings: {
       [H2O_BINDING_NAME]: createLogRequestEvent({
         absoluteBundlePath: '', // TODO
       }),
     },
-    // handleRuntimeStdio(stdio, stderr) {},
+    handleRuntimeStdio(stdout, stderr) {
+      // TODO: handle runtime stdio and remove inspector logs
+    },
   });
 
   mf.ready.then(() => {
@@ -100,28 +117,40 @@ export async function startMiniOxygenVite({
       ws.on('close', () => {
         hmrChannel.clients.delete(ws);
       });
+
+      const reconnect = createInspectorConnector({
+        debug,
+        sourceMapPath: '',
+        absoluteBundlePath: '',
+        privateInspectorPort,
+        publicInspectorPort,
+      });
+
+      return reconnect();
     });
   });
 
-  viteServer.middlewares.use(fetchModulePathname, async (req, res) => {
+  viteServer.middlewares.use(fetchModulePathname, (req, res) => {
     const url = new URL(req.url!, 'http://localhost');
 
     const id = url.searchParams.get('id');
     const importer = url.searchParams.get('importer') ?? undefined;
 
-    if (!id) {
+    if (id) {
+      res.setHeader('cache-control', 'no-store');
+      res.setHeader('content-type', 'application/json');
+      viteServer.ssrFetchModule(id, importer).then((ssrModule) => {
+        res.end(JSON.stringify(ssrModule));
+      });
+    } else {
       res.statusCode = 400;
-      return res.end('Invalid request');
+      res.end('Invalid request');
     }
-
-    const ssrModule = await viteServer.ssrFetchModule(id, importer);
-    res.setHeader('content-type', 'application/json');
-    return res.end(JSON.stringify(ssrModule));
   });
 
   viteServer.middlewares.use(
     '/graphiql/customer-account.schema.json',
-    async (req, res) => {
+    (req, res) => {
       const require = createRequire(import.meta.url);
       const filePath = require.resolve(
         '@shopify/hydrogen/customer-account.schema.json',
