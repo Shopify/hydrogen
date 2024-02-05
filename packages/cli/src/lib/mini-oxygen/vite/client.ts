@@ -19,6 +19,9 @@ import {makeLegalIdentifier} from '@rollup/pluginutils';
 
 declare const __ROOT__: string;
 declare const __CODE_LINE_OFFSET__: number;
+declare const __VITE_URL__: string;
+declare const __VITE_FETCH_MODULE_URL__: string;
+declare const __VITE_RUNTIME_EXECUTE_URL__: string;
 
 let rpc: BirpcReturn<ServerFunctions, ClientFunctions>;
 let onHmrRecieve: ((payload: HMRPayload) => void) | undefined;
@@ -71,7 +74,6 @@ type UnsafeEvalModule = {
 
 class MiniOxygenRunner implements ViteModuleRunner {
   unsafeEval: UnsafeEvalModule | undefined;
-  fetchModuleUrl: string | undefined | null;
   private idMap = new Map<string, string[]>();
 
   async runViteModule(
@@ -147,9 +149,7 @@ const runtime = new ViteRuntime(
     fetchModule: (id, importer) => {
       // Do not use WS here because the payload can exceed the limit of WS in workerd
 
-      if (!runner.fetchModuleUrl) throw new Error('fetchModuleUrl is not set');
-
-      const url = new URL(runner.fetchModuleUrl);
+      const url = new URL(__VITE_FETCH_MODULE_URL__);
       url.searchParams.set('id', id);
       if (importer) url.searchParams.set('importer', importer);
 
@@ -194,14 +194,14 @@ export default {
   async fetch(request: Request, env: any, ctx: any) {
     await setupRpc();
     runner.unsafeEval = env.UNSAFE_EVAL;
-    runner.fetchModuleUrl = request.headers.get('vite-fetch-module-url');
 
-    const executeUrl = request.headers.get('vite-runtime-execute-url');
-    if (!executeUrl) {
-      throw new Error('executeUrl should not be empty');
+    if (request.url.endsWith('.json')) {
+      return fetch(new URL(new URL(request.url).pathname, __VITE_URL__));
     }
 
-    const module = await runtime.executeEntrypoint(executeUrl);
+    const module = await runtime.executeEntrypoint(
+      __VITE_RUNTIME_EXECUTE_URL__,
+    );
     return module.default.fetch(request, env, ctx);
   },
 };

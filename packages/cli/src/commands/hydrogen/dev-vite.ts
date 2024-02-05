@@ -1,12 +1,8 @@
 import path from 'node:path';
 import {statSync} from 'node:fs';
-import fs from 'node:fs/promises';
-import type {ChildProcess} from 'node:child_process';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
-import {fileExists} from '@shopify/cli-kit/node/fs';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
-import {copyPublicFiles} from './build.js';
 import {enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
 import {
   commonFlags,
@@ -31,6 +27,10 @@ import {createServer as createHattipServer} from '@hattip/adapter-node';
 import httpProxy from 'http-proxy';
 import {createServer as createViteServer} from 'vite';
 import type {RemixPluginContext} from '@remix-run/dev/dist/vite/plugin.js';
+import {
+  handleDebugNetworkRequest,
+  setConstructors,
+} from '../../lib/request-events.js';
 
 export default class DevVite extends Command {
   static description =
@@ -205,17 +205,19 @@ export async function runDev({
   //     ],
   //   });
 
-  const workerRuntime = await startMiniOxygenVite(viteServer, {
-    env: await envPromise,
-  });
-
   // handle unhandledRejection so that the process won't exit
   process.on('unhandledRejection', (err) => {
     console.log('Unhandled Rejection: ', err);
   });
 
   // Store the port passed by the user in the config.
-  const publicPort = appPort ?? viteServer.config.server.port ?? 3000;
+  const publicPort = 3000 ?? appPort ?? viteServer.config.server.port ?? 3000;
+  // const assetsPort = await findPort(publicPort + 100);
+  // if (assetsPort) {
+  //   // Note: Set this env before loading Remix config!
+  //   process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
+  // }
+
   // Start the internal Vite server with a random port.
   await viteServer.listen(0);
 
@@ -228,11 +230,13 @@ export async function runDev({
 
   inspectorPort = debug ? await findPort(inspectorPort) : inspectorPort;
 
-  // const assetsPort = await findPort(publicPort + 100);
-  // if (assetsPort) {
-  //   // Note: Set this env before loading Remix config!
-  //   process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
-  // }
+  setConstructors({Response: globalThis.Response});
+
+  const workerRuntime = await startMiniOxygenVite({
+    env: await envPromise,
+    viteUrl,
+    viteServer,
+  });
 
   const publicFacingServer = createHattipServer(async (ctx) => {
     const url = new URL(ctx.request.url);

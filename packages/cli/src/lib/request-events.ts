@@ -18,7 +18,10 @@ type InferredResponse<R extends RequestKind> = R extends WorkerdRequest
   ? WorkerdResponse
   : Response;
 
-let ResponseConstructor: typeof Response | typeof WorkerdResponse;
+let ResponseConstructor:
+  | typeof Response
+  | typeof WorkerdResponse
+  | typeof globalThis.Response;
 export function setConstructors(constructors: {
   Response: typeof ResponseConstructor;
 }) {
@@ -91,6 +94,7 @@ function createResponse<R extends RequestKind>(
   main: string | ReadableStream = 'ok',
   init?: Pick<ResponseInit, 'headers'>,
 ) {
+  // @ts-ignore
   return new ResponseConstructor(main, init) as InferredResponse<R>;
 }
 
