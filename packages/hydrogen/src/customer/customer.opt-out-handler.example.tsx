@@ -1,4 +1,4 @@
-import type {CustomerClient} from '@shopify/hydrogen';
+import type {CustomerAccount} from '@shopify/hydrogen';
 import {type HydrogenSession} from '@shopify/hydrogen';
 import {
   createCookieSessionStorage,
@@ -18,7 +18,7 @@ declare module '@shopify/remix-oxygen' {
    * Declare local additions to the Remix loader context.
    */
   export interface AppLoadContext {
-    customerAccount: CustomerClient;
+    customerAccount: CustomerAccount;
     session: AppSession;
   }
 }

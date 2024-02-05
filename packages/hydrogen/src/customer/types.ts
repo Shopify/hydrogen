@@ -42,7 +42,7 @@ export interface CustomerAccountMutations {
   // '#graphql mutation m1 {...}': {return: M1Mutation; variables: M1MutationVariables};
 }
 
-export type CustomerClient = {
+export type CustomerAccount = {
   /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use) */
   login: () => Promise<Response>;
   /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */
@@ -53,6 +53,8 @@ export type CustomerClient = {
   handleAuthStatus: () => void | DataFunctionValue;
   /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */
   getAccessToken: () => Promise<string | undefined>;
+  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/
+  getApiUrl: () => string;
   /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/
   logout: () => Promise<Response>;
   /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */
@@ -87,7 +89,7 @@ export type CustomerClient = {
   >;
 };
 
-export type CustomerClientOptions = {
+export type CustomerAccountOptions = {
   /** The client requires a session to persist the auth and refresh token. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */
   session: HydrogenSession;
   /** Unique UUID prefixed with `shp_` associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountId. Use `h2 env pull` to link your store credentials. */
@@ -108,7 +110,7 @@ export type CustomerClientOptions = {
 
 /** Below are types meant for documentation only. Ensure it stay in sync with the type above. */
 
-export type CustomerClientForDocs = {
+export type CustomerAccountForDocs = {
   /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use) */
   login?: () => Promise<Response>;
   /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */
@@ -119,21 +121,23 @@ export type CustomerClientForDocs = {
   handleAuthStatus?: () => void | DataFunctionValue;
   /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */
   getAccessToken?: () => Promise<string | undefined>;
+  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/
+  getApiUrl: () => string;
   /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/
   logout?: () => Promise<Response>;
   /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */
   query?: <TData = any>(
     query: string,
-    options: CustomerClientQueryOptionsForDocs,
+    options: CustomerAccountQueryOptionsForDocs,
   ) => Promise<TData>;
   /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */
   mutate?: <TData = any>(
     mutation: string,
-    options: CustomerClientQueryOptionsForDocs,
+    options: CustomerAccountQueryOptionsForDocs,
   ) => Promise<TData>;
 };
 
-export type CustomerClientQueryOptionsForDocs = {
+export type CustomerAccountQueryOptionsForDocs = {
   /** The variables for the GraphQL statement. */
   variables?: Record<string, unknown>;
 };

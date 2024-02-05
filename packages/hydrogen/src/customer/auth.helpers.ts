@@ -6,9 +6,44 @@ import {
   CUSTOMER_ACCOUNT_SESSION_KEY,
 } from './constants';
 
+type H2OEvent = Parameters<NonNullable<typeof __H2O_LOG_EVENT>>[0];
+
 export interface Locks {
   refresh?: Promise<any>;
 }
+
+export const logSubRequestEvent =
+  process.env.NODE_ENV === 'development'
+    ? ({
+        url,
+        response,
+        startTime,
+        query,
+        variables,
+        ...debugInfo
+      }: {
+        url: H2OEvent['url'];
+        response: Response;
+        startTime: H2OEvent['startTime'];
+        query?: string;
+        variables?: Record<string, any> | null;
+      } & Partial<H2OEvent>) => {
+        globalThis.__H2O_LOG_EVENT?.({
+          ...debugInfo,
+          eventType: 'subrequest',
+          url,
+          startTime,
+          graphql: query
+            ? JSON.stringify({query, variables, schema: 'customer-account'})
+            : undefined,
+          responseInit: {
+            status: response.status || 0,
+            statusText: response.statusText || '',
+            headers: Array.from(response.headers.entries() || []),
+          },
+        });
+      }
+    : undefined;
 
 export function redirect(
   path: string,
@@ -36,11 +71,13 @@ export async function refreshToken({
   customerAccountId,
   customerAccountUrl,
   origin,
+  debugInfo,
 }: {
   session: HydrogenSession;
   customerAccountId: string;
   customerAccountUrl: string;
   origin: string;
+  debugInfo?: Partial<H2OEvent>;
 }) {
   const newBody = new URLSearchParams();
 
@@ -63,10 +100,20 @@ export async function refreshToken({
     Origin: origin,
   };
 
-  const response = await fetch(`${customerAccountUrl}/auth/oauth/token`, {
+  const startTime = new Date().getTime();
+  const url = `${customerAccountUrl}/auth/oauth/token`;
+  const response = await fetch(url, {
     method: 'POST',
     headers,
     body: newBody,
+  });
+
+  logSubRequestEvent?.({
+    displayName: 'Customer Account API: access token refresh',
+    url,
+    startTime,
+    response,
+    ...debugInfo,
   });
 
   if (!response.ok) {
@@ -87,6 +134,7 @@ export async function refreshToken({
     customerAccountId,
     customerAccountUrl,
     origin,
+    debugInfo,
   );
 
   session.set(CUSTOMER_ACCOUNT_SESSION_KEY, {
@@ -110,6 +158,7 @@ export async function checkExpires({
   customerAccountId,
   customerAccountUrl,
   origin,
+  debugInfo,
 }: {
   locks: Locks;
   expiresAt: string;
@@ -117,6 +166,7 @@ export async function checkExpires({
   customerAccountId: string;
   customerAccountUrl: string;
   origin: string;
+  debugInfo?: Partial<H2OEvent>;
 }) {
   if (parseInt(expiresAt, 10) - 1000 < new Date().getTime()) {
     try {
@@ -127,6 +177,7 @@ export async function checkExpires({
           customerAccountId,
           customerAccountUrl,
           origin,
+          debugInfo,
         });
 
       await locks.refresh;
@@ -189,6 +240,7 @@ export async function exchangeAccessToken(
   customerAccountId: string,
   customerAccountUrl: string,
   origin: string,
+  debugInfo?: Partial<H2OEvent>,
 ) {
   const clientId = customerAccountId;
 
@@ -216,10 +268,20 @@ export async function exchangeAccessToken(
     Origin: origin,
   };
 
-  const response = await fetch(`${customerAccountUrl}/auth/oauth/token`, {
+  const startTime = new Date().getTime();
+  const url = `${customerAccountUrl}/auth/oauth/token`;
+  const response = await fetch(url, {
     method: 'POST',
     headers,
     body,
+  });
+
+  logSubRequestEvent?.({
+    displayName: 'Customer Account API: access token exchange',
+    url,
+    startTime,
+    response,
+    ...debugInfo,
   });
 
   const data = await response.json<AccessTokenResponse>();

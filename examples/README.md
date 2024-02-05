@@ -10,9 +10,14 @@ Examples are kept intentionally minimal, containing only the new and updated cod
 
 These are some of the most commonly used Hydrogen examples. Browse the folders in this directory for the complete list.
 
-Example | Details |
---- | ---
-[Multipass](/examples/multipass/) | Connect your existing third-party authentication method to Shopify’s customer accounts, so buyers can use a single login across multiple services.
+| Example                                                                   | Details                                                                                                                                            |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Custom Cart Method](/examples/custom-cart-method/)                       | How to implementation custom cart method by showing in-line product option edit in cart.                                                           |
+| [Express](/examples/express/)                                             | Hydrogen example using NodeJS [Express](https://expressjs.com/).                                                                                   |
+| [Legacy Customer Account Flow](/examples/legacy-customer-account-flow/)   | The legacy customer account flow made with [Storefront API](https://shopify.dev/docs/api/storefront).                                              |
+| [Multipass](/examples/multipass/)                                         | Connect your existing third-party authentication method to Shopify’s customer accounts, so buyers can use a single login across multiple services. |
+| [Optimistic Cart UI](/examples/optimistic-cart-ui/)                       | How to optimistically remove a cart line item from the cart.                                                                                       |
+| [Third-party Queries and Caching](/examples/third-party-queries-caching/) | How to leverage Oxygen's sub-request caching when querying third-party GraphQL API in Hydrogen.                                                    |
 
 ## Request an example
 
@@ -28,9 +33,11 @@ An example diff is a partial Hydrogen app that only contains the files that chan
 
 Keep the following in mind when creating a new example diff:
 
-- Start a new example diff by copying another minimal example and changing code.
-- Only include and commit files that are different from the skeleton template.
-- `package.json` must always be created with a unique name with example- prefix, and this name must be included in the NPM workspace (root `package.json`).
-- `dependencies`, `devDependencies`, and `peerDependencies` in `package.json` are also merged to those in skeleton. Therefore, only list new or modified dependencies in the example.
-- The scripts in `package.json` must pass the `--diff` flag to the `dev` and `build` commands. Otherwise, it will be treated as a full Hydrogen app instead of a diff.
-- The `tsconfig.json` must have special values. Copy it from another existing diff example.
+1. Start a new example diff by copying another minimal example and changing code.
+   Only include and commit files that are different from the skeleton template.
+1. `package.json` must always be created with a unique name with example- prefix.
+1. `dependencies`, `devDependencies`, and `peerDependencies` in `package.json` are also merged to those in skeleton. Therefore, only list new or modified dependencies in the example.
+1. The scripts in `package.json` must pass the `--diff` flag to the `dev` and `build` commands. Otherwise, it will be treated as a full Hydrogen app instead of a diff.
+1. The `tsconfig.json` must have special values. Copy it from another existing diff example.
+1. Add the example package to `workspaces` option in the main repo package.json
+1. Add the new example in this README
