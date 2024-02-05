@@ -200,6 +200,7 @@ export async function startMiniOxygenVite({
         ...(req.headers as object),
       },
       body: req.headers['content-length'] ? Readable.toWeb(req) : undefined,
+      duplex: 'half', // This is required when sending a ReadableStream as body
     });
 
     const startTimeMs = Date.now();
