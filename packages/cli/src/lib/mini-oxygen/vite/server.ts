@@ -14,7 +14,10 @@ import {H2O_BINDING_NAME, createLogRequestEvent} from '../../request-events.js';
 import {OXYGEN_HEADERS_MAP, logRequestLine} from '../common.js';
 
 import type {ViteEnv} from './client.js';
-import {PRIVATE_WORKERD_INSPECTOR_PORT} from '../workerd.js';
+import {
+  PRIVATE_WORKERD_INSPECTOR_PORT,
+  OXYGEN_WORKERD_COMPAT_PARAMS,
+} from '../workerd.js';
 import {findPort} from '../../find-port.js';
 import {createInspectorConnector} from '../workerd-inspector.js';
 import {MiniOxygenOptions} from '../types.js';
@@ -27,7 +30,8 @@ const fnDeclarationLineCount = (() => {
   return source.slice(0, source.indexOf(body)).split('\n').length - 1;
 })();
 
-const fetchModulePathname = '/__vite_fetch_module';
+const PRIVATE_WORKERD_HMR_PORT = 9400;
+const FETCH_MODULE_PATHNAME = '/__vite_fetch_module';
 
 const oxygenHeadersMap = Object.values(OXYGEN_HEADERS_MAP).reduce(
   (acc, item) => {
@@ -57,11 +61,13 @@ export async function startMiniOxygenVite({
       ? viteServer.config.build.ssr
       : 'server.ts';
 
-  const hmrPort = 9400;
-  const wss = new WebSocketServer({host: 'localhost', port: hmrPort});
-  const hmrChannel = new WssHmrChannel();
-  const publicInspectorPort = await findPort(inspectorPort);
-  const privateInspectorPort = await findPort(PRIVATE_WORKERD_INSPECTOR_PORT);
+  const scriptPromise = readFile(clientPath, 'utf-8');
+  const [publicInspectorPort, privateInspectorPort, privateHmrPort] =
+    await Promise.all([
+      findPort(inspectorPort),
+      findPort(PRIVATE_WORKERD_INSPECTOR_PORT),
+      findPort(PRIVATE_WORKERD_HMR_PORT),
+    ]);
 
   const mf = new Miniflare({
     cf: false,
@@ -71,10 +77,9 @@ export async function startMiniOxygenVite({
     inspectorPort: privateInspectorPort,
     modules: true,
     modulesRoot: viteServer.config.root,
-    script: await readFile(clientPath, 'utf-8'),
+    script: await scriptPromise,
     scriptPath: path.join(viteServer.config.root, '_virtual-server-entry.js'),
-    compatibilityFlags: ['streams_enable_constructors'],
-    compatibilityDate: '2022-10-31',
+    ...OXYGEN_WORKERD_COMPAT_PARAMS,
     bindings: {
       ...env,
       __VITE_ROOT: viteServer.config.root,
@@ -82,10 +87,10 @@ export async function startMiniOxygenVite({
       __VITE_URL: publicUrl.toString(),
       __VITE_RUNTIME_EXECUTE_URL: workerEntryFile,
       __VITE_FETCH_MODULE_URL: new URL(
-        fetchModulePathname,
+        FETCH_MODULE_PATHNAME,
         publicUrl.origin,
       ).toString(),
-      __VITE_HMR_URL: `http://localhost:${hmrPort}`,
+      __VITE_HMR_URL: `http://localhost:${privateHmrPort}`,
     } satisfies Omit<ViteEnv, '__VITE_UNSAFE_EVAL'>,
     unsafeEvalBinding: '__VITE_UNSAFE_EVAL',
     serviceBindings: {
@@ -98,7 +103,10 @@ export async function startMiniOxygenVite({
     },
   });
 
+  const wss = new WebSocketServer({host: 'localhost', port: privateHmrPort});
+
   mf.ready.then(() => {
+    const hmrChannel = new WssHmrChannel();
     viteServer.hot.addChannel(hmrChannel);
 
     wss.on('connection', (ws) => {
@@ -135,7 +143,7 @@ export async function startMiniOxygenVite({
   });
 
   viteServer.middlewares.use(
-    fetchModulePathname,
+    FETCH_MODULE_PATHNAME,
     function h2HandleModuleFetch(req, res) {
       // This request comes from workerd. It is asking for the contents
       // of backend files. We need to fetch the file through Vite,

@@ -32,6 +32,11 @@ import {
 // but at the moment we can't get the port from workerd (afaik?).
 export const PRIVATE_WORKERD_INSPECTOR_PORT = 9222;
 
+export const OXYGEN_WORKERD_COMPAT_PARAMS = {
+  compatibilityFlags: ['streams_enable_constructors'],
+  compatibilityDate: '2022-10-31',
+};
+
 export async function startWorkerdServer({
   root,
   port: appPort,
@@ -106,8 +111,7 @@ export async function startWorkerdServer({
               contents: await readFile(absoluteBundlePath),
             },
           ],
-          compatibilityFlags: ['streams_enable_constructors'],
-          compatibilityDate: '2022-10-31',
+          ...OXYGEN_WORKERD_COMPAT_PARAMS,
           bindings: {...env},
           serviceBindings: {
             [H2O_BINDING_NAME]: createLogRequestEvent({absoluteBundlePath}),
