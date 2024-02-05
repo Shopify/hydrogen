@@ -1,3 +1,11 @@
+/**
+ * All the code in this file is executed in workerd. This file
+ * is compiled at build time (tsup) to be transpiled to JS, and
+ * then loaded as string in a workerd instance at runtime as
+ * the worker entrypoint. It then requests modules to Vite
+ * and evaluates them to run the app's backend code.
+ */
+
 import {
   ViteRuntime,
   type ViteModuleRunner,
@@ -63,8 +71,8 @@ async function setupEnvironment(env: ViteEnv) {
       {
         root: env.__VITE_ROOT,
         fetchModule: (id, importer) => {
-          // Do not use WS here because the payload can exceed the limit of WS in workerd
-
+          // Do not use WS here because the payload can exceed the limit of WS in workerd.
+          // Instead, use fetch to get the module:
           const url = new URL(env.__VITE_FETCH_MODULE_URL);
           url.searchParams.set('id', id);
           if (importer) url.searchParams.set('importer', importer);

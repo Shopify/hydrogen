@@ -134,27 +134,38 @@ export async function startMiniOxygenVite({
     return reconnect();
   });
 
-  viteServer.middlewares.use(fetchModulePathname, (req, res) => {
-    const url = new URL(req.url!, 'http://localhost');
+  viteServer.middlewares.use(
+    fetchModulePathname,
+    function h2HandleModuleFetch(req, res) {
+      // This request comes from workerd. It is asking for the contents
+      // of backend files. We need to fetch the file through Vite,
+      // which transpiles/prepares the source code into valid JS, and
+      // send it back so that workerd can evaluate/run it.
 
-    const id = url.searchParams.get('id');
-    const importer = url.searchParams.get('importer') ?? undefined;
+      const url = new URL(req.url!, 'http://localhost');
+      const id = url.searchParams.get('id');
+      const importer = url.searchParams.get('importer') ?? undefined;
 
-    if (id) {
-      res.setHeader('cache-control', 'no-store');
-      res.setHeader('content-type', 'application/json');
-      viteServer.ssrFetchModule(id, importer).then((ssrModule) => {
-        res.end(JSON.stringify(ssrModule));
-      });
-    } else {
-      res.statusCode = 400;
-      res.end('Invalid request');
-    }
-  });
+      if (id) {
+        res.setHeader('cache-control', 'no-store');
+        res.setHeader('content-type', 'application/json');
+        viteServer.ssrFetchModule(id, importer).then((ssrModule) => {
+          res.end(JSON.stringify(ssrModule));
+        });
+      } else {
+        res.statusCode = 400;
+        res.end('Invalid request');
+      }
+    },
+  );
 
   viteServer.middlewares.use(
     '/graphiql/customer-account.schema.json',
-    (req, res) => {
+    function h2HandleGraphiQLCustomerSchema(req, res) {
+      // This request comes from Hydrogen's GraphiQL.
+      // Currently, the CAAPI schema is not available in the public API,
+      // so we serve it from here.
+
       const require = createRequire(import.meta.url);
       const filePath = require.resolve(
         '@shopify/hydrogen/customer-account.schema.json',
@@ -165,7 +176,12 @@ export async function startMiniOxygenVite({
     },
   );
 
-  viteServer.middlewares.use((req, res) => {
+  viteServer.middlewares.use(function h2HandleWorkerRequest(req, res) {
+    // This request comes from the browser. At this point, Vite
+    // tried to serve the request as a static file, but it didn't
+    // find it in the project. Therefore, we assume this is a
+    // request for a Remix route, and we forward it to workerd.
+
     const url = new URL(req.url ?? '/', publicUrl.origin);
 
     const webRequest = new Request(url, {
