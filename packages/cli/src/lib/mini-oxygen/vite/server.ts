@@ -11,6 +11,7 @@ import type {ClientFunctions, ServerFunctions} from './common.js';
 import {H2O_BINDING_NAME, createLogRequestEvent} from '../../request-events.js';
 import {OXYGEN_HEADERS_MAP} from '../common.js';
 
+import type {ViteEnv} from './client.js';
 const clientPath = fileURLToPath(new URL('./client.js', import.meta.url));
 
 const AsyncFunction = async function () {}.constructor as typeof Function;
@@ -46,29 +47,26 @@ export async function startMiniOxygenVite({
       ? viteServer.config.build.ssr
       : 'server.ts';
 
-  const script = (await readFile(clientPath, 'utf-8'))
-    .replaceAll('__ROOT__', JSON.stringify(viteServer.config.root))
-    .replaceAll('__CODE_LINE_OFFSET__', '' + fnDeclarationLineCount)
-    .replaceAll('__VITE_URL__', JSON.stringify(viteUrl.toString() ?? ''))
-    .replaceAll('__VITE_RUNTIME_EXECUTE_URL__', JSON.stringify(workerEntryFile))
-    .replaceAll(
-      '__VITE_FETCH_MODULE_URL__',
-      JSON.stringify(path.join(viteUrl.toString() + fetchModulePathname)),
-    );
-
-  const scriptPath = path.join(
-    viteServer.config.root,
-    '_virtual-server-entry.js',
-  );
+  const hmrPort = 9400;
+  const wss = new WebSocketServer({host: 'localhost', port: hmrPort});
+  const hmrChannel = new WssHmrChannel();
 
   const mf = new Miniflare({
-    script,
-    scriptPath,
+    script: await readFile(clientPath, 'utf-8'),
+    scriptPath: path.join(viteServer.config.root, '_virtual-server-entry.js'),
     modules: true,
-    unsafeEvalBinding: 'UNSAFE_EVAL',
+    unsafeEvalBinding: '__VITE_UNSAFE_EVAL',
     compatibilityFlags: ['streams_enable_constructors'],
     compatibilityDate: '2022-10-31',
-    bindings: {...env},
+    bindings: {
+      ...env,
+      __VITE_ROOT: viteServer.config.root,
+      __VITE_CODE_LINE_OFFSET: String(fnDeclarationLineCount),
+      __VITE_URL: viteUrl.toString(),
+      __VITE_RUNTIME_EXECUTE_URL: workerEntryFile,
+      __VITE_FETCH_MODULE_URL: path.join(viteUrl.origin + fetchModulePathname),
+      __VITE_HMR_URL: `http://localhost:${hmrPort}`,
+    } satisfies Omit<ViteEnv, '__VITE_UNSAFE_EVAL'>,
     serviceBindings: {
       [H2O_BINDING_NAME]: createLogRequestEvent({
         absoluteBundlePath: '', // TODO
@@ -77,10 +75,33 @@ export async function startMiniOxygenVite({
     // handleRuntimeStdio(stdio, stderr) {},
   });
 
-  const url = await mf.ready;
-  const wss = new WebSocketServer({host: 'localhost', port: 9400});
-  const hmrChannel = new WssHmrChannel();
-  viteServer.hot.addChannel(hmrChannel);
+  mf.ready.then(() => {
+    const serverFunctions: ServerFunctions = {
+      hmrSend(_payload) {
+        // TODO: emit?
+      },
+    };
+
+    viteServer.hot.addChannel(hmrChannel);
+
+    wss.on('connection', (ws) => {
+      const rpc = createBirpc<ClientFunctions, ServerFunctions>(
+        serverFunctions,
+        {
+          post: (data) => ws.send(data),
+          on: (data) => ws.on('message', data),
+          serialize: (v) => JSON.stringify(v),
+          deserialize: (v) => JSON.parse(v),
+        },
+      );
+
+      hmrChannel.clients.set(ws, rpc);
+
+      ws.on('close', () => {
+        hmrChannel.clients.delete(ws);
+      });
+    });
+  });
 
   viteServer.middlewares.use(fetchModulePathname, async (req, res) => {
     const url = new URL(req.url!, 'http://localhost');
@@ -111,32 +132,12 @@ export async function startMiniOxygenVite({
     },
   );
 
-  const serverFunctions: ServerFunctions = {
-    hmrSend(_payload) {
-      // TODO: emit?
-    },
-  };
-
-  wss.on('connection', (ws) => {
-    const rpc = createBirpc<ClientFunctions, ServerFunctions>(serverFunctions, {
-      post: (data) => ws.send(data),
-      on: (data) => ws.on('message', data),
-      serialize: (v) => JSON.stringify(v),
-      deserialize: (v) => JSON.parse(v),
-    });
-
-    hmrChannel.clients.set(ws, rpc);
-
-    ws.on('close', () => {
-      hmrChannel.clients.delete(ws);
-    });
-  });
-
   return {
     async handleRequest(request: globalThis.Request, ctx: {viteUrl: string}) {
+      const mfURL = await mf.ready;
       const resolvedUrl = new URL(request.url);
-      resolvedUrl.protocol = url.protocol;
-      resolvedUrl.host = url.host;
+      resolvedUrl.protocol = mfURL.protocol;
+      resolvedUrl.host = mfURL.host;
 
       const body = request.body ? await request.arrayBuffer() : undefined;
       const response = await mf.dispatchFetch(resolvedUrl, {

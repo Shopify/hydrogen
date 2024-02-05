@@ -17,63 +17,97 @@ import type {Response} from 'miniflare';
 import type {HMRPayload} from 'vite';
 import {makeLegalIdentifier} from '@rollup/pluginutils';
 
-declare const __ROOT__: string;
-declare const __CODE_LINE_OFFSET__: number;
-declare const __VITE_URL__: string;
-declare const __VITE_FETCH_MODULE_URL__: string;
-declare const __VITE_RUNTIME_EXECUTE_URL__: string;
+export interface ViteEnv {
+  __VITE_ROOT: string;
+  __VITE_CODE_LINE_OFFSET: string;
+  __VITE_URL: string;
+  __VITE_HMR_URL: string;
+  __VITE_FETCH_MODULE_URL: string;
+  __VITE_RUNTIME_EXECUTE_URL: string;
+  __VITE_UNSAFE_EVAL: UnsafeEval;
+}
 
-let rpc: BirpcReturn<ServerFunctions, ClientFunctions>;
+export default {
+  async fetch(request: Request, env: ViteEnv, ctx: any) {
+    await setupEnvironment(env);
+
+    if (request.url.endsWith('.json')) {
+      return fetch(new URL(new URL(request.url).pathname, env.__VITE_URL));
+    }
+
+    const module = await runtime.executeEntrypoint(
+      env.__VITE_RUNTIME_EXECUTE_URL,
+    );
+
+    const appEnv = Object.keys(env).reduce((acc, key) => {
+      if (!key.startsWith('__VITE_')) {
+        acc[key] = env[key as keyof typeof env];
+      }
+
+      return acc;
+    }, {} as Record<string, any>);
+
+    return module.default.fetch(request, appEnv, ctx);
+  },
+};
+
+let runner: MiniOxygenRunner;
+let runtime: ViteRuntime;
+let hmrRpc: BirpcReturn<ServerFunctions, ClientFunctions>;
 let onHmrRecieve: ((payload: HMRPayload) => void) | undefined;
 
-const setupRpc = async () => {
-  if (rpc) return;
+async function setupEnvironment(env: ViteEnv) {
+  if (!runner || !runtime) {
+    runner = new MiniOxygenRunner();
+    runtime = new ViteRuntime(
+      {
+        root: env.__VITE_ROOT,
+        fetchModule: (id, importer) => {
+          // Do not use WS here because the payload can exceed the limit of WS in workerd
 
-  const resp = (await fetch('http://localhost:9400', {
-    headers: {
-      Upgrade: 'websocket',
-    },
-  })) as unknown as Response;
-  const ws = resp.webSocket;
-  if (!ws) {
-    throw new Error('ws failed to connect');
+          const url = new URL(env.__VITE_FETCH_MODULE_URL);
+          url.searchParams.set('id', id);
+          if (importer) url.searchParams.set('importer', importer);
+
+          return fetch(url).then((res) => res.json());
+        },
+        hmr: {
+          connection: {
+            isReady() {
+              return !!hmrRpc;
+            },
+            send(messages: string) {
+              // console.log('send:', messages);
+            },
+            onUpdate(h: any) {
+              onHmrRecieve = h;
+              return () => {
+                onHmrRecieve = undefined;
+              };
+            },
+          } satisfies HMRRuntimeConnection,
+        },
+      },
+      runner,
+    );
   }
-  ws.accept();
 
-  const clientFunctions: ClientFunctions = {
-    hmrSend(payload) {
-      onHmrRecieve?.(payload);
-    },
-  };
-  rpc = createBirpc<ServerFunctions, ClientFunctions>(clientFunctions, {
-    post: (data) => ws.send(data),
-    on: (data) => ws.addEventListener('message', (e) => data(e.data)),
-    serialize: (v) => JSON.stringify(v),
-    deserialize: (v) => JSON.parse(v),
-  });
-};
+  if (!hmrRpc) {
+    await createHmrRpc(env);
+  }
 
-const hmrConnection: HMRRuntimeConnection = {
-  isReady() {
-    return !!rpc;
-  },
-  send(messages: string) {
-    console.log('send:', messages);
-  },
-  onUpdate(h: any) {
-    onHmrRecieve = h;
-    return () => {
-      onHmrRecieve = undefined;
-    };
-  },
-};
+  runner.unsafeEval = env.__VITE_UNSAFE_EVAL;
+  runner.codeLineOffset = Number(env.__VITE_CODE_LINE_OFFSET);
+}
 
-type UnsafeEvalModule = {
+type UnsafeEval = {
   newAsyncFunction(code: string, name?: string, ...args: string[]): Function;
 };
 
 class MiniOxygenRunner implements ViteModuleRunner {
-  unsafeEval: UnsafeEvalModule | undefined;
+  unsafeEval: UnsafeEval | undefined;
+  codeLineOffset = 0;
+
   private idMap = new Map<string, string[]>();
 
   async runViteModule(
@@ -98,7 +132,7 @@ class MiniOxygenRunner implements ViteModuleRunner {
     delete context[ssrImportMetaKey].dirname;
 
     const initModule = this.unsafeEval.newAsyncFunction(
-      '"use strict";' + '\n'.repeat(__CODE_LINE_OFFSET__) + code,
+      '"use strict";' + '\n'.repeat(this.codeLineOffset) + code,
       `${escapedId}_${number}`,
       ssrModuleExportsKey,
       ssrImportMetaKey,
@@ -142,26 +176,30 @@ class MiniOxygenRunner implements ViteModuleRunner {
   }
 }
 
-const runner = new MiniOxygenRunner();
-const runtime = new ViteRuntime(
-  {
-    root: __ROOT__,
-    fetchModule: (id, importer) => {
-      // Do not use WS here because the payload can exceed the limit of WS in workerd
+async function createHmrRpc(env: ViteEnv) {
+  const response = (await fetch(env.__VITE_HMR_URL, {
+    headers: {Upgrade: 'websocket'},
+  })) as unknown as Response;
 
-      const url = new URL(__VITE_FETCH_MODULE_URL__);
-      url.searchParams.set('id', id);
-      if (importer) url.searchParams.set('importer', importer);
+  const ws = response.webSocket;
+  if (!ws) throw new Error('ws failed to connect');
+  ws.accept();
 
-      return fetch(url).then((res) => res.json());
+  const clientFunctions: ClientFunctions = {
+    hmrSend(payload) {
+      onHmrRecieve?.(payload);
     },
-    hmr: {
-      connection: hmrConnection,
-    },
-  },
-  runner,
-);
-// exists because ViteRuntime assigns it
+  };
+
+  hmrRpc = createBirpc<ServerFunctions, ClientFunctions>(clientFunctions, {
+    post: (data) => ws.send(data),
+    on: (data) => ws.addEventListener('message', (e) => data(e.data)),
+    serialize: (v) => JSON.stringify(v),
+    deserialize: (v) => JSON.parse(v),
+  });
+}
+
+// Fix sourcemaps
 const originalPrepareStackTrace = Error.prepareStackTrace!;
 Error.prepareStackTrace = (error, stacks) => {
   const wrappedStacks = stacks.map(
@@ -187,21 +225,6 @@ Error.prepareStackTrace = (error, stacks) => {
         },
       }),
   );
+
   return originalPrepareStackTrace(error, wrappedStacks);
-};
-
-export default {
-  async fetch(request: Request, env: any, ctx: any) {
-    await setupRpc();
-    runner.unsafeEval = env.UNSAFE_EVAL;
-
-    if (request.url.endsWith('.json')) {
-      return fetch(new URL(new URL(request.url).pathname, __VITE_URL__));
-    }
-
-    const module = await runtime.executeEntrypoint(
-      __VITE_RUNTIME_EXECUTE_URL__,
-    );
-    return module.default.fetch(request, env, ctx);
-  },
 };
