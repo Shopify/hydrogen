@@ -174,7 +174,7 @@ type HydrogenClientProps<TI18n> = {
   /** An object containing a country code and language code */
   i18n?: TI18n;
   /** Whether it should print GraphQL errors automatically. Defaults to true */
-  logErrors?: boolean;
+  logErrors?: (error?: Error) => boolean;
 };
 
 export type CreateStorefrontClientOptions<TI18n extends I18nBase> =
@@ -219,7 +219,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     waitUntil,
     i18n,
     storefrontId,
-    logErrors = true,
+    logErrors = () => true,
     ...clientOptions
   } = options;
   const H2_PREFIX_WARN = '[h2:warn:createStorefrontClient] ';
