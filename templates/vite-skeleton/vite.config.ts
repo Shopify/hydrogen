@@ -2,66 +2,56 @@ import {defineConfig} from 'vite';
 import {unstable_vitePlugin as remix} from '@remix-run/dev';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
-export default defineConfig((options) => {
-  const remixPlugins = remix({
-    buildDirectory: 'dist',
-    serverBuildFile: 'index.js',
-  });
+export default defineConfig({
+  plugins: [
+    patchRemix(
+      remix({
+        buildDirectory: 'dist',
+        serverBuildFile: 'index.js',
+      }),
+    ),
+    tsconfigPaths(),
+  ],
+  server: {port: 3000, hmr: {port: 3001}},
+  build: {
+    copyPublicDir: false,
+    emptyOutDir: false,
+  },
+  resolve: {
+    conditions: ['worker', 'workerd'],
+  },
+  ssr: {
+    noExternal: true,
+    target: 'webworker',
+    optimizeDeps: {
+      include: [
+        'set-cookie-parser',
+        'cookie',
+        'content-security-policy-builder',
+        'react',
+        'react/jsx-runtime',
+        'react/jsx-dev-runtime',
+        'react-dom',
+        'react-dom/server',
+        'react-dom/server.browser',
+      ],
+    },
+  },
+});
 
-  const mainRemixPlugin = remixPlugins[0];
+function patchRemix(plugins: ReturnType<typeof remix>) {
+  const [remixPlugin] = plugins;
   const originalConfigureServer =
-    typeof mainRemixPlugin.configureServer === 'function'
-      ? mainRemixPlugin.configureServer
-      : mainRemixPlugin.configureServer?.handler!;
+    typeof remixPlugin.configureServer === 'function'
+      ? remixPlugin.configureServer
+      : remixPlugin.configureServer?.handler!;
 
-  mainRemixPlugin.configureServer = (viteDevServer) => {
+  remixPlugin.configureServer = (viteDevServer: any) => {
+    // Prevent Remix from adding its own middleware to handle
+    // requests in Node.js. We want to handle requests in workerd.
     viteDevServer.config.server.middlewareMode = true;
     return originalConfigureServer(viteDevServer);
   };
 
-  const plugins = [remixPlugins, tsconfigPaths()];
-
-  if (options.command === 'build' && !options.isSsrBuild) {
-    return {
-      plugins,
-      ssr: {
-        noExternal: true,
-        target: 'webworker',
-      },
-    };
-  }
-
-  return {
-    plugins,
-    server: {
-      port: 3000,
-      hmr: {
-        port: 3001,
-      },
-    },
-    build: {
-      copyPublicDir: false,
-      emptyOutDir: false,
-    },
-    resolve: {
-      conditions: ['worker', 'workerd'],
-    },
-    ssr: {
-      noExternal: true,
-      target: 'webworker',
-      optimizeDeps: {
-        include: [
-          'set-cookie-parser',
-          'cookie',
-          'content-security-policy-builder',
-          'react',
-          'react/jsx-runtime',
-          'react/jsx-dev-runtime',
-          'react-dom',
-          'react-dom/server',
-          'react-dom/server.browser',
-        ],
-      },
-    },
-  };
-});
+  return plugins;
+}
