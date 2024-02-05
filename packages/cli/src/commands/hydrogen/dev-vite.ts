@@ -111,6 +111,7 @@ export async function runDev({
   });
 
   const viteServer = await createViteServer({
+    root,
     server: {host: host ? true : undefined},
   });
 
@@ -203,7 +204,7 @@ export async function runDev({
 
   checkRemixVersions();
   if (!disableVersionCheck) {
-    displayDevUpgradeNotice({targetPath: appPath});
+    displayDevUpgradeNotice({targetPath: root});
   }
 
   return {
