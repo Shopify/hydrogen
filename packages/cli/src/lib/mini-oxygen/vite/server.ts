@@ -2,10 +2,12 @@ import {type HMRChannel, type HMRPayload, type ViteDevServer} from 'vite';
 import path from 'node:path';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
+import crypto from 'node:crypto';
 import {createRequire} from 'node:module';
+import {Readable} from 'node:stream';
 import {createFileReadStream} from '@shopify/cli-kit/node/fs';
 import {createBirpc, type BirpcReturn} from 'birpc';
-import {Miniflare, NoOpLog} from 'miniflare';
+import {Miniflare, NoOpLog, Request} from 'miniflare';
 import {WebSocket, WebSocketServer} from 'ws';
 import type {ClientFunctions, ServerFunctions} from './common.js';
 import {H2O_BINDING_NAME, createLogRequestEvent} from '../../request-events.js';
@@ -40,15 +42,15 @@ type MiniOxygenViteOptions = Pick<
   'env' | 'debug' | 'inspectorPort'
 > & {
   viteServer: ViteDevServer;
-  viteUrl: URL;
+  publicUrl: URL;
 };
 
 export async function startMiniOxygenVite({
   viteServer,
-  viteUrl,
+  publicUrl,
   env,
   debug = false,
-  inspectorPort: publicInspectorPort,
+  inspectorPort,
 }: MiniOxygenViteOptions) {
   const workerEntryFile =
     typeof viteServer.config.build.ssr === 'string'
@@ -58,6 +60,7 @@ export async function startMiniOxygenVite({
   const hmrPort = 9400;
   const wss = new WebSocketServer({host: 'localhost', port: hmrPort});
   const hmrChannel = new WssHmrChannel();
+  const publicInspectorPort = await findPort(inspectorPort);
   const privateInspectorPort = await findPort(PRIVATE_WORKERD_INSPECTOR_PORT);
 
   const mf = new Miniflare({
@@ -76,9 +79,12 @@ export async function startMiniOxygenVite({
       ...env,
       __VITE_ROOT: viteServer.config.root,
       __VITE_CODE_LINE_OFFSET: String(fnDeclarationLineCount),
-      __VITE_URL: viteUrl.toString(),
+      __VITE_URL: publicUrl.toString(),
       __VITE_RUNTIME_EXECUTE_URL: workerEntryFile,
-      __VITE_FETCH_MODULE_URL: path.join(viteUrl.origin + fetchModulePathname),
+      __VITE_FETCH_MODULE_URL: new URL(
+        fetchModulePathname,
+        publicUrl.origin,
+      ).toString(),
       __VITE_HMR_URL: `http://localhost:${hmrPort}`,
     } satisfies Omit<ViteEnv, '__VITE_UNSAFE_EVAL'>,
     unsafeEvalBinding: '__VITE_UNSAFE_EVAL',
@@ -117,17 +123,17 @@ export async function startMiniOxygenVite({
       ws.on('close', () => {
         hmrChannel.clients.delete(ws);
       });
-
-      const reconnect = createInspectorConnector({
-        debug,
-        sourceMapPath: '',
-        absoluteBundlePath: '',
-        privateInspectorPort,
-        publicInspectorPort,
-      });
-
-      return reconnect();
     });
+
+    const reconnect = createInspectorConnector({
+      debug,
+      sourceMapPath: '',
+      absoluteBundlePath: '',
+      privateInspectorPort,
+      publicInspectorPort,
+    });
+
+    return reconnect();
   });
 
   viteServer.middlewares.use(fetchModulePathname, (req, res) => {
@@ -161,34 +167,44 @@ export async function startMiniOxygenVite({
     },
   );
 
-  return {
-    async handleRequest(request: globalThis.Request, ctx: {viteUrl: string}) {
-      const mfURL = await mf.ready;
-      const resolvedUrl = new URL(request.url);
-      resolvedUrl.protocol = mfURL.protocol;
-      resolvedUrl.host = mfURL.host;
+  viteServer.middlewares.use((request, response) => {
+    const url = new URL(request.url ?? '/', publicUrl.origin);
 
-      const body = request.body ? await request.arrayBuffer() : undefined;
-      const response = await mf.dispatchFetch(resolvedUrl, {
+    mf.dispatchFetch(
+      new Request(url, {
         method: request.method,
         headers: {
           'request-id': crypto.randomUUID(),
           ...oxygenHeadersMap,
-          ...Object.fromEntries(
-            request.headers as unknown as Iterable<[string, string]>,
-          ),
+          ...(request.headers as object),
         },
-        body,
-      });
+        body: request.headers['content-length']
+          ? Readable.toWeb(request)
+          : undefined,
+      }),
+    )
+      .then((webResponse) => {
+        response.writeHead(
+          webResponse.status,
+          Object.fromEntries(webResponse.headers.entries()),
+        );
 
-      return response as unknown as globalThis.Response;
-    },
-    async teardown() {
-      await mf.dispose();
-      await new Promise<void>((resolve, reject) =>
-        wss.close((err) => (err ? reject(err) : resolve())),
-      );
-    },
+        if (webResponse.body) {
+          Readable.fromWeb(webResponse.body).pipe(response);
+        }
+      })
+      .catch((error) => {
+        console.error('Error during evaluation:', error);
+        response.writeHead(500);
+        response.end();
+      });
+  });
+
+  return async () => {
+    await mf.dispose();
+    await new Promise<void>((resolve, reject) =>
+      wss.close((err) => (err ? reject(err) : resolve())),
+    );
   };
 }
 

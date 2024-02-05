@@ -1,5 +1,4 @@
 import path from 'node:path';
-import {statSync} from 'node:fs';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
@@ -20,17 +19,11 @@ import {getConfig} from '../../lib/shopify-config.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
-import {findPort} from '../../lib/find-port.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
 
-import {createServer as createHattipServer} from '@hattip/adapter-node';
-import httpProxy from 'http-proxy';
 import {createServer as createViteServer} from 'vite';
 import type {RemixPluginContext} from '@remix-run/dev/dist/vite/plugin.js';
-import {
-  handleDebugNetworkRequest,
-  setConstructors,
-} from '../../lib/request-events.js';
+import {setConstructors} from '../../lib/request-events.js';
 
 export default class DevVite extends Command {
   static description =
@@ -173,18 +166,6 @@ export async function runDev({
       })
     : undefined;
 
-  //   miniOxygen = await startMiniOxygen({
-  //     root,
-  //     debug,
-  //     assetsPort,
-  //     inspectorPort,
-  //     port: appPort,
-  //     watch: !liveReload,
-  //     buildPathWorkerFile,
-  //     buildPathClient,
-  //     env: await envPromise,
-  //   });
-
   //   miniOxygen.showBanner({
   //     appName: storefront ? colors.cyan(storefront?.title) : undefined,
   //     headlinePrefix:
@@ -209,107 +190,46 @@ export async function runDev({
   });
 
   // Store the port passed by the user in the config.
-  const publicPort = 3000 ?? appPort ?? viteServer.config.server.port ?? 3000;
+  const publicPort = appPort ?? viteServer.config.server.port ?? 3000;
   // const assetsPort = await findPort(publicPort + 100);
   // if (assetsPort) {
   //   // Note: Set this env before loading Remix config!
   //   process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
   // }
 
-  // Start the internal Vite server with a random port.
-  await viteServer.listen(0);
+  await viteServer.listen(publicPort);
 
-  const viteUrlString =
-    viteServer.resolvedUrls!.local[0] ?? viteServer.resolvedUrls!.network[0]!;
-  const viteUrl = new URL(viteUrlString);
-
-  const internalPort = viteUrl.origin.split(':').pop()?.replace('/', '')!;
-  viteServer.config.server.port = Number(internalPort);
-
-  inspectorPort = debug ? await findPort(inspectorPort) : inspectorPort;
+  const publicUrl = new URL(
+    viteServer.resolvedUrls!.local[0] ?? viteServer.resolvedUrls!.network[0]!,
+  );
 
   setConstructors({Response: globalThis.Response});
 
-  const workerRuntime = await startMiniOxygenVite({
+  const disposeMiniOxygen = await startMiniOxygenVite({
     debug,
     inspectorPort,
     env: await envPromise,
-    viteUrl,
     viteServer,
-  });
-
-  const publicFacingServer = createHattipServer(async (ctx) => {
-    const url = new URL(ctx.request.url);
-
-    if (
-      /^\/(@\w+|node_modules)\//.test(url.pathname) ||
-      statSync(path.join(rootDirectory, url.pathname), {
-        throwIfNoEntry: false,
-      })?.isFile()
-    ) {
-      // This is a request for a static file or a virtual module:
-      // forward it to Vite server.
-      const newUrl = new URL(url);
-      newUrl.protocol = viteUrl.protocol;
-      newUrl.host = viteUrl.host;
-
-      return fetch(new Request(newUrl.href, ctx.request)).catch((error) => {
-        console.error('Failed to proxy request to Vite server:', error);
-        return new Response(null, {status: 500});
-      });
-    }
-
-    return workerRuntime
-      .handleRequest(ctx.request, {viteUrl: viteUrlString})
-      .catch((error) => {
-        console.error('Error during evaluation:', error);
-        return new Response(null, {status: 500});
-      });
-  });
-
-  const viteProxyServer = httpProxy.createProxyServer({
-    target: viteUrlString,
-    ws: true,
-  });
-
-  publicFacingServer.on('upgrade', (req, socket, head) => {
-    viteProxyServer.ws(req, socket, head);
+    publicUrl,
   });
 
   // Start the public facing server with the port passed by the user.
-  publicFacingServer.listen(publicPort, 'localhost', () => {
-    enhanceH2Logs({rootDirectory, host: `http://localhost:${publicPort}`});
+  enhanceH2Logs({rootDirectory, host: publicUrl.toString()});
 
-    if (viteServer.resolvedUrls) {
-      if (internalPort) {
-        // Replace the internal port with the public port in the resolved URLs
-        // to print the correct URLs in the console.
-        viteServer.resolvedUrls.local = viteServer.resolvedUrls.local.map(
-          (url) => url.replace(internalPort, String(publicPort)),
-        );
-        viteServer.resolvedUrls.network = viteServer.resolvedUrls.network.map(
-          (url) => url.replace(':' + internalPort, ':' + publicPort),
-        );
-      }
-    }
+  console.log('');
+  viteServer.printUrls();
+  viteServer.bindCLIShortcuts({print: true});
 
-    console.log('');
-    viteServer.printUrls();
-    viteServer.bindCLIShortcuts({print: true});
-
-    checkRemixVersions();
-    if (!disableVersionCheck) {
-      displayDevUpgradeNotice({targetPath: appPath});
-    }
-  });
+  checkRemixVersions();
+  if (!disableVersionCheck) {
+    displayDevUpgradeNotice({targetPath: appPath});
+  }
 
   return {
     async close() {
       codegenProcess?.kill(0);
-      await workerRuntime.teardown();
+      await disposeMiniOxygen();
       viteServer.close();
-      viteProxyServer.close();
-      publicFacingServer.close();
     },
   };
 }
