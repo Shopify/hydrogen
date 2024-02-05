@@ -33,7 +33,6 @@ export default defineConfig({
         'react/jsx-dev-runtime',
         'react-dom',
         'react-dom/server',
-        'react-dom/server.browser',
       ],
     },
   },

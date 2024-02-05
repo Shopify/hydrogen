@@ -16,9 +16,10 @@ import {
   isRouteErrorResponse,
   type ShouldRevalidateFunction,
 } from '@remix-run/react';
+import {Layout} from '~/components/Layout';
+
 import './styles/reset.css';
 import './styles/app.css';
-import {Layout} from '~/components/Layout';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
