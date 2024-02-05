@@ -11,7 +11,7 @@ import {Miniflare, NoOpLog, Request} from 'miniflare';
 import {WebSocket, WebSocketServer} from 'ws';
 import type {ClientFunctions, ServerFunctions} from './common.js';
 import {H2O_BINDING_NAME, createLogRequestEvent} from '../../request-events.js';
-import {OXYGEN_HEADERS_MAP} from '../common.js';
+import {OXYGEN_HEADERS_MAP, logRequestLine} from '../common.js';
 
 import type {ViteEnv} from './client.js';
 import {PRIVATE_WORKERD_INSPECTOR_PORT} from '../workerd.js';
@@ -165,36 +165,41 @@ export async function startMiniOxygenVite({
     },
   );
 
-  viteServer.middlewares.use((request, response) => {
-    const url = new URL(request.url ?? '/', publicUrl.origin);
+  viteServer.middlewares.use((req, res) => {
+    const url = new URL(req.url ?? '/', publicUrl.origin);
 
-    mf.dispatchFetch(
-      new Request(url, {
-        method: request.method,
-        headers: {
-          'request-id': crypto.randomUUID(),
-          ...oxygenHeadersMap,
-          ...(request.headers as object),
-        },
-        body: request.headers['content-length']
-          ? Readable.toWeb(request)
-          : undefined,
-      }),
-    )
+    const webRequest = new Request(url, {
+      method: req.method,
+      headers: {
+        'request-id': crypto.randomUUID(),
+        ...oxygenHeadersMap,
+        ...(req.headers as object),
+      },
+      body: req.headers['content-length'] ? Readable.toWeb(req) : undefined,
+    });
+
+    const startTimeMs = Date.now();
+
+    mf.dispatchFetch(webRequest)
       .then((webResponse) => {
-        response.writeHead(
+        res.writeHead(
           webResponse.status,
           Object.fromEntries(webResponse.headers.entries()),
         );
 
         if (webResponse.body) {
-          Readable.fromWeb(webResponse.body).pipe(response);
+          Readable.fromWeb(webResponse.body).pipe(res);
         }
+
+        logRequestLine(webRequest, {
+          responseStatus: webResponse.status,
+          durationMs: Date.now() - startTimeMs,
+        });
       })
       .catch((error) => {
         console.error('Error during evaluation:', error);
-        response.writeHead(500);
-        response.end();
+        res.writeHead(500);
+        res.end();
       });
   });
 
