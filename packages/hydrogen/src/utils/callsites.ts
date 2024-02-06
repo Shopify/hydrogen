@@ -4,7 +4,13 @@
  */
 export function withSyncStack<T>(
   promise: Promise<T>,
-  {stackOffset = 0, logErrors = false} = {},
+  {
+    stackOffset = 0,
+    logErrors = () => false
+  }: {
+    stackOffset?: number;
+    logErrors?: (error?: Error) => boolean;
+  } = {},
 ): Promise<T> {
   const syncError = new Error();
   const getSyncStack = (message: string, name = 'Error') => {
@@ -25,7 +31,7 @@ export function withSyncStack<T>(
         result.errors.forEach((error: Error) => {
           if (error) {
             error.stack = getSyncStack(error.message, error.name);
-            if (logErrors) console.error(error);
+            if (logErrors(error)) console.error(error);
           }
         });
       }
