@@ -6,7 +6,7 @@ export function withSyncStack<T>(
   promise: Promise<T>,
   {
     stackOffset = 0,
-    logErrors = () => false
+    logErrors = () => false,
   }: {
     stackOffset?: number;
     logErrors?: (error?: Error) => boolean;
