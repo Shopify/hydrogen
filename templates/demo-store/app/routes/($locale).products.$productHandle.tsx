@@ -323,8 +323,10 @@ export function ProductForm({
                           prefetch="intent"
                           replace
                           className={clsx(
-                            'leading-none p-1 bg-secondary border-[1.5px] cursor-pointer transition-all duration-200',
-                            isActive ? 'border-primary/50' : 'border-primary/10',
+                            'p-1 bg-secondary border-[1.5px] cursor-pointer transition-all duration-200',
+                            isActive
+                              ? 'border-primary/50'
+                              : 'border-primary/10',
                           )}
                         >
                           <div
