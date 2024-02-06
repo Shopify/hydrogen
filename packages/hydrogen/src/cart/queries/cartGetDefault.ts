@@ -70,7 +70,7 @@ export function cartGetDefault(options: CartQueryOptions): CartGetFunction {
 }
 
 function addCustomerLoggedInParam(isCustomerLoggedIn: boolean, cart: Cart) {
-  if (isCustomerLoggedIn && cart.checkoutUrl) {
+  if (isCustomerLoggedIn && cart && cart.checkoutUrl) {
     const finalCheckoutUrl = new URL(cart.checkoutUrl);
     finalCheckoutUrl.searchParams.set('logged_in', 'true');
     cart.checkoutUrl = finalCheckoutUrl.toString();
