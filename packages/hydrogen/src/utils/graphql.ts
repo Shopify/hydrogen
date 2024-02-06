@@ -1,6 +1,10 @@
 import type {StorefrontApiResponseOk} from '@shopify/hydrogen-react';
 import type {GenericVariables} from '@shopify/hydrogen-codegen';
 
+export function extractQueryName(query: string) {
+  return query.match(/(query|mutation)\s+([^({]*)/)?.[0]?.trim();
+}
+
 export function minifyQuery<T extends string>(string: T) {
   return string
     .replace(/\s*#.*$/gm, '') // Remove GQL comments
@@ -57,28 +61,49 @@ export class GraphQLError extends Error {
   extensions?: {[key: string]: unknown};
 
   constructor(
-    message: string,
+    message?: string,
     options: Pick<
       GraphQLError,
-      'locations' | 'path' | 'extensions' | 'stack'
-    > = {},
+      'locations' | 'path' | 'extensions' | 'stack' | 'cause'
+    > & {
+      query?: string;
+      queryVariables?: GenericVariables;
+      requestId?: string | null;
+      clientOperation?: string;
+    } = {},
   ) {
-    super(message);
+    const h2Prefix = options.clientOperation
+      ? `[h2:error:${options.clientOperation}] `
+      : '';
+
+    const enhancedMessage =
+      h2Prefix +
+      message +
+      (options.requestId ? ` - Request ID: ${options.requestId}` : '');
+
+    super(enhancedMessage);
     this.name = 'GraphQLError';
-    Object.assign(this, options);
+    this.extensions = options.extensions;
+    this.locations = options.locations;
+    this.path = options.path;
     this.stack = options.stack || undefined;
 
-    if (process.env.NODE_ENV === 'development') {
-      // During dev, workerd logs show 'cause' but hides other properties. Put them in cause.
-      if (options.extensions || options.path) {
-        try {
-          this.cause = JSON.stringify({
-            path: options.path,
-            locations: options.locations,
-            extensions: options.extensions,
-          });
-        } catch {}
-      }
+    try {
+      this.cause = JSON.stringify({
+        ...(typeof options.cause === 'object' ? options.cause : {}),
+        requestId: options.requestId,
+        ...(process.env.NODE_ENV === 'development' && {
+          path: options.path,
+          extensions: options.extensions,
+          graphql: h2Prefix &&
+            options.query && {
+              query: options.query,
+              variables: JSON.stringify(options.queryVariables),
+            },
+        }),
+      });
+    } catch {
+      if (options.cause) this.cause = options.cause;
     }
   }
 
@@ -152,28 +177,19 @@ export function throwErrorWithGqlLink<T>({
   ErrorConstructor = Error,
   client = 'storefront',
 }: GraphQLErrorOptions<T>): never {
-  const requestId = response.headers.get('x-request-id');
   const errorMessage =
     (typeof errors === 'string'
       ? errors
       : errors?.map?.((error) => error.message).join('\n')) ||
     `URL: ${url}\nAPI response error: ${response.status}`;
 
-  throw new ErrorConstructor(
-    `[h2:error:${client}.${type}] ` +
-      errorMessage +
-      (requestId ? ` - Request ID: ${requestId}` : ''),
-    {
-      cause: JSON.stringify({
-        errors,
-        requestId,
-        ...(process.env.NODE_ENV === 'development' && {
-          graphql: {
-            query,
-            variables: JSON.stringify(queryVariables),
-          },
-        }),
-      }),
-    },
-  );
+  const gqlError = new GraphQLError(errorMessage, {
+    query,
+    queryVariables,
+    cause: {errors},
+    clientOperation: `${client}.${type}`,
+    requestId: response.headers.get('x-request-id'),
+  });
+
+  throw new ErrorConstructor(gqlError.message, {cause: gqlError.cause});
 }

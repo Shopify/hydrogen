@@ -1577,7 +1577,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
+            "value": "JsonGraphQLError[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -1912,7 +1912,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
+            "value": "JsonGraphQLError[] | undefined",
             "description": ""
           },
           "CartCreateFunction": {
@@ -2848,7 +2848,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
+            "value": "JsonGraphQLError[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -3364,7 +3364,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
+            "value": "JsonGraphQLError[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -3880,7 +3880,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
+            "value": "JsonGraphQLError[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -4396,7 +4396,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
+            "value": "JsonGraphQLError[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -4905,7 +4905,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
+            "value": "JsonGraphQLError[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -5372,7 +5372,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
+            "value": "JsonGraphQLError[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -5888,7 +5888,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
+            "value": "JsonGraphQLError[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -6397,7 +6397,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
+            "value": "JsonGraphQLError[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -6913,7 +6913,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
+            "value": "JsonGraphQLError[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -7422,7 +7422,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
+            "value": "JsonGraphQLError[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -7938,7 +7938,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
+            "value": "JsonGraphQLError[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -8447,7 +8447,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
+            "value": "JsonGraphQLError[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
@@ -8722,7 +8722,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "HydrogenClientProps",
-            "value": "{\n  /** Storefront API headers. If on Oxygen, use `getStorefrontHeaders()` */\n  storefrontHeaders?: StorefrontHeaders;\n  /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */\n  cache?: Cache;\n  /** The globally unique identifier for the Shop */\n  storefrontId?: string;\n  /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */\n  waitUntil?: ExecutionContext['waitUntil'];\n  /** An object containing a country code and language code */\n  i18n?: TI18n;\n}",
+            "value": "{\n  /** Storefront API headers. If on Oxygen, use `getStorefrontHeaders()` */\n  storefrontHeaders?: StorefrontHeaders;\n  /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */\n  cache?: Cache;\n  /** The globally unique identifier for the Shop */\n  storefrontId?: string;\n  /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */\n  waitUntil?: ExecutionContext['waitUntil'];\n  /** An object containing a country code and language code */\n  i18n?: TI18n;\n  /** Whether it should print GraphQL errors automatically. Defaults to true */\n  logErrors?: boolean | ((error?: Error) => boolean);\n}",
             "description": "",
             "members": [
               {
@@ -8763,6 +8763,14 @@
                 "name": "i18n",
                 "value": "TI18n",
                 "description": "An object containing a country code and language code",
+                "isOptional": true
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "logErrors",
+                "value": "boolean | ((error?: Error) => boolean)",
+                "description": "Whether it should print GraphQL errors automatically. Defaults to true",
                 "isOptional": true
               }
             ]
@@ -9069,7 +9077,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
+            "value": "JsonGraphQLError[] | undefined",
             "description": ""
           },
           "StorefrontMutationOptionsForDocs": {
@@ -9547,7 +9555,7 @@
             "filePath": "/customer/types.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CustomerAccountForDocs",
-            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use) */\n  login?: () => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize?: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn?: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus?: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken?: () => Promise<string | undefined>;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/\n  logout?: () => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query?: <TData = any>(\n    query: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n}",
+            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use) */\n  login?: () => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize?: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn?: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus?: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken?: () => Promise<string | undefined>;\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/\n  getApiUrl: () => string;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/\n  logout?: () => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query?: <TData = any>(\n    query: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n}",
             "description": "Below are types meant for documentation only. Ensure it stay in sync with the type above.",
             "members": [
               {
@@ -9589,6 +9597,13 @@
                 "value": "() => Promise<string>",
                 "description": "Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed.",
                 "isOptional": true
+              },
+              {
+                "filePath": "/customer/types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "getApiUrl",
+                "value": "() => string",
+                "description": "Creates the fully-qualified URL to your store's GraphQL endpoint."
               },
               {
                 "filePath": "/customer/types.ts",
@@ -10639,7 +10654,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontApiErrors",
-            "value": "ReturnType<GraphQLError['toJSON']>[] | undefined",
+            "value": "JsonGraphQLError[] | undefined",
             "description": ""
           },
           "StorefrontMutations": {
