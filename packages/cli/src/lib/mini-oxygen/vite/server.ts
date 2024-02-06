@@ -47,6 +47,7 @@ type MiniOxygenViteOptions = Pick<
 > & {
   viteServer: ViteDevServer;
   publicUrl: URL;
+  workerEntryFile: string;
 };
 
 export async function startMiniOxygenVite({
@@ -55,12 +56,8 @@ export async function startMiniOxygenVite({
   env,
   debug = false,
   inspectorPort,
+  workerEntryFile,
 }: MiniOxygenViteOptions) {
-  const workerEntryFile =
-    typeof viteServer.config.build.ssr === 'string'
-      ? viteServer.config.build.ssr
-      : 'server.ts';
-
   const scriptPromise = readFile(clientPath, 'utf-8');
   const [publicInspectorPort, privateInspectorPort, privateHmrPort] =
     await Promise.all([

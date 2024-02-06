@@ -27,6 +27,7 @@ export default class DevVite extends Command {
     'Runs Hydrogen storefront in an Oxygen worker for development.';
   static flags = {
     path: commonFlags.path,
+    entry: commonFlags.entry,
     port: overrideFlag(commonFlags.port, {default: undefined, required: false}),
     codegen: overrideFlag(commonFlags.codegen, {
       description:
@@ -73,6 +74,7 @@ export default class DevVite extends Command {
 }
 
 type DevOptions = {
+  entry: string;
   port: number;
   path?: string;
   codegen?: boolean;
@@ -87,6 +89,7 @@ type DevOptions = {
 };
 
 export async function runDev({
+  entry,
   port: appPort,
   path: appPath,
   host,
@@ -193,6 +196,7 @@ export async function runDev({
     env: await envPromise,
     viteServer,
     publicUrl,
+    workerEntryFile: entry,
   });
 
   // Start the public facing server with the port passed by the user.

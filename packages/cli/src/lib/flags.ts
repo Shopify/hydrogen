@@ -104,6 +104,11 @@ export const commonFlags = {
     default: false,
     required: false,
   }),
+  entry: Flags.string({
+    description: 'Entry file for the worker. Defaults to `./server`.',
+    env: 'SHOPIFY_HYDROGEN_FLAG_ENTRY',
+    default: './server',
+  }),
 };
 
 export function flagsToCamelObject<T extends Record<string, any>>(obj: T) {

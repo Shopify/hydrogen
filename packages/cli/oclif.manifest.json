@@ -245,6 +245,13 @@
           "description": "The path to the directory of the Hydrogen storefront. The default is the current directory.",
           "multiple": false
         },
+        "entry": {
+          "name": "entry",
+          "type": "option",
+          "description": "Entry file for the worker. Defaults to `./server`.",
+          "multiple": false,
+          "default": "./server"
+        },
         "port": {
           "name": "port",
           "type": "option",
