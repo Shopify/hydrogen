@@ -60,6 +60,24 @@ npm run dev
 1. Edit `Javascript origin(s)` to include your public domain `https://<your-ngrok-domain>.app` or keep it blank
 1. Edit `Logout URI` to include your public domain `https://<your-ngrok-domain>.app` or keep it blank
 
+### Add the ngrok domain to the CSP policy
+
+Modify your `/app/entry.server.tsx` to allow the ngrok domain as a connect-src
+
+```diff
+-  const {nonce, header, NonceProvider} = createContentSecurityPolicy()
++  const {nonce, header, NonceProvider} = createContentSecurityPolicy({
++   connectSrc: [
++     "'self'",
++     'https://monorail-edge.shopifysvc.com',
++     'http://localhost:*',
++     'ws://localhost:*',
++     'ws://127.0.0.1:*',
++     'wss://<your-ngrok-domain>.app:*', // Your ngrok websocket domain
++   ],
++ });
+```
+
 ### Prepare Environment variables
 
 Run [`npx shopify hydrogen link`](https://shopify.dev/docs/custom-storefronts/hydrogen/cli#link) or [`npx shopify hydrogen env pull`](https://shopify.dev/docs/custom-storefronts/hydrogen/cli#env-pull) to link this app to your own test shop.

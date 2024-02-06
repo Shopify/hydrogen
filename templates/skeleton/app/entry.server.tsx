@@ -10,7 +10,17 @@ export default async function handleRequest(
   responseHeaders: Headers,
   remixContext: EntryContext,
 ) {
-  const {nonce, header, NonceProvider} = createContentSecurityPolicy();
+  const {nonce, header, NonceProvider} = createContentSecurityPolicy({
+    connectSrc: [
+      "'self'",
+      'https://monorail-edge.shopifysvc.com',
+      'http://localhost:*',
+      'ws://localhost:*',
+      'ws://127.0.0.1:*',
+      // NOTE: Add your ngronk domain to the allowed connectSrc domain list. e.g
+      // 'wss://<your-ngrok-domain>.app:*',
+    ],
+  });
 
   const body = await renderToReadableStream(
     <NonceProvider>
