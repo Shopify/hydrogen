@@ -40,4 +40,63 @@ describe('cartGetDefault', () => {
     // @ts-expect-error
     expect(result.query).toContain(cartFragment);
   });
+
+  describe('run with cart options', () => {
+    it('should return a cartId passed in', async () => {
+      const cartGet = cartGetDefault({
+        storefront: mockCreateStorefrontClient(),
+        getCartId: () => CART_ID,
+      });
+
+      const result = await cartGet({cartId: 'gid://shopify/Cart/c1-456'});
+
+      expect(result).toHaveProperty('id', 'gid://shopify/Cart/c1-456');
+    });
+
+    it('should add logged_in search param to checkout link if customerLoggedIn = true', async () => {
+      const cartGet = cartGetDefault({
+        storefront: mockCreateStorefrontClient(),
+        getCartId: () => CART_ID,
+      });
+
+      const result = await cartGet({customerLoggedIn: true});
+
+      expect(result?.checkoutUrl).toContain('logged_in=true');
+    });
+
+    it('should NOT add logged_in search param to checkout link if customerLoggedIn = false', async () => {
+      const cartGet = cartGetDefault({
+        storefront: mockCreateStorefrontClient(),
+        getCartId: () => CART_ID,
+      });
+
+      const result = await cartGet({customerLoggedIn: false});
+
+      expect(result?.checkoutUrl).not.toContain('logged_in=true');
+    });
+
+    it('should add logged_in search param to checkout link if customerLoggedIn resolved to true', async () => {
+      const cartGet = cartGetDefault({
+        storefront: mockCreateStorefrontClient(),
+        getCartId: () => CART_ID,
+      });
+
+      const result = await cartGet({
+        customerLoggedIn: Promise.resolve(true),
+      });
+
+      expect(result?.checkoutUrl).toContain('logged_in=true');
+    });
+
+    it('should NOT add logged_in search param to checkout link if customerLoggedIn resolved to false', async () => {
+      const cartGet = cartGetDefault({
+        storefront: mockCreateStorefrontClient(),
+        getCartId: () => CART_ID,
+      });
+
+      const result = await cartGet({customerLoggedIn: Promise.resolve(false)});
+
+      expect(result?.checkoutUrl).not.toContain('logged_in=true');
+    });
+  });
 });

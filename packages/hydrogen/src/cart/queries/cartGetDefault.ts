@@ -29,29 +29,54 @@ type CartGetProps = {
   numCartLines?: number;
 };
 
+type CartOptions = CartGetProps & {
+  customerLoggedIn?: Promise<boolean> | boolean;
+};
+
 export type CartGetFunction = (
-  cartInput?: CartGetProps,
+  getCartOptions?: CartOptions,
 ) => Promise<CartReturn | null>;
 
 export function cartGetDefault(options: CartQueryOptions): CartGetFunction {
-  return async (cartInput?: CartGetProps) => {
+  return async (getCartOptions?: CartOptions) => {
     const cartId = options.getCartId();
 
     if (!cartId) return null;
 
-    const {cart, errors} = await options.storefront.query<{
-      cart: Cart;
-      errors: StorefrontApiErrors;
-    }>(CART_QUERY(options.cartFragment), {
-      variables: {
-        cartId,
-        ...cartInput,
-      },
-      cache: options.storefront.CacheNone(),
-    });
+    const {customerLoggedIn, ...cartInput} = getCartOptions || {};
 
-    return formatAPIResult(cart, errors);
+    const [isCustomerLoggedIn, {cart, errors}] = await Promise.all([
+      customerLoggedIn,
+      options.storefront.query<{
+        cart: Cart;
+        errors: StorefrontApiErrors;
+      }>(CART_QUERY(options.cartFragment), {
+        variables: {
+          cartId,
+          ...cartInput,
+        },
+        cache: options.storefront.CacheNone(),
+      }),
+    ]);
+
+    const formattedResult = formatAPIResult(cart, errors);
+
+    if (isCustomerLoggedIn) {
+      return addCustomerLoggedInParam(isCustomerLoggedIn, formattedResult);
+    }
+
+    return formattedResult;
   };
+}
+
+function addCustomerLoggedInParam(isCustomerLoggedIn: boolean, cart: Cart) {
+  if (isCustomerLoggedIn && cart.checkoutUrl) {
+    const finalCheckoutUrl = new URL(cart.checkoutUrl);
+    finalCheckoutUrl.searchParams.set('logged_in', 'true');
+    cart.checkoutUrl = finalCheckoutUrl.toString();
+  }
+
+  return cart;
 }
 
 //! @see https://shopify.dev/docs/api/storefront/latest/queries/cart
