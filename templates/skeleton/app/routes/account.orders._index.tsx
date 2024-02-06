@@ -95,7 +95,7 @@ function EmptyOrders() {
 }
 
 function OrderItem({order}: {order: OrderItemFragment}) {
-  const fulfillmentStatus = flattenConnection(order.fulfillments)[0].status;
+  const fulfillmentStatus = flattenConnection(order.fulfillments)[0]?.status;
   return (
     <>
       <fieldset>
@@ -104,7 +104,7 @@ function OrderItem({order}: {order: OrderItemFragment}) {
         </Link>
         <p>{new Date(order.processedAt).toDateString()}</p>
         <p>{order.financialStatus}</p>
-        <p>{fulfillmentStatus}</p>
+        {fulfillmentStatus && <p>{fulfillmentStatus}</p>}
         <Money data={order.totalPrice} />
         <Link to={`/account/orders/${btoa(order.id)}`}>View Order →</Link>
       </fieldset>
