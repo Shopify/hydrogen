@@ -14,15 +14,6 @@ export const headers = routeHeaders;
 export async function loader({params, context}: LoaderFunctionArgs) {
   const {language, country} = context.storefront.i18n;
 
-  if (
-    params.locale &&
-    params.locale.toLowerCase() !== `${language}-${country}`.toLowerCase()
-  ) {
-    // If the locale URL param is defined, yet we still are on `EN-US`
-    // the the locale param must be invalid, send to the 404 page
-    throw new Response(null, {status: 404});
-  }
-
   const {shop, hero} = await context.storefront.query(HOMEPAGE_SEO_QUERY, {
     variables: {handle: 'freestyle'},
   });

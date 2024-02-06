@@ -143,6 +143,7 @@ export async function handleRouteGeneration(
             typescript: language === 'ts',
             localePrefix: i18nStrategy === 'subfolders' ? 'locale' : false,
             signal: controller.signal,
+            i18nStrategy,
           },
           {
             rootDirectory: directory,

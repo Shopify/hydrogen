@@ -1,4 +1,5 @@
 import {readdir} from 'fs/promises';
+import {fileURLToPath} from 'node:url';
 import {
   fileExists,
   readFile,
@@ -31,8 +32,9 @@ import {
 import {convertRouteToV1} from '../../../lib/remix-version-interop.js';
 import {type RemixConfig, getRemixConfig} from '../../remix-config.js';
 import {findFileWithExtension} from '../../file.js';
+import {type I18nStrategy} from '../i18n/index.js';
 
-const NO_LOCALE_PATTERNS = [/robots\.txt/];
+const NO_LOCALE_PATTERNS = [/robots\.txt/, /\(\$locale\)/];
 
 const ROUTE_MAP = {
   home: ['_index', '$'],
@@ -106,6 +108,7 @@ type GenerateRoutesOptions = Omit<
   directory: string;
   localePrefix?: GenerateProjectFileOptions['localePrefix'] | false;
   v1RouteConvention?: boolean;
+  i18nStrategy?: I18nStrategy;
 };
 
 type RemixConfigParam = Pick<RemixConfig, 'rootDirectory' | 'appDirectory'>;
@@ -145,6 +148,16 @@ export async function generateRoutes(
         formatOptions,
       }),
     );
+  }
+
+  if (options.i18nStrategy === 'subfolders') {
+    await copyLocaleNamelessRoute({
+      ...options,
+      typescript,
+      localePrefix,
+      appDirectory,
+      formatOptions,
+    });
   }
 
   return {
@@ -399,4 +412,55 @@ export async function renderRoutePrompt(options?: {abortSignal: AbortSignal}) {
   });
 
   return generateAll ? 'all' : ([] as string[]);
+}
+
+async function copyLocaleNamelessRoute({
+  appDirectory,
+  typescript,
+  formatOptions,
+}: GenerateProjectFileOptions & {
+  appDirectory: string;
+  formatOptions?: FormatOptions;
+}) {
+  return await copyRouteTemplate('($locale)', {
+    appDirectory,
+    typescript,
+    formatOptions,
+  });
+}
+
+async function copyRouteTemplate(
+  routeTemplateFileName: string,
+  {
+    appDirectory,
+    typescript,
+    formatOptions,
+  }: GenerateProjectFileOptions & {
+    appDirectory: string;
+    formatOptions?: FormatOptions;
+  },
+) {
+  const routePath = joinPath(
+    appDirectory,
+    'routes',
+    routeTemplateFileName + (typescript ? '.ts' : '.js'),
+  );
+
+  const templatePath = fileURLToPath(
+    new URL(`./templates/${routeTemplateFileName}.tsx`, import.meta.url),
+  );
+
+  if (!(await fileExists(templatePath))) {
+    throw new Error('Unknown strategy');
+  }
+
+  let templateContent = await readFile(templatePath);
+
+  if (!typescript) {
+    templateContent = await transpileFile(templateContent, templatePath);
+  }
+
+  templateContent = await formatCode(templateContent, formatOptions, routePath);
+
+  await writeFile(routePath, templateContent);
 }

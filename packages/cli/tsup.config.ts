@@ -43,6 +43,14 @@ export default defineConfig([
       );
       console.log('\n', 'Copied i18n template files to build directory', '\n');
 
+      // Copy Route Templates
+      const routeTemplatesPath = 'lib/setups/routes/templates';
+      await fs.copy(
+        path.join('src', routeTemplatesPath),
+        path.join(outDir, routeTemplatesPath),
+      );
+      console.log('\n', 'Copied route template files to build directory', '\n');
+
       // Copy Bundle Analyzer
       const bundleAnalyzer = 'lib/bundle/bundle-analyzer.html';
       await fs.copy(
