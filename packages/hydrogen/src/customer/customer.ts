@@ -311,7 +311,10 @@ export function createCustomerAccountClient({
         throw new BadRequest(
           'Unauthorized',
           'No code or state parameter found in the redirect URL.',
-        ).headers.set('Set-Cookie', await session.commit());
+          {
+            'Set-Cookie': await session.commit(),
+          },
+        );
       }
 
       if (session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.state !== state) {
@@ -320,7 +323,10 @@ export function createCustomerAccountClient({
         throw new BadRequest(
           'Unauthorized',
           'The session state does not match the state parameter. Make sure that the session is configured correctly and passed to `createCustomerAccountClient`.',
-        ).headers.set('Set-Cookie', await session.commit());
+          {
+            'Set-Cookie': await session.commit(),
+          },
+        );
       }
 
       const clientId = customerAccountId;
