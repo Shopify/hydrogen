@@ -4,12 +4,9 @@
  */
 export function withSyncStack<T>(
   promise: Promise<T>,
-  {
-    stackOffset = 0,
-    logErrors = () => false,
-  }: {
+  options: {
     stackOffset?: number;
-    logErrors?: (error?: Error) => boolean;
+    logErrors?: boolean | ((error?: Error) => boolean);
   } = {},
 ): Promise<T> {
   const syncError = new Error();
@@ -17,7 +14,7 @@ export function withSyncStack<T>(
     // Remove error message, caller function and current function from the stack.
     const syncStack = (syncError.stack ?? '')
       .split('\n')
-      .slice(3 + stackOffset)
+      .slice(3 + (options.stackOffset ?? 0))
       .join('\n')
       // Sometimes stack traces show loaders with a number suffix due to ESBuild.
       .replace(/ at loader(\d+) \(/, (all, m1) => all.replace(m1, ''));
@@ -28,6 +25,11 @@ export function withSyncStack<T>(
   return promise
     .then((result: any) => {
       if (result?.errors && Array.isArray(result.errors)) {
+        const logErrors =
+          typeof options.logErrors === 'function'
+            ? options.logErrors
+            : () => options.logErrors ?? false;
+
         result.errors.forEach((error: Error) => {
           if (error) {
             error.stack = getSyncStack(error.message, error.name);
@@ -35,6 +37,7 @@ export function withSyncStack<T>(
           }
         });
       }
+
       return result;
     })
     .catch((error: Error) => {
