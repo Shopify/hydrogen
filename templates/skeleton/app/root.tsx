@@ -73,18 +73,7 @@ export async function loader({context}: LoaderFunctionArgs) {
   const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
 
   const isLoggedInPromise = customerAccount.isLoggedIn();
-
-  const cartPromise = Promise.all([isLoggedInPromise, cart.get()]).then(
-    ([isLoggedIn, cartResult]) => {
-      if (isLoggedIn && cartResult && cartResult.checkoutUrl) {
-        const finalCheckoutUrl = new URL(cartResult.checkoutUrl);
-        finalCheckoutUrl.searchParams.set('logged_in', 'true');
-        cartResult.checkoutUrl = finalCheckoutUrl.toString();
-      }
-
-      return cartResult;
-    },
-  );
+  const cartPromise = cart.get({customerLoggedIn: isLoggedInPromise});
 
   // defer the footer query (below the fold)
   const footerPromise = storefront.query(FOOTER_QUERY, {
