@@ -1,5 +1,22 @@
 # @shopify/cli-hydrogen
 
+## 7.0.1
+
+### Patch Changes
+
+- Add support for multiple schemas in GraphiQL. Fix links in Subrequest Profiler. ([#1693](https://github.com/Shopify/hydrogen/pull/1693)) by [@frandiox](https://github.com/frandiox)
+
+- ♻️ `CustomerClient` type is deprecated and replaced by `CustomerAccount` ([#1692](https://github.com/Shopify/hydrogen/pull/1692)) by [@michenly](https://github.com/michenly)
+
+- Skip prompt about creating `h2` shortcut during init flow if it has been already added to the environment. ([#1718](https://github.com/Shopify/hydrogen/pull/1718)) by [@gfscott](https://github.com/gfscott)
+
+- Bump Codegen dependencies to fix known bugs and remove patches. ([#1705](https://github.com/Shopify/hydrogen/pull/1705)) by [@frandiox](https://github.com/frandiox)
+
+- Fix local asset path to Oxygen to return valid preflight headers ([#1709](https://github.com/Shopify/hydrogen/pull/1709)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Updated dependencies [[`c7b2017f`](https://github.com/Shopify/hydrogen/commit/c7b2017f11a2cb4d280dfd8f170e65a908b9ea02)]:
+  - @shopify/hydrogen-codegen@0.2.1
+
 ## 7.0.0
 
 ### Major Changes

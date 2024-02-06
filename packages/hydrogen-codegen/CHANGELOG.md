@@ -1,5 +1,11 @@
 # @shopify/hydrogen-codegen
 
+## 0.2.1
+
+### Patch Changes
+
+- Bump Codegen dependencies to fix known bugs and remove patches. ([#1705](https://github.com/Shopify/hydrogen/pull/1705)) by [@frandiox](https://github.com/frandiox)
+
 ## 0.2.0
 
 ### Minor Changes
