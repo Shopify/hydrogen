@@ -1,5 +1,15 @@
 # @shopify/hydrogen
 
+## 2024.1.1
+
+### Patch Changes
+
+- Add support for multiple schemas in GraphiQL. Fix links in Subrequest Profiler. ([#1693](https://github.com/Shopify/hydrogen/pull/1693)) by [@frandiox](https://github.com/frandiox)
+
+- ♻️ `CustomerClient` type is deprecated and replaced by `CustomerAccount` ([#1692](https://github.com/Shopify/hydrogen/pull/1692)) by [@michenly](https://github.com/michenly)
+
+- Log GraphQL errors automatically in Storefront client, with a new `logErrors: boolean` option to disable it. Add back a link to GraphiQL in the error message. ([#1690](https://github.com/Shopify/hydrogen/pull/1690)) by [@frandiox](https://github.com/frandiox)
+
 ## 2024.1.0
 
 ### Major Changes
