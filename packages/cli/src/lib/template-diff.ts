@@ -125,7 +125,13 @@ export async function copyDiffBuild(
 ) {
   const targetDist = joinPath(diffDirectory, 'dist');
   await removeDirectory(targetDist);
-  await copyDirectory(joinPath(targetDirectory, 'dist'), targetDist, {
-    overwrite: true,
-  });
+  await Promise.all([
+    copyDirectory(joinPath(targetDirectory, 'dist'), targetDist, {
+      overwrite: true,
+    }),
+    copyFile(
+      joinPath(targetDirectory, '.env'),
+      joinPath(diffDirectory, '.env'),
+    ),
+  ]);
 }

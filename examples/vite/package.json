@@ -4,8 +4,8 @@
   "type": "module",
   "prettier": "@shopify/prettier-config",
   "scripts": {
-    "build": "vite build && vite build --ssr ./server.ts",
-    "dev": "shopify hydrogen dev-vite --diff",
+    "build": "shopify hydrogen build-vite --diff",
+    "dev": "shopify hydrogen dev-vite --codegen --diff",
     "preview": "npm run build && shopify hydrogen preview",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "typecheck": "tsc --noEmit",
@@ -13,5 +13,9 @@
   },
   "devDependencies": {
     "vite": "^5.1.0-beta.6"
+  },
+  "dependencies": {
+    "@remix-run/node": "^2.6.0",
+    "isbot": "^4"
   }
 }

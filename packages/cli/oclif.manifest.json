@@ -1,6 +1,73 @@
 {
   "version": "7.0.0",
   "commands": {
+    "hydrogen:build-vite": {
+      "id": "hydrogen:build-vite",
+      "description": "Builds a Hydrogen storefront for production.",
+      "strict": true,
+      "pluginName": "@shopify/cli-hydrogen",
+      "pluginAlias": "@shopify/cli-hydrogen",
+      "pluginType": "core",
+      "aliases": [],
+      "flags": {
+        "path": {
+          "name": "path",
+          "type": "option",
+          "description": "The path to the directory of the Hydrogen storefront. The default is the current directory.",
+          "multiple": false
+        },
+        "entry": {
+          "name": "entry",
+          "type": "option",
+          "description": "Entry file for the worker. Defaults to `./server`.",
+          "multiple": false,
+          "default": "./server"
+        },
+        "sourcemap": {
+          "name": "sourcemap",
+          "type": "boolean",
+          "description": "Generate sourcemaps for the build.",
+          "allowNo": true
+        },
+        "lockfile-check": {
+          "name": "lockfile-check",
+          "type": "boolean",
+          "description": "Checks that there is exactly 1 valid lockfile in the project.",
+          "allowNo": true
+        },
+        "disable-route-warning": {
+          "name": "disable-route-warning",
+          "type": "boolean",
+          "description": "Disable warning about missing standard routes.",
+          "allowNo": false
+        },
+        "codegen": {
+          "name": "codegen",
+          "type": "boolean",
+          "description": "Generate types for the Storefront API queries found in your project.",
+          "required": false,
+          "allowNo": false
+        },
+        "codegen-config-path": {
+          "name": "codegen-config-path",
+          "type": "option",
+          "description": "Specify a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if it exists.",
+          "required": false,
+          "multiple": false,
+          "dependsOn": [
+            "codegen"
+          ]
+        },
+        "diff": {
+          "name": "diff",
+          "type": "boolean",
+          "description": "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
+          "required": false,
+          "allowNo": false
+        }
+      },
+      "args": {}
+    },
     "hydrogen:build": {
       "id": "hydrogen:build",
       "description": "Builds a Hydrogen storefront for production.",
