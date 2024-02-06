@@ -161,6 +161,7 @@ describe('createStorefrontClient', () => {
         storefrontId,
         storefrontHeaders,
         publicStorefrontToken,
+        logErrors: false,
       });
 
       vi.mocked(fetchWithServerCache).mockResolvedValueOnce([
@@ -174,7 +175,10 @@ describe('createStorefrontClient', () => {
       const data = await storefront.query('query {}');
       expect(data).toMatchObject({
         cart: {},
-        errors: [{message: 'first'}, {message: 'second'}],
+        errors: [
+          {message: '[h2:error:storefront.query] first'},
+          {message: '[h2:error:storefront.query] second'},
+        ],
       });
     });
   });

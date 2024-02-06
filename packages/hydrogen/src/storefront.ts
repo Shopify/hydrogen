@@ -8,6 +8,7 @@ import {
   SHOPIFY_STOREFRONT_S_HEADER,
   type StorefrontClientProps,
 } from '@shopify/hydrogen-react';
+import type {WritableDeep} from 'type-fest';
 import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
 import {
   SDK_VARIANT_HEADER,
@@ -42,6 +43,7 @@ import {
   minifyQuery,
   assertQuery,
   assertMutation,
+  extractQueryName,
   throwErrorWithGqlLink,
   GraphQLError,
   type GraphQLApiResponse,
@@ -63,9 +65,8 @@ export type I18nBase = {
 // Therefore, we need make TS think this is a plain object instead of
 // a class to make it work in server and client.
 // Also, Remix' `Jsonify` type is broken and can't infer types of classes properly.
-export type StorefrontApiErrors =
-  | ReturnType<GraphQLError['toJSON']>[] // Equivalent to `Jsonify<GraphQLError>[]`
-  | undefined;
+type JsonGraphQLError = ReturnType<GraphQLError['toJSON']>; // Equivalent to `Jsonify<GraphQLError>[]`
+export type StorefrontApiErrors = JsonGraphQLError[] | undefined;
 
 type StorefrontError = {
   errors?: StorefrontApiErrors;
@@ -172,6 +173,8 @@ type HydrogenClientProps<TI18n> = {
   waitUntil?: ExecutionContext['waitUntil'];
   /** An object containing a country code and language code */
   i18n?: TI18n;
+  /** Whether it should print GraphQL errors automatically. Defaults to true */
+  logErrors?: boolean | ((error?: Error) => boolean);
 };
 
 export type CreateStorefrontClientOptions<TI18n extends I18nBase> =
@@ -216,6 +219,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     waitUntil,
     i18n,
     storefrontId,
+    logErrors = true,
     ...clientOptions
   } = options;
   const H2_PREFIX_WARN = '[h2:warn:createStorefrontClient] ';
@@ -360,7 +364,18 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
     const {data, errors} = body as GraphQLApiResponse<T>;
 
-    return formatAPIResult(data, errors as StorefrontApiErrors);
+    const gqlErrors = errors?.map(
+      ({message, ...rest}) =>
+        new GraphQLError(message, {
+          ...(rest as WritableDeep<typeof rest>),
+          clientOperation: `storefront.${errorOptions.type}`,
+          requestId: response.headers.get('x-request-id'),
+          queryVariables,
+          query,
+        }),
+    );
+
+    return formatAPIResult(data, gqlErrors);
   }
 
   return {
@@ -391,7 +406,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
             query,
             stackInfo: getCallerStackLine?.(stackOffset),
           }),
-          stackOffset,
+          {stackOffset, logErrors},
         );
       },
       /**
@@ -419,7 +434,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
             mutation,
             stackInfo: getCallerStackLine?.(stackOffset),
           }),
-          stackOffset,
+          {stackOffset, logErrors},
         );
       },
       cache,
@@ -480,17 +495,14 @@ const getStackOffset =
       }
     : undefined;
 
-export function formatAPIResult<T>(data: T, errors: StorefrontApiErrors) {
-  let result = data;
-  if (errors) {
-    result = {
-      ...data,
-      errors: errors.map(
-        (errorOptions) => new GraphQLError(errorOptions.message, errorOptions),
-      ),
-    };
-  }
-  return result as T & StorefrontError;
+export function formatAPIResult<T>(
+  data: T,
+  errors: StorefrontApiErrors,
+): T & StorefrontError {
+  return {
+    ...data,
+    ...(errors && {errors}),
+  };
 }
 
 export type CreateStorefrontClientForDocs<TI18n extends I18nBase> = {
