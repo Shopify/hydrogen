@@ -51,6 +51,8 @@ npm run dev
 1. Install the [ngrok CLI](https://ngrok.com/download) to use in terminal
 1. Start ngrok using `ngrok http --domain=<your-ngrok-domain>.app 3000`
 
+> [!IMPORTANT]
+> To successfully interact with the Customer Account API routes you will need to use the ngrok domain during development instead of localhost
 ### Include public domain in Customer Account API settings
 
 1. Go to your Shopify admin => `Hydrogen` or `Headless` app/channel => Customer Account API => Application setup
@@ -64,6 +66,8 @@ Run [`npx shopify hydrogen link`](https://shopify.dev/docs/custom-storefronts/hy
 
 Alternately, the values of the required environment variables "PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID" and "PUBLIC_CUSTOMER_ACCOUNT_API_URL" can be found in customer account api settings in the Hydrogen admin channel.
 
-🗒️ Note that mock.shop doesn't supply these variables automatically and your own test shop is required for using Customer Account API
+> [!IMPORTANT]
+> Note that `mock.shop` doesn't supply these variables automatically and your own test shop is required for using Customer Account API
 
-🗒️ B2B features such as contextual pricing is not available in SF API with Customer Account API login. If you require this feature, we suggest using the [legacy-customer-account-flow](https://github.com/Shopify/hydrogen/tree/main/examples/legacy-customer-account-flow). This feature aim to be released for 2024-04.
+> [!NOTE]
+> B2B features such as contextual pricing is not available in SF API with Customer Account API login. If you require this feature, we suggest using the [legacy-customer-account-flow](https://github.com/Shopify/hydrogen/tree/main/examples/legacy-customer-account-flow). This feature should be available in the Customer Account API in the 2024-04 release.
