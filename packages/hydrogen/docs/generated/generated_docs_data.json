@@ -1982,9 +1982,9 @@
             "description": "",
             "params": [
               {
-                "name": "cartInput",
+                "name": "cartGetOptions",
                 "description": "",
-                "value": "CartGetProps",
+                "value": "CartGetOptions",
                 "isOptional": true,
                 "filePath": "/cart/queries/cartGetDefault.ts"
               }
@@ -1995,7 +1995,14 @@
               "name": "Promise<CartReturn | null>",
               "value": "Promise<CartReturn | null>"
             },
-            "value": "export type CartGetFunction = (\n  cartInput?: CartGetProps,\n) => Promise<CartReturn | null>;"
+            "value": "export type CartGetFunction = (\n  cartGetOptions?: CartGetOptions,\n) => Promise<CartReturn | null>;"
+          },
+          "CartGetOptions": {
+            "filePath": "/cart/queries/cartGetDefault.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartGetOptions",
+            "value": "CartGetProps & {\n  customerLoggedIn?: Promise<boolean> | boolean;\n}",
+            "description": ""
           },
           "CartGetProps": {
             "filePath": "/cart/queries/cartGetDefault.ts",
@@ -4640,7 +4647,7 @@
               "name": "CartGetFunction",
               "value": "CartGetFunction"
             },
-            "value": "export function cartGetDefault(options: CartQueryOptions): CartGetFunction {\n  return async (cartInput?: CartGetProps) => {\n    const cartId = options.getCartId();\n\n    if (!cartId) return null;\n\n    const {cart, errors} = await options.storefront.query<{\n      cart: Cart;\n      errors: StorefrontApiErrors;\n    }>(CART_QUERY(options.cartFragment), {\n      variables: {\n        cartId,\n        ...cartInput,\n      },\n      cache: options.storefront.CacheNone(),\n    });\n\n    return formatAPIResult(cart, errors);\n  };\n}"
+            "value": "export function cartGetDefault(options: CartQueryOptions): CartGetFunction {\n  return async (cartGetOptions?: CartGetOptions) => {\n    const cartId = options.getCartId();\n\n    if (!cartId) return null;\n\n    const {customerLoggedIn, ...cartInput} = cartGetOptions || {};\n\n    const [isCustomerLoggedIn, {cart, errors}] = await Promise.all([\n      customerLoggedIn,\n      options.storefront.query<{\n        cart: Cart;\n        errors: StorefrontApiErrors;\n      }>(CART_QUERY(options.cartFragment), {\n        variables: {\n          cartId,\n          ...cartInput,\n        },\n        cache: options.storefront.CacheNone(),\n      }),\n    ]);\n\n    const formattedResult = formatAPIResult(cart, errors);\n\n    if (isCustomerLoggedIn) {\n      return addCustomerLoggedInParam(isCustomerLoggedIn, formattedResult);\n    }\n\n    return formattedResult;\n  };\n}"
           },
           "CartQueryOptions": {
             "filePath": "/cart/queries/cart-types.ts",
@@ -4985,9 +4992,9 @@
             "description": "",
             "params": [
               {
-                "name": "cartInput",
+                "name": "cartGetOptions",
                 "description": "",
-                "value": "CartGetProps",
+                "value": "CartGetOptions",
                 "isOptional": true,
                 "filePath": "/cart/queries/cartGetDefault.ts"
               }
@@ -4998,7 +5005,14 @@
               "name": "Promise<CartReturn | null>",
               "value": "Promise<CartReturn | null>"
             },
-            "value": "export type CartGetFunction = (\n  cartInput?: CartGetProps,\n) => Promise<CartReturn | null>;"
+            "value": "export type CartGetFunction = (\n  cartGetOptions?: CartGetOptions,\n) => Promise<CartReturn | null>;"
+          },
+          "CartGetOptions": {
+            "filePath": "/cart/queries/cartGetDefault.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartGetOptions",
+            "value": "CartGetProps & {\n  customerLoggedIn?: Promise<boolean> | boolean;\n}",
+            "description": ""
           },
           "CartGetProps": {
             "filePath": "/cart/queries/cartGetDefault.ts",
@@ -9547,7 +9561,7 @@
             "filePath": "/customer/types.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CustomerAccountForDocs",
-            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use) */\n  login?: () => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize?: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn?: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus?: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken?: () => Promise<string | undefined>;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/\n  logout?: () => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query?: <TData = any>(\n    query: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n}",
+            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use) */\n  login?: () => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize?: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn?: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus?: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken?: () => Promise<string | undefined>;\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/\n  getApiUrl: () => string;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/\n  logout?: () => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query?: <TData = any>(\n    query: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n}",
             "description": "Below are types meant for documentation only. Ensure it stay in sync with the type above.",
             "members": [
               {
@@ -9589,6 +9603,13 @@
                 "value": "() => Promise<string>",
                 "description": "Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed.",
                 "isOptional": true
+              },
+              {
+                "filePath": "/customer/types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "getApiUrl",
+                "value": "() => string",
+                "description": "Creates the fully-qualified URL to your store's GraphQL endpoint."
               },
               {
                 "filePath": "/customer/types.ts",

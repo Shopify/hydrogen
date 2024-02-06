@@ -29,21 +29,21 @@ type CartGetProps = {
   numCartLines?: number;
 };
 
-type CartOptions = CartGetProps & {
+type CartGetOptions = CartGetProps & {
   customerLoggedIn?: Promise<boolean> | boolean;
 };
 
 export type CartGetFunction = (
-  getCartOptions?: CartOptions,
+  cartGetOptions?: CartGetOptions,
 ) => Promise<CartReturn | null>;
 
 export function cartGetDefault(options: CartQueryOptions): CartGetFunction {
-  return async (getCartOptions?: CartOptions) => {
+  return async (cartGetOptions?: CartGetOptions) => {
     const cartId = options.getCartId();
 
     if (!cartId) return null;
 
-    const {customerLoggedIn, ...cartInput} = getCartOptions || {};
+    const {customerLoggedIn, ...cartInput} = cartGetOptions || {};
 
     const [isCustomerLoggedIn, {cart, errors}] = await Promise.all([
       customerLoggedIn,
