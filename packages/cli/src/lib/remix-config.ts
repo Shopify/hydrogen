@@ -18,16 +18,12 @@ const WORKER_SUBDIR = 'worker'; // Hardcoded in Oxygen
 
 const oxygenServerMainFields = ['browser', 'module', 'main'];
 
-export function getProjectPaths(appPath?: string, isVite = false) {
+export function getProjectPaths(appPath?: string) {
   const root = appPath ?? process.cwd();
   const publicPath = path.join(root, 'public');
   const buildPath = path.join(root, BUILD_DIR);
   const buildPathClient = path.join(buildPath, CLIENT_SUBDIR);
-  const buildPathWorkerFile = path.join(
-    buildPath,
-    isVite ? 'server' : WORKER_SUBDIR,
-    'index.js',
-  );
+  const buildPathWorkerFile = path.join(buildPath, WORKER_SUBDIR, 'index.js');
 
   return {
     root,

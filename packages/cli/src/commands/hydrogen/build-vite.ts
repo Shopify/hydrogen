@@ -5,19 +5,23 @@ import {
   outputWarn,
   outputContent,
 } from '@shopify/cli-kit/node/output';
-import {resolveConfig} from 'vite';
-import {fileSize, glob, readFile, writeFile} from '@shopify/cli-kit/node/fs';
+import {
+  fileSize,
+  glob,
+  readFile,
+  removeFile,
+  writeFile,
+} from '@shopify/cli-kit/node/fs';
 import {resolvePath, relativePath, joinPath} from '@shopify/cli-kit/node/path';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 import colors from '@shopify/cli-kit/node/colors';
-import {getProjectPaths} from '../../lib/remix-config.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
 import {codegen} from '../../lib/codegen.js';
 import {isCI} from '../../lib/is-ci.js';
 import {copyDiffBuild, prepareDiffDirectory} from '../../lib/template-diff.js';
-import type {RemixPluginContext} from '@remix-run/dev/dist/vite/plugin.js';
+import {getViteConfig} from '../../lib/vite-config.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
 const WORKER_BUILD_SIZE_LIMIT = 5;
@@ -103,8 +107,7 @@ export async function runBuild({
     process.env.NODE_ENV = 'production';
   }
 
-  const {root, buildPathClient, buildPathWorkerFile, publicPath} =
-    getProjectPaths(directory, true);
+  const root = directory ?? process.cwd();
 
   if (lockfileCheck) {
     await checkLockfileStatus(root, isCI());
@@ -112,25 +115,10 @@ export async function runBuild({
 
   console.time(LOG_WORKER_BUILT);
 
-  outputInfo(`\n🏗️  Building in ${process.env.NODE_ENV} mode...`);
+  outputInfo(`\n🏗️  Building in ${process.env.NODE_ENV} mode...\n`);
 
-  const vite = await import('vite');
-
-  // assertOxygenChecks(remixConfig);
-  const viteConfig = await resolveConfig(
-    {},
-    'build',
-    process.env.NODE_ENV,
-    process.env.NODE_ENV,
-  );
-
-  const {rootDirectory, remixConfig} = ((viteConfig as any)
-    .__remixPluginContext as RemixPluginContext) || {
-    rootDirectory: root,
-    remixConfig: {appDirectory: joinPath(root, 'app')},
-  };
-
-  const {appDirectory} = remixConfig;
+  const {viteConfig, remixConfig, clientOutDir, serverOutDir, serverOutFile} =
+    await getViteConfig(root);
 
   const commonConfig = {
     root,
@@ -140,14 +128,20 @@ export async function runBuild({
     },
   };
 
+  const vite = await import('vite');
+
+  // Client build first
   await vite.build({
     ...commonConfig,
     build: {
       emptyOutDir: true,
       copyPublicDir: true,
+      // Disable client sourcemaps in production
+      sourcemap: process.env.NODE_ENV !== 'production' && sourcemap,
     },
   });
 
+  // Server/SSR build
   await vite.build({
     ...commonConfig,
     build: {
@@ -161,12 +155,8 @@ export async function runBuild({
       target: 'webworker',
       optimizeDeps: {
         include: [
-          'set-cookie-parser',
-          'cookie',
-          'content-security-policy-builder',
           'react',
           'react/jsx-runtime',
-          'react/jsx-dev-runtime',
           'react-dom',
           'react-dom/server',
         ],
@@ -174,30 +164,30 @@ export async function runBuild({
     },
   });
 
-  // await remixViteBuild(root, {
-  //   emptyOutDir: true,
-  //   mode: process.env.NODE_ENV,
-  //   sourcemapServer: sourcemap,
-  //   sourcemapClient: sourcemap && process.env.NODE_ENV === 'development',
-  // });
+  await Promise.all([
+    removeFile(joinPath(clientOutDir, '.vite')),
+    removeFile(joinPath(serverOutDir, '.vite')),
+    removeFile(joinPath(serverOutDir, 'assets')),
+  ]);
 
   if (useCodegen) {
     await codegen({
-      rootDirectory,
-      appDirectory,
+      rootDirectory: root,
+      appDirectory: remixConfig.appDirectory,
       configFilePath: codegenConfigPath,
     });
   }
 
   if (process.env.NODE_ENV !== 'development') {
+    console.log('');
     console.timeEnd(LOG_WORKER_BUILT);
 
-    const sizeMB = (await fileSize(buildPathWorkerFile)) / (1024 * 1024);
+    const sizeMB = (await fileSize(serverOutFile)) / (1024 * 1024);
     const formattedSize = colors.yellow(sizeMB.toFixed(2) + ' MB');
 
     outputInfo(
       outputContent`   ${colors.dim(
-        relativePath(root, buildPathWorkerFile),
+        relativePath(root, serverOutFile),
       )}  ${formattedSize}\n`,
     );
 
@@ -229,7 +219,7 @@ export async function runBuild({
   }
 
   if (process.env.NODE_ENV !== 'development') {
-    await cleanClientSourcemaps(buildPathClient);
+    await cleanClientSourcemaps(clientOutDir);
   }
 }
 
