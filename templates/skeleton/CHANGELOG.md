@@ -1,5 +1,15 @@
 # skeleton
 
+## 1.0.3
+
+### Patch Changes
+
+- ♻️ `CustomerClient` type is deprecated and replaced by `CustomerAccount` ([#1692](https://github.com/Shopify/hydrogen/pull/1692)) by [@michenly](https://github.com/michenly)
+
+- Updated dependencies [[`02798786`](https://github.com/Shopify/hydrogen/commit/02798786bf8ae5c53f6430723a86d62b8e94d120), [`52b15df4`](https://github.com/Shopify/hydrogen/commit/52b15df457ce723bbc83ad594ded73a7b06447d6), [`a2664362`](https://github.com/Shopify/hydrogen/commit/a2664362a7d89b34835553a9b0eb7af55ca70ae4), [`eee5d927`](https://github.com/Shopify/hydrogen/commit/eee5d9274b72404dfb0ffef30d5503fd553be5fe), [`c7b2017f`](https://github.com/Shopify/hydrogen/commit/c7b2017f11a2cb4d280dfd8f170e65a908b9ea02), [`06320ee4`](https://github.com/Shopify/hydrogen/commit/06320ee48b94dbfece945461031a252f454fd0a3)]:
+  - @shopify/hydrogen@2024.1.1
+  - @shopify/cli-hydrogen@7.0.1
+
 ## 1.0.2
 
 ### Patch Changes
