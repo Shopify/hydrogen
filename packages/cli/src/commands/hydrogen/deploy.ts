@@ -73,6 +73,7 @@ export default class Deploy extends Command {
       required: false,
       default: false,
     }),
+    'lockfile-check': commonFlags.lockfileCheck,
     path: commonFlags.path,
     shop: commonFlags.shop,
     'no-json-output': Flags.boolean({
@@ -147,6 +148,7 @@ interface OxygenDeploymentOptions {
   defaultEnvironment: boolean;
   environmentTag?: string;
   force: boolean;
+  lockfileCheck: boolean;
   noJsonOutput: boolean;
   path: string;
   shop: string;
@@ -189,6 +191,7 @@ export async function oxygenDeploy(
     defaultEnvironment,
     environmentTag,
     force: forceOnUncommitedChanges,
+    lockfileCheck,
     noJsonOutput,
     path,
     shop,
@@ -378,6 +381,7 @@ export async function oxygenDeploy(
       await runBuild({
         directory: path,
         assetPath,
+        lockfileCheck,
         sourcemap: true,
         useCodegen: false,
       });

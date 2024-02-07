@@ -55,13 +55,7 @@ export default class Build extends Command {
       default: true,
       allowNo: true,
     }),
-    'lockfile-check': Flags.boolean({
-      description:
-        'Checks that there is exactly 1 valid lockfile in the project.',
-      env: 'SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK',
-      default: true,
-      allowNo: true,
-    }),
+    'lockfile-check': commonFlags.lockfileCheck,
     'disable-route-warning': Flags.boolean({
       description: 'Disable warning about missing standard routes.',
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
