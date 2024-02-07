@@ -3,6 +3,74 @@
   "version": "1.1",
   "releases": [
     {
+      "title": "Bug fixes and improvements",
+      "version": "2024.1.1",
+      "date": "",
+      "hash": "49a167e825e8ce49a8a65078a87bd35d53f18c34",
+      "pr": "https://github.com/Shopify/hydrogen/pull/1696",
+      "commit": "https://github.com/Shopify/hydrogen/commit/49a167e825e8ce49a8a65078a87bd35d53f18c34",
+      "dependencies": {
+        "@remix-run/react": "2.5.1",
+        "@shopify/cli-hydrogen": "^7.0.1",
+        "@shopify/hydrogen": "^2024.1.1",
+        "@shopify/remix-oxygen": "^2.0.3"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "2.5.1",
+        "typescript": "^5.2.2",
+        "@shopify/cli": "3.52.0",
+        "@shopify/oxygen-workers-types": "^4.0.0",
+        "@remix-run/server-runtime": "2.5.1"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Add support for multiple schemas in GraphiQL. Fix GraphiQL links in Subrequest Profiler.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1693",
+          "id": "1693"
+        },
+        {
+          "title": "CustomerClient type is deprecated and replaced by CustomerAccount",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1692",
+          "id": "1692"
+        },
+        {
+          "title": "Skip prompt about creating h2 shortcut during init flow if it has been already added to the environment",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1718",
+          "id": "1718"
+        },
+        {
+          "title": "Bump Codegen dependencies to fix known bugs and remove patches",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1705",
+          "id": "1705"
+        },
+        {
+          "title": "Fix local asset path to Oxygen to return valid preflight headers",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1709",
+          "id": "1709"
+        },
+        {
+          "title": "Log GraphQL errors automatically in Storefront client, with a new logErrors: boolean option to disable it. Add back a link to GraphiQL in the error message.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1690",
+          "id": "1690"
+        }
+      ],
+      "features": []
+    },
+    {
       "title": "SFAPI 2024-01, Remix 2.51, Customer Account API, Examples, and more",
       "version": "2024.1.0",
       "date": "",
