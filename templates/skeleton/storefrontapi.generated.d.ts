@@ -42,6 +42,17 @@ export type CartApiQueryFragment = Pick<
   StorefrontAPI.Cart,
   'id' | 'checkoutUrl' | 'totalQuantity' | 'note'
 > & {
+  buyerIdentity: Pick<
+    StorefrontAPI.CartBuyerIdentity,
+    'countryCode' | 'email' | 'phone'
+  > & {
+    customer?: StorefrontAPI.Maybe<
+      Pick<
+        StorefrontAPI.Customer,
+        'id' | 'email' | 'firstName' | 'lastName' | 'displayName'
+      >
+    >;
+  };
   lines: {
     nodes: Array<
       Pick<StorefrontAPI.CartLine, 'id' | 'quantity'> & {

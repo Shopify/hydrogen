@@ -1,4 +1,5 @@
 import {StorefrontApiErrors, formatAPIResult} from '../../storefront';
+import type {CustomerAccount} from '../../customer/types';
 import type {CartQueryOptions, CartReturn} from './cart-types';
 import type {
   Cart,
@@ -29,43 +30,46 @@ type CartGetProps = {
   numCartLines?: number;
 };
 
-type CartGetOptions = CartGetProps & {
-  customerLoggedIn?: Promise<boolean> | boolean;
-};
-
 export type CartGetFunction = (
-  cartGetOptions?: CartGetOptions,
+  cartInput?: CartGetProps,
 ) => Promise<CartReturn | null>;
 
-export function cartGetDefault(options: CartQueryOptions): CartGetFunction {
-  return async (cartGetOptions?: CartGetOptions) => {
-    const cartId = options.getCartId();
+type CartGetOptions = CartQueryOptions & {
+  /**
+   * The customer account client instance created by [`createCustomerAccountClient`](docs/api/hydrogen/latest/utilities/createcustomeraccountclient).
+   */
+  customerAccount?: CustomerAccount;
+};
+
+export function cartGetDefault({
+  storefront,
+  customerAccount,
+  getCartId,
+  cartFragment,
+}: CartGetOptions): CartGetFunction {
+  return async (cartInput?: CartGetProps) => {
+    const cartId = getCartId();
 
     if (!cartId) return null;
 
-    const {customerLoggedIn, ...cartInput} = cartGetOptions || {};
-
     const [isCustomerLoggedIn, {cart, errors}] = await Promise.all([
-      customerLoggedIn,
-      options.storefront.query<{
+      customerAccount ? customerAccount.isLoggedIn() : false,
+      storefront.query<{
         cart: Cart;
         errors: StorefrontApiErrors;
-      }>(CART_QUERY(options.cartFragment), {
+      }>(CART_QUERY(cartFragment), {
         variables: {
           cartId,
           ...cartInput,
         },
-        cache: options.storefront.CacheNone(),
+        cache: storefront.CacheNone(),
       }),
     ]);
 
-    const formattedResult = formatAPIResult(cart, errors);
-
-    if (isCustomerLoggedIn) {
-      return addCustomerLoggedInParam(isCustomerLoggedIn, formattedResult);
-    }
-
-    return formattedResult;
+    return formatAPIResult(
+      addCustomerLoggedInParam(isCustomerLoggedIn, cart),
+      errors,
+    );
   };
 }
 

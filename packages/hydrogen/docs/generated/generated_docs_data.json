@@ -1982,9 +1982,9 @@
             "description": "",
             "params": [
               {
-                "name": "cartGetOptions",
+                "name": "cartInput",
                 "description": "",
-                "value": "CartGetOptions",
+                "value": "CartGetProps",
                 "isOptional": true,
                 "filePath": "/cart/queries/cartGetDefault.ts"
               }
@@ -1995,14 +1995,7 @@
               "name": "Promise<CartReturn | null>",
               "value": "Promise<CartReturn | null>"
             },
-            "value": "export type CartGetFunction = (\n  cartGetOptions?: CartGetOptions,\n) => Promise<CartReturn | null>;"
-          },
-          "CartGetOptions": {
-            "filePath": "/cart/queries/cartGetDefault.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartGetOptions",
-            "value": "CartGetProps & {\n  customerLoggedIn?: Promise<boolean> | boolean;\n}",
-            "description": ""
+            "value": "export type CartGetFunction = (\n  cartInput?: CartGetProps,\n) => Promise<CartReturn | null>;"
           },
           "CartGetProps": {
             "filePath": "/cart/queries/cartGetDefault.ts",
@@ -4635,9 +4628,9 @@
             "description": "",
             "params": [
               {
-                "name": "options",
+                "name": "input1",
                 "description": "",
-                "value": "CartQueryOptions",
+                "value": "CartGetOptions",
                 "filePath": "/cart/queries/cartGetDefault.ts"
               }
             ],
@@ -4647,7 +4640,14 @@
               "name": "CartGetFunction",
               "value": "CartGetFunction"
             },
-            "value": "export function cartGetDefault(options: CartQueryOptions): CartGetFunction {\n  return async (cartGetOptions?: CartGetOptions) => {\n    const cartId = options.getCartId();\n\n    if (!cartId) return null;\n\n    const {customerLoggedIn, ...cartInput} = cartGetOptions || {};\n\n    const [isCustomerLoggedIn, {cart, errors}] = await Promise.all([\n      customerLoggedIn,\n      options.storefront.query<{\n        cart: Cart;\n        errors: StorefrontApiErrors;\n      }>(CART_QUERY(options.cartFragment), {\n        variables: {\n          cartId,\n          ...cartInput,\n        },\n        cache: options.storefront.CacheNone(),\n      }),\n    ]);\n\n    const formattedResult = formatAPIResult(cart, errors);\n\n    if (isCustomerLoggedIn) {\n      return addCustomerLoggedInParam(isCustomerLoggedIn, formattedResult);\n    }\n\n    return formattedResult;\n  };\n}"
+            "value": "export function cartGetDefault({\n  storefront,\n  customerAccount,\n  getCartId,\n  cartFragment,\n}: CartGetOptions): CartGetFunction {\n  return async (cartInput?: CartGetProps) => {\n    const cartId = getCartId();\n\n    if (!cartId) return null;\n\n    const [isCustomerLoggedIn, {cart, errors}] = await Promise.all([\n      customerAccount ? customerAccount.isLoggedIn() : false,\n      storefront.query<{\n        cart: Cart;\n        errors: StorefrontApiErrors;\n      }>(CART_QUERY(cartFragment), {\n        variables: {\n          cartId,\n          ...cartInput,\n        },\n        cache: storefront.CacheNone(),\n      }),\n    ]);\n\n    return formatAPIResult(\n      addCustomerLoggedInParam(isCustomerLoggedIn, cart),\n      errors,\n    );\n  };\n}"
+          },
+          "CartGetOptions": {
+            "filePath": "/cart/queries/cartGetDefault.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartGetOptions",
+            "value": "CartQueryOptions & {\n  /**\n   * The customer account client instance created by [`createCustomerAccountClient`](docs/api/hydrogen/latest/utilities/createcustomeraccountclient).\n   */\n  customerAccount?: CustomerAccount;\n}",
+            "description": ""
           },
           "CartQueryOptions": {
             "filePath": "/cart/queries/cart-types.ts",
@@ -4986,15 +4986,108 @@
             ],
             "value": "export interface AllCacheOptions {\n  /**\n   * The caching mode, generally `public`, `private`, or `no-store`.\n   */\n  mode?: string;\n  /**\n   * The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).\n   */\n  maxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).\n   */\n  staleWhileRevalidate?: number;\n  /**\n   * Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).\n   */\n  sMaxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).\n   */\n  staleIfError?: number;\n}"
           },
+          "CustomerAccount": {
+            "filePath": "/customer/types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CustomerAccount",
+            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use) */\n  login: () => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken: () => Promise<string | undefined>;\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/\n  getApiUrl: () => string;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/\n  logout: () => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      CustomerAccountQueries,\n      RawGqlString\n    >\n  ) => Promise<\n    CustomerAPIResponse<\n      ClientReturn<CustomerAccountQueries, RawGqlString, OverrideReturnType>\n    >\n  >;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      CustomerAccountMutations,\n      RawGqlString\n    >\n  ) => Promise<\n    CustomerAPIResponse<\n      ClientReturn<CustomerAccountMutations, RawGqlString, OverrideReturnType>\n    >\n  >;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/customer/types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "login",
+                "value": "() => Promise<Response>",
+                "description": "Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use)"
+              },
+              {
+                "filePath": "/customer/types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "authorize",
+                "value": "() => Promise<Response>",
+                "description": "On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin."
+              },
+              {
+                "filePath": "/customer/types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "isLoggedIn",
+                "value": "() => Promise<boolean>",
+                "description": "Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed."
+              },
+              {
+                "filePath": "/customer/types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "handleAuthStatus",
+                "value": "() => void | DataFunctionValue",
+                "description": "Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option."
+              },
+              {
+                "filePath": "/customer/types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "getAccessToken",
+                "value": "() => Promise<string>",
+                "description": "Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed."
+              },
+              {
+                "filePath": "/customer/types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "getApiUrl",
+                "value": "() => string",
+                "description": "Creates the fully-qualified URL to your store's GraphQL endpoint."
+              },
+              {
+                "filePath": "/customer/types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "logout",
+                "value": "() => Promise<Response>",
+                "description": "Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin."
+              },
+              {
+                "filePath": "/customer/types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "query",
+                "value": "<OverrideReturnType extends unknown = never, RawGqlString extends string = string>(query: RawGqlString, ...options: IsOptionalVariables<CustomerAccountQueries[RawGqlString][\"variables\"], never, Omit<CustomerAccountQueries[RawGqlString][\"variables\"], never>> extends true ? [({} & ClientVariables<CustomerAccountQueries, RawGqlString, never, \"variables\", RawGqlString extends never ? { [KeyType in keyof ({ [KeyType in keyof CustomerAccountQueries[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountQueries[RawGqlString][\"variables\"], never>>]: CustomerAccountQueries[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountQueries[RawGqlString][\"variables\"], Extract<keyof CustomerAccountQueries[RawGqlString][\"variables\"], never>>>)]: ({ [KeyType in keyof CustomerAccountQueries[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountQueries[RawGqlString][\"variables\"], never>>]: CustomerAccountQueries[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountQueries[RawGqlString][\"variables\"], Extract<keyof CustomerAccountQueries[RawGqlString][\"variables\"], never>>>)[KeyType]; } : { readonly [variable: string]: unknown; }, Record<\"variables\", RawGqlString extends never ? { [KeyType in keyof ({ [KeyType in keyof CustomerAccountQueries[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountQueries[RawGqlString][\"variables\"], never>>]: CustomerAccountQueries[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountQueries[RawGqlString][\"variables\"], Extract<keyof CustomerAccountQueries[RawGqlString][\"variables\"], never>>>)]: ({ [KeyType in keyof CustomerAccountQueries[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountQueries[RawGqlString][\"variables\"], never>>]: CustomerAccountQueries[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountQueries[RawGqlString][\"variables\"], Extract<keyof CustomerAccountQueries[RawGqlString][\"variables\"], never>>>)[KeyType]; } : { readonly [variable: string]: unknown; }>>)?] : [{} & ClientVariables<CustomerAccountQueries, RawGqlString, never, \"variables\", RawGqlString extends never ? { [KeyType in keyof ({ [KeyType in keyof CustomerAccountQueries[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountQueries[RawGqlString][\"variables\"], never>>]: CustomerAccountQueries[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountQueries[RawGqlString][\"variables\"], Extract<keyof CustomerAccountQueries[RawGqlString][\"variables\"], never>>>)]: ({ [KeyType in keyof CustomerAccountQueries[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountQueries[RawGqlString][\"variables\"], never>>]: CustomerAccountQueries[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountQueries[RawGqlString][\"variables\"], Extract<keyof CustomerAccountQueries[RawGqlString][\"variables\"], never>>>)[KeyType]; } : { readonly [variable: string]: unknown; }, Record<\"variables\", RawGqlString extends never ? { [KeyType in keyof ({ [KeyType in keyof CustomerAccountQueries[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountQueries[RawGqlString][\"variables\"], never>>]: CustomerAccountQueries[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountQueries[RawGqlString][\"variables\"], Extract<keyof CustomerAccountQueries[RawGqlString][\"variables\"], never>>>)]: ({ [KeyType in keyof CustomerAccountQueries[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountQueries[RawGqlString][\"variables\"], never>>]: CustomerAccountQueries[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountQueries[RawGqlString][\"variables\"], Extract<keyof CustomerAccountQueries[RawGqlString][\"variables\"], never>>>)[KeyType]; } : { readonly [variable: string]: unknown; }>>]) => Promise<CustomerAPIResponse<ClientReturn<CustomerAccountQueries, RawGqlString, OverrideReturnType>>>",
+                "description": "Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query."
+              },
+              {
+                "filePath": "/customer/types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "mutate",
+                "value": "<OverrideReturnType extends unknown = never, RawGqlString extends string = string>(mutation: RawGqlString, ...options: IsOptionalVariables<CustomerAccountMutations[RawGqlString][\"variables\"], never, Omit<CustomerAccountMutations[RawGqlString][\"variables\"], never>> extends true ? [({} & ClientVariables<CustomerAccountMutations, RawGqlString, never, \"variables\", RawGqlString extends never ? { [KeyType in keyof ({ [KeyType in keyof CustomerAccountMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>]: CustomerAccountMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountMutations[RawGqlString][\"variables\"], Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>>)]: ({ [KeyType in keyof CustomerAccountMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>]: CustomerAccountMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountMutations[RawGqlString][\"variables\"], Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>>)[KeyType]; } : { readonly [variable: string]: unknown; }, Record<\"variables\", RawGqlString extends never ? { [KeyType in keyof ({ [KeyType in keyof CustomerAccountMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>]: CustomerAccountMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountMutations[RawGqlString][\"variables\"], Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>>)]: ({ [KeyType in keyof CustomerAccountMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>]: CustomerAccountMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountMutations[RawGqlString][\"variables\"], Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>>)[KeyType]; } : { readonly [variable: string]: unknown; }>>)?] : [{} & ClientVariables<CustomerAccountMutations, RawGqlString, never, \"variables\", RawGqlString extends never ? { [KeyType in keyof ({ [KeyType in keyof CustomerAccountMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>]: CustomerAccountMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountMutations[RawGqlString][\"variables\"], Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>>)]: ({ [KeyType in keyof CustomerAccountMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>]: CustomerAccountMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountMutations[RawGqlString][\"variables\"], Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>>)[KeyType]; } : { readonly [variable: string]: unknown; }, Record<\"variables\", RawGqlString extends never ? { [KeyType in keyof ({ [KeyType in keyof CustomerAccountMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>]: CustomerAccountMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountMutations[RawGqlString][\"variables\"], Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>>)]: ({ [KeyType in keyof CustomerAccountMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>]: CustomerAccountMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountMutations[RawGqlString][\"variables\"], Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>>)[KeyType]; } : { readonly [variable: string]: unknown; }>>]) => Promise<CustomerAPIResponse<ClientReturn<CustomerAccountMutations, RawGqlString, OverrideReturnType>>>",
+                "description": "Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation."
+              }
+            ]
+          },
+          "DataFunctionValue": {
+            "filePath": "/customer/types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "DataFunctionValue",
+            "value": "Response | NonNullable<unknown> | null",
+            "description": ""
+          },
+          "CustomerAccountQueries": {
+            "filePath": "/customer/types.ts",
+            "name": "CustomerAccountQueries",
+            "description": "",
+            "members": [],
+            "value": "export interface CustomerAccountQueries {\n  // Example of how a generated query type looks like:\n  // '#graphql query q1 {...}': {return: Q1Query; variables: Q1QueryVariables};\n}"
+          },
+          "CustomerAccountMutations": {
+            "filePath": "/customer/types.ts",
+            "name": "CustomerAccountMutations",
+            "description": "",
+            "members": [],
+            "value": "export interface CustomerAccountMutations {\n  // Example of how a generated mutation type looks like:\n  // '#graphql mutation m1 {...}': {return: M1Mutation; variables: M1MutationVariables};\n}"
+          },
           "CartGetFunction": {
             "filePath": "/cart/queries/cartGetDefault.ts",
             "name": "CartGetFunction",
             "description": "",
             "params": [
               {
-                "name": "cartGetOptions",
+                "name": "cartInput",
                 "description": "",
-                "value": "CartGetOptions",
+                "value": "CartGetProps",
                 "isOptional": true,
                 "filePath": "/cart/queries/cartGetDefault.ts"
               }
@@ -5005,14 +5098,7 @@
               "name": "Promise<CartReturn | null>",
               "value": "Promise<CartReturn | null>"
             },
-            "value": "export type CartGetFunction = (\n  cartGetOptions?: CartGetOptions,\n) => Promise<CartReturn | null>;"
-          },
-          "CartGetOptions": {
-            "filePath": "/cart/queries/cartGetDefault.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartGetOptions",
-            "value": "CartGetProps & {\n  customerLoggedIn?: Promise<boolean> | boolean;\n}",
-            "description": ""
+            "value": "export type CartGetFunction = (\n  cartInput?: CartGetProps,\n) => Promise<CartReturn | null>;"
           },
           "CartGetProps": {
             "filePath": "/cart/queries/cartGetDefault.ts",

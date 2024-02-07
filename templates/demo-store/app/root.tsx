@@ -76,7 +76,7 @@ export async function loader({request, context}: LoaderFunctionArgs) {
   const layout = await getLayoutData(context);
 
   const isLoggedInPromise = customerAccount.isLoggedIn();
-  const cartPromise = cart.get({customerLoggedIn: isLoggedInPromise});
+  const cartPromise = cart.get();
 
   const seo = seoPayload.root({shop: layout.shop, url: request.url});
 
