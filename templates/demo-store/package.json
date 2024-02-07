@@ -20,8 +20,8 @@
   "prettier": "@shopify/prettier-config",
   "dependencies": {
     "@headlessui/react": "^1.7.2",
-    "@remix-run/react": "^2.5.1",
-    "@remix-run/server-runtime": "^2.5.1",
+    "@remix-run/react": "^2.6.0",
+    "@remix-run/server-runtime": "^2.6.0",
     "@shopify/cli": "3.52.0",
     "@shopify/cli-hydrogen": "^7.0.1",
     "@shopify/hydrogen": "~2024.1.1",
@@ -41,8 +41,8 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.40.1",
-    "@remix-run/dev": "^2.5.1",
-    "@remix-run/eslint-config": "^2.5.1",
+    "@remix-run/dev": "^2.6.0",
+    "@remix-run/eslint-config": "^2.6.0",
     "@shopify/eslint-plugin": "^42.0.1",
     "@shopify/oxygen-workers-types": "^4.0.0",
     "@shopify/prettier-config": "^1.1.2",
