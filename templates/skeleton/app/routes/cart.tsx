@@ -48,6 +48,12 @@ export async function action({request, context}: ActionFunctionArgs) {
       result = await cart.updateDiscountCodes(discountCodes);
       break;
     }
+    case CartForm.ACTIONS.BuyerIdentityUpdate: {
+      result = await cart.updateBuyerIdentity({
+        ...inputs.buyerIdentity,
+      });
+      break;
+    }
     default:
       throw new Error(`${action} cart action is not defined`);
   }
