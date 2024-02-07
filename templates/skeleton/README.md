@@ -68,11 +68,6 @@ Modify your `/app/entry.server.tsx` to allow the ngrok domain as a connect-src
 -  const {nonce, header, NonceProvider} = createContentSecurityPolicy()
 +  const {nonce, header, NonceProvider} = createContentSecurityPolicy({
 +   connectSrc: [
-+     "'self'",
-+     'https://monorail-edge.shopifysvc.com',
-+     'http://localhost:*',
-+     'ws://localhost:*',
-+     'ws://127.0.0.1:*',
 +     'wss://<your-ngrok-domain>.app:*', // Your ngrok websocket domain
 +   ],
 + });
