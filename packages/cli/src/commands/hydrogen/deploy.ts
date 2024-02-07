@@ -73,13 +73,20 @@ export default class Deploy extends Command {
       required: false,
       default: false,
     }),
+    'build-command': Flags.string({
+      description:
+        'Specify a build command to run before deploying. If not specified, `shopify hydrogen build` will be used.',
+      required: false,
+    }),
+    'lockfile-check': commonFlags.lockfileCheck,
     path: commonFlags.path,
     shop: commonFlags.shop,
-    'no-json-output': Flags.boolean({
+    'json-output': Flags.boolean({
+      allowNo: true,
       description:
-        'Prevents the command from creating a JSON file containing the deployment URL in CI environments.',
+        'Create a JSON file containing the deployment details in CI environments. Defaults to true, use `--no-json-output` to disable.',
       required: false,
-      default: false,
+      default: true,
     }),
     token: Flags.string({
       char: 't',
@@ -144,10 +151,12 @@ export default class Deploy extends Command {
 
 interface OxygenDeploymentOptions {
   authBypassToken: boolean;
+  buildCommand?: string;
   defaultEnvironment: boolean;
   environmentTag?: string;
   force: boolean;
-  noJsonOutput: boolean;
+  lockfileCheck: boolean;
+  jsonOutput: boolean;
   path: string;
   shop: string;
   token?: string;
@@ -186,10 +195,12 @@ export async function oxygenDeploy(
 ): Promise<void> {
   const {
     authBypassToken: generateAuthBypassToken,
+    buildCommand,
     defaultEnvironment,
     environmentTag,
     force: forceOnUncommitedChanges,
-    noJsonOutput,
+    lockfileCheck,
+    jsonOutput,
     path,
     shop,
     metadataUrl,
@@ -371,17 +382,6 @@ export async function oxygenDeploy(
   });
 
   const hooks: DeploymentHooks = {
-    buildFunction: async (assetPath: string | undefined): Promise<void> => {
-      outputInfo(
-        outputContent`${colors.whiteBright('Building project...')}`.value,
-      );
-      await runBuild({
-        directory: path,
-        assetPath,
-        sourcemap: true,
-        useCodegen: false,
-      });
-    },
     onDeploymentCompleted: () => resolveDeploymentCompletedVerification(),
     onVerificationComplete: () => resolveRoutableCheck(),
     onDeploymentCompletedVerificationError() {
@@ -408,6 +408,25 @@ export async function oxygenDeploy(
       );
     },
   };
+
+  if (buildCommand) {
+    config.buildCommand = buildCommand;
+  } else {
+    hooks.buildFunction = async (
+      assetPath: string | undefined,
+    ): Promise<void> => {
+      outputInfo(
+        outputContent`${colors.whiteBright('Building project...')}`.value,
+      );
+      await runBuild({
+        directory: path,
+        assetPath,
+        lockfileCheck,
+        sourcemap: true,
+        useCodegen: false,
+      });
+    };
+  }
 
   const uploadStart = async () => {
     outputInfo(
@@ -459,9 +478,8 @@ export async function oxygenDeploy(
         body: ['Successfully deployed to Oxygen'],
         nextSteps,
       });
-      // in CI environments, output to a file so consequent steps can access the URL
-      // the formatting of this file is likely to change in future versions.
-      if (isCI && !noJsonOutput) {
+      // in CI environments, output to a file so consequent steps can access the deployment details
+      if (isCI && jsonOutput) {
         await writeFile(
           'h2_deploy_log.json',
           JSON.stringify(completedDeployment),
