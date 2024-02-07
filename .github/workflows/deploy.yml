@@ -1,10 +1,4 @@
 # This Action is responsible for deploying the default Hydrogen template to Oxygen.
-# It is split out from deployments.yml because Oxygen checks for the presence of this specific workflow in the repo.
-# TODO: Merge the workflow if/when Oxygen is more lenient.
-
-# Don't change the line below!
-#! oxygen_storefront_id: 28966968
-
 name: Oxygen Deployment
 
 on: [push, pull_request, workflow_dispatch]
@@ -47,24 +41,6 @@ jobs:
           CI=true npm run build:pkg
 
       - name: 📤 Build and publish the Demo store template to Oxygen
-        id: deploy
-        uses: shopify/oxygenctl-action@v4
-        with:
-          path: ./templates/demo-store
-          oxygen_deployment_token: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_28966968 }}
-          oxygen_worker_dir: dist/worker
-          oxygen_client_dir: dist/client
-          build_command: 'HYDROGEN_ASSET_BASE_URL=$OXYGEN_ASSET_BASE_URL npm run build -- --no-lockfile-check'
-          # Hardcode message and timestamp if manual dispatch
-          commit_message: ${{ github.event.head_commit.message || 'Manual deployment' }}
-          commit_timestamp: ${{ github.event.head_commit.timestamp || github.event.repository.updated_at }}
-          oxygen_health_check: true
-
-      - name: 🐙 Create GitHub deployment
-        uses: shopify/github-deployment-action@v1
-        if: always()
-        with:
-          token: ${{ github.token }}
-          environment: 'preview'
-          preview_url: ${{ steps.deploy.outputs.url }}
-          description: ${{ github.event.head_commit.message }}
+        env:
+          SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_28966968 }}
+        run: npx shopify hydrogen deploy --path "./templates/demo-store"   
