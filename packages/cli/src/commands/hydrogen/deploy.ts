@@ -13,7 +13,7 @@ import {
   getLatestGitCommit,
   GitDirectoryNotCleanError,
 } from '@shopify/cli-kit/node/git';
-import {resolvePath} from '@shopify/cli-kit/node/path';
+import {relativePath, resolvePath} from '@shopify/cli-kit/node/path';
 import {
   renderFatalError,
   renderSelectPrompt,
@@ -36,6 +36,8 @@ import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
 import {OxygenDeploymentData} from '../../lib/graphql/admin/get-oxygen-data.js';
 import {runBuild} from './build.js';
+import {runViteBuild} from './build-vite.js';
+import {getViteConfig} from '../../lib/vite-config.js';
 
 export const deploymentLogger: Logger = (
   message: string,
@@ -190,7 +192,7 @@ export async function oxygenDeploy(
     environmentTag,
     force: forceOnUncommitedChanges,
     noJsonOutput,
-    path,
+    path: root,
     shop,
     metadataUrl,
     metadataUser,
@@ -200,7 +202,7 @@ export async function oxygenDeploy(
 
   let isCleanGit = true;
   try {
-    await ensureIsClean(path);
+    await ensureIsClean(root);
   } catch (error) {
     if (error instanceof GitDirectoryNotCleanError) {
       isCleanGit = false;
@@ -226,7 +228,7 @@ export async function oxygenDeploy(
   let gitCommit: GitCommit;
 
   try {
-    gitCommit = await getLatestGitCommit(path);
+    gitCommit = await getLatestGitCommit(root);
     branch = (/HEAD -> ([^,]*)/.exec(gitCommit.refs) || [])[1];
     commitHash = gitCommit.hash;
   } catch (error) {
@@ -250,7 +252,7 @@ export async function oxygenDeploy(
 
   if (!isCI) {
     deploymentData = await getOxygenDeploymentData({
-      root: path,
+      root,
       flagShop: shop,
     });
 
@@ -322,8 +324,18 @@ export async function oxygenDeploy(
     isPreview = true;
   }
 
+  let assetsDir = 'dist/client';
+  let workerDir = 'dist/worker';
+
+  const maybeVite = await getViteConfig(root).catch(() => null);
+
+  if (maybeVite) {
+    assetsDir = relativePath(root, maybeVite.clientOutDir);
+    workerDir = relativePath(root, maybeVite.serverOutDir);
+  }
+
   const config: DeploymentConfig = {
-    assetsDir: 'dist/client',
+    assetsDir,
     bugsnag: true,
     deploymentUrl,
     defaultEnvironment: defaultEnvironment || isPreview,
@@ -339,10 +351,10 @@ export async function oxygenDeploy(
       ...(metadataVersion ? {version: metadataVersion} : {}),
     },
     skipVerification: false,
-    rootPath: path,
+    rootPath: root,
     skipBuild: false,
     workerOnly: false,
-    workerDir: 'dist/worker',
+    workerDir,
   };
 
   let resolveUpload: () => void;
@@ -370,13 +382,15 @@ export async function oxygenDeploy(
     rejectDeploy = reject;
   });
 
+  const build = maybeVite ? runViteBuild : runBuild;
+
   const hooks: DeploymentHooks = {
     buildFunction: async (assetPath: string | undefined): Promise<void> => {
       outputInfo(
         outputContent`${colors.whiteBright('Building project...')}`.value,
       );
-      await runBuild({
-        directory: path,
+      await build({
+        directory: root,
         assetPath,
         sourcemap: true,
         useCodegen: false,

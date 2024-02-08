@@ -11,6 +11,8 @@ export async function getViteConfig(root: string) {
     process.env.NODE_ENV,
   );
 
+  if (!viteConfig.configFile) throw new Error('No Vite config found');
+
   const serverOutDir = viteConfig.build.outDir;
   const clientOutDir = serverOutDir.replace(/server$/, 'client');
 

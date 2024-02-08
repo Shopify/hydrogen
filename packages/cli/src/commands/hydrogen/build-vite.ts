@@ -64,7 +64,7 @@ export default class Build extends Command {
       directory = await prepareDiffDirectory(originalDirectory, false);
     }
 
-    await runBuild({
+    await runViteBuild({
       ...flagsToCamelObject(flags),
       useCodegen: flags.codegen,
       directory,
@@ -82,7 +82,7 @@ export default class Build extends Command {
 }
 
 type RunBuildOptions = {
-  entry: string;
+  entry?: string;
   directory?: string;
   useCodegen?: boolean;
   codegenConfigPath?: string;
@@ -93,8 +93,8 @@ type RunBuildOptions = {
   lockfileCheck?: boolean;
 };
 
-export async function runBuild({
-  entry,
+export async function runViteBuild({
+  entry = commonFlags.entry.default as string | undefined,
   directory,
   useCodegen = false,
   codegenConfigPath,
@@ -120,9 +120,13 @@ export async function runBuild({
   const {viteConfig, remixConfig, clientOutDir, serverOutDir, serverOutFile} =
     await getViteConfig(root);
 
+  // TODO this shouldn't be needed after updating Remix
+  process.env.HYDROGEN_ASSET_BASE_URL = assetPath;
+
   const commonConfig = {
     root,
     mode: process.env.NODE_ENV,
+    base: assetPath,
     resolve: {
       conditions: ['worker', 'workerd'],
     },

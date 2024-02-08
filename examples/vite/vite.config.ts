@@ -8,6 +8,8 @@ export default defineConfig({
       remix({
         buildDirectory: 'dist',
         serverBuildFile: 'index.js',
+        // TODO update Remix to fix this
+        publicPath: process.env.HYDROGEN_ASSET_BASE_URL,
       }),
     ),
     tsconfigPaths(),

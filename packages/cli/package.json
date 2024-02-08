@@ -72,6 +72,9 @@
   "peerDependenciesMeta": {
     "@remix-run/dev": {
       "optional": true
+    },
+    "vite": {
+      "optional": true
     }
   },
   "bin": "dist/create-app.js",
