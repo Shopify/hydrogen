@@ -101,7 +101,7 @@ export async function runViteBuild({
   sourcemap = false,
   disableRouteWarning = false,
   lockfileCheck = true,
-  assetPath,
+  assetPath = '/',
 }: RunBuildOptions) {
   if (!process.env.NODE_ENV) {
     process.env.NODE_ENV = 'production';

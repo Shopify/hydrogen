@@ -38,6 +38,7 @@ import {OxygenDeploymentData} from '../../lib/graphql/admin/get-oxygen-data.js';
 import {runBuild} from './build.js';
 import {runViteBuild} from './build-vite.js';
 import {getViteConfig} from '../../lib/vite-config.js';
+import {prepareDiffDirectory} from '../../lib/template-diff.js';
 
 export const deploymentLogger: Logger = (
   message: string,
@@ -112,23 +113,26 @@ export default class Deploy extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_METADATA_VERSION',
       hidden: true,
     }),
+    diff: commonFlags.diff,
   };
 
   async run() {
     const {flags} = await this.parse(Deploy);
     const deploymentOptions = this.flagsToOxygenDeploymentOptions(flags);
 
-    await oxygenDeploy(deploymentOptions)
-      .catch((error) => {
-        renderFatalError(error);
-        process.exit(1);
-      })
-      .finally(() => {
-        // The Remix compiler hangs due to a bug in ESBuild:
-        // https://github.com/evanw/esbuild/issues/2727
-        // The actual build has already finished so we can kill the process
-        process.exit(0);
-      });
+    if (flags.diff) {
+      deploymentOptions.path = await prepareDiffDirectory(
+        deploymentOptions.path,
+        false,
+      );
+    }
+
+    await runDeploy(deploymentOptions);
+
+    // The Remix compiler hangs due to a bug in ESBuild:
+    // https://github.com/evanw/esbuild/issues/2727
+    // The actual build has already finished so we can kill the process
+    process.exit(0);
   }
 
   private flagsToOxygenDeploymentOptions(flags: {
@@ -183,7 +187,7 @@ function createUnexpectedAbortError(message?: string): AbortError {
   );
 }
 
-export async function oxygenDeploy(
+export async function runDeploy(
   options: OxygenDeploymentOptions,
 ): Promise<void> {
   const {

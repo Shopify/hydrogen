@@ -62,6 +62,7 @@
           "name": "diff",
           "type": "boolean",
           "description": "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
+          "hidden": true,
           "required": false,
           "allowNo": false
         }
@@ -128,6 +129,7 @@
           "name": "diff",
           "type": "boolean",
           "description": "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
+          "hidden": true,
           "required": false,
           "allowNo": false
         }
@@ -293,6 +295,14 @@
           "hidden": true,
           "required": false,
           "multiple": false
+        },
+        "diff": {
+          "name": "diff",
+          "type": "boolean",
+          "description": "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
+          "hidden": true,
+          "required": false,
+          "allowNo": false
         }
       },
       "args": {}
@@ -387,6 +397,7 @@
           "name": "diff",
           "type": "boolean",
           "description": "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
+          "hidden": true,
           "required": false,
           "allowNo": false
         }
@@ -486,6 +497,7 @@
           "name": "diff",
           "type": "boolean",
           "description": "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
+          "hidden": true,
           "required": false,
           "allowNo": false
         }

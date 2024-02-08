@@ -103,6 +103,7 @@ export const commonFlags = {
       "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
     default: false,
     required: false,
+    hidden: true,
   }),
   entry: Flags.string({
     description: 'Entry file for the worker. Defaults to `./server`.',
