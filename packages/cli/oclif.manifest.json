@@ -171,6 +171,19 @@
           "required": false,
           "allowNo": false
         },
+        "custom-build": {
+          "name": "custom-build",
+          "type": "boolean",
+          "description": "Use the build command specified in package.json to build the project.",
+          "required": false,
+          "allowNo": false
+        },
+        "lockfile-check": {
+          "name": "lockfile-check",
+          "type": "boolean",
+          "description": "Checks that there is exactly 1 valid lockfile in the project.",
+          "allowNo": true
+        },
         "path": {
           "name": "path",
           "type": "option",
@@ -184,12 +197,12 @@
           "description": "Shop URL. It can be the shop prefix (janes-apparel) or the full myshopify.com URL (janes-apparel.myshopify.com, https://janes-apparel.myshopify.com).",
           "multiple": false
         },
-        "no-json-output": {
-          "name": "no-json-output",
+        "json-output": {
+          "name": "json-output",
           "type": "boolean",
           "description": "Prevents the command from creating a JSON file containing the deployment URL in CI environments.",
           "required": false,
-          "allowNo": false
+          "allowNo": true
         },
         "token": {
           "name": "token",

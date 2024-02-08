@@ -14,6 +14,7 @@ import {
   GitDirectoryNotCleanError,
 } from '@shopify/cli-kit/node/git';
 import {resolvePath} from '@shopify/cli-kit/node/path';
+import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 import {
   renderFatalError,
   renderSelectPrompt,
@@ -73,10 +74,16 @@ export default class Deploy extends Command {
       required: false,
       default: false,
     }),
+    'custom-build': Flags.boolean({
+      description: 'Use the build command specified in package.json to build the project.',
+      required: false,
+      default: false,
+    }),
     'lockfile-check': commonFlags.lockfileCheck,
     path: commonFlags.path,
     shop: commonFlags.shop,
-    'no-json-output': Flags.boolean({
+    'json-output': Flags.boolean({
+      allowNo: true,
       description:
         'Prevents the command from creating a JSON file containing the deployment URL in CI environments.',
       required: false,
@@ -145,6 +152,7 @@ export default class Deploy extends Command {
 
 interface OxygenDeploymentOptions {
   authBypassToken: boolean;
+  customBuild: boolean;
   defaultEnvironment: boolean;
   environmentTag?: string;
   force: boolean;
@@ -188,6 +196,7 @@ export async function oxygenDeploy(
 ): Promise<void> {
   const {
     authBypassToken: generateAuthBypassToken,
+    customBuild,
     defaultEnvironment,
     environmentTag,
     force: forceOnUncommitedChanges,
@@ -374,18 +383,6 @@ export async function oxygenDeploy(
   });
 
   const hooks: DeploymentHooks = {
-    buildFunction: async (assetPath: string | undefined): Promise<void> => {
-      outputInfo(
-        outputContent`${colors.whiteBright('Building project...')}`.value,
-      );
-      await runBuild({
-        directory: path,
-        assetPath,
-        lockfileCheck,
-        sourcemap: true,
-        useCodegen: false,
-      });
-    },
     onDeploymentCompleted: () => resolveDeploymentCompletedVerification(),
     onVerificationComplete: () => resolveRoutableCheck(),
     onDeploymentCompletedVerificationError() {
@@ -412,6 +409,39 @@ export async function oxygenDeploy(
       );
     },
   };
+
+  if (!customBuild) {
+    hooks.buildFunction = async (assetPath: string | undefined): Promise<void> => {
+      outputInfo(
+        outputContent`${colors.whiteBright('Building project...')}`.value,
+      );
+      await runBuild({
+        directory: path,
+        assetPath,
+        lockfileCheck,
+        sourcemap: true,
+        useCodegen: false,
+      });
+    };
+  } else {
+    const packageManager = await getPackageManager(path);
+    console.log("yoyo", packageManager);
+    const buildCommands = {
+      npm: 'npm run build',
+      yarn: 'yarn build',
+      pnpm: 'pnpm run build',
+      bun: 'bun build',
+      unknown: 'npm run build', // default to using npm
+    };
+
+    config.buildCommand = buildCommands[packageManager];
+
+    if (packageManager === 'unknown') {
+      outputWarn(
+        "Could not determine the package manager used in this project. Defaulting to 'npm run build'.",
+      );
+    }
+  }
 
   const uploadStart = async () => {
     outputInfo(
