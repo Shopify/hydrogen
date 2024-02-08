@@ -30,6 +30,7 @@ const fnDeclarationLineCount = (() => {
 
 const PRIVATE_WORKERD_HMR_PORT = 9400;
 const FETCH_MODULE_PATHNAME = '/__vite_fetch_module';
+const WARMUP_PATHNAME = '/__vite_warmup';
 
 const oxygenHeadersMap = Object.values(OXYGEN_HEADERS_MAP).reduce(
   (acc, item) => {
@@ -86,6 +87,7 @@ export async function startMiniOxygenVite({
         publicUrl.origin,
       ).toString(),
       __VITE_HMR_URL: `http://localhost:${privateHmrPort}`,
+      __VITE_WARMUP_URL: new URL(WARMUP_PATHNAME, publicUrl.origin).toString(),
     } satisfies Omit<ViteEnv, '__VITE_UNSAFE_EVAL'>,
     unsafeEvalBinding: '__VITE_UNSAFE_EVAL',
     serviceBindings: {
@@ -118,6 +120,8 @@ export async function startMiniOxygenVite({
       privateInspectorPort,
       publicInspectorPort,
     });
+
+    mf.dispatchFetch(new URL(WARMUP_PATHNAME, publicUrl)).catch(() => {});
 
     return reconnect();
   });

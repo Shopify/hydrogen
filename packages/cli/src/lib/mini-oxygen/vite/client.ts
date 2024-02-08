@@ -31,6 +31,7 @@ export interface ViteEnv {
   __VITE_FETCH_MODULE_URL: string;
   __VITE_RUNTIME_EXECUTE_URL: string;
   __VITE_UNSAFE_EVAL: UnsafeEval;
+  __VITE_WARMUP_URL: string;
 }
 
 export default {
@@ -45,6 +46,10 @@ export default {
     const module = await runtime.executeEntrypoint(
       env.__VITE_RUNTIME_EXECUTE_URL,
     );
+
+    if (request.url === env.__VITE_WARMUP_URL) {
+      return new globalThis.Response(null);
+    }
 
     const appEnv = Object.keys(env).reduce((acc, key) => {
       if (!key.startsWith('__VITE_')) {
