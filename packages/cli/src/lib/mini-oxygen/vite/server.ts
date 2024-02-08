@@ -198,6 +198,7 @@ export async function startMiniOxygenVite({
       },
       body: req.headers['content-length'] ? Readable.toWeb(req) : undefined,
       duplex: 'half', // This is required when sending a ReadableStream as body
+      redirect: 'manual', // Avoid consuming 300 responses here, return to browser
     });
 
     const startTimeMs = Date.now();
