@@ -75,7 +75,8 @@ export default class Deploy extends Command {
       default: false,
     }),
     'custom-build': Flags.boolean({
-      description: 'Use the build command specified in package.json to build the project.',
+      description:
+        'Use the build command specified in package.json to build the project.',
       required: false,
       default: false,
     }),
@@ -411,7 +412,9 @@ export async function oxygenDeploy(
   };
 
   if (!customBuild) {
-    hooks.buildFunction = async (assetPath: string | undefined): Promise<void> => {
+    hooks.buildFunction = async (
+      assetPath: string | undefined,
+    ): Promise<void> => {
       outputInfo(
         outputContent`${colors.whiteBright('Building project...')}`.value,
       );
@@ -425,7 +428,6 @@ export async function oxygenDeploy(
     };
   } else {
     const packageManager = await getPackageManager(path);
-    console.log("yoyo", packageManager);
     const buildCommands = {
       npm: 'npm run build',
       yarn: 'yarn build',

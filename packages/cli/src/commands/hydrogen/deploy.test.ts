@@ -363,7 +363,6 @@ describe('deploy', () => {
       return new Promise((resolve, _reject) => {
         resolve({url: 'https://a-lovely-deployment.com'});
       }) as Promise<CompletedDeployment | undefined>;
-
     });
     await oxygenDeploy(params);
 
@@ -382,7 +381,7 @@ describe('deploy', () => {
       customBuild: true,
     };
     vi.mocked(getPackageManager).mockResolvedValueOnce('yarn');
-    const { buildFunction: _, ...hooks } = expectedHooks;
+    const {buildFunction: _, ...hooks} = expectedHooks;
 
     await oxygenDeploy(params);
 
