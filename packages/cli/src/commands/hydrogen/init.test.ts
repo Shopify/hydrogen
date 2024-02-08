@@ -597,7 +597,7 @@ describe('init', () => {
           expect(resultFiles).toContain('app/routes/($locale)._index.tsx');
 
           // Adds ($locale) route
-          expect(resultFiles).toContain('app/routes/($locale).ts');
+          expect(resultFiles).toContain('app/routes/($locale).tsx');
 
           // Injects styles in Root
           const serverFile = await readFile(`${tmpDir}/server.ts`);

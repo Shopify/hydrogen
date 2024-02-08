@@ -33,7 +33,7 @@ import {convertRouteToV1} from '../../../lib/remix-version-interop.js';
 import {type RemixConfig, getRemixConfig} from '../../remix-config.js';
 import {findFileWithExtension} from '../../file.js';
 
-const NO_LOCALE_PATTERNS = [/robots\.txt/, /\(\$locale\)/];
+const NO_LOCALE_PATTERNS = [/robots\.txt/];
 
 const ROUTE_MAP = {
   home: ['_index', '$'],
@@ -443,6 +443,9 @@ async function copyRouteTemplate({
   typescript,
   adapter,
 }: RouteTemplateOptions) {
+  const routePath = joinPath(routesDirectory, routeName);
+  if (await fileExists(routePath)) return;
+
   const templatePath = fileURLToPath(
     new URL(`./templates/${templateName}`, import.meta.url),
   );
@@ -460,8 +463,6 @@ async function copyRouteTemplate({
   if (!typescript) {
     templateContent = await transpileFile(templateContent, templatePath);
   }
-
-  const routePath = joinPath(routesDirectory, routeName);
 
   templateContent = await formatCode(templateContent, formatOptions, routePath);
 

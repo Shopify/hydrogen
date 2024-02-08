@@ -777,6 +777,12 @@
           "description": "Generate TypeScript files",
           "allowNo": false
         },
+        "locale-param": {
+          "name": "locale-param",
+          "type": "option",
+          "description": "The param name in Remix routes for the i18n locale, if any. Example: `locale` becomes ($locale).",
+          "multiple": false
+        },
         "force": {
           "name": "force",
           "type": "boolean",
@@ -833,6 +839,12 @@
           "type": "boolean",
           "description": "Generate TypeScript files",
           "allowNo": false
+        },
+        "locale-param": {
+          "name": "locale-param",
+          "type": "option",
+          "description": "The param name in Remix routes for the i18n locale, if any. Example: `locale` becomes ($locale).",
+          "multiple": false
         },
         "force": {
           "name": "force",
