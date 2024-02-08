@@ -180,17 +180,6 @@ export default function AccountProfile() {
         <br />
         <legend>Change password (optional)</legend>
         <fieldset>
-          <label htmlFor="currentPassword">Current password</label>
-          <input
-            id="currentPassword"
-            name="currentPassword"
-            type="password"
-            autoComplete="current-password"
-            placeholder="Current password"
-            aria-label="Current password"
-            minLength={8}
-          />
-
           <label htmlFor="newPassword">New password</label>
           <input
             id="newPassword"
@@ -231,33 +220,21 @@ export default function AccountProfile() {
 
 function getPassword(form: FormData): string | undefined {
   let password;
-  const currentPassword = form.get('currentPassword');
   const newPassword = form.get('newPassword');
   const newPasswordConfirm = form.get('newPasswordConfirm');
 
   let passwordError;
-  if (newPassword && !currentPassword) {
-    passwordError = new Error('Current password is required.');
-  }
 
   if (newPassword && newPassword !== newPasswordConfirm) {
     passwordError = new Error('New passwords must match.');
-  }
-
-  if (newPassword && currentPassword && newPassword === currentPassword) {
-    passwordError = new Error(
-      'New password must be different than current password.',
-    );
   }
 
   if (passwordError) {
     throw passwordError;
   }
 
-  if (currentPassword && newPassword) {
+  if (newPassword) {
     password = newPassword;
-  } else {
-    password = currentPassword;
   }
 
   return String(password);
