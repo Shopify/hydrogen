@@ -36,7 +36,7 @@
     "@ast-grep/napi": "0.11.0",
     "@graphql-codegen/cli": "5.0.1",
     "@oclif/core": "2.11.7",
-    "@shopify/cli-kit": "3.52.0",
+    "@shopify/cli-kit": "^3.55.4",
     "@shopify/hydrogen-codegen": "^0.2.1",
     "@shopify/mini-oxygen": "^2.2.5",
     "@shopify/oxygen-cli": "^4.0.0",
