@@ -44,7 +44,6 @@
     "@shopify/mini-oxygen": "^2.2.5",
     "@shopify/oxygen-cli": "^4.0.0",
     "ansi-escapes": "^6.2.0",
-    "birpc": "^0.2.15",
     "cli-truncate": "^4.0.0",
     "diff": "^5.1.0",
     "fs-extra": "^11.1.0",

@@ -6,14 +6,10 @@ import crypto from 'node:crypto';
 import {createRequire} from 'node:module';
 import {Readable} from 'node:stream';
 import {createFileReadStream} from '@shopify/cli-kit/node/fs';
-import {createBirpc, type BirpcReturn} from 'birpc';
 import {Miniflare, NoOpLog, Request} from 'miniflare';
 import {WebSocket, WebSocketServer} from 'ws';
-import type {ClientFunctions, ServerFunctions} from './common.js';
 import {H2O_BINDING_NAME, createLogRequestEvent} from '../../request-events.js';
 import {OXYGEN_HEADERS_MAP, logRequestLine} from '../common.js';
-
-import type {ViteEnv} from './client.js';
 import {
   PRIVATE_WORKERD_INSPECTOR_PORT,
   OXYGEN_WORKERD_COMPAT_PARAMS,
@@ -21,6 +17,8 @@ import {
 import {findPort} from '../../find-port.js';
 import {createInspectorConnector} from '../workerd-inspector.js';
 import {MiniOxygenOptions} from '../types.js';
+
+import type {ViteEnv} from './client.js';
 const clientPath = fileURLToPath(new URL('./client.js', import.meta.url));
 
 const AsyncFunction = async function () {}.constructor as typeof Function;
@@ -107,22 +105,7 @@ export async function startMiniOxygenVite({
     viteServer.hot.addChannel(hmrChannel);
 
     wss.on('connection', (ws) => {
-      const rpc = createBirpc<ClientFunctions, ServerFunctions>(
-        {
-          hmrSend(_payload) {
-            // TODO: emit?
-          },
-        },
-        {
-          post: (data) => ws.send(data),
-          on: (data) => ws.on('message', data),
-          serialize: (v) => JSON.stringify(v),
-          deserialize: (v) => JSON.parse(v),
-        },
-      );
-
-      hmrChannel.clients.set(ws, rpc);
-
+      hmrChannel.clients.add(ws);
       ws.on('close', () => {
         hmrChannel.clients.delete(ws);
       });
@@ -236,11 +219,10 @@ export async function startMiniOxygenVite({
 
 class WssHmrChannel implements HMRChannel {
   name = 'WssHmrChannel';
-  clients = new Map<WebSocket, BirpcReturn<ClientFunctions, ServerFunctions>>();
+  clients = new Set<WebSocket>();
 
   listen(): void {}
   close(): void {}
-
   on(_event: unknown, _listener: unknown): void {}
   off(_event: string, _listener: Function): void {}
 
@@ -260,8 +242,8 @@ class WssHmrChannel implements HMRChannel {
       }
     }
 
-    this.clients.forEach((rpc) => {
-      rpc.hmrSend(payload);
+    this.clients.forEach((ws) => {
+      ws.send(JSON.stringify(payload));
     });
   }
 }

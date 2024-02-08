@@ -19,8 +19,6 @@ import {
   type SSRImportMetadata,
   type HMRRuntimeConnection,
 } from 'vite/runtime';
-import {createBirpc, type BirpcReturn} from 'birpc';
-import type {ClientFunctions, ServerFunctions} from './common.js';
 import type {Response} from 'miniflare';
 import type {HMRPayload} from 'vite';
 import {makeLegalIdentifier} from '@rollup/pluginutils';
@@ -37,12 +35,13 @@ export interface ViteEnv {
 
 export default {
   async fetch(request: Request, env: ViteEnv, ctx: any) {
-    await setupEnvironment(env);
+    setupEnvironment(env);
 
     if (request.url.endsWith('.json')) {
       return fetch(new URL(new URL(request.url).pathname, env.__VITE_URL));
     }
 
+    // Fetch the app's entry module
     const module = await runtime.executeEntrypoint(
       env.__VITE_RUNTIME_EXECUTE_URL,
     );
@@ -59,14 +58,23 @@ export default {
   },
 };
 
-let runner: MiniOxygenRunner;
+let runner: WorkerdRunner;
 let runtime: ViteRuntime;
-let hmrRpc: BirpcReturn<ServerFunctions, ClientFunctions>;
-let onHmrRecieve: ((payload: HMRPayload) => void) | undefined;
 
-async function setupEnvironment(env: ViteEnv) {
+function setupEnvironment(env: ViteEnv) {
   if (!runner || !runtime) {
-    runner = new MiniOxygenRunner();
+    runner = new WorkerdRunner();
+
+    let onHmrRecieve: ((payload: HMRPayload) => void) | undefined;
+
+    let hmrReady = false;
+    connectHmrWsClient(env).then((hmrWs) => {
+      hmrReady = true;
+      hmrWs.addEventListener('message', (message) => {
+        onHmrRecieve?.(JSON.parse(message.data?.toString()));
+      });
+    });
+
     runtime = new ViteRuntime(
       {
         root: env.__VITE_ROOT,
@@ -81,14 +89,10 @@ async function setupEnvironment(env: ViteEnv) {
         },
         hmr: {
           connection: {
-            isReady() {
-              return !!hmrRpc;
-            },
-            send(messages: string) {
-              // TODO
-            },
-            onUpdate(h: any) {
-              onHmrRecieve = h;
+            isReady: () => hmrReady,
+            send: () => {},
+            onUpdate(receiver) {
+              onHmrRecieve = receiver;
               return () => {
                 onHmrRecieve = undefined;
               };
@@ -100,24 +104,6 @@ async function setupEnvironment(env: ViteEnv) {
     );
   }
 
-  if (!hmrRpc) {
-    const wsClient = await connectHmrWsClient(env);
-
-    hmrRpc = createBirpc<ServerFunctions, ClientFunctions>(
-      {
-        hmrSend(payload) {
-          onHmrRecieve?.(payload);
-        },
-      },
-      {
-        post: (data) => wsClient.send(data),
-        on: (data) => wsClient.addEventListener('message', (e) => data(e.data)),
-        serialize: (v) => JSON.stringify(v),
-        deserialize: (v) => JSON.parse(v),
-      },
-    );
-  }
-
   runner.unsafeEval = env.__VITE_UNSAFE_EVAL;
   runner.codeLineOffset = Number(env.__VITE_CODE_LINE_OFFSET);
 }
@@ -126,7 +112,7 @@ type UnsafeEval = {
   newAsyncFunction(code: string, name?: string, ...args: string[]): Function;
 };
 
-class MiniOxygenRunner implements ViteModuleRunner {
+class WorkerdRunner implements ViteModuleRunner {
   unsafeEval: UnsafeEval | undefined;
   codeLineOffset = 0;
 
@@ -144,10 +130,11 @@ class MiniOxygenRunner implements ViteModuleRunner {
     if (!this.idMap.has(escapedId)) {
       this.idMap.set(escapedId, []);
     }
+
     const idList = this.idMap.get(escapedId)!;
-    let number = idList.indexOf(id);
-    if (number < 0) {
-      number = idList.push(id) - 1;
+    let idIndex = idList.indexOf(id);
+    if (idIndex < 0) {
+      idIndex = idList.push(id) - 1;
     }
 
     delete context[ssrImportMetaKey].filename;
@@ -155,13 +142,14 @@ class MiniOxygenRunner implements ViteModuleRunner {
 
     const initModule = this.unsafeEval.newAsyncFunction(
       '"use strict";' + '\n'.repeat(this.codeLineOffset) + code,
-      `${escapedId}_${number}`,
+      `${escapedId}_${idIndex}`,
       ssrModuleExportsKey,
       ssrImportMetaKey,
       ssrImportKey,
       ssrDynamicImportKey,
       ssrExportAllKey,
     );
+
     await initModule(
       context[ssrModuleExportsKey],
       context[ssrImportMetaKey],
@@ -169,14 +157,12 @@ class MiniOxygenRunner implements ViteModuleRunner {
       context[ssrDynamicImportKey],
       context[ssrExportAllKey],
     );
+
     Object.freeze(context[ssrModuleExportsKey]);
   }
 
-  runExternalModule(_filepath: string): Promise<any> {
-    // TODO: support Node.js modules
-    // https://developers.cloudflare.com/workers/runtime-apis/nodejs/
-    // TODO: support `cloudflare:*` modules and `workerd:*` modules
-    throw new Error('Not supported');
+  runExternalModule(filepath: string): Promise<any> {
+    throw new Error('External modules are not supported');
   }
 
   processImport(
