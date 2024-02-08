@@ -2,14 +2,23 @@ import {type HMRChannel, type HMRPayload, type ViteDevServer} from 'vite';
 import path from 'node:path';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
+import type {ServerResponse} from 'node:http';
 import crypto from 'node:crypto';
 import {createRequire} from 'node:module';
 import {Readable} from 'node:stream';
 import {createFileReadStream} from '@shopify/cli-kit/node/fs';
-import {Miniflare, NoOpLog, Request} from 'miniflare';
+import {Miniflare, NoOpLog, Request, type Response} from 'miniflare';
 import {WebSocket, WebSocketServer} from 'ws';
-import {H2O_BINDING_NAME, createLogRequestEvent} from '../../request-events.js';
-import {OXYGEN_HEADERS_MAP, logRequestLine} from '../common.js';
+import {
+  H2O_BINDING_NAME,
+  createLogRequestEvent,
+  handleDebugNetworkRequest,
+} from '../../request-events.js';
+import {
+  OXYGEN_HEADERS_MAP,
+  SUBREQUEST_PROFILER_ENDPOINT,
+  logRequestLine,
+} from '../common.js';
 import {
   PRIVATE_WORKERD_INSPECTOR_PORT,
   OXYGEN_WORKERD_COMPAT_PARAMS,
@@ -167,6 +176,21 @@ export async function startMiniOxygenVite({
     },
   );
 
+  viteServer.middlewares.use(
+    SUBREQUEST_PROFILER_ENDPOINT,
+    function h2HandleSubrequestProfilerEvent(req, res) {
+      // This request comes from Hydrogen's Subrequest Profiler UI.
+
+      const url = new URL(req.url ?? '/', publicUrl.origin);
+
+      const webResponse = handleDebugNetworkRequest(
+        new Request(url, {method: req.method}),
+      );
+
+      pipeFromWeb(webResponse, res);
+    },
+  );
+
   viteServer.middlewares.use(function h2HandleWorkerRequest(req, res) {
     // This request comes from the browser. At this point, Vite
     // tried to serve the request as a static file, but it didn't
@@ -191,14 +215,7 @@ export async function startMiniOxygenVite({
 
     mf.dispatchFetch(webRequest)
       .then((webResponse) => {
-        res.writeHead(
-          webResponse.status,
-          Object.fromEntries(webResponse.headers.entries()),
-        );
-
-        if (webResponse.body) {
-          Readable.fromWeb(webResponse.body).pipe(res);
-        }
+        pipeFromWeb(webResponse, res);
 
         logRequestLine(webRequest, {
           responseStatus: webResponse.status,
@@ -218,6 +235,19 @@ export async function startMiniOxygenVite({
       wss.close((err) => (err ? reject(err) : resolve())),
     );
   };
+}
+
+function pipeFromWeb(webResponse: Response, res: ServerResponse) {
+  res.writeHead(
+    webResponse.status,
+    Object.fromEntries(webResponse.headers.entries()),
+  );
+
+  if (webResponse.body) {
+    Readable.fromWeb(webResponse.body).pipe(res);
+  } else {
+    res.end();
+  }
 }
 
 class WssHmrChannel implements HMRChannel {
