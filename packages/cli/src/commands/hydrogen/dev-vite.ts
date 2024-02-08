@@ -1,4 +1,5 @@
 import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
 import {enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
 import {
@@ -18,7 +19,6 @@ import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
 
-import {createServer as createViteServer} from 'vite';
 import type {RemixPluginContext} from '@remix-run/dev/dist/vite/plugin.js';
 import {setConstructors} from '../../lib/request-events.js';
 
@@ -69,6 +69,7 @@ export default class DevVite extends Command {
     await runDev({
       ...flagsToCamelObject(flags),
       path: directory,
+      isLocalDev: flags.diff,
     });
   }
 }
@@ -86,6 +87,7 @@ type DevOptions = {
   debug?: boolean;
   sourcemap?: boolean;
   inspectorPort: number;
+  isLocalDev?: boolean;
 };
 
 export async function runDev({
@@ -101,6 +103,7 @@ export async function runDev({
   sourcemap = true,
   disableVersionCheck = false,
   inspectorPort,
+  isLocalDev = false,
 }: DevOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
@@ -113,9 +116,22 @@ export async function runDev({
     return getAllEnvironmentVariables({root, fetchRemote, envBranch});
   });
 
-  const viteServer = await createViteServer({
+  const vite = await import('vite');
+
+  const viteServer = await vite.createServer({
     root,
-    server: {host: host ? true : undefined},
+    server: {
+      host: host ? true : undefined,
+      fs: isLocalDev
+        ? {
+            // Hydrogen packages
+            allow: [
+              root,
+              fileURLToPath(new URL('../../../../', import.meta.url)),
+            ],
+          }
+        : undefined,
+    },
   });
 
   process.once('SIGTERM', async () => {
@@ -126,43 +142,62 @@ export async function runDev({
     }
   });
 
-  const viteConfig = viteServer.config;
-  const remixPluginContext = ((viteConfig as any)
-    .__remixPluginContext as RemixPluginContext) || {
-    rootDirectory: root,
-    remixConfig: {appDirectory: path.join(root, 'app')},
-  };
+  let appDirectory = path.join(root, 'app');
 
-  // assertOxygenChecks(remixConfig);
+  async function reloadVirtualRoutes() {
+    const remixPluginContext = (viteServer.config as any)
+      .__remixPluginContext as RemixPluginContext;
 
-  if (!disableVirtualRoutes) {
-    // Unfreeze remixConfig to extend it with virtual routes.
-    remixPluginContext.remixConfig = {...remixPluginContext.remixConfig};
-    // @ts-expect-error
-    remixPluginContext.remixConfig.routes = {
-      ...remixPluginContext.remixConfig.routes,
-    };
+    appDirectory =
+      remixPluginContext?.remixConfig?.appDirectory ?? appDirectory;
 
-    await addVirtualRoutes(remixPluginContext.remixConfig).catch((error) => {
-      // Seen this fail when somehow NPM doesn't publish
-      // the full 'virtual-routes' directory.
-      // E.g. https://unpkg.com/browse/@shopify/cli-hydrogen@0.0.0-next-aa15969-20230703072007/dist/virtual-routes/
-      outputDebug(
-        'Could not add virtual routes: ' +
-          (error?.stack ?? error?.message ?? error),
-      );
-    });
+    // assertOxygenChecks(remixConfig);
 
-    Object.freeze(remixPluginContext.remixConfig.routes);
-    Object.freeze(remixPluginContext.remixConfig);
+    if (!disableVirtualRoutes) {
+      // Unfreeze remixConfig to extend it with virtual routes.
+      remixPluginContext.remixConfig = {...remixPluginContext.remixConfig};
+      // @ts-expect-error
+      remixPluginContext.remixConfig.routes = {
+        ...remixPluginContext.remixConfig.routes,
+      };
+
+      await addVirtualRoutes(remixPluginContext.remixConfig).catch((error) => {
+        // Seen this fail when somehow NPM doesn't publish
+        // the full 'virtual-routes' directory.
+        // E.g. https://unpkg.com/browse/@shopify/cli-hydrogen@0.0.0-next-aa15969-20230703072007/dist/virtual-routes/
+        outputDebug(
+          'Could not add virtual routes: ' +
+            (error?.stack ?? error?.message ?? error),
+        );
+      });
+
+      Object.freeze(remixPluginContext.remixConfig.routes);
+      Object.freeze(remixPluginContext.remixConfig);
+    }
   }
 
-  const {remixConfig, rootDirectory} = remixPluginContext;
+  await reloadVirtualRoutes();
+
+  // Remix resets the routes when the app is reloaded. Add them again.
+  viteServer.watcher.on('all', (eventName, filepath) => {
+    const appFileAddedOrRemoved =
+      (eventName === 'add' || eventName === 'unlink') &&
+      vite.normalizePath(filepath).startsWith(vite.normalizePath(appDirectory));
+
+    const viteConfigChanged =
+      eventName === 'change' &&
+      vite.normalizePath(filepath) ===
+        vite.normalizePath(viteServer.config.configFile ?? '');
+
+    if (appFileAddedOrRemoved || viteConfigChanged) {
+      setTimeout(reloadVirtualRoutes, 100);
+    }
+  });
 
   const codegenProcess = useCodegen
     ? spawnCodegenProcess({
-        rootDirectory,
-        appDirectory: remixConfig.appDirectory,
+        rootDirectory: root,
+        appDirectory,
         configFilePath: codegenConfigPath,
       })
     : undefined;
@@ -200,7 +235,7 @@ export async function runDev({
   });
 
   // Start the public facing server with the port passed by the user.
-  enhanceH2Logs({rootDirectory, host: publicUrl.toString()});
+  enhanceH2Logs({rootDirectory: root, host: publicUrl.toString()});
 
   console.log('');
   viteServer.printUrls();
