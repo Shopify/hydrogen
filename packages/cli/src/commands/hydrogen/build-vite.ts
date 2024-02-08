@@ -132,6 +132,8 @@ export async function runViteBuild({
     },
   };
 
+  // Avoid static imports because this file is imported by `deploy` command,
+  // which must have a hard dependency on 'vite'.
   const vite = await import('vite');
 
   // Client build first

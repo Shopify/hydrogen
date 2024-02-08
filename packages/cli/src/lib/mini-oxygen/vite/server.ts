@@ -80,7 +80,6 @@ export async function startMiniOxygenVite({
       ...env,
       __VITE_ROOT: viteServer.config.root,
       __VITE_CODE_LINE_OFFSET: String(fnDeclarationLineCount),
-      __VITE_URL: publicUrl.toString(),
       __VITE_RUNTIME_EXECUTE_URL: workerEntryFile,
       __VITE_FETCH_MODULE_URL: new URL(
         FETCH_MODULE_PATHNAME,

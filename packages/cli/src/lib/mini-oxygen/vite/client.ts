@@ -26,7 +26,6 @@ import {makeLegalIdentifier} from '@rollup/pluginutils';
 export interface ViteEnv {
   __VITE_ROOT: string;
   __VITE_CODE_LINE_OFFSET: string;
-  __VITE_URL: string;
   __VITE_HMR_URL: string;
   __VITE_FETCH_MODULE_URL: string;
   __VITE_RUNTIME_EXECUTE_URL: string;
@@ -37,10 +36,6 @@ export interface ViteEnv {
 export default {
   async fetch(request: Request, env: ViteEnv, ctx: any) {
     setupEnvironment(env);
-
-    if (request.url.endsWith('.json')) {
-      return fetch(new URL(new URL(request.url).pathname, env.__VITE_URL));
-    }
 
     // Fetch the app's entry module
     const module = await runtime.executeEntrypoint(

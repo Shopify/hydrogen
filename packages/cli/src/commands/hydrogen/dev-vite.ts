@@ -151,8 +151,6 @@ export async function runDev({
     appDirectory =
       remixPluginContext?.remixConfig?.appDirectory ?? appDirectory;
 
-    // assertOxygenChecks(remixConfig);
-
     if (!disableVirtualRoutes) {
       // Unfreeze remixConfig to extend it with virtual routes.
       remixPluginContext.remixConfig = {...remixPluginContext.remixConfig};
