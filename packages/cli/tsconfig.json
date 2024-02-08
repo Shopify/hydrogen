@@ -1,6 +1,6 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src"],
+  "include": ["src", "remix.env.d.ts"],
   "exclude": ["dist", "__tests__", "node_modules", ".turbo"],
   "compilerOptions": {
     "module": "NodeNext",
