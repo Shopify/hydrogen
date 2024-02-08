@@ -98,9 +98,7 @@ function createResponse<R extends RequestKind>(
   return new ResponseConstructor(main, init) as InferredResponse<R>;
 }
 
-async function clearHistory<R extends RequestKind>(
-  request: R,
-): Promise<InferredResponse<R>> {
+function clearHistory<R extends RequestKind>(request: R): InferredResponse<R> {
   eventHistory.length = 0;
   return createResponse<R>();
 }

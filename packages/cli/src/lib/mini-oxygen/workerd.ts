@@ -15,7 +15,11 @@ import colors from '@shopify/cli-kit/node/colors';
 import {createInspectorConnector} from './workerd-inspector.js';
 import {findPort} from '../find-port.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
-import {OXYGEN_HEADERS_MAP, logRequestLine} from './common.js';
+import {
+  OXYGEN_HEADERS_MAP,
+  SUBREQUEST_PROFILER_ENDPOINT,
+  logRequestLine,
+} from './common.js';
 import {
   H2O_BINDING_NAME,
   handleDebugNetworkRequest,
@@ -213,7 +217,7 @@ async function miniOxygenHandler(
 ) {
   const {pathname} = new URL(request.url);
 
-  if (pathname === '/debug-network-server') {
+  if (pathname === SUBREQUEST_PROFILER_ENDPOINT) {
     return env.debugNetwork.fetch(request);
   }
 
