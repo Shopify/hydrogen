@@ -1,4 +1,4 @@
-import {readdir} from 'fs/promises';
+import {readdir} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {
   fileExists,
@@ -32,7 +32,6 @@ import {
 import {convertRouteToV1} from '../../../lib/remix-version-interop.js';
 import {type RemixConfig, getRemixConfig} from '../../remix-config.js';
 import {findFileWithExtension} from '../../file.js';
-import {type I18nStrategy} from '../i18n/index.js';
 
 const NO_LOCALE_PATTERNS = [/robots\.txt/, /\(\$locale\)/];
 
@@ -108,7 +107,6 @@ type GenerateRoutesOptions = Omit<
   directory: string;
   localePrefix?: GenerateProjectFileOptions['localePrefix'] | false;
   v1RouteConvention?: boolean;
-  i18nStrategy?: I18nStrategy;
 };
 
 type RemixConfigParam = Pick<RemixConfig, 'rootDirectory' | 'appDirectory'>;
@@ -130,7 +128,8 @@ export async function generateRoutes(
   );
 
   const formatOptions = await getCodeFormatOptions(rootDirectory);
-  const localePrefix = await getLocalePrefix(appDirectory, options);
+  const routesDirectory = joinPath(appDirectory, GENERATOR_ROUTE_DIR);
+  const localePrefix = await getLocalePrefix(routesDirectory, options);
   const typescript = !!(
     options.typescript ??
     (await fileExists(joinPath(rootDirectory, 'tsconfig.json')))
@@ -150,13 +149,13 @@ export async function generateRoutes(
     );
   }
 
-  if (options.i18nStrategy === 'subfolders') {
+  if (localePrefix) {
     await copyLocaleNamelessRoute({
-      ...options,
       typescript,
       localePrefix,
-      appDirectory,
+      routesDirectory,
       formatOptions,
+      adapter: options.adapter,
     });
   }
 
@@ -183,15 +182,13 @@ type GenerateProjectFileOptions = {
  * In V2, we check the home route for the presence of `($...)._index` in the filename.
  */
 async function getLocalePrefix(
-  appDirectory: string,
+  routesDirectory: string,
   {localePrefix, routeName, v1RouteConvention}: GenerateRoutesOptions,
 ) {
   if (localePrefix) return localePrefix;
   if (localePrefix !== undefined || routeName === 'all') return;
 
-  const existingFiles = await readdir(joinPath(appDirectory, 'routes')).catch(
-    () => [],
-  );
+  const existingFiles = await readdir(routesDirectory).catch(() => []);
 
   const coreRouteWithLocaleRE = v1RouteConvention
     ? /^\(\$(\w+)\)$/
@@ -303,10 +300,7 @@ export async function generateProjectFile(
     // If the command was run with an adapter flag, we replace the default
     // import with the adapter that was passed.
     if (adapter) {
-      templateContent = templateContent.replace(
-        /@shopify\/remix-oxygen/g,
-        adapter,
-      );
+      templateContent = replaceAdapters(templateContent, adapter);
     }
 
     // We format the template content with Prettier.
@@ -323,6 +317,10 @@ export async function generateProjectFile(
   }
 
   return result;
+}
+
+function replaceAdapters(templateContent: string, adapter: string) {
+  return templateContent.replace(/@shopify\/remix-oxygen/g, adapter);
 }
 
 /**
@@ -414,40 +412,39 @@ export async function renderRoutePrompt(options?: {abortSignal: AbortSignal}) {
   return generateAll ? 'all' : ([] as string[]);
 }
 
-async function copyLocaleNamelessRoute({
-  appDirectory,
+function copyLocaleNamelessRoute({
   typescript,
-  formatOptions,
-}: GenerateProjectFileOptions & {
-  appDirectory: string;
-  formatOptions?: FormatOptions;
-}) {
-  return await copyRouteTemplate('($locale)', {
-    appDirectory,
+  localePrefix,
+  ...options
+}: {localePrefix: string} & Omit<
+  RouteTemplateOptions,
+  'templateName' | 'routeName'
+>) {
+  return copyRouteTemplate({
+    ...options,
     typescript,
-    formatOptions,
+    templateName: 'locale-check.ts',
+    routeName: `(\$${localePrefix})${typescript ? '.tsx' : '.jsx'}`,
   });
 }
 
-async function copyRouteTemplate(
-  routeTemplateFileName: string,
-  {
-    appDirectory,
-    typescript,
-    formatOptions,
-  }: GenerateProjectFileOptions & {
-    appDirectory: string;
-    formatOptions?: FormatOptions;
-  },
-) {
-  const routePath = joinPath(
-    appDirectory,
-    'routes',
-    routeTemplateFileName + (typescript ? '.ts' : '.js'),
-  );
+type RouteTemplateOptions = {
+  routesDirectory: string;
+  templateName: string;
+  routeName: string;
+  formatOptions?: FormatOptions;
+} & Pick<GenerateProjectFileOptions, 'adapter' | 'typescript'>;
 
+async function copyRouteTemplate({
+  templateName,
+  routeName,
+  routesDirectory,
+  formatOptions,
+  typescript,
+  adapter,
+}: RouteTemplateOptions) {
   const templatePath = fileURLToPath(
-    new URL(`./templates/${routeTemplateFileName}.tsx`, import.meta.url),
+    new URL(`./templates/${templateName}`, import.meta.url),
   );
 
   if (!(await fileExists(templatePath))) {
@@ -456,9 +453,15 @@ async function copyRouteTemplate(
 
   let templateContent = await readFile(templatePath);
 
+  if (adapter) {
+    templateContent = replaceAdapters(templateContent, adapter);
+  }
+
   if (!typescript) {
     templateContent = await transpileFile(templateContent, templatePath);
   }
+
+  const routePath = joinPath(routesDirectory, routeName);
 
   templateContent = await formatCode(templateContent, formatOptions, routePath);
 

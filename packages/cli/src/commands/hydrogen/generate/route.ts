@@ -26,6 +26,11 @@ export default class GenerateRoute extends Command {
       description: 'Generate TypeScript files',
       env: 'SHOPIFY_HYDROGEN_FLAG_TYPESCRIPT',
     }),
+    'locale-param': Flags.string({
+      description:
+        'The param name in Remix routes for the i18n locale, if any. Example: `locale` becomes ($locale).',
+      env: 'SHOPIFY_HYDROGEN_FLAG_ADAPTER',
+    }),
     force: commonFlags.force,
     path: commonFlags.path,
   };
@@ -54,6 +59,7 @@ export default class GenerateRoute extends Command {
       ...flags,
       directory,
       routeName,
+      localePrefix: flags['locale-param'],
     });
   }
 }
@@ -64,6 +70,7 @@ export async function runGenerate(options: {
   adapter?: string;
   typescript?: boolean;
   force?: boolean;
+  localePrefix?: string;
 }) {
   const {routes} = await generateRoutes({
     ...options,

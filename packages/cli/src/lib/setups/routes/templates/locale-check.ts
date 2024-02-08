@@ -1,4 +1,4 @@
-import {type LoaderFunctionArgs} from '@remix-run/server-runtime';
+import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
 
 export async function loader({params, context}: LoaderFunctionArgs) {
   const {language, country} = context.storefront.i18n;
