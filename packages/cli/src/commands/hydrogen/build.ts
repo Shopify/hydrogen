@@ -45,13 +45,15 @@ export default class Build extends Command {
   static flags = {
     path: commonFlags.path,
     sourcemap: Flags.boolean({
-      description: 'Generate sourcemaps for the build.',
+      description:
+        'Controls wether sourcemaps are generated. Default to true, use `--no-sourcemaps` to disable.',
       env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
       allowNo: true,
       default: true,
     }),
     'bundle-stats': Flags.boolean({
-      description: 'Show a bundle size summary after building.',
+      description:
+        'Show a bundle size summary after building. Defaults to true, use `--no-bundle-stats` to disable.',
       default: true,
       allowNo: true,
     }),

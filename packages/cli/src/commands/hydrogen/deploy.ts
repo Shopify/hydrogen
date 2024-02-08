@@ -86,7 +86,7 @@ export default class Deploy extends Command {
     'json-output': Flags.boolean({
       allowNo: true,
       description:
-        'Create a JSON file containing the deployment details in CI environments.',
+        'Create a JSON file containing the deployment details in CI environments. Defaults to true, use `--no-json-output` to disable.',
       required: false,
       default: false,
     }),

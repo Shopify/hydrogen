@@ -19,19 +19,19 @@
         "sourcemap": {
           "name": "sourcemap",
           "type": "boolean",
-          "description": "Generate sourcemaps for the build.",
+          "description": "Controls wether sourcemaps are generated. Default to true, use `--no-sourcemaps` to disable.",
           "allowNo": true
         },
         "bundle-stats": {
           "name": "bundle-stats",
           "type": "boolean",
-          "description": "Show a bundle size summary after building.",
+          "description": "Show a bundle size summary after building. Defaults to true, use `--no-bundle-stats` to disable.",
           "allowNo": true
         },
         "lockfile-check": {
           "name": "lockfile-check",
           "type": "boolean",
-          "description": "Checks that there is exactly 1 valid lockfile in the project.",
+          "description": "Checks that there is exactly 1 valid lockfile in the project. Defaults to true, use `--no-lockfile-check` to disable.",
           "allowNo": true
         },
         "disable-route-warning": {
@@ -181,7 +181,7 @@
         "lockfile-check": {
           "name": "lockfile-check",
           "type": "boolean",
-          "description": "Checks that there is exactly 1 valid lockfile in the project.",
+          "description": "Checks that there is exactly 1 valid lockfile in the project. Defaults to true, use `--no-lockfile-check` to disable.",
           "allowNo": true
         },
         "path": {
@@ -200,7 +200,7 @@
         "json-output": {
           "name": "json-output",
           "type": "boolean",
-          "description": "Prevents the command from creating a JSON file containing the deployment URL in CI environments.",
+          "description": "Create a JSON file containing the deployment details in CI environments. Defaults to true, use `--no-json-output` to disable.",
           "required": false,
           "allowNo": true
         },

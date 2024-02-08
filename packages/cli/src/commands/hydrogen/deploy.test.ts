@@ -352,7 +352,7 @@ describe('deploy', () => {
     });
   });
 
-  it('passes the lockfileCheck to the build function when the  flag is set', async () => {
+  it('passes the lockfileCheck to the build function when the flag is set', async () => {
     const params = {
       ...deployParams,
       lockfileCheck: false,
