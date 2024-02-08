@@ -6,6 +6,7 @@ import {joinPath} from '@shopify/cli-kit/node/path';
 import {renderInfo, renderTasks} from '@shopify/cli-kit/node/ui';
 import {getLatestTemplates} from '../template-downloader.js';
 import {applyTemplateDiff} from '../template-diff.js';
+import {getCliCommand} from '../shell.js';
 import {
   commitAll,
   createAbortHandler,
@@ -110,7 +111,7 @@ export async function setupRemoteTemplate(
     language,
     packageManager,
     depsInstalled: false,
-    hasCreatedShortcut: false,
+    cliCommand: await getCliCommand('', packageManager),
   };
 
   const tasks = [
