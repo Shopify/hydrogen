@@ -16,6 +16,6 @@
   },
   "dependencies": {
     "@remix-run/node": "^2.6.0",
-    "isbot": "^4"
+    "isbot": "^3.8.0"
   }
 }
