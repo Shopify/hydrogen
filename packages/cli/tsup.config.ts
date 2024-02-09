@@ -32,7 +32,7 @@ const outDir = 'dist';
 export default defineConfig([
   {
     ...commonConfig,
-    entry: ['src/**/*.ts', '!src/**/vite/client.ts'],
+    entry: ['src/**/*.ts', '!src/lib/vite/client.ts'],
     outDir,
     async onSuccess() {
       // Copy TS templates
@@ -57,8 +57,8 @@ export default defineConfig([
     },
   },
   {
-    entry: ['src/lib/mini-oxygen/vite/client.ts'],
-    outDir: 'dist/lib/mini-oxygen/vite',
+    entry: ['src/lib/vite/client.ts'],
+    outDir: 'dist/lib/vite',
     format: 'esm',
     noExternal: [/./],
     esbuildPlugins: [esbuildNoSideEffectPlugin(['picomatch'])],

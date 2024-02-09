@@ -13,19 +13,19 @@ import {
   H2O_BINDING_NAME,
   createLogRequestEvent,
   handleDebugNetworkRequest,
-} from '../../request-events.js';
+} from '../request-events.js';
 import {
   OXYGEN_HEADERS_MAP,
   SUBREQUEST_PROFILER_ENDPOINT,
   logRequestLine,
-} from '../common.js';
+} from '../mini-oxygen/common.js';
 import {
   PRIVATE_WORKERD_INSPECTOR_PORT,
   OXYGEN_WORKERD_COMPAT_PARAMS,
-} from '../workerd.js';
-import {findPort} from '../../find-port.js';
-import {createInspectorConnector} from '../workerd-inspector.js';
-import {MiniOxygenOptions} from '../types.js';
+} from '../mini-oxygen/workerd.js';
+import {findPort} from '../find-port.js';
+import {createInspectorConnector} from '../mini-oxygen/workerd-inspector.js';
+import {MiniOxygenOptions} from '../mini-oxygen/types.js';
 
 import type {ViteEnv} from './client.js';
 const clientPath = fileURLToPath(new URL('./client.js', import.meta.url));
