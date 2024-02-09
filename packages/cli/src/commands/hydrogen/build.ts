@@ -46,7 +46,7 @@ export default class Build extends Command {
     path: commonFlags.path,
     sourcemap: Flags.boolean({
       description:
-        'Controls wether sourcemaps are generated. Default to true, use `--no-sourcemaps` to disable.',
+        'Controls whether sourcemaps are generated. Default to true, use `--no-sourcemaps` to disable.',
       env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
       allowNo: true,
       default: true,

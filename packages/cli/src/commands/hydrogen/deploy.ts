@@ -14,7 +14,6 @@ import {
   GitDirectoryNotCleanError,
 } from '@shopify/cli-kit/node/git';
 import {resolvePath} from '@shopify/cli-kit/node/path';
-import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 import {
   renderFatalError,
   renderSelectPrompt,
@@ -74,11 +73,10 @@ export default class Deploy extends Command {
       required: false,
       default: false,
     }),
-    'custom-build': Flags.boolean({
+    'build-command': Flags.string({
       description:
-        'Use the build command specified in package.json to build the project.',
+        'Specify a build command to run before deploying. If not specified, `shopify hydrogen build` will be used.',
       required: false,
-      default: false,
     }),
     'lockfile-check': commonFlags.lockfileCheck,
     path: commonFlags.path,
@@ -153,7 +151,7 @@ export default class Deploy extends Command {
 
 interface OxygenDeploymentOptions {
   authBypassToken: boolean;
-  customBuild: boolean;
+  buildCommand?: string;
   defaultEnvironment: boolean;
   environmentTag?: string;
   force: boolean;
@@ -197,7 +195,7 @@ export async function oxygenDeploy(
 ): Promise<void> {
   const {
     authBypassToken: generateAuthBypassToken,
-    customBuild,
+    buildCommand,
     defaultEnvironment,
     environmentTag,
     force: forceOnUncommitedChanges,
@@ -411,7 +409,9 @@ export async function oxygenDeploy(
     },
   };
 
-  if (!customBuild) {
+  if (buildCommand) {
+    config.buildCommand = buildCommand;
+  } else {
     hooks.buildFunction = async (
       assetPath: string | undefined,
     ): Promise<void> => {
@@ -426,23 +426,6 @@ export async function oxygenDeploy(
         useCodegen: false,
       });
     };
-  } else {
-    const packageManager = await getPackageManager(path);
-    const buildCommands = {
-      npm: 'npm run build',
-      yarn: 'yarn build',
-      pnpm: 'pnpm run build',
-      bun: 'bun build',
-      unknown: 'npm run build', // default to using npm
-    };
-
-    config.buildCommand = buildCommands[packageManager];
-
-    if (packageManager === 'unknown') {
-      outputWarn(
-        "Could not determine the package manager used in this project. Defaulting to 'npm run build'.",
-      );
-    }
   }
 
   const uploadStart = async () => {

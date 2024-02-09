@@ -19,7 +19,7 @@
         "sourcemap": {
           "name": "sourcemap",
           "type": "boolean",
-          "description": "Controls wether sourcemaps are generated. Default to true, use `--no-sourcemaps` to disable.",
+          "description": "Controls whether sourcemaps are generated. Default to true, use `--no-sourcemaps` to disable.",
           "allowNo": true
         },
         "bundle-stats": {
@@ -171,12 +171,12 @@
           "required": false,
           "allowNo": false
         },
-        "custom-build": {
-          "name": "custom-build",
-          "type": "boolean",
-          "description": "Use the build command specified in package.json to build the project.",
+        "build-command": {
+          "name": "build-command",
+          "type": "option",
+          "description": "Specify a build command to run before deploying. If not specified, `shopify hydrogen build` will be used.",
           "required": false,
-          "allowNo": false
+          "multiple": false
         },
         "lockfile-check": {
           "name": "lockfile-check",

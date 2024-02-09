@@ -14,7 +14,6 @@ import {
   getLatestGitCommit,
   GitDirectoryNotCleanError,
 } from '@shopify/cli-kit/node/git';
-import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 
 import {deploymentLogger, oxygenDeploy} from './deploy.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
@@ -29,7 +28,6 @@ import {runBuild} from './build.js';
 vi.mock('@shopify/oxygen-cli/deploy');
 vi.mock('@shopify/cli-kit/node/fs');
 vi.mock('@shopify/cli-kit/node/context/local');
-vi.mock('@shopify/cli-kit/node/node-package-manager');
 vi.mock('../../lib/get-oxygen-deployment-data.js');
 vi.mock('./build.js');
 vi.mock('../../lib/auth.js');
@@ -87,7 +85,6 @@ describe('deploy', () => {
 
   const deployParams = {
     authBypassToken: true,
-    customBuild: false,
     defaultEnvironment: false,
     force: false,
     lockfileCheck: false,
@@ -375,12 +372,11 @@ describe('deploy', () => {
     });
   });
 
-  it('passes a build command to createDeploy when the custom-build flag is used', async () => {
+  it('passes a build command to createDeploy when the build-command flag is used', async () => {
     const params = {
       ...deployParams,
-      customBuild: true,
+      buildCommand: 'hocus pocus',
     };
-    vi.mocked(getPackageManager).mockResolvedValueOnce('yarn');
     const {buildFunction: _, ...hooks} = expectedHooks;
 
     await oxygenDeploy(params);
@@ -388,7 +384,7 @@ describe('deploy', () => {
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
       config: {
         ...expectedConfig,
-        buildCommand: 'yarn build',
+        buildCommand: 'hocus pocus',
       },
       hooks: hooks,
       logger: deploymentLogger,
