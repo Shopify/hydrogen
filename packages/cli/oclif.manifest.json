@@ -226,6 +226,13 @@
           "hidden": true,
           "required": false,
           "multiple": false
+        },
+        "environment-file": {
+          "name": "environment-file",
+          "type": "option",
+          "description": "Path to an environment file to override existing environment variables for the deployment.",
+          "required": false,
+          "multiple": false
         }
       },
       "args": {}
