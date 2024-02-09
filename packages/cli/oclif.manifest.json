@@ -20,8 +20,7 @@
           "name": "entry",
           "type": "option",
           "description": "Entry file for the worker. Defaults to `./server`.",
-          "multiple": false,
-          "default": "./server"
+          "multiple": false
         },
         "sourcemap": {
           "name": "sourcemap",
@@ -326,8 +325,7 @@
           "name": "entry",
           "type": "option",
           "description": "Entry file for the worker. Defaults to `./server`.",
-          "multiple": false,
-          "default": "./server"
+          "multiple": false
         },
         "port": {
           "name": "port",

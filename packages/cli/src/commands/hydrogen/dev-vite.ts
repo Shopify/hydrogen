@@ -1,6 +1,6 @@
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
+import {outputDebug} from '@shopify/cli-kit/node/output';
 import {enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
 import {
   commonFlags,
@@ -9,18 +9,16 @@ import {
 } from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
-import {startMiniOxygenVite} from '../../lib/mini-oxygen/vite/server.js';
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
-import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
-
 import type {RemixPluginContext} from '@remix-run/dev/dist/vite/plugin.js';
-import {setConstructors} from '../../lib/request-events.js';
+import type {HydrogenPluginContext} from '../../lib/vite/plugin.js';
+import {AbortError} from '@shopify/cli-kit/node/error';
 
 export default class DevVite extends Command {
   static description =
@@ -75,7 +73,7 @@ export default class DevVite extends Command {
 }
 
 type DevOptions = {
-  entry: string;
+  entry?: string;
   port: number;
   path?: string;
   codegen?: boolean;
@@ -91,7 +89,7 @@ type DevOptions = {
 };
 
 export async function runDev({
-  entry,
+  entry: ssrEntry,
   port: appPort,
   path: appPath,
   host,
@@ -100,7 +98,6 @@ export async function runDev({
   disableVirtualRoutes,
   envBranch,
   debug = false,
-  sourcemap = true,
   disableVersionCheck = false,
   inspectorPort,
   isLocalDev = false,
@@ -113,25 +110,26 @@ export async function runDev({
 
   const envPromise = getConfig(root).then(({shop, storefront}) => {
     const fetchRemote = !!shop && !!storefront?.id;
-    return getAllEnvironmentVariables({root, fetchRemote, envBranch});
+    // Vite already reads .env files so we only need to fetch remote variables.
+    return fetchRemote
+      ? getAllEnvironmentVariables({root, fetchRemote, envBranch})
+      : {};
   });
 
   const vite = await import('vite');
 
+  // Allow Vite to read files from the Hydrogen packages in local development.
+  const fs = isLocalDev
+    ? {allow: [root, fileURLToPath(new URL('../../../../', import.meta.url))]}
+    : undefined;
+
   const viteServer = await vite.createServer({
     root,
-    server: {
-      host: host ? true : undefined,
-      fs: isLocalDev
-        ? {
-            // Hydrogen packages
-            allow: [
-              root,
-              fileURLToPath(new URL('../../../../', import.meta.url)),
-            ],
-          }
-        : undefined,
-    },
+    server: {fs, host: host ? true : undefined},
+    // @ts-expect-error Pass custom config properties for the plugin
+    __hydrogenPluginContext: {
+      cliOptions: {envPromise, inspectorPort, debug, ssrEntry},
+    } satisfies HydrogenPluginContext,
   });
 
   process.once('SIGTERM', async () => {
@@ -141,6 +139,14 @@ export async function runDev({
       process.exit();
     }
   });
+
+  if (!viteServer.config.plugins.find((plugin) => plugin.name === 'h2:main')) {
+    await viteServer.close();
+    throw new AbortError(
+      'Hydrogen plugin not found.',
+      'Add `hydrogen()` plugin to your Vite config.',
+    );
+  }
 
   let appDirectory = path.join(root, 'app');
 
@@ -221,17 +227,6 @@ export async function runDev({
     viteServer.resolvedUrls!.local[0] ?? viteServer.resolvedUrls!.network[0]!,
   );
 
-  setConstructors({Response: globalThis.Response});
-
-  const disposeMiniOxygen = await startMiniOxygenVite({
-    debug,
-    inspectorPort,
-    env: await envPromise,
-    viteServer,
-    publicUrl,
-    workerEntryFile: entry,
-  });
-
   // Start the public facing server with the port passed by the user.
   enhanceH2Logs({rootDirectory: root, host: publicUrl.toString()});
 
@@ -247,8 +242,7 @@ export async function runDev({
   return {
     async close() {
       codegenProcess?.kill(0);
-      await disposeMiniOxygen();
-      viteServer.close();
+      await viteServer.close();
     },
   };
 }

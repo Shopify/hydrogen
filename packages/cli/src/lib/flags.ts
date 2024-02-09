@@ -108,7 +108,6 @@ export const commonFlags = {
   entry: Flags.string({
     description: 'Entry file for the worker. Defaults to `./server`.',
     env: 'SHOPIFY_HYDROGEN_FLAG_ENTRY',
-    default: './server',
   }),
 };
 

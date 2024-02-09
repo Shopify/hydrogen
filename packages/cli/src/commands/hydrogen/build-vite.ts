@@ -94,7 +94,7 @@ type RunBuildOptions = {
 };
 
 export async function runViteBuild({
-  entry = commonFlags.entry.default as string | undefined,
+  entry: ssrEntry,
   directory,
   useCodegen = false,
   codegenConfigPath,
@@ -152,7 +152,7 @@ export async function runViteBuild({
     ...commonConfig,
     build: {
       sourcemap,
-      ssr: entry,
+      ssr: ssrEntry ?? true,
       emptyOutDir: false,
       copyPublicDir: false,
     },
