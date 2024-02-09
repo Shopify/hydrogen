@@ -79,7 +79,10 @@
   "bin": "dist/create-app.js",
   "exports": {
     "./package.json": "./package.json",
-    "./commands/hydrogen/init": "./dist/commands/hydrogen/init.js"
+    "./commands/hydrogen/init": {
+      "types": "./dist/commands/hydrogen/init.d.ts",
+      "default": "./dist/commands/hydrogen/init.js"
+    }
   },
   "files": [
     "dist",

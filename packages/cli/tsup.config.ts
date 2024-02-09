@@ -21,10 +21,6 @@ const commonConfig = defineConfig({
   sourcemap: false,
   publicDir: 'templates',
   clean: false, // Avoid deleting the assets folder
-  // Weird bug:
-  // When `dts: true`, Tsup will remove all the d.ts files copied to `dist`
-  // during `onSuccess` callbacks, thus removing part of the starter templates.
-  dts: false,
 });
 
 const outDir = 'dist';
@@ -34,6 +30,8 @@ export default defineConfig([
     ...commonConfig,
     entry: ['src/**/*.ts', '!src/lib/vite/client.ts'],
     outDir,
+    // Generate types only for the exposed entry points
+    dts: {entry: ['src/commands/hydrogen/init.ts']},
     async onSuccess() {
       // Copy TS templates
       const i18nTemplatesPath = 'lib/setups/i18n/templates';
@@ -61,6 +59,7 @@ export default defineConfig([
     outDir: 'dist/lib/vite',
     format: 'esm',
     noExternal: [/./],
+    dts: false,
     esbuildPlugins: [esbuildNoSideEffectPlugin(['picomatch'])],
   },
   {
@@ -68,6 +67,7 @@ export default defineConfig([
     entry: ['src/virtual-routes/**/*.tsx'],
     outDir: `${outDir}/virtual-routes`,
     outExtension: () => ({js: '.jsx'}),
+    dts: false,
     async onSuccess() {
       const filterArtifacts = (filepath: string) =>
         !/node_modules|\.shopify|\.cache|\.turbo|build|dist/gi.test(filepath);
