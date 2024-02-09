@@ -68,7 +68,13 @@ export async function startWorkerdServer({
   const handleAssets = createAssetHandler(assetsPort);
   const staticAssetExtensions = STATIC_ASSET_EXTENSIONS.slice();
 
-  let stringifiedOxygenHandler = miniOxygenHandler.toString();
+  let stringifiedOxygenHandler = miniOxygenHandler
+    .toString()
+    .replace(
+      'SUBREQUEST_PROFILER_ENDPOINT',
+      JSON.stringify(SUBREQUEST_PROFILER_ENDPOINT),
+    );
+
   if (process.env.NODE_ENV === 'test') {
     // Vitest adds namespaces to imports
     stringifiedOxygenHandler = stringifiedOxygenHandler.replace(
