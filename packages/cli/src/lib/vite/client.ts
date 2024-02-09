@@ -27,27 +27,21 @@ export interface ViteEnv {
   __VITE_ROOT: string;
   __VITE_CODE_LINE_OFFSET: string;
   __VITE_HMR_URL: string;
-  __VITE_FETCH_MODULE_URL: string;
+  __VITE_FETCH_MODULE_PATHNAME: string;
   __VITE_RUNTIME_EXECUTE_URL: string;
   __VITE_UNSAFE_EVAL: UnsafeEval;
-  __VITE_WARMUP_URL: string;
+  __VITE_WARMUP_PATHNAME: string;
 }
-
-let runner: WorkerdRunner;
-let runtime: ViteRuntime;
 
 export default {
   async fetch(request: Request, env: ViteEnv, ctx: any) {
-    // Set up runtime and runner.
-    setupEnvironment(env);
+    const url = new URL(request.url);
 
     // Fetch the app's entry module and cache it. E.g. `<root>/server.ts`
-    const module = await runtime.executeEntrypoint(
-      env.__VITE_RUNTIME_EXECUTE_URL,
-    );
+    const module = await fetchEntryModule(url, env);
 
-    // Return early for warmup requests after runtime cache is filled.
-    if (request.url === env.__VITE_WARMUP_URL) {
+    // Return early for warmup requests after loading the entry module.
+    if (url.pathname === env.__VITE_WARMUP_PATHNAME) {
       return new globalThis.Response(null);
     }
 
@@ -65,10 +59,9 @@ export default {
   },
 };
 
-function setupEnvironment(env: ViteEnv) {
-  if (!runner || !runtime) {
-    runner = new WorkerdRunner();
-
+let runtime: ViteRuntime & {runner: WorkerdRunner};
+function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
+  if (!runtime) {
     let onHmrRecieve: ((payload: HMRPayload) => void) | undefined;
 
     let hmrReady = false;
@@ -87,7 +80,7 @@ function setupEnvironment(env: ViteEnv) {
         fetchModule: (id, importer) => {
           // Do not use WS here because the payload can exceed the limit
           // of WS in workerd. Instead, use fetch to get the module:
-          const url = new URL(env.__VITE_FETCH_MODULE_URL);
+          const url = new URL(env.__VITE_FETCH_MODULE_PATHNAME, publicUrl);
           url.searchParams.set('id', id);
           if (importer) url.searchParams.set('importer', importer);
 
@@ -106,12 +99,16 @@ function setupEnvironment(env: ViteEnv) {
           } satisfies HMRRuntimeConnection,
         },
       },
-      runner,
-    );
+      new WorkerdRunner(),
+    ) as ViteRuntime & {runner: WorkerdRunner};
   }
 
-  runner.unsafeEval = env.__VITE_UNSAFE_EVAL;
-  runner.codeLineOffset = Number(env.__VITE_CODE_LINE_OFFSET);
+  runtime.runner.unsafeEval = env.__VITE_UNSAFE_EVAL;
+  runtime.runner.codeLineOffset = Number(env.__VITE_CODE_LINE_OFFSET);
+
+  return runtime.executeEntrypoint(env.__VITE_RUNTIME_EXECUTE_URL) as Promise<{
+    default: {fetch: ExportedHandlerFetchHandler};
+  }>;
 }
 
 type UnsafeEval = {
@@ -219,7 +216,7 @@ Error.prepareStackTrace = (error, stacks) => {
               );
               if (key === 'getFileName' && typeof result === 'string') {
                 const realFilename =
-                  runner.getGetRealFilenameFromEscapedId(result);
+                  runtime.runner.getGetRealFilenameFromEscapedId(result);
                 return realFilename ?? result;
               }
               return result;
