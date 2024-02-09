@@ -142,7 +142,7 @@ export async function startMiniOxygenVite({
       // which transpiles/prepares the source code into valid JS, and
       // send it back so that workerd can evaluate/run it.
 
-      const url = new URL(req.url!, 'http://localhost');
+      const url = new URL(req.url!, publicUrl);
       const id = url.searchParams.get('id');
       const importer = url.searchParams.get('importer') ?? undefined;
 

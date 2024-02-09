@@ -33,33 +33,37 @@ export interface ViteEnv {
   __VITE_WARMUP_URL: string;
 }
 
+let runner: WorkerdRunner;
+let runtime: ViteRuntime;
+
 export default {
   async fetch(request: Request, env: ViteEnv, ctx: any) {
+    // Set up runtime and runner.
     setupEnvironment(env);
 
-    // Fetch the app's entry module
+    // Fetch the app's entry module and cache it. E.g. `<root>/server.ts`
     const module = await runtime.executeEntrypoint(
       env.__VITE_RUNTIME_EXECUTE_URL,
     );
 
+    // Return early for warmup requests after runtime cache is filled.
     if (request.url === env.__VITE_WARMUP_URL) {
       return new globalThis.Response(null);
     }
 
-    const appEnv = Object.keys(env).reduce((acc, key) => {
-      if (!key.startsWith('__VITE_')) {
-        acc[key] = env[key as keyof typeof env];
-      }
+    // Clean up variables that are only used for dev orchestration.
+    const appEnv = (Object.keys(env) as Array<keyof typeof env>).reduce(
+      (acc, key) => {
+        if (!key.startsWith('__VITE_')) acc[key] = env[key];
+        return acc;
+      },
+      {} as Record<string, any>,
+    );
 
-      return acc;
-    }, {} as Record<string, any>);
-
+    // Execute the user app's entry module.
     return module.default.fetch(request, appEnv, ctx);
   },
 };
-
-let runner: WorkerdRunner;
-let runtime: ViteRuntime;
 
 function setupEnvironment(env: ViteEnv) {
   if (!runner || !runtime) {
@@ -68,19 +72,21 @@ function setupEnvironment(env: ViteEnv) {
     let onHmrRecieve: ((payload: HMRPayload) => void) | undefined;
 
     let hmrReady = false;
-    connectHmrWsClient(env).then((hmrWs) => {
-      hmrReady = true;
-      hmrWs.addEventListener('message', (message) => {
-        onHmrRecieve?.(JSON.parse(message.data?.toString()));
-      });
-    });
+    connectHmrWsClient(env)
+      .then((hmrWs) => {
+        hmrReady = true;
+        hmrWs.addEventListener('message', (message) => {
+          onHmrRecieve?.(JSON.parse(message.data?.toString()));
+        });
+      })
+      .catch((error) => console.error(error));
 
     runtime = new ViteRuntime(
       {
         root: env.__VITE_ROOT,
         fetchModule: (id, importer) => {
-          // Do not use WS here because the payload can exceed the limit of WS in workerd.
-          // Instead, use fetch to get the module:
+          // Do not use WS here because the payload can exceed the limit
+          // of WS in workerd. Instead, use fetch to get the module:
           const url = new URL(env.__VITE_FETCH_MODULE_URL);
           url.searchParams.set('id', id);
           if (importer) url.searchParams.set('importer', importer);
@@ -184,17 +190,17 @@ class WorkerdRunner implements ViteModuleRunner {
   }
 }
 
-async function connectHmrWsClient(env: ViteEnv) {
-  const response = (await fetch(env.__VITE_HMR_URL, {
+function connectHmrWsClient(env: ViteEnv) {
+  return fetch(env.__VITE_HMR_URL, {
     headers: {Upgrade: 'websocket'},
-  })) as unknown as Response;
+  }).then((response: unknown) => {
+    const ws = (response as Response).webSocket;
 
-  const ws = response.webSocket;
-  if (!ws) throw new Error('ws failed to connect');
+    if (!ws) throw new Error('Failed to connect to HMR server.');
 
-  ws.accept();
-
-  return ws;
+    ws.accept();
+    return ws;
+  });
 }
 
 // Fix sourcemaps
