@@ -181,11 +181,6 @@ aside li {
   margin-top: auto;
 }
 
-.footer-menu-missing {
-  display: inline-block;
-  margin: 1rem;
-}
-
 .footer-menu {
   align-items: center;
   display: flex;
