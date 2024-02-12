@@ -169,6 +169,20 @@ shop-pay-button {
     }
   }
 
+  .strike-diagonal {
+    position: relative;
+  &:before {
+     position: absolute;
+     content: '';
+     left: 0;
+     top: 50%;
+     right: 0;
+     border-top: 1px solid rgb(var(--color-contrast) / 0.6);
+     border-bottom: 1px solid rgb(var(--color-primary) / 0.3);
+     transform: skewY(-45deg);
+   }
+  }
+
   .card-image {
     @apply relative flex items-center justify-center overflow-clip rounded;
     &::before {

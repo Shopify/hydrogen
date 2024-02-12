@@ -251,6 +251,9 @@ export function ProductForm({
               >
                 <Heading as="legend" size="lead" className="min-w-[4rem]">
                   {option.name}
+                  {option.name === 'Color' && (
+                    <span className="font-medium px-1">: {option.value}</span>
+                  )}
                 </Heading>
                 <div className="flex flex-wrap items-baseline gap-4">
                   {option.values.length > 7 ? (
@@ -311,22 +314,46 @@ export function ProductForm({
                       </Listbox>
                     </div>
                   ) : (
-                    option.values.map(({value, isAvailable, isActive, to}) => (
-                      <Link
-                        key={option.name + value}
-                        to={to}
-                        preventScrollReset
-                        prefetch="intent"
-                        replace
-                        className={clsx(
-                          'leading-none py-1 border-b-[1.5px] cursor-pointer transition-all duration-200',
-                          isActive ? 'border-primary/50' : 'border-primary/0',
-                          isAvailable ? 'opacity-100' : 'opacity-50',
-                        )}
-                      >
-                        {value}
-                      </Link>
-                    ))
+                    option.values.map(({value, isAvailable, isActive, to}) => {
+                      return option.name === 'Color' ? (
+                        <Link
+                          key={option.name + value}
+                          to={to}
+                          preventScrollReset
+                          prefetch="intent"
+                          replace
+                          className={clsx(
+                            'p-1 bg-secondary border-[1.5px] cursor-pointer transition-all duration-200',
+                            isActive
+                              ? 'border-primary/60'
+                              : 'border-primary/10',
+                          )}
+                        >
+                          <div
+                            className={clsx(
+                              'product-options-item border border-primary/20 w-[38px] h-[38px]',
+                              isAvailable ? 'opacity-100' : 'strike-diagonal',
+                            )}
+                            style={{backgroundColor: value}}
+                          />
+                        </Link>
+                      ) : (
+                        <Link
+                          key={option.name + value}
+                          to={to}
+                          preventScrollReset
+                          prefetch="intent"
+                          replace
+                          className={clsx(
+                            'leading-none py-1 border-b-[1.5px] cursor-pointer transition-all duration-200',
+                            isActive ? 'border-primary/50' : 'border-primary/0',
+                            isAvailable ? 'opacity-100' : 'opacity-50',
+                          )}
+                        >
+                          {value}
+                        </Link>
+                      );
+                    })
                   )}
                 </div>
               </div>
