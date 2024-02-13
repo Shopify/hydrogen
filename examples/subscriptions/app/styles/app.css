@@ -387,11 +387,6 @@ aside li {
   margin-top: 0;
 }
 
-.product-images {
-  display: grid;
-  grid-gap: 1rem;
-}
-
 .product-image img {
   height: auto;
   width: 100%;
@@ -458,10 +453,6 @@ aside li {
 * routes/account
 * --------------------------------------------------
 */
-.account-profile-marketing {
-  display: flex;
-  align-items: center;
-}
 
 .account-logout {
   display: inline-block;
