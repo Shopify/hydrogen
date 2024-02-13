@@ -5,35 +5,17 @@ import {
   startMiniOxygenRuntime,
   type MiniOxygen,
 } from './server.js';
-
-export type HydrogenPluginContext = {
-  cliOptions?: Partial<
-    HydrogenPluginOptions & {
-      envPromise: Promise<Record<string, any>>;
-    }
-  >;
-};
-
-export type HydrogenPluginOptions = {
-  ssrEntry?: string;
-  debug?: boolean;
-  inspectorPort?: number;
-};
-
-const DEFAULT_SSR_ENTRY = './server';
+import {
+  getCliOptions,
+  DEFAULT_SSR_ENTRY,
+  type HydrogenPluginOptions,
+} from './shared.js';
 
 export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
-  let cliOptions: HydrogenPluginContext['cliOptions'];
-
   return [
     {
       name: 'h2:main',
       config(config, env) {
-        // Inline config passed by the CLI
-        cliOptions = (
-          (config as any).__hydrogenPluginContext as HydrogenPluginContext
-        )?.cliOptions;
-
         return {
           appType: 'custom',
           // When building, the CLI will set the `ssr` option to `true`
@@ -65,12 +47,11 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
       configureServer(viteDevServer) {
         // Get the value from the CLI, which downloads variables
         // from Oxygen and merges them with the local .env file.
+        const cliOptions = getCliOptions(viteDevServer.config);
         const envPromise = cliOptions?.envPromise ?? Promise.resolve();
 
         let miniOxygen: MiniOxygen;
         const miniOxygenPromise = envPromise.then((remoteEnv) => {
-          if (remoteEnv) console.log(''); // Add a newline after the CLI output
-
           return startMiniOxygenRuntime({
             viteDevServer,
             env: {...remoteEnv, ...viteDevServer.config.env},

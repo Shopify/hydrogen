@@ -8,7 +8,9 @@ import {
   overrideFlag,
 } from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
+import {AbortError} from '@shopify/cli-kit/node/error';
 import {Flags} from '@oclif/core';
+import type {RemixPluginContext} from '@remix-run/dev/dist/vite/plugin.js';
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
@@ -16,9 +18,7 @@ import {getConfig} from '../../lib/shopify-config.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
-import type {RemixPluginContext} from '@remix-run/dev/dist/vite/plugin.js';
-import type {HydrogenPluginContext} from '../../lib/vite/plugin.js';
-import {AbortError} from '@shopify/cli-kit/node/error';
+import {setHydrogenPluginContext} from '../../lib/vite/shared.js';
 
 export default class DevVite extends Command {
   static description =
@@ -112,7 +112,12 @@ export async function runDev({
     const fetchRemote = !!shop && !!storefront?.id;
     // Vite already reads .env files so we only need to fetch remote variables.
     return fetchRemote
-      ? getAllEnvironmentVariables({root, fetchRemote, envBranch})
+      ? getAllEnvironmentVariables({root, fetchRemote, envBranch}).then(
+          (env) => {
+            console.log(''); // Add a newline after the CLI output
+            return env;
+          },
+        )
       : {};
   });
 
@@ -126,10 +131,9 @@ export async function runDev({
   const viteServer = await vite.createServer({
     root,
     server: {fs, host: host ? true : undefined},
-    // @ts-expect-error Pass custom config properties for the plugin
-    __hydrogenPluginContext: {
+    ...setHydrogenPluginContext({
       cliOptions: {envPromise, inspectorPort, debug, ssrEntry},
-    } satisfies HydrogenPluginContext,
+    }),
   });
 
   process.once('SIGTERM', async () => {
