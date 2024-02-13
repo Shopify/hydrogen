@@ -17,7 +17,7 @@ import type {HMRPayload} from 'vite';
 
 export interface ViteEnv {
   __VITE_ROOT: string;
-  __VITE_HMR_URL: string;
+  __VITE_OVERWRITE_HMR_URL: string;
   __VITE_FETCH_MODULE_PATHNAME: string;
   __VITE_RUNTIME_EXECUTE_URL: string;
   __VITE_WARMUP_PATHNAME: string;
@@ -28,6 +28,8 @@ export interface ViteEnv {
     newAsyncFunction(code: string, name?: string, ...args: string[]): Function;
   };
 }
+
+const O2_PREFIX = '[o2:runtime]';
 
 export default {
   /**
@@ -75,11 +77,19 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
     let onHmrRecieve: ((payload: HMRPayload) => void) | undefined;
 
     let hmrReady = false;
-    connectHmrWsClient(env)
+    connectHmrWsClient(publicUrl, env)
       .then((hmrWs) => {
-        hmrReady = true;
-        hmrWs.addEventListener('message', (message) => {
-          onHmrRecieve?.(JSON.parse(message.data?.toString()));
+        hmrReady = !!hmrWs;
+        hmrWs?.addEventListener('message', (message) => {
+          if (onHmrRecieve) {
+            let data = JSON.parse(message.data?.toString());
+            if (data?.type === 'update') {
+              // TODO: handle partial updates
+              data = {type: 'full-reload', path: '*'};
+            }
+
+            onHmrRecieve(data);
+          }
         });
       })
       .catch((error) => console.error(error));
@@ -115,7 +125,7 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
           // Might need to implement this in the future if we enable `nodejs_compat` flag,
           // or add custom Oxygen runtime modules (e.g. `import kv from 'oxygen:kv';`).
           throw new Error(
-            `[o2:runtime] External modules are not supported: "${filepath}"`,
+            `${O2_PREFIX} External modules are not supported: "${filepath}"`,
           );
         },
 
@@ -125,7 +135,7 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
           id: string,
         ): Promise<any> {
           if (!env.__VITE_UNSAFE_EVAL) {
-            throw new Error('[o2:runtime] unsafeEval module is not set');
+            throw new Error(`${O2_PREFIX} unsafeEval module is not set`);
           }
 
           // We can't use `newAsyncFunction` here because it uses the `id`
@@ -161,13 +171,13 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
  * Note: HMR in the server is just for invalidating modules
  * in workerd/ViteRuntime cache, not to refresh the browser.
  */
-function connectHmrWsClient(env: ViteEnv) {
-  return fetch(env.__VITE_HMR_URL, {
+function connectHmrWsClient(url: URL, env: ViteEnv) {
+  return fetch(env.__VITE_OVERWRITE_HMR_URL || url.origin, {
     headers: {Upgrade: 'websocket'},
   }).then((response: unknown) => {
     const ws = (response as Response).webSocket;
 
-    if (!ws) throw new Error('[o2:runtime] Failed to connect to HMR server');
+    if (!ws) throw new Error(`${O2_PREFIX} Failed to connect to HMR server`);
 
     ws.accept();
     return ws;

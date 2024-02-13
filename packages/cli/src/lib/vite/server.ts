@@ -1,9 +1,4 @@
-import {
-  fetchModule,
-  type HMRChannel,
-  type HMRPayload,
-  type ViteDevServer,
-} from 'vite';
+import {fetchModule, type ViteDevServer} from 'vite';
 import path from 'node:path';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
@@ -11,7 +6,6 @@ import crypto from 'node:crypto';
 import {createRequire} from 'node:module';
 import {createFileReadStream} from '@shopify/cli-kit/node/fs';
 import {Miniflare, NoOpLog, Request, type Response} from 'miniflare';
-import {WebSocket, WebSocketServer} from 'ws';
 import {
   H2O_BINDING_NAME,
   createLogRequestEvent,
@@ -35,7 +29,6 @@ import {pipeFromWeb, toURL, toWeb} from './utils.js';
 import type {ViteEnv} from './client.js';
 const clientPath = fileURLToPath(new URL('./client.js', import.meta.url));
 
-const PRIVATE_WORKERD_HMR_PORT = 9400;
 const FETCH_MODULE_PATHNAME = '/__vite_fetch_module';
 const WARMUP_PATHNAME = '/__vite_warmup';
 
@@ -65,12 +58,21 @@ export async function startMiniOxygenRuntime({
   workerEntryFile,
 }: MiniOxygenViteOptions) {
   const scriptPromise = readFile(clientPath, 'utf-8');
-  const [publicInspectorPort, privateInspectorPort, privateHmrPort] =
-    await Promise.all([
-      findPort(inspectorPort),
-      findPort(PRIVATE_WORKERD_INSPECTOR_PORT),
-      findPort(PRIVATE_WORKERD_HMR_PORT),
-    ]);
+  const [publicInspectorPort, privateInspectorPort] = await Promise.all([
+    findPort(inspectorPort),
+    findPort(PRIVATE_WORKERD_INSPECTOR_PORT),
+  ]);
+
+  const configHmr = viteDevServer.config.server?.hmr;
+  const hmrPort = typeof configHmr !== 'boolean' && configHmr?.port;
+  const overwriteHmrUrl =
+    configHmr !== false && hmrPort ? `http://localhost:${hmrPort}` : '';
+
+  if (configHmr === false) {
+    console.warn(
+      'HMR is disabled. Code changes will not be reflected in either browser and server.',
+    );
+  }
 
   const mf = new Miniflare({
     cf: false,
@@ -83,7 +85,7 @@ export async function startMiniOxygenRuntime({
     script: await scriptPromise,
     scriptPath: path.join(
       viteDevServer.config.root,
-      '_virtual-server-entry.js',
+      '_virtual-o2-worker-entry.js',
     ),
     ...OXYGEN_WORKERD_COMPAT_PARAMS,
     bindings: {
@@ -91,7 +93,7 @@ export async function startMiniOxygenRuntime({
       __VITE_ROOT: viteDevServer.config.root,
       __VITE_RUNTIME_EXECUTE_URL: workerEntryFile,
       __VITE_FETCH_MODULE_PATHNAME: FETCH_MODULE_PATHNAME,
-      __VITE_HMR_URL: `http://localhost:${privateHmrPort}`,
+      __VITE_OVERWRITE_HMR_URL: overwriteHmrUrl,
       __VITE_WARMUP_PATHNAME: WARMUP_PATHNAME,
     } satisfies Omit<ViteEnv, '__VITE_UNSAFE_EVAL'>,
     unsafeEvalBinding: '__VITE_UNSAFE_EVAL',
@@ -104,17 +106,6 @@ export async function startMiniOxygenRuntime({
       // TODO: handle runtime stdio and remove inspector logs
     },
   });
-
-  const hmrChannel = new WssHmrChannel();
-  const wss = new WebSocketServer({host: 'localhost', port: privateHmrPort});
-  wss.on('connection', (ws) => {
-    hmrChannel.clients.add(ws);
-    ws.on('close', () => {
-      hmrChannel.clients.delete(ws);
-    });
-  });
-
-  viteDevServer.hot.addChannel(hmrChannel);
 
   const warmupWorkerdCache = () => {
     let viteUrl =
@@ -152,14 +143,11 @@ export async function startMiniOxygenRuntime({
 
   return {
     ready: mf.ready,
+    publicInspectorPort,
     dispatch: (webRequest: Request) => mf.dispatchFetch(webRequest),
     async dispose() {
       await mf.dispose();
-      await new Promise<void>((resolve, reject) =>
-        wss.close((err) => (err ? reject(err) : resolve())),
-      );
     },
-    publicInspectorPort,
   };
 }
 
@@ -256,35 +244,4 @@ export function setupOxygenHandlers(
         res.end();
       });
   });
-}
-
-class WssHmrChannel implements HMRChannel {
-  name = 'WssHmrChannel';
-  clients = new Set<WebSocket>();
-
-  listen(): void {}
-  close(): void {}
-  on(_event: unknown, _listener: unknown): void {}
-  off(_event: string, _listener: Function): void {}
-
-  send(arg0: unknown, arg1?: unknown): void {
-    let payload: HMRPayload;
-    if (typeof arg0 === 'string') {
-      payload = {
-        type: 'custom',
-        event: arg0,
-        data: arg1,
-      };
-    } else {
-      payload = arg0 as HMRPayload;
-      if (payload.type === 'update') {
-        // TODO: handle partial updates
-        payload = {type: 'full-reload', path: '*'};
-      }
-    }
-
-    this.clients.forEach((ws) => {
-      ws.send(JSON.stringify(payload));
-    });
-  }
 }
