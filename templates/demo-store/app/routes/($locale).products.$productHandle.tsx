@@ -240,11 +240,14 @@ export function ProductForm({
 
   /**
    * There's an additional permission: unauthenticated_read_product_inventory access inventory.
-   * You'll need to configure this from your private app in order to get anything useful for quantityAvailable.
    * https://shopify.dev/docs/api/usage/access-scopes
+   * You'll need to configure this from Storefront settings in your Hydrogen application.
+   * If you have enabled unauthenticated_read_product_inventory permission your can enable 'quantityAvailable' field
+   * in PRODUCT_VARIANT_FRAGMENT of PRODUCT_QUERY otherwise leave it disabled to avoid error
    */
   const quantityAvailable: number | null =
-    selectedVariant.quantityAvailable || null;
+    (selectedVariant as any).quantityAvailable || null;
+
   const priceWithQuantity = {
     amount: String(
       Number(selectedVariant?.price?.amount || 0) * productQuantity,
@@ -475,7 +478,9 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
   fragment ProductVariantFragment on ProductVariant {
     id
     availableForSale
-    quantityAvailable
+    #  If you have enabled unauthenticated_read_product_inventory permission your can enable 'quantityAvailable' field
+    #  otherwise leave it disabled to avoid error
+    #quantityAvailable
     selectedOptions {
       name
       value
