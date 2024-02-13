@@ -16,21 +16,4 @@ export default defineConfig({
   ],
   build: {minify: true},
   server: {port: 3000, hmr: {port: 3001}},
-  resolve: {conditions: ['worker', 'workerd']},
-  ssr: {
-    noExternal: true,
-    target: 'webworker',
-    optimizeDeps: {
-      include: [
-        'set-cookie-parser',
-        'cookie',
-        'content-security-policy-builder',
-        'react',
-        'react/jsx-runtime',
-        'react/jsx-dev-runtime',
-        'react-dom',
-        'react-dom/server',
-      ],
-    },
-  },
 });

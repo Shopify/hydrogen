@@ -33,6 +33,26 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
                       config.build?.ssr,
               },
             }),
+
+          ssr: {
+            optimizeDeps: {
+              // Add CJS dependencies that break code in workerd
+              // with errors like "require/module/exports is not defined":
+              include: [
+                // React deps:
+                'react',
+                'react/jsx-runtime',
+                'react/jsx-dev-runtime',
+                'react-dom',
+                'react-dom/server',
+                // Remix deps:
+                'set-cookie-parser',
+                'cookie',
+                // Hydrogen deps:
+                'content-security-policy-builder',
+              ],
+            },
+          },
         };
       },
       configureServer(viteDevServer) {
@@ -43,7 +63,17 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
     },
     {
       name: 'h2:oxygen-runtime',
-      apply: 'serve',
+      config() {
+        return {
+          resolve: {
+            conditions: ['worker', 'workerd'],
+          },
+          ssr: {
+            noExternal: true,
+            target: 'webworker',
+          },
+        };
+      },
       configureServer(viteDevServer) {
         // Get the value from the CLI, which downloads variables
         // from Oxygen and merges them with the local .env file.

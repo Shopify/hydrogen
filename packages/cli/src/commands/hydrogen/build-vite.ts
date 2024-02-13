@@ -127,9 +127,6 @@ export async function runViteBuild({
     root,
     mode: process.env.NODE_ENV,
     base: assetPath,
-    resolve: {
-      conditions: ['worker', 'workerd'],
-    },
   };
 
   // Avoid static imports because this file is imported by `deploy` command,
@@ -155,18 +152,6 @@ export async function runViteBuild({
       ssr: ssrEntry ?? true,
       emptyOutDir: false,
       copyPublicDir: false,
-    },
-    ssr: {
-      noExternal: true,
-      target: 'webworker',
-      optimizeDeps: {
-        include: [
-          'react',
-          'react/jsx-runtime',
-          'react-dom',
-          'react-dom/server',
-        ],
-      },
     },
   });
 
