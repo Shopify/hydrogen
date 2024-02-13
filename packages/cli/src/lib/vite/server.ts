@@ -1,4 +1,9 @@
-import {type HMRChannel, type HMRPayload, type ViteDevServer} from 'vite';
+import {
+  fetchModule,
+  type HMRChannel,
+  type HMRPayload,
+  type ViteDevServer,
+} from 'vite';
 import path from 'node:path';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
@@ -29,13 +34,6 @@ import {pipeFromWeb, toURL, toWeb} from './utils.js';
 
 import type {ViteEnv} from './client.js';
 const clientPath = fileURLToPath(new URL('./client.js', import.meta.url));
-
-const AsyncFunction = async function () {}.constructor as typeof Function;
-const fnDeclarationLineCount = (() => {
-  const body = '/*code*/';
-  const source = new AsyncFunction('a', 'b', body).toString();
-  return source.slice(0, source.indexOf(body)).split('\n').length - 1;
-})();
 
 const PRIVATE_WORKERD_HMR_PORT = 9400;
 const FETCH_MODULE_PATHNAME = '/__vite_fetch_module';
@@ -91,11 +89,10 @@ export async function startMiniOxygenRuntime({
     bindings: {
       ...env,
       __VITE_ROOT: viteDevServer.config.root,
-      __VITE_CODE_LINE_OFFSET: String(fnDeclarationLineCount),
       __VITE_RUNTIME_EXECUTE_URL: workerEntryFile,
       __VITE_FETCH_MODULE_PATHNAME: FETCH_MODULE_PATHNAME,
       __VITE_HMR_URL: `http://localhost:${privateHmrPort}`,
-      __VITE_WARMUP_PATHNAME: WARMUP_PATHNAME.toString(),
+      __VITE_WARMUP_PATHNAME: WARMUP_PATHNAME,
     } satisfies Omit<ViteEnv, '__VITE_UNSAFE_EVAL'>,
     unsafeEvalBinding: '__VITE_UNSAFE_EVAL',
     serviceBindings: {
@@ -216,7 +213,10 @@ export function setupOxygenHandlers(
       if (id) {
         res.setHeader('cache-control', 'no-store');
         res.setHeader('content-type', 'application/json');
-        viteDevServer.ssrFetchModule(id, importer).then((ssrModule) => {
+
+        // `fetchModule` is similar to `viteDevServer.ssrFetchModule`,
+        // but it treats source maps differently (avoids adding empty lines).
+        fetchModule(viteDevServer, id, importer).then((ssrModule) => {
           res.end(JSON.stringify(ssrModule));
         });
       } else {

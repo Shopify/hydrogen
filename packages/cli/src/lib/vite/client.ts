@@ -8,24 +8,18 @@
 
 import {
   ViteRuntime,
+  ssrModuleExportsKey,
   type ViteModuleRunner,
   type ViteRuntimeModuleContext,
-  ssrModuleExportsKey,
-  ssrImportMetaKey,
-  ssrImportKey,
-  ssrExportAllKey,
-  ssrDynamicImportKey,
   type ResolvedResult,
   type SSRImportMetadata,
   type HMRRuntimeConnection,
 } from 'vite/runtime';
 import type {Response} from 'miniflare';
 import type {HMRPayload} from 'vite';
-import {makeLegalIdentifier} from '@rollup/pluginutils';
 
 export interface ViteEnv {
   __VITE_ROOT: string;
-  __VITE_CODE_LINE_OFFSET: string;
   __VITE_HMR_URL: string;
   __VITE_FETCH_MODULE_PATHNAME: string;
   __VITE_RUNTIME_EXECUTE_URL: string;
@@ -77,6 +71,7 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
     runtime = new ViteRuntime(
       {
         root: env.__VITE_ROOT,
+        sourcemapInterceptor: 'prepareStackTrace',
         fetchModule: (id, importer) => {
           // Do not use WS here because the payload can exceed the limit
           // of WS in workerd. Instead, use fetch to get the module:
@@ -104,22 +99,21 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
   }
 
   runtime.runner.unsafeEval = env.__VITE_UNSAFE_EVAL;
-  runtime.runner.codeLineOffset = Number(env.__VITE_CODE_LINE_OFFSET);
 
   return runtime.executeEntrypoint(env.__VITE_RUNTIME_EXECUTE_URL) as Promise<{
     default: {fetch: ExportedHandlerFetchHandler};
   }>;
 }
 
+// Ref: https://github.com/cloudflare/workerd/blob/main/src/workerd/api/unsafe.h
 type UnsafeEval = {
+  eval(code: string, name?: string): Function;
+  newFunction(code: string, name?: string, ...args: string[]): Function;
   newAsyncFunction(code: string, name?: string, ...args: string[]): Function;
 };
 
 class WorkerdRunner implements ViteModuleRunner {
   unsafeEval: UnsafeEval | undefined;
-  codeLineOffset = 0;
-
-  private idMap = new Map<string, string[]>();
 
   async runViteModule(
     context: ViteRuntimeModuleContext,
@@ -128,38 +122,20 @@ class WorkerdRunner implements ViteModuleRunner {
   ): Promise<any> {
     if (!this.unsafeEval) throw new Error('unsafeEval module is not set');
 
-    const escapedId = makeLegalIdentifier(id);
-
-    if (!this.idMap.has(escapedId)) {
-      this.idMap.set(escapedId, []);
-    }
-
-    const idList = this.idMap.get(escapedId)!;
-    let idIndex = idList.indexOf(id);
-    if (idIndex < 0) {
-      idIndex = idList.push(id) - 1;
-    }
-
-    delete context[ssrImportMetaKey].filename;
-    delete context[ssrImportMetaKey].dirname;
-
-    const initModule = this.unsafeEval.newAsyncFunction(
-      '"use strict";' + '\n'.repeat(this.codeLineOffset) + code,
-      `${escapedId}_${idIndex}`,
-      ssrModuleExportsKey,
-      ssrImportMetaKey,
-      ssrImportKey,
-      ssrDynamicImportKey,
-      ssrExportAllKey,
+    // We can't use `newAsyncFunction` here because it uses the `id`
+    // as the function name AND for sourcemaps. The `id` contains
+    // symbols like `@`, `/` or `.` to make the sourcemaps work, but
+    // these symbols are not allowed in function names. Therefore,
+    // use `eval` instead with an anonymous function:
+    const initModule = this.unsafeEval.eval(
+      // 'use strict' is implied in ESM so we enable it here. Also, we
+      // add an extra block scope (`{}`) to allow redeclaring variables
+      // with the same name as the parameters.
+      `'use strict';async (${Object.keys(context).join(',')})=>{{${code}\n}}`,
+      id,
     );
 
-    await initModule(
-      context[ssrModuleExportsKey],
-      context[ssrImportMetaKey],
-      context[ssrImportKey],
-      context[ssrDynamicImportKey],
-      context[ssrExportAllKey],
-    );
+    await initModule(...Object.values(context));
 
     Object.freeze(context[ssrModuleExportsKey]);
   }
@@ -175,16 +151,6 @@ class WorkerdRunner implements ViteModuleRunner {
   ): Record<string, any> {
     return mod;
   }
-
-  getGetRealFilenameFromEscapedId(escapedIdWithSuffix: string) {
-    const match = escapedIdWithSuffix.match(/^(.+)_(\d+)$/);
-    if (!match) return undefined;
-
-    const escapedId = match[1] ?? '';
-    const number = Number(match[2]);
-
-    return this.idMap.get(escapedId)?.[number];
-  }
 }
 
 function connectHmrWsClient(env: ViteEnv) {
@@ -199,33 +165,3 @@ function connectHmrWsClient(env: ViteEnv) {
     return ws;
   });
 }
-
-// Fix sourcemaps
-const originalPrepareStackTrace = Error.prepareStackTrace!;
-Error.prepareStackTrace = (error, stacks) => {
-  const wrappedStacks = stacks.map(
-    (stack) =>
-      new Proxy(stack as any, {
-        get(target, key, receiver) {
-          const value = target[key];
-          if (value instanceof Function) {
-            return function (this: any, ...args: any[]) {
-              const result = value.apply(
-                this === receiver ? target : this,
-                args,
-              );
-              if (key === 'getFileName' && typeof result === 'string') {
-                const realFilename =
-                  runtime.runner.getGetRealFilenameFromEscapedId(result);
-                return realFilename ?? result;
-              }
-              return result;
-            };
-          }
-          return value;
-        },
-      }),
-  );
-
-  return originalPrepareStackTrace(error, wrappedStacks);
-};
