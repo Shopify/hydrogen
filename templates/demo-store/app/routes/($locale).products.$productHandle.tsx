@@ -39,6 +39,8 @@ import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 
 export const headers = routeHeaders;
 
+const VARIANT_OPTIONS_LIST_NUMBER = 7;
+
 export async function loader({params, request, context}: LoaderFunctionArgs) {
   const {productHandle} = params;
   invariant(productHandle, 'Missing productHandle param, check route filename');
@@ -251,9 +253,13 @@ export function ProductForm({
               >
                 <Heading as="legend" size="lead" className="min-w-[4rem]">
                   {option.name}
+                  {option.name === 'Color' &&
+                    option.values.length <= VARIANT_OPTIONS_LIST_NUMBER && (
+                      <span className="font-medium px-1">: {option.value}</span>
+                    )}
                 </Heading>
                 <div className="flex flex-wrap items-baseline gap-4">
-                  {option.values.length > 7 ? (
+                  {option.values.length > VARIANT_OPTIONS_LIST_NUMBER ? (
                     <div className="relative w-full">
                       <Listbox>
                         {({open}) => (
@@ -267,7 +273,15 @@ export function ProductForm({
                                   : 'rounded',
                               )}
                             >
-                              <span>{option.value}</span>
+                              <div className="flex items-center w-full">
+                                {option.name === 'Color' && (
+                                  <span
+                                    className="mr-2 border border-primary/20 w-6 h-6"
+                                    style={{backgroundColor: option.value}}
+                                  />
+                                )}
+                                <span>{option.value}</span>
+                              </div>
                               <IconCaret direction={open ? 'up' : 'down'} />
                             </Listbox.Button>
                             <Listbox.Options
@@ -295,6 +309,12 @@ export function ProductForm({
                                           closeRef.current.click();
                                         }}
                                       >
+                                        {option.name === 'Color' && (
+                                          <span
+                                            className="mr-2 border border-primary/20 w-6 h-6"
+                                            style={{backgroundColor: value}}
+                                          />
+                                        )}
                                         {value}
                                         {isActive && (
                                           <span className="ml-2">
@@ -311,22 +331,46 @@ export function ProductForm({
                       </Listbox>
                     </div>
                   ) : (
-                    option.values.map(({value, isAvailable, isActive, to}) => (
-                      <Link
-                        key={option.name + value}
-                        to={to}
-                        preventScrollReset
-                        prefetch="intent"
-                        replace
-                        className={clsx(
-                          'leading-none py-1 border-b-[1.5px] cursor-pointer transition-all duration-200',
-                          isActive ? 'border-primary/50' : 'border-primary/0',
-                          isAvailable ? 'opacity-100' : 'opacity-50',
-                        )}
-                      >
-                        {value}
-                      </Link>
-                    ))
+                    option.values.map(({value, isAvailable, isActive, to}) => {
+                      return option.name === 'Color' ? (
+                        <Link
+                          key={option.name + value}
+                          to={to}
+                          preventScrollReset
+                          prefetch="intent"
+                          replace
+                          className={clsx(
+                            'p-1 bg-secondary border-[1.5px] cursor-pointer transition-all duration-200',
+                            isActive
+                              ? 'border-primary/60'
+                              : 'border-primary/10',
+                          )}
+                        >
+                          <div
+                            className={clsx(
+                              'border border-primary/20 w-[38px] h-[38px]',
+                              isAvailable ? 'opacity-100' : 'strike-diagonal',
+                            )}
+                            style={{backgroundColor: value}}
+                          />
+                        </Link>
+                      ) : (
+                        <Link
+                          key={option.name + value}
+                          to={to}
+                          preventScrollReset
+                          prefetch="intent"
+                          replace
+                          className={clsx(
+                            'leading-none py-1 border-b-[1.5px] cursor-pointer transition-all duration-200',
+                            isActive ? 'border-primary/50' : 'border-primary/0',
+                            isAvailable ? 'opacity-100' : 'opacity-50',
+                          )}
+                        >
+                          {value}
+                        </Link>
+                      );
+                    })
                   )}
                 </div>
               </div>
