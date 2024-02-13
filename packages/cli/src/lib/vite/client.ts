@@ -9,10 +9,7 @@
 import {
   ViteRuntime,
   ssrModuleExportsKey,
-  type ViteModuleRunner,
   type ViteRuntimeModuleContext,
-  type ResolvedResult,
-  type SSRImportMetadata,
   type HMRRuntimeConnection,
 } from 'vite/runtime';
 import type {Response} from 'miniflare';
@@ -23,11 +20,19 @@ export interface ViteEnv {
   __VITE_HMR_URL: string;
   __VITE_FETCH_MODULE_PATHNAME: string;
   __VITE_RUNTIME_EXECUTE_URL: string;
-  __VITE_UNSAFE_EVAL: UnsafeEval;
   __VITE_WARMUP_PATHNAME: string;
+  // Ref: https://github.com/cloudflare/workerd/blob/main/src/workerd/api/unsafe.h
+  __VITE_UNSAFE_EVAL: {
+    eval(code: string, name?: string): Function;
+    newFunction(code: string, name?: string, ...args: string[]): Function;
+    newAsyncFunction(code: string, name?: string, ...args: string[]): Function;
+  };
 }
 
 export default {
+  /**
+   * Worker entry module that wraps the user app's entry module.
+   */
   async fetch(request: Request, env: ViteEnv, ctx: any) {
     const url = new URL(request.url);
 
@@ -39,21 +44,32 @@ export default {
       return new globalThis.Response(null);
     }
 
-    // Clean up variables that are only used for dev orchestration.
-    const appEnv = (Object.keys(env) as Array<keyof typeof env>).reduce(
-      (acc, key) => {
-        if (!key.startsWith('__VITE_')) acc[key] = env[key];
-        return acc;
-      },
-      {} as Record<string, any>,
-    );
-
     // Execute the user app's entry module.
-    return module.default.fetch(request, appEnv, ctx);
+    return module.default.fetch(request, createUserEnv(env), ctx);
   },
 };
 
-let runtime: ViteRuntime & {runner: WorkerdRunner};
+/**
+ * Clean up variables that are only used for dev orchestration.
+ */
+function createUserEnv(env: ViteEnv) {
+  return Object.fromEntries(
+    Object.entries(env).filter(([key]) => !key.startsWith('__VITE_')),
+  );
+}
+
+/**
+ * The Vite runtime instance. It's a singleton because it's shared
+ * across all the requests to workerd and it's stateful (module cache).
+ */
+let runtime: ViteRuntime;
+
+/**
+ * Setup the whole Vite runtime and HMR the first time this function is called.
+ * Note: we can use the `env` object that comes from the first request even
+ * for subsequent requests, so there's no need to refresh the pointer.
+ * @returns The app's entry module.
+ */
 function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
   if (!runtime) {
     let onHmrRecieve: ((payload: HMRPayload) => void) | undefined;
@@ -94,72 +110,64 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
           } satisfies HMRRuntimeConnection,
         },
       },
-      new WorkerdRunner(),
-    ) as ViteRuntime & {runner: WorkerdRunner};
-  }
+      {
+        runExternalModule(filepath: string): Promise<any> {
+          // Might need to implement this in the future if we enable `nodejs_compat` flag,
+          // or add custom Oxygen runtime modules (e.g. `import kv from 'oxygen:kv';`).
+          throw new Error(
+            `[o2:runtime] External modules are not supported: "${filepath}"`,
+          );
+        },
 
-  runtime.runner.unsafeEval = env.__VITE_UNSAFE_EVAL;
+        async runViteModule(
+          context: ViteRuntimeModuleContext,
+          code: string,
+          id: string,
+        ): Promise<any> {
+          if (!env.__VITE_UNSAFE_EVAL) {
+            throw new Error('[o2:runtime] unsafeEval module is not set');
+          }
+
+          // We can't use `newAsyncFunction` here because it uses the `id`
+          // as the function name AND for sourcemaps. The `id` contains
+          // symbols like `@`, `/` or `.` to make the sourcemaps work, but
+          // these symbols are not allowed in function names. Therefore,
+          // use `eval` instead with an anonymous function:
+          const initModule = env.__VITE_UNSAFE_EVAL.eval(
+            // 'use strict' is implied in ESM so we enable it here. Also, we
+            // add an extra block scope (`{}`) to allow redeclaring variables
+            // with the same name as the parameters.
+            `'use strict';async (${Object.keys(context).join(
+              ',',
+            )})=>{{${code}\n}}`,
+            id,
+          );
+
+          await initModule(...Object.values(context));
+
+          Object.freeze(context[ssrModuleExportsKey]);
+        },
+      },
+    );
+  }
 
   return runtime.executeEntrypoint(env.__VITE_RUNTIME_EXECUTE_URL) as Promise<{
     default: {fetch: ExportedHandlerFetchHandler};
   }>;
 }
 
-// Ref: https://github.com/cloudflare/workerd/blob/main/src/workerd/api/unsafe.h
-type UnsafeEval = {
-  eval(code: string, name?: string): Function;
-  newFunction(code: string, name?: string, ...args: string[]): Function;
-  newAsyncFunction(code: string, name?: string, ...args: string[]): Function;
-};
-
-class WorkerdRunner implements ViteModuleRunner {
-  unsafeEval: UnsafeEval | undefined;
-
-  async runViteModule(
-    context: ViteRuntimeModuleContext,
-    code: string,
-    id: string,
-  ): Promise<any> {
-    if (!this.unsafeEval) throw new Error('unsafeEval module is not set');
-
-    // We can't use `newAsyncFunction` here because it uses the `id`
-    // as the function name AND for sourcemaps. The `id` contains
-    // symbols like `@`, `/` or `.` to make the sourcemaps work, but
-    // these symbols are not allowed in function names. Therefore,
-    // use `eval` instead with an anonymous function:
-    const initModule = this.unsafeEval.eval(
-      // 'use strict' is implied in ESM so we enable it here. Also, we
-      // add an extra block scope (`{}`) to allow redeclaring variables
-      // with the same name as the parameters.
-      `'use strict';async (${Object.keys(context).join(',')})=>{{${code}\n}}`,
-      id,
-    );
-
-    await initModule(...Object.values(context));
-
-    Object.freeze(context[ssrModuleExportsKey]);
-  }
-
-  runExternalModule(filepath: string): Promise<any> {
-    throw new Error('External modules are not supported');
-  }
-
-  processImport(
-    mod: Record<string, any>,
-    _fetchResult: ResolvedResult,
-    _metadata?: SSRImportMetadata | undefined,
-  ): Record<string, any> {
-    return mod;
-  }
-}
-
+/**
+ * Establish a WebSocket connection to the HMR server.
+ * Note: HMR in the server is just for invalidating modules
+ * in workerd/ViteRuntime cache, not to refresh the browser.
+ */
 function connectHmrWsClient(env: ViteEnv) {
   return fetch(env.__VITE_HMR_URL, {
     headers: {Upgrade: 'websocket'},
   }).then((response: unknown) => {
     const ws = (response as Response).webSocket;
 
-    if (!ws) throw new Error('Failed to connect to HMR server.');
+    if (!ws) throw new Error('[o2:runtime] Failed to connect to HMR server');
 
     ws.accept();
     return ws;
