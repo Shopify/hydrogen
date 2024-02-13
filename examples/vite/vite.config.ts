@@ -15,5 +15,5 @@ export default defineConfig({
     tsconfigPaths(),
   ],
   build: {minify: true},
-  server: {port: 3000, hmr: {port: 3001}},
+  server: {port: 3000, hmr: {port: 3010}},
 });

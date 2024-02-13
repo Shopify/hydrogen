@@ -1,4 +1,4 @@
-import type {Plugin} from 'vite';
+import type {Plugin, ResolvedConfig} from 'vite';
 import {
   setupHydrogenHandlers,
   setupOxygenHandlers,
@@ -56,6 +56,8 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
         };
       },
       configureServer(viteDevServer) {
+        if (isRemixChildCompiler(viteDevServer.config)) return;
+
         return () => {
           setupHydrogenHandlers(viteDevServer);
         };
@@ -75,6 +77,8 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
         };
       },
       configureServer(viteDevServer) {
+        if (isRemixChildCompiler(viteDevServer.config)) return;
+
         // Get the value from the CLI, which downloads variables
         // from Oxygen and merges them with the local .env file.
         const cliOptions = getCliOptions(viteDevServer.config);
@@ -112,4 +116,8 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
       },
     },
   ];
+}
+
+function isRemixChildCompiler(config: ResolvedConfig) {
+  return !config.plugins?.some((plugin) => plugin.name === 'remix');
 }
