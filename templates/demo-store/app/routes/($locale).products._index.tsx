@@ -5,11 +5,9 @@ import {Pagination, getPaginationVariables} from '@shopify/hydrogen';
 
 import {PageHeader, Section, ProductCard, Grid} from '~/components';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
-import {getImageLoadingPriority} from '~/lib/const';
+import {getImageLoadingPriority, PAGINATION_SIZE} from '~/lib/const';
 import {seoPayload} from '~/lib/seo.server';
 import {routeHeaders} from '~/data/cache';
-
-const PAGE_BY = 8;
 
 export const headers = routeHeaders;
 
@@ -17,7 +15,7 @@ export async function loader({
   request,
   context: {storefront},
 }: LoaderFunctionArgs) {
-  const variables = getPaginationVariables(request, {pageBy: PAGE_BY});
+  const variables = getPaginationVariables(request, {pageBy: PAGINATION_SIZE});
 
   const data = await storefront.query(ALL_PRODUCTS_QUERY, {
     variables: {

@@ -29,14 +29,14 @@ import {routeHeaders} from '~/data/cache';
 import {seoPayload} from '~/lib/seo.server';
 import type {SortParam} from '~/components/SortFilter';
 import {FILTER_URL_PREFIX} from '~/components/SortFilter';
-import {getImageLoadingPriority} from '~/lib/const';
+import {getImageLoadingPriority, PAGINATION_SIZE} from '~/lib/const';
 import {parseAsCurrency} from '~/lib/utils';
 
 export const headers = routeHeaders;
 
 export async function loader({params, request, context}: LoaderFunctionArgs) {
   const paginationVariables = getPaginationVariables(request, {
-    pageBy: 8,
+    pageBy: PAGINATION_SIZE,
   });
   const {collectionHandle} = params;
   const locale = context.storefront.i18n;
