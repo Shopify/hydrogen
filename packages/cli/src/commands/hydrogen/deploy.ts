@@ -54,6 +54,11 @@ export default class Deploy extends Command {
       description: 'Environment branch (tag) for environment to deploy to.',
       required: false,
     }),
+    'env-file': Flags.string({
+      description:
+        'Path to an environment file to override existing environment variables for the deployment.',
+      required: false,
+    }),
     preview: Flags.boolean({
       description:
         'Deploys to the Preview environment. Overrides --env-branch and Git metadata.',
@@ -111,11 +116,6 @@ export default class Deploy extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_METADATA_VERSION',
       hidden: true,
     }),
-    'environment-file': Flags.string({
-      description:
-        'Path to an environment file to override existing environment variables for the deployment.',
-      required: false,
-    }),
   };
 
   async run() {
@@ -143,6 +143,7 @@ export default class Deploy extends Command {
       ...camelFlags,
       defaultEnvironment: flags.preview,
       environmentTag: flags['env-branch'],
+      environmentFile: flags['env-file'],
       path: flags.path ? resolvePath(flags.path) : process.cwd(),
     } as OxygenDeploymentOptions;
   }

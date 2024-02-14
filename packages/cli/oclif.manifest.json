@@ -149,6 +149,13 @@
           "required": false,
           "multiple": false
         },
+        "env-file": {
+          "name": "env-file",
+          "type": "option",
+          "description": "Path to an environment file to override existing environment variables for the deployment.",
+          "required": false,
+          "multiple": false
+        },
         "preview": {
           "name": "preview",
           "type": "boolean",
@@ -224,13 +231,6 @@
           "name": "metadata-version",
           "type": "option",
           "hidden": true,
-          "required": false,
-          "multiple": false
-        },
-        "environment-file": {
-          "name": "environment-file",
-          "type": "option",
-          "description": "Path to an environment file to override existing environment variables for the deployment.",
           "required": false,
           "multiple": false
         }
