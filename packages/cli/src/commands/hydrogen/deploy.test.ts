@@ -88,7 +88,7 @@ describe('deploy', () => {
     defaultEnvironment: false,
     force: false,
     lockfileCheck: false,
-    noJsonOutput: false,
+    jsonOutput: true,
     path: './',
     shop: 'snowdevil.myshopify.com',
     metadataUrl: 'https://example.com',
@@ -416,7 +416,7 @@ describe('deploy', () => {
     );
 
     vi.mocked(writeFile).mockClear();
-    ciDeployParams.noJsonOutput = true;
+    ciDeployParams.jsonOutput = false;
     await oxygenDeploy(ciDeployParams);
     expect(vi.mocked(writeFile)).not.toHaveBeenCalled();
   });
@@ -506,10 +506,97 @@ describe('deploy', () => {
     } catch (err) {
       if (err instanceof AbortError) {
         expect(err.message).toBe('oh shit');
-        expect(err.tryMessage).toBe('Retrying the deployement may succeed.');
+        expect(err.tryMessage).toBe('Retrying the deployment may succeed.');
       } else {
         expect(true).toBe(false);
       }
     }
+  });
+
+  describe('next steps', () => {
+    it('renders a link to the deployment', async () => {
+      vi.mocked(createDeploy).mockResolvedValue({
+        url: 'https://a-lovely-deployment.com',
+      });
+
+      await oxygenDeploy(deployParams);
+
+      expect(vi.mocked(renderSuccess)).toHaveBeenCalledWith({
+        body: ['Successfully deployed to Oxygen'],
+        nextSteps: [
+          [
+            'Open',
+            {link: {url: 'https://a-lovely-deployment.com'}},
+            'in your browser to view your deployment.',
+          ],
+        ],
+      });
+    });
+
+    it('renders a link to the deployment and shows auth bypass token when one is created', async () => {
+      vi.mocked(createDeploy).mockResolvedValue({
+        url: 'https://a-lovely-deployment.com',
+        authBypassToken: 'some-token',
+      });
+
+      await oxygenDeploy(deployParams);
+
+      expect(vi.mocked(renderSuccess)).toHaveBeenCalledWith({
+        body: ['Successfully deployed to Oxygen'],
+        nextSteps: [
+          [
+            'Open',
+            {link: {url: 'https://a-lovely-deployment.com'}},
+            'in your browser to view your deployment.',
+          ],
+          [
+            'Use the',
+            {subdued: 'some-token'},
+            'token to perform end-to-end tests against the deployment.',
+          ],
+        ],
+      });
+    });
+
+    describe('when in a CI environment', () => {
+      it('renders information about h2_deploy_log.json', async () => {
+        vi.mocked(ciPlatform).mockReturnValue({
+          isCI: true,
+          name: 'github',
+          metadata: {},
+        });
+
+        await oxygenDeploy({...deployParams, token: 'fake-token'});
+
+        expect(vi.mocked(renderSuccess)).toHaveBeenCalledWith({
+          body: ['Successfully deployed to Oxygen'],
+          nextSteps: [
+            [
+              'View the deployment information in',
+              {subdued: 'h2_deploy_log.json'},
+            ],
+          ],
+        });
+      });
+
+      it('renders no next steps if jsonOutput is set to false', async () => {
+        vi.mocked(ciPlatform).mockReturnValue({
+          isCI: true,
+          name: 'github',
+          metadata: {},
+        });
+
+        await oxygenDeploy({
+          ...deployParams,
+          token: 'fake-token',
+          jsonOutput: false,
+        });
+
+        expect(vi.mocked(renderSuccess)).toHaveBeenCalledWith({
+          body: ['Successfully deployed to Oxygen'],
+          nextSteps: [],
+        });
+      });
+    });
   });
 });

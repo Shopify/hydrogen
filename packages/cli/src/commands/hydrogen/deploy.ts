@@ -37,6 +37,8 @@ import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
 import {OxygenDeploymentData} from '../../lib/graphql/admin/get-oxygen-data.js';
 import {runBuild} from './build.js';
 
+const DEPLOY_OUTPUT_FILE_HANDLE = 'h2_deploy_log.json';
+
 export const deploymentLogger: Logger = (
   message: string,
   level: LogLevel = 'info',
@@ -86,7 +88,7 @@ export default class Deploy extends Command {
       description:
         'Create a JSON file containing the deployment details in CI environments. Defaults to true, use `--no-json-output` to disable.',
       required: false,
-      default: false,
+      default: true,
     }),
     token: Flags.string({
       char: 't',
@@ -156,7 +158,7 @@ interface OxygenDeploymentOptions {
   environmentTag?: string;
   force: boolean;
   lockfileCheck: boolean;
-  noJsonOutput: boolean;
+  jsonOutput: boolean;
   path: string;
   shop: string;
   token?: string;
@@ -174,10 +176,10 @@ interface GitCommit {
 function createUnexpectedAbortError(message?: string): AbortError {
   return new AbortError(
     message || 'The deployment failed due to an unexpected error.',
-    'Retrying the deployement may succeed.',
+    'Retrying the deployment may succeed.',
     [
       [
-        'If the issue persits, please check the',
+        'If the issue persists, please check the',
         {
           link: {
             label: 'Shopify status page',
@@ -200,7 +202,7 @@ export async function oxygenDeploy(
     environmentTag,
     force: forceOnUncommitedChanges,
     lockfileCheck,
-    noJsonOutput,
+    jsonOutput,
     path,
     shop,
     metadataUrl,
@@ -459,19 +461,29 @@ export async function oxygenDeploy(
         | string
         | {subdued: string}
         | {link: {url: string}}
-      )[][] = [
-        [
+      )[][] = [];
+
+      if (isCI) {
+        if (jsonOutput) {
+          nextSteps.push([
+            'View the deployment information in',
+            {subdued: DEPLOY_OUTPUT_FILE_HANDLE},
+          ]);
+        }
+      } else {
+        nextSteps.push([
           'Open',
           {link: {url: completedDeployment!.url}},
-          `in your browser to view your deployment.`,
-        ],
-      ];
-      if (completedDeployment?.authBypassToken) {
-        nextSteps.push([
-          'Use the',
-          {subdued: completedDeployment.authBypassToken},
-          'token to perform end-to-end tests against the deployment.',
+          'in your browser to view your deployment.',
         ]);
+
+        if (completedDeployment?.authBypassToken) {
+          nextSteps.push([
+            'Use the',
+            {subdued: completedDeployment.authBypassToken},
+            'token to perform end-to-end tests against the deployment.',
+          ]);
+        }
       }
 
       renderSuccess({
@@ -480,9 +492,9 @@ export async function oxygenDeploy(
       });
       // in CI environments, output to a file so consequent steps can access the URL
       // the formatting of this file is likely to change in future versions.
-      if (isCI && !noJsonOutput) {
+      if (isCI && jsonOutput) {
         await writeFile(
-          'h2_deploy_log.json',
+          DEPLOY_OUTPUT_FILE_HANDLE,
           JSON.stringify(completedDeployment),
         );
       }
