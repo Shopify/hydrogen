@@ -8,6 +8,7 @@ export type H2OPluginContext = {
       envPromise: Promise<Record<string, any>>;
     }
   >;
+  setupFunctions?: Array<(viteUrl: string) => void>;
 };
 
 export type OxygenPluginOptions = {
@@ -21,8 +22,8 @@ export const DEFAULT_SSR_ENTRY = './server';
 
 const H2O_CONTEXT_KEY = '__h2oPluginContext';
 
-export function getCliOptions(config: UserConfig | ResolvedConfig) {
-  return ((config as any)?.[H2O_CONTEXT_KEY] as H2OPluginContext)?.cliOptions;
+export function getH2OPluginContext(config: UserConfig | ResolvedConfig) {
+  return (config as any)?.[H2O_CONTEXT_KEY] as H2OPluginContext;
 }
 
 export function setH2OPluginContext<T extends H2OPluginContext>(options: T) {

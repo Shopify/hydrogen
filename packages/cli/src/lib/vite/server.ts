@@ -46,6 +46,7 @@ type MiniOxygenViteOptions = Pick<
 > & {
   viteDevServer: ViteDevServer;
   workerEntryFile: string;
+  setupFunctions?: Array<string | ((viteUrl: string) => void)>;
 };
 
 export type MiniOxygen = Awaited<ReturnType<typeof startMiniOxygenRuntime>>;
@@ -56,6 +57,7 @@ export async function startMiniOxygenRuntime({
   debug = false,
   inspectorPort,
   workerEntryFile,
+  setupFunctions,
 }: MiniOxygenViteOptions) {
   const scriptPromise = readFile(clientPath, 'utf-8');
   const scriptPath = path.join(
@@ -95,7 +97,7 @@ export async function startMiniOxygenRuntime({
           __VITE_FETCH_MODULE_PATHNAME: FETCH_MODULE_PATHNAME,
           __VITE_HMR_URL: getHmrUrl(viteDevServer),
           __VITE_WARMUP_PATHNAME: WARMUP_PATHNAME,
-        } satisfies Omit<ViteEnv, '__VITE_UNSAFE_EVAL'>,
+        } satisfies Omit<ViteEnv, '__VITE_UNSAFE_EVAL' | '__VITE_SETUP_ENV'>,
         unsafeEvalBinding: '__VITE_UNSAFE_EVAL',
         serviceBindings: {
           [H2O_BINDING_NAME]: createLogRequestEvent({
@@ -103,6 +105,21 @@ export async function startMiniOxygenRuntime({
               path.join(viteDevServer.config.root, partialLocation),
           }),
         },
+        wrappedBindings: {
+          __VITE_SETUP_ENV: 'setup-environment',
+        },
+      },
+      {
+        name: 'setup-environment',
+        modules: true,
+        scriptPath,
+        script: `
+          const setupFunctions = [${setupFunctions}];
+          export default (env) => (request) => {
+            const viteUrl = new URL(request.url).origin;
+            setupFunctions.forEach((setup) => setup(viteUrl));
+            setupFunctions.length = 0;
+          }`,
       },
     ],
   });
@@ -151,6 +168,21 @@ export async function startMiniOxygenRuntime({
   };
 }
 
+// Function to be passed as a setup function to the Oxygen worker.
+// It runs within workerd and sets up Remix dev server hooks.
+// It is eventually stringified to be initialized in the worker,
+// so do not use any external variables or imports.
+export function setupRemixDevServerHooks(viteUrl: string) {
+  // @ts-expect-error Remix global magic
+  globalThis['__remix_devServerHooks'] = {
+    getCriticalCss: (...args: any) =>
+      fetch(new URL('/__vite_critical_css', viteUrl), {
+        method: 'POST',
+        body: JSON.stringify(args),
+      }).then((res) => res.json()),
+  };
+}
+
 export function setupHydrogenHandlers(viteDevServer: ViteDevServer) {
   setConstructors({Response: globalThis.Response});
 
@@ -161,6 +193,25 @@ export function setupHydrogenHandlers(viteDevServer: ViteDevServer) {
 
       const webResponse = handleDebugNetworkRequest(toWeb(req));
       pipeFromWeb(webResponse, res);
+    },
+  );
+
+  viteDevServer.middlewares.use(
+    '/__vite_critical_css',
+    function h2HandleCriticalCss(req, res) {
+      // This request comes from Remix's `getCriticalCss` function
+      // to gather the required CSS and avoid flashes of unstyled content in dev.
+
+      toWeb(req)
+        .json()
+        .then(async (args: any) => {
+          // @ts-expect-error Remix global magic
+          const result = await globalThis[
+            '__remix_devServerHooks'
+          ]?.getCriticalCss?.(...args);
+          res.writeHead(200, {'Content-Type': 'application/json'});
+          res.end(JSON.stringify(result));
+        });
     },
   );
 
@@ -204,11 +255,16 @@ export function setupOxygenHandlers(
 
         // `fetchModule` is similar to `viteDevServer.ssrFetchModule`,
         // but it treats source maps differently (avoids adding empty lines).
-        fetchModule(viteDevServer, id, importer).then((ssrModule) => {
-          res.end(JSON.stringify(ssrModule));
-        });
+        fetchModule(viteDevServer, id, importer)
+          .then((ssrModule) => res.end(JSON.stringify(ssrModule)))
+          .catch((error) => {
+            console.error('Error during module fetch:', error);
+            res.writeHead(500, {'Content-Type': 'text/plain'});
+            res.end('Internal server error');
+          });
       } else {
         res.statusCode = 400;
+        res.writeHead(400, {'Content-Type': 'text/plain'});
         res.end('Invalid request');
       }
     },

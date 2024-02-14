@@ -20,6 +20,7 @@ export interface ViteEnv {
   __VITE_FETCH_MODULE_PATHNAME: string;
   __VITE_RUNTIME_EXECUTE_URL: string;
   __VITE_WARMUP_PATHNAME: string;
+  __VITE_SETUP_ENV: (request: Request) => void;
   // Ref: https://github.com/cloudflare/workerd/blob/main/src/workerd/api/unsafe.h
   __VITE_UNSAFE_EVAL: {
     eval(code: string, name?: string): Function;
@@ -35,6 +36,7 @@ export default {
    * Worker entry module that wraps the user app's entry module.
    */
   async fetch(request: Request, env: ViteEnv, ctx: any) {
+    env.__VITE_SETUP_ENV(request);
     const url = new URL(request.url);
 
     // Fetch the app's entry module and cache it. E.g. `<root>/server.ts`

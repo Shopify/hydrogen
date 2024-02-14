@@ -4,10 +4,12 @@ import {
   setupHydrogenHandlers,
   setupOxygenHandlers,
   startMiniOxygenRuntime,
+  setupRemixDevServerHooks,
   type MiniOxygen,
 } from './server.js';
 import {
-  getCliOptions,
+  getH2OPluginContext,
+  setH2OPluginContext,
   DEFAULT_SSR_ENTRY,
   type OxygenPluginOptions,
 } from './shared.js';
@@ -43,6 +45,8 @@ export function hydrogen(): Plugin[] {
               ],
             },
           },
+          // Pass the setup functions to the Oxygen runtime.
+          ...setH2OPluginContext({setupFunctions: [setupRemixDevServerHooks]}),
         };
       },
       configureServer(viteDevServer) {
@@ -102,21 +106,23 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
 
         // Get the value from the CLI, which downloads variables
         // from Oxygen and merges them with the local .env file.
-        const cliOptions = getCliOptions(viteDevServer.config);
-        const envPromise = cliOptions?.envPromise ?? Promise.resolve();
+        const {cliOptions, setupFunctions} =
+          getH2OPluginContext(viteDevServer.config) || {};
 
         const workerEntryFile =
           cliOptions?.ssrEntry ?? pluginOptions.ssrEntry ?? DEFAULT_SSR_ENTRY;
-
         absoluteWorkerEntryFile = path.isAbsolute(workerEntryFile)
           ? workerEntryFile
           : path.resolve(viteDevServer.config.root, workerEntryFile);
+
+        const envPromise = cliOptions?.envPromise ?? Promise.resolve();
 
         let miniOxygen: MiniOxygen;
         const miniOxygenPromise = envPromise.then((remoteEnv) => {
           return startMiniOxygenRuntime({
             viteDevServer,
             workerEntryFile,
+            setupFunctions,
             env: {...remoteEnv, ...viteDevServer.config.env},
             debug: cliOptions?.debug ?? pluginOptions.debug ?? false,
             inspectorPort:
