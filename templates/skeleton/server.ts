@@ -39,7 +39,7 @@ export default {
         AppSession.init(request, [env.SESSION_SECRET]),
       ]);
 
-      // [ START namespace.two-col-test ]
+      // [START namespace.two-col-test]
       /**
        * Create Hydrogen's Storefront client.
       */
@@ -53,7 +53,7 @@ export default {
        storefrontId: env.PUBLIC_STOREFRONT_ID,
        storefrontHeaders: getStorefrontHeaders(request),
       });
-      // [ END namespace.two-col-test ]
+      // [END namespace.two-col-test]
 
       /**
        * Create a client for Customer Account API.
