@@ -78,7 +78,7 @@ export async function startMiniOxygenRuntime({
     },
     workers: [
       {
-        name: 'hydrogen',
+        name: 'oxygen',
         modulesRoot: viteDevServer.config.root,
         modules: [
           {
