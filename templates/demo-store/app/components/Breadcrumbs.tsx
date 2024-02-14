@@ -15,8 +15,11 @@ export function Breadcrumbs() {
   const matches: UIMatch<any>[] = useMatches();
   const deepestRoute = matches.at(-1);
   const splitURL = deepestRoute?.pathname.split('/') || [];
-  const pages = [{path: '/', name: 'Home'}];
   const {pageType, pageName, hideBreadcrumbs} = getPageData(splitURL[1]);
+
+  if (hideBreadcrumbs) return null;
+
+  const pages = [{path: '/', name: 'Home'}];
 
   if (splitURL[1]) {
     pages.push({
@@ -34,8 +37,6 @@ export function Breadcrumbs() {
       });
     }
   }
-
-  if (hideBreadcrumbs) return null;
 
   const mobilePage = pages[pages.length - 2];
 
