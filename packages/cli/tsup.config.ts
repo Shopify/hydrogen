@@ -28,7 +28,7 @@ const outDir = 'dist';
 export default defineConfig([
   {
     ...commonConfig,
-    entry: ['src/**/*.ts', '!src/lib/vite/client.ts'],
+    entry: ['src/**/*.ts', '!src/lib/vite/worker-entry.ts'],
     outDir,
     // Generate types only for the exposed entry points
     dts: {entry: ['src/lib/vite/plugins.ts', 'src/commands/hydrogen/init.ts']},
@@ -55,7 +55,7 @@ export default defineConfig([
     },
   },
   {
-    entry: ['src/lib/vite/client.ts'],
+    entry: ['src/lib/vite/worker-entry.ts'],
     outDir: 'dist/lib/vite',
     format: 'esm',
     noExternal: [/./],

@@ -1,22 +1,10 @@
 import {fetchModule, type ViteDevServer} from 'vite';
 import path from 'node:path';
-import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import crypto from 'node:crypto';
-import {createRequire} from 'node:module';
-import {createFileReadStream} from '@shopify/cli-kit/node/fs';
 import {Miniflare, NoOpLog, Request, type Response} from 'miniflare';
-import {
-  H2O_BINDING_NAME,
-  createLogRequestEvent,
-  handleDebugNetworkRequest,
-  setConstructors,
-} from '../request-events.js';
-import {
-  OXYGEN_HEADERS_MAP,
-  SUBREQUEST_PROFILER_ENDPOINT,
-  logRequestLine,
-} from '../mini-oxygen/common.js';
+import {H2O_BINDING_NAME, createLogRequestEvent} from '../request-events.js';
+import {OXYGEN_HEADERS_MAP, logRequestLine} from '../mini-oxygen/common.js';
 import {
   PRIVATE_WORKERD_INSPECTOR_PORT,
   OXYGEN_WORKERD_COMPAT_PARAMS,
@@ -26,8 +14,8 @@ import {createInspectorConnector} from '../mini-oxygen/workerd-inspector.js';
 import {MiniOxygenOptions} from '../mini-oxygen/types.js';
 import {getHmrUrl, pipeFromWeb, toURL, toWeb} from './utils.js';
 
-import type {ViteEnv} from './client.js';
-const clientPath = fileURLToPath(new URL('./client.js', import.meta.url));
+import type {ViteEnv} from './worker-entry.js';
+const scriptPath = fileURLToPath(new URL('./worker-entry.js', import.meta.url));
 
 const FETCH_MODULE_PATHNAME = '/__vite_fetch_module';
 const WARMUP_PATHNAME = '/__vite_warmup';
@@ -59,12 +47,6 @@ export async function startMiniOxygenRuntime({
   workerEntryFile,
   setupFunctions,
 }: MiniOxygenViteOptions) {
-  const scriptPromise = readFile(clientPath, 'utf-8');
-  const scriptPath = path.join(
-    viteDevServer.config.root,
-    '_virtual-o2-worker-entry.js',
-  );
-
   const [publicInspectorPort, privateInspectorPort] = await Promise.all([
     findPort(inspectorPort),
     findPort(PRIVATE_WORKERD_INSPECTOR_PORT),
@@ -81,14 +63,8 @@ export async function startMiniOxygenRuntime({
     workers: [
       {
         name: 'oxygen',
-        modulesRoot: viteDevServer.config.root,
-        modules: [
-          {
-            type: 'ESModule',
-            path: scriptPath,
-            contents: await scriptPromise,
-          },
-        ],
+        modulesRoot: '/',
+        modules: [{type: 'ESModule', path: scriptPath}],
         ...OXYGEN_WORKERD_COMPAT_PARAMS,
         bindings: {
           ...env,
@@ -168,78 +144,13 @@ export async function startMiniOxygenRuntime({
   };
 }
 
-// Function to be passed as a setup function to the Oxygen worker.
-// It runs within workerd and sets up Remix dev server hooks.
-// It is eventually stringified to be initialized in the worker,
-// so do not use any external variables or imports.
-export function setupRemixDevServerHooks(viteUrl: string) {
-  // @ts-expect-error Remix global magic
-  globalThis['__remix_devServerHooks'] = {
-    getCriticalCss: (...args: any) =>
-      fetch(new URL('/__vite_critical_css', viteUrl), {
-        method: 'POST',
-        body: JSON.stringify(args),
-      }).then((res) => res.json()),
-  };
-}
-
-export function setupHydrogenHandlers(viteDevServer: ViteDevServer) {
-  setConstructors({Response: globalThis.Response});
-
-  viteDevServer.middlewares.use(
-    SUBREQUEST_PROFILER_ENDPOINT,
-    function h2HandleSubrequestProfilerEvent(req, res) {
-      // This request comes from Hydrogen's Subrequest Profiler UI.
-
-      const webResponse = handleDebugNetworkRequest(toWeb(req));
-      pipeFromWeb(webResponse, res);
-    },
-  );
-
-  viteDevServer.middlewares.use(
-    '/__vite_critical_css',
-    function h2HandleCriticalCss(req, res) {
-      // This request comes from Remix's `getCriticalCss` function
-      // to gather the required CSS and avoid flashes of unstyled content in dev.
-
-      toWeb(req)
-        .json()
-        .then(async (args: any) => {
-          // @ts-expect-error Remix global magic
-          const result = await globalThis[
-            '__remix_devServerHooks'
-          ]?.getCriticalCss?.(...args);
-          res.writeHead(200, {'Content-Type': 'application/json'});
-          res.end(JSON.stringify(result));
-        });
-    },
-  );
-
-  viteDevServer.middlewares.use(
-    '/graphiql/customer-account.schema.json',
-    function h2HandleGraphiQLCustomerSchema(req, res) {
-      // This request comes from Hydrogen's GraphiQL.
-      // Currently, the CAAPI schema is not available in the public API,
-      // so we serve it from here.
-
-      const require = createRequire(import.meta.url);
-      const filePath = require.resolve(
-        '@shopify/hydrogen/customer-account.schema.json',
-      );
-
-      res.writeHead(200, {'Content-Type': 'application/json'});
-      createFileReadStream(filePath).pipe(res);
-    },
-  );
-}
-
-export function setupOxygenHandlers(
+export function setupOxygenMiddleware(
   viteDevServer: ViteDevServer,
   dispatchFetch: (webRequest: Request) => Promise<Response>,
 ) {
   viteDevServer.middlewares.use(
     FETCH_MODULE_PATHNAME,
-    function h2HandleModuleFetch(req, res) {
+    function o2HandleModuleFetch(req, res) {
       // This request comes from workerd. It is asking for the contents
       // of backend files. We need to fetch the file through Vite,
       // which transpiles/prepares the source code into valid JS, and
@@ -270,7 +181,7 @@ export function setupOxygenHandlers(
     },
   );
 
-  viteDevServer.middlewares.use(function h2HandleWorkerRequest(req, res) {
+  viteDevServer.middlewares.use(function o2HandleWorkerRequest(req, res) {
     // This request comes from the browser. At this point, Vite
     // tried to serve the request as a static file, but it didn't
     // find it in the project. Therefore, we assume this is a

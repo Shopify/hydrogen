@@ -1,12 +1,14 @@
 import path from 'node:path';
 import type {Plugin, ResolvedConfig} from 'vite';
 import {
-  setupHydrogenHandlers,
-  setupOxygenHandlers,
-  startMiniOxygenRuntime,
+  setupHydrogenMiddleware,
   setupRemixDevServerHooks,
+} from './hydrogen-middleware.js';
+import {
+  setupOxygenMiddleware,
+  startMiniOxygenRuntime,
   type MiniOxygen,
-} from './server.js';
+} from './mini-oxygen.js';
 import {
   getH2OPluginContext,
   setH2OPluginContext,
@@ -53,7 +55,7 @@ export function hydrogen(): Plugin[] {
         if (isRemixChildCompiler(viteDevServer.config)) return;
 
         return () => {
-          setupHydrogenHandlers(viteDevServer);
+          setupHydrogenMiddleware(viteDevServer);
         };
       },
     },
@@ -139,7 +141,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
         });
 
         return () => {
-          setupOxygenHandlers(viteDevServer, async (request) => {
+          setupOxygenMiddleware(viteDevServer, async (request) => {
             miniOxygen ??= await miniOxygenPromise;
             return miniOxygen.dispatch(request);
           });
