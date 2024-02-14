@@ -117,12 +117,18 @@ export async function runViteBuild({
 
   outputInfo(`\n🏗️  Building in ${process.env.NODE_ENV} mode...\n`);
 
-  const {viteConfig, remixConfig, clientOutDir, serverOutDir, serverOutFile} =
-    await getViteConfig(root);
+  const {
+    userViteConfig,
+    remixConfig,
+    clientOutDir,
+    serverOutDir,
+    serverOutFile,
+  } = await getViteConfig(root);
 
   // TODO this shouldn't be needed after updating Remix
   process.env.HYDROGEN_ASSET_BASE_URL = assetPath;
 
+  const serverMinify = userViteConfig.build?.minify ?? true;
   const commonConfig = {
     root,
     mode: process.env.NODE_ENV,
@@ -152,6 +158,7 @@ export async function runViteBuild({
       ssr: ssrEntry ?? true,
       emptyOutDir: false,
       copyPublicDir: false,
+      minify: serverMinify,
     },
   });
 
@@ -185,7 +192,7 @@ export async function runViteBuild({
     if (sizeMB >= WORKER_BUILD_SIZE_LIMIT) {
       outputWarn(
         `🚨 Smaller worker bundles are faster to deploy and run.${
-          viteConfig.build.minify
+          serverMinify
             ? ''
             : '\n   Minify your bundle by adding `build.minify: true` to vite.config.js.'
         }\n   Learn more about optimizing your worker bundle file: https://h2o.fyi/debugging/bundle-size\n`,

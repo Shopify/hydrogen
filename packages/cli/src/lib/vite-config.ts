@@ -4,19 +4,30 @@ import type {RemixPluginContext} from '@remix-run/dev/dist/vite/plugin.js';
 export async function getViteConfig(root: string) {
   const vite = await import('vite');
 
-  const viteConfig = await vite.resolveConfig(
-    {root, build: {ssr: true}},
-    'build',
-    process.env.NODE_ENV,
-    process.env.NODE_ENV,
+  const command = 'build';
+  const mode = process.env.NODE_ENV || 'production';
+
+  const maybeConfig = await vite.loadConfigFromFile(
+    {command, mode, isSsrBuild: true},
+    undefined,
+    root,
   );
 
-  if (!viteConfig.configFile) throw new Error('No Vite config found');
+  if (!maybeConfig || !maybeConfig.path) {
+    throw new Error('No Vite config found');
+  }
 
-  const serverOutDir = viteConfig.build.outDir;
+  const resolvedViteConfig = await vite.resolveConfig(
+    {root, build: {ssr: true}},
+    command,
+    mode,
+    mode,
+  );
+
+  const serverOutDir = resolvedViteConfig.build.outDir;
   const clientOutDir = serverOutDir.replace(/server$/, 'client');
 
-  const rollupOutput = viteConfig.build.rollupOptions.output;
+  const rollupOutput = resolvedViteConfig.build.rollupOptions.output;
   const {entryFileNames} =
     (Array.isArray(rollupOutput) ? rollupOutput[0] : rollupOutput) ?? {};
   const serverOutFile = joinPath(
@@ -28,8 +39,9 @@ export async function getViteConfig(root: string) {
     clientOutDir,
     serverOutDir,
     serverOutFile,
-    viteConfig,
-    remixConfig: getRemixConfigFromVite(viteConfig),
+    resolvedViteConfig,
+    userViteConfig: maybeConfig.config,
+    remixConfig: getRemixConfigFromVite(resolvedViteConfig),
   };
 }
 
