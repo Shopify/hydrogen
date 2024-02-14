@@ -124,7 +124,9 @@ export async function startWorkerdServer({
           ...OXYGEN_WORKERD_COMPAT_PARAMS,
           bindings: {...env},
           serviceBindings: {
-            [H2O_BINDING_NAME]: createLogRequestEvent({absoluteBundlePath}),
+            [H2O_BINDING_NAME]: createLogRequestEvent({
+              transformLocation: () => absoluteBundlePath,
+            }),
           },
         },
       ],

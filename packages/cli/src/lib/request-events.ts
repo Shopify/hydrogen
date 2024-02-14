@@ -103,7 +103,9 @@ function clearHistory<R extends RequestKind>(request: R): InferredResponse<R> {
   return createResponse<R>();
 }
 
-export function createLogRequestEvent(options?: {absoluteBundlePath?: string}) {
+export function createLogRequestEvent(options?: {
+  transformLocation?: (partialPath: string) => string;
+}) {
   return async function logRequestEvent<R extends RequestKind>(
     request: R,
   ): Promise<InferredResponse<R>> {
@@ -143,8 +145,8 @@ export function createLogRequestEvent(options?: {absoluteBundlePath?: string}) {
     let stackLink: string | null = null;
 
     if (stackInfo?.file) {
-      if (!path.isAbsolute(stackInfo.file) && options?.absoluteBundlePath) {
-        stackInfo.file = options.absoluteBundlePath;
+      if (options?.transformLocation) {
+        stackInfo.file = options.transformLocation(stackInfo.file);
       }
 
       const {source, line, column} = mapSourcePosition({
