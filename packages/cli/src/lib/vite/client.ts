@@ -10,14 +10,13 @@ import {
   ViteRuntime,
   ssrModuleExportsKey,
   type ViteRuntimeModuleContext,
-  type HMRRuntimeConnection,
 } from 'vite/runtime';
-import type {Response} from 'miniflare';
 import type {HMRPayload} from 'vite';
+import type {Response} from 'miniflare';
 
 export interface ViteEnv {
   __VITE_ROOT: string;
-  __VITE_OVERWRITE_HMR_URL: string;
+  __VITE_HMR_URL: string;
   __VITE_FETCH_MODULE_PATHNAME: string;
   __VITE_RUNTIME_EXECUTE_URL: string;
   __VITE_WARMUP_PATHNAME: string;
@@ -82,7 +81,8 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
         hmrReady = !!hmrWs;
         hmrWs?.addEventListener('message', (message) => {
           if (onHmrRecieve) {
-            let data = JSON.parse(message.data?.toString());
+            let data: HMRPayload = JSON.parse(message.data?.toString());
+
             if (data?.type === 'update') {
               // TODO: handle partial updates
               data = {type: 'full-reload', path: '*'};
@@ -117,7 +117,7 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
                 onHmrRecieve = undefined;
               };
             },
-          } satisfies HMRRuntimeConnection,
+          },
         },
       },
       {
@@ -172,8 +172,19 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
  * in workerd/ViteRuntime cache, not to refresh the browser.
  */
 function connectHmrWsClient(url: URL, env: ViteEnv) {
-  return fetch(env.__VITE_OVERWRITE_HMR_URL || url.origin, {
-    headers: {Upgrade: 'websocket'},
+  // The HMR URL might come without origin, which means it's relative
+  // to the main Vite HTTP server. Otherwise, it's an absolute URL.
+  const hmrUrl = env.__VITE_HMR_URL.startsWith('http://')
+    ? env.__VITE_HMR_URL
+    : new URL(env.__VITE_HMR_URL, url.origin);
+
+  return fetch(hmrUrl, {
+    // When the HTTP port and the HMR port are the same, Vite reuses the same server for both.
+    // This happens when not specifying the HMR port in the Vite config. Otherwise, Vite creates
+    // a new server for HMR. In the first case, the protocol header is required to specify
+    // that the connection to the main HTTP server via WS is for HMR.
+    // Ref: https://github.com/vitejs/vite/blob/7440191715b07a50992fcf8c90d07600dffc375e/packages/vite/src/node/server/ws.ts#L120-L127
+    headers: {Upgrade: 'websocket', 'sec-websocket-protocol': 'vite-hmr'},
   }).then((response: unknown) => {
     const ws = (response as Response).webSocket;
 

@@ -8,12 +8,10 @@ export default defineConfig({
     hydrogen(),
     remix({
       buildDirectory: 'dist',
-      serverBuildFile: 'index.js',
       // TODO update Remix to fix this
       publicPath: process.env.HYDROGEN_ASSET_BASE_URL,
     }),
     tsconfigPaths(),
   ],
   build: {minify: true},
-  server: {port: 3000, hmr: {port: 3010}},
 });

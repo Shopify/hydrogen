@@ -24,7 +24,7 @@ import {
 import {findPort} from '../find-port.js';
 import {createInspectorConnector} from '../mini-oxygen/workerd-inspector.js';
 import {MiniOxygenOptions} from '../mini-oxygen/types.js';
-import {pipeFromWeb, toURL, toWeb} from './utils.js';
+import {getHmrUrl, pipeFromWeb, toURL, toWeb} from './utils.js';
 
 import type {ViteEnv} from './client.js';
 const clientPath = fileURLToPath(new URL('./client.js', import.meta.url));
@@ -63,17 +63,6 @@ export async function startMiniOxygenRuntime({
     findPort(PRIVATE_WORKERD_INSPECTOR_PORT),
   ]);
 
-  const configHmr = viteDevServer.config.server?.hmr;
-  const hmrPort = typeof configHmr !== 'boolean' && configHmr?.port;
-  const overwriteHmrUrl =
-    configHmr !== false && hmrPort ? `http://localhost:${hmrPort}` : '';
-
-  if (configHmr === false) {
-    console.warn(
-      'HMR is disabled. Code changes will not be reflected in either browser and server.',
-    );
-  }
-
   const mf = new Miniflare({
     cf: false,
     verbose: false,
@@ -93,7 +82,7 @@ export async function startMiniOxygenRuntime({
       __VITE_ROOT: viteDevServer.config.root,
       __VITE_RUNTIME_EXECUTE_URL: workerEntryFile,
       __VITE_FETCH_MODULE_PATHNAME: FETCH_MODULE_PATHNAME,
-      __VITE_OVERWRITE_HMR_URL: overwriteHmrUrl,
+      __VITE_HMR_URL: getHmrUrl(viteDevServer),
       __VITE_WARMUP_PATHNAME: WARMUP_PATHNAME,
     } satisfies Omit<ViteEnv, '__VITE_UNSAFE_EVAL'>,
     unsafeEvalBinding: '__VITE_UNSAFE_EVAL',

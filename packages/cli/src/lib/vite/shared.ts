@@ -16,6 +16,7 @@ export type HydrogenPluginOptions = {
   inspectorPort?: number;
 };
 
+// Note: Vite resolves extensions like .js or .ts automatically.
 export const DEFAULT_SSR_ENTRY = './server';
 
 const HYDROGEN_CONTEXT_KEY = '__hydrogenPluginContext';
