@@ -31,7 +31,7 @@ export default defineConfig([
     entry: ['src/**/*.ts', '!src/lib/vite/client.ts'],
     outDir,
     // Generate types only for the exposed entry points
-    dts: {entry: ['src/lib/vite/plugin.ts', 'src/commands/hydrogen/init.ts']},
+    dts: {entry: ['src/lib/vite/plugins.ts', 'src/commands/hydrogen/init.ts']},
     async onSuccess() {
       // Copy TS templates
       const i18nTemplatesPath = 'lib/setups/i18n/templates';

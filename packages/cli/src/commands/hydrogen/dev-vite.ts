@@ -18,7 +18,7 @@ import {getConfig} from '../../lib/shopify-config.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
-import {setHydrogenPluginContext} from '../../lib/vite/shared.js';
+import {setH2OPluginContext} from '../../lib/vite/shared.js';
 
 export default class DevVite extends Command {
   static description =
@@ -131,7 +131,7 @@ export async function runDev({
   const viteServer = await vite.createServer({
     root,
     server: {fs, host: host ? true : undefined},
-    ...setHydrogenPluginContext({
+    ...setH2OPluginContext({
       cliOptions: {envPromise, inspectorPort, debug, ssrEntry},
     }),
   });
@@ -144,7 +144,9 @@ export async function runDev({
     }
   });
 
-  if (!viteServer.config.plugins.find((plugin) => plugin.name === 'h2:main')) {
+  if (
+    !viteServer.config.plugins.find((plugin) => plugin.name === 'hydrogen:main')
+  ) {
     await viteServer.close();
     throw new AbortError(
       'Hydrogen plugin not found.',

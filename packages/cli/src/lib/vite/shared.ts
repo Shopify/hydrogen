@@ -2,15 +2,15 @@
 // the rest of the CLI when Vite might not be installed.
 import type {ResolvedConfig, UserConfig} from 'vite';
 
-export type HydrogenPluginContext = {
+export type H2OPluginContext = {
   cliOptions?: Partial<
-    HydrogenPluginOptions & {
+    OxygenPluginOptions & {
       envPromise: Promise<Record<string, any>>;
     }
   >;
 };
 
-export type HydrogenPluginOptions = {
+export type OxygenPluginOptions = {
   ssrEntry?: string;
   debug?: boolean;
   inspectorPort?: number;
@@ -19,15 +19,12 @@ export type HydrogenPluginOptions = {
 // Note: Vite resolves extensions like .js or .ts automatically.
 export const DEFAULT_SSR_ENTRY = './server';
 
-const HYDROGEN_CONTEXT_KEY = '__hydrogenPluginContext';
+const H2O_CONTEXT_KEY = '__h2oPluginContext';
 
 export function getCliOptions(config: UserConfig | ResolvedConfig) {
-  return ((config as any)?.[HYDROGEN_CONTEXT_KEY] as HydrogenPluginContext)
-    ?.cliOptions;
+  return ((config as any)?.[H2O_CONTEXT_KEY] as H2OPluginContext)?.cliOptions;
 }
 
-export function setHydrogenPluginContext<T extends HydrogenPluginContext>(
-  options: T,
-) {
-  return {[HYDROGEN_CONTEXT_KEY]: options} as Record<string, any>;
+export function setH2OPluginContext<T extends H2OPluginContext>(options: T) {
+  return {[H2O_CONTEXT_KEY]: options} as Record<string, any>;
 }

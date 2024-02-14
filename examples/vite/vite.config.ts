@@ -1,11 +1,12 @@
 import {defineConfig} from 'vite';
-import {hydrogen} from '@shopify/cli-hydrogen/experimental-vite-plugin';
+import {hydrogen, oxygen} from '@shopify/cli-hydrogen/experimental-vite';
 import {unstable_vitePlugin as remix} from '@remix-run/dev';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
   plugins: [
     hydrogen(),
+    oxygen(),
     remix({
       buildDirectory: 'dist',
       // TODO update Remix to fix this

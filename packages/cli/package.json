@@ -82,9 +82,9 @@
       "types": "./dist/commands/hydrogen/init.d.ts",
       "default": "./dist/commands/hydrogen/init.js"
     },
-    "./experimental-vite-plugin": {
-      "types": "./dist/lib/vite/plugin.d.ts",
-      "default": "./dist/lib/vite/plugin.js"
+    "./experimental-vite": {
+      "types": "./dist/lib/vite/plugins.d.ts",
+      "default": "./dist/lib/vite/plugins.js"
     }
   },
   "files": [
