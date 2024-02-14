@@ -68,30 +68,46 @@ export function WebPixel ({publicStoreDomain}: {publicStoreDomain: string}) {
           },
           onerror: function() {}
       })
-    })({
+    })(
+    // This config is unique to the connecting store
+    {
         shopId: 11786682427,
         storefrontBaseUrl: `https://${publicStoreDomain}`,
         cdnBaseUrl: `https://${publicStoreDomain}/cdn`,
         surface: "storefront-renderer",
         enabledBetaFlags: ["f6570685"],
         webPixelsConfigList: [{
-            "id": "shopify-app-pixel",
-            "configuration": "{}",
-            "eventPayloadVersion": "v1",
-            "runtimeContext": "STRICT",
-            "scriptVersion": "0575",
-            "apiClientId": "shopify-pixel",
-            "type": "APP",
-            "purposes": ["ANALYTICS"]
-        }, {
-            "id": "shopify-custom-pixel",
-            "eventPayloadVersion": "v1",
-            "runtimeContext": "LAX",
-            "scriptVersion": "0575",
-            "apiClientId": "shopify-pixel",
-            "type": "CUSTOM",
-            "purposes": ["ANALYTICS"]
-        }],
+          "id": "12615739",
+          "eventPayloadVersion": "1",
+          "runtimeContext": "LAX",
+          "scriptVersion": "1",
+          "type": "CUSTOM",
+          "privacyPurposes": null
+      }, {
+          "id": "12615739",
+          "eventPayloadVersion": "1",
+          "runtimeContext": "LAX",
+          "scriptVersion": "1",
+          "type": "CUSTOM",
+          "privacyPurposes": null
+      }, {
+          "id": "shopify-app-pixel",
+          "configuration": "{}",
+          "eventPayloadVersion": "v1",
+          "runtimeContext": "STRICT",
+          "scriptVersion": "0575",
+          "apiClientId": "shopify-pixel",
+          "type": "APP",
+          "purposes": ["ANALYTICS"]
+      }, {
+          "id": "shopify-custom-pixel",
+          "eventPayloadVersion": "v1",
+          "runtimeContext": "LAX",
+          "scriptVersion": "0575",
+          "apiClientId": "shopify-pixel",
+          "type": "CUSTOM",
+          "purposes": ["ANALYTICS"]
+      }],
         initData: {
             "cart": {},
             "checkout": null,
@@ -100,7 +116,7 @@ export function WebPixel ({publicStoreDomain}: {publicStoreDomain: string}) {
         },
     }, function pageEvents(webPixelsManagerAPI: any) {
         WebPixelManagerApiRef.current = webPixelsManagerAPI;
-        webPixelsManagerAPI.subscribe('page_viewed', () => {console.log('WPM page viewed')})
+        webPixelsManagerAPI.subscribe('page_viewed', (event: any) => {console.log('WPM page viewed', event)})
         webPixelsManagerAPI.publish("page_viewed");
         hasInit = true;
 
