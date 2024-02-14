@@ -58,6 +58,11 @@ export async function startMiniOxygenRuntime({
   workerEntryFile,
 }: MiniOxygenViteOptions) {
   const scriptPromise = readFile(clientPath, 'utf-8');
+  const scriptPath = path.join(
+    viteDevServer.config.root,
+    '_virtual-o2-worker-entry.js',
+  );
+
   const [publicInspectorPort, privateInspectorPort] = await Promise.all([
     findPort(inspectorPort),
     findPort(PRIVATE_WORKERD_INSPECTOR_PORT),
@@ -67,34 +72,39 @@ export async function startMiniOxygenRuntime({
     cf: false,
     verbose: false,
     log: new NoOpLog(),
-    name: 'hydrogen',
     inspectorPort: privateInspectorPort,
-    modules: true,
-    modulesRoot: viteDevServer.config.root,
-    script: await scriptPromise,
-    scriptPath: path.join(
-      viteDevServer.config.root,
-      '_virtual-o2-worker-entry.js',
-    ),
-    ...OXYGEN_WORKERD_COMPAT_PARAMS,
-    bindings: {
-      ...env,
-      __VITE_ROOT: viteDevServer.config.root,
-      __VITE_RUNTIME_EXECUTE_URL: workerEntryFile,
-      __VITE_FETCH_MODULE_PATHNAME: FETCH_MODULE_PATHNAME,
-      __VITE_HMR_URL: getHmrUrl(viteDevServer),
-      __VITE_WARMUP_PATHNAME: WARMUP_PATHNAME,
-    } satisfies Omit<ViteEnv, '__VITE_UNSAFE_EVAL'>,
-    unsafeEvalBinding: '__VITE_UNSAFE_EVAL',
-    serviceBindings: {
-      [H2O_BINDING_NAME]: createLogRequestEvent({
-        transformLocation: (partialLocation) =>
-          path.join(viteDevServer.config.root, partialLocation),
-      }),
-    },
     handleRuntimeStdio(stdout, stderr) {
       // TODO: handle runtime stdio and remove inspector logs
     },
+    workers: [
+      {
+        name: 'hydrogen',
+        modulesRoot: viteDevServer.config.root,
+        modules: [
+          {
+            type: 'ESModule',
+            path: scriptPath,
+            contents: await scriptPromise,
+          },
+        ],
+        ...OXYGEN_WORKERD_COMPAT_PARAMS,
+        bindings: {
+          ...env,
+          __VITE_ROOT: viteDevServer.config.root,
+          __VITE_RUNTIME_EXECUTE_URL: workerEntryFile,
+          __VITE_FETCH_MODULE_PATHNAME: FETCH_MODULE_PATHNAME,
+          __VITE_HMR_URL: getHmrUrl(viteDevServer),
+          __VITE_WARMUP_PATHNAME: WARMUP_PATHNAME,
+        } satisfies Omit<ViteEnv, '__VITE_UNSAFE_EVAL'>,
+        unsafeEvalBinding: '__VITE_UNSAFE_EVAL',
+        serviceBindings: {
+          [H2O_BINDING_NAME]: createLogRequestEvent({
+            transformLocation: (partialLocation) =>
+              path.join(viteDevServer.config.root, partialLocation),
+          }),
+        },
+      },
+    ],
   });
 
   const warmupWorkerdCache = () => {
