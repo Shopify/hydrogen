@@ -22,6 +22,7 @@ import {
   Cart,
   CartLoading,
   Link,
+  Breadcrumbs,
 } from '~/components';
 import {
   type EnhancedMenu,
@@ -53,6 +54,7 @@ export function Layout({children, layout}: LayoutProps) {
         {headerMenu && layout?.shop.name && (
           <Header title={layout.shop.name} menu={headerMenu} />
         )}
+        <Breadcrumbs />
         <main role="main" id="mainContent" className="flex-grow">
           {children}
         </main>

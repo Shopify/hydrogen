@@ -19,6 +19,7 @@ export {FeaturedCollections} from './FeaturedCollections';
 export {Hero} from './Hero';
 export {SortFilter} from './SortFilter';
 export {Grid} from './Grid';
+export {Breadcrumbs} from './Breadcrumbs';
 export {FeaturedProducts} from './FeaturedProducts';
 export {AddToCartButton} from './AddToCartButton';
 export * from './Icon';
