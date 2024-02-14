@@ -29,7 +29,7 @@ export async function loader({
 }: LoaderFunctionArgs) {
   const searchParams = new URL(request.url).searchParams;
   const searchTerm = searchParams.get('q')!;
-  const variables = getPaginationVariables(request, {pageBy: 8});
+  const variables = getPaginationVariables(request, {pageBy: PAGINATION_SIZE});
 
   const {products} = await storefront.query(SEARCH_QUERY, {
     variables: {
