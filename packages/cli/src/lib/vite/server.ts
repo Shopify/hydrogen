@@ -88,7 +88,8 @@ export async function startMiniOxygenRuntime({
     unsafeEvalBinding: '__VITE_UNSAFE_EVAL',
     serviceBindings: {
       [H2O_BINDING_NAME]: createLogRequestEvent({
-        absoluteBundlePath: '', // TODO
+        transformLocation: (partialLocation) =>
+          path.join(viteDevServer.config.root, partialLocation),
       }),
     },
     handleRuntimeStdio(stdout, stderr) {
