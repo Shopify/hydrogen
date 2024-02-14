@@ -56,7 +56,7 @@ export async function startWorkerdServer({
   setConstructors({Response});
 
   const absoluteBundlePath = resolvePath(root, buildPathWorkerFile);
-  const handleAssets = createAssetHandler(assetsPort);
+  const handleAssets = createAssetHandler(assetsPort, env.PUBLIC_STORE_DOMAIN);
   const staticAssetExtensions = STATIC_ASSET_EXTENSIONS.slice();
 
   let stringifiedOxygenHandler = miniOxygenHandler.toString();
@@ -262,10 +262,21 @@ async function miniOxygenHandler(
   return response;
 }
 
-function createAssetHandler(assetsPort: number) {
+function createAssetHandler(assetsPort: number, publicStoreDomain?: string) {
   const assetsServerOrigin = buildAssetsUrl(assetsPort);
 
   return async (request: Request): Promise<Response> => {
+    const {pathname} = new URL(request.url);
+
+    const wpmAssets = pathname.startsWith('/wpm@') || pathname.startsWith('/cdn/wpm/');
+    if (publicStoreDomain && wpmAssets) {
+      return fetch(
+        `https://${publicStoreDomain}/${pathname}`, {
+          signal: request.signal,
+          headers: request.headers,
+      });
+    }
+
     return fetch(
       new Request(
         request.url.replace(

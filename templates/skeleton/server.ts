@@ -33,6 +33,20 @@ export default {
         throw new Error('SESSION_SECRET environment variable is not set');
       }
 
+      const {pathname} = new URL(request.url);
+      const wpmAssets = pathname.startsWith('/wpm@');
+      if (wpmAssets) {
+        console.log();
+        const wpmUrl = `https://${env.PUBLIC_STORE_DOMAIN}/${pathname}`;
+        const wpmResponse = await fetch(wpmUrl);
+
+        // Doesn't work because CF doesn't allow cross origin html requests
+        return new Response(wpmResponse.body, {
+          headers: wpmResponse.headers,
+          status: wpmResponse.status,
+        });
+      }
+
       const waitUntil = executionContext.waitUntil.bind(executionContext);
       const [cache, session] = await Promise.all([
         caches.open('hydrogen'),

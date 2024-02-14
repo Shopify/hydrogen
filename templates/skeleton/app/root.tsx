@@ -22,6 +22,7 @@ import favicon from '../public/favicon.svg';
 import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
+import { WebPixel } from './components/WebPixel';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -118,6 +119,7 @@ export default function App() {
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <Meta />
         <Links />
+        <WebPixel publicStoreDomain={data.publicStoreDomain}/>
       </head>
       <body>
         <Layout {...data}>
