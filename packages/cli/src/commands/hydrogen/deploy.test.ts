@@ -22,10 +22,12 @@ import {
   createDeploy,
   parseToken,
 } from '@shopify/oxygen-cli/deploy';
+import {loadEnvironmentVariableFile} from '@shopify/oxygen-cli/utils';
 import {ciPlatform} from '@shopify/cli-kit/node/context/local';
 
 vi.mock('../../lib/get-oxygen-deployment-data.js');
 vi.mock('@shopify/oxygen-cli/deploy');
+vi.mock('@shopify/oxygen-cli/utils');
 vi.mock('@shopify/cli-kit/node/fs');
 vi.mock('@shopify/cli-kit/node/context/local');
 vi.mock('../../lib/auth.js');
@@ -184,6 +186,52 @@ describe('deploy', () => {
       logger: deploymentLogger,
     });
     expect(vi.mocked(renderSuccess)).toHaveBeenCalled;
+  });
+
+  it('calls createDeploy with overridden variables in environment file', async () => {
+    const overriddenEnvironmentVariables = [
+      {
+        key: 'fake-key',
+        value: 'fake-value',
+        isSecret: true,
+      },
+    ];
+
+    vi.mocked(loadEnvironmentVariableFile).mockReturnValue(
+      overriddenEnvironmentVariables,
+    );
+
+    await oxygenDeploy({
+      ...deployParams,
+      environmentFile: 'fake-env-file',
+    });
+
+    expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
+      config: {
+        ...expectedConfig,
+        overriddenEnvironmentVariables,
+      },
+      hooks: expectedHooks,
+      logger: deploymentLogger,
+    });
+  });
+
+  it('errors when supplied environment file does not exist', async () => {
+    vi.mocked(loadEnvironmentVariableFile).mockImplementation(
+      (_path: string) => {
+        throw new AbortError('File not found');
+      },
+    );
+
+    try {
+      await oxygenDeploy({
+        ...deployParams,
+        environmentFile: 'fake-env-file',
+      });
+      expect(true).toBe(false);
+    } catch (err) {
+      expect(err).toBeInstanceOf(AbortError);
+    }
   });
 
   it('errors when there are uncommited changes', async () => {

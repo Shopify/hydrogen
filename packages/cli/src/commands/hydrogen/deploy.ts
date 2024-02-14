@@ -31,6 +31,7 @@ import {
   DeploymentVerificationDetailsResponse,
   parseToken,
 } from '@shopify/oxygen-cli/deploy';
+import {loadEnvironmentVariableFile} from '@shopify/oxygen-cli/utils';
 
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
@@ -51,6 +52,11 @@ export default class Deploy extends Command {
   static flags: any = {
     'env-branch': Flags.string({
       description: 'Environment branch (tag) for environment to deploy to.',
+      required: false,
+    }),
+    'env-file': Flags.string({
+      description:
+        'Path to an environment file to override existing environment variables for the deployment.',
       required: false,
     }),
     preview: Flags.boolean({
@@ -137,6 +143,7 @@ export default class Deploy extends Command {
       ...camelFlags,
       defaultEnvironment: flags.preview,
       environmentTag: flags['env-branch'],
+      environmentFile: flags['env-file'],
       path: flags.path ? resolvePath(flags.path) : process.cwd(),
     } as OxygenDeploymentOptions;
   }
@@ -146,6 +153,7 @@ interface OxygenDeploymentOptions {
   authBypassToken: boolean;
   defaultEnvironment: boolean;
   environmentTag?: string;
+  environmentFile?: string;
   force: boolean;
   noJsonOutput: boolean;
   path: string;
@@ -188,6 +196,7 @@ export async function oxygenDeploy(
     authBypassToken: generateAuthBypassToken,
     defaultEnvironment,
     environmentTag,
+    environmentFile,
     force: forceOnUncommitedChanges,
     noJsonOutput,
     path,
@@ -246,6 +255,19 @@ export async function oxygenDeploy(
       ],
     });
     metadataDescription = `${commitHash} with additional changes`;
+  }
+
+  let overriddenEnvironmentVariables;
+
+  if (environmentFile) {
+    try {
+      overriddenEnvironmentVariables =
+        loadEnvironmentVariableFile(environmentFile);
+    } catch (error) {
+      throw new AbortError(
+        `Could not load environment file at ${environmentFile}`,
+      );
+    }
   }
 
   if (!isCI) {
@@ -343,6 +365,7 @@ export async function oxygenDeploy(
     skipBuild: false,
     workerOnly: false,
     workerDir: 'dist/worker',
+    overriddenEnvironmentVariables,
   };
 
   let resolveUpload: () => void;
