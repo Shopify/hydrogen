@@ -1,3 +1,4 @@
+import path from 'node:path';
 import type {Plugin, ResolvedConfig} from 'vite';
 import {
   setupHydrogenHandlers,
@@ -61,6 +62,9 @@ export function hydrogen(): Plugin[] {
  * @experimental
  */
 export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
+  let resolvedConfig: ResolvedConfig;
+  let absoluteWorkerEntryFile: string;
+
   return [
     {
       name: 'oxygen:runtime',
@@ -94,23 +98,29 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
       configureServer(viteDevServer) {
         if (isRemixChildCompiler(viteDevServer.config)) return;
 
+        resolvedConfig = viteDevServer.config;
+
         // Get the value from the CLI, which downloads variables
         // from Oxygen and merges them with the local .env file.
         const cliOptions = getCliOptions(viteDevServer.config);
         const envPromise = cliOptions?.envPromise ?? Promise.resolve();
 
+        const workerEntryFile =
+          cliOptions?.ssrEntry ?? pluginOptions.ssrEntry ?? DEFAULT_SSR_ENTRY;
+
+        absoluteWorkerEntryFile = path.isAbsolute(workerEntryFile)
+          ? workerEntryFile
+          : path.resolve(viteDevServer.config.root, workerEntryFile);
+
         let miniOxygen: MiniOxygen;
         const miniOxygenPromise = envPromise.then((remoteEnv) => {
           return startMiniOxygenRuntime({
             viteDevServer,
+            workerEntryFile,
             env: {...remoteEnv, ...viteDevServer.config.env},
             debug: cliOptions?.debug ?? pluginOptions.debug ?? false,
             inspectorPort:
               cliOptions?.inspectorPort ?? pluginOptions.inspectorPort ?? 9229,
-            workerEntryFile:
-              cliOptions?.ssrEntry ??
-              pluginOptions.ssrEntry ??
-              DEFAULT_SSR_ENTRY,
           });
         });
 
@@ -128,6 +138,21 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
             return miniOxygen.dispatch(request);
           });
         };
+      },
+      transform(code, id, options) {
+        if (
+          resolvedConfig?.command === 'serve' &&
+          resolvedConfig?.server?.hmr !== false &&
+          options?.ssr &&
+          (id === absoluteWorkerEntryFile ||
+            id === absoluteWorkerEntryFile + path.extname(id))
+        ) {
+          return {
+            // Accept HMR in server entry module to avoid full-page refresh in the browser.
+            // Note: appending code at the end should not break the source map.
+            code: code + '\nif (import.meta.hot) import.meta.hot.accept();',
+          };
+        }
       },
     },
   ];

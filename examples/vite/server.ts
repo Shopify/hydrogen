@@ -17,10 +17,6 @@ import {
 import {AppSession} from '~/lib/session';
 import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
 
-if (import.meta.hot) {
-  import.meta.hot.accept();
-}
-
 /**
  * Export a fetch handler in module format.
  */
