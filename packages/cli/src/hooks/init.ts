@@ -26,10 +26,10 @@ const hook: Hook<'init'> = async function (options) {
     const [command, ...args] = process.argv;
     args.unshift(EXPERIMENTAL_VM_MODULES_FLAG);
 
-    spawnSync(command!, args, {stdio: 'inherit'});
+    const result = spawnSync(command!, args, {stdio: 'inherit'});
 
-    // This code should not be reached
-    process.exit(0);
+    // If we don't have a status we can assume that the process errored out
+    process.exit(result.status ?? 1);
   }
 };
 
