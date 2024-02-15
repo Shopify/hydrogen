@@ -141,7 +141,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
             workerEntryFile,
             setupScripts,
             services,
-            env: {...remoteEnv, ...viteDevServer.config.env},
+            env: {...remoteEnv, ...pluginOptions.env},
             debug: cliOptions?.debug ?? pluginOptions.debug ?? false,
             inspectorPort:
               cliOptions?.inspectorPort ?? pluginOptions.inspectorPort ?? 9229,

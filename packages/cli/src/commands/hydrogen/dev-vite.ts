@@ -107,10 +107,7 @@ export async function runDev({
 
   const envPromise = getConfig(root).then(({shop, storefront}) => {
     const fetchRemote = !!shop && !!storefront?.id;
-    // Vite already reads .env files so we only need to fetch remote variables.
-    return fetchRemote
-      ? getAllEnvironmentVariables({root, fetchRemote, envBranch})
-      : {};
+    return getAllEnvironmentVariables({root, fetchRemote, envBranch});
   });
 
   const vite = await import('vite');

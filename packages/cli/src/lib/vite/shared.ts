@@ -20,6 +20,7 @@ export type OxygenPluginOptions = {
   ssrEntry?: string;
   debug?: boolean;
   inspectorPort?: number;
+  env?: Record<string, any>;
 };
 
 // Note: Vite resolves extensions like .js or .ts automatically.
