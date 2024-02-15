@@ -1,4 +1,5 @@
 import type {GenericVariables} from '@shopify/hydrogen-codegen';
+import type {WritableDeep} from 'type-fest';
 import {
   DEFAULT_CUSTOMER_API_VERSION,
   CUSTOMER_ACCOUNT_SESSION_KEY,
@@ -25,6 +26,7 @@ import {
   assertMutation,
   throwErrorWithGqlLink,
   type GraphQLErrorOptions,
+  GraphQLError,
 } from '../utils/graphql';
 import {parseJSON} from '../utils/parse-json';
 import {
@@ -34,7 +36,11 @@ import {
 } from '../utils/request';
 import {getCallerStackLine, withSyncStack} from '../utils/callsites';
 import {getRedirectUrl} from '../utils/get-redirect-url';
-import type {CustomerAccountOptions, CustomerAccount} from './types';
+import type {
+  CustomerAccountOptions,
+  CustomerAccount,
+  CustomerAPIResponse,
+} from './types';
 
 const DEFAULT_LOGIN_URL = '/account/login';
 const DEFAULT_AUTH_URL = '/account/authorize';
@@ -61,6 +67,7 @@ export function createCustomerAccountClient({
   waitUntil,
   authUrl = DEFAULT_AUTH_URL,
   customAuthStatusHandler,
+  logErrors = true,
 }: CustomerAccountOptions): CustomerAccount {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.warn(
@@ -174,7 +181,21 @@ export function createCustomerAccountClient({
     }
 
     try {
-      return parseJSON(body);
+      const APIresponse = parseJSON(body) as CustomerAPIResponse<T>;
+      const {errors} = APIresponse;
+
+      const gqlErrors = errors?.map(
+        ({message, ...rest}) =>
+          new GraphQLError(message, {
+            ...(rest as WritableDeep<typeof rest>),
+            clientOperation: `storefront.${errorOptions.type}`,
+            requestId: response.headers.get('x-request-id'),
+            queryVariables: variables,
+            query,
+          }),
+      );
+
+      return {...APIresponse, errors: gqlErrors};
     } catch (e) {
       throwErrorWithGqlLink({...errorOptions, errors: [{message: body}]});
     }
@@ -291,6 +312,7 @@ export function createCustomerAccountClient({
 
       return withSyncStack(
         fetchCustomerAPI({query: mutation, type: 'mutation', ...options}),
+        {logErrors},
       );
     },
     query(query, options?) {
@@ -299,6 +321,7 @@ export function createCustomerAccountClient({
 
       return withSyncStack(
         fetchCustomerAPI({query, type: 'query', ...options}),
+        {logErrors},
       );
     },
     authorize: async () => {
