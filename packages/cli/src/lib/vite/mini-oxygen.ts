@@ -90,10 +90,10 @@ export async function startMiniOxygenRuntime({
         modules: true,
         scriptPath,
         script: `
-          const setupFunctions = [${setupFunctions}];
+          const setupFunctions = [${setupFunctions ?? ''}];
           export default (env) => (request) => {
             const viteUrl = new URL(request.url).origin;
-            setupFunctions.forEach((setup) => setup(viteUrl));
+            setupFunctions.forEach((setup) => setup?.(viteUrl));
             setupFunctions.length = 0;
           }`,
       },
