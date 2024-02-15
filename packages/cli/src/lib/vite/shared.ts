@@ -5,10 +5,15 @@ import type {InternalMiniOxygenOptions} from './mini-oxygen.js';
 
 export type H2OPluginContext = InternalMiniOxygenOptions & {
   cliOptions?: Partial<
-    OxygenPluginOptions & {
-      envPromise: Promise<Record<string, any>>;
-    }
+    HydrogenPluginOptions &
+      OxygenPluginOptions & {
+        envPromise: Promise<Record<string, any>>;
+      }
   >;
+};
+
+export type HydrogenPluginOptions = {
+  disableVirtualRoutes?: boolean;
 };
 
 export type OxygenPluginOptions = {

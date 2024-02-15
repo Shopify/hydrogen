@@ -1,6 +1,5 @@
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {outputDebug} from '@shopify/cli-kit/node/output';
 import {enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
 import {
   commonFlags,
@@ -10,8 +9,6 @@ import {
 import Command from '@shopify/cli-kit/node/base-command';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {Flags} from '@oclif/core';
-import type {RemixPluginContext} from '@remix-run/dev/dist/vite/plugin.js';
-import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
@@ -132,7 +129,13 @@ export async function runDev({
     root,
     server: {fs, host: host ? true : undefined},
     ...setH2OPluginContext({
-      cliOptions: {envPromise, inspectorPort, debug, ssrEntry},
+      cliOptions: {
+        debug,
+        ssrEntry,
+        envPromise,
+        inspectorPort,
+        disableVirtualRoutes,
+      },
     }),
   });
 
@@ -154,60 +157,9 @@ export async function runDev({
     );
   }
 
-  let appDirectory = path.join(root, 'app');
-
-  async function reloadVirtualRoutes() {
-    const remixPluginContext = (viteServer.config as any)
-      .__remixPluginContext as RemixPluginContext;
-
-    appDirectory =
-      remixPluginContext?.remixConfig?.appDirectory ?? appDirectory;
-
-    if (!disableVirtualRoutes) {
-      // Unfreeze remixConfig to extend it with virtual routes.
-      remixPluginContext.remixConfig = {...remixPluginContext.remixConfig};
-      // @ts-expect-error
-      remixPluginContext.remixConfig.routes = {
-        ...remixPluginContext.remixConfig.routes,
-      };
-
-      await addVirtualRoutes(remixPluginContext.remixConfig).catch((error) => {
-        // Seen this fail when somehow NPM doesn't publish
-        // the full 'virtual-routes' directory.
-        // E.g. https://unpkg.com/browse/@shopify/cli-hydrogen@0.0.0-next-aa15969-20230703072007/dist/virtual-routes/
-        outputDebug(
-          'Could not add virtual routes: ' +
-            (error?.stack ?? error?.message ?? error),
-        );
-      });
-
-      Object.freeze(remixPluginContext.remixConfig.routes);
-      Object.freeze(remixPluginContext.remixConfig);
-    }
-  }
-
-  await reloadVirtualRoutes();
-
-  // Remix resets the routes when the app is reloaded. Add them again.
-  viteServer.watcher.on('all', (eventName, filepath) => {
-    const appFileAddedOrRemoved =
-      (eventName === 'add' || eventName === 'unlink') &&
-      vite.normalizePath(filepath).startsWith(vite.normalizePath(appDirectory));
-
-    const viteConfigChanged =
-      eventName === 'change' &&
-      vite.normalizePath(filepath) ===
-        vite.normalizePath(viteServer.config.configFile ?? '');
-
-    if (appFileAddedOrRemoved || viteConfigChanged) {
-      setTimeout(reloadVirtualRoutes, 100);
-    }
-  });
-
   const codegenProcess = useCodegen
     ? spawnCodegenProcess({
         rootDirectory: root,
-        appDirectory,
         configFilePath: codegenConfigPath,
       })
     : undefined;

@@ -14,6 +14,7 @@ import {
   setH2OPluginContext,
   DEFAULT_SSR_ENTRY,
   type OxygenPluginOptions,
+  type HydrogenPluginOptions,
 } from './shared.js';
 import {H2O_BINDING_NAME, createLogRequestEvent} from '../request-events.js';
 
@@ -23,7 +24,7 @@ import {H2O_BINDING_NAME, createLogRequestEvent} from '../request-events.js';
  * It must be used in combination with the `oxygen` plugin and Hydrogen CLI.
  * @experimental
  */
-export function hydrogen(): Plugin[] {
+export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
   return [
     {
       name: 'hydrogen:main',
@@ -63,8 +64,14 @@ export function hydrogen(): Plugin[] {
       configureServer(viteDevServer) {
         if (isRemixChildCompiler(viteDevServer.config)) return;
 
+        // Get options from Hydrogen CLI.
+        const {cliOptions} = getH2OPluginContext(viteDevServer.config) || {};
+
         return () => {
-          setupHydrogenMiddleware(viteDevServer);
+          setupHydrogenMiddleware(viteDevServer, {
+            ...pluginOptions,
+            ...cliOptions,
+          });
         };
       },
     },
