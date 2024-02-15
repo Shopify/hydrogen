@@ -24,12 +24,14 @@ import {
 } from '@shopify/oxygen-cli/deploy';
 import {loadEnvironmentVariableFile} from '@shopify/oxygen-cli/utils';
 import {ciPlatform} from '@shopify/cli-kit/node/context/local';
+import {runBuild} from './build.js';
 
-vi.mock('../../lib/get-oxygen-deployment-data.js');
 vi.mock('@shopify/oxygen-cli/deploy');
 vi.mock('@shopify/oxygen-cli/utils');
 vi.mock('@shopify/cli-kit/node/fs');
 vi.mock('@shopify/cli-kit/node/context/local');
+vi.mock('../../lib/get-oxygen-deployment-data.js');
+vi.mock('./build.js');
 vi.mock('../../lib/auth.js');
 vi.mock('../../lib/shopify-config.js');
 vi.mock('../../lib/graphql/admin/link-storefront.js');
@@ -87,7 +89,8 @@ describe('deploy', () => {
     authBypassToken: true,
     defaultEnvironment: false,
     force: false,
-    noJsonOutput: false,
+    lockfileCheck: false,
+    jsonOutput: true,
     path: './',
     shop: 'snowdevil.myshopify.com',
     metadataUrl: 'https://example.com',
@@ -394,6 +397,48 @@ describe('deploy', () => {
     });
   });
 
+  it('passes the lockfileCheck to the build function when the flag is set', async () => {
+    const params = {
+      ...deployParams,
+      lockfileCheck: false,
+    };
+    vi.mocked(createDeploy).mockImplementationOnce((options) => {
+      options.hooks?.buildFunction?.('some-cool-asset-path');
+
+      return new Promise((resolve, _reject) => {
+        resolve({url: 'https://a-lovely-deployment.com'});
+      }) as Promise<CompletedDeployment | undefined>;
+    });
+    await oxygenDeploy(params);
+
+    expect(vi.mocked(runBuild)).toHaveBeenCalledWith({
+      assetPath: 'some-cool-asset-path',
+      directory: params.path,
+      lockfileCheck: false,
+      sourcemap: true,
+      useCodegen: false,
+    });
+  });
+
+  it('passes a build command to createDeploy when the build-command flag is used', async () => {
+    const params = {
+      ...deployParams,
+      buildCommand: 'hocus pocus',
+    };
+    const {buildFunction: _, ...hooks} = expectedHooks;
+
+    await oxygenDeploy(params);
+
+    expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
+      config: {
+        ...expectedConfig,
+        buildCommand: 'hocus pocus',
+      },
+      hooks: hooks,
+      logger: deploymentLogger,
+    });
+  });
+
   it('writes a file with JSON content in CI environments', async () => {
     vi.mocked(ciPlatform).mockReturnValue({
       isCI: true,
@@ -419,7 +464,7 @@ describe('deploy', () => {
     );
 
     vi.mocked(writeFile).mockClear();
-    ciDeployParams.noJsonOutput = true;
+    ciDeployParams.jsonOutput = false;
     await oxygenDeploy(ciDeployParams);
     expect(vi.mocked(writeFile)).not.toHaveBeenCalled();
   });

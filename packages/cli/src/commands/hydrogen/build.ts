@@ -45,23 +45,19 @@ export default class Build extends Command {
   static flags = {
     path: commonFlags.path,
     sourcemap: Flags.boolean({
-      description: 'Generate sourcemaps for the build.',
+      description:
+        'Controls whether sourcemaps are generated. Default to true, use `--no-sourcemaps` to disable.',
       env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
       allowNo: true,
       default: true,
     }),
     'bundle-stats': Flags.boolean({
-      description: 'Show a bundle size summary after building.',
-      default: true,
-      allowNo: true,
-    }),
-    'lockfile-check': Flags.boolean({
       description:
-        'Checks that there is exactly 1 valid lockfile in the project.',
-      env: 'SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK',
+        'Show a bundle size summary after building. Defaults to true, use `--no-bundle-stats` to disable.',
       default: true,
       allowNo: true,
     }),
+    'lockfile-check': commonFlags.lockfileCheck,
     'disable-route-warning': Flags.boolean({
       description: 'Disable warning about missing standard routes.',
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
