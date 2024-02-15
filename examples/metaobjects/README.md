@@ -15,7 +15,7 @@ at a route and section level.
   to make this example work.
 
 > [!NOTE]
-> (Optional) If you prefer to use your own store instead, please follow the [instructions](/docs/METAOBJECTS.md)
+> (Optional) If you prefer to use your own store instead, please follow the [instructions](./docs/METAOBJECTS.md)
 > to configure the same content architecture.
 
 ## Key files
@@ -53,8 +53,8 @@ create are labeled with 🆕.
 This example uses `mock.shop` store by default.
 
 > [!NOTE]
-> If you would like to use your store instead please ensure that the [required metaobjects](TODO)
-> structure has been created.
+> (Optional) If you prefer to use your own store instead, please follow the [instructions](./docs/METAOBJECTS.md)
+> to configure the same content architecture.
 
 ### 2. Copy over the 🆕 files
 
