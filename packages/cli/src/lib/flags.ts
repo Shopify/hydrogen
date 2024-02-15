@@ -104,6 +104,13 @@ export const commonFlags = {
     default: false,
     required: false,
   }),
+  lockfileCheck: Flags.boolean({
+    allowNo: true,
+    default: true,
+    description:
+      'Checks that there is exactly 1 valid lockfile in the project. Defaults to true, use `--no-lockfile-check` to disable.',
+    env: 'SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK',
+  }),
 };
 
 export function flagsToCamelObject<T extends Record<string, any>>(obj: T) {
