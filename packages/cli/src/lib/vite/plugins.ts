@@ -50,7 +50,7 @@ export function hydrogen(): Plugin[] {
           },
           // Pass the setup functions to the Oxygen runtime.
           ...setH2OPluginContext({
-            setupFunctions: [setupRemixDevServerHooks],
+            setupScripts: [setupRemixDevServerHooks],
             services: {
               [H2O_BINDING_NAME]: createLogRequestEvent({
                 transformLocation: (partialLocation) =>
@@ -115,9 +115,8 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
 
         resolvedConfig = viteDevServer.config;
 
-        // Get the value from the CLI, which downloads variables
-        // from Oxygen and merges them with the local .env file.
-        const {cliOptions, setupFunctions} =
+        // Get options from Hydrogen plugin and CLI.
+        const {cliOptions, setupScripts, services} =
           getH2OPluginContext(viteDevServer.config) || {};
 
         const workerEntryFile =
@@ -133,7 +132,8 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
           return startMiniOxygenRuntime({
             viteDevServer,
             workerEntryFile,
-            setupFunctions,
+            setupScripts,
+            services,
             env: {...remoteEnv, ...viteDevServer.config.env},
             debug: cliOptions?.debug ?? pluginOptions.debug ?? false,
             inspectorPort:

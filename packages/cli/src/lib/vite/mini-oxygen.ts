@@ -27,7 +27,7 @@ const oxygenHeadersMap = Object.values(OXYGEN_HEADERS_MAP).reduce(
 );
 
 export type InternalMiniOxygenOptions = {
-  setupFunctions?: Array<(viteUrl: string) => void>;
+  setupScripts?: Array<(viteUrl: string) => void>;
   services?: Record<string, (request: Request) => Response | Promise<Response>>;
 };
 
@@ -46,7 +46,7 @@ export async function startMiniOxygenRuntime({
   debug = false,
   inspectorPort,
   workerEntryFile,
-  setupFunctions,
+  setupScripts,
 }: MiniOxygenViteOptions) {
   const [publicInspectorPort, privateInspectorPort] = await Promise.all([
     findPort(inspectorPort),
@@ -86,11 +86,11 @@ export async function startMiniOxygenRuntime({
         modules: true,
         scriptPath,
         script: `
-          const setupFunctions = [${setupFunctions ?? ''}];
+          const setupScripts = [${setupScripts ?? ''}];
           export default (env) => (request) => {
             const viteUrl = new URL(request.url).origin;
-            setupFunctions.forEach((setup) => setup?.(viteUrl));
-            setupFunctions.length = 0;
+            setupScripts.forEach((setup) => setup?.(viteUrl));
+            setupScripts.length = 0;
           }`,
       },
     ],
