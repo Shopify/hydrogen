@@ -32,7 +32,7 @@ export function setupHydrogenMiddleware(viteDevServer: ViteDevServer) {
             '__remix_devServerHooks'
           ]?.getCriticalCss?.(...args);
           res.writeHead(200, {'Content-Type': 'application/json'});
-          res.end(JSON.stringify(result));
+          res.end(JSON.stringify(result ?? ''));
         });
     },
   );
