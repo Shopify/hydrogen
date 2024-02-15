@@ -17,5 +17,11 @@
   "dependencies": {
     "@remix-run/node": "^2.6.0",
     "isbot": "^3.8.0"
+  },
+  "h2:diff": {
+    "skip-files": [
+      "remix.config.js",
+      "remix.env.d.ts"
+    ]
   }
 }
