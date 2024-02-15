@@ -9,7 +9,7 @@ export default defineConfig({
     oxygen(),
     remix({
       buildDirectory: 'dist',
-      // TODO update Remix to fix this
+      // @ts-ignore This is fixed in the next Remix version
       publicPath: process.env.HYDROGEN_ASSET_BASE_URL,
     }),
     tsconfigPaths(),
