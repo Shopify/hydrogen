@@ -11,7 +11,6 @@ import {
   renderInfo,
   renderSuccess,
 } from '@shopify/cli-kit/node/ui';
-import {parseDotEnvFile} from '@shopify/oxygen-cli/utils';
 import {
   outputContent,
   outputToken,
@@ -26,6 +25,7 @@ import {linkStorefront} from '../link.js';
 import {getStorefrontEnvVariables} from '../../../lib/graphql/admin/pull-variables.js';
 import {pushStorefrontEnvVariables} from '../../../lib/graphql/admin/push-variables.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
+import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
 
 export default class EnvPush extends Command {
   static description =
@@ -62,14 +62,8 @@ export async function runEnvPush({
   let validatedEnvironment: Partial<Environment> = {};
 
   // Ensure local .env file
-  const dotEnvPath = resolvePath(path, '.env');
-  let localVariables: Record<string, string>;
-
-  try {
-    localVariables = parseDotEnvFile(dotEnvPath);
-  } catch {
-    throw new AbortError('Local .env file not found');
-  }
+  const dotEnvPath = resolvePath(path, envFile);
+  const {variables: localVariables} = await readAndParseDotEnv(dotEnvPath);
 
   // Authenticate
   const [{session, config}, cliCommand] = await Promise.all([
