@@ -109,12 +109,7 @@ export async function runDev({
     const fetchRemote = !!shop && !!storefront?.id;
     // Vite already reads .env files so we only need to fetch remote variables.
     return fetchRemote
-      ? getAllEnvironmentVariables({root, fetchRemote, envBranch}).then(
-          (env) => {
-            console.log(''); // Add a newline after the CLI output
-            return env;
-          },
-        )
+      ? getAllEnvironmentVariables({root, fetchRemote, envBranch})
       : {};
   });
 
@@ -188,9 +183,11 @@ export async function runDev({
   // Start the public facing server with the port passed by the user.
   enhanceH2Logs({rootDirectory: root, host: publicUrl.toString()});
 
+  await envPromise; // Prints the injected env vars
   console.log('');
   viteServer.printUrls();
   viteServer.bindCLIShortcuts({print: true});
+  console.log('\n');
 
   checkRemixVersions();
   if (!disableVersionCheck) {
