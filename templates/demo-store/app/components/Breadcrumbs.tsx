@@ -1,5 +1,5 @@
 import React from 'react';
-import {Link, UIMatch, useMatches} from '@remix-run/react';
+import {Link, type UIMatch, useMatches} from '@remix-run/react';
 
 import {IconCaret} from '~/components';
 
@@ -29,7 +29,7 @@ export function Breadcrumbs() {
 
     if (splitURL[2]) {
       pages.push({
-        path: deepestRoute?.pathname || '',
+        path: `/${splitURL[2]}`,
         name: `${
           deepestRoute?.data?.[pageType]?.title ||
           getCapitalizeString(splitURL[2])
@@ -55,7 +55,7 @@ export function Breadcrumbs() {
         {pages.map((page, index) => {
           const currentPage = index === pages.length - 1;
           return (
-            <li className="flex items-center" key={`${page.path}_${index}`}>
+            <li className="flex items-center" key={page.path}>
               {index !== 0 ? (
                 <span className="px-2 text-primary/80 hover:text-primary">
                   {SEPARATOR}
