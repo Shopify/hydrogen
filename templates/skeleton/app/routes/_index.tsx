@@ -52,6 +52,7 @@ function FeaturedCollection({
   );
 }
 
+// [START h2-start.recommended]
 function RecommendedProducts({
   products,
 }: {
@@ -59,7 +60,9 @@ function RecommendedProducts({
 }) {
   return (
     <div className="recommended-products">
-      <h2>Recommended Products</h2>
+      {/* [START h2-start.recommended-edit] */}
+      <h2>Trending</h2>
+      {/* [END h2-start.recommended-edit] */}
       <Suspense fallback={<div>Loading...</div>}>
         <Await resolve={products}>
           {({products}) => (
@@ -89,6 +92,7 @@ function RecommendedProducts({
     </div>
   );
 }
+// [END h2-start.recommended]
 
 const FEATURED_COLLECTION_QUERY = `#graphql
   fragment FeaturedCollection on Collection {
