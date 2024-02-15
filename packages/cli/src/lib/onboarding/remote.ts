@@ -1,3 +1,4 @@
+import {readdir} from 'node:fs/promises';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController} from '@shopify/cli-kit/node/abort';
 import {copyFile, fileExists} from '@shopify/cli-kit/node/fs';
@@ -46,9 +47,20 @@ export async function setupRemoteTemplate(
         return {templatesDir, sourcePath: examplePath};
       }
 
+      const availableTemplates = (
+        await Promise.all([readdir(examplesDir), readdir(templatesDir)]).catch(
+          () => [],
+        )
+      )
+        .flat()
+        .filter((name) => name !== 'skeleton' && !name.endsWith('.md'))
+        .sort();
+
       throw new AbortError(
-        'Unknown value in --template flag.',
-        'Skip the --template flag or provide the name of a template or example in the Hydrogen repository.',
+        `Unknown value in \`--template\` flag "${appTemplate}".\nSkip the flag or provide the name of a template or example in the Hydrogen repository.`,
+        availableTemplates.length === 0
+          ? ''
+          : {list: {title: 'Available templates:', items: availableTemplates}},
       );
     })
     .catch(abort);
