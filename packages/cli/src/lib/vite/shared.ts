@@ -1,14 +1,14 @@
 // Do not import Vite in this file since it is used from
 // the rest of the CLI when Vite might not be installed.
 import type {ResolvedConfig, UserConfig} from 'vite';
+import type {InternalMiniOxygenOptions} from './mini-oxygen.js';
 
-export type H2OPluginContext = {
+export type H2OPluginContext = InternalMiniOxygenOptions & {
   cliOptions?: Partial<
     OxygenPluginOptions & {
       envPromise: Promise<Record<string, any>>;
     }
   >;
-  setupFunctions?: Array<(viteUrl: string) => void>;
 };
 
 export type OxygenPluginOptions = {

@@ -1,9 +1,7 @@
 import {fetchModule, type ViteDevServer} from 'vite';
-import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import crypto from 'node:crypto';
 import {Miniflare, NoOpLog, Request, type Response} from 'miniflare';
-import {H2O_BINDING_NAME, createLogRequestEvent} from '../request-events.js';
 import {OXYGEN_HEADERS_MAP, logRequestLine} from '../mini-oxygen/common.js';
 import {
   PRIVATE_WORKERD_INSPECTOR_PORT,
@@ -28,20 +26,23 @@ const oxygenHeadersMap = Object.values(OXYGEN_HEADERS_MAP).reduce(
   {} as Record<string, string>,
 );
 
-type MiniOxygenViteOptions = Pick<
-  MiniOxygenOptions,
-  'env' | 'debug' | 'inspectorPort'
-> & {
-  viteDevServer: ViteDevServer;
-  workerEntryFile: string;
-  setupFunctions?: Array<string | ((viteUrl: string) => void)>;
+export type InternalMiniOxygenOptions = {
+  setupFunctions?: Array<(viteUrl: string) => void>;
+  services?: Record<string, (request: Request) => Response | Promise<Response>>;
 };
+
+type MiniOxygenViteOptions = InternalMiniOxygenOptions &
+  Pick<MiniOxygenOptions, 'env' | 'debug' | 'inspectorPort'> & {
+    viteDevServer: ViteDevServer;
+    workerEntryFile: string;
+  };
 
 export type MiniOxygen = Awaited<ReturnType<typeof startMiniOxygenRuntime>>;
 
 export async function startMiniOxygenRuntime({
   viteDevServer,
   env,
+  services,
   debug = false,
   inspectorPort,
   workerEntryFile,
@@ -66,6 +67,7 @@ export async function startMiniOxygenRuntime({
         modulesRoot: '/',
         modules: [{type: 'ESModule', path: scriptPath}],
         ...OXYGEN_WORKERD_COMPAT_PARAMS,
+        serviceBindings: {...services},
         bindings: {
           ...env,
           __VITE_ROOT: viteDevServer.config.root,
@@ -75,12 +77,6 @@ export async function startMiniOxygenRuntime({
           __VITE_WARMUP_PATHNAME: WARMUP_PATHNAME,
         } satisfies Omit<ViteEnv, '__VITE_UNSAFE_EVAL' | '__VITE_SETUP_ENV'>,
         unsafeEvalBinding: '__VITE_UNSAFE_EVAL',
-        serviceBindings: {
-          [H2O_BINDING_NAME]: createLogRequestEvent({
-            transformLocation: (partialLocation) =>
-              path.join(viteDevServer.config.root, partialLocation),
-          }),
-        },
         wrappedBindings: {
           __VITE_SETUP_ENV: 'setup-environment',
         },
@@ -185,7 +181,7 @@ export function setupOxygenMiddleware(
     // This request comes from the browser. At this point, Vite
     // tried to serve the request as a static file, but it didn't
     // find it in the project. Therefore, we assume this is a
-    // request for a Remix route, and we forward it to workerd.
+    // request for a backend route, and we forward it to workerd.
 
     if (!req.headers.host) throw new Error('Missing host header');
 

@@ -15,6 +15,7 @@ import {
   DEFAULT_SSR_ENTRY,
   type OxygenPluginOptions,
 } from './shared.js';
+import {H2O_BINDING_NAME, createLogRequestEvent} from '../request-events.js';
 
 /**
  * Enables Hydrogen utilities for local development
@@ -26,7 +27,7 @@ export function hydrogen(): Plugin[] {
   return [
     {
       name: 'hydrogen:main',
-      config() {
+      config(config) {
         return {
           ssr: {
             optimizeDeps: {
@@ -48,7 +49,15 @@ export function hydrogen(): Plugin[] {
             },
           },
           // Pass the setup functions to the Oxygen runtime.
-          ...setH2OPluginContext({setupFunctions: [setupRemixDevServerHooks]}),
+          ...setH2OPluginContext({
+            setupFunctions: [setupRemixDevServerHooks],
+            services: {
+              [H2O_BINDING_NAME]: createLogRequestEvent({
+                transformLocation: (partialLocation) =>
+                  path.join(config.root ?? process.cwd(), partialLocation),
+              }),
+            },
+          }),
         };
       },
       configureServer(viteDevServer) {
