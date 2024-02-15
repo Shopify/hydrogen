@@ -23,8 +23,8 @@ import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
 
-/*
- * This is important to avoid re-fetching root queries on sub navigation
+/**
+ * This is important to avoid re-fetching root queries on sub-navigations
  */
 export const shouldRevalidate: ShouldRevalidateFunction = ({
   formMethod,
@@ -60,28 +60,32 @@ export function links() {
   ];
 }
 
+/**
+ * Access the result of the root loader from a React component.
+ */
 export const useRootLoaderData = () => {
   const [root] = useMatches();
   return root?.data as SerializeFrom<typeof loader>;
 };
 
 export async function loader({context}: LoaderFunctionArgs) {
-  const {storefront, session, cart} = context;
-  const customerAccessToken = session.get('customerAccessToken');
+  const {storefront, customerAccount, cart} = context;
   const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
 
-  // validate the customer access token is valid
-  const {isLoggedIn, headers} = await validateCustomerAccessToken(
-    session,
-    customerAccessToken,
-  );
-
-  // defer the cart query by not awaiting it
+  const isLoggedInPromise = customerAccount.isLoggedIn();
   const cartPromise = cart.get();
+
+  // defer the footer query (below the fold)
+  const footerPromise = storefront.query(FOOTER_QUERY, {
+    cache: storefront.CacheLong(),
+    variables: {
+      footerMenuHandle: 'footer', // Adjust to your footer menu handle
+    },
+  });
 
   // await the header query (above the fold)
   const headerPromise = storefront.query(HEADER_QUERY, {
-    cache: storefront.CacheNone(),
+    cache: storefront.CacheLong(),
     variables: {
       headerMenuHandle: 'main-menu', // Adjust to your header menu handle
     },
@@ -90,12 +94,21 @@ export async function loader({context}: LoaderFunctionArgs) {
   return defer(
     {
       cart: cartPromise,
+      footer: footerPromise,
       header: await headerPromise,
-      isLoggedIn,
+      isLoggedIn: isLoggedInPromise,
       publicStoreDomain,
-      publictoreSubdomain: context.env.PUBLIC_SHOPIFY_STORE_DOMAIN
+      /***********************************************/
+      /**********  EXAMPLE UPDATE STARTS  ************/
+      publictoreSubdomain: context.env.PUBLIC_SHOPIFY_STORE_DOMAIN,
+      /**********   EXAMPLE UPDATE END   ************/
+      /***********************************************/
     },
-    {headers},
+    {
+      headers: {
+        'Set-Cookie': await context.session.commit(),
+      },
+    },
   );
 }
 
@@ -165,42 +178,6 @@ export function ErrorBoundary() {
   );
 }
 
-/**
- * Validates the customer access token and returns a boolean and headers
- * @see https://shopify.dev/docs/api/storefront/latest/objects/CustomerAccessToken
- *
- * @example
- * ```js
- * const {isLoggedIn, headers} = await validateCustomerAccessToken(
- *  customerAccessToken,
- *  session,
- * );
- * ```
- */
-async function validateCustomerAccessToken(
-  session: LoaderFunctionArgs['context']['session'],
-  customerAccessToken?: CustomerAccessToken,
-) {
-  let isLoggedIn = false;
-  const headers = new Headers();
-  if (!customerAccessToken?.accessToken || !customerAccessToken?.expiresAt) {
-    return {isLoggedIn, headers};
-  }
-
-  const expiresAt = new Date(customerAccessToken.expiresAt).getTime();
-  const dateNow = Date.now();
-  const customerAccessTokenExpired = expiresAt < dateNow;
-
-  if (customerAccessTokenExpired) {
-    session.unset('customerAccessToken');
-    headers.append('Set-Cookie', await session.commit());
-  } else {
-    isLoggedIn = true;
-  }
-
-  return {isLoggedIn, headers};
-}
-
 const MENU_FRAGMENT = `#graphql
   fragment MenuItem on MenuItem {
     id
@@ -231,6 +208,7 @@ const HEADER_QUERY = `#graphql
   fragment Shop on Shop {
     id
     name
+    description
     primaryDomain {
       url
     }
@@ -251,6 +229,19 @@ const HEADER_QUERY = `#graphql
       ...Shop
     }
     menu(handle: $headerMenuHandle) {
+      ...Menu
+    }
+  }
+  ${MENU_FRAGMENT}
+` as const;
+
+const FOOTER_QUERY = `#graphql
+  query Footer(
+    $country: CountryCode
+    $footerMenuHandle: String!
+    $language: LanguageCode
+  ) @inContext(language: $language, country: $country) {
+    menu(handle: $footerMenuHandle) {
       ...Menu
     }
   }

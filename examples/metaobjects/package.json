@@ -1,44 +1,17 @@
 {
-  "name": "metaobjects",
+  "name": "example-metaobjects",
   "private": true,
-  "sideEffects": false,
-  "version": "1.0.0",
+  "prettier": "@shopify/prettier-config",
   "scripts": {
-    "build": "shopify hydrogen build",
-    "dev": "shopify hydrogen dev --codegen",
+    "build": "shopify hydrogen build --diff",
+    "dev": "shopify hydrogen dev --codegen --diff",
     "preview": "npm run build && shopify hydrogen preview",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "typecheck": "tsc --noEmit",
     "codegen": "shopify hydrogen codegen"
   },
-  "prettier": "@shopify/prettier-config",
   "dependencies": {
-    "@remix-run/react": "^2.5.1",
-    "@shopify/cli": "3.51.0",
-    "@shopify/cli-hydrogen": "^7.0.0",
-    "@shopify/hydrogen": "^2024.1.0",
-    "@shopify/remix-oxygen": "^2.0.2",
-    "graphql": "^16.6.0",
-    "graphql-tag": "^2.12.6",
-    "isbot": "^3.6.6",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
-  },
-  "devDependencies": {
-    "@remix-run/dev": "^2.5.1",
-    "@remix-run/eslint-config": "^2.5.1",
-    "@shopify/oxygen-workers-types": "^3.17.3",
-    "@shopify/prettier-config": "^1.1.2",
-    "@total-typescript/ts-reset": "^0.4.2",
-    "@types/eslint": "^8.4.10",
-    "@types/react": "^18.2.22",
-    "@types/react-dom": "^18.2.7",
-    "eslint": "^8.20.0",
-    "eslint-plugin-hydrogen": "0.12.2",
-    "prettier": "^2.8.4",
-    "typescript": "^5.2.2"
-  },
-  "engines": {
-    "node": ">=18.0.0"
+    "slate": "^0.101.4",
+    "slate-react": "^0.101.3"
   }
 }

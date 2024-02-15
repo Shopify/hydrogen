@@ -2,6 +2,7 @@ import type {ParsedMetafields} from '@shopify/hydrogen';
 import {parseSection} from '~/utils/parseSection';
 import {Link} from '@remix-run/react';
 import type {SectionStoreProfileFragment} from 'storefrontapi.generated';
+import {Key, ReactElement, JSXElementConstructor, ReactNode} from 'react';
 
 export function SectionStoreProfile(props: SectionStoreProfileFragment) {
   const section = parseSection<
@@ -40,7 +41,7 @@ export function SectionStoreProfile(props: SectionStoreProfileFragment) {
         <div>
           <br />
           <h5>Opening Hours</h5>
-          {hours.parsedValue.map((day) => (
+          {hours.parsedValue.map((day: string) => (
             <p key={day}>{day}</p>
           ))}
         </div>
