@@ -20,6 +20,14 @@ line item from the cart.
 
 - Basic understanding of Remix's [pending optimistic UI](https://remix.run/docs/en/main/discussion/pending-ui)
 
+## Install
+
+Setup a new project with this example:
+
+```bash
+npm create @shopify/hydrogen@latest -- --template optimistic-cart-ui
+```
+
 ## Key files
 
 This folder contains the minimal set of files needed to showcase the implementation.

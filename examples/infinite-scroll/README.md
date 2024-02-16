@@ -10,6 +10,14 @@ A few side effects of this implementation are:
 2. As the user scrolls, the URL automatically changes as new pages are loaded.
 3. Because the implementation uses the `Pagination` component, navigating back to the collection list after clicking on a product automatically maintains the user's scroll position.
 
+## Install
+
+Setup a new project with this example:
+
+```bash
+npm create @shopify/hydrogen@latest -- --template infinite-scroll
+```
+
 ## Key files
 
 This folder contains the minimal set of files needed to showcase the implementation.
