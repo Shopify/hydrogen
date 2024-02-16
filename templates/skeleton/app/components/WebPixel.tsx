@@ -116,7 +116,6 @@ export function WebPixel ({publicStoreDomain}: {publicStoreDomain: string}) {
         },
     }, function pageEvents(webPixelsManagerAPI: any) {
         WebPixelManagerApiRef.current = webPixelsManagerAPI;
-        webPixelsManagerAPI.subscribe('page_viewed', (event: any) => {console.log('WPM page viewed', event)})
         webPixelsManagerAPI.publish("page_viewed");
         hasInit = true;
 
