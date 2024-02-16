@@ -35,6 +35,7 @@
     "examples/custom-cart-method",
     "examples/express",
     "examples/legacy-customer-account-flow",
+    "examples/metaobjects",
     "examples/multipass",
     "examples/optimistic-cart-ui",
     "examples/partytown",
