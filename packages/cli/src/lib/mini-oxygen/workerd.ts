@@ -174,20 +174,6 @@ export async function startWorkerdServer({
     showBanner(options) {
       console.log(''); // New line
 
-      const isVSCode = process.env.TERM_PROGRAM === 'vscode';
-      const debuggingDocsLink =
-        'https://h2o.fyi/debugging/server-code' +
-        (isVSCode ? '#visual-studio-code' : '#step-2-attach-a-debugger');
-
-      const debuggerMessage =
-        outputContent`\n\nDebugging enabled on port ${String(
-          publicInspectorPort,
-        )}.\nAttach a ${outputToken.link(
-          colors.yellow(isVSCode ? 'VSCode debugger' : 'debugger'),
-          debuggingDocsLink,
-        )} or open DevTools in http://localhost:${String(publicInspectorPort)}.`
-          .value;
-
       renderSuccess({
         headline: `${
           options?.headlinePrefix ?? ''
@@ -197,9 +183,10 @@ export async function startWorkerdServer({
         body: [
           `View ${options?.appName ?? 'Hydrogen'} app: ${listeningAt}`,
           ...(options?.extraLines ?? []),
-          ...(debug ? [{warn: debuggerMessage}] : []),
+          ...(debug ? [{warn: getDebugBannerLine(publicInspectorPort)}] : []),
         ],
       });
+
       console.log('');
     },
     async close() {
@@ -301,4 +288,19 @@ async function logRequest(request: Request): Promise<Response> {
   });
 
   return new Response('ok');
+}
+
+export function getDebugBannerLine(publicInspectorPort: number) {
+  const isVSCode = process.env.TERM_PROGRAM === 'vscode';
+  const debuggingDocsLink =
+    'https://h2o.fyi/debugging/server-code' +
+    (isVSCode ? '#visual-studio-code' : '#step-2-attach-a-debugger');
+
+  return outputContent`\n\nDebugging enabled on port ${String(
+    publicInspectorPort,
+  )}.\nAttach a ${outputToken.link(
+    colors.yellow(isVSCode ? 'VSCode debugger' : 'debugger'),
+    debuggingDocsLink,
+  )} or open DevTools in http://localhost:${String(publicInspectorPort)}.`
+    .value;
 }

@@ -7,6 +7,8 @@ import {
   overrideFlag,
 } from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
+import colors from '@shopify/cli-kit/node/colors';
+import {type TokenItem, renderInfo} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {Flags} from '@oclif/core';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
@@ -16,6 +18,8 @@ import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {setH2OPluginContext} from '../../lib/vite/shared.js';
+import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
+import {getDebugBannerLine} from '../../lib/mini-oxygen/workerd.js';
 
 export default class DevVite extends Command {
   static description =
@@ -185,6 +189,27 @@ export async function runDev({
   viteServer.printUrls();
   viteServer.bindCLIShortcuts({print: true});
   console.log('\n');
+
+  const infoLines: TokenItem = [];
+
+  if (!disableVirtualRoutes) {
+    infoLines.push(
+      `${colors.dim('View GraphiQL API browser:')} ${getGraphiQLUrl({
+        host: publicUrl.origin,
+      })}`,
+      `\n${colors.dim('View server network requests:')} ${
+        publicUrl.origin
+      }/subrequest-profiler`,
+    );
+  }
+
+  if (debug) {
+    infoLines.push({warn: getDebugBannerLine(inspectorPort)});
+  }
+
+  if (infoLines.length > 0) {
+    renderInfo({body: infoLines});
+  }
 
   checkRemixVersions();
   if (!disableVersionCheck) {
