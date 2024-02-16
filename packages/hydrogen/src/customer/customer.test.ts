@@ -611,7 +611,7 @@ describe('customer', () => {
       fetch.mockResolvedValue(createFetchResponse(someJson, {ok: true}));
 
       const response = await customer.query(`query {...}`);
-      expect(response).toStrictEqual({data: 'json'});
+      expect(response).toStrictEqual({data: 'json', errors: undefined});
       // Session not updated because it's not expired
       expect(session.set).not.toHaveBeenCalled();
     });
