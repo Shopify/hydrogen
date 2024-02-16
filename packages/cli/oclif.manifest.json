@@ -171,6 +171,13 @@
           "required": false,
           "allowNo": false
         },
+        "no-verify": {
+          "name": "no-verify",
+          "type": "boolean",
+          "description": "Skip the routability verification step after deployment.",
+          "required": false,
+          "allowNo": false
+        },
         "auth-bypass-token": {
           "name": "auth-bypass-token",
           "type": "boolean",
