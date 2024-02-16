@@ -16,6 +16,7 @@ These are some of the most commonly used Hydrogen examples. Browse the folders i
 | [Express](/examples/express/)                                             | Hydrogen example using NodeJS [Express](https://expressjs.com/).                                                                                   |
 | [Legacy Customer Account Flow](/examples/legacy-customer-account-flow/)   | The legacy customer account flow made with [Storefront API](https://shopify.dev/docs/api/storefront).                                              |
 | [Multipass](/examples/multipass/)                                         | Connect your existing third-party authentication method to Shopify’s customer accounts, so buyers can use a single login across multiple services. |
+| [Metaobjects](/examples/metaobjects/)                                     | How to use [metaobjects](https://help.shopify.com/en/manual/custom-data/metaobjects) as a Content Management System (CMS) for Hydrogen.            |
 | [Optimistic Cart UI](/examples/optimistic-cart-ui/)                       | How to optimistically remove a cart line item from the cart.                                                                                       |
 | [Third-party Queries and Caching](/examples/third-party-queries-caching/) | How to leverage Oxygen's sub-request caching when querying third-party GraphQL API in Hydrogen.                                                    |
 
