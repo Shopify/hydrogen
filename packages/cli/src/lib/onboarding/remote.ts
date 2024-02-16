@@ -71,13 +71,16 @@ export async function setupRemoteTemplate(
 
   abort = createAbortHandler(controller, project);
 
-  let backgroundWorkPromise = backgroundDownloadPromise
-    .then(async (result) => {
+  const downloaded = await backgroundDownloadPromise;
+  if (controller.signal.aborted) return;
+
+  let backgroundWorkPromise = Promise.resolve()
+    .then(async () => {
       // Result is undefined in certain tests,
       // do not continue if it's already aborted
       if (controller.signal.aborted) return;
 
-      const {sourcePath, templatesDir} = result;
+      const {sourcePath, templatesDir} = downloaded;
 
       const pkgJson = await readAndParsePackageJson(
         joinPath(sourcePath, 'package.json'),
@@ -95,11 +98,8 @@ export async function setupRemoteTemplate(
     })
     .catch(abort);
 
-  if (controller.signal.aborted) return;
-
-  const {sourcePath} = await backgroundDownloadPromise;
   const supportsTranspilation = await fileExists(
-    joinPath(sourcePath, 'tsconfig.json'),
+    joinPath(downloaded.sourcePath, 'tsconfig.json'),
   );
 
   const {language, transpileProject} = supportsTranspilation
