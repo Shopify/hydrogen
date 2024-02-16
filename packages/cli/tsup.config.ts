@@ -60,7 +60,6 @@ export default defineConfig([
     format: 'esm',
     noExternal: [/./],
     dts: false,
-    esbuildPlugins: [esbuildNoSideEffectPlugin(['picomatch'])],
   },
   {
     ...commonConfig,
@@ -104,26 +103,3 @@ export default defineConfig([
     },
   },
 ]);
-
-function esbuildNoSideEffectPlugin(packageNames: string[]) {
-  return {
-    name: 'no-sideeffect',
-    setup({onResolve, resolve}) {
-      onResolve(
-        {filter: new RegExp(`^${packageNames.join('|')}$`)},
-        async (args) => {
-          if (args.pluginData?.skipNoSideEffectResolver) return;
-
-          const result = await resolve(args.path, {
-            kind: args.kind,
-            importer: args.importer,
-            namespace: args.namespace,
-            resolveDir: args.resolveDir,
-            pluginData: {...args.pluginData, skipNoSideEffectResolver: true},
-          });
-          return {...result, sideEffects: false};
-        },
-      );
-    },
-  };
-}
