@@ -1,7 +1,7 @@
-import {useRef, Suspense} from 'react';
+import {useRef, Suspense, Fragment} from 'react';
 import {Disclosure, Listbox} from '@headlessui/react';
 import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {useLoaderData, Await} from '@remix-run/react';
+import {useLoaderData, Await, useNavigate} from '@remix-run/react';
 import type {ShopifyAnalyticsProduct} from '@shopify/hydrogen';
 import {
   AnalyticsPageType,
@@ -64,7 +64,7 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
 
   // In order to show which variants are available in the UI, we need to query
   // all of them. But there might be a *lot*, so instead separate the variants
-  // into it's own separate query that is deferred. So there's a brief moment
+  // into its own separate query that is deferred. So there's a brief moment
   // where variant options might show as available when they're not, but after
   // this deferred query resolves, the UI will update.
   const variants = context.storefront.query(VARIANTS_QUERY, {
@@ -216,7 +216,7 @@ export function ProductForm({
   const {product, analytics, storeDomain} = useLoaderData<typeof loader>();
 
   const closeRef = useRef<HTMLButtonElement>(null);
-
+  const navigate = useNavigate();
   /**
    * Likewise, we're defaulting to the first variant for purposes
    * of add to cart if there is none returned from the loader.
@@ -233,6 +233,11 @@ export function ProductForm({
   const productAnalytics: ShopifyAnalyticsProduct = {
     ...analytics.products[0],
     quantity: 1,
+  };
+  const onListboxSelection = (value: string) => {
+    if (!closeRef?.current) return;
+    closeRef.current.click();
+    navigate(value);
   };
 
   return (
@@ -255,7 +260,7 @@ export function ProductForm({
                 <div className="flex flex-wrap items-baseline gap-4">
                   {option.values.length > 7 ? (
                     <div className="relative w-full">
-                      <Listbox>
+                      <Listbox onChange={onListboxSelection}>
                         {({open}) => (
                           <>
                             <Listbox.Button
@@ -281,19 +286,15 @@ export function ProductForm({
                                 .map(({value, to, isActive}) => (
                                   <Listbox.Option
                                     key={`option-${option.name}-${value}`}
-                                    value={value}
+                                    value={to}
+                                    as={Fragment}
                                   >
                                     {({active}) => (
-                                      <Link
-                                        to={to}
+                                      <li
                                         className={clsx(
                                           'text-primary w-full p-2 transition rounded flex justify-start items-center text-left cursor-pointer',
                                           active && 'bg-primary/10',
                                         )}
-                                        onClick={() => {
-                                          if (!closeRef?.current) return;
-                                          closeRef.current.click();
-                                        }}
                                       >
                                         {value}
                                         {isActive && (
@@ -301,7 +302,7 @@ export function ProductForm({
                                             <IconCheck />
                                           </span>
                                         )}
-                                      </Link>
+                                      </li>
                                     )}
                                   </Listbox.Option>
                                 ))}
