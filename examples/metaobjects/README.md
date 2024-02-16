@@ -6,6 +6,14 @@ as a thin Content Management System (CMS) for Hydrogen.
 More specifically, this example focuses on how to render and manage custom content
 at a route and section level.
 
+## Install
+
+Setup a new project with this example:
+
+```bash
+npm create @shopify/hydrogen@latest -- --template metaobjects
+```
+
 ## Requirements
 
 - Basic understanding of metaobjects. Creating metaobject [definitions](https://help.shopify.com/en/manual/custom-data/metaobjects/building-a-metaobject),
