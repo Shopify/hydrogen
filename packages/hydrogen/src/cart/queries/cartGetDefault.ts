@@ -1,4 +1,5 @@
 import {StorefrontApiErrors, formatAPIResult} from '../../storefront';
+import type {CustomerAccount} from '../../customer/types';
 import type {CartQueryOptions, CartReturn} from './cart-types';
 import type {
   Cart,
@@ -33,25 +34,53 @@ export type CartGetFunction = (
   cartInput?: CartGetProps,
 ) => Promise<CartReturn | null>;
 
-export function cartGetDefault(options: CartQueryOptions): CartGetFunction {
+type CartGetOptions = CartQueryOptions & {
+  /**
+   * The customer account client instance created by [`createCustomerAccountClient`](docs/api/hydrogen/latest/utilities/createcustomeraccountclient).
+   */
+  customerAccount?: CustomerAccount;
+};
+
+export function cartGetDefault({
+  storefront,
+  customerAccount,
+  getCartId,
+  cartFragment,
+}: CartGetOptions): CartGetFunction {
   return async (cartInput?: CartGetProps) => {
-    const cartId = options.getCartId();
+    const cartId = getCartId();
 
     if (!cartId) return null;
 
-    const {cart, errors} = await options.storefront.query<{
-      cart: Cart;
-      errors: StorefrontApiErrors;
-    }>(CART_QUERY(options.cartFragment), {
-      variables: {
-        cartId,
-        ...cartInput,
-      },
-      cache: options.storefront.CacheNone(),
-    });
+    const [isCustomerLoggedIn, {cart, errors}] = await Promise.all([
+      customerAccount ? customerAccount.isLoggedIn() : false,
+      storefront.query<{
+        cart: Cart;
+        errors: StorefrontApiErrors;
+      }>(CART_QUERY(cartFragment), {
+        variables: {
+          cartId,
+          ...cartInput,
+        },
+        cache: storefront.CacheNone(),
+      }),
+    ]);
 
-    return formatAPIResult(cart, errors);
+    return formatAPIResult(
+      addCustomerLoggedInParam(isCustomerLoggedIn, cart),
+      errors,
+    );
   };
+}
+
+function addCustomerLoggedInParam(isCustomerLoggedIn: boolean, cart: Cart) {
+  if (isCustomerLoggedIn && cart && cart.checkoutUrl) {
+    const finalCheckoutUrl = new URL(cart.checkoutUrl);
+    finalCheckoutUrl.searchParams.set('logged_in', 'true');
+    cart.checkoutUrl = finalCheckoutUrl.toString();
+  }
+
+  return cart;
 }
 
 //! @see https://shopify.dev/docs/api/storefront/latest/queries/cart

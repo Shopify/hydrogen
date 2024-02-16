@@ -31,6 +31,7 @@ import {
   DeploymentVerificationDetailsResponse,
   parseToken,
 } from '@shopify/oxygen-cli/deploy';
+import {loadEnvironmentVariableFile} from '@shopify/oxygen-cli/utils';
 
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
@@ -39,6 +40,8 @@ import {runBuild} from './build.js';
 import {runViteBuild} from './build-vite.js';
 import {getViteConfig} from '../../lib/vite-config.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
+
+const DEPLOY_OUTPUT_FILE_HANDLE = 'h2_deploy_log.json';
 
 export const deploymentLogger: Logger = (
   message: string,
@@ -54,6 +57,11 @@ export default class Deploy extends Command {
   static flags: any = {
     'env-branch': Flags.string({
       description: 'Environment branch (tag) for environment to deploy to.',
+      required: false,
+    }),
+    'env-file': Flags.string({
+      description:
+        'Path to an environment file to override existing environment variables for the deployment.',
       required: false,
     }),
     preview: Flags.boolean({
@@ -76,13 +84,20 @@ export default class Deploy extends Command {
       required: false,
       default: false,
     }),
+    'build-command': Flags.string({
+      description:
+        'Specify a build command to run before deploying. If not specified, `shopify hydrogen build` will be used.',
+      required: false,
+    }),
+    'lockfile-check': commonFlags.lockfileCheck,
     path: commonFlags.path,
     shop: commonFlags.shop,
-    'no-json-output': Flags.boolean({
+    'json-output': Flags.boolean({
+      allowNo: true,
       description:
-        'Prevents the command from creating a JSON file containing the deployment URL in CI environments.',
+        'Create a JSON file containing the deployment details in CI environments. Defaults to true, use `--no-json-output` to disable.',
       required: false,
-      default: false,
+      default: true,
     }),
     token: Flags.string({
       char: 't',
@@ -143,6 +158,7 @@ export default class Deploy extends Command {
       ...camelFlags,
       defaultEnvironment: flags.preview,
       environmentTag: flags['env-branch'],
+      environmentFile: flags['env-file'],
       path: flags.path ? resolvePath(flags.path) : process.cwd(),
     } as OxygenDeploymentOptions;
   }
@@ -150,10 +166,13 @@ export default class Deploy extends Command {
 
 interface OxygenDeploymentOptions {
   authBypassToken: boolean;
+  buildCommand?: string;
   defaultEnvironment: boolean;
   environmentTag?: string;
+  environmentFile?: string;
   force: boolean;
-  noJsonOutput: boolean;
+  lockfileCheck: boolean;
+  jsonOutput: boolean;
   path: string;
   shop: string;
   token?: string;
@@ -171,10 +190,10 @@ interface GitCommit {
 function createUnexpectedAbortError(message?: string): AbortError {
   return new AbortError(
     message || 'The deployment failed due to an unexpected error.',
-    'Retrying the deployement may succeed.',
+    'Retrying the deployment may succeed.',
     [
       [
-        'If the issue persits, please check the',
+        'If the issue persists, please check the',
         {
           link: {
             label: 'Shopify status page',
@@ -192,10 +211,13 @@ export async function runDeploy(
 ): Promise<void> {
   const {
     authBypassToken: generateAuthBypassToken,
+    buildCommand,
     defaultEnvironment,
     environmentTag,
+    environmentFile,
     force: forceOnUncommitedChanges,
-    noJsonOutput,
+    lockfileCheck,
+    jsonOutput,
     path: root,
     shop,
     metadataUrl,
@@ -252,6 +274,19 @@ export async function runDeploy(
       ],
     });
     metadataDescription = `${commitHash} with additional changes`;
+  }
+
+  let overriddenEnvironmentVariables;
+
+  if (environmentFile) {
+    try {
+      overriddenEnvironmentVariables =
+        loadEnvironmentVariableFile(environmentFile);
+    } catch (error) {
+      throw new AbortError(
+        `Could not load environment file at ${environmentFile}`,
+      );
+    }
   }
 
   if (!isCI) {
@@ -359,6 +394,7 @@ export async function runDeploy(
     skipBuild: false,
     workerOnly: false,
     workerDir,
+    overriddenEnvironmentVariables,
   };
 
   let resolveUpload: () => void;
@@ -386,20 +422,7 @@ export async function runDeploy(
     rejectDeploy = reject;
   });
 
-  const build = maybeVite ? runViteBuild : runBuild;
-
   const hooks: DeploymentHooks = {
-    buildFunction: async (assetPath: string | undefined): Promise<void> => {
-      outputInfo(
-        outputContent`${colors.whiteBright('Building project...')}`.value,
-      );
-      await build({
-        directory: root,
-        assetPath,
-        sourcemap: true,
-        useCodegen: false,
-      });
-    },
     onDeploymentCompleted: () => resolveDeploymentCompletedVerification(),
     onVerificationComplete: () => resolveRoutableCheck(),
     onDeploymentCompletedVerificationError() {
@@ -426,6 +449,28 @@ export async function runDeploy(
       );
     },
   };
+
+  if (buildCommand) {
+    config.buildCommand = buildCommand;
+  } else {
+    hooks.buildFunction = async (
+      assetPath: string | undefined,
+    ): Promise<void> => {
+      outputInfo(
+        outputContent`${colors.whiteBright('Building project...')}`.value,
+      );
+
+      const build = maybeVite ? runViteBuild : runBuild;
+
+      await build({
+        directory: root,
+        assetPath,
+        lockfileCheck,
+        sourcemap: true,
+        useCodegen: false,
+      });
+    };
+  }
 
   const uploadStart = async () => {
     outputInfo(
@@ -458,30 +503,39 @@ export async function runDeploy(
         | string
         | {subdued: string}
         | {link: {url: string}}
-      )[][] = [
-        [
+      )[][] = [];
+
+      if (isCI) {
+        if (jsonOutput) {
+          nextSteps.push([
+            'View the deployment information in',
+            {subdued: DEPLOY_OUTPUT_FILE_HANDLE},
+          ]);
+        }
+      } else {
+        nextSteps.push([
           'Open',
           {link: {url: completedDeployment!.url}},
-          `in your browser to view your deployment.`,
-        ],
-      ];
-      if (completedDeployment?.authBypassToken) {
-        nextSteps.push([
-          'Use the',
-          {subdued: completedDeployment.authBypassToken},
-          'token to perform end-to-end tests against the deployment.',
+          'in your browser to view your deployment.',
         ]);
+
+        if (completedDeployment?.authBypassToken) {
+          nextSteps.push([
+            'Use the',
+            {subdued: completedDeployment.authBypassToken},
+            'token to perform end-to-end tests against the deployment.',
+          ]);
+        }
       }
 
       renderSuccess({
         body: ['Successfully deployed to Oxygen'],
         nextSteps,
       });
-      // in CI environments, output to a file so consequent steps can access the URL
-      // the formatting of this file is likely to change in future versions.
-      if (isCI && !noJsonOutput) {
+      // in CI environments, output to a file so consequent steps can access the deployment details
+      if (isCI && jsonOutput) {
         await writeFile(
-          'h2_deploy_log.json',
+          DEPLOY_OUTPUT_FILE_HANDLE,
           JSON.stringify(completedDeployment),
         );
       }

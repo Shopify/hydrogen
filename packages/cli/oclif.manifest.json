@@ -86,19 +86,19 @@
         "sourcemap": {
           "name": "sourcemap",
           "type": "boolean",
-          "description": "Generate sourcemaps for the build.",
+          "description": "Controls whether sourcemaps are generated. Default to true, use `--no-sourcemaps` to disable.",
           "allowNo": true
         },
         "bundle-stats": {
           "name": "bundle-stats",
           "type": "boolean",
-          "description": "Show a bundle size summary after building.",
+          "description": "Show a bundle size summary after building. Defaults to true, use `--no-bundle-stats` to disable.",
           "allowNo": true
         },
         "lockfile-check": {
           "name": "lockfile-check",
           "type": "boolean",
-          "description": "Checks that there is exactly 1 valid lockfile in the project.",
+          "description": "Checks that there is exactly 1 valid lockfile in the project. Defaults to true, use `--no-lockfile-check` to disable.",
           "allowNo": true
         },
         "disable-route-warning": {
@@ -217,6 +217,13 @@
           "required": false,
           "multiple": false
         },
+        "env-file": {
+          "name": "env-file",
+          "type": "option",
+          "description": "Path to an environment file to override existing environment variables for the deployment.",
+          "required": false,
+          "multiple": false
+        },
         "preview": {
           "name": "preview",
           "type": "boolean",
@@ -239,6 +246,19 @@
           "required": false,
           "allowNo": false
         },
+        "build-command": {
+          "name": "build-command",
+          "type": "option",
+          "description": "Specify a build command to run before deploying. If not specified, `shopify hydrogen build` will be used.",
+          "required": false,
+          "multiple": false
+        },
+        "lockfile-check": {
+          "name": "lockfile-check",
+          "type": "boolean",
+          "description": "Checks that there is exactly 1 valid lockfile in the project. Defaults to true, use `--no-lockfile-check` to disable.",
+          "allowNo": true
+        },
         "path": {
           "name": "path",
           "type": "option",
@@ -252,12 +272,12 @@
           "description": "Shop URL. It can be the shop prefix (janes-apparel) or the full myshopify.com URL (janes-apparel.myshopify.com, https://janes-apparel.myshopify.com).",
           "multiple": false
         },
-        "no-json-output": {
-          "name": "no-json-output",
+        "json-output": {
+          "name": "json-output",
           "type": "boolean",
-          "description": "Prevents the command from creating a JSON file containing the deployment URL in CI environments.",
+          "description": "Create a JSON file containing the deployment details in CI environments. Defaults to true, use `--no-json-output` to disable.",
           "required": false,
-          "allowNo": false
+          "allowNo": true
         },
         "token": {
           "name": "token",
@@ -950,6 +970,12 @@
           "description": "Generate TypeScript files",
           "allowNo": false
         },
+        "locale-param": {
+          "name": "locale-param",
+          "type": "option",
+          "description": "The param name in Remix routes for the i18n locale, if any. Example: `locale` becomes ($locale).",
+          "multiple": false
+        },
         "force": {
           "name": "force",
           "type": "boolean",
@@ -1006,6 +1032,12 @@
           "type": "boolean",
           "description": "Generate TypeScript files",
           "allowNo": false
+        },
+        "locale-param": {
+          "name": "locale-param",
+          "type": "option",
+          "description": "The param name in Remix routes for the i18n locale, if any. Example: `locale` becomes ($locale).",
+          "multiple": false
         },
         "force": {
           "name": "force",

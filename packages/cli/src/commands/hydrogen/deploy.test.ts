@@ -22,12 +22,16 @@ import {
   createDeploy,
   parseToken,
 } from '@shopify/oxygen-cli/deploy';
+import {loadEnvironmentVariableFile} from '@shopify/oxygen-cli/utils';
 import {ciPlatform} from '@shopify/cli-kit/node/context/local';
+import {runBuild} from './build.js';
 
-vi.mock('../../lib/get-oxygen-deployment-data.js');
 vi.mock('@shopify/oxygen-cli/deploy');
+vi.mock('@shopify/oxygen-cli/utils');
 vi.mock('@shopify/cli-kit/node/fs');
 vi.mock('@shopify/cli-kit/node/context/local');
+vi.mock('../../lib/get-oxygen-deployment-data.js');
+vi.mock('./build.js');
 vi.mock('../../lib/auth.js');
 vi.mock('../../lib/shopify-config.js');
 vi.mock('../../lib/graphql/admin/link-storefront.js');
@@ -85,7 +89,8 @@ describe('deploy', () => {
     authBypassToken: true,
     defaultEnvironment: false,
     force: false,
-    noJsonOutput: false,
+    lockfileCheck: false,
+    jsonOutput: true,
     path: './',
     shop: 'snowdevil.myshopify.com',
     metadataUrl: 'https://example.com',
@@ -184,6 +189,52 @@ describe('deploy', () => {
       logger: deploymentLogger,
     });
     expect(vi.mocked(renderSuccess)).toHaveBeenCalled;
+  });
+
+  it('calls createDeploy with overridden variables in environment file', async () => {
+    const overriddenEnvironmentVariables = [
+      {
+        key: 'fake-key',
+        value: 'fake-value',
+        isSecret: true,
+      },
+    ];
+
+    vi.mocked(loadEnvironmentVariableFile).mockReturnValue(
+      overriddenEnvironmentVariables,
+    );
+
+    await runDeploy({
+      ...deployParams,
+      environmentFile: 'fake-env-file',
+    });
+
+    expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
+      config: {
+        ...expectedConfig,
+        overriddenEnvironmentVariables,
+      },
+      hooks: expectedHooks,
+      logger: deploymentLogger,
+    });
+  });
+
+  it('errors when supplied environment file does not exist', async () => {
+    vi.mocked(loadEnvironmentVariableFile).mockImplementation(
+      (_path: string) => {
+        throw new AbortError('File not found');
+      },
+    );
+
+    try {
+      await runDeploy({
+        ...deployParams,
+        environmentFile: 'fake-env-file',
+      });
+      expect(true).toBe(false);
+    } catch (err) {
+      expect(err).toBeInstanceOf(AbortError);
+    }
   });
 
   it('errors when there are uncommited changes', async () => {
@@ -346,6 +397,48 @@ describe('deploy', () => {
     });
   });
 
+  it('passes the lockfileCheck to the build function when the flag is set', async () => {
+    const params = {
+      ...deployParams,
+      lockfileCheck: false,
+    };
+    vi.mocked(createDeploy).mockImplementationOnce((options) => {
+      options.hooks?.buildFunction?.('some-cool-asset-path');
+
+      return new Promise((resolve, _reject) => {
+        resolve({url: 'https://a-lovely-deployment.com'});
+      }) as Promise<CompletedDeployment | undefined>;
+    });
+    await runDeploy(params);
+
+    expect(vi.mocked(runBuild)).toHaveBeenCalledWith({
+      assetPath: 'some-cool-asset-path',
+      directory: params.path,
+      lockfileCheck: false,
+      sourcemap: true,
+      useCodegen: false,
+    });
+  });
+
+  it('passes a build command to createDeploy when the build-command flag is used', async () => {
+    const params = {
+      ...deployParams,
+      buildCommand: 'hocus pocus',
+    };
+    const {buildFunction: _, ...hooks} = expectedHooks;
+
+    await runDeploy(params);
+
+    expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
+      config: {
+        ...expectedConfig,
+        buildCommand: 'hocus pocus',
+      },
+      hooks: hooks,
+      logger: deploymentLogger,
+    });
+  });
+
   it('writes a file with JSON content in CI environments', async () => {
     vi.mocked(ciPlatform).mockReturnValue({
       isCI: true,
@@ -371,7 +464,7 @@ describe('deploy', () => {
     );
 
     vi.mocked(writeFile).mockClear();
-    ciDeployParams.noJsonOutput = true;
+    ciDeployParams.jsonOutput = false;
     await runDeploy(ciDeployParams);
     expect(vi.mocked(writeFile)).not.toHaveBeenCalled();
   });
@@ -461,10 +554,97 @@ describe('deploy', () => {
     } catch (err) {
       if (err instanceof AbortError) {
         expect(err.message).toBe('oh shit');
-        expect(err.tryMessage).toBe('Retrying the deployement may succeed.');
+        expect(err.tryMessage).toBe('Retrying the deployment may succeed.');
       } else {
         expect(true).toBe(false);
       }
     }
+  });
+
+  describe('next steps', () => {
+    it('renders a link to the deployment', async () => {
+      vi.mocked(createDeploy).mockResolvedValue({
+        url: 'https://a-lovely-deployment.com',
+      });
+
+      await runDeploy(deployParams);
+
+      expect(vi.mocked(renderSuccess)).toHaveBeenCalledWith({
+        body: ['Successfully deployed to Oxygen'],
+        nextSteps: [
+          [
+            'Open',
+            {link: {url: 'https://a-lovely-deployment.com'}},
+            'in your browser to view your deployment.',
+          ],
+        ],
+      });
+    });
+
+    it('renders a link to the deployment and shows auth bypass token when one is created', async () => {
+      vi.mocked(createDeploy).mockResolvedValue({
+        url: 'https://a-lovely-deployment.com',
+        authBypassToken: 'some-token',
+      });
+
+      await runDeploy(deployParams);
+
+      expect(vi.mocked(renderSuccess)).toHaveBeenCalledWith({
+        body: ['Successfully deployed to Oxygen'],
+        nextSteps: [
+          [
+            'Open',
+            {link: {url: 'https://a-lovely-deployment.com'}},
+            'in your browser to view your deployment.',
+          ],
+          [
+            'Use the',
+            {subdued: 'some-token'},
+            'token to perform end-to-end tests against the deployment.',
+          ],
+        ],
+      });
+    });
+
+    describe('when in a CI environment', () => {
+      it('renders information about h2_deploy_log.json', async () => {
+        vi.mocked(ciPlatform).mockReturnValue({
+          isCI: true,
+          name: 'github',
+          metadata: {},
+        });
+
+        await runDeploy({...deployParams, token: 'fake-token'});
+
+        expect(vi.mocked(renderSuccess)).toHaveBeenCalledWith({
+          body: ['Successfully deployed to Oxygen'],
+          nextSteps: [
+            [
+              'View the deployment information in',
+              {subdued: 'h2_deploy_log.json'},
+            ],
+          ],
+        });
+      });
+
+      it('renders no next steps if jsonOutput is set to false', async () => {
+        vi.mocked(ciPlatform).mockReturnValue({
+          isCI: true,
+          name: 'github',
+          metadata: {},
+        });
+
+        await runDeploy({
+          ...deployParams,
+          token: 'fake-token',
+          jsonOutput: false,
+        });
+
+        expect(vi.mocked(renderSuccess)).toHaveBeenCalledWith({
+          body: ['Successfully deployed to Oxygen'],
+          nextSteps: [],
+        });
+      });
+    });
   });
 });

@@ -73,8 +73,6 @@ export async function loader({context}: LoaderFunctionArgs) {
   const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
 
   const isLoggedInPromise = customerAccount.isLoggedIn();
-
-  // defer the cart query by not awaiting it
   const cartPromise = cart.get();
 
   // defer the footer query (below the fold)

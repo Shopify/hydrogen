@@ -72,9 +72,11 @@ export const useRootLoaderData = () => {
 };
 
 export async function loader({request, context}: LoaderFunctionArgs) {
-  const {storefront, cart} = context;
+  const {storefront, customerAccount, cart} = context;
   const layout = await getLayoutData(context);
-  const isLoggedInPromise = context.customerAccount.isLoggedIn();
+
+  const isLoggedInPromise = customerAccount.isLoggedIn();
+  const cartPromise = cart.get();
 
   const seo = seoPayload.root({shop: layout.shop, url: request.url});
 
@@ -83,7 +85,7 @@ export async function loader({request, context}: LoaderFunctionArgs) {
       isLoggedIn: isLoggedInPromise,
       layout,
       selectedLocale: storefront.i18n,
-      cart: cart.get(),
+      cart: cartPromise,
       analytics: {
         shopifySalesChannel: ShopifySalesChannel.hydrogen,
         shopId: layout.shop.id,

@@ -1,4 +1,5 @@
 import {Storefront} from '../storefront';
+import type {CustomerAccount} from '../customer/types';
 import {type CartGetFunction, cartGetDefault} from './queries/cartGetDefault';
 import {
   type CartCreateFunction,
@@ -47,6 +48,7 @@ import {
 
 export type CartHandlerOptions = {
   storefront: Storefront;
+  customerAccount?: CustomerAccount;
   getCartId: () => string | undefined;
   setCartId: (cartId: string) => Headers;
   cartQueryFragment?: string;
@@ -97,6 +99,7 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
     getCartId,
     setCartId,
     storefront,
+    customerAccount,
     cartQueryFragment,
     cartMutateFragment,
   } = options;
@@ -113,6 +116,7 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
   const methods: HydrogenCart = {
     get: cartGetDefault({
       storefront,
+      customerAccount,
       getCartId,
       cartFragment: cartQueryFragment,
     }),

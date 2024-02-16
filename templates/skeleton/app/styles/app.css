@@ -181,11 +181,6 @@ aside li {
   margin-top: auto;
 }
 
-.footer-menu-missing {
-  display: inline-block;
-  margin: 1rem;
-}
-
 .footer-menu {
   align-items: center;
   display: flex;
@@ -237,7 +232,7 @@ aside li {
   width: calc(var(--aside-width) - 40px);
 }
 
-.cart-line-quantiy {
+.cart-line-quantity {
   display: flex;
 }
 
@@ -392,11 +387,6 @@ aside li {
   margin-top: 0;
 }
 
-.product-images {
-  display: grid;
-  grid-gap: 1rem;
-}
-
 .product-image img {
   height: auto;
   width: 100%;
@@ -463,10 +453,6 @@ aside li {
 * routes/account
 * --------------------------------------------------
 */
-.account-profile-marketing {
-  display: flex;
-  align-items: center;
-}
 
 .account-logout {
   display: inline-block;
