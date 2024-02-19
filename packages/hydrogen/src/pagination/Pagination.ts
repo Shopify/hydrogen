@@ -5,7 +5,7 @@ import {
   useRef,
   forwardRef,
   type Ref,
-  FC,
+  type FC,
 } from 'react';
 import type {
   Maybe,
