@@ -62,7 +62,6 @@ export function useLoadScript(
   options?: LoadScriptParams[1],
 ): ScriptState {
   const [status, setStatus] = useState<ScriptState>('loading');
-  const serializedOptions = JSON.stringify(options);
 
   useEffect(
     () => {
@@ -70,9 +69,9 @@ export function useLoadScript(
         .then(() => setStatus('done'))
         .catch(() => setStatus('error'));
     },
-    // Track changes in options using its serialized version:
+    // Ignore options changes since it won't trigger a new load.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [url, serializedOptions],
+    [url],
   );
 
   return status;
