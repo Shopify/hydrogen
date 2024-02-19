@@ -65,19 +65,9 @@ export function useLoadScript(
   const stringifiedOptions = JSON.stringify(options);
 
   useEffect(() => {
-    async function loadScriptWrapper(): Promise<void> {
-      try {
-        setStatus('loading');
-        await loadScript(url, options);
-        setStatus('done');
-      } catch (error) {
-        setStatus('error');
-      }
-    }
-
-    loadScriptWrapper().catch(() => {
-      setStatus('error');
-    });
+    loadScript(url, options)
+      .then(() => setStatus('done'))
+      .catch(() => setStatus('error'));
   }, [url, stringifiedOptions, options]);
 
   return status;
