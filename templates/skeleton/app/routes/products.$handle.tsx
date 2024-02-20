@@ -5,7 +5,6 @@ import {
   Link,
   useLoaderData,
   type MetaFunction,
-  type FetcherWithComponents,
 } from '@remix-run/react';
 import type {
   ProductFragment,
@@ -19,13 +18,12 @@ import {
   VariantSelector,
   type VariantOption,
   getSelectedProductOptions,
-  CartForm,
 } from '@shopify/hydrogen';
 import type {
-  CartLineInput,
   SelectedOption,
 } from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/lib/variants';
+import {AddToCartButton} from '~/components/AddToCartButton';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
@@ -286,41 +284,6 @@ function ProductOptions({option}: {option: VariantOption}) {
       </div>
       <br />
     </div>
-  );
-}
-
-function AddToCartButton({
-  analytics,
-  children,
-  disabled,
-  lines,
-  onClick,
-}: {
-  analytics?: unknown;
-  children: React.ReactNode;
-  disabled?: boolean;
-  lines: CartLineInput[];
-  onClick?: () => void;
-}) {
-  return (
-    <CartForm route="/cart" inputs={{lines}} action={CartForm.ACTIONS.LinesAdd}>
-      {(fetcher: FetcherWithComponents<any>) => (
-        <>
-          <input
-            name="analytics"
-            type="hidden"
-            value={JSON.stringify(analytics)}
-          />
-          <button
-            type="submit"
-            onClick={onClick}
-            disabled={disabled ?? fetcher.state !== 'idle'}
-          >
-            {children}
-          </button>
-        </>
-      )}
-    </CartForm>
   );
 }
 

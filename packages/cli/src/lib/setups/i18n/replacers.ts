@@ -374,6 +374,14 @@ export async function replaceI18nCartPath(
       },
       formatConfig,
     ),
+    replaceI18nCartPathForFile(
+      {
+        rootDirectory,
+        path: 'app/components',
+        filename: 'AddToCartButton',
+      },
+      formatConfig,
+    ),
   ]);
 }
 

@@ -20,7 +20,7 @@ const remixDts = 'remix.env.d.ts';
 const serverTs = 'server.ts';
 const rootTsx = 'app/root.tsx';
 const cartTsx = 'app/components/Cart.tsx';
-const productHandleTsx = 'app/routes/products.$handle.tsx';
+const addToCartButtonTsx = 'app/components/AddToCartButton.tsx';
 
 const checkTypes = (content: string) => {
   const {diagnostics} = ts.transpileModule(content, {
@@ -288,7 +288,7 @@ describe('i18n replacers', () => {
     await inTemporaryDirectory(async (tmpDir) => {
       const skeletonDir = getSkeletonSourceDir();
       await copyFile(joinPath(skeletonDir, cartTsx), joinPath(tmpDir, cartTsx));
-
+      await copyFile(joinPath(skeletonDir, addToCartButtonTsx), joinPath(tmpDir, addToCartButtonTsx));
       await copyFile(joinPath(skeletonDir, rootTsx), joinPath(tmpDir, rootTsx));
 
       await replaceI18nCartPath({rootDirectory: tmpDir}, {});
@@ -905,6 +905,57 @@ describe('i18n replacers', () => {
               inputs={{ lines }}
             >
               {children}
+            </CartForm>
+          );
+        }
+        "
+      `);
+
+      const newAddToCartButtonContent = await readFile(joinPath(tmpDir, addToCartButtonTsx));
+      expect(() => checkTypes(newAddToCartButtonContent)).not.toThrow();
+
+      expect(newAddToCartButtonContent).toMatchInlineSnapshot(`
+        "import { type FetcherWithComponents } from "@remix-run/react";
+        import { CartForm } from "@shopify/hydrogen";
+        import type { CartLineInput } from "@shopify/hydrogen/storefront-api-types";
+        import { usePrefixPathWithLocale } from "~/root";
+
+        export function AddToCartButton({
+          analytics,
+          children,
+          disabled,
+          lines,
+          onClick,
+        }: {
+          analytics?: unknown;
+          children: React.ReactNode;
+          disabled?: boolean;
+          lines: CartLineInput[];
+          onClick?: () => void;
+        }) {
+          const cartPath = usePrefixPathWithLocale("/cart");
+          return (
+            <CartForm
+              route={cartPath}
+              inputs={{ lines }}
+              action={CartForm.ACTIONS.LinesAdd}
+            >
+              {(fetcher: FetcherWithComponents<any>) => (
+                <>
+                  <input
+                    name="analytics"
+                    type="hidden"
+                    value={JSON.stringify(analytics)}
+                  />
+                  <button
+                    type="submit"
+                    onClick={onClick}
+                    disabled={disabled ?? fetcher.state !== "idle"}
+                  >
+                    {children}
+                  </button>
+                </>
+              )}
             </CartForm>
           );
         }
