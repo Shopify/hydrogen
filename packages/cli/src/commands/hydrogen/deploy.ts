@@ -75,6 +75,11 @@ export default class Deploy extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
       required: false,
     }),
+    'no-verify': Flags.boolean({
+      description: 'Skip the routability verification step after deployment.',
+      default: false,
+      required: false,
+    }),
     'auth-bypass-token': Flags.boolean({
       description:
         'Generate an authentication bypass token, which can be used to perform end-to-end tests against the deployment.',
@@ -165,6 +170,7 @@ interface OxygenDeploymentOptions {
   environmentTag?: string;
   environmentFile?: string;
   force: boolean;
+  noVerify: boolean;
   lockfileCheck: boolean;
   jsonOutput: boolean;
   path: string;
@@ -210,6 +216,7 @@ export async function oxygenDeploy(
     environmentTag,
     environmentFile,
     force: forceOnUncommitedChanges,
+    noVerify,
     lockfileCheck,
     jsonOutput,
     path,
@@ -373,7 +380,7 @@ export async function oxygenDeploy(
       ...(metadataUser ? {user: metadataUser} : {}),
       ...(metadataVersion ? {version: metadataVersion} : {}),
     },
-    skipVerification: false,
+    skipVerification: noVerify,
     rootPath: path,
     skipBuild: false,
     workerOnly: false,
@@ -469,6 +476,7 @@ export async function oxygenDeploy(
       {
         title: 'Verifying deployment is routable',
         task: async () => await routableCheckPromise,
+        skip: () => noVerify,
       },
     ]);
   };
