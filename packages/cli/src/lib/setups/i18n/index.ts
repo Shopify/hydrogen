@@ -52,7 +52,7 @@ export async function setupI18nStrategy(
   await replaceRemixEnv(options, formatConfig, template);
 
   if (strategy === 'subfolders') {
-    await replaceI18nCartPath(options, formatConfig, isJs);
+    await replaceI18nCartPath(options, formatConfig);
   }
 }
 
