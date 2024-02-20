@@ -94,7 +94,7 @@ export type CustomerAccount = {
         ClientReturn<CustomerAccountMutations, RawGqlString, OverrideReturnType>
       >,
       'errors'
-    > & {errors: JsonGraphQLError[]}
+    > & {errors?: JsonGraphQLError[]}
   >;
 };
 
