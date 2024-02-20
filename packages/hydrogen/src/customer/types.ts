@@ -76,7 +76,7 @@ export type CustomerAccount = {
         ClientReturn<CustomerAccountQueries, RawGqlString, OverrideReturnType>
       >,
       'errors'
-    > & {errors: JsonGraphQLError[]}
+    > & {errors?: JsonGraphQLError[]}
   >;
   /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */
   mutate: <
