@@ -286,6 +286,7 @@ export function ProductForm({
                                     {({active}) => (
                                       <Link
                                         to={to}
+                                        preventScrollReset
                                         className={clsx(
                                           'text-primary w-full p-2 transition rounded flex justify-start items-center text-left cursor-pointer',
                                           active && 'bg-primary/10',
