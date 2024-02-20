@@ -1,6 +1,6 @@
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {joinPath} from '@shopify/cli-kit/node/path';
-import {fileExists, touchFileSync} from '@shopify/cli-kit/node/fs';
+import {fileExists} from '@shopify/cli-kit/node/fs';
 import {findFileWithExtension, replaceFileContent} from '../../file.js';
 import type {FormatOptions} from '../../format-code.js';
 import type {I18nSetupConfig} from './index.js';
