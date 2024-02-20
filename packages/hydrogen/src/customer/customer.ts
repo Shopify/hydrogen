@@ -196,7 +196,6 @@ export function createCustomerAccountClient({
       );
 
       return {...APIresponse, ...(errors && {errors: gqlErrors})};
-
     } catch (e) {
       throwErrorWithGqlLink({...errorOptions, errors: [{message: body}]});
     }
