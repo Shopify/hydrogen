@@ -350,15 +350,10 @@ type FilePath = {
 };
 
 async function findFile({rootDirectory, path, filename}: FilePath) {
-  const componentPath = joinPath(rootDirectory, path);
   const {filepath, astType} = await findFileWithExtension(
-    componentPath,
+    joinPath(rootDirectory, path),
     filename,
   );
-
-  if (!filepath || !astType) {
-    throw new AbortError('Could not find a Cart component path');
-  }
 
   return {filepath, astType};
 }
@@ -374,6 +369,10 @@ export async function replaceI18nCartPath(
     path: 'app',
     filename: 'root',
   });
+
+  if (!filepath || !astType) {
+    throw new AbortError('Could not find a root file');
+  }
 
   await replaceFileContent(filepath, formatConfig, async (content) => {
     const astGrep = await importLangAstGrep(astType);
@@ -449,6 +448,10 @@ async function replaceI18nCartPathForFile(
   formatConfig: FormatOptions,
 ) {
   const {filepath, astType} = await findFile(filePathComponents);
+
+  if (!filepath || !astType) {
+    return;
+  }
 
   await replaceFileContent(filepath, formatConfig, async (content) => {
     const astGrep = await importLangAstGrep(astType);
