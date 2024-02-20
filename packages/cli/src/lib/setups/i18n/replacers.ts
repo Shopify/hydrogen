@@ -1,6 +1,6 @@
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {joinPath} from '@shopify/cli-kit/node/path';
-import {fileExists} from '@shopify/cli-kit/node/fs';
+import {fileExists, touchFileSync} from '@shopify/cli-kit/node/fs';
 import {findFileWithExtension, replaceFileContent} from '../../file.js';
 import type {FormatOptions} from '../../format-code.js';
 import type {I18nSetupConfig} from './index.js';
@@ -341,4 +341,171 @@ async function findEntryFile({
   }
 
   return {filepath, astType};
+}
+
+type FilePath = {
+  rootDirectory: string;
+  path: string;
+  filename: string;
+};
+
+async function findFile({
+  rootDirectory,
+  path,
+  filename,
+}: FilePath) {
+
+  const componentPath = joinPath(rootDirectory, path);
+  const {filepath, astType} = await findFileWithExtension(componentPath, filename);
+
+  if (!filepath || !astType) {
+    throw new AbortError('Could not find a Cart component path');
+  }
+
+  return {filepath, astType};
+}
+
+export async function replaceI18nCartPath(
+  {rootDirectory}: I18nSetupConfig,
+  formatConfig: FormatOptions,
+  isJs: boolean,
+) {
+  // Add selectedLocale to root loader
+  const {filepath, astType} = await findFile({
+    rootDirectory,
+    path: 'app',
+    filename: 'root',
+  });
+
+  await replaceFileContent(filepath, formatConfig, async (content) => {
+    const astGrep = await importLangAstGrep(astType);
+    var root = astGrep.parse(content).root();
+    const loaderReturnNode = root.find({
+      rule: {
+        kind: 'shorthand_property_identifier',
+        regex: 'publicStoreDomain',
+      },
+    });
+
+    if (loaderReturnNode) {
+        const {end} = loaderReturnNode.range();
+        content =
+          content.slice(0, end.index + 1) +
+          'selectedLocale: storefront.i18n,' +
+          content.slice(end.index + 1);
+    }
+
+    root = astGrep.parse(content).root();
+    const loaderHookNode = root.find({
+      rule: {
+        kind: 'export_statement',
+        regex: 'useRootLoaderData',
+      },
+    });
+
+    if (loaderHookNode) {
+        const {end} = loaderHookNode.range();
+        content =
+          content.slice(0, end.index + 1) +
+          `
+          const DEFAULT_LOCALE = {
+            pathPrefix: '',
+            language: 'EN',
+            country: 'US',
+          };
+
+          export function usePrefixPathWithLocale(path: string) {
+            const rootData = useRootLoaderData();
+            const selectedLocale = rootData?.selectedLocale ?? DEFAULT_LOCALE;
+
+            return \`\${selectedLocale.pathPrefix}\${
+              path.startsWith('/') ? path : '/' + path
+            }\`;
+          }
+          ` +
+          content.slice(end.index + 1);
+    }
+    return content;
+  });
+
+  await replaceI18nCartPathForFile({
+    rootDirectory,
+    path: 'app/components',
+    filename: 'Cart',
+  }, formatConfig);
+  await replaceI18nCartPathForFile({
+    rootDirectory,
+    path: 'app/routes',
+    filename: 'products.$handle',
+  }, formatConfig);
+}
+
+async function replaceI18nCartPathForFile(filePathComponents: FilePath, formatConfig: FormatOptions) {
+  const {filepath, astType} = await findFile(filePathComponents);
+
+  await replaceFileContent(filepath, formatConfig, async (content) => {
+    const astGrep = await importLangAstGrep(astType);
+
+    // Add import statement for usePrefixPathWithLocale
+    var root = astGrep.parse(content).root();
+    const cartImportStatementNodes = root.findAll({
+      rule: {
+        kind: 'import_statement',
+      },
+    });
+
+    if (cartImportStatementNodes.length !== 0) {
+      const lastImportStatementNode = cartImportStatementNodes[cartImportStatementNodes.length - 1];
+      if (lastImportStatementNode?.range) {
+        const {end} = lastImportStatementNode.range();
+        content =
+          content.slice(0, end.index) +
+          '\nimport {usePrefixPathWithLocale} from "~/root";' +
+          content.slice(end.index);
+      }
+    }
+
+    // Find all CartForm route attribute
+    root = astGrep.parse(content).root();
+    const cartFormAttributeNodes = root.findAll({
+      rule: {
+        kind: 'jsx_attribute',
+        regex: 'route="/cart"',
+      },
+    });
+
+    if (cartFormAttributeNodes.length !== 0) {
+      cartFormAttributeNodes.reverse().map((cartFormAttributeNode) => {
+        const {start, end} = cartFormAttributeNode.range();
+        content =
+          content.slice(0, start.index) +
+          'route={cartPath}' +
+          content.slice(end.index + 1);
+      });
+    }
+
+    // Find all CartForm return statement
+    root = astGrep.parse(content).root();
+    const cartFormReturnStatementNodes = root.findAll({
+      rule: {
+        kind: 'return_statement',
+        has: {
+          regex: 'CartForm',
+        }
+      },
+    });
+
+    if (cartFormReturnStatementNodes.length !== 0) {
+      cartFormReturnStatementNodes.reverse().map((cartFormReturnStatementNode) => {
+        const {start} = cartFormReturnStatementNode.range();
+
+        content =
+          content.slice(0, start.index) +
+          "const cartPath = usePrefixPathWithLocale('/cart');" +
+          content.slice(start.index);
+      });
+    }
+
+    return content;
+  });
 }

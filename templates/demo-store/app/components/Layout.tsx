@@ -27,6 +27,7 @@ import {
   type EnhancedMenu,
   type ChildEnhancedMenuItem,
   useIsHomePath,
+  usePrefixPathWithLocale,
 } from '~/lib/utils';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import {useCartFetchers} from '~/hooks/useCartFetchers';
@@ -372,6 +373,7 @@ function Badge({
   openCart: () => void;
 }) {
   const isHydrated = useIsHydrated();
+  const cartPath = usePrefixPathWithLocale('/cart');
 
   const BadgeCounter = useMemo(
     () => (
@@ -400,7 +402,7 @@ function Badge({
     </button>
   ) : (
     <Link
-      to="/cart"
+      to={cartPath}
       className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5"
     >
       {BadgeCounter}
