@@ -1124,6 +1124,24 @@
           ]
         }
       }
+    },
+    "hydrogen:setup:vite": {
+      "id": "hydrogen:setup:vite",
+      "description": "EXPERIMENTAL: Upgrades the project to use Vite.",
+      "strict": true,
+      "pluginName": "@shopify/cli-hydrogen",
+      "pluginAlias": "@shopify/cli-hydrogen",
+      "pluginType": "core",
+      "aliases": [],
+      "flags": {
+        "path": {
+          "name": "path",
+          "type": "option",
+          "description": "The path to the directory of the Hydrogen storefront. The default is the current directory.",
+          "multiple": false
+        }
+      },
+      "args": {}
     }
   }
 }
