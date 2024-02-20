@@ -188,7 +188,7 @@ export function createCustomerAccountClient({
         ({message, ...rest}) =>
           new GraphQLError(message, {
             ...(rest as WritableDeep<typeof rest>),
-            clientOperation: `storefront.${errorOptions.type}`,
+            clientOperation: `customerAccount.${errorOptions.type}`,
             requestId: response.headers.get('x-request-id'),
             queryVariables: variables,
             query,
