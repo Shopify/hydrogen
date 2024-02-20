@@ -62,7 +62,7 @@ export async function runSetupI18n({
   ]);
 
   renderSuccess({
-    headline: `Makerts support setup complete with strategy ${I18N_STRATEGY_NAME_MAP[
+    headline: `Market support setup complete with strategy ${I18N_STRATEGY_NAME_MAP[
       strategy
     ].toLocaleLowerCase()}.`,
     body: `You can now modify the supported locales in ${

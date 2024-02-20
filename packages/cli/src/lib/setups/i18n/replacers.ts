@@ -350,6 +350,8 @@ type FilePath = {
 };
 
 async function findFile({rootDirectory, path, filename}: FilePath) {
+  if (!fileExists(joinPath(rootDirectory, path, filename))) return {};
+
   const {filepath, astType} = await findFileWithExtension(
     joinPath(rootDirectory, path),
     filename,
@@ -361,7 +363,23 @@ async function findFile({rootDirectory, path, filename}: FilePath) {
 export async function replaceI18nCartPath(
   {rootDirectory}: I18nSetupConfig,
   formatConfig: FormatOptions,
-  isJs: boolean,
+) {
+  await Promise.all([
+    replaceI18nRootFile({rootDirectory}, formatConfig),
+    replaceI18nCartPathForFile(
+      {
+        rootDirectory,
+        path: 'app/components',
+        filename: 'Cart',
+      },
+      formatConfig,
+    ),
+  ]);
+}
+
+async function replaceI18nRootFile(
+  {rootDirectory}: I18nSetupConfig,
+  formatConfig: FormatOptions,
 ) {
   // Add selectedLocale to root loader
   const {filepath, astType} = await findFile({
@@ -424,23 +442,6 @@ export async function replaceI18nCartPath(
     }
     return content;
   });
-
-  await replaceI18nCartPathForFile(
-    {
-      rootDirectory,
-      path: 'app/components',
-      filename: 'Cart',
-    },
-    formatConfig,
-  );
-  await replaceI18nCartPathForFile(
-    {
-      rootDirectory,
-      path: 'app/routes',
-      filename: 'products.$handle',
-    },
-    formatConfig,
-  );
 }
 
 async function replaceI18nCartPathForFile(
