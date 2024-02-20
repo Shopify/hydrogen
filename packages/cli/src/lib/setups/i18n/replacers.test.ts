@@ -288,7 +288,10 @@ describe('i18n replacers', () => {
     await inTemporaryDirectory(async (tmpDir) => {
       const skeletonDir = getSkeletonSourceDir();
       await copyFile(joinPath(skeletonDir, cartTsx), joinPath(tmpDir, cartTsx));
-      await copyFile(joinPath(skeletonDir, addToCartButtonTsx), joinPath(tmpDir, addToCartButtonTsx));
+      await copyFile(
+        joinPath(skeletonDir, addToCartButtonTsx),
+        joinPath(tmpDir, addToCartButtonTsx),
+      );
       await copyFile(joinPath(skeletonDir, rootTsx), joinPath(tmpDir, rootTsx));
 
       await replaceI18nCartPath({rootDirectory: tmpDir}, {});
@@ -911,7 +914,9 @@ describe('i18n replacers', () => {
         "
       `);
 
-      const newAddToCartButtonContent = await readFile(joinPath(tmpDir, addToCartButtonTsx));
+      const newAddToCartButtonContent = await readFile(
+        joinPath(tmpDir, addToCartButtonTsx),
+      );
       expect(() => checkTypes(newAddToCartButtonContent)).not.toThrow();
 
       expect(newAddToCartButtonContent).toMatchInlineSnapshot(`
