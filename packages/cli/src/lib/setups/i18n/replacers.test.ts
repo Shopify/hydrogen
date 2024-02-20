@@ -9,7 +9,11 @@ import {
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {ts} from 'ts-morph';
 import {getSkeletonSourceDir} from '../../build.js';
-import {replaceI18nCartPath, replaceRemixEnv, replaceServerI18n} from './replacers.js';
+import {
+  replaceI18nCartPath,
+  replaceRemixEnv,
+  replaceServerI18n,
+} from './replacers.js';
 import {DEFAULT_COMPILER_OPTIONS} from '../../transpile/morph/index.js';
 
 const remixDts = 'remix.env.d.ts';
@@ -284,26 +288,16 @@ describe('i18n replacers', () => {
   it('replace cart path for i18n subfolder strategy', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       const skeletonDir = getSkeletonSourceDir();
-      await copyFile(
-        joinPath(skeletonDir, cartTsx),
-        joinPath(tmpDir, cartTsx),
-      );
+      await copyFile(joinPath(skeletonDir, cartTsx), joinPath(tmpDir, cartTsx));
 
       await copyFile(
         joinPath(skeletonDir, productHandleTsx),
         joinPath(tmpDir, productHandleTsx),
       );
 
-      await copyFile(
-        joinPath(skeletonDir, rootTsx),
-        joinPath(tmpDir, rootTsx),
-      );
+      await copyFile(joinPath(skeletonDir, rootTsx), joinPath(tmpDir, rootTsx));
 
-      await replaceI18nCartPath(
-        {rootDirectory: tmpDir},
-        {},
-        false,
-      );
+      await replaceI18nCartPath({rootDirectory: tmpDir}, {}, false);
 
       const newRootFile = await readFile(joinPath(tmpDir, rootTsx));
       expect(() => checkTypes(newRootFile)).not.toThrow();
@@ -923,7 +917,9 @@ describe('i18n replacers', () => {
         "
       `);
 
-      const newProductContent = await readFile(joinPath(tmpDir, productHandleTsx));
+      const newProductContent = await readFile(
+        joinPath(tmpDir, productHandleTsx),
+      );
       expect(() => checkTypes(newProductContent)).not.toThrow();
 
       expect(newProductContent).toMatchInlineSnapshot(`
@@ -1366,7 +1362,7 @@ describe('i18n replacers', () => {
           }
         \` as const;
         "
-      `)
+      `);
     });
   });
 });

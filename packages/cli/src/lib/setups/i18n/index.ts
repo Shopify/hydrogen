@@ -3,7 +3,11 @@ import {renderSelectPrompt} from '@shopify/cli-kit/node/ui';
 import {fileExists, readFile} from '@shopify/cli-kit/node/fs';
 import {AbortSignal} from '@shopify/cli-kit/node/abort';
 import {getCodeFormatOptions} from '../../format-code.js';
-import {replaceI18nCartPath, replaceRemixEnv, replaceServerI18n} from './replacers.js';
+import {
+  replaceI18nCartPath,
+  replaceRemixEnv,
+  replaceServerI18n,
+} from './replacers.js';
 
 export const SETUP_I18N_STRATEGIES = [
   'subfolders',
@@ -47,7 +51,7 @@ export async function setupI18nStrategy(
   await replaceServerI18n(options, formatConfig, template, isJs);
   await replaceRemixEnv(options, formatConfig, template);
 
-  if(strategy === 'subfolders') {
+  if (strategy === 'subfolders') {
     await replaceI18nCartPath(options, formatConfig, isJs);
   }
 }

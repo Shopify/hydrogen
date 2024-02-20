@@ -349,14 +349,12 @@ type FilePath = {
   filename: string;
 };
 
-async function findFile({
-  rootDirectory,
-  path,
-  filename,
-}: FilePath) {
-
+async function findFile({rootDirectory, path, filename}: FilePath) {
   const componentPath = joinPath(rootDirectory, path);
-  const {filepath, astType} = await findFileWithExtension(componentPath, filename);
+  const {filepath, astType} = await findFileWithExtension(
+    componentPath,
+    filename,
+  );
 
   if (!filepath || !astType) {
     throw new AbortError('Could not find a Cart component path');
@@ -388,11 +386,11 @@ export async function replaceI18nCartPath(
     });
 
     if (loaderReturnNode) {
-        const {end} = loaderReturnNode.range();
-        content =
-          content.slice(0, end.index + 1) +
-          'selectedLocale: storefront.i18n,' +
-          content.slice(end.index + 1);
+      const {end} = loaderReturnNode.range();
+      content =
+        content.slice(0, end.index + 1) +
+        'selectedLocale: storefront.i18n,' +
+        content.slice(end.index + 1);
     }
 
     root = astGrep.parse(content).root();
@@ -404,10 +402,10 @@ export async function replaceI18nCartPath(
     });
 
     if (loaderHookNode) {
-        const {end} = loaderHookNode.range();
-        content =
-          content.slice(0, end.index + 1) +
-          `
+      const {end} = loaderHookNode.range();
+      content =
+        content.slice(0, end.index + 1) +
+        `
           const DEFAULT_LOCALE = {
             pathPrefix: '',
             language: 'EN',
@@ -423,24 +421,33 @@ export async function replaceI18nCartPath(
             }\`;
           }
           ` +
-          content.slice(end.index + 1);
+        content.slice(end.index + 1);
     }
     return content;
   });
 
-  await replaceI18nCartPathForFile({
-    rootDirectory,
-    path: 'app/components',
-    filename: 'Cart',
-  }, formatConfig);
-  await replaceI18nCartPathForFile({
-    rootDirectory,
-    path: 'app/routes',
-    filename: 'products.$handle',
-  }, formatConfig);
+  await replaceI18nCartPathForFile(
+    {
+      rootDirectory,
+      path: 'app/components',
+      filename: 'Cart',
+    },
+    formatConfig,
+  );
+  await replaceI18nCartPathForFile(
+    {
+      rootDirectory,
+      path: 'app/routes',
+      filename: 'products.$handle',
+    },
+    formatConfig,
+  );
 }
 
-async function replaceI18nCartPathForFile(filePathComponents: FilePath, formatConfig: FormatOptions) {
+async function replaceI18nCartPathForFile(
+  filePathComponents: FilePath,
+  formatConfig: FormatOptions,
+) {
   const {filepath, astType} = await findFile(filePathComponents);
 
   await replaceFileContent(filepath, formatConfig, async (content) => {
@@ -455,7 +462,8 @@ async function replaceI18nCartPathForFile(filePathComponents: FilePath, formatCo
     });
 
     if (cartImportStatementNodes.length !== 0) {
-      const lastImportStatementNode = cartImportStatementNodes[cartImportStatementNodes.length - 1];
+      const lastImportStatementNode =
+        cartImportStatementNodes[cartImportStatementNodes.length - 1];
       if (lastImportStatementNode?.range) {
         const {end} = lastImportStatementNode.range();
         content =
@@ -491,19 +499,21 @@ async function replaceI18nCartPathForFile(filePathComponents: FilePath, formatCo
         kind: 'return_statement',
         has: {
           regex: 'CartForm',
-        }
+        },
       },
     });
 
     if (cartFormReturnStatementNodes.length !== 0) {
-      cartFormReturnStatementNodes.reverse().map((cartFormReturnStatementNode) => {
-        const {start} = cartFormReturnStatementNode.range();
+      cartFormReturnStatementNodes
+        .reverse()
+        .map((cartFormReturnStatementNode) => {
+          const {start} = cartFormReturnStatementNode.range();
 
-        content =
-          content.slice(0, start.index) +
-          "const cartPath = usePrefixPathWithLocale('/cart');" +
-          content.slice(start.index);
-      });
+          content =
+            content.slice(0, start.index) +
+            "const cartPath = usePrefixPathWithLocale('/cart');" +
+            content.slice(start.index);
+        });
     }
 
     return content;

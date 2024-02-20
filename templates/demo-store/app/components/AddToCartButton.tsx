@@ -11,7 +11,7 @@ import {useEffect} from 'react';
 
 import {Button} from '~/components';
 import {usePageAnalytics} from '~/hooks/usePageAnalytics';
-import { usePrefixPathWithLocale } from '~/lib/utils';
+import {usePrefixPathWithLocale} from '~/lib/utils';
 
 export function AddToCartButton({
   children,
