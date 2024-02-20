@@ -20,6 +20,7 @@ export type MiniOxygenInstance = {
     headlinePrefix?: string;
     extraLines?: string[];
     appName?: string;
+    forwardHost?: string;
   }) => void;
   close: () => Promise<void>;
 };

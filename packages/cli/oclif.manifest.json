@@ -352,6 +352,33 @@
           "description": "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
           "required": false,
           "allowNo": false
+        },
+        "ngrok": {
+          "name": "ngrok",
+          "type": "boolean",
+          "description": "Use ngrok to create public domain use for development",
+          "required": false,
+          "allowNo": false
+        },
+        "ngrok-auth-token": {
+          "name": "ngrok-auth-token",
+          "type": "option",
+          "description": "Auth token required for ngrok to use",
+          "required": false,
+          "multiple": false,
+          "dependsOn": [
+            "ngrok"
+          ]
+        },
+        "ngrok-domain": {
+          "name": "ngrok-domain",
+          "type": "option",
+          "description": "Optional domain for ngrok",
+          "required": false,
+          "multiple": false,
+          "dependsOn": [
+            "ngrok"
+          ]
         }
       },
       "args": {}

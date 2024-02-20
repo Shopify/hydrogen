@@ -179,7 +179,9 @@ export async function startWorkerdServer({
           options?.mode ?? 'development'
         } server running.`,
         body: [
-          `View ${options?.appName ?? 'Hydrogen'} app: ${listeningAt}`,
+          `View ${options?.appName ?? 'Hydrogen'} app: ${
+            options?.forwardHost ? options?.forwardHost : listeningAt
+          }`,
           ...(options?.extraLines ?? []),
           ...(debug ? [{warn: debuggerMessage}] : []),
         ],

@@ -5,6 +5,9 @@ import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
+import ngrok from '@ngrok/ngrok';
+import {resolvePath} from '@shopify/cli-kit/node/path';
+import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
 import {copyPublicFiles} from './build.js';
 import {
   assertOxygenChecks,
@@ -71,6 +74,21 @@ export default class Dev extends Command {
       required: false,
     }),
     diff: commonFlags.diff,
+    ngrok: Flags.boolean({
+      description: 'Use ngrok to create public domain use for development',
+      required: false,
+      default: false,
+    }),
+    ['ngrok-auth-token']: Flags.string({
+      description: 'Auth token required for ngrok to use',
+      required: false,
+      dependsOn: ['ngrok'],
+    }),
+    ['ngrok-domain']: Flags.string({
+      description: 'Optional domain for ngrok',
+      required: false,
+      dependsOn: ['ngrok'],
+    }),
   };
 
   async run(): Promise<void> {
@@ -100,6 +118,9 @@ type DevOptions = {
   debug?: boolean;
   sourcemap?: boolean;
   inspectorPort: number;
+  ngrok?: boolean;
+  ngrokAuthToken?: string;
+  ngrokDomain?: string;
 };
 
 export async function runDev({
@@ -114,6 +135,9 @@ export async function runDev({
   sourcemap = true,
   disableVersionCheck = false,
   inspectorPort,
+  ngrok: useNgrok = false,
+  ngrokAuthToken,
+  ngrokDomain,
 }: DevOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
@@ -200,7 +224,43 @@ export async function runDev({
       legacyRuntime,
     );
 
-    enhanceH2Logs({host: miniOxygen.listeningAt, ...remixConfig});
+    async function useNgrokUrl() {
+      let authtoken = ngrokAuthToken;
+      let domain = ngrokDomain;
+
+      if (!ngrokAuthToken) {
+        const dotEnvPath = resolvePath(root, '.env');
+        const {variables} = await fileExists(dotEnvPath).then((exists) =>
+          exists
+            ? readAndParseDotEnv(dotEnvPath)
+            : {variables: {} as Record<string, string>},
+        );
+
+        authtoken = variables.NGROK_AUTHTOKEN;
+        domain = variables.NGROK_DOMAIN || domain;
+      }
+
+      if (!authtoken) return null;
+
+      const listener = await ngrok.forward({
+        addr: miniOxygen.listeningAt,
+        authtoken,
+        domain,
+      });
+
+      return listener.url();
+
+      //TODO: await ngrok.disconnect(listener.url());
+    }
+
+    let host = miniOxygen.listeningAt;
+
+    if (useNgrok) {
+      const ngrokUrl = await useNgrokUrl();
+      if (ngrokUrl) host = ngrokUrl;
+    }
+
+    enhanceH2Logs({host, ...remixConfig});
 
     miniOxygen.showBanner({
       appName: storefront ? colors.cyan(storefront?.title) : undefined,
@@ -208,14 +268,15 @@ export async function runDev({
         initialBuildDurationMs > 0
           ? `Initial build: ${initialBuildDurationMs}ms\n`
           : '',
+      forwardHost: useNgrok ? host : undefined,
       extraLines: [
         colors.dim(
           `\nView GraphiQL API browser: ${getGraphiQLUrl({
-            host: miniOxygen.listeningAt,
+            host,
           })}`,
         ),
         colors.dim(
-          `\nView server network requests: ${miniOxygen.listeningAt}/subrequest-profiler`,
+          `\nView server network requests: ${host}/subrequest-profiler`,
         ),
       ],
     });
