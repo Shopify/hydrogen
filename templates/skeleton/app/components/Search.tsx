@@ -3,7 +3,6 @@ import {
   Form,
   useParams,
   useFetcher,
-  useFetchers,
   type FormProps,
 } from '@remix-run/react';
 import {Image, Money, Pagination} from '@shopify/hydrogen';
@@ -251,7 +250,9 @@ export function PredictiveSearchForm({
   ...props
 }: SearchFromProps) {
   const params = useParams();
-  const fetcher = useFetcher<NormalizedPredictiveSearchResults>();
+  const fetcher = useFetcher<NormalizedPredictiveSearchResults>({
+    key: 'search',
+  });
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   function fetchResults(event: React.ChangeEvent<HTMLInputElement>) {
@@ -318,7 +319,6 @@ export function PredictiveSearchResults() {
           />
         ))}
       </div>
-      {/* view all results /search?q=term */}
       {searchTerm.current && (
         <Link onClick={goToSearchResult} to={`/search?q=${searchTerm.current}`}>
           <p>
@@ -425,10 +425,9 @@ type UseSearchReturn = NormalizedPredictiveSearch & {
 };
 
 function usePredictiveSearch(): UseSearchReturn {
-  const fetchers = useFetchers();
+  const searchFetcher = useFetcher<FetchSearchResultsReturn>({key: 'search'});
   const searchTerm = useRef<string>('');
   const searchInputRef = useRef<HTMLInputElement | null>(null);
-  const searchFetcher = fetchers.find((fetcher) => fetcher.data?.searchResults);
 
   if (searchFetcher?.state === 'loading') {
     searchTerm.current = (searchFetcher.formData?.get('q') || '') as string;
