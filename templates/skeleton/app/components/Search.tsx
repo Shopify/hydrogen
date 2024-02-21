@@ -7,7 +7,7 @@ import {
 } from '@remix-run/react';
 import {Image, Money, Pagination} from '@shopify/hydrogen';
 import React, {useRef, useEffect} from 'react';
-import {applyTrackingParams} from '~/routes/api.predictive-search';
+import {applyTrackingParams} from '~/lib/search';
 
 import type {
   PredictiveProductFragment,
