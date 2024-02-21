@@ -106,6 +106,19 @@ async function fetchPredictiveSearchResults({
   return {searchResults, searchTerm, searchTypes};
 }
 
+export function applyTrackingParams(
+  resource: PredictiveSearchResultItem | PredictiveQueryFragment,
+  params?: string,
+) {
+  if (params) {
+    return resource.trackingParameters
+      ? `?${params}&${resource.trackingParameters}`
+      : `?${params}`;
+  } else {
+    return resource.trackingParameters ? `?${resource.trackingParameters}` : '';
+  }
+}
+
 /**
  * Normalize results and apply tracking qurery parameters to each result url
  */
@@ -119,21 +132,6 @@ export function normalizePredictiveSearchResults(
       results: NO_PREDICTIVE_SEARCH_RESULTS,
       totalResults,
     };
-  }
-
-  function applyTrackingParams(
-    resource: PredictiveSearchResultItem | PredictiveQueryFragment,
-    params?: string,
-  ) {
-    if (params) {
-      return resource.trackingParameters
-        ? `?${params}&${resource.trackingParameters}`
-        : `?${params}`;
-    } else {
-      return resource.trackingParameters
-        ? `?${resource.trackingParameters}`
-        : '';
-    }
   }
 
   const localePrefix = locale ? `/${locale}` : '';
