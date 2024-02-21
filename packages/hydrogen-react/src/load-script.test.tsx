@@ -1,5 +1,5 @@
 import {vi, afterEach, describe, expect, it} from 'vitest';
-import {renderHook} from '@testing-library/react';
+import {renderHook, act, findByTestId} from '@testing-library/react';
 import {useLoadScript} from './load-script.js';
 
 let html: HTMLHtmlElement;
@@ -81,5 +81,19 @@ describe(`useLoadScript`, () => {
 
     const scripts = html.querySelectorAll('body script');
     expect(scripts.length).toEqual(2);
+  });
+
+  it('finishes loading a script', async () => {
+    const hookResult = renderHook(() =>
+      useLoadScript('test6.js', {attributes: {'data-testid': 'test'}}),
+    );
+
+    await act(async () => {
+      const script = await findByTestId<HTMLScriptElement>(html, 'test');
+      expect(hookResult.result.current).toBe('loading');
+      script.onload?.({} as Event);
+    });
+
+    expect(hookResult.result.current).toBe('done');
   });
 });
