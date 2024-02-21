@@ -125,9 +125,6 @@ export async function runViteBuild({
     serverOutFile,
   } = await getViteConfig(root);
 
-  // TODO this shouldn't be needed after updating Remix
-  process.env.HYDROGEN_ASSET_BASE_URL = assetPath;
-
   const serverMinify = userViteConfig.build?.minify ?? true;
   const commonConfig = {
     root,
