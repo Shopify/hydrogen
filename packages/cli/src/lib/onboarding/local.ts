@@ -123,6 +123,13 @@ export async function setupLocalStarterTemplate(
     },
   ];
 
+  const cliCommand = await getCliCommand();
+
+  const envLeadingComment =
+    '# The variables added in this file are only available locally in MiniOxygen.\n' +
+    `# Run \`${cliCommand} link\` to also inject environment variables from your storefront,\n` +
+    `# or \`${cliCommand} env pull\` to populate this file.`;
+
   backgroundWorkPromise = backgroundWorkPromise.then(() => {
     const promises: Array<Promise<any>> = [
       // Add project name to package.json
@@ -136,11 +143,6 @@ export async function setupLocalStarterTemplate(
           ),
       ),
     ];
-
-    const envLeadingComment =
-      '# The variables added in this file are only available locally in MiniOxygen.\n' +
-      '# Run `h2 link` to also inject environment variables from your storefront,\n' +
-      '# or `h2 env pull` to populate this file.';
 
     let storefrontToLink: {id: string; title: string} | undefined;
 
