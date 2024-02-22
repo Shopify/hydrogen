@@ -1,5 +1,11 @@
 # @shopify/hydrogen-react
 
+## 2024.1.1
+
+### Patch Changes
+
+- Fix `useLoadScript` to avoid infinite re-renders when using its second parameter. ([#1775](https://github.com/Shopify/hydrogen/pull/1775)) by [@frandiox](https://github.com/frandiox)
+
 ## 2024.1.0
 
 ### Major Changes
