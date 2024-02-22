@@ -6,6 +6,7 @@ export const SHOPIFY_DIR = '.shopify';
 export const SHOPIFY_DIR_PROJECT = 'project.json';
 
 export interface ShopifyConfig {
+  shopifyConfigAutoUpdate?: boolean;
   shop: string;
   shopName: string;
   email: string;
@@ -150,5 +151,34 @@ export async function ensureShopifyGitIgnore(root: string): Promise<boolean> {
     return true;
   } catch {
     return false;
+  }
+}
+
+/**
+ * Allow for automatic Customer Account Application urls push
+ *
+ * @param root the target directory
+ * @returns the updated config
+ */
+export async function setShopifyConfigAutoUpdate(
+  root: string,
+  shopifyConfigAutoUpdate: ShopifyConfig['shopifyConfigAutoUpdate'],
+) {
+  try {
+    const filePath = resolvePath(root, SHOPIFY_DIR, SHOPIFY_DIR_PROJECT);
+
+    const existingConfig: ShopifyConfig = JSON.parse(await readFile(filePath));
+
+    const config = {
+      ...existingConfig,
+      shopifyConfigAutoUpdate,
+    };
+
+    await writeFile(filePath, JSON.stringify(config));
+    await ensureShopifyGitIgnore(root);
+
+    return config;
+  } catch {
+    throw new AbortError('Project configuration could not be found.');
   }
 }

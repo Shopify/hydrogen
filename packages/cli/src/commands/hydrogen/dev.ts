@@ -3,7 +3,11 @@ import fs from 'node:fs/promises';
 import type {ChildProcess} from 'node:child_process';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
-import {renderFatalError} from '@shopify/cli-kit/node/ui';
+import {
+  renderFatalError,
+  renderConfirmationPrompt,
+  renderInfo,
+} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import {copyPublicFiles} from './build.js';
 import {
@@ -31,13 +35,19 @@ import {
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
-import {getConfig} from '../../lib/shopify-config.js';
+import {
+  getConfig,
+  setShopifyConfigAutoUpdate,
+} from '../../lib/shopify-config.js';
+import {getCliCommand} from '../../lib/shell.js';
+import {runConfigPush} from './config/push.js';
 import {setupLiveReload} from '../../lib/live-reload.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {findPort} from '../../lib/find-port.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
+import {link} from 'fs-extra';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -167,10 +177,8 @@ export async function runDev({
     process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
   }
 
-  const [remixConfig, {shop, storefront}] = await Promise.all([
-    reloadConfig(),
-    getConfig(root),
-  ]);
+  const [remixConfig, {shop, storefront, shopifyConfigAutoUpdate}] =
+    await Promise.all([reloadConfig(), getConfig(root)]);
 
   assertOxygenChecks(remixConfig);
 
@@ -224,6 +232,8 @@ export async function runDev({
         );
         host = await pollTunnelURL(tunnel);
       }
+
+      await confirmedAndPushShopifyConfig(root, host, shopifyConfigAutoUpdate);
     }
 
     enhanceH2Logs({host, ...remixConfig});
@@ -372,4 +382,63 @@ export async function runDev({
       await Promise.all([closeWatcher(), miniOxygen?.close()]);
     },
   };
+}
+
+async function confirmedAndPushShopifyConfig(
+  root: string,
+  developmentOrigin: string,
+  shopifyConfigAutoUpdate?: boolean,
+) {
+  let autoSaveConfirmation = shopifyConfigAutoUpdate;
+  if (typeof autoSaveConfirmation === 'undefined') {
+    autoSaveConfirmation = await renderConfirmationPrompt({
+      message: `Would you like Shopify to automatically update Hydrogen storefront's Customer Account application setup with tunneling url?`,
+      confirmationMessage: 'Yes',
+      cancellationMessage:
+        'No (You can change this setting in ./shopify/project.json)',
+    });
+
+    await setShopifyConfigAutoUpdate(root, autoSaveConfirmation);
+  }
+
+  if (autoSaveConfirmation) {
+    await runConfigPush({
+      path: root,
+      developmentOrigin,
+    });
+  } else {
+    const cliCommand = await getCliCommand();
+
+    renderInfo({
+      headline:
+        "Your tunneling url was not use to update Hydrogen storefront's Customer Account application setup",
+      body: [
+        'This setting is required to use',
+        {
+          link: {
+            label: 'Customer Account API',
+            url: 'https://shopify.dev/docs/api/customer',
+          },
+        },
+      ],
+      nextSteps: [
+        [
+          'Use',
+          {
+            command: `${cliCommand} config push --dev-origin ${developmentOrigin}`,
+          },
+          'to push the config in a separate Terminal',
+        ],
+        [
+          'For manual update, follow instruction on',
+          {
+            link: {
+              label: 'application setup',
+              url: 'https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#update-the-application-setup',
+            },
+          },
+        ],
+      ],
+    });
+  }
 }

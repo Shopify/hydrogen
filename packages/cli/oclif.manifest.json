@@ -968,6 +968,70 @@
       },
       "args": {}
     },
+    "hydrogen:config:push": {
+      "id": "hydrogen:config:push",
+      "description": "Push project configuration to admin",
+      "strict": true,
+      "pluginName": "@shopify/cli-hydrogen",
+      "pluginAlias": "@shopify/cli-hydrogen",
+      "pluginType": "core",
+      "aliases": [],
+      "flags": {
+        "path": {
+          "name": "path",
+          "type": "option",
+          "description": "The path to the directory of the Hydrogen storefront. The default is the current directory.",
+          "multiple": false
+        },
+        "storefrontId": {
+          "name": "storefrontId",
+          "type": "option",
+          "description": "The id of the storefront the configuration should be pushed to. Must start with 'gid://shopify/HydrogenStorefront/'",
+          "multiple": false,
+          "aliases": [
+            "storefront-id"
+          ]
+        },
+        "developmentOrigin": {
+          "name": "developmentOrigin",
+          "type": "option",
+          "description": "The development domain of your application.",
+          "required": true,
+          "multiple": false,
+          "aliases": [
+            "dev-origin"
+          ]
+        },
+        "redirectUriRelativeUrl": {
+          "name": "redirectUriRelativeUrl",
+          "type": "option",
+          "description": "The relative url of allowed callback url for Customer Account API OAuth flow. Default is '/account/authorize'",
+          "multiple": false,
+          "aliases": [
+            "relative-redirect-uri"
+          ]
+        },
+        "logoutUriRelativeUrl": {
+          "name": "logoutUriRelativeUrl",
+          "type": "option",
+          "description": "The relative url of allowed url that will be redirected to post-logout for Customer Account API OAuth flow. Default to nothing.",
+          "multiple": false,
+          "aliases": [
+            "relative-logout-uri"
+          ]
+        },
+        "removeRegex": {
+          "name": "removeRegex",
+          "type": "option",
+          "description": "A regular express of all the urls that should be remove before new url are added. Default is '^https://.*.trycloudflare.com.*$'",
+          "multiple": false,
+          "aliases": [
+            "remove-regex"
+          ]
+        }
+      },
+      "args": {}
+    },
     "hydrogen:debug:cpu": {
       "id": "hydrogen:debug:cpu",
       "description": "Builds and profiles the server startup time the app.",
