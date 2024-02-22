@@ -3,6 +3,98 @@
   "version": "1.1",
   "releases": [
     {
+      "title": "`deploy` command enhancements and bug fixes",
+      "version": "2024.1.2",
+      "date": "",
+      "hash": "06b6724e9c079d5e4842f0343adb8f63a2b564a4",
+      "pr": "https://github.com/Shopify/hydrogen/pull/1739",
+      "commit": "https://github.com/Shopify/hydrogen/pull/1739/commits/06b6724e9c079d5e4842f0343adb8f63a2b564a4",
+      "dependencies": {
+        "@remix-run/react": "2.6.0",
+        "@shopify/cli-hydrogen": "^7.1.0",
+        "@shopify/hydrogen": "^2024.1.2",
+        "@shopify/remix-oxygen": "^2.0.3"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "2.6.0",
+        "typescript": "^5.2.2",
+        "@shopify/cli": "3.52.0",
+        "@shopify/oxygen-workers-types": "^4.0.0",
+        "@remix-run/server-runtime": "2.6.0"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Adds `--build-command` and `--no-lockfile-check` flags to the build command",
+          "description": "`build-command`: Allows users to specify which command is used to build the project (instead of the default build function). This provides more flexibility for projects that have custom build processes.\n `no-lockfile-check`: Allows users to skip the lockfile check during the build process. This can be useful in scenarios where you want to bypass the lockfile check for certain reasons, such as in monorepos, where the lockfile resides in the root folder.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1736",
+          "docs": "https://shopify.dev/docs/custom-storefronts/hydrogen/cli#deploy",
+          "id": "1736"
+        },
+        {
+          "title": "Adds `--skip-verification` flag to the build command",
+          "description": "Adding flag to h2 deploy to skip the verification step after the deployment has been completed",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1770",
+          "docs": "https://shopify.dev/docs/custom-storefronts/hydrogen/cli#deploy",
+          "id": "1770"
+        },
+        {
+          "title": "Adds `--env-file` flag to the build command",
+          "description": "Allowing users to deploy using locally stored environment variables in environment file. Optionally provide the path to a local .env file to override the environment variables set on Admin.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1743",
+          "docs": "https://shopify.dev/docs/custom-storefronts/hydrogen/cli#deploy",
+          "id": "1743"
+        },
+        {
+          "title": "Fix issue where customer login does not persist to checkout",
+          "description": "Add `customerAccount` option to `createCartHandler`. `?logged_in=true` will be added to the checkoutUrl for cart query if a customer is logged in",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1719",
+          "id": "1719"
+        },
+        {
+          "title": "Customer Account API client's query & mutate method now returns errors",
+          "description": "Errors are now an array of GraphQLError(s) that is better formatted. Log GraphQL errors automatically in Customer Account API client, with a new `logErrors: boolean` option to disable it.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1765",
+          "id": "1765"
+        },
+        {
+          "title": "Fix `useLoadScript` to avoid infinite re-renders when using its second parameter",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1775",
+          "id": "1775"
+        },
+        {
+          "title": "Fix 404 not working on certain unknown and i18n routes",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1732",
+          "id": "1732",
+          "steps": [
+            {
+              "title": "Add a `($locale).tsx` route with the following contents",
+              "code": "YGBganMKaW1wb3J0IHt0eXBlIExvYWRlckZ1bmN0aW9uQXJnc30gZnJvbSAnQHJlbWl4LXJ1bi9zZXJ2ZXItcnVudGltZSc7CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gbG9hZGVyKHtwYXJhbXMsIGNvbnRleHR9OiBMb2FkZXJGdW5jdGlvbkFyZ3MpIHsKICBjb25zdCB7bGFuZ3VhZ2UsIGNvdW50cnl9ID0gY29udGV4dC5zdG9yZWZyb250LmkxOG47CgogIGlmICgKICAgIHBhcmFtcy5sb2NhbGUgJiYKICAgIHBhcmFtcy5sb2NhbGUudG9Mb3dlckNhc2UoKSAhPT0gYCR7bGFuZ3VhZ2V9LSR7Y291bnRyeX1gLnRvTG93ZXJDYXNlKCkKICApIHsKICAgIC8vIElmIHRoZSBsb2NhbGUgVVJMIHBhcmFtIGlzIGRlZmluZWQsIHlldCB3ZSBzdGlsbCBhcmUgc3RpbGwgYXQgdGhlIGRlZmF1bHQgbG9jYWxlCiAgICAvLyB0aGVuIHRoZSB0aGUgbG9jYWxlIHBhcmFtIG11c3QgYmUgaW52YWxpZCwgc2VuZCB0byB0aGUgNDA0IHBhZ2UKICAgIHRocm93IG5ldyBSZXNwb25zZShudWxsLCB7c3RhdHVzOiA0MDR9KTsKICB9CgogIHJldHVybiBudWxsOwp9CmBgYA=="
+            }
+          ]
+        },
+        {
+          "title": "Fix predictive search in skeleton",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1783",
+          "id": "1783"
+        }
+      ],
+      "features": []
+    },
+    {
       "title": "Bug fixes and improvements",
       "version": "2024.1.1",
       "date": "",
