@@ -8,9 +8,10 @@ import {
 } from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import colors from '@shopify/cli-kit/node/colors';
-import {type TokenItem, renderInfo} from '@shopify/cli-kit/node/ui';
+import {renderInfo} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {Flags} from '@oclif/core';
+import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
+import {Flags, Config} from '@oclif/core';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
@@ -20,6 +21,7 @@ import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {setH2OPluginContext} from '../../lib/vite/shared.js';
 import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 import {getDebugBannerLine} from '../../lib/mini-oxygen/workerd.js';
+import {startTunnelPlugin, pollTunnelURL} from '../../lib/tunneling.js';
 
 export default class DevVite extends Command {
   static description =
@@ -105,7 +107,9 @@ export async function runDev({
 
   const root = appPath ?? process.cwd();
 
+  let appName: string | undefined;
   const envPromise = getConfig(root).then(({shop, storefront}) => {
+    appName = storefront?.title;
     const fetchRemote = !!shop && !!storefront?.id;
     return getAllEnvironmentVariables({root, fetchRemote, envBranch});
   });
@@ -186,25 +190,35 @@ export async function runDev({
   viteServer.bindCLIShortcuts({print: true});
   console.log('\n');
 
-  const infoLines: TokenItem = [];
+  const customSections = [];
 
   if (!disableVirtualRoutes) {
-    infoLines.push(
-      `${colors.dim('View GraphiQL API browser:')} ${getGraphiQLUrl({
-        host: publicUrl.origin,
-      })}`,
-      `\n${colors.dim('View server network requests:')} ${
-        publicUrl.origin
-      }/subrequest-profiler`,
-    );
+    customSections.push({
+      body: [
+        `View GraphiQL API browser: \n${getGraphiQLUrl({
+          host: publicUrl.origin,
+        })}`,
+        `View server network requests: \n${publicUrl.origin}/subrequest-profiler`,
+      ].map((value, index) => ({
+        subdued: `${index != 0 ? '\n\n' : ''}${value}`,
+      })),
+    });
   }
 
   if (debug) {
-    infoLines.push({warn: getDebugBannerLine(inspectorPort)});
+    customSections.push({
+      body: {warn: getDebugBannerLine(inspectorPort)},
+    });
   }
 
-  if (infoLines.length > 0) {
-    renderInfo({body: infoLines});
+  if (customSections.length > 0) {
+    renderInfo({
+      body: [
+        `View ${appName ? colors.cyan(appName) : 'Hydrogen'} app:`,
+        {link: {url: publicUrl.toString()}},
+      ],
+      customSections,
+    });
   }
 
   checkRemixVersions();

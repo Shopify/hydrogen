@@ -639,6 +639,24 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "tunnel": {
+          "description": "Use tunneling for local development. Required for using new Customer Account API's Oauth flow",
+          "name": "tunnel",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "tunnel-url": {
+          "dependsOn": [
+            "tunnel"
+          ],
+          "description": "Use your own tunneling service (e.g. ngrok) instead. Assume a tunneling had already been started at the development port (default 3000)",
+          "name": "tunnel-url",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         }
       },
       "hasDynamicHelp": false,
@@ -1204,6 +1222,68 @@
         "hydrogen",
         "debug",
         "cpu.js"
+      ]
+    },
+    "hydrogen:config:push": {
+      "aliases": [],
+      "args": {},
+      "description": "Push project configuration to admin",
+      "flags": {
+        "path": {
+          "name": "path",
+          "hasDynamicHelp": false
+        },
+        "storefront-id": {
+          "description": "The id of the storefront the configuration should be pushed to. Must start with 'gid://shopify/HydrogenStorefront/'",
+          "name": "storefront-id",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "dev-origin": {
+          "description": "The development domain of your application.",
+          "name": "dev-origin",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "relative-redirect-uri": {
+          "description": "The relative url of allowed callback url for Customer Account API OAuth flow. Default is '/account/authorize'",
+          "name": "relative-redirect-uri",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "relative-logout-uri": {
+          "description": "The relative url of allowed url that will be redirected to post-logout for Customer Account API OAuth flow. Default to nothing.",
+          "name": "relative-logout-uri",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "remove-regex": {
+          "description": "A regular express of all the urls that should be remove before new url are added. Default is '^https://.*.trycloudflare.com.*$'",
+          "name": "remove-regex",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "hydrogen:config:push",
+      "pluginAlias": "@shopify/cli-hydrogen",
+      "pluginName": "@shopify/cli-hydrogen",
+      "pluginType": "core",
+      "strict": true,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "hydrogen",
+        "config",
+        "push.js"
       ]
     },
     "hydrogen:env:list": {

@@ -74,8 +74,11 @@ function createCSPHeader(
       // For HMR:
       'ws://localhost:*',
       'ws://127.0.0.1:*',
+      'ws://*.trycloudflare.com:*',
     ];
   }
+
+  console.error(`connectSrc=${defaultDirectives.connectSrc}`);
 
   const combinedDirectives = Object.assign({}, defaultDirectives, directives);
 

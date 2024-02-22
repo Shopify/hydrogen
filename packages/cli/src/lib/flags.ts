@@ -168,6 +168,18 @@ export const commonFlags = {
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
     }),
   },
+  tunnel: Flags.boolean({
+    description:
+      "Use tunneling for local development. Required for using new Customer Account API's Oauth flow",
+    required: false,
+    default: false,
+  }),
+  tunnelUrl: Flags.string({
+    description:
+      'Use your own tunneling service (e.g. ngrok) instead. Assume a tunneling had already been started at the development port (default 3000)',
+    required: false,
+    dependsOn: ['tunnel'],
+  }),
 } satisfies Record<string, Record<Lowercase<string>, FlagProps>>;
 
 export function flagsToCamelObject<T extends Record<string, any>>(obj: T) {

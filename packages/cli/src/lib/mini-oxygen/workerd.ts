@@ -182,6 +182,22 @@ export async function startWorkerdServer({
     showBanner(options) {
       console.log(''); // New line
 
+      const customSections = [];
+
+      if (options?.extraLines?.length) {
+        customSections.push({
+          body: options.extraLines.map((value, index) => ({
+            subdued: `${index != 0 ? '\n\n' : ''}${value}`,
+          })),
+        });
+      }
+
+      if (debug) {
+        customSections.push({
+          body: {warn: getDebugBannerLine(publicInspectorPort)},
+        });
+      }
+
       renderSuccess({
         headline: `${
           options?.headlinePrefix ?? ''
@@ -189,10 +205,12 @@ export async function startWorkerdServer({
           options?.mode ?? 'development'
         } server running.`,
         body: [
-          `View ${options?.appName ?? 'Hydrogen'} app: ${listeningAt}`,
-          ...(options?.extraLines ?? []),
-          ...(debug ? [{warn: getDebugBannerLine(publicInspectorPort)}] : []),
+          `View ${
+            options?.appName ? colors.cyan(options?.appName) : 'Hydrogen'
+          } app:`,
+          {link: {url: options?.host || listeningAt}},
         ],
+        customSections,
       });
 
       console.log('');
@@ -304,7 +322,7 @@ export function getDebugBannerLine(publicInspectorPort: number) {
     'https://h2o.fyi/debugging/server-code' +
     (isVSCode ? '#visual-studio-code' : '#step-2-attach-a-debugger');
 
-  return outputContent`\n\nDebugging enabled on port ${String(
+  return outputContent`Debugging enabled on port ${String(
     publicInspectorPort,
   )}.\nAttach a ${outputToken.link(
     colors.yellow(isVSCode ? 'VSCode debugger' : 'debugger'),

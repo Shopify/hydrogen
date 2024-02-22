@@ -8,6 +8,7 @@ import {
   Request,
   type MiniOxygenOptions as InternalMiniOxygenOptions,
 } from '@shopify/mini-oxygen';
+import colors from '@shopify/cli-kit/node/colors';
 import {DEFAULT_PORT} from '../flags.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
 import {
@@ -126,21 +127,34 @@ export async function startNodeServer({
     },
     showBanner(options) {
       console.log('');
+
+      const customSections = [];
+
+      if (options?.extraLines?.length) {
+        customSections.push({
+          body: options.extraLines.map((value, index) => ({
+            subdued: `${index != 0 ? '\n\n' : ''}${value}`,
+          })),
+        });
+      }
+
+      if (debug) {
+        customSections.push({
+          body: {warn: `Debugger listening on ws://localhost:${inspectorPort}`},
+        });
+      }
+
       renderSuccess({
         headline: `${options?.headlinePrefix ?? ''}MiniOxygen (Node Sandbox) ${
           options?.mode ?? 'development'
         } server running.`,
         body: [
-          `View ${options?.appName ?? 'Hydrogen'} app: ${listeningAt}`,
-          ...(options?.extraLines ?? []),
-          ...(debug
-            ? [
-                {
-                  warn: `\n\nDebugger listening on ws://localhost:${inspectorPort}`,
-                },
-              ]
-            : []),
+          `View ${
+            options?.appName ? colors.cyan(options?.appName) : 'Hydrogen'
+          } app:`,
+          {link: {url: options?.host || listeningAt}},
         ],
+        customSections,
       });
       console.log('');
     },
