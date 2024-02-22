@@ -19,7 +19,7 @@ const AnalyticsContext = createContext<AnalyticsContextValue>(
   defaultAnalyticsContext,
 );
 
-const subscribers = new Map<string, Set<(payload: Record<string, unknown>) => void>>();
+const subscribers = new Map<string, Map<String, (payload: Record<string, unknown>) => void>>();
 
 export function AnalyticsProvider({
   children,
@@ -28,15 +28,15 @@ export function AnalyticsProvider({
   const finalConfig = useMemo<AnalyticsContextValue>(() => {
     return {
       publish: (event: string, payload: Record<string, unknown>) => {
-        (subscribers.get(event) ?? new Set()).forEach((callback) => {
+        (subscribers.get(event) ?? new Map()).forEach((callback) => {
           callback(payload);
         });
       },
       subscribe: (event: string, callback: (payload: Record<string, unknown>) => void) => {
         if (!subscribers.has(event)) {
-          subscribers.set(event, new Set());
+          subscribers.set(event, new Map());
         }
-        subscribers.get(event)?.add(callback);
+        subscribers.get(event)?.set(callback.toString(), callback);
       },
       ...analyticsConfig,
     };

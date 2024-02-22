@@ -5,6 +5,7 @@ import {
   getPaginationVariables,
   Image,
   Money,
+  AnalyticsCollectionViewed,
 } from '@shopify/hydrogen';
 import type {ProductItemFragment} from 'storefrontapi.generated';
 import {useVariantUrl} from '~/lib/variants';
@@ -57,6 +58,9 @@ export default function Collection() {
           </>
         )}
       </Pagination>
+      <AnalyticsCollectionViewed data={{collection}} callback={(payload) =>{
+            console.log('collection view', payload);
+      }} />
     </div>
   );
 }

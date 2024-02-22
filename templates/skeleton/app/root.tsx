@@ -1,4 +1,4 @@
-import {useNonce} from '@shopify/hydrogen';
+import {AnalyticsPageViewed, AnalyticsProvider, useNonce} from '@shopify/hydrogen';
 import {
   defer,
   type SerializeFrom,
@@ -22,6 +22,7 @@ import favicon from '../public/favicon.svg';
 import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
+import { CustomAnalytics } from './components/CustomAnalytics';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -120,9 +121,15 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout {...data}>
-          <Outlet />
-        </Layout>
+        <AnalyticsProvider>
+          <Layout {...data}>
+            <Outlet />
+          </Layout>
+          <AnalyticsPageViewed callback={(payload) =>{
+            console.log('page view', payload);
+          }} />
+          <CustomAnalytics />
+        </AnalyticsProvider>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
         <LiveReload nonce={nonce} />

@@ -2,26 +2,25 @@ import { useLocation } from "@remix-run/react";
 import { useAnalyticsProvider } from "./AnalyticsProvider";
 import { useEffect, useRef } from "react";
 
-export function AnalyticsPageViewed({callback}: { callback?: (payload: unknown) => void}) {
+export function AnalyticsProductViewed({
+  data,
+  callback
+}: {
+  data: Record<string, unknown>;
+  callback?: (payload: unknown) => void
+}) {
   const location = useLocation();
   const lastLocationKey = useRef<string>('');
   const {publish} = useAnalyticsProvider();
 
-  // Page view analytics
-  // We want useEffect to execute only when location changes
-  // which represents a page view
   useEffect(() => {
     if (lastLocationKey.current === location.key) return;
 
     lastLocationKey.current = location.key;
 
-    const payload = {
-      url: location.pathname,
-    };
-
     setTimeout(() => {
-      publish('pageViewed', payload);
-      callback && callback(payload);
+      publish('productViewed', data);
+      callback && callback(data);
     }, 0);
   }, [location]);
 
