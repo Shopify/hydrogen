@@ -47,14 +47,17 @@
           "required": false,
           "allowNo": false
         },
-        "codegen-config-path": {
-          "name": "codegen-config-path",
+        "codegenConfigPath": {
+          "name": "codegenConfigPath",
           "type": "option",
           "description": "Specify a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if it exists.",
           "required": false,
           "multiple": false,
           "dependsOn": [
             "codegen"
+          ],
+          "aliases": [
+            "codegen-config-path"
           ]
         },
         "diff": {
@@ -114,14 +117,17 @@
           "required": false,
           "allowNo": false
         },
-        "codegen-config-path": {
-          "name": "codegen-config-path",
+        "codegenConfigPath": {
+          "name": "codegenConfigPath",
           "type": "option",
           "description": "Specify a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if it exists.",
           "required": false,
           "multiple": false,
           "dependsOn": [
             "codegen"
+          ],
+          "aliases": [
+            "codegen-config-path"
           ]
         },
         "diff": {
@@ -368,14 +374,17 @@
           "required": false,
           "allowNo": false
         },
-        "codegen-config-path": {
-          "name": "codegen-config-path",
+        "codegenConfigPath": {
+          "name": "codegenConfigPath",
           "type": "option",
           "description": "Specify a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if it exists.",
           "required": false,
           "multiple": false,
           "dependsOn": [
             "codegen"
+          ],
+          "aliases": [
+            "codegen-config-path"
           ]
         },
         "disable-virtual-routes": {
@@ -390,12 +399,15 @@
           "description": "Enables inspector connections with a debugger.",
           "allowNo": false
         },
-        "inspector-port": {
-          "name": "inspector-port",
+        "inspectorPort": {
+          "name": "inspectorPort",
           "type": "option",
           "description": "Port where the inspector will be available.",
           "multiple": false,
-          "default": 9229
+          "default": 9229,
+          "aliases": [
+            "inspector-port"
+          ]
         },
         "host": {
           "name": "host",
@@ -404,12 +416,15 @@
           "required": false,
           "allowNo": false
         },
-        "env-branch": {
-          "name": "env-branch",
+        "envBranch": {
+          "name": "envBranch",
           "type": "option",
           "char": "e",
           "description": "Specify an environment's branch name when using remote environment variables.",
-          "multiple": false
+          "multiple": false,
+          "aliases": [
+            "env-branch"
+          ]
         },
         "disable-version-check": {
           "name": "disable-version-check",
@@ -425,6 +440,26 @@
           "hidden": true,
           "required": false,
           "allowNo": false
+        },
+        "tunnel": {
+          "name": "tunnel",
+          "type": "boolean",
+          "description": "Use tunneling for local development. Required for using new Customer Account API's Oauth flow",
+          "required": false,
+          "allowNo": false
+        },
+        "tunnelUrl": {
+          "name": "tunnelUrl",
+          "type": "option",
+          "description": "Use your own tunneling service (e.g. ngrok) instead. Assume a tunneling had already been started at the development port (default 3000)",
+          "required": false,
+          "multiple": false,
+          "dependsOn": [
+            "tunnel"
+          ],
+          "aliases": [
+            "tunnel-url"
+          ]
         }
       },
       "args": {}
@@ -456,11 +491,14 @@
           "type": "boolean",
           "hidden": true
         },
-        "legacy-runtime": {
-          "name": "legacy-runtime",
+        "legacyRuntime": {
+          "name": "legacyRuntime",
           "type": "boolean",
           "description": "Run the app in a Node.js sandbox instead of an Oxygen worker.",
-          "allowNo": false
+          "allowNo": false,
+          "aliases": [
+            "legacy-runtime"
+          ]
         },
         "codegen": {
           "name": "codegen",
@@ -469,14 +507,17 @@
           "required": false,
           "allowNo": false
         },
-        "codegen-config-path": {
-          "name": "codegen-config-path",
+        "codegenConfigPath": {
+          "name": "codegenConfigPath",
           "type": "option",
           "description": "Specify a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if it exists.",
           "required": false,
           "multiple": false,
           "dependsOn": [
             "codegen"
+          ],
+          "aliases": [
+            "codegen-config-path"
           ]
         },
         "sourcemap": {
@@ -497,19 +538,25 @@
           "description": "Enables inspector connections with a debugger.",
           "allowNo": false
         },
-        "inspector-port": {
-          "name": "inspector-port",
+        "inspectorPort": {
+          "name": "inspectorPort",
           "type": "option",
           "description": "Port where the inspector will be available.",
           "multiple": false,
-          "default": 9229
+          "default": 9229,
+          "aliases": [
+            "inspector-port"
+          ]
         },
-        "env-branch": {
-          "name": "env-branch",
+        "envBranch": {
+          "name": "envBranch",
           "type": "option",
           "char": "e",
           "description": "Specify an environment's branch name when using remote environment variables.",
-          "multiple": false
+          "multiple": false,
+          "aliases": [
+            "env-branch"
+          ]
         },
         "disable-version-check": {
           "name": "disable-version-check",
@@ -525,6 +572,26 @@
           "hidden": true,
           "required": false,
           "allowNo": false
+        },
+        "tunnel": {
+          "name": "tunnel",
+          "type": "boolean",
+          "description": "Use tunneling for local development. Required for using new Customer Account API's Oauth flow",
+          "required": false,
+          "allowNo": false
+        },
+        "tunnelUrl": {
+          "name": "tunnelUrl",
+          "type": "option",
+          "description": "Use your own tunneling service (e.g. ngrok) instead. Assume a tunneling had already been started at the development port (default 3000)",
+          "required": false,
+          "multiple": false,
+          "dependsOn": [
+            "tunnel"
+          ],
+          "aliases": [
+            "tunnel-url"
+          ]
         }
       },
       "args": {}
@@ -740,25 +807,34 @@
           "type": "boolean",
           "hidden": true
         },
-        "legacy-runtime": {
-          "name": "legacy-runtime",
+        "legacyRuntime": {
+          "name": "legacyRuntime",
           "type": "boolean",
           "description": "Run the app in a Node.js sandbox instead of an Oxygen worker.",
-          "allowNo": false
+          "allowNo": false,
+          "aliases": [
+            "legacy-runtime"
+          ]
         },
-        "env-branch": {
-          "name": "env-branch",
+        "envBranch": {
+          "name": "envBranch",
           "type": "option",
           "char": "e",
           "description": "Specify an environment's branch name when using remote environment variables.",
-          "multiple": false
+          "multiple": false,
+          "aliases": [
+            "env-branch"
+          ]
         },
-        "inspector-port": {
-          "name": "inspector-port",
+        "inspectorPort": {
+          "name": "inspectorPort",
           "type": "option",
           "description": "Port where the inspector will be available.",
           "multiple": false,
-          "default": 9229
+          "default": 9229,
+          "aliases": [
+            "inspector-port"
+          ]
         },
         "debug": {
           "name": "debug",
@@ -938,7 +1014,10 @@
           "type": "option",
           "char": "e",
           "description": "Specify an environment's branch name when using remote environment variables.",
-          "multiple": false
+          "multiple": false,
+          "aliases": [
+            "env-branch"
+          ]
         },
         "path": {
           "name": "path",

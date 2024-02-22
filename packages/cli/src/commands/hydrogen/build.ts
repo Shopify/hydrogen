@@ -63,7 +63,7 @@ export default class Build extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
     }),
     codegen: commonFlags.codegen,
-    'codegen-config-path': commonFlags.codegenConfigPath,
+    codegenConfigPath: commonFlags.codegenConfigPath,
     diff: commonFlags.diff,
   };
 

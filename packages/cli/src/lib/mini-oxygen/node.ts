@@ -126,21 +126,31 @@ export async function startNodeServer({
     },
     showBanner(options) {
       console.log('');
+
+      const customSections = [];
+
+      if (options?.extraLines?.length) {
+        customSections.push({
+          body: options.extraLines.map(
+            (value, index) => `${index != 0 ? '\n' : ''}${value}`,
+          ),
+        });
+      }
+
+      if (debug) {
+        customSections.push({
+          body: {warn: `Debugger listening on ws://localhost:${inspectorPort}`},
+        });
+      }
+
       renderSuccess({
         headline: `${options?.headlinePrefix ?? ''}MiniOxygen (Node Sandbox) ${
           options?.mode ?? 'development'
         } server running.`,
-        body: [
-          `View ${options?.appName ?? 'Hydrogen'} app: ${listeningAt}`,
-          ...(options?.extraLines ?? []),
-          ...(debug
-            ? [
-                {
-                  warn: `\n\nDebugger listening on ws://localhost:${inspectorPort}`,
-                },
-              ]
-            : []),
-        ],
+        body: `View ${options?.appName ?? 'Hydrogen'} app: ${
+          options?.host || listeningAt
+        }`,
+        customSections,
       });
       console.log('');
     },

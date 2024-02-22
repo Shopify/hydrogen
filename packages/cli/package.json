@@ -42,6 +42,7 @@
     "@shopify/hydrogen-codegen": "^0.2.1",
     "@shopify/mini-oxygen": "^2.2.5",
     "@shopify/oxygen-cli": "^4.1.0",
+    "@shopify/plugin-cloudflare": "^3.56.2",
     "ansi-escapes": "^6.2.0",
     "cli-truncate": "^4.0.0",
     "diff": "^5.1.0",
@@ -103,6 +104,9 @@
       "hydrogen": {
         "description": "Hydrogen commands"
       }
-    }
+    },
+    "plugins": [
+      "@shopify/plugin-cloudflare"
+    ]
   }
 }

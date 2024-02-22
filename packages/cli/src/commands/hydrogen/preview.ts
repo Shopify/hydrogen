@@ -18,9 +18,9 @@ export default class Preview extends Command {
     path: commonFlags.path,
     port: commonFlags.port,
     worker: deprecated('--worker', {isBoolean: true}),
-    'legacy-runtime': commonFlags.legacyRuntime,
-    'env-branch': commonFlags.envBranch,
-    'inspector-port': commonFlags.inspectorPort,
+    legacyRuntime: commonFlags.legacyRuntime,
+    envBranch: commonFlags.envBranch,
+    inspectorPort: commonFlags.inspectorPort,
     debug: commonFlags.debug,
   };
 

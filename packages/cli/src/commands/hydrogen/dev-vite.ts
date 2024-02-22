@@ -8,9 +8,10 @@ import {
 } from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import colors from '@shopify/cli-kit/node/colors';
-import {type TokenItem, renderInfo} from '@shopify/cli-kit/node/ui';
+import {renderInfo} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {Flags} from '@oclif/core';
+import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
+import {Flags, Config} from '@oclif/core';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
@@ -20,6 +21,7 @@ import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {setH2OPluginContext} from '../../lib/vite/shared.js';
 import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 import {getDebugBannerLine} from '../../lib/mini-oxygen/workerd.js';
+import {startTunnelPlugin, pollTunnelURL} from '../../lib/tunneling.js';
 
 export default class DevVite extends Command {
   static description =
@@ -33,7 +35,7 @@ export default class DevVite extends Command {
         commonFlags.codegen.description! +
         ' It updates the types on file save.',
     }),
-    'codegen-config-path': commonFlags.codegenConfigPath,
+    codegenConfigPath: commonFlags.codegenConfigPath,
     // sourcemap: commonFlags.sourcemap,
     'disable-virtual-routes': Flags.boolean({
       description:
@@ -42,19 +44,21 @@ export default class DevVite extends Command {
       default: false,
     }),
     debug: commonFlags.debug,
-    'inspector-port': commonFlags.inspectorPort,
+    inspectorPort: commonFlags.inspectorPort,
     host: Flags.boolean({
       description: 'Expose the server to the network',
       default: false,
       required: false,
     }),
-    ['env-branch']: commonFlags.envBranch,
+    envBranch: commonFlags.envBranch,
     ['disable-version-check']: Flags.boolean({
       description: 'Skip the version check when running `hydrogen dev`',
       default: false,
       required: false,
     }),
     diff: commonFlags.diff,
+    tunnel: commonFlags.tunnel,
+    tunnelUrl: commonFlags.tunnelUrl,
   };
 
   async run(): Promise<void> {
@@ -69,6 +73,7 @@ export default class DevVite extends Command {
       ...flagsToCamelObject(flags),
       path: directory,
       isLocalDev: flags.diff,
+      cliConfig: this.config,
     });
   }
 }
@@ -87,6 +92,9 @@ type DevOptions = {
   sourcemap?: boolean;
   inspectorPort: number;
   isLocalDev?: boolean;
+  tunnel?: boolean;
+  tunnelUrl?: string;
+  cliConfig?: Config;
 };
 
 export async function runDev({
@@ -102,6 +110,9 @@ export async function runDev({
   disableVersionCheck = false,
   inspectorPort,
   isLocalDev = false,
+  tunnel: useTunnel = false,
+  tunnelUrl,
+  cliConfig,
 }: DevOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
@@ -181,8 +192,19 @@ export async function runDev({
     viteServer.resolvedUrls!.local[0] ?? viteServer.resolvedUrls!.network[0]!,
   );
 
+  let finalHost = publicUrl.origin;
+  if (useTunnel && cliConfig) {
+    if (tunnelUrl) {
+      finalHost = tunnelUrl;
+    } else {
+      outputInfo('Starting tunnel...');
+      const tunnel = await startTunnelPlugin(cliConfig, appPort, 'cloudflare');
+      finalHost = await pollTunnelURL(tunnel);
+    }
+  }
+
   // Start the public facing server with the port passed by the user.
-  enhanceH2Logs({rootDirectory: root, host: publicUrl.toString()});
+  enhanceH2Logs({rootDirectory: root, host: finalHost});
 
   await envPromise; // Prints the injected env vars
   console.log('');
@@ -190,25 +212,33 @@ export async function runDev({
   viteServer.bindCLIShortcuts({print: true});
   console.log('\n');
 
-  const infoLines: TokenItem = [];
+  const customSections = [];
 
   if (!disableVirtualRoutes) {
-    infoLines.push(
-      `${colors.dim('View GraphiQL API browser:')} ${getGraphiQLUrl({
-        host: publicUrl.origin,
-      })}`,
-      `\n${colors.dim('View server network requests:')} ${
-        publicUrl.origin
-      }/subrequest-profiler`,
-    );
+    customSections.push({
+      body: [
+        `${colors.dim('View GraphiQL API browser:')} ${getGraphiQLUrl({
+          host: finalHost,
+        })}`,
+        `\n${colors.dim(
+          'View server network requests:',
+        )} ${finalHost}/subrequest-profiler`,
+      ].map((value, index) => ({
+        subdued: `${index != 0 ? '\n' : ''}${value}`,
+      })),
+    });
   }
 
   if (debug) {
-    infoLines.push({warn: getDebugBannerLine(inspectorPort)});
+    customSections.push({
+      body: {warn: getDebugBannerLine(inspectorPort)},
+    });
   }
 
-  if (infoLines.length > 0) {
-    renderInfo({body: infoLines});
+  if (customSections.length > 0) {
+    renderInfo({
+      customSections,
+    });
   }
 
   checkRemixVersions();

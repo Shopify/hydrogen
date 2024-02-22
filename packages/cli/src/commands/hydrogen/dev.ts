@@ -20,8 +20,9 @@ import {
   flagsToCamelObject,
   overrideFlag,
 } from '../../lib/flags.js';
+import {startTunnelPlugin, pollTunnelURL} from '../../lib/tunneling.js';
 import Command from '@shopify/cli-kit/node/base-command';
-import {Flags} from '@oclif/core';
+import {Flags, Config} from '@oclif/core';
 import {
   type MiniOxygen,
   startMiniOxygen,
@@ -48,13 +49,13 @@ export default class Dev extends Command {
     path: commonFlags.path,
     port: commonFlags.port,
     worker: deprecated('--worker', {isBoolean: true}),
-    'legacy-runtime': commonFlags.legacyRuntime,
+    legacyRuntime: commonFlags.legacyRuntime,
     codegen: overrideFlag(commonFlags.codegen, {
       description:
         commonFlags.codegen.description! +
         ' It updates the types on file save.',
     }),
-    'codegen-config-path': commonFlags.codegenConfigPath,
+    codegenConfigPath: commonFlags.codegenConfigPath,
     sourcemap: commonFlags.sourcemap,
     'disable-virtual-routes': Flags.boolean({
       description:
@@ -63,14 +64,16 @@ export default class Dev extends Command {
       default: false,
     }),
     debug: commonFlags.debug,
-    'inspector-port': commonFlags.inspectorPort,
-    ['env-branch']: commonFlags.envBranch,
+    inspectorPort: commonFlags.inspectorPort,
+    envBranch: commonFlags.envBranch,
     ['disable-version-check']: Flags.boolean({
       description: 'Skip the version check when running `hydrogen dev`',
       default: false,
       required: false,
     }),
     diff: commonFlags.diff,
+    tunnel: commonFlags.tunnel,
+    tunnelUrl: commonFlags.tunnelUrl,
   };
 
   async run(): Promise<void> {
@@ -84,6 +87,7 @@ export default class Dev extends Command {
     await runDev({
       ...flagsToCamelObject(flags),
       path: directory,
+      cliConfig: this.config,
     });
   }
 }
@@ -100,6 +104,9 @@ type DevOptions = {
   debug?: boolean;
   sourcemap?: boolean;
   inspectorPort: number;
+  tunnel?: boolean;
+  tunnelUrl?: string;
+  cliConfig?: Config;
 };
 
 export async function runDev({
@@ -114,6 +121,9 @@ export async function runDev({
   sourcemap = true,
   disableVersionCheck = false,
   inspectorPort,
+  tunnel: useTunnel = false,
+  tunnelUrl,
+  cliConfig,
 }: DevOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
@@ -200,7 +210,23 @@ export async function runDev({
       legacyRuntime,
     );
 
-    enhanceH2Logs({host: miniOxygen.listeningAt, ...remixConfig});
+    let host = miniOxygen.listeningAt;
+
+    if (useTunnel && cliConfig) {
+      if (tunnelUrl) {
+        host = tunnelUrl;
+      } else {
+        outputInfo('Starting tunnel...');
+        const tunnel = await startTunnelPlugin(
+          cliConfig,
+          appPort,
+          'cloudflare',
+        );
+        host = await pollTunnelURL(tunnel);
+      }
+    }
+
+    enhanceH2Logs({host, ...remixConfig});
 
     miniOxygen.showBanner({
       appName: storefront ? colors.cyan(storefront?.title) : undefined,
@@ -208,14 +234,15 @@ export async function runDev({
         initialBuildDurationMs > 0
           ? `Initial build: ${initialBuildDurationMs}ms\n`
           : '',
+      host,
       extraLines: [
         colors.dim(
-          `\nView GraphiQL API browser: ${getGraphiQLUrl({
+          `View GraphiQL API browser: ${getGraphiQLUrl({
             host: miniOxygen.listeningAt,
           })}`,
         ),
         colors.dim(
-          `\nView server network requests: ${miniOxygen.listeningAt}/subrequest-profiler`,
+          `View server network requests: ${miniOxygen.listeningAt}/subrequest-profiler`,
         ),
       ],
     });

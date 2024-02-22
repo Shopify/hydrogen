@@ -25,6 +25,7 @@ export const commonFlags = {
     description:
       'Run the app in a Node.js sandbox instead of an Oxygen worker.',
     env: 'SHOPIFY_HYDROGEN_FLAG_WORKER',
+    aliases: ['legacy-runtime'],
   }),
   force: Flags.boolean({
     description:
@@ -50,6 +51,7 @@ export const commonFlags = {
       "Specify an environment's branch name when using remote environment variables.",
     env: 'SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH',
     char: 'e',
+    aliases: ['env-branch'],
   }),
   env: Flags.string({
     description:
@@ -73,6 +75,7 @@ export const commonFlags = {
       'Specify a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if it exists.',
     required: false,
     dependsOn: ['codegen'],
+    aliases: ['codegen-config-path'],
   }),
   styling: Flags.string({
     description: `Sets the styling strategy to use. One of ${STYLING_CHOICES.map(
@@ -102,6 +105,7 @@ export const commonFlags = {
     description: 'Port where the inspector will be available.',
     env: 'SHOPIFY_HYDROGEN_FLAG_INSPECTOR_PORT',
     default: DEFAULT_INSPECTOR_PORT,
+    aliases: ['inspector-port'],
   }),
   diff: Flags.boolean({
     description:
@@ -120,6 +124,19 @@ export const commonFlags = {
     description:
       'Checks that there is exactly 1 valid lockfile in the project. Defaults to true, use `--no-lockfile-check` to disable.',
     env: 'SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK',
+  }),
+  tunnel: Flags.boolean({
+    description:
+      "Use tunneling for local development. Required for using new Customer Account API's Oauth flow",
+    required: false,
+    default: false,
+  }),
+  tunnelUrl: Flags.string({
+    description:
+      'Use your own tunneling service (e.g. ngrok) instead. Assume a tunneling had already been started at the development port (default 3000)',
+    required: false,
+    dependsOn: ['tunnel'],
+    aliases: ['tunnel-url'],
   }),
 };
 
