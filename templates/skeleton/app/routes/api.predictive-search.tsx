@@ -4,6 +4,7 @@ import type {
   NormalizedPredictiveSearchResults,
 } from '~/components/Search';
 import {NO_PREDICTIVE_SEARCH_RESULTS} from '~/components/Search';
+import {applyTrackingParams} from '~/lib/search';
 
 import type {
   PredictiveArticleFragment,
@@ -13,12 +14,6 @@ import type {
   PredictiveQueryFragment,
   PredictiveSearchQuery,
 } from 'storefrontapi.generated';
-
-type PredictiveSearchResultItem =
-  | PredictiveArticleFragment
-  | PredictiveCollectionFragment
-  | PredictivePageFragment
-  | PredictiveProductFragment;
 
 type PredictiveSearchTypes =
   | 'ARTICLE'
@@ -119,21 +114,6 @@ export function normalizePredictiveSearchResults(
       results: NO_PREDICTIVE_SEARCH_RESULTS,
       totalResults,
     };
-  }
-
-  function applyTrackingParams(
-    resource: PredictiveSearchResultItem | PredictiveQueryFragment,
-    params?: string,
-  ) {
-    if (params) {
-      return resource.trackingParameters
-        ? `?${params}&${resource.trackingParameters}`
-        : `?${params}`;
-    } else {
-      return resource.trackingParameters
-        ? `?${resource.trackingParameters}`
-        : '';
-    }
   }
 
   const localePrefix = locale ? `/${locale}` : '';
