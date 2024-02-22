@@ -76,7 +76,15 @@ function SearchAside() {
                 type="search"
               />
               &nbsp;
-              <button type="submit">Search</button>
+              <button
+                onClick={() => {
+                  window.location.href = inputRef?.current?.value
+                    ? `/search?q=${inputRef.current.value}`
+                    : `/search`;
+                }}
+              >
+                Search
+              </button>
             </div>
           )}
         </PredictiveSearchForm>
