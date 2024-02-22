@@ -21,7 +21,7 @@ import {
   overrideFlag,
 } from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
-import {Flags} from '@oclif/core';
+import {Config, Flags} from '@oclif/core';
 import {
   type MiniOxygen,
   startMiniOxygen,
@@ -37,6 +37,9 @@ import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {findPort} from '../../lib/find-port.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
+import { TunnelClient } from '@shopify/cli-kit/node/plugins/tunnel';
+import { fanoutHooks } from '@shopify/cli-kit/node/plugins';
+import { AbortError, BugError } from '@shopify/cli-kit/node/error';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -81,11 +84,47 @@ export default class Dev extends Command {
       directory = await prepareDiffDirectory(directory, true);
     }
 
-    await runDev({
-      ...flagsToCamelObject(flags),
-      path: directory,
-    });
+    outputInfo('Starting tunnel...');
+    const tunnel = await startTunnelPlugin(this.config, 3000, 'cloudflare');
+    const url = await pollTunnelURL(tunnel)
+    console.log(url)
   }
+}
+
+export async function startTunnelPlugin(config: Config, port: number, provider: string): Promise<TunnelClient> {
+  const hooks = await fanoutHooks(config, 'tunnel_start', {port, provider})
+  const results = Object.values(hooks).filter(
+    (tunnelResponse) => !tunnelResponse?.isErr() || tunnelResponse.error.type !== 'invalid-provider',
+  )
+  const first = results[0]
+  if (!first) throw new BugError(`We couldn't find the ${provider} tunnel plugin`)
+  if (first.isErr()) throw new AbortError(`${provider} failed to start the tunnel.\n${first.error.message}`)
+  return first.value
+}
+
+/**
+ * Poll the tunnel provider every 0.5 until an URL or error is returned.
+ */
+async function pollTunnelURL(tunnelClient: TunnelClient): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    let retries = 0
+    const pollTunnelStatus = async () => {
+      const result = tunnelClient.getTunnelStatus()
+      outputDebug(`Polling tunnel status for ${tunnelClient.provider} (attempt ${retries}): ${result.status}`)
+      if (result.status === 'error') return reject(new AbortError(result.message, result.tryMessage))
+      if (result.status === 'connected') {
+        resolve(result.url)
+      } else {
+        retries += 1
+        startPolling()
+      }
+    }
+    const startPolling = () => {
+      setTimeout(pollTunnelStatus, 500)
+    }
+
+    pollTunnelStatus()
+  })
 }
 
 type DevOptions = {
