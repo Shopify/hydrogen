@@ -101,7 +101,19 @@
     },
     "topics": {
       "hydrogen": {
-        "description": "Hydrogen commands"
+        "description": "Shopify CLI commands for Hydrogen."
+      },
+      "hydrogen:debug": {
+        "description": "Debugging utilities."
+      },
+      "hydrogen:env": {
+        "description": "Syncs environment variables between .env and Oxygen."
+      },
+      "hydrogen:generate": {
+        "description": "Creates new routes."
+      },
+      "hydrogen:setup": {
+        "description": "Scaffolds new functionality."
       }
     }
   }
