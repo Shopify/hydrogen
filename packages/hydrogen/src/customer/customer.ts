@@ -77,7 +77,7 @@ export function createCustomerAccountClient({
 
   if (!customerAccountId || !customerAccountUrl) {
     console.warn(
-      "[h2:warn:createCustomerAccountClient] `customerAccountId` and `customerAccountUrl` need to be provided to use Customer Account API. Mock.shop doesn't automatically supply these variables.\nUse `h2 env pull` to link your store credentials.",
+      "[h2:warn:createCustomerAccountClient] `customerAccountId` and `customerAccountUrl` need to be provided to use Customer Account API. Mock.shop doesn't automatically supply these variables.\nUse `npx shopify hydrogen env pull` to link your store credentials.",
     );
   }
 

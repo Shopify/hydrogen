@@ -29,6 +29,7 @@ import {
 } from '@shopify/cli-kit/node/node-package-manager';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {PackageJson} from 'type-fest';
+import {getCliCommand} from '../../lib/shell.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {getProjectPaths} from '../../lib/remix-config.js';
 
@@ -1042,6 +1043,8 @@ export async function displayDevUpgradeNotice({
         } new @shopify/hydrogen versions available.`
       : `There's a new @shopify/hydrogen version available.`;
 
+  const cliCommand = await getCliCommand();
+
   renderInfo({
     headline,
     body: [`Current: ${currentVersion} | Latest: ${pinnedLatestVersion}`],
@@ -1069,7 +1072,7 @@ export async function displayDevUpgradeNotice({
               {
                 list: {
                   items: [
-                    `Run \`h2 upgrade\` or \`h2 upgrade --version XXXX.X.XX\``,
+                    `Run \`${cliCommand} upgrade\` or \`${cliCommand} upgrade --version XXXX.X.XX\``,
                     ,
                     `Read release notes at https://hydrogen.shopify.dev/releases`,
                   ],

@@ -85,8 +85,8 @@ export default function Index() {
             <p>
               You&rsquo;re seeing this because you don&rsquo;t have a home route
               in your project yet. <br />
-              Run <code>h2 setup</code> to scaffold standard Shopify routes.
-              Learn more about
+              Run <code>npx shopify hydrogen setup</code> to scaffold standard
+              Shopify routes. Learn more about
               {` `}
               <CreateRoutesLink />
             </p>
@@ -95,8 +95,12 @@ export default function Index() {
               You&rsquo;re seeing this because you have not yet configured your
               storefront token. <br />
               <br /> To link your store,{` `}
-              run <code>h2 link && h2 env pull</code>. Then, run{' '}
-              <code>h2 setup</code> to scaffold standard Shopify routes.
+              run{' '}
+              <code>
+                npx shopify hydrogen link && npx shopify hydrogen env pull
+              </code>
+              . Then, run <code>npx shopify hydrogen setup</code> to scaffold
+              standard Shopify routes.
               <br />
               Learn more about
               {` `}
