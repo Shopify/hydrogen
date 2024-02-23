@@ -8,11 +8,14 @@ export function CustomAnalytics() {
     subscribe('pageViewed', (payload) => {
       console.log('CustomAnalytics - Page viewed:', payload);
     });
-    subscribe('productViewed', (payload) => {
+    subscribe('product_viewed', (payload) => {
       console.log('CustomAnalytics - Product viewed:', payload);
     });
-    subscribe('collectionViewed', (payload) => {
+    subscribe('collection_viewed', (payload) => {
       console.log('CustomAnalytics - Collection viewed:', payload);
+    });
+    subscribe('cart_viewed', (payload) => {
+      console.log('CustomAnalytics - Cart viewed:', payload);
     });
   }, []);
 

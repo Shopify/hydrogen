@@ -121,13 +121,26 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <AnalyticsProvider>
+        <AnalyticsProvider
+          canTrack={() => true}
+          eventDataRoute="/event-data"
+          eventParamsMap={{
+            product_viewed: {
+              routeId: 'products.$handle',
+              paramName: 'handle',
+            },
+            collection_viewed: {
+              routeId: 'collections.$handle',
+              paramName: 'handle',
+            },
+            cart_viewed: {
+              routeId: 'cart',
+            },
+          }}
+        >
           <Layout {...data}>
             <Outlet />
           </Layout>
-          <AnalyticsPageViewed callback={(payload) =>{
-            console.log('page view', payload);
-          }} />
           <CustomAnalytics />
         </AnalyticsProvider>
         <ScrollRestoration nonce={nonce} />
