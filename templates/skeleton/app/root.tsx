@@ -1,4 +1,4 @@
-import {AnalyticsPageViewed, AnalyticsProvider, useNonce} from '@shopify/hydrogen';
+import {AnalyticsProvider, useNonce} from '@shopify/hydrogen';
 import {
   defer,
   type SerializeFrom,
