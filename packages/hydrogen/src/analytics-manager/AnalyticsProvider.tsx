@@ -1,6 +1,5 @@
-import { useFetcher, useLocation, useOutlet, useParams } from "@remix-run/react";
+import {useLocation, useOutlet, useParams } from "@remix-run/react";
 import {type ReactNode, useMemo, createContext, useContext, useRef, useEffect} from "react";
-import { s } from "vitest/dist/reporters-OH1c16Kq";
 
 type EventConfig = {
   routeId?: string;
@@ -100,7 +99,6 @@ export function useAnalyticsProvider(): AnalyticsContextValue {
 }
 
 function PageViewed({eventDataRoute}: {eventDataRoute: string}) {
-  const fetcher = useFetcher();
   const params = useParams();
   const location = useLocation();
   const lastLocationKey = useRef<string>('');
@@ -111,9 +109,9 @@ function PageViewed({eventDataRoute}: {eventDataRoute: string}) {
   // We want useEffect to execute only when location changes
   // which represents a page view
   useEffect(() => {
-    if (lastLocationKey.current === location.key) return;
+    if (lastLocationKey.current === location.pathname) return;
 
-    lastLocationKey.current = location.key;
+    lastLocationKey.current = location.pathname;
 
     const payload = {
       url: location.pathname,
@@ -155,7 +153,7 @@ function PageViewed({eventDataRoute}: {eventDataRoute: string}) {
         }
       });
     }, 0);
-  }, [location]);
+  }, [location.pathname]);
 
   return null;
 }

@@ -6,7 +6,13 @@ import { type Storefront } from "../storefront";
 
 const CACHE_LONG = generateCacheControlHeader(CacheLong());
 
-export async function analyticsEventData(request: Request, storefront: Storefront) {
+export async function analyticsEventData({
+  request,
+  storefront,
+}: {
+  request: Request;
+  storefront: Storefront;
+}) {
   const url = new URL(request.url);
   const searchParams = new URLSearchParams(url.search);
   const dataType = searchParams.get('eventType');
