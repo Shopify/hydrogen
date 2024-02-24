@@ -17,6 +17,12 @@ export function CustomAnalytics() {
     subscribe('cart_viewed', (payload) => {
       console.log('CustomAnalytics - Cart viewed:', payload);
     });
+    subscribe('product_added_to_cart', (payload) => {
+      console.log('CustomAnalytics - Product added to cart:', payload);
+    });
+    subscribe('product_removed_from_cart', (payload) => {
+      console.log('CustomAnalytics - Product removed from cart:', payload);
+    });
   }, []);
 
   return null;

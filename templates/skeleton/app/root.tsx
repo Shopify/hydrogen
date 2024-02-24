@@ -17,7 +17,6 @@ import {
   isRouteErrorResponse,
   type ShouldRevalidateFunction,
 } from '@remix-run/react';
-import type {CustomerAccessToken} from '@shopify/hydrogen/storefront-api-types';
 import favicon from '../public/favicon.svg';
 import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
@@ -122,6 +121,7 @@ export default function App() {
       </head>
       <body>
         <AnalyticsProvider
+          cart={data.cart}
           canTrack={() => true}
           eventDataRoute="/event-data"
           eventParamsMap={{

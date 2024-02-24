@@ -1,5 +1,7 @@
-import {useLocation, useOutlet, useParams } from "@remix-run/react";
-import {type ReactNode, useMemo, createContext, useContext, useRef, useEffect} from "react";
+import {Await, useLocation, useOutlet, useParams } from "@remix-run/react";
+import {type ReactNode, useMemo, createContext, useContext, useRef, useEffect, Suspense} from "react";
+import {type CartReturn} from "../cart/queries/cart-types";
+import { CartLine, ComponentizableCartLine } from "@shopify/hydrogen-react/storefront-api-types";
 
 type EventConfig = {
   routeId?: string;
@@ -18,12 +20,14 @@ type AnalyticsProviderProps = {
   eventDataRoute: string;
   eventParamsMap: EventParamsMap;
   canTrack: () => boolean;
+  cart: Promise<CartReturn | null>;
 }
 
 type AnalyticsContextValue = {
   eventParamsMap: EventParamsMap;
   publish: (event: string, payload: Record<string, unknown>) => void;
   subscribe: (event: string, callback: (payload: Record<string, unknown>) => void) => void;
+  getCart: () => CartReturn | null;
 }
 
 export const defaultAnalyticsContext: AnalyticsContextValue = {
@@ -33,6 +37,7 @@ export const defaultAnalyticsContext: AnalyticsContextValue = {
   },
   publish: () => {},
   subscribe: () => {},
+  getCart: () => null,
 };
 
 const AnalyticsContext = createContext<AnalyticsContextValue>(
@@ -47,10 +52,13 @@ export function AnalyticsProvider({
   eventDataRoute,
   eventParamsMap,
   canTrack,
+  cart,
 }: AnalyticsProviderProps): JSX.Element {
+  const cartRef = useRef<CartReturn | null>(null);
   const finalConfig = useMemo<AnalyticsContextValue>(() => {
     return {
       eventParamsMap,
+      getCart: () => cartRef.current,
       publish: (event: string, payload: Record<string, unknown>) => {
         const stampedPayload = {
           eventTimestamp: Date.now(),
@@ -85,6 +93,7 @@ export function AnalyticsProvider({
   return (
     <AnalyticsContext.Provider value={finalConfig}>
       {children}
+      <AnalyticsCart cart={cart} cartRef={cartRef}/>
       <PageViewed eventDataRoute={eventDataRoute} />
     </AnalyticsContext.Provider>
   );
@@ -101,7 +110,7 @@ export function useAnalyticsProvider(): AnalyticsContextValue {
 function PageViewed({eventDataRoute}: {eventDataRoute: string}) {
   const params = useParams();
   const location = useLocation();
-  const lastLocationKey = useRef<string>('');
+  const lastLocationPathname = useRef<string>('');
   const outlet = useOutlet();
   const {publish, eventParamsMap} = useAnalyticsProvider();
 
@@ -109,9 +118,9 @@ function PageViewed({eventDataRoute}: {eventDataRoute: string}) {
   // We want useEffect to execute only when location changes
   // which represents a page view
   useEffect(() => {
-    if (lastLocationKey.current === location.pathname) return;
+    if (lastLocationPathname.current === location.pathname) return;
 
-    lastLocationKey.current = location.pathname;
+    lastLocationPathname.current = location.pathname;
 
     const payload = {
       url: location.pathname,
@@ -155,5 +164,82 @@ function PageViewed({eventDataRoute}: {eventDataRoute: string}) {
     }, 0);
   }, [location.pathname]);
 
+  return null;
+}
+
+function AnalyticsCart({
+  cart,
+  cartRef,
+}: {
+  cart: Promise<CartReturn | null>
+  cartRef: React.MutableRefObject<CartReturn | null>
+}) {
+  return (
+    <Suspense fallback={<p>Loading cart ...</p>}>
+      <Await resolve={cart}>
+        {(cart) => {
+          if (cartRef.current === null) {
+            cartRef.current = cart;
+            return null;
+          } else {
+            return <AnalyticDiffCartLines cartRef={cartRef} previousCart={cartRef.current} currentCart={cart} />;
+          }
+        }}
+      </Await>
+    </Suspense>
+  );
+}
+
+function AnalyticDiffCartLines({
+  cartRef,
+  previousCart,
+  currentCart,
+}: {
+  cartRef: React.MutableRefObject<CartReturn | null>
+  previousCart: CartReturn | null;
+  currentCart: CartReturn | null;
+}) {
+  const {publish} = useAnalyticsProvider();
+
+  useEffect(() => {
+    cartRef.current = currentCart;
+    if (!previousCart || !currentCart) return;
+
+    // Product removed from cart
+    previousCart?.lines.nodes.forEach((line) => {
+      const matchedLineId = currentCart?.lines.nodes.filter((currentLine) => line.id === currentLine.id);
+      if (matchedLineId.length === 1) {
+        const matchedLine = matchedLineId[0];
+        if (line.quantity < matchedLine.quantity) {
+          publish('product_added_to_cart', {
+            line,
+            quantity: matchedLine.quantity,
+          });
+        } else if (line.quantity > matchedLine.quantity) {
+          publish('product_removed_from_cart', {
+            line,
+            quantity: matchedLine.quantity,
+          });
+        }
+      } else {
+        publish('product_removed_from_cart', {
+          line,
+          quantity: 0,
+        });
+      }
+    });
+
+    // Product added to cart
+    currentCart?.lines.nodes.forEach((line) => {
+      const matchedLineId = previousCart?.lines.nodes.filter((previousLine) => line.id === previousLine.id);
+      if (matchedLineId.length === 0) {
+        publish('product_added_to_cart', {
+          line,
+          quantity: 1,
+        });
+      }
+    });
+
+  }, [previousCart, currentCart]);
   return null;
 }
