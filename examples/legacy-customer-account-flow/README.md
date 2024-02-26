@@ -9,3 +9,11 @@ Passwordless login with [Customer Account API](<(https://shopify.dev/docs/api/cu
 If you are looking to use Shopify's customer login experience on a seperate webiste that is not a Shopify store. Check out the [multipass example](../multipass/).
 
 🗒️ Read about the Customer Account API and why it was introduced: [https://www.shopify.com/partners/blog/introducing-customer-account-api-for-headless-stores](https://www.shopify.com/partners/blog/introducing-customer-account-api-for-headless-stores)
+
+## Install
+
+Setup a new project with this example:
+
+```bash
+npm create @shopify/hydrogen@latest -- --template legacy-customer-account-flow
+```
