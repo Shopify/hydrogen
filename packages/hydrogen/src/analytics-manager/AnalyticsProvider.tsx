@@ -113,17 +113,18 @@ function PageViewed({eventDataRoute}: {eventDataRoute: string}) {
   const lastLocationPathname = useRef<string>('');
   const outlet = useOutlet();
   const {publish, eventParamsMap} = useAnalyticsProvider();
+  const url = location.pathname + location.search
 
   // Page view analytics
   // We want useEffect to execute only when location changes
   // which represents a page view
   useEffect(() => {
-    if (lastLocationPathname.current === location.pathname) return;
+    if (lastLocationPathname.current === url) return;
 
-    lastLocationPathname.current = location.pathname;
+    lastLocationPathname.current = url;
 
     const payload = {
-      url: location.pathname,
+      url,
     };
 
     setTimeout(() => {
@@ -162,7 +163,7 @@ function PageViewed({eventDataRoute}: {eventDataRoute: string}) {
         }
       });
     }, 0);
-  }, [location.pathname]);
+  }, [url]);
 
   return null;
 }
