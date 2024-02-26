@@ -9,6 +9,14 @@ third-party GraphQL API in Hydrogen. This example uses the public [Rick & Morty 
 
 - Basic knowledge of GraphQL and the [Rick & Morty API](https://rickandmortyapi.com/documentation/#graphql)
 
+## Install
+
+Setup a new project with this example:
+
+```bash
+npm create @shopify/hydrogen@latest -- --template third-party-queries-caching
+```
+
 ## Key files
 
 This folder contains the minimal set of files needed to showcase the implementation.

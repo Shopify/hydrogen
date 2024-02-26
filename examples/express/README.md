@@ -8,6 +8,14 @@ This is an example setup where we have adapted the Remix Express starter app to 
 1. The app does not yet utilize [`storefrontRedirect`](https://shopify.dev/docs/api/hydrogen/2023-04/unstable/utilities/storefrontredirect). This will be added when Remix releases middleware.
 1. The app only includes a single index route. If you'd like to add more routes, run the Shopify CLI: `npx shopify hydrogen generate route`
 
+## Install
+
+Setup a new project with this example:
+
+```bash
+npm create @shopify/hydrogen@latest -- --template express
+```
+
 ## Setup
 
 Start the Remix development asset server and the Express server by running:

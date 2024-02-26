@@ -13,6 +13,14 @@ To run this example on your own store, you'll need to:
 - Install a [subscription app](https://apps.shopify.com/categories/selling-products-purchase-options-subscriptions).
 - Use the subscription app to create a selling plan for a product.
 
+## Install
+
+Setup a new project with this example:
+
+```bash
+npm create @shopify/hydrogen@latest -- --template subscriptions
+```
+
 ## Key files
 
 This folder contains the minimal set of files needed to showcase the implementation.
