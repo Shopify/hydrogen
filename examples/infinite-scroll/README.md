@@ -1,24 +1,22 @@
-# Hydrogen example: Optimistic Cart UI
+# Hydrogen example: infinite scroll collection page
 
-This folder contains an example implementation of [pending optimistic](https://remix.run/docs/en/main/discussion/pending-ui) Cart UI leveraging Hydrogen's [OptimisticInput](https://shopify.dev/docs/api/hydrogen/latest/components/optimisticinput)
-component and [useOptimisticData](https://shopify.dev/docs/api/hydrogen/latest/hooks/useoptimisticdata) hook.
+This folder contains an example implementation of [infinite scroll](https://shopify.dev/docs/custom-storefronts/hydrogen/data-fetching/pagination#automatically-load-pages-on-scroll) within a product collection page using the [Pagination component](https://shopify.dev/docs/api/hydrogen/2024-01/components/pagination).
 
-More specifically, this example focuses on how to optimistically remove a cart
-line item from the cart.
+The example uses [`react-intersection-observer`](https://www.npmjs.com/package/react-intersection-observer) to detect when the `Load more` button is in view. A `useEffect` then triggers a navigation to the next page url, which seemlessly loads more products as the user scrolls.
 
-> [!NOTE]
-> Removing items without optimistic UI
+A few side effects of this implementation are:
 
-![not-optimistic](https://github.com/Shopify/hydrogen/assets/12080141/52309d79-12a0-4c38-b172-031e5ca4f8a9)
+1. The page progressively enhances, so that when JavaScript has yet to load, the page is still interactive because the user can still click the `Load more` button.
+2. As the user scrolls, the URL automatically changes as new pages are loaded.
+3. Because the implementation uses the `Pagination` component, navigating back to the collection list after clicking on a product automatically maintains the user's scroll position.
 
-> [!NOTE]
-> Removing items _with_ optimistic UI
+## Install
 
-![optimistic](https://github.com/Shopify/hydrogen/assets/12080141/29d0b9b2-88b7-44de-ae44-d09863bc2c6f)
+Setup a new project with this example:
 
-## Requirements
-
-- Basic understanding of Remix's [pending optimistic UI](https://remix.run/docs/en/main/discussion/pending-ui)
+```bash
+npm create @shopify/hydrogen@latest -- --template infinite-scroll
+```
 
 ## Key files
 
@@ -26,104 +24,24 @@ This folder contains the minimal set of files needed to showcase the implementat
 Files that aren’t included by default with Hydrogen and that you’ll need to
 create are labeled with 🆕.
 
-| File                                                 | Description                               |
-| ---------------------------------------------------- | ----------------------------------------- |
-| [`app/components/Cart.tsx`](app/components/Cart.tsx) | Cart component that renders the side cart |
+| File                                                                       | Description                 |
+| -------------------------------------------------------------------------- | --------------------------- |
+| [`app/routes/collections.$handle.tsx`](app/routes/collections.$handle.tsx) | The product collection page |
 
 ## Instructions
 
 ### 1. Link your store to inject the required environment variables
 
 ```bash
-h2 link
+npx shopify hydrogen link
 ```
 
-### 2. Edit the Cart component file to remove line items optimistically
+### 2. Edit the route loader
 
-In `app/components/Cart.tsx`, import the `OptimisticInput` and `useOptimisticData` helpers from @shopify/hydrogen
+In `app/routes/collections.$handle.tsx`, update the `pageBy` parameter passed to the `getPaginationVariables` function call to customize how many products to load at a time.
 
 ```ts
-import {OptimisticInput, useOptimisticData} from '@shopify/hydrogen';
+const paginationVariables = getPaginationVariables(request, {
+  pageBy: 8,
+});
 ```
-
-Add the `<OptimisticInput/>` component to the line remove `<CartForm />` in order to trigger a line item removing action
-
-```diff
-function CartLineRemoveButton({lineIds}: {lineIds: string[]}) {
-  return (
-    <CartForm
-      route="/cart"
-      action={CartForm.ACTIONS.LinesRemove}
-      inputs={{lineIds}}
-    >
-+     <OptimisticInput id={lineIds[0]} data={{action: 'removing'}} />
-      <button type="submit">Remove</button>
-    </CartForm>
-  );
-}
-```
-
-Read pending optimistic events adding the `useOptimisticData` hook to the `<CartLineItem >` component.
-
-```diff
-function CartLineItem({
-  layout,
-  line,
-}: {
-  layout: CartMainProps['layout'];
-  line: CartLine;
-}) {
-  const {id, merchandise} = line;
-  const {product, title, image, selectedOptions} = merchandise;
-  const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
-
-+ const optimistic = useOptimisticData<{ action?: 'removing'; quantity?: number;}>(id);
-
-  return (
-    <li key={id} className="cart-line">
-      {image && (
-        <Image
-          alt={title}
-          data={image}
-          height={60}
-          width={100}
-          loading="lazy"
-        />
-      )}
-
-       // ...other code
-    </li>
-  );
-}
-```
-
-Optimistically hide the line item when the user clicks the remove button, by setting the display
-style to `none` if a `removing` event is triggered
-
-```diff
-function CartLineItem({
-  layout,
-  line,
-}: {
-  layout: CartMainProps['layout'];
-  line: CartLine;
-}) {
-  const {id, merchandise} = line;
-  const {product, title, image, selectedOptions} = merchandise;
-  const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
-
-  const optimisticData = useOptimisticData<{ action?: 'removing'; quantity?: number;}>(id);
-
-  return (
-    <li
-      key={id}
-      className="cart-line"
-+     style={{ display: optimisticData?.action === 'removing' ? 'none' : 'flex'}}
-    >
-     //... other code
-    </li>
-  );
-}
-```
-
-[View the complete component file](app/components/Cart.tsx) to see these updates in context.

@@ -1,5 +1,45 @@
 # @shopify/cli-hydrogen
 
+## 7.1.0
+
+### Minor Changes
+
+- Adds new command line flag options for the `deploy` command: ([#1736](https://github.com/Shopify/hydrogen/pull/1736)) by [@vincentezw](https://github.com/vincentezw)
+
+  - `build-command`: Allows users to specify which command is used to build the project (instead of the default build function). This provides more flexibility for projects that have custom build processes.
+  - `no-lockfile-check`: Allows users to skip the lockfile check during the build process. This can be useful in scenarios where you want to bypass the lockfile check for certain reasons, such as in monorepos, where the lockfile resides in the root folder.
+
+- Adding skip-verification flag to hydrogen deploy command ([#1770](https://github.com/Shopify/hydrogen/pull/1770)) by [@lynchv](https://github.com/lynchv)
+
+### Patch Changes
+
+- Add `--env-file` flag to the `deploy` command ([#1743](https://github.com/Shopify/hydrogen/pull/1743)) by [@aswamy](https://github.com/aswamy)
+
+  Optionally provide the path to a local .env file to override the environment variables set on Admin.
+
+- This is an important fix to a bug with 404 routes and path-based i18n projects where some unknown routes would not properly render a 404. This fixes all new projects, but to fix existing projects, add a `($locale).tsx` route with the following contents: ([#1732](https://github.com/Shopify/hydrogen/pull/1732)) by [@blittle](https://github.com/blittle)
+
+  ```ts
+  import {type LoaderFunctionArgs} from '@remix-run/server-runtime';
+
+  export async function loader({params, context}: LoaderFunctionArgs) {
+    const {language, country} = context.storefront.i18n;
+
+    if (
+      params.locale &&
+      params.locale.toLowerCase() !== `${language}-${country}`.toLowerCase()
+    ) {
+      // If the locale URL param is defined, yet we still are still at the default locale
+      // then the the locale param must be invalid, send to the 404 page
+      throw new Response(null, {status: 404});
+    }
+
+    return null;
+  }
+  ```
+
+- Non-zero exit codes are now honored ([#1766](https://github.com/Shopify/hydrogen/pull/1766)) by [@graygilmore](https://github.com/graygilmore)
+
 ## 7.0.1
 
 ### Patch Changes

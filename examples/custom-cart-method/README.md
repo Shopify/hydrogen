@@ -8,6 +8,14 @@ It also showcase an end-to-end implementation of [custom method](https://shopify
 
 Note that this is an isolated example, for a better edit in cart user experience we recommend implementing [optimistic-cart-ui](../optimistic-cart-ui) along side of this example.
 
+## Install
+
+Setup a new project with this example:
+
+```bash
+npm create @shopify/hydrogen@latest -- --template custom-cart-method
+```
+
 ## Requirements
 
 - Basic understanding of how to [build a cart with Hydrogen](https://shopify.dev/docs/custom-storefronts/hydrogen/building/cart)

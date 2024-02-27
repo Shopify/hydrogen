@@ -1,5 +1,20 @@
 # @shopify/hydrogen
 
+## 2024.1.2
+
+### Patch Changes
+
+- 🐛 Fix issue where customer login does not persist to checkout ([#1719](https://github.com/Shopify/hydrogen/pull/1719)) by [@michenly](https://github.com/michenly)
+
+  ✨ Add `customerAccount` option to `createCartHandler`. Where a `?logged_in=true` will be added to the checkoutUrl for cart query if a customer is logged in.
+
+- Customer Account API client's `query` & `mutate` method now returns `errors` as an array of GraphQLError(s) that is better formatted. ([#1765](https://github.com/Shopify/hydrogen/pull/1765)) by [@michenly](https://github.com/michenly)
+
+  Log GraphQL errors automatically in Customer Account API client, with a new `logErrors: boolean` option to disable it.
+
+- Updated dependencies [[`409e1bca`](https://github.com/Shopify/hydrogen/commit/409e1bcab3b2bd291179013350df13315f045479)]:
+  - @shopify/hydrogen-react@2024.1.1
+
 ## 2024.1.1
 
 ### Patch Changes
