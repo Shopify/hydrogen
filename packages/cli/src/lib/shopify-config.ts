@@ -6,17 +6,27 @@ import {outputInfo} from '@shopify/cli-kit/node/output';
 export const SHOPIFY_DIR = '.shopify';
 export const SHOPIFY_DIR_PROJECT = 'project.json';
 
-interface Storefront {
-  id: string;
-  title: string;
-}
-
 export interface ShopifyConfig {
-  shop?: string;
-  storefront?: Storefront;
+  shop: string;
+  shopName: string;
+  email: string;
+  storefront?: {
+    id: string;
+    title: string;
+  };
 }
 
-export async function getConfig(root: string): Promise<ShopifyConfig> {
+export async function resetConfig(root: string): Promise<void> {
+  const filePath = resolvePath(root, SHOPIFY_DIR, SHOPIFY_DIR_PROJECT);
+
+  if (!(await fileExists(filePath))) {
+    return;
+  }
+
+  await writeFile(filePath, JSON.stringify({}));
+}
+
+export async function getConfig(root: string): Promise<Partial<ShopifyConfig>> {
   const filePath = resolvePath(root, SHOPIFY_DIR, SHOPIFY_DIR_PROJECT);
 
   if (!(await fileExists(filePath))) {
@@ -26,36 +36,31 @@ export async function getConfig(root: string): Promise<ShopifyConfig> {
   return JSON.parse(await readFile(filePath));
 }
 
-export async function setShop(
+export async function setUserAccount(
   root: string,
-  shop: string,
-): Promise<ShopifyConfig> {
+  {shop, shopName, email}: Omit<ShopifyConfig, 'storefront'>,
+) {
   const filePath = resolvePath(root, SHOPIFY_DIR, SHOPIFY_DIR_PROJECT);
 
-  if (!(await fileExists(filePath))) {
+  let existingConfig: Partial<ShopifyConfig> = {};
+
+  if (await fileExists(filePath)) {
+    existingConfig = JSON.parse(await readFile(filePath));
+  } else {
     await mkdir(dirname(filePath));
-
-    const newConfig: ShopifyConfig = {
-      shop,
-    };
-
-    await writeFile(filePath, JSON.stringify(newConfig));
-    await ensureShopifyGitIgnore(root);
-
-    return newConfig;
   }
 
-  const existingConfig = JSON.parse(await readFile(filePath));
-
-  const config = {
+  const newConfig = {
     ...existingConfig,
     shop,
+    shopName,
+    email,
   };
 
-  await writeFile(filePath, JSON.stringify(config));
+  await writeFile(filePath, JSON.stringify(newConfig));
   await ensureShopifyGitIgnore(root);
 
-  return config;
+  return newConfig;
 }
 
 /**
@@ -66,12 +71,12 @@ export async function setShop(
  */
 export async function setStorefront(
   root: string,
-  {id, title}: Storefront,
-): Promise<ShopifyConfig> {
+  {id, title}: NonNullable<ShopifyConfig['storefront']>,
+) {
   try {
     const filePath = resolvePath(root, SHOPIFY_DIR, SHOPIFY_DIR_PROJECT);
 
-    const existingConfig = JSON.parse(await readFile(filePath));
+    const existingConfig: ShopifyConfig = JSON.parse(await readFile(filePath));
 
     const config = {
       ...existingConfig,
@@ -93,11 +98,15 @@ export async function setStorefront(
  * @param root the target directory
  * @returns the updated config
  */
-export async function unsetStorefront(root: string): Promise<ShopifyConfig> {
+export async function unsetStorefront(
+  root: string,
+): Promise<Partial<ShopifyConfig>> {
   try {
     const filePath = resolvePath(root, SHOPIFY_DIR, SHOPIFY_DIR_PROJECT);
 
-    const existingConfig = JSON.parse(await readFile(filePath));
+    const existingConfig: Partial<ShopifyConfig> = JSON.parse(
+      await readFile(filePath),
+    );
 
     const config = {
       ...existingConfig,
@@ -137,7 +146,7 @@ export async function ensureShopifyGitIgnore(root: string): Promise<boolean> {
 
     gitIgnoreContents += `${SHOPIFY_DIR}\r\n`;
 
-    outputInfo('Adding .shopify to .gitignore...');
+    outputInfo('Adding .shopify to .gitignore...\n');
     await writeFile(gitIgnoreFilePath, gitIgnoreContents);
 
     return true;

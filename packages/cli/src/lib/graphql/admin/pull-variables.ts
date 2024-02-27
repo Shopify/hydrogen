@@ -1,7 +1,6 @@
-import {type AdminSession} from '../../admin-session.js';
-import {adminRequest} from '../../graphql.js';
+import {adminRequest, type AdminSession} from './client.js';
 
-export const PullVariablesQuery = `#graphql
+const PullVariablesQuery = `#graphql
   query PullVariables($id: ID!, $branch: String) {
     hydrogenStorefront(id: $id) {
       id
@@ -45,5 +44,5 @@ export async function getStorefrontEnvVariables(
     },
   );
 
-  return {storefront: hydrogenStorefront};
+  return hydrogenStorefront;
 }

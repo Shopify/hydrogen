@@ -1,15 +1,10 @@
 import path from 'path';
 import Command from '@shopify/cli-kit/node/base-command';
-import {AbortError} from '@shopify/cli-kit/node/error';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {Flags} from '@oclif/core';
 import {getProjectPaths, getRemixConfig} from '../../lib/config.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
-import {
-  generateTypes,
-  normalizeCodegenError,
-  patchGqlPluck,
-} from '../../lib/codegen.js';
+import {codegen} from '../../lib/codegen.js';
 
 export default class Codegen extends Command {
   static description =
@@ -45,7 +40,7 @@ export default class Codegen extends Command {
   }
 }
 
-async function runCodegen({
+export async function runCodegen({
   path: appPath,
   codegenConfigPath,
   forceSfapiVersion,
@@ -59,30 +54,19 @@ async function runCodegen({
   const {root} = getProjectPaths(appPath);
   const remixConfig = await getRemixConfig(root);
 
-  await patchGqlPluck();
+  console.log(''); // New line
 
-  try {
-    const generatedFiles = await generateTypes({
-      ...remixConfig,
-      configFilePath: codegenConfigPath,
-      forceSfapiVersion,
-      watch,
+  const generatedFiles = await codegen({
+    ...remixConfig,
+    configFilePath: codegenConfigPath,
+    forceSfapiVersion,
+    watch,
+  });
+
+  if (!watch) {
+    renderSuccess({
+      headline: 'Generated types for GraphQL:',
+      body: generatedFiles.map((file) => `- ${file}`).join('\n'),
     });
-
-    if (!watch) {
-      console.log('');
-      renderSuccess({
-        headline: 'Generated types for GraphQL:',
-        body: generatedFiles.map((file) => `- ${file}`).join('\n'),
-      });
-    }
-  } catch (error) {
-    const {message, details} = normalizeCodegenError(
-      (error as Error).message,
-      remixConfig.rootDirectory,
-    );
-
-    console.log('');
-    throw new AbortError(message, details);
   }
 }

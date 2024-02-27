@@ -2,6 +2,7 @@ import {useParams, Form, Await, useMatches} from '@remix-run/react';
 import {useWindowScroll} from 'react-use';
 import {Disclosure} from '@headlessui/react';
 import {Suspense, useEffect, useMemo} from 'react';
+import {CartForm} from '@shopify/hydrogen';
 
 import type {LayoutQuery} from 'storefrontapi.generated';
 import {
@@ -70,7 +71,7 @@ function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
     closeDrawer: closeMenu,
   } = useDrawer();
 
-  const addToCartFetchers = useCartFetchers('ADD_TO_CART');
+  const addToCartFetchers = useCartFetchers(CartForm.ACTIONS.LinesAdd);
 
   // toggle cart drawer when adding to cart
   useEffect(() => {

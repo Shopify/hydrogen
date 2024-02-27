@@ -42,7 +42,7 @@ export type ClientBrowserParameters = {
    **/
   search: string;
   /**
-   * Value of `window.location.referrer`.
+   * Value of `window.document.referrer`.
    *
    * Use `getClientBrowserParameters()` to collect this value.
    **/

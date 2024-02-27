@@ -9,7 +9,6 @@ export function logMissingStorefronts(adminSession: AdminSession) {
     body: 'There are no Hydrogen storefronts on your Shop.',
     nextSteps: [
       `Ensure you have specified the correct shop (you specified: ${adminSession.storeFqdn})`,
-      `Ensure you have the Hydrogen sales channel installed https://apps.shopify.com/hydrogen`,
       `Create a new Hydrogen storefront: ${newHydrogenStorefrontUrl(
         adminSession,
       )}`,

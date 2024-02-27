@@ -9,33 +9,27 @@ import {
   pluckConfig,
   patchGqlPluck,
 } from '@shopify/hydrogen-codegen';
-import {format, resolveFormatConfig} from './transpile-ts.js';
+import {formatCode, getCodeFormatOptions} from './format-code.js';
 import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
-import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
+import {joinPath} from '@shopify/cli-kit/node/path';
+import {AbortError} from '@shopify/cli-kit/node/error';
 import {spawn} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-
-export {patchGqlPluck} from '@shopify/hydrogen-codegen';
 
 const nodePath = process.argv[1];
 const modulePath = fileURLToPath(import.meta.url);
 const isStandaloneProcess = nodePath === modulePath;
 
 if (isStandaloneProcess) {
-  patchGqlPluck().then(() =>
-    generateTypes({
-      rootDirectory: process.argv[2]!,
-      appDirectory: process.argv[3]!,
-      configFilePath: process.argv[4],
-      watch: true,
-    }),
-  );
+  codegen({
+    rootDirectory: process.argv[2]!,
+    appDirectory: process.argv[3]!,
+    configFilePath: process.argv[4],
+    watch: true,
+  });
 }
 
-export function normalizeCodegenError(
-  errorMessage: string,
-  rootDirectory?: string,
-) {
+function normalizeCodegenError(errorMessage: string, rootDirectory?: string) {
   const [first = '', ...rest] = errorMessage
     .replaceAll('[FAILED]', '')
     .replace(/\s{2,}/g, '\n')
@@ -115,7 +109,22 @@ type CodegenOptions = ProjectDirs & {
   forceSfapiVersion?: string;
 };
 
-export async function generateTypes({
+export async function codegen(options: CodegenOptions) {
+  await patchGqlPluck();
+
+  try {
+    return await generateTypes(options);
+  } catch (error) {
+    const {message, details} = normalizeCodegenError(
+      (error as Error).message,
+      options.rootDirectory,
+    );
+
+    throw new AbortError(message, details);
+  }
+}
+
+async function generateTypes({
   watch,
   configFilePath,
   forceSfapiVersion,
@@ -152,7 +161,6 @@ function generateDefaultConfig(
   forceSfapiVersion?: string,
 ): LoadCodegenConfigResult {
   const tsDefaultGlob = '*!(*.d).{ts,tsx}'; // No d.ts files
-  const appDirRelative = relativePath(rootDirectory, appDirectory);
 
   return {
     filepath: 'virtual:codegen',
@@ -164,8 +172,8 @@ function generateDefaultConfig(
           preset,
           schema,
           documents: [
-            tsDefaultGlob, // E.g. ./server.ts
-            joinPath(appDirRelative, '**', tsDefaultGlob), // E.g. app/routes/_index.tsx
+            joinPath(rootDirectory, tsDefaultGlob), // E.g. ./server.ts
+            joinPath(appDirectory, '**', tsDefaultGlob), // E.g. app/routes/_index.tsx
           ],
 
           ...(!!forceSfapiVersion && {
@@ -206,11 +214,11 @@ async function addHooksToHydrogenOptions(
   const hydrogenOptions = Array.isArray(options) ? options[0] : options;
 
   if (hydrogenOptions) {
-    const formatConfig = await resolveFormatConfig(rootDirectory);
+    const formatConfig = await getCodeFormatOptions(rootDirectory);
 
     hydrogenOptions.hooks = {
       beforeOneFileWrite: (file: string, content: string) =>
-        format(content, formatConfig, file), // Run Prettier before writing files
+        formatCode(content, formatConfig, file), // Run Prettier before writing files
       ...hydrogenOptions.hooks,
     };
   }

@@ -6,19 +6,17 @@ import colors from '@shopify/cli-kit/node/colors';
 import {
   outputContent,
   outputInfo,
-  outputToken,
   outputNewline,
 } from '@shopify/cli-kit/node/output';
 import {linkStorefront} from '../link.js';
 import {commonFlags} from '../../../lib/flags.js';
-import {getHydrogenShop} from '../../../lib/shop.js';
-import {getAdminSession} from '../../../lib/admin-session.js';
 import {getStorefrontEnvironments} from '../../../lib/graphql/admin/list-environments.js';
-import {getConfig} from '../../../lib/shopify-config.js';
 import {
   renderMissingLink,
   renderMissingStorefront,
 } from '../../../lib/render-errors.js';
+import {login} from '../../../lib/auth.js';
+import {getCliCommand} from '../../../lib/shell.js';
 
 export default class EnvList extends Command {
   static description =
@@ -26,55 +24,56 @@ export default class EnvList extends Command {
 
   static flags = {
     path: commonFlags.path,
-    shop: commonFlags.shop,
   };
 
   async run(): Promise<void> {
     const {flags} = await this.parse(EnvList);
-    await listEnvironments(flags);
+    await runEnvList(flags);
   }
 }
 
 interface Flags {
   path?: string;
-  shop?: string;
 }
 
-export async function listEnvironments({path, shop: flagShop}: Flags) {
-  const shop = await getHydrogenShop({path, shop: flagShop});
-  const adminSession = await getAdminSession(shop);
-  const actualPath = path ?? process.cwd();
-  let configStorefront = (await getConfig(actualPath)).storefront;
+export async function runEnvList({path: root = process.cwd()}: Flags) {
+  const [{session, config}, cliCommand] = await Promise.all([
+    login(root),
+    getCliCommand(),
+  ]);
+
+  let configStorefront = config.storefront;
 
   if (!configStorefront?.id) {
-    renderMissingLink({adminSession});
+    renderMissingLink({session, cliCommand});
 
     const runLink = await renderConfirmationPrompt({
-      message: outputContent`Run ${outputToken.genericShellCommand(
-        `npx shopify hydrogen link`,
-      )}?`.value,
+      message: ['Run', {command: `${cliCommand} link`}, '?'],
     });
 
     if (!runLink) {
       return;
     }
 
-    await linkStorefront({path, shop: flagShop, silent: true});
+    configStorefront = await linkStorefront(root, session, config, {
+      cliCommand,
+    });
   }
 
-  configStorefront = (await getConfig(actualPath)).storefront;
+  if (!configStorefront) return;
 
-  if (!configStorefront) {
-    return;
-  }
-
-  const {storefront} = await getStorefrontEnvironments(
-    adminSession,
+  const storefront = await getStorefrontEnvironments(
+    session,
     configStorefront.id,
   );
 
   if (!storefront) {
-    renderMissingStorefront({adminSession, storefront: configStorefront});
+    renderMissingStorefront({
+      session,
+      storefront: configStorefront,
+      cliCommand,
+    });
+
     return;
   }
 

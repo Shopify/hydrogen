@@ -9,6 +9,24 @@ vi.mock('@shopify/cli-kit/node/node-package-manager', () => {
   };
 });
 
+const requireMock = vi.fn();
+vi.mock('node:module', async () => {
+  const {createRequire} = await vi.importActual<typeof import('node:module')>(
+    'node:module',
+  );
+
+  return {
+    createRequire: (url: string) => {
+      const actualRequire = createRequire(url);
+      requireMock.mockImplementation((mod: string) => actualRequire(mod));
+      const require = requireMock as unknown as typeof actualRequire;
+      require.resolve = actualRequire.resolve.bind(actualRequire);
+
+      return require;
+    },
+  };
+});
+
 describe('checkHydrogenVersion()', () => {
   const outputMock = mockAndCaptureOutput();
 
@@ -34,6 +52,17 @@ describe('checkHydrogenVersion()', () => {
       });
 
       it('returns undefined', async () => {
+        expect(await checkHydrogenVersion('dir')).toBe(undefined);
+      });
+    });
+
+    describe('and it is using @next', () => {
+      it('returns undefined', async () => {
+        vi.mocked(checkForNewVersion).mockResolvedValue('2023.1.5');
+        vi.mocked(requireMock).mockReturnValueOnce({
+          version: '0.0.0-next-a188915-20230713115118',
+        });
+
         expect(await checkHydrogenVersion('dir')).toBe(undefined);
       });
     });

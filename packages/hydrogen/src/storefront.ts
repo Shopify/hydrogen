@@ -237,10 +237,13 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     storefrontId,
     ...clientOptions
   } = options;
-  if (!cache) {
-    // TODO: should only warn in development
+  const H2_PREFIX_WARN = '[h2:warn:createStorefrontClient] ';
+  const H2_PREFIX_ERROR = '[h2:error:createStorefrontClient] ';
+
+  if (process.env.NODE_ENV === 'development' && !cache) {
     warnOnce(
-      'Storefront API client created without a cache instance. This may slow down your sub-requests.',
+      H2_PREFIX_WARN +
+        'Storefront API client created without a cache instance. This may slow down your sub-requests.',
     );
   }
 
@@ -276,9 +279,10 @@ export function createStorefrontClient<TI18n extends I18nBase>(
   }
 
   // Deprecation warning
-  if (!storefrontHeaders) {
+  if (process.env.NODE_ENV === 'development' && !storefrontHeaders) {
     warnOnce(
-      '"requestGroupId" and "buyerIp" will be deprecated in the next calendar release. Please use "getStorefrontHeaders"',
+      H2_PREFIX_WARN +
+        '`requestGroupId` and `buyerIp` will be deprecated in the next calendar release. Please use `getStorefrontHeaders`',
     );
   }
 
@@ -328,6 +332,14 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       waitUntil,
     });
 
+    const errorOptions: StorefrontErrorOptions<T> = {
+      response,
+      type: mutation ? 'mutation' : 'query',
+      query,
+      queryVariables,
+      errors: undefined,
+    };
+
     if (!response.ok) {
       /**
        * The Storefront API might return a string error, or a JSON-formatted {error: string}.
@@ -340,12 +352,18 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         errors = [{message: body}];
       }
 
-      throwError(response, errors);
+      throwError({...errorOptions, errors});
     }
 
     const {data, errors} = body as StorefrontApiResponse<T>;
 
-    if (errors?.length) throwError(response, errors, StorefrontApiError);
+    if (errors?.length) {
+      throwError({
+        ...errorOptions,
+        errors,
+        ErrorConstructor: StorefrontApiError,
+      });
+    }
 
     return data as T;
   }
@@ -368,8 +386,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        */
       query: <Storefront['query']>((query: string, payload) => {
         query = minifyQuery(query);
-        if (isMutationRE.test(query))
-          throw new Error('storefront.query cannot execute mutations');
+        if (isMutationRE.test(query)) {
+          throw new Error(
+            H2_PREFIX_ERROR + '`storefront.query` cannot execute mutations',
+          );
+        }
 
         return fetchStorefrontApi({...payload, query});
       }),
@@ -388,8 +409,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        */
       mutate: <Storefront['mutate']>((mutation: string, payload) => {
         mutation = minifyQuery(mutation);
-        if (isQueryRE.test(mutation))
-          throw new Error('storefront.mutate cannot execute queries');
+        if (isQueryRE.test(mutation)) {
+          throw new Error(
+            H2_PREFIX_ERROR + '`storefront.mutate` cannot execute queries',
+          );
+        }
 
         return fetchStorefrontApi({...payload, mutation});
       }),
@@ -428,24 +452,45 @@ export function createStorefrontClient<TI18n extends I18nBase>(
   };
 }
 
-function throwError<T>(
-  response: Response,
-  errors: StorefrontApiResponse<T>['errors'],
+type StorefrontErrorOptions<T> = {
+  response: Response;
+  errors: StorefrontApiResponse<T>['errors'];
+  type: 'query' | 'mutation';
+  query: string;
+  queryVariables: Record<string, any>;
+  ErrorConstructor?: ErrorConstructor;
+};
+
+function throwError<T>({
+  response,
+  errors,
+  type,
+  query,
+  queryVariables,
   ErrorConstructor = Error,
-) {
-  const reqId = response.headers.get('x-request-id');
-  const reqIdMessage = reqId ? ` - Request ID: ${reqId}` : '';
-
-  if (errors) {
-    const errorMessages =
-      typeof errors === 'string'
-        ? errors
-        : errors.map((error) => error.message).join('\n');
-
-    throw new ErrorConstructor(errorMessages + reqIdMessage);
-  }
+}: StorefrontErrorOptions<T>) {
+  const requestId = response.headers.get('x-request-id');
+  const errorMessage =
+    (typeof errors === 'string'
+      ? errors
+      : errors?.map?.((error) => error.message).join('\n')) ||
+    `API response error: ${response.status}`;
 
   throw new ErrorConstructor(
-    `API response error: ${response.status}` + reqIdMessage,
+    `[h2:error:storefront.${type}] ` +
+      errorMessage +
+      (requestId ? ` - Request ID: ${requestId}` : ''),
+    {
+      cause: {
+        errors,
+        requestId,
+        ...(process.env.NODE_ENV === 'development' && {
+          graphql: {
+            query,
+            variables: JSON.stringify(queryVariables),
+          },
+        }),
+      },
+    },
   );
 }

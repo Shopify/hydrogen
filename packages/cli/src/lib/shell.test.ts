@@ -1,28 +1,39 @@
-import {describe, it, expect, vi, beforeEach} from 'vitest';
+import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
+import {platform, userInfo} from 'node:os';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
-import {getCliCommand, shellWriteAlias} from './shell.js';
+import {
+  getCliCommand,
+  shellWriteAlias,
+  createPlatformShortcut,
+} from './shell.js';
 import {execAsync} from './process.js';
+
+vi.mock('node:os');
+vi.mock('node:child_process');
+vi.mock('@shopify/cli-kit/node/fs');
+vi.mock('@shopify/cli-kit/node/node-package-manager');
+vi.mock('./process.js', async () => {
+  const original = await vi.importActual<typeof import('./process.js')>(
+    './process.js',
+  );
+
+  return {
+    ...original,
+    execAsync: vi.fn(),
+  };
+});
+
+vi.mocked(fileExists).mockResolvedValue(false);
+vi.mocked(getPackageManager).mockResolvedValue('npm');
 
 describe('shell', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    vi.mock('node:child_process');
-    vi.mock('@shopify/cli-kit/node/fs');
-    vi.mock('@shopify/cli-kit/node/node-package-manager');
-    vi.mock('./process.js', async () => {
-      const original = await vi.importActual<typeof import('./process.js')>(
-        './process.js',
-      );
+  });
 
-      return {
-        ...original,
-        execAsync: vi.fn(),
-      };
-    });
-
-    vi.mocked(fileExists).mockResolvedValue(false);
-    vi.mocked(getPackageManager).mockResolvedValue('npm');
+  afterEach(() => {
+    delete process.env.MINGW_PREFIX;
   });
 
   describe('shellWriteAlias', () => {
@@ -81,8 +92,47 @@ describe('shell', () => {
     });
   });
 
+  describe('createPlatformShortcut', () => {
+    it('creates aliases for Unix', async () => {
+      // Given
+      vi.mocked(platform).mockReturnValue('darwin');
+
+      // When
+      const result = await createPlatformShortcut();
+
+      // Then
+      expect(result).toEqual(expect.arrayContaining(['zsh', 'bash', 'fish']));
+    });
+
+    it('creates aliases for Windows', async () => {
+      // Given
+      vi.mocked(platform).mockReturnValue('win32');
+
+      // When
+      const result = await createPlatformShortcut();
+
+      // Then
+      expect(result).toEqual(
+        expect.arrayContaining(['PowerShell', 'PowerShell 7+']),
+      );
+    });
+
+    it('creates aliases for Windows in Git Bash', async () => {
+      // Given
+      process.env.MINGW_PREFIX = 'something';
+      vi.mocked(platform).mockReturnValue('win32');
+
+      // When
+      const result = await createPlatformShortcut();
+
+      // Then
+      expect(result).toEqual(expect.arrayContaining(['bash']));
+    });
+  });
+
   describe('getCliCommand', () => {
     it('returns the shortcut alias if available', async () => {
+      vi.mocked(userInfo).mockReturnValue({shell: '/bin/bash'} as any);
       vi.mocked(execAsync).mockImplementation((shellCommand) =>
         shellCommand.startsWith('grep')
           ? (Promise.resolve({stdout: 'stuff', stderr: ''}) as any)

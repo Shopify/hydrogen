@@ -1,5 +1,5 @@
-import {adminRequest, parseGid} from '../../graphql.js';
-import {getAdminSession} from '../../admin-session.js';
+import {adminRequest, type AdminSession} from './client.js';
+import {parseGid} from '../../gid.js';
 
 export const LinkStorefrontQuery = `#graphql
   query LinkStorefront {
@@ -17,23 +17,18 @@ interface HydrogenStorefront {
   productionUrl: string;
 }
 
-interface LinkStorefrontSchema {
+export interface LinkStorefrontSchema {
   hydrogenStorefronts: HydrogenStorefront[];
 }
 
-export async function getStorefronts(shop: string) {
-  const adminSession = await getAdminSession(shop);
-
+export async function getStorefronts(adminSession: AdminSession) {
   const {hydrogenStorefronts} = await adminRequest<LinkStorefrontSchema>(
     LinkStorefrontQuery,
     adminSession,
   );
 
-  return {
-    adminSession,
-    storefronts: hydrogenStorefronts.map((storefront) => ({
-      ...storefront,
-      parsedId: parseGid(storefront.id),
-    })),
-  };
+  return hydrogenStorefronts.map((storefront) => ({
+    ...storefront,
+    parsedId: parseGid(storefront.id),
+  }));
 }

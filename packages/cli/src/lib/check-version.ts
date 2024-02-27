@@ -1,5 +1,5 @@
-import path from 'path';
-import {createRequire} from 'module';
+import path from 'node:path';
+import {createRequire} from 'node:module';
 import {checkForNewVersion} from '@shopify/cli-kit/node/node-package-manager';
 import {renderInfo} from '@shopify/cli-kit/node/ui';
 
@@ -34,7 +34,7 @@ export async function checkHydrogenVersion(
 
   const currentVersion = require(pkgJsonPath).version as string;
 
-  if (!currentVersion) return;
+  if (!currentVersion || currentVersion.includes('next')) return;
 
   const newVersionAvailable = await checkForNewVersion(pkgName, currentVersion);
 
