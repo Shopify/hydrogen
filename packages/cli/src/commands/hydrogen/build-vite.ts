@@ -1,14 +1,9 @@
 import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
-import {
-  outputInfo,
-  outputWarn,
-  outputContent,
-} from '@shopify/cli-kit/node/output';
+import {outputWarn} from '@shopify/cli-kit/node/output';
 import {fileSize, removeFile} from '@shopify/cli-kit/node/fs';
-import {resolvePath, relativePath, joinPath} from '@shopify/cli-kit/node/path';
+import {resolvePath, joinPath} from '@shopify/cli-kit/node/path';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
-import colors from '@shopify/cli-kit/node/colors';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
@@ -17,7 +12,6 @@ import {isCI} from '../../lib/is-ci.js';
 import {copyDiffBuild, prepareDiffDirectory} from '../../lib/template-diff.js';
 import {getViteConfig} from '../../lib/vite-config.js';
 
-const LOG_WORKER_BUILT = '📦 Worker built';
 const WORKER_BUILD_SIZE_LIMIT = 5;
 
 export default class Build extends Command {
@@ -102,10 +96,6 @@ export async function runViteBuild({
     await checkLockfileStatus(root, isCI());
   }
 
-  console.time(LOG_WORKER_BUILT);
-
-  outputInfo(`\n🏗️  Building in ${process.env.NODE_ENV} mode...\n`);
-
   const {
     userViteConfig,
     remixConfig,
@@ -136,6 +126,8 @@ export async function runViteBuild({
     },
   });
 
+  console.log('');
+
   // Server/SSR build
   await vite.build({
     ...commonConfig,
@@ -163,17 +155,7 @@ export async function runViteBuild({
   }
 
   if (process.env.NODE_ENV !== 'development') {
-    console.log('');
-    console.timeEnd(LOG_WORKER_BUILT);
-
     const sizeMB = (await fileSize(serverOutFile)) / (1024 * 1024);
-    const formattedSize = colors.yellow(sizeMB.toFixed(2) + ' MB');
-
-    outputInfo(
-      outputContent`   ${colors.dim(
-        relativePath(root, serverOutFile),
-      )}  ${formattedSize}\n`,
-    );
 
     if (sizeMB >= WORKER_BUILD_SIZE_LIMIT) {
       outputWarn(
