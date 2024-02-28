@@ -26,8 +26,8 @@ export async function loader({context}: LoaderFunctionArgs) {
       header: await headerPromise,
       isLoggedIn: isLoggedInPromise,
       publicStoreDomain,
-+     env: {
-+       checkoutRootDomain: env.PUBLIC_CHECKOUT_DOMAIN,
++     banner: {
++       checkoutRootDomain: env.PUBLIC__DOMAIN,
 +       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
 +       storefrontRootDomain: env.PUBLIC_PREVIEW_DOMAIN,
 +     },
@@ -61,7 +61,7 @@ export default function App() {
         <Layout {...data}>
           <Outlet />
         </Layout>
-+       <ShopifyCookieBanner {...data.env} />
++       <ShopifyCookieBanner {...data.banner} />
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
         <LiveReload nonce={nonce} />
