@@ -139,8 +139,8 @@ export default function App() {
           <Layout {...data}>
             <Outlet />
           </Layout>
+          <ShopifyCookieBanner {...data.env} />
         </Analytics.Provider>
-        <ShopifyCookieBanner {...data.env} />
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
         <LiveReload nonce={nonce} />

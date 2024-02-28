@@ -101,6 +101,7 @@ export default function App() {
       <body>
 +        <Analytics.Provider
 +           userConsent={() => {
++             // NOTE: Optional if using ShopifyCookieBanner
 +             if (typeof window === 'undefined') return;
 +
 +             // Using 1P Consent API?
