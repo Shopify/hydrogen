@@ -15,7 +15,6 @@ import {
 } from '@shopify/cli-kit/node/git';
 import {relativePath, resolvePath} from '@shopify/cli-kit/node/path';
 import {
-  renderFatalError,
   renderSelectPrompt,
   renderSuccess,
   renderTasks,
@@ -76,6 +75,11 @@ export default class Deploy extends Command {
         'Forces a deployment to proceed if there are uncommited changes in its Git repository.',
       default: false,
       env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
+      required: false,
+    }),
+    'no-verify': Flags.boolean({
+      description: 'Skip the routability verification step after deployment.',
+      default: false,
       required: false,
     }),
     'auth-bypass-token': Flags.boolean({
@@ -171,6 +175,7 @@ interface OxygenDeploymentOptions {
   environmentTag?: string;
   environmentFile?: string;
   force: boolean;
+  noVerify: boolean;
   lockfileCheck: boolean;
   jsonOutput: boolean;
   path: string;
@@ -216,6 +221,7 @@ export async function runDeploy(
     environmentTag,
     environmentFile,
     force: forceOnUncommitedChanges,
+    noVerify,
     lockfileCheck,
     jsonOutput,
     path: root,
@@ -389,7 +395,7 @@ export async function runDeploy(
       ...(metadataUser ? {user: metadataUser} : {}),
       ...(metadataVersion ? {version: metadataVersion} : {}),
     },
-    skipVerification: false,
+    skipVerification: noVerify,
     rootPath: root,
     skipBuild: false,
     workerOnly: false,
@@ -488,6 +494,7 @@ export async function runDeploy(
       {
         title: 'Verifying deployment is routable',
         task: async () => await routableCheckPromise,
+        skip: () => noVerify,
       },
     ]);
   };

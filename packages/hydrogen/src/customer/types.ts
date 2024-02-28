@@ -2,6 +2,7 @@ import type {
   ClientReturn,
   ClientVariablesInRestParams,
 } from '@shopify/hydrogen-codegen';
+import {type GraphQLError} from '../utils/graphql';
 
 import type {CrossRuntimeRequest} from '../utils/request';
 
@@ -11,7 +12,9 @@ import type {HydrogenSession} from '../hydrogen';
 // This type is not exported https://github.com/remix-run/react-router/blob/main/packages/router/utils.ts#L167
 type DataFunctionValue = Response | NonNullable<unknown> | null;
 
-type CustomerAPIResponse<ReturnType> = {
+type JsonGraphQLError = ReturnType<GraphQLError['toJSON']>; // Equivalent to `Jsonify<GraphQLError>[]`
+
+export type CustomerAPIResponse<ReturnType> = {
   data: ReturnType;
   errors: Array<{
     message: string;
@@ -68,9 +71,12 @@ export type CustomerAccount = {
       RawGqlString
     >
   ) => Promise<
-    CustomerAPIResponse<
-      ClientReturn<CustomerAccountQueries, RawGqlString, OverrideReturnType>
-    >
+    Omit<
+      CustomerAPIResponse<
+        ClientReturn<CustomerAccountQueries, RawGqlString, OverrideReturnType>
+      >,
+      'errors'
+    > & {errors?: JsonGraphQLError[]}
   >;
   /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */
   mutate: <
@@ -83,18 +89,21 @@ export type CustomerAccount = {
       RawGqlString
     >
   ) => Promise<
-    CustomerAPIResponse<
-      ClientReturn<CustomerAccountMutations, RawGqlString, OverrideReturnType>
-    >
+    Omit<
+      CustomerAPIResponse<
+        ClientReturn<CustomerAccountMutations, RawGqlString, OverrideReturnType>
+      >,
+      'errors'
+    > & {errors?: JsonGraphQLError[]}
   >;
 };
 
 export type CustomerAccountOptions = {
   /** The client requires a session to persist the auth and refresh token. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */
   session: HydrogenSession;
-  /** Unique UUID prefixed with `shp_` associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountId. Use `h2 env pull` to link your store credentials. */
+  /** Unique UUID prefixed with `shp_` associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountId. Use `npx shopify hydrogen env pull` to link your store credentials. */
   customerAccountId: string;
-  /** The account URL associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountUrl. Use `h2 env pull` to link your store credentials. */
+  /** The account URL associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountUrl. Use `npx shopify hydrogen env pull` to link your store credentials. */
   customerAccountUrl: string;
   /** Override the version of the API */
   customerApiVersion?: string;
@@ -106,6 +115,8 @@ export type CustomerAccountOptions = {
   authUrl?: string;
   /** Use this method to overwrite the default logged-out redirect behavior. The default handler [throws a redirect](https://remix.run/docs/en/main/utils/redirect#:~:text=!session) to `/account/login` with current path as `return_to` query param. */
   customAuthStatusHandler?: () => DataFunctionValue;
+  /** Whether it should print GraphQL errors automatically. Defaults to true */
+  logErrors?: boolean | ((error?: Error) => boolean);
 };
 
 /** Below are types meant for documentation only. Ensure it stay in sync with the type above. */

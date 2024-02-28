@@ -62,23 +62,17 @@ export function useLoadScript(
   options?: LoadScriptParams[1],
 ): ScriptState {
   const [status, setStatus] = useState<ScriptState>('loading');
-  const stringifiedOptions = JSON.stringify(options);
 
-  useEffect(() => {
-    async function loadScriptWrapper(): Promise<void> {
-      try {
-        setStatus('loading');
-        await loadScript(url, options);
-        setStatus('done');
-      } catch (error) {
-        setStatus('error');
-      }
-    }
-
-    loadScriptWrapper().catch(() => {
-      setStatus('error');
-    });
-  }, [url, stringifiedOptions, options]);
+  useEffect(
+    () => {
+      loadScript(url, options)
+        .then(() => setStatus('done'))
+        .catch(() => setStatus('error'));
+    },
+    // Ignore options changes since it won't trigger a new load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [url],
+  );
 
   return status;
 }

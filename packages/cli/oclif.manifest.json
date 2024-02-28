@@ -1,5 +1,5 @@
 {
-  "version": "7.0.1",
+  "version": "7.1.0",
   "commands": {
     "hydrogen:build-vite": {
       "id": "hydrogen:build-vite",
@@ -236,6 +236,13 @@
           "type": "boolean",
           "char": "f",
           "description": "Forces a deployment to proceed if there are uncommited changes in its Git repository.",
+          "required": false,
+          "allowNo": false
+        },
+        "no-verify": {
+          "name": "no-verify",
+          "type": "boolean",
+          "description": "Skip the routability verification step after deployment.",
           "required": false,
           "allowNo": false
         },

@@ -1,5 +1,40 @@
 # skeleton
 
+## 1.0.4
+
+### Patch Changes
+
+- This is an important fix to a bug with 404 routes and path-based i18n projects where some unknown routes would not properly render a 404. This fixes all new projects, but to fix existing projects, add a `($locale).tsx` route with the following contents: ([#1732](https://github.com/Shopify/hydrogen/pull/1732)) by [@blittle](https://github.com/blittle)
+
+  ```ts
+  import {type LoaderFunctionArgs} from '@remix-run/server-runtime';
+
+  export async function loader({params, context}: LoaderFunctionArgs) {
+    const {language, country} = context.storefront.i18n;
+
+    if (
+      params.locale &&
+      params.locale.toLowerCase() !== `${language}-${country}`.toLowerCase()
+    ) {
+      // If the locale URL param is defined, yet we still are still at the default locale
+      // then the the locale param must be invalid, send to the 404 page
+      throw new Response(null, {status: 404});
+    }
+
+    return null;
+  }
+  ```
+
+- Add defensive null checks to the default cart implementation in the starter template ([#1746](https://github.com/Shopify/hydrogen/pull/1746)) by [@blittle](https://github.com/blittle)
+
+- 🐛 Fix issue where customer login does not persist to checkout ([#1719](https://github.com/Shopify/hydrogen/pull/1719)) by [@michenly](https://github.com/michenly)
+
+  ✨ Add `customerAccount` option to `createCartHandler`. Where a `?logged_in=true` will be added to the checkoutUrl for cart query if a customer is logged in.
+
+- Updated dependencies [[`faeba9f8`](https://github.com/Shopify/hydrogen/commit/faeba9f8947d6b9420b33274a0f39b62418ff2e5), [`6d585026`](https://github.com/Shopify/hydrogen/commit/6d585026623204e99d54a5f2efa3d1c74f690bb6), [`fcecfb23`](https://github.com/Shopify/hydrogen/commit/fcecfb2307210b9d73a7cc90ba865508937217ba), [`28864d6f`](https://github.com/Shopify/hydrogen/commit/28864d6ffbb19b62a5fb8f4c9bbe27568de62411), [`c0ec7714`](https://github.com/Shopify/hydrogen/commit/c0ec77141fb1d7a713d91219b8777bc541780ae8), [`226cf478`](https://github.com/Shopify/hydrogen/commit/226cf478a5bdef1cca33fe8f69832ae0e557d9d9), [`06d9fd91`](https://github.com/Shopify/hydrogen/commit/06d9fd91140bd52a8ee41a20bc114ce2e7fb67dc)]:
+  - @shopify/cli-hydrogen@7.1.0
+  - @shopify/hydrogen@2024.1.2
+
 ## 1.0.3
 
 ### Patch Changes

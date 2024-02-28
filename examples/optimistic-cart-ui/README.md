@@ -35,7 +35,7 @@ create are labeled with 🆕.
 ### 1. Link your store to inject the required environment variables
 
 ```bash
-h2 link
+npx shopify hydrogen link
 ```
 
 ### 2. Edit the Cart component file to remove line items optimistically
