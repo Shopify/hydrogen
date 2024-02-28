@@ -38,10 +38,15 @@ export function toWeb(req: IncomingMessage, headers?: Record<string, string>) {
  * using native Node APIs.
  */
 export function pipeFromWeb(webResponse: Response, res: ServerResponse) {
-  res.writeHead(
-    webResponse.status,
-    Object.fromEntries(webResponse.headers.entries()),
-  );
+  const headers = Object.fromEntries(webResponse.headers.entries());
+
+  const setCookieHeader = 'set-cookie';
+  if (headers[setCookieHeader]) {
+    delete headers[setCookieHeader];
+    res.setHeader(setCookieHeader, webResponse.headers.getSetCookie());
+  }
+
+  res.writeHead(webResponse.status, webResponse.statusText, headers);
 
   if (webResponse.body) {
     Readable.fromWeb(webResponse.body).pipe(res);
