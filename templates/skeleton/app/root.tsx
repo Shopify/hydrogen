@@ -1,4 +1,4 @@
-import {AnalyticsProvider, useNonce} from '@shopify/hydrogen';
+import {AnalyticsCart, AnalyticsProvider, useNonce} from '@shopify/hydrogen';
 import {
   defer,
   type SerializeFrom,
@@ -16,6 +16,7 @@ import {
   ScrollRestoration,
   isRouteErrorResponse,
   type ShouldRevalidateFunction,
+  Await,
 } from '@remix-run/react';
 import favicon from '../public/favicon.svg';
 import resetStyles from './styles/reset.css';
@@ -23,6 +24,7 @@ import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
 import { CustomAnalytics } from './components/CustomAnalytics';
 import { ShopifyAnalytics } from './components/ShopifyAnalytics';
+import { Suspense } from 'react';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -94,7 +96,14 @@ export async function loader({context}: LoaderFunctionArgs) {
 
   const shopPromise = storefront.query(SHOP_QUERY, {
     cache: storefront.CacheLong(),
-  })
+  }).then((data) => {
+    return {
+      shopId: data.shop.id,
+      acceptedLanguage: data.localization.language.isoCode,
+      currency: data.localization.country.currency.isoCode,
+      hydrogenSubchannelId: context.env.PUBLIC_STOREFRONT_ID || '0',
+    }
+  });
 
   return defer(
     {
@@ -103,7 +112,7 @@ export async function loader({context}: LoaderFunctionArgs) {
       header: await headerPromise,
       isLoggedIn: isLoggedInPromise,
       publicStoreDomain,
-      shop: await shopPromise,
+      shop: shopPromise,
     },
     {
       headers: {
@@ -116,7 +125,6 @@ export async function loader({context}: LoaderFunctionArgs) {
 export default function App() {
   const nonce = useNonce();
   const data = useLoaderData<typeof loader>();
-  const shop = data.shop;
 
   return (
     <html lang="en">
@@ -128,21 +136,26 @@ export default function App() {
       </head>
       <body>
         <AnalyticsProvider
-          staticPayload={{
-            shop: {
-              shopId: shop.shop.id,
-              acceptedLanguage: shop.localization.language.isoCode,
-              currency: shop.localization.country.currency.isoCode,
-            },
-          }}
-          cart={data.cart}
           canTrack={() => true}
         >
           <Layout {...data}>
             <Outlet />
           </Layout>
           <CustomAnalytics />
-          <ShopifyAnalytics />
+          <Suspense>
+            <Await resolve={data.shop}>
+              {(shop) => (
+                <ShopifyAnalytics data={shop} />
+              )}
+            </Await>
+          </Suspense>
+          <Suspense>
+            <Await resolve={data.cart}>
+              {(cart) => (
+                <AnalyticsCart currentCart={cart} />
+              )}
+            </Await>
+          </Suspense>
         </AnalyticsProvider>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />

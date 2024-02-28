@@ -2,14 +2,14 @@ import { AnalyticsEventName, ShopifyPageViewPayload, getClientBrowserParameters,
 import { CurrencyCode, LanguageCode } from "@shopify/hydrogen/storefront-api-types";
 import { useEffect } from "react";
 
-type ShopAnalyticPayload = {
+type ShopAnalytic = {
   shopId: string;
   acceptedLanguage: LanguageCode;
   currency: CurrencyCode;
-  [key: string]: string | boolean;
+  hydrogenSubchannelId: string;
 };
 
-export function ShopifyAnalytics() {
+export function ShopifyAnalytics({data}: {data: ShopAnalytic}) {
   const {subscribe, canTrack} = useAnalyticsProvider();
   const hasUserConsent = canTrack();
   useShopifyCookies({hasUserConsent});
@@ -18,13 +18,8 @@ export function ShopifyAnalytics() {
     subscribe('page_viewed', (payload) => {
       console.log('ShopifyAnalytics - Page viewed:', payload);
 
-      if (!payload.shop) return;
-      const shop = payload.shop as ShopAnalyticPayload;
-
       const eventPayload: ShopifyPageViewPayload = {
-        shopId: shop.shopId,
-        acceptedLanguage: shop.acceptedLanguage,
-        currency: shop.currency,
+        ...data,
         hasUserConsent,
         ...getClientBrowserParameters(),
       };

@@ -78,6 +78,7 @@ export {ShopPayButton} from './shop/ShopPayButton';
 
 export {AnalyticsProvider, useAnalyticsProvider} from './analytics-manager/AnalyticsProvider';
 export {AnalyticsView} from './analytics-manager/AnalyticsView';
+export {AnalyticsCart} from './analytics-manager/AnalyticsCart';
 
 export {
   AnalyticsEventName,

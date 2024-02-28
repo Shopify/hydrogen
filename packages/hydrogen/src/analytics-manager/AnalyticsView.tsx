@@ -66,8 +66,6 @@ export function AnalyticsView({
 
     lastLocationPathname.current = url;
 
-    console.log('AnalyticsView - Page viewed:', url);
-
     const viewPayload = {
       url: window.location.href,
       ...payload,
@@ -75,7 +73,7 @@ export function AnalyticsView({
 
     setTimeout(() => {
       publish(eventName, viewPayload);
-    }, 0);
+    }, 500);
   }, [url]);
 
   return null;
