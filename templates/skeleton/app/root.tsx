@@ -17,11 +17,14 @@ import {
   isRouteErrorResponse,
   type ShouldRevalidateFunction,
 } from '@remix-run/react';
-import type {CustomerAccessToken} from '@shopify/hydrogen/storefront-api-types';
 import favicon from '../public/favicon.svg';
 import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
+import {ShopifyCookieBanner} from '~/components/ShopifyCookieBanner';
+
+// 1. import analytics provider
+import {Analytics} from './hydrogen/Analytics';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -69,7 +72,7 @@ export const useRootLoaderData = () => {
 };
 
 export async function loader({context}: LoaderFunctionArgs) {
-  const {storefront, customerAccount, cart} = context;
+  const {storefront, customerAccount, cart, env} = context;
   const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
 
   const isLoggedInPromise = customerAccount.isLoggedIn();
@@ -98,6 +101,12 @@ export async function loader({context}: LoaderFunctionArgs) {
       header: await headerPromise,
       isLoggedIn: isLoggedInPromise,
       publicStoreDomain,
+      // 2. Return the environment variables required by the ShopifyCookieBanner component
+      env: {
+        checkoutRootDomain: env.PUBLIC_CHECKOUT_DOMAIN, // e.g checkout.yourstore.com
+        storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+        storefrontRootDomain: 'localhost', // env.PUBLIC_PREVIEW_DOMAIN, // e.g yourstore.com
+      },
     },
     {
       headers: {
@@ -120,9 +129,18 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout {...data}>
-          <Outlet />
-        </Layout>
+        <Analytics.Provider
+          userConsent={() => {
+            if (typeof window === 'undefined') return;
+            // window?.Shopify?.customerPrivacy?.userCanBeTracked();
+            window?.Shopify?.currentVisitorConsent()?.marketing;
+          }}
+        >
+          <Layout {...data}>
+            <Outlet />
+          </Layout>
+        </Analytics.Provider>
+        <ShopifyCookieBanner {...data.env} />
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
         <LiveReload nonce={nonce} />

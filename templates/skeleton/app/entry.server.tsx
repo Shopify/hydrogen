@@ -10,7 +10,12 @@ export default async function handleRequest(
   responseHeaders: Headers,
   remixContext: EntryContext,
 ) {
-  const {nonce, header, NonceProvider} = createContentSecurityPolicy();
+  const {nonce, header, NonceProvider} = createContentSecurityPolicy({
+    connectSrc: [
+      'https://checkout.hydrogen.shop/api/unstable/graphql.json',
+      'https://privacy-banner.shopifyapps.com/customization',
+    ],
+  });
 
   const body = await renderToReadableStream(
     <NonceProvider>

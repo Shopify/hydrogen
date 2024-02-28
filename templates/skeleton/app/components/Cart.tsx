@@ -166,6 +166,16 @@ function CartLineRemoveButton({lineIds}: {lineIds: string[]}) {
       route="/cart"
       action={CartForm.ACTIONS.LinesRemove}
       inputs={{lineIds}}
+      onLinesRemove={() => {
+        window.dataLayer.push({
+          event: 'remove_from_cart',
+          ecommerce: {
+            remove: {
+              products: lineIds.map((id) => ({id})),
+            },
+          },
+        });
+      }}
     >
       <button type="submit">Remove</button>
     </CartForm>
@@ -315,6 +325,20 @@ function UpdateDiscountForm({
       inputs={{
         discountCodes: discountCodes || [],
       }}
+      onDiscountCodesUpdate={() => {
+        window.dataLayer.push({
+          event: 'apply_discount',
+          ecommerce: {
+            promo_click: {
+              promotions: [
+                {
+                  id: discountCodes?.join(', '),
+                },
+              ],
+            },
+          },
+        });
+      }}
     >
       {children}
     </CartForm>
@@ -333,6 +357,14 @@ function CartLineUpdateButton({
       route="/cart"
       action={CartForm.ACTIONS.LinesUpdate}
       inputs={{lines}}
+      onLinesUpdate={() => {
+        window.dataLayer.push({
+          event: 'update_cart',
+          ecommerce: {
+            items: lines,
+          },
+        });
+      }}
     >
       {children}
     </CartForm>

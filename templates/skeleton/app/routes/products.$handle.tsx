@@ -27,6 +27,9 @@ import type {
 } from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/lib/variants';
 
+// 1. Import the Analytics component from the Hydrogen package
+import {Analytics} from '~/hydrogen/Analytics';
+
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
 };
@@ -123,6 +126,21 @@ export default function Product() {
         selectedVariant={selectedVariant}
         product={product}
         variants={variants}
+      />
+      {/* 2. Add the ProductView component to the Product route */}
+      <Analytics.ProductView<ProductFragment>
+        product={product}
+        onProductView={() => {
+          // @ts-ignore
+          window?.dataLayer?.push({
+            event: 'product_view',
+            ecommerce: {
+              detail: {
+                products: [product],
+              },
+            },
+          });
+        }}
       />
     </div>
   );
@@ -234,6 +252,16 @@ function ProductForm({
         handle={product.handle}
         options={product.options}
         variants={variants}
+        onSelectedVariant={(selectedVariant) => {
+          window.dataLayer.push({
+            event: 'product_view',
+            ecommerce: {
+              detail: {
+                products: [selectedVariant],
+              },
+            },
+          });
+        }}
       >
         {({option}) => <ProductOptions key={option.name} option={option} />}
       </VariantSelector>
@@ -303,7 +331,19 @@ function AddToCartButton({
   onClick?: () => void;
 }) {
   return (
-    <CartForm route="/cart" inputs={{lines}} action={CartForm.ACTIONS.LinesAdd}>
+    <CartForm
+      route="/cart"
+      inputs={{lines}}
+      action={CartForm.ACTIONS.LinesAdd}
+      onLinesAdd={(event) => {
+        window.dataLayer.push({
+          event: 'add_to_cart',
+          ecommerce: {
+            add: lines,
+          },
+        });
+      }}
+    >
       {(fetcher: FetcherWithComponents<any>) => (
         <>
           <input
