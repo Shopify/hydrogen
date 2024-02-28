@@ -73,8 +73,9 @@ export default function App() {
 
 ### 2. Add the Analytics instrumentation provider
 
-> [!NOTE] The Analytics provider sole purpose is to make the `userConsent` prop
-> available to all event triggering components.
+> [!NOTE]
+> The Analytics provider sole purpose is to make the `userConsent` prop available
+> to all event triggering components.
 
 In `root.tsx` first import the `Analytics` component
 
@@ -278,7 +279,7 @@ function AddToCartButton({
       inputs={{lines}}
       action={CartForm.ACTIONS.LinesAdd}
 +     onLinesAdd={(event) => {
-        // Optional - 3P event
++       // Optional - 3P event
 +       window.dataLayer.push({
 +         event: 'add_to_cart',
 +         ecommerce: { add: lines },
@@ -331,7 +332,6 @@ function CartLineRemoveButton({lineIds}: {lineIds: string[]}) {
 }
 ```
 
-
 #### 4.3 Discount code event
 
 ```diff
@@ -364,5 +364,3 @@ function UpdateDiscountForm({
   );
 }
 ```
-
-
