@@ -1,46 +1,28 @@
-import {Await, useLoaderData, useLocation, useOutlet, useParams } from "@remix-run/react";
+import {Await} from "@remix-run/react";
 import {type ReactNode, useMemo, createContext, useContext, useRef, useEffect, Suspense} from "react";
 import {type CartReturn} from "../cart/queries/cart-types";
-import { CartLine, ComponentizableCartLine } from "@shopify/hydrogen-react/storefront-api-types";
-import data from "../createStorefrontClient.doc";
-
-type EventConfig = {
-  routeId?: string;
-  paramName?: string;
-}
-
-type EventParamsMap = {
-  collection_viewed: EventConfig;
-  product_viewed: EventConfig;
-  [eventName: string]: EventConfig;
-};
+import { AnalyticsView } from "./AnalyticsView";
 
 type AnalyticsProviderProps = {
   /** React children to render. */
   children?: ReactNode;
-  eventDataRoute: string;
-  eventParamsMap: EventParamsMap;
   canTrack: () => boolean;
   cart: Promise<CartReturn | null>;
+  staticPayload?: Record<string, unknown>;
 }
 
 type AnalyticsContextValue = {
-  eventParamsMap: EventParamsMap;
+  canTrack: () => boolean;
   publish: (event: string, payload: Record<string, unknown>) => void;
   subscribe: (event: string, callback: (payload: Record<string, unknown>) => void) => void;
   getCart: () => CartReturn | null;
-  getEventData: (params: {searchParams?: string, eventType: string, eventHandle?: string}) => Promise<Object>;
 }
 
 export const defaultAnalyticsContext: AnalyticsContextValue = {
-  eventParamsMap: {
-    collection_viewed: {},
-    product_viewed: {},
-  },
+  canTrack: () => false,
   publish: () => {},
   subscribe: () => {},
   getCart: () => null,
-  getEventData: () => Promise.resolve({}),
 };
 
 const AnalyticsContext = createContext<AnalyticsContextValue>(
@@ -52,37 +34,19 @@ const eventsHoldQueue = Array<{event: string, payload: Record<string, unknown>}>
 
 export function AnalyticsProvider({
   children,
-  eventDataRoute,
-  eventParamsMap,
   canTrack,
   cart,
+  staticPayload = {},
 }: AnalyticsProviderProps): JSX.Element {
   const cartRef = useRef<CartReturn | null>(null);
   const finalConfig = useMemo<AnalyticsContextValue>(() => {
     return {
-      eventParamsMap,
+      canTrack,
       getCart: () => cartRef.current,
-      getEventData: ({
-        searchParams,
-        eventType,
-        eventHandle,
-      }: {
-        searchParams?: string;
-        eventType: string;
-        eventHandle?: string;
-      }) => {
-        const search = new URLSearchParams(searchParams);
-        search.append('_data', `routes${eventDataRoute}`);
-        search.append('eventType', eventType);
-        search.append('eventHandle', eventHandle || '');
-
-        return fetch(`${eventDataRoute}?${search.toString()}`)
-          .then(res => res.json())
-          .then(data => data as Object);
-      },
       publish: (event: string, payload: Record<string, unknown>) => {
         const stampedPayload = {
           eventTimestamp: Date.now(),
+          ...staticPayload,
           ...payload
         };
         if (canTrack()) {
@@ -109,13 +73,13 @@ export function AnalyticsProvider({
         subscribers.get(event)?.set(callback.toString(), callback);
       },
     };
-  }, [eventParamsMap]);
+  }, [staticPayload, canTrack]);
 
   return (
     <AnalyticsContext.Provider value={finalConfig}>
       {children}
       <AnalyticsCart cart={cart} cartRef={cartRef}/>
-      <PageViewed eventDataRoute={eventDataRoute} />
+      <AnalyticsView eventName={AnalyticsView.PAGE_VIEWED} />
     </AnalyticsContext.Provider>
   );
 };
@@ -128,72 +92,6 @@ export function useAnalyticsProvider(): AnalyticsContextValue {
   return analyticsContext;
 }
 
-function PageViewed({eventDataRoute}: {eventDataRoute: string}) {
-  const params = useParams();
-  const location = useLocation();
-  const lastLocationPathname = useRef<string>('');
-  const outlet = useOutlet();
-  const {publish, eventParamsMap, getEventData} = useAnalyticsProvider();
-  const url = location.pathname + location.search
-  const outletId = outlet?.props.children?.props.match?.route.id;
-
-  // Page view analytics
-  // We want useEffect to execute only when location changes
-  // which represents a page view
-  useEffect(() => {
-    if (lastLocationPathname.current === url) return;
-
-    lastLocationPathname.current = url;
-
-    const payload = {
-      url,
-    };
-
-    setTimeout(() => {
-      publish('pageViewed', payload);
-
-      Object.keys(eventParamsMap).forEach((eventName) => {
-        const eventConfig = eventParamsMap[eventName];
-        const paramName = eventConfig.paramName;
-        const routeId = `routes/${eventConfig.routeId}`;
-
-        if (paramName && routeId) {
-          if (params.hasOwnProperty(paramName) && outletId === routeId) {
-            if (eventName === 'product_viewed' || eventName === 'collection_viewed') {
-              const search = new URLSearchParams(location.search);
-              search.append('_data', `routes${eventDataRoute}`);
-              search.append('eventType', eventName === 'product_viewed' ? 'product' : 'collection');
-              search.append('eventHandle', params[paramName] || '');
-
-              let eventData: Object = {};
-              getEventData({
-                searchParams: location.search,
-                eventType: eventName === 'product_viewed' ? 'product' : 'collection',
-                eventHandle: params[paramName],
-              }).then((data) => {
-                eventData = data;
-              }).finally(() => {
-                publish(eventName, {
-                  [paramName]: params[paramName],
-                  ...eventData as Object,
-                });
-              });
-            } else {
-              publish(eventName, {[paramName]: params[paramName]});
-            }
-          }
-        } else if (paramName && params.hasOwnProperty(paramName)) {
-          publish(eventName, {[paramName]: params[paramName]});
-        } else if (routeId && outletId === routeId) {
-          publish(eventName, {});
-        }
-      });
-    }, 0);
-  }, [url]);
-
-  return null;
-}
-
 function AnalyticsCart({
   cart,
   cartRef,
@@ -202,7 +100,7 @@ function AnalyticsCart({
   cartRef: React.MutableRefObject<CartReturn | null>
 }) {
   return (
-    <Suspense fallback={<p>Loading cart ...</p>}>
+    <Suspense>
       <Await resolve={cart}>
         {(cart) => {
           if (cartRef.current === null) {

@@ -20,6 +20,7 @@ import {
   type VariantOption,
   getSelectedProductOptions,
   CartForm,
+  AnalyticsView,
 } from '@shopify/hydrogen';
 import type {
   CartLineInput,
@@ -124,6 +125,13 @@ export default function Product() {
         product={product}
         variants={variants}
       />
+      <AnalyticsView eventName={AnalyticsView.PRODUCT_VIEWED} payload={{
+        product: {
+          id: product.id,
+          title: product.title,
+          handle: product.handle,
+        }
+      }} />
     </div>
   );
 }

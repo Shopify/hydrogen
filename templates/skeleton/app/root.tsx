@@ -22,6 +22,7 @@ import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
 import { CustomAnalytics } from './components/CustomAnalytics';
+import { ShopifyAnalytics } from './components/ShopifyAnalytics';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -91,6 +92,10 @@ export async function loader({context}: LoaderFunctionArgs) {
     },
   });
 
+  const shopPromise = storefront.query(SHOP_QUERY, {
+    cache: storefront.CacheLong(),
+  })
+
   return defer(
     {
       cart: cartPromise,
@@ -98,6 +103,7 @@ export async function loader({context}: LoaderFunctionArgs) {
       header: await headerPromise,
       isLoggedIn: isLoggedInPromise,
       publicStoreDomain,
+      shop: await shopPromise,
     },
     {
       headers: {
@@ -110,6 +116,7 @@ export async function loader({context}: LoaderFunctionArgs) {
 export default function App() {
   const nonce = useNonce();
   const data = useLoaderData<typeof loader>();
+  const shop = data.shop;
 
   return (
     <html lang="en">
@@ -121,27 +128,21 @@ export default function App() {
       </head>
       <body>
         <AnalyticsProvider
-          cart={data.cart}
-          canTrack={() => true}
-          eventDataRoute="/event-data"
-          eventParamsMap={{
-            product_viewed: {
-              routeId: 'products.$handle',
-              paramName: 'handle',
-            },
-            collection_viewed: {
-              routeId: 'collections.$handle',
-              paramName: 'handle',
-            },
-            cart_viewed: {
-              routeId: 'cart',
+          staticPayload={{
+            shop: {
+              shopId: shop.shop.id,
+              acceptedLanguage: shop.localization.language.isoCode,
+              currency: shop.localization.country.currency.isoCode,
             },
           }}
+          cart={data.cart}
+          canTrack={() => true}
         >
           <Layout {...data}>
             <Outlet />
           </Layout>
           <CustomAnalytics />
+          <ShopifyAnalytics />
         </AnalyticsProvider>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
@@ -261,4 +262,25 @@ const FOOTER_QUERY = `#graphql
     }
   }
   ${MENU_FRAGMENT}
+` as const;
+
+const SHOP_QUERY = `#graphql
+  query ShopData(
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
+    shop {
+      id
+    }
+    localization {
+      country {
+        currency {
+          isoCode
+        }
+      }
+      language {
+        isoCode
+      }
+    }
+  }
 ` as const;
