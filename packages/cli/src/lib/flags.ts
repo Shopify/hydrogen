@@ -51,6 +51,11 @@ export const commonFlags = {
     env: 'SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH',
     char: 'e',
   }),
+  env: Flags.string({
+    description:
+      "Specify an environment's name when using remote environment variables.",
+    env: 'SHOPIFY_HYDROGEN_ENVIRONMENT_NAME',
+  }),
   sourcemap: Flags.boolean({
     description: 'Generate sourcemaps for the build.',
     env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',

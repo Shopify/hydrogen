@@ -40,6 +40,7 @@ describe('getAllEnvironmentVariables()', () => {
           key: 'PUBLIC_API_TOKEN',
           value: 'abc123',
           isSecret: false,
+          readOnly: false,
         },
       ],
     });
@@ -124,6 +125,7 @@ describe('getAllEnvironmentVariables()', () => {
             key: 'PUBLIC_API_TOKEN',
             value: '',
             isSecret: true,
+            readOnly: false,
           },
         ],
       });

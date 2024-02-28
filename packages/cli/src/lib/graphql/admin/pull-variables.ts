@@ -7,6 +7,7 @@ const PullVariablesQuery = `#graphql
       environmentVariables(branchName: $branch) {
         id
         isSecret
+        readOnly
         key
         value
       }
@@ -17,6 +18,7 @@ const PullVariablesQuery = `#graphql
 export interface EnvironmentVariable {
   id: string;
   isSecret: boolean;
+  readOnly: boolean;
   key: string;
   value: string;
 }

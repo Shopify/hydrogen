@@ -22,7 +22,13 @@ describe('getStorefrontEnvVariables', () => {
       hydrogenStorefront: {
         id: '123',
         environmentVariables: [
-          {id: '123', isSecret: false, key: 'key', value: 'value'},
+          {
+            id: '123',
+            isSecret: false,
+            readOnly: false,
+            key: 'key',
+            value: 'value',
+          },
         ],
       },
     };
