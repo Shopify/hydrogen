@@ -10,6 +10,14 @@ Party town helps relocate resource intensive scripts off the main thread into a 
 - [Google Tag Manager ID] - Log in to your Google Tag Manager account and open a container. In the top right corner (next to the Submit and Preview buttons) you'll see some short text that starts with GTM- and then contains some letters/numbers. That's your Google Tag Manager ID
 - [Basic Partytown knowledge](https://dev.to/adamdbradley/introducing-partytown-run-third-party-scripts-from-a-web-worker-2cnp) - Introducing Partytown: Run Third-Party Scripts From a Web Worker
 
+## Install
+
+Setup a new project with this example:
+
+```bash
+npm create @shopify/hydrogen@latest -- --template partytown
+```
+
 ## Key files
 
 The following files have been added (🆕) or changed from the default Hydration template:
@@ -27,8 +35,8 @@ The following files have been added (🆕) or changed from the default Hydration
 
 ## Dependencies
 
-| Module                                                                          | Description                                                                                                                                                                                                                                                      |
-| ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Module                                                                          | Description                                                                                 |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | 🆕 [@builder.io/partytown](https://www.npmjs.com/package/@builder.io/partytown) | Party town helps relocate resource intensive scripts off the main thread into a web worker. |
 
 ## Instructions
