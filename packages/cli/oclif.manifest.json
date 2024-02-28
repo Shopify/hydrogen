@@ -783,6 +783,37 @@
       },
       "args": {}
     },
+    "hydrogen:env:push__unstable": {
+      "id": "hydrogen:env:push__unstable",
+      "description": "Push environment variables from the local .env file to your linked Hydrogen storefront.",
+      "strict": true,
+      "pluginName": "@shopify/cli-hydrogen",
+      "pluginAlias": "@shopify/cli-hydrogen",
+      "pluginType": "core",
+      "hidden": true,
+      "aliases": [],
+      "flags": {
+        "env": {
+          "name": "env",
+          "type": "option",
+          "description": "Specify an environment's name when using remote environment variables.",
+          "multiple": false
+        },
+        "env-file": {
+          "name": "env-file",
+          "type": "option",
+          "description": "Specify the environment variable file name. Default value is '.env'.",
+          "multiple": false
+        },
+        "path": {
+          "name": "path",
+          "type": "option",
+          "description": "The path to the directory of the Hydrogen storefront. The default is the current directory.",
+          "multiple": false
+        }
+      },
+      "args": {}
+    },
     "hydrogen:generate:route": {
       "id": "hydrogen:generate:route",
       "description": "Generates a standard Shopify route.",
