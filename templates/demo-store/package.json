@@ -37,7 +37,8 @@
     "react-use": "^17.4.0",
     "schema-dts": "^1.1.0",
     "tiny-invariant": "^1.2.0",
-    "typographic-base": "^1.0.4"
+    "typographic-base": "^1.0.4",
+    "@shopify/storefront-api-client": "^0.3.2"
   },
   "devDependencies": {
     "@playwright/test": "^1.40.1",
