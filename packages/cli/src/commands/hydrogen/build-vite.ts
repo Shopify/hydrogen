@@ -5,13 +5,7 @@ import {
   outputWarn,
   outputContent,
 } from '@shopify/cli-kit/node/output';
-import {
-  fileSize,
-  glob,
-  readFile,
-  removeFile,
-  writeFile,
-} from '@shopify/cli-kit/node/fs';
+import {fileSize, removeFile} from '@shopify/cli-kit/node/fs';
 import {resolvePath, relativePath, joinPath} from '@shopify/cli-kit/node/path';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 import colors from '@shopify/cli-kit/node/colors';
@@ -207,22 +201,4 @@ export async function runViteBuild({
       );
     }
   }
-
-  if (process.env.NODE_ENV !== 'development') {
-    await cleanClientSourcemaps(clientOutDir);
-  }
-}
-
-async function cleanClientSourcemaps(buildPathClient: string) {
-  const bundleFiles = await glob(joinPath(buildPathClient, '**/*.js'));
-
-  await Promise.all(
-    bundleFiles.map(async (filePath) => {
-      const file = await readFile(filePath);
-      return await writeFile(
-        filePath,
-        file.replace(/\/\/# sourceMappingURL=.+\.js\.map$/gm, ''),
-      );
-    }),
-  );
 }
