@@ -41,7 +41,10 @@ export async function loader({request, context}: LoaderFunctionArgs) {
     totalResults,
   };
 
-  return defer({searchTerm, searchResults});
+  return defer({
+    searchTerm,
+    searchResults,
+  });
 }
 
 export default function SearchPage() {
@@ -54,7 +57,10 @@ export default function SearchPage() {
       {!searchTerm || !searchResults.totalResults ? (
         <NoSearchResults />
       ) : (
-        <SearchResults results={searchResults.results} />
+        <SearchResults
+          results={searchResults.results}
+          searchTerm={searchTerm}
+        />
       )}
     </div>
   );

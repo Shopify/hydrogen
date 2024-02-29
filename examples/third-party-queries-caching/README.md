@@ -9,25 +9,33 @@ third-party GraphQL API in Hydrogen. This example uses the public [Rick & Morty 
 
 - Basic knowledge of GraphQL and the [Rick & Morty API](https://rickandmortyapi.com/documentation/#graphql)
 
+## Install
+
+Setup a new project with this example:
+
+```bash
+npm create @shopify/hydrogen@latest -- --template third-party-queries-caching
+```
+
 ## Key files
 
 This folder contains the minimal set of files needed to showcase the implementation.
 Files that aren’t included by default with Hydrogen and that you’ll need to
 create are labeled with 🆕.
 
-| File                                                                                              | Description                                                      |
-| ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| File                                                                                          | Description                                                      |
+| --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
 | 🆕 [`app/lib/createRickAndMortyClient.server.ts`](app/lib/createRickAndMortyClient.server.ts) | Rick & Morty GraphQL client factory function with Oxygen caching |
-| [`server.ts`](server.ts)                                                                          | Oxygen server worker                                             |
-| [`remix.env.d.ts`](remix.env.d.ts)                                                                | (Optional) Oxygen/Hydrogen TypeScript types                      |
-| [`app/routes/_index.tsx`](app/routes/_index.tsx)                                                  | Hydrogen homepage route                                          |
+| [`server.ts`](server.ts)                                                                      | Oxygen server worker                                             |
+| [`remix.env.d.ts`](remix.env.d.ts)                                                            | (Optional) Oxygen/Hydrogen TypeScript types                      |
+| [`app/routes/_index.tsx`](app/routes/_index.tsx)                                              | Hydrogen homepage route                                          |
 
 ## Instructions
 
 ### 1. Connect to your store to link the required environment variables
 
 ```bash
-h2 link
+npx shopify hydrogen link
 ```
 
 ### 2. Copy over the new file `createRickAndMortyClient.server.ts` to `app/lib/`

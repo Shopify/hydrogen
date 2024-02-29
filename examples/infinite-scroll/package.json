@@ -9,5 +9,8 @@
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "typecheck": "tsc --noEmit",
     "codegen": "shopify hydrogen codegen"
+  },
+  "dependencies": {
+    "react-intersection-observer": "^8.32.0"
   }
 }
