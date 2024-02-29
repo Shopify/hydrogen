@@ -10,7 +10,11 @@ import {
 } from '@shopify/mini-oxygen';
 import {DEFAULT_PORT} from '../flags.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
-import {OXYGEN_HEADERS_MAP, logRequestLine} from './common.js';
+import {
+  OXYGEN_HEADERS_MAP,
+  SUBREQUEST_PROFILER_ENDPOINT,
+  logRequestLine,
+} from './common.js';
 import {
   H2O_BINDING_NAME,
   createLogRequestEvent,
@@ -74,7 +78,7 @@ export async function startNodeServer({
     oxygenHeaders,
     async onRequest(request, defaultDispatcher) {
       const url = new URL(request.url);
-      if (url.pathname === '/debug-network-server') {
+      if (url.pathname === SUBREQUEST_PROFILER_ENDPOINT) {
         return handleDebugNetworkRequest(request);
       }
 
