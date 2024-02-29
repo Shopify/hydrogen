@@ -148,10 +148,12 @@ describe('init', () => {
             language: 'ts',
             template: 'https://github.com/some/repo',
           }),
-        ).resolves;
+        ).resolves.ok;
       });
 
-      expect(outputMock.error()).toMatch('--template');
+      // The error message is printed asynchronously
+      await vi.waitFor(() => expect(outputMock.error()).toMatch('--template'));
+
       expect(processExit).toHaveBeenCalledWith(1);
 
       processExit.mockRestore();

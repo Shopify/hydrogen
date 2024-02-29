@@ -6,6 +6,9 @@ import {startMiniOxygen} from '../../lib/mini-oxygen/index.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
 import {findPort} from '../../lib/find-port.js';
+import {fileExists} from '@shopify/cli-kit/node/fs';
+import {joinPath} from '@shopify/cli-kit/node/path';
+import {getViteConfig} from '../../lib/vite-config.js';
 
 export default class Preview extends Command {
   static description =
@@ -51,7 +54,13 @@ export async function runPreview({
 
   muteDevLogs({workerReload: false});
 
-  const {root, buildPathWorkerFile, buildPathClient} = getProjectPaths(appPath);
+  let {root, buildPathWorkerFile, buildPathClient} = getProjectPaths(appPath);
+
+  if (!(await fileExists(joinPath(root, buildPathWorkerFile)))) {
+    const maybeResult = await getViteConfig(root).catch(() => null);
+    if (maybeResult) buildPathWorkerFile = maybeResult.serverOutFile;
+  }
+
   const {shop, storefront} = await getConfig(root);
   const fetchRemote = !!shop && !!storefront?.id;
   const env = await getAllEnvironmentVariables({root, fetchRemote, envBranch});

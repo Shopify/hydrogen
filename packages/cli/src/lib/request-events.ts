@@ -18,7 +18,10 @@ type InferredResponse<R extends RequestKind> = R extends WorkerdRequest
   ? WorkerdResponse
   : Response;
 
-let ResponseConstructor: typeof Response | typeof WorkerdResponse;
+let ResponseConstructor:
+  | typeof Response
+  | typeof WorkerdResponse
+  | typeof globalThis.Response;
 export function setConstructors(constructors: {
   Response: typeof ResponseConstructor;
 }) {
@@ -91,17 +94,18 @@ function createResponse<R extends RequestKind>(
   main: string | ReadableStream = 'ok',
   init?: Pick<ResponseInit, 'headers'>,
 ) {
+  // @ts-ignore
   return new ResponseConstructor(main, init) as InferredResponse<R>;
 }
 
-async function clearHistory<R extends RequestKind>(
-  request: R,
-): Promise<InferredResponse<R>> {
+function clearHistory<R extends RequestKind>(request: R): InferredResponse<R> {
   eventHistory.length = 0;
   return createResponse<R>();
 }
 
-export function createLogRequestEvent(options?: {absoluteBundlePath?: string}) {
+export function createLogRequestEvent(options?: {
+  transformLocation?: (partialPath: string) => string;
+}) {
   return async function logRequestEvent<R extends RequestKind>(
     request: R,
   ): Promise<InferredResponse<R>> {
@@ -141,8 +145,8 @@ export function createLogRequestEvent(options?: {absoluteBundlePath?: string}) {
     let stackLink: string | null = null;
 
     if (stackInfo?.file) {
-      if (!path.isAbsolute(stackInfo.file) && options?.absoluteBundlePath) {
-        stackInfo.file = options.absoluteBundlePath;
+      if (options?.transformLocation) {
+        stackInfo.file = options.transformLocation(stackInfo.file);
       }
 
       const {source, line, column} = mapSourcePosition({

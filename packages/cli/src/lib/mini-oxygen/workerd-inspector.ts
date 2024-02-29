@@ -101,7 +101,7 @@ async function findInspectorUrl(inspectorPort: number) {
     ).json()) as InspectorWebSocketTarget[];
 
     const url = body?.find(
-      ({id}) => id === 'core:user:hydrogen',
+      ({id}) => id === 'core:user:hydrogen' || id === 'core:user:oxygen',
     )?.webSocketDebuggerUrl;
 
     if (!url) {

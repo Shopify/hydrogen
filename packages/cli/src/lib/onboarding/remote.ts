@@ -1,3 +1,4 @@
+import {readdir} from 'node:fs/promises';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController} from '@shopify/cli-kit/node/abort';
 import {copyFile, fileExists} from '@shopify/cli-kit/node/fs';
@@ -46,9 +47,20 @@ export async function setupRemoteTemplate(
         return {templatesDir, sourcePath: examplePath};
       }
 
+      const availableTemplates = (
+        await Promise.all([readdir(examplesDir), readdir(templatesDir)]).catch(
+          () => [],
+        )
+      )
+        .flat()
+        .filter((name) => name !== 'skeleton' && !name.endsWith('.md'))
+        .sort();
+
       throw new AbortError(
-        'Unknown value in --template flag.',
-        'Skip the --template flag or provide the name of a template or example in the Hydrogen repository.',
+        `Unknown value in \`--template\` flag "${appTemplate}".\nSkip the flag or provide the name of a template or example in the Hydrogen repository.`,
+        availableTemplates.length === 0
+          ? ''
+          : {list: {title: 'Available templates:', items: availableTemplates}},
       );
     })
     .catch(abort);
@@ -59,13 +71,16 @@ export async function setupRemoteTemplate(
 
   abort = createAbortHandler(controller, project);
 
-  let backgroundWorkPromise = backgroundDownloadPromise
-    .then(async (result) => {
+  const downloaded = await backgroundDownloadPromise;
+  if (controller.signal.aborted) return;
+
+  let backgroundWorkPromise = Promise.resolve()
+    .then(async () => {
       // Result is undefined in certain tests,
       // do not continue if it's already aborted
       if (controller.signal.aborted) return;
 
-      const {sourcePath, templatesDir} = result;
+      const {sourcePath, templatesDir} = downloaded;
 
       const pkgJson = await readAndParsePackageJson(
         joinPath(sourcePath, 'package.json'),
@@ -83,11 +98,8 @@ export async function setupRemoteTemplate(
     })
     .catch(abort);
 
-  if (controller.signal.aborted) return;
-
-  const {sourcePath} = await backgroundDownloadPromise;
   const supportsTranspilation = await fileExists(
-    joinPath(sourcePath, 'tsconfig.json'),
+    joinPath(downloaded.sourcePath, 'tsconfig.json'),
   );
 
   const {language, transpileProject} = supportsTranspilation

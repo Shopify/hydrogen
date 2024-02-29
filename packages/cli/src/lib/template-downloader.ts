@@ -1,4 +1,5 @@
-import path from 'path';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {pipeline} from 'stream/promises';
 import gunzipMaybe from 'gunzip-maybe';
 import {extract} from 'tar-fs';
@@ -6,7 +7,7 @@ import {fetch} from '@shopify/cli-kit/node/http';
 import {mkdir, fileExists} from '@shopify/cli-kit/node/fs';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortSignal} from '@shopify/cli-kit/node/abort';
-import {fileURLToPath} from 'url';
+import {getSkeletonSourceDir} from './build.js';
 
 // Note: this skips pre-releases
 const REPO_RELEASES_URL = `https://api.github.com/repos/shopify/hydrogen/releases/latest`;
@@ -74,6 +75,15 @@ async function downloadTarball(
 export async function getLatestTemplates({
   signal,
 }: {signal?: AbortSignal} = {}) {
+  if (process.env.LOCAL_DEV) {
+    const templatesDir = path.dirname(getSkeletonSourceDir());
+    return {
+      version: 'local',
+      templatesDir,
+      examplesDir: path.resolve(templatesDir, '..', 'examples'),
+    };
+  }
+
   try {
     const {version, url} = await getLatestReleaseDownloadUrl(signal);
     const templateStoragePath = fileURLToPath(

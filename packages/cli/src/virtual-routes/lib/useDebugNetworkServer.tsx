@@ -32,6 +32,7 @@ export type ServerEvents = {
 
 let nextEventId = 0;
 
+export const SUBREQUEST_PROFILER_ENDPOINT = '/debug-network-server';
 const LOCAL_STORAGE_SETTINGS_KEY = 'h2-debug-network-settings';
 type DebugNetworkSettings = Pick<
   ServerEvents,
@@ -89,7 +90,7 @@ export function useDebugNetworkServer() {
   }, []);
 
   function clearServerEvents() {
-    fetch('/debug-network-server', {method: 'DELETE'}).catch((error) =>
+    fetch(SUBREQUEST_PROFILER_ENDPOINT, {method: 'DELETE'}).catch((error) =>
       console.error('Could not clear history:', error),
     );
 
@@ -117,7 +118,7 @@ export function useDebugNetworkServer() {
   }
 
   useEffect(() => {
-    const evtSource = new EventSource('/debug-network-server', {
+    const evtSource = new EventSource(SUBREQUEST_PROFILER_ENDPOINT, {
       withCredentials: true,
     });
 

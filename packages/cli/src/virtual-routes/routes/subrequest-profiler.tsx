@@ -9,11 +9,13 @@ import {Link} from '@remix-run/react';
 
 import favicon from '../assets/favicon.svg';
 import faviconDark from '../assets/favicon-dark.svg';
-import styles from '../assets/debug-network.css';
 import {useDebugNetworkServer} from '../lib/useDebugNetworkServer.jsx';
 import {RequestDetails} from '../components/RequestDetails.jsx';
 import {IconClose} from '../components/IconClose.jsx';
 import {IconDiscard} from '../components/IconDiscard.jsx';
+
+// @ts-expect-error
+import styles from '../assets/debug-network.css?url';
 
 export const links: LinksFunction = () => {
   return [

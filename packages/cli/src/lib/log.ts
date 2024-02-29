@@ -249,6 +249,7 @@ export function muteAuthLogs({
 export function enhanceH2Logs(options: {rootDirectory: string; host: string}) {
   injectLogReplacer('error');
   injectLogReplacer('warn', warningDebouncer);
+  injectLogReplacer('log', warningDebouncer);
 
   addMessageReplacers('h2-warn', [
     ([first]) => {

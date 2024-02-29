@@ -6,7 +6,14 @@ import type {RemixConfig} from './remix-config.js';
 export const VIRTUAL_ROUTES_DIR = 'virtual-routes/routes';
 export const VIRTUAL_ROOT = 'virtual-routes/virtual-root';
 
-export async function addVirtualRoutes(config: RemixConfig) {
+type MinimalRemixConfig = {
+  appDirectory: string;
+  routes: RemixConfig['routes'];
+};
+
+export async function addVirtualRoutes<T extends MinimalRemixConfig>(
+  config: T,
+): Promise<T> {
   const userRouteList = Object.values(config.routes);
   const distPath = fileURLToPath(new URL('..', import.meta.url));
   const virtualRoutesPath = joinPath(distPath, VIRTUAL_ROUTES_DIR);

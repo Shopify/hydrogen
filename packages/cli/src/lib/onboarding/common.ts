@@ -749,9 +749,8 @@ export function createAbortHandler(
       ),
     );
 
-    if (process.env.NODE_ENV === 'test') {
-      console.error(error);
-    }
+    // Enable this when debugging tests:
+    // if (process.env.NODE_ENV === 'test') console.error(error);
 
     // This code runs asynchronously so throwing here
     // turns into an unhandled rejection. Exit process instead:
