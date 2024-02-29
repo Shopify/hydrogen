@@ -1,6 +1,7 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {type AdminSession, login} from '../../lib/auth.js';
 import {getStorefronts} from '../../lib/graphql/admin/link-storefront.js';
+import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {writeFile} from '@shopify/cli-kit/node/fs';
 import {
@@ -22,12 +23,11 @@ import {
   createDeploy,
   parseToken,
 } from '@shopify/oxygen-cli/deploy';
-import {loadEnvironmentVariableFile} from '@shopify/oxygen-cli/utils';
 import {ciPlatform} from '@shopify/cli-kit/node/context/local';
 import {runBuild} from './build.js';
 
 vi.mock('@shopify/oxygen-cli/deploy');
-vi.mock('@shopify/oxygen-cli/utils');
+vi.mock('@shopify/cli-kit/node/dot-env');
 vi.mock('@shopify/cli-kit/node/fs');
 vi.mock('@shopify/cli-kit/node/context/local');
 vi.mock('../../lib/get-oxygen-deployment-data.js');
@@ -193,17 +193,12 @@ describe('deploy', () => {
   });
 
   it('calls createDeploy with overridden variables in environment file', async () => {
-    const overriddenEnvironmentVariables = [
-      {
-        key: 'fake-key',
-        value: 'fake-value',
-        isSecret: true,
+    vi.mocked(readAndParseDotEnv).mockResolvedValue({
+      path: 'fake-env-file',
+      variables: {
+        'fake-key': 'fake-value',
       },
-    ];
-
-    vi.mocked(loadEnvironmentVariableFile).mockReturnValue(
-      overriddenEnvironmentVariables,
-    );
+    });
 
     await runDeploy({
       ...deployParams,
@@ -213,29 +208,17 @@ describe('deploy', () => {
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
       config: {
         ...expectedConfig,
-        overriddenEnvironmentVariables,
+        overriddenEnvironmentVariables: [
+          {
+            key: 'fake-key',
+            value: 'fake-value',
+            isSecret: true,
+          },
+        ],
       },
       hooks: expectedHooks,
       logger: deploymentLogger,
     });
-  });
-
-  it('errors when supplied environment file does not exist', async () => {
-    vi.mocked(loadEnvironmentVariableFile).mockImplementation(
-      (_path: string) => {
-        throw new AbortError('File not found');
-      },
-    );
-
-    try {
-      await runDeploy({
-        ...deployParams,
-        environmentFile: 'fake-env-file',
-      });
-      expect(true).toBe(false);
-    } catch (err) {
-      expect(err).toBeInstanceOf(AbortError);
-    }
   });
 
   it('errors when there are uncommited changes', async () => {
