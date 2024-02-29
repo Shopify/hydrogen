@@ -36,7 +36,10 @@ export default defineConfig([
 
       await fs.writeFile(
         'dist/esm/index.d.ts',
-        dts.replace('interfaceExtension:', 'interfaceExtension?:'),
+        // For some reason, dts-bundle-generator exports PresetConfig
+        // from @shopify/graphql-codegen, which conflicts with the
+        // overwritten type in src/preset.ts. This is a workaround.
+        dts.replace('export type PresetConfig', 'type PresetConfig'),
       );
     },
   },

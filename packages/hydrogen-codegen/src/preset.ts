@@ -5,7 +5,9 @@ import {
 } from '@shopify/graphql-codegen';
 import {getDefaultOptions} from './defaults.js';
 
-export const preset: Types.OutputPreset<Partial<InternalPresetConfig>> = {
+export type PresetConfig = Partial<InternalPresetConfig>;
+
+export const preset: Types.OutputPreset<PresetConfig> = {
   [Symbol.for('name')]: 'hydrogen',
   buildGeneratesSection: (options) => {
     try {
@@ -20,7 +22,7 @@ export const preset: Types.OutputPreset<Partial<InternalPresetConfig>> = {
           },
           interfaceExtension: defaultOptions.interfaceExtensionCode,
           ...options.presetConfig,
-        } satisfies Partial<InternalPresetConfig>,
+        } satisfies PresetConfig,
       });
     } catch (err) {
       const error = err as Error;

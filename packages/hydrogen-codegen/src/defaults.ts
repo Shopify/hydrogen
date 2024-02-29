@@ -1,4 +1,4 @@
-import type {PresetConfig} from '@shopify/graphql-codegen';
+import type {PresetConfig} from './preset';
 
 const QUERIES_PLACEHOLDER = '%queries%';
 const MUTATIONS_PLACEHOLDER = '%mutations%';
@@ -28,7 +28,7 @@ function replacePlaceholders(
 type DefaultValues = {
   importTypesFrom: string;
   namespacedImportName: string;
-  interfaceExtensionCode: PresetConfig['interfaceExtension'];
+  interfaceExtensionCode: NonNullable<PresetConfig['interfaceExtension']>;
 };
 
 const sfapiDefaultValues: DefaultValues = {
