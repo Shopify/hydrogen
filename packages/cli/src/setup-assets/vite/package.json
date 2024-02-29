@@ -5,7 +5,7 @@
     "dev": "shopify hydrogen dev-vite --codegen"
   },
   "dependencies": {
-    "@remix-run/node": "^2.7.0",
+    "@remix-run/node": "^2.8.0",
     "isbot": "^3.8.0"
   },
   "devDependencies": {
