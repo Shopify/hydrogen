@@ -6,6 +6,7 @@ import {
   outputInfo,
   outputWarn,
 } from '@shopify/cli-kit/node/output';
+import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {writeFile} from '@shopify/cli-kit/node/fs';
 import {
@@ -31,7 +32,6 @@ import {
   DeploymentVerificationDetailsResponse,
   parseToken,
 } from '@shopify/oxygen-cli/deploy';
-import {loadEnvironmentVariableFile} from '@shopify/oxygen-cli/utils';
 
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
@@ -280,14 +280,14 @@ export async function oxygenDeploy(
   let overriddenEnvironmentVariables;
 
   if (environmentFile) {
-    try {
-      overriddenEnvironmentVariables =
-        loadEnvironmentVariableFile(environmentFile);
-    } catch (error) {
-      throw new AbortError(
-        `Could not load environment file at ${environmentFile}`,
-      );
-    }
+    const {variables} = await readAndParseDotEnv(environmentFile);
+    overriddenEnvironmentVariables = Object.entries(variables).map(
+      ([key, value]) => ({
+        isSecret: true,
+        key,
+        value,
+      }),
+    );
   }
 
   if (!isCI) {
