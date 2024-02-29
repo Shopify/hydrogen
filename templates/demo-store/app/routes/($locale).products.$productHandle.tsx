@@ -1,6 +1,11 @@
 import {useRef, Suspense} from 'react';
 import {Disclosure, Listbox} from '@headlessui/react';
-import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {
+  MetaFunction,
+  defer,
+  redirect,
+  type LoaderFunctionArgs,
+} from '@shopify/remix-oxygen';
 import {useLoaderData, Await} from '@remix-run/react';
 import type {ShopifyAnalyticsProduct} from '@shopify/hydrogen';
 import {
@@ -38,6 +43,14 @@ import {routeHeaders} from '~/data/cache';
 import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 
 export const headers = routeHeaders;
+
+export const meta: MetaFunction = () => [
+  {
+    tagName: 'link',
+    rel: 'canonical',
+    href: 'https://remix.run',
+  },
+];
 
 export async function loader({params, request, context}: LoaderFunctionArgs) {
   const {productHandle} = params;
