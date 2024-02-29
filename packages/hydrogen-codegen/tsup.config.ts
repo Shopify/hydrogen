@@ -29,7 +29,14 @@ export default defineConfig([
       const [dts] = await generateDtsBundle([
         {
           filePath: './src/index.ts',
-          libraries: {inlinedLibraries: ['@shopify/graphql-codegen']},
+          libraries: {
+            // Bundle types from these libraries to avoid
+            // the need to install them as dependencies in consumers.
+            // Specifically, 'type-fest' might be installed in a consumer
+            // with an older version that doesn't include `IsNever` or
+            // a similar type.
+            inlinedLibraries: ['@shopify/graphql-codegen', 'type-fest'],
+          },
           output: {noBanner: true},
         },
       ]);
