@@ -9,6 +9,8 @@ import {DEV_ROUTES} from '../request-events.js';
 // Default port used for debugging in VSCode and Chrome DevTools.
 export const DEFAULT_INSPECTOR_PORT = 9229;
 
+export const SUBREQUEST_PROFILER_ENDPOINT = '/debug-network-server';
+
 export function logRequestLine(
   // Minimal overlap between Fetch, Miniflare@2 and Miniflare@3 request types.
   request: Pick<Request, 'method' | 'url'> & {

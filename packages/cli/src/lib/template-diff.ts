@@ -7,6 +7,7 @@ import {
 } from 'fs-extra/esm';
 import {copyFile, removeFile} from '@shopify/cli-kit/node/fs';
 import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
+import {readAndParsePackageJson} from '@shopify/cli-kit/node/node-package-manager';
 import colors from '@shopify/cli-kit/node/colors';
 import {getRepoNodeModules, getStarterDir} from './build.js';
 import {mergePackageJson} from './file.js';
@@ -91,21 +92,30 @@ export async function applyTemplateDiff(
   diffDirectory: string,
   templateDir = getStarterDir(),
 ) {
-  const createFilter = (re: RegExp) => (filepath: string) =>
-    !re.test(relativePath(templateDir, filepath));
+  const pkgJson: Record<string, any> = await readAndParsePackageJson(
+    joinPath(diffDirectory, 'package.json'),
+  );
+
+  const createFilter =
+    (re: RegExp, skipFiles?: string[]) => (filepath: string) => {
+      const filename = relativePath(templateDir, filepath);
+      return !re.test(filename) && !skipFiles?.includes(filename);
+    };
 
   await copyDirectory(templateDir, targetDirectory, {
     filter: createFilter(
-      /(^|\/|\\)(dist|node_modules|\.cache|CHANGELOG\.md)(\/|\\|$)/i,
+      /(^|\/|\\)(dist|node_modules|\.cache|.turbo|CHANGELOG\.md)(\/|\\|$)/i,
+      pkgJson['h2:diff']?.['skip-files'] || [],
     ),
   });
   await copyDirectory(diffDirectory, targetDirectory, {
     filter: createFilter(
-      /(^|\/|\\)(dist|node_modules|\.cache|package\.json|tsconfig\.json)(\/|\\|$)/i,
+      /(^|\/|\\)(dist|node_modules|\.cache|.turbo|package\.json|tsconfig\.json)(\/|\\|$)/i,
     ),
   });
 
   await mergePackageJson(diffDirectory, targetDirectory, {
+    ignoredKeys: ['h2:diff'],
     onResult: (pkgJson) => {
       for (const key of ['build', 'dev']) {
         const scriptLine = pkgJson.scripts?.[key];
@@ -125,7 +135,13 @@ export async function copyDiffBuild(
 ) {
   const targetDist = joinPath(diffDirectory, 'dist');
   await removeDirectory(targetDist);
-  await copyDirectory(joinPath(targetDirectory, 'dist'), targetDist, {
-    overwrite: true,
-  });
+  await Promise.all([
+    copyDirectory(joinPath(targetDirectory, 'dist'), targetDist, {
+      overwrite: true,
+    }),
+    copyFile(
+      joinPath(targetDirectory, '.env'),
+      joinPath(diffDirectory, '.env'),
+    ),
+  ]);
 }
