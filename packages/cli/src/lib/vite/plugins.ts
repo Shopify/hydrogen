@@ -25,6 +25,9 @@ import {H2O_BINDING_NAME, createLogRequestEvent} from '../request-events.js';
  * @experimental
  */
 export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
+  const isRemixChildCompiler = (config: ResolvedConfig) =>
+    !config.plugins?.some((plugin) => plugin.name === 'remix');
+
   return [
     {
       name: 'hydrogen:main',
@@ -52,6 +55,7 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
           // Pass the setup functions to the Oxygen runtime.
           ...setH2OPluginContext({
             setupScripts: [setupRemixDevServerHooks],
+            shouldStartRuntime: (config) => !isRemixChildCompiler(config),
             services: {
               [H2O_BINDING_NAME]: createLogRequestEvent({
                 transformLocation: (partialLocation) =>
@@ -118,13 +122,13 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
         };
       },
       configureServer(viteDevServer) {
-        if (isRemixChildCompiler(viteDevServer.config)) return;
-
         resolvedConfig = viteDevServer.config;
 
         // Get options from Hydrogen plugin and CLI.
-        const {cliOptions, setupScripts, services} =
-          getH2OPluginContext(viteDevServer.config) || {};
+        const {shouldStartRuntime, cliOptions, setupScripts, services} =
+          getH2OPluginContext(resolvedConfig) || {};
+
+        if (shouldStartRuntime && !shouldStartRuntime(resolvedConfig)) return;
 
         const workerEntryFile =
           cliOptions?.ssrEntry ?? pluginOptions.ssrEntry ?? DEFAULT_SSR_ENTRY;
@@ -180,8 +184,4 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
       },
     },
   ];
-}
-
-function isRemixChildCompiler(config: ResolvedConfig) {
-  return !config.plugins?.some((plugin) => plugin.name === 'remix');
 }

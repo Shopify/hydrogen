@@ -6,6 +6,7 @@ import {
   outputInfo,
   outputWarn,
 } from '@shopify/cli-kit/node/output';
+import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {writeFile} from '@shopify/cli-kit/node/fs';
 import {
@@ -15,7 +16,6 @@ import {
 } from '@shopify/cli-kit/node/git';
 import {relativePath, resolvePath} from '@shopify/cli-kit/node/path';
 import {
-  renderFatalError,
   renderSelectPrompt,
   renderSuccess,
   renderTasks,
@@ -31,7 +31,6 @@ import {
   DeploymentVerificationDetailsResponse,
   parseToken,
 } from '@shopify/oxygen-cli/deploy';
-import {loadEnvironmentVariableFile} from '@shopify/oxygen-cli/utils';
 
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
@@ -76,6 +75,11 @@ export default class Deploy extends Command {
         'Forces a deployment to proceed if there are uncommited changes in its Git repository.',
       default: false,
       env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
+      required: false,
+    }),
+    'no-verify': Flags.boolean({
+      description: 'Skip the routability verification step after deployment.',
+      default: false,
       required: false,
     }),
     'auth-bypass-token': Flags.boolean({
@@ -171,6 +175,7 @@ interface OxygenDeploymentOptions {
   environmentTag?: string;
   environmentFile?: string;
   force: boolean;
+  noVerify: boolean;
   lockfileCheck: boolean;
   jsonOutput: boolean;
   path: string;
@@ -216,6 +221,7 @@ export async function runDeploy(
     environmentTag,
     environmentFile,
     force: forceOnUncommitedChanges,
+    noVerify,
     lockfileCheck,
     jsonOutput,
     path: root,
@@ -279,14 +285,14 @@ export async function runDeploy(
   let overriddenEnvironmentVariables;
 
   if (environmentFile) {
-    try {
-      overriddenEnvironmentVariables =
-        loadEnvironmentVariableFile(environmentFile);
-    } catch (error) {
-      throw new AbortError(
-        `Could not load environment file at ${environmentFile}`,
-      );
-    }
+    const {variables} = await readAndParseDotEnv(environmentFile);
+    overriddenEnvironmentVariables = Object.entries(variables).map(
+      ([key, value]) => ({
+        isSecret: true,
+        key,
+        value,
+      }),
+    );
   }
 
   if (!isCI) {
@@ -389,7 +395,7 @@ export async function runDeploy(
       ...(metadataUser ? {user: metadataUser} : {}),
       ...(metadataVersion ? {version: metadataVersion} : {}),
     },
-    skipVerification: false,
+    skipVerification: noVerify,
     rootPath: root,
     skipBuild: false,
     workerOnly: false,
@@ -488,6 +494,7 @@ export async function runDeploy(
       {
         title: 'Verifying deployment is routable',
         task: async () => await routableCheckPromise,
+        skip: () => noVerify,
       },
     ]);
   };

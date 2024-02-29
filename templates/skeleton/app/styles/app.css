@@ -292,6 +292,15 @@ aside li {
   margin-bottom: 0.5rem;
 }
 
+.search-results-item a {
+  display: flex;
+  flex: row;
+  align-items: center;
+  gap: 1rem;
+}
+
+
+
 /*
 * --------------------------------------------------
 * routes/__index

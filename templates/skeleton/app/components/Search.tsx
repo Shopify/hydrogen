@@ -3,11 +3,11 @@ import {
   Form,
   useParams,
   useFetcher,
-  useFetchers,
   type FormProps,
 } from '@remix-run/react';
 import {Image, Money, Pagination} from '@shopify/hydrogen';
 import React, {useRef, useEffect} from 'react';
+import {applyTrackingParams} from '~/lib/search';
 
 import type {
   PredictiveProductFragment,
@@ -104,7 +104,10 @@ export function SearchForm({searchTerm}: {searchTerm: string}) {
 
 export function SearchResults({
   results,
-}: Pick<FetchSearchResultsReturn['searchResults'], 'results'>) {
+  searchTerm,
+}: Pick<FetchSearchResultsReturn['searchResults'], 'results'> & {
+  searchTerm: string;
+}) {
   if (!results) {
     return null;
   }
@@ -128,6 +131,7 @@ export function SearchResults({
               <SearchResultsProductsGrid
                 key="products"
                 products={productResults}
+                searchTerm={searchTerm}
               />
             ) : null;
           }
@@ -148,19 +152,44 @@ export function SearchResults({
   );
 }
 
-function SearchResultsProductsGrid({products}: Pick<SearchQuery, 'products'>) {
+function SearchResultsProductsGrid({
+  products,
+  searchTerm,
+}: Pick<SearchQuery, 'products'> & {searchTerm: string}) {
   return (
     <div className="search-result">
       <h2>Products</h2>
       <Pagination connection={products}>
         {({nodes, isLoading, NextLink, PreviousLink}) => {
-          const itemsMarkup = nodes.map((product) => (
-            <div className="search-results-item" key={product.id}>
-              <Link prefetch="intent" to={`/products/${product.handle}`}>
-                <span>{product.title}</span>
-              </Link>
-            </div>
-          ));
+          const ItemsMarkup = nodes.map((product) => {
+            const trackingParams = applyTrackingParams(
+              product,
+              `q=${encodeURIComponent(searchTerm)}`,
+            );
+
+            return (
+              <div className="search-results-item" key={product.id}>
+                <Link
+                  prefetch="intent"
+                  to={`/products/${product.handle}${trackingParams}`}
+                >
+                  {product.variants.nodes[0].image && (
+                    <Image
+                      data={product.variants.nodes[0].image}
+                      alt={product.title}
+                      width={50}
+                    />
+                  )}
+                  <div>
+                    <p>{product.title}</p>
+                    <small>
+                      <Money data={product.variants.nodes[0].price} />
+                    </small>
+                  </div>
+                </Link>
+              </div>
+            );
+          });
           return (
             <div>
               <div>
@@ -169,7 +198,7 @@ function SearchResultsProductsGrid({products}: Pick<SearchQuery, 'products'>) {
                 </PreviousLink>
               </div>
               <div>
-                {itemsMarkup}
+                {ItemsMarkup}
                 <br />
               </div>
               <div>
@@ -251,7 +280,9 @@ export function PredictiveSearchForm({
   ...props
 }: SearchFromProps) {
   const params = useParams();
-  const fetcher = useFetcher<NormalizedPredictiveSearchResults>();
+  const fetcher = useFetcher<NormalizedPredictiveSearchResults>({
+    key: 'search',
+  });
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   function fetchResults(event: React.ChangeEvent<HTMLInputElement>) {
@@ -318,7 +349,6 @@ export function PredictiveSearchResults() {
           />
         ))}
       </div>
-      {/* view all results /search?q=term */}
       {searchTerm.current && (
         <Link onClick={goToSearchResult} to={`/search?q=${searchTerm.current}`}>
           <p>
@@ -425,10 +455,9 @@ type UseSearchReturn = NormalizedPredictiveSearch & {
 };
 
 function usePredictiveSearch(): UseSearchReturn {
-  const fetchers = useFetchers();
+  const searchFetcher = useFetcher<FetchSearchResultsReturn>({key: 'search'});
   const searchTerm = useRef<string>('');
   const searchInputRef = useRef<HTMLInputElement | null>(null);
-  const searchFetcher = fetchers.find((fetcher) => fetcher.data?.searchResults);
 
   if (searchFetcher?.state === 'loading') {
     searchTerm.current = (searchFetcher.formData?.get('q') || '') as string;

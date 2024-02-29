@@ -43,7 +43,6 @@ import {
   minifyQuery,
   assertQuery,
   assertMutation,
-  extractQueryName,
   throwErrorWithGqlLink,
   GraphQLError,
   type GraphQLApiResponse,
