@@ -25,7 +25,7 @@ import {linkStorefront} from '../link.js';
 import {getStorefrontEnvVariables} from '../../../lib/graphql/admin/pull-variables.js';
 import {pushStorefrontEnvVariables} from '../../../lib/graphql/admin/push-variables.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
+import {readAndParseDotEnv, createDotEnvFileLine} from '@shopify/cli-kit/node/dot-env';
 
 export default class EnvPush extends Command {
   static description =
@@ -173,7 +173,7 @@ export async function runEnvPush({
   const comparableRemoteVars =
     remoteVars
       .sort((a, b) => a.key.localeCompare(b.key))
-      .map(({key, value}) => `${key}=${value}`)
+      .map(({key, value}) => createDotEnvFileLine(key, value))
       .join('\n') + '\n';
 
   const compareableLocalVars =
@@ -183,7 +183,7 @@ export async function runEnvPush({
         const {isSecret, readOnly} =
           environmentVariables.find((variable) => variable.key === key) ?? {};
         if (isSecret || readOnly) return acc;
-        return [...acc, `${key}=${localVariables[key]}`];
+        return [...acc, createDotEnvFileLine(key, localVariables[key])];
       }, [] as string[])
       .join('\n') + '\n';
 
