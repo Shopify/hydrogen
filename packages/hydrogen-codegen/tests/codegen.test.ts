@@ -60,9 +60,6 @@ describe('Hydrogen Codegen', async () => {
       /interface GeneratedMutationTypes \{\s+"#graphql/,
     );
 
-    // Augments query/mutation types
-    expect(generatedCode).toMatch(getDefaultOptions().interfaceExtensionCode);
-
     expect(generatedCode).toMatchInlineSnapshot(`
       "/* eslint-disable eslint-comments/disable-enable-pair */
       /* eslint-disable eslint-comments/no-unlimited-disable */

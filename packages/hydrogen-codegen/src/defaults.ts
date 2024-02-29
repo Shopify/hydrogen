@@ -1,36 +1,56 @@
-import {
-  GENERATED_MUTATION_INTERFACE_NAME,
-  GENERATED_QUERY_INTERFACE_NAME,
-} from './plugin.js';
+import type {PresetConfig} from '@shopify/graphql-codegen';
+
+const QUERIES_PLACEHOLDER = '%queries%';
+const MUTATIONS_PLACEHOLDER = '%mutations%';
 
 const sfapiDefaultInterfaceExtensionCode = `
 declare module '@shopify/hydrogen' {
-  interface StorefrontQueries extends ${GENERATED_QUERY_INTERFACE_NAME} {}
-  interface StorefrontMutations extends ${GENERATED_MUTATION_INTERFACE_NAME} {}
+  interface StorefrontQueries extends ${QUERIES_PLACEHOLDER} {}
+  interface StorefrontMutations extends ${MUTATIONS_PLACEHOLDER} {}
 }`;
 
 const caapiDefaultInterfaceExtensionCode = `
 declare module '@shopify/hydrogen' {
-  interface CustomerAccountQueries extends ${GENERATED_QUERY_INTERFACE_NAME} {}
-  interface CustomerAccountMutations extends ${GENERATED_MUTATION_INTERFACE_NAME} {}
+  interface CustomerAccountQueries extends ${QUERIES_PLACEHOLDER} {}
+  interface CustomerAccountMutations extends ${MUTATIONS_PLACEHOLDER} {}
 }`;
+
+function replacePlaceholders(
+  code: string,
+  queryType: string,
+  mutationType: string,
+) {
+  return code
+    .replace(QUERIES_PLACEHOLDER, queryType)
+    .replace(MUTATIONS_PLACEHOLDER, mutationType);
+}
 
 type DefaultValues = {
   importTypesFrom: string;
   namespacedImportName: string;
-  interfaceExtensionCode: string;
+  interfaceExtensionCode: PresetConfig['interfaceExtension'];
 };
 
 const sfapiDefaultValues: DefaultValues = {
   importTypesFrom: '@shopify/hydrogen/storefront-api-types',
   namespacedImportName: 'StorefrontAPI',
-  interfaceExtensionCode: sfapiDefaultInterfaceExtensionCode,
+  interfaceExtensionCode: ({queryType, mutationType}) =>
+    replacePlaceholders(
+      sfapiDefaultInterfaceExtensionCode,
+      queryType,
+      mutationType,
+    ),
 };
 
 const caapiDefaultValues: DefaultValues = {
   importTypesFrom: '@shopify/hydrogen/customer-account-api-types',
   namespacedImportName: 'CustomerAccountAPI',
-  interfaceExtensionCode: caapiDefaultInterfaceExtensionCode,
+  interfaceExtensionCode: ({queryType, mutationType}) =>
+    replacePlaceholders(
+      caapiDefaultInterfaceExtensionCode,
+      queryType,
+      mutationType,
+    ),
 };
 
 export function getDefaultOptions(outputFile = '') {
