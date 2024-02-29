@@ -38,13 +38,12 @@ create are labeled with 🆕.
 | 🆕 [`app/sections/Sections.tsx`](app/sections/Sections.tsx)                               | A component that renders an array of content sections                                                                                    |
 | 🆕 [`app/sections/SectionHero.tsx`](app/sections/SectionHero.tsx)                         | A component that renders the SectionHero definition and entries                                                                          |
 | 🆕 [`app/sections/SectionFeaturedProducts.tsx`](app/sections/SectionFeaturedProducts.tsx) | A component that renders the SectionFeaturedProducts definition and entries                                                              |
-| 🆕 [`app/sections/SectionRichText.tsx`](app/sections/SectionRichText.tsx)                 | A component that renders the SectionRichText definition and entries                                                                      |
 | 🆕 [`app/sections/SectionStoreProfile.tsx`](app/sections/SectionStoreProfile.tsx)         | A component that renders the SectionStoreProfile definition and entries                                                                  |
 | 🆕 [`app/sections/SectionStores.tsx`](app/sections/SectionStores.tsx)                     | A component that renders the SectionStores definition and entries                                                                        |
 | 🆕 [`app/components/EditRoute.tsx`](app/components/EditRoute.tsx)                         | A component that overlays an Edit Route button in routes with metaobjects for easy access to the metaobject entry in the admin dashboard |
-| 🆕 [`app/lib/parseSection.ts`](app/sections/parseSection.tsx)                             | A utility that parses and cleans up SFAPI metaobject responses for easier consumption                                                    |
+| 🆕 [`app/utils/parseSection.ts`](app/utils/parseSection.ts)                             | A utility that parses and cleans up SFAPI metaobject responses for easier consumption                                                    |
 | 🆕 [`app/routes/stores._index.tsx`](app/routes/stores._index.tsx)                         | A route that displays a collection of custom store entries                                                                               |
-| 🆕 [`app/routes/store.$.tsx`](app/routes/store.$.tsx)                                     | A dynamic route that displays custom store metaobject profiles                                                                           |
+| 🆕 [`app/routes/stores.$name.tsx`](app/routes/stores.$name.tsx)                                     | A dynamic route that displays custom store metaobject profiles                                                                           |
 | [`app/routes/_index.tsx`](app/routes/_index.tsx)                                          | Modified home route to display metaobjects route content / sections                                                                      |
 
 ## Dependencies
