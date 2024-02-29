@@ -4,6 +4,7 @@ import type {ResolvedConfig, UserConfig} from 'vite';
 import type {InternalMiniOxygenOptions} from './mini-oxygen.js';
 
 export type H2OPluginContext = InternalMiniOxygenOptions & {
+  shouldStartRuntime?: (config: ResolvedConfig) => boolean;
   cliOptions?: Partial<
     HydrogenPluginOptions &
       OxygenPluginOptions & {
