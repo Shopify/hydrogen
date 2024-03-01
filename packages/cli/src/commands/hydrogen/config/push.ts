@@ -123,19 +123,6 @@ export async function runConfigPush({
       error.userErrors = userErrors;
       throw error;
     }
-
-    renderInfo({
-      headline: 'Customer Account Application setup updated successfully',
-      body: {
-        list: {
-          items: [
-            redirectUri ? `Callback URI: ${redirectUri}\n` : '',
-            javascriptOrigin ? `Javascript origin: ${javascriptOrigin}\n` : '',
-            logoutUri ? `Logout URI: ${logoutUri}` : '',
-          ],
-        },
-      },
-    });
   } catch (error: any) {
     const errors: string[] = error?.userErrors?.length
       ? error.userErrors.map(

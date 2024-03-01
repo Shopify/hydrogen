@@ -43,7 +43,6 @@ import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {findPort} from '../../lib/find-port.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
-import {link} from 'fs-extra';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -168,8 +167,10 @@ export async function runDev({
     process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
   }
 
-  const [remixConfig, {shop, storefront, shopifyConfigAutoUpdate}] =
-    await Promise.all([reloadConfig(), getConfig(root)]);
+  const [remixConfig, {shop, storefront}] = await Promise.all([
+    reloadConfig(),
+    getConfig(root),
+  ]);
 
   assertOxygenChecks(remixConfig);
 
@@ -224,7 +225,10 @@ export async function runDev({
         host = await pollTunnelURL(tunnel);
       }
 
-      await confirmedAndPushShopifyConfig(root, host, shopifyConfigAutoUpdate);
+      await runConfigPush({
+        path: root,
+        devOrigin: host,
+      });
     }
 
     enhanceH2Logs({host, ...remixConfig});
@@ -369,62 +373,4 @@ export async function runDev({
       await Promise.all([closeWatcher(), miniOxygen?.close()]);
     },
   };
-}
-
-async function confirmedAndPushShopifyConfig(
-  root: string,
-  devOrigin: string,
-  shopifyConfigAutoUpdate?: boolean,
-) {
-  let autoSaveConfirmation = shopifyConfigAutoUpdate;
-  if (typeof autoSaveConfirmation === 'undefined') {
-    autoSaveConfirmation = await renderConfirmationPrompt({
-      message: `Would you like Shopify to automatically update Hydrogen storefront's Customer Account application setup with tunneling url?`,
-      confirmationMessage: 'Yes',
-      cancellationMessage: 'No',
-    });
-
-    await setShopifyConfigAutoUpdate(root, autoSaveConfirmation);
-  }
-
-  if (autoSaveConfirmation) {
-    await runConfigPush({
-      path: root,
-      devOrigin,
-    });
-  } else {
-    const cliCommand = await getCliCommand();
-
-    renderError({
-      headline:
-        'Your tunneling url was not use to update Customer Account application setup',
-      body: [
-        'This setting is required to use',
-        {
-          link: {
-            label: 'Customer Account API',
-            url: 'https://shopify.dev/docs/api/customer',
-          },
-        },
-      ],
-      nextSteps: [
-        [
-          'Use',
-          {
-            command: `${cliCommand} config push --dev-origin ${devOrigin}`,
-          },
-          'to push the config in a separate Terminal',
-        ],
-        [
-          'For manual update, follow instruction on',
-          {
-            link: {
-              label: 'application setup',
-              url: 'https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#update-the-application-setup',
-            },
-          },
-        ],
-      ],
-    });
-  }
 }
