@@ -61,6 +61,7 @@ export const useRootLoaderData = () => {
   const [root] = useMatches();
   return root?.data;
 };
+// [END project-structure.head-links]
 // [START project-structure.root-loader]
 /**
  * @param {LoaderFunctionArgs}
