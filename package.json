@@ -91,7 +91,10 @@
       "prettier --write"
     ]
   },
-  "dependencies": {
-    "fast-array-diff": "^1.0.1"
+  "overrides": {
+    "@oclif/core": "3.15.1",
+    "@oclif/plugin-commands": "3.1.0",
+    "@oclif/plugin-help": "6.0.9",
+    "@oclif/plugin-plugins": "4.2.6"
   }
 }

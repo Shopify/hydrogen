@@ -75,7 +75,7 @@ export default class DevVite extends Command {
 
 type DevOptions = {
   entry?: string;
-  port: number;
+  port?: number;
   path?: string;
   codegen?: boolean;
   host?: boolean;
