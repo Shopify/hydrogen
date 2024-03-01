@@ -17,10 +17,11 @@ import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
 
+// [START project-structure.should-revalidate]
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
  * @type {ShouldRevalidateFunction}
- */
+*/
 export const shouldRevalidate = ({formMethod, currentUrl, nextUrl}) => {
   // revalidate when a mutation is performed e.g add to cart, login...
   if (formMethod && formMethod !== 'GET') {
@@ -34,7 +35,8 @@ export const shouldRevalidate = ({formMethod, currentUrl, nextUrl}) => {
 
   return false;
 };
-
+// [END project-structure.should-revalidate]
+// [START project-structure.head-links]
 export function links() {
   return [
     {rel: 'stylesheet', href: resetStyles},
@@ -59,10 +61,10 @@ export const useRootLoaderData = () => {
   const [root] = useMatches();
   return root?.data;
 };
-
+// [START project-structure.root-loader]
 /**
  * @param {LoaderFunctionArgs}
- */
+*/
 export async function loader({context}) {
   const {storefront, customerAccount, cart} = context;
   const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
@@ -99,9 +101,10 @@ export async function loader({context}) {
         'Set-Cookie': await context.session.commit(),
       },
     },
-  );
-}
-
+    );
+  }
+// [END project-structure.root-loader]
+// [START project-structure.root-layout]
 export default function App() {
   const nonce = useNonce();
   /** @type {LoaderReturnData} */
@@ -126,7 +129,8 @@ export default function App() {
     </html>
   );
 }
-
+// [END project-structure.root-layout]
+// [START project-structure.root-error]
 export function ErrorBoundary() {
   const error = useRouteError();
   const rootData = useRootLoaderData();
@@ -168,7 +172,8 @@ export function ErrorBoundary() {
     </html>
   );
 }
-
+// [END project-structure.root-error]
+// [START project-structure.query-fragments]
 const MENU_FRAGMENT = `#graphql
   fragment MenuItem on MenuItem {
     id
@@ -238,7 +243,7 @@ const FOOTER_QUERY = `#graphql
   }
   ${MENU_FRAGMENT}
 `;
-
+// [END project-structure.query-fragments]
 /** @typedef {import('@shopify/remix-oxygen').LoaderFunctionArgs} LoaderFunctionArgs */
 /** @typedef {import('@remix-run/react').ShouldRevalidateFunction} ShouldRevalidateFunction */
 /** @typedef {import('@shopify/hydrogen/storefront-api-types').CustomerAccessToken} CustomerAccessToken */
