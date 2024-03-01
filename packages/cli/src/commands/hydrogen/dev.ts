@@ -46,10 +46,10 @@ export default class Dev extends Command {
   static description =
     'Runs Hydrogen storefront in an Oxygen worker for development.';
   static flags = {
-    path: commonFlags.path,
+    ...commonFlags.path,
     port: commonFlags.port,
     worker: deprecated('--worker', {isBoolean: true}),
-    legacyRuntime: commonFlags.legacyRuntime,
+    ['legacy-runtime']: commonFlags['legacy-runtime'],
     codegen: overrideFlag(commonFlags.codegen, {
       description:
         commonFlags.codegen.description! +

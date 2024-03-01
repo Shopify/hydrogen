@@ -120,7 +120,9 @@ export async function runDev({
 
   const root = appPath ?? process.cwd();
 
+  let appName: string | undefined;
   const envPromise = getConfig(root).then(({shop, storefront}) => {
+    appName = storefront?.title;
     const fetchRemote = !!shop && !!storefront?.id;
     return getAllEnvironmentVariables({root, fetchRemote, envBranch});
   });
@@ -198,7 +200,11 @@ export async function runDev({
       finalHost = tunnelUrl;
     } else {
       outputInfo('Starting tunnel...');
-      const tunnel = await startTunnelPlugin(cliConfig, appPort, 'cloudflare');
+      const tunnel = await startTunnelPlugin(
+        cliConfig,
+        publicPort,
+        'cloudflare',
+      );
       finalHost = await pollTunnelURL(tunnel);
     }
   }
@@ -223,9 +229,7 @@ export async function runDev({
         `\n${colors.dim(
           'View server network requests:',
         )} ${finalHost}/subrequest-profiler`,
-      ].map((value, index) => ({
-        subdued: `${index != 0 ? '\n' : ''}${value}`,
-      })),
+      ].map((value, index) => `${index != 0 ? '\n' : ''}${value}`),
     });
   }
 
@@ -237,6 +241,7 @@ export async function runDev({
 
   if (customSections.length > 0) {
     renderInfo({
+      body: [`View ${appName ?? 'Hydrogen'} app:`, {link: {url: finalHost}}],
       customSections,
     });
   }

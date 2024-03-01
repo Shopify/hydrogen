@@ -473,11 +473,23 @@
       "pluginType": "core",
       "aliases": [],
       "flags": {
-        "path": {
-          "name": "path",
-          "type": "option",
-          "description": "The path to the directory of the Hydrogen storefront. The default is the current directory.",
-          "multiple": false
+        "parse": {
+          "name": "parse"
+        },
+        "description": {
+          "name": "description"
+        },
+        "env": {
+          "name": "env"
+        },
+        "input": {
+          "name": "input"
+        },
+        "multiple": {
+          "name": "multiple"
+        },
+        "type": {
+          "name": "type"
         },
         "port": {
           "name": "port",
