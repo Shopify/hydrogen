@@ -50,20 +50,13 @@ export function AnalyticsProvider({
           ...payload
         };
         if (canTrack()) {
-          if (eventsHoldQueue.length > 0) {
-            // Flush hold queue
-            eventsHoldQueue.forEach((holdEvent) => {
-              (subscribers.get(holdEvent.event) ?? new Map()).forEach((callback) => {
-                callback(holdEvent.payload);
-              });
-            });
-            eventsHoldQueue.length = 0;
-          }
           (subscribers.get(event) ?? new Map()).forEach((callback) => {
-            callback(stampedPayload);
+            try {
+              callback(stampedPayload);
+            } catch (error) {
+              console.error(error);
+            }
           });
-        } else {
-          eventsHoldQueue.push({event, payload: stampedPayload});
         }
       },
       subscribe: (event: string, callback: (payload: Record<string, unknown>) => void) => {

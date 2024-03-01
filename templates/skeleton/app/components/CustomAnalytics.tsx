@@ -5,7 +5,7 @@ export function CustomAnalytics() {
   const {subscribe} = useAnalyticsProvider();
 
   useEffect(() => {
-    subscribe('pageViewed', (payload) => {
+    subscribe('page_viewed', (payload) => {
       console.log('CustomAnalytics - Page viewed:', payload);
     });
     subscribe('product_viewed', (payload) => {

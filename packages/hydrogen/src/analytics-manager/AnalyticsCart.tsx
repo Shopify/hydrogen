@@ -27,7 +27,7 @@ export function AnalyticsCart({
 
     // Compare previous cart against current cart lines
     // Detect quantity changes and missing cart lines
-    previousCart?.lines.nodes.forEach((line) => {
+    previousCart?.lines?.nodes?.forEach((line) => {
       const matchedLineId = currentCart?.lines.nodes.filter((currentLine) => line.id === currentLine.id);
       if (matchedLineId.length === 1) {
         const matchedLine = matchedLineId[0];
@@ -52,7 +52,7 @@ export function AnalyticsCart({
 
     // Compare current cart against previous cart lines
     // Detect new cart lines
-    currentCart?.lines.nodes.forEach((line) => {
+    currentCart?.lines?.nodes?.forEach((line) => {
       const matchedLineId = previousCart?.lines.nodes.filter((previousLine) => line.id === previousLine.id);
       if (!matchedLineId || matchedLineId.length === 0) {
         publish('product_added_to_cart', {

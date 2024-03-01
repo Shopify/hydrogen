@@ -24,7 +24,8 @@ import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
 import { CustomAnalytics } from './components/CustomAnalytics';
 import { ShopifyAnalytics } from './components/ShopifyAnalytics';
-import { Suspense } from 'react';
+import { Suspense} from 'react';
+import {getCustomerPrivacy, useCustomerPrivacyApi, useCustomerPrivacyApiWithPrivacyBanner } from './components/ConsentManagementApi';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -74,6 +75,7 @@ export const useRootLoaderData = () => {
 export async function loader({context}: LoaderFunctionArgs) {
   const {storefront, customerAccount, cart} = context;
   const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
+  const env = context.env
 
   const isLoggedInPromise = customerAccount.isLoggedIn();
   const cartPromise = cart.get();
@@ -101,7 +103,7 @@ export async function loader({context}: LoaderFunctionArgs) {
       shopId: data.shop.id,
       acceptedLanguage: data.localization.language.isoCode,
       currency: data.localization.country.currency.isoCode,
-      hydrogenSubchannelId: context.env.PUBLIC_STOREFRONT_ID || '0',
+      hydrogenSubchannelId: env.PUBLIC_STOREFRONT_ID || '0',
     }
   });
 
@@ -113,6 +115,12 @@ export async function loader({context}: LoaderFunctionArgs) {
       isLoggedIn: isLoggedInPromise,
       publicStoreDomain,
       shop: shopPromise,
+      consentConfig: {
+        shopDomain: env.PUBLIC_STORE_DOMAIN,
+        checkoutRootDomain: env.PUBLIC_CHECKOUT_DOMAIN,
+        storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+        storefrontRootDomain: 'localhost', // env.PUBLIC_STORE_DOMAIN,
+        },
     },
     {
       headers: {
@@ -126,6 +134,10 @@ export default function App() {
   const nonce = useNonce();
   const data = useLoaderData<typeof loader>();
 
+  useCustomerPrivacyApiWithPrivacyBanner({
+    consentConfig: data.consentConfig
+  });
+
   return (
     <html lang="en">
       <head>
@@ -136,7 +148,10 @@ export default function App() {
       </head>
       <body>
         <AnalyticsProvider
-          canTrack={() => true}
+          canTrack={() => {
+            const customerPrivacy = getCustomerPrivacy();
+            return customerPrivacy?.userCanBeTracked() || false;
+          }}
         >
           <Layout {...data}>
             <Outlet />

@@ -1,6 +1,7 @@
 import { AnalyticsEventName, ShopifyPageViewPayload, getClientBrowserParameters, sendShopifyAnalytics, useAnalyticsProvider, useShopifyCookies } from "@shopify/hydrogen";
 import { CurrencyCode, LanguageCode } from "@shopify/hydrogen/storefront-api-types";
 import { useEffect } from "react";
+import { getCustomerPrivacyRequired } from "./ConsentManagementApi";
 
 type ShopAnalytic = {
   shopId: string;
@@ -9,18 +10,23 @@ type ShopAnalytic = {
   hydrogenSubchannelId: string;
 };
 
-export function ShopifyAnalytics({data}: {data: ShopAnalytic}) {
+export function ShopifyAnalytics({
+  data
+}: {
+  data: ShopAnalytic;
+}) {
   const {subscribe, canTrack} = useAnalyticsProvider();
   const hasUserConsent = canTrack();
   useShopifyCookies({hasUserConsent});
 
   useEffect(() => {
-    subscribe('page_viewed', (payload) => {
-      console.log('ShopifyAnalytics - Page viewed:', payload);
+    subscribe('page_viewed', () => {
+      const customerPrivacy = getCustomerPrivacyRequired();
+      console.log('ShopifyAnalytics - Page viewed:', customerPrivacy);
 
       const eventPayload: ShopifyPageViewPayload = {
         ...data,
-        hasUserConsent,
+        hasUserConsent: customerPrivacy?.userCanBeTracked() || false,
         ...getClientBrowserParameters(),
       };
 
