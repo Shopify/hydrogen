@@ -21,7 +21,7 @@ import {Layout} from '~/components/Layout';
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
  * @type {ShouldRevalidateFunction}
-*/
+ */
 export const shouldRevalidate = ({formMethod, currentUrl, nextUrl}) => {
   // revalidate when a mutation is performed e.g add to cart, login...
   if (formMethod && formMethod !== 'GET') {
@@ -52,6 +52,7 @@ export function links() {
     {rel: 'icon', type: 'image/svg+xml', href: favicon},
   ];
 }
+// [END project-structure.head-links]
 
 /**
  * Access the result of the root loader from a React component.
@@ -61,11 +62,10 @@ export const useRootLoaderData = () => {
   const [root] = useMatches();
   return root?.data;
 };
-// [END project-structure.head-links]
 // [START project-structure.root-loader]
 /**
  * @param {LoaderFunctionArgs}
-*/
+ */
 export async function loader({context}) {
   const {storefront, customerAccount, cart} = context;
   const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
@@ -102,8 +102,8 @@ export async function loader({context}) {
         'Set-Cookie': await context.session.commit(),
       },
     },
-    );
-  }
+  );
+}
 // [END project-structure.root-loader]
 // [START project-structure.root-layout]
 export default function App() {
