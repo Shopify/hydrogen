@@ -29,7 +29,7 @@
           "type": "boolean"
         },
         "lockfile-check": {
-          "description": "Checks that there is exactly 1 valid lockfile in the project.",
+          "description": "Checks that there is exactly 1 valid lockfile in the project. Defaults to true, use `--no-lockfile-check` to disable.",
           "env": "SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK",
           "name": "lockfile-check",
           "allowNo": true,
@@ -98,7 +98,7 @@
           "type": "option"
         },
         "sourcemap": {
-          "description": "Controls whether sourcemaps are generated. Default to true, use `--no-sourcemaps` to disable.",
+          "description": "Generate sourcemaps for the build.",
           "env": "SHOPIFY_HYDROGEN_FLAG_SOURCEMAP",
           "name": "sourcemap",
           "allowNo": true,
@@ -447,7 +447,7 @@
           "type": "option"
         },
         "codegen": {
-          "description": "Generate types for the Storefront API queries found in your project. It updates the types on file save.",
+          "description": "Generate types for the Storefront API queries found in your project.",
           "name": "codegen",
           "required": false,
           "allowNo": false,
@@ -569,7 +569,7 @@
           "type": "boolean"
         },
         "codegen": {
-          "description": "Generate types for the Storefront API queries found in your project. It updates the types on file save.",
+          "description": "Generate types for the Storefront API queries found in your project.",
           "name": "codegen",
           "required": false,
           "allowNo": false,

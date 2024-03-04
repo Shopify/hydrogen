@@ -17,28 +17,13 @@ const WORKER_BUILD_SIZE_LIMIT = 5;
 export default class Build extends Command {
   static description = 'Builds a Hydrogen storefront for production.';
   static flags = {
-    path: commonFlags.path,
-    entry: commonFlags.entry,
-    sourcemap: Flags.boolean({
-      description: 'Generate sourcemaps for the build.',
-      env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
-      allowNo: true,
-      default: true,
-    }),
-    'lockfile-check': Flags.boolean({
-      description:
-        'Checks that there is exactly 1 valid lockfile in the project.',
-      env: 'SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK',
-      default: true,
-      allowNo: true,
-    }),
-    'disable-route-warning': Flags.boolean({
-      description: 'Disable warning about missing standard routes.',
-      env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
-    }),
-    codegen: commonFlags.codegen,
-    'codegen-config-path': commonFlags.codegenConfigPath,
-    diff: commonFlags.diff,
+    ...commonFlags.path,
+    ...commonFlags.entry,
+    ...commonFlags.sourcemap,
+    ...commonFlags.lockfileCheck,
+    ...commonFlags.disableRouteWarning,
+    ...commonFlags.codegen,
+    ...commonFlags.diff,
   };
 
   async run(): Promise<void> {

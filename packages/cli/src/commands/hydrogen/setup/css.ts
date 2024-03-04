@@ -24,9 +24,9 @@ export default class SetupCSS extends Command {
   static description = 'Setup CSS strategies for your project.';
 
   static flags = {
-    path: commonFlags.path,
-    force: commonFlags.force,
-    'install-deps': overrideFlag(commonFlags.installDeps, {default: true}),
+    ...commonFlags.path,
+    ...commonFlags.force,
+    ...overrideFlag(commonFlags.installDeps, {'install-deps': {default: true}}),
   };
 
   static args = {

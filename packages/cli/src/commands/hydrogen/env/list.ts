@@ -23,7 +23,7 @@ export default class EnvList extends Command {
     'List the environments on your linked Hydrogen storefront.';
 
   static flags = {
-    path: commonFlags.path,
+    ...commonFlags.path,
   };
 
   async run(): Promise<void> {

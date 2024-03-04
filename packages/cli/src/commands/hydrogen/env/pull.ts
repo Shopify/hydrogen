@@ -31,9 +31,9 @@ export default class EnvPull extends Command {
     'Populate your .env with variables from your Hydrogen storefront.';
 
   static flags = {
-    ['env-branch']: commonFlags.envBranch,
-    path: commonFlags.path,
-    force: commonFlags.force,
+    ...commonFlags.envBranch,
+    ...commonFlags.path,
+    ...commonFlags.force,
   };
 
   async run(): Promise<void> {

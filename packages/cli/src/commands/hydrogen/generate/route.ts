@@ -31,8 +31,8 @@ export default class GenerateRoute extends Command {
         'The param name in Remix routes for the i18n locale, if any. Example: `locale` becomes ($locale).',
       env: 'SHOPIFY_HYDROGEN_FLAG_ADAPTER',
     }),
-    force: commonFlags.force,
-    path: commonFlags.path,
+    ...commonFlags.force,
+    ...commonFlags.path,
   };
 
   static hidden: true;

@@ -9,7 +9,7 @@ export default class Unlink extends Command {
   static description = 'Unlink a local project from a Hydrogen storefront.';
 
   static flags = {
-    path: commonFlags.path,
+    ...commonFlags.path,
   };
 
   async run(): Promise<void> {
