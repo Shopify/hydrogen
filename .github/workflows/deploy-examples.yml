@@ -15,7 +15,9 @@ jobs:
       optimistic_cart_ui: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014888 }}
     steps:
       - name: Set up environment
-        run: echo "success";
+        run: |
+          echo "optimistic_cart_ui=${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014888 }}"
+          echo "success";
 
   deploy:
     name: Deploy to Oxygen
