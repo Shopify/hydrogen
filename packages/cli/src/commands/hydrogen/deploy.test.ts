@@ -16,7 +16,7 @@ import {
   GitDirectoryNotCleanError,
 } from '@shopify/cli-kit/node/git';
 
-import {deploymentLogger, oxygenDeploy} from './deploy.js';
+import {deploymentLogger, runDeploy} from './deploy.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
 import {
   CompletedDeployment,
@@ -173,7 +173,7 @@ describe('deploy', () => {
   });
 
   it('calls getOxygenDeploymentData with the correct parameters', async () => {
-    await oxygenDeploy(deployParams);
+    await runDeploy(deployParams);
     expect(getOxygenDeploymentData).toHaveBeenCalledWith({
       root: './',
       flagShop: 'snowdevil.myshopify.com',
@@ -182,7 +182,7 @@ describe('deploy', () => {
   });
 
   it('calls createDeploy with the correct parameters', async () => {
-    await oxygenDeploy(deployParams);
+    await runDeploy(deployParams);
 
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
       config: expectedConfig,
@@ -200,7 +200,7 @@ describe('deploy', () => {
       },
     });
 
-    await oxygenDeploy({
+    await runDeploy({
       ...deployParams,
       environmentFile: 'fake-env-file',
     });
@@ -225,7 +225,7 @@ describe('deploy', () => {
     vi.mocked(ensureIsClean).mockRejectedValue(
       new GitDirectoryNotCleanError('Uncommitted changes'),
     );
-    await expect(oxygenDeploy(deployParams)).rejects.toThrowError(
+    await expect(runDeploy(deployParams)).rejects.toThrowError(
       'Uncommitted changes detected',
     );
     expect(vi.mocked(createDeploy)).not.toHaveBeenCalled;
@@ -245,7 +245,7 @@ describe('deploy', () => {
       refs: 'HEAD -> main',
     });
 
-    await oxygenDeploy({
+    await runDeploy({
       ...deployParams,
       force: true,
     });
@@ -282,7 +282,7 @@ describe('deploy', () => {
       refs: 'HEAD -> main',
     });
 
-    await oxygenDeploy({
+    await runDeploy({
       ...deployParams,
       force: true,
       metadataDescription: 'cool new stuff',
@@ -314,7 +314,7 @@ describe('deploy', () => {
       refs: 'HEAD -> main',
     });
 
-    await oxygenDeploy(deployParams);
+    await runDeploy(deployParams);
 
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
       config: {...expectedConfig, environmentTag: 'main'},
@@ -333,7 +333,7 @@ describe('deploy', () => {
       ],
     });
 
-    await oxygenDeploy(deployParams);
+    await runDeploy(deployParams);
 
     expect(vi.mocked(renderSelectPrompt)).toHaveBeenCalledWith({
       message: 'Select an environment to deploy to',
@@ -367,7 +367,7 @@ describe('deploy', () => {
         'shopify-preview-environment.',
       );
 
-      await oxygenDeploy(deployParams);
+      await runDeploy(deployParams);
 
       expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
         config: {
@@ -393,7 +393,7 @@ describe('deploy', () => {
         resolve({url: 'https://a-lovely-deployment.com'});
       }) as Promise<CompletedDeployment | undefined>;
     });
-    await oxygenDeploy(params);
+    await runDeploy(params);
 
     expect(vi.mocked(runBuild)).toHaveBeenCalledWith({
       assetPath: 'some-cool-asset-path',
@@ -411,7 +411,7 @@ describe('deploy', () => {
     };
     const {buildFunction: _, ...hooks} = expectedHooks;
 
-    await oxygenDeploy(params);
+    await runDeploy(params);
 
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
       config: {
@@ -437,7 +437,7 @@ describe('deploy', () => {
       generateAuthBypassToken: true,
     };
 
-    await oxygenDeploy(ciDeployParams);
+    await runDeploy(ciDeployParams);
 
     expect(vi.mocked(writeFile)).toHaveBeenCalledWith(
       'h2_deploy_log.json',
@@ -449,7 +449,7 @@ describe('deploy', () => {
 
     vi.mocked(writeFile).mockClear();
     ciDeployParams.jsonOutput = false;
-    await oxygenDeploy(ciDeployParams);
+    await runDeploy(ciDeployParams);
     expect(vi.mocked(writeFile)).not.toHaveBeenCalled();
   });
 
@@ -469,7 +469,7 @@ describe('deploy', () => {
     });
 
     try {
-      await oxygenDeploy(deployParams);
+      await runDeploy(deployParams);
       expect(true).toBe(false);
     } catch (err) {
       if (err instanceof AbortError) {
@@ -500,7 +500,7 @@ describe('deploy', () => {
     });
 
     try {
-      await oxygenDeploy(deployParams);
+      await runDeploy(deployParams);
       expect(true).toBe(false);
     } catch (err) {
       if (err instanceof AbortError) {
@@ -533,7 +533,7 @@ describe('deploy', () => {
     });
 
     try {
-      await oxygenDeploy(deployParams);
+      await runDeploy(deployParams);
       expect(true).toBe(false);
     } catch (err) {
       if (err instanceof AbortError) {
@@ -551,7 +551,7 @@ describe('deploy', () => {
         url: 'https://a-lovely-deployment.com',
       });
 
-      await oxygenDeploy(deployParams);
+      await runDeploy(deployParams);
 
       expect(vi.mocked(renderSuccess)).toHaveBeenCalledWith({
         body: ['Successfully deployed to Oxygen'],
@@ -571,7 +571,7 @@ describe('deploy', () => {
         authBypassToken: 'some-token',
       });
 
-      await oxygenDeploy(deployParams);
+      await runDeploy(deployParams);
 
       expect(vi.mocked(renderSuccess)).toHaveBeenCalledWith({
         body: ['Successfully deployed to Oxygen'],
@@ -598,7 +598,7 @@ describe('deploy', () => {
           metadata: {},
         });
 
-        await oxygenDeploy({...deployParams, token: 'fake-token'});
+        await runDeploy({...deployParams, token: 'fake-token'});
 
         expect(vi.mocked(renderSuccess)).toHaveBeenCalledWith({
           body: ['Successfully deployed to Oxygen'],
@@ -618,7 +618,7 @@ describe('deploy', () => {
           metadata: {},
         });
 
-        await oxygenDeploy({
+        await runDeploy({
           ...deployParams,
           token: 'fake-token',
           jsonOutput: false,
