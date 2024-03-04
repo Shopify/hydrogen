@@ -9,39 +9,15 @@ permissions:
   deployments: write
 
 jobs:
-  setup_environment:
-    runs-on: ubuntu-latest
-    outputs:
-      optimistic_cart_ui: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014888 }}
-    steps:
-      - name: Set up environment
-        run: |
-          echo "optimistic_cart_ui=${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014888 }}"
-          echo "success";
-
   deploy:
     name: Deploy to Oxygen
     timeout-minutes: 30
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        examples:
-          [
-            {
-              name: 'optimistic-cart-ui',
-              token: '${{ needs.setup_environment.outputs.optimistic_cart_ui }}',
-              test: 'hi world',
-            },
-          ]
+        examples: [{name: 'optimistic-cart-ui', token: '1000014888'}]
     steps:
       - uses: actions/checkout@v4
-
-      -name: test
-        run: |
-          echo '---------------'
-          echo ${{ matrix.examples.test }}
-          echo ${{ matrix.examples.token }}
-          echo '---------------'
 
       - name: ⎔ Setup node
         uses: actions/setup-node@v4
@@ -70,6 +46,6 @@ jobs:
       - name: Build and Publish to Oxygen
         id: deploy
         working-directory: examples/${{ matrix.examples.name }}
-        run: npx shopify hydrogen deploy --no-lockfile-check --diff
-        env:
-          SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN: ${{ matrix.examples.token }}
+        run: |
+          export SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN=$OXYGEN_DEPLOYMENT_TOKEN_${{ matrix.examples.token }}
+          npx shopify hydrogen deploy --no-lockfile-check --diff
