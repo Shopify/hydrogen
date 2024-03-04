@@ -1,4 +1,4 @@
-import {useRef, Suspense} from 'react';
+import {useRef, Suspense, useState} from 'react';
 import {Disclosure, Listbox} from '@headlessui/react';
 import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, Await} from '@remix-run/react';
@@ -30,6 +30,7 @@ import {
   Link,
   AddToCartButton,
   Button,
+  QuantityInput,
 } from '~/components';
 import {getExcerpt} from '~/lib/utils';
 import {seoPayload} from '~/lib/seo.server';
@@ -217,6 +218,8 @@ export function ProductForm({
 
   const closeRef = useRef<HTMLButtonElement>(null);
 
+  const [productQuantity, setProductQuantity] = useState(1);
+
   /**
    * Likewise, we're defaulting to the first variant for purposes
    * of add to cart if there is none returned from the loader.
@@ -232,7 +235,31 @@ export function ProductForm({
 
   const productAnalytics: ShopifyAnalyticsProduct = {
     ...analytics.products[0],
-    quantity: 1,
+    quantity: productQuantity,
+  };
+
+  /**
+   * There's an additional permission: unauthenticated_read_product_inventory access inventory.
+   * https://shopify.dev/docs/api/usage/access-scopes
+   * You'll need to configure this from Storefront settings in your Hydrogen application.
+   * If you have enabled unauthenticated_read_product_inventory permission your can enable 'quantityAvailable' field
+   * in PRODUCT_VARIANT_FRAGMENT of PRODUCT_QUERY otherwise leave it disabled to avoid error
+   */
+  const quantityAvailable: number | null =
+    (selectedVariant as any).quantityAvailable || null;
+
+  const priceWithQuantity = {
+    amount: String(
+      Number(selectedVariant?.price?.amount || 0) * productQuantity,
+    ),
+    currencyCode: selectedVariant?.price?.currencyCode,
+  };
+
+  const compareAtPriceWithQuantity = {
+    amount: String(
+      Number(selectedVariant?.compareAtPrice?.amount || 0) * productQuantity,
+    ),
+    currencyCode: selectedVariant?.compareAtPrice?.currencyCode,
   };
 
   return (
@@ -336,6 +363,14 @@ export function ProductForm({
         </VariantSelector>
         {selectedVariant && (
           <div className="grid items-stretch gap-4">
+            {!isOutOfStock && (
+              <QuantityInput
+                label="Quantity"
+                maxValue={quantityAvailable}
+                minValue={1}
+                setValue={setProductQuantity}
+              />
+            )}
             {isOutOfStock ? (
               <Button variant="secondary" disabled>
                 <Text>Sold out</Text>
@@ -345,7 +380,7 @@ export function ProductForm({
                 lines={[
                   {
                     merchandiseId: selectedVariant.id!,
-                    quantity: 1,
+                    quantity: productQuantity,
                   },
                 ]}
                 variant="primary"
@@ -362,14 +397,14 @@ export function ProductForm({
                   <span>Add to Cart</span> <span>·</span>{' '}
                   <Money
                     withoutTrailingZeros
-                    data={selectedVariant?.price!}
+                    data={priceWithQuantity!}
                     as="span"
                     data-test="price"
                   />
                   {isOnSale && (
                     <Money
                       withoutTrailingZeros
-                      data={selectedVariant?.compareAtPrice!}
+                      data={compareAtPriceWithQuantity!}
                       as="span"
                       className="opacity-50 strike"
                     />
@@ -444,6 +479,9 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
   fragment ProductVariantFragment on ProductVariant {
     id
     availableForSale
+    #  If you have enabled unauthenticated_read_product_inventory permission your can enable 'quantityAvailable' field
+    #  otherwise leave it disabled to avoid error
+    #quantityAvailable
     selectedOptions {
       name
       value
