@@ -17,7 +17,11 @@ jobs:
       # In addition to updating the examples matrix below, make sure to also update
       # the add a key in the `env` block of the `Build and Publish to Oxygen` step
       matrix:
-        examples: [{name: 'optimistic-cart-ui', token: '1000014888'}]
+        examples:
+          [
+            {name: 'optimistic-cart-ui', token: '1000014888'},
+            {name: 'vite', token: '1000014892'},
+          ]
     steps:
       - uses: actions/checkout@v4
 
@@ -52,3 +56,4 @@ jobs:
           npx shopify hydrogen deploy --no-lockfile-check --diff --token=$OXYGEN_DEPLOYMENT_TOKEN_${{ matrix.examples.token }}
         env:
           OXYGEN_DEPLOYMENT_TOKEN_1000014888: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014888 }}
+          OXYGEN_DEPLOYMENT_TOKEN_1000014892: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014892 }}
