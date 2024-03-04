@@ -48,5 +48,5 @@ jobs:
           SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014875 }}
       - name: Create deployment
         run: |
-        	export DEPLOYMENT_URL=${jq -r '.url' h2_deploy_log.json}
+          export DEPLOYMENT_URL=${jq -r '.url' h2_deploy_log.json}
           echo "Deployment created at $DEPLOYMENT_URL"
