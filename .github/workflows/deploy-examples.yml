@@ -47,5 +47,6 @@ jobs:
         id: deploy
         working-directory: examples/${{ matrix.examples.name }}
         run: |
-          echo "test: $OXYGEN_DEPLOYMENT_TOKEN_${{ matrix.examples.token }}"
           npx shopify hydrogen deploy --no-lockfile-check --diff --token=$OXYGEN_DEPLOYMENT_TOKEN_${{ matrix.examples.token }}
+        environment:
+          SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN_1000014875: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014875 }}
