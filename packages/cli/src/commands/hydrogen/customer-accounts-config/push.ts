@@ -1,4 +1,3 @@
-import path from 'node:path';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
 import {
@@ -9,8 +8,8 @@ import {
 import {linkStorefront} from '../link.js';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import {getCliCommand} from '../../../lib/shell.js';
-import {AdminSession, login} from '../../../lib/auth.js';
-import {getConfig, type ShopifyConfig} from '../../../lib/shopify-config.js';
+import {login} from '../../../lib/auth.js';
+import {getConfig} from '../../../lib/shopify-config.js';
 import {replaceCustomerApplicationUrls} from '../../../lib/graphql/admin/customer-application-update.js';
 import {FatalErrorType} from '@shopify/cli-kit/node/error';
 
@@ -62,13 +61,7 @@ export async function runConfigPush({
   logoutUriRelativeUrl?: string;
   removeRegex?: string;
 }) {
-  const {session, config} = await login(root);
-  const storefrontId = await getStorefrontId(
-    root,
-    session,
-    config,
-    storefrontIdFromFlag,
-  );
+  const storefrontId = await getStorefrontId(root, storefrontIdFromFlag);
 
   if (!storefrontId) {
     renderFatalError({
@@ -97,6 +90,7 @@ export async function runConfigPush({
       return;
     }
 
+    const {session} = await login(root);
     const {success, userErrors} = await replaceCustomerApplicationUrls(
       session,
       storefrontId,
@@ -159,13 +153,13 @@ export async function runConfigPush({
   }
 }
 
-async function getStorefrontId(
+export async function getStorefrontId(
   root: string,
-  session: AdminSession,
-  config: ShopifyConfig,
   storefrontIdFromFlag?: string,
 ) {
   if (storefrontIdFromFlag) return storefrontIdFromFlag;
+
+  const {session, config} = await login(root);
 
   if (config.storefront?.id) return config.storefront.id;
 

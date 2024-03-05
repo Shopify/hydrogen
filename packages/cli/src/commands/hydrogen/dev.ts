@@ -31,12 +31,11 @@ import {
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
+import {getConfig} from '../../lib/shopify-config.js';
 import {
-  getConfig,
-  setShopifyConfigAutoUpdate,
-} from '../../lib/shopify-config.js';
-import {getCliCommand} from '../../lib/shell.js';
-import {runConfigPush} from './config/push.js';
+  runConfigPush,
+  getStorefrontId,
+} from './customer-accounts-config/push.js';
 import {setupLiveReload} from '../../lib/live-reload.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
@@ -72,8 +71,12 @@ export default class Dev extends Command {
       required: false,
     }),
     ...commonFlags.diff,
-    tunnel: commonFlags.tunnel,
-    'tunnel-url': commonFlags.tunnelUrl,
+    'with-customer-account-api': Flags.boolean({
+      description:
+        "Use tunneling for local development and push the tunneling domain to admin. Required to use Customer Account API's Oauth flow",
+      required: false,
+      default: false,
+    }),
   };
 
   async run(): Promise<void> {
@@ -104,9 +107,8 @@ type DevOptions = {
   debug?: boolean;
   sourcemap?: boolean;
   inspectorPort: number;
-  tunnel?: boolean;
-  tunnelUrl?: string;
-  cliConfig?: Config;
+  withCustomerAccountApi?: boolean;
+  cliConfig: Config;
 };
 
 export async function runDev({
@@ -121,8 +123,7 @@ export async function runDev({
   sourcemap = true,
   disableVersionCheck = false,
   inspectorPort,
-  tunnel: useTunnel = false,
-  tunnelUrl,
+  withCustomerAccountApi = false,
   cliConfig,
 }: DevOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
@@ -195,41 +196,29 @@ export async function runDev({
   async function safeStartMiniOxygen() {
     if (miniOxygen) return;
 
-    miniOxygen = await startMiniOxygen(
-      {
-        root,
-        debug,
-        assetsPort,
-        inspectorPort,
-        port: appPort,
-        watch: !liveReload,
-        buildPathWorkerFile,
-        buildPathClient,
-        env: await envPromise,
-      },
-      legacyRuntime,
-    );
+    const [tunnelHost, newMiniOxygen] = await Promise.all([
+      withCustomerAccountApi
+        ? startTunnelAndPushConfig(root, cliConfig, appPort)
+        : undefined,
+      startMiniOxygen(
+        {
+          root,
+          debug,
+          assetsPort,
+          inspectorPort,
+          port: appPort,
+          watch: !liveReload,
+          buildPathWorkerFile,
+          buildPathClient,
+          env: await envPromise,
+        },
+        legacyRuntime,
+      ),
+    ]);
 
-    let host = miniOxygen.listeningAt;
+    miniOxygen = newMiniOxygen;
 
-    if (useTunnel && cliConfig) {
-      if (tunnelUrl) {
-        host = tunnelUrl;
-      } else {
-        outputInfo('\nStarting tunnel...\n');
-        const tunnel = await startTunnelPlugin(
-          cliConfig,
-          appPort,
-          'cloudflare',
-        );
-        host = await pollTunnelURL(tunnel);
-      }
-
-      await runConfigPush({
-        path: root,
-        devOrigin: host,
-      });
-    }
+    const host = tunnelHost || miniOxygen.listeningAt;
 
     enhanceH2Logs({host, ...remixConfig});
 
@@ -373,4 +362,23 @@ export async function runDev({
       await Promise.all([closeWatcher(), miniOxygen?.close()]);
     },
   };
+}
+
+async function startTunnelAndPushConfig(
+  root: string,
+  cliConfig: Config,
+  port: number,
+  storefrontId?: string,
+) {
+  outputInfo('\nStarting tunnel...\n');
+  const tunnel = await startTunnelPlugin(cliConfig, port, 'cloudflare');
+  const host = await pollTunnelURL(tunnel);
+
+  await runConfigPush({
+    path: root,
+    devOrigin: host,
+    storefrontId,
+  });
+
+  return host;
 }
