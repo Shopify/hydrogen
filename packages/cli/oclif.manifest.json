@@ -1199,50 +1199,22 @@
         "cpu.js"
       ]
     },
-    "hydrogen:env:list": {
+    "hydrogen:setup:css": {
       "aliases": [],
-      "args": {},
-      "description": "List the environments on your linked Hydrogen storefront.",
-      "flags": {
-        "path": {
-          "description": "The path to the directory of the Hydrogen storefront. The default is the current directory.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
-          "name": "path",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
+      "args": {
+        "strategy": {
+          "description": "The CSS strategy to setup. One of tailwind,css-modules,vanilla-extract,postcss",
+          "name": "strategy",
+          "options": [
+            "tailwind",
+            "css-modules",
+            "vanilla-extract",
+            "postcss"
+          ]
         }
       },
-      "hasDynamicHelp": false,
-      "hiddenAliases": [],
-      "id": "hydrogen:env:list",
-      "pluginAlias": "@shopify/cli-hydrogen",
-      "pluginName": "@shopify/cli-hydrogen",
-      "pluginType": "core",
-      "strict": true,
-      "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "hydrogen",
-        "env",
-        "list.js"
-      ]
-    },
-    "hydrogen:env:pull": {
-      "aliases": [],
-      "args": {},
-      "description": "Populate your .env with variables from your Hydrogen storefront.",
+      "description": "Setup CSS strategies for your project.",
       "flags": {
-        "env-branch": {
-          "char": "e",
-          "description": "Specify an environment's branch name when using remote environment variables.",
-          "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH",
-          "name": "env-branch",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. The default is the current directory.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1258,11 +1230,18 @@
           "name": "force",
           "allowNo": false,
           "type": "boolean"
+        },
+        "install-deps": {
+          "description": "Auto install dependencies using the active package manager",
+          "env": "SHOPIFY_HYDROGEN_FLAG_INSTALL_DEPS",
+          "name": "install-deps",
+          "allowNo": true,
+          "type": "boolean"
         }
       },
       "hasDynamicHelp": false,
       "hiddenAliases": [],
-      "id": "hydrogen:env:pull",
+      "id": "hydrogen:setup:css",
       "pluginAlias": "@shopify/cli-hydrogen",
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
@@ -1272,31 +1251,25 @@
         "dist",
         "commands",
         "hydrogen",
-        "env",
-        "pull.js"
+        "setup",
+        "css.js"
       ]
     },
-    "hydrogen:env:push__unstable": {
+    "hydrogen:setup:markets": {
       "aliases": [],
-      "args": {},
-      "description": "Push environment variables from the local .env file to your linked Hydrogen storefront.",
+      "args": {
+        "strategy": {
+          "description": "The URL structure strategy to setup multiple markets. One of subfolders,domains,subdomains",
+          "name": "strategy",
+          "options": [
+            "subfolders",
+            "domains",
+            "subdomains"
+          ]
+        }
+      },
+      "description": "Setup support for multiple markets in your project.",
       "flags": {
-        "env": {
-          "description": "Specify an environment's name when using remote environment variables.",
-          "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_NAME",
-          "name": "env",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "env-file": {
-          "description": "Specify the environment variable file name. Default value is '.env'.",
-          "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_FILENAME",
-          "name": "env-file",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. The default is the current directory.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1307,9 +1280,8 @@
         }
       },
       "hasDynamicHelp": false,
-      "hidden": true,
       "hiddenAliases": [],
-      "id": "hydrogen:env:push__unstable",
+      "id": "hydrogen:setup:markets",
       "pluginAlias": "@shopify/cli-hydrogen",
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
@@ -1319,8 +1291,8 @@
         "dist",
         "commands",
         "hydrogen",
-        "env",
-        "push__unstable.js"
+        "setup",
+        "markets.js"
       ]
     },
     "hydrogen:generate:route": {
@@ -1465,22 +1437,50 @@
         "routes.js"
       ]
     },
-    "hydrogen:setup:css": {
+    "hydrogen:env:list": {
       "aliases": [],
-      "args": {
-        "strategy": {
-          "description": "The CSS strategy to setup. One of tailwind,css-modules,vanilla-extract,postcss",
-          "name": "strategy",
-          "options": [
-            "tailwind",
-            "css-modules",
-            "vanilla-extract",
-            "postcss"
-          ]
+      "args": {},
+      "description": "List the environments on your linked Hydrogen storefront.",
+      "flags": {
+        "path": {
+          "description": "The path to the directory of the Hydrogen storefront. The default is the current directory.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
+          "name": "path",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         }
       },
-      "description": "Setup CSS strategies for your project.",
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "hydrogen:env:list",
+      "pluginAlias": "@shopify/cli-hydrogen",
+      "pluginName": "@shopify/cli-hydrogen",
+      "pluginType": "core",
+      "strict": true,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "hydrogen",
+        "env",
+        "list.js"
+      ]
+    },
+    "hydrogen:env:pull": {
+      "aliases": [],
+      "args": {},
+      "description": "Populate your .env with variables from your Hydrogen storefront.",
       "flags": {
+        "env-branch": {
+          "char": "e",
+          "description": "Specify an environment's branch name when using remote environment variables.",
+          "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH",
+          "name": "env-branch",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. The default is the current directory.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1496,18 +1496,11 @@
           "name": "force",
           "allowNo": false,
           "type": "boolean"
-        },
-        "install-deps": {
-          "description": "Auto install dependencies using the active package manager",
-          "env": "SHOPIFY_HYDROGEN_FLAG_INSTALL_DEPS",
-          "name": "install-deps",
-          "allowNo": true,
-          "type": "boolean"
         }
       },
       "hasDynamicHelp": false,
       "hiddenAliases": [],
-      "id": "hydrogen:setup:css",
+      "id": "hydrogen:env:pull",
       "pluginAlias": "@shopify/cli-hydrogen",
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
@@ -1517,25 +1510,31 @@
         "dist",
         "commands",
         "hydrogen",
-        "setup",
-        "css.js"
+        "env",
+        "pull.js"
       ]
     },
-    "hydrogen:setup:markets": {
+    "hydrogen:env:push__unstable": {
       "aliases": [],
-      "args": {
-        "strategy": {
-          "description": "The URL structure strategy to setup multiple markets. One of subfolders,domains,subdomains",
-          "name": "strategy",
-          "options": [
-            "subfolders",
-            "domains",
-            "subdomains"
-          ]
-        }
-      },
-      "description": "Setup support for multiple markets in your project.",
+      "args": {},
+      "description": "Push environment variables from the local .env file to your linked Hydrogen storefront.",
       "flags": {
+        "env": {
+          "description": "Specify an environment's name when using remote environment variables.",
+          "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_NAME",
+          "name": "env",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "env-file": {
+          "description": "Specify the environment variable file name. Default value is '.env'.",
+          "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_FILENAME",
+          "name": "env-file",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. The default is the current directory.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1546,8 +1545,9 @@
         }
       },
       "hasDynamicHelp": false,
+      "hidden": true,
       "hiddenAliases": [],
-      "id": "hydrogen:setup:markets",
+      "id": "hydrogen:env:push__unstable",
       "pluginAlias": "@shopify/cli-hydrogen",
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
@@ -1557,8 +1557,8 @@
         "dist",
         "commands",
         "hydrogen",
-        "setup",
-        "markets.js"
+        "env",
+        "push__unstable.js"
       ]
     }
   },
