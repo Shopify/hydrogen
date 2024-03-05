@@ -23,6 +23,7 @@ jobs:
             {name: 'vite', token: '1000014892'},
             {name: 'subscriptions', token: '1000014928'},
             {name: 'third-party-queries-caching', token: '1000014929'},
+            {name: 'custom-cart-method', token: '1000014930'},
           ]
     steps:
       - uses: actions/checkout@v4
@@ -61,3 +62,4 @@ jobs:
           OXYGEN_DEPLOYMENT_TOKEN_1000014892: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014892 }}
           OXYGEN_DEPLOYMENT_TOKEN_1000014928: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014928 }}
           OXYGEN_DEPLOYMENT_TOKEN_1000014929: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014929 }}
+          OXYGEN_DEPLOYMENT_TOKEN_1000014930: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014930 }}
