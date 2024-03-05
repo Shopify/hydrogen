@@ -1,15 +1,14 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
-import {
-  renderInfo,
-  renderWarning,
-  renderFatalError,
-} from '@shopify/cli-kit/node/ui';
+import {renderWarning, renderFatalError} from '@shopify/cli-kit/node/ui';
 import {linkStorefront} from '../link.js';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import {getCliCommand} from '../../../lib/shell.js';
 import {login} from '../../../lib/auth.js';
-import {getConfig} from '../../../lib/shopify-config.js';
+import {
+  getConfig,
+  setCustomerAccountConfig,
+} from '../../../lib/shopify-config.js';
 import {replaceCustomerApplicationUrls} from '../../../lib/graphql/admin/customer-application-update.js';
 import {FatalErrorType} from '@shopify/cli-kit/node/error';
 
@@ -34,10 +33,6 @@ export default class ConfigPush extends Command {
       description:
         'The relative url of allowed url that will be redirected to post-logout for Customer Account API OAuth flow. Default to nothing.',
     }),
-    'remove-regex': Flags.string({
-      description:
-        "A regular express of all the urls that should be remove before new url are added. Default is '^https://.*.trycloudflare.com.*$'",
-    }),
   };
 
   async run(): Promise<void> {
@@ -52,7 +47,6 @@ export async function runConfigPush({
   devOrigin,
   redirectUriRelativeUrl = '/account/authorize',
   logoutUriRelativeUrl,
-  removeRegex = '^https://.*.trycloudflare.com.*$',
 }: {
   path?: string;
   storefrontId?: string;
@@ -90,22 +84,23 @@ export async function runConfigPush({
       return;
     }
 
-    const {session} = await login(root);
+    const {session, config} = await login(root);
+    const customerAccountConfig = config?.storefront?.customerAccountConfig;
     const {success, userErrors} = await replaceCustomerApplicationUrls(
       session,
       storefrontId,
       {
         redirectUri: {
           add: redirectUri ? [redirectUri] : undefined,
-          removeRegex,
+          removeRegex: customerAccountConfig?.redirectUri,
         },
         javascriptOrigin: {
           add: javascriptOrigin ? [javascriptOrigin] : undefined,
-          removeRegex,
+          removeRegex: customerAccountConfig?.javascriptOrigin,
         },
         logoutUris: {
           add: logoutUri ? [logoutUri] : undefined,
-          removeRegex,
+          removeRegex: customerAccountConfig?.logoutUri,
         },
       },
     );
@@ -117,6 +112,12 @@ export async function runConfigPush({
       error.userErrors = userErrors;
       throw error;
     }
+
+    await setCustomerAccountConfig(root, {
+      redirectUri,
+      javascriptOrigin,
+      logoutUri,
+    });
   } catch (error: any) {
     const errors: string[] = error?.userErrors?.length
       ? error.userErrors.map(

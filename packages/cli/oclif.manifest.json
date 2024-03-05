@@ -1174,7 +1174,7 @@
         "upgrade.js"
       ]
     },
-    "hydrogen:customer-accounts-config:push": {
+    "hydrogen:customer-accounts-api-config:push": {
       "aliases": [],
       "args": {},
       "description": "Push project configuration to admin",
@@ -1211,18 +1211,11 @@
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
-        },
-        "remove-regex": {
-          "description": "A regular express of all the urls that should be remove before new url are added. Default is '^https://.*.trycloudflare.com.*$'",
-          "name": "remove-regex",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
         }
       },
       "hasDynamicHelp": false,
       "hiddenAliases": [],
-      "id": "hydrogen:customer-accounts-config:push",
+      "id": "hydrogen:customer-accounts-api-config:push",
       "pluginAlias": "@shopify/cli-hydrogen",
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
@@ -1232,7 +1225,7 @@
         "dist",
         "commands",
         "hydrogen",
-        "customer-accounts-config",
+        "customer-accounts-api-config",
         "push.js"
       ]
     },

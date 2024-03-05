@@ -3,13 +3,7 @@ import fs from 'node:fs/promises';
 import type {ChildProcess} from 'node:child_process';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
-import {
-  renderFatalError,
-  renderConfirmationPrompt,
-  renderInfo,
-  renderError,
-} from '@shopify/cli-kit/node/ui';
-import colors from '@shopify/cli-kit/node/colors';
+import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import {copyPublicFiles} from './build.js';
 import {
   assertOxygenChecks,
@@ -32,10 +26,7 @@ import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
-import {
-  runConfigPush,
-  getStorefrontId,
-} from './customer-accounts-config/push.js';
+import {runConfigPush} from './customer-accounts-api-config/push.js';
 import {setupLiveReload} from '../../lib/live-reload.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {getGraphiQLUrl} from '../../lib/graphiql-url.js';

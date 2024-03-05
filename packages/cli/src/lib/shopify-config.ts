@@ -6,13 +6,17 @@ export const SHOPIFY_DIR = '.shopify';
 export const SHOPIFY_DIR_PROJECT = 'project.json';
 
 export interface ShopifyConfig {
-  shopifyConfigAutoUpdate?: boolean;
   shop: string;
   shopName: string;
   email: string;
   storefront?: {
     id: string;
     title: string;
+    customerAccountConfig?: {
+      redirectUri?: string;
+      javascriptOrigin?: string;
+      logoutUri?: string;
+    };
   };
 }
 
@@ -155,14 +159,19 @@ export async function ensureShopifyGitIgnore(root: string): Promise<boolean> {
 }
 
 /**
- * Allow for automatic Customer Account Application urls push
+ * The Customer Account Config
  *
  * @param root the target directory
+ * @param customerAccountConfig the config to be save
  * @returns the updated config
  */
-export async function setShopifyConfigAutoUpdate(
+export async function setCustomerAccountConfig(
   root: string,
-  shopifyConfigAutoUpdate: ShopifyConfig['shopifyConfigAutoUpdate'],
+  customerAccountConfig: {
+    redirectUri?: string;
+    javascriptOrigin?: string;
+    logoutUri?: string;
+  },
 ) {
   try {
     const filePath = resolvePath(root, SHOPIFY_DIR, SHOPIFY_DIR_PROJECT);
@@ -171,7 +180,10 @@ export async function setShopifyConfigAutoUpdate(
 
     const config = {
       ...existingConfig,
-      shopifyConfigAutoUpdate,
+      storefront: {
+        ...existingConfig['storefront'],
+        customerAccountConfig,
+      },
     };
 
     await writeFile(filePath, JSON.stringify(config));
