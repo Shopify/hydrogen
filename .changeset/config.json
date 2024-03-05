@@ -7,6 +7,6 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["hello-world", "demo-store", "example-*"],
+  "ignore": ["hello-world", "example-*"],
   "privatePackages": {"version": true, "tag": true}
 }

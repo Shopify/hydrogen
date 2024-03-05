@@ -77,23 +77,23 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
     },
   );
 
-  const hydrogenEventListener = {
-    error: passthroughProps.onError,
-    load: passthroughProps.onLoad,
-    preload: passthroughProps.onPreload,
-    'model-visibility': passthroughProps.onModelVisibility,
-    progress: passthroughProps.onProgress,
-    'ar-status': passthroughProps.onArStatus,
-    'ar-tracking': passthroughProps.onArTracking,
-    'quick-look-button-tapped': passthroughProps.onQuickLookButtonTapped,
-    'camera-change': passthroughProps.onCameraChange,
-    'environment-change': passthroughProps.onEnvironmentChange,
-    play: passthroughProps.onPlay,
-    pause: passthroughProps.onPause,
-    'scene-graph-ready': passthroughProps.onSceneGraphReady,
-  };
-
   useEffect(() => {
+    const hydrogenEventListener = {
+      error: passthroughProps.onError,
+      load: passthroughProps.onLoad,
+      preload: passthroughProps.onPreload,
+      'model-visibility': passthroughProps.onModelVisibility,
+      progress: passthroughProps.onProgress,
+      'ar-status': passthroughProps.onArStatus,
+      'ar-tracking': passthroughProps.onArTracking,
+      'quick-look-button-tapped': passthroughProps.onQuickLookButtonTapped,
+      'camera-change': passthroughProps.onCameraChange,
+      'environment-change': passthroughProps.onEnvironmentChange,
+      play: passthroughProps.onPlay,
+      pause: passthroughProps.onPause,
+      'scene-graph-ready': passthroughProps.onSceneGraphReady,
+    };
+
     if (!modelViewer) {
       return;
     }

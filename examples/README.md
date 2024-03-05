@@ -6,6 +6,10 @@ Each example only contains the files that are different from Hydrogen’s [Skele
 
 Examples are kept intentionally minimal, containing only the new and updated code required to illustrate a working use case.
 
+## Full-featured example
+
+See the full-featured example https://hydrogen.shop at https://github.com/Shopify/hydrogen-demo-store
+
 ## Popular examples
 
 These are some of the most commonly used Hydrogen examples. Browse the folders in this directory for the complete list.
