@@ -60,6 +60,14 @@ export async function startMiniOxygenRuntime({
     inspectorPort: privateInspectorPort,
     handleRuntimeStdio(stdout, stderr) {
       // TODO: handle runtime stdio and remove inspector logs
+      // stdout.pipe(process.stdout);
+      // stderr.pipe(process.stderr);
+
+      // Destroy these streams to prevent memory leaks
+      // until we start piping them to the terminal.
+      // https://github.com/Shopify/hydrogen/issues/1720
+      stdout.destroy();
+      stderr.destroy();
     },
     workers: [
       {
