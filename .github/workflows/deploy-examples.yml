@@ -21,6 +21,7 @@ jobs:
           [
             {name: 'optimistic-cart-ui', token: '1000014888'},
             {name: 'vite', token: '1000014892'},
+            {name: 'subscriptions', token: '1000014928'},
           ]
     steps:
       - uses: actions/checkout@v4
@@ -57,3 +58,4 @@ jobs:
         env:
           OXYGEN_DEPLOYMENT_TOKEN_1000014888: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014888 }}
           OXYGEN_DEPLOYMENT_TOKEN_1000014892: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014892 }}
+          OXYGEN_DEPLOYMENT_TOKEN_1000014928: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014928 }}
