@@ -20,8 +20,10 @@ import {displayDevUpgradeNotice} from './upgrade.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {setH2OPluginContext} from '../../lib/vite/shared.js';
 import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
-import {getDebugBannerLine} from '../../lib/mini-oxygen/workerd.js';
-import {startTunnelPlugin, pollTunnelURL} from '../../lib/tunneling.js';
+import {
+  getDebugBannerLine,
+  startTunnelAndPushConfig,
+} from '../../lib/dev-shared.js';
 
 export default class DevVite extends Command {
   static description =
@@ -53,6 +55,7 @@ export default class DevVite extends Command {
       required: false,
     }),
     ...commonFlags.diff,
+    ...commonFlags.withCustomerAccountApi,
   };
 
   async run(): Promise<void> {
@@ -67,6 +70,7 @@ export default class DevVite extends Command {
       ...flagsToCamelObject(flags),
       path: directory,
       isLocalDev: flags.diff,
+      cliConfig: this.config,
     });
   }
 }
@@ -85,6 +89,8 @@ type DevOptions = {
   sourcemap?: boolean;
   inspectorPort: number;
   isLocalDev?: boolean;
+  withCustomerAccountApi?: boolean;
+  cliConfig: Config;
 };
 
 export async function runDev({
@@ -100,6 +106,8 @@ export async function runDev({
   disableVersionCheck = false,
   inspectorPort,
   isLocalDev = false,
+  withCustomerAccountApi = false,
+  cliConfig,
 }: DevOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
@@ -175,14 +183,21 @@ export async function runDev({
   //   process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
   // }
 
-  await viteServer.listen(publicPort);
+  const [tunnelHost] = await Promise.all([
+    withCustomerAccountApi
+      ? startTunnelAndPushConfig(root, cliConfig, publicPort)
+      : undefined,
+    viteServer.listen(publicPort),
+  ]);
 
   const publicUrl = new URL(
     viteServer.resolvedUrls!.local[0] ?? viteServer.resolvedUrls!.network[0]!,
   );
 
+  const finalHost = tunnelHost || publicUrl.toString() || publicUrl.origin;
+
   // Start the public facing server with the port passed by the user.
-  enhanceH2Logs({rootDirectory: root, host: publicUrl.toString()});
+  enhanceH2Logs({rootDirectory: root, host: finalHost});
 
   await envPromise; // Prints the injected env vars
   console.log('');
@@ -196,9 +211,9 @@ export async function runDev({
     customSections.push({
       body: [
         `View GraphiQL API browser: \n${getGraphiQLUrl({
-          host: publicUrl.origin,
+          host: finalHost,
         })}`,
-        `View server network requests: \n${publicUrl.origin}/subrequest-profiler`,
+        `View server network requests: \n${finalHost}/subrequest-profiler`,
       ].map((value, index) => ({
         subdued: `${index != 0 ? '\n\n' : ''}${value}`,
       })),
@@ -215,7 +230,7 @@ export async function runDev({
     renderInfo({
       body: [
         `View ${appName ? colors.cyan(appName) : 'Hydrogen'} app:`,
-        {link: {url: publicUrl.toString()}},
+        {link: {url: finalHost}},
       ],
       customSections,
     });

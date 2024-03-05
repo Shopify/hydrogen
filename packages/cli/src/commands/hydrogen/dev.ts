@@ -14,7 +14,6 @@ import {
 } from '../../lib/remix-config.js';
 import {createRemixLogger, enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
 import {commonFlags, deprecated, flagsToCamelObject} from '../../lib/flags.js';
-import {startTunnelPlugin, pollTunnelURL} from '../../lib/tunneling.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags, Config} from '@oclif/core';
 import {
@@ -26,13 +25,13 @@ import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
-import {runConfigPush} from './customer-accounts-api-config/push.js';
 import {setupLiveReload} from '../../lib/live-reload.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {findPort} from '../../lib/find-port.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
+import {startTunnelAndPushConfig} from '../../lib/dev-shared.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -62,12 +61,7 @@ export default class Dev extends Command {
       required: false,
     }),
     ...commonFlags.diff,
-    'with-customer-account-api': Flags.boolean({
-      description:
-        "Use tunneling for local development and push the tunneling domain to admin. Required to use Customer Account API's Oauth flow",
-      required: false,
-      default: false,
-    }),
+    ...commonFlags.withCustomerAccountApi,
   };
 
   async run(): Promise<void> {
@@ -353,23 +347,4 @@ export async function runDev({
       await Promise.all([closeWatcher(), miniOxygen?.close()]);
     },
   };
-}
-
-async function startTunnelAndPushConfig(
-  root: string,
-  cliConfig: Config,
-  port: number,
-  storefrontId?: string,
-) {
-  outputInfo('\nStarting tunnel...\n');
-  const tunnel = await startTunnelPlugin(cliConfig, port, 'cloudflare');
-  const host = await pollTunnelURL(tunnel);
-
-  await runConfigPush({
-    path: root,
-    devOrigin: host,
-    storefrontId,
-  });
-
-  return host;
 }

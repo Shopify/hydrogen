@@ -10,7 +10,6 @@ import {
 import {dirname, resolvePath} from '@shopify/cli-kit/node/path';
 import {readFile} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
-import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
 import {createInspectorConnector} from './workerd-inspector.js';
 import {findPort} from '../find-port.js';
@@ -31,6 +30,7 @@ import {
   createAssetsServer,
   STATIC_ASSET_EXTENSIONS,
 } from './assets.js';
+import {getDebugBannerLine} from '../dev-shared.js';
 
 // This should probably be `0` and let workerd find a free port,
 // but at the moment we can't get the port from workerd (afaik?).
@@ -314,19 +314,4 @@ async function logRequest(request: Request): Promise<Response> {
   });
 
   return new Response('ok');
-}
-
-export function getDebugBannerLine(publicInspectorPort: number) {
-  const isVSCode = process.env.TERM_PROGRAM === 'vscode';
-  const debuggingDocsLink =
-    'https://h2o.fyi/debugging/server-code' +
-    (isVSCode ? '#visual-studio-code' : '#step-2-attach-a-debugger');
-
-  return outputContent`Debugging enabled on port ${String(
-    publicInspectorPort,
-  )}.\nAttach a ${outputToken.link(
-    colors.yellow(isVSCode ? 'VSCode debugger' : 'debugger'),
-    debuggingDocsLink,
-  )} or open DevTools in http://localhost:${String(publicInspectorPort)}.`
-    .value;
 }
