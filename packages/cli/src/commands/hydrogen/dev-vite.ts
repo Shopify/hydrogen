@@ -25,36 +25,32 @@ export default class DevVite extends Command {
   static description =
     'Runs Hydrogen storefront in an Oxygen worker for development.';
   static flags = {
-    path: commonFlags.path,
-    entry: commonFlags.entry,
-    port: overrideFlag(commonFlags.port, {default: undefined, required: false}),
-    codegen: overrideFlag(commonFlags.codegen, {
-      description:
-        commonFlags.codegen.description! +
-        ' It updates the types on file save.',
+    ...commonFlags.path,
+    ...commonFlags.entry,
+    ...overrideFlag(commonFlags.port, {
+      port: {default: undefined, required: false},
     }),
-    'codegen-config-path': commonFlags.codegenConfigPath,
-    // sourcemap: commonFlags.sourcemap,
+    ...commonFlags.codegen,
     'disable-virtual-routes': Flags.boolean({
       description:
         "Disable rendering fallback routes when a route file doesn't exist.",
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_VIRTUAL_ROUTES',
       default: false,
     }),
-    debug: commonFlags.debug,
-    'inspector-port': commonFlags.inspectorPort,
+    ...commonFlags.debug,
+    ...commonFlags.inspectorPort,
     host: Flags.boolean({
       description: 'Expose the server to the network',
       default: false,
       required: false,
     }),
-    ['env-branch']: commonFlags.envBranch,
-    ['disable-version-check']: Flags.boolean({
+    ...commonFlags.envBranch,
+    'disable-version-check': Flags.boolean({
       description: 'Skip the version check when running `hydrogen dev`',
       default: false,
       required: false,
     }),
-    diff: commonFlags.diff,
+    ...commonFlags.diff,
   };
 
   async run(): Promise<void> {

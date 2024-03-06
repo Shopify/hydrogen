@@ -15,13 +15,13 @@ export default class Preview extends Command {
     'Runs a Hydrogen storefront in an Oxygen worker for production.';
 
   static flags = {
-    path: commonFlags.path,
-    port: commonFlags.port,
+    ...commonFlags.path,
+    ...commonFlags.port,
     worker: deprecated('--worker', {isBoolean: true}),
-    'legacy-runtime': commonFlags.legacyRuntime,
-    'env-branch': commonFlags.envBranch,
-    'inspector-port': commonFlags.inspectorPort,
-    debug: commonFlags.debug,
+    ...commonFlags.legacyRuntime,
+    ...commonFlags.envBranch,
+    ...commonFlags.inspectorPort,
+    ...commonFlags.debug,
   };
 
   async run(): Promise<void> {

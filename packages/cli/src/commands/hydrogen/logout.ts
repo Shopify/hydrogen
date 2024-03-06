@@ -8,7 +8,7 @@ export default class Logout extends Command {
   static description = 'Logout of your local session.';
 
   static flags = {
-    path: commonFlags.path,
+    ...commonFlags.path,
   };
 
   async run(): Promise<void> {

@@ -28,7 +28,7 @@ const FLAG_MAP = {f: 'force'} as Record<string, string>;
 export default class Init extends Command {
   static description = 'Creates a new Hydrogen storefront.';
   static flags = {
-    force: commonFlags.force,
+    ...commonFlags.force,
     path: Flags.string({
       description: 'The path to the directory of the new Hydrogen storefront.',
       env: 'SHOPIFY_HYDROGEN_FLAG_PATH',
@@ -43,15 +43,15 @@ export default class Init extends Command {
         'Scaffolds project based on an existing template or example from the Hydrogen repository.',
       env: 'SHOPIFY_HYDROGEN_FLAG_TEMPLATE',
     }),
-    'install-deps': commonFlags.installDeps,
+    ...commonFlags.installDeps,
     'mock-shop': Flags.boolean({
       description: 'Use mock.shop as the data source for the storefront.',
       default: false,
       env: 'SHOPIFY_HYDROGEN_FLAG_MOCK_DATA',
     }),
-    styling: commonFlags.styling,
-    markets: commonFlags.markets,
-    shortcut: commonFlags.shortcut,
+    ...commonFlags.styling,
+    ...commonFlags.markets,
+    ...commonFlags.shortcut,
     routes: Flags.boolean({
       description: 'Generate routes for all pages.',
       env: 'SHOPIFY_HYDROGEN_FLAG_ROUTES',

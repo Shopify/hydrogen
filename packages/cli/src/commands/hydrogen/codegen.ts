@@ -11,13 +11,13 @@ export default class Codegen extends Command {
   static description =
     'Generate types for the Storefront API queries found in your project.';
   static flags = {
-    path: commonFlags.path,
-    ['codegen-config-path']: Flags.string({
+    ...commonFlags.path,
+    'codegen-config-path': Flags.string({
       description:
         'Specify a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if it exists.',
       required: false,
     }),
-    ['force-sfapi-version']: Flags.string({
+    'force-sfapi-version': Flags.string({
       description:
         'Force generating Storefront API types for a specific version instead of using the one provided in Hydrogen. A token can also be provided with this format: `<version>:<token>`.',
       hidden: true,

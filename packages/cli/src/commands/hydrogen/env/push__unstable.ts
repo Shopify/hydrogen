@@ -33,13 +33,13 @@ export default class EnvPush extends Command {
   static hidden = true;
 
   static flags = {
-    env: commonFlags.env,
-    ['env-file']: Flags.string({
+    ...commonFlags.env,
+    'env-file': Flags.string({
       description:
         "Specify the environment variable file name. Default value is '.env'.",
       env: 'SHOPIFY_HYDROGEN_ENVIRONMENT_FILENAME',
     }),
-    path: commonFlags.path,
+    ...commonFlags.path,
   };
 
   async run(): Promise<void> {

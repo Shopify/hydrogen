@@ -14,12 +14,7 @@ import {
   type ServerMode,
 } from '../../lib/remix-config.js';
 import {createRemixLogger, enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
-import {
-  commonFlags,
-  deprecated,
-  flagsToCamelObject,
-  overrideFlag,
-} from '../../lib/flags.js';
+import {commonFlags, deprecated, flagsToCamelObject} from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
 import {
@@ -45,32 +40,27 @@ export default class Dev extends Command {
   static description =
     'Runs Hydrogen storefront in an Oxygen worker for development.';
   static flags = {
-    path: commonFlags.path,
-    port: commonFlags.port,
+    ...commonFlags.path,
+    ...commonFlags.port,
     worker: deprecated('--worker', {isBoolean: true}),
-    'legacy-runtime': commonFlags.legacyRuntime,
-    codegen: overrideFlag(commonFlags.codegen, {
-      description:
-        commonFlags.codegen.description! +
-        ' It updates the types on file save.',
-    }),
-    'codegen-config-path': commonFlags.codegenConfigPath,
-    sourcemap: commonFlags.sourcemap,
+    ...commonFlags.legacyRuntime,
+    ...commonFlags.codegen,
+    ...commonFlags.sourcemap,
     'disable-virtual-routes': Flags.boolean({
       description:
         "Disable rendering fallback routes when a route file doesn't exist.",
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_VIRTUAL_ROUTES',
       default: false,
     }),
-    debug: commonFlags.debug,
-    'inspector-port': commonFlags.inspectorPort,
-    ['env-branch']: commonFlags.envBranch,
-    ['disable-version-check']: Flags.boolean({
+    ...commonFlags.debug,
+    ...commonFlags.inspectorPort,
+    ...commonFlags.envBranch,
+    'disable-version-check': Flags.boolean({
       description: 'Skip the version check when running `hydrogen dev`',
       default: false,
       required: false,
     }),
-    diff: commonFlags.diff,
+    ...commonFlags.diff,
   };
 
   async run(): Promise<void> {

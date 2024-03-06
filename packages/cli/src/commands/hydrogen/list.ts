@@ -23,7 +23,7 @@ export default class List extends Command {
     'Returns a list of Hydrogen storefronts available on a given shop.';
 
   static flags = {
-    path: commonFlags.path,
+    ...commonFlags.path,
   };
 
   async run(): Promise<void> {
