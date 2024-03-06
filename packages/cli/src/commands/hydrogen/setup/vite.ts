@@ -66,6 +66,10 @@ export async function runSetupVite({directory}: {directory: string}) {
         ),
       )
       .catch(handlePartialIssue),
+    moveFile(
+      resolvePath(directory, '.eslintrc.js'),
+      resolvePath(directory, '.eslintrc.cjs'),
+    ).catch(handlePartialIssue),
     remixConfigPromise.then((config) => {
       const serverEntry = config.serverEntryPoint || 'server.js';
       const isTS = serverEntry.endsWith('.ts');
