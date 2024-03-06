@@ -74,6 +74,8 @@ export function spawnCodegenProcess({
 
     const {message, details} = normalizeCodegenError(dataString, rootDirectory);
 
+    if (/`punycode`/.test(message)) return;
+
     console.log('');
     renderWarning({headline: message, body: details});
   });
