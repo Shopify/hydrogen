@@ -94,7 +94,7 @@ type DevOptions = {
   sourcemap?: boolean;
   inspectorPort: number;
   withCustomerAccountApi?: boolean;
-  cliConfig: Config;
+  cliConfig?: Config;
 };
 
 export async function runDev({
@@ -188,7 +188,7 @@ export async function runDev({
     if (miniOxygen) return;
 
     const [tunnelHost, newMiniOxygen] = await Promise.all([
-      withCustomerAccountApi
+      withCustomerAccountApi && cliConfig
         ? startTunnelAndPushConfig(root, cliConfig, appPort, storefront?.id)
         : undefined,
       startMiniOxygen(

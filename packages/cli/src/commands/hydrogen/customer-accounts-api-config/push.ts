@@ -16,7 +16,7 @@ export default class ConfigPush extends Command {
   static description = 'Push project configuration to admin';
 
   static flags = {
-    path: commonFlags.path,
+    ...commonFlags.path,
     'storefront-id': Flags.string({
       description:
         "The id of the storefront the configuration should be pushed to. Must start with 'gid://shopify/HydrogenStorefront/'",
