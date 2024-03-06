@@ -31,7 +31,7 @@ export default class SetupMarkets extends Command {
     const {flags, args} = await this.parse(SetupMarkets);
     const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
-    await runSetupI18n({
+    await runSetupMarkets({
       ...flagsToCamelObject(flags),
       strategy: args.strategy as I18nStrategy,
       directory,
@@ -39,7 +39,7 @@ export default class SetupMarkets extends Command {
   }
 }
 
-export async function runSetupI18n({
+export async function runSetupMarkets({
   strategy: flagStrategy,
   directory,
 }: {

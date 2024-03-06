@@ -16,10 +16,10 @@ import {
   isRouteErrorResponse,
   type ShouldRevalidateFunction,
 } from '@remix-run/react';
+import favicon from './assets/favicon.svg';
+import resetStyles from './styles/reset.css?url';
+import appStyles from './styles/app.css?url';
 import {Layout} from '~/components/Layout';
-
-import './styles/reset.css';
-import './styles/app.css';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -44,6 +44,8 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 
 export function links() {
   return [
+    {rel: 'stylesheet', href: resetStyles},
+    {rel: 'stylesheet', href: appStyles},
     {
       rel: 'preconnect',
       href: 'https://cdn.shopify.com',
@@ -52,7 +54,7 @@ export function links() {
       rel: 'preconnect',
       href: 'https://shop.app',
     },
-    {rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg'},
+    {rel: 'icon', type: 'image/svg+xml', href: favicon},
   ];
 }
 
@@ -69,8 +71,6 @@ export async function loader({context}: LoaderFunctionArgs) {
   const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
 
   const isLoggedInPromise = customerAccount.isLoggedIn();
-
-  // defer the cart query by not awaiting it
   const cartPromise = cart.get();
 
   // defer the footer query (below the fold)
