@@ -25,12 +25,6 @@
       "import": "./dist/esm/index.js",
       "default": "./dist/esm/index.js"
     },
-    "./patch": {
-      "types": "./dist/esm/patch.d.ts",
-      "require": "./dist/cjs/patch.cjs",
-      "import": "./dist/esm/patch.js",
-      "default": "./dist/esm/patch.js"
-    },
     "./package.json": "./package.json"
   },
   "repository": {
@@ -44,16 +38,11 @@
   "devDependencies": {
     "@graphql-codegen/cli": "^5.0.1",
     "@graphql-codegen/plugin-helpers": "^5.0.2",
-    "@graphql-tools/utils": "^10.0.13",
+    "dts-bundle-generator": "^9.3.1",
+    "type-fest": "^4.5.0",
     "vitest": "^1.0.4"
   },
   "dependencies": {
-    "@graphql-codegen/add": "^5.0.1",
-    "@graphql-codegen/typescript": "^4.0.2",
-    "@graphql-codegen/typescript-operations": "^4.1.0",
-    "type-fest": "^4.5.0"
-  },
-  "peerDependencies": {
-    "graphql": "^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0"
+    "@shopify/graphql-codegen": "^0.0.1"
   }
 }
