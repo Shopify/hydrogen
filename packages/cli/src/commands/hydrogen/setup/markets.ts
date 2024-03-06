@@ -16,7 +16,7 @@ export default class SetupMarkets extends Command {
   static description = 'Setup support for multiple markets in your project.';
 
   static flags = {
-    path: commonFlags.path,
+    ...commonFlags.path,
   };
 
   static args = {

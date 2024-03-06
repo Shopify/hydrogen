@@ -11,7 +11,7 @@ export default class GenerateRoute extends Command {
     'Returns diagnostic information about a Hydrogen storefront.';
 
   static flags = {
-    path: commonFlags.path,
+    ...commonFlags.path,
   };
 
   static args = {

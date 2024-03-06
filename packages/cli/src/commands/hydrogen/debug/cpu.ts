@@ -20,7 +20,7 @@ const DEFAULT_OUTPUT_PATH = 'startup.cpuprofile';
 export default class DebugCpu extends Command {
   static description = 'Builds and profiles the server startup time the app.';
   static flags = {
-    path: commonFlags.path,
+    ...commonFlags.path,
     output: Flags.string({
       description: `Specify a path to generate the profile file. Defaults to "${DEFAULT_OUTPUT_PATH}".`,
       default: DEFAULT_OUTPUT_PATH,
