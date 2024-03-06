@@ -21,7 +21,7 @@ export const commonFlags = {
   },
   port: {
     port: Flags.integer({
-      description: 'Port to run the server on.',
+      description: `Port to run the server on. Defaults to ${DEFAULT_PORT}.`,
       env: 'SHOPIFY_HYDROGEN_FLAG_PORT',
       default: DEFAULT_PORT,
     }),
@@ -53,7 +53,8 @@ export const commonFlags = {
   },
   installDeps: {
     'install-deps': Flags.boolean({
-      description: 'Auto install dependencies using the active package manager',
+      description:
+        'Auto install dependencies using the active package manager. Deactivate with `--no-install-deps`.',
       env: 'SHOPIFY_HYDROGEN_FLAG_INSTALL_DEPS',
       allowNo: true,
     }),
@@ -75,7 +76,8 @@ export const commonFlags = {
   },
   sourcemap: {
     sourcemap: Flags.boolean({
-      description: 'Generate sourcemaps for the build.',
+      description:
+        'Generate sourcemaps for the worker build. Defaults to `true`. Deactivate with `--no-sourcemap`.',
       env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
       default: true,
       allowNo: true,
@@ -115,7 +117,8 @@ export const commonFlags = {
   },
   shortcut: {
     shortcut: Flags.boolean({
-      description: 'Create a shortcut to the Shopify Hydrogen CLI.',
+      description:
+        'Create a shortcut to the Shopify Hydrogen CLI. Deactivate with `--no-shortcut`.',
       env: 'SHOPIFY_HYDROGEN_FLAG_SHORTCUT',
       allowNo: true,
     }),
@@ -129,7 +132,7 @@ export const commonFlags = {
   },
   inspectorPort: {
     'inspector-port': Flags.integer({
-      description: 'Port where the inspector will be available.',
+      description: `Port where the inspector will be available. Defaults to ${DEFAULT_INSPECTOR_PORT}.`,
       env: 'SHOPIFY_HYDROGEN_FLAG_INSPECTOR_PORT',
       default: DEFAULT_INSPECTOR_PORT,
     }),

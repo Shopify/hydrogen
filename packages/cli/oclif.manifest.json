@@ -22,14 +22,14 @@
           "type": "option"
         },
         "sourcemap": {
-          "description": "Generate sourcemaps for the build.",
+          "description": "Generate sourcemaps for the worker build. Defaults to `true`. Deactivate with `--no-sourcemap`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_SOURCEMAP",
           "name": "sourcemap",
           "allowNo": true,
           "type": "boolean"
         },
         "lockfile-check": {
-          "description": "Checks that there is exactly 1 valid lockfile in the project. Defaults to true, use `--no-lockfile-check` to disable.",
+          "description": "Checks that there is exactly one valid lockfile in the project. Defaults to `true`. Deactivate with `--no-lockfile-check`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK",
           "name": "lockfile-check",
           "allowNo": true,
@@ -98,7 +98,7 @@
           "type": "option"
         },
         "sourcemap": {
-          "description": "Generate sourcemaps for the build.",
+          "description": "Generate sourcemaps for the worker build. Defaults to `true`. Deactivate with `--no-sourcemap`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_SOURCEMAP",
           "name": "sourcemap",
           "allowNo": true,
@@ -111,7 +111,7 @@
           "type": "boolean"
         },
         "lockfile-check": {
-          "description": "Checks that there is exactly 1 valid lockfile in the project. Defaults to true, use `--no-lockfile-check` to disable.",
+          "description": "Checks that there is exactly one valid lockfile in the project. Defaults to `true`. Deactivate with `--no-lockfile-check`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK",
           "name": "lockfile-check",
           "allowNo": true,
@@ -316,7 +316,7 @@
           "type": "option"
         },
         "lockfile-check": {
-          "description": "Checks that there is exactly 1 valid lockfile in the project. Defaults to true, use `--no-lockfile-check` to disable.",
+          "description": "Checks that there is exactly one valid lockfile in the project. Defaults to `true`. Deactivate with `--no-lockfile-check`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK",
           "name": "lockfile-check",
           "allowNo": true,
@@ -438,7 +438,7 @@
           "type": "option"
         },
         "port": {
-          "description": "Port to run the server on.",
+          "description": "Port to run the server on. Defaults to 3000.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PORT",
           "name": "port",
           "required": false,
@@ -479,7 +479,7 @@
           "type": "boolean"
         },
         "inspector-port": {
-          "description": "Port where the inspector will be available.",
+          "description": "Port where the inspector will be available. Defaults to 9229.",
           "env": "SHOPIFY_HYDROGEN_FLAG_INSPECTOR_PORT",
           "name": "inspector-port",
           "default": 9229,
@@ -548,7 +548,7 @@
           "type": "option"
         },
         "port": {
-          "description": "Port to run the server on.",
+          "description": "Port to run the server on. Defaults to 3000.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PORT",
           "name": "port",
           "default": 3000,
@@ -587,7 +587,7 @@
           "type": "option"
         },
         "sourcemap": {
-          "description": "Generate sourcemaps for the build.",
+          "description": "Generate sourcemaps for the worker build. Defaults to `true`. Deactivate with `--no-sourcemap`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_SOURCEMAP",
           "name": "sourcemap",
           "allowNo": true,
@@ -608,7 +608,7 @@
           "type": "boolean"
         },
         "inspector-port": {
-          "description": "Port where the inspector will be available.",
+          "description": "Port where the inspector will be available. Defaults to 9229.",
           "env": "SHOPIFY_HYDROGEN_FLAG_INSPECTOR_PORT",
           "name": "inspector-port",
           "default": 9229,
@@ -715,7 +715,7 @@
           "type": "option"
         },
         "install-deps": {
-          "description": "Auto install dependencies using the active package manager",
+          "description": "Auto install dependencies using the active package manager. Deactivate with `--no-install-deps`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_INSTALL_DEPS",
           "name": "install-deps",
           "allowNo": true,
@@ -745,7 +745,7 @@
           "type": "option"
         },
         "shortcut": {
-          "description": "Create a shortcut to the Shopify Hydrogen CLI.",
+          "description": "Create a shortcut to the Shopify Hydrogen CLI. Deactivate with `--no-shortcut`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_SHORTCUT",
           "name": "shortcut",
           "allowNo": true,
@@ -937,7 +937,7 @@
           "type": "option"
         },
         "port": {
-          "description": "Port to run the server on.",
+          "description": "Port to run the server on. Defaults to 3000.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PORT",
           "name": "port",
           "default": 3000,
@@ -967,7 +967,7 @@
           "type": "option"
         },
         "inspector-port": {
-          "description": "Port where the inspector will be available.",
+          "description": "Port where the inspector will be available. Defaults to 9229.",
           "env": "SHOPIFY_HYDROGEN_FLAG_INSPECTOR_PORT",
           "name": "inspector-port",
           "default": 9229,
@@ -1036,14 +1036,14 @@
           "type": "option"
         },
         "shortcut": {
-          "description": "Create a shortcut to the Shopify Hydrogen CLI.",
+          "description": "Create a shortcut to the Shopify Hydrogen CLI. Deactivate with `--no-shortcut`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_SHORTCUT",
           "name": "shortcut",
           "allowNo": true,
           "type": "boolean"
         },
         "install-deps": {
-          "description": "Auto install dependencies using the active package manager",
+          "description": "Auto install dependencies using the active package manager. Deactivate with `--no-install-deps`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_INSTALL_DEPS",
           "name": "install-deps",
           "allowNo": true,
@@ -1498,7 +1498,7 @@
           "type": "boolean"
         },
         "install-deps": {
-          "description": "Auto install dependencies using the active package manager",
+          "description": "Auto install dependencies using the active package manager. Deactivate with `--no-install-deps`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_INSTALL_DEPS",
           "name": "install-deps",
           "allowNo": true,
