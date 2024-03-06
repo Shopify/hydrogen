@@ -32,6 +32,7 @@ import {displayDevUpgradeNotice} from './upgrade.js';
 import {findPort} from '../../lib/find-port.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {startTunnelAndPushConfig} from '../../lib/dev-shared.js';
+import {getStorefrontId} from '../../commands/hydrogen/customer-accounts-api-config/push.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -153,6 +154,11 @@ export async function runDev({
     process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
   }
 
+  // ensure this occur before getConfig since it can run link
+  if (withCustomerAccountApi) {
+    await getStorefrontId(root);
+  }
+
   const [remixConfig, {shop, storefront}] = await Promise.all([
     reloadConfig(),
     getConfig(root),
@@ -183,7 +189,7 @@ export async function runDev({
 
     const [tunnelHost, newMiniOxygen] = await Promise.all([
       withCustomerAccountApi
-        ? startTunnelAndPushConfig(root, cliConfig, appPort)
+        ? startTunnelAndPushConfig(root, cliConfig, appPort, storefront?.id)
         : undefined,
       startMiniOxygen(
         {

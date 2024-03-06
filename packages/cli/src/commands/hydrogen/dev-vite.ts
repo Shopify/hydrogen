@@ -24,6 +24,7 @@ import {
   getDebugBannerLine,
   startTunnelAndPushConfig,
 } from '../../lib/dev-shared.js';
+import {getStorefrontId} from '../../commands/hydrogen/customer-accounts-api-config/push.js';
 
 export default class DevVite extends Command {
   static description =
@@ -115,9 +116,18 @@ export async function runDev({
 
   const root = appPath ?? process.cwd();
 
+  // ensure this occur before getConfig since it can run link
+  if (withCustomerAccountApi) {
+    await getStorefrontId(root);
+  }
+
   let appName: string | undefined;
+  let storefrontId: string | undefined;
+
   const envPromise = getConfig(root).then(({shop, storefront}) => {
     appName = storefront?.title;
+    storefrontId = storefront?.id;
+
     const fetchRemote = !!shop && !!storefront?.id;
     return getAllEnvironmentVariables({root, fetchRemote, envBranch});
   });
@@ -185,7 +195,7 @@ export async function runDev({
 
   const [tunnelHost] = await Promise.all([
     withCustomerAccountApi
-      ? startTunnelAndPushConfig(root, cliConfig, publicPort)
+      ? startTunnelAndPushConfig(root, cliConfig, publicPort, storefrontId)
       : undefined,
     viteServer.listen(publicPort),
   ]);
