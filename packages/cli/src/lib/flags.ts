@@ -15,13 +15,13 @@ export const commonFlags = {
   path: {
     path: Flags.string({
       description:
-        'The path to the directory of the Hydrogen storefront. The default is the current directory.',
+        'The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.',
       env: 'SHOPIFY_HYDROGEN_FLAG_PATH',
     }),
   },
   port: {
     port: Flags.integer({
-      description: `Port to run the server on. Defaults to ${DEFAULT_PORT}.`,
+      description: `The port to run the server on. Defaults to ${DEFAULT_PORT}.`,
       env: 'SHOPIFY_HYDROGEN_FLAG_PORT',
       default: DEFAULT_PORT,
     }),
@@ -29,14 +29,14 @@ export const commonFlags = {
   legacyRuntime: {
     'legacy-runtime': Flags.boolean({
       description:
-        'Run the app in a Node.js sandbox instead of an Oxygen worker.',
+        'Runs the app in a Node.js sandbox instead of an Oxygen worker.',
       env: 'SHOPIFY_HYDROGEN_FLAG_WORKER',
     }),
   },
   force: {
     force: Flags.boolean({
       description:
-        'Overwrite the destination directory and files if they already exist.',
+        'Overwrites the destination directory and files if they already exist.',
       env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
       char: 'f',
     }),
@@ -54,7 +54,7 @@ export const commonFlags = {
   installDeps: {
     'install-deps': Flags.boolean({
       description:
-        'Auto install dependencies using the active package manager. Deactivate with `--no-install-deps`.',
+        'Auto installs dependencies using the active package manager.',
       env: 'SHOPIFY_HYDROGEN_FLAG_INSTALL_DEPS',
       allowNo: true,
     }),
@@ -62,7 +62,7 @@ export const commonFlags = {
   envBranch: {
     'env-branch': Flags.string({
       description:
-        "Specify an environment's branch name when using remote environment variables.",
+        'Specifies the environment to pull variables from using its Git branch name.',
       env: 'SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH',
       char: 'e',
     }),
@@ -70,14 +70,14 @@ export const commonFlags = {
   env: {
     env: Flags.string({
       description:
-        "Specify an environment's name when using remote environment variables.",
+        "Specifies an environment's name when using remote environment variables.",
       env: 'SHOPIFY_HYDROGEN_ENVIRONMENT_NAME',
     }),
   },
   sourcemap: {
     sourcemap: Flags.boolean({
       description:
-        'Generate sourcemaps for the worker build. Defaults to `true`. Deactivate with `--no-sourcemap`.',
+        'Controls whether sourcemaps are generated. Default to `true`. Deactivate `--no-sourcemaps`.',
       env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
       default: true,
       allowNo: true,
@@ -86,13 +86,13 @@ export const commonFlags = {
   codegen: {
     codegen: Flags.boolean({
       description:
-        'Generate types for the Storefront API queries found in your project.',
+        'Automatically generates GraphQL types for your project’s Storefront API queries.',
       required: false,
       default: false,
     }),
     'codegen-config-path': Flags.string({
       description:
-        'Specify a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if it exists.',
+        'Specifies a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if this file exists.',
       required: false,
       dependsOn: ['codegen'],
     }),
@@ -108,9 +108,9 @@ export const commonFlags = {
   },
   markets: {
     markets: Flags.string({
-      description: `Sets the URL structure to support multiple markets. One of ${I18N_CHOICES.map(
+      description: `Sets the URL structure to support multiple markets. Must be one of: ${I18N_CHOICES.map(
         (item) => `\`${item}\``,
-      ).join(', ')}.`,
+      ).join(', ')}. Example: \`--markets subfolders\`.`,
       choices: I18N_CHOICES,
       env: 'SHOPIFY_HYDROGEN_FLAG_I18N',
     }),
@@ -118,21 +118,22 @@ export const commonFlags = {
   shortcut: {
     shortcut: Flags.boolean({
       description:
-        'Create a shortcut to the Shopify Hydrogen CLI. Deactivate with `--no-shortcut`.',
+        'Creates a global h2 shortcut for Shopify CLI using shell aliases. Deactivate with `--no-shortcut`.',
       env: 'SHOPIFY_HYDROGEN_FLAG_SHORTCUT',
       allowNo: true,
     }),
   },
   debug: {
     debug: Flags.boolean({
-      description: 'Enables inspector connections with a debugger.',
+      description:
+        'Enables inspector connections to the server with a debugger such as Visual Studio Code or Chrome DevTools.',
       env: 'SHOPIFY_HYDROGEN_FLAG_DEBUG',
       default: false,
     }),
   },
   inspectorPort: {
     'inspector-port': Flags.integer({
-      description: `Port where the inspector will be available. Defaults to ${DEFAULT_INSPECTOR_PORT}.`,
+      description: `The port where the inspector is available. Defaults to ${DEFAULT_INSPECTOR_PORT}.`,
       env: 'SHOPIFY_HYDROGEN_FLAG_INSPECTOR_PORT',
       default: DEFAULT_INSPECTOR_PORT,
     }),
@@ -163,7 +164,7 @@ export const commonFlags = {
   },
   disableRouteWarning: {
     'disable-route-warning': Flags.boolean({
-      description: 'Disable warning about missing standard routes.',
+      description: 'Disables any warnings about missing standard routes.',
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
     }),
   },
