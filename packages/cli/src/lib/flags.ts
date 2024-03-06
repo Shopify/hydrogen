@@ -154,7 +154,7 @@ export const commonFlags = {
       allowNo: true,
       default: true,
       description:
-        'Checks that there is exactly 1 valid lockfile in the project. Defaults to true, use `--no-lockfile-check` to disable.',
+        'Checks that there is exactly one valid lockfile in the project. Defaults to `true`. Deactivate with `--no-lockfile-check`.',
       env: 'SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK',
     }),
   },
