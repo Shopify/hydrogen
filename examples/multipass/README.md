@@ -29,7 +29,7 @@ create are labeled with 🆕.
 | 🆕 [`app/lib/multipass/multipass.ts`](app/lib/multipass/multipass.ts)                                                   | Utility function that handles getting a multipass URL and token.                                              |
 | 🆕 [`app/lib/multipass/multipassify.server.ts`](app/lib/multipass/multipassify.server.ts)                               | Utility that handles creating and parse multipass tokens.                                                     |
 | 🆕 [`app/lib/multipass/types.ts`](app/lib/multipass/types.ts)                                                           | Types for multipass utilities.                                                                                |
-| 🆕 [`app/routes/($lang).account._public.login.multipass.tsx`](<app/routes/($lang).account._public.login.multipass.tsx>) | API route that returns generated multipass tokens.                                                            |
+| 🆕 [`app/routes/account_.login.multipass.tsx`](<app/routes/account_.login.multipass.tsx>) | API route that returns generated multipass tokens.                                                            |
 | [`app/components/Cart.tsx`](app/components/Cart.tsx)                                                                    | Hydrogen cart component, which gets updated to add the `<MultipassCheckoutButton>` component.                 |
 
 ## Dependencies
