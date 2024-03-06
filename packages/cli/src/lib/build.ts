@@ -11,6 +11,7 @@ export const GENERATOR_SETUP_ASSETS_SUB_DIRS = [
   'css-modules',
   'vanilla-extract',
   'postcss',
+  'vite',
 ] as const;
 
 export type AssetDir = (typeof GENERATOR_SETUP_ASSETS_SUB_DIRS)[number];

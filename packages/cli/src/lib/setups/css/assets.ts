@@ -1,15 +1,15 @@
 import {fileExists, readFile, writeFile} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
-import {
-  type AssetDir,
-  getAssetDir,
-  GENERATOR_SETUP_ASSETS_SUB_DIRS,
-} from '../../build.js';
+import {type AssetDir, getAssetDir} from '../../build.js';
 
-// Alias
-export const SETUP_CSS_STRATEGIES = GENERATOR_SETUP_ASSETS_SUB_DIRS;
-export type CssStrategy = AssetDir;
+export type CssStrategy = Exclude<AssetDir, 'vite'>;
+export const SETUP_CSS_STRATEGIES: CssStrategy[] = [
+  'tailwind',
+  'css-modules',
+  'vanilla-extract',
+  'postcss',
+];
 
 export function copyAssets(
   feature: AssetDir,

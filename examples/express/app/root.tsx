@@ -15,7 +15,6 @@ import {
 import type {Cart, Shop} from '@shopify/hydrogen/storefront-api-types';
 import {Layout} from '~/components/Layout';
 import styles from './styles/app.css';
-import favicon from '../public/favicon.svg';
 import {useNonce} from '@shopify/hydrogen';
 
 export const links: LinksFunction = () => {
@@ -29,7 +28,7 @@ export const links: LinksFunction = () => {
       rel: 'preconnect',
       href: 'https://shop.app',
     },
-    {rel: 'icon', type: 'image/svg+xml', href: favicon},
+    {rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg'},
   ];
 };
 

@@ -18,7 +18,8 @@
   "h2:diff": {
     "skip-files": [
       "remix.config.js",
-      "remix.env.d.ts"
+      "remix.env.d.ts",
+      ".eslintrc.js"
     ]
   }
 }
