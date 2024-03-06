@@ -60,6 +60,7 @@ export default {
         waitUntil,
         request,
         session,
+        storeDomain: env.PUBLIC_STORE_DOMAIN,
         customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID,
         customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_API_URL,
       });

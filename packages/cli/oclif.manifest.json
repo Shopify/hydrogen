@@ -1220,65 +1220,6 @@
         "cpu.js"
       ]
     },
-    "hydrogen:customer-accounts-api-config:push": {
-      "aliases": [],
-      "args": {},
-      "description": "Push project configuration to admin",
-      "flags": {
-        "path": {
-          "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
-          "name": "path",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "storefront-id": {
-          "description": "The id of the storefront the configuration should be pushed to. Must start with 'gid://shopify/HydrogenStorefront/'",
-          "name": "storefront-id",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "dev-origin": {
-          "description": "The development domain of your application.",
-          "name": "dev-origin",
-          "required": true,
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "relative-redirect-uri": {
-          "description": "The relative url of allowed callback url for Customer Account API OAuth flow. Default is '/account/authorize'",
-          "name": "relative-redirect-uri",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "relative-logout-uri": {
-          "description": "The relative url of allowed url that will be redirected to post-logout for Customer Account API OAuth flow. Default to nothing.",
-          "name": "relative-logout-uri",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        }
-      },
-      "hasDynamicHelp": false,
-      "hiddenAliases": [],
-      "id": "hydrogen:customer-accounts-api-config:push",
-      "pluginAlias": "@shopify/cli-hydrogen",
-      "pluginName": "@shopify/cli-hydrogen",
-      "pluginType": "core",
-      "strict": true,
-      "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "hydrogen",
-        "customer-accounts-api-config",
-        "push.js"
-      ]
-    },
     "hydrogen:env:list": {
       "aliases": [],
       "args": {},
@@ -1669,6 +1610,65 @@
         "hydrogen",
         "setup",
         "vite.js"
+      ]
+    },
+    "hydrogen:customer-accounts-api-config:push": {
+      "aliases": [],
+      "args": {},
+      "description": "Push project configuration to admin",
+      "flags": {
+        "path": {
+          "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
+          "name": "path",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "storefront-id": {
+          "description": "The id of the storefront the configuration should be pushed to. Must start with 'gid://shopify/HydrogenStorefront/'",
+          "name": "storefront-id",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "dev-origin": {
+          "description": "The development domain of your application.",
+          "name": "dev-origin",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "relative-redirect-uri": {
+          "description": "The relative url of allowed callback url for Customer Account API OAuth flow. Default is '/account/authorize'",
+          "name": "relative-redirect-uri",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "relative-logout-uri": {
+          "description": "The relative url of allowed url that will be redirected to post-logout for Customer Account API OAuth flow. Default to nothing.",
+          "name": "relative-logout-uri",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "hydrogen:customer-accounts-api-config:push",
+      "pluginAlias": "@shopify/cli-hydrogen",
+      "pluginName": "@shopify/cli-hydrogen",
+      "pluginType": "core",
+      "strict": true,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "hydrogen",
+        "customer-accounts-api-config",
+        "push.js"
       ]
     }
   },

@@ -62,6 +62,7 @@ function defaultAuthStatusHandler(request: CrossRuntimeRequest) {
 
 export function createCustomerAccountClient({
   session,
+  storeDomain,
   customerAccountId,
   customerAccountUrl,
   customerApiVersion = DEFAULT_CUSTOMER_API_VERSION,
@@ -204,6 +205,7 @@ export function createCustomerAccountClient({
   }
 
   async function isLoggedIn() {
+    ifMockShopThrowError(storeDomain);
     const customerAccount = session.get(CUSTOMER_ACCOUNT_SESSION_KEY);
     const accessToken = customerAccount?.accessToken;
     const expiresAt = customerAccount?.expiresAt;
@@ -249,6 +251,7 @@ export function createCustomerAccountClient({
 
   return {
     login: async (options?: LoginOptions) => {
+      ifMockShopThrowError(storeDomain);
       const loginUrl = new URL(customerAccountUrl + '/auth/oauth/authorize');
 
       const state = await generateState();
@@ -298,6 +301,7 @@ export function createCustomerAccountClient({
       });
     },
     logout: async () => {
+      ifMockShopThrowError(storeDomain);
       const idToken = session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.idToken;
 
       clearSession(session);
@@ -318,6 +322,8 @@ export function createCustomerAccountClient({
     getAccessToken,
     getApiUrl: () => customerAccountApiUrl,
     mutate(mutation, options?) {
+      ifMockShopThrowError(storeDomain);
+
       mutation = minifyQuery(mutation);
       assertMutation(mutation, 'customer.mutate');
 
@@ -327,6 +333,8 @@ export function createCustomerAccountClient({
       );
     },
     query(query, options?) {
+      ifMockShopThrowError(storeDomain);
+
       query = minifyQuery(query);
       assertQuery(query, 'customer.query');
 
@@ -336,6 +344,8 @@ export function createCustomerAccountClient({
       );
     },
     authorize: async () => {
+      ifMockShopThrowError(storeDomain);
+
       const code = requestUrl.searchParams.get('code');
       const state = requestUrl.searchParams.get('state');
 
@@ -465,4 +475,12 @@ export function createCustomerAccountClient({
       });
     },
   };
+}
+
+function ifMockShopThrowError(storeDomain: string) {
+  if (storeDomain.includes('mock.shop')) {
+    throw Error(
+      'You are using mock.shop with Customer Account API. Note that this is not supported. \nWe recommend running `npx shopify hydrogen env pull` to link to your store credentials.',
+    );
+  }
 }
