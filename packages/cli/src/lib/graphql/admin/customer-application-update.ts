@@ -1,6 +1,6 @@
 import {adminRequest, type AdminSession} from './client.js';
 
-export const CustomerApplicationUrlsReplace = `#graphql
+export const CUSTOMER_APPLICATION_URLS_REPLACE = `#graphql
   mutation CustomerApplicationUrlsReplace($storefrontId: ID!, $urlsReplaceInput: HydrogenStorefrontCustomerApplicationUrlsReplaceInput!) {
     hydrogenStorefrontCustomerApplicationUrlsReplace(
       storefrontId: $storefrontId,
@@ -50,7 +50,7 @@ export async function replaceCustomerApplicationUrls(
   const {
     hydrogenStorefrontCustomerApplicationUrlsReplace: {success, userErrors},
   } = await adminRequest<CustomerApplicationUrlsUpdateSchema>(
-    CustomerApplicationUrlsReplace,
+    CUSTOMER_APPLICATION_URLS_REPLACE,
     adminSession,
     {storefrontId, urlsReplaceInput},
   );

@@ -78,8 +78,6 @@ function createCSPHeader(
     ];
   }
 
-  console.error(`connectSrc=${defaultDirectives.connectSrc}`);
-
   const combinedDirectives = Object.assign({}, defaultDirectives, directives);
 
   //add defaults if it was override

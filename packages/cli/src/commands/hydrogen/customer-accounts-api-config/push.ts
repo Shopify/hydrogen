@@ -78,9 +78,6 @@ export async function runConfigPush({
       : devOrigin;
 
     if (!redirectUri && !javascriptOrigin && !logoutUri) {
-      renderWarning({
-        body: 'No urls was updated.',
-      });
       return;
     }
 
