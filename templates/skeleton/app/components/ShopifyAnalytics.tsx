@@ -1,4 +1,4 @@
-import { AnalyticsEventName, ShopifyPageViewPayload, getClientBrowserParameters, sendShopifyAnalytics, useAnalyticsProvider, useShopifyCookies } from "@shopify/hydrogen";
+import { AnalyticsEventName, CartReturn, ShopifyPageViewPayload, getClientBrowserParameters, sendShopifyAnalytics, useAnalyticsProvider, useShopifyCookies } from "@shopify/hydrogen";
 import { CurrencyCode, LanguageCode } from "@shopify/hydrogen/storefront-api-types";
 import { useEffect } from "react";
 import { getCustomerPrivacyRequired } from "./ConsentManagementApi";
@@ -44,11 +44,47 @@ export function ShopifyAnalytics({
     subscribe('cart_viewed', (payload) => {
       console.log('ShopifyAnalytics - Cart viewed:', payload);
     });
-    subscribe('product_added_to_cart', (payload) => {
-      console.log('ShopifyAnalytics - Product added to cart:', payload);
-    });
-    subscribe('product_removed_from_cart', (payload) => {
-      console.log('ShopifyAnalytics - Product removed from cart:', payload);
+    subscribe('cart_updated', (payload) => {
+      const previousCart = payload.previousCart as CartReturn;
+      const currentCart = payload.currentCart as CartReturn;
+
+      // Compare previous cart against current cart lines
+      // Detect quantity changes and missing cart lines
+      previousCart?.lines?.nodes?.forEach((line) => {
+        const matchedLineId = currentCart?.lines.nodes.filter((currentLine) => line.id === currentLine.id);
+        if (matchedLineId.length === 1) {
+          const matchedLine = matchedLineId[0];
+          if (line.quantity < matchedLine.quantity) {
+            console.log('product_added_to_cart', {
+              line,
+              quantity: matchedLine.quantity,
+            });
+          } else if (line.quantity > matchedLine.quantity) {
+            console.log('product_removed_from_cart', {
+              line,
+              quantity: matchedLine.quantity,
+            });
+          }
+        } else {
+          console.log('product_removed_from_cart', {
+            line,
+            quantity: 0,
+          });
+        }
+      });
+
+      // Compare current cart against previous cart lines
+      // Detect new cart lines
+      currentCart?.lines?.nodes?.forEach((line) => {
+        const matchedLineId = previousCart?.lines.nodes.filter((previousLine) => line.id === previousLine.id);
+        if (!matchedLineId || matchedLineId.length === 0) {
+          console.log('product_added_to_cart', {
+            line,
+            quantity: 1,
+          });
+        }
+      });
+
     });
   }, []);
 

@@ -25,7 +25,7 @@ import {Layout} from '~/components/Layout';
 import { CustomAnalytics } from './components/CustomAnalytics';
 import { ShopifyAnalytics } from './components/ShopifyAnalytics';
 import { Suspense} from 'react';
-import {getCustomerPrivacy, useCustomerPrivacyApi, useCustomerPrivacyApiWithPrivacyBanner } from './components/ConsentManagementApi';
+import {getCustomerPrivacy, useCustomerPrivacyApi} from './components/ConsentManagementApi';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -120,7 +120,7 @@ export async function loader({context}: LoaderFunctionArgs) {
         checkoutRootDomain: env.PUBLIC_CHECKOUT_DOMAIN,
         storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
         storefrontRootDomain: 'localhost', // env.PUBLIC_STORE_DOMAIN,
-        },
+      },
     },
     {
       headers: {
@@ -134,7 +134,8 @@ export default function App() {
   const nonce = useNonce();
   const data = useLoaderData<typeof loader>();
 
-  useCustomerPrivacyApiWithPrivacyBanner({
+  useCustomerPrivacyApi({
+    withPrivacyBanner: true,
     consentConfig: data.consentConfig
   });
 

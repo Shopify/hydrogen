@@ -19,9 +19,17 @@ export type VisitorConsentCollected = {
   thirdPartyMarketingAllowed: boolean;
 };
 
+type SetConsentHeadlessParams = VisitorConsent & {
+  headlessStorefront?: boolean;
+  checkoutRootDomain?: string;
+  storefrontRootDomain?: string;
+  storefrontAccessToken?: string;
+};
+
 export type CustomerPrivacy = {
   currentVisitorConsent: () => VisitorConsent;
   userCanBeTracked: () => boolean;
+  setTrackingConsent: (consent: SetConsentHeadlessParams, callback: () => void) => void;
 };
 
 type PrivacyBanner = {
@@ -53,23 +61,23 @@ export type PrivacyConsentBannerProps = {
 };
 
 type CustomerPrivacyApiProps = {
-  onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;
-};
-
-type CustomerPrivacyApiWithPrivacyBannerProps = CustomerPrivacyApiProps & {
   consentConfig: PrivacyConsentBannerProps;
+  withPrivacyBanner: boolean;
+  onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;
 };
 
 const CONSENT_API = 'https://cdn.shopify.com/shopifycloud/consent-tracking-api/v0.1/consent-tracking-api.js';
 const CONSENT_API_WITH_BANNER = 'https://cdn.shopify.com/shopifycloud/privacy-banner/storefront-banner.js';
 
-export function useCustomerPrivacyApi(props: CustomerPrivacyApiProps = {}) {
+export function useCustomerPrivacyApi(props: CustomerPrivacyApiProps) {
   const nonce = useNonce();
+  const withBanner = props.withPrivacyBanner || false;
+  const consentConfig = props.consentConfig;
   const scriptStatus = useLoadScript(
-    CONSENT_API,
+    withBanner ? CONSENT_API_WITH_BANNER : CONSENT_API,
     {
       attributes: {
-        id: 'consent-management-api',
+        id: 'customer-privacy-api',
         nonce: nonce || '',
       },
     }
@@ -79,10 +87,28 @@ export function useCustomerPrivacyApi(props: CustomerPrivacyApiProps = {}) {
   useEffect(() => {
     if (scriptStatus !== 'done') return;
 
+    if (withBanner) {
+      window?.privacyBanner?.loadBanner(consentConfig);
+    }
+
     if (onVisitorConsentCollected) {
       document.addEventListener('visitorConsentCollected', (event: CustomEvent<VisitorConsentCollected>) => {
         onVisitorConsentCollected(event.detail);
       });
+    }
+
+    // Override the setTrackingConsent method to include the headless storefront configuration
+    if (window.Shopify?.customerPrivacy) {
+      const originalSetTrackingConsent = window.Shopify.customerPrivacy.setTrackingConsent;
+      window.Shopify.customerPrivacy.setTrackingConsent = (consent: VisitorConsent, callback: () => void) => {
+        originalSetTrackingConsent({
+          ...consent,
+          headlessStorefront: true,
+          checkoutRootDomain: consentConfig.checkoutRootDomain,
+          storefrontRootDomain: consentConfig.storefrontRootDomain,
+          storefrontAccessToken: consentConfig.storefrontAccessToken,
+        }, callback)
+      };
     }
   }, [scriptStatus, onVisitorConsentCollected]);
 
@@ -105,40 +131,4 @@ export function getCustomerPrivacyRequired() {
   }
 
   return customerPrivacy;
-}
-
-export function useCustomerPrivacyApiWithPrivacyBanner(props: CustomerPrivacyApiWithPrivacyBannerProps) {
-  const nonce = useNonce();
-  const scriptStatus = useLoadScript(
-    CONSENT_API_WITH_BANNER,
-    {
-      attributes: {
-        id: 'consent-privacy-banner',
-        nonce: nonce || '',
-      },
-    }
-  );
-  const onVisitorConsentCollected = props.onVisitorConsentCollected;
-
-  useEffect(() => {
-    if (scriptStatus !== 'done') return;
-
-    window?.privacyBanner?.loadBanner(props.consentConfig);
-
-    if (onVisitorConsentCollected) {
-      document.addEventListener('visitorConsentCollected', (event: CustomEvent<VisitorConsentCollected>) => {
-        onVisitorConsentCollected(event.detail);
-      });
-    }
-  }, [scriptStatus, props]);
-
-  return;
-}
-
-export function getPrivacyBanner() {
-  try {
-    return window && window.privacyBanner ? window.privacyBanner : null;
-  } catch (e) {
-    return null;
-  }
 }

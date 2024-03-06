@@ -1,4 +1,4 @@
-import { useAnalyticsProvider } from "@shopify/hydrogen";
+import { CartReturn, useAnalyticsProvider } from "@shopify/hydrogen";
 import { useEffect } from "react";
 
 export function CustomAnalytics() {
@@ -17,11 +17,8 @@ export function CustomAnalytics() {
     subscribe('cart_viewed', (payload) => {
       console.log('CustomAnalytics - Cart viewed:', payload);
     });
-    subscribe('product_added_to_cart', (payload) => {
-      console.log('CustomAnalytics - Product added to cart:', payload);
-    });
-    subscribe('product_removed_from_cart', (payload) => {
-      console.log('CustomAnalytics - Product removed from cart:', payload);
+    subscribe('cart_updated', (payload) => {
+      console.log('CustomAnalytics - Cart updated:', payload);
     });
   }, []);
 
