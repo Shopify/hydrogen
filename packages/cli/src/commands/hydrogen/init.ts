@@ -96,6 +96,24 @@ export default class Init extends Command {
   }
 }
 
+async function cliUpgradeNotice() {
+  // Resolving the CLI package from a local directory might fail because
+  // this code could be run from a global dependency (e.g. on `npm create`).
+  // Therefore, pass the known path to the package.json directly from here:
+  const packageJson = fileURLToPath(new URL('../../../package.json', import.meta.url))
+
+  const showCliUpgrade = await checkHydrogenVersion(packageJson, 'cli');
+
+  if (!showCliUpgrade) return;
+
+  const packageManager = packageManagerFromUserAgent();
+
+  const cliUpgradeMessage = packageManager === 'unknown'
+    ? ''
+    : `Please upgrade the CLI with \`${packageManager} upgrade @shopify/cli-hydrogen\` before creating a new project with  \`${packageManager} create @shopify/hydrogen@latest\`.\nTo `
+  showCliUpgrade(cliUpgradeMessage);
+}
+
 export async function runInit(
   options: InitOptions = parseProcessFlags(process.argv, FLAG_MAP),
 ) {
@@ -103,22 +121,7 @@ export async function runInit(
 
   options.git ??= true;
 
-  const showUpgrade = await checkHydrogenVersion(
-    // Resolving the CLI package from a local directory might fail because
-    // this code could be run from a global dependency (e.g. on `npm create`).
-    // Therefore, pass the known path to the package.json directly from here:
-    fileURLToPath(new URL('../../../package.json', import.meta.url)),
-    'cli',
-  );
-
-  if (showUpgrade) {
-    const packageManager = packageManagerFromUserAgent();
-    showUpgrade(
-      packageManager === 'unknown'
-        ? ''
-        : `Please use the latest version with \`${packageManager} create @shopify/hydrogen@latest\``,
-    );
-  }
+  await cliUpgradeNotice()
 
   const controller = new AbortController();
 
