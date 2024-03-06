@@ -75,6 +75,7 @@ export type InitOptions = {
   shortcut?: boolean;
   installDeps?: boolean;
   git?: boolean;
+  quickstart?: boolean;
 };
 
 export const LANGUAGES = {
