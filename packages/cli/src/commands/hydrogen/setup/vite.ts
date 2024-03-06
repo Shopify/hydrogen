@@ -26,7 +26,7 @@ export default class SetupVite extends Command {
   static description = 'EXPERIMENTAL: Upgrades the project to use Vite.';
 
   static flags = {
-    path: commonFlags.path,
+    ...commonFlags.path,
   };
 
   async run(): Promise<void> {

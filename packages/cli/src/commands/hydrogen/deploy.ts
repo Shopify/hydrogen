@@ -93,9 +93,9 @@ export default class Deploy extends Command {
         'Specify a build command to run before deploying. If not specified, `shopify hydrogen build` will be used.',
       required: false,
     }),
-    'lockfile-check': commonFlags.lockfileCheck,
-    path: commonFlags.path,
-    shop: commonFlags.shop,
+    ...commonFlags.lockfileCheck,
+    ...commonFlags.path,
+    ...commonFlags.shop,
     'json-output': Flags.boolean({
       allowNo: true,
       description:
@@ -132,7 +132,7 @@ export default class Deploy extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_METADATA_VERSION',
       hidden: true,
     }),
-    diff: commonFlags.diff,
+    ...commonFlags.diff,
   };
 
   async run() {

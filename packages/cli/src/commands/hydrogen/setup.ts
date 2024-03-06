@@ -27,12 +27,14 @@ export default class Setup extends Command {
   static description = 'Scaffold routes and core functionality.';
 
   static flags = {
-    path: commonFlags.path,
-    force: commonFlags.force,
-    styling: commonFlags.styling,
-    markets: commonFlags.markets,
-    shortcut: commonFlags.shortcut,
-    'install-deps': overrideFlag(commonFlags.installDeps, {default: true}),
+    ...commonFlags.path,
+    ...commonFlags.force,
+    ...commonFlags.styling,
+    ...commonFlags.markets,
+    ...commonFlags.shortcut,
+    ...overrideFlag(commonFlags.installDeps, {
+      'install-deps': {default: true},
+    }),
   };
 
   async run(): Promise<void> {
