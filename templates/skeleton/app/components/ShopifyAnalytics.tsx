@@ -1,6 +1,6 @@
 import { AnalyticsEventName, CartReturn, ShopifyPageViewPayload, getClientBrowserParameters, sendShopifyAnalytics, useAnalyticsProvider, useShopifyCookies } from "@shopify/hydrogen";
 import { CurrencyCode, LanguageCode } from "@shopify/hydrogen/storefront-api-types";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { getCustomerPrivacyRequired } from "./ConsentManagementApi";
 
 type ShopAnalytic = {
@@ -11,21 +11,29 @@ type ShopAnalytic = {
 };
 
 export function ShopifyAnalytics({
-  data
+  shopAnalytics
 }: {
-  data: ShopAnalytic;
+  shopAnalytics: Promise<ShopAnalytic | null> | ShopAnalytic | null;
 }) {
   const {subscribe, canTrack} = useAnalyticsProvider();
   const hasUserConsent = canTrack();
   useShopifyCookies({hasUserConsent});
+  const [shop, setShop] = useState<ShopAnalytic | null>(null);
 
   useEffect(() => {
+    Promise.resolve(shopAnalytics).then(setShop);
+    return () => {};
+  }, [setShop, shopAnalytics, shop]);
+
+  useEffect(() => {
+    if (!shop) return;
+
     subscribe('page_viewed', () => {
       const customerPrivacy = getCustomerPrivacyRequired();
       console.log('ShopifyAnalytics - Page viewed:', customerPrivacy);
 
       const eventPayload: ShopifyPageViewPayload = {
-        ...data,
+        ...shop,
         hasUserConsent: customerPrivacy?.userCanBeTracked() || false,
         ...getClientBrowserParameters(),
       };
@@ -86,7 +94,7 @@ export function ShopifyAnalytics({
       });
 
     });
-  }, []);
+  }, [shop]);
 
   return null;
 }

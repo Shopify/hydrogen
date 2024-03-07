@@ -158,13 +158,7 @@ export default function App() {
             <Outlet />
           </Layout>
           <CustomAnalytics />
-          <Suspense>
-            <Await resolve={data.shop}>
-              {(shop) => (
-                <ShopifyAnalytics data={shop} />
-              )}
-            </Await>
-          </Suspense>
+          <ShopifyAnalytics shopAnalytics={data.shop} />
           <AnalyticsCart currentCart={data.cart} />
         </AnalyticsProvider>
         <ScrollRestoration nonce={nonce} />
