@@ -2,4 +2,4 @@
 '@shopify/hydrogen': patch
 ---
 
-Fixed Pagination, PreviousLink and NextLink types
+Fix `PreviousLink` and `NextLink` types in the Pagination component.

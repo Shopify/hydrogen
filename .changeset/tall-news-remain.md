@@ -2,7 +2,7 @@
 'skeleton': patch
 ---
 
-Updated the `@shopify/cli` dependency:
+Update the `@shopify/cli` dependency:
 
 ```diff
 - "@shopify/cli": "3.52.0",

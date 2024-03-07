@@ -1,5 +1,5 @@
 ---
-'@shopify/hydrogen-codegen': minor
+'@shopify/hydrogen-codegen': patch
 ---
 
-Extract codegen logic in an agnostic package. `@shopify/hydrogen-codegen` is now a wrapper with default values around `@shopify/graphql-codegen`.
+Extract Codegen features into an agnostic `@shopify/graphql-codegen` package. `@shopify/hydrogen-codegen` now simply wraps this package with a set of Hydrogen defaults.
