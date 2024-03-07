@@ -101,6 +101,7 @@ const CART_QUERY = (cartFragment = DEFAULT_CART_FRAGMENT) => `#graphql
 
 export const DEFAULT_CART_FRAGMENT = `#graphql
   fragment CartApiQuery on Cart {
+    updatedAt
     id
     checkoutUrl
     totalQuantity

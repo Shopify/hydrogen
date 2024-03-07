@@ -40,7 +40,7 @@ export type CartLineFragment = Pick<
 
 export type CartApiQueryFragment = Pick<
   StorefrontAPI.Cart,
-  'id' | 'checkoutUrl' | 'totalQuantity' | 'note'
+  'updatedAt' | 'id' | 'checkoutUrl' | 'totalQuantity' | 'note'
 > & {
   buyerIdentity: Pick<
     StorefrontAPI.CartBuyerIdentity,

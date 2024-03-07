@@ -13,6 +13,7 @@ export function AnalyticsCart({
   const previousCart = cartRef.current;
 
   const [cart, setCart] = useState<CartReturn | null>(null);
+  const [lastCartUpdated, setLastCartUpdated] = useState<string | null>(null);
 
   // resolve the cart (if it's a promise) and set it or just set it if it's not a promise
   useEffect(() => {
@@ -24,15 +25,19 @@ export function AnalyticsCart({
     cartRef.current = cart;
     if (!isFirstLoad) {
       isFirstLoad = true;
+      setLastCartUpdated(cart?.updatedAt || null);
       return;
     }
     if (!cart) return;
+    if(lastCartUpdated !== cart.updatedAt) {
+      setLastCartUpdated(cart.updatedAt);
 
-    publish('cart_updated', {
-      currentCart: cart,
-      previousCart,
-    })
+      publish('cart_updated', {
+        currentCart: cart,
+        previousCart,
+      })
+    }
 
-  }, [previousCart, currentCart]);
+  }, [previousCart, cart]);
   return null;
 }
