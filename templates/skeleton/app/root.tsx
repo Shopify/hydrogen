@@ -165,13 +165,7 @@ export default function App() {
               )}
             </Await>
           </Suspense>
-          <Suspense>
-            <Await resolve={data.cart}>
-              {(cart) => (
-                <AnalyticsCart currentCart={cart} />
-              )}
-            </Await>
-          </Suspense>
+          <AnalyticsCart currentCart={data.cart} />
         </AnalyticsProvider>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
