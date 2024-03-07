@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import type {ChildProcess} from 'node:child_process';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
-import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
+import {renderFatalError, renderInfo} from '@shopify/cli-kit/node/ui';
 import {copyPublicFiles} from './build.js';
 import {
   assertOxygenChecks,
@@ -154,12 +154,12 @@ export async function runDev({
 
       const cliCommand = await getCliCommand();
 
-      renderWarning({
+      renderInfo({
         headline:
           'Using mock.shop with `--customer-account-push` flag is not supported',
         body: 'The functionalities of this flag had been removed.',
         nextSteps: [
-          'You may continue knowing all Customer Account API (/account) will fail.',
+          'You may continue knowing Customer Account API (/account) interactions will fail.',
           [
             'Or run',
             {

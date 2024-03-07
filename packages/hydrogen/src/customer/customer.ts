@@ -62,7 +62,6 @@ function defaultAuthStatusHandler(request: CrossRuntimeRequest) {
 
 export function createCustomerAccountClient({
   session,
-  storeDomain,
   customerAccountId,
   customerAccountUrl,
   customerApiVersion = DEFAULT_CUSTOMER_API_VERSION,
@@ -75,12 +74,6 @@ export function createCustomerAccountClient({
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.warn(
       `[h2:warn:createCustomerAccountClient] You are using Customer Account API version ${customerApiVersion} when this version of Hydrogen was built for ${DEFAULT_CUSTOMER_API_VERSION}.`,
-    );
-  }
-
-  if (!customerAccountId || !customerAccountUrl) {
-    console.warn(
-      "[h2:warn:createCustomerAccountClient] `customerAccountId` and `customerAccountUrl` need to be provided to use Customer Account API. Mock.shop doesn't automatically supply these variables.\nUse `npx shopify hydrogen env pull` to link your store credentials.",
     );
   }
 
@@ -205,7 +198,7 @@ export function createCustomerAccountClient({
   }
 
   async function isLoggedIn() {
-    ifMockShopThrowError(storeDomain);
+    ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
     const customerAccount = session.get(CUSTOMER_ACCOUNT_SESSION_KEY);
     const accessToken = customerAccount?.accessToken;
     const expiresAt = customerAccount?.expiresAt;
@@ -251,7 +244,7 @@ export function createCustomerAccountClient({
 
   return {
     login: async (options?: LoginOptions) => {
-      ifMockShopThrowError(storeDomain);
+      ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
       const loginUrl = new URL(customerAccountUrl + '/auth/oauth/authorize');
 
       const state = await generateState();
@@ -301,7 +294,7 @@ export function createCustomerAccountClient({
       });
     },
     logout: async () => {
-      ifMockShopThrowError(storeDomain);
+      ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
       const idToken = session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.idToken;
 
       clearSession(session);
@@ -322,7 +315,7 @@ export function createCustomerAccountClient({
     getAccessToken,
     getApiUrl: () => customerAccountApiUrl,
     mutate(mutation, options?) {
-      ifMockShopThrowError(storeDomain);
+      ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
 
       mutation = minifyQuery(mutation);
       assertMutation(mutation, 'customer.mutate');
@@ -333,7 +326,7 @@ export function createCustomerAccountClient({
       );
     },
     query(query, options?) {
-      ifMockShopThrowError(storeDomain);
+      ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
 
       query = minifyQuery(query);
       assertQuery(query, 'customer.query');
@@ -344,7 +337,7 @@ export function createCustomerAccountClient({
       );
     },
     authorize: async () => {
-      ifMockShopThrowError(storeDomain);
+      ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
 
       const code = requestUrl.searchParams.get('code');
       const state = requestUrl.searchParams.get('state');
@@ -477,10 +470,24 @@ export function createCustomerAccountClient({
   };
 }
 
-function ifMockShopThrowError(storeDomain?: string) {
-  if (storeDomain && storeDomain.includes('mock.shop')) {
-    throw Error(
-      'Using mock.shop with `--customer-account-push` flag is not supported. \nWe recommend running `npx shopify hydrogen env pull` to link to your store credentials.',
-    );
+function ifInvalidCredentialThrowError(
+  customerAccountUrl?: string,
+  customerAccountId?: string,
+) {
+  try {
+    if (!customerAccountUrl || !customerAccountId) throw Error();
+    new URL(customerAccountUrl);
+  } catch {
+    if (process.env.NODE_ENV === 'development') {
+      throw new Response(
+        'You do not have the valid credential to use Customer Account API (/account).' +
+          '\n\nmock.shop does not support Customer Account API. \nWe recommend running `npx shopify hydrogen env pull` to link your store credentials.',
+        {status: 400},
+      );
+    } else {
+      console.error(
+        'You do not have the valid credential to use Customer Account API.\nRun `npx shopify hydrogen env pull` to link your store credentials.',
+      );
+    }
   }
 }

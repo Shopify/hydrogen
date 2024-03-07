@@ -130,8 +130,6 @@ export type CustomerAccountOptions = {
   customAuthStatusHandler?: () => DataFunctionValue;
   /** Whether it should print GraphQL errors automatically. Defaults to true */
   logErrors?: boolean | ((error?: Error) => boolean);
-  /** The host name of the domain (eg: `{shop}.myshopify.com`). */
-  storeDomain?: string;
 };
 
 /** Below are types meant for documentation only. Ensure it stay in sync with the type above. */
