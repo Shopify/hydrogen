@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import type {ChildProcess} from 'node:child_process';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
-import {renderFatalError} from '@shopify/cli-kit/node/ui';
+import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
 import {copyPublicFiles} from './build.js';
 import {
   assertOxygenChecks,
@@ -23,7 +23,10 @@ import {
 } from '../../lib/mini-oxygen/index.js';
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
-import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
+import {
+  getAllEnvironmentVariables,
+  getLocalVariables,
+} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
 import {setupLiveReload} from '../../lib/live-reload.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
@@ -32,6 +35,7 @@ import {displayDevUpgradeNotice} from './upgrade.js';
 import {findPort} from '../../lib/find-port.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {startTunnelAndPushConfig} from '../../lib/dev-shared.js';
+import {getCliCommand} from '../../lib/shell.js';
 import {getStorefrontId} from './customer-account/push.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
@@ -109,7 +113,7 @@ export async function runDev({
   sourcemap = true,
   disableVersionCheck = false,
   inspectorPort,
-  customerAccountPush = false,
+  customerAccountPush: customerAccountPushFlag = false,
   cliConfig,
 }: DevOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
@@ -137,6 +141,36 @@ export async function runDev({
           return config;
         });
   };
+
+  let customerAccountPush = customerAccountPushFlag;
+  if (customerAccountPush) {
+    const {variables} = await getLocalVariables(root);
+
+    if (
+      variables?.PUBLIC_STORE_DOMAIN &&
+      variables?.PUBLIC_STORE_DOMAIN.includes('mock.shop')
+    ) {
+      customerAccountPush = false;
+
+      const cliCommand = await getCliCommand();
+
+      renderWarning({
+        headline:
+          'Using mock.shop with `--customer-account-push` flag is not supported',
+        body: 'The functionalities of this flag had been removed.',
+        nextSteps: [
+          'You may continue knowing all Customer Account API (/account) will fail.',
+          [
+            'Or run',
+            {
+              command: `${cliCommand} env pull`,
+            },
+            'to link to your store credentials.',
+          ],
+        ],
+      });
+    }
+  }
 
   const getFilePaths = (file: string) => {
     const fileRelative = path.relative(root, file);
