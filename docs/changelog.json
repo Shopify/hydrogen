@@ -62,7 +62,7 @@
         },
         {
           "title": "Add experimental support for Vite projects",
-          "description": "To test this unstable feature, make sure you're running the latest version of the Hydrogen CLI, then run npx shopify hydrogen setup vite in your Hydrogen project. This command edits existing files and creates some new ones required to run Vite.",
+          "description": "To test this unstable feature, make sure you're running the latest version of the Hydrogen CLI, then run `npx shopify hydrogen setup vite` in your Hydrogen project. This command edits existing files and creates some new ones required to run Vite.",
           "id": "1728",
           "pr": "https://github.com/Shopify/hydrogen/pull/1728"
         },
