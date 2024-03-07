@@ -321,7 +321,7 @@ export function PredictiveSearchForm({
 }
 
 export function PredictiveSearchResults() {
-  const {results, totalResults, searchInputRef, searchTerm} =
+  const {results, totalResults, searchInputRef, searchTerm, state} =
     usePredictiveSearch();
 
   function goToSearchResult(event: React.MouseEvent<HTMLAnchorElement>) {
@@ -332,9 +332,14 @@ export function PredictiveSearchResults() {
     window.location.href = event.currentTarget.href;
   }
 
+  if (state === 'loading') {
+    return <div>Loading...</div>;
+  }
+
   if (!totalResults) {
     return <NoPredictiveSearchResults searchTerm={searchTerm} />;
   }
+
   return (
     <div className="predictive-search-results">
       <div>
@@ -451,6 +456,7 @@ function SearchResultItem({goToSearchResult, item}: SearchResultItemProps) {
 type UseSearchReturn = NormalizedPredictiveSearch & {
   searchInputRef: React.MutableRefObject<HTMLInputElement | null>;
   searchTerm: React.MutableRefObject<string>;
+  state: Exclude<ReturnType<typeof useFetcher>['state'], 'submitting'>;
 };
 
 function usePredictiveSearch(): UseSearchReturn {
@@ -473,7 +479,7 @@ function usePredictiveSearch(): UseSearchReturn {
     searchInputRef.current = document.querySelector('input[type="search"]');
   }, []);
 
-  return {...search, searchInputRef, searchTerm};
+  return {...search, searchInputRef, searchTerm, state: searchFetcher.state};
 }
 
 /**
