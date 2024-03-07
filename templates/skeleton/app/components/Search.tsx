@@ -263,20 +263,18 @@ type ChildrenRenderProps = {
 
 type SearchFromProps = {
   action?: FormProps['action'];
-  method?: FormProps['method'];
   className?: string;
   children: (passedProps: ChildrenRenderProps) => React.ReactNode;
   [key: string]: unknown;
 };
 
 /**
- *  Search form component that posts search requests to the `/search` route
+ *  Search form component that sends search requests to the `/search` route
  **/
 export function PredictiveSearchForm({
   action,
   children,
   className = 'predictive-search-form',
-  method = 'POST',
   ...props
 }: SearchFromProps) {
   const params = useParams();
@@ -287,13 +285,14 @@ export function PredictiveSearchForm({
 
   function fetchResults(event: React.ChangeEvent<HTMLInputElement>) {
     const searchAction = action ?? '/api/predictive-search';
+    const newSearchTerm = event.target.value || '';
     const localizedAction = params.locale
       ? `/${params.locale}${searchAction}`
       : searchAction;
-    const newSearchTerm = event.target.value || '';
+
     fetcher.submit(
       {q: newSearchTerm, limit: '6'},
-      {method, action: localizedAction},
+      {method: 'GET', action: localizedAction},
     );
   }
 
