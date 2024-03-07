@@ -477,8 +477,8 @@ export function createCustomerAccountClient({
   };
 }
 
-function ifMockShopThrowError(storeDomain: string) {
-  if (storeDomain.includes('mock.shop')) {
+function ifMockShopThrowError(storeDomain?: string) {
+  if (storeDomain && storeDomain.includes('mock.shop')) {
     throw Error(
       'You are using mock.shop with Customer Account API. Note that this is not supported. \nWe recommend running `npx shopify hydrogen env pull` to link to your store credentials.',
     );

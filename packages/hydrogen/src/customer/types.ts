@@ -114,8 +114,6 @@ export type CustomerAccount = {
 export type CustomerAccountOptions = {
   /** The client requires a session to persist the auth and refresh token. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */
   session: HydrogenSession;
-  /** The host name of the domain (eg: `{shop}.myshopify.com`). */
-  storeDomain: string;
   /** Unique UUID prefixed with `shp_` associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountId. Use `npx shopify hydrogen env pull` to link your store credentials. */
   customerAccountId: string;
   /** The account URL associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountUrl. Use `npx shopify hydrogen env pull` to link your store credentials. */
@@ -132,6 +130,8 @@ export type CustomerAccountOptions = {
   customAuthStatusHandler?: () => DataFunctionValue;
   /** Whether it should print GraphQL errors automatically. Defaults to true */
   logErrors?: boolean | ((error?: Error) => boolean);
+  /** The host name of the domain (eg: `{shop}.myshopify.com`). */
+  storeDomain?: string;
 };
 
 /** Below are types meant for documentation only. Ensure it stay in sync with the type above. */
