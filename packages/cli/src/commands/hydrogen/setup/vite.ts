@@ -70,6 +70,10 @@ export async function runSetupVite({directory}: {directory: string}) {
       resolvePath(directory, '.eslintrc.js'),
       resolvePath(directory, '.eslintrc.cjs'),
     ).catch(handlePartialIssue),
+    moveFile(
+      resolvePath(directory, 'postcss.config.js'),
+      resolvePath(directory, 'postcss.config.cjs'),
+    ).catch(handlePartialIssue),
     remixConfigPromise.then((config) => {
       const serverEntry = config.serverEntryPoint || 'server.js';
       const isTS = serverEntry.endsWith('.ts');
