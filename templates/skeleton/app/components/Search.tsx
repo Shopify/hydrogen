@@ -456,7 +456,7 @@ function SearchResultItem({goToSearchResult, item}: SearchResultItemProps) {
 type UseSearchReturn = NormalizedPredictiveSearch & {
   searchInputRef: React.MutableRefObject<HTMLInputElement | null>;
   searchTerm: React.MutableRefObject<string>;
-  state: Exclude<ReturnType<typeof useFetcher>['state'], 'submitting'>;
+  state: ReturnType<typeof useFetcher>['state'];
 };
 
 function usePredictiveSearch(): UseSearchReturn {
