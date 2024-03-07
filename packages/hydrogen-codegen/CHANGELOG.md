@@ -1,5 +1,11 @@
 # @shopify/hydrogen-codegen
 
+## 0.2.2
+
+### Patch Changes
+
+- Extract Codegen features into an agnostic `@shopify/graphql-codegen` package. `@shopify/hydrogen-codegen` now simply wraps this package with a set of Hydrogen defaults. ([#1799](https://github.com/Shopify/hydrogen/pull/1799)) by [@frandiox](https://github.com/frandiox)
+
 ## 0.2.1
 
 ### Patch Changes

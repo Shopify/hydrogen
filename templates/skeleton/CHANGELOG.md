@@ -1,5 +1,39 @@
 # skeleton
 
+## 1.0.5
+
+### Patch Changes
+
+- Update the `@shopify/cli` dependency: ([#1786](https://github.com/Shopify/hydrogen/pull/1786)) by [@frandiox](https://github.com/frandiox)
+
+  ```diff
+  - "@shopify/cli": "3.52.0",
+  + "@shopify/cli": "3.56.3",
+  ```
+
+- Update Remix and associated packages to 2.8.0. ([#1781](https://github.com/Shopify/hydrogen/pull/1781)) by [@frandiox](https://github.com/frandiox)
+
+  ```diff
+  "dependencies": {
+  -  "@remix-run/react": "^2.6.0",
+  -  "@remix-run/server-runtime": "^2.6.0",
+  +  "@remix-run/react": "^2.8.0",
+  +  "@remix-run/server-runtime": "^2.8.0",
+      //...
+    },
+    "devDependencies": {
+  -   "@remix-run/dev": "^2.6.0",
+  -   "@remix-run/eslint-config": "^2.6.0",
+  +  "@remix-run/dev": "^2.8.0",
+  +  "@remix-run/eslint-config": "^2.8.0",
+      //...
+    },
+  ```
+
+- Updated dependencies [[`ced1d4cb`](https://github.com/Shopify/hydrogen/commit/ced1d4cb5b1eeeb4303449eb1d60aac44f33480e), [`fc013401`](https://github.com/Shopify/hydrogen/commit/fc013401c5727948b602c9c6b6963a2df21cbd38), [`e641255e`](https://github.com/Shopify/hydrogen/commit/e641255eccc5783b41c8fabbc88313a610f539d0), [`d7e04cb6`](https://github.com/Shopify/hydrogen/commit/d7e04cb6a33d40ea86fa8ac2712d7a5ea785de2d), [`eedd9c49`](https://github.com/Shopify/hydrogen/commit/eedd9c497b36aba47a641cecbc710e18f5b14e46)]:
+  - @shopify/cli-hydrogen@7.1.1
+  - @shopify/hydrogen@2024.1.3
+
 ## 1.0.4
 
 ### Patch Changes
