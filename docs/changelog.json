@@ -1,7 +1,78 @@
 {
   "url": "https://github.com/Shopify/hydrogen/pulls?q=is%3Apr+is%3Aclosed+%5Bci%5D+release+in%3Atitle+is%3Amerged",
-  "version": "1.2",
+  "version": "1.3",
   "releases": [
+    {
+      "title": "Experimental Vite support, Remix 2.8.0, fixed Pagination and runtime freezes, extracted Codegen",
+      "version": "2024.1.3",
+      "date": "",
+      "hash": "499c2917e2ba0e3884972f649e526f5040112404",
+      "pr": "https://github.com/Shopify/hydrogen/pull/1796",
+      "commit": "https://github.com/Shopify/hydrogen/pull/1796/commits/499c2917e2ba0e3884972f649e526f5040112404",
+      "dependencies": {
+        "@remix-run/react": "2.8.0",
+        "@shopify/cli-hydrogen": "^7.1.1",
+        "@shopify/hydrogen": "^2024.1.3",
+        "@shopify/remix-oxygen": "^2.0.3"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "2.8.0",
+        "typescript": "^5.2.2",
+        "@shopify/cli": "3.56.3",
+        "@shopify/oxygen-workers-types": "^4.0.0",
+        "@remix-run/server-runtime": "2.8.0"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Fix PreviousLink and NextLink types in the Pagination component",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1774",
+          "id": "1774"
+        },
+        {
+          "title": "Fix an issue that could cause the local worker runtime to freeze",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1819",
+          "id": "1819"
+        }
+      ],
+      "features": [
+        {
+          "title": "Extract Codegen to a separate package",
+          "description": "Codegen is now an agnostic `@shopify/graphql-codegen` package. `@shopify/hydrogen-codegen` now simply wraps this package with a set of Hydrogen defaults.",
+          "id": "1799",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1799"
+        },
+        {
+          "title": "Upgrade to Remix 2.8.0",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1781",
+          "id": "1781"
+        },
+        {
+          "title": "Add experimental support for Vite projects",
+          "description": "To test this unstable feature, make sure you're running the latest version of the Hydrogen CLI, then run `npx shopify hydrogen setup vite` in your Hydrogen project. This command edits existing files and creates some new ones required to run Vite.",
+          "id": "1728",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1728"
+        },
+        {
+          "title": "Improve h2 --help messaging",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1786",
+          "id": "1786"
+        }
+      ]
+    },
     {
       "title": "`deploy` command enhancements and bug fixes",
       "version": "2024.1.2",
