@@ -41,7 +41,9 @@ export async function loader({request, params, context}: LoaderFunctionArgs) {
     context,
   });
 
-  return json(search);
+  return json(search, {
+    headers: {'Cache-Control': `max-age=${search.searchTerm ? 60 : 3600}`},
+  });
 }
 
 async function fetchPredictiveSearchResults({
