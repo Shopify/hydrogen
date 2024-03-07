@@ -1,5 +1,24 @@
 # @shopify/cli-hydrogen
 
+## 7.1.1
+
+### Patch Changes
+
+- Update `@shopify/cli-kit` dependency to `3.56.3` and improve some help messaging. ([#1786](https://github.com/Shopify/hydrogen/pull/1786)) by [@frandiox](https://github.com/frandiox)
+
+- Hide a non-actionable warning about a deprecated Node.js module `punycode`. ([#1801](https://github.com/Shopify/hydrogen/pull/1801)) by [@frandiox](https://github.com/frandiox)
+
+- Add experimental support for Vite projects. ([#1728](https://github.com/Shopify/hydrogen/pull/1728)) by [@frandiox](https://github.com/frandiox)
+
+  To test this unstable feature, make sure you're running the latest version of the Hydrogen CLI, then run `npx shopify hydrogen setup vite` in your Hydrogen project. This command edits existing files and creates some new ones required to run Vite.
+
+  Please report [any issues you run into](https://github.com/Shopify/hydrogen/issues/new?assignees=&labels=bug%3Aunverified&projects=&template=bug_report.yml), and let us know if you have any feedback or suggestions.
+
+- Fix an issue that could cause the local worker runtime to freeze. ([#1819](https://github.com/Shopify/hydrogen/pull/1819)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`4e3d5b00`](https://github.com/Shopify/hydrogen/commit/4e3d5b005941db9a6d8eb2a5d7edf23148d60b07)]:
+  - @shopify/hydrogen-codegen@0.2.2
+
 ## 7.1.0
 
 ### Minor Changes
