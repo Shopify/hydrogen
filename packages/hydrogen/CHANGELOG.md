@@ -1,5 +1,11 @@
 # @shopify/hydrogen
 
+## 2024.1.3
+
+### Patch Changes
+
+- Fix `PreviousLink` and `NextLink` types in the Pagination component. ([#1774](https://github.com/Shopify/hydrogen/pull/1774)) by [@lorenzo-del-rosario](https://github.com/lorenzo-del-rosario)
+
 ## 2024.1.2
 
 ### Patch Changes
