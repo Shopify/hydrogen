@@ -24,7 +24,7 @@ import {
   getDebugBannerLine,
   startTunnelAndPushConfig,
 } from '../../lib/dev-shared.js';
-import {getStorefrontId} from '../../commands/hydrogen/customer-accounts-api-config/push.js';
+import {getStorefrontId} from './customer-account/push.js';
 
 export default class DevVite extends Command {
   static description =
@@ -56,7 +56,7 @@ export default class DevVite extends Command {
       required: false,
     }),
     ...commonFlags.diff,
-    ...commonFlags.withCustomerAccountApi,
+    ...commonFlags.customerAccountPush,
   };
 
   async run(): Promise<void> {
@@ -90,7 +90,7 @@ type DevOptions = {
   sourcemap?: boolean;
   inspectorPort: number;
   isLocalDev?: boolean;
-  withCustomerAccountApi?: boolean;
+  customerAccountPush?: boolean;
   cliConfig: Config;
 };
 
@@ -107,7 +107,7 @@ export async function runDev({
   disableVersionCheck = false,
   inspectorPort,
   isLocalDev = false,
-  withCustomerAccountApi = false,
+  customerAccountPush = false,
   cliConfig,
 }: DevOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
@@ -117,7 +117,7 @@ export async function runDev({
   const root = appPath ?? process.cwd();
 
   // ensure this occur before getConfig since it can run link
-  if (withCustomerAccountApi) {
+  if (customerAccountPush) {
     await getStorefrontId(root);
   }
 
@@ -194,7 +194,7 @@ export async function runDev({
   // }
 
   const [tunnelHost] = await Promise.all([
-    withCustomerAccountApi
+    customerAccountPush
       ? startTunnelAndPushConfig(root, cliConfig, publicPort, storefrontId)
       : undefined,
     viteServer.listen(publicPort),

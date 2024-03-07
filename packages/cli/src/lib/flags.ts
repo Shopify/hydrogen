@@ -168,8 +168,8 @@ export const commonFlags = {
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
     }),
   },
-  withCustomerAccountApi: {
-    'with-customer-account-api': Flags.boolean({
+  customerAccountPush: {
+    'customer-account-push': Flags.boolean({
       description:
         "Use tunneling for local development and push the tunneling domain to admin. Required to use Customer Account API's Oauth flow",
       required: false,

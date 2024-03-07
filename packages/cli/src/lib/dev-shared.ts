@@ -6,7 +6,7 @@ import {
   outputToken,
 } from '@shopify/cli-kit/node/output';
 import {startTunnelPlugin, pollTunnelURL} from './tunneling.js';
-import {runConfigPush} from '../commands/hydrogen/customer-accounts-api-config/push.js';
+import {runConfigPush} from '../commands/hydrogen/customer-account/push.js';
 
 export async function startTunnelAndPushConfig(
   root: string,

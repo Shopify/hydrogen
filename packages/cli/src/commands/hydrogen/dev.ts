@@ -32,7 +32,7 @@ import {displayDevUpgradeNotice} from './upgrade.js';
 import {findPort} from '../../lib/find-port.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {startTunnelAndPushConfig} from '../../lib/dev-shared.js';
-import {getStorefrontId} from '../../commands/hydrogen/customer-accounts-api-config/push.js';
+import {getStorefrontId} from './customer-account/push.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -62,7 +62,7 @@ export default class Dev extends Command {
       required: false,
     }),
     ...commonFlags.diff,
-    ...commonFlags.withCustomerAccountApi,
+    ...commonFlags.customerAccountPush,
   };
 
   async run(): Promise<void> {
@@ -93,7 +93,7 @@ type DevOptions = {
   debug?: boolean;
   sourcemap?: boolean;
   inspectorPort: number;
-  withCustomerAccountApi?: boolean;
+  customerAccountPush?: boolean;
   cliConfig?: Config;
 };
 
@@ -109,7 +109,7 @@ export async function runDev({
   sourcemap = true,
   disableVersionCheck = false,
   inspectorPort,
-  withCustomerAccountApi = false,
+  customerAccountPush = false,
   cliConfig,
 }: DevOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
@@ -155,7 +155,7 @@ export async function runDev({
   }
 
   // ensure this occur before getConfig since it can run link
-  if (withCustomerAccountApi) {
+  if (customerAccountPush) {
     await getStorefrontId(root);
   }
 
@@ -188,7 +188,7 @@ export async function runDev({
     if (miniOxygen) return;
 
     const [tunnelHost, newMiniOxygen] = await Promise.all([
-      withCustomerAccountApi && cliConfig
+      customerAccountPush && cliConfig
         ? startTunnelAndPushConfig(root, cliConfig, appPort, storefront?.id)
         : undefined,
       startMiniOxygen(
