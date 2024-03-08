@@ -626,6 +626,13 @@ export async function renderProjectReady(
 
   const render = hasErrors ? renderWarning : renderSuccess;
 
+  // Dynamically set "Next steps" for success message
+  const nextSteps = [];
+
+  if (true) {
+    nextSteps.push(['Dependencies', 'were installed'])
+  }
+
   render({
     headline:
       `Storefront setup complete` +
@@ -664,39 +671,6 @@ export async function renderProjectReady(
             },
           },
         ],
-      },
-      {
-        title: 'Help\n',
-        body: {
-          list: {
-            items: [
-              {
-                link: {
-                  label: 'Guides',
-                  url: 'https://h2o.fyi/building',
-                },
-              },
-              {
-                link: {
-                  label: 'API reference',
-                  url: 'https://shopify.dev/docs/api/storefront',
-                },
-              },
-              {
-                link: {
-                  label: 'Demo Store code',
-                  url: 'https://github.com/Shopify/hydrogen/tree/HEAD/templates/demo-store',
-                },
-              },
-              [
-                'Run',
-                {
-                  command: `${cliCommand} --help`,
-                },
-              ],
-            ],
-          },
-        },
       },
       {
         title: 'Next steps\n',
