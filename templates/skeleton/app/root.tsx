@@ -119,7 +119,6 @@ export async function loader({context}: LoaderFunctionArgs) {
         shopDomain: env.PUBLIC_STORE_DOMAIN,
         checkoutRootDomain: env.PUBLIC_CHECKOUT_DOMAIN,
         storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-        storefrontRootDomain: 'localhost', // env.PUBLIC_STORE_DOMAIN,
       },
     },
     {
@@ -151,6 +150,7 @@ export default function App() {
         <AnalyticsProvider
           canTrack={() => {
             const customerPrivacy = getCustomerPrivacy();
+            console.log('Customer privacy:', customerPrivacy?.userCanBeTracked());
             return customerPrivacy?.userCanBeTracked() || false;
           }}
         >

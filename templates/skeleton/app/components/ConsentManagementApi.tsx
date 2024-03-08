@@ -19,11 +19,14 @@ export type VisitorConsentCollected = {
   thirdPartyMarketingAllowed: boolean;
 };
 
-type SetConsentHeadlessParams = VisitorConsent & {
-  headlessStorefront?: boolean;
+type CustomerPrivacyConsentConfig = {
   checkoutRootDomain?: string;
   storefrontRootDomain?: string;
   storefrontAccessToken?: string;
+};
+
+type SetConsentHeadlessParams = VisitorConsent & CustomerPrivacyConsentConfig & {
+  headlessStorefront?: boolean;
 };
 
 export type CustomerPrivacy = {
@@ -33,7 +36,7 @@ export type CustomerPrivacy = {
 };
 
 type PrivacyBanner = {
-  loadBanner: (options: PrivacyConsentBannerProps) => void;
+  loadBanner: (options: CustomerPrivacyConsentConfig) => void;
 }
 
 interface CustomEventMap {
@@ -54,10 +57,9 @@ declare global {
 }
 
 export type PrivacyConsentBannerProps = {
-  checkoutRootDomain: string;
   shopDomain: string;
+  checkoutRootDomain: string;
   storefrontAccessToken: string;
-  storefrontRootDomain: string;
 };
 
 type CustomerPrivacyApiProps = {
@@ -105,7 +107,6 @@ export function useCustomerPrivacyApi(props: CustomerPrivacyApiProps) {
           ...consent,
           headlessStorefront: true,
           checkoutRootDomain: consentConfig.checkoutRootDomain,
-          storefrontRootDomain: consentConfig.storefrontRootDomain,
           storefrontAccessToken: consentConfig.storefrontAccessToken,
         }, callback)
       };
