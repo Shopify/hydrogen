@@ -1,6 +1,5 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
-import {renderWarning} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {linkStorefront} from '../link.js';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
@@ -110,14 +109,41 @@ export async function runCustomerAccountPush({
       logoutUri,
     });
   } catch (error: any) {
+    let confidentialAccessFound = false;
+
     const errors: string[] = error?.userErrors?.length
       ? error.userErrors.map(
-          (value: {message: string; field: [string]; code: string}) =>
-            `${value.field}: ${value.message}`,
+          (value: {message: string; field: [string]; code: string}) => {
+            if (
+              value.message ===
+              'Javascript origin is not allowed for this application type.'
+            ) {
+              confidentialAccessFound = true;
+            }
+            return `${value.field}: ${value.message}`;
+          },
         )
       : error.message
       ? [error.message]
       : [];
+
+    const nextSteps = [
+      {
+        link: {
+          label: 'Manually update application setup',
+          url: 'https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#update-the-application-setup',
+        },
+      },
+    ];
+
+    if (confidentialAccessFound) {
+      nextSteps.unshift({
+        link: {
+          label: 'Enable Public access for Hydrogen',
+          url: 'https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/getting-started#step-1-enable-customer-account-api-access',
+        },
+      });
+    }
 
     throw new AbortError(
       'Customer Account Application setup update fail.',
@@ -133,14 +159,7 @@ export async function runCustomerAccountPush({
             },
           ]
         : undefined,
-      [
-        {
-          link: {
-            label: 'Manually update Customer Account Application setup',
-            url: 'https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#update-the-application-setup',
-          },
-        },
-      ],
+      nextSteps,
     );
   }
 }
