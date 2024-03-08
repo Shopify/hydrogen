@@ -520,6 +520,7 @@
         },
         "customer-account-push": {
           "description": "Use tunneling for local development and push the tunneling domain to admin. Required to use Customer Account API's Oauth flow",
+          "env": "SHOPIFY_HYDROGEN_FLAG_CUSTOMER_ACCOUNT_PUSH",
           "name": "customer-account-push",
           "required": false,
           "allowNo": false,
@@ -649,6 +650,7 @@
         },
         "customer-account-push": {
           "description": "Use tunneling for local development and push the tunneling domain to admin. Required to use Customer Account API's Oauth flow",
+          "env": "SHOPIFY_HYDROGEN_FLAG_CUSTOMER_ACCOUNT_PUSH",
           "name": "customer-account-push",
           "required": false,
           "allowNo": false,

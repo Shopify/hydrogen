@@ -482,7 +482,7 @@ function ifInvalidCredentialThrowError(
       throw new Response(
         'You do not have the valid credential to use Customer Account API (/account).' +
           '\n\nmock.shop does not support Customer Account API. \nWe recommend running `npx shopify hydrogen env pull` to link your store credentials.',
-        {status: 400},
+        {status: 500},
       );
     } else {
       console.error(

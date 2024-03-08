@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import type {ChildProcess} from 'node:child_process';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
-import {renderFatalError, renderInfo} from '@shopify/cli-kit/node/ui';
+import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import {copyPublicFiles} from './build.js';
 import {
   assertOxygenChecks,
@@ -23,10 +23,7 @@ import {
 } from '../../lib/mini-oxygen/index.js';
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
-import {
-  getAllEnvironmentVariables,
-  getLocalVariables,
-} from '../../lib/environment-variables.js';
+import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
 import {setupLiveReload} from '../../lib/live-reload.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
@@ -34,8 +31,10 @@ import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {findPort} from '../../lib/find-port.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
-import {startTunnelAndPushConfig} from '../../lib/dev-shared.js';
-import {getCliCommand} from '../../lib/shell.js';
+import {
+  startTunnelAndPushConfig,
+  checkMockShopAndByPassTunnel,
+} from '../../lib/dev-shared.js';
 import {getStorefrontId} from './customer-account/push.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
@@ -142,36 +141,6 @@ export async function runDev({
         });
   };
 
-  let customerAccountPush = customerAccountPushFlag;
-  if (customerAccountPush) {
-    const {variables} = await getLocalVariables(root);
-
-    if (
-      variables?.PUBLIC_STORE_DOMAIN &&
-      variables?.PUBLIC_STORE_DOMAIN.includes('mock.shop')
-    ) {
-      customerAccountPush = false;
-
-      const cliCommand = await getCliCommand();
-
-      renderInfo({
-        headline:
-          'Using mock.shop with `--customer-account-push` flag is not supported',
-        body: 'The functionalities of this flag had been removed.',
-        nextSteps: [
-          'You may continue knowing Customer Account API (/account) interactions will fail.',
-          [
-            'Or run',
-            {
-              command: `${cliCommand} env pull`,
-            },
-            'to link to your store credentials.',
-          ],
-        ],
-      });
-    }
-  }
-
   const getFilePaths = (file: string) => {
     const fileRelative = path.relative(root, file);
     return [fileRelative, path.resolve(root, fileRelative)] as const;
@@ -188,9 +157,23 @@ export async function runDev({
     process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
   }
 
-  // ensure this occur before getConfig since it can run link
-  if (customerAccountPush) {
-    await getStorefrontId(root);
+  let host: string;
+
+  const customerAccountPush = await checkMockShopAndByPassTunnel(
+    root,
+    customerAccountPushFlag,
+  );
+
+  // ensure this occur before getConfig since it can run link and changed env vars
+  if (customerAccountPush && cliConfig) {
+    const storefrontId = await getStorefrontId(root);
+
+    host = await startTunnelAndPushConfig(
+      root,
+      cliConfig,
+      appPort,
+      storefrontId,
+    );
   }
 
   const [remixConfig, {shop, storefront}] = await Promise.all([
@@ -221,29 +204,22 @@ export async function runDev({
   async function safeStartMiniOxygen() {
     if (miniOxygen) return;
 
-    const [tunnelHost, newMiniOxygen] = await Promise.all([
-      customerAccountPush && cliConfig
-        ? startTunnelAndPushConfig(root, cliConfig, appPort, storefront?.id)
-        : undefined,
-      startMiniOxygen(
-        {
-          root,
-          debug,
-          assetsPort,
-          inspectorPort,
-          port: appPort,
-          watch: !liveReload,
-          buildPathWorkerFile,
-          buildPathClient,
-          env: await envPromise,
-        },
-        legacyRuntime,
-      ),
-    ]);
+    miniOxygen = await startMiniOxygen(
+      {
+        root,
+        debug,
+        assetsPort,
+        inspectorPort,
+        port: appPort,
+        watch: !liveReload,
+        buildPathWorkerFile,
+        buildPathClient,
+        env: await envPromise,
+      },
+      legacyRuntime,
+    );
 
-    miniOxygen = newMiniOxygen;
-
-    const host = tunnelHost || miniOxygen.listeningAt;
+    if (!host) host = miniOxygen.listeningAt;
 
     enhanceH2Logs({host, ...remixConfig});
 

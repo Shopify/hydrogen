@@ -1,6 +1,7 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
-import {renderWarning, renderFatalError} from '@shopify/cli-kit/node/ui';
+import {renderWarning} from '@shopify/cli-kit/node/ui';
+import {AbortError} from '@shopify/cli-kit/node/error';
 import {linkStorefront} from '../link.js';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import {getCliCommand} from '../../../lib/shell.js';
@@ -12,7 +13,7 @@ import {
 import {replaceCustomerApplicationUrls} from '../../../lib/graphql/admin/customer-application-update.js';
 import {FatalErrorType} from '@shopify/cli-kit/node/error';
 
-export default class ConfigPush extends Command {
+export default class CustomerAccountPush extends Command {
   static description = 'Push project configuration to admin';
 
   static flags = {
@@ -36,12 +37,12 @@ export default class ConfigPush extends Command {
   };
 
   async run(): Promise<void> {
-    const {flags} = await this.parse(ConfigPush);
-    await runConfigPush({...flagsToCamelObject(flags)});
+    const {flags} = await this.parse(CustomerAccountPush);
+    await runCustomerAccountPush({...flagsToCamelObject(flags)});
   }
 }
 
-export async function runConfigPush({
+export async function runCustomerAccountPush({
   path: root = process.cwd(),
   storefrontId: storefrontIdFromFlag,
   devOrigin,
@@ -57,18 +58,11 @@ export async function runConfigPush({
 }) {
   const storefrontId = await getStorefrontId(root, storefrontIdFromFlag);
 
-  if (!storefrontId) {
-    renderFatalError({
-      name: 'error',
-      type: FatalErrorType.Abort,
-      message: `No storefrontId was found`,
-      skipOclifErrorHandling: true,
-      tryMessage: 'Run running command with `--storefront-id` flag',
-    });
-    return;
-  }
-
   try {
+    if (!storefrontId) {
+      throw new Error('No storefrontId was found.');
+    }
+
     const redirectUri = redirectUriRelativeUrl
       ? new URL(redirectUriRelativeUrl, devOrigin).toString()
       : devOrigin;
@@ -125,9 +119,9 @@ export async function runConfigPush({
       ? [error.message]
       : [];
 
-    renderWarning({
-      headline: 'Customer Account Application setup update fail.',
-      body: errors.length
+    throw new AbortError(
+      'Customer Account Application setup update fail.',
+      errors.length
         ? [
             {
               list: {
@@ -139,7 +133,7 @@ export async function runConfigPush({
             },
           ]
         : undefined,
-      nextSteps: [
+      [
         {
           link: {
             label: 'Manually update Customer Account Application setup',
@@ -147,7 +141,7 @@ export async function runConfigPush({
           },
         },
       ],
-    });
+    );
   }
 }
 

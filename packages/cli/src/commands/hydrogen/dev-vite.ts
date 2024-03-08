@@ -10,7 +10,6 @@ import Command from '@shopify/cli-kit/node/base-command';
 import colors from '@shopify/cli-kit/node/colors';
 import {renderInfo} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
 import {Flags, Config} from '@oclif/core';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
@@ -23,6 +22,7 @@ import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 import {
   getDebugBannerLine,
   startTunnelAndPushConfig,
+  checkMockShopAndByPassTunnel,
 } from '../../lib/dev-shared.js';
 import {getStorefrontId} from './customer-account/push.js';
 
@@ -107,7 +107,7 @@ export async function runDev({
   disableVersionCheck = false,
   inspectorPort,
   isLocalDev = false,
-  customerAccountPush = false,
+  customerAccountPush: customerAccountPushFlag = false,
   cliConfig,
 }: DevOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
@@ -116,7 +116,12 @@ export async function runDev({
 
   const root = appPath ?? process.cwd();
 
-  // ensure this occur before getConfig since it can run link
+  const customerAccountPush = await checkMockShopAndByPassTunnel(
+    root,
+    customerAccountPushFlag,
+  );
+
+  // ensure this occur before getConfig since it can run link and changed env vars
   if (customerAccountPush) {
     await getStorefrontId(root);
   }

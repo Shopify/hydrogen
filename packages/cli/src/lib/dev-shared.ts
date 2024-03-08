@@ -5,8 +5,48 @@ import {
   outputContent,
   outputToken,
 } from '@shopify/cli-kit/node/output';
+import {renderInfo} from '@shopify/cli-kit/node/ui';
+import {AbortError} from '@shopify/cli-kit/node/error';
+import {runCustomerAccountPush} from '../commands/hydrogen/customer-account/push.js';
+import {getLocalVariables} from '../lib/environment-variables.js';
+import {getCliCommand} from '../lib/shell.js';
 import {startTunnelPlugin, pollTunnelURL} from './tunneling.js';
-import {runConfigPush} from '../commands/hydrogen/customer-account/push.js';
+
+export async function checkMockShopAndByPassTunnel(
+  root: string,
+  customerAccountPushFlag: boolean,
+) {
+  if (customerAccountPushFlag) {
+    const {variables} = await getLocalVariables(root);
+
+    if (
+      variables?.PUBLIC_STORE_DOMAIN &&
+      variables?.PUBLIC_STORE_DOMAIN.includes('mock.shop')
+    ) {
+      const cliCommand = await getCliCommand();
+
+      renderInfo({
+        headline:
+          'Using mock.shop with `--customer-account-push` flag is not supported',
+        body: 'The functionalities of this flag had been removed.',
+        nextSteps: [
+          'You may continue knowing Customer Account API (/account) interactions will fail.',
+          [
+            'Or run',
+            {
+              command: `${cliCommand} env pull`,
+            },
+            'to link to your store credentials.',
+          ],
+        ],
+      });
+
+      return false;
+    }
+  }
+
+  return customerAccountPushFlag;
+}
 
 export async function startTunnelAndPushConfig(
   root: string,
@@ -19,11 +59,21 @@ export async function startTunnelAndPushConfig(
   const tunnel = await startTunnelPlugin(cliConfig, port, 'cloudflare');
   const host = await pollTunnelURL(tunnel);
 
-  await runConfigPush({
-    path: root,
-    devOrigin: host,
-    storefrontId,
-  });
+  try {
+    await runCustomerAccountPush({
+      path: root,
+      devOrigin: host,
+      storefrontId,
+    });
+  } catch (error) {
+    if (error instanceof AbortError) {
+      renderInfo({
+        headline: 'Customer Account Application setup update fail.',
+        body: error.tryMessage || undefined,
+        nextSteps: error.nextSteps,
+      });
+    }
+  }
 
   return host;
 }

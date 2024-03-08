@@ -181,7 +181,7 @@ export async function setCustomerAccountConfig(
     const config = {
       ...existingConfig,
       storefront: {
-        ...existingConfig['storefront'],
+        ...existingConfig.storefront,
         customerAccountConfig,
       },
     };

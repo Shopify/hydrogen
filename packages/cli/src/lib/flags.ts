@@ -174,6 +174,7 @@ export const commonFlags = {
         "Use tunneling for local development and push the tunneling domain to admin. Required to use Customer Account API's Oauth flow",
       required: false,
       default: false,
+      env: 'SHOPIFY_HYDROGEN_FLAG_CUSTOMER_ACCOUNT_PUSH',
     }),
   },
 } satisfies Record<string, Record<Lowercase<string>, FlagProps>>;
