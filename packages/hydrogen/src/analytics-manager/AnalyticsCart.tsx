@@ -15,7 +15,7 @@ export function AnalyticsCart({
   const [cart, setCart] = useState<CartReturn | null>(null);
   const [lastCartUpdated, setLastCartUpdated] = useState<string | null>(null);
 
-  // resolve the cart (if it's a promise) and set it or just set it if it's not a promise
+  // resolve the cart
   useEffect(() => {
     Promise.resolve(currentCart).then(setCart);
     return () => {};

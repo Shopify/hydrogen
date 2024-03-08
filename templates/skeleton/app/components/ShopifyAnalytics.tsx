@@ -20,6 +20,7 @@ export function ShopifyAnalytics({
   useShopifyCookies({hasUserConsent});
   const [shop, setShop] = useState<ShopAnalytic | null>(null);
 
+  // resolve the shop analytics
   useEffect(() => {
     Promise.resolve(shopAnalytics).then(setShop);
     return () => {};
