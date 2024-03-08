@@ -1,5 +1,5 @@
 # Don't change the line below!
-#! oxygen_storefront_id: 28966968
+#! oxygen_storefront_id: 1000014875
 
 name: Skeleton deploy
 on: [push]
@@ -45,4 +45,4 @@ jobs:
         working-directory: templates/skeleton
         run: npx shopify hydrogen deploy --no-lockfile-check
         env:
-          SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_28966968 }}
+          SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014875 }}
