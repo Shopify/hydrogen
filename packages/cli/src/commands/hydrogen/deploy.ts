@@ -6,6 +6,7 @@ import {
   outputInfo,
   outputWarn,
 } from '@shopify/cli-kit/node/output';
+import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {writeFile} from '@shopify/cli-kit/node/fs';
 import {
@@ -13,9 +14,8 @@ import {
   getLatestGitCommit,
   GitDirectoryNotCleanError,
 } from '@shopify/cli-kit/node/git';
-import {resolvePath} from '@shopify/cli-kit/node/path';
+import {relativePath, resolvePath} from '@shopify/cli-kit/node/path';
 import {
-  renderFatalError,
   renderSelectPrompt,
   renderSuccess,
   renderTasks,
@@ -31,12 +31,14 @@ import {
   DeploymentVerificationDetailsResponse,
   parseToken,
 } from '@shopify/oxygen-cli/deploy';
-import {loadEnvironmentVariableFile} from '@shopify/oxygen-cli/utils';
 
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
 import {OxygenDeploymentData} from '../../lib/graphql/admin/get-oxygen-data.js';
 import {runBuild} from './build.js';
+import {runViteBuild} from './build-vite.js';
+import {getViteConfig} from '../../lib/vite-config.js';
+import {prepareDiffDirectory} from '../../lib/template-diff.js';
 
 const DEPLOY_OUTPUT_FILE_HANDLE = 'h2_deploy_log.json';
 
@@ -91,9 +93,9 @@ export default class Deploy extends Command {
         'Specify a build command to run before deploying. If not specified, `shopify hydrogen build` will be used.',
       required: false,
     }),
-    'lockfile-check': commonFlags.lockfileCheck,
-    path: commonFlags.path,
-    shop: commonFlags.shop,
+    ...commonFlags.lockfileCheck,
+    ...commonFlags.path,
+    ...commonFlags.shop,
     'json-output': Flags.boolean({
       allowNo: true,
       description:
@@ -130,23 +132,26 @@ export default class Deploy extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_METADATA_VERSION',
       hidden: true,
     }),
+    ...commonFlags.diff,
   };
 
   async run() {
     const {flags} = await this.parse(Deploy);
     const deploymentOptions = this.flagsToOxygenDeploymentOptions(flags);
 
-    await oxygenDeploy(deploymentOptions)
-      .catch((error) => {
-        renderFatalError(error);
-        process.exit(1);
-      })
-      .finally(() => {
-        // The Remix compiler hangs due to a bug in ESBuild:
-        // https://github.com/evanw/esbuild/issues/2727
-        // The actual build has already finished so we can kill the process
-        process.exit(0);
-      });
+    if (flags.diff) {
+      deploymentOptions.path = await prepareDiffDirectory(
+        deploymentOptions.path,
+        false,
+      );
+    }
+
+    await runDeploy(deploymentOptions);
+
+    // The Remix compiler hangs due to a bug in ESBuild:
+    // https://github.com/evanw/esbuild/issues/2727
+    // The actual build has already finished so we can kill the process
+    process.exit(0);
   }
 
   private flagsToOxygenDeploymentOptions(flags: {
@@ -206,7 +211,7 @@ function createUnexpectedAbortError(message?: string): AbortError {
   );
 }
 
-export async function oxygenDeploy(
+export async function runDeploy(
   options: OxygenDeploymentOptions,
 ): Promise<void> {
   const {
@@ -219,7 +224,7 @@ export async function oxygenDeploy(
     noVerify,
     lockfileCheck,
     jsonOutput,
-    path,
+    path: root,
     shop,
     metadataUrl,
     metadataUser,
@@ -229,7 +234,7 @@ export async function oxygenDeploy(
 
   let isCleanGit = true;
   try {
-    await ensureIsClean(path);
+    await ensureIsClean(root);
   } catch (error) {
     if (error instanceof GitDirectoryNotCleanError) {
       isCleanGit = false;
@@ -255,7 +260,7 @@ export async function oxygenDeploy(
   let gitCommit: GitCommit;
 
   try {
-    gitCommit = await getLatestGitCommit(path);
+    gitCommit = await getLatestGitCommit(root);
     branch = (/HEAD -> ([^,]*)/.exec(gitCommit.refs) || [])[1];
     commitHash = gitCommit.hash;
   } catch (error) {
@@ -280,19 +285,19 @@ export async function oxygenDeploy(
   let overriddenEnvironmentVariables;
 
   if (environmentFile) {
-    try {
-      overriddenEnvironmentVariables =
-        loadEnvironmentVariableFile(environmentFile);
-    } catch (error) {
-      throw new AbortError(
-        `Could not load environment file at ${environmentFile}`,
-      );
-    }
+    const {variables} = await readAndParseDotEnv(environmentFile);
+    overriddenEnvironmentVariables = Object.entries(variables).map(
+      ([key, value]) => ({
+        isSecret: true,
+        key,
+        value,
+      }),
+    );
   }
 
   if (!isCI) {
     deploymentData = await getOxygenDeploymentData({
-      root: path,
+      root,
       flagShop: shop,
     });
 
@@ -364,8 +369,18 @@ export async function oxygenDeploy(
     isPreview = true;
   }
 
+  let assetsDir = 'dist/client';
+  let workerDir = 'dist/worker';
+
+  const maybeVite = await getViteConfig(root).catch(() => null);
+
+  if (maybeVite) {
+    assetsDir = relativePath(root, maybeVite.clientOutDir);
+    workerDir = relativePath(root, maybeVite.serverOutDir);
+  }
+
   const config: DeploymentConfig = {
-    assetsDir: 'dist/client',
+    assetsDir,
     bugsnag: true,
     deploymentUrl,
     defaultEnvironment: defaultEnvironment || isPreview,
@@ -381,10 +396,10 @@ export async function oxygenDeploy(
       ...(metadataVersion ? {version: metadataVersion} : {}),
     },
     skipVerification: noVerify,
-    rootPath: path,
+    rootPath: root,
     skipBuild: false,
     workerOnly: false,
-    workerDir: 'dist/worker',
+    workerDir,
     overriddenEnvironmentVariables,
   };
 
@@ -450,8 +465,11 @@ export async function oxygenDeploy(
       outputInfo(
         outputContent`${colors.whiteBright('Building project...')}`.value,
       );
-      await runBuild({
-        directory: path,
+
+      const build = maybeVite ? runViteBuild : runBuild;
+
+      await build({
+        directory: root,
         assetPath,
         lockfileCheck,
         sourcemap: true,

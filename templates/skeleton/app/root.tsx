@@ -18,7 +18,7 @@ import {
   type ShouldRevalidateFunction,
   Await,
 } from '@remix-run/react';
-import favicon from '../public/favicon.svg';
+import favicon from './assets/favicon.svg';
 import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';

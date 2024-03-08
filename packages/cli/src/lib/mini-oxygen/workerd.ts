@@ -15,7 +15,11 @@ import colors from '@shopify/cli-kit/node/colors';
 import {createInspectorConnector} from './workerd-inspector.js';
 import {findPort} from '../find-port.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
-import {OXYGEN_HEADERS_MAP, logRequestLine} from './common.js';
+import {
+  OXYGEN_HEADERS_MAP,
+  SUBREQUEST_PROFILER_ENDPOINT,
+  logRequestLine,
+} from './common.js';
 import {
   H2O_BINDING_NAME,
   handleDebugNetworkRequest,
@@ -30,7 +34,12 @@ import {
 
 // This should probably be `0` and let workerd find a free port,
 // but at the moment we can't get the port from workerd (afaik?).
-const PRIVATE_WORKERD_INSPECTOR_PORT = 9222;
+export const PRIVATE_WORKERD_INSPECTOR_PORT = 9222;
+
+export const OXYGEN_WORKERD_COMPAT_PARAMS = {
+  compatibilityFlags: ['streams_enable_constructors'],
+  compatibilityDate: '2022-10-31',
+};
 
 export async function startWorkerdServer({
   root,
@@ -59,7 +68,13 @@ export async function startWorkerdServer({
   const handleAssets = createAssetHandler(assetsPort);
   const staticAssetExtensions = STATIC_ASSET_EXTENSIONS.slice();
 
-  let stringifiedOxygenHandler = miniOxygenHandler.toString();
+  let stringifiedOxygenHandler = miniOxygenHandler
+    .toString()
+    .replace(
+      'SUBREQUEST_PROFILER_ENDPOINT',
+      JSON.stringify(SUBREQUEST_PROFILER_ENDPOINT),
+    );
+
   if (process.env.NODE_ENV === 'test') {
     // Vitest adds namespaces to imports
     stringifiedOxygenHandler = stringifiedOxygenHandler.replace(
@@ -77,8 +92,16 @@ export async function startWorkerdServer({
       log: new NoOpLog(),
       liveReload: watch,
       host: 'localhost',
-      handleRuntimeStdio() {
+      handleRuntimeStdio(stdout, stderr) {
         // TODO: handle runtime stdio and remove inspector logs
+        // stdout.pipe(process.stdout);
+        // stderr.pipe(process.stderr);
+
+        // Destroy these streams to prevent memory leaks
+        // until we start piping them to the terminal.
+        // https://github.com/Shopify/hydrogen/issues/1720
+        stdout.destroy();
+        stderr.destroy();
       },
       workers: [
         {
@@ -106,11 +129,12 @@ export async function startWorkerdServer({
               contents: await readFile(absoluteBundlePath),
             },
           ],
-          compatibilityFlags: ['streams_enable_constructors'],
-          compatibilityDate: '2022-10-31',
+          ...OXYGEN_WORKERD_COMPAT_PARAMS,
           bindings: {...env},
           serviceBindings: {
-            [H2O_BINDING_NAME]: createLogRequestEvent({absoluteBundlePath}),
+            [H2O_BINDING_NAME]: createLogRequestEvent({
+              transformLocation: () => absoluteBundlePath,
+            }),
           },
         },
       ],
@@ -158,20 +182,6 @@ export async function startWorkerdServer({
     showBanner(options) {
       console.log(''); // New line
 
-      const isVSCode = process.env.TERM_PROGRAM === 'vscode';
-      const debuggingDocsLink =
-        'https://h2o.fyi/debugging/server-code' +
-        (isVSCode ? '#visual-studio-code' : '#step-2-attach-a-debugger');
-
-      const debuggerMessage =
-        outputContent`\n\nDebugging enabled on port ${String(
-          publicInspectorPort,
-        )}.\nAttach a ${outputToken.link(
-          colors.yellow(isVSCode ? 'VSCode debugger' : 'debugger'),
-          debuggingDocsLink,
-        )} or open DevTools in http://localhost:${String(publicInspectorPort)}.`
-          .value;
-
       renderSuccess({
         headline: `${
           options?.headlinePrefix ?? ''
@@ -181,9 +191,10 @@ export async function startWorkerdServer({
         body: [
           `View ${options?.appName ?? 'Hydrogen'} app: ${listeningAt}`,
           ...(options?.extraLines ?? []),
-          ...(debug ? [{warn: debuggerMessage}] : []),
+          ...(debug ? [{warn: getDebugBannerLine(publicInspectorPort)}] : []),
         ],
       });
+
       console.log('');
     },
     async close() {
@@ -209,7 +220,7 @@ async function miniOxygenHandler(
 ) {
   const {pathname} = new URL(request.url);
 
-  if (pathname === '/debug-network-server') {
+  if (pathname === SUBREQUEST_PROFILER_ENDPOINT) {
     return env.debugNetwork.fetch(request);
   }
 
@@ -285,4 +296,19 @@ async function logRequest(request: Request): Promise<Response> {
   });
 
   return new Response('ok');
+}
+
+export function getDebugBannerLine(publicInspectorPort: number) {
+  const isVSCode = process.env.TERM_PROGRAM === 'vscode';
+  const debuggingDocsLink =
+    'https://h2o.fyi/debugging/server-code' +
+    (isVSCode ? '#visual-studio-code' : '#step-2-attach-a-debugger');
+
+  return outputContent`\n\nDebugging enabled on port ${String(
+    publicInspectorPort,
+  )}.\nAttach a ${outputToken.link(
+    colors.yellow(isVSCode ? 'VSCode debugger' : 'debugger'),
+    debuggingDocsLink,
+  )} or open DevTools in http://localhost:${String(publicInspectorPort)}.`
+    .value;
 }

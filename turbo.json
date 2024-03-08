@@ -45,14 +45,6 @@
         "@shopify/remix-oxygen#build"
       ]
     },
-    "demo-store#build": {
-      "dependsOn": [
-        "@shopify/hydrogen#build",
-        "@shopify/cli-hydrogen#build",
-        "@shopify/remix-oxygen#build"
-      ],
-      "outputs": ["dist/**"]
-    },
     "hello-world#build": {
       "dependsOn": [
         "@shopify/hydrogen#build",

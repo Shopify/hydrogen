@@ -11,10 +11,12 @@ import {
   isRouteErrorResponse,
   useRouteError,
 } from '@remix-run/react';
-import styles from './assets/styles.css';
 import favicon from './assets/favicon.svg';
 import {Layout} from './components/Layout.jsx';
 import {useNonce} from '@shopify/hydrogen';
+
+// @ts-expect-error
+import styles from './assets/styles.css?url';
 
 export const links: LinksFunction = () => {
   return [

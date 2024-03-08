@@ -8,6 +8,10 @@ import {
   type ServerEvents,
 } from '../lib/useDebugNetworkServer.jsx';
 
+declare global {
+  var setActiveEventId: (eventId: string) => void;
+}
+
 export type RequestWaterfallConfig = {
   colors: {
     server: string;

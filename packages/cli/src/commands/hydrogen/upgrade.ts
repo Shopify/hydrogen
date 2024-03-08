@@ -103,7 +103,7 @@ export default class Upgrade extends Command {
   static description = 'Upgrade Remix and Hydrogen npm dependencies.';
 
   static flags = {
-    path: commonFlags.path,
+    ...commonFlags.path,
     version: Flags.string({
       description: 'A target hydrogen version to update to',
       required: false,
@@ -295,7 +295,7 @@ export async function getChangelog(): Promise<ChangeLog> {
   // For local testing
   if (
     process.env.FORCE_CHANGELOG_SOURCE === 'local' ||
-    (process.env.FORCE_CHANGELOG_SOURCE !== 'remote' && !!process.env.LOCAL_ENV)
+    (process.env.FORCE_CHANGELOG_SOURCE !== 'remote' && !!process.env.LOCAL_DEV)
   ) {
     const require = createRequire(import.meta.url);
     return require(fileURLToPath(

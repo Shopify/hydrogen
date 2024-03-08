@@ -88,10 +88,6 @@ jobs:
         run: |
           node scripts/compile-template-for-dist.mjs hello-world
 
-      - name: Compile demo-store
-        run: |
-          node scripts/compile-template-for-dist.mjs demo-store
-
       - name: Update templates in the dist branch
         run: |
           git add .
@@ -115,24 +111,24 @@ jobs:
   #     - name: Update package-lock.json
   #       run: npm install --package-lock-only --ignore-engines
 
-      # TODO: Figure out how to push to protected branch
-      # - name: Push commit to main branch
-      #   run: |
-      #     git add .
-      #     git status
-      #     git config user.email "hydrogen@shopify.com"
-      #     git config user.name "Hydrogen Bot"
-      #     git show-ref
-      #     git commit -m "[ci] Update package-lock.json"
-      #     git push origin HEAD:main
+  # TODO: Figure out how to push to protected branch
+  # - name: Push commit to main branch
+  #   run: |
+  #     git add .
+  #     git status
+  #     git config user.email "hydrogen@shopify.com"
+  #     git config user.name "Hydrogen Bot"
+  #     git show-ref
+  #     git commit -m "[ci] Update package-lock.json"
+  #     git push origin HEAD:main
 
-      # - name: Sync latest to version branch
-      #   run: |
-      #     git config user.email "hydrogen@shopify.com"
-      #     git config user.name "Hydrogen Bot"
-      #     git show-ref
-      #     git commit -m "[ci] release ${{ needs.changelog.outputs.latestBranch }}"
-      #     git push origin main:${{ needs.changelog.outputs.latestBranch }} --force
+  # - name: Sync latest to version branch
+  #   run: |
+  #     git config user.email "hydrogen@shopify.com"
+  #     git config user.name "Hydrogen Bot"
+  #     git show-ref
+  #     git commit -m "[ci] release ${{ needs.changelog.outputs.latestBranch }}"
+  #     git push origin main:${{ needs.changelog.outputs.latestBranch }} --force
 
   discord_announcement:
     needs: changelog

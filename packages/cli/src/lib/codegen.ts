@@ -2,7 +2,12 @@ import {spawn} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {formatCode, getCodeFormatOptions} from './format-code.js';
 import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
-import {joinPath, relativePath, basename} from '@shopify/cli-kit/node/path';
+import {
+  joinPath,
+  relativePath,
+  basename,
+  resolvePath,
+} from '@shopify/cli-kit/node/path';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import type {LoadCodegenConfigResult} from '@graphql-codegen/cli';
 import type {GraphQLConfig} from 'graphql-config';
@@ -55,7 +60,7 @@ export function spawnCodegenProcess({
     [
       fileURLToPath(import.meta.url),
       rootDirectory,
-      appDirectory,
+      appDirectory ?? resolvePath('app'),
       configFilePath ?? '',
     ],
     {stdio: ['inherit', 'ignore', 'pipe']},
@@ -68,6 +73,8 @@ export function spawnCodegenProcess({
     if (!dataString) return;
 
     const {message, details} = normalizeCodegenError(dataString, rootDirectory);
+
+    if (/`punycode`/.test(message)) return;
 
     console.log('');
     renderWarning({headline: message, body: details});
@@ -92,7 +99,7 @@ export function spawnCodegenProcess({
 
 type ProjectDirs = {
   rootDirectory: string;
-  appDirectory: string;
+  appDirectory?: string;
 };
 
 type CodegenOptions = ProjectDirs & {
@@ -164,7 +171,10 @@ async function generateTypes({
 }
 
 async function generateDefaultConfig(
-  {rootDirectory, appDirectory}: ProjectDirs,
+  {
+    rootDirectory,
+    appDirectory = resolvePath(rootDirectory, 'app'),
+  }: ProjectDirs,
   forceSfapiVersion?: string,
 ): Promise<LoadCodegenConfigResult> {
   const {getSchema, preset, pluckConfig} = await import(

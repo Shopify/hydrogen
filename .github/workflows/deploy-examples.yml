@@ -1,0 +1,65 @@
+# Don't change the line below!
+#! oxygen_storefront_id: 1000014888
+
+name: Examples deploy
+on: [push]
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  deploy:
+    name: Deploy to Oxygen
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    strategy:
+      # In addition to updating the examples matrix below, make sure to also update
+      # the add a key in the `env` block of the `Build and Publish to Oxygen` step
+      matrix:
+        examples:
+          [
+            {name: 'optimistic-cart-ui', token: '1000014888'},
+            {name: 'vite', token: '1000014892'},
+            {name: 'subscriptions', token: '1000014928'},
+            {name: 'third-party-queries-caching', token: '1000014929'},
+            {name: 'custom-cart-method', token: '1000014930'},
+          ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Cache node modules
+        id: cache-npm
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Install dependencies
+        run: npm ci
+      - name: 📦 Build packages
+        run: |
+          CI=true npm run build:pkg
+      - name: Build and Publish to Oxygen
+        id: deploy
+        working-directory: examples/${{ matrix.examples.name }}
+        run: |
+          npx shopify hydrogen deploy --no-lockfile-check --diff --token=$OXYGEN_DEPLOYMENT_TOKEN_${{ matrix.examples.token }}
+        env:
+          OXYGEN_DEPLOYMENT_TOKEN_1000014888: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014888 }}
+          OXYGEN_DEPLOYMENT_TOKEN_1000014892: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014892 }}
+          OXYGEN_DEPLOYMENT_TOKEN_1000014928: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014928 }}
+          OXYGEN_DEPLOYMENT_TOKEN_1000014929: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014929 }}
+          OXYGEN_DEPLOYMENT_TOKEN_1000014930: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014930 }}

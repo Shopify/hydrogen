@@ -30,8 +30,8 @@ export default class Link extends Command {
     "Link a local project to one of your shop's Hydrogen storefronts.";
 
   static flags = {
-    force: commonFlags.force,
-    path: commonFlags.path,
+    ...commonFlags.force,
+    ...commonFlags.path,
     storefront: Flags.string({
       description: 'The name of a Hydrogen Storefront (e.g. "Jane\'s Apparel")',
       env: 'SHOPIFY_HYDROGEN_STOREFRONT',
