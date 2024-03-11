@@ -1,5 +1,5 @@
 ---
-'@shopify/hydrogen': minor
+'@shopify/hydrogen': patch
 ---
 
 add optional fetcher key to CartForm
