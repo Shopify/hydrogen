@@ -16,16 +16,17 @@ import {
   ScrollRestoration,
   isRouteErrorResponse,
   type ShouldRevalidateFunction,
-  Await,
 } from '@remix-run/react';
 import favicon from './assets/favicon.svg';
 import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
-import { CustomAnalytics } from './components/CustomAnalytics';
-import { ShopifyAnalytics } from './components/ShopifyAnalytics';
-import { Suspense} from 'react';
-import {getCustomerPrivacy, useCustomerPrivacyApi} from './components/ConsentManagementApi';
+import {CustomAnalytics} from './components/CustomAnalytics';
+import {ShopifyAnalytics} from './components/ShopifyAnalytics';
+import {
+  getCustomerPrivacy,
+  useCustomerPrivacyApi,
+} from './components/ConsentManagementApi';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -75,7 +76,7 @@ export const useRootLoaderData = () => {
 export async function loader({context}: LoaderFunctionArgs) {
   const {storefront, customerAccount, cart} = context;
   const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
-  const env = context.env
+  const env = context.env;
 
   const isLoggedInPromise = customerAccount.isLoggedIn();
   const cartPromise = cart.get();
@@ -96,16 +97,18 @@ export async function loader({context}: LoaderFunctionArgs) {
     },
   });
 
-  const shopPromise = storefront.query(SHOP_QUERY, {
-    cache: storefront.CacheLong(),
-  }).then((data) => {
-    return {
-      shopId: data.shop.id,
-      acceptedLanguage: data.localization.language.isoCode,
-      currency: data.localization.country.currency.isoCode,
-      hydrogenSubchannelId: env.PUBLIC_STOREFRONT_ID || '0',
-    }
-  });
+  const shop = storefront
+    .query(SHOP_QUERY, {
+      cache: storefront.CacheLong(),
+    })
+    .then((data) => {
+      return {
+        shopId: data.shop.id,
+        acceptedLanguage: data.localization.language.isoCode,
+        currency: data.localization.country.currency.isoCode,
+        hydrogenSubchannelId: env.PUBLIC_STOREFRONT_ID || '0',
+      };
+    });
 
   return defer(
     {
@@ -114,7 +117,7 @@ export async function loader({context}: LoaderFunctionArgs) {
       header: await headerPromise,
       isLoggedIn: isLoggedInPromise,
       publicStoreDomain,
-      shop: shopPromise,
+      shop,
       consentConfig: {
         shopDomain: env.PUBLIC_STORE_DOMAIN,
         checkoutRootDomain: env.PUBLIC_CHECKOUT_DOMAIN,
@@ -135,7 +138,7 @@ export default function App() {
 
   useCustomerPrivacyApi({
     withPrivacyBanner: true,
-    consentConfig: data.consentConfig
+    consentConfig: data.consentConfig,
   });
 
   return (
@@ -147,19 +150,13 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <AnalyticsProvider
-          canTrack={() => {
-            const customerPrivacy = getCustomerPrivacy();
-            console.log('Customer privacy:', customerPrivacy?.userCanBeTracked());
-            return customerPrivacy?.userCanBeTracked() || false;
-          }}
-        >
+        <AnalyticsProvider>
           <Layout {...data}>
             <Outlet />
           </Layout>
           <CustomAnalytics />
           <ShopifyAnalytics shopAnalytics={data.shop} />
-          <AnalyticsCart currentCart={data.cart} />
+          <AnalyticsCart cart={data.cart} />
         </AnalyticsProvider>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />

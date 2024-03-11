@@ -25,23 +25,29 @@ type CustomerPrivacyConsentConfig = {
   storefrontAccessToken?: string;
 };
 
-type SetConsentHeadlessParams = VisitorConsent & CustomerPrivacyConsentConfig & {
-  headlessStorefront?: boolean;
-};
+type SetConsentHeadlessParams = VisitorConsent &
+  CustomerPrivacyConsentConfig & {
+    headlessStorefront?: boolean;
+  };
 
 export type CustomerPrivacy = {
   currentVisitorConsent: () => VisitorConsent;
   userCanBeTracked: () => boolean;
-  setTrackingConsent: (consent: SetConsentHeadlessParams, callback: () => void) => void;
+  setTrackingConsent: (
+    consent: SetConsentHeadlessParams,
+    callback: () => void,
+  ) => void;
 };
 
 type PrivacyBanner = {
   loadBanner: (options: CustomerPrivacyConsentConfig) => void;
-}
+};
 
 interface CustomEventMap {
-  "visitorConsentCollected": CustomEvent<VisitorConsentCollected>;
+  visitorConsentCollected: CustomEvent<VisitorConsentCollected>;
 }
+
+// TODO: Move this to a global.d.ts file
 declare global {
   interface Window {
     privacyBanner: PrivacyBanner;
@@ -50,8 +56,10 @@ declare global {
     };
   }
   interface Document {
-    addEventListener<K extends keyof CustomEventMap>(type: K,
-       listener: (this: Document, ev: CustomEventMap[K]) => void): void;
+    addEventListener<K extends keyof CustomEventMap>(
+      type: K,
+      listener: (this: Document, ev: CustomEventMap[K]) => void,
+    ): void;
     dispatchEvent<K extends keyof CustomEventMap>(ev: CustomEventMap[K]): void;
   }
 }
@@ -68,8 +76,10 @@ type CustomerPrivacyApiProps = {
   onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;
 };
 
-const CONSENT_API = 'https://cdn.shopify.com/shopifycloud/consent-tracking-api/v0.1/consent-tracking-api.js';
-const CONSENT_API_WITH_BANNER = 'https://cdn.shopify.com/shopifycloud/privacy-banner/storefront-banner.js';
+const CONSENT_API =
+  'https://cdn.shopify.com/shopifycloud/consent-tracking-api/v0.1/consent-tracking-api.js';
+const CONSENT_API_WITH_BANNER =
+  'https://cdn.shopify.com/shopifycloud/privacy-banner/storefront-banner.js';
 
 export function useCustomerPrivacyApi(props: CustomerPrivacyApiProps) {
   const nonce = useNonce();
@@ -82,8 +92,8 @@ export function useCustomerPrivacyApi(props: CustomerPrivacyApiProps) {
         id: 'customer-privacy-api',
         nonce: nonce || '',
       },
-    }
-  )
+    },
+  );
   const onVisitorConsentCollected = props.onVisitorConsentCollected;
 
   useEffect(() => {
@@ -94,21 +104,31 @@ export function useCustomerPrivacyApi(props: CustomerPrivacyApiProps) {
     }
 
     if (onVisitorConsentCollected) {
-      document.addEventListener('visitorConsentCollected', (event: CustomEvent<VisitorConsentCollected>) => {
-        onVisitorConsentCollected(event.detail);
-      });
+      document.addEventListener(
+        'visitorConsentCollected',
+        (event: CustomEvent<VisitorConsentCollected>) => {
+          onVisitorConsentCollected(event.detail);
+        },
+      );
     }
 
     // Override the setTrackingConsent method to include the headless storefront configuration
     if (window.Shopify?.customerPrivacy) {
-      const originalSetTrackingConsent = window.Shopify.customerPrivacy.setTrackingConsent;
-      window.Shopify.customerPrivacy.setTrackingConsent = (consent: VisitorConsent, callback: () => void) => {
-        originalSetTrackingConsent({
-          ...consent,
-          headlessStorefront: true,
-          checkoutRootDomain: consentConfig.checkoutRootDomain,
-          storefrontAccessToken: consentConfig.storefrontAccessToken,
-        }, callback)
+      const originalSetTrackingConsent =
+        window.Shopify.customerPrivacy.setTrackingConsent;
+      window.Shopify.customerPrivacy.setTrackingConsent = (
+        consent: VisitorConsent,
+        callback: () => void,
+      ) => {
+        originalSetTrackingConsent(
+          {
+            ...consent,
+            headlessStorefront: true,
+            checkoutRootDomain: consentConfig.checkoutRootDomain,
+            storefrontAccessToken: consentConfig.storefrontAccessToken,
+          },
+          callback,
+        );
       };
     }
   }, [scriptStatus, onVisitorConsentCollected]);
@@ -118,7 +138,9 @@ export function useCustomerPrivacyApi(props: CustomerPrivacyApiProps) {
 
 export function getCustomerPrivacy() {
   try {
-    return window.Shopify && window.Shopify.customerPrivacy ? window.Shopify?.customerPrivacy : null;
+    return window.Shopify && window.Shopify.customerPrivacy
+      ? window.Shopify?.customerPrivacy
+      : null;
   } catch (e) {
     return null;
   }
@@ -127,8 +149,10 @@ export function getCustomerPrivacy() {
 export function getCustomerPrivacyRequired() {
   const customerPrivacy = getCustomerPrivacy();
 
-  if(!customerPrivacy) {
-    throw new Error('Shopify Customer Privacy API not available. Make sure to load the Shopify Customer Privacy API with useCustomerPrivacyApi().');
+  if (!customerPrivacy) {
+    throw new Error(
+      'Shopify Customer Privacy API not available. Make sure to load the Shopify Customer Privacy API with useCustomerPrivacyApi().',
+    );
   }
 
   return customerPrivacy;
