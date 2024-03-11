@@ -1,43 +1,32 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { type CartReturn } from "../cart/queries/cart-types";
 import { useAnalyticsProvider } from "./AnalyticsProvider";
 
-let isFirstLoad = false;
 export function AnalyticsCart({
-  currentCart,
+  cart: currentCart,
 }: {
-  currentCart: Promise<CartReturn | null> | CartReturn | null;
+  cart: Promise<CartReturn | null> | CartReturn | null;
 }) {
-  const {publish, getCartRef} = useAnalyticsProvider();
-  const cartRef = getCartRef();
-  const previousCart = cartRef.current;
-
+  const {publish} = useAnalyticsProvider();
+  const prevCartRef = useRef<CartReturn | null>(null);
   const [cart, setCart] = useState<CartReturn | null>(null);
-  const [lastCartUpdated, setLastCartUpdated] = useState<string | null>(null);
 
-  // resolve the cart
+  // resolve the cart that could have been deferred
   useEffect(() => {
     Promise.resolve(currentCart).then(setCart);
     return () => {};
-  }, [setCart, currentCart, cart]);
+  }, [setCart, currentCart]);
 
   useEffect(() => {
-    cartRef.current = cart;
-    if (!isFirstLoad) {
-      isFirstLoad = true;
-      setLastCartUpdated(cart?.updatedAt || null);
-      return;
-    }
     if (!cart) return;
-    if(lastCartUpdated !== cart.updatedAt) {
-      setLastCartUpdated(cart.updatedAt);
+    if (cart?.updatedAt === prevCartRef.current?.updatedAt) return;
 
-      publish('cart_updated', {
-        currentCart: cart,
-        previousCart,
-      })
-    }
+    publish('cart_updated', {
+      currentCart: cart,
+      previousCart: JSON.parse(JSON.stringify(prevCartRef.current)),
+    })
 
-  }, [previousCart, cart]);
+    prevCartRef.current = cart;
+  });
   return null;
 }
