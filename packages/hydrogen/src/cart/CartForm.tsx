@@ -178,6 +178,11 @@ type CartFormCommonProps = {
    * The route to submit the form to. Defaults to the current route.
    */
   route?: string;
+  /**
+   * Optional key to use for the fetcher.
+   * @see https://remix.run/hooks/use-fetcher#key
+   */
+  fetcherKey?: string;
 };
 
 type CartActionInputProps =
@@ -217,8 +222,9 @@ export function CartForm({
   action,
   inputs,
   route,
+  fetcherKey,
 }: CartFormProps): JSX.Element {
-  const fetcher = useFetcher();
+  const fetcher = useFetcher({key: fetcherKey});
 
   return (
     <fetcher.Form action={route || ''} method="post">
