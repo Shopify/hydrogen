@@ -16,7 +16,7 @@
     "@remix-run/react": "1.15.0",
     "@shopify/cli": "3.45.0",
     "@shopify/cli-hydrogen": "^4.1.0",
-    "@shopify/hydrogen": "^2023.1.7",
+    "@shopify/hydrogen": "^2023.1.8",
     "@shopify/remix-oxygen": "^1.0.5",
     "graphql": "^16.6.0",
     "graphql-tag": "^2.12.6",
