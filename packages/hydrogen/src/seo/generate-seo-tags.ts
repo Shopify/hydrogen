@@ -2,6 +2,8 @@ import type {ComponentPropsWithoutRef} from 'react';
 import type {Maybe} from '@shopify/hydrogen-react/storefront-api-types';
 import type {Thing, WithContext} from 'schema-dts';
 
+import xss from 'xss';
+
 const ERROR_PREFIX = 'Error in SEO input: ';
 
 // TODO: Refactor this into more reusable validators or use a library like zod to do this if we decide to use it in
@@ -503,7 +505,14 @@ export function generateSeoTags<
             'script',
             {
               type: 'application/ld+json',
-              children: JSON.stringify(block),
+              children: JSON.stringify(block, (k, value) => {
+                return typeof value === 'string'
+                  ? xss(value, {
+                      stripIgnoreTag: true,
+                      stripIgnoreTagBody: true,
+                    })
+                  : value;
+              }),
             },
             // @ts-expect-error
             `json-ld-${block?.['@type'] || block?.name || index++}`,

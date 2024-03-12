@@ -264,6 +264,35 @@ describe('seo', () => {
       </DocumentFragment>
     `);
   });
+
+  it('escapes script content', async () => {
+    vi.mocked(useMatches).mockReturnValueOnce([
+      fillMatch({
+        data: {
+          seo: {
+            jsonLd: {
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'Hydrogen Root',
+              description: '</script><script>alert("hacked")</script>shows up',
+            },
+          },
+        },
+      }),
+    ]);
+
+    const {asFragment} = render(createElement(Seo));
+
+    expect(asFragment()).toMatchInlineSnapshot(`
+      <DocumentFragment>
+        <script
+          type="application/ld+json"
+        >
+          {"@context":"https://schema.org","@type":"Organization","name":"Hydrogen Root","description":"shows up"}
+        </script>
+      </DocumentFragment>
+    `);
+  });
 });
 
 function fillMatch(partial: Partial<UIMatch<any>> = {}) {
