@@ -5,7 +5,7 @@
     "@shopify:registry": "https://registry.npmjs.org"
   },
   "type": "module",
-  "version": "2023.1.7",
+  "version": "2023.1.8",
   "license": "SEE LICENSE IN LICENSE.md",
   "main": "dist/index.cjs",
   "module": "dist/production/index.js",
