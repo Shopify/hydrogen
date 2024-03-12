@@ -38,16 +38,16 @@ describe('getStorefrontEnvVariables', () => {
     );
 
     const id = '123';
-    const branch = 'staging';
+    const envHandle = 'staging';
 
     await expect(
-      getStorefrontEnvVariables(ADMIN_SESSION, id, branch),
+      getStorefrontEnvVariables(ADMIN_SESSION, id, envHandle),
     ).resolves.toStrictEqual(mockedResponse.hydrogenStorefront);
 
     expect(adminRequest).toHaveBeenCalledWith(
       expect.stringMatching(/^#graphql.+query.+hydrogenStorefront\(/s),
       ADMIN_SESSION,
-      {id, branch},
+      {id, handle: envHandle},
     );
   });
 });

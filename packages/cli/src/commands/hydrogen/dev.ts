@@ -59,6 +59,7 @@ export default class Dev extends Command {
     }),
     ...commonFlags.debug,
     ...commonFlags.inspectorPort,
+    ...commonFlags.env,
     ...commonFlags.envBranch,
     'disable-version-check': Flags.boolean({
       description: 'Skip the version check when running `hydrogen dev`',
@@ -93,6 +94,7 @@ type DevOptions = {
   codegenConfigPath?: string;
   disableVirtualRoutes?: boolean;
   disableVersionCheck?: boolean;
+  env?: string;
   envBranch?: string;
   debug?: boolean;
   sourcemap?: boolean;
@@ -108,6 +110,7 @@ export async function runDev({
   legacyRuntime = false,
   codegenConfigPath,
   disableVirtualRoutes,
+  env: envHandle,
   envBranch,
   debug = false,
   sourcemap = true,
@@ -177,7 +180,13 @@ export async function runDev({
   assertOxygenChecks(remixConfig);
 
   const envPromise = backgroundPromise.then(({fetchRemote, localVariables}) =>
-    getAllEnvironmentVariables({root, fetchRemote, envBranch, localVariables}),
+    getAllEnvironmentVariables({
+      root,
+      fetchRemote,
+      envBranch,
+      envHandle,
+      localVariables,
+    }),
   );
 
   const [{watch}, {createFileWatchCache}] = await Promise.all([
@@ -337,6 +346,7 @@ export async function runDev({
               root,
               fetchRemote,
               envBranch,
+              envHandle,
             }),
           });
         }

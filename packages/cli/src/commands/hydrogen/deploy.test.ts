@@ -221,6 +221,92 @@ describe('deploy', () => {
     });
   });
 
+  it('calls createDeploy against a environment selected by env', async () => {
+    vi.mocked(getOxygenDeploymentData).mockResolvedValue({
+      oxygenDeploymentToken: 'some-encoded-token',
+      environments: [
+        {
+          name: 'Production',
+          handle: 'production',
+          branch: 'main',
+          type: 'PRODUCTION',
+        },
+        {name: 'Preview', handle: 'preview', branch: null, type: 'PREVIEW'},
+        {name: 'Staging', handle: 'staging', branch: 'stage-1', type: 'CUSTOM'},
+      ],
+    });
+
+    await runDeploy({
+      ...deployParams,
+      env: 'staging',
+    });
+
+    expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
+      config: {
+        ...expectedConfig,
+        environmentTag: 'stage-1',
+      },
+      hooks: expectedHooks,
+      logger: deploymentLogger,
+    });
+    expect(vi.mocked(renderSuccess)).toHaveBeenCalled;
+  });
+
+  it('calls createDeploy against a environment selected by envBranch', async () => {
+    vi.mocked(getOxygenDeploymentData).mockResolvedValue({
+      oxygenDeploymentToken: 'some-encoded-token',
+      environments: [
+        {
+          name: 'Production',
+          handle: 'production',
+          branch: 'main',
+          type: 'PRODUCTION',
+        },
+        {name: 'Preview', handle: 'preview', branch: null, type: 'PREVIEW'},
+        {name: 'Staging', handle: 'staging', branch: 'stage-1', type: 'CUSTOM'},
+      ],
+    });
+
+    await runDeploy({
+      ...deployParams,
+      envBranch: 'stage-1',
+    });
+
+    expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
+      config: {
+        ...expectedConfig,
+        environmentTag: 'stage-1',
+      },
+      hooks: expectedHooks,
+      logger: deploymentLogger,
+    });
+    expect(vi.mocked(renderSuccess)).toHaveBeenCalled;
+  });
+
+  it("errors when the env provided doesn't match any environment", async () => {
+    await expect(
+      runDeploy({
+        ...deployParams,
+        env: 'fake-handle',
+      }),
+    ).rejects.toThrowError('Environment not found');
+  });
+
+  it('errors when env is provided while running in CI', async () => {
+    vi.mocked(ciPlatform).mockReturnValue({
+      isCI: true,
+      name: 'github',
+      metadata: {},
+    });
+
+    await expect(
+      runDeploy({
+        ...deployParams,
+        env: 'fake-handle',
+      }),
+    ).rejects.toThrowError("Can't specify an environment handle in CI");
+  });
+
   it('errors when there are uncommited changes', async () => {
     vi.mocked(ensureIsClean).mockRejectedValue(
       new GitDirectoryNotCleanError('Uncommitted changes'),
@@ -328,8 +414,13 @@ describe('deploy', () => {
     vi.mocked(getOxygenDeploymentData).mockResolvedValue({
       oxygenDeploymentToken: 'some-encoded-token',
       environments: [
-        {name: 'Production', branch: 'main', type: 'PRODUCTION'},
-        {name: 'Preview', branch: null, type: 'PREVIEW'},
+        {
+          name: 'Production',
+          handle: 'production',
+          branch: 'main',
+          type: 'PRODUCTION',
+        },
+        {name: 'Preview', handle: 'preview', branch: null, type: 'PREVIEW'},
       ],
     });
 
@@ -358,8 +449,13 @@ describe('deploy', () => {
       vi.mocked(getOxygenDeploymentData).mockResolvedValue({
         oxygenDeploymentToken: 'some-encoded-token',
         environments: [
-          {name: 'Production', branch: 'main', type: 'PRODUCTION'},
-          {name: 'Preview', branch: null, type: 'PREVIEW'},
+          {
+            name: 'Production',
+            handle: 'production',
+            branch: 'main',
+            type: 'PRODUCTION',
+          },
+          {name: 'Preview', handle: 'preview', branch: null, type: 'PREVIEW'},
         ],
       });
 
