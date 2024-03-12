@@ -111,9 +111,9 @@ export async function setupLocalStarterTemplate(
   // Note: Async task titles automatically have '...' appended
   const initMsg = {
     create: 'Creating storefront',
-    setup: `Setting up ${options.quickstart ? 'Quickstart ': ''}project`,
+    setup: `Setting up ${options.quickstart ? 'Quickstart ' : ''}project`,
     install: 'Installing dependencies. This could take a few minutes',
-  }
+  };
 
   const tasks = [
     {
@@ -281,7 +281,7 @@ export async function setupLocalStarterTemplate(
 
   // If running in --quickstart mode, skip this success banner
   if (options.quickstart) {
-    console.log("\n");
+    console.log('\n');
   } else {
     renderSuccess({
       headline: [

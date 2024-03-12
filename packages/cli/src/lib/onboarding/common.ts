@@ -630,7 +630,7 @@ export async function renderProjectReady(
   const nextSteps = [];
 
   if (true) {
-    nextSteps.push(['Dependencies', 'were installed'])
+    nextSteps.push(['Dependencies', 'were installed']);
   }
 
   render({
