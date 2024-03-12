@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 7.1.2
+
+### Patch Changes
+
+- Change the required Vite version to `~5.1.0` instead of `^5.1.0` to avoid breaking changes in experimental APIs that will be introduced in Vite 5.2.0. ([#1830](https://github.com/Shopify/hydrogen/pull/1830)) by [@frandiox](https://github.com/frandiox)
+
 ## 7.1.1
 
 ### Patch Changes

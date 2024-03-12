@@ -1,5 +1,20 @@
 # skeleton
 
+## 1.0.6
+
+### Patch Changes
+
+- Improve performance of predictive search: ([#1823](https://github.com/Shopify/hydrogen/pull/1823)) by [@frandiox](https://github.com/frandiox)
+
+  - Change the request to be GET instead of POST to avoid Remix route revalidations.
+  - Add Cache-Control headers to the response to get quicker results when typing.
+
+  Aside from that, it now shows a loading state when fetching the results instead of "No results found.".
+
+- Updated dependencies [[`351b3c1b`](https://github.com/Shopify/hydrogen/commit/351b3c1b7768870793ff072ba91426107ba0180c), [`5060cf57`](https://github.com/Shopify/hydrogen/commit/5060cf57f69d8391b425b54acaa487af1f7405ae), [`2888014e`](https://github.com/Shopify/hydrogen/commit/2888014e54fab72c150e9eca55df3c6dd789503e)]:
+  - @shopify/hydrogen@2024.1.4
+  - @shopify/cli-hydrogen@7.1.2
+
 ## 1.0.5
 
 ### Patch Changes
