@@ -61,7 +61,8 @@
   "dependencies": {
     "@shopify/hydrogen-react": "2024.1.1",
     "content-security-policy-builder": "^2.1.1",
-    "type-fest": "^4.5.0"
+    "type-fest": "^4.5.0",
+    "sanitize-html": "^2.3.0"
   },
   "peerDependencies": {
     "@remix-run/react": "^2.1.0",
@@ -77,6 +78,7 @@
     "happy-dom": "^8.9.0",
     "react": "^18.2.0",
     "schema-dts": "^1.1.0",
-    "vitest": "^1.0.4"
+    "vitest": "^1.0.4",
+    "@types/sanitize-html": "2.11.0"
   }
 }
