@@ -4,7 +4,7 @@
   "releases": [
     {
       "title": "Fix XSS vulnerability in the SEO component",
-      "version": "2024.1.3",
+      "version": "2024.1.4",
       "hash": "e3398352c48d1e703d7600f49fae2895764a8677",
       "pr": "https://github.com/Shopify/hydrogen/pull/1837",
       "commit": "https://github.com/Shopify/hydrogen/pull/1837/commits/31dcac4dfd8f45153541e856d56350dfa16475b4",
