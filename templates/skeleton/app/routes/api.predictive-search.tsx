@@ -34,18 +34,16 @@ const DEFAULT_SEARCH_TYPES: PredictiveSearchTypes[] = [
  * Fetches the search results from the predictive search API
  * requested by the SearchForm component
  */
-export async function action({request, params, context}: LoaderFunctionArgs) {
-  if (request.method !== 'POST') {
-    throw new Error('Invalid request method');
-  }
-
+export async function loader({request, params, context}: LoaderFunctionArgs) {
   const search = await fetchPredictiveSearchResults({
     params,
     request,
     context,
   });
 
-  return json(search);
+  return json(search, {
+    headers: {'Cache-Control': `max-age=${search.searchTerm ? 60 : 3600}`},
+  });
 }
 
 async function fetchPredictiveSearchResults({
@@ -55,15 +53,10 @@ async function fetchPredictiveSearchResults({
 }: Pick<LoaderFunctionArgs, 'params' | 'context' | 'request'>) {
   const url = new URL(request.url);
   const searchParams = new URLSearchParams(url.search);
-  let body;
-  try {
-    body = await request.formData();
-  } catch (error) {}
-  const searchTerm = String(body?.get('q') || searchParams.get('q') || '');
-  const limit = Number(body?.get('limit') || searchParams.get('limit') || 10);
-  const rawTypes = String(
-    body?.get('type') || searchParams.get('type') || 'ANY',
-  );
+  const searchTerm = searchParams.get('q') || '';
+  const limit = Number(searchParams.get('limit') || 10);
+  const rawTypes = String(searchParams.get('type') || 'ANY');
+
   const searchTypes =
     rawTypes === 'ANY'
       ? DEFAULT_SEARCH_TYPES
