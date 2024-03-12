@@ -274,7 +274,7 @@ describe('seo', () => {
               '@context': 'https://schema.org',
               '@type': 'Organization',
               name: 'Hydrogen Root',
-              description: '</script><script>alert("hacked")</script>shows up',
+              description: '</script><script>alert("hacked")</script>',
             },
           },
         },
@@ -288,7 +288,7 @@ describe('seo', () => {
         <script
           type="application/ld+json"
         >
-          {"@context":"https://schema.org","@type":"Organization","name":"Hydrogen Root","description":"shows up"}
+          {"@context":"https://schema.org","@type":"Organization","name":"Hydrogen Root","description":"\\\\u003c/script\\\\u003e\\\\u003cscript\\\\u003ealert(\\"hacked\\")\\\\u003c/script\\\\u003e"}
         </script>
       </DocumentFragment>
     `);

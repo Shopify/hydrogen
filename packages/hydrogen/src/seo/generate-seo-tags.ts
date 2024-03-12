@@ -1,8 +1,7 @@
 import type {ComponentPropsWithoutRef} from 'react';
 import type {Maybe} from '@shopify/hydrogen-react/storefront-api-types';
 import type {Thing, WithContext} from 'schema-dts';
-
-import xss from 'xss';
+import {escapeHtml} from './escape';
 
 const ERROR_PREFIX = 'Error in SEO input: ';
 
@@ -506,12 +505,7 @@ export function generateSeoTags<
             {
               type: 'application/ld+json',
               children: JSON.stringify(block, (k, value) => {
-                return typeof value === 'string'
-                  ? xss(value, {
-                      stripIgnoreTag: true,
-                      stripIgnoreTagBody: true,
-                    })
-                  : value;
+                return typeof value === 'string' ? escapeHtml(value) : value;
               }),
             },
             // @ts-expect-error
