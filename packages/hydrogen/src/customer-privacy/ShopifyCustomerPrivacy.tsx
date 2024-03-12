@@ -1,7 +1,7 @@
 import {useLoadScript, useNonce} from '@shopify/hydrogen';
 import {useEffect} from 'react';
 
-type ConsentStatus = 'true' | 'false' | '';
+export type ConsentStatus = 'true' | 'false' | '';
 
 export type VisitorConsent = {
   marketing: ConsentStatus;
@@ -19,13 +19,13 @@ export type VisitorConsentCollected = {
   thirdPartyMarketingAllowed: boolean;
 };
 
-type CustomerPrivacyConsentConfig = {
+export type CustomerPrivacyConsentConfig = {
   checkoutRootDomain?: string;
   storefrontRootDomain?: string;
   storefrontAccessToken?: string;
 };
 
-type SetConsentHeadlessParams = VisitorConsent &
+export type SetConsentHeadlessParams = VisitorConsent &
   CustomerPrivacyConsentConfig & {
     headlessStorefront?: boolean;
   };
@@ -39,11 +39,11 @@ export type CustomerPrivacy = {
   ) => void;
 };
 
-type PrivacyBanner = {
+export type PrivacyBanner = {
   loadBanner: (options: CustomerPrivacyConsentConfig) => void;
 };
 
-interface CustomEventMap {
+export interface CustomEventMap {
   visitorConsentCollected: CustomEvent<VisitorConsentCollected>;
 }
 
@@ -70,7 +70,7 @@ export type PrivacyConsentBannerProps = {
   storefrontAccessToken: string;
 };
 
-type CustomerPrivacyApiProps = {
+export type CustomerPrivacyApiProps = {
   consentConfig: PrivacyConsentBannerProps;
   withPrivacyBanner: boolean;
   onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;
@@ -81,7 +81,7 @@ const CONSENT_API =
 const CONSENT_API_WITH_BANNER =
   'https://cdn.shopify.com/shopifycloud/privacy-banner/storefront-banner.js';
 
-export function useCustomerPrivacyApi(props: CustomerPrivacyApiProps) {
+export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   const nonce = useNonce();
   const withBanner = props.withPrivacyBanner || false;
   const consentConfig = props.consentConfig;

@@ -12,7 +12,6 @@ import type {
   ProductVariantsQuery,
   ProductVariantFragment,
 } from 'storefrontapi.generated';
-
 import {
   Image,
   Money,
@@ -125,13 +124,16 @@ export default function Product() {
         product={product}
         variants={variants}
       />
-      <AnalyticsView eventName={AnalyticsView.PRODUCT_VIEWED} payload={{
-        product: {
-          id: product.id,
-          title: product.title,
-          handle: product.handle,
-        }
-      }} />
+      <AnalyticsView
+        type="product_viewed"
+        payload={{
+          product: {
+            id: product.id,
+            title: product.title,
+            handle: product.handle,
+          },
+        }}
+      />
     </div>
   );
 }
