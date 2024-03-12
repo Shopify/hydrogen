@@ -4,6 +4,13 @@
 
 ### Patch Changes
 
+- Updated dependencies [[`0dbb16c3`](https://github.com/Shopify/hydrogen/commit/0dbb16c33d132d9beb42b5557a0a3f309d6d48e3)]:
+  - @shopify/hydrogen@2023.10.5
+
+## null
+
+### Patch Changes
+
 - Updated dependencies [[`1f9f91cb`](https://github.com/Shopify/hydrogen/commit/1f9f91cbc6118ad611edfbc2237ea7ce9f7cc715)]:
   - @shopify/hydrogen@2023.10.4
 
