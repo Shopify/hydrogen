@@ -40,6 +40,7 @@ import type {
   CustomerAccountOptions,
   CustomerAccount,
   CustomerAPIResponse,
+  UiLocales,
 } from './types';
 
 const DEFAULT_LOGIN_URL = '/account/login';
@@ -246,7 +247,7 @@ export function createCustomerAccountClient({
   }
 
   return {
-    login: async () => {
+    login: async (uiLocales?: UiLocales) => {
       const loginUrl = new URL(customerAccountUrl + '/auth/oauth/authorize');
 
       const state = await generateState();
@@ -262,6 +263,10 @@ export function createCustomerAccountClient({
       );
       loginUrl.searchParams.append('state', state);
       loginUrl.searchParams.append('nonce', nonce);
+
+      if (uiLocales) {
+        loginUrl.searchParams.append('ui_locales', uiLocales);
+      }
 
       const verifier = await generateCodeVerifier();
       const challenge = await generateCodeChallenge(verifier);

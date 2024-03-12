@@ -45,9 +45,11 @@ export interface CustomerAccountMutations {
   // '#graphql mutation m1 {...}': {return: M1Mutation; variables: M1MutationVariables};
 }
 
+export type UiLocales = 'en' | 'fr' | 'cs' | 'da' | 'de' | 'es' | 'fi' | 'it' | 'ja' | 'ko' | 'nb' | 'nl' | 'pl' | 'pt-BR' | 'pt-PT' | 'sv' | 'th' | 'tr' | 'vi' | 'zh-CN' | 'zh-TW';
+
 export type CustomerAccount = {
   /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use) */
-  login: () => Promise<Response>;
+  login: (uiLocales?: UiLocales) => Promise<Response>;
   /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */
   authorize: () => Promise<Response>;
   /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */
