@@ -1,6 +1,6 @@
 {
   "url": "https://github.com/Shopify/hydrogen/pulls?q=is%3Apr+is%3Aclosed+%5Bci%5D+release+in%3Atitle+is%3Amerged",
-  "version": "1.4",
+  "version": "1.4.1",
   "releases": [
     {
       "title": "Fix XSS vulnerability in the SEO component",
