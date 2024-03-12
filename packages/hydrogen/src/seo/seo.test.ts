@@ -265,7 +265,7 @@ describe('seo', () => {
     `);
   });
 
-  it.only('escapes script content', async () => {
+  it('escapes script content', async () => {
     vi.mocked(useMatches).mockReturnValueOnce([
       fillMatch({
         data: {
