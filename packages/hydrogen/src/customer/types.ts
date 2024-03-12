@@ -45,7 +45,28 @@ export interface CustomerAccountMutations {
   // '#graphql mutation m1 {...}': {return: M1Mutation; variables: M1MutationVariables};
 }
 
-export type UiLocales = 'en' | 'fr' | 'cs' | 'da' | 'de' | 'es' | 'fi' | 'it' | 'ja' | 'ko' | 'nb' | 'nl' | 'pl' | 'pt-BR' | 'pt-PT' | 'sv' | 'th' | 'tr' | 'vi' | 'zh-CN' | 'zh-TW';
+export type UiLocales =
+  | 'en'
+  | 'fr'
+  | 'cs'
+  | 'da'
+  | 'de'
+  | 'es'
+  | 'fi'
+  | 'it'
+  | 'ja'
+  | 'ko'
+  | 'nb'
+  | 'nl'
+  | 'pl'
+  | 'pt-BR'
+  | 'pt-PT'
+  | 'sv'
+  | 'th'
+  | 'tr'
+  | 'vi'
+  | 'zh-CN'
+  | 'zh-TW';
 
 export type CustomerAccount = {
   /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use) */
