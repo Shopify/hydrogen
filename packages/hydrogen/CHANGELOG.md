@@ -1,5 +1,11 @@
 # @shopify/hydrogen
 
+## 2023.4.7
+
+### Patch Changes
+
+- Fix XSS vulnerability ([#1845](https://github.com/Shopify/hydrogen/pull/1845)) by [@blittle](https://github.com/blittle)
+
 ## 2023.4.6
 
 ### Patch Changes
