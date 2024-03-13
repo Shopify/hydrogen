@@ -4,8 +4,10 @@ import type {Socket} from 'net';
 
 import getPort, {portNumbers} from 'get-port';
 
-import {MiniOxygen} from './mini-oxygen/core.js';
-import type {MiniOxygenServerOptions, fetch} from './mini-oxygen/server.js';
+import {MiniOxygen} from './core.js';
+import type {MiniOxygenServerOptions, fetch} from './server.js';
+
+export {Request, Response, fetch} from './server.js';
 
 class WorkerNotFoundError extends Error {
   name = 'WorkerNotFoundError';

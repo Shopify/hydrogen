@@ -8,9 +8,9 @@
   "license": "MIT",
   "type": "module",
   "description": "Development assistant for custom Shopify Oxygen hosted storefronts",
-  "main": "./dist/index.js",
-  "module": "dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/worker/index.js",
+  "module": "dist/worker/index.js",
+  "types": "./dist/worker/index.d.ts",
   "sideEffects": false,
   "repository": "https://github.com/Shopify/hydrogen.git",
   "scripts": {
@@ -25,6 +25,17 @@
   ],
   "engines": {
     "node": ">=18.0.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/worker/index.d.ts",
+      "default": "./dist/worker/index.js"
+    },
+    "./node": {
+      "types": "./dist/node/index.d.ts",
+      "default": "./dist/node/index.js"
+    },
+    "./package.json": "./package.json"
   },
   "dependencies": {
     "@miniflare/cache": "^2.14.2",

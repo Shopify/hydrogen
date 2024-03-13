@@ -1,10 +1,10 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src"],
+  "include": ["src", "tests"],
   "exclude": ["dist", "tests", "node_modules", ".turbo"],
   "compilerOptions": {
     "baseUrl": "src",
-    "rootDir": "src",
+    "rootDir": ".",
     "declaration": true,
     "jsx": "react",
     "target": "ES2022",
