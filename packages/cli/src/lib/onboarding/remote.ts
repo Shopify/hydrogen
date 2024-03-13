@@ -1,11 +1,11 @@
 import {readdir} from 'node:fs/promises';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {AbortController} from '@shopify/cli-kit/node/abort';
+import {AbortController, AbortSignal} from '@shopify/cli-kit/node/abort';
 import {copyFile, fileExists} from '@shopify/cli-kit/node/fs';
 import {readAndParsePackageJson} from '@shopify/cli-kit/node/node-package-manager';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {renderInfo, renderTasks} from '@shopify/cli-kit/node/ui';
-import {getLatestTemplates} from '../template-downloader.js';
+import {downloadMonorepoTemplates} from '../template-downloader.js';
 import {applyTemplateDiff} from '../template-diff.js';
 import {getCliCommand} from '../shell.js';
 import {
@@ -24,46 +24,18 @@ import {
  * Flow for creating a project starting from a remote template (e.g. demo-store).
  */
 export async function setupRemoteTemplate(
-  options: InitOptions,
+  options: InitOptions & Required<Pick<InitOptions, 'template'>>,
   controller: AbortController,
 ) {
   // TODO: support GitHub repos as templates
-  const appTemplate = options.template!;
+  const appTemplate = options.template;
   let abort = createAbortHandler(controller);
 
   // Start downloading templates early.
-  const backgroundDownloadPromise = getLatestTemplates({
-    signal: controller.signal,
-  })
-    .then(async ({templatesDir, examplesDir}) => {
-      const templatePath = joinPath(templatesDir, appTemplate);
-      const examplePath = joinPath(examplesDir, appTemplate);
-
-      if (await fileExists(templatePath)) {
-        return {templatesDir, sourcePath: templatePath};
-      }
-
-      if (await fileExists(examplePath)) {
-        return {templatesDir, sourcePath: examplePath};
-      }
-
-      const availableTemplates = (
-        await Promise.all([readdir(examplesDir), readdir(templatesDir)]).catch(
-          () => [],
-        )
-      )
-        .flat()
-        .filter((name) => name !== 'skeleton' && !name.endsWith('.md'))
-        .sort();
-
-      throw new AbortError(
-        `Unknown value in \`--template\` flag "${appTemplate}".\nSkip the flag or provide the name of a template or example in the Hydrogen repository.`,
-        availableTemplates.length === 0
-          ? ''
-          : {list: {title: 'Available templates:', items: availableTemplates}},
-      );
-    })
-    .catch(abort);
+  const backgroundDownloadPromise = getMonorepoTemplate(
+    appTemplate,
+    controller.signal,
+  ).catch(abort);
 
   const project = await handleProjectLocation({...options, controller});
 
@@ -80,18 +52,14 @@ export async function setupRemoteTemplate(
       // do not continue if it's already aborted
       if (controller.signal.aborted) return;
 
-      const {sourcePath, templatesDir} = downloaded;
+      const {sourcePath, skeletonPath} = downloaded;
 
       const pkgJson = await readAndParsePackageJson(
         joinPath(sourcePath, 'package.json'),
       );
 
       if (pkgJson.scripts?.dev?.includes('--diff')) {
-        return applyTemplateDiff(
-          project.directory,
-          sourcePath,
-          joinPath(templatesDir, 'skeleton'),
-        );
+        return applyTemplateDiff(project.directory, sourcePath, skeletonPath);
       }
 
       return copyFile(sourcePath, project.directory);
@@ -178,4 +146,38 @@ export async function setupRemoteTemplate(
     ...project,
     ...setupSummary,
   };
+}
+
+async function getMonorepoTemplate(appTemplate: string, signal: AbortSignal) {
+  const {templatesDir, examplesDir} = await downloadMonorepoTemplates({
+    signal,
+  });
+
+  const skeletonPath = joinPath(templatesDir, 'skeleton');
+  const templatePath = joinPath(templatesDir, appTemplate);
+  const examplePath = joinPath(examplesDir, appTemplate);
+
+  if (await fileExists(templatePath)) {
+    return {skeletonPath, sourcePath: templatePath};
+  }
+
+  if (await fileExists(examplePath)) {
+    return {skeletonPath, sourcePath: examplePath};
+  }
+
+  const availableTemplates = (
+    await Promise.all([readdir(examplesDir), readdir(templatesDir)]).catch(
+      () => [],
+    )
+  )
+    .flat()
+    .filter((name) => name !== 'skeleton' && !name.endsWith('.md'))
+    .sort();
+
+  throw new AbortError(
+    `Unknown value in \`--template\` flag "${appTemplate}".\nSkip the flag or provide the name of a template or example in the Hydrogen repository.`,
+    availableTemplates.length === 0
+      ? ''
+      : {list: {title: 'Available templates:', items: availableTemplates}},
+  );
 }

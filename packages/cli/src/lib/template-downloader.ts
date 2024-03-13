@@ -4,7 +4,7 @@ import {pipeline} from 'stream/promises';
 import gunzipMaybe from 'gunzip-maybe';
 import {extract} from 'tar-fs';
 import {fetch} from '@shopify/cli-kit/node/http';
-import {mkdir, fileExists} from '@shopify/cli-kit/node/fs';
+import {mkdir, fileExists, rmdir} from '@shopify/cli-kit/node/fs';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortSignal} from '@shopify/cli-kit/node/abort';
 import {getSkeletonSourceDir} from './build.js';
@@ -40,7 +40,7 @@ async function getLatestReleaseDownloadUrl(signal?: AbortSignal) {
   };
 }
 
-async function downloadTarball(
+async function downloadMonorepoTarball(
   url: string,
   storageDir: string,
   signal?: AbortSignal,
@@ -72,7 +72,7 @@ async function downloadTarball(
   );
 }
 
-export async function getLatestTemplates({
+export async function downloadMonorepoTemplates({
   signal,
 }: {signal?: AbortSignal} = {}) {
   if (process.env.LOCAL_DEV) {
@@ -96,7 +96,7 @@ export async function getLatestTemplates({
 
     const templateStorageVersionPath = path.join(templateStoragePath, version);
     if (!(await fileExists(templateStorageVersionPath))) {
-      await downloadTarball(url, templateStorageVersionPath, signal);
+      await downloadMonorepoTarball(url, templateStorageVersionPath, signal);
     }
 
     return {
