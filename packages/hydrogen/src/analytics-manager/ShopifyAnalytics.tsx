@@ -3,16 +3,16 @@ import {
   getClientBrowserParameters,
   sendShopifyAnalytics,
   useShopifyCookies,
-  useAnalyticsProvider,
+  type ShopifyPageViewPayload,
 } from '@shopify/hydrogen';
+import {useAnalyticsProvider} from './AnalyticsProvider';
 import type {
-  ShopifyPageViewPayload,
   PageViewPayload,
   ProductViewPayload,
   CollectionViewPayload,
   CartViewPayload,
   CartUpdatePayload,
-} from '@shopify/hydrogen';
+} from './AnalyticsView';
 import {useEffect} from 'react';
 
 /**
@@ -25,22 +25,25 @@ import {useEffect} from 'react';
  * - cart_updated
  *   - product_added_to_cart
  *   - product_removed_from_cart
- *   - product_quantity_updated
- *   - cart_cleared
+ *   - TODO: add more events
  *
 */
 export function ShopifyAnalytics() {
   const {subscribe, canTrack} = useAnalyticsProvider();
-  const hasUserConsent = canTrack();
-  useShopifyCookies({hasUserConsent});
+  useShopifyCookies({hasUserConsent: canTrack()});
 
   useEffect(() => {
     // Views
     subscribe('page_viewed', pageViewHandler);
+
     subscribe('page_viewed', (payload) => {
       console.log('page_viewed', payload);
     });
+
     subscribe('product_viewed', productViewHandler);
+    subscribe('product_viewed', (payload) => {
+      console.log('product_viewed', payload);
+    })
     subscribe('collection_viewed', collectionViewHandler);
     subscribe('cart_viewed', cartViewHandler);
 
@@ -100,24 +103,24 @@ function cartUpdateHandler(payload: CartUpdatePayload) {
     const matchedLineId = cart?.lines.nodes.filter(
       (line) => prevLine.id === line.id,
     );
-    if (matchedLineId.length === 1) {
+    if (matchedLineId?.length === 1) {
       const matchedLine = matchedLineId[0];
       if (prevLine.quantity < matchedLine.quantity) {
         // eslint-disable-next-line no-console
-        console.log('product_added_to_cart', {
+        console.log('ShopifyAnalytics - Added To Cart', {
           prevLine,
           quantity: matchedLine.quantity,
         });
       } else if (prevLine.quantity > matchedLine.quantity) {
         // eslint-disable-next-line no-console
-        console.log('product_removed_from_cart', {
+        console.log('ShopifyAnalytics - Removed From Cart', {
           prevLine,
           quantity: matchedLine.quantity,
         });
       }
     } else {
       // eslint-disable-next-line no-console
-      console.log('product_removed_from_cart', {
+      console.log('ShopifyAnalytics - Removed From Cart', {
         prevLine,
         quantity: 0,
       });
@@ -131,7 +134,7 @@ function cartUpdateHandler(payload: CartUpdatePayload) {
     );
     if (!matchedLineId || matchedLineId.length === 0) {
       // eslint-disable-next-line no-console
-      console.log('product_added_to_cart', {
+      console.log('ShopifyAnalytics - Added To Cart', {
         line,
         quantity: 1,
       });

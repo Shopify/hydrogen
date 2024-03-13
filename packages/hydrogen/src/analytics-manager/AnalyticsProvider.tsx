@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState , useMemo, useCallback, createContext, useContext, useRef } from "react";
+import { type ReactNode, useEffect, useState , useMemo, createContext, useContext, useRef } from "react";
 import { type CartReturn } from "../cart/queries/cart-types";
 import {
   AnalyticsView,
@@ -8,10 +8,13 @@ import {
   type CartViewPayload,
   type CartUpdatePayload,
   type CustomEventPayload,
-  type OtherData
+  type OtherData,
+  type EventPayloads,
+  type EventTypes,
 } from "./AnalyticsView";
 import { type CurrencyCode, LanguageCode } from '@shopify/hydrogen-react/storefront-api-types';
 import {AnalyticsEvent} from "./events";
+import {ShopifyAnalytics} from "./ShopifyAnalytics";
 
 export type ShopAnalytic = {
   [key: string]: unknown;
@@ -30,27 +33,29 @@ export type AnalyticsProviderProps = {
   canTrack?: () => boolean;
 
   /** The optional customer object to pass to events **/
-  // TODO: Need to solve for this
+  // TODO: Need to solve for this. Do we want to defer the customer in the root and pass it down?
+  // or do it client-side but we don't support customer queries on the client.
   // customer?: Promise<CustomerReturn | null> | CustomerReturn | null;
 
   /** An optional custom payload to pass to all events. e.g language/locale/currency */
   customPayload?: Record<string, unknown>;
 
-  /** Enable consent and evnets publishing logs */
-  debug?: boolean;
-
   // TODO: pass generic Promise<ShopAnalytic | null> | ShopAnalytic | null;
   shop: Promise<ShopAnalytic | null> | ShopAnalytic | null;
 }
 
+type Carts = {
+  cart: Awaited<AnalyticsProviderProps['cart']>;
+  prevCart: Awaited<AnalyticsProviderProps['cart']>;
+}
 
 type AnalyticsContextValue = {
   canTrack: NonNullable<AnalyticsProviderProps['canTrack']>;
   cart: Awaited<AnalyticsProviderProps['cart']>;
   customPayload: AnalyticsProviderProps['customPayload'];
-  debug?: AnalyticsProviderProps['debug'];
   prevCart: Awaited<AnalyticsProviderProps['cart']>;
   publish: typeof publish;
+  setCarts: React.Dispatch<React.SetStateAction<Carts>>;
   shop: Awaited<AnalyticsProviderProps['shop']>;
   subscribe: typeof subscribe;
 }
@@ -59,18 +64,18 @@ export const defaultAnalyticsContext: AnalyticsContextValue = {
   canTrack: () => false,
   cart: null,
   customPayload: {},
-  debug: false,
   prevCart: null,
-  publish: () => { },
+  publish: () => {},
+  setCarts: () => ({cart: null, prevCart: null}),
   shop: null,
-  subscribe: () => { },
+  subscribe: () => {},
 };
 
 const AnalyticsContext = createContext<AnalyticsContextValue>(
   defaultAnalyticsContext,
 );
 
-const subscribers = new Map<string, Map<String, (payload: Record<string, unknown>) => void>>();
+const subscribers = new Map<string, Map<string, (payload: EventPayloads) => void>>();
 
 // Overload functions for each subscribe event
 function subscribe(
@@ -103,7 +108,6 @@ function subscribe(
   callback: (payload: CustomEventPayload) => void
 ): void;
 
-// TODO: should be any any or string and a default callback function?
 function subscribe(
   event: any,
   callback: any
@@ -120,7 +124,7 @@ function publish(event: typeof AnalyticsEvent.COLLECTION_VIEWED, payload: Collec
 function publish(event: typeof AnalyticsEvent.CART_VIEWED, payload: CartViewPayload): void;
 function publish(event: typeof AnalyticsEvent.CART_UPDATED, payload: CartUpdatePayload): void;
 function publish(event: typeof AnalyticsEvent.CUSTOM_EVENT, payload: OtherData): void;
-function publish(event: string,  payload: Record<string, unknown>): void {
+function publish(event: any,  payload: any): void {
   (subscribers.get(event) ?? new Map()).forEach((callback) => {
     try {
       callback(payload);
@@ -134,53 +138,71 @@ function publish(event: string,  payload: Record<string, unknown>): void {
   });
 }
 
+// This functions attempts to automatically determine if the user can be tracked if the
+// customer privacy API is available. If not, it will default to false.
+function shopifyCanTrack() {
+  if (
+    typeof window !== 'undefined' &&
+    typeof window?.Shopify === 'object' &&
+    typeof window?.Shopify?.customerPrivacy === 'object' &&
+    typeof window?.Shopify?.customerPrivacy?.userCanBeTracked === 'function'
+  ) {
+    return window.Shopify.customerPrivacy.userCanBeTracked();
+  }
+  return false;
+}
+
 export function AnalyticsProvider({
   children,
   canTrack: customCanTrack,
   customPayload = {},
   cart: currentCart,
   shop: shopProp = null,
-  debug = false,
 }: AnalyticsProviderProps): JSX.Element {
-  const {cart, prevCart} = useCartAnalytics(currentCart)
+  const listenerSet = useRef(false);
   const {shop} = useShopAnalytics(shopProp);
+  const [consentLoaded, setConsentLoaded] = useState(customCanTrack ? true : false);
+  const [carts, setCarts] = useState<Carts>({cart: null, prevCart: null});
+  const [canTrack, setCanTrack] = useState(customCanTrack ? () => customCanTrack : () => shopifyCanTrack);
 
-  // This functions attempts to automatically determine if the user can be tracked if the
-  // customer privacy API is available. If not, it will default to false.
-  function shopifyCanTrack() {
-    if (
-      typeof window !== 'undefined' &&
-      typeof window?.Shopify === 'object' &&
-      typeof window?.Shopify?.customerPrivacy === 'object' &&
-      typeof window?.Shopify?.customerPrivacy?.userCanBeTracked === 'function'
-    ) {
-      return window.Shopify.customerPrivacy.userCanBeTracked();
-    }
-    return false;
-  }
+  useEffect(() => {
+    if (listenerSet.current) return;
+    listenerSet.current = true;
 
-  const canTrack = customCanTrack ?? shopifyCanTrack
+    // Listen for the customerPrivacyApiLoaded event dispatched by the
+    // useCustomerPrivacy hook
+    document.addEventListener('customerPrivacyApiLoaded', (event) => {;
+      if (!event.detail) {
+        setConsentLoaded(false);
+        setCanTrack(() => () => false);
+      } else {
+        setConsentLoaded(event.detail);
+        setCanTrack(() => shopifyCanTrack);
+      }
+    })
+  }, [setConsentLoaded, setCanTrack]);
 
   const value = useMemo<AnalyticsContextValue>(() => ({
-    debug,
     canTrack,
-    cart,
+    ...carts,
     customPayload,
-    prevCart,
     publish,
+    setCarts,
     shop,
     subscribe
-  }), [debug, canTrack, cart?.updatedAt, prevCart, publish, subscribe, customPayload, shop]);
+  }), [setCarts, consentLoaded, canTrack, JSON.stringify(canTrack), carts.cart?.updatedAt, carts.prevCart, publish, subscribe, customPayload, shop]);
 
   return (
     <AnalyticsContext.Provider value={value}>
       {children}
-      <AnalyticsView type="page_viewed" />
+      {shop && <AnalyticsView type="page_viewed" />}
+      {currentCart && <CartAnalytics cart={currentCart} />}
+      <ShopifyAnalytics />
     </AnalyticsContext.Provider>
   );
 };
 
-export function useAnalyticsProvider() {
+export function useAnalyticsProvider(): AnalyticsContextValue {
   const analyticsContext = useContext(AnalyticsContext);
   if (!analyticsContext) {
     throw new Error(`'useAnalyticsProvider()' must be a descendent of <AnalyticsProvider/>`);
@@ -188,46 +210,43 @@ export function useAnalyticsProvider() {
   return analyticsContext;
 }
 
-/**
- * A hook to track both the cart and previous cart and publish cart_updated events.
-**/
-function useCartAnalytics(currentCart : AnalyticsProviderProps['cart']) {
-  const {publish, shop, customPayload, canTrack} = useAnalyticsProvider();
-  const prevCartRef = useRef<Awaited<AnalyticsProviderProps['cart']>>(null);
-  const [cart, setCart] = useState<Awaited<AnalyticsProviderProps['cart']>>(null);
+export function CartAnalytics({cart: currentCart}: {cart: AnalyticsProviderProps['cart']}) {
+  const {publish, shop, customPayload, canTrack, cart, prevCart, setCarts} = useAnalyticsProvider();
+  const lastEventId = useRef<string | null>(null);
 
   // resolve the cart that could have been deferred
   useEffect(() => {
     if (!currentCart) return;
-    Promise.resolve(currentCart).then(setCart);
+    Promise.resolve(currentCart).then((updatedCart) => {
+      setCarts(({cart, prevCart}: Carts) => {
+        if (updatedCart?.updatedAt !== cart?.updatedAt) return {cart: updatedCart, prevCart: cart};
+        return {cart, prevCart};
+      })
+    })
     return () => {};
-  }, [setCart, currentCart]);
+  }, [setCarts, currentCart]);
+
 
   useEffect(() => {
-    if (!cart) return;
-    if (cart?.updatedAt === prevCartRef.current?.updatedAt) return;
+    if (!cart || !cart?.updatedAt) return;
+    if (cart?.updatedAt === prevCart?.updatedAt) return;
 
     const payload: CartUpdatePayload = {
       eventTimestamp: Date.now(),
-      cart: cart,
-      prevCart: JSON.parse(JSON.stringify(prevCartRef.current)) as CartReturn,
+      cart,
+      prevCart,
       shop,
       customPayload,
     };
 
-    console.log('useCart', canTrack)
+    // prevent duplicate events
+    if (cart.updatedAt === lastEventId.current) return;
+    lastEventId.current = cart.updatedAt;
 
-    if (canTrack()) {
-      publish('cart_updated', payload)
-    } else {
-      // eslint-disable-next-line no-console
-      console.warn('Analytics - cart_updated event not sent because user cannot be tracked');
-    }
+    publish('cart_updated', payload)
+  }, [cart, prevCart, setCarts, publish, shop, customPayload, canTrack]);
 
-    prevCartRef.current = cart;
-  }, [canTrack, publish, cart?.updatedAt, prevCartRef, shop, customPayload]);
-
-  return {cart, prevCart: prevCartRef.current};
+  return null;
 }
 
 /**

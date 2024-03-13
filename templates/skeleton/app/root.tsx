@@ -2,6 +2,7 @@ import {
   useCustomerPrivacy,
   AnalyticsProvider,
   ShopifyAnalytics,
+  CartAnalytics,
   useNonce,
 } from '@shopify/hydrogen';
 import {
@@ -161,7 +162,6 @@ export default function App() {
             <Outlet />
           </Layout>
           <CustomAnalytics />
-          <ShopifyAnalytics />
         </AnalyticsProvider>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />

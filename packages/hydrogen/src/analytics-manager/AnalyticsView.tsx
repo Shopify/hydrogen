@@ -41,13 +41,27 @@ export type PageViewPayload = {
 } & BasePayload;
 
 export type CartUpdatePayload = {
-  cart: CartReturn;
-  prevCart: CartReturn;
+  cart: CartReturn | null;
+  prevCart: CartReturn | null;
 } & BasePayload;
 
 export type CustomEventPayload = {
   [key: string]: unknown;
 } & BasePayload;
+
+export type EventPayloads = PageViewPayload |
+  ProductViewPayload |
+  CollectionViewPayload |
+  CartViewPayload |
+  CartUpdatePayload |
+  CustomEventPayload;
+
+export type EventTypes = typeof AnalyticsEvent['PAGE_VIEWED'] |
+  typeof AnalyticsEvent['PRODUCT_VIEWED'] |
+  typeof AnalyticsEvent['COLLECTION_VIEWED'] |
+  typeof AnalyticsEvent['CART_VIEWED'] |
+  typeof AnalyticsEvent['CART_UPDATED'] |
+  typeof AnalyticsEvent['CUSTOM_EVENT'];
 
 // Event types
 type PageViewProps = {
@@ -81,10 +95,10 @@ export function AnalyticsView(props: CollectionViewProps): null;
 export function AnalyticsView(props: CartViewProps): null;
 export function AnalyticsView(props: CustomViewProps): null;
 export function AnalyticsView(props: any) {
-  const { type, payload = {} } = props;
+  const {type, payload = {}} = props;
   const location = useLocation();
   const lastLocationPathname = useRef<string>('');
-  const {publish, cart, prevCart, shop, canTrack} = useAnalyticsProvider();
+  const {publish, cart, prevCart, shop} = useAnalyticsProvider();
   const url = location.pathname + location.search;
 
   // Publish page_viewed events when the URL changes
@@ -104,15 +118,8 @@ export function AnalyticsView(props: any) {
 
     lastLocationPathname.current = url;
 
-    console.log('PageView', canTrack)
-
-    if (canTrack()) {
-      publish(type, viewPayload);
-    } else {
-      // eslint-disable-next-line no-console
-      console.warn('AnalyticsView - User has not consented to tracking');
-    }
-  }, [canTrack, publish, url, cart, prevCart, shop]);
+    publish(type, viewPayload);
+  }, [publish, url, cart, prevCart, shop]);
 
   return null;
 }
