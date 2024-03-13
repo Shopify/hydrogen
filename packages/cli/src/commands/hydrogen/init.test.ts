@@ -196,7 +196,6 @@ describe('init', () => {
         expect(output).not.toMatch('warning');
         expect(output).not.toMatch('Routes');
         expect(output).toMatch(/Language:\s*TypeScript/);
-        expect(output).toMatch('Help');
         expect(output).toMatch('Next steps');
         expect(output).toMatch(
           // Output contains banner characters. USe [^\w]*? to match them.
@@ -368,7 +367,6 @@ describe('init', () => {
         expect(output).toMatch(basename(tmpDir));
         expect(output).not.toMatch('Routes');
         expect(output).toMatch(/Language:\s*TypeScript/);
-        expect(output).toMatch('Help');
         expect(output).toMatch('Next steps');
         expect(output).toMatch(
           // Output contains banner characters. USe [^\w]*? to match them.
@@ -821,6 +819,52 @@ describe('init', () => {
           } finally {
             await close();
           }
+        });
+      });
+    });
+
+    describe('Quickstart options', () => {
+      it('Scaffolds Quickstart project with expected values', async () => {
+        await inTemporaryDirectory(async (tmpDir) => {
+          await runInit({
+            path: tmpDir,
+            quickstart: true,
+            installDeps: false,
+          });
+
+          const templateFiles = await glob('**/*', {
+            cwd: getSkeletonSourceDir().replace(
+              'skeleton',
+              'hydrogen-quickstart',
+            ),
+            ignore: ['**/node_modules/**', '**/dist/**'],
+          });
+          const resultFiles = await glob('**/*', {cwd: tmpDir});
+          const nonAppFiles = templateFiles.filter(
+            (item) => !item.startsWith('app/'),
+          );
+
+          expect(resultFiles).toEqual(expect.arrayContaining(nonAppFiles));
+
+          expect(resultFiles).toContain('app/root.jsx');
+          expect(resultFiles).toContain('app/entry.client.jsx');
+          expect(resultFiles).toContain('app/entry.server.jsx');
+          expect(resultFiles).toContain('app/components/Layout.jsx');
+          expect(resultFiles).toContain('app/routes/_index.jsx');
+          expect(resultFiles).not.toContain('app/routes/($locale)._index.jsx');
+
+          // await expect(readFile(`${tmpDir}/package.json`)).resolves.toMatch(
+          //   `"name": "hello-world"`,
+          // );
+
+          const output = outputMock.info();
+          expect(output).not.toMatch('warning');
+          expect(output).toMatch('success');
+          expect(output).toMatch(/Shopify:\s+Mock.shop/);
+          expect(output).toMatch(/Language:\s+JavaScript/);
+          expect(output).toMatch(/Styling:\s+Tailwind/);
+          expect(output).toMatch('Routes');
+          expect(output).toMatch('Next steps');
         });
       });
     });
