@@ -108,15 +108,22 @@ export async function setupLocalStarterTemplate(
     )
     .catch(abort);
 
+  // Note: Async task titles automatically have '...' appended
+  const initMsg = {
+    create: 'Creating storefront',
+    setup: `Setting up ${options.quickstart ? 'Quickstart ' : ''}project`,
+    install: 'Installing dependencies. This could take a few minutes',
+  };
+
   const tasks = [
     {
-      title: 'Creating storefront',
+      title: initMsg.create,
       task: async () => {
         await createStorefrontPromise;
       },
     },
     {
-      title: 'Setting up project',
+      title: initMsg.setup,
       task: async () => {
         await backgroundWorkPromise;
       },
@@ -249,7 +256,7 @@ export async function setupLocalStarterTemplate(
     });
 
     tasks.push({
-      title: 'Installing dependencies. This could take a few minutes',
+      title: initMsg.install,
       task: async () => {
         await installingDepsPromise;
       },
@@ -272,12 +279,17 @@ export async function setupLocalStarterTemplate(
     showShortcutBanner();
   }
 
-  renderSuccess({
-    headline: [
-      {userInput: storefrontInfo?.title ?? project.name},
-      'is ready to build.',
-    ],
-  });
+  // If running in --quickstart mode, skip this success banner
+  if (options.quickstart) {
+    console.log('\n');
+  } else {
+    renderSuccess({
+      headline: [
+        {userInput: storefrontInfo?.title ?? project.name},
+        'is ready to build.',
+      ],
+    });
+  }
 
   const continueWithSetup =
     (options.i18n ?? options.routes) !== undefined ||
