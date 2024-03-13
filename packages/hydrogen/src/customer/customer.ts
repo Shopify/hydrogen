@@ -42,6 +42,7 @@ import type {
   CustomerAPIResponse,
   UiLocales,
 } from './types';
+import { LanguageCode } from '@shopify/hydrogen-react/storefront-api-types';
 
 const DEFAULT_LOGIN_URL = '/account/login';
 const DEFAULT_AUTH_URL = '/account/authorize';
@@ -247,7 +248,7 @@ export function createCustomerAccountClient({
   }
 
   return {
-    login: async (uiLocales?: UiLocales) => {
+    login: async (uiLocales?: LanguageCode) => {
       const loginUrl = new URL(customerAccountUrl + '/auth/oauth/authorize');
 
       const state = await generateState();
@@ -265,7 +266,12 @@ export function createCustomerAccountClient({
       loginUrl.searchParams.append('nonce', nonce);
 
       if (uiLocales) {
-        loginUrl.searchParams.append('ui_locales', uiLocales);
+        const [language, region] = uiLocales.split('-');
+        let locale = language.toLowerCase();
+        if (region) {
+          locale += `-${region.toUpperCase()}`;
+        }
+        loginUrl.searchParams.append('ui_locales', locale);
       }
 
       const verifier = await generateCodeVerifier();
