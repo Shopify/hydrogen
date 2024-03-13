@@ -1,4 +1,10 @@
-import {AnalyticsCart, AnalyticsProvider, useNonce} from '@shopify/hydrogen';
+import {
+  useCustomerPrivacy,
+  AnalyticsProvider,
+  ShopifyAnalytics,
+  CartAnalytics,
+  useNonce,
+} from '@shopify/hydrogen';
 import {
   defer,
   type SerializeFrom,
@@ -22,11 +28,6 @@ import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
 import {CustomAnalytics} from './components/CustomAnalytics';
-import {ShopifyAnalytics} from './components/ShopifyAnalytics';
-import {
-  getCustomerPrivacy,
-  useCustomerPrivacyApi,
-} from './components/ConsentManagementApi';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -132,11 +133,13 @@ export async function loader({context}: LoaderFunctionArgs) {
   );
 }
 
+// shop: Promise<ShopAnalytic | null> | ShopAnalytic | null;
+
 export default function App() {
   const nonce = useNonce();
   const data = useLoaderData<typeof loader>();
 
-  useCustomerPrivacyApi({
+  useCustomerPrivacy({
     withPrivacyBanner: true,
     consentConfig: data.consentConfig,
   });
@@ -150,13 +153,15 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <AnalyticsProvider>
+        <AnalyticsProvider
+          cart={data.cart}
+          shop={data.shop}
+          customPayload={{test: 'juan'}}
+        >
           <Layout {...data}>
             <Outlet />
           </Layout>
           <CustomAnalytics />
-          <ShopifyAnalytics shopAnalytics={data.shop} />
-          <AnalyticsCart cart={data.cart} />
         </AnalyticsProvider>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />

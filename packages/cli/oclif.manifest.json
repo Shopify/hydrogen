@@ -1323,132 +1323,6 @@
         "push__unstable.js"
       ]
     },
-    "hydrogen:setup:css": {
-      "aliases": [],
-      "args": {
-        "strategy": {
-          "description": "The CSS strategy to setup. One of tailwind,css-modules,vanilla-extract,postcss",
-          "name": "strategy",
-          "options": [
-            "tailwind",
-            "css-modules",
-            "vanilla-extract",
-            "postcss"
-          ]
-        }
-      },
-      "description": "Setup CSS strategies for your project.",
-      "flags": {
-        "path": {
-          "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
-          "name": "path",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "force": {
-          "char": "f",
-          "description": "Overwrites the destination directory and files if they already exist.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_FORCE",
-          "name": "force",
-          "allowNo": false,
-          "type": "boolean"
-        },
-        "install-deps": {
-          "description": "Auto installs dependencies using the active package manager.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_INSTALL_DEPS",
-          "name": "install-deps",
-          "allowNo": true,
-          "type": "boolean"
-        }
-      },
-      "hasDynamicHelp": false,
-      "hiddenAliases": [],
-      "id": "hydrogen:setup:css",
-      "pluginAlias": "@shopify/cli-hydrogen",
-      "pluginName": "@shopify/cli-hydrogen",
-      "pluginType": "core",
-      "strict": true,
-      "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "hydrogen",
-        "setup",
-        "css.js"
-      ]
-    },
-    "hydrogen:setup:markets": {
-      "aliases": [],
-      "args": {
-        "strategy": {
-          "description": "The URL structure strategy to setup multiple markets. One of subfolders,domains,subdomains",
-          "name": "strategy",
-          "options": [
-            "subfolders",
-            "domains",
-            "subdomains"
-          ]
-        }
-      },
-      "description": "Setup support for multiple markets in your project.",
-      "flags": {
-        "path": {
-          "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
-          "name": "path",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        }
-      },
-      "hasDynamicHelp": false,
-      "hiddenAliases": [],
-      "id": "hydrogen:setup:markets",
-      "pluginAlias": "@shopify/cli-hydrogen",
-      "pluginName": "@shopify/cli-hydrogen",
-      "pluginType": "core",
-      "strict": true,
-      "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "hydrogen",
-        "setup",
-        "markets.js"
-      ]
-    },
-    "hydrogen:setup:vite": {
-      "aliases": [],
-      "args": {},
-      "description": "EXPERIMENTAL: Upgrades the project to use Vite.",
-      "flags": {
-        "path": {
-          "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
-          "name": "path",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        }
-      },
-      "hasDynamicHelp": false,
-      "hiddenAliases": [],
-      "id": "hydrogen:setup:vite",
-      "pluginAlias": "@shopify/cli-hydrogen",
-      "pluginName": "@shopify/cli-hydrogen",
-      "pluginType": "core",
-      "strict": true,
-      "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "hydrogen",
-        "setup",
-        "vite.js"
-      ]
-    },
     "hydrogen:generate:route": {
       "aliases": [],
       "args": {
@@ -1589,6 +1463,132 @@
         "hydrogen",
         "generate",
         "routes.js"
+      ]
+    },
+    "hydrogen:setup:css": {
+      "aliases": [],
+      "args": {
+        "strategy": {
+          "description": "The CSS strategy to setup. One of tailwind,css-modules,vanilla-extract,postcss",
+          "name": "strategy",
+          "options": [
+            "tailwind",
+            "css-modules",
+            "vanilla-extract",
+            "postcss"
+          ]
+        }
+      },
+      "description": "Setup CSS strategies for your project.",
+      "flags": {
+        "path": {
+          "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
+          "name": "path",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "force": {
+          "char": "f",
+          "description": "Overwrites the destination directory and files if they already exist.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_FORCE",
+          "name": "force",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "install-deps": {
+          "description": "Auto installs dependencies using the active package manager.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_INSTALL_DEPS",
+          "name": "install-deps",
+          "allowNo": true,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "hydrogen:setup:css",
+      "pluginAlias": "@shopify/cli-hydrogen",
+      "pluginName": "@shopify/cli-hydrogen",
+      "pluginType": "core",
+      "strict": true,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "hydrogen",
+        "setup",
+        "css.js"
+      ]
+    },
+    "hydrogen:setup:markets": {
+      "aliases": [],
+      "args": {
+        "strategy": {
+          "description": "The URL structure strategy to setup multiple markets. One of subfolders,domains,subdomains",
+          "name": "strategy",
+          "options": [
+            "subfolders",
+            "domains",
+            "subdomains"
+          ]
+        }
+      },
+      "description": "Setup support for multiple markets in your project.",
+      "flags": {
+        "path": {
+          "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
+          "name": "path",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "hydrogen:setup:markets",
+      "pluginAlias": "@shopify/cli-hydrogen",
+      "pluginName": "@shopify/cli-hydrogen",
+      "pluginType": "core",
+      "strict": true,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "hydrogen",
+        "setup",
+        "markets.js"
+      ]
+    },
+    "hydrogen:setup:vite": {
+      "aliases": [],
+      "args": {},
+      "description": "EXPERIMENTAL: Upgrades the project to use Vite.",
+      "flags": {
+        "path": {
+          "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
+          "name": "path",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "hydrogen:setup:vite",
+      "pluginAlias": "@shopify/cli-hydrogen",
+      "pluginName": "@shopify/cli-hydrogen",
+      "pluginType": "core",
+      "strict": true,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "hydrogen",
+        "setup",
+        "vite.js"
       ]
     }
   },

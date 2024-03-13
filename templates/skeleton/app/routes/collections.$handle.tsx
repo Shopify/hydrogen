@@ -58,11 +58,14 @@ export default function Collection() {
           </>
         )}
       </Pagination>
-      <AnalyticsView eventName={AnalyticsView.COLLECTION_VIEWED} payload={{
-        collection: {
-          id: collection.id,
-        },
-      }} />
+      <AnalyticsView
+        type="collection_viewed"
+        payload={{
+          collection: {
+            id: collection.id,
+          },
+        }}
+      />
     </div>
   );
 }

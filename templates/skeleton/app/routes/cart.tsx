@@ -99,7 +99,7 @@ export default function Cart() {
           }}
         </Await>
       </Suspense>
-      <AnalyticsView eventName={AnalyticsView.CART_VIEWED} />
+      <AnalyticsView type="cart_viewed" />
     </div>
   );
 }

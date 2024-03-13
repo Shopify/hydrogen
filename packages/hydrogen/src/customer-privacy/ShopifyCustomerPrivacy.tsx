@@ -1,7 +1,7 @@
 import {useLoadScript, useNonce} from '@shopify/hydrogen';
-import {useEffect} from 'react';
+import {useEffect, useRef} from 'react';
 
-type ConsentStatus = 'true' | 'false' | '';
+export type ConsentStatus = 'true' | 'false' | '';
 
 export type VisitorConsent = {
   marketing: ConsentStatus;
@@ -19,13 +19,15 @@ export type VisitorConsentCollected = {
   thirdPartyMarketingAllowed: boolean;
 };
 
-type CustomerPrivacyConsentConfig = {
+export type CustomerPrivacyApiLoaded = boolean
+
+export type CustomerPrivacyConsentConfig = {
   checkoutRootDomain?: string;
   storefrontRootDomain?: string;
   storefrontAccessToken?: string;
 };
 
-type SetConsentHeadlessParams = VisitorConsent &
+export type SetConsentHeadlessParams = VisitorConsent &
   CustomerPrivacyConsentConfig & {
     headlessStorefront?: boolean;
   };
@@ -39,12 +41,13 @@ export type CustomerPrivacy = {
   ) => void;
 };
 
-type PrivacyBanner = {
+export type PrivacyBanner = {
   loadBanner: (options: CustomerPrivacyConsentConfig) => void;
 };
 
-interface CustomEventMap {
+export interface CustomEventMap {
   visitorConsentCollected: CustomEvent<VisitorConsentCollected>;
+  customerPrivacyApiLoaded: CustomEvent<CustomerPrivacyApiLoaded>;
 }
 
 // TODO: Move this to a global.d.ts file
@@ -70,7 +73,7 @@ export type PrivacyConsentBannerProps = {
   storefrontAccessToken: string;
 };
 
-type CustomerPrivacyApiProps = {
+export type CustomerPrivacyApiProps = {
   consentConfig: PrivacyConsentBannerProps;
   withPrivacyBanner: boolean;
   onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;
@@ -81,23 +84,33 @@ const CONSENT_API =
 const CONSENT_API_WITH_BANNER =
   'https://cdn.shopify.com/shopifycloud/privacy-banner/storefront-banner.js';
 
-export function useCustomerPrivacyApi(props: CustomerPrivacyApiProps) {
-  const nonce = useNonce();
+export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   const withBanner = props.withPrivacyBanner || false;
   const consentConfig = props.consentConfig;
+  const loadedEvent = useRef(false);
   const scriptStatus = useLoadScript(
     withBanner ? CONSENT_API_WITH_BANNER : CONSENT_API,
     {
       attributes: {
         id: 'customer-privacy-api',
-        nonce: nonce || '',
       },
     },
   );
   const onVisitorConsentCollected = props.onVisitorConsentCollected;
 
   useEffect(() => {
-    if (scriptStatus !== 'done') return;
+    if (scriptStatus !== 'done' || loadedEvent.current) return;
+
+    // Dispatch a custom customerPrivacyApiLoaded event when the script has been loaded
+    // This event is read by the AnalyticsProvider to know when the Customer Privacy API
+    // is available
+    const customerPrivacyApiLoadedEvent = new CustomEvent<CustomerPrivacyApiLoaded>(
+      'customerPrivacyApiLoaded',
+      { detail: true }
+    );
+    document.dispatchEvent(customerPrivacyApiLoadedEvent);
+
+    loadedEvent.current = true;
 
     if (withBanner) {
       window?.privacyBanner?.loadBanner(consentConfig);

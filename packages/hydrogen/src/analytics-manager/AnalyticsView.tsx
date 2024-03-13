@@ -1,85 +1,125 @@
 import { useLocation } from "@remix-run/react";
 import { useEffect, useRef } from "react";
-import { useAnalyticsProvider } from "./AnalyticsProvider";
+import { type ShopAnalytic, type AnalyticsProviderProps, useAnalyticsProvider } from "./AnalyticsProvider";
+import { CartReturn } from "../cart/queries/cart-types";
+import {AnalyticsEvent} from './events';
 
-type OtherData = {
+export type OtherData = {
   [key: string]: unknown;
 };
 
+export type BasePayload = {
+  eventTimestamp: number;
+  shop: ShopAnalytic | null;
+  customPayload: AnalyticsProviderProps['customPayload'];
+};
+
+// Event payloads
+export type CollectionViewPayload = {
+  collection: {
+    id: string;
+  };
+} & BasePayload;
+
+export type ProductViewPayload = {
+  product: {
+    id: string;
+    title: string;
+    handle: string;
+  };
+} & BasePayload;
+
+export type CartViewPayload = {
+  cart: CartReturn | null;
+  prevCart: CartReturn | null;
+} & BasePayload;
+
+export type PageViewPayload = {
+  url: string;
+  cart: CartReturn | null;
+  prevCart: CartReturn | null;
+} & BasePayload;
+
+export type CartUpdatePayload = {
+  cart: CartReturn | null;
+  prevCart: CartReturn | null;
+} & BasePayload;
+
+export type CustomEventPayload = {
+  [key: string]: unknown;
+} & BasePayload;
+
+export type EventPayloads = PageViewPayload |
+  ProductViewPayload |
+  CollectionViewPayload |
+  CartViewPayload |
+  CartUpdatePayload |
+  CustomEventPayload;
+
+export type EventTypes = typeof AnalyticsEvent['PAGE_VIEWED'] |
+  typeof AnalyticsEvent['PRODUCT_VIEWED'] |
+  typeof AnalyticsEvent['COLLECTION_VIEWED'] |
+  typeof AnalyticsEvent['CART_VIEWED'] |
+  typeof AnalyticsEvent['CART_UPDATED'] |
+  typeof AnalyticsEvent['CUSTOM_EVENT'];
+
+// Event types
 type PageViewProps = {
-  eventName: 'page_viewed';
+  type: typeof AnalyticsEvent.PAGE_VIEWED;
   payload?: OtherData;
 };
 
 type ProductViewProps = {
-  eventName: 'product_viewed';
-  payload: {
-    product: {
-      id: string,
-      title: string,
-      handle: string,
-    },
-    [key: string]: unknown,
-  } & OtherData;
+  type: typeof AnalyticsEvent.PRODUCT_VIEWED;
+  payload: ProductViewPayload
 };
 
 type CollectionViewProps = {
-  eventName: 'collection_viewed';
-  payload: {
-    collection: {
-      id: string,
-    },
-  } & OtherData;
+  type: typeof AnalyticsEvent.COLLECTION_VIEWED;
+  payload: CollectionViewPayload;
 }
 
 type CartViewProps = {
-  eventName: 'cart_viewed';
-  payload?: OtherData;
+  type: typeof AnalyticsEvent.CART_VIEWED;
+  payload?: CartViewPayload;
 };
 
 type CustomViewProps = {
-  eventName: `custom_${string}`;
+  type: typeof AnalyticsEvent.CUSTOM_EVENT;
   payload?: OtherData;
 };
 
-type AnalyticsViewProps =
-  | PageViewProps
-  | ProductViewProps
-  | CollectionViewProps
-  | CartViewProps
-  | CustomViewProps;
-
-export function AnalyticsView({
-  eventName,
-  payload,
-}: AnalyticsViewProps) {
+export function AnalyticsView(props: PageViewProps): null;
+export function AnalyticsView(props: ProductViewProps): null;
+export function AnalyticsView(props: CollectionViewProps): null;
+export function AnalyticsView(props: CartViewProps): null;
+export function AnalyticsView(props: CustomViewProps): null;
+export function AnalyticsView(props: any) {
+  const {type, payload = {}} = props;
   const location = useLocation();
   const lastLocationPathname = useRef<string>('');
-  const {publish} = useAnalyticsProvider();
+  const {publish, cart, prevCart, shop} = useAnalyticsProvider();
   const url = location.pathname + location.search;
 
-  // Page view analytics
-  // We want useEffect to execute only when location changes
-  // which represents a page view
+  // Publish page_viewed events when the URL changes
   useEffect(() => {
     if (lastLocationPathname.current === url) return;
 
-    lastLocationPathname.current = url;
+    // don't publish the event until we have the shop
+    if (!shop) return;
 
-    const viewPayload = {
-      url: window.location.href,
+    const viewPayload: PageViewPayload = {
       ...payload,
+      url: window.location.href,
+      cart,
+      prevCart,
+      shop,
     };
 
-    setTimeout(() => {
-      publish(eventName, viewPayload);
-    }, 500);
-  }, [url]);
+    lastLocationPathname.current = url;
+
+    publish(type, viewPayload);
+  }, [publish, url, cart, prevCart, shop]);
 
   return null;
 }
-
-AnalyticsView.PAGE_VIEWED = 'page_viewed' as const;
-AnalyticsView.PRODUCT_VIEWED = 'product_viewed' as const;
-AnalyticsView.COLLECTION_VIEWED = 'collection_viewed' as const;
-AnalyticsView.CART_VIEWED = 'cart_viewed' as const;
