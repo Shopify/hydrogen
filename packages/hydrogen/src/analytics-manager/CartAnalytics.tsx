@@ -2,6 +2,8 @@ import {useEffect, useRef} from "react";
 import {useAnalyticsProvider, type AnalyticsProviderProps, type Carts} from "./AnalyticsProvider";
 import {type CartUpdatePayload} from "./AnalyticsView";
 
+let firstRender = true;
+
 export function CartAnalytics({cart: currentCart}: {cart: AnalyticsProviderProps['cart']}) {
   const {publish, shop, customPayload, canTrack, cart, prevCart, setCarts} = useAnalyticsProvider();
   const lastEventId = useRef<string | null>(null);
@@ -22,6 +24,11 @@ export function CartAnalytics({cart: currentCart}: {cart: AnalyticsProviderProps
   useEffect(() => {
     if (!cart || !cart?.updatedAt) return;
     if (cart?.updatedAt === prevCart?.updatedAt) return;
+
+    if (firstRender) {
+      firstRender = false;
+      return;
+    }
 
     const payload: CartUpdatePayload = {
       eventTimestamp: Date.now(),

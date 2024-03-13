@@ -40,7 +40,10 @@ export type AnalyticsProviderProps = {
   /** An optional custom payload to pass to all events. e.g language/locale/currency */
   customPayload?: Record<string, unknown>;
 
-  // TODO: pass generic Promise<ShopAnalytic | null> | ShopAnalytic | null;
+  /** Prevents events to be sent to the Shopify admin */
+  disableShopifyAnalytics?: boolean;
+
+  /** The shop analytics config or shop analytics config promise required to send events */
   shop: Promise<ShopAnalytic | null> | ShopAnalytic | null;
 }
 
@@ -158,6 +161,7 @@ export function AnalyticsProvider({
   customPayload = {},
   cart: currentCart,
   shop: shopProp = null,
+  disableShopifyAnalytics = false,
 }: AnalyticsProviderProps): JSX.Element {
   const listenerSet = useRef(false);
   const {shop} = useShopAnalytics(shopProp);
@@ -166,21 +170,19 @@ export function AnalyticsProvider({
   const [canTrack, setCanTrack] = useState(customCanTrack ? () => customCanTrack : () => shopifyCanTrack);
 
   useEffect(() => {
+    if (customCanTrack) return;
     if (listenerSet.current) return;
     listenerSet.current = true;
 
     // Listen for the customerPrivacyApiLoaded event dispatched by the
     // useCustomerPrivacy hook
     document.addEventListener('customerPrivacyApiLoaded', (event) => {;
-      if (!event.detail) {
-        setConsentLoaded(false);
-        setCanTrack(() => () => false);
-      } else {
+      if (event.detail) {
         setConsentLoaded(event.detail);
         setCanTrack(() => shopifyCanTrack);
       }
     })
-  }, [setConsentLoaded, setCanTrack]);
+  }, [setConsentLoaded, setCanTrack, customCanTrack]);
 
   const value = useMemo<AnalyticsContextValue>(() => ({
     canTrack,
@@ -197,7 +199,7 @@ export function AnalyticsProvider({
       {children}
       {shop && <AnalyticsView type="page_viewed" />}
       {shop && currentCart && <CartAnalytics cart={currentCart} />}
-      {shop && <ShopifyAnalytics />}
+      {shop && !disableShopifyAnalytics && <ShopifyAnalytics />}
     </AnalyticsContext.Provider>
   );
 };
