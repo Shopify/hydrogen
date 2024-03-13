@@ -26,10 +26,10 @@ export default {
    */
   async fetch(request, env, executionContext) {
     try {
-      // [START project-structure.session-secret]
       /**
        * Open a cache instance in the worker and a custom session instance.
        */
+      // [START project-structure.session-secret]
       if (!env?.SESSION_SECRET) {
         throw new Error('SESSION_SECRET environment variable is not set');
       }
@@ -100,6 +100,7 @@ export default {
       // [END project-structure.request-handler]
 
       const response = await handleRequest(request);
+
       // [START project-structure.storefront-redirect]
       if (response.status === 404) {
         /**
