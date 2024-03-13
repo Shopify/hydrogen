@@ -8,7 +8,7 @@ on:
       - 2023-10
 
 concurrency:
-  group: changeset-${{ github.head_ref }}
+  group: changeset-2023-10
   cancel-in-progress: true
 
 jobs:
