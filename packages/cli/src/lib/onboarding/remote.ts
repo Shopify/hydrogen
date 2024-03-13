@@ -193,10 +193,11 @@ async function getMonorepoTemplate(
   )
     .flat()
     .filter((name) => name !== 'skeleton' && !name.endsWith('.md'))
+    .concat('demo-store') // Note: demo-store is handled as an external template
     .sort();
 
   throw new AbortError(
-    `Unknown value in \`--template\` flag "${appTemplate}".\nSkip the flag or provide the name of a template or example in the Hydrogen repository.`,
+    `Unknown value in \`--template\` flag "${appTemplate}".\nSkip the flag or provide the name of a template or example in the Hydrogen repository or a URL to a git repository.`,
     availableTemplates.length === 0
       ? ''
       : {list: {title: 'Available templates:', items: availableTemplates}},
