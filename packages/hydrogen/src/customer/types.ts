@@ -7,7 +7,7 @@ import {type GraphQLError} from '../utils/graphql';
 import type {CrossRuntimeRequest} from '../utils/request';
 
 import type {HydrogenSession} from '../hydrogen';
-import { LanguageCode } from '@shopify/hydrogen-react/storefront-api-types';
+import {LanguageCode} from '@shopify/hydrogen-react/storefront-api-types';
 
 // Return type of unauthorizedHandler = Return type of loader/action function
 // This type is not exported https://github.com/remix-run/react-router/blob/main/packages/router/utils.ts#L167
@@ -131,8 +131,16 @@ export type CustomerAccountOptions = {
 /** Below are types meant for documentation only. Ensure it stay in sync with the type above. */
 
 export type CustomerAccountForDocs = {
-  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use) */
-  login?: () => Promise<Response>;
+  /** Start the OAuth login flow. This function should be called and returned from a Remix action.
+   * It redirects the customer to a Shopify login domain. It also defined the final path the customer
+   * lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is
+   * automatically setup unless `customAuthStatusHandler` option is in use)
+   *
+   * @param uiLocales - The displayed language of the login page. Only support for the following languages:
+   * `en`, `fr`, `cs`, `da`, `de`, `es`, `fi`, `it`, `ja`, `ko`, `nb`, `nl`, `pl`, `pt-BR`, `pt-PT`,
+   * `sv`, `th`, `tr`, `vi`, `zh-CN`, `zh-TW`. If supplied any other language code, it will default to `en`.
+   * */
+  login: (uiLocales?: LanguageCode) => Promise<Response>;
   /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */
   authorize?: () => Promise<Response>;
   /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */

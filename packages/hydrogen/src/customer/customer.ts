@@ -40,9 +40,8 @@ import type {
   CustomerAccountOptions,
   CustomerAccount,
   CustomerAPIResponse,
-  UiLocales,
 } from './types';
-import { LanguageCode } from '@shopify/hydrogen-react/storefront-api-types';
+import {LanguageCode} from '@shopify/hydrogen-react/storefront-api-types';
 
 const DEFAULT_LOGIN_URL = '/account/login';
 const DEFAULT_AUTH_URL = '/account/authorize';
