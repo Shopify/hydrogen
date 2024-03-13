@@ -2,7 +2,7 @@ import path from 'node:path';
 import {EventEmitter} from 'node:events';
 import {ReadableStream} from 'node:stream/web';
 import {getGraphiQLUrl} from './graphiql-url.js';
-import type {Request, Response} from '@shopify/mini-oxygen';
+import type {Request, Response} from '@shopify/mini-oxygen/node';
 import type {
   Request as WorkerdRequest,
   Response as WorkerdResponse,

@@ -3,7 +3,7 @@ import {Session, type Profiler} from 'node:inspector';
 import type {SourceMapConsumer} from 'source-map';
 
 export async function createCpuStartupProfiler() {
-  const {createMiniOxygen} = await import('@shopify/mini-oxygen');
+  const {createMiniOxygen} = await import('@shopify/mini-oxygen/node');
 
   const miniOxygen = createMiniOxygen({
     script: 'export default {}',

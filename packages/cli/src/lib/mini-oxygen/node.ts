@@ -2,12 +2,12 @@ import {randomUUID} from 'node:crypto';
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {readFile} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
-import {Response} from '@shopify/mini-oxygen';
+import {Response} from '@shopify/mini-oxygen/node';
 import {
   startServer,
   Request,
   type MiniOxygenOptions as InternalMiniOxygenOptions,
-} from '@shopify/mini-oxygen';
+} from '@shopify/mini-oxygen/node';
 import {DEFAULT_PORT} from '../flags.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
 import {
