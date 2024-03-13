@@ -10,11 +10,11 @@ import {
   type CustomEventPayload,
   type OtherData,
   type EventPayloads,
-  type EventTypes,
 } from "./AnalyticsView";
-import { type CurrencyCode, LanguageCode } from '@shopify/hydrogen-react/storefront-api-types';
+import type {CurrencyCode, LanguageCode} from '@shopify/hydrogen-react/storefront-api-types';
 import {AnalyticsEvent} from "./events";
 import {ShopifyAnalytics} from "./ShopifyAnalytics";
+import {CartAnalytics} from "./CartAnalytics";
 
 export type ShopAnalytic = {
   [key: string]: unknown;
@@ -44,7 +44,7 @@ export type AnalyticsProviderProps = {
   shop: Promise<ShopAnalytic | null> | ShopAnalytic | null;
 }
 
-type Carts = {
+export type Carts = {
   cart: Awaited<AnalyticsProviderProps['cart']>;
   prevCart: Awaited<AnalyticsProviderProps['cart']>;
 }
@@ -196,8 +196,8 @@ export function AnalyticsProvider({
     <AnalyticsContext.Provider value={value}>
       {children}
       {shop && <AnalyticsView type="page_viewed" />}
-      {currentCart && <CartAnalytics cart={currentCart} />}
-      <ShopifyAnalytics />
+      {shop && currentCart && <CartAnalytics cart={currentCart} />}
+      {shop && <ShopifyAnalytics />}
     </AnalyticsContext.Provider>
   );
 };
@@ -208,45 +208,6 @@ export function useAnalyticsProvider(): AnalyticsContextValue {
     throw new Error(`'useAnalyticsProvider()' must be a descendent of <AnalyticsProvider/>`);
   }
   return analyticsContext;
-}
-
-export function CartAnalytics({cart: currentCart}: {cart: AnalyticsProviderProps['cart']}) {
-  const {publish, shop, customPayload, canTrack, cart, prevCart, setCarts} = useAnalyticsProvider();
-  const lastEventId = useRef<string | null>(null);
-
-  // resolve the cart that could have been deferred
-  useEffect(() => {
-    if (!currentCart) return;
-    Promise.resolve(currentCart).then((updatedCart) => {
-      setCarts(({cart, prevCart}: Carts) => {
-        if (updatedCart?.updatedAt !== cart?.updatedAt) return {cart: updatedCart, prevCart: cart};
-        return {cart, prevCart};
-      })
-    })
-    return () => {};
-  }, [setCarts, currentCart]);
-
-
-  useEffect(() => {
-    if (!cart || !cart?.updatedAt) return;
-    if (cart?.updatedAt === prevCart?.updatedAt) return;
-
-    const payload: CartUpdatePayload = {
-      eventTimestamp: Date.now(),
-      cart,
-      prevCart,
-      shop,
-      customPayload,
-    };
-
-    // prevent duplicate events
-    if (cart.updatedAt === lastEventId.current) return;
-    lastEventId.current = cart.updatedAt;
-
-    publish('cart_updated', payload)
-  }, [cart, prevCart, setCarts, publish, shop, customPayload, canTrack]);
-
-  return null;
 }
 
 /**
