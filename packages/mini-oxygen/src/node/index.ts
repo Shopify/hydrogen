@@ -1,6 +1,6 @@
-import * as path from 'path';
-import * as fs from 'fs';
-import type {Socket} from 'net';
+import * as path from 'node:path';
+import * as fs from 'node:fs';
+import type {Socket} from 'node:net';
 
 import getPort, {portNumbers} from 'get-port';
 
