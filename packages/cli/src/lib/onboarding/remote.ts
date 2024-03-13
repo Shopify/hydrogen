@@ -5,7 +5,10 @@ import {copyFile, fileExists} from '@shopify/cli-kit/node/fs';
 import {readAndParsePackageJson} from '@shopify/cli-kit/node/node-package-manager';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {renderInfo, renderTasks} from '@shopify/cli-kit/node/ui';
-import {downloadMonorepoTemplates} from '../template-downloader.js';
+import {
+  downloadExternalRepo,
+  downloadMonorepoTemplates,
+} from '../template-downloader.js';
 import {applyTemplateDiff} from '../template-diff.js';
 import {getCliCommand} from '../shell.js';
 import {
@@ -27,15 +30,17 @@ export async function setupRemoteTemplate(
   options: InitOptions & Required<Pick<InitOptions, 'template'>>,
   controller: AbortController,
 ) {
-  // TODO: support GitHub repos as templates
-  const appTemplate = options.template;
+  const appTemplate =
+    options.template === 'demo-store'
+      ? `shopify/${options.template}`
+      : options.template;
+
   let abort = createAbortHandler(controller);
 
   // Start downloading templates early.
-  const backgroundDownloadPromise = getMonorepoTemplate(
-    appTemplate,
-    controller.signal,
-  ).catch(abort);
+  const backgroundDownloadPromise = appTemplate.includes('/')
+    ? getExternalTemplate(appTemplate, controller.signal).catch(abort)
+    : getMonorepoTemplate(appTemplate, controller.signal).catch(abort);
 
   const project = await handleProjectLocation({...options, controller});
 
@@ -148,7 +153,23 @@ export async function setupRemoteTemplate(
   };
 }
 
-async function getMonorepoTemplate(appTemplate: string, signal: AbortSignal) {
+type DownloadedTemplate = {
+  sourcePath: string;
+  skeletonPath?: string;
+};
+
+async function getExternalTemplate(
+  appTemplate: string,
+  signal: AbortSignal,
+): Promise<DownloadedTemplate> {
+  const {templateDir} = await downloadExternalRepo(appTemplate, signal);
+  return {sourcePath: templateDir};
+}
+
+async function getMonorepoTemplate(
+  appTemplate: string,
+  signal: AbortSignal,
+): Promise<DownloadedTemplate> {
   const {templatesDir, examplesDir} = await downloadMonorepoTemplates({
     signal,
   });
