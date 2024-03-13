@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 7.1.3
+
+### Patch Changes
+
+- Add `--quickstart` flag option to init/create command ([#1822](https://github.com/Shopify/hydrogen/pull/1822)) by [@gfscott](https://github.com/gfscott)
+
 ## 7.1.2
 
 ### Patch Changes
