@@ -1,4 +1,3 @@
-import {randomUUID} from 'node:crypto';
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {readFile} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
@@ -10,11 +9,7 @@ import {
 } from '@shopify/mini-oxygen/node';
 import {DEFAULT_PORT} from '../flags.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
-import {
-  OXYGEN_HEADERS_MAP,
-  SUBREQUEST_PROFILER_ENDPOINT,
-  logRequestLine,
-} from './common.js';
+import {SUBREQUEST_PROFILER_ENDPOINT, logRequestLine} from './common.js';
 import {
   H2O_BINDING_NAME,
   createLogRequestEvent,
@@ -31,12 +26,6 @@ export async function startNodeServer({
   debug = false,
   inspectorPort,
 }: MiniOxygenOptions): Promise<MiniOxygenInstance> {
-  const oxygenHeaders = Object.fromEntries(
-    Object.entries(OXYGEN_HEADERS_MAP).map(([key, value]) => {
-      return [key, value.defaultValue];
-    }),
-  );
-
   setConstructors({Response});
 
   const logRequestEvent = createLogRequestEvent();
@@ -75,19 +64,13 @@ export async function startNodeServer({
       ...serviceBindings,
     },
     log: () => {},
-    oxygenHeaders,
     async onRequest(request, defaultDispatcher) {
       const url = new URL(request.url);
       if (url.pathname === SUBREQUEST_PROFILER_ENDPOINT) {
         return handleDebugNetworkRequest(request);
       }
 
-      let requestId = request.headers.get('request-id');
-      if (!requestId) {
-        requestId = randomUUID();
-        request.headers.set('request-id', requestId);
-      }
-
+      const requestId = request.headers.get('request-id')!;
       const startTimeMs = Date.now();
 
       // Provide headers to sub-requests and dispatch the request.
