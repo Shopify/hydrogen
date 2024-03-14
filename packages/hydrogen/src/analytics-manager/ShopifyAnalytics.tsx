@@ -77,8 +77,7 @@ function pageViewHandler(payload: PageViewPayload) {
 }
 
 function productViewHandler(payload: ProductViewPayload) {
-  // eslint-disable-next-line no-console
-  console.log('ShopifyAnalytics - Product viewed:', payload);
+  validateProduct(payload.products);
 }
 
 function collectionViewHandler(payload: CollectionViewPayload) {
@@ -138,6 +137,51 @@ function cartUpdateHandler(payload: CartUpdatePayload) {
         line,
         quantity: 1,
       });
+    }
+  });
+}
+
+// variant_id: int, optional
+// product_id: int, optional
+// product_gid: string,
+// name: string,
+// price: float,
+// sku: string, optional
+// brand: string,
+// variant: string,
+// category: string, optional
+// quantity: float
+function validateProduct(products: Array<Record<string, unknown>>) {
+  console.log('ShopifyAnalytics - Product viewed:', products);
+
+  products.forEach((product) => {
+    if (!product.id) {
+      console.error('ShopifyAnalytics - Product viewed: product.id is required');
+      return;
+    }
+    if (!product.title) {
+      console.error('ShopifyAnalytics - Product viewed: product.title is required');
+      return;
+    }
+    if (!product.price) {
+      console.error('ShopifyAnalytics - Product viewed: product.<displayed_variant>.price.amount is required');
+      return;
+    }
+    if (!product.vendor) {
+      console.error('ShopifyAnalytics - Product viewed: vendor is required');
+      return;
+    }
+    if (!product.variantId) {
+      console.error('ShopifyAnalytics - Product viewed: variant.id is required');
+      return;
+    }
+    if (!product.variantTitle) {
+      console.error('ShopifyAnalytics - Product viewed: variant.title is required');
+      return;
+    }
+    if (!product.quantity) {
+      console.error('ShopifyAnalytics - Product viewed: quantity is required');
+      return;
     }
   });
 }

@@ -1,8 +1,6 @@
 import {
   useCustomerPrivacy,
   AnalyticsProvider,
-  ShopifyAnalytics,
-  CartAnalytics,
   useNonce,
 } from '@shopify/hydrogen';
 import {

@@ -127,11 +127,15 @@ export default function Product() {
       <AnalyticsView
         type="product_viewed"
         payload={{
-          product: {
+          products: [{
             id: product.id,
             title: product.title,
-            handle: product.handle,
-          },
+            price: selectedVariant?.price.amount || '0',
+            vendor: product.vendor,
+            variantId: selectedVariant?.id || '',
+            variantTitle: selectedVariant?.title || '',
+            quantity: 1,
+          }]
         }}
       />
     </div>

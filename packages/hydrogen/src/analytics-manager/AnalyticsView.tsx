@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { type ShopAnalytic, type AnalyticsProviderProps, useAnalyticsProvider } from "./AnalyticsProvider";
 import { CartReturn } from "../cart/queries/cart-types";
 import {AnalyticsEvent} from './events';
+import { Product, ProductVariant } from "@shopify/hydrogen-react/storefront-api-types";
 
 export type OtherData = {
   [key: string]: unknown;
@@ -22,11 +23,18 @@ export type CollectionViewPayload = {
 } & BasePayload;
 
 export type ProductViewPayload = {
-  product: {
-    id: string;
-    title: string;
-    handle: string;
-  };
+  products: Array<{
+    id: Product['id']
+    title: Product['title'],
+    price: ProductVariant['price']['amount'],
+    vendor: Product['vendor'],
+    variantId: ProductVariant['id'],
+    variantTitle: ProductVariant['title'],
+    quantity: number,
+    sku?: ProductVariant['sku'],
+    productType?: Product['productType'],
+    [key: string]: unknown,
+  }>,
 } & BasePayload;
 
 export type CartViewPayload = {
