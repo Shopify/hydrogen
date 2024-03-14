@@ -131,8 +131,6 @@ export async function loader({context}: LoaderFunctionArgs) {
   );
 }
 
-// shop: Promise<ShopAnalytic | null> | ShopAnalytic | null;
-
 export default function App() {
   const nonce = useNonce();
   const data = useLoaderData<typeof loader>();

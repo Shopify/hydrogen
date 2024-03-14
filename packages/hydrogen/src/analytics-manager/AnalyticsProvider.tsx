@@ -61,6 +61,7 @@ type AnalyticsContextValue = {
   setCarts: React.Dispatch<React.SetStateAction<Carts>>;
   shop: Awaited<AnalyticsProviderProps['shop']>;
   subscribe: typeof subscribe;
+  register: (key: string) => {ready: () => void};
 }
 
 export const defaultAnalyticsContext: AnalyticsContextValue = {
@@ -72,6 +73,7 @@ export const defaultAnalyticsContext: AnalyticsContextValue = {
   setCarts: () => ({cart: null, prevCart: null}),
   shop: null,
   subscribe: () => {},
+  register: () => ({ready: () => {}}),
 };
 
 const AnalyticsContext = createContext<AnalyticsContextValue>(
@@ -79,6 +81,17 @@ const AnalyticsContext = createContext<AnalyticsContextValue>(
 );
 
 const subscribers = new Map<string, Map<string, (payload: EventPayloads) => void>>();
+const registers: Record<string, boolean> = {};
+
+function areRegistersReady() {
+  let ready = true;
+  Object.keys(registers).forEach((key) => {
+    if(!registers[key]) {
+      ready = false;
+    }
+  });
+  return ready;
+}
 
 // Overload functions for each subscribe event
 function subscribe(
@@ -121,6 +134,8 @@ function subscribe(
   subscribers.get(event)?.set(callback.toString(), callback);
 }
 
+const waitForReadyQueue = new Map<any, any>();
+
 function publish(event: typeof AnalyticsEvent.PAGE_VIEWED, payload: PageViewPayload): void;
 function publish(event: typeof AnalyticsEvent.PRODUCT_VIEWED, payload: ProductViewPayload): void;
 function publish(event: typeof AnalyticsEvent.COLLECTION_VIEWED, payload: CollectionViewPayload): void;
@@ -128,6 +143,14 @@ function publish(event: typeof AnalyticsEvent.CART_VIEWED, payload: CartViewPayl
 function publish(event: typeof AnalyticsEvent.CART_UPDATED, payload: CartUpdatePayload): void;
 function publish(event: typeof AnalyticsEvent.CUSTOM_EVENT, payload: OtherData): void;
 function publish(event: any,  payload: any): void {
+  if (!areRegistersReady()) {
+    waitForReadyQueue.set(event, payload);
+    return;
+  }
+  publishEvent(event, payload);
+}
+
+function publishEvent(event:any, payload: any):void {
   (subscribers.get(event) ?? new Map()).forEach((callback) => {
     try {
       callback(payload);
@@ -139,6 +162,25 @@ function publish(event: any,  payload: any): void {
       }
     }
   });
+}
+
+function register(key: string) {
+  if (!registers.hasOwnProperty(key)) {
+    registers[key] = false;
+  }
+
+  return {
+    ready: () => {
+      registers[key] = true;
+
+      if(areRegistersReady() && waitForReadyQueue.size > 0) {
+        waitForReadyQueue.forEach((queuePayload, queueEvent) => {
+          publishEvent(queueEvent, queuePayload);
+        });
+        waitForReadyQueue.clear();
+    }
+    }
+  }
 }
 
 // This functions attempts to automatically determine if the user can be tracked if the
@@ -194,8 +236,9 @@ export function AnalyticsProvider({
     publish,
     setCarts,
     shop,
-    subscribe
-  }), [setCarts, consentLoaded, canTrack, JSON.stringify(canTrack), carts.cart?.updatedAt, carts.prevCart, publish, subscribe, customPayload, shop]);
+    subscribe,
+    register,
+  }), [setCarts, consentLoaded, canTrack, JSON.stringify(canTrack), carts.cart?.updatedAt, carts.prevCart, publish, subscribe, customPayload, shop, register]);
 
   return (
     <AnalyticsContext.Provider value={value}>

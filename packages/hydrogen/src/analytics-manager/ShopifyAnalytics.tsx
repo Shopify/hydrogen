@@ -29,26 +29,21 @@ import {useEffect} from 'react';
  *
 */
 export function ShopifyAnalytics() {
-  const {subscribe, canTrack} = useAnalyticsProvider();
+  const {subscribe, canTrack, register} = useAnalyticsProvider();
+  const {ready} = register('ShopifyAnalytics');
   useShopifyCookies({hasUserConsent: canTrack()});
 
   useEffect(() => {
     // Views
     subscribe('page_viewed', pageViewHandler);
-
-    subscribe('page_viewed', (payload) => {
-      console.log('page_viewed', payload);
-    });
-
     subscribe('product_viewed', productViewHandler);
-    subscribe('product_viewed', (payload) => {
-      console.log('product_viewed', payload);
-    })
     subscribe('collection_viewed', collectionViewHandler);
     subscribe('cart_viewed', cartViewHandler);
 
     // Cart updates
     subscribe('cart_updated', cartUpdateHandler);
+
+    ready();
   }, [subscribe]);
 
   return null;
