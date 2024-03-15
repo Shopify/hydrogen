@@ -145,10 +145,20 @@ export async function linkStorefront(
 
 async function createNewStorefront(root: string, session: AdminSession) {
   const projectDirectory = basename(root);
+  const storefronts = await getStorefronts(session);
+
+  let defaultProjectName = titleize(projectDirectory);
+  const nameAlreadyUsed = storefronts.some(
+    ({title}) => title === defaultProjectName,
+  );
+  // Append a random hash to the default project name if it's already used
+  if ( nameAlreadyUsed ) {
+    defaultProjectName += ` ${Math.random().toString(36).substring(2, 6)}`;
+  };
 
   const projectName = await renderTextPrompt({
     message: 'New storefront name',
-    defaultValue: titleize(projectDirectory),
+    defaultValue: defaultProjectName,
   });
 
   let storefront: HydrogenStorefront | undefined;
