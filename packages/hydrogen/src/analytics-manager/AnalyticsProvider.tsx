@@ -216,17 +216,13 @@ export function AnalyticsProvider({
     if (listenerSet.current) return;
     listenerSet.current = true;
 
-    // Listen for the customerPrivacyApiLoaded event dispatched by the
-    // useCustomerPrivacy hook
-    document.addEventListener('customerPrivacyApiLoaded', (event) => {;
-      if (!event.detail) {
-        setConsentLoaded(false);
-        setCanTrack(() => () => false);
-      } else {
-        setConsentLoaded(event.detail);
+    document.addEventListener(
+      'visitorConsentCollected',
+      () => {
+        setConsentLoaded(true);
         setCanTrack(() => shopifyCanTrack);
-      }
-    })
+      },
+    );
   }, [setConsentLoaded, setCanTrack, customCanTrack]);
 
   const value = useMemo<AnalyticsContextValue>(() => ({
@@ -238,7 +234,7 @@ export function AnalyticsProvider({
     shop,
     subscribe,
     register,
-  }), [setCarts, consentLoaded, canTrack, JSON.stringify(canTrack), carts.cart?.updatedAt, carts.prevCart, publish, subscribe, customPayload, shop, register]);
+  }), [setCarts, consentLoaded, canTrack(), canTrack, JSON.stringify(canTrack), carts.cart?.updatedAt, carts.prevCart, publish, subscribe, customPayload, shop, register]);
 
   return (
     <AnalyticsContext.Provider value={value}>

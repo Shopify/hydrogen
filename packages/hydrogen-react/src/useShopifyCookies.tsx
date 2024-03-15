@@ -22,6 +22,7 @@ type UseShopifyCookiesOptions = {
 export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {
   const {hasUserConsent = false, domain = ''} = options || {};
   useEffect(() => {
+    console.log('useShopifyCookies - useEffect');
     const cookies = getShopifyCookies(document.cookie);
 
     /**
@@ -44,7 +45,7 @@ export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {
       setCookie(SHOPIFY_Y, '', 0, domain);
       setCookie(SHOPIFY_S, '', 0, domain);
     }
-  });
+  }, [options]);
 }
 
 function setCookie(

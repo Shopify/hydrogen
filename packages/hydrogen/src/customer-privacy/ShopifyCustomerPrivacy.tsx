@@ -101,15 +101,6 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   useEffect(() => {
     if (scriptStatus !== 'done' || loadedEvent.current) return;
 
-    // Dispatch a custom customerPrivacyApiLoaded event when the script has been loaded
-    // This event is read by the AnalyticsProvider to know when the Customer Privacy API
-    // is available
-    const customerPrivacyApiLoadedEvent = new CustomEvent<CustomerPrivacyApiLoaded>(
-      'customerPrivacyApiLoaded',
-      { detail: true }
-    );
-    document.dispatchEvent(customerPrivacyApiLoadedEvent);
-
     loadedEvent.current = true;
 
     if (withBanner) {
