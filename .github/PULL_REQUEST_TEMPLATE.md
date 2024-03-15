@@ -45,10 +45,10 @@ Fixes #0000 <!-- link to issue if one exists -->
 
 #### Checklist
 
-- [ ] I've read the [Contributing Guidelines](CONTRIBUTING.md)
+- [ ] I've read the [Contributing Guidelines](https://github.com/Shopify/hydrogen/blob/main/CONTRIBUTING.md)
 - [ ] I've considered possible cross-platform impacts (Mac, Linux, Windows)
-- [ ] I've added a [changeset](CONTRIBUTING.md#changesets) if this PR contains user-facing or noteworthy changes
-- [ ] I've added [tests](CONTRIBUTING.md#testing) to cover my changes
+- [ ] I've added a [changeset](https://github.com/Shopify/hydrogen/blob/main/CONTRIBUTING.md#changesets) if this PR contains user-facing or noteworthy changes
+- [ ] I've added [tests](https://github.com/Shopify/hydrogen/blob/main/CONTRIBUTING.md#testing) to cover my changes
 - [ ] I've added or updated the documentation
 
 <!--
