@@ -41,7 +41,7 @@ const data: LandingTemplateSchema = {
       anchorLink: 'authentication',
       title: 'Authentication',
       sectionContent:
-        'To make full use of Hydrogen, you need to authenticate with and make requests to the [Storefront API](/docs/api/storefront) and the [Customer Account API](/docs/api/customer). Hydrogen includes full-featured API clients to securely handle API queries and mutations.\n\nYou can create access tokens for your own Shopify store by [installing the Hydrogen sales channel](/docs/custom-storefronts/oxygen/getting-started), which includes built-in support for Oxygen, Shopify’s global edge hosting platform. Or install the Headless sales channel to host your Hydrogen app anywhere.\n\nBoth the Storefront API and Customer Account API offer public credentials for client-side applications, as well as private credentials that should never be exposed publicly and only used server-side.',
+        'To make full use of Hydrogen, you need to authenticate with and make requests to the [Storefront API](/docs/api/storefront) and the [Customer Account API](/docs/api/customer). Hydrogen includes full-featured API clients to securely handle API queries and mutations.\n\nYou can create access tokens for your own Shopify store by [installing the Hydrogen sales channel](https://apps.shopify.com/hydrogen), which includes built-in support for Oxygen, Shopify’s global edge hosting platform. Or install the [Headless sales channel](https://apps.shopify.com/headless) to host your Hydrogen app anywhere.\n\nBoth the Storefront API and Customer Account API offer public credentials for client-side applications.',
       sectionCard: [
         {
           subtitle: 'Install',
