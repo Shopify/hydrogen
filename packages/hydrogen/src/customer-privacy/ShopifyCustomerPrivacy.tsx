@@ -35,6 +35,10 @@ export type SetConsentHeadlessParams = VisitorConsent &
 export type CustomerPrivacy = {
   currentVisitorConsent: () => VisitorConsent;
   userCanBeTracked: () => boolean;
+  // I don't know why adding these 3 lines will cause ts blow up
+  // saleOfDataAllowed: () => boolean;
+  // marketingAllowed: () => boolean;
+  // analyticsProcessingAllowed: () => boolean;
   setTrackingConsent: (
     consent: SetConsentHeadlessParams,
     callback: () => void,

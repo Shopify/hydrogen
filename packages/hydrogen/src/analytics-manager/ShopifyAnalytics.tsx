@@ -75,6 +75,10 @@ function pageViewHandler(payload: PageViewPayload) {
     ...payload.shop,
     hasUserConsent,
     ...getClientBrowserParameters(),
+    // @ts-ignore
+    ccpaEnforced: !customerPrivacy.saleOfDataAllowed(),
+    // @ts-ignore
+    gdprEnforced: !(customerPrivacy.marketingAllowed() && customerPrivacy.analyticsProcessingAllowed()),
   };
 
   // eslint-disable-next-line no-console
