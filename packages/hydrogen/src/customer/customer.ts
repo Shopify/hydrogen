@@ -77,12 +77,6 @@ export function createCustomerAccountClient({
     );
   }
 
-  if (!customerAccountId || !customerAccountUrl) {
-    console.warn(
-      "[h2:warn:createCustomerAccountClient] `customerAccountId` and `customerAccountUrl` need to be provided to use Customer Account API. Mock.shop doesn't automatically supply these variables.\nUse `npx shopify hydrogen env pull` to link your store credentials.",
-    );
-  }
-
   if (!request?.url) {
     throw new Error(
       '[h2:error:createCustomerAccountClient] The request object does not contain a URL.',
@@ -204,6 +198,7 @@ export function createCustomerAccountClient({
   }
 
   async function isLoggedIn() {
+    ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
     const customerAccount = session.get(CUSTOMER_ACCOUNT_SESSION_KEY);
     const accessToken = customerAccount?.accessToken;
     const expiresAt = customerAccount?.expiresAt;
@@ -249,6 +244,7 @@ export function createCustomerAccountClient({
 
   return {
     login: async (options?: LoginOptions) => {
+      ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
       const loginUrl = new URL(customerAccountUrl + '/auth/oauth/authorize');
 
       const state = await generateState();
@@ -298,6 +294,7 @@ export function createCustomerAccountClient({
       });
     },
     logout: async () => {
+      ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
       const idToken = session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.idToken;
 
       clearSession(session);
@@ -318,6 +315,8 @@ export function createCustomerAccountClient({
     getAccessToken,
     getApiUrl: () => customerAccountApiUrl,
     mutate(mutation, options?) {
+      ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
+
       mutation = minifyQuery(mutation);
       assertMutation(mutation, 'customer.mutate');
 
@@ -327,6 +326,8 @@ export function createCustomerAccountClient({
       );
     },
     query(query, options?) {
+      ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
+
       query = minifyQuery(query);
       assertQuery(query, 'customer.query');
 
@@ -336,6 +337,8 @@ export function createCustomerAccountClient({
       );
     },
     authorize: async () => {
+      ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
+
       const code = requestUrl.searchParams.get('code');
       const state = requestUrl.searchParams.get('state');
 
@@ -465,4 +468,24 @@ export function createCustomerAccountClient({
       });
     },
   };
+}
+
+function ifInvalidCredentialThrowError(
+  customerAccountUrl?: string,
+  customerAccountId?: string,
+) {
+  try {
+    if (!customerAccountUrl || !customerAccountId) throw Error();
+    new URL(customerAccountUrl);
+  } catch {
+    console.error(
+      'You do not have the valid credential to use Customer Account API.\nRun `npx shopify hydrogen env pull` to link your store credentials.',
+    );
+
+    throw new Response(
+      'You do not have the valid credential to use Customer Account API (/account).' +
+        '\n\nmock.shop does not support Customer Account API. \nWe recommend running `npx shopify hydrogen env pull` to link your store credentials.',
+      {status: 500},
+    );
+  }
 }
