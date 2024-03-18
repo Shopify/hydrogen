@@ -292,22 +292,24 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         ? Object.fromEntries(headers)
         : headers;
 
-    query = query ?? mutation;
-
+    const document = query ?? mutation;
     const queryVariables = {...variables};
 
     if (i18n) {
-      if (!variables?.country && /\$country/.test(query)) {
+      if (!variables?.country && /\$country/.test(document)) {
         queryVariables.country = i18n.country;
       }
 
-      if (!variables?.language && /\$language/.test(query)) {
+      if (!variables?.language && /\$language/.test(document)) {
         queryVariables.language = i18n.language;
       }
     }
 
     const url = getStorefrontApiUrl({storefrontApiVersion});
-    const graphqlData = JSON.stringify({query, variables: queryVariables});
+    const graphqlData = JSON.stringify({
+      query: document,
+      variables: queryVariables,
+    });
     const requestInit = {
       method: 'POST',
       headers: {...defaultHeaders, ...userHeaders},
@@ -341,7 +343,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       url,
       response,
       type: mutation ? 'mutation' : 'query',
-      query,
+      query: document,
       queryVariables,
       errors: undefined,
     };
@@ -370,7 +372,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
           clientOperation: `storefront.${errorOptions.type}`,
           requestId: response.headers.get('x-request-id'),
           queryVariables,
-          query,
+          query: document,
         }),
     );
 
