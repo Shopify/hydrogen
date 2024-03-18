@@ -982,7 +982,7 @@
             "filePath": "/cart/CartForm.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartFormCommonProps",
-            "value": "{\n  /**\n   * Children nodes of CartForm.\n   * Children can be a render prop that receives the fetcher.\n   */\n  children: ReactNode | ((fetcher: FetcherWithComponents<any>) => ReactNode);\n  /**\n   * The route to submit the form to. Defaults to the current route.\n   */\n  route?: string;\n}",
+            "value": "{\n  /**\n   * Children nodes of CartForm.\n   * Children can be a render prop that receives the fetcher.\n   */\n  children: ReactNode | ((fetcher: FetcherWithComponents<any>) => ReactNode);\n  /**\n   * The route to submit the form to. Defaults to the current route.\n   */\n  route?: string;\n  /**\n   * Optional key to use for the fetcher.\n   * @see https://remix.run/hooks/use-fetcher#key\n   */\n  fetcherKey?: string;\n}",
             "description": "",
             "members": [
               {
@@ -998,6 +998,14 @@
                 "name": "route",
                 "value": "string",
                 "description": "The route to submit the form to. Defaults to the current route.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart/CartForm.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "fetcherKey",
+                "value": "string",
+                "description": "Optional key to use for the fetcher.",
                 "isOptional": true
               }
             ]
@@ -4990,14 +4998,14 @@
             "filePath": "/customer/types.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CustomerAccount",
-            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use) */\n  login: () => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken: () => Promise<string | undefined>;\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/\n  getApiUrl: () => string;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/\n  logout: () => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      CustomerAccountQueries,\n      RawGqlString\n    >\n  ) => Promise<\n    Omit<\n      CustomerAPIResponse<\n        ClientReturn<CustomerAccountQueries, RawGqlString, OverrideReturnType>\n      >,\n      'errors'\n    > & {errors?: JsonGraphQLError[]}\n  >;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      CustomerAccountMutations,\n      RawGqlString\n    >\n  ) => Promise<\n    Omit<\n      CustomerAPIResponse<\n        ClientReturn<CustomerAccountMutations, RawGqlString, OverrideReturnType>\n      >,\n      'errors'\n    > & {errors?: JsonGraphQLError[]}\n  >;\n}",
+            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action.\n   * It redirects the customer to a Shopify login domain. It also defined the final path the customer\n   * lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is\n   * automatically setup unless `customAuthStatusHandler` option is in use)\n   *\n   * @param options.uiLocales - The displayed language of the login page. Only support for the following languages:\n   * `en`, `fr`, `cs`, `da`, `de`, `es`, `fi`, `it`, `ja`, `ko`, `nb`, `nl`, `pl`, `pt-BR`, `pt-PT`,\n   * `sv`, `th`, `tr`, `vi`, `zh-CN`, `zh-TW`. If supplied any other language code, it will default to `en`.\n   * */\n  login: (options?: LoginOptions) => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken: () => Promise<string | undefined>;\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/\n  getApiUrl: () => string;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/\n  logout: () => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      CustomerAccountQueries,\n      RawGqlString\n    >\n  ) => Promise<\n    Omit<\n      CustomerAPIResponse<\n        ClientReturn<CustomerAccountQueries, RawGqlString, OverrideReturnType>\n      >,\n      'errors'\n    > & {errors?: JsonGraphQLError[]}\n  >;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      CustomerAccountMutations,\n      RawGqlString\n    >\n  ) => Promise<\n    Omit<\n      CustomerAPIResponse<\n        ClientReturn<CustomerAccountMutations, RawGqlString, OverrideReturnType>\n      >,\n      'errors'\n    > & {errors?: JsonGraphQLError[]}\n  >;\n}",
             "description": "",
             "members": [
               {
                 "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "login",
-                "value": "() => Promise<Response>",
+                "value": "(options?: LoginOptions) => Promise<Response>",
                 "description": "Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use)"
               },
               {
@@ -5055,6 +5063,23 @@
                 "name": "mutate",
                 "value": "<OverrideReturnType extends unknown = never, RawGqlString extends string = string>(mutation: RawGqlString, ...options: IsOptionalVariables<CustomerAccountMutations[RawGqlString][\"variables\"], never, Omit<CustomerAccountMutations[RawGqlString][\"variables\"], never>> extends true ? [({} & ClientVariables<CustomerAccountMutations, RawGqlString, never, \"variables\", RawGqlString extends never ? { [KeyType in keyof ({ [KeyType in keyof CustomerAccountMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>]: CustomerAccountMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountMutations[RawGqlString][\"variables\"], Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>>)]: ({ [KeyType in keyof CustomerAccountMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>]: CustomerAccountMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountMutations[RawGqlString][\"variables\"], Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>>)[KeyType]; } : { readonly [variable: string]: unknown; }, Record<\"variables\", RawGqlString extends never ? { [KeyType in keyof ({ [KeyType in keyof CustomerAccountMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>]: CustomerAccountMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountMutations[RawGqlString][\"variables\"], Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>>)]: ({ [KeyType in keyof CustomerAccountMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>]: CustomerAccountMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountMutations[RawGqlString][\"variables\"], Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>>)[KeyType]; } : { readonly [variable: string]: unknown; }>>)?] : [{} & ClientVariables<CustomerAccountMutations, RawGqlString, never, \"variables\", RawGqlString extends never ? { [KeyType in keyof ({ [KeyType in keyof CustomerAccountMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>]: CustomerAccountMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountMutations[RawGqlString][\"variables\"], Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>>)]: ({ [KeyType in keyof CustomerAccountMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>]: CustomerAccountMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountMutations[RawGqlString][\"variables\"], Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>>)[KeyType]; } : { readonly [variable: string]: unknown; }, Record<\"variables\", RawGqlString extends never ? { [KeyType in keyof ({ [KeyType in keyof CustomerAccountMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>]: CustomerAccountMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountMutations[RawGqlString][\"variables\"], Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>>)]: ({ [KeyType in keyof CustomerAccountMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>]: CustomerAccountMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<CustomerAccountMutations[RawGqlString][\"variables\"], Extract<keyof CustomerAccountMutations[RawGqlString][\"variables\"], never>>>)[KeyType]; } : { readonly [variable: string]: unknown; }>>]) => Promise<Omit<CustomerAPIResponse<ClientReturn<CustomerAccountMutations, RawGqlString, OverrideReturnType>>, \"errors\"> & { errors?: Pick<GraphQLError, \"name\" | \"message\" | \"path\" | \"extensions\" | \"locations\" | \"stack\">[]; }>",
                 "description": "Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation."
+              }
+            ]
+          },
+          "LoginOptions": {
+            "filePath": "/customer/types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "LoginOptions",
+            "value": "{\n  uiLocales?: LanguageCode;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/customer/types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "uiLocales",
+                "value": "LanguageCode",
+                "description": "",
+                "isOptional": true
               }
             ]
           },
@@ -9663,16 +9688,15 @@
             "filePath": "/customer/types.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CustomerAccountForDocs",
-            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use) */\n  login?: () => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize?: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn?: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus?: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken?: () => Promise<string | undefined>;\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/\n  getApiUrl: () => string;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/\n  logout?: () => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query?: <TData = any>(\n    query: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n}",
+            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action.\n   * It redirects the customer to a Shopify login domain. It also defined the final path the customer\n   * lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is\n   * automatically setup unless `customAuthStatusHandler` option is in use)\n   *\n   * @param options.uiLocales - The displayed language of the login page. Only support for the following languages:\n   * `en`, `fr`, `cs`, `da`, `de`, `es`, `fi`, `it`, `ja`, `ko`, `nb`, `nl`, `pl`, `pt-BR`, `pt-PT`,\n   * `sv`, `th`, `tr`, `vi`, `zh-CN`, `zh-TW`. If supplied any other language code, it will default to `en`.\n   * */\n  login: (options?: LoginOptions) => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize?: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn?: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus?: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken?: () => Promise<string | undefined>;\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/\n  getApiUrl: () => string;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/\n  logout?: () => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query?: <TData = any>(\n    query: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n}",
             "description": "Below are types meant for documentation only. Ensure it stay in sync with the type above.",
             "members": [
               {
                 "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "login",
-                "value": "() => Promise<Response>",
-                "description": "Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use)",
-                "isOptional": true
+                "value": "(options?: LoginOptions) => Promise<Response>",
+                "description": "Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use)"
               },
               {
                 "filePath": "/customer/types.ts",
@@ -9735,6 +9759,23 @@
                 "name": "mutate",
                 "value": "<TData = any>(mutation: string, options: CustomerAccountQueryOptionsForDocs) => Promise<TData>",
                 "description": "Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation.",
+                "isOptional": true
+              }
+            ]
+          },
+          "LoginOptions": {
+            "filePath": "/customer/types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "LoginOptions",
+            "value": "{\n  uiLocales?: LanguageCode;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/customer/types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "uiLocales",
+                "value": "LanguageCode",
+                "description": "",
                 "isOptional": true
               }
             ]
@@ -10000,23 +10041,44 @@
           },
           "PaginationRenderProp": {
             "filePath": "/pagination/Pagination.ts",
+            "syntaxKind": "TypeAliasDeclaration",
             "name": "PaginationRenderProp",
+            "value": "FC<PaginationInfo<NodesType>>",
             "description": "",
-            "params": [
+            "members": [
               {
-                "name": "props",
+                "filePath": "/pagination/Pagination.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "propTypes",
+                "value": "WeakValidationMap<PaginationInfo<NodesType>>",
                 "description": "",
-                "value": "PaginationInfo<NodesType>",
-                "filePath": "/pagination/Pagination.ts"
+                "isOptional": true
+              },
+              {
+                "filePath": "/pagination/Pagination.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "contextTypes",
+                "value": "ValidationMap<any>",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/pagination/Pagination.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "defaultProps",
+                "value": "Partial<PaginationInfo<NodesType>>",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/pagination/Pagination.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "displayName",
+                "value": "string",
+                "description": "",
+                "isOptional": true
               }
-            ],
-            "returns": {
-              "filePath": "/pagination/Pagination.ts",
-              "description": "",
-              "name": "ReactNode",
-              "value": "ReactNode"
-            },
-            "value": "type PaginationRenderProp<NodesType> = (\n  props: PaginationInfo<NodesType>,\n) => ReactNode;"
+            ]
           },
           "PaginationInfo": {
             "filePath": "/pagination/Pagination.ts",
@@ -10034,14 +10096,14 @@
                 "filePath": "/pagination/Pagination.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "NextLink",
-                "value": "(props: Omit<RemixLinkProps, \"to\"> & { ref?: Ref<HTMLAnchorElement>; }) => ReactNode",
+                "value": "FC<Omit<LinkProps, 'to'> & {ref?: Ref<HTMLAnchorElement>}>",
                 "description": "The `<NextLink>` is a helper component that makes it easy to navigate to the next page of paginated data. Alternatively you can build your own `<Link>` component: `<Link to={nextPageUrl} state={state} preventScrollReset />`"
               },
               {
                 "filePath": "/pagination/Pagination.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "PreviousLink",
-                "value": "(props: Omit<RemixLinkProps, \"to\"> & { ref?: Ref<HTMLAnchorElement>; }) => ReactNode",
+                "value": "FC<Omit<LinkProps, 'to'> & {ref?: Ref<HTMLAnchorElement>}>",
                 "description": "The `<PreviousLink>` is a helper component that makes it easy to navigate to the previous page of paginated data. Alternatively you can build your own `<Link>` component: `<Link to={previousPageUrl} state={state} preventScrollReset />`"
               },
               {
@@ -10087,7 +10149,7 @@
                 "description": "The `state` property is important to use when building your own `<Link>` component if you want paginated data to continuously append to the page. This means that every time the user clicks \"Next page\", the next page of data will be apppended inline with the previous page. If you want the whole page to re-render with only the next page results, do not pass the `state` prop to the Remix `<Link>` component."
               }
             ],
-            "value": "interface PaginationInfo<NodesType> {\n  /** The paginated array of nodes. You should map over and render this array. */\n  nodes: Array<NodesType>;\n  /** The `<NextLink>` is a helper component that makes it easy to navigate to the next page of paginated data. Alternatively you can build your own `<Link>` component: `<Link to={nextPageUrl} state={state} preventScrollReset />` */\n  NextLink: (\n    props: Omit<LinkProps, 'to'> & {ref?: Ref<HTMLAnchorElement>},\n  ) => ReactNode;\n  /** The `<PreviousLink>` is a helper component that makes it easy to navigate to the previous page of paginated data. Alternatively you can build your own `<Link>` component: `<Link to={previousPageUrl} state={state} preventScrollReset />` */\n  PreviousLink: (\n    props: Omit<LinkProps, 'to'> & {ref?: Ref<HTMLAnchorElement>},\n  ) => ReactNode;\n  /** The URL to the previous page of paginated data. Use this prop to build your own `<Link>` component. */\n  previousPageUrl: string;\n  /** The URL to the next page of paginated data. Use this prop to build your own `<Link>` component. */\n  nextPageUrl: string;\n  /** True if the cursor has next paginated data */\n  hasNextPage: boolean;\n  /** True if the cursor has previous paginated data */\n  hasPreviousPage: boolean;\n  /** True if we are in the process of fetching another page of data */\n  isLoading: boolean;\n  /** The `state` property is important to use when building your own `<Link>` component if you want paginated data to continuously append to the page. This means that every time the user clicks \"Next page\", the next page of data will be apppended inline with the previous page. If you want the whole page to re-render with only the next page results, do not pass the `state` prop to the Remix `<Link>` component. */\n  state: {\n    nodes: Array<NodesType>;\n    pageInfo: {\n      endCursor: Maybe<string> | undefined;\n      startCursor: Maybe<string> | undefined;\n      hasPreviousPage: boolean;\n    };\n  };\n}"
+            "value": "interface PaginationInfo<NodesType> {\n  /** The paginated array of nodes. You should map over and render this array. */\n  nodes: Array<NodesType>;\n  /** The `<NextLink>` is a helper component that makes it easy to navigate to the next page of paginated data. Alternatively you can build your own `<Link>` component: `<Link to={nextPageUrl} state={state} preventScrollReset />` */\n  NextLink: FC<Omit<LinkProps, 'to'> & {ref?: Ref<HTMLAnchorElement>}>;\n  /** The `<PreviousLink>` is a helper component that makes it easy to navigate to the previous page of paginated data. Alternatively you can build your own `<Link>` component: `<Link to={previousPageUrl} state={state} preventScrollReset />` */\n  PreviousLink: FC<Omit<LinkProps, 'to'> & {ref?: Ref<HTMLAnchorElement>}>;\n  /** The URL to the previous page of paginated data. Use this prop to build your own `<Link>` component. */\n  previousPageUrl: string;\n  /** The URL to the next page of paginated data. Use this prop to build your own `<Link>` component. */\n  nextPageUrl: string;\n  /** True if the cursor has next paginated data */\n  hasNextPage: boolean;\n  /** True if the cursor has previous paginated data */\n  hasPreviousPage: boolean;\n  /** True if we are in the process of fetching another page of data */\n  isLoading: boolean;\n  /** The `state` property is important to use when building your own `<Link>` component if you want paginated data to continuously append to the page. This means that every time the user clicks \"Next page\", the next page of data will be apppended inline with the previous page. If you want the whole page to re-render with only the next page results, do not pass the `state` prop to the Remix `<Link>` component. */\n  state: {\n    nodes: Array<NodesType>;\n    pageInfo: {\n      endCursor: Maybe<string> | undefined;\n      startCursor: Maybe<string> | undefined;\n      hasPreviousPage: boolean;\n    };\n  };\n}"
           }
         }
       }

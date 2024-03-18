@@ -765,6 +765,13 @@
           "name": "git",
           "allowNo": true,
           "type": "boolean"
+        },
+        "quickstart": {
+          "description": "Scaffolds a new Hydrogen project with a set of sensible defaults.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_QUICKSTART",
+          "name": "quickstart",
+          "allowNo": false,
+          "type": "boolean"
         }
       },
       "hasDynamicHelp": false,
@@ -1592,5 +1599,5 @@
       ]
     }
   },
-  "version": "7.1.1"
+  "version": "7.1.2"
 }

@@ -1,5 +1,13 @@
 # @shopify/hydrogen
 
+## 2024.1.4
+
+### Patch Changes
+
+- add optional fetcher key to CartForm ([#1792](https://github.com/Shopify/hydrogen/pull/1792)) by [@rmiller61](https://github.com/rmiller61)
+
+- Fix XSS vulnerability in the SEO component ([#1839](https://github.com/Shopify/hydrogen/pull/1839)) by [@blittle](https://github.com/blittle)
+
 ## 2024.1.3
 
 ### Patch Changes

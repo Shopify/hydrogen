@@ -263,20 +263,18 @@ type ChildrenRenderProps = {
 
 type SearchFromProps = {
   action?: FormProps['action'];
-  method?: FormProps['method'];
   className?: string;
   children: (passedProps: ChildrenRenderProps) => React.ReactNode;
   [key: string]: unknown;
 };
 
 /**
- *  Search form component that posts search requests to the `/search` route
+ *  Search form component that sends search requests to the `/search` route
  **/
 export function PredictiveSearchForm({
   action,
   children,
   className = 'predictive-search-form',
-  method = 'POST',
   ...props
 }: SearchFromProps) {
   const params = useParams();
@@ -287,13 +285,14 @@ export function PredictiveSearchForm({
 
   function fetchResults(event: React.ChangeEvent<HTMLInputElement>) {
     const searchAction = action ?? '/api/predictive-search';
+    const newSearchTerm = event.target.value || '';
     const localizedAction = params.locale
       ? `/${params.locale}${searchAction}`
       : searchAction;
-    const newSearchTerm = event.target.value || '';
+
     fetcher.submit(
       {q: newSearchTerm, limit: '6'},
-      {method, action: localizedAction},
+      {method: 'GET', action: localizedAction},
     );
   }
 
@@ -322,7 +321,7 @@ export function PredictiveSearchForm({
 }
 
 export function PredictiveSearchResults() {
-  const {results, totalResults, searchInputRef, searchTerm} =
+  const {results, totalResults, searchInputRef, searchTerm, state} =
     usePredictiveSearch();
 
   function goToSearchResult(event: React.MouseEvent<HTMLAnchorElement>) {
@@ -333,9 +332,14 @@ export function PredictiveSearchResults() {
     window.location.href = event.currentTarget.href;
   }
 
+  if (state === 'loading') {
+    return <div>Loading...</div>;
+  }
+
   if (!totalResults) {
     return <NoPredictiveSearchResults searchTerm={searchTerm} />;
   }
+
   return (
     <div className="predictive-search-results">
       <div>
@@ -452,6 +456,7 @@ function SearchResultItem({goToSearchResult, item}: SearchResultItemProps) {
 type UseSearchReturn = NormalizedPredictiveSearch & {
   searchInputRef: React.MutableRefObject<HTMLInputElement | null>;
   searchTerm: React.MutableRefObject<string>;
+  state: ReturnType<typeof useFetcher>['state'];
 };
 
 function usePredictiveSearch(): UseSearchReturn {
@@ -474,7 +479,7 @@ function usePredictiveSearch(): UseSearchReturn {
     searchInputRef.current = document.querySelector('input[type="search"]');
   }, []);
 
-  return {...search, searchInputRef, searchTerm};
+  return {...search, searchInputRef, searchTerm, state: searchFetcher.state};
 }
 
 /**
