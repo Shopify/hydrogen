@@ -168,6 +168,15 @@ export const commonFlags = {
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
     }),
   },
+  customerAccountPush: {
+    'customer-account-push': Flags.boolean({
+      description:
+        "Use tunneling for local development and push the tunneling domain to admin. Required to use Customer Account API's Oauth flow",
+      required: false,
+      default: false,
+      env: 'SHOPIFY_HYDROGEN_FLAG_CUSTOMER_ACCOUNT_PUSH',
+    }),
+  },
 } satisfies Record<string, Record<Lowercase<string>, FlagProps>>;
 
 export function flagsToCamelObject<T extends Record<string, any>>(obj: T) {

@@ -4,7 +4,6 @@ import type {ChildProcess} from 'node:child_process';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
-import colors from '@shopify/cli-kit/node/colors';
 import {copyPublicFiles} from './build.js';
 import {
   assertOxygenChecks,
@@ -16,7 +15,7 @@ import {
 import {createRemixLogger, enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
 import {commonFlags, deprecated, flagsToCamelObject} from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
-import {Flags} from '@oclif/core';
+import {Flags, Config} from '@oclif/core';
 import {
   type MiniOxygen,
   startMiniOxygen,
@@ -32,6 +31,11 @@ import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {findPort} from '../../lib/find-port.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
+import {
+  startTunnelAndPushConfig,
+  checkMockShopAndByPassTunnel,
+} from '../../lib/dev-shared.js';
+import {getStorefrontId} from './customer-account/push.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -61,6 +65,7 @@ export default class Dev extends Command {
       required: false,
     }),
     ...commonFlags.diff,
+    ...commonFlags.customerAccountPush,
   };
 
   async run(): Promise<void> {
@@ -74,6 +79,7 @@ export default class Dev extends Command {
     await runDev({
       ...flagsToCamelObject(flags),
       path: directory,
+      cliConfig: this.config,
     });
   }
 }
@@ -90,6 +96,8 @@ type DevOptions = {
   debug?: boolean;
   sourcemap?: boolean;
   inspectorPort: number;
+  customerAccountPush?: boolean;
+  cliConfig?: Config;
 };
 
 export async function runDev({
@@ -104,6 +112,8 @@ export async function runDev({
   sourcemap = true,
   disableVersionCheck = false,
   inspectorPort,
+  customerAccountPush: customerAccountPushFlag = false,
+  cliConfig,
 }: DevOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
@@ -145,6 +155,24 @@ export async function runDev({
   if (assetsPort) {
     // Note: Set this env before loading Remix config!
     process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
+  }
+
+  const customerAccountPush = await checkMockShopAndByPassTunnel(
+    root,
+    customerAccountPushFlag,
+  );
+
+  // ensure getStorefrontId occur before getConfig since it can run link and changed env vars
+  let tunnelPromise: Promise<string> | undefined;
+  if (customerAccountPush && cliConfig) {
+    const storefrontId = await getStorefrontId(root);
+
+    tunnelPromise = startTunnelAndPushConfig(
+      root,
+      cliConfig,
+      appPort,
+      storefrontId,
+    );
   }
 
   const [remixConfig, {shop, storefront}] = await Promise.all([
@@ -190,23 +218,22 @@ export async function runDev({
       legacyRuntime,
     );
 
-    enhanceH2Logs({host: miniOxygen.listeningAt, ...remixConfig});
+    const host = (await tunnelPromise) ?? miniOxygen.listeningAt;
+
+    enhanceH2Logs({host, ...remixConfig});
 
     miniOxygen.showBanner({
-      appName: storefront ? colors.cyan(storefront?.title) : undefined,
+      appName: storefront?.title,
       headlinePrefix:
         initialBuildDurationMs > 0
           ? `Initial build: ${initialBuildDurationMs}ms\n`
           : '',
+      host,
       extraLines: [
-        colors.dim(
-          `\nView GraphiQL API browser: ${getGraphiQLUrl({
-            host: miniOxygen.listeningAt,
-          })}`,
-        ),
-        colors.dim(
-          `\nView server network requests: ${miniOxygen.listeningAt}/subrequest-profiler`,
-        ),
+        `View GraphiQL API browser: \n${getGraphiQLUrl({
+          host,
+        })}`,
+        `View server network requests: \n${host}/subrequest-profiler`,
       ],
     });
 

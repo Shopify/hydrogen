@@ -26,8 +26,6 @@ export async function getAllEnvironmentVariables({
   envBranch,
   fetchRemote = true,
 }: Arguments) {
-  const dotEnvPath = resolvePath(root, '.env');
-
   const [{remoteVariables, remoteSecrets}, {variables: localVariables}] =
     await Promise.all([
       // Get remote vars
@@ -45,9 +43,7 @@ export async function getAllEnvironmentVariables({
           })
         : createEmptyRemoteVars(),
       // Get local vars
-      fileExists(dotEnvPath).then((exists) =>
-        exists ? readAndParseDotEnv(dotEnvPath) : {variables: {} as EnvMap},
-      ),
+      getLocalVariables(root),
     ]);
 
   const remoteSecretKeys = Object.keys(remoteSecrets);
@@ -100,4 +96,12 @@ async function getRemoteVariables(root: string, envBranch?: string) {
   }
 
   return {remoteVariables, remoteSecrets};
+}
+
+export async function getLocalVariables(root: string) {
+  const dotEnvPath = resolvePath(root, '.env');
+
+  return await fileExists(dotEnvPath).then((exists) =>
+    exists ? readAndParseDotEnv(dotEnvPath) : {variables: {} as EnvMap},
+  );
 }

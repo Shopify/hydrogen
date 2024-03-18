@@ -12,6 +12,11 @@ export interface ShopifyConfig {
   storefront?: {
     id: string;
     title: string;
+    customerAccountConfig?: {
+      redirectUri?: string;
+      javascriptOrigin?: string;
+      logoutUri?: string;
+    };
   };
 }
 
@@ -150,5 +155,42 @@ export async function ensureShopifyGitIgnore(root: string): Promise<boolean> {
     return true;
   } catch {
     return false;
+  }
+}
+
+/**
+ * The Customer Account Config
+ *
+ * @param root the target directory
+ * @param customerAccountConfig the config to be save
+ * @returns the updated config
+ */
+export async function setCustomerAccountConfig(
+  root: string,
+  customerAccountConfig: {
+    redirectUri?: string;
+    javascriptOrigin?: string;
+    logoutUri?: string;
+  },
+) {
+  try {
+    const filePath = resolvePath(root, SHOPIFY_DIR, SHOPIFY_DIR_PROJECT);
+
+    const existingConfig: ShopifyConfig = JSON.parse(await readFile(filePath));
+
+    const config = {
+      ...existingConfig,
+      storefront: {
+        ...existingConfig.storefront,
+        customerAccountConfig,
+      },
+    };
+
+    await writeFile(filePath, JSON.stringify(config));
+    await ensureShopifyGitIgnore(root);
+
+    return config;
+  } catch {
+    throw new AbortError('Project configuration could not be found.');
   }
 }
