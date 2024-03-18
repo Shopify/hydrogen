@@ -106,7 +106,7 @@ export async function linkStorefront(
     }
   }
 
-  const storefronts: ParsedHydrogenStorefront[]  = await getStorefronts(session);
+  const storefronts: ParsedHydrogenStorefront[] = await getStorefronts(session);
 
   let selectedStorefront: HydrogenStorefront | undefined;
 
@@ -136,7 +136,11 @@ export async function linkStorefront(
     selectedStorefront = await handleStorefrontSelection(storefronts);
 
     if (!selectedStorefront) {
-      selectedStorefront = await createNewStorefront(root, session, storefronts);
+      selectedStorefront = await createNewStorefront(
+        root,
+        session,
+        storefronts,
+      );
     }
   }
 
@@ -145,15 +149,19 @@ export async function linkStorefront(
   return selectedStorefront;
 }
 
-async function createNewStorefront(root: string, session: AdminSession, storefronts: ParsedHydrogenStorefront[]) {
+async function createNewStorefront(
+  root: string,
+  session: AdminSession,
+  storefronts: ParsedHydrogenStorefront[],
+) {
   const projectDirectory = basename(root);
   let defaultProjectName = titleize(projectDirectory);
   const nameAlreadyUsed = storefronts.some(
     ({title}: {title: string}) => title === defaultProjectName,
   );
-  if ( nameAlreadyUsed ) {
+  if (nameAlreadyUsed) {
     defaultProjectName = generateRandomName();
-  };
+  }
 
   const projectName = await renderTextPrompt({
     message: 'New storefront name',
