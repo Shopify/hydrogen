@@ -34,7 +34,7 @@ export function LocationSelector({customer, companyLocationId}) {
         country: locationCountry,
       }),
     });
-    setSavedLocation(location);
+    setSavedLocation(selectedLocation);
   };
 
   function LocationItem({location}) {
@@ -73,9 +73,8 @@ export function LocationSelector({customer, companyLocationId}) {
             {savedLocation ? savedLocation.name : locations[0].name}
           </h3>
           <button
-            className="location-select-cta"
             onClick={() => {
-              setSavedLoction(null);
+              setSavedLocation(null);
               setSelectedLocation(null);
             }}
           >

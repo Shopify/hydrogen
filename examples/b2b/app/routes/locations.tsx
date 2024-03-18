@@ -15,13 +15,12 @@ export const meta: MetaFunction = () => {
 export async function action({request, context}: ActionFunctionArgs) {
   const req = await request.json();
   context.session.set('company_location_id', req.locationId);
+  console.log(context.session.get('customer_access_token'));
 
   const result = await context.cart.updateBuyerIdentity({
-    customerAccessToken: context.session.get(
-      'storefront_customer_access_token',
-    ),
+    customerAccessToken: context.session.get('customer_access_token'),
     ...(req.locationId && {companyLocationId: req.locationId}),
-    countryCode: req.country ?? context.storefront.i18n.country,
+    countryCode: req.country,
   });
 
   const cartHeaders = context.cart.setCartId(result.cart.id);
