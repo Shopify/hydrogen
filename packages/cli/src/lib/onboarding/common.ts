@@ -268,6 +268,8 @@ export type HydrogenStorefront = {
   productionUrl: string;
 };
 
+export type ParsedHydrogenStorefront = HydrogenStorefront & {parsedId: string};
+
 export async function handleStorefrontSelection(
   storefronts: HydrogenStorefront[],
 ): Promise<HydrogenStorefront | undefined> {
@@ -753,4 +755,75 @@ function normalizeRoutePath(routePath: string) {
     .replace(/\$/g, ':') // Replace dollar signs with colons
     .replace(/[\[\]]/g, '') // Remove brackets
     .replace(/:\w*Handle/i, ':handle'); // Replace arbitrary handle names with a standard `:handle`
+}
+
+export function generateRandomName() {
+  function getRandomElement(arr: string[]) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+  const geographicalFeature = getRandomElement([
+    'Bay',
+    'Bend',
+    'Cape',
+    'Cliff',
+    'Cove',
+    'Creek',
+    'Dale',
+    'Dune',
+    'Fjord',
+    'Glade',
+    'Gulf',
+    'Hill',
+    'Isle',
+    'Knoll',
+    'Lake',
+    'Loch',
+    'Mesa',
+    'Peak',
+    'Pond',
+    'Quay',
+    'Reef',
+    'Ridge',
+    'Rise',
+    'River',
+    'Road',
+    'Shore',
+    'Strait',
+    'Stream',
+    'Vale',
+    'Valley',
+    'View',
+    'Vista',
+  ]);
+  const colorNames = getRandomElement([
+    'Crimson',
+    'Azure',
+    'Coral',
+    'Fuchsia',
+    'Indigo',
+    'Ivory',
+    'Lavender',
+    'Lime',
+    'Magenta',
+    'Maroon',
+    'Orchid',
+    'Peach',
+    'Plum',
+    'Quartz',
+    'Salmon',
+    'Teal',
+    'Turquoise',
+    'Violet',
+    'Yellow',
+    'Ebony',
+    'Jade',
+    'Lilac',
+    'Mint',
+    'Onyx',
+    'Pearl',
+    'Ruby',
+    'Sapphire',
+    'Topaz',
+  ]);
+  return `${colorNames} ${geographicalFeature}`;
 }
