@@ -123,8 +123,10 @@ export async function runInit(
   const controller = new AbortController();
 
   try {
-    return options.template
-      ? await setupRemoteTemplate(options, controller)
+    const template = options.template;
+
+    return template
+      ? await setupRemoteTemplate({...options, template}, controller)
       : await setupLocalStarterTemplate(options, controller);
   } catch (error) {
     controller.abort();
