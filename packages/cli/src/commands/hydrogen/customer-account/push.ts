@@ -59,7 +59,9 @@ export async function runCustomerAccountPush({
 
   try {
     if (!storefrontId) {
-      throw new Error('No storefrontId was found.');
+      throw new Error(
+        'No storefrontId was found in --storefront-id flag or .shopify/project.json',
+      );
     }
 
     const redirectUri = redirectUriRelativeUrl
@@ -115,8 +117,9 @@ export async function runCustomerAccountPush({
       ? error.userErrors.map(
           (value: {message: string; field: [string]; code: string}) => {
             if (
-              value.message ===
-              'Javascript origin is not allowed for this application type.'
+              /Javascript origin is not allowed for this application type/i.test(
+                value.message,
+              )
             ) {
               confidentialAccessFound = true;
             }

@@ -28,7 +28,7 @@ export async function checkMockShopAndByPassTunnel(
       renderInfo({
         headline:
           'Using mock.shop with `--customer-account-push` flag is not supported',
-        body: 'The functionalities of this flag had been removed.',
+        body: 'The functionalities of this flag are disabled.',
         nextSteps: [
           'You may continue knowing Customer Account API (/account) interactions will fail.',
           [

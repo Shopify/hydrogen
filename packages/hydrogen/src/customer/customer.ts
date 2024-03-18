@@ -478,16 +478,14 @@ function ifInvalidCredentialThrowError(
     if (!customerAccountUrl || !customerAccountId) throw Error();
     new URL(customerAccountUrl);
   } catch {
-    if (process.env.NODE_ENV === 'development') {
-      throw new Response(
-        'You do not have the valid credential to use Customer Account API (/account).' +
-          '\n\nmock.shop does not support Customer Account API. \nWe recommend running `npx shopify hydrogen env pull` to link your store credentials.',
-        {status: 500},
-      );
-    } else {
-      console.error(
-        'You do not have the valid credential to use Customer Account API.\nRun `npx shopify hydrogen env pull` to link your store credentials.',
-      );
-    }
+    console.error(
+      'You do not have the valid credential to use Customer Account API.\nRun `npx shopify hydrogen env pull` to link your store credentials.',
+    );
+
+    throw new Response(
+      'You do not have the valid credential to use Customer Account API (/account).' +
+        '\n\nmock.shop does not support Customer Account API. \nWe recommend running `npx shopify hydrogen env pull` to link your store credentials.',
+      {status: 500},
+    );
   }
 }

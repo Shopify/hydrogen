@@ -157,18 +157,17 @@ export async function runDev({
     process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
   }
 
-  let host: string;
-
   const customerAccountPush = await checkMockShopAndByPassTunnel(
     root,
     customerAccountPushFlag,
   );
 
-  // ensure this occur before getConfig since it can run link and changed env vars
+  // ensure getStorefrontId occur before getConfig since it can run link and changed env vars
+  let tunnelPromise: Promise<string> | undefined;
   if (customerAccountPush && cliConfig) {
     const storefrontId = await getStorefrontId(root);
 
-    host = await startTunnelAndPushConfig(
+    tunnelPromise = startTunnelAndPushConfig(
       root,
       cliConfig,
       appPort,
@@ -219,7 +218,7 @@ export async function runDev({
       legacyRuntime,
     );
 
-    if (!host) host = miniOxygen.listeningAt;
+    const host = (await tunnelPromise) ?? miniOxygen.listeningAt;
 
     enhanceH2Logs({host, ...remixConfig});
 
