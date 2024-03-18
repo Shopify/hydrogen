@@ -136,7 +136,7 @@ export async function downloadExternalRepo(
   const result = parsed.value;
   const templateDir = joinPath(
     externalTemplates,
-    result.full.replace(/[^\w]/, '_'),
+    result.full.replace(/^https?:\/\//, '').replace(/[^\w]+/, '_'),
   );
 
   if (await fileExists(templateDir)) {
