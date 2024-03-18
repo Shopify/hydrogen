@@ -42,14 +42,14 @@ export const ShopifyAppId = {
  * These duplicated interface declaration is so that we can generate proper documentation
  * for these public facing constants
  */
-interface AnalyticsEventName {
+export interface AnalyticsEventName {
   /** Page view */
   PAGE_VIEW: 'PAGE_VIEW';
   /** Add to cart */
   ADD_TO_CART: 'ADD_TO_CART';
 }
 
-interface AnalyticsPageType {
+export interface AnalyticsPageType {
   article: 'article';
   blog: 'blog';
   captcha: 'captcha';
@@ -74,7 +74,7 @@ interface AnalyticsPageType {
   search: 'search';
 }
 
-interface ShopifySalesChannel {
+export interface ShopifySalesChannel {
   /** Shopify Hydrogen sales channel */
   hydrogen: 'hydrogen';
   /** Shopify Headless sales channel */
