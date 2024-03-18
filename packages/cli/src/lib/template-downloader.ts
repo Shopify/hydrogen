@@ -140,7 +140,7 @@ export async function downloadExternalRepo(
   );
 
   if (await fileExists(templateDir)) {
-    await rmdir(templateDir);
+    await rmdir(templateDir, {force: true});
   }
 
   // TODO use AbortSignal?
@@ -150,7 +150,7 @@ export async function downloadExternalRepo(
     shallow: true,
   });
 
-  await rmdir(joinPath(templateDir, '.git'));
+  await rmdir(joinPath(templateDir, '.git'), {force: true});
 
   return {templateDir};
 }

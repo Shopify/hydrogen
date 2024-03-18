@@ -23,6 +23,8 @@ import {
   type InitOptions,
 } from './common.js';
 
+const DEMO_STORE_REPO = 'shopify/hydrogen-demo-store';
+
 /**
  * Flow for creating a project starting from a remote template (e.g. demo-store).
  */
@@ -31,9 +33,7 @@ export async function setupRemoteTemplate(
   controller: AbortController,
 ) {
   const appTemplate =
-    options.template === 'demo-store'
-      ? `shopify/${options.template}`
-      : options.template;
+    options.template === 'demo-store' ? DEMO_STORE_REPO : options.template;
 
   let abort = createAbortHandler(controller);
 
@@ -140,7 +140,7 @@ export async function setupRemoteTemplate(
 
   renderInfo({
     headline: `Your project will display inventory from ${
-      options.template === 'demo-store'
+      options.template.endsWith(DEMO_STORE_REPO)
         ? 'the Hydrogen Demo Store'
         : 'Mock.shop'
     }.`,
