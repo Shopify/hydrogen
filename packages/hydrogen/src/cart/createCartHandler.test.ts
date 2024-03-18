@@ -399,4 +399,17 @@ describe('createCartHandler', () => {
 
     expect(result.cart).toHaveProperty('id', 'gid://shopify/Cart/c1-456');
   });
+
+  it('stores the cartId in memory when a new cart is created and returns that result if available', async () => {
+    const cart = getCartHandler();
+
+    await cart.addLines([
+      {
+        merchandiseId: '1',
+        quantity: 1,
+      },
+    ]);
+
+    expect(await cart.get()).toHaveProperty('id', 'c1-new-cart-id');
+  });
 });

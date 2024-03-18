@@ -96,7 +96,7 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
   options: CartHandlerOptions | CartHandlerOptionsWithCustom<TCustomMethods>,
 ): CartHandlerReturn<TCustomMethods> {
   const {
-    getCartId,
+    getCartId: _getCartId,
     setCartId,
     storefront,
     customerAccount,
@@ -104,14 +104,23 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
     cartMutateFragment,
   } = options;
 
+  let cartId = _getCartId();
+
+  const getCartId = () => cartId || _getCartId();
+
   const mutateOptions = {
     storefront,
     getCartId,
     cartFragment: cartMutateFragment,
   };
 
-  const cartId = getCartId();
-  const cartCreate = cartCreateDefault(mutateOptions);
+  const _cartCreate = cartCreateDefault(mutateOptions);
+
+  const cartCreate: CartCreateFunction = async function (...args) {
+    const result = await _cartCreate(...args);
+    cartId = result?.cart?.id;
+    return result;
+  };
 
   const methods: HydrogenCart = {
     get: cartGetDefault({
