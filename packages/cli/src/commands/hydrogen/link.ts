@@ -22,6 +22,8 @@ import {login} from '../../lib/auth.js';
 import type {AdminSession} from '../../lib/auth.js';
 import {
   type HydrogenStorefront,
+  type ParsedHydrogenStorefront,
+  generateRandomName,
   handleStorefrontSelection,
 } from '../../lib/onboarding/common.js';
 
@@ -104,7 +106,7 @@ export async function linkStorefront(
     }
   }
 
-  const storefronts = await getStorefronts(session);
+  const storefronts: ParsedHydrogenStorefront[]  = await getStorefronts(session);
 
   let selectedStorefront: HydrogenStorefront | undefined;
 
@@ -134,7 +136,7 @@ export async function linkStorefront(
     selectedStorefront = await handleStorefrontSelection(storefronts);
 
     if (!selectedStorefront) {
-      selectedStorefront = await createNewStorefront(root, session);
+      selectedStorefront = await createNewStorefront(root, session, storefronts);
     }
   }
 
@@ -143,17 +145,14 @@ export async function linkStorefront(
   return selectedStorefront;
 }
 
-async function createNewStorefront(root: string, session: AdminSession) {
+async function createNewStorefront(root: string, session: AdminSession, storefronts: ParsedHydrogenStorefront[]) {
   const projectDirectory = basename(root);
-  const storefronts = await getStorefronts(session);
-
   let defaultProjectName = titleize(projectDirectory);
   const nameAlreadyUsed = storefronts.some(
-    ({title}) => title === defaultProjectName,
+    ({title}: {title: string}) => title === defaultProjectName,
   );
-  // Append a random hash to the default project name if it's already used
   if ( nameAlreadyUsed ) {
-    defaultProjectName += ` ${Math.random().toString(36).substring(2, 6)}`;
+    defaultProjectName = generateRandomName();
   };
 
   const projectName = await renderTextPrompt({
