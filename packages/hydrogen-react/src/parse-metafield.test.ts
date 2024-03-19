@@ -11,6 +11,7 @@ import {TypeEqual, expectType} from 'ts-expect';
 import type {
   Collection,
   GenericFile,
+  Metaobject,
   MoneyV2,
   Page,
   Product,
@@ -251,6 +252,86 @@ describe(`parseMetafield`, () => {
       expect(parsed?.parsedValue?.unit === 'lbs').toBe(true);
       expect(parsed?.parsedValue?.value === 2).toBe(true);
       expectType<null | Measurement>(parsed?.parsedValue);
+    });
+
+    it(`metaobject_reference`, () => {
+      const parsed = parseMetafield<ParsedMetafields['metaobject_reference']>({
+        type: 'metaobject_reference',
+        reference: {
+          __typename: 'Metaobject',
+          fields: [
+            {
+              type: 'single_line_text_field',
+              key: 'title',
+              value: 'Test Title',
+            },
+            {
+              type: 'boolean',
+              key: 'enable',
+              value: 'true',
+            },
+            {
+              type: 'metaobject_reference',
+              key: 'nested_metaobject_reference',
+              value: 'gid://shopify/Metaobject/{id}',
+              reference: {
+                id: 'gid://shopify/Metaobject/{id}',
+                fields: [
+                  {
+                    type: 'single_line_text_field',
+                    key: 'title',
+                    value: 'Test Title',
+                  },
+                  {
+                    type: 'boolean',
+                    key: 'enable',
+                    value: 'true',
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      });
+
+      expect(parsed.parsedValue?.__typename === 'Metaobject').toBe(true);
+      expect(
+        parsed.parsedValue?.parsedFields?.title.parsedValue === 'Test Title',
+      ).toBe(true);
+      expect(
+        parsed.parsedValue?.parsedFields?.enable.parsedValue === true,
+      ).toBe(true);
+      expectType<null | Metaobject>(parsed?.parsedValue);
+    });
+
+    it(`mixed_reference`, () => {
+      const parsed = parseMetafield<ParsedMetafields['mixed_reference']>({
+        type: 'mixed_reference',
+        reference: {
+          __typename: 'Metaobject',
+          fields: [
+            {
+              type: 'single_line_text_field',
+              key: 'title',
+              value: 'Test Title',
+            },
+            {
+              type: 'boolean',
+              key: 'enable',
+              value: 'true',
+            },
+          ],
+        },
+      });
+
+      expect(parsed.parsedValue?.__typename === 'Metaobject').toBe(true);
+      expect(
+        parsed.parsedValue?.parsedFields?.title.parsedValue === 'Test Title',
+      ).toBe(true);
+      expect(
+        parsed.parsedValue?.parsedFields?.enable.parsedValue === true,
+      ).toBe(true);
+      expectType<null | Metaobject>(parsed?.parsedValue);
     });
   });
 
