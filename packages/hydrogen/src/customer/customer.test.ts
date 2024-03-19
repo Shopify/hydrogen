@@ -134,6 +134,7 @@ describe('customer', () => {
       const params = new URLSearchParams(url.search);
 
       expect(params.get('id_token_hint')).toBe('id_token');
+      expect(params.get('post_logout_redirect_uri')).toBe('https://localhost');
 
       // Session is cleared
       expect(session.unset).toHaveBeenCalledWith(CUSTOMER_ACCOUNT_SESSION_KEY);
