@@ -1,4 +1,3 @@
-import {MetaFunction} from '@remix-run/react';
 import {getSeoMeta} from '@shopify/hydrogen';
 
 export async function loader({context}) {

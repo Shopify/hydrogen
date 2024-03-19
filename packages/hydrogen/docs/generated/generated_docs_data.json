@@ -10938,7 +10938,7 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {MetaFunction} from '@remix-run/react';\nimport {getSeoMeta} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  const {shop} = await context.storefront.query(`\n    query layout {\n      shop {\n        name\n        description\n      }\n    }\n  `);\n\n  return {\n    seo: {\n      title: shop.title,\n      description: shop.description,\n    },\n  };\n}\n\n// Instead of rendering the `&lt;Seo /&gt;` component in root.tsx\n// call `getSeoMeta` from within meta in each route that has\n// an `seo` prop returned from the loader.\nexport const meta = ({data}) =&gt; {\n  return getSeoMeta(data.seo);\n};\n",
+            "code": "import {getSeoMeta} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  const {shop} = await context.storefront.query(`\n    query layout {\n      shop {\n        name\n        description\n      }\n    }\n  `);\n\n  return {\n    seo: {\n      title: shop.title,\n      description: shop.description,\n    },\n  };\n}\n\n// Instead of rendering the `&lt;Seo /&gt;` component in root.tsx\n// call `getSeoMeta` from within meta in each route that has\n// an `seo` prop returned from the loader.\nexport const meta = ({data}) =&gt; {\n  return getSeoMeta(data.seo);\n};\n",
             "language": "js"
           },
           {
@@ -11528,7 +11528,7 @@
     "category": "components",
     "isVisualComponent": false,
     "related": [],
-    "description": "The `<Seo />` component renders SEO meta tags in the document `head`. Add the `<Seo />` to your `root.jsx` before the `<Meta />` and `<Link />` components. SEO metadata is set on a per-route basis using Remix [loader functions](https://remix.run/docs/en/v1/guides/data-loading). Learn more about [how SEO works in Hydrogen](https://shopify.dev/docs/custom-storefronts/hydrogen/seo).\n  \n  **Note: the Seo component is deprecated**",
+    "description": "The `<Seo />` component renders SEO meta tags in the document `head`. Add the `<Seo />` to your `root.jsx` before the `<Meta />` and `<Link />` components. SEO metadata is set on a per-route basis using Remix [loader functions](https://remix.run/docs/en/v1/guides/data-loading). Learn more about [how SEO works in Hydrogen](https://shopify.dev/docs/custom-storefronts/hydrogen/seo).\n  \n  **Note: the Seo component is deprecated** - Use [getSeoMeta](/docs/api/hydrogen/utilities/getseometa) to migrate.",
     "type": "component",
     "defaultExample": {
       "description": "I am the default example",
