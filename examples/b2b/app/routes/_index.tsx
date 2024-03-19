@@ -16,11 +16,11 @@ export async function loader({context}: LoaderFunctionArgs) {
   const {storefront} = context;
   const buyer = getBuyer({session: context.session});
   const {collections} = await storefront.query(FEATURED_COLLECTION_QUERY, {
-    variables: buyer,
+    variables: {buyer},
   });
   const featuredCollection = collections?.nodes?.[0];
   const recommendedProducts = storefront.query(RECOMMENDED_PRODUCTS_QUERY, {
-    variables: buyer,
+    variables: {buyer},
   });
 
   return defer({featuredCollection, recommendedProducts});

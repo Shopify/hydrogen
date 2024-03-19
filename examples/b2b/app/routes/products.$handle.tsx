@@ -27,6 +27,8 @@ import type {
 } from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/lib/variants';
 import {getBuyer} from '~/lib/buyer';
+import {QuantityRules, hasQuantityRules} from '~/components/QuantityRules';
+import {PriceBreaks} from '~/components/PriceBreaks';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
@@ -181,11 +183,25 @@ function ProductMain({
               product={product}
               selectedVariant={selectedVariant}
               variants={data.product?.variants.nodes || []}
+              quantity={selectedVariant?.quantityRule?.increment || 1}
             />
           )}
         </Await>
       </Suspense>
       <br />
+      {hasQuantityRules(selectedVariant?.quantityRule) ? (
+        <QuantityRules
+          maximum={selectedVariant.quantityRule.maximum}
+          minimum={selectedVariant.quantityRule.minimum}
+          increment={selectedVariant.quantityRule.increment}
+        />
+      ) : null}
+      <br />
+      {selectedVariant?.quantityPriceBreaks?.nodes?.length > 0 ? (
+        <PriceBreaks
+          priceBreaks={selectedVariant?.quantityPriceBreaks?.nodes}
+        />
+      ) : null}
       <br />
       <p>
         <strong>Description</strong>
@@ -226,10 +242,12 @@ function ProductForm({
   product,
   selectedVariant,
   variants,
+  quantity,
 }: {
   product: ProductFragment;
   selectedVariant: ProductFragment['selectedVariant'];
   variants: Array<ProductVariantFragment>;
+  quantity: number;
 }) {
   return (
     <div className="product-form">
@@ -251,7 +269,7 @@ function ProductForm({
             ? [
                 {
                   merchandiseId: selectedVariant.id,
-                  quantity: 1,
+                  quantity,
                 },
               ]
             : []
@@ -354,6 +372,20 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
     selectedOptions {
       name
       value
+    }
+    quantityRule {
+      maximum
+      minimum
+      increment
+    }
+    quantityPriceBreaks(first: 5) {
+      nodes {
+        minimumQuantity
+        price {
+          amount
+          currencyCode
+        }
+      }
     }
     sku
     title
