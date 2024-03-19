@@ -483,10 +483,12 @@ function ifInvalidCredentialThrowError(
       'You do not have the valid credential to use Customer Account API.\nRun `npx shopify hydrogen env pull` to link your store credentials.',
     );
 
-    throw new Response(
-      'You do not have the valid credential to use Customer Account API (/account).' +
-        '\n\nmock.shop does not support Customer Account API. \nWe recommend running `npx shopify hydrogen env pull` to link your store credentials.',
-      {status: 500},
-    );
+    const publicMessage =
+      process.env.NODE_ENV === 'production'
+        ? 'Internal Server Error'
+        : 'You do not have the valid credential to use Customer Account API (/account).' +
+          '\n\nmock.shop does not support Customer Account API. \nWe recommend running `npx shopify hydrogen env pull` to link your store credentials.';
+
+    throw new Response(publicMessage, {status: 500});
   }
 }
