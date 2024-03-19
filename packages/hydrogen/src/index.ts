@@ -15,7 +15,7 @@ export {type CacheKey} from './cache/fetch';
 export {storefrontRedirect} from './routing/redirect';
 export {graphiqlLoader} from './routing/graphiql';
 export {Seo} from './seo/seo';
-export {getSeoMeta} from './seo/seo-meta';
+export {getSeoMeta} from './seo/getSeoMeta';
 export {type SeoConfig} from './seo/generate-seo-tags';
 export type {SeoHandleFunction} from './seo/seo';
 export {Pagination, getPaginationVariables} from './pagination/Pagination';

@@ -1,9 +1,9 @@
 import type {Organization, Product, Thing} from 'schema-dts';
 import {afterAll, describe, expect, it, vi} from 'vitest';
-import {getSeoMeta} from './seo-meta';
+import {getSeoMeta} from './getSeoMeta';
 import {SeoConfig} from './generate-seo-tags';
 
-describe('generateSeoTags', () => {
+describe('getSeoMeta', () => {
   const consoleMock = {
     warn: vi.fn(),
   };
