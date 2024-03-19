@@ -198,7 +198,8 @@ export function createCustomerAccountClient({
   }
 
   async function isLoggedIn() {
-    ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
+    if (!customerAccountUrl || !customerAccountId) return false;
+
     const customerAccount = session.get(CUSTOMER_ACCOUNT_SESSION_KEY);
     const accessToken = customerAccount?.accessToken;
     const expiresAt = customerAccount?.expiresAt;
