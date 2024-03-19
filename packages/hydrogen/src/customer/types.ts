@@ -75,7 +75,10 @@ export type CustomerAccount = {
   getAccessToken: () => Promise<string | undefined>;
   /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/
   getApiUrl: () => string;
-  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/
+  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.
+   *
+   * @param options.postLogoutRedirectUri - The url to redirect customer to after logout. Can be relative or absolute URL. This url will need to included in Customer Account API's application setup for logout URI. The default value is current origin, which is automatically setup when using `--customer-account-push` flag with dev.
+   * */
   logout: (options?: LogoutOptions) => Promise<Response>;
   /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */
   query: <
@@ -159,7 +162,10 @@ export type CustomerAccountForDocs = {
   getAccessToken?: () => Promise<string | undefined>;
   /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/
   getApiUrl?: () => string;
-  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/
+  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.
+   *
+   * @param options.postLogoutRedirectUri - The url to redirect customer to after logout. Can be relative or absolute URL. This url will need to included in Customer Account API's application setup for logout URI. The default value is current origin, which is automatically setup when using `--customer-account-push` flag with dev.
+   * */
   logout?: (options?: LogoutOptions) => Promise<Response>;
   /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */
   query?: <TData = any>(
