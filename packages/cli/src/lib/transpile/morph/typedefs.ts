@@ -56,8 +56,6 @@ export function generateTypeDefs(sourceFile: SourceFile, code: string) {
 
   const knownGenerics: Record<string, string | undefined> = {
     MetaFunction: 'T',
-    Session: 'T,U',
-    SessionStorage: 'T,U',
   };
 
   typedefsFromImports.forEach((typeElements, moduleSpecifier) => {

@@ -1,15 +1,9 @@
-import type {HydrogenSession, HydrogenSessionData} from '@shopify/hydrogen';
+import type {HydrogenSession} from '@shopify/hydrogen';
 import {
   createCookieSessionStorage,
   type SessionStorage,
   type Session,
 } from '@shopify/remix-oxygen';
-
-/** Custom session data */
-type SessionData = HydrogenSessionData & {};
-
-/** Custom flash data */
-type FlashData = {};
 
 /**
  * This is a custom session implementation for your Hydrogen shop.
@@ -20,10 +14,7 @@ export class AppSession implements HydrogenSession {
   #sessionStorage;
   #session;
 
-  constructor(
-    sessionStorage: SessionStorage<SessionData, FlashData>,
-    session: Session<SessionData, FlashData>,
-  ) {
+  constructor(sessionStorage: SessionStorage, session: Session) {
     this.#sessionStorage = sessionStorage;
     this.#session = session;
   }
