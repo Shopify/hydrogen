@@ -15,7 +15,6 @@ export const meta: MetaFunction = () => {
 export async function loader({context}: LoaderFunctionArgs) {
   const {storefront} = context;
   const buyer = getBuyer({session: context.session});
-  console.log(buyer.buyer);
   const {collections} = await storefront.query(FEATURED_COLLECTION_QUERY, {
     variables: buyer,
   });

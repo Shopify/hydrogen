@@ -5,6 +5,7 @@ import type {
 } from '~/components/Search';
 import {NO_PREDICTIVE_SEARCH_RESULTS} from '~/components/Search';
 import {applyTrackingParams} from '~/lib/search';
+import {getBuyer} from '~/lib/buyer';
 
 import type {
   PredictiveArticleFragment,
@@ -79,9 +80,11 @@ async function fetchPredictiveSearchResults({
       searchTypes,
     };
   }
+  const buyer = getBuyer({session: context.session});
 
   const data = await context.storefront.query(PREDICTIVE_SEARCH_QUERY, {
     variables: {
+      buyer,
       limit,
       limitScope: 'EACH',
       searchTerm,
@@ -289,11 +292,12 @@ const PREDICTIVE_SEARCH_QUERY = `#graphql
   query predictiveSearch(
     $country: CountryCode
     $language: LanguageCode
+    $buyer: BuyerIdentityInput
     $limit: Int!
     $limitScope: PredictiveSearchLimitScope!
     $searchTerm: String!
     $types: [PredictiveSearchType!]
-  ) @inContext(country: $country, language: $language) {
+  ) @inContext(country: $country, language: $language, buyer: $buyer) {
     predictiveSearch(
       limit: $limit,
       limitScope: $limitScope,

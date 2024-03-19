@@ -3,6 +3,7 @@ import {useLoaderData, type MetaFunction} from '@remix-run/react';
 import {getPaginationVariables} from '@shopify/hydrogen';
 
 import {SearchForm, SearchResults, NoSearchResults} from '~/components/Search';
+import {getBuyer} from '~/lib/buyer';
 
 export const meta: MetaFunction = () => {
   return [{title: `Hydrogen | Search`}];
@@ -21,8 +22,11 @@ export async function loader({request, context}: LoaderFunctionArgs) {
     };
   }
 
+  const buyer = getBuyer({session: context.session});
+
   const {errors, ...data} = await context.storefront.query(SEARCH_QUERY, {
     variables: {
+      buyer,
       query: searchTerm,
       ...variables,
     },
@@ -119,13 +123,14 @@ const SEARCH_QUERY = `#graphql
   }
   query search(
     $country: CountryCode
+    $buyer: BuyerIdentityInput
     $endCursor: String
     $first: Int
     $language: LanguageCode
     $last: Int
     $query: String!
     $startCursor: String
-  ) @inContext(country: $country, language: $language) {
+  ) @inContext(country: $country, language: $language, buyer: $buyer) {
     products: search(
       query: $query,
       unavailableProducts: HIDE,

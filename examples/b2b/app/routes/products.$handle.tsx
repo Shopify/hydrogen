@@ -26,6 +26,7 @@ import type {
   SelectedOption,
 } from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/lib/variants';
+import {getBuyer} from '~/lib/buyer';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
@@ -51,9 +52,11 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
     throw new Error('Expected product handle to be defined');
   }
 
+  const buyer = getBuyer({session: context.session});
+
   // await the query for the critical product data
   const {product} = await storefront.query(PRODUCT_QUERY, {
-    variables: {handle, selectedOptions},
+    variables: {buyer, handle, selectedOptions},
   });
 
   if (!product?.id) {
@@ -84,7 +87,7 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
   // where variant options might show as available when they're not, but after
   // this deffered query resolves, the UI will update.
   const variants = storefront.query(VARIANTS_QUERY, {
-    variables: {handle},
+    variables: {buyer, handle},
   });
 
   return defer({product, variants});
@@ -392,10 +395,11 @@ const PRODUCT_FRAGMENT = `#graphql
 const PRODUCT_QUERY = `#graphql
   query Product(
     $country: CountryCode
+    $buyer: BuyerIdentityInput
     $handle: String!
     $language: LanguageCode
     $selectedOptions: [SelectedOptionInput!]!
-  ) @inContext(country: $country, language: $language) {
+  ) @inContext(country: $country, language: $language, buyer: $buyer) {
     product(handle: $handle) {
       ...Product
     }
@@ -418,9 +422,10 @@ const VARIANTS_QUERY = `#graphql
   ${PRODUCT_VARIANTS_FRAGMENT}
   query ProductVariants(
     $country: CountryCode
+    $buyer: BuyerIdentityInput
     $language: LanguageCode
     $handle: String!
-  ) @inContext(country: $country, language: $language) {
+  ) @inContext(country: $country, language: $language, buyer: $buyer) {
     product(handle: $handle) {
       ...ProductVariants
     }

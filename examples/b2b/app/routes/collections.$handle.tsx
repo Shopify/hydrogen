@@ -8,6 +8,7 @@ import {
 } from '@shopify/hydrogen';
 import type {ProductItemFragment} from 'storefrontapi.generated';
 import {useVariantUrl} from '~/lib/variants';
+import {getBuyer} from '~/lib/buyer';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
@@ -24,8 +25,10 @@ export async function loader({request, params, context}: LoaderFunctionArgs) {
     return redirect('/collections');
   }
 
+  const buyer = getBuyer({session: context.session});
+
   const {collection} = await storefront.query(COLLECTION_QUERY, {
-    variables: {handle, ...paginationVariables},
+    variables: {buyer, handle, ...paginationVariables},
   });
 
   if (!collection) {
@@ -151,12 +154,13 @@ const COLLECTION_QUERY = `#graphql
   query Collection(
     $handle: String!
     $country: CountryCode
+    $buyer: BuyerIdentityInput
     $language: LanguageCode
     $first: Int
     $last: Int
     $startCursor: String
     $endCursor: String
-  ) @inContext(country: $country, language: $language) {
+  ) @inContext(country: $country, language: $language, buyer: $buyer) {
     collection(handle: $handle) {
       id
       handle
