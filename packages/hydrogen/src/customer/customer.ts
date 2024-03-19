@@ -41,6 +41,7 @@ import type {
   CustomerAccount,
   CustomerAPIResponse,
   LoginOptions,
+  LogoutOptions,
 } from './types';
 import {LanguageCode} from '@shopify/hydrogen-react/storefront-api-types';
 
@@ -294,22 +295,33 @@ export function createCustomerAccountClient({
         },
       });
     },
-    logout: async () => {
+    logout: async (options?: LogoutOptions) => {
       ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
-      const idToken = session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.idToken;
+
+      const logoutUrl = new URL(customerAccountUrl + '/auth/logout');
+
+      logoutUrl.searchParams.set(
+        'id_token_hint',
+        session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.idToken,
+      );
+
+      logoutUrl.searchParams.set(
+        'post_logout_redirect_uri',
+        options?.postLogoutRedirectUri
+          ? options.postLogoutRedirectUri.startsWith('/')
+            ? origin + options?.postLogoutRedirectUri
+            : options.postLogoutRedirectUri
+          : origin,
+      );
 
       clearSession(session);
 
-      return redirect(
-        `${customerAccountUrl}/auth/logout?id_token_hint=${idToken}`,
-        {
-          status: 302,
-
-          headers: {
-            'Set-Cookie': await session.commit(),
-          },
+      return redirect(logoutUrl.toString(), {
+        status: 302,
+        headers: {
+          'Set-Cookie': await session.commit(),
         },
-      );
+      });
     },
     isLoggedIn,
     handleAuthStatus,
