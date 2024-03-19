@@ -248,8 +248,8 @@ export function createCustomerAccountClient({
       ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
       const loginUrl = new URL(customerAccountUrl + '/auth/oauth/authorize');
 
-      const state = await generateState();
-      const nonce = await generateNonce();
+      const state = generateState();
+      const nonce = generateNonce();
 
       loginUrl.searchParams.set('client_id', customerAccountId);
       loginUrl.searchParams.set('scope', 'openid email');
@@ -271,7 +271,7 @@ export function createCustomerAccountClient({
         loginUrl.searchParams.append('ui_locales', locale);
       }
 
-      const verifier = await generateCodeVerifier();
+      const verifier = generateCodeVerifier();
       const challenge = await generateCodeChallenge(verifier);
 
       session.set(CUSTOMER_ACCOUNT_SESSION_KEY, {
