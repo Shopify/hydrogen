@@ -116,26 +116,30 @@ export async function runDev({
 
   const root = appPath ?? process.cwd();
 
-  const customerAccountPush = await checkMockShopAndByPassTunnel(
+  const customerAccountPushPromise = checkMockShopAndByPassTunnel(
     root,
     customerAccountPushFlag,
   );
 
-  // ensure this occur before getConfig since it can run link and changed env vars
-  if (customerAccountPush) {
-    await getStorefrontId(root);
-  }
-
   let appName: string | undefined;
   let storefrontId: string | undefined;
 
-  const envPromise = getConfig(root).then(({shop, storefront}) => {
-    appName = storefront?.title;
-    storefrontId = storefront?.id;
+  const envPromise = customerAccountPushPromise.then(
+    async (customerAccountPush) => {
+      // ensure this occur before getConfig since it can run link and changed env vars
+      if (customerAccountPush) {
+        await getStorefrontId(root);
+      }
 
-    const fetchRemote = !!shop && !!storefront?.id;
-    return getAllEnvironmentVariables({root, fetchRemote, envBranch});
-  });
+      const {shop, storefront} = await getConfig(root);
+
+      appName = storefront?.title;
+      storefrontId = storefront?.id;
+
+      const fetchRemote = !!shop && !!storefront?.id;
+      return getAllEnvironmentVariables({root, fetchRemote, envBranch});
+    },
+  );
 
   const vite = await import('vite');
 
@@ -199,9 +203,11 @@ export async function runDev({
   // }
 
   const [tunnelHost] = await Promise.all([
-    customerAccountPush
-      ? startTunnelAndPushConfig(root, cliConfig, publicPort, storefrontId)
-      : undefined,
+    customerAccountPushPromise.then((customerAccountPush) =>
+      customerAccountPush
+        ? startTunnelAndPushConfig(root, cliConfig, publicPort, storefrontId)
+        : undefined,
+    ),
     viteServer.listen(publicPort),
   ]);
 
