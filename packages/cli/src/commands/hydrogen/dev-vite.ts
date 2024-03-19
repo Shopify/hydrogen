@@ -25,6 +25,7 @@ import {
   checkMockShopAndByPassTunnel,
 } from '../../lib/dev-shared.js';
 import {getStorefrontId} from './customer-account/push.js';
+import {getCliCommand} from '../../lib/shell.js';
 
 export default class DevVite extends Command {
   static description =
@@ -116,13 +117,14 @@ export async function runDev({
 
   const root = appPath ?? process.cwd();
 
+  let appName: string | undefined;
+  let storefrontId: string | undefined;
+
+  const cliCommandPromise = getCliCommand(root);
   const customerAccountPushPromise = checkMockShopAndByPassTunnel(
     root,
     customerAccountPushFlag,
   );
-
-  let appName: string | undefined;
-  let storefrontId: string | undefined;
 
   const envPromise = customerAccountPushPromise.then(
     async (customerAccountPush) => {
@@ -218,7 +220,11 @@ export async function runDev({
   const finalHost = tunnelHost || publicUrl.toString() || publicUrl.origin;
 
   // Start the public facing server with the port passed by the user.
-  enhanceH2Logs({rootDirectory: root, host: finalHost});
+  enhanceH2Logs({
+    rootDirectory: root,
+    host: finalHost,
+    cliCommand: await cliCommandPromise,
+  });
 
   await envPromise; // Prints the injected env vars
   console.log('');

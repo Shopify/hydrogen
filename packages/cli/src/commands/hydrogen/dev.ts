@@ -36,6 +36,7 @@ import {
   checkMockShopAndByPassTunnel,
 } from '../../lib/dev-shared.js';
 import {getStorefrontId} from './customer-account/push.js';
+import {getCliCommand} from '../../lib/shell.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -122,7 +123,9 @@ export async function runDev({
   const {root, publicPath, buildPathClient, buildPathWorkerFile} =
     getProjectPaths(appPath);
 
-  const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
+  const copyFilesPromise = copyPublicFiles(publicPath, buildPathClient);
+  const cliCommandPromise = getCliCommand(root);
+
   const reloadConfig = async () => {
     const config = await getRemixConfig(root);
 
@@ -220,7 +223,7 @@ export async function runDev({
 
     const host = (await tunnelPromise) ?? miniOxygen.listeningAt;
 
-    enhanceH2Logs({host, ...remixConfig});
+    enhanceH2Logs({host, cliCommand: await cliCommandPromise, ...remixConfig});
 
     miniOxygen.showBanner({
       appName: storefront?.title,
@@ -277,7 +280,7 @@ export async function runDev({
       onBuildManifest: liveReload?.onBuildManifest,
       async onBuildFinish(context, duration, succeeded) {
         if (isInitialBuild) {
-          await copyingFiles;
+          await copyFilesPromise;
           initialBuildDurationMs = Date.now() - initialBuildStartTimeMs;
           isInitialBuild = false;
         } else if (!skipRebuildLogs) {
