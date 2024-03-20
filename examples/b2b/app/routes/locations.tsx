@@ -20,7 +20,7 @@ export async function action({request, context}: ActionFunctionArgs) {
   const result = await context.cart.updateBuyerIdentity({
     customerAccessToken: context.session.get('customer_access_token'),
     ...(req.locationId && {companyLocationId: req.locationId}),
-    countryCode: req.country,
+    countryCode: req.country ?? 'US',
   });
 
   const cartHeaders = context.cart.setCartId(result.cart.id);

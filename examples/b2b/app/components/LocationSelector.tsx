@@ -1,11 +1,4 @@
 import {useState} from 'react';
-import {
-  Form,
-  useActionData,
-  useNavigation,
-  useOutletContext,
-  type MetaFunction,
-} from '@remix-run/react';
 
 export function LocationSelector({customer, companyLocationId}) {
   const company =
