@@ -35,7 +35,7 @@ import {
   getDebugHeaders,
 } from '../utils/request';
 import {getCallerStackLine, withSyncStack} from '../utils/callsites';
-import {getRedirectUrl} from '../utils/get-redirect-url';
+import {getRedirectUrl, buildLocalRedirectUrl} from '../utils/get-redirect-url';
 import type {
   CustomerAccountOptions,
   CustomerAccount,
@@ -91,7 +91,7 @@ export function createCustomerAccountClient({
     requestUrl.protocol === 'http:'
       ? requestUrl.origin.replace('http', 'https')
       : requestUrl.origin;
-  const redirectUri = authUrl.startsWith('/') ? origin + authUrl : authUrl;
+  const redirectUri = buildLocalRedirectUrl(request.url, authUrl);
   const customerAccountApiUrl = `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`;
   const locks: Locks = {};
 
@@ -299,7 +299,7 @@ export function createCustomerAccountClient({
 
       const idToken = session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.idToken;
       const postLogoutRedirectUri = options?.postLogoutRedirectUri
-        ? new URL(options?.postLogoutRedirectUri, origin).toString()
+        ? buildLocalRedirectUrl(origin, options?.postLogoutRedirectUri)
         : origin;
 
       const logoutUrl = idToken

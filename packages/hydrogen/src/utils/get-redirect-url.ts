@@ -32,3 +32,23 @@ function isLocalPath(requestUrl: string, redirectUrl: string) {
     return false;
   }
 }
+
+// build redirect url using request url origin to ensure there is no cross domain redirect
+// redirectUrl can be absolute or relative url
+export function buildLocalRedirectUrl(requestUrl: string, redirectUrl: string) {
+  return isAbsoluteUrl(redirectUrl)
+    ? new URL(
+        new URL(redirectUrl).pathname,
+        new URL(requestUrl).origin,
+      ).toString()
+    : new URL(redirectUrl, new URL(requestUrl).origin).toString();
+}
+
+function isAbsoluteUrl(url: string) {
+  try {
+    new URL(url);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
