@@ -43,7 +43,6 @@ import type {
   LoginOptions,
   LogoutOptions,
 } from './types';
-import {LanguageCode} from '@shopify/hydrogen-react/storefront-api-types';
 
 const DEFAULT_LOGIN_URL = '/account/login';
 const DEFAULT_AUTH_URL = '/account/authorize';
@@ -247,7 +246,7 @@ export function createCustomerAccountClient({
   return {
     login: async (options?: LoginOptions) => {
       ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
-      const loginUrl = new URL(customerAccountUrl + '/auth/oauth/authorize');
+      const loginUrl = new URL(`${customerAccountUrl}/auth/oauth/authorize`);
 
       const state = await generateState();
       const nonce = await generateNonce();
@@ -298,25 +297,23 @@ export function createCustomerAccountClient({
     logout: async (options?: LogoutOptions) => {
       ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
 
-      const logoutUrl = new URL(customerAccountUrl + '/auth/logout');
+      const idToken = session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.idToken;
+      const postLogoutRedirectUri = options?.postLogoutRedirectUri
+        ? new URL(options?.postLogoutRedirectUri, origin).toString()
+        : origin;
 
-      logoutUrl.searchParams.set(
-        'id_token_hint',
-        session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.idToken,
-      );
-
-      logoutUrl.searchParams.set(
-        'post_logout_redirect_uri',
-        options?.postLogoutRedirectUri
-          ? options.postLogoutRedirectUri.startsWith('/')
-            ? origin + options?.postLogoutRedirectUri
-            : options.postLogoutRedirectUri
-          : origin,
-      );
+      const logoutUrl = idToken
+        ? new URL(
+            `${customerAccountUrl}/auth/logout?${new URLSearchParams([
+              ['id_token_hint', idToken],
+              ['post_logout_redirect_uri', postLogoutRedirectUri],
+            ]).toString()}`,
+          ).toString()
+        : postLogoutRedirectUri;
 
       clearSession(session);
 
-      return redirect(logoutUrl.toString(), {
+      return redirect(logoutUrl, {
         status: 302,
         headers: {
           'Set-Cookie': await session.commit(),

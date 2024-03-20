@@ -114,11 +114,13 @@ describe('customer', () => {
     });
 
     it('Redirects to the customer account api logout url', async () => {
+      const origin = 'https://shop123.com';
+
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
-        request: new Request('https://localhost'),
+        request: new Request(origin),
         waitUntil: vi.fn(),
       });
 
@@ -134,10 +136,98 @@ describe('customer', () => {
       const params = new URLSearchParams(url.search);
 
       expect(params.get('id_token_hint')).toBe('id_token');
-      expect(params.get('post_logout_redirect_uri')).toBe('https://localhost');
+      expect(params.get('post_logout_redirect_uri')).toBe(origin);
 
       // Session is cleared
       expect(session.unset).toHaveBeenCalledWith(CUSTOMER_ACCOUNT_SESSION_KEY);
+    });
+
+    it('Redirects to the customer account api logout url with postLogoutRedirectUri in the param', async () => {
+      const origin = 'https://shop123.com';
+      const postLogoutRedirectUri = '/post-logout-landing-page';
+
+      const customer = createCustomerAccountClient({
+        session,
+        customerAccountId: 'customerAccountId',
+        customerAccountUrl: 'https://customer-api',
+        request: new Request(origin),
+        waitUntil: vi.fn(),
+      });
+
+      const response = await customer.logout({postLogoutRedirectUri});
+
+      const url = new URL(response.headers.get('location')!);
+      expect(url.origin).toBe('https://customer-api');
+      expect(url.pathname).toBe('/auth/logout');
+
+      const params = new URLSearchParams(url.search);
+      expect(params.get('id_token_hint')).toBe('id_token');
+      expect(params.get('post_logout_redirect_uri')).toBe(
+        `${origin}${postLogoutRedirectUri}`,
+      );
+
+      // Session is cleared
+      expect(session.unset).toHaveBeenCalledWith(CUSTOMER_ACCOUNT_SESSION_KEY);
+    });
+
+    it('Redirects to app origin when customer is not login by default', async () => {
+      const origin = 'https://shop123.com';
+      const mockSession: HydrogenSession = {
+        commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
+        get: vi.fn(() => undefined) as HydrogenSession['get'],
+        set: vi.fn(),
+        unset: vi.fn(),
+      };
+
+      const customer = createCustomerAccountClient({
+        session: mockSession,
+        customerAccountId: 'customerAccountId',
+        customerAccountUrl: 'https://customer-api',
+        request: new Request(origin),
+        waitUntil: vi.fn(),
+      });
+
+      const response = await customer.logout();
+
+      const url = new URL(response.headers.get('location')!);
+      expect(url.toString()).toBe(new URL(origin).toString());
+
+      // Session is cleared
+      expect(mockSession.unset).toHaveBeenCalledWith(
+        CUSTOMER_ACCOUNT_SESSION_KEY,
+      );
+    });
+
+    it('Redirects to postLogoutRedirectUri when customer is not login', async () => {
+      const origin = 'https://shop123.com';
+      const postLogoutRedirectUri = '/post-logout-landing-page';
+
+      const mockSession: HydrogenSession = {
+        commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
+        get: vi.fn(() => undefined) as HydrogenSession['get'],
+        set: vi.fn(),
+        unset: vi.fn(),
+      };
+
+      const customer = createCustomerAccountClient({
+        session: mockSession,
+        customerAccountId: 'customerAccountId',
+        customerAccountUrl: 'https://customer-api',
+        request: new Request(origin),
+        waitUntil: vi.fn(),
+      });
+
+      const response = await customer.logout({postLogoutRedirectUri});
+
+      const url = new URL(response.headers.get('location')!);
+      expect(url.toString()).toBe(
+        new URL(postLogoutRedirectUri, origin).toString(),
+      );
+
+      // Session is cleared
+      expect(mockSession.unset).toHaveBeenCalledWith(
+        CUSTOMER_ACCOUNT_SESSION_KEY,
+      );
     });
 
     it('Saved redirectPath to session by default if `return_to` param was found', async () => {
