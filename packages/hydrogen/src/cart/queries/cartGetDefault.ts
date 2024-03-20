@@ -159,6 +159,7 @@ export const DEFAULT_CART_FRAGMENT = `#graphql
                 handle
                 title
                 id
+                vendor
               }
               selectedOptions {
                 name

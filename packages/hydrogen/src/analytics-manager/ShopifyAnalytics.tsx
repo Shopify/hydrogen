@@ -6,18 +6,19 @@ import {
   type ShopifyPageViewPayload,
   AnalyticsPageType,
   ShopifyAnalyticsProduct,
-  getCustomerPrivacy,
   getCustomerPrivacyRequired,
+  ShopifyAddToCartPayload,
+  CartReturn,
 } from '@shopify/hydrogen';
 import {useAnalyticsProvider} from './AnalyticsProvider';
 import type {
   PageViewPayload,
   ProductViewPayload,
   CollectionViewPayload,
-  CartViewPayload,
   CartUpdatePayload,
 } from './AnalyticsView';
 import {useEffect} from 'react';
+import {CartLine, ComponentizableCartLine, Maybe} from '@shopify/hydrogen-react/storefront-api-types';
 
 /**
  * This component is responsible for sending analytics events to Shopify.
@@ -25,18 +26,15 @@ import {useEffect} from 'react';
  * - page_viewed
  * - product_viewed
  * - collection_viewed
- * - cart_viewed
  * - cart_updated
  *   - product_added_to_cart
  *   - product_removed_from_cart
- *   - TODO: add more events
  *
 */
 export function ShopifyAnalytics() {
   const {subscribe, register, canTrack} = useAnalyticsProvider();
   const {ready} = register('ShopifyAnalytics');
   const {ready: customerPrivacyReady} = register('ShopifyCustomerPrivacy');
-  console.log('ShopifyAnalytics - canTrack', canTrack());
 
   useShopifyCookies({hasUserConsent: canTrack()});
   useEffect(() => {
@@ -48,7 +46,6 @@ export function ShopifyAnalytics() {
     subscribe('page_viewed', pageViewHandler);
     subscribe('product_viewed', productViewHandler);
     subscribe('collection_viewed', collectionViewHandler);
-    subscribe('cart_viewed', cartViewHandler);
 
     // Cart updates
     subscribe('cart_updated', cartUpdateHandler);
@@ -59,11 +56,9 @@ export function ShopifyAnalytics() {
   return null;
 }
 
-function pageViewHandler(payload: PageViewPayload) {
+function prepareBasePageViewPayload(payload: PageViewPayload | ProductViewPayload | CollectionViewPayload | CartUpdatePayload): ShopifyPageViewPayload | undefined {
   const customerPrivacy = getCustomerPrivacyRequired();
   const hasUserConsent = customerPrivacy.userCanBeTracked();
-
-  console.log('ShopifyAnalytics - page view hasUserConsent:', hasUserConsent);
 
   if (!payload?.shop?.shopId) {
     // eslint-disable-next-line no-console
@@ -72,6 +67,7 @@ function pageViewHandler(payload: PageViewPayload) {
   }
 
   const eventPayload: ShopifyPageViewPayload = {
+    shopifySalesChannel: 'hydrogen',
     ...payload.shop,
     hasUserConsent,
     ...getClientBrowserParameters(),
@@ -81,8 +77,40 @@ function pageViewHandler(payload: PageViewPayload) {
     gdprEnforced: !(customerPrivacy.marketingAllowed() && customerPrivacy.analyticsProcessingAllowed()),
   };
 
-  // eslint-disable-next-line no-console
-  console.log('ShopifyAnalytics - Page viewed', eventPayload);
+  return eventPayload;
+};
+
+function prepareBaseCartPayload(payload: CartUpdatePayload, cart: CartReturn | null): ShopifyAddToCartPayload | undefined {
+  if (cart === null) return;
+
+  const customerPrivacy = getCustomerPrivacyRequired();
+  const hasUserConsent = customerPrivacy.userCanBeTracked();
+
+  if (!payload?.shop?.shopId) {
+    // eslint-disable-next-line no-console
+    console.warn('ShopifyAnalytics - Missing shopId in add to cart payload');
+    return;
+  }
+
+  const eventPayload: ShopifyAddToCartPayload = {
+    shopifySalesChannel: 'hydrogen',
+    cartId: cart.id,
+    ...payload.shop,
+    hasUserConsent,
+    ...getClientBrowserParameters(),
+    // @ts-ignore
+    ccpaEnforced: !customerPrivacy.saleOfDataAllowed(),
+    // @ts-ignore
+    gdprEnforced: !(customerPrivacy.marketingAllowed() && customerPrivacy.analyticsProcessingAllowed()),
+  };
+
+  return eventPayload;
+}
+
+function pageViewHandler(payload: PageViewPayload) {
+  const eventPayload = prepareBasePageViewPayload(payload);
+
+  if (!eventPayload) return;
 
   sendShopifyAnalytics({
     eventName: AnalyticsEventName.PAGE_VIEW,
@@ -91,21 +119,21 @@ function pageViewHandler(payload: PageViewPayload) {
 }
 
 function productViewHandler(payload: ProductViewPayload) {
-  if (!payload?.shop?.shopId) {
-    // eslint-disable-next-line no-console
-    console.warn('ShopifyAnalytics - Missing shopId in page view payload');
-    return;
-  }
+  let eventPayload = prepareBasePageViewPayload(payload);
 
-  if (validateProducts(payload.products)) {
+  if (eventPayload && validateProducts({
+    eventName: PRODUCT_VIEWED,
+    productField: 'products',
+    variantField: 'product.<displayed_variant>',
+    fromSource: 'product_viewed products array',
+    products: payload.products
+  })) {
     const formattedProducts = formatProduct(payload.products);
-    const eventPayload: ShopifyPageViewPayload = {
-      ...payload.shop,
+    eventPayload = {
+      ...eventPayload,
       pageType: AnalyticsPageType.product,
       resourceId: formattedProducts[0].productGid,
       products: formatProduct(payload.products),
-      hasUserConsent: true,
-      ...getClientBrowserParameters(),
     };
 
     sendShopifyAnalytics({
@@ -116,19 +144,27 @@ function productViewHandler(payload: ProductViewPayload) {
 }
 
 function collectionViewHandler(payload: CollectionViewPayload) {
-  // eslint-disable-next-line no-console
-  console.log('ShopifyAnalytics - Collection viewed:', payload);
-}
+  let eventPayload = prepareBasePageViewPayload(payload);
 
-function cartViewHandler(payload: CartViewPayload) {
-  // eslint-disable-next-line no-console
-  console.log('ShopifyAnalytics - Cart viewed:', payload);
+  if (!eventPayload) return;
+
+  eventPayload = {
+    ...eventPayload,
+    pageType: AnalyticsPageType.collection,
+    resourceId: payload.collection.id,
+  };
+
+  sendShopifyAnalytics({
+    eventName: AnalyticsEventName.PAGE_VIEW,
+    payload: eventPayload,
+  });
 }
 
 function cartUpdateHandler(payload: CartUpdatePayload) {
-  console.log('ShopifyAnalytics - Cart updated:', payload);
   const {cart, prevCart} = payload;
+  const eventPayload = prepareBaseCartPayload(payload, cart);
 
+  if (!eventPayload) return;
   // TODO: cleanup and simplify some of this logic using cart.totalCount instead
 
   // Compare previous cart against current cart lines
@@ -140,24 +176,11 @@ function cartUpdateHandler(payload: CartUpdatePayload) {
     if (matchedLineId?.length === 1) {
       const matchedLine = matchedLineId[0];
       if (prevLine.quantity < matchedLine.quantity) {
-        // eslint-disable-next-line no-console
-        console.log('ShopifyAnalytics - Added To Cart', {
-          prevLine,
-          quantity: matchedLine.quantity,
-        });
-      } else if (prevLine.quantity > matchedLine.quantity) {
-        // eslint-disable-next-line no-console
-        console.log('ShopifyAnalytics - Removed From Cart', {
-          prevLine,
-          quantity: matchedLine.quantity,
+        sendCartAnalytics({
+          matchedLine,
+          eventPayload
         });
       }
-    } else {
-      // eslint-disable-next-line no-console
-      console.log('ShopifyAnalytics - Removed From Cart', {
-        prevLine,
-        quantity: 0,
-      });
     }
   });
 
@@ -167,19 +190,67 @@ function cartUpdateHandler(payload: CartUpdatePayload) {
       (previousLine) => line.id === previousLine.id,
     );
     if (!matchedLineId || matchedLineId.length === 0) {
-      // eslint-disable-next-line no-console
-      console.log('ShopifyAnalytics - Added To Cart', {
-        line,
-        quantity: 1,
+      sendCartAnalytics({
+        matchedLine: line,
+        eventPayload
       });
     }
   });
 }
 
+type AnalyticsProduct = {
+  id: string,
+  variantId: string,
+  title: string,
+  variantTitle: string,
+  vendor: string,
+  price: string,
+  quantity: number,
+  productType?: string,
+  sku?: Maybe<string> | undefined,
+};
+
+function sendCartAnalytics({
+  matchedLine,
+  eventPayload
+}: {
+  matchedLine: CartLine | ComponentizableCartLine,
+  eventPayload: ShopifyAddToCartPayload
+}) {
+  const product: AnalyticsProduct = {
+    id: matchedLine.merchandise.product.id,
+    variantId: matchedLine.id,
+    title: matchedLine.merchandise.product.title,
+    variantTitle: matchedLine.merchandise.title,
+    vendor: matchedLine.merchandise.product.vendor,
+    price: matchedLine.merchandise.price.amount,
+    quantity: matchedLine.quantity,
+    productType: matchedLine.merchandise.product.productType,
+    sku: matchedLine.merchandise.sku,
+  };
+  if (validateProducts({
+    eventName: ADD_TO_CART,
+    productField: 'merchandise.product',
+    variantField: 'merchandise',
+    fromSource: 'cart query',
+    products: [product]
+  })) {
+    sendShopifyAnalytics({
+      eventName: AnalyticsEventName.ADD_TO_CART,
+      payload: {
+        ...eventPayload,
+        products: formatProduct([product]),
+      },
+    });
+  }
+}
+
 const PRODUCT_VIEWED = 'Product viewed';
-function missingErrorMessage(eventName: string, missingFieldName: string) {
+const ADD_TO_CART = 'Add to cart';
+const REMOVE_FROM_CART = 'Remove from cart';
+function missingErrorMessage(eventName: string, missingFieldName: string, fromSource: string) {
   // eslint-disable-next-line no-console
-  console.error(`ShopifyAnalytics - ${eventName}: ${missingFieldName} is required in the products array.`);
+  console.error(`ShopifyAnalytics - ${eventName}: ${missingFieldName} is required from the ${fromSource}.`);
 }
 
 // variant_id: int, optional
@@ -192,39 +263,51 @@ function missingErrorMessage(eventName: string, missingFieldName: string) {
 // variant: string,
 // category: string, optional
 // quantity: float
-function validateProducts(products: Array<Record<string, unknown>>) {
+function validateProducts({
+  eventName,
+  productField,
+  variantField,
+  products,
+  fromSource,
+}: {
+  eventName: string,
+  productField: string,
+  variantField: string,
+  fromSource: string,
+  products: Array<Record<string, unknown>>
+}) {
   products.forEach((product) => {
     if (!product.id) {
-      missingErrorMessage(PRODUCT_VIEWED, 'product.id');
+      missingErrorMessage(eventName, `${productField}.id`, fromSource);
       return false;
     }
     if (!product.title) {
-      missingErrorMessage(PRODUCT_VIEWED, 'product.title');
+      missingErrorMessage(eventName, `${productField}.title`, fromSource);
       return false;
     }
     if (!product.price) {
-      missingErrorMessage(PRODUCT_VIEWED, 'product.<displayed_variant>.price.amount');
+      missingErrorMessage(eventName, `${variantField}.price.amount`, fromSource);
       return false;
     }
     if (!product.vendor) {
-      missingErrorMessage(PRODUCT_VIEWED, 'product.vendor');
+      missingErrorMessage(eventName, `${productField}.vendor`, fromSource);
       return false;
     }
     if (!product.variantId) {
-      missingErrorMessage(PRODUCT_VIEWED, 'product.<displayed_variant>.id');
+      missingErrorMessage(eventName, `${variantField}.id`, fromSource);
       return false;
     }
     if (!product.variantTitle) {
-      missingErrorMessage(PRODUCT_VIEWED, 'product.<displayed_variant>.title');
+      missingErrorMessage(eventName, `${variantField}.title`, fromSource);
       return false;
     }
   });
   return true;
 }
 
-function formatProduct(products: Array<Record<string, unknown>>) {
+function formatProduct(products: Array<AnalyticsProduct>) {
   return products.map((product) => {
-    return {
+    const formattedProduct = {
       productGid: product.id,
       variantGid: product.variantId,
       name: product.title,
@@ -233,7 +316,11 @@ function formatProduct(products: Array<Record<string, unknown>>) {
       price: product.price,
       quantity: product.quantity || 1,
       category: product.productType,
-      sku: product.sku,
     } as ShopifyAnalyticsProduct;
+
+    if (product.sku) formattedProduct.sku = product.sku;
+    if (product.productType) formattedProduct.category = product.productType;
+
+    return formattedProduct;
   });
 }
