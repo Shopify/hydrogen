@@ -35,7 +35,10 @@ import {
   getDebugHeaders,
 } from '../utils/request';
 import {getCallerStackLine, withSyncStack} from '../utils/callsites';
-import {getRedirectUrl, buildLocalRedirectUrl} from '../utils/get-redirect-url';
+import {
+  getRedirectUrl,
+  ensureLocalRedirectUrl,
+} from '../utils/get-redirect-url';
 import type {
   CustomerAccountOptions,
   CustomerAccount,
@@ -67,7 +70,7 @@ export function createCustomerAccountClient({
   customerApiVersion = DEFAULT_CUSTOMER_API_VERSION,
   request,
   waitUntil,
-  authUrl = DEFAULT_AUTH_URL,
+  authUrl,
   customAuthStatusHandler,
   logErrors = true,
 }: CustomerAccountOptions): CustomerAccount {
@@ -91,7 +94,11 @@ export function createCustomerAccountClient({
     requestUrl.protocol === 'http:'
       ? requestUrl.origin.replace('http', 'https')
       : requestUrl.origin;
-  const redirectUri = buildLocalRedirectUrl(request.url, authUrl);
+  const redirectUri = ensureLocalRedirectUrl({
+    requestUrl: request.url,
+    defaultUrl: DEFAULT_AUTH_URL,
+    redirectUrl: authUrl,
+  });
   const customerAccountApiUrl = `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`;
   const locks: Locks = {};
 
@@ -294,13 +301,16 @@ export function createCustomerAccountClient({
         },
       });
     },
+
     logout: async (options?: LogoutOptions) => {
       ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
 
       const idToken = session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.idToken;
-      const postLogoutRedirectUri = options?.postLogoutRedirectUri
-        ? buildLocalRedirectUrl(origin, options?.postLogoutRedirectUri)
-        : origin;
+      const postLogoutRedirectUri = ensureLocalRedirectUrl({
+        requestUrl: origin,
+        defaultUrl: origin,
+        redirectUrl: options?.postLogoutRedirectUri,
+      });
 
       const logoutUrl = idToken
         ? new URL(
