@@ -1,8 +1,9 @@
+import {useNavigate} from '@remix-run/react';
 import {useState} from 'react';
 
-export function LocationSelector({customer, companyLocationId}) {
+export function LocationSelector({customer}) {
   const company =
-    customer?.customer?.companyContacts?.edges?.[0]?.node?.company;
+    customer?.data?.customer?.companyContacts?.edges?.[0]?.node?.company;
 
   const locations = company?.locations?.edges
     ? company.locations.edges.map((loc) => {
@@ -10,12 +11,8 @@ export function LocationSelector({customer, companyLocationId}) {
       })
     : [];
 
-  const [selectedLocation, setSelectedLocation] = useState(
-    locations.find((loc) => loc.id === companyLocationId) || null,
-  );
-  const [savedLocation, setSavedLocation] = useState(
-    locations.find((loc) => loc.id === companyLocationId) || null,
-  );
+  const [selectedLocation, setSelectedLocation] = useState();
+  const navigate = useNavigate();
 
   const setLocation = async () => {
     const locationId = selectedLocation?.id;
@@ -27,7 +24,7 @@ export function LocationSelector({customer, companyLocationId}) {
         country: locationCountry,
       }),
     });
-    setSavedLocation(selectedLocation);
+    navigate('/', {replace: true});
   };
 
   function LocationItem({location}) {
@@ -59,33 +56,16 @@ export function LocationSelector({customer, companyLocationId}) {
   return (
     <div>
       <h1>Logged in for {company.name}</h1>
-      {savedLocation ? (
-        <div>
-          <h3>
-            Selected Location{' '}
-            {savedLocation ? savedLocation.name : locations[0].name}
-          </h3>
-          <button
-            onClick={() => {
-              setSavedLocation(null);
-              setSelectedLocation(null);
-            }}
-          >
-            <p>Select different location</p>
-          </button>
-        </div>
-      ) : (
-        <div>
-          {locations.map((location) => {
-            return (
-              <div key={location.id}>
-                <LocationItem location={location} />
-              </div>
-            );
-          })}
-          <button onClick={setLocation}>Choose location</button>
-        </div>
-      )}
+      <div>
+        {locations.map((location) => {
+          return (
+            <div key={location.id}>
+              <LocationItem location={location} />
+            </div>
+          );
+        })}
+        <button onClick={setLocation}>Choose location</button>
+      </div>
     </div>
   );
 }

@@ -21,6 +21,7 @@ import favicon from './assets/favicon.svg';
 import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
+import {LocationSelector} from '~/components/LocationSelector';
 import {CUSTOMER_LOCATIONS_QUERY} from '~/graphql/customer-account/CustomerLocationsQuery';
 
 /**
@@ -72,7 +73,7 @@ export async function loader({request, context}: LoaderFunctionArgs) {
   const {storefront, customerAccount, cart, session} = context;
   const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
 
-  const isLoggedInPromise = customerAccount.isLoggedIn();
+  const isLoggedInPromise = await customerAccount.isLoggedIn();
   const cartPromise = cart.get();
 
   // defer the footer query (below the fold)
@@ -120,6 +121,10 @@ export async function loader({request, context}: LoaderFunctionArgs) {
 export default function App() {
   const nonce = useNonce();
   const data = useLoaderData<typeof loader>();
+  const hasCompanyData =
+    data?.customer?.data?.customer?.companyContacts?.edges?.[0]?.node?.company;
+
+  console.log(data.customer);
 
   return (
     <html lang="en">
@@ -130,9 +135,16 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout {...data}>
-          <Outlet />
-        </Layout>
+        {hasCompanyData && !data.companyLocationId ? (
+          <main>
+            <LocationSelector customer={data.customer} />
+          </main>
+        ) : (
+          <Layout {...data}>
+            <Outlet />
+          </Layout>
+        )}
+
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
         <LiveReload nonce={nonce} />

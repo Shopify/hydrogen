@@ -23,7 +23,7 @@ export async function loader({context}: LoaderFunctionArgs) {
   const test = session.get('customer_access_token');
   console.log('authorize', test);
 
-  return redirect('/locations', {
+  return redirect('/', {
     headers: {
       'Set-Cookie': await session.commit(),
     },

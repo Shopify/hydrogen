@@ -1,12 +1,5 @@
-import {useLoaderData, type MetaFunction} from '@remix-run/react';
-import {
-  defer,
-  json,
-  type LoaderFunctionArgs,
-  type ActionFunctionArgs,
-} from '@shopify/remix-oxygen';
-import {LocationSelector} from '~/components/LocationSelector';
-import {CUSTOMER_LOCATIONS_QUERY} from '~/graphql/customer-account/CustomerLocationsQuery';
+import {type MetaFunction} from '@remix-run/react';
+import {redirect, type ActionFunctionArgs} from '@shopify/remix-oxygen';
 
 export const meta: MetaFunction = () => {
   return [{title: 'Hydrogen | Locations'}];
@@ -27,42 +20,7 @@ export async function action({request, context}: ActionFunctionArgs) {
 
   cartHeaders.append('Set-Cookie', await context.session.commit());
 
-  return json(
-    {},
-    {
-      headers: cartHeaders,
-    },
-  );
-}
-
-export async function loader({request, context}: LoaderFunctionArgs) {
-  await context.customerAccount.handleAuthStatus();
-  const companyLocationId = context.session.get('company_location_id');
-  console.log('COMPANY LOCATION ID: ', companyLocationId);
-
-  const customer = await context.customerAccount.query(
-    CUSTOMER_LOCATIONS_QUERY,
-    {
-      variables: {},
-      context,
-      request,
-    },
-  );
-
-  return defer({
-    customer: customer.data,
-    companyLocationId,
+  return redirect('/', {
+    headers: cartHeaders,
   });
-}
-
-export default function Homepage() {
-  const data = useLoaderData<typeof loader>();
-  return (
-    <div className="home">
-      <LocationSelector
-        customer={data.customer}
-        companyLocationId={data.companyLocationId}
-      />
-    </div>
-  );
 }
