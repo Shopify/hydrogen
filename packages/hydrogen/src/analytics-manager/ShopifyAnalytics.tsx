@@ -6,7 +6,6 @@ import {
   type ShopifyPageViewPayload,
   AnalyticsPageType,
   ShopifyAnalyticsProduct,
-  getCustomerPrivacyRequired,
   ShopifyAddToCartPayload,
   CartReturn,
 } from '@shopify/hydrogen';
@@ -30,12 +29,14 @@ import {CartLine, ComponentizableCartLine, Maybe} from '@shopify/hydrogen-react/
  * - cart_updated
  *   - product_added_to_cart
  *   - product_removed_from_cart
+ *   - ...
  *
 */
 export function ShopifyAnalytics({consent}: {consent: AnalyticsProviderProps['consent']}) {
   const {subscribe, register, canTrack} = useAnalytics();
   const {ready} = register('ShopifyAnalytics');
   const {ready: customerPrivacyReady} = register('ShopifyCustomerPrivacy');
+  consent?.consentConfig && useCustomerPrivacy(consent);
 
   useShopifyCookies({hasUserConsent: canTrack()});
   useEffect(() => {
