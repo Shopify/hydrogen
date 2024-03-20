@@ -1,8 +1,4 @@
-import {
-  useCustomerPrivacy,
-  AnalyticsProvider,
-  useNonce,
-} from '@shopify/hydrogen';
+import {Analytics, useNonce} from '@shopify/hydrogen';
 import {
   defer,
   type SerializeFrom,
@@ -135,11 +131,6 @@ export default function App() {
   const nonce = useNonce();
   const data = useLoaderData<typeof loader>();
 
-  useCustomerPrivacy({
-    withPrivacyBanner: true,
-    consentConfig: data.consentConfig,
-  });
-
   return (
     <html lang="en">
       <head>
@@ -149,16 +140,20 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <AnalyticsProvider
+        <Analytics.Provider
           cart={data.cart}
           shop={data.shop}
-          customPayload={{test: 'juan'}}
+          consent={{
+            withPrivacyBanner: true,
+            consentConfig: data.consentConfig,
+          }}
+          customData={{test: 'juan'}}
         >
           <Layout {...data}>
             <Outlet />
           </Layout>
           <CustomAnalytics />
-        </AnalyticsProvider>
+        </Analytics.Provider>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
         <LiveReload nonce={nonce} />

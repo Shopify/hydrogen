@@ -1,24 +1,24 @@
-import { CartReturn, useAnalyticsProvider } from "@shopify/hydrogen";
-import { useEffect } from "react";
+import {useAnalytics} from '@shopify/hydrogen';
+import {useEffect} from 'react';
 
 export function CustomAnalytics() {
-  const {subscribe} = useAnalyticsProvider();
+  const {subscribe} = useAnalytics();
 
   useEffect(() => {
-    subscribe('page_viewed', (payload) => {
-      console.log('CustomAnalytics - Page viewed:', payload);
+    subscribe('page_viewed', (data) => {
+      console.log('CustomAnalytics - Page viewed:', data);
     });
-    subscribe('product_viewed', (payload) => {
-      console.log('CustomAnalytics - Product viewed:', payload);
+    subscribe('product_viewed', (data) => {
+      console.log('CustomAnalytics - Product viewed:', data);
     });
-    subscribe('collection_viewed', (payload) => {
-      console.log('CustomAnalytics - Collection viewed:', payload);
+    subscribe('collection_viewed', (data) => {
+      console.log('CustomAnalytics - Collection viewed:', data);
     });
-    subscribe('cart_viewed', (payload) => {
-      console.log('CustomAnalytics - Cart viewed:', payload);
+    subscribe('cart_viewed', (data) => {
+      console.log('CustomAnalytics - Cart viewed:', data);
     });
-    subscribe('cart_updated', (payload) => {
-      console.log('CustomAnalytics - Cart updated:', payload);
+    subscribe('cart_updated', (data) => {
+      console.log('CustomAnalytics - Cart updated:', data);
     });
   }, []);
 

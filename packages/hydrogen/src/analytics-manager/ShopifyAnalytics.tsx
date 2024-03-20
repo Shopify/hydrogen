@@ -10,7 +10,8 @@ import {
   ShopifyAddToCartPayload,
   CartReturn,
 } from '@shopify/hydrogen';
-import {useAnalyticsProvider} from './AnalyticsProvider';
+import {useAnalytics, type AnalyticsProviderProps} from './AnalyticsProvider';
+import {useCustomerPrivacy, getCustomerPrivacyRequired} from '../customer-privacy/ShopifyCustomerPrivacy';
 import type {
   PageViewPayload,
   ProductViewPayload,
@@ -31,8 +32,8 @@ import {CartLine, ComponentizableCartLine, Maybe} from '@shopify/hydrogen-react/
  *   - product_removed_from_cart
  *
 */
-export function ShopifyAnalytics() {
-  const {subscribe, register, canTrack} = useAnalyticsProvider();
+export function ShopifyAnalytics({consent}: {consent: AnalyticsProviderProps['consent']}) {
+  const {subscribe, register, canTrack} = useAnalytics();
   const {ready} = register('ShopifyAnalytics');
   const {ready: customerPrivacyReady} = register('ShopifyCustomerPrivacy');
 
@@ -166,7 +167,6 @@ function cartUpdateHandler(payload: CartUpdatePayload) {
 
   if (!eventPayload) return;
   // TODO: cleanup and simplify some of this logic using cart.totalCount instead
-
   // Compare previous cart against current cart lines
   // Detect quantity changes and missing cart lines
   prevCart?.lines?.nodes?.forEach((prevLine) => {

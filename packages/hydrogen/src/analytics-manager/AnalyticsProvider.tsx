@@ -1,7 +1,11 @@
 import { type ReactNode, useEffect, useState , useMemo, createContext, useContext, useRef } from "react";
 import { type CartReturn } from "../cart/queries/cart-types";
 import {
-  AnalyticsView,
+  AnalyticsPageView,
+  AnalyticsProductView,
+  AnalyticsCollectionView,
+  AnalyticsCartView,
+  AnalyticsCustomView,
   type PageViewPayload,
   type ProductViewPayload,
   type CollectionViewPayload,
@@ -15,6 +19,7 @@ import type {CurrencyCode, LanguageCode} from '@shopify/hydrogen-react/storefron
 import {AnalyticsEvent} from "./events";
 import {ShopifyAnalytics} from "./ShopifyAnalytics";
 import {CartAnalytics} from "./CartAnalytics";
+import {type CustomerPrivacyApiProps} from "../customer-privacy/ShopifyCustomerPrivacy";
 
 export type ShopAnalytic = {
   [key: string]: unknown;
@@ -31,20 +36,20 @@ export type AnalyticsProviderProps = {
   cart: Promise<CartReturn | null> | CartReturn | null;
   /** An optional function to set wether the user can be tracked. */
   canTrack?: () => boolean;
-
   /** The optional customer object to pass to events **/
   // TODO: Need to solve for this. Do we want to defer the customer in the root and pass it down?
   // or do it client-side but we don't support customer queries on the client.
   // customer?: Promise<CustomerReturn | null> | CustomerReturn | null;
 
   /** An optional custom payload to pass to all events. e.g language/locale/currency */
-  customPayload?: Record<string, unknown>;
+  customData?: Record<string, unknown>;
 
   /** Prevents analytics from being sent to Shopify's admin dashboards */
   disableShopifyAnalytics?: boolean;
-
   /** The shop/store config required to publish events **/
   shop: Promise<ShopAnalytic | null> | ShopAnalytic | null;
+  /** The customer privacy consent configuration and options */
+  consent: CustomerPrivacyApiProps;
 }
 
 export type Carts = {
@@ -55,7 +60,7 @@ export type Carts = {
 type AnalyticsContextValue = {
   canTrack: NonNullable<AnalyticsProviderProps['canTrack']>;
   cart: Awaited<AnalyticsProviderProps['cart']>;
-  customPayload: AnalyticsProviderProps['customPayload'];
+  customData?: AnalyticsProviderProps['customData'];
   prevCart: Awaited<AnalyticsProviderProps['cart']>;
   publish: typeof publish;
   setCarts: React.Dispatch<React.SetStateAction<Carts>>;
@@ -67,7 +72,7 @@ type AnalyticsContextValue = {
 export const defaultAnalyticsContext: AnalyticsContextValue = {
   canTrack: () => false,
   cart: null,
-  customPayload: {},
+  customData: {},
   prevCart: null,
   publish: () => {},
   setCarts: () => ({cart: null, prevCart: null}),
@@ -197,13 +202,14 @@ function shopifyCanTrack() {
   return false;
 }
 
-export function AnalyticsProvider({
-  children,
+function AnalyticsProvider({
   canTrack: customCanTrack,
-  customPayload = {},
   cart: currentCart,
+  children,
+  consent,
+  customData= {},
+  disableShopifyAnalytics = false,
   shop: shopProp = null,
-  disableShopifyAnalytics = false
 }: AnalyticsProviderProps): JSX.Element {
   const listenerSet = useRef(false);
   const {shop} = useShopAnalytics(shopProp);
@@ -228,25 +234,25 @@ export function AnalyticsProvider({
   const value = useMemo<AnalyticsContextValue>(() => ({
     canTrack,
     ...carts,
-    customPayload,
+    customData,
     publish,
     setCarts,
     shop,
     subscribe,
     register,
-  }), [setCarts, consentLoaded, canTrack(), canTrack, JSON.stringify(canTrack), carts.cart?.updatedAt, carts.prevCart, publish, subscribe, customPayload, shop, register]);
+  }), [setCarts, consentLoaded, canTrack(), canTrack, JSON.stringify(canTrack), carts.cart?.updatedAt, carts.prevCart, publish, subscribe, customData, shop, register]);
 
   return (
     <AnalyticsContext.Provider value={value}>
       {children}
-      {shop && <AnalyticsView type="page_viewed" />}
+      {shop && <AnalyticsPageView />}
       {shop && currentCart && <CartAnalytics cart={currentCart} />}
-      {shop && !disableShopifyAnalytics && <ShopifyAnalytics />}
+      {shop && !disableShopifyAnalytics && <ShopifyAnalytics consent={consent} />}
     </AnalyticsContext.Provider>
   );
 };
 
-export function useAnalyticsProvider(): AnalyticsContextValue {
+export function useAnalytics(): AnalyticsContextValue {
   const analyticsContext = useContext(AnalyticsContext);
   if (!analyticsContext) {
     throw new Error(`'useAnalyticsProvider()' must be a descendent of <AnalyticsProvider/>`);
@@ -268,4 +274,13 @@ function useShopAnalytics(shopProp: AnalyticsProviderProps['shop']): {shop: Shop
   }, [setShop, shopProp]);
 
   return {shop};
+}
+
+export const Analytics = {
+  CartView: AnalyticsCartView,
+  CollectionView: AnalyticsCollectionView,
+  CustomView: AnalyticsCustomView,
+  PageView: AnalyticsPageView,
+  ProductView: AnalyticsProductView,
+  Provider: AnalyticsProvider,
 }

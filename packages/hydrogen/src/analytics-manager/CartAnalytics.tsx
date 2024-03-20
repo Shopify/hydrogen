@@ -1,9 +1,9 @@
 import {useEffect, useRef} from "react";
-import {useAnalyticsProvider, type AnalyticsProviderProps, type Carts} from "./AnalyticsProvider";
+import {useAnalytics, type AnalyticsProviderProps, type Carts} from "./AnalyticsProvider";
 import {type CartUpdatePayload} from "./AnalyticsView";
 
 export function CartAnalytics({cart: currentCart}: {cart: AnalyticsProviderProps['cart']}) {
-  const {publish, shop, customPayload, canTrack, cart, prevCart, setCarts} = useAnalyticsProvider();
+  const {publish, shop, customData, canTrack, cart, prevCart, setCarts} = useAnalytics();
   const lastEventId = useRef<string | null>(null);
 
   // resolve the cart that could have been deferred
@@ -31,7 +31,7 @@ export function CartAnalytics({cart: currentCart}: {cart: AnalyticsProviderProps
       cart,
       prevCart,
       shop,
-      customPayload,
+      customData,
     };
 
     // prevent duplicate events
@@ -44,7 +44,7 @@ export function CartAnalytics({cart: currentCart}: {cart: AnalyticsProviderProps
     // to detect if the cart has been updated since the last page render
     // this prevents sending duplicate cart_updated events on first render
     localStorage.setItem('cartLastUpdatedAt', cart.updatedAt);
-  }, [cart, prevCart, setCarts, publish, shop, customPayload, canTrack]);
+  }, [cart, prevCart, setCarts, publish, shop, customData, canTrack]);
 
   return null;
 }
