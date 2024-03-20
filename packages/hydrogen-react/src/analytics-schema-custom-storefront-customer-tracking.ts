@@ -93,6 +93,102 @@ export function pageView(
   return pageViewEvents;
 }
 
+export function pageView2(
+  payload: ShopifyPageViewPayload,
+): ShopifyMonorailEvent[] {
+  const pageViewPayload = payload;
+  const additionalPayload = {
+    canonical_url: pageViewPayload.canonicalUrl || pageViewPayload.url,
+    customer_id: pageViewPayload.customerId,
+  };
+
+  return [
+    schemaWrapper(
+      SCHEMA_ID,
+      addDataIf(
+        {
+          event_name: PAGE_RENDERED_EVENT_NAME,
+          ...additionalPayload,
+        },
+        formatPayload(pageViewPayload),
+      ),
+    ),
+  ];
+}
+
+export function collectionView(
+  payload: ShopifyPageViewPayload,
+): ShopifyMonorailEvent[] {
+  const pageViewPayload = payload;
+  const additionalPayload = {
+    canonical_url: pageViewPayload.canonicalUrl || pageViewPayload.url,
+    customer_id: pageViewPayload.customerId,
+  };
+
+  return [
+    schemaWrapper(
+      SCHEMA_ID,
+      addDataIf(
+        {
+          event_name: COLLECTION_PAGE_RENDERED_EVENT_NAME,
+          ...additionalPayload,
+          collection_name: pageViewPayload.collectionHandle,
+        },
+        formatPayload(pageViewPayload),
+      ),
+    ),
+  ];
+}
+
+export function productView(
+  payload: ShopifyPageViewPayload,
+): ShopifyMonorailEvent[] {
+  const pageViewPayload = payload;
+  const additionalPayload = {
+    canonical_url: pageViewPayload.canonicalUrl || pageViewPayload.url,
+    customer_id: pageViewPayload.customerId,
+  };
+
+  return [
+    schemaWrapper(
+      SCHEMA_ID,
+      addDataIf(
+        {
+          event_name: PRODUCT_PAGE_RENDERED_EVENT_NAME,
+          ...additionalPayload,
+          products: formatProductPayload(pageViewPayload.products),
+          total_value: pageViewPayload.totalValue,
+        },
+        formatPayload(pageViewPayload),
+      ),
+    ),
+  ];
+}
+
+export function searchView(
+  payload: ShopifyPageViewPayload,
+): ShopifyMonorailEvent[] {
+  const pageViewPayload = payload;
+  const additionalPayload = {
+    canonical_url: pageViewPayload.canonicalUrl || pageViewPayload.url,
+    customer_id: pageViewPayload.customerId,
+  };
+
+  return [
+    schemaWrapper(
+      SCHEMA_ID,
+      addDataIf(
+        {
+          event_name: SEARCH_SUBMITTED_EVENT_NAME,
+          ...additionalPayload,
+          search_string: pageViewPayload.searchString,
+        },
+        formatPayload(pageViewPayload),
+      ),
+    ),
+  ];
+}
+
 export function addToCart(
   payload: ShopifyAddToCartPayload,
 ): ShopifyMonorailEvent[] {

@@ -113,7 +113,7 @@ function pageViewHandler(payload: PageViewPayload) {
   if (!eventPayload) return;
 
   sendShopifyAnalytics({
-    eventName: AnalyticsEventName.PAGE_VIEW,
+    eventName: AnalyticsEventName.PAGE_VIEW_2,
     payload: eventPayload,
   });
 }
@@ -137,7 +137,7 @@ function productViewHandler(payload: ProductViewPayload) {
     };
 
     sendShopifyAnalytics({
-      eventName: AnalyticsEventName.PAGE_VIEW,
+      eventName: AnalyticsEventName.PRODUCT_VIEW,
       payload: eventPayload,
     });
   }
@@ -155,7 +155,7 @@ function collectionViewHandler(payload: CollectionViewPayload) {
   };
 
   sendShopifyAnalytics({
-    eventName: AnalyticsEventName.PAGE_VIEW,
+    eventName: AnalyticsEventName.COLLECTION_VIEW,
     payload: eventPayload,
   });
 }
