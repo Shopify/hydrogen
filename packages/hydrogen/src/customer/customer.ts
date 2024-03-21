@@ -248,8 +248,8 @@ export function createCustomerAccountClient({
       ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
       const loginUrl = new URL(customerAccountUrl + '/auth/oauth/authorize');
 
-      const state = await generateState();
-      const nonce = await generateNonce();
+      const state = generateState();
+      const nonce = generateNonce();
 
       loginUrl.searchParams.set('client_id', customerAccountId);
       loginUrl.searchParams.set('scope', 'openid email');
@@ -271,7 +271,7 @@ export function createCustomerAccountClient({
         loginUrl.searchParams.append('ui_locales', locale);
       }
 
-      const verifier = await generateCodeVerifier();
+      const verifier = generateCodeVerifier();
       const challenge = await generateCodeChallenge(verifier);
 
       session.set(CUSTOMER_ACCOUNT_SESSION_KEY, {
@@ -480,13 +480,16 @@ function ifInvalidCredentialThrowError(
     new URL(customerAccountUrl);
   } catch {
     console.error(
-      'You do not have the valid credential to use Customer Account API.\nRun `npx shopify hydrogen env pull` to link your store credentials.',
+      new Error(
+        '[h2:error:customerAccount] You do not have the valid credential to use Customer Account API.\nRun `h2 env pull` to link your store credentials.',
+      ),
     );
 
-    throw new Response(
-      'You do not have the valid credential to use Customer Account API (/account).' +
-        '\n\nmock.shop does not support Customer Account API. \nWe recommend running `npx shopify hydrogen env pull` to link your store credentials.',
-      {status: 500},
-    );
+    const publicMessage =
+      process.env.NODE_ENV === 'production'
+        ? 'Internal Server Error'
+        : 'You do not have the valid credential to use Customer Account API (/account).';
+
+    throw new Response(publicMessage, {status: 500});
   }
 }

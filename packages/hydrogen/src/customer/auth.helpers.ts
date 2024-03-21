@@ -200,7 +200,7 @@ export async function checkExpires({
   }
 }
 
-export async function generateCodeVerifier() {
+export function generateCodeVerifier() {
   const rando = generateRandomCode();
   return base64UrlEncode(rando);
 }
@@ -232,7 +232,7 @@ function convertBufferToString(hash: ArrayBuffer) {
   return String.fromCharCode(...numberArray);
 }
 
-export async function generateState(): Promise<string> {
+export function generateState() {
   const timestamp = Date.now().toString();
   const randomString = Math.random().toString(36).substring(2);
   return timestamp + randomString;
