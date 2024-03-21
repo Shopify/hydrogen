@@ -24,7 +24,6 @@ import {
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
-import {getConfig} from '../../lib/shopify-config.js';
 import {setupLiveReload} from '../../lib/live-reload.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
@@ -33,9 +32,11 @@ import {findPort} from '../../lib/find-port.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {
   startTunnelAndPushConfig,
-  checkMockShopAndByPassTunnel,
+  getDevConfigInBackground,
+  isMockShop,
+  notifyIssueWithTunnelAndMockShop,
 } from '../../lib/dev-shared.js';
-import {getStorefrontId} from './customer-account/push.js';
+import {getCliCommand} from '../../lib/shell.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -122,7 +123,9 @@ export async function runDev({
   const {root, publicPath, buildPathClient, buildPathWorkerFile} =
     getProjectPaths(appPath);
 
-  const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
+  const copyFilesPromise = copyPublicFiles(publicPath, buildPathClient);
+  const cliCommandPromise = getCliCommand(root);
+
   const reloadConfig = async () => {
     const config = await getRemixConfig(root);
 
@@ -157,33 +160,25 @@ export async function runDev({
     process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
   }
 
-  const customerAccountPush = await checkMockShopAndByPassTunnel(
+  const backgroundPromise = getDevConfigInBackground(
     root,
     customerAccountPushFlag,
   );
 
-  // ensure getStorefrontId occur before getConfig since it can run link and changed env vars
-  let tunnelPromise: Promise<string> | undefined;
-  if (customerAccountPush && cliConfig) {
-    const storefrontId = await getStorefrontId(root);
+  const tunnelPromise =
+    cliConfig &&
+    backgroundPromise.then(({customerAccountPush, storefrontId}) => {
+      if (customerAccountPush) {
+        return startTunnelAndPushConfig(root, cliConfig, appPort, storefrontId);
+      }
+    });
 
-    tunnelPromise = startTunnelAndPushConfig(
-      root,
-      cliConfig,
-      appPort,
-      storefrontId,
-    );
-  }
-
-  const [remixConfig, {shop, storefront}] = await Promise.all([
-    reloadConfig(),
-    getConfig(root),
-  ]);
-
+  const remixConfig = await reloadConfig();
   assertOxygenChecks(remixConfig);
 
-  const fetchRemote = !!shop && !!storefront?.id;
-  const envPromise = getAllEnvironmentVariables({root, fetchRemote, envBranch});
+  const envPromise = backgroundPromise.then(({fetchRemote, localVariables}) =>
+    getAllEnvironmentVariables({root, fetchRemote, envBranch, localVariables}),
+  );
 
   const [{watch}, {createFileWatchCache}] = await Promise.all([
     import('@remix-run/dev/dist/compiler/watch.js'),
@@ -203,6 +198,8 @@ export async function runDev({
   async function safeStartMiniOxygen() {
     if (miniOxygen) return;
 
+    const envVariables = await envPromise;
+
     miniOxygen = await startMiniOxygen(
       {
         root,
@@ -213,17 +210,20 @@ export async function runDev({
         watch: !liveReload,
         buildPathWorkerFile,
         buildPathClient,
-        env: await envPromise,
+        env: envVariables,
       },
       legacyRuntime,
     );
 
     const host = (await tunnelPromise) ?? miniOxygen.listeningAt;
 
-    enhanceH2Logs({host, ...remixConfig});
+    const cliCommand = await cliCommandPromise;
+    enhanceH2Logs({host, cliCommand, ...remixConfig});
+
+    const {storefrontTitle} = await backgroundPromise;
 
     miniOxygen.showBanner({
-      appName: storefront?.title,
+      appName: storefrontTitle,
       headlinePrefix:
         initialBuildDurationMs > 0
           ? `Initial build: ${initialBuildDurationMs}ms\n`
@@ -248,6 +248,10 @@ export async function runDev({
 
     if (!disableVersionCheck) {
       displayDevUpgradeNotice({targetPath: appPath});
+    }
+
+    if (customerAccountPushFlag && isMockShop(envVariables)) {
+      notifyIssueWithTunnelAndMockShop(cliCommand);
     }
   }
 
@@ -277,7 +281,7 @@ export async function runDev({
       onBuildManifest: liveReload?.onBuildManifest,
       async onBuildFinish(context, duration, succeeded) {
         if (isInitialBuild) {
-          await copyingFiles;
+          await copyFilesPromise;
           initialBuildDurationMs = Date.now() - initialBuildStartTimeMs;
           isInitialBuild = false;
         } else if (!skipRebuildLogs) {
@@ -327,6 +331,7 @@ export async function runDev({
 
         if (relative.endsWith('.env')) {
           skipRebuildLogs = true;
+          const {fetchRemote} = await backgroundPromise;
           await miniOxygen.reload({
             env: await getAllEnvironmentVariables({
               root,
