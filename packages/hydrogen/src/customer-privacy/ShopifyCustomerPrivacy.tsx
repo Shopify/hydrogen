@@ -1,5 +1,5 @@
-import {useLoadScript, useNonce} from '@shopify/hydrogen';
-import {useEffect, useRef} from 'react';
+import { useLoadScript } from '@shopify/hydrogen';
+import { useEffect, useRef } from 'react';
 
 export type ConsentStatus = 'true' | 'false' | '';
 
@@ -32,13 +32,34 @@ export type SetConsentHeadlessParams = VisitorConsent &
     headlessStorefront?: boolean;
   };
 
+/**
+  Ideally this type should come from the Custoemr Privacy API sdk
+  analyticsProcessingAllowed -
+  currentVisitorConsent
+  doesMerchantSupportGranularConsent
+  firstPartyMarketingAllowed
+  getCCPAConsent
+  getRegulation
+  getShopPrefs
+  getTrackingConsent
+  isRegulationEnforced
+  marketingAllowed
+  preferencesProcessingAllowed
+  saleOfDataAllowed
+  saleOfDataRegion
+  setCCPAConsent
+  setTrackingConsent
+  shouldShowBanner
+  shouldShowCCPABanner
+  shouldShowGDPRBanner
+  thirdPartyMarketingAllowed
+**/
 export type CustomerPrivacy = {
   currentVisitorConsent: () => VisitorConsent;
   userCanBeTracked: () => boolean;
-  // I don't know why adding these 3 lines will cause ts blow up
-  // saleOfDataAllowed: () => boolean;
-  // marketingAllowed: () => boolean;
-  // analyticsProcessingAllowed: () => boolean;
+  saleOfDataAllowed: () => boolean;
+  marketingAllowed: () => boolean;
+  analyticsProcessingAllowed: () => boolean;
   setTrackingConsent: (
     consent: SetConsentHeadlessParams,
     callback: () => void,
@@ -54,31 +75,13 @@ export interface CustomEventMap {
   customerPrivacyApiLoaded: CustomEvent<CustomerPrivacyApiLoaded>;
 }
 
-// TODO: Move this to a global.d.ts file
-declare global {
-  interface Window {
-    privacyBanner: PrivacyBanner;
-    Shopify: {
-      customerPrivacy: CustomerPrivacy;
-    };
-  }
-  interface Document {
-    addEventListener<K extends keyof CustomEventMap>(
-      type: K,
-      listener: (this: Document, ev: CustomEventMap[K]) => void,
-    ): void;
-    dispatchEvent<K extends keyof CustomEventMap>(ev: CustomEventMap[K]): void;
-  }
-}
-
 export type PrivacyConsentBannerProps = {
   shopDomain: string;
   checkoutRootDomain: string;
   storefrontAccessToken: string;
 };
 
-export type CustomerPrivacyApiProps = {
-  consentConfig: PrivacyConsentBannerProps;
+export type CustomerPrivacyApiProps = PrivacyConsentBannerProps & {
   withPrivacyBanner: boolean;
   onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;
 };
@@ -89,25 +92,23 @@ const CONSENT_API_WITH_BANNER =
   'https://cdn.shopify.com/shopifycloud/privacy-banner/storefront-banner.js';
 
 export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
-  const withBanner = props.withPrivacyBanner || false;
-  const consentConfig = props.consentConfig;
+  const { withPrivacyBanner = false, onVisitorConsentCollected, ...consentConfig } = props;
   const loadedEvent = useRef(false);
   const scriptStatus = useLoadScript(
-    withBanner ? CONSENT_API_WITH_BANNER : CONSENT_API,
+    withPrivacyBanner ? CONSENT_API_WITH_BANNER : CONSENT_API,
     {
       attributes: {
         id: 'customer-privacy-api',
       },
     },
   );
-  const onVisitorConsentCollected = props.onVisitorConsentCollected;
 
   useEffect(() => {
     if (scriptStatus !== 'done' || loadedEvent.current) return;
 
     loadedEvent.current = true;
 
-    if (withBanner) {
+    if (withPrivacyBanner && window?.privacyBanner) {
       window?.privacyBanner?.loadBanner(consentConfig);
     }
 
@@ -139,7 +140,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
         );
       };
     }
-  }, [scriptStatus, onVisitorConsentCollected]);
+  }, [scriptStatus, onVisitorConsentCollected, withPrivacyBanner, consentConfig]);
 
   return;
 }

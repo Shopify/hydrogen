@@ -30,20 +30,24 @@ import {CartLine, ComponentizableCartLine, Maybe} from '@shopify/hydrogen-react/
  *   - product_added_to_cart
  *   - product_removed_from_cart
  *   - ...
- *
 */
 export function ShopifyAnalytics({consent}: {consent: AnalyticsProviderProps['consent']}) {
   const {subscribe, register, canTrack} = useAnalytics();
-  const {ready} = register('ShopifyAnalytics');
+  const {ready: shopifyAnalyticsReady} = register('ShopifyAnalytics');
   const {ready: customerPrivacyReady} = register('ShopifyCustomerPrivacy');
-  consent?.consentConfig && useCustomerPrivacy(consent);
+  const {checkoutRootDomain, shopDomain, storefrontAccessToken} = consent;
+  checkoutRootDomain && shopDomain && storefrontAccessToken && useCustomerPrivacy(consent);
 
   useShopifyCookies({hasUserConsent: canTrack()});
   useEffect(() => {
-    document.addEventListener('visitorConsentCollected', () => {;
-      customerPrivacyReady();
-    });
+    document.addEventListener('visitorConsentCollected', customerPrivacyReady)
 
+    return () => {
+      document.removeEventListener('visitorConsentCollected', customerPrivacyReady);
+    }
+  }, [customerPrivacyReady])
+
+  useEffect(() => {
     // Views
     subscribe('page_viewed', pageViewHandler);
     subscribe('product_viewed', productViewHandler);
@@ -52,8 +56,8 @@ export function ShopifyAnalytics({consent}: {consent: AnalyticsProviderProps['co
     // Cart updates
     subscribe('cart_updated', cartUpdateHandler);
 
-    ready();
-  }, [subscribe, ready, customerPrivacyReady]);
+    shopifyAnalyticsReady();
+  }, [subscribe, shopifyAnalyticsReady]);
 
   return null;
 }
@@ -167,7 +171,6 @@ function cartUpdateHandler(payload: CartUpdatePayload) {
   const eventPayload = prepareBaseCartPayload(payload, cart);
 
   if (!eventPayload) return;
-  // TODO: cleanup and simplify some of this logic using cart.totalCount instead
   // Compare previous cart against current cart lines
   // Detect quantity changes and missing cart lines
   prevCart?.lines?.nodes?.forEach((prevLine) => {

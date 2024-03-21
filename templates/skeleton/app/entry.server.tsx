@@ -12,7 +12,8 @@ export default async function handleRequest(
 ) {
   const {nonce, header, NonceProvider} = createContentSecurityPolicy({
     connectSrc: [
-      'https://checkout.hydrogen.shop/api/unstable/graphql.json',
+      // 'https://checkout.hydrogen.shop/api/unstable/graphql.json',
+      'https://demostore.mock.shop/api/unstable/graphql.json',
     ],
   });
 

@@ -76,7 +76,7 @@ export {
 
 export {ShopPayButton} from './shop/ShopPayButton';
 
-export {Analytics, useAnalytics} from './analytics-manager/AnalyticsProvider';
+export {Analytics, useAnalytics, getShopAnalytics} from './analytics-manager/AnalyticsProvider';
 export {CartAnalytics} from './analytics-manager/CartAnalytics';
 export {AnalyticsEvent} from './analytics-manager/events';
 export {ShopifyAnalytics} from './analytics-manager/ShopifyAnalytics';;

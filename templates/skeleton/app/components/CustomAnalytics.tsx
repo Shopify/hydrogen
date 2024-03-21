@@ -5,6 +5,7 @@ export function CustomAnalytics() {
   const {subscribe} = useAnalytics();
 
   useEffect(() => {
+    // Standard events
     subscribe('page_viewed', (data) => {
       console.log('CustomAnalytics - Page viewed:', data);
     });
@@ -19,6 +20,11 @@ export function CustomAnalytics() {
     });
     subscribe('cart_updated', (data) => {
       console.log('CustomAnalytics - Cart updated:', data);
+    });
+
+    // Custom events
+    subscribe('custom_sidecart_viewed', (data) => {
+      console.log('CustomAnalytics - Custom sidecart opened:', data);
     });
   }, []);
 
