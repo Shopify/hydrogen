@@ -63,6 +63,7 @@ describe('i18n replacers', () => {
           Storefront,
           CustomerAccount,
           HydrogenCart,
+          HydrogenSessionData,
         } from "@shopify/hydrogen";
         import type {
           LanguageCode,
@@ -99,7 +100,7 @@ describe('i18n replacers', () => {
           /**
            * Declare local additions to the Remix loader context.
            */
-          export interface AppLoadContext {
+          interface AppLoadContext {
             env: Env;
             cart: HydrogenCart;
             storefront: Storefront<I18nLocale>;
@@ -107,6 +108,11 @@ describe('i18n replacers', () => {
             session: AppSession;
             waitUntil: ExecutionContext["waitUntil"];
           }
+
+          /**
+           * Declare local additions to the Remix session data.
+           */
+          interface SessionData extends HydrogenSessionData {}
         }
         "
       `);
