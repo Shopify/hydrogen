@@ -59,7 +59,7 @@ function createCSPHeader(
   const defaultDirectives: Record<string, string[] | string | boolean> = {
     baseUri: ["'self'"],
     defaultSrc,
-    frameAncestors: ['none'],
+    frameAncestors: ["'none'"],
     styleSrc,
     connectSrc,
   };
