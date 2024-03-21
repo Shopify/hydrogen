@@ -270,7 +270,7 @@ export function CartProvider({
     },
   });
 
-  const cartReady = useRef(false);
+  const [cartReady, setCartReady] = useState<boolean>(false);
   const cartCompleted = cartState.matches('cartCompleted');
 
   const countryChanged =
@@ -288,7 +288,7 @@ export function CartProvider({
    * 2. localStorage cartId
    */
   useEffect(() => {
-    if (!cartReady.current && !fetchingFromStorage.current) {
+    if (!cartReady && !fetchingFromStorage.current) {
       if (!cart && storageAvailable('localStorage')) {
         fetchingFromStorage.current = true;
         try {
@@ -301,7 +301,7 @@ export function CartProvider({
           console.warn(error);
         }
       }
-      cartReady.current = true;
+      setCartReady(true);
     }
   }, [cart, cartReady, cartSend]);
 
@@ -323,12 +323,12 @@ export function CartProvider({
   // send cart events when ready
   const onCartReadySend = useCallback(
     (cartEvent: CartMachineEvent) => {
-      if (!cartReady.current) {
+      if (!cartReady) {
         return console.warn("Cart isn't ready yet");
       }
       cartSend(cartEvent);
     },
-    [cartSend],
+    [cartSend, cartReady],
   );
 
   // save cart id to local storage
@@ -393,6 +393,7 @@ export function CartProvider({
       error: cartDisplayState?.context?.errors,
       totalQuantity: cartDisplayState?.context?.cart?.totalQuantity ?? 0,
       cartCreate,
+      cartReady,
       linesAdd(lines: CartLineInput[]): void {
         if (cartDisplayState?.context?.cart?.id) {
           onCartReadySend({
@@ -455,6 +456,7 @@ export function CartProvider({
     };
   }, [
     cartCreate,
+    cartReady,
     cartDisplayState?.context?.cart,
     cartDisplayState?.context?.errors,
     cartDisplayState.value,
