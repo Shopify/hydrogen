@@ -10,6 +10,7 @@ import type {
   CustomerAccount,
   HydrogenCart,
   HydrogenCartCustom,
+  HydrogenSessionData,
   CartQueryDataReturn,
 } from '@shopify/hydrogen';
 import type {
@@ -42,7 +43,7 @@ declare module '@shopify/remix-oxygen' {
   /**
    * Declare local additions to the Remix loader context.
    */
-  export interface AppLoadContext {
+  interface AppLoadContext {
     env: Env;
     /***********************************************/
     /**********  EXAMPLE UPDATE STARTS  ************/
@@ -60,4 +61,9 @@ declare module '@shopify/remix-oxygen' {
     session: AppSession;
     waitUntil: ExecutionContext['waitUntil'];
   }
+
+  /**
+   * Declare local additions to the Remix session data.
+   */
+  interface SessionData extends HydrogenSessionData {}
 }

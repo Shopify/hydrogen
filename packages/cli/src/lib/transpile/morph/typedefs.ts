@@ -54,6 +54,10 @@ export function generateTypeDefs(sourceFile: SourceFile, code: string) {
 
   typedefs.push(''); // New line
 
+  const knownGenerics: Record<string, string | undefined> = {
+    MetaFunction: 'T',
+  };
+
   typedefsFromImports.forEach((typeElements, moduleSpecifier) => {
     for (const typeElement of typeElements) {
       // We only use this in root.tsx and it's better to
@@ -61,13 +65,13 @@ export function generateTypeDefs(sourceFile: SourceFile, code: string) {
       if (typeElement === 'SerializeFrom') continue;
 
       // Note: SerializeFrom also needs generic if we stop skipping it.
-      const hasGeneric = typeElement === 'MetaFunction';
+      const hasGeneric = !!knownGenerics[typeElement];
 
       typedefs.push(
         `/** ${
-          hasGeneric ? '@template T ' : ''
+          hasGeneric ? `@template ${knownGenerics[typeElement]} ` : ''
         }@typedef {import('${moduleSpecifier}').${typeElement}${
-          hasGeneric ? '<T>' : ''
+          hasGeneric ? `<${knownGenerics[typeElement]}>` : ''
         }} ${typeElement} */`,
       );
     }

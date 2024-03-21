@@ -9,6 +9,7 @@ import type {
   Storefront,
   CustomerAccount,
   HydrogenCart,
+  HydrogenSessionData,
 } from '@shopify/hydrogen';
 import type {AppSession} from '~/lib/session';
 import {createRickAndMortyClient} from './app/lib/createRickAndMortyClient.server';
@@ -46,4 +47,9 @@ declare module '@shopify/remix-oxygen' {
     session: AppSession;
     waitUntil: ExecutionContext['waitUntil'];
   }
+
+  /**
+   * Declare local additions to the Remix session data.
+   */
+  interface SessionData extends HydrogenSessionData {}
 }
