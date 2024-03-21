@@ -16,6 +16,7 @@ import type {
   ProductViewPayload,
   CollectionViewPayload,
   CartUpdatePayload,
+  CartLineUpdatePayload,
 } from './AnalyticsView';
 import {useEffect} from 'react';
 import {CartLine, ComponentizableCartLine, Maybe} from '@shopify/hydrogen-react/storefront-api-types';
@@ -53,8 +54,8 @@ export function ShopifyAnalytics({consent}: {consent: AnalyticsProviderProps['co
     subscribe('product_viewed', productViewHandler);
     subscribe('collection_viewed', collectionViewHandler);
 
-    // Cart updates
-    subscribe('cart_updated', cartUpdateHandler);
+    // Cart
+    subscribe('product_added_to_cart', productAddedToCartHandler);
 
     shopifyAnalyticsReady();
   }, [subscribe, shopifyAnalyticsReady]);
@@ -166,39 +167,15 @@ function collectionViewHandler(payload: CollectionViewPayload) {
   });
 }
 
-function cartUpdateHandler(payload: CartUpdatePayload) {
-  const {cart, prevCart} = payload;
+function productAddedToCartHandler(payload: CartLineUpdatePayload) {
+  const {cart, currentLine} = payload;
   const eventPayload = prepareBaseCartPayload(payload, cart);
 
-  if (!eventPayload) return;
-  // Compare previous cart against current cart lines
-  // Detect quantity changes and missing cart lines
-  prevCart?.lines?.nodes?.forEach((prevLine) => {
-    const matchedLineId = cart?.lines.nodes.filter(
-      (line) => prevLine.id === line.id,
-    );
-    if (matchedLineId?.length === 1) {
-      const matchedLine = matchedLineId[0];
-      if (prevLine.quantity < matchedLine.quantity) {
-        sendCartAnalytics({
-          matchedLine,
-          eventPayload
-        });
-      }
-    }
-  });
+  if (!eventPayload || !currentLine) return;
 
-  // Detect added to cart
-  cart?.lines?.nodes?.forEach((line) => {
-    const matchedLineId = prevCart?.lines.nodes.filter(
-      (previousLine) => line.id === previousLine.id,
-    );
-    if (!matchedLineId || matchedLineId.length === 0) {
-      sendCartAnalytics({
-        matchedLine: line,
-        eventPayload
-      });
-    }
+  sendCartAnalytics({
+    matchedLine: currentLine,
+    eventPayload,
   });
 }
 

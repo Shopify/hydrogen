@@ -8,6 +8,8 @@ export const AnalyticsEvent = {
 
   // Cart
   CART_UPDATED: 'cart_updated' as const,
+  PRODUCT_ADD_TO_CART: 'product_added_to_cart' as const,
+  PRODUCT_REMOVED_FROM_CART: 'product_removed_from_cart' as const,
 
   // Custom
   CUSTOM_EVENT: `custom_` as `custom_${string}`

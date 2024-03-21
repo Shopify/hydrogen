@@ -18,6 +18,7 @@ import {
   type CustomEventPayload,
   type OtherData,
   type EventPayloads,
+  CartLineUpdatePayload,
 } from "./AnalyticsView";
 import type { CurrencyCode, LanguageCode } from '@shopify/hydrogen-react/storefront-api-types';
 import { AnalyticsEvent } from "./events";
@@ -127,6 +128,16 @@ function subscribe(
 ): void;
 
 function subscribe(
+  event: typeof AnalyticsEvent.PRODUCT_ADD_TO_CART,
+  callback: (payload: CartLineUpdatePayload) => void
+): void;
+
+function subscribe(
+  event: typeof AnalyticsEvent.PRODUCT_REMOVED_FROM_CART,
+  callback: (payload: CartLineUpdatePayload) => void
+): void;
+
+function subscribe(
   event: typeof AnalyticsEvent.CUSTOM_EVENT,
   callback: (payload: CustomEventPayload) => void
 ): void;
@@ -148,6 +159,8 @@ function publish(event: typeof AnalyticsEvent.PRODUCT_VIEWED, payload: ProductVi
 function publish(event: typeof AnalyticsEvent.COLLECTION_VIEWED, payload: CollectionViewPayload): void;
 function publish(event: typeof AnalyticsEvent.CART_VIEWED, payload: CartViewPayload): void;
 function publish(event: typeof AnalyticsEvent.CART_UPDATED, payload: CartUpdatePayload): void;
+function publish(event: typeof AnalyticsEvent.PRODUCT_ADD_TO_CART, payload: CartLineUpdatePayload): void;
+function publish(event: typeof AnalyticsEvent.PRODUCT_REMOVED_FROM_CART, payload: CartLineUpdatePayload): void;
 function publish(event: typeof AnalyticsEvent.CUSTOM_EVENT, payload: OtherData): void;
 function publish(event: any, payload: any): void {
   if (!areRegistersReady()) {

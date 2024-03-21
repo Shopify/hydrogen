@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import { type ShopAnalytic, type AnalyticsProviderProps, useAnalytics} from "./AnalyticsProvider";
 import { CartReturn } from "../cart/queries/cart-types";
 import {AnalyticsEvent} from './events';
-import { Product, ProductVariant } from "@shopify/hydrogen-react/storefront-api-types";
+import { CartLine, ComponentizableCartLine, Product, ProductVariant } from "@shopify/hydrogen-react/storefront-api-types";
 
 export type OtherData = {
   [key: string]: unknown;
@@ -60,6 +60,12 @@ export type CartUpdatePayload = {
   prevCart: CartReturn | null;
 } & BasePayload;
 
+export type CartLineUpdatePayload = {
+  cart: CartReturn | null;
+  prevCart: CartReturn | null;
+  prevLine?: CartLine | ComponentizableCartLine;
+  currentLine?: CartLine | ComponentizableCartLine;
+} & BasePayload;
 
 export type CustomEventPayload = {
   [key: string]: unknown;

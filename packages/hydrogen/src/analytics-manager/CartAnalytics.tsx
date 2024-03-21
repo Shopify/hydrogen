@@ -38,12 +38,53 @@ export function CartAnalytics({cart: currentCart}: {cart: AnalyticsProviderProps
     if (cart.updatedAt === lastEventId.current) return;
     lastEventId.current = cart.updatedAt;
 
-    publish('cart_updated', payload)
+    publish('cart_updated', payload);
 
     // We store the last cart update timestamp in localStorage to be able
     // to detect if the cart has been updated since the last page render
     // this prevents sending duplicate cart_updated events on first render
     localStorage.setItem('cartLastUpdatedAt', cart.updatedAt);
+
+    // Detect quantity changes and missing cart lines
+    prevCart?.lines?.nodes?.forEach((prevLine) => {
+      const matchedLineId = cart?.lines.nodes.filter(
+        (line) => prevLine.id === line.id,
+      );
+      if (matchedLineId?.length === 1) {
+        const matchedLine = matchedLineId[0];
+        if (prevLine.quantity < matchedLine.quantity) {
+          publish('product_added_to_cart', {
+            ...payload,
+            prevLine,
+            currentLine: matchedLine,
+          });
+        } else if (prevLine.quantity > matchedLine.quantity) {
+          publish('product_removed_from_cart', {
+            ...payload,
+            prevLine,
+            currentLine: matchedLine,
+          });
+        }
+      } else {
+        publish('product_removed_from_cart', {
+          ...payload,
+          prevLine,
+        });
+      }
+    });
+
+    // Detect added to cart
+    cart?.lines?.nodes?.forEach((line) => {
+      const matchedLineId = prevCart?.lines.nodes.filter(
+        (previousLine) => line.id === previousLine.id,
+      );
+      if (!matchedLineId || matchedLineId.length === 0) {
+        publish('product_added_to_cart', {
+          ...payload,
+          currentLine: line,
+        });
+      }
+    });
   }, [cart, prevCart, setCarts, publish, shop, customData, canTrack]);
 
   return null;
