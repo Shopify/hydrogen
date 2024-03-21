@@ -35,14 +35,17 @@ import {
   getDebugHeaders,
 } from '../utils/request';
 import {getCallerStackLine, withSyncStack} from '../utils/callsites';
-import {getRedirectUrl} from '../utils/get-redirect-url';
+import {
+  getRedirectUrl,
+  ensureLocalRedirectUrl,
+} from '../utils/get-redirect-url';
 import type {
   CustomerAccountOptions,
   CustomerAccount,
   CustomerAPIResponse,
   LoginOptions,
+  LogoutOptions,
 } from './types';
-import {LanguageCode} from '@shopify/hydrogen-react/storefront-api-types';
 
 const DEFAULT_LOGIN_URL = '/account/login';
 const DEFAULT_AUTH_URL = '/account/authorize';
@@ -67,7 +70,7 @@ export function createCustomerAccountClient({
   customerApiVersion = DEFAULT_CUSTOMER_API_VERSION,
   request,
   waitUntil,
-  authUrl = DEFAULT_AUTH_URL,
+  authUrl,
   customAuthStatusHandler,
   logErrors = true,
 }: CustomerAccountOptions): CustomerAccount {
@@ -91,7 +94,11 @@ export function createCustomerAccountClient({
     requestUrl.protocol === 'http:'
       ? requestUrl.origin.replace('http', 'https')
       : requestUrl.origin;
-  const redirectUri = authUrl.startsWith('/') ? origin + authUrl : authUrl;
+  const redirectUri = ensureLocalRedirectUrl({
+    requestUrl: request.url,
+    defaultUrl: DEFAULT_AUTH_URL,
+    redirectUrl: authUrl,
+  });
   const customerAccountApiUrl = `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`;
   const locks: Locks = {};
 
@@ -246,7 +253,7 @@ export function createCustomerAccountClient({
   return {
     login: async (options?: LoginOptions) => {
       ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
-      const loginUrl = new URL(customerAccountUrl + '/auth/oauth/authorize');
+      const loginUrl = new URL(`${customerAccountUrl}/auth/oauth/authorize`);
 
       const state = generateState();
       const nonce = generateNonce();
@@ -294,22 +301,34 @@ export function createCustomerAccountClient({
         },
       });
     },
-    logout: async () => {
+
+    logout: async (options?: LogoutOptions) => {
       ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
+
       const idToken = session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.idToken;
+      const postLogoutRedirectUri = ensureLocalRedirectUrl({
+        requestUrl: origin,
+        defaultUrl: origin,
+        redirectUrl: options?.postLogoutRedirectUri,
+      });
+
+      const logoutUrl = idToken
+        ? new URL(
+            `${customerAccountUrl}/auth/logout?${new URLSearchParams([
+              ['id_token_hint', idToken],
+              ['post_logout_redirect_uri', postLogoutRedirectUri],
+            ]).toString()}`,
+          ).toString()
+        : postLogoutRedirectUri;
 
       clearSession(session);
 
-      return redirect(
-        `${customerAccountUrl}/auth/logout?id_token_hint=${idToken}`,
-        {
-          status: 302,
-
-          headers: {
-            'Set-Cookie': await session.commit(),
-          },
+      return redirect(logoutUrl, {
+        status: 302,
+        headers: {
+          'Set-Cookie': await session.commit(),
         },
-      );
+      });
     },
     isLoggedIn,
     handleAuthStatus,
