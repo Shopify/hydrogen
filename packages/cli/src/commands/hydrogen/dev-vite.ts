@@ -13,7 +13,6 @@ import {AbortError} from '@shopify/cli-kit/node/error';
 import {Flags, Config} from '@oclif/core';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
-import {getConfig} from '../../lib/shopify-config.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
@@ -22,9 +21,10 @@ import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 import {
   getDebugBannerLine,
   startTunnelAndPushConfig,
-  checkMockShopAndByPassTunnel,
+  isMockShop,
+  notifyIssueWithTunnelAndMockShop,
+  getDevConfigInBackground,
 } from '../../lib/dev-shared.js';
-import {getStorefrontId} from './customer-account/push.js';
 import {getCliCommand} from '../../lib/shell.js';
 
 export default class DevVite extends Command {
@@ -117,34 +117,18 @@ export async function runDev({
 
   const root = appPath ?? process.cwd();
 
-  let appName: string | undefined;
-
   const cliCommandPromise = getCliCommand(root);
-  const backgroundPromise = checkMockShopAndByPassTunnel(
+  const backgroundPromise = getDevConfigInBackground(
     root,
     customerAccountPushFlag,
-  ).then(async (customerAccountPush) => {
-    // ensure this occur before `getConfig` since it can run link and changed env vars
-    if (customerAccountPush) {
-      await getStorefrontId(root);
-    }
+  );
 
-    const {shop, storefront} = await getConfig(root);
-    const storefrontId = storefront?.id;
-    appName = storefront?.title;
-
-    return {
-      storefrontId,
-      customerAccountPush,
-      fetchRemote: !!shop && !!storefrontId,
-    };
-  });
-
-  const envPromise = backgroundPromise.then(({fetchRemote}) =>
+  const envPromise = backgroundPromise.then(({fetchRemote, localVariables}) =>
     getAllEnvironmentVariables({
       root,
       envBranch,
       fetchRemote,
+      localVariables,
     }),
   );
 
@@ -209,12 +193,13 @@ export async function runDev({
   //   process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
   // }
 
-  const [tunnelHost] = await Promise.all([
+  const [tunnelHost, cliCommand] = await Promise.all([
     backgroundPromise.then(({customerAccountPush, storefrontId}) =>
       customerAccountPush
         ? startTunnelAndPushConfig(root, cliConfig, publicPort, storefrontId)
         : undefined,
     ),
+    cliCommandPromise,
     viteServer.listen(publicPort),
   ]);
 
@@ -228,10 +213,10 @@ export async function runDev({
   enhanceH2Logs({
     rootDirectory: root,
     host: finalHost,
-    cliCommand: await cliCommandPromise,
+    cliCommand,
   });
 
-  await envPromise; // Prints the injected env vars
+  const envVariables = await envPromise; // Prints the injected env vars
   console.log('');
   viteServer.printUrls();
   viteServer.bindCLIShortcuts({print: true});
@@ -259,9 +244,13 @@ export async function runDev({
   }
 
   if (customSections.length > 0) {
+    const {storefrontTitle} = await backgroundPromise;
+
     renderInfo({
       body: [
-        `View ${appName ? colors.cyan(appName) : 'Hydrogen'} app:`,
+        `View ${
+          storefrontTitle ? colors.cyan(storefrontTitle) : 'Hydrogen'
+        } app:`,
         {link: {url: finalHost}},
       ],
       customSections,
@@ -271,6 +260,10 @@ export async function runDev({
   checkRemixVersions();
   if (!disableVersionCheck) {
     displayDevUpgradeNotice({targetPath: root});
+  }
+
+  if (customerAccountPushFlag && isMockShop(envVariables)) {
+    notifyIssueWithTunnelAndMockShop(cliCommand);
   }
 
   return {

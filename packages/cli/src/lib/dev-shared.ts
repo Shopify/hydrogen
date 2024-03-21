@@ -7,45 +7,61 @@ import {
 } from '@shopify/cli-kit/node/output';
 import {renderInfo} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {runCustomerAccountPush} from '../commands/hydrogen/customer-account/push.js';
+import {
+  getStorefrontId,
+  runCustomerAccountPush,
+} from '../commands/hydrogen/customer-account/push.js';
 import {getLocalVariables} from '../lib/environment-variables.js';
-import {getCliCommand} from '../lib/shell.js';
 import {startTunnelPlugin, pollTunnelURL} from './tunneling.js';
+import {getConfig} from './shopify-config.js';
 
-export async function checkMockShopAndByPassTunnel(
+export function isMockShop(envVariables: Record<string, string>) {
+  return (
+    envVariables.PUBLIC_STORE_DOMAIN &&
+    envVariables.PUBLIC_STORE_DOMAIN.includes('mock.shop')
+  );
+}
+
+export function notifyIssueWithTunnelAndMockShop(cliCommand: string) {
+  renderInfo({
+    headline:
+      'Using mock.shop with `--customer-account-push` flag is not supported',
+    body: 'The functionalities of this flag are disabled.',
+    nextSteps: [
+      'You may continue knowing Customer Account API (/account) interactions will fail.',
+      [
+        'Or run',
+        {command: `${cliCommand} env pull`},
+        'to link to your store credentials.',
+      ],
+    ],
+  });
+}
+
+export function getDevConfigInBackground(
   root: string,
   customerAccountPushFlag: boolean,
 ) {
-  if (customerAccountPushFlag) {
-    const {variables} = await getLocalVariables(root);
+  return getLocalVariables(root).then(async ({variables: localVariables}) => {
+    const customerAccountPush =
+      customerAccountPushFlag && !isMockShop(localVariables);
 
-    if (
-      variables?.PUBLIC_STORE_DOMAIN &&
-      variables?.PUBLIC_STORE_DOMAIN.includes('mock.shop')
-    ) {
-      const cliCommand = await getCliCommand();
-
-      renderInfo({
-        headline:
-          'Using mock.shop with `--customer-account-push` flag is not supported',
-        body: 'The functionalities of this flag are disabled.',
-        nextSteps: [
-          'You may continue knowing Customer Account API (/account) interactions will fail.',
-          [
-            'Or run',
-            {
-              command: `${cliCommand} env pull`,
-            },
-            'to link to your store credentials.',
-          ],
-        ],
-      });
-
-      return false;
+    // ensure this occur before `getConfig` since it can run link and changed env vars
+    if (customerAccountPush) {
+      await getStorefrontId(root);
     }
-  }
 
-  return customerAccountPushFlag;
+    const {shop, storefront} = await getConfig(root);
+    const storefrontId = storefront?.id;
+
+    return {
+      storefrontId,
+      customerAccountPush,
+      fetchRemote: !!shop && !!storefrontId,
+      localVariables,
+      storefrontTitle: storefront?.title,
+    };
+  });
 }
 
 export async function startTunnelAndPushConfig(

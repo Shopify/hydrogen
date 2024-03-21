@@ -9,13 +9,15 @@ import colors from '@shopify/cli-kit/node/colors';
 import {getStorefrontEnvVariables} from './graphql/admin/pull-variables.js';
 import {login} from './auth.js';
 
+type EnvMap = Record<string, string>;
+
 interface Arguments {
   envBranch?: string;
   root: string;
   fetchRemote?: boolean;
+  localVariables?: EnvMap;
 }
 
-type EnvMap = Record<string, string>;
 const createEmptyRemoteVars = () => ({
   remoteVariables: {} as EnvMap,
   remoteSecrets: {} as EnvMap,
@@ -25,6 +27,7 @@ export async function getAllEnvironmentVariables({
   root,
   envBranch,
   fetchRemote = true,
+  localVariables: inlineLocalVariables,
 }: Arguments) {
   const [{remoteVariables, remoteSecrets}, {variables: localVariables}] =
     await Promise.all([
@@ -43,7 +46,9 @@ export async function getAllEnvironmentVariables({
           })
         : createEmptyRemoteVars(),
       // Get local vars
-      getLocalVariables(root),
+      inlineLocalVariables
+        ? {variables: inlineLocalVariables}
+        : getLocalVariables(root),
     ]);
 
   const remoteSecretKeys = Object.keys(remoteSecrets);
