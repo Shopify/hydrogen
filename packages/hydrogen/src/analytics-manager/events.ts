@@ -4,6 +4,7 @@ export const AnalyticsEvent = {
   PRODUCT_VIEWED: 'product_viewed' as const,
   COLLECTION_VIEWED: 'collection_viewed' as const,
   CART_VIEWED: 'cart_viewed' as const,
+  SEARCH_VIEWED: 'search_viewed' as const,
 
   // Cart
   CART_UPDATED: 'cart_updated' as const,

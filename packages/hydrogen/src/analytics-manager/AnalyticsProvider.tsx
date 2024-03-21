@@ -5,6 +5,7 @@ import {
   AnalyticsProductView,
   AnalyticsCollectionView,
   AnalyticsCartView,
+  AnalyticsSearchView,
   AnalyticsCustomView,
   type PageViewPayload,
   type ProductViewPayload,
@@ -283,4 +284,5 @@ export const Analytics = {
   PageView: AnalyticsPageView,
   ProductView: AnalyticsProductView,
   Provider: AnalyticsProvider,
+  SearchView: AnalyticsSearchView,
 }

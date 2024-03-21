@@ -48,10 +48,18 @@ export type PageViewPayload = {
   prevCart: CartReturn | null;
 } & BasePayload;
 
+export type SearchViewPayload = {
+  cart: CartReturn | null;
+  prevCart: CartReturn | null;
+  searchTerm: string;
+  results: Array<any>;
+} & BasePayload;
+
 export type CartUpdatePayload = {
   cart: CartReturn | null;
   prevCart: CartReturn | null;
 } & BasePayload;
+
 
 export type CustomEventPayload = {
   [key: string]: unknown;
@@ -96,6 +104,11 @@ type CartViewProps = BaseViewProps & {
   data?: CartViewPayload;
 };
 
+type SearchViewProps = BaseViewProps & {
+  type: typeof AnalyticsEvent.SEARCH_VIEWED;
+  data?: SearchViewPayload;
+};
+
 type CustomViewProps = BaseViewProps & {
   type: typeof AnalyticsEvent.CUSTOM_EVENT;
   data?: OtherData;
@@ -105,6 +118,7 @@ function AnalyticsView(props: PageViewProps): null;
 function AnalyticsView(props: ProductViewProps): null;
 function AnalyticsView(props: CollectionViewProps): null;
 function AnalyticsView(props: CartViewProps): null;
+function AnalyticsView(props: SearchViewProps): null;
 function AnalyticsView(props: CustomViewProps): null;
 function AnalyticsView(props: any) {
   const {type, payload = {}} = props;
@@ -152,8 +166,10 @@ export function AnalyticsCartView(props: Omit<CartViewProps, 'type'>) {
   return <AnalyticsView {...props} type='cart_viewed'  />;
 }
 
+export function AnalyticsSearchView(props: Omit<SearchViewProps, 'type'>) {
+  return <AnalyticsView {...props} type='search_viewed'  />;
+}
+
 export function AnalyticsCustomView(props: CustomViewProps) {
   return <AnalyticsView {...props}  />;
 }
-
-// TODO: Search view?
