@@ -36,8 +36,35 @@ describe('storefrontRedirect', () => {
       }),
     ).resolves.toEqual(
       new Response(null, {
-        status: 301,
+        status: 302,
         headers: {location: shopifyDomain + '/some-page'},
+      }),
+    );
+
+    expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
+      variables: {query: 'path:/some-page'},
+    });
+  });
+
+  it('works with soft navigations', async () => {
+    queryMock.mockResolvedValueOnce({
+      urlRedirects: {edges: [{node: {target: shopifyDomain + '/some-page'}}]},
+    });
+
+    await expect(
+      storefrontRedirect({
+        storefront: storefrontMock,
+        request: new Request(
+          'https://domain.com/some-page?_data=%2Fcollections%2Fbackcountry',
+        ),
+      }),
+    ).resolves.toEqual(
+      new Response(null, {
+        status: 200,
+        headers: {
+          'X-Remix-Redirect': shopifyDomain + '/some-page',
+          'X-Remix-Status': '302',
+        },
       }),
     );
 
