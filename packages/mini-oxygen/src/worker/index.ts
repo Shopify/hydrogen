@@ -5,6 +5,7 @@ import {
   Response,
   fetch,
   type RequestInit,
+  type ResponseInit,
   type SharedOptions,
   type CORE_PLUGIN,
   type MiniflareOptions as OutputMiniflareOptions,
@@ -18,7 +19,14 @@ import {
 import {miniOxygenHandler} from './handler.js';
 import {OXYGEN_HEADERS_MAP} from '../common/headers.js';
 
-export {buildAssetsUrl, Request, Response, fetch, type RequestInit};
+export {
+  buildAssetsUrl,
+  Request,
+  Response,
+  fetch,
+  type RequestInit,
+  type ResponseInit,
+};
 
 const OXYGEN_WORKERD_COMPAT_PARAMS = {
   compatibilityFlags: ['streams_enable_constructors'],

@@ -1,7 +1,8 @@
 import type {ServerResponse, IncomingMessage} from 'node:http';
 import path from 'node:path';
 import {Readable} from 'node:stream';
-import {Request, Response} from 'miniflare';
+// TODO
+import {Request, type Response} from '@shopify/mini-oxygen';
 import type {ViteDevServer} from 'vite';
 
 /**

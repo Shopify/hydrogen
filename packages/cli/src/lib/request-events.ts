@@ -7,7 +7,7 @@ import type {
   Request as WorkerdRequest,
   Response as WorkerdResponse,
   ResponseInit,
-} from 'miniflare';
+} from '@shopify/mini-oxygen';
 import {mapSourcePosition} from 'source-map-support';
 
 export const H2O_BINDING_NAME = 'H2O_LOG_EVENT';

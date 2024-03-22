@@ -163,7 +163,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
         return () => {
           setupOxygenMiddleware(viteDevServer, async (request) => {
             miniOxygen ??= await miniOxygenPromise;
-            return miniOxygen.dispatch(request);
+            return miniOxygen.dispatchFetch(request);
           });
         };
       },
