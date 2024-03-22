@@ -92,7 +92,12 @@ export function createInspectorProxy(
           req.headers.origin ?? 'devtools://devtools',
         );
 
-        res.end(sourceMapPath ? readFileSync(sourceMapPath, 'utf-8') : '');
+        if (sourceMapPath) {
+          res.end(readFileSync(sourceMapPath, 'utf-8'));
+        } else {
+          res.statusCode = 404;
+          res.end();
+        }
         break;
       case '/favicon.ico':
         proxyHttp(FAVICON_URL, req.headers, res);
