@@ -7,6 +7,7 @@ import {type GraphQLError} from '../utils/graphql';
 import type {CrossRuntimeRequest} from '../utils/request';
 
 import type {HydrogenSession} from '../hydrogen';
+import {LanguageCode} from '@shopify/hydrogen-react/storefront-api-types';
 
 // Return type of unauthorizedHandler = Return type of loader/action function
 // This type is not exported https://github.com/remix-run/react-router/blob/main/packages/router/utils.ts#L167
@@ -45,9 +46,25 @@ export interface CustomerAccountMutations {
   // '#graphql mutation m1 {...}': {return: M1Mutation; variables: M1MutationVariables};
 }
 
+export type LoginOptions = {
+  uiLocales?: LanguageCode;
+};
+
+export type LogoutOptions = {
+  postLogoutRedirectUri?: string;
+};
+
 export type CustomerAccount = {
-  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use) */
-  login: () => Promise<Response>;
+  /** Start the OAuth login flow. This function should be called and returned from a Remix action.
+   * It redirects the customer to a Shopify login domain. It also defined the final path the customer
+   * lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is
+   * automatically setup unless `customAuthStatusHandler` option is in use)
+   *
+   * @param options.uiLocales - The displayed language of the login page. Only support for the following languages:
+   * `en`, `fr`, `cs`, `da`, `de`, `es`, `fi`, `it`, `ja`, `ko`, `nb`, `nl`, `pl`, `pt-BR`, `pt-PT`,
+   * `sv`, `th`, `tr`, `vi`, `zh-CN`, `zh-TW`. If supplied any other language code, it will default to `en`.
+   * */
+  login: (options?: LoginOptions) => Promise<Response>;
   /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */
   authorize: () => Promise<Response>;
   /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */
@@ -58,8 +75,11 @@ export type CustomerAccount = {
   getAccessToken: () => Promise<string | undefined>;
   /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/
   getApiUrl: () => string;
-  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/
-  logout: () => Promise<Response>;
+  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.
+   *
+   * @param options.postLogoutRedirectUri - The url to redirect customer to after logout, should be a relative URL. This url will need to included in Customer Account API's application setup for logout URI. The default value is current app origin, which is automatically setup in admin when using `--customer-account-push` flag with dev.
+   * */
+  logout: (options?: LogoutOptions) => Promise<Response>;
   /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */
   query: <
     OverrideReturnType extends any = never,
@@ -122,8 +142,16 @@ export type CustomerAccountOptions = {
 /** Below are types meant for documentation only. Ensure it stay in sync with the type above. */
 
 export type CustomerAccountForDocs = {
-  /** Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use) */
-  login?: () => Promise<Response>;
+  /** Start the OAuth login flow. This function should be called and returned from a Remix action.
+   * It redirects the customer to a Shopify login domain. It also defined the final path the customer
+   * lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is
+   * automatically setup unless `customAuthStatusHandler` option is in use)
+   *
+   * @param options.uiLocales - The displayed language of the login page. Only support for the following languages:
+   * `en`, `fr`, `cs`, `da`, `de`, `es`, `fi`, `it`, `ja`, `ko`, `nb`, `nl`, `pl`, `pt-BR`, `pt-PT`,
+   * `sv`, `th`, `tr`, `vi`, `zh-CN`, `zh-TW`. If supplied any other language code, it will default to `en`.
+   * */
+  login?: (options?: LoginOptions) => Promise<Response>;
   /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */
   authorize?: () => Promise<Response>;
   /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */
@@ -133,9 +161,12 @@ export type CustomerAccountForDocs = {
   /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */
   getAccessToken?: () => Promise<string | undefined>;
   /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/
-  getApiUrl: () => string;
-  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/
-  logout?: () => Promise<Response>;
+  getApiUrl?: () => string;
+  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.
+   *
+   * @param options.postLogoutRedirectUri - The url to redirect customer to after logout, should be a relative URL. This url will need to included in Customer Account API's application setup for logout URI. The default value is current app origin, which is automatically setup in admin when using `--customer-account-push` flag with dev.
+   * */
+  logout?: (options?: LogoutOptions) => Promise<Response>;
   /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */
   query?: <TData = any>(
     query: string,

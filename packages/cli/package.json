@@ -4,7 +4,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "7.1.1",
+  "version": "7.1.2",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -42,6 +42,7 @@
     "@shopify/hydrogen-codegen": "^0.2.2",
     "@shopify/mini-oxygen": "^2.2.5",
     "@shopify/oxygen-cli": "^4.3.0",
+    "@shopify/plugin-cloudflare": "3.56.3",
     "ansi-escapes": "^6.2.0",
     "cli-truncate": "^4.0.0",
     "diff": "^5.1.0",
@@ -49,7 +50,7 @@
     "get-port": "^7.0.0",
     "graphql-config": "5.0.3",
     "gunzip-maybe": "^1.4.2",
-    "miniflare": "3.20240129.0",
+    "miniflare": "3.20240304.2",
     "prettier": "^2.8.4",
     "semver": "^7.5.3",
     "source-map": "^0.7.4",
@@ -115,6 +116,9 @@
       "hydrogen:setup": {
         "description": "Scaffolds new functionality."
       }
-    }
+    },
+    "plugins": [
+      "@shopify/plugin-cloudflare"
+    ]
   }
 }

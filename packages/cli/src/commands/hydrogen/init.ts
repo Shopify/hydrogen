@@ -64,6 +64,12 @@ export default class Init extends Command {
       default: true,
       allowNo: true,
     }),
+    quickstart: Flags.boolean({
+      description:
+        'Scaffolds a new Hydrogen project with a set of sensible defaults.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_QUICKSTART',
+      default: false,
+    }),
   };
 
   async run(): Promise<void> {
@@ -103,6 +109,22 @@ export async function runInit(
 
   options.git ??= true;
 
+  /**
+   * Quickstart options. A set of sensible defaults to streamline documentation.
+   * Logical OR assignment means you can still override individual options by flag:
+   * $ h2 init --quickstart --language ts
+   */
+  if (options.quickstart) {
+    options.i18n ||= 'none';
+    options.installDeps ||= true;
+    options.language ||= 'js';
+    options.mockShop ||= true;
+    options.path ||= './hydrogen-quickstart';
+    options.routes ||= true;
+    options.shortcut ||= true;
+    options.styling ||= 'tailwind';
+  }
+
   const showUpgrade = await checkHydrogenVersion(
     // Resolving the CLI package from a local directory might fail because
     // this code could be run from a global dependency (e.g. on `npm create`).
@@ -123,8 +145,10 @@ export async function runInit(
   const controller = new AbortController();
 
   try {
-    return options.template
-      ? await setupRemoteTemplate(options, controller)
+    const template = options.template;
+
+    return template
+      ? await setupRemoteTemplate({...options, template}, controller)
       : await setupLocalStarterTemplate(options, controller);
   } catch (error) {
     controller.abort();

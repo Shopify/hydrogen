@@ -18,8 +18,10 @@ export type MiniOxygenInstance = {
   showBanner: (options?: {
     mode?: string;
     headlinePrefix?: string;
+    host?: string;
     extraLines?: string[];
     appName?: string;
+    tunnelHost?: string;
   }) => void;
   close: () => Promise<void>;
 };
