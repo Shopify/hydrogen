@@ -48,19 +48,27 @@
     "body-parser": "1.20.2",
     "connect": "^3.7.0",
     "get-port": "^7.0.0",
+    "miniflare": "3.20240129.0",
     "mrmime": "1.0.1",
-    "source-map-support": "^0.5.21"
+    "source-map": "^0.7.4",
+    "source-map-support": "^0.5.21",
+    "stack-trace": "^1.0.0-pre2",
+    "ws": "^8.16.0"
   },
   "devDependencies": {
+    "@shopify/oxygen-workers-types": "^4.0.0",
     "@types/body-parser": "1.19.3",
     "@types/connect": "^3.4.35",
     "@types/eventsource": "^1.1.10",
     "@types/fs-extra": "^11.0.1",
     "@types/node": "^18.7.0",
-    "@types/source-map-support": "^0.5.6",
+    "@types/source-map-support": "^0.5.10",
+    "@types/stack-trace": "^0.0.33",
     "@types/ws": "^8.5.3",
+    "devtools-protocol": "^0.0.1177611",
     "eventsource": "^2.0.2",
     "fs-extra": "^11.1.0",
+    "tempy": "3.0.0",
     "vitest": "^1.0.4"
   }
 }

@@ -6,8 +6,8 @@ fs.removeSync('./dist');
 
 export default defineConfig([
   {
-    entry: ['src/node/**/*.ts'],
-    outDir: 'dist/node',
+    entry: ['src/**/*.ts', '!src/**/*.test.ts'],
+    outDir: 'dist',
     format: 'esm',
     minify: false,
     bundle: false,
