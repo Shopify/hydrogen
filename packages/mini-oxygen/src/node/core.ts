@@ -46,7 +46,7 @@ export class MiniOxygen extends MiniflareCore<MiniOxygenType> {
     super(
       PLUGINS,
       {
-        log: new Log(LogLevel.VERBOSE),
+        log: new Log(LogLevel.ERROR),
         storageFactory,
         scriptRunner: new VMScriptRunner(),
         queueBroker: new QueueBroker(),
