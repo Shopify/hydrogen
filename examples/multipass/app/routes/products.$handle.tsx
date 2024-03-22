@@ -1,7 +1,5 @@
-import {Suspense} from 'react';
 import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {
-  Await,
   Link,
   useLoaderData,
   type MetaFunction,
@@ -78,16 +76,7 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
     }
   }
 
-  // In order to show which variants are available in the UI, we need to query
-  // all of them. But there might be a *lot*, so instead separate the variants
-  // into it's own separate query that is deferred. So there's a brief moment
-  // where variant options might show as available when they're not, but after
-  // this deffered query resolves, the UI will update.
-  const variants = storefront.query(VARIANTS_QUERY, {
-    variables: {handle},
-  });
-
-  return defer({product, variants});
+  return defer({product});
 }
 
 function redirectToFirstVariant({
@@ -114,7 +103,7 @@ function redirectToFirstVariant({
 }
 
 export default function Product() {
-  const {product, variants} = useLoaderData<typeof loader>();
+  const {product} = useLoaderData<typeof loader>();
   const {selectedVariant} = product;
   return (
     <div className="product">
@@ -122,7 +111,6 @@ export default function Product() {
       <ProductMain
         selectedVariant={selectedVariant}
         product={product}
-        variants={variants}
       />
     </div>
   );
@@ -148,11 +136,9 @@ function ProductImage({image}: {image: ProductVariantFragment['image']}) {
 function ProductMain({
   selectedVariant,
   product,
-  variants,
 }: {
   product: ProductFragment;
   selectedVariant: ProductFragment['selectedVariant'];
-  variants: Promise<ProductVariantsQuery>;
 }) {
   const {title, descriptionHtml} = product;
   return (
@@ -160,28 +146,7 @@ function ProductMain({
       <h1>{title}</h1>
       <ProductPrice selectedVariant={selectedVariant} />
       <br />
-      <Suspense
-        fallback={
-          <ProductForm
-            product={product}
-            selectedVariant={selectedVariant}
-            variants={[]}
-          />
-        }
-      >
-        <Await
-          errorElement="There was a problem loading product variants"
-          resolve={variants}
-        >
-          {(data) => (
-            <ProductForm
-              product={product}
-              selectedVariant={selectedVariant}
-              variants={data.product?.variants.nodes || []}
-            />
-          )}
-        </Await>
-      </Suspense>
+      <ProductForm product={product} selectedVariant={selectedVariant} />
       <br />
       <br />
       <p>
@@ -219,22 +184,13 @@ function ProductPrice({
   );
 }
 
-function ProductForm({
-  product,
-  selectedVariant,
-  variants,
-}: {
+function ProductForm({ product, selectedVariant, }: {
   product: ProductFragment;
   selectedVariant: ProductFragment['selectedVariant'];
-  variants: Array<ProductVariantFragment>;
 }) {
   return (
     <div className="product-form">
-      <VariantSelector
-        handle={product.handle}
-        options={product.options}
-        variants={variants}
-      >
+      <VariantSelector handle={product.handle} options={product.options} >
         {({option}) => <ProductOptions key={option.name} option={option} />}
       </VariantSelector>
       <br />
@@ -371,7 +327,11 @@ const PRODUCT_FRAGMENT = `#graphql
     description
     options {
       name
-      values
+      optionValues(selectedOptions: $selectedOptions) {
+        id
+        name
+        variant
+      }
     }
     selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions) {
       ...ProductVariant
@@ -401,28 +361,4 @@ const PRODUCT_QUERY = `#graphql
     }
   }
   ${PRODUCT_FRAGMENT}
-` as const;
-
-const PRODUCT_VARIANTS_FRAGMENT = `#graphql
-  fragment ProductVariants on Product {
-    variants(first: 250) {
-      nodes {
-        ...ProductVariant
-      }
-    }
-  }
-  ${PRODUCT_VARIANT_FRAGMENT}
-` as const;
-
-const VARIANTS_QUERY = `#graphql
-  ${PRODUCT_VARIANTS_FRAGMENT}
-  query ProductVariants(
-    $country: CountryCode
-    $language: LanguageCode
-    $handle: String!
-  ) @inContext(country: $country, language: $language) {
-    product(handle: $handle) {
-      ...ProductVariants
-    }
-  }
 ` as const;
