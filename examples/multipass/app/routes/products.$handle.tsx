@@ -330,7 +330,9 @@ const PRODUCT_FRAGMENT = `#graphql
       optionValues(selectedOptions: $selectedOptions) {
         id
         name
-        variant
+        variant {
+          ...ProductVariant
+        }
       }
     }
     selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions) {
