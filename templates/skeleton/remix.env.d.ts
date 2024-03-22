@@ -9,6 +9,7 @@ import type {
   Storefront,
   CustomerAccount,
   HydrogenCart,
+  HydrogenSessionData,
 } from '@shopify/hydrogen';
 import type {AppSession} from '~/lib/session';
 
@@ -37,7 +38,7 @@ declare module '@shopify/remix-oxygen' {
   /**
    * Declare local additions to the Remix loader context.
    */
-  export interface AppLoadContext {
+  interface AppLoadContext {
     env: Env;
     cart: HydrogenCart;
     storefront: Storefront;
@@ -45,4 +46,9 @@ declare module '@shopify/remix-oxygen' {
     session: AppSession;
     waitUntil: ExecutionContext['waitUntil'];
   }
+
+  /**
+   * Declare local additions to the Remix session data.
+   */
+  interface SessionData extends HydrogenSessionData {}
 }

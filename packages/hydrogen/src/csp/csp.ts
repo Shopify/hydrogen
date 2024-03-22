@@ -59,7 +59,7 @@ function createCSPHeader(
   const defaultDirectives: Record<string, string[] | string | boolean> = {
     baseUri: ["'self'"],
     defaultSrc,
-    frameAncestors: ['none'],
+    frameAncestors: ["'none'"],
     styleSrc,
     connectSrc,
   };
@@ -74,6 +74,7 @@ function createCSPHeader(
       // For HMR:
       'ws://localhost:*',
       'ws://127.0.0.1:*',
+      'ws://*.trycloudflare.com:*',
     ];
   }
 

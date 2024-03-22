@@ -4,7 +4,6 @@ import type {ChildProcess} from 'node:child_process';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
-import colors from '@shopify/cli-kit/node/colors';
 import {copyPublicFiles} from './build.js';
 import {
   assertOxygenChecks,
@@ -16,7 +15,7 @@ import {
 import {createRemixLogger, enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
 import {commonFlags, deprecated, flagsToCamelObject} from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
-import {Flags} from '@oclif/core';
+import {Flags, Config} from '@oclif/core';
 import {
   type MiniOxygen,
   startMiniOxygen,
@@ -25,13 +24,19 @@ import {
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
-import {getConfig} from '../../lib/shopify-config.js';
 import {setupLiveReload} from '../../lib/live-reload.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {findPort} from '../../lib/find-port.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
+import {
+  startTunnelAndPushConfig,
+  getDevConfigInBackground,
+  isMockShop,
+  notifyIssueWithTunnelAndMockShop,
+} from '../../lib/dev-shared.js';
+import {getCliCommand} from '../../lib/shell.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -61,6 +66,7 @@ export default class Dev extends Command {
       required: false,
     }),
     ...commonFlags.diff,
+    ...commonFlags.customerAccountPush,
   };
 
   async run(): Promise<void> {
@@ -74,6 +80,7 @@ export default class Dev extends Command {
     await runDev({
       ...flagsToCamelObject(flags),
       path: directory,
+      cliConfig: this.config,
     });
   }
 }
@@ -90,6 +97,8 @@ type DevOptions = {
   debug?: boolean;
   sourcemap?: boolean;
   inspectorPort: number;
+  customerAccountPush?: boolean;
+  cliConfig?: Config;
 };
 
 export async function runDev({
@@ -104,6 +113,8 @@ export async function runDev({
   sourcemap = true,
   disableVersionCheck = false,
   inspectorPort,
+  customerAccountPush: customerAccountPushFlag = false,
+  cliConfig,
 }: DevOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
@@ -112,7 +123,9 @@ export async function runDev({
   const {root, publicPath, buildPathClient, buildPathWorkerFile} =
     getProjectPaths(appPath);
 
-  const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
+  const copyFilesPromise = copyPublicFiles(publicPath, buildPathClient);
+  const cliCommandPromise = getCliCommand(root);
+
   const reloadConfig = async () => {
     const config = await getRemixConfig(root);
 
@@ -147,15 +160,25 @@ export async function runDev({
     process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
   }
 
-  const [remixConfig, {shop, storefront}] = await Promise.all([
-    reloadConfig(),
-    getConfig(root),
-  ]);
+  const backgroundPromise = getDevConfigInBackground(
+    root,
+    customerAccountPushFlag,
+  );
 
+  const tunnelPromise =
+    cliConfig &&
+    backgroundPromise.then(({customerAccountPush, storefrontId}) => {
+      if (customerAccountPush) {
+        return startTunnelAndPushConfig(root, cliConfig, appPort, storefrontId);
+      }
+    });
+
+  const remixConfig = await reloadConfig();
   assertOxygenChecks(remixConfig);
 
-  const fetchRemote = !!shop && !!storefront?.id;
-  const envPromise = getAllEnvironmentVariables({root, fetchRemote, envBranch});
+  const envPromise = backgroundPromise.then(({fetchRemote, localVariables}) =>
+    getAllEnvironmentVariables({root, fetchRemote, envBranch, localVariables}),
+  );
 
   const [{watch}, {createFileWatchCache}] = await Promise.all([
     import('@remix-run/dev/dist/compiler/watch.js'),
@@ -175,6 +198,8 @@ export async function runDev({
   async function safeStartMiniOxygen() {
     if (miniOxygen) return;
 
+    const envVariables = await envPromise;
+
     miniOxygen = await startMiniOxygen(
       {
         root,
@@ -185,28 +210,30 @@ export async function runDev({
         watch: !liveReload,
         buildPathWorkerFile,
         buildPathClient,
-        env: await envPromise,
+        env: envVariables,
       },
       legacyRuntime,
     );
 
-    enhanceH2Logs({host: miniOxygen.listeningAt, ...remixConfig});
+    const host = (await tunnelPromise) ?? miniOxygen.listeningAt;
+
+    const cliCommand = await cliCommandPromise;
+    enhanceH2Logs({host, cliCommand, ...remixConfig});
+
+    const {storefrontTitle} = await backgroundPromise;
 
     miniOxygen.showBanner({
-      appName: storefront ? colors.cyan(storefront?.title) : undefined,
+      appName: storefrontTitle,
       headlinePrefix:
         initialBuildDurationMs > 0
           ? `Initial build: ${initialBuildDurationMs}ms\n`
           : '',
+      host,
       extraLines: [
-        colors.dim(
-          `\nView GraphiQL API browser: ${getGraphiQLUrl({
-            host: miniOxygen.listeningAt,
-          })}`,
-        ),
-        colors.dim(
-          `\nView server network requests: ${miniOxygen.listeningAt}/subrequest-profiler`,
-        ),
+        `View GraphiQL API browser: \n${getGraphiQLUrl({
+          host,
+        })}`,
+        `View server network requests: \n${host}/subrequest-profiler`,
       ],
     });
 
@@ -221,6 +248,10 @@ export async function runDev({
 
     if (!disableVersionCheck) {
       displayDevUpgradeNotice({targetPath: appPath});
+    }
+
+    if (customerAccountPushFlag && isMockShop(envVariables)) {
+      notifyIssueWithTunnelAndMockShop(cliCommand);
     }
   }
 
@@ -250,7 +281,7 @@ export async function runDev({
       onBuildManifest: liveReload?.onBuildManifest,
       async onBuildFinish(context, duration, succeeded) {
         if (isInitialBuild) {
-          await copyingFiles;
+          await copyFilesPromise;
           initialBuildDurationMs = Date.now() - initialBuildStartTimeMs;
           isInitialBuild = false;
         } else if (!skipRebuildLogs) {
@@ -300,6 +331,7 @@ export async function runDev({
 
         if (relative.endsWith('.env')) {
           skipRebuildLogs = true;
+          const {fetchRemote} = await backgroundPromise;
           await miniOxygen.reload({
             env: await getAllEnvironmentVariables({
               root,

@@ -9,13 +9,15 @@ import colors from '@shopify/cli-kit/node/colors';
 import {getStorefrontEnvVariables} from './graphql/admin/pull-variables.js';
 import {login} from './auth.js';
 
+type EnvMap = Record<string, string>;
+
 interface Arguments {
   envBranch?: string;
   root: string;
   fetchRemote?: boolean;
+  localVariables?: EnvMap;
 }
 
-type EnvMap = Record<string, string>;
 const createEmptyRemoteVars = () => ({
   remoteVariables: {} as EnvMap,
   remoteSecrets: {} as EnvMap,
@@ -25,9 +27,8 @@ export async function getAllEnvironmentVariables({
   root,
   envBranch,
   fetchRemote = true,
+  localVariables: inlineLocalVariables,
 }: Arguments) {
-  const dotEnvPath = resolvePath(root, '.env');
-
   const [{remoteVariables, remoteSecrets}, {variables: localVariables}] =
     await Promise.all([
       // Get remote vars
@@ -45,9 +46,9 @@ export async function getAllEnvironmentVariables({
           })
         : createEmptyRemoteVars(),
       // Get local vars
-      fileExists(dotEnvPath).then((exists) =>
-        exists ? readAndParseDotEnv(dotEnvPath) : {variables: {} as EnvMap},
-      ),
+      inlineLocalVariables
+        ? {variables: inlineLocalVariables}
+        : getLocalVariables(root),
     ]);
 
   const remoteSecretKeys = Object.keys(remoteSecrets);
@@ -100,4 +101,12 @@ async function getRemoteVariables(root: string, envBranch?: string) {
   }
 
   return {remoteVariables, remoteSecrets};
+}
+
+export async function getLocalVariables(root: string) {
+  const dotEnvPath = resolvePath(root, '.env');
+
+  return await fileExists(dotEnvPath).then((exists) =>
+    exists ? readAndParseDotEnv(dotEnvPath) : {variables: {} as EnvMap},
+  );
 }

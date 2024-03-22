@@ -246,7 +246,11 @@ export function muteAuthLogs({
  * Where the message can be multiline and the last line
  * can contain links to docs or other resources.
  */
-export function enhanceH2Logs(options: {rootDirectory: string; host: string}) {
+export function enhanceH2Logs(options: {
+  rootDirectory: string;
+  host: string;
+  cliCommand?: string;
+}) {
   injectLogReplacer('error');
   injectLogReplacer('warn', warningDebouncer);
   injectLogReplacer('log', warningDebouncer);
@@ -273,9 +277,16 @@ export function enhanceH2Logs(options: {rootDirectory: string; host: string}) {
       const headline = `In Hydrogen's \`${scope.trim()}\`:\n\n`;
 
       const lines = message.split('\n');
-      const lastLine = lines.at(-1) ?? '';
+      let lastLine = lines.at(-1) ?? '';
       const hasLinks = /https?:\/\//.test(lastLine);
       const hasCommands = /`h2 [^`]+`/.test(lastLine);
+
+      if (hasCommands && lastLine) {
+        lastLine = lastLine.replace(
+          /`(h2) ([^`]+)`/g,
+          colors.magentaBright(`\`${options.cliCommand ?? '$1'} $2\``),
+        );
+      }
 
       if (hasLinks || hasCommands) lines.pop();
 
@@ -359,13 +370,7 @@ export function enhanceH2Logs(options: {rootDirectory: string; host: string}) {
       render({
         body: headline + colors.bold(lines.join('\n')),
         reference,
-        nextSteps: hasCommands
-          ? [
-              lastLine.replace(/`h2 [^`]+`/g, (cmd) =>
-                colors.bold(colors.yellow(cmd)),
-              ),
-            ]
-          : undefined,
+        nextSteps: hasCommands ? [lastLine] : undefined,
       });
 
       return;

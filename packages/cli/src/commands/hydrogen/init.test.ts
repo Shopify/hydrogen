@@ -29,7 +29,7 @@ const {renderTasksHook} = vi.hoisted(() => ({renderTasksHook: vi.fn()}));
 vi.mock('../../lib/check-version.js');
 
 vi.mock('../../lib/template-downloader.js', async () => ({
-  getLatestTemplates: () =>
+  downloadMonorepoTemplates: () =>
     Promise.resolve({
       version: '',
       templatesDir: fileURLToPath(
@@ -37,6 +37,12 @@ vi.mock('../../lib/template-downloader.js', async () => ({
       ),
       examplesDir: fileURLToPath(
         new URL('../../../../../examples', import.meta.url),
+      ),
+    }),
+  downloadExternalRepo: () =>
+    Promise.resolve({
+      templateDir: fileURLToPath(
+        new URL('../../../../../templates/skeleton', import.meta.url),
       ),
     }),
 }));
@@ -146,7 +152,7 @@ describe('init', () => {
             path: tmpDir,
             git: false,
             language: 'ts',
-            template: 'https://github.com/some/repo',
+            template: 'missing-template',
           }),
         ).resolves.ok;
       });

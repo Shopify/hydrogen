@@ -8,18 +8,24 @@ import {
 } from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import colors from '@shopify/cli-kit/node/colors';
-import {type TokenItem, renderInfo} from '@shopify/cli-kit/node/ui';
+import {renderInfo} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {Flags} from '@oclif/core';
+import {Flags, Config} from '@oclif/core';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
-import {getConfig} from '../../lib/shopify-config.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {setH2OPluginContext} from '../../lib/vite/shared.js';
 import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
-import {getDebugBannerLine} from '../../lib/mini-oxygen/workerd.js';
+import {
+  getDebugBannerLine,
+  startTunnelAndPushConfig,
+  isMockShop,
+  notifyIssueWithTunnelAndMockShop,
+  getDevConfigInBackground,
+} from '../../lib/dev-shared.js';
+import {getCliCommand} from '../../lib/shell.js';
 
 export default class DevVite extends Command {
   static description =
@@ -51,6 +57,7 @@ export default class DevVite extends Command {
       required: false,
     }),
     ...commonFlags.diff,
+    ...commonFlags.customerAccountPush,
   };
 
   async run(): Promise<void> {
@@ -65,6 +72,7 @@ export default class DevVite extends Command {
       ...flagsToCamelObject(flags),
       path: directory,
       isLocalDev: flags.diff,
+      cliConfig: this.config,
     });
   }
 }
@@ -83,6 +91,8 @@ type DevOptions = {
   sourcemap?: boolean;
   inspectorPort: number;
   isLocalDev?: boolean;
+  customerAccountPush?: boolean;
+  cliConfig: Config;
 };
 
 export async function runDev({
@@ -98,6 +108,8 @@ export async function runDev({
   disableVersionCheck = false,
   inspectorPort,
   isLocalDev = false,
+  customerAccountPush: customerAccountPushFlag = false,
+  cliConfig,
 }: DevOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
@@ -105,10 +117,20 @@ export async function runDev({
 
   const root = appPath ?? process.cwd();
 
-  const envPromise = getConfig(root).then(({shop, storefront}) => {
-    const fetchRemote = !!shop && !!storefront?.id;
-    return getAllEnvironmentVariables({root, fetchRemote, envBranch});
-  });
+  const cliCommandPromise = getCliCommand(root);
+  const backgroundPromise = getDevConfigInBackground(
+    root,
+    customerAccountPushFlag,
+  );
+
+  const envPromise = backgroundPromise.then(({fetchRemote, localVariables}) =>
+    getAllEnvironmentVariables({
+      root,
+      envBranch,
+      fetchRemote,
+      localVariables,
+    }),
+  );
 
   const vite = await import('vite');
 
@@ -171,45 +193,77 @@ export async function runDev({
   //   process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
   // }
 
-  await viteServer.listen(publicPort);
+  const [tunnelHost, cliCommand] = await Promise.all([
+    backgroundPromise.then(({customerAccountPush, storefrontId}) =>
+      customerAccountPush
+        ? startTunnelAndPushConfig(root, cliConfig, publicPort, storefrontId)
+        : undefined,
+    ),
+    cliCommandPromise,
+    viteServer.listen(publicPort),
+  ]);
 
   const publicUrl = new URL(
     viteServer.resolvedUrls!.local[0] ?? viteServer.resolvedUrls!.network[0]!,
   );
 
-  // Start the public facing server with the port passed by the user.
-  enhanceH2Logs({rootDirectory: root, host: publicUrl.toString()});
+  const finalHost = tunnelHost || publicUrl.toString() || publicUrl.origin;
 
-  await envPromise; // Prints the injected env vars
+  // Start the public facing server with the port passed by the user.
+  enhanceH2Logs({
+    rootDirectory: root,
+    host: finalHost,
+    cliCommand,
+  });
+
+  const envVariables = await envPromise; // Prints the injected env vars
   console.log('');
   viteServer.printUrls();
   viteServer.bindCLIShortcuts({print: true});
   console.log('\n');
 
-  const infoLines: TokenItem = [];
+  const customSections = [];
 
   if (!disableVirtualRoutes) {
-    infoLines.push(
-      `${colors.dim('View GraphiQL API browser:')} ${getGraphiQLUrl({
-        host: publicUrl.origin,
-      })}`,
-      `\n${colors.dim('View server network requests:')} ${
-        publicUrl.origin
-      }/subrequest-profiler`,
-    );
+    customSections.push({
+      body: [
+        `View GraphiQL API browser: \n${getGraphiQLUrl({
+          host: finalHost,
+        })}`,
+        `View server network requests: \n${finalHost}/subrequest-profiler`,
+      ].map((value, index) => ({
+        subdued: `${index != 0 ? '\n\n' : ''}${value}`,
+      })),
+    });
   }
 
   if (debug) {
-    infoLines.push({warn: getDebugBannerLine(inspectorPort)});
+    customSections.push({
+      body: {warn: getDebugBannerLine(inspectorPort)},
+    });
   }
 
-  if (infoLines.length > 0) {
-    renderInfo({body: infoLines});
+  if (customSections.length > 0) {
+    const {storefrontTitle} = await backgroundPromise;
+
+    renderInfo({
+      body: [
+        `View ${
+          storefrontTitle ? colors.cyan(storefrontTitle) : 'Hydrogen'
+        } app:`,
+        {link: {url: finalHost}},
+      ],
+      customSections,
+    });
   }
 
   checkRemixVersions();
   if (!disableVersionCheck) {
     displayDevUpgradeNotice({targetPath: root});
+  }
+
+  if (customerAccountPushFlag && isMockShop(envVariables)) {
+    notifyIssueWithTunnelAndMockShop(cliCommand);
   }
 
   return {

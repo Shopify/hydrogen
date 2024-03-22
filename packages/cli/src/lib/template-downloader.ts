@@ -4,10 +4,13 @@ import {pipeline} from 'stream/promises';
 import gunzipMaybe from 'gunzip-maybe';
 import {extract} from 'tar-fs';
 import {fetch} from '@shopify/cli-kit/node/http';
-import {mkdir, fileExists} from '@shopify/cli-kit/node/fs';
+import {parseGitHubRepositoryURL} from '@shopify/cli-kit/node/github';
+import {mkdir, fileExists, rmdir} from '@shopify/cli-kit/node/fs';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortSignal} from '@shopify/cli-kit/node/abort';
 import {getSkeletonSourceDir} from './build.js';
+import {joinPath} from '@shopify/cli-kit/node/path';
+import {downloadGitRepository} from '@shopify/cli-kit/node/git';
 
 // Note: this skips pre-releases
 const REPO_RELEASES_URL = `https://api.github.com/repos/shopify/hydrogen/releases/latest`;
@@ -40,7 +43,7 @@ async function getLatestReleaseDownloadUrl(signal?: AbortSignal) {
   };
 }
 
-async function downloadTarball(
+async function downloadMonorepoTarball(
   url: string,
   storageDir: string,
   signal?: AbortSignal,
@@ -72,7 +75,7 @@ async function downloadTarball(
   );
 }
 
-export async function getLatestTemplates({
+export async function downloadMonorepoTemplates({
   signal,
 }: {signal?: AbortSignal} = {}) {
   if (process.env.LOCAL_DEV) {
@@ -96,7 +99,7 @@ export async function getLatestTemplates({
 
     const templateStorageVersionPath = path.join(templateStoragePath, version);
     if (!(await fileExists(templateStorageVersionPath))) {
-      await downloadTarball(url, templateStorageVersionPath, signal);
+      await downloadMonorepoTarball(url, templateStorageVersionPath, signal);
     }
 
     return {
@@ -112,4 +115,42 @@ export async function getLatestTemplates({
       error.tryMessage,
     );
   }
+}
+
+export async function downloadExternalRepo(
+  appTemplate: string,
+  signal: AbortSignal,
+) {
+  const parsed = parseGitHubRepositoryURL(appTemplate);
+  if (parsed.isErr()) {
+    throw new AbortError(parsed.error.message);
+  }
+
+  const externalTemplates = fileURLToPath(
+    new URL('../external-templates', import.meta.url),
+  );
+  if (!(await fileExists(externalTemplates))) {
+    await mkdir(externalTemplates);
+  }
+
+  const result = parsed.value;
+  const templateDir = joinPath(
+    externalTemplates,
+    result.full.replace(/^https?:\/\//, '').replace(/[^\w]+/, '_'),
+  );
+
+  if (await fileExists(templateDir)) {
+    await rmdir(templateDir, {force: true});
+  }
+
+  // TODO use AbortSignal?
+  await downloadGitRepository({
+    repoUrl: result.full,
+    destination: templateDir,
+    shallow: true,
+  });
+
+  await rmdir(joinPath(templateDir, '.git'), {force: true});
+
+  return {templateDir};
 }
