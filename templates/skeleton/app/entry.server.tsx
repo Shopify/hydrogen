@@ -3,17 +3,18 @@ import {RemixServer} from '@remix-run/react';
 import isbot from 'isbot';
 import {renderToReadableStream} from 'react-dom/server';
 import {createContentSecurityPolicy} from '@shopify/hydrogen';
+import { AppLoadContext } from '@remix-run/server-runtime';
 
 export default async function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
   remixContext: EntryContext,
+  loadContext: AppLoadContext,
 ) {
   const {nonce, header, NonceProvider} = createContentSecurityPolicy({
     connectSrc: [
-      // 'https://checkout.hydrogen.shop/api/unstable/graphql.json',
-      'https://demostore.mock.shop/api/unstable/graphql.json',
+      `https://${loadContext.env.PUBLIC_CHECKOUT_DOMAIN}`,
     ],
   });
 
