@@ -1,6 +1,6 @@
 import { useLocation } from "@remix-run/react";
 import { useEffect, useRef } from "react";
-import { type ShopAnalytic, type AnalyticsProviderProps, useAnalytics} from "./AnalyticsProvider";
+import { type ShopAnalytic, type AnalyticsProviderProps, useAnalytics } from "./AnalyticsProvider";
 import { CartReturn } from "../cart/queries/cart-types";
 import {AnalyticsEvent} from './events';
 import { CartLine, ComponentizableCartLine, Product, ProductVariant } from "@shopify/hydrogen-react/storefront-api-types";
@@ -12,7 +12,7 @@ export type OtherData = {
 export type BasePayload = {
   eventTimestamp: number;
   shop: ShopAnalytic | null;
-  customData: AnalyticsProviderProps['customData'];
+  customData?: AnalyticsProviderProps['customData'];
 };
 
 // Event payloads
@@ -98,22 +98,22 @@ type PageViewProps = BaseViewProps & {
 
 type ProductViewProps = BaseViewProps & {
   type: typeof AnalyticsEvent.PRODUCT_VIEWED;
-  data: ProductViewPayload
+  data: Omit<ProductViewPayload, keyof BasePayload>;
 };
 
 type CollectionViewProps = BaseViewProps & {
   type: typeof AnalyticsEvent.COLLECTION_VIEWED;
-  data: CollectionViewPayload;
+  data: Omit<CollectionViewPayload, keyof BasePayload>;
 }
 
 type CartViewProps = BaseViewProps & {
   type: typeof AnalyticsEvent.CART_VIEWED;
-  data?: CartViewPayload;
+  data?: Omit<CartViewPayload, keyof BasePayload>;
 };
 
 type SearchViewProps = BaseViewProps & {
   type: typeof AnalyticsEvent.SEARCH_VIEWED;
-  data?: SearchViewPayload;
+  data?: Omit<SearchViewPayload, keyof BasePayload>;
 };
 
 type CustomViewProps = BaseViewProps & {
@@ -131,7 +131,7 @@ function AnalyticsView(props: any) {
   const {type, data = {}} = props;
   const location = useLocation();
   const lastLocationPathname = useRef<string>('');
-  const {publish, cart, prevCart, shop} = useAnalytics();
+  const { publish, cart, prevCart, shop } = useAnalytics();
   const url = location.pathname + location.search;
 
   // Publish page_viewed events when the URL changes
@@ -158,25 +158,25 @@ function AnalyticsView(props: any) {
 }
 
 export function AnalyticsPageView(props: Omit<PageViewProps, 'type'>) {
-  return <AnalyticsView {...props} type='page_viewed'  />;
+  return <AnalyticsView {...props} type='page_viewed' />;
 }
 
 export function AnalyticsProductView(props: Omit<ProductViewProps, 'type'>) {
-  return <AnalyticsView {...props} type='product_viewed'  />;
+  return <AnalyticsView {...props} type='product_viewed' />;
 }
 
 export function AnalyticsCollectionView(props: Omit<CollectionViewProps, 'type'>) {
-  return <AnalyticsView {...props} type='collection_viewed'  />;
+  return <AnalyticsView {...props} type='collection_viewed' />;
 }
 
 export function AnalyticsCartView(props: Omit<CartViewProps, 'type'>) {
-  return <AnalyticsView {...props} type='cart_viewed'  />;
+  return <AnalyticsView {...props} type='cart_viewed' />;
 }
 
 export function AnalyticsSearchView(props: Omit<SearchViewProps, 'type'>) {
-  return <AnalyticsView {...props} type='search_viewed'  />;
+  return <AnalyticsView {...props} type='search_viewed' />;
 }
 
 export function AnalyticsCustomView(props: CustomViewProps) {
-  return <AnalyticsView {...props}  />;
+  return <AnalyticsView {...props} />;
 }

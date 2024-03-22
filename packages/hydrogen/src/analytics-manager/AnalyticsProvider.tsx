@@ -2,7 +2,6 @@
 import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import { type ReactNode, useEffect, useState, useMemo, createContext, useContext, useRef } from "react";
 import { type CartReturn } from "../cart/queries/cart-types";
-// import { type CustomerReturn } from "../customer-privacy/queries/customer-types";
 import {
   AnalyticsPageView,
   AnalyticsProductView,
@@ -42,7 +41,7 @@ export type AnalyticsProviderProps = {
   canTrack?: () => boolean;
 
   /** The optional customer object to pass to events **/
-  // customer?: Promise<CustomerReturn | null> | CustomerReturn | null;
+  // customer?: Promise<Customer| null> | Customer| null;
 
   /** An optional custom payload to pass to all events. e.g language/locale/currency */
   customData?: Record<string, unknown>;
