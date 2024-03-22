@@ -62,6 +62,7 @@ export default function Collection() {
         data={{
           collection: {
             id: collection.id,
+            handle: collection.handle,
           },
         }}
       />

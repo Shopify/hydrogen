@@ -159,6 +159,7 @@ function collectionViewHandler(payload: CollectionViewPayload) {
     ...eventPayload,
     pageType: AnalyticsPageType.collection,
     resourceId: payload.collection.id,
+    collectionHandle: payload.collection.handle,
   };
 
   sendShopifyAnalytics({

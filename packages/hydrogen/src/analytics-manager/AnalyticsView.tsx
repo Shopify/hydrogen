@@ -19,6 +19,7 @@ export type BasePayload = {
 export type CollectionViewPayload = {
   collection: {
     id: string;
+    handle: string;
   };
 } & BasePayload;
 
@@ -127,7 +128,7 @@ function AnalyticsView(props: CartViewProps): null;
 function AnalyticsView(props: SearchViewProps): null;
 function AnalyticsView(props: CustomViewProps): null;
 function AnalyticsView(props: any) {
-  const {type, payload = {}} = props;
+  const {type, data = {}} = props;
   const location = useLocation();
   const lastLocationPathname = useRef<string>('');
   const {publish, cart, prevCart, shop} = useAnalytics();
@@ -141,7 +142,7 @@ function AnalyticsView(props: any) {
     if (!shop) return;
 
     const viewPayload: PageViewPayload = {
-      ...payload,
+      ...data,
       url: window.location.href,
       cart,
       prevCart,
