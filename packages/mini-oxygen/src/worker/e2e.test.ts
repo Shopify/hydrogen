@@ -224,8 +224,7 @@ type WithFixturesTestParams = WithFixturesSetupParams & {
   miniOxygenOptions: Partial<MiniOxygenOptions>;
 };
 
-type WorkerOptions = MiniOxygenOptions['workers'][0];
-type ReloadOptions = Pick<WorkerOptions, 'bindings'>;
+type ReloadOptions = Pick<MiniOxygenOptions['workers'][0], 'bindings'>;
 
 /**
  * Runs MiniOxygen in a temporary project directory.
@@ -281,25 +280,25 @@ function withFixtures(
 
     const absoluteBundlePath = path.join(tmpDir, relativeWorkerEntry);
 
-    const testWorker = {
-      name: 'test',
-      modulesRoot: path.dirname(absoluteBundlePath),
-      modules: [
-        {
-          type: 'ESModule',
-          path: absoluteBundlePath,
-          contents: await fs.readFile(absoluteBundlePath, 'utf-8'),
-        },
-      ],
-      bindings: {...optionsFromSetup?.bindings},
-    } satisfies WorkerOptions;
-
     const miniOxygenOptions = {
       assets: {
         directory: path.join(tmpDir, relativeDistClient),
         port: 1347,
       },
-      workers: [testWorker],
+      workers: [
+        {
+          name: 'test',
+          modulesRoot: path.dirname(absoluteBundlePath),
+          modules: [
+            {
+              type: 'ESModule',
+              path: absoluteBundlePath,
+              contents: await fs.readFile(absoluteBundlePath, 'utf-8'),
+            },
+          ],
+          bindings: {...optionsFromSetup?.bindings},
+        },
+      ],
       sourceMapPath: path.join(tmpDir, relativeWorkerEntry + '.map'),
       logRequestLine: null,
     } satisfies MiniOxygenOptions;
@@ -308,15 +307,20 @@ function withFixtures(
     const listeningAt = await miniOxygen.ready;
 
     const reloadMiniOxygen = async (options: ReloadOptions = {}) => {
-      Object.assign(testWorker, options);
+      await miniOxygen.reload(async ({workers}) => {
+        const testWorker = workers[0];
+        Object.assign(testWorker, options);
 
-      // Reload contents
-      testWorker.modules[0].contents = await fs.readFile(
-        absoluteBundlePath,
-        'utf-8',
-      );
+        if (Array.isArray(testWorker.modules)) {
+          // Reload contents
+          testWorker.modules[0].contents = await fs.readFile(
+            absoluteBundlePath,
+            'utf-8',
+          );
+        }
 
-      await miniOxygen.reload(miniOxygenOptions);
+        return {workers};
+      });
     };
 
     try {

@@ -6,7 +6,7 @@ import {
   fetch,
   type RequestInit,
   type SharedOptions,
-  type WorkerOptions,
+  type CORE_PLUGIN,
   type MiniflareOptions as OutputMiniflareOptions,
 } from 'miniflare';
 import {createInspectorConnector} from './inspector.js';
@@ -17,6 +17,8 @@ import {
 } from './assets.js';
 import {miniOxygenHandler} from './handler.js';
 import {OXYGEN_HEADERS_MAP} from '../common/headers.js';
+
+export {buildAssetsUrl, Request, Response, fetch, type RequestInit};
 
 const OXYGEN_WORKERD_COMPAT_PARAMS = {
   compatibilityFlags: ['streams_enable_constructors'],
@@ -43,8 +45,15 @@ type AssetOptions =
     };
 
 type InputMiniflareOptions = Omit<SharedOptions, 'cf'> & {
-  workers: WorkerOptions[];
+  // Miniflare supports other type of options for D1, DO, KV, etc.
+  // This is the only shape we support in MiniOxygen:
+  workers: Array<typeof CORE_PLUGIN.options._output & {name: string}>;
 };
+
+type ReloadableOptions = Pick<MiniOxygenOptions, 'workers'>;
+type GetNewOptions = (
+  previousOptions: ReloadableOptions,
+) => ReloadableOptions | Promise<ReloadableOptions>;
 
 export type MiniOxygenOptions = InputMiniflareOptions & {
   debug?: boolean;
@@ -118,7 +127,11 @@ export function createMiniOxygen({
     getBindings: mf.getBindings,
     getCaches: mf.getCaches,
     getWorker: mf.getWorker,
-    async reload(newOptions: Pick<MiniOxygenOptions, 'workers'>) {
+    async reload(getNewOptions?: GetNewOptions) {
+      const newOptions = await getNewOptions?.({
+        workers: miniflareOptions.workers,
+      });
+
       await reconnect(() =>
         mf.setOptions(
           buildMiniflareOptions(
