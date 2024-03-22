@@ -1,4 +1,3 @@
-import {redirect} from '@remix-run/server-runtime';
 import type {UrlRedirectConnection} from '@shopify/hydrogen-react/storefront-api-types';
 import type {I18nBase, Storefront} from '../storefront';
 import {getRedirectUrl} from '../utils/get-redirect-url';
@@ -32,11 +31,18 @@ export async function storefrontRedirect(
     response = new Response('Not Found', {status: 404}),
   } = options;
 
-  const {pathname, search} = new URL(request.url);
-  const redirectFrom = pathname + search;
+  const url = new URL(request.url);
+  const isSoftNavigation = url.searchParams.has('_data');
 
-  if (pathname === '/admin' && !noAdminRedirect) {
-    return redirect(`${storefront.getShopifyDomain()}/admin`);
+  url.searchParams.delete('_data');
+
+  const redirectFrom = url.toString().replace(url.origin, '');
+
+  if (url.pathname === '/admin' && !noAdminRedirect) {
+    return createRedirectResponse(
+      `${storefront.getShopifyDomain()}/admin`,
+      isSoftNavigation,
+    );
   }
 
   try {
@@ -49,13 +55,13 @@ export async function storefrontRedirect(
     const location = urlRedirects?.edges?.[0]?.node?.target;
 
     if (location) {
-      return new Response(null, {status: 301, headers: {location}});
+      return createRedirectResponse(location, isSoftNavigation);
     }
 
     const redirectTo = getRedirectUrl(request.url);
 
     if (redirectTo) {
-      return redirect(redirectTo);
+      return createRedirectResponse(redirectTo, isSoftNavigation);
     }
   } catch (error) {
     console.error(
@@ -67,17 +73,17 @@ export async function storefrontRedirect(
   return response;
 }
 
-function isLocalPath(requestUrl: string, redirectUrl: string) {
-  // We don't want to redirect cross domain,
-  // doing so could create phishing vulnerability
-  // Test for protocols, e.g. https://, http://, //
-  // and uris: mailto:, tel:, javascript:, etc.
-  try {
-    return (
-      new URL(requestUrl).origin === new URL(redirectUrl, requestUrl).origin
-    );
-  } catch (e) {
-    return false;
+function createRedirectResponse(location: string, isSoftNavigation: boolean) {
+  if (isSoftNavigation) {
+    return new Response(null, {
+      status: 200,
+      headers: {'X-Remix-Redirect': location, 'X-Remix-Status': '302'},
+    });
+  } else {
+    return new Response(null, {
+      status: 302,
+      headers: {location: location},
+    });
   }
 }
 
