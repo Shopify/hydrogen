@@ -4,7 +4,7 @@ import type {IncomingMessage} from 'node:http';
 import fs from 'node:fs';
 import {randomUUID} from 'node:crypto';
 
-import mime from 'mime';
+import {lookup as lookupMimeType} from 'mrmime';
 import {Request, Response} from '@miniflare/core';
 import connect from 'connect';
 import type {NextHandleFunction} from 'connect';
@@ -88,7 +88,7 @@ function createAssetMiddleware({
 
       res.setHeader(
         'Content-Type',
-        mime.getType(filePath) || 'application/octet-stream',
+        lookupMimeType(filePath) || 'application/octet-stream',
       );
       res.setHeader('Content-Length', size);
 

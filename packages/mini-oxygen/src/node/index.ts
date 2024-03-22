@@ -2,10 +2,9 @@ import * as path from 'node:path';
 import * as fs from 'node:fs';
 import type {Socket} from 'node:net';
 
-import getPort, {portNumbers} from 'get-port';
-
 import {MiniOxygen} from './core.js';
 import type {MiniOxygenServerOptions, fetch} from './server.js';
+import {findPort} from '../common/find-port.js';
 
 export {Request, Response, fetch} from './server.js';
 
@@ -151,7 +150,7 @@ export function createMiniOxygen(
         onResponseError,
       });
 
-      const actualPort = await getPort({port: portNumbers(port, port + 100)});
+      const actualPort = await findPort(port);
       if (actualPort !== port) {
         log(
           `\nWARNING: Port ${port} is not available. Using ${actualPort} instead.`,
