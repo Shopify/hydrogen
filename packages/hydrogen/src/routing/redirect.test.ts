@@ -46,7 +46,7 @@ describe('storefrontRedirect', () => {
     });
   });
 
-  it('works with soft navigations', async () => {
+  it('strips remix _data query parameter on soft navigations', async () => {
     queryMock.mockResolvedValueOnce({
       urlRedirects: {edges: [{node: {target: shopifyDomain + '/some-page'}}]},
     });
@@ -70,6 +70,33 @@ describe('storefrontRedirect', () => {
 
     expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
       variables: {query: 'path:/some-page'},
+    });
+  });
+
+  it('retains custom query parameters on soft navigations', async () => {
+    queryMock.mockResolvedValueOnce({
+      urlRedirects: {edges: [{node: {target: shopifyDomain + '/some-page'}}]},
+    });
+
+    await expect(
+      storefrontRedirect({
+        storefront: storefrontMock,
+        request: new Request(
+          'https://domain.com/some-page?test=true&_data=%2Fcollections%2Fbackcountry',
+        ),
+      }),
+    ).resolves.toEqual(
+      new Response(null, {
+        status: 200,
+        headers: {
+          'X-Remix-Redirect': shopifyDomain + '/some-page',
+          'X-Remix-Status': '302',
+        },
+      }),
+    );
+
+    expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
+      variables: {query: 'path:/some-page?test=true'},
     });
   });
 

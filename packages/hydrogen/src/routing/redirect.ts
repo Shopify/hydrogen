@@ -1,4 +1,3 @@
-import {redirect} from '@remix-run/server-runtime';
 import type {UrlRedirectConnection} from '@shopify/hydrogen-react/storefront-api-types';
 import type {I18nBase, Storefront} from '../storefront';
 import {getRedirectUrl} from '../utils/get-redirect-url';
@@ -32,18 +31,14 @@ export async function storefrontRedirect(
     response = new Response('Not Found', {status: 404}),
   } = options;
 
-  const {pathname, search} = new URL(request.url);
-  const searchParams = new URLSearchParams(search);
+  const url = new URL(request.url);
+  const isSoftNavigation = url.searchParams.has('_data');
 
-  const isSoftNavigation = searchParams.has('_data');
+  url.searchParams.delete('_data');
 
-  searchParams.delete('_data');
-  const filteredSearchParams = searchParams.toString();
+  const redirectFrom = url.toString().replace(url.origin, '');
 
-  const redirectFrom =
-    pathname + (filteredSearchParams ? '?' + isSoftNavigation : '');
-
-  if (pathname === '/admin' && !noAdminRedirect) {
+  if (url.pathname === '/admin' && !noAdminRedirect) {
     return createRedirectResponse(
       `${storefront.getShopifyDomain()}/admin`,
       isSoftNavigation,
