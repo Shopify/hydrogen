@@ -144,7 +144,7 @@ export async function runDev({
   const assetsPort = legacyRuntime ? 0 : await findPort(appPort + 100);
   if (assetsPort) {
     // Note: Set this env before loading Remix config!
-    process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
+    process.env.HYDROGEN_ASSET_BASE_URL = await buildAssetsUrl(assetsPort);
   }
 
   const [remixConfig, {shop, storefront}] = await Promise.all([

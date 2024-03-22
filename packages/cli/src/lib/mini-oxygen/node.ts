@@ -1,15 +1,14 @@
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {readFile} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
-import {Response} from '@shopify/mini-oxygen/node';
-import {
-  startServer,
-  Request,
-  type MiniOxygenOptions as InternalMiniOxygenOptions,
-} from '@shopify/mini-oxygen/node';
+import type {MiniOxygenOptions as InternalMiniOxygenOptions} from '@shopify/mini-oxygen/node';
 import {DEFAULT_PORT} from '../flags.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
-import {SUBREQUEST_PROFILER_ENDPOINT, logRequestLine} from './common.js';
+import {
+  SUBREQUEST_PROFILER_ENDPOINT,
+  logRequestLine,
+  handleMiniOxygenImportFail,
+} from './common.js';
 import {
   H2O_BINDING_NAME,
   createLogRequestEvent,
@@ -26,6 +25,10 @@ export async function startNodeServer({
   debug = false,
   inspectorPort,
 }: MiniOxygenOptions): Promise<MiniOxygenInstance> {
+  const {startServer, Request, Response} = await import(
+    '@shopify/mini-oxygen/node'
+  ).catch(handleMiniOxygenImportFail);
+
   setConstructors({Response});
 
   const logRequestEvent = createLogRequestEvent();

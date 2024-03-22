@@ -5,11 +5,19 @@ import {
 } from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
 import {DEV_ROUTES} from '../request-events.js';
+import {AbortError} from '@shopify/cli-kit/node/error';
 
 // Default port used for debugging in VSCode and Chrome DevTools.
 export const DEFAULT_INSPECTOR_PORT = 9229;
 
 export const SUBREQUEST_PROFILER_ENDPOINT = '/debug-network-server';
+
+export function handleMiniOxygenImportFail(): never {
+  throw new AbortError(
+    'Could not load MiniOxygen.',
+    'Please make sure you have `@shopify/mini-oxygen` installed.',
+  );
+}
 
 export function logRequestLine(
   // Minimal overlap between Fetch, Miniflare@2 and Miniflare@3 request types.
@@ -61,6 +69,14 @@ export function logRequestLine(
     }
   }
 }
+
+// This should probably be `0` and let workerd find a free port,
+// but at the moment we can't get the port from workerd (afaik?).
+export const PRIVATE_WORKERD_INSPECTOR_PORT = 9222;
+export const OXYGEN_WORKERD_COMPAT_PARAMS = {
+  compatibilityFlags: ['streams_enable_constructors'],
+  compatibilityDate: '2022-10-31',
+};
 
 // https://shopify.dev/docs/custom-storefronts/oxygen/worker-runtime-apis#custom-headers
 export const OXYGEN_HEADERS_MAP = {

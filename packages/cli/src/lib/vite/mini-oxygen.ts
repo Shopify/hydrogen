@@ -6,7 +6,7 @@ import {OXYGEN_HEADERS_MAP, logRequestLine} from '../mini-oxygen/common.js';
 import {
   PRIVATE_WORKERD_INSPECTOR_PORT,
   OXYGEN_WORKERD_COMPAT_PARAMS,
-} from '../mini-oxygen/workerd.js';
+} from '../mini-oxygen/common.js';
 import {findPort} from '../find-port.js';
 import {createInspectorConnector} from '../mini-oxygen/workerd-inspector.js';
 import {MiniOxygenOptions} from '../mini-oxygen/types.js';
