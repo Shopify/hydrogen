@@ -1,5 +1,11 @@
 # @shopify/hydrogen
 
+## 2024.1.5
+
+### Patch Changes
+
+- Fix bug where `storefrontRedirect` would return an error on soft page navigations. Also change the redirect status code from 301 to 302. ([#1888](https://github.com/Shopify/hydrogen/pull/1888)) by [@blittle](https://github.com/blittle)
+
 ## 2024.1.4
 
 ### Patch Changes
