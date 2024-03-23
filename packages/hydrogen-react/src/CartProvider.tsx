@@ -270,7 +270,8 @@ export function CartProvider({
     },
   });
 
-  const [cartReady, setCartReady] = useState<boolean>(false);
+  const cartReady = useRef(false);
+  const [isCartReady, setIsCartReady] = useState(false);
   const cartCompleted = cartState.matches('cartCompleted');
 
   const countryChanged =
@@ -288,7 +289,7 @@ export function CartProvider({
    * 2. localStorage cartId
    */
   useEffect(() => {
-    if (!cartReady && !fetchingFromStorage.current) {
+    if (!cartReady.current && !fetchingFromStorage.current) {
       if (!cart && storageAvailable('localStorage')) {
         fetchingFromStorage.current = true;
         try {
@@ -301,7 +302,9 @@ export function CartProvider({
           console.warn(error);
         }
       }
-      setCartReady(true);
+      cartReady.current = true;
+      // Providing a separate cart ready state variable to avoid re-renders in this logic while still being able to pass the reactive status through context.
+      setIsCartReady(true);
     }
   }, [cart, cartReady, cartSend]);
 
@@ -323,7 +326,7 @@ export function CartProvider({
   // send cart events when ready
   const onCartReadySend = useCallback(
     (cartEvent: CartMachineEvent) => {
-      if (!cartReady) {
+      if (!cartReady.current) {
         return console.warn("Cart isn't ready yet");
       }
       cartSend(cartEvent);
@@ -393,7 +396,7 @@ export function CartProvider({
       error: cartDisplayState?.context?.errors,
       totalQuantity: cartDisplayState?.context?.cart?.totalQuantity ?? 0,
       cartCreate,
-      cartReady,
+      cartReady: isCartReady,
       linesAdd(lines: CartLineInput[]): void {
         if (cartDisplayState?.context?.cart?.id) {
           onCartReadySend({
@@ -456,7 +459,7 @@ export function CartProvider({
     };
   }, [
     cartCreate,
-    cartReady,
+    isCartReady,
     cartDisplayState?.context?.cart,
     cartDisplayState?.context?.errors,
     cartDisplayState.value,
