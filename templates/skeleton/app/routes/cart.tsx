@@ -60,7 +60,7 @@ export async function action({request, context}: ActionFunctionArgs) {
 
   const cartId = result.cart.id;
   const headers = cart.setCartId(result.cart.id);
-  const {cart: cartResult, errors} = result;
+  const {cart: cartResult, userErrors: errors} = result;
 
   const redirectTo = formData.get('redirectTo') ?? null;
   if (typeof redirectTo === 'string') {
