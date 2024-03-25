@@ -83,7 +83,8 @@ function fromSerializableResponse([body, init]: [any, ResponseInit]) {
 
 // Check if the response body has GraphQL errors
 // https://spec.graphql.org/June2018/#sec-Response-Format
-export const checkGraphQLErrors = (body: any) => !body?.errors;
+export const checkGraphQLErrors = (body: any, response: Response) =>
+  !body?.errors && response.status < 400;
 
 // Lock to prevent revalidating the same sub-request
 // in the same isolate. Note that different isolates
