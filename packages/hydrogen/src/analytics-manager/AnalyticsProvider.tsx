@@ -46,8 +46,6 @@ export type AnalyticsProviderProps = {
   /** An optional custom payload to pass to all events. e.g language/locale/currency */
   customData?: Record<string, unknown>;
 
-  /** Prevents analytics from being sent to Shopify's admin dashboards */
-  disableShopifyAnalytics?: boolean;
   /** The shop/store config required to publish events **/
   shop: Promise<ShopAnalytic | null> | ShopAnalytic | null;
   /** The customer privacy consent configuration and options */
@@ -223,7 +221,6 @@ function AnalyticsProvider({
   children,
   consent,
   customData = {},
-  disableShopifyAnalytics = false,
   shop: shopProp = null,
 }: AnalyticsProviderProps): JSX.Element {
   const listenerSet = useRef(false);
@@ -265,7 +262,7 @@ function AnalyticsProvider({
       {children}
       {shop && <AnalyticsPageView />}
       {shop && currentCart && <CartAnalytics cart={currentCart} />}
-      {shop && !disableShopifyAnalytics && <ShopifyAnalytics consent={consent} />}
+      {shop && <ShopifyAnalytics consent={consent} />}
     </AnalyticsContext.Provider>
   );
 };
