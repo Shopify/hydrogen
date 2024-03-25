@@ -117,7 +117,18 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
   const _cartCreate = cartCreateDefault(mutateOptions);
 
   const cartCreate: CartCreateFunction = async function (...args) {
-    const result = await _cartCreate(...args);
+    const buyer = customerAccount
+      ? await customerAccount.UNSTABLE_getBuyer()
+      : undefined;
+
+    const result = await _cartCreate(
+      {
+        ...args[0],
+        buyerIdentity: {...buyer, ...args[0]?.buyerIdentity},
+      },
+      args[1],
+    );
+
     cartId = result?.cart?.id;
     return result;
   };

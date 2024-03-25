@@ -5,9 +5,10 @@ import type {
   FlashSessionData,
 } from '@remix-run/server-runtime';
 import type {RequestEventPayload} from './vite/request-events';
+import {CUSTOMER_ACCOUNT_SESSION_KEY} from './constants';
 
 export interface HydrogenSessionData {
-  customerAccount: {
+  [CUSTOMER_ACCOUNT_SESSION_KEY]: {
     accessToken?: string;
     expiresAt?: string;
     refreshToken?: string;
@@ -16,6 +17,11 @@ export interface HydrogenSessionData {
     nonce?: string;
     state?: string;
     redirectPath?: string;
+  };
+  // for B2B buyer context
+  [BUYER_SESSION_KEY]: {
+    customerAccessToken?: string;
+    companyLocationId?: string;
   };
 }
 

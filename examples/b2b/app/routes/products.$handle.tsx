@@ -26,7 +26,6 @@ import type {
   SelectedOption,
 } from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/lib/variants';
-import {getBuyer} from '~/lib/buyer';
 import {QuantityRules, hasQuantityRules} from '~/components/QuantityRules';
 import {PriceBreaks} from '~/components/PriceBreaks';
 
@@ -54,11 +53,9 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
     throw new Error('Expected product handle to be defined');
   }
 
-  const buyer = getBuyer({session: context.session});
-
   // await the query for the critical product data
   const {product} = await storefront.query(PRODUCT_QUERY, {
-    variables: {buyer, handle, selectedOptions},
+    variables: {handle, selectedOptions},
   });
 
   if (!product?.id) {
@@ -89,7 +86,7 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
   // where variant options might show as available when they're not, but after
   // this deffered query resolves, the UI will update.
   const variants = storefront.query(VARIANTS_QUERY, {
-    variables: {buyer, handle},
+    variables: {handle},
   });
 
   return defer({product, variants});

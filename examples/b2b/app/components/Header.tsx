@@ -1,4 +1,5 @@
 import {Await, Form, NavLink} from '@remix-run/react';
+import {CartForm} from '@shopify/hydrogen';
 import {useState, Suspense} from 'react';
 import type {HeaderQuery} from 'storefrontapi.generated';
 import type {LayoutProps} from './Layout';
@@ -182,30 +183,38 @@ function LocationDropdown({
   if (locations.length === 1) return null;
 
   return (
-    <Form action="/locations" method="POST">
-      <select
-        name="companyLocationId"
-        id="companyLocationSelect"
-        onChange={setLocation}
-        value={selectedLocation}
-        style={{marginRight: '4px'}}
-      >
-        {locations.map((location) => {
-          return (
-            <option
-              selected={selectedLocation === location.id}
-              value={location.id}
-              key={location.id}
-            >
-              {location.name}
-            </option>
-          );
-        })}
-      </select>
-      <button formAction="/locations" formMethod="POST" type="submit">
-        Choose Location
-      </button>
-    </Form>
+    <CartForm route="/cart" action={CartForm.ACTIONS.BuyerIdentityUpdate}>
+      {(fetcher) => (
+        <>
+          <select
+            name="companyLocationId"
+            onChange={(event) => {
+              setLocation(event);
+              fetcher.submit(event.currentTarget.form, {
+                method: 'POST',
+              });
+            }}
+            value={selectedLocation}
+            style={{marginRight: '4px'}}
+          >
+            {locations.map((location) => {
+              return (
+                <option
+                  defaultValue={selectedLocation}
+                  value={location.id}
+                  key={location.id}
+                >
+                  {location.name}
+                </option>
+              );
+            })}
+          </select>
+          <noscript>
+            <button type="submit">Choose Location</button>
+          </noscript>
+        </>
+      )}
+    </CartForm>
   );
 }
 
