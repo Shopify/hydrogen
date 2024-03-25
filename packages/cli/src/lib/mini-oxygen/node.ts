@@ -3,7 +3,7 @@ import {readFile} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import type {MiniOxygenOptions as InternalMiniOxygenOptions} from '@shopify/mini-oxygen/node';
-import {DEFAULT_PORT} from '../flags.js';
+import {DEFAULT_INSPECTOR_PORT} from '../flags.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
 import {
   SUBREQUEST_PROFILER_ENDPOINT,
@@ -16,9 +16,10 @@ import {
   handleDebugNetworkRequest,
   setConstructors,
 } from '../request-events.js';
+import {findPort} from '../find-port.js';
 
 export async function startNodeServer({
-  port = DEFAULT_PORT,
+  appPort,
   watch = false,
   buildPathWorkerFile,
   buildPathClient,
@@ -50,6 +51,7 @@ export async function startNodeServer({
   };
 
   if (debug) {
+    if (!inspectorPort) inspectorPort = await findPort(DEFAULT_INSPECTOR_PORT);
     (await import('node:inspector')).open(inspectorPort);
   }
 
@@ -58,7 +60,7 @@ export async function startNodeServer({
     workerFile: buildPathWorkerFile,
     assetsDir: buildPathClient,
     publicPath: '',
-    port,
+    port: appPort,
     watch,
     autoReload: watch,
     modules: true,
@@ -124,7 +126,7 @@ export async function startNodeServer({
         });
       }
 
-      if (debug) {
+      if (debug && inspectorPort) {
         customSections.push({
           body: {warn: `Debugger listening on ws://localhost:${inspectorPort}`},
         });

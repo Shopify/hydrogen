@@ -6,7 +6,6 @@ import {
   type Response,
 } from '@shopify/mini-oxygen';
 import {logRequestLine} from '../mini-oxygen/common.js';
-import {findPort} from '../find-port.js';
 import {MiniOxygenOptions} from '../mini-oxygen/types.js';
 import {getHmrUrl, pipeFromWeb, toURL, toWeb} from './utils.js';
 
@@ -38,11 +37,9 @@ export async function startMiniOxygenRuntime({
   workerEntryFile,
   setupScripts,
 }: MiniOxygenViteOptions) {
-  const [publicInspectorPort] = await Promise.all([findPort(inspectorPort)]);
-
   const miniOxygen = createMiniOxygen({
     debug,
-    inspectorPort: publicInspectorPort,
+    inspectorPort,
     logRequestLine,
     workers: [
       {
@@ -104,27 +101,7 @@ export async function startMiniOxygenRuntime({
     ? warmupWorkerdCache()
     : viteDevServer.httpServer?.once('listening', warmupWorkerdCache);
 
-  // miniOxygen.ready.then(() => {
-  //   const reconnect = createInspectorConnector({
-  //     debug,
-  //     sourceMapPath: '',
-  //     absoluteBundlePath: '',
-  //     privateInspectorPort,
-  //     publicInspectorPort,
-  //   });
-
-  //   return reconnect();
-  // });
-
-  return {
-    publicInspectorPort,
-    ...miniOxygen,
-    // ready: miniOxygen.ready,
-    // dispatch: (webRequest: Request) => miniOxygen.dispatchFetch(webRequest),
-    // async dispose() {
-    //   await miniOxygen.dispose();
-    // },
-  };
+  return miniOxygen;
 }
 
 export function setupOxygenMiddleware(
@@ -144,8 +121,8 @@ export function setupOxygenMiddleware(
       const importer = url.searchParams.get('importer') ?? undefined;
 
       if (id) {
-        res.setHeader('cache-control', 'no-store');
-        res.setHeader('content-type', 'application/json');
+        res.setHeader('Cache-Control', 'no-store');
+        res.setHeader('Content-Type', 'application/json');
 
         // `fetchModule` is similar to `viteDevServer.ssrFetchModule`,
         // but it treats source maps differently (avoids adding empty lines).
@@ -157,7 +134,6 @@ export function setupOxygenMiddleware(
             res.end('Internal server error');
           });
       } else {
-        res.statusCode = 400;
         res.writeHead(400, {'Content-Type': 'text/plain'});
         res.end('Invalid request');
       }

@@ -115,7 +115,7 @@ export function createMiniOxygen(
       const {
         assetsDir,
         publicPath,
-        port = 3000,
+        port,
         autoReload = false,
         proxyServer,
         oxygenHeaders,
@@ -150,12 +150,7 @@ export function createMiniOxygen(
         onResponseError,
       });
 
-      const actualPort = await findPort(port);
-      if (actualPort !== port) {
-        log(
-          `\nWARNING: Port ${port} is not available. Using ${actualPort} instead.`,
-        );
-      }
+      const actualPort = port ?? (await findPort(3000));
 
       const sockets = new Set<Socket>();
       app.on('connection', (socket) => {

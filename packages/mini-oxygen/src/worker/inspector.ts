@@ -48,9 +48,8 @@ export interface ErrorProperties {
 
 export function createInspectorConnector(options: {
   privateInspectorPort: number;
-  publicInspectorPort: number;
+  publicInspectorPort?: number;
   sourceMapPath: string;
-  debug: boolean;
   workerName: string;
 }) {
   let inspectorUrl: string | undefined;
@@ -74,7 +73,7 @@ export function createInspectorConnector(options: {
 
     addInspectorConsoleLogger(inspectorConnection);
 
-    if (options.debug) {
+    if (options.publicInspectorPort) {
       if (inspectorProxy) {
         inspectorProxy.updateInspectorConnection(inspectorConnection);
       } else {

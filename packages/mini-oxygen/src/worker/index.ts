@@ -18,7 +18,8 @@ import {
 } from './assets.js';
 import {miniOxygenHandler} from './handler.js';
 import {OXYGEN_HEADERS_MAP} from '../common/headers.js';
-import {OXYGEN_COMPAT_PARAMS} from 'common/compat.js';
+import {findPort} from '../common/find-port.js';
+import {OXYGEN_COMPAT_PARAMS} from '../common/compat.js';
 
 export {
   buildAssetsUrl,
@@ -70,7 +71,7 @@ export type MiniOxygenInstance = ReturnType<typeof createMiniOxygen>;
 
 export function createMiniOxygen({
   debug = false,
-  inspectorPort: publicInspectorPort = DEFAULT_PUBLIC_INSPECTOR_PORT,
+  inspectorPort,
   assets,
   sourceMapPath = '',
   logRequestLine,
@@ -100,10 +101,14 @@ export function createMiniOxygen({
   let reconnect: ReturnType<typeof createInspectorConnector>;
 
   const ready = mf.ready.then(async (workerUrl) => {
-    const privateInspectorUrl = await mf.getInspectorURL();
+    const [privateInspectorUrl, publicInspectorPort] = await Promise.all([
+      mf.getInspectorURL(),
+      debug
+        ? inspectorPort ?? findPort(DEFAULT_PUBLIC_INSPECTOR_PORT)
+        : undefined,
+    ]);
 
     reconnect = createInspectorConnector({
-      debug,
       sourceMapPath,
       publicInspectorPort,
       privateInspectorPort: Number(privateInspectorUrl.port),
@@ -115,7 +120,17 @@ export function createMiniOxygen({
 
     await reconnect();
 
-    return workerUrl;
+    return {
+      workerUrl,
+      inspectorUrl: debug
+        ? new URL(
+            privateInspectorUrl.href.replace(
+              privateInspectorUrl.port,
+              String(publicInspectorPort),
+            ),
+          )
+        : undefined,
+    };
   });
 
   const assetsServer = assets?.directory

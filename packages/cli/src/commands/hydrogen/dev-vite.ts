@@ -2,6 +2,8 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
 import {
+  DEFAULT_APP_PORT,
+  DEFAULT_INSPECTOR_PORT,
   commonFlags,
   flagsToCamelObject,
   overrideFlag,
@@ -26,6 +28,7 @@ import {
   getDevConfigInBackground,
 } from '../../lib/dev-shared.js';
 import {getCliCommand} from '../../lib/shell.js';
+import {findPort} from '../../lib/find-port.js';
 
 export default class DevVite extends Command {
   static description =
@@ -89,7 +92,7 @@ type DevOptions = {
   envBranch?: string;
   debug?: boolean;
   sourcemap?: boolean;
-  inspectorPort: number;
+  inspectorPort?: number;
   isLocalDev?: boolean;
   customerAccountPush?: boolean;
   cliConfig: Config;
@@ -131,6 +134,13 @@ export async function runDev({
       localVariables,
     }),
   );
+
+  if (debug && !inspectorPort) {
+    // The Vite plugin can find and return a port for the inspector
+    // but we need to print the URLs before the runtime is ready,
+    // so we find a port early here.
+    inspectorPort = await findPort(DEFAULT_INSPECTOR_PORT);
+  }
 
   const vite = await import('vite');
 
@@ -184,7 +194,8 @@ export async function runDev({
   });
 
   // Store the port passed by the user in the config.
-  const publicPort = appPort ?? viteServer.config.server.port ?? 3000;
+  const publicPort =
+    appPort ?? viteServer.config.server.port ?? DEFAULT_APP_PORT;
 
   // TODO -- Need to change Remix' <Scripts/> component
   // const assetsPort = await findPort(publicPort + 100);
@@ -237,7 +248,7 @@ export async function runDev({
     });
   }
 
-  if (debug) {
+  if (debug && inspectorPort) {
     customSections.push({
       body: {warn: getDebugBannerLine(inspectorPort)},
     });

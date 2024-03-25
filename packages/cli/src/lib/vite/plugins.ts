@@ -148,7 +148,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
             env: {...remoteEnv, ...pluginOptions.env},
             debug: cliOptions?.debug ?? pluginOptions.debug ?? false,
             inspectorPort:
-              cliOptions?.inspectorPort ?? pluginOptions.inspectorPort ?? 9229,
+              cliOptions?.inspectorPort ?? pluginOptions.inspectorPort,
           });
         });
 

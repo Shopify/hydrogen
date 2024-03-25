@@ -304,7 +304,7 @@ function withFixtures(
     } satisfies MiniOxygenOptions;
 
     const miniOxygen = createMiniOxygen(miniOxygenOptions);
-    const listeningAt = await miniOxygen.ready;
+    const {workerUrl} = await miniOxygen.ready;
 
     const reloadMiniOxygen = async (options: ReloadOptions = {}) => {
       await miniOxygen.reload(async ({workers}) => {
@@ -330,7 +330,7 @@ function withFixtures(
         writeAsset,
         reloadMiniOxygen,
         miniOxygenOptions,
-        fetch: (pathname: string) => fetch(listeningAt.origin + pathname),
+        fetch: (pathname: string) => fetch(workerUrl.origin + pathname),
         fetchAsset: (pathname: string) =>
           fetch(buildAssetsUrl(miniOxygenOptions.assets.port) + pathname),
       });

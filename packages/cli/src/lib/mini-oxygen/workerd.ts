@@ -18,7 +18,7 @@ import {
 
 export async function startWorkerdServer({
   root,
-  port: appPort,
+  appPort,
   inspectorPort: publicInspectorPort,
   assetsPort,
   debug = false,
@@ -79,11 +79,11 @@ export async function startWorkerdServer({
     ],
   });
 
-  const listeningAt = (await miniOxygen.ready).origin;
+  const {workerUrl, inspectorUrl} = await miniOxygen.ready;
 
   return {
-    port: appPort,
-    listeningAt,
+    port: Number(workerUrl.port),
+    listeningAt: workerUrl.origin,
     reload(nextOptions) {
       return miniOxygen.reload(async ({workers}) => {
         const mainWorker = workers.find(({name}) => name === mainWorkerName)!;
@@ -112,9 +112,9 @@ export async function startWorkerdServer({
         });
       }
 
-      if (debug) {
+      if (inspectorUrl) {
         customSections.push({
-          body: {warn: getDebugBannerLine(publicInspectorPort)},
+          body: {warn: getDebugBannerLine(Number(inspectorUrl.port))},
         });
       }
 
@@ -128,7 +128,7 @@ export async function startWorkerdServer({
           `View ${
             options?.appName ? colors.cyan(options?.appName) : 'Hydrogen'
           } app:`,
-          {link: {url: options?.host || listeningAt}},
+          {link: {url: options?.host || workerUrl.origin}},
         ],
         customSections,
       });

@@ -13,7 +13,12 @@ import {
   type ServerMode,
 } from '../../lib/remix-config.js';
 import {createRemixLogger, enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
-import {commonFlags, deprecated, flagsToCamelObject} from '../../lib/flags.js';
+import {
+  DEFAULT_APP_PORT,
+  commonFlags,
+  deprecated,
+  flagsToCamelObject,
+} from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags, Config} from '@oclif/core';
 import {
@@ -86,7 +91,7 @@ export default class Dev extends Command {
 }
 
 type DevOptions = {
-  port: number;
+  port?: number;
   path?: string;
   codegen?: boolean;
   legacyRuntime?: boolean;
@@ -96,7 +101,7 @@ type DevOptions = {
   envBranch?: string;
   debug?: boolean;
   sourcemap?: boolean;
-  inspectorPort: number;
+  inspectorPort?: number;
   customerAccountPush?: boolean;
   cliConfig?: Config;
 };
@@ -151,8 +156,9 @@ export async function runDev({
 
   const serverBundleExists = () => fileExists(buildPathWorkerFile);
 
-  inspectorPort = debug ? await findPort(inspectorPort) : inspectorPort;
-  appPort = legacyRuntime ? appPort : await findPort(appPort); // findPort is already called for Node sandbox
+  if (!appPort) {
+    appPort = await findPort(DEFAULT_APP_PORT);
+  }
 
   const assetsPort = legacyRuntime ? 0 : await findPort(appPort + 100);
   if (assetsPort) {
@@ -204,9 +210,9 @@ export async function runDev({
       {
         root,
         debug,
+        appPort,
         assetsPort,
         inspectorPort,
-        port: appPort,
         watch: !liveReload,
         buildPathWorkerFile,
         buildPathClient,
