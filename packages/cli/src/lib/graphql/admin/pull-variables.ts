@@ -1,10 +1,10 @@
 import {adminRequest, type AdminSession} from './client.js';
 
 const PullVariablesQuery = `#graphql
-  query PullVariables($id: ID!, $branch: String) {
+  query PullVariables($id: ID!, $handle: String) {
     hydrogenStorefront(id: $id) {
       id
-      environmentVariables(branchName: $branch) {
+      environmentVariables(handle: $handle) {
         id
         isSecret
         readOnly
@@ -35,14 +35,14 @@ export interface PullVariablesSchema {
 export async function getStorefrontEnvVariables(
   adminSession: AdminSession,
   storefrontId: string,
-  envBranch?: string,
+  envHandle?: string,
 ) {
   const {hydrogenStorefront} = await adminRequest<PullVariablesSchema>(
     PullVariablesQuery,
     adminSession,
     {
       id: storefrontId,
-      branch: envBranch,
+      handle: envHandle,
     },
   );
 
