@@ -104,6 +104,7 @@ type DevOptions = {
   inspectorPort?: number;
   customerAccountPush?: boolean;
   cliConfig?: Config;
+  shouldLiveReload?: boolean;
 };
 
 export async function runDev({
@@ -119,6 +120,7 @@ export async function runDev({
   disableVersionCheck = false,
   inspectorPort,
   customerAccountPush: customerAccountPushFlag = false,
+  shouldLiveReload = true,
   cliConfig,
 }: DevOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
@@ -195,7 +197,7 @@ export async function runDev({
   let initialBuildDurationMs = 0;
   let initialBuildStartTimeMs = Date.now();
 
-  const liveReload = true // TODO: option to disable HMR?
+  const liveReload = shouldLiveReload
     ? await setupLiveReload(remixConfig.dev?.port ?? 8002)
     : undefined;
 
@@ -368,6 +370,7 @@ export async function runDev({
   );
 
   return {
+    getUrl: () => miniOxygen.listeningAt,
     async close() {
       codegenProcess?.kill(0);
       await Promise.all([closeWatcher(), miniOxygen?.close()]);
