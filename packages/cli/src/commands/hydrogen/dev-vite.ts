@@ -10,7 +10,7 @@ import {
 } from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import colors from '@shopify/cli-kit/node/colors';
-import {renderInfo} from '@shopify/cli-kit/node/ui';
+import {type AlertCustomSection, renderInfo} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {Flags, Config} from '@oclif/core';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
@@ -19,13 +19,13 @@ import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {setH2OPluginContext} from '../../lib/vite/shared.js';
-import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 import {
   getDebugBannerLine,
   startTunnelAndPushConfig,
   isMockShop,
   notifyIssueWithTunnelAndMockShop,
   getDevConfigInBackground,
+  getUtilityBannerlines,
 } from '../../lib/dev-shared.js';
 import {getCliCommand} from '../../lib/shell.js';
 import {findPort} from '../../lib/find-port.js';
@@ -233,19 +233,10 @@ export async function runDev({
   viteServer.bindCLIShortcuts({print: true});
   console.log('\n');
 
-  const customSections = [];
+  const customSections: AlertCustomSection[] = [];
 
   if (!disableVirtualRoutes) {
-    customSections.push({
-      body: [
-        `View GraphiQL API browser: \n${getGraphiQLUrl({
-          host: finalHost,
-        })}`,
-        `View server network requests: \n${finalHost}/subrequest-profiler`,
-      ].map((value, index) => ({
-        subdued: `${index != 0 ? '\n\n' : ''}${value}`,
-      })),
-    });
+    customSections.push({body: getUtilityBannerlines(finalHost)});
   }
 
   if (debug && inspectorPort) {

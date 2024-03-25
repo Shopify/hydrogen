@@ -31,7 +31,6 @@ import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {setupLiveReload} from '../../lib/live-reload.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
-import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {findPort} from '../../lib/find-port.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
@@ -40,6 +39,7 @@ import {
   getDevConfigInBackground,
   isMockShop,
   notifyIssueWithTunnelAndMockShop,
+  getUtilityBannerlines,
 } from '../../lib/dev-shared.js';
 import {getCliCommand} from '../../lib/shell.js';
 
@@ -237,12 +237,7 @@ export async function runDev({
           ? `Initial build: ${initialBuildDurationMs}ms\n`
           : '',
       host,
-      extraLines: [
-        `View GraphiQL API browser: \n${getGraphiQLUrl({
-          host,
-        })}`,
-        `View server network requests: \n${host}/subrequest-profiler`,
-      ],
+      extraLines: getUtilityBannerlines(host),
     });
 
     if (useCodegen) {

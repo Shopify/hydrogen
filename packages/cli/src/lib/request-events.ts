@@ -28,7 +28,11 @@ export function setConstructors(constructors: {
   ResponseConstructor = constructors.Response;
 }
 
-export const DEV_ROUTES = new Set(['/graphiql', '/subrequest-profiler']);
+export const DEV_ROUTES = new Set([
+  '/graphiql',
+  '/subrequest-profiler',
+  '/__vite_warmup',
+]);
 
 type RequestEvent = {
   event: string;
