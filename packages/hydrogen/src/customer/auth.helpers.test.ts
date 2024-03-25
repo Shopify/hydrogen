@@ -57,7 +57,7 @@ describe('auth.helpers', () => {
           session,
           customerAccountId: 'customerAccountId',
           customerAccountUrl: 'customerAccountUrl',
-          origin: 'https://localhost',
+          httpsOrigin: 'https://localhost',
         });
       }
 
@@ -76,7 +76,7 @@ describe('auth.helpers', () => {
           session,
           customerAccountId: 'customerAccountId',
           customerAccountUrl: 'customerAccountUrl',
-          origin: 'https://localhost',
+          httpsOrigin: 'https://localhost',
         });
       }
 
@@ -105,7 +105,7 @@ describe('auth.helpers', () => {
           session,
           customerAccountId: 'customerAccountId',
           customerAccountUrl: 'customerAccountUrl',
-          origin: 'https://localhost',
+          httpsOrigin: 'https://localhost',
         });
       }
 
@@ -135,7 +135,7 @@ describe('auth.helpers', () => {
         session,
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'customerAccountUrl',
-        origin: 'https://localhost',
+        httpsOrigin: 'https://localhost',
       });
 
       expect(session.set).toHaveBeenNthCalledWith(
@@ -193,7 +193,7 @@ describe('auth.helpers', () => {
           session,
           customerAccountId: 'customerAccountId',
           customerAccountUrl: 'customerAccountUrl',
-          origin: 'https://localhost',
+          httpsOrigin: 'https://localhost',
         });
       }
 
@@ -223,7 +223,7 @@ describe('auth.helpers', () => {
         session,
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'customerAccountUrl',
-        origin: 'https://localhost',
+        httpsOrigin: 'https://localhost',
       });
 
       expect(session.set).toHaveBeenNthCalledWith(
@@ -264,7 +264,7 @@ describe('auth.helpers', () => {
         session,
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'customerAccountUrl',
-        origin: 'https://localhost',
+        httpsOrigin: 'https://localhost',
       });
 
       expect(session.set).not.toHaveBeenNthCalledWith(1, 'customerAccount', {

@@ -90,12 +90,12 @@ export function createCustomerAccountClient({
     : () => defaultAuthStatusHandler(request);
 
   const requestUrl = new URL(request.url);
-  const origin =
+  const httpsOrigin =
     requestUrl.protocol === 'http:'
       ? requestUrl.origin.replace('http', 'https')
       : requestUrl.origin;
   const redirectUri = ensureLocalRedirectUrl({
-    requestUrl: request.url,
+    requestUrl: httpsOrigin,
     defaultUrl: DEFAULT_AUTH_URL,
     redirectUrl: authUrl,
   });
@@ -128,7 +128,7 @@ export function createCustomerAccountClient({
       headers: {
         'Content-Type': 'application/json',
         'User-Agent': USER_AGENT,
-        Origin: origin,
+        Origin: httpsOrigin,
         Authorization: accessToken,
       },
       body: JSON.stringify({query, variables}),
@@ -223,7 +223,7 @@ export function createCustomerAccountClient({
         session,
         customerAccountId,
         customerAccountUrl,
-        origin,
+        httpsOrigin,
         debugInfo: {
           waitUntil,
           stackInfo,
@@ -307,8 +307,8 @@ export function createCustomerAccountClient({
 
       const idToken = session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.idToken;
       const postLogoutRedirectUri = ensureLocalRedirectUrl({
-        requestUrl: origin,
-        defaultUrl: origin,
+        requestUrl: httpsOrigin,
+        defaultUrl: httpsOrigin,
         redirectUrl: options?.postLogoutRedirectUri,
       });
 
@@ -410,7 +410,7 @@ export function createCustomerAccountClient({
       const headers = {
         'content-type': 'application/x-www-form-urlencoded',
         'User-Agent': USER_AGENT,
-        Origin: origin,
+        Origin: httpsOrigin,
       };
 
       const stackInfo = getCallerStackLine?.();
@@ -458,7 +458,7 @@ export function createCustomerAccountClient({
         access_token,
         customerAccountId,
         customerAccountUrl,
-        origin,
+        httpsOrigin,
         {
           waitUntil,
           stackInfo,

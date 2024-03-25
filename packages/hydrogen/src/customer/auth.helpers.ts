@@ -70,13 +70,13 @@ export async function refreshToken({
   session,
   customerAccountId,
   customerAccountUrl,
-  origin,
+  httpsOrigin,
   debugInfo,
 }: {
   session: HydrogenSession;
   customerAccountId: string;
   customerAccountUrl: string;
-  origin: string;
+  httpsOrigin: string;
   debugInfo?: Partial<H2OEvent>;
 }) {
   const newBody = new URLSearchParams();
@@ -97,7 +97,7 @@ export async function refreshToken({
   const headers = {
     'content-type': 'application/x-www-form-urlencoded',
     'User-Agent': USER_AGENT,
-    Origin: origin,
+    Origin: httpsOrigin,
   };
 
   const startTime = new Date().getTime();
@@ -133,7 +133,7 @@ export async function refreshToken({
     access_token,
     customerAccountId,
     customerAccountUrl,
-    origin,
+    httpsOrigin,
     debugInfo,
   );
 
@@ -157,7 +157,7 @@ export async function checkExpires({
   session,
   customerAccountId,
   customerAccountUrl,
-  origin,
+  httpsOrigin,
   debugInfo,
 }: {
   locks: Locks;
@@ -165,7 +165,7 @@ export async function checkExpires({
   session: HydrogenSession;
   customerAccountId: string;
   customerAccountUrl: string;
-  origin: string;
+  httpsOrigin: string;
   debugInfo?: Partial<H2OEvent>;
 }) {
   if (parseInt(expiresAt, 10) - 1000 < new Date().getTime()) {
@@ -176,7 +176,7 @@ export async function checkExpires({
           session,
           customerAccountId,
           customerAccountUrl,
-          origin,
+          httpsOrigin,
           debugInfo,
         });
 
@@ -242,7 +242,7 @@ export async function exchangeAccessToken(
   authAccessToken: string | undefined,
   customerAccountId: string,
   customerAccountUrl: string,
-  origin: string,
+  httpsOrigin: string,
   debugInfo?: Partial<H2OEvent>,
 ) {
   const clientId = customerAccountId;
@@ -268,7 +268,7 @@ export async function exchangeAccessToken(
   const headers = {
     'content-type': 'application/x-www-form-urlencoded',
     'User-Agent': USER_AGENT,
-    Origin: origin,
+    Origin: httpsOrigin,
   };
 
   const startTime = new Date().getTime();
