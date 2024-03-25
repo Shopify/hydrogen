@@ -17,6 +17,7 @@ import type {
   CollectionViewPayload,
   CartUpdatePayload,
   CartLineUpdatePayload,
+  SearchViewPayload,
 } from './AnalyticsView';
 import {useEffect} from 'react';
 import {CartLine, ComponentizableCartLine, Maybe} from '@shopify/hydrogen-react/storefront-api-types';
@@ -53,6 +54,7 @@ export function ShopifyAnalytics({consent}: {consent: AnalyticsProviderProps['co
     subscribe('page_viewed', pageViewHandler);
     subscribe('product_viewed', productViewHandler);
     subscribe('collection_viewed', collectionViewHandler);
+    subscribe('search_viewed', searchViewHandler);
 
     // Cart
     subscribe('product_added_to_cart', productAddedToCartHandler);
@@ -63,7 +65,7 @@ export function ShopifyAnalytics({consent}: {consent: AnalyticsProviderProps['co
   return null;
 }
 
-function prepareBasePageViewPayload(payload: PageViewPayload | ProductViewPayload | CollectionViewPayload | CartUpdatePayload): ShopifyPageViewPayload | undefined {
+function prepareBasePageViewPayload(payload: PageViewPayload | ProductViewPayload | CollectionViewPayload | SearchViewPayload| CartUpdatePayload): ShopifyPageViewPayload | undefined {
   const customerPrivacy = getCustomerPrivacyRequired();
   const hasUserConsent = customerPrivacy.userCanBeTracked();
 
@@ -163,6 +165,26 @@ function collectionViewHandler(payload: CollectionViewPayload) {
 
   sendShopifyAnalytics({
     eventName: AnalyticsEventName.COLLECTION_VIEW,
+    payload: eventPayload,
+  });
+}
+
+function searchViewHandler(payload: SearchViewPayload) {
+  let eventPayload = prepareBasePageViewPayload(payload);
+
+  if (!eventPayload) return;
+
+  viewPayload = {
+    pageType: AnalyticsPageType.search,
+  };
+  eventPayload = {
+    ...eventPayload,
+    ...viewPayload,
+    searchString: payload.searchTerm,
+  };
+
+  sendShopifyAnalytics({
+    eventName: AnalyticsEventName.SEARCH_VIEW,
     payload: eventPayload,
   });
 }
