@@ -100,11 +100,7 @@ function prepareBaseCartPayload(payload: CartUpdatePayload, cart: CartReturn | n
   return eventPayload;
 }
 
-type AdditionalViewPayload = {
-  pageType: AnalyticsPageType,
-  resourceId: string,
-};
-
+// Forwarding view specific event payloads to page view handler
 let viewPayload = {};
 
 function pageViewHandler(payload: PageViewPayload) {
@@ -232,12 +228,12 @@ function sendCartAnalytics({
 
 const PRODUCT_VIEWED = 'Product viewed';
 const ADD_TO_CART = 'Add to cart';
-const REMOVE_FROM_CART = 'Remove from cart';
 function missingErrorMessage(eventName: string, missingFieldName: string, fromSource: string) {
   // eslint-disable-next-line no-console
   console.error(`ShopifyAnalytics - ${eventName}: ${missingFieldName} is required from the ${fromSource}.`);
 }
 
+// Product expected field and types:
 // variant_id: int, optional
 // product_id: int, optional
 // product_gid: string,
