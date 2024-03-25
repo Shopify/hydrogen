@@ -36,9 +36,33 @@ const miniOxygen = createMiniOxygen({
 Dispatch requests to MiniOxygen from the browser or any other environment:
 
 ```js
-const {workerUrl} = await miniOxygen.ready;
-const response = await fetch(workerUrl);
-// or: const response = await miniOxygen.dispatchFetch('http://placeholder');
+const response = await miniOxygen.dispatchFetch('http://placeholder');
+// Or with the following code via network request:
+// const {workerUrl} = await miniOxygen.ready;
+// const response = await fetch(workerUrl);
+
+console.log(await response.text());
+
+await miniOxygen.dispose();
+```
+
+### Legacy Node.js Sandbox runtime
+
+The previous Node.js sandbox runtime has been moved to the `@shopify/mini-oxygen/node` export. It is not recommended for new projects, but can be used as follows:
+
+```js
+import {createMiniOxygen} from '@shopify/mini-oxygen/node';
+
+const miniOxygen = createMiniOxygen({
+  script: `export default {
+  async fetch() {
+     const response = await fetch("https://hydrogen.shopify.dev");
+     return response;
+  }
+ }`,
+});
+
+const response = await miniOxygen.dispatchFetch('http://placeholder');
 
 console.log(await response.text());
 
