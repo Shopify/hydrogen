@@ -146,7 +146,8 @@ export function setupOxygenMiddleware(
     // find it in the project. Therefore, we assume this is a
     // request for a backend route, and we forward it to workerd.
 
-    dispatchFetch(toWeb(req))
+    toWeb(req)
+      .then(dispatchFetch)
       .then((webResponse) => pipeFromWeb(webResponse, res))
       .catch((error) => {
         console.error('Error during evaluation:', error);
