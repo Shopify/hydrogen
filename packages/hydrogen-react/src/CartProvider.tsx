@@ -331,7 +331,7 @@ export function CartProvider({
       }
       cartSend(cartEvent);
     },
-    [cartSend, cartReady],
+    [cartSend],
   );
 
   // save cart id to local storage
