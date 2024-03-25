@@ -15,10 +15,12 @@ import {OXYGEN_HEADERS_MAP} from '../common/headers.js';
 
 export {Request, Response, fetch} from '@miniflare/core';
 
+export type DispatchFetch = (request: Request) => Promise<Response>;
+
 export interface MiniOxygenServerHooks {
   onRequest?: (
     request: Request,
-    defaultDispatcher: (request?: Request) => Promise<Response>,
+    defaultDispatcher: DispatchFetch,
   ) => void | Response | Promise<void | Response>;
   onResponse?: (request: Request, response: Response) => void | Promise<void>;
   onResponseError?: (request: Request, error: unknown) => void;

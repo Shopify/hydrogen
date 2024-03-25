@@ -3,7 +3,7 @@ import * as fs from 'node:fs';
 import type {Socket} from 'node:net';
 
 import {MiniOxygen} from './core.js';
-import type {MiniOxygenServerOptions, fetch} from './server.js';
+import type {DispatchFetch, MiniOxygenServerOptions, fetch} from './server.js';
 import {findPort} from '../common/find-port.js';
 import {OXYGEN_COMPAT_PARAMS} from '../common/compat.js';
 
@@ -39,6 +39,7 @@ export type MiniOxygenPreviewOptions = MiniOxygenOptions &
 
 interface MiniOxygenPublicInstance {
   ready: () => Promise<void>;
+  dispatchFetch: DispatchFetch;
   dispose: () => Promise<void>;
   reload: (
     options?: Partial<Pick<MiniOxygenPreviewOptions, 'env' | 'script'>>,
@@ -105,6 +106,7 @@ export function createMiniOxygen(
       // which means that it has loaded the initial worker code.
       await mf.getPlugins();
     },
+    dispatchFetch: (request) => mf.dispatchFetch(request),
     async reload({env, ...nextOptions} = {}) {
       await mf.setOptions({...nextOptions, ...(env && {bindings: env})});
     },

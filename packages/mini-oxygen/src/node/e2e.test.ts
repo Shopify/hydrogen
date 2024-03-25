@@ -290,7 +290,7 @@ describe('start()', () => {
       port: testPort,
       script: 'export default { fetch: () => new Response("foo") }',
       onRequest: async (request, dispatchFetch) => {
-        const response = await dispatchFetch();
+        const response = await dispatchFetch(request);
         return new Response(`${await response.text()}bar`);
       },
     });
