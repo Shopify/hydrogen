@@ -73,7 +73,7 @@ describe('storefrontRedirect', () => {
     });
   });
 
-  it('retains custom query parameters on soft navigations', async () => {
+  it('matches query parameters', async () => {
     queryMock.mockResolvedValueOnce({
       urlRedirects: {edges: [{node: {target: shopifyDomain + '/some-page'}}]},
     });
@@ -84,6 +84,7 @@ describe('storefrontRedirect', () => {
         request: new Request(
           'https://domain.com/some-page?test=true&_data=%2Fcollections%2Fbackcountry',
         ),
+        matchQueryParams: true,
       }),
     ).resolves.toEqual(
       new Response(null, {
@@ -97,6 +98,69 @@ describe('storefrontRedirect', () => {
 
     expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
       variables: {query: 'path:/some-page?test=true'},
+    });
+  });
+
+  it('propogates query parameters to the final redirect', async () => {
+    queryMock.mockResolvedValueOnce({
+      urlRedirects: {
+        edges: [
+          {node: {target: shopifyDomain + '/some-redirect?redirectParam=true'}},
+        ],
+      },
+    });
+
+    await expect(
+      storefrontRedirect({
+        storefront: storefrontMock,
+        request: new Request(
+          'https://domain.com/some-page?requestParam=true&_data=%2Fcollections%2Fbackcountry',
+        ),
+      }),
+    ).resolves.toEqual(
+      new Response(null, {
+        status: 200,
+        headers: {
+          'X-Remix-Redirect':
+            shopifyDomain +
+            '/some-redirect?redirectParam=true&requestParam=true',
+          'X-Remix-Status': '302',
+        },
+      }),
+    );
+
+    expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
+      variables: {query: 'path:/some-page'},
+    });
+  });
+
+  it('propogates query parameters to the final redirect for relative URLs', async () => {
+    queryMock.mockResolvedValueOnce({
+      urlRedirects: {
+        edges: [{node: {target: '/some-redirect?redirectParam=true'}}],
+      },
+    });
+
+    await expect(
+      storefrontRedirect({
+        storefront: storefrontMock,
+        request: new Request(
+          'https://domain.com/some-page?requestParam=true&_data=%2Fcollections%2Fbackcountry',
+        ),
+      }),
+    ).resolves.toEqual(
+      new Response(null, {
+        status: 200,
+        headers: {
+          'X-Remix-Redirect':
+            '/some-redirect?redirectParam=true&requestParam=true',
+          'X-Remix-Status': '302',
+        },
+      }),
+    );
+
+    expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
+      variables: {query: 'path:/some-page'},
     });
   });
 
