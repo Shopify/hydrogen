@@ -1,5 +1,11 @@
 # @shopify/hydrogen
 
+## 2024.1.6
+
+### Patch Changes
+
+- Make sure 400-500 sub-requests are not cached ([#1903](https://github.com/Shopify/hydrogen/pull/1903)) by [@blittle](https://github.com/blittle)
+
 ## 2024.1.5
 
 ### Patch Changes
