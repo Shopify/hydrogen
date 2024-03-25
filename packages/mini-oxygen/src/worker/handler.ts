@@ -41,7 +41,16 @@ export async function miniOxygenHandler(
   } satisfies RequestInit;
 
   const startTimeMs = Date.now();
-  const response = await env.entry.fetch(request, requestInit);
+
+  const response = await env.entry.fetch(
+    request.url.includes('trycloudflare.com')
+      ? new Request(
+          request.url.replace('trycloudflare.com', 'tryhydrogen.dev'),
+          new Request(request, requestInit),
+        )
+      : request,
+    requestInit,
+  );
   const durationMs = Date.now() - startTimeMs;
 
   context.waitUntil(

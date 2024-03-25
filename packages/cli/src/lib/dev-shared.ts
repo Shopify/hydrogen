@@ -74,7 +74,9 @@ export async function startTunnelAndPushConfig(
   outputInfo('\nStarting tunnel...\n');
 
   const tunnel = await startTunnelPlugin(cliConfig, port, 'cloudflare');
-  const host = await pollTunnelURL(tunnel);
+  const host = await pollTunnelURL(tunnel).then((host) =>
+    host.replace('trycloudflare.com', 'tryhydrogen.dev'),
+  );
 
   try {
     await runCustomerAccountPush({
