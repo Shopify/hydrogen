@@ -18,6 +18,7 @@ import {
 } from './assets.js';
 import {miniOxygenHandler} from './handler.js';
 import {OXYGEN_HEADERS_MAP} from '../common/headers.js';
+import {OXYGEN_COMPAT_PARAMS} from 'common/compat.js';
 
 export {
   buildAssetsUrl,
@@ -28,12 +29,6 @@ export {
   type ResponseInit,
 };
 
-const OXYGEN_WORKERD_COMPAT_PARAMS = {
-  compatibilityFlags: ['streams_enable_constructors'],
-  compatibilityDate: '2022-10-31',
-};
-
-// const PRIVATE_INSPECTOR_PORT = 9222;
 const DEFAULT_PUBLIC_INSPECTOR_PORT = 9229;
 const DEFAULT_ASSETS_PORT = 9100;
 
@@ -246,7 +241,7 @@ function buildMiniflareOptions(
         },
       },
       ...workers.map((worker) => ({
-        ...OXYGEN_WORKERD_COMPAT_PARAMS,
+        ...OXYGEN_COMPAT_PARAMS,
         ...worker,
       })),
     ],

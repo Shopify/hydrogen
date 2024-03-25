@@ -5,6 +5,7 @@ import type {Socket} from 'node:net';
 import {MiniOxygen} from './core.js';
 import type {MiniOxygenServerOptions, fetch} from './server.js';
 import {findPort} from '../common/find-port.js';
+import {OXYGEN_COMPAT_PARAMS} from '../common/compat.js';
 
 export {Request, Response, fetch} from './server.js';
 
@@ -93,8 +94,7 @@ export function createMiniOxygen(
       // This prevents the process from exiting when an unhandled rejection occurs.
       logUnhandledRejections: true,
       // this should stay in sync with oxygen-dms
-      compatibilityFlags: ['streams_enable_constructors'],
-      compatibilityDate: '2022-10-31',
+      ...OXYGEN_COMPAT_PARAMS,
     },
     env,
   );
