@@ -4,7 +4,8 @@ import {
   USER_AGENT,
   CUSTOMER_API_CLIENT_ID,
   CUSTOMER_ACCOUNT_SESSION_KEY,
-} from './constants';
+  BUYER_SESSION_KEY,
+} from '../constants';
 
 type H2OEvent = Parameters<NonNullable<typeof __H2O_LOG_EVENT>>[0];
 
@@ -72,12 +73,14 @@ export async function refreshToken({
   customerAccountUrl,
   origin,
   debugInfo,
+  exchangeForStorefrontCustomerAccessToken,
 }: {
   session: HydrogenSession;
   customerAccountId: string;
   customerAccountUrl: string;
   origin: string;
   debugInfo?: Partial<H2OEvent>;
+  exchangeForStorefrontCustomerAccessToken: () => Promise<void>;
 }) {
   const newBody = new URLSearchParams();
 
@@ -145,10 +148,13 @@ export async function refreshToken({
     refreshToken: refresh_token,
     idToken: id_token,
   });
+
+  await exchangeForStorefrontCustomerAccessToken();
 }
 
 export function clearSession(session: HydrogenSession): void {
   session.unset(CUSTOMER_ACCOUNT_SESSION_KEY);
+  session.unset(BUYER_SESSION_KEY);
 }
 
 export async function checkExpires({
@@ -159,6 +165,7 @@ export async function checkExpires({
   customerAccountUrl,
   origin,
   debugInfo,
+  exchangeForStorefrontCustomerAccessToken,
 }: {
   locks: Locks;
   expiresAt: string;
@@ -167,6 +174,7 @@ export async function checkExpires({
   customerAccountUrl: string;
   origin: string;
   debugInfo?: Partial<H2OEvent>;
+  exchangeForStorefrontCustomerAccessToken: () => Promise<void>;
 }) {
   if (parseInt(expiresAt, 10) - 1000 < new Date().getTime()) {
     try {
@@ -178,6 +186,7 @@ export async function checkExpires({
           customerAccountUrl,
           origin,
           debugInfo,
+          exchangeForStorefrontCustomerAccessToken,
         });
 
       await locks.refresh;

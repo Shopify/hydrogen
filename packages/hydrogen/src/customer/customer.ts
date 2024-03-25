@@ -3,8 +3,9 @@ import type {WritableDeep} from 'type-fest';
 import {
   DEFAULT_CUSTOMER_API_VERSION,
   CUSTOMER_ACCOUNT_SESSION_KEY,
+  BUYER_SESSION_KEY,
   USER_AGENT,
-} from './constants';
+} from '../constants';
 import {
   clearSession,
   generateCodeChallenge,
@@ -41,8 +42,8 @@ import type {
   CustomerAccount,
   CustomerAPIResponse,
   LoginOptions,
+  Buyer,
 } from './types';
-import {LanguageCode} from '@shopify/hydrogen-react/storefront-api-types';
 
 const DEFAULT_LOGIN_URL = '/account/login';
 const DEFAULT_AUTH_URL = '/account/authorize';
@@ -70,6 +71,7 @@ export function createCustomerAccountClient({
   authUrl = DEFAULT_AUTH_URL,
   customAuthStatusHandler,
   logErrors = true,
+  b2b = false,
 }: CustomerAccountOptions): CustomerAccount {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.warn(
@@ -222,6 +224,7 @@ export function createCustomerAccountClient({
           stackInfo,
           ...getDebugHeaders(request),
         },
+        exchangeForStorefrontCustomerAccessToken,
       });
     } catch {
       return false;
@@ -241,6 +244,85 @@ export function createCustomerAccountClient({
 
     if (hasAccessToken)
       return session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.accessToken;
+  }
+
+  async function mutate(
+    mutation: Parameters<CustomerAccount['mutate']>[0],
+    options?: Parameters<CustomerAccount['mutate']>[1],
+  ) {
+    ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
+
+    mutation = minifyQuery(mutation);
+    assertMutation(mutation, 'customer.mutate');
+
+    return withSyncStack(
+      fetchCustomerAPI({query: mutation, type: 'mutation', ...options}),
+      {logErrors},
+    );
+  }
+
+  async function query(
+    query: Parameters<CustomerAccount['query']>[0],
+    options?: Parameters<CustomerAccount['query']>[1],
+  ) {
+    ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
+
+    query = minifyQuery(query);
+    assertQuery(query, 'customer.query');
+
+    return withSyncStack(fetchCustomerAPI({query, type: 'query', ...options}), {
+      logErrors,
+    });
+  }
+
+  function setBuyer(buyer: Buyer) {
+    session.set(BUYER_SESSION_KEY, {
+      ...session.get(BUYER_SESSION_KEY),
+      ...buyer,
+    });
+  }
+
+  async function getBuyer() {
+    // check loggedIn and trigger refresh if expire
+    const hasAccessToken = await isLoggedIn();
+
+    if (!hasAccessToken) {
+      return;
+    }
+
+    return session.get(BUYER_SESSION_KEY);
+  }
+
+  async function exchangeForStorefrontCustomerAccessToken() {
+    if (!b2b) {
+      return;
+    }
+
+    const STOREFRONT_CUSTOMER_ACCOUNT_TOKEN_CREATE = `#graphql
+      mutation storefrontCustomerAccessTokenCreate {
+        storefrontCustomerAccessTokenCreate {
+          customerAccessToken
+        }
+      }
+    `;
+
+    // Remove hard coded type later
+    const {data} = (await mutate(STOREFRONT_CUSTOMER_ACCOUNT_TOKEN_CREATE)) as {
+      data: {
+        storefrontCustomerAccessTokenCreate?: {
+          customerAccessToken?: string;
+        };
+      };
+    };
+
+    const customerAccessToken =
+      data?.storefrontCustomerAccessTokenCreate?.customerAccessToken;
+
+    if (customerAccessToken) {
+      setBuyer({
+        customerAccessToken,
+      });
+    }
   }
 
   return {
@@ -304,7 +386,6 @@ export function createCustomerAccountClient({
         `${customerAccountUrl}/auth/logout?id_token_hint=${idToken}`,
         {
           status: 302,
-
           headers: {
             'Set-Cookie': await session.commit(),
           },
@@ -315,28 +396,8 @@ export function createCustomerAccountClient({
     handleAuthStatus,
     getAccessToken,
     getApiUrl: () => customerAccountApiUrl,
-    mutate(mutation, options?) {
-      ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
-
-      mutation = minifyQuery(mutation);
-      assertMutation(mutation, 'customer.mutate');
-
-      return withSyncStack(
-        fetchCustomerAPI({query: mutation, type: 'mutation', ...options}),
-        {logErrors},
-      );
-    },
-    query(query, options?) {
-      ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
-
-      query = minifyQuery(query);
-      assertQuery(query, 'customer.query');
-
-      return withSyncStack(
-        fetchCustomerAPI({query, type: 'query', ...options}),
-        {logErrors},
-      );
-    },
+    mutate: mutate as CustomerAccount['mutate'],
+    query: query as CustomerAccount['query'],
     authorize: async () => {
       ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
 
@@ -454,13 +515,13 @@ export function createCustomerAccountClient({
       session.set(CUSTOMER_ACCOUNT_SESSION_KEY, {
         accessToken: customerAccessToken,
         expiresAt:
-          new Date(
-            new Date().getTime() + (expires_in! - 120) * 1000,
-          ).getTime() + '',
+          new Date(new Date().getTime() + (expires_in - 120) * 1000).getTime() +
+          '',
         refreshToken: refresh_token,
         idToken: id_token,
-        redirectPath: undefined,
       });
+
+      await exchangeForStorefrontCustomerAccessToken();
 
       return redirect(redirectPath || DEFAULT_REDIRECT_PATH, {
         headers: {
@@ -468,6 +529,8 @@ export function createCustomerAccountClient({
         },
       });
     },
+    UNSTABLE_setBuyer: setBuyer,
+    UNSTABLE_getBuyer: getBuyer,
   };
 }
 

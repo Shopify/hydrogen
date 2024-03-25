@@ -1,4 +1,4 @@
-import {Form} from '@remix-run/react';
+import {CartForm} from '@shopify/hydrogen';
 
 export function LocationSelector({customer}) {
   const company =
@@ -38,7 +38,7 @@ export function LocationSelector({customer}) {
   return (
     <div>
       <h1>Logged in for {company.name}</h1>
-      <Form id={'company-location-selector'}>
+      <CartForm route="/cart" action={CartForm.ACTIONS.BuyerIdentityUpdate}>
         <fieldset>
           <legend>Choose a location:</legend>
           {locations.map((location) => {
@@ -50,11 +50,9 @@ export function LocationSelector({customer}) {
               </div>
             );
           })}
-          <button formAction="/locations" formMethod="POST" type="submit">
-            Choose Location
-          </button>
         </fieldset>
-      </Form>
+        <button type="submit">Choose Location</button>
+      </CartForm>
     </div>
   );
 }

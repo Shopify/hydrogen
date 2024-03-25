@@ -6,26 +6,16 @@ import type {
   FeaturedCollectionFragment,
   RecommendedProductsQuery,
 } from 'storefrontapi.generated';
-import {getBuyer} from '~/lib/buyer';
 
 export const meta: MetaFunction = () => {
   return [{title: 'Hydrogen | Home'}];
 };
 
 export async function loader({context}: LoaderFunctionArgs) {
-  const {storefront, customerAccount} = context;
-  console.error(
-    '\x1b[42m%s\x1b[0m',
-    `token=${JSON.stringify(await customerAccount.getAccessToken())}`,
-  );
-  const buyer = getBuyer({session: context.session});
-  const {collections} = await storefront.query(FEATURED_COLLECTION_QUERY, {
-    variables: {buyer},
-  });
+  const {storefront} = context;
+  const {collections} = await storefront.query(FEATURED_COLLECTION_QUERY);
   const featuredCollection = collections?.nodes?.[0];
-  const recommendedProducts = storefront.query(RECOMMENDED_PRODUCTS_QUERY, {
-    variables: {buyer},
-  });
+  const recommendedProducts = storefront.query(RECOMMENDED_PRODUCTS_QUERY);
 
   return defer({featuredCollection, recommendedProducts});
 }

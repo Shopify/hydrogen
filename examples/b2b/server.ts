@@ -40,6 +40,23 @@ export default {
       ]);
 
       /**
+       * Create a client for Customer Account API.
+       */
+      const customerAccount = createCustomerAccountClient({
+        waitUntil,
+        request,
+        session,
+        customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID,
+        customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_API_URL,
+        customerApiVersion: 'unstable',
+        /***********************************************/
+        /**********  EXAMPLE UPDATE STARTS  ************/
+        b2b: true,
+        /**********   EXAMPLE UPDATE END   ************/
+        /***********************************************/
+      });
+
+      /**
        * Create Hydrogen's Storefront client.
        */
       const {storefront} = createStorefrontClient({
@@ -51,19 +68,13 @@ export default {
         storeDomain: env.PUBLIC_STORE_DOMAIN,
         storefrontId: env.PUBLIC_STOREFRONT_ID,
         storefrontHeaders: getStorefrontHeaders(request),
-        storefrontApiVersion: 'unstable'
-      });
-
-      /**
-       * Create a client for Customer Account API.
-       */
-      const customerAccount = createCustomerAccountClient({
-        waitUntil,
-        request,
-        session,
-        customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID,
-        customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_API_URL,
-        customerApiVersion: 'unstable'
+        storefrontApiVersion: 'unstable',
+        /***********************************************/
+        /**********  EXAMPLE UPDATE STARTS  ************/
+        b2b: true,
+        customerAccount,
+        /**********   EXAMPLE UPDATE END   ************/
+        /***********************************************/
       });
 
       /*

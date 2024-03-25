@@ -8,7 +8,6 @@ import {
 } from '@shopify/hydrogen';
 import type {ProductItemFragment} from 'storefrontapi.generated';
 import {useVariantUrl} from '~/lib/variants';
-import {getBuyer} from '~/lib/buyer';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
@@ -25,10 +24,8 @@ export async function loader({request, params, context}: LoaderFunctionArgs) {
     return redirect('/collections');
   }
 
-  const buyer = getBuyer({session: context.session});
-
   const {collection} = await storefront.query(COLLECTION_QUERY, {
-    variables: {buyer, handle, ...paginationVariables},
+    variables: {handle, ...paginationVariables},
   });
 
   if (!collection) {
