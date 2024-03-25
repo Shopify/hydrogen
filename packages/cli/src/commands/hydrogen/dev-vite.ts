@@ -50,6 +50,7 @@ export default class DevVite extends Command {
       default: false,
       required: false,
     }),
+    ...commonFlags.env,
     ...commonFlags.envBranch,
     'disable-version-check': Flags.boolean({
       description: 'Skip the version check when running `hydrogen dev`',
@@ -87,6 +88,7 @@ type DevOptions = {
   disableVirtualRoutes?: boolean;
   disableVersionCheck?: boolean;
   envBranch?: string;
+  env?: string;
   debug?: boolean;
   sourcemap?: boolean;
   inspectorPort: number;
@@ -104,6 +106,7 @@ export async function runDev({
   codegenConfigPath,
   disableVirtualRoutes,
   envBranch,
+  env: envHandle,
   debug = false,
   disableVersionCheck = false,
   inspectorPort,
@@ -127,6 +130,7 @@ export async function runDev({
     getAllEnvironmentVariables({
       root,
       envBranch,
+      envHandle,
       fetchRemote,
       localVariables,
     }),

@@ -3,10 +3,8 @@ import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {inTemporaryDirectory} from '@shopify/cli-kit/node/fs';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 
-import {
-  getStorefrontEnvironments,
-  type Environment,
-} from '../../../lib/graphql/admin/list-environments.js';
+import {getStorefrontEnvironments} from '../../../lib/graphql/admin/list-environments.js';
+import {dummyListEnvironments} from '../../../lib/graphql/admin/test-helper.js';
 import {type AdminSession, login} from '../../../lib/auth.js';
 import {
   renderMissingLink,
@@ -49,48 +47,15 @@ describe('listEnvironments', () => {
     },
   };
 
-  const PRODUCTION_ENVIRONMENT: Environment = {
-    id: 'gid://shopify/HydrogenStorefrontEnvironment/1',
-    branch: 'main',
-    type: 'PRODUCTION',
-    name: 'Production',
-    createdAt: '2023-02-16T22:35:42Z',
-    url: 'https://oxygen-123.example.com',
-  };
-
-  const CUSTOM_ENVIRONMENT: Environment = {
-    id: 'gid://shopify/HydrogenStorefrontEnvironment/3',
-    branch: 'staging',
-    type: 'CUSTOM',
-    name: 'Staging',
-    createdAt: '2023-05-08T20:52:29Z',
-    url: 'https://oxygen-456.example.com',
-  };
-
-  const PREVIEW_ENVIRONMENT: Environment = {
-    id: 'gid://shopify/HydrogenStorefrontEnvironment/2',
-    branch: null,
-    type: 'PREVIEW',
-    name: 'Preview',
-    createdAt: '2023-02-16T22:35:42Z',
-    url: null,
-  };
-
   beforeEach(async () => {
     vi.mocked(login).mockResolvedValue({
       session: ADMIN_SESSION,
       config: SHOPIFY_CONFIG,
     });
 
-    vi.mocked(getStorefrontEnvironments).mockResolvedValue({
-      id: 'gid://shopify/HydrogenStorefront/1',
-      productionUrl: 'https://example.com',
-      environments: [
-        PRODUCTION_ENVIRONMENT,
-        CUSTOM_ENVIRONMENT,
-        PREVIEW_ENVIRONMENT,
-      ],
-    });
+    vi.mocked(getStorefrontEnvironments).mockResolvedValue(
+      dummyListEnvironments(SHOPIFY_CONFIG.storefront.id),
+    );
   });
 
   afterEach(() => {
@@ -119,11 +84,15 @@ describe('listEnvironments', () => {
         /Showing 3 environments for the Hydrogen storefront Existing Link/i,
       );
 
-      expect(output.info()).toMatch(/Production \(Branch: main\)/);
-      expect(output.info()).toMatch(/https:\/\/example\.com/);
-      expect(output.info()).toMatch(/Staging \(Branch: staging\)/);
+      expect(output.info()).toMatch(
+        /Production \(handle: production, branch: main\)/,
+      );
+      expect(output.info()).toMatch(/https:\/\/my-shop\.myshopify\.com/);
+      expect(output.info()).toMatch(
+        /Staging \(handle: staging, branch: staging\)/,
+      );
       expect(output.info()).toMatch(/https:\/\/oxygen-456\.example\.com/);
-      expect(output.info()).toMatch(/Preview/);
+      expect(output.info()).toMatch(/Preview \(handle: preview\)/);
     });
   });
 
