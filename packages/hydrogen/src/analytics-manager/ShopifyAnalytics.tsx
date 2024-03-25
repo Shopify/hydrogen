@@ -78,9 +78,7 @@ function prepareBasePageViewPayload(payload: PageViewPayload | ProductViewPayloa
     ...payload.shop,
     hasUserConsent,
     ...getClientBrowserParameters(),
-    // @ts-ignore
     ccpaEnforced: !customerPrivacy.saleOfDataAllowed(),
-    // @ts-ignore
     gdprEnforced: !(customerPrivacy.marketingAllowed() && customerPrivacy.analyticsProcessingAllowed()),
   };
 
@@ -90,29 +88,24 @@ function prepareBasePageViewPayload(payload: PageViewPayload | ProductViewPayloa
 function prepareBaseCartPayload(payload: CartUpdatePayload, cart: CartReturn | null): ShopifyAddToCartPayload | undefined {
   if (cart === null) return;
 
-  const customerPrivacy = getCustomerPrivacyRequired();
-  const hasUserConsent = customerPrivacy.userCanBeTracked();
+  const pageViewPayload = prepareBasePageViewPayload(payload);
 
-  if (!payload?.shop?.shopId) {
-    // eslint-disable-next-line no-console
-    console.warn('ShopifyAnalytics - Missing shopId in add to cart payload');
-    return;
-  }
+  if (!pageViewPayload) return;
 
   const eventPayload: ShopifyAddToCartPayload = {
-    shopifySalesChannel: 'hydrogen',
+    ...pageViewPayload  as ShopifyAddToCartPayload,
     cartId: cart.id,
-    ...payload.shop,
-    hasUserConsent,
-    ...getClientBrowserParameters(),
-    // @ts-ignore
-    ccpaEnforced: !customerPrivacy.saleOfDataAllowed(),
-    // @ts-ignore
-    gdprEnforced: !(customerPrivacy.marketingAllowed() && customerPrivacy.analyticsProcessingAllowed()),
   };
 
   return eventPayload;
 }
+
+type AdditionalViewPayload = {
+  pageType: AnalyticsPageType,
+  resourceId: string,
+};
+
+let viewPayload = {};
 
 function pageViewHandler(payload: PageViewPayload) {
   const eventPayload = prepareBasePageViewPayload(payload);
@@ -121,8 +114,12 @@ function pageViewHandler(payload: PageViewPayload) {
 
   sendShopifyAnalytics({
     eventName: AnalyticsEventName.PAGE_VIEW_2,
-    payload: eventPayload,
+    payload: {
+      ...eventPayload,
+      ...viewPayload,
+    }
   });
+  viewPayload = {};
 }
 
 function productViewHandler(payload: ProductViewPayload) {
@@ -136,10 +133,13 @@ function productViewHandler(payload: ProductViewPayload) {
     products: payload.products
   })) {
     const formattedProducts = formatProduct(payload.products);
-    eventPayload = {
-      ...eventPayload,
+    viewPayload = {
       pageType: AnalyticsPageType.product,
       resourceId: formattedProducts[0].productGid,
+    };
+    eventPayload = {
+      ...eventPayload,
+      ...viewPayload,
       products: formatProduct(payload.products),
     };
 
@@ -155,10 +155,13 @@ function collectionViewHandler(payload: CollectionViewPayload) {
 
   if (!eventPayload) return;
 
-  eventPayload = {
-    ...eventPayload,
+  viewPayload = {
     pageType: AnalyticsPageType.collection,
     resourceId: payload.collection.id,
+  };
+  eventPayload = {
+    ...eventPayload,
+    ...viewPayload,
     collectionHandle: payload.collection.handle,
   };
 
