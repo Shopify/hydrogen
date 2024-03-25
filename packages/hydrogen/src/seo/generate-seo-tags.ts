@@ -685,7 +685,7 @@ export function generateKey(tag: CustomHeadTagObject, group?: string) {
   return `${tagName}-${props.type}`;
 }
 
-function renderTitle<T extends CustomHeadTagObject['children']>(
+export function renderTitle<T extends CustomHeadTagObject['children']>(
   template?:
     | string
     | ((title: string) => string | undefined)
@@ -708,7 +708,7 @@ function renderTitle<T extends CustomHeadTagObject['children']>(
   return template.replace('%s', title ?? '');
 }
 
-function inferMimeType(url: Maybe<string> | undefined) {
+export function inferMimeType(url: Maybe<string> | undefined) {
   const ext = url && url.split('.').pop();
 
   switch (ext) {
@@ -738,11 +738,11 @@ export type SchemaType =
   | 'BlogPosting'
   | 'Thing';
 
-function ensureArray<T>(value: T | T[]): T[] {
+export function ensureArray<T>(value: T | T[]): T[] {
   return Array.isArray(value) ? value : [value];
 }
 
-function validate<T>(
+export function validate<T>(
   schema: {validate: <T>(data: T) => NonNullable<T>},
   data: T,
 ): T {
