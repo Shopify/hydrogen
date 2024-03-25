@@ -10,6 +10,7 @@ const ListEnvironmentsQuery = `#graphql
         createdAt
         id
         name
+        handle
         type
         url
       }
@@ -24,11 +25,12 @@ export interface Environment {
   createdAt: string;
   id: string;
   name: string;
+  handle: string;
   type: EnvironmentType;
   url: string | null;
 }
 
-interface HydrogenStorefront {
+export interface HydrogenStorefront {
   id: string;
   environments: Environment[];
   productionUrl: string;

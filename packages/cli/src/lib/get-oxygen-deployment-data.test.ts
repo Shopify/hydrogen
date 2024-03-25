@@ -32,11 +32,13 @@ describe('getOxygenDeploymentData', () => {
   const environments: OxygenDeploymentData['environments'] = [
     {
       name: 'production',
+      handle: 'production',
       branch: 'main',
       type: 'PRODUCTION',
     },
     {
       name: 'preview',
+      handle: 'preview',
       branch: null,
       type: 'PREVIEW',
     },

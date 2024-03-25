@@ -32,6 +32,10 @@ import {
   parseToken,
 } from '@shopify/oxygen-cli/deploy';
 
+import {
+  findEnvironmentByBranchOrThrow,
+  findEnvironmentOrThrow,
+} from '../../lib/common.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
 import {OxygenDeploymentData} from '../../lib/graphql/admin/get-oxygen-data.js';
@@ -54,10 +58,8 @@ export const deploymentLogger: Logger = (
 export default class Deploy extends Command {
   static description = 'Builds and deploys a Hydrogen storefront to Oxygen.';
   static flags: any = {
-    'env-branch': Flags.string({
-      description: 'Environment branch (tag) for environment to deploy to.',
-      required: false,
-    }),
+    ...commonFlags.env,
+    ...commonFlags.envBranch,
     'env-file': Flags.string({
       description:
         'Path to an environment file to override existing environment variables for the deployment.',
@@ -161,7 +163,6 @@ export default class Deploy extends Command {
     return {
       ...camelFlags,
       defaultEnvironment: flags.preview,
-      environmentTag: flags['env-branch'],
       environmentFile: flags['env-file'],
       path: flags.path ? resolvePath(flags.path) : process.cwd(),
     } as OxygenDeploymentOptions;
@@ -172,7 +173,8 @@ interface OxygenDeploymentOptions {
   authBypassToken: boolean;
   buildCommand?: string;
   defaultEnvironment: boolean;
-  environmentTag?: string;
+  env?: string;
+  envBranch?: string;
   environmentFile?: string;
   force: boolean;
   noVerify: boolean;
@@ -218,7 +220,8 @@ export async function runDeploy(
     authBypassToken: generateAuthBypassToken,
     buildCommand,
     defaultEnvironment,
-    environmentTag,
+    env: envHandle,
+    envBranch,
     environmentFile,
     force: forceOnUncommitedChanges,
     noVerify,
@@ -295,6 +298,15 @@ export async function runDeploy(
     );
   }
 
+  let userProvidedEnvironmentTag: string | null = null;
+
+  if (isCI && envHandle) {
+    throw new AbortError(
+      "Can't specify an environment handle in CI",
+      'Environments are automatically picked up by the current Git branch.',
+    );
+  }
+
   if (!isCI) {
     deploymentData = await getOxygenDeploymentData({
       root,
@@ -306,6 +318,15 @@ export async function runDeploy(
     }
 
     token = token || deploymentData.oxygenDeploymentToken;
+
+    if (envHandle) {
+      userProvidedEnvironmentTag = findEnvironmentOrThrow(
+        deploymentData.environments || [],
+        envHandle,
+      ).branch;
+    } else if (envBranch) {
+      userProvidedEnvironmentTag = envBranch;
+    }
   }
 
   if (!token) {
@@ -322,7 +343,7 @@ export async function runDeploy(
   if (
     !isCI &&
     !defaultEnvironment &&
-    !environmentTag &&
+    !userProvidedEnvironmentTag &&
     deploymentData?.environments
   ) {
     if (deploymentData.environments.length > 1) {
@@ -386,7 +407,9 @@ export async function runDeploy(
     defaultEnvironment: defaultEnvironment || isPreview,
     deploymentToken: parseToken(token as string),
     environmentTag:
-      environmentTag || deploymentEnvironmentTag || fallbackEnvironmentTag,
+      userProvidedEnvironmentTag ||
+      deploymentEnvironmentTag ||
+      fallbackEnvironmentTag,
     generateAuthBypassToken,
     verificationMaxDuration: 180,
     metadata: {

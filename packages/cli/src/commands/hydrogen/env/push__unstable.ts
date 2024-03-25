@@ -16,6 +16,7 @@ import {
   outputToken,
   outputWarn,
 } from '@shopify/cli-kit/node/output';
+import {findEnvironmentOrThrow} from '../../../lib/common.js';
 import {renderMissingLink} from '../../../lib/render-errors.js';
 import {
   Environment,
@@ -55,11 +56,11 @@ interface Flags {
 }
 
 export async function runEnvPush({
-  env: environmentName,
+  env: envHandle,
   envFile = '.env',
   path = process.cwd(),
 }: Flags) {
-  let validatedEnvironment: Partial<Environment> = {};
+  let validatedEnvironment: Environment;
 
   // Ensure local .env file
   const dotEnvPath = resolvePath(path, envFile);
@@ -111,34 +112,8 @@ export async function runEnvPush({
   }
 
   // Select and validate an environment, if not passed via the flag
-  if (environmentName) {
-    // If an environment was passed in, ensure the parameter is a valid environment, and unique
-    const matchedEnvironments = environments.filter(
-      ({name}) => name === environmentName,
-    );
-    if (matchedEnvironments.length === 0) {
-      throw new AbortError(
-        'Environment not found',
-        `We could not find an environment matching the name '${environmentName}'.`,
-      );
-    } else if (matchedEnvironments.length === 1) {
-      const {id, name, branch, type} = matchedEnvironments[0] ?? {};
-      validatedEnvironment = {id, name, branch, type};
-    } else {
-      // Prompt the user for a selection if there are multiple matches
-      const selection = await renderSelectPrompt({
-        message: `There were multiple environments found with the name ${environmentName}:`,
-        choices: [
-          ...matchedEnvironments.map(({id, name, branch, type, url}) => ({
-            label: `${name} (${branch}) ${type} ${url}`,
-            value: id,
-          })),
-        ],
-      });
-      const {id, name, branch, type} =
-        matchedEnvironments.find(({id}) => id === selection) ?? {};
-      validatedEnvironment = {id, name, branch, type};
-    }
+  if (envHandle) {
+    validatedEnvironment = findEnvironmentOrThrow(environments, envHandle);
   } else {
     // Environment flag not passed
     const choices = [
@@ -149,13 +124,13 @@ export async function runEnvPush({
     ];
 
     const pushToBranchSelection = await renderSelectPrompt({
-      message: 'Select a set of environment variables to overwrite:',
+      message: 'Select an environment to overwrite its environment variables:',
       choices,
     });
 
-    const {id, name, branch, type} =
-      environments.find(({id}) => id === pushToBranchSelection) ?? {};
-    validatedEnvironment = {id, name, branch, type};
+    validatedEnvironment = environments.find(
+      ({id}) => id === pushToBranchSelection,
+    )!;
   }
 
   // Fetch remote variables
@@ -163,7 +138,7 @@ export async function runEnvPush({
     (await getStorefrontEnvVariables(
       session,
       config.storefront.id,
-      validatedEnvironment.branch ?? undefined,
+      validatedEnvironment.handle,
     )) ?? {};
 
   // Normalize variables

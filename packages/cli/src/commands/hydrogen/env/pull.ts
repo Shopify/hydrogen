@@ -20,10 +20,15 @@ import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import {login} from '../../../lib/auth.js';
 import {getCliCommand} from '../../../lib/shell.js';
 import {
+  findEnvironmentByBranchOrThrow,
+  findEnvironmentOrThrow,
+} from '../../../lib/common.js';
+import {
   renderMissingLink,
   renderMissingStorefront,
 } from '../../../lib/render-errors.js';
 import {linkStorefront} from '../link.js';
+import {getStorefrontEnvironments} from '../../../lib/graphql/admin/list-environments.js';
 import {getStorefrontEnvVariables} from '../../../lib/graphql/admin/pull-variables.js';
 
 export default class EnvPull extends Command {
@@ -31,6 +36,7 @@ export default class EnvPull extends Command {
     'Populate your .env with variables from your Hydrogen storefront.';
 
   static flags = {
+    ...commonFlags.env,
     ...commonFlags.envBranch,
     ...commonFlags.path,
     ...commonFlags.force,
@@ -43,12 +49,14 @@ export default class EnvPull extends Command {
 }
 
 interface Flags {
+  env?: string;
   envBranch?: string;
   force?: boolean;
   path?: string;
 }
 
 export async function runEnvPull({
+  env: envHandle,
   envBranch,
   path: root = process.cwd(),
   force,
@@ -76,10 +84,24 @@ export async function runEnvPull({
 
   if (!config.storefront?.id) return;
 
+  if (envHandle || envBranch) {
+    const environments =
+      (await getStorefrontEnvironments(session, config.storefront.id))
+        ?.environments || [];
+    if (envHandle) {
+      findEnvironmentOrThrow(environments, envHandle);
+    } else if (envBranch) {
+      envHandle = findEnvironmentByBranchOrThrow(
+        environments,
+        envBranch,
+      ).handle;
+    }
+  }
+
   const storefront = await getStorefrontEnvVariables(
     session,
     config.storefront.id,
-    envBranch,
+    envHandle,
   );
 
   if (!storefront) {

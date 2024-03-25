@@ -10,7 +10,9 @@ import {joinPath} from '@shopify/cli-kit/node/path';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 
 import {type AdminSession, login} from '../../../lib/auth.js';
+import {getStorefrontEnvironments} from '../../../lib/graphql/admin/list-environments.js';
 import {getStorefrontEnvVariables} from '../../../lib/graphql/admin/pull-variables.js';
+import {dummyListEnvironments} from '../../../lib/graphql/admin/test-helper.js';
 
 import {runEnvPull} from './pull.js';
 import {
@@ -31,6 +33,7 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
 vi.mock('../link.js');
 vi.mock('../../../lib/auth.js');
 vi.mock('../../../lib/render-errors.js');
+vi.mock('../../../lib/graphql/admin/list-environments.js');
 vi.mock('../../../lib/graphql/admin/pull-variables.js');
 
 describe('pullVariables', () => {
@@ -54,6 +57,10 @@ describe('pullVariables', () => {
       session: ADMIN_SESSION,
       config: SHOPIFY_CONFIG,
     });
+
+    vi.mocked(getStorefrontEnvironments).mockResolvedValue(
+      dummyListEnvironments(SHOPIFY_CONFIG.storefront.id),
+    );
 
     vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
       id: SHOPIFY_CONFIG.storefront.id,
@@ -81,15 +88,45 @@ describe('pullVariables', () => {
     mockAndCaptureOutput().clear();
   });
 
-  it('calls getStorefrontEnvVariables', async () => {
-    await inTemporaryDirectory(async (tmpDir) => {
-      await runEnvPull({path: tmpDir, envBranch: 'staging'});
+  describe('when environment is provided', () => {
+    it('calls getStorefrontEnvVariables when handle is provided', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        await runEnvPull({path: tmpDir, env: 'staging'});
 
-      expect(getStorefrontEnvVariables).toHaveBeenCalledWith(
-        ADMIN_SESSION,
-        SHOPIFY_CONFIG.storefront.id,
-        'staging',
-      );
+        expect(getStorefrontEnvVariables).toHaveBeenCalledWith(
+          ADMIN_SESSION,
+          SHOPIFY_CONFIG.storefront.id,
+          'staging',
+        );
+      });
+    });
+
+    it('calls getStorefrontEnvVariables when branch is provided', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        await runEnvPull({path: tmpDir, envBranch: 'main'});
+
+        expect(getStorefrontEnvVariables).toHaveBeenCalledWith(
+          ADMIN_SESSION,
+          SHOPIFY_CONFIG.storefront.id,
+          'production',
+        );
+      });
+    });
+
+    it('throws error if handle does not map to any environment', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        await expect(
+          runEnvPull({path: tmpDir, env: 'fake'}),
+        ).rejects.toThrowError('Environment not found');
+      });
+    });
+
+    it('throws error if branch does not map to any environment', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        await expect(
+          runEnvPull({path: tmpDir, envBranch: 'fake'}),
+        ).rejects.toThrowError('Environment not found');
+      });
     });
   });
 

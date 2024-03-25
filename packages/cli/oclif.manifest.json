@@ -261,10 +261,24 @@
       "args": {},
       "description": "Builds and deploys a Hydrogen storefront to Oxygen.",
       "flags": {
+        "env": {
+          "description": "Specifies the environment to perform the operation using its handle. Run `env list` to view an environment's handle ",
+          "exclusive": [
+            "env-branch"
+          ],
+          "name": "env",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "env-branch": {
-          "description": "Environment branch (tag) for environment to deploy to.",
+          "deprecated": {
+            "to": "env",
+            "message": "--env-branch is deprecated. Use --env instead."
+          },
+          "description": "Specifies the environment to perform the operation using its Git branch name.",
+          "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH",
           "name": "env-branch",
-          "required": false,
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
@@ -494,9 +508,22 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "env": {
+          "description": "Specifies the environment to perform the operation using its handle. Run `env list` to view an environment's handle ",
+          "exclusive": [
+            "env-branch"
+          ],
+          "name": "env",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "env-branch": {
-          "char": "e",
-          "description": "Specifies the environment to pull variables from using its Git branch name.",
+          "deprecated": {
+            "to": "env",
+            "message": "--env-branch is deprecated. Use --env instead."
+          },
+          "description": "Specifies the environment to perform the operation using its Git branch name.",
           "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH",
           "name": "env-branch",
           "hasDynamicHelp": false,
@@ -624,9 +651,22 @@
           "multiple": false,
           "type": "option"
         },
+        "env": {
+          "description": "Specifies the environment to perform the operation using its handle. Run `env list` to view an environment's handle ",
+          "exclusive": [
+            "env-branch"
+          ],
+          "name": "env",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "env-branch": {
-          "char": "e",
-          "description": "Specifies the environment to pull variables from using its Git branch name.",
+          "deprecated": {
+            "to": "env",
+            "message": "--env-branch is deprecated. Use --env instead."
+          },
+          "description": "Specifies the environment to perform the operation using its Git branch name.",
           "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH",
           "name": "env-branch",
           "hasDynamicHelp": false,
@@ -980,9 +1020,22 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "env": {
+          "description": "Specifies the environment to perform the operation using its handle. Run `env list` to view an environment's handle ",
+          "exclusive": [
+            "env-branch"
+          ],
+          "name": "env",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "env-branch": {
-          "char": "e",
-          "description": "Specifies the environment to pull variables from using its Git branch name.",
+          "deprecated": {
+            "to": "env",
+            "message": "--env-branch is deprecated. Use --env instead."
+          },
+          "description": "Specifies the environment to perform the operation using its Git branch name.",
           "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH",
           "name": "env-branch",
           "hasDynamicHelp": false,
@@ -1316,9 +1369,22 @@
       "args": {},
       "description": "Populate your .env with variables from your Hydrogen storefront.",
       "flags": {
+        "env": {
+          "description": "Specifies the environment to perform the operation using its handle. Run `env list` to view an environment's handle ",
+          "exclusive": [
+            "env-branch"
+          ],
+          "name": "env",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "env-branch": {
-          "char": "e",
-          "description": "Specifies the environment to pull variables from using its Git branch name.",
+          "deprecated": {
+            "to": "env",
+            "message": "--env-branch is deprecated. Use --env instead."
+          },
+          "description": "Specifies the environment to perform the operation using its Git branch name.",
           "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH",
           "name": "env-branch",
           "hasDynamicHelp": false,
@@ -1364,8 +1430,10 @@
       "description": "Push environment variables from the local .env file to your linked Hydrogen storefront.",
       "flags": {
         "env": {
-          "description": "Specifies an environment's name when using remote environment variables.",
-          "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_NAME",
+          "description": "Specifies the environment to perform the operation using its handle. Run `env list` to view an environment's handle ",
+          "exclusive": [
+            "env-branch"
+          ],
           "name": "env",
           "hasDynamicHelp": false,
           "multiple": false,

@@ -88,8 +88,6 @@ export async function runEnvList({path: root = process.cwd()}: Flags) {
   );
   storefront.environments.push(previewEnvironment[0]!);
 
-  outputNewline();
-
   outputInfo(
     pluralizedEnvironments({
       environments: storefront.environments,
@@ -97,7 +95,7 @@ export async function runEnvList({path: root = process.cwd()}: Flags) {
     }).toString(),
   );
 
-  storefront.environments.forEach(({name, branch, type, url}) => {
+  storefront.environments.forEach(({name, handle, branch, type, url}) => {
     outputNewline();
 
     // If a custom domain is set it will be available on the storefront itself
@@ -105,17 +103,31 @@ export async function runEnvList({path: root = process.cwd()}: Flags) {
     const environmentUrl =
       type === 'PRODUCTION' ? storefront.productionUrl : url;
 
+    const metadata = {
+      handle,
+      branch,
+    };
+
+    const metadataStringified = Object.entries(metadata)
+      .reduce((acc, [key, val]) => {
+        if (val) {
+          acc.push(`${key}: ${val}`);
+        }
+        return acc;
+      }, [] as Array<string>)
+      .join(', ');
+
     outputInfo(
-      outputContent`${colors.whiteBright(name)}${
-        branch ? ` ${colors.dim(`(Branch: ${branch})`)}` : ''
-      }`.value,
+      outputContent`${colors.bold(name)} ${colors.dim(
+        `(${metadataStringified})`,
+      )}`.value,
     );
     if (environmentUrl) {
-      outputInfo(
-        outputContent`    ${colors.whiteBright(environmentUrl)}`.value,
-      );
+      outputInfo(outputContent`    ${environmentUrl}`.value);
     }
   });
+
+  outputNewline();
 }
 
 const pluralizedEnvironments = ({

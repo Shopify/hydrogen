@@ -59,19 +59,25 @@ export const commonFlags = {
       allowNo: true,
     }),
   },
-  envBranch: {
-    'env-branch': Flags.string({
-      description:
-        'Specifies the environment to pull variables from using its Git branch name.',
-      env: 'SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH',
-      char: 'e',
-    }),
-  },
   env: {
     env: Flags.string({
       description:
-        "Specifies an environment's name when using remote environment variables.",
-      env: 'SHOPIFY_HYDROGEN_ENVIRONMENT_NAME',
+        "Specifies the environment to perform the operation using its handle. Run `env list` to view an environment's handle ",
+      exclusive: ['env-branch'],
+    }),
+  },
+  /**
+   * @deprecated use `env` instead.
+   */
+  envBranch: {
+    'env-branch': Flags.string({
+      description:
+        'Specifies the environment to perform the operation using its Git branch name.',
+      env: 'SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH',
+      deprecated: {
+        to: 'env',
+        message: '--env-branch is deprecated. Use --env instead.',
+      },
     }),
   },
   sourcemap: {

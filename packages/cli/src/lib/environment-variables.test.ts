@@ -5,10 +5,13 @@ import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 
 import {getAllEnvironmentVariables} from './environment-variables.js';
 import {getStorefrontEnvVariables} from './graphql/admin/pull-variables.js';
+import {getStorefrontEnvironments} from './graphql/admin/list-environments.js';
+import {dummyListEnvironments} from './graphql/admin/test-helper.js';
 import {login} from './auth.js';
 
 vi.mock('./auth.js');
 vi.mock('./graphql/admin/pull-variables.js');
+vi.mock('./graphql/admin/list-environments.js');
 
 describe('getAllEnvironmentVariables()', () => {
   const ADMIN_SESSION = {
@@ -44,6 +47,10 @@ describe('getAllEnvironmentVariables()', () => {
         },
       ],
     });
+
+    vi.mocked(getStorefrontEnvironments).mockResolvedValue(
+      dummyListEnvironments(SHOPIFY_CONFIG.storefront.id),
+    );
   });
 
   afterEach(() => {
@@ -51,7 +58,22 @@ describe('getAllEnvironmentVariables()', () => {
     mockAndCaptureOutput().clear();
   });
 
-  it('calls pullRemoteEnvironmentVariables', async () => {
+  it('calls pullRemoteEnvironmentVariables using handle', async () => {
+    await inTemporaryDirectory(async (tmpDir) => {
+      await getAllEnvironmentVariables({
+        envHandle: 'production',
+        root: tmpDir,
+      });
+
+      expect(getStorefrontEnvVariables).toHaveBeenCalledWith(
+        ADMIN_SESSION,
+        SHOPIFY_CONFIG.storefront.id,
+        'production',
+      );
+    });
+  });
+
+  it('calls pullRemoteEnvironmentVariables using branch', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       await getAllEnvironmentVariables({
         envBranch: 'main',
@@ -61,7 +83,7 @@ describe('getAllEnvironmentVariables()', () => {
       expect(getStorefrontEnvVariables).toHaveBeenCalledWith(
         ADMIN_SESSION,
         SHOPIFY_CONFIG.storefront.id,
-        'main',
+        'production',
       );
     });
   });
