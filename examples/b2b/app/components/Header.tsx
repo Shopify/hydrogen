@@ -188,6 +188,8 @@ function LocationDropdown({
     navigate('.', {replace: true});
   };
 
+  if (locations.length === 1) return null;
+
   return (
     <select
       name="companyLocation"

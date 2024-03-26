@@ -93,12 +93,19 @@ export async function loader({request, context}: LoaderFunctionArgs) {
   });
 
   // B2B buyer context
-  const companyLocationId = session.get('company_location_id');
+  let companyLocationId = session.get('company_location_id');
   const customer = await customerAccount.query(CUSTOMER_LOCATIONS_QUERY, {
     variables: {},
     context,
     request,
   });
+  const companyData =
+    customer?.data?.customer?.companyContacts?.edges?.[0]?.node?.company;
+  if (companyData?.locations?.edges?.length === 1) {
+    console.log('SETTING LOCATION');
+    companyLocationId = companyData.locations.edges[0].node.id;
+    session.set('company_location_id', companyLocationId);
+  }
 
   return defer(
     {
@@ -121,10 +128,8 @@ export async function loader({request, context}: LoaderFunctionArgs) {
 export default function App() {
   const nonce = useNonce();
   const data = useLoaderData<typeof loader>();
-  const hasCompanyData =
+  const companyData =
     data?.customer?.data?.customer?.companyContacts?.edges?.[0]?.node?.company;
-
-  console.log(data.customer);
 
   return (
     <html lang="en">
@@ -135,7 +140,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        {hasCompanyData && !data.companyLocationId ? (
+        {companyData && !data.companyLocationId ? (
           <main>
             <LocationSelector customer={data.customer} />
           </main>
