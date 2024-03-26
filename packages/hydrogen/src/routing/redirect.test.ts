@@ -18,7 +18,7 @@ describe('storefrontRedirect', () => {
       }),
     ).resolves.toEqual(
       new Response(null, {
-        status: 302,
+        status: 301,
         headers: {location: shopifyDomain + '/admin'},
       }),
     );
@@ -36,7 +36,7 @@ describe('storefrontRedirect', () => {
       }),
     ).resolves.toEqual(
       new Response(null, {
-        status: 302,
+        status: 301,
         headers: {location: shopifyDomain + '/some-page'},
       }),
     );
@@ -63,7 +63,7 @@ describe('storefrontRedirect', () => {
         status: 200,
         headers: {
           'X-Remix-Redirect': shopifyDomain + '/some-page',
-          'X-Remix-Status': '302',
+          'X-Remix-Status': '301',
         },
       }),
     );
@@ -91,7 +91,7 @@ describe('storefrontRedirect', () => {
         status: 200,
         headers: {
           'X-Remix-Redirect': shopifyDomain + '/some-page',
-          'X-Remix-Status': '302',
+          'X-Remix-Status': '301',
         },
       }),
     );
@@ -124,7 +124,7 @@ describe('storefrontRedirect', () => {
           'X-Remix-Redirect':
             shopifyDomain +
             '/some-redirect?redirectParam=true&requestParam=true',
-          'X-Remix-Status': '302',
+          'X-Remix-Status': '301',
         },
       }),
     );
@@ -154,7 +154,7 @@ describe('storefrontRedirect', () => {
         headers: {
           'X-Remix-Redirect':
             '/some-redirect?redirectParam=true&requestParam=true',
-          'X-Remix-Status': '302',
+          'X-Remix-Status': '301',
         },
       }),
     );
@@ -215,7 +215,7 @@ describe('storefrontRedirect', () => {
           ),
         }),
       ).resolves.toEqual(
-        new Response(null, {status: 302, headers: {location: '/some-page'}}),
+        new Response(null, {status: 301, headers: {location: '/some-page'}}),
       );
     });
 
@@ -232,7 +232,7 @@ describe('storefrontRedirect', () => {
           ),
         }),
       ).resolves.toEqual(
-        new Response(null, {status: 302, headers: {location: '/some-page'}}),
+        new Response(null, {status: 301, headers: {location: '/some-page'}}),
       );
     });
 
@@ -280,7 +280,7 @@ describe('storefrontRedirect', () => {
         }),
       ).resolves.toEqual(
         new Response(null, {
-          status: 302,
+          status: 301,
           headers: {location: '/some-page?param=https://another.com'},
         }),
       );

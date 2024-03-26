@@ -101,12 +101,12 @@ function createRedirectResponse(
   searchParams: URLSearchParams,
   matchQueryParams?: boolean,
 ) {
-  const url = new URL(
-    location.startsWith('/') ? `${TEMP_DOMAIN}${location}` : location,
-  );
+  const url = new URL(location, TEMP_DOMAIN);
 
   if (!matchQueryParams) {
     for (const [key, value] of searchParams) {
+      // The redirect destination might include query params, so merge the
+      // original query params with the redirect destination query params
       url.searchParams.append(key, value);
     }
   }
@@ -116,12 +116,12 @@ function createRedirectResponse(
       status: 200,
       headers: {
         'X-Remix-Redirect': url.toString().replace(TEMP_DOMAIN, ''),
-        'X-Remix-Status': '302',
+        'X-Remix-Status': '301',
       },
     });
   } else {
     return new Response(null, {
-      status: 302,
+      status: 301,
       headers: {location: url.toString().replace(TEMP_DOMAIN, '')},
     });
   }
