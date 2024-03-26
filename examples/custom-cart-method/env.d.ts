@@ -1,4 +1,4 @@
-/// <reference types="@remix-run/dev" />
+/// <reference types="vite/client" />
 /// <reference types="@shopify/remix-oxygen" />
 /// <reference types="@shopify/oxygen-workers-types" />
 
@@ -9,10 +9,15 @@ import type {
   Storefront,
   CustomerAccount,
   HydrogenCart,
+  HydrogenCartCustom,
   HydrogenSessionData,
+  CartQueryDataReturn,
 } from '@shopify/hydrogen';
+import type {
+  SelectedOptionInput,
+  CartLineUpdateInput,
+} from '@shopify/hydrogen/storefront-api-types';
 import type {AppSession} from '~/lib/session';
-import {createRickAndMortyClient} from './app/lib/createRickAndMortyClient.server';
 
 declare global {
   /**
@@ -38,12 +43,21 @@ declare module '@shopify/remix-oxygen' {
   /**
    * Declare local additions to the Remix loader context.
    */
-  export interface AppLoadContext {
+  interface AppLoadContext {
     env: Env;
-    cart: HydrogenCart;
+    /***********************************************/
+    /**********  EXAMPLE UPDATE STARTS  ************/
+    cart: HydrogenCartCustom<{
+      updateLineByOptions: (
+        productId: string,
+        selectedOptions: SelectedOptionInput[],
+        line: CartLineUpdateInput,
+      ) => Promise<CartQueryDataReturn>;
+    }>;
+    /**********   EXAMPLE UPDATE END   ************/
+    /***********************************************/
     storefront: Storefront;
     customerAccount: CustomerAccount;
-    rickAndMorty: ReturnType<typeof createRickAndMortyClient>;
     session: AppSession;
     waitUntil: ExecutionContext['waitUntil'];
   }
