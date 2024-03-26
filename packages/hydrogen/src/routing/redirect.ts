@@ -11,6 +11,8 @@ type StorefrontRedirect = {
   response?: Response;
   /** By default the `/admin` route is redirected to the Shopify Admin page for the current storefront. Disable this redirect by passing `true`. */
   noAdminRedirect?: boolean;
+  /** By default, query parameters are not used to match redirects. Set this to `true` if you'd like redirects to be query parameter sensitive */
+  matchQueryParams?: boolean;
 };
 
 /**
@@ -28,20 +30,28 @@ export async function storefrontRedirect(
     storefront,
     request,
     noAdminRedirect,
+    matchQueryParams,
     response = new Response('Not Found', {status: 404}),
   } = options;
 
   const url = new URL(request.url);
-  const isSoftNavigation = url.searchParams.has('_data');
+  const {pathname, searchParams} = url;
+  const isSoftNavigation = searchParams.has('_data');
 
-  url.searchParams.delete('_data');
+  searchParams.delete('redirect');
+  searchParams.delete('return_to');
+  searchParams.delete('_data');
 
-  const redirectFrom = url.toString().replace(url.origin, '');
+  const redirectFrom = matchQueryParams
+    ? url.toString().replace(url.origin, '')
+    : pathname;
 
   if (url.pathname === '/admin' && !noAdminRedirect) {
     return createRedirectResponse(
       `${storefront.getShopifyDomain()}/admin`,
       isSoftNavigation,
+      searchParams,
+      matchQueryParams,
     );
   }
 
@@ -55,13 +65,23 @@ export async function storefrontRedirect(
     const location = urlRedirects?.edges?.[0]?.node?.target;
 
     if (location) {
-      return createRedirectResponse(location, isSoftNavigation);
+      return createRedirectResponse(
+        location,
+        isSoftNavigation,
+        searchParams,
+        matchQueryParams,
+      );
     }
 
     const redirectTo = getRedirectUrl(request.url);
 
     if (redirectTo) {
-      return createRedirectResponse(redirectTo, isSoftNavigation);
+      return createRedirectResponse(
+        redirectTo,
+        isSoftNavigation,
+        searchParams,
+        matchQueryParams,
+      );
     }
   } catch (error) {
     console.error(
@@ -73,16 +93,36 @@ export async function storefrontRedirect(
   return response;
 }
 
-function createRedirectResponse(location: string, isSoftNavigation: boolean) {
+const TEMP_DOMAIN = 'https://example.com';
+
+function createRedirectResponse(
+  location: string,
+  isSoftNavigation: boolean,
+  searchParams: URLSearchParams,
+  matchQueryParams?: boolean,
+) {
+  const url = new URL(location, TEMP_DOMAIN);
+
+  if (!matchQueryParams) {
+    for (const [key, value] of searchParams) {
+      // The redirect destination might include query params, so merge the
+      // original query params with the redirect destination query params
+      url.searchParams.append(key, value);
+    }
+  }
+
   if (isSoftNavigation) {
     return new Response(null, {
       status: 200,
-      headers: {'X-Remix-Redirect': location, 'X-Remix-Status': '302'},
+      headers: {
+        'X-Remix-Redirect': url.toString().replace(TEMP_DOMAIN, ''),
+        'X-Remix-Status': '301',
+      },
     });
   } else {
     return new Response(null, {
-      status: 302,
-      headers: {location: location},
+      status: 301,
+      headers: {location: url.toString().replace(TEMP_DOMAIN, '')},
     });
   }
 }
