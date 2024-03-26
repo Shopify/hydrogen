@@ -8,7 +8,6 @@ import {
   RequestInit,
 } from 'miniflare';
 import {dirname, resolvePath} from '@shopify/cli-kit/node/path';
-import {readFileSync} from 'node:fs';
 import {readFile} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
