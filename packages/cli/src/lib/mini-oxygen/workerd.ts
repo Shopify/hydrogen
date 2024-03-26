@@ -8,6 +8,7 @@ import {
   RequestInit,
 } from 'miniflare';
 import {dirname, resolvePath} from '@shopify/cli-kit/node/path';
+import {readFileSync} from 'node:fs';
 import {readFile} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
@@ -336,18 +337,25 @@ export function getWorkerOutboundService() {
 
   const extraCaCerts = process.env.NODE_EXTRA_CA_CERTS;
   if (extraCaCerts) {
-    // Pass the extra CA certs file to the worker environment.
-    // https://nodejs.org/api/cli.html#node_extra_ca_certsfile
-    return {
-      outboundService: {
-        network: {
-          allow: ['public'],
-          tlsOptions: {
-            trustBrowserCas: true,
-            trustedCertificates: [extraCaCerts],
+    try {
+      const content = readFileSync(extraCaCerts, 'utf-8');
+      const certs = content.split('\n\n');
+
+      // Pass the extra CA certs file to the worker environment.
+      // https://nodejs.org/api/cli.html#node_extra_ca_certsfile
+      return {
+        outboundService: {
+          network: {
+            allow: ['public'],
+            tlsOptions: {
+              trustBrowserCas: true,
+              trustedCertificates: certs,
+            },
           },
         },
-      },
-    };
+      };
+    } catch (error) {
+      console.error(error);
+    }
   }
 }
