@@ -20,7 +20,7 @@ jobs:
         examples:
           [
             {name: 'optimistic-cart-ui', token: '1000014888'},
-            {name: 'vite', token: '1000014892'},
+            {name: 'classic-remix', token: '1000014892'},
             {name: 'subscriptions', token: '1000014928'},
             {name: 'third-party-queries-caching', token: '1000014929'},
             {name: 'custom-cart-method', token: '1000014930'},
