@@ -1,7 +1,15 @@
 // FIX: AnalyticsProvider.tsx:301 Analytics publish error Cannot read properties of undefined (reading 'forEach')
 import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import { type ReactNode, useEffect, useState, useMemo, createContext, useContext, useRef } from "react";
-import { type CartReturn } from "../cart/queries/cart-types";
+import {
+  type ReactNode,
+  useEffect,
+  useState,
+  useMemo,
+  createContext,
+  useContext,
+  useRef,
+} from 'react';
+import {type CartReturn} from '../cart/queries/cart-types';
 import {
   AnalyticsPageView,
   AnalyticsProductView,
@@ -19,19 +27,22 @@ import {
   type EventPayloads,
   CartLineUpdatePayload,
   SearchViewPayload,
-} from "./AnalyticsView";
-import type { CurrencyCode, Customer, LanguageCode } from '@shopify/hydrogen-react/storefront-api-types';
-import { AnalyticsEvent } from "./events";
-import { ShopifyAnalytics } from "./ShopifyAnalytics";
-import { CartAnalytics } from "./CartAnalytics";
-import { type CustomerPrivacyApiProps } from "../customer-privacy/ShopifyCustomerPrivacy";
+} from './AnalyticsView';
+import type {
+  CurrencyCode,
+  LanguageCode,
+} from '@shopify/hydrogen-react/storefront-api-types';
+import {AnalyticsEvent} from './events';
+import {ShopifyAnalytics} from './ShopifyAnalytics';
+import {CartAnalytics} from './CartAnalytics';
+import {type CustomerPrivacyApiProps} from '../customer-privacy/ShopifyCustomerPrivacy';
 
 export type ShopAnalytic = {
   shopId: string;
-  acceptedLanguage: LanguageCode
+  acceptedLanguage: LanguageCode;
   currency: CurrencyCode;
-  hydrogenSubchannelId: string | '0',
-}
+  hydrogenSubchannelId: string | '0';
+};
 
 export type AnalyticsProviderProps = {
   /** React children to render. */
@@ -51,12 +62,12 @@ export type AnalyticsProviderProps = {
   shop: Promise<ShopAnalytic | null> | ShopAnalytic | null;
   /** The customer privacy consent configuration and options */
   consent: CustomerPrivacyApiProps;
-}
+};
 
 export type Carts = {
   cart: Awaited<AnalyticsProviderProps['cart']>;
   prevCart: Awaited<AnalyticsProviderProps['cart']>;
-}
+};
 
 type AnalyticsContextValue = {
   canTrack: NonNullable<AnalyticsProviderProps['canTrack']>;
@@ -67,8 +78,8 @@ type AnalyticsContextValue = {
   setCarts: React.Dispatch<React.SetStateAction<Carts>>;
   shop: Awaited<AnalyticsProviderProps['shop']>;
   subscribe: typeof subscribe;
-  register: (key: string) => { ready: () => void };
-}
+  register: (key: string) => {ready: () => void};
+};
 
 export const defaultAnalyticsContext: AnalyticsContextValue = {
   canTrack: () => false,
@@ -76,17 +87,20 @@ export const defaultAnalyticsContext: AnalyticsContextValue = {
   customData: {},
   prevCart: null,
   publish: () => {},
-  setCarts: () => ({ cart: null, prevCart: null }),
+  setCarts: () => ({cart: null, prevCart: null}),
   shop: null,
   subscribe: () => {},
-  register: () => ({ ready: () => {} }),
+  register: () => ({ready: () => {}}),
 };
 
 const AnalyticsContext = createContext<AnalyticsContextValue>(
   defaultAnalyticsContext,
 );
 
-const subscribers = new Map<string, Map<string, (payload: EventPayloads) => void>>();
+const subscribers = new Map<
+  string,
+  Map<string, (payload: EventPayloads) => void>
+>();
 const registers: Record<string, boolean> = {};
 
 function areRegistersReady() {
@@ -102,53 +116,50 @@ function areRegistersReady() {
 // Overload functions for each subscribe event
 function subscribe(
   event: typeof AnalyticsEvent.PAGE_VIEWED,
-  callback: (payload: PageViewPayload) => void
+  callback: (payload: PageViewPayload) => void,
 ): void;
 
 function subscribe(
   event: typeof AnalyticsEvent.PRODUCT_VIEWED,
-  callback: (payload: ProductViewPayload) => void
+  callback: (payload: ProductViewPayload) => void,
 ): void;
 
 function subscribe(
   event: typeof AnalyticsEvent.COLLECTION_VIEWED,
-  callback: (payload: CollectionViewPayload) => void
+  callback: (payload: CollectionViewPayload) => void,
 ): void;
 
 function subscribe(
   event: typeof AnalyticsEvent.CART_VIEWED,
-  callback: (payload: CartViewPayload) => void
+  callback: (payload: CartViewPayload) => void,
 ): void;
 
 function subscribe(
   event: typeof AnalyticsEvent.SEARCH_VIEWED,
-  callback: (payload: SearchViewPayload) => void
+  callback: (payload: SearchViewPayload) => void,
 ): void;
 
 function subscribe(
   event: typeof AnalyticsEvent.CART_UPDATED,
-  callback: (payload: CartUpdatePayload) => void
+  callback: (payload: CartUpdatePayload) => void,
 ): void;
 
 function subscribe(
   event: typeof AnalyticsEvent.PRODUCT_ADD_TO_CART,
-  callback: (payload: CartLineUpdatePayload) => void
+  callback: (payload: CartLineUpdatePayload) => void,
 ): void;
 
 function subscribe(
   event: typeof AnalyticsEvent.PRODUCT_REMOVED_FROM_CART,
-  callback: (payload: CartLineUpdatePayload) => void
+  callback: (payload: CartLineUpdatePayload) => void,
 ): void;
 
 function subscribe(
   event: typeof AnalyticsEvent.CUSTOM_EVENT,
-  callback: (payload: CustomEventPayload) => void
+  callback: (payload: CustomEventPayload) => void,
 ): void;
 
-function subscribe(
-  event: any,
-  callback: any
-) {
+function subscribe(event: any, callback: any) {
   if (!subscribers.has(event)) {
     subscribers.set(event, new Map());
   }
@@ -157,14 +168,38 @@ function subscribe(
 
 const waitForReadyQueue = new Map<any, any>();
 
-function publish(event: typeof AnalyticsEvent.PAGE_VIEWED, payload: PageViewPayload): void;
-function publish(event: typeof AnalyticsEvent.PRODUCT_VIEWED, payload: ProductViewPayload): void;
-function publish(event: typeof AnalyticsEvent.COLLECTION_VIEWED, payload: CollectionViewPayload): void;
-function publish(event: typeof AnalyticsEvent.CART_VIEWED, payload: CartViewPayload): void;
-function publish(event: typeof AnalyticsEvent.CART_UPDATED, payload: CartUpdatePayload): void;
-function publish(event: typeof AnalyticsEvent.PRODUCT_ADD_TO_CART, payload: CartLineUpdatePayload): void;
-function publish(event: typeof AnalyticsEvent.PRODUCT_REMOVED_FROM_CART, payload: CartLineUpdatePayload): void;
-function publish(event: typeof AnalyticsEvent.CUSTOM_EVENT, payload: OtherData): void;
+function publish(
+  event: typeof AnalyticsEvent.PAGE_VIEWED,
+  payload: PageViewPayload,
+): void;
+function publish(
+  event: typeof AnalyticsEvent.PRODUCT_VIEWED,
+  payload: ProductViewPayload,
+): void;
+function publish(
+  event: typeof AnalyticsEvent.COLLECTION_VIEWED,
+  payload: CollectionViewPayload,
+): void;
+function publish(
+  event: typeof AnalyticsEvent.CART_VIEWED,
+  payload: CartViewPayload,
+): void;
+function publish(
+  event: typeof AnalyticsEvent.CART_UPDATED,
+  payload: CartUpdatePayload,
+): void;
+function publish(
+  event: typeof AnalyticsEvent.PRODUCT_ADD_TO_CART,
+  payload: CartLineUpdatePayload,
+): void;
+function publish(
+  event: typeof AnalyticsEvent.PRODUCT_REMOVED_FROM_CART,
+  payload: CartLineUpdatePayload,
+): void;
+function publish(
+  event: typeof AnalyticsEvent.CUSTOM_EVENT,
+  payload: OtherData,
+): void;
 function publish(event: any, payload: any): void {
   if (!areRegistersReady()) {
     waitForReadyQueue.set(event, payload);
@@ -203,8 +238,8 @@ function register(key: string) {
         });
         waitForReadyQueue.clear();
       }
-    }
-  }
+    },
+  };
 }
 
 // This functions attempts to automatically determine if the user can be tracked if the
@@ -230,10 +265,14 @@ function AnalyticsProvider({
   shop: shopProp = null,
 }: AnalyticsProviderProps): JSX.Element {
   const listenerSet = useRef(false);
-  const { shop } = useShopAnalytics(shopProp);
-  const [consentLoaded, setConsentLoaded] = useState(customCanTrack ? true : false);
-  const [carts, setCarts] = useState<Carts>({ cart: null, prevCart: null });
-  const [canTrack, setCanTrack] = useState(customCanTrack ? () => customCanTrack : () => shopifyCanTrack);
+  const {shop} = useShopAnalytics(shopProp);
+  const [consentLoaded, setConsentLoaded] = useState(
+    customCanTrack ? true : false,
+  );
+  const [carts, setCarts] = useState<Carts>({cart: null, prevCart: null});
+  const [canTrack, setCanTrack] = useState(
+    customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
+  );
 
   // Force a re-render of the value when
   useEffect(() => {
@@ -241,13 +280,10 @@ function AnalyticsProvider({
     if (listenerSet.current) return;
     listenerSet.current = true;
 
-    document.addEventListener(
-      'visitorConsentCollected',
-      () => {
-        setConsentLoaded(true);
-        setCanTrack(() => shopifyCanTrack);
-      },
-    );
+    document.addEventListener('visitorConsentCollected', () => {
+      setConsentLoaded(true);
+      setCanTrack(() => shopifyCanTrack);
+    });
   }, [setConsentLoaded, setCanTrack, customCanTrack]);
 
   const value = useMemo<AnalyticsContextValue>(() => {
@@ -255,13 +291,26 @@ function AnalyticsProvider({
       canTrack,
       ...carts,
       customData,
-      publish: canTrack() ? publish : () => { },
+      publish: canTrack() ? publish : () => {},
       setCarts,
       shop,
       subscribe,
       register,
-    }
-  }, [setCarts, consentLoaded, canTrack(), canTrack, JSON.stringify(canTrack), carts.cart?.updatedAt, carts.prevCart, publish, subscribe, customData, shop, register]);
+    };
+  }, [
+    setCarts,
+    consentLoaded,
+    canTrack(),
+    canTrack,
+    JSON.stringify(canTrack),
+    carts.cart?.updatedAt,
+    carts.prevCart,
+    publish,
+    subscribe,
+    customData,
+    shop,
+    register,
+  ]);
 
   return (
     <AnalyticsContext.Provider value={value}>
@@ -271,12 +320,14 @@ function AnalyticsProvider({
       {shop && <ShopifyAnalytics consent={consent} />}
     </AnalyticsContext.Provider>
   );
-};
+}
 
 export function useAnalytics(): AnalyticsContextValue {
   const analyticsContext = useContext(AnalyticsContext);
   if (!analyticsContext) {
-    throw new Error(`'useAnalyticsProvider()' must be a descendent of <AnalyticsProvider/>`);
+    throw new Error(
+      `'useAnalyticsProvider()' must be a descendent of <AnalyticsProvider/>`,
+    );
   }
   return analyticsContext;
 }
@@ -285,21 +336,26 @@ export function useAnalytics(): AnalyticsContextValue {
  * A hook that resolves the shop analytics that could have been deferred
  * and returns the shop analytics.
  */
-function useShopAnalytics(shopProp: AnalyticsProviderProps['shop']): { shop: ShopAnalytic | null } {
-  const [shop, setShop] = useState<Awaited<AnalyticsProviderProps['shop']>>(null);
+function useShopAnalytics(shopProp: AnalyticsProviderProps['shop']): {
+  shop: ShopAnalytic | null;
+} {
+  const [shop, setShop] =
+    useState<Awaited<AnalyticsProviderProps['shop']>>(null);
 
   // resolve the shop analytics that could have been deferred
   useEffect(() => {
     Promise.resolve(shopProp).then(setShop);
-    return () => { };
+    return () => {};
   }, [setShop, shopProp]);
 
-  return { shop };
+  return {shop};
 }
 
 // TODO: useCustomerAnalytics hook
 
-export async function getShopAnalytics(context: LoaderFunctionArgs['context']): Promise<ShopAnalytic | null> {
+export async function getShopAnalytics(
+  context: LoaderFunctionArgs['context'],
+): Promise<ShopAnalytic | null> {
   return context.storefront
     .query(SHOP_QUERY, {
       cache: context.storefront.CacheLong(),
@@ -343,4 +399,4 @@ export const Analytics = {
   ProductView: AnalyticsProductView,
   Provider: AnalyticsProvider,
   SearchView: AnalyticsSearchView,
-}
+};

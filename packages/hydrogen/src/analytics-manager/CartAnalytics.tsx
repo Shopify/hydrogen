@@ -1,9 +1,18 @@
-import {useEffect, useRef} from "react";
-import {useAnalytics, type AnalyticsProviderProps, type Carts} from "./AnalyticsProvider";
-import {type CartUpdatePayload} from "./AnalyticsView";
+import {useEffect, useRef} from 'react';
+import {
+  useAnalytics,
+  type AnalyticsProviderProps,
+  type Carts,
+} from './AnalyticsProvider';
+import {type CartUpdatePayload} from './AnalyticsView';
 
-export function CartAnalytics({cart: currentCart}: {cart: AnalyticsProviderProps['cart']}) {
-  const {publish, shop, customData, canTrack, cart, prevCart, setCarts} = useAnalytics();
+export function CartAnalytics({
+  cart: currentCart,
+}: {
+  cart: AnalyticsProviderProps['cart'];
+}) {
+  const {publish, shop, customData, canTrack, cart, prevCart, setCarts} =
+    useAnalytics();
   const lastEventId = useRef<string | null>(null);
 
   // resolve the cart that could have been deferred
@@ -11,13 +20,13 @@ export function CartAnalytics({cart: currentCart}: {cart: AnalyticsProviderProps
     if (!currentCart) return;
     Promise.resolve(currentCart).then((updatedCart) => {
       setCarts(({cart, prevCart}: Carts) => {
-        if (updatedCart?.updatedAt !== cart?.updatedAt) return {cart: updatedCart, prevCart: cart};
+        if (updatedCart?.updatedAt !== cart?.updatedAt)
+          return {cart: updatedCart, prevCart: cart};
         return {cart, prevCart};
-      })
-    })
+      });
+    });
     return () => {};
   }, [setCarts, currentCart]);
-
 
   useEffect(() => {
     if (!cart || !cart?.updatedAt) return;

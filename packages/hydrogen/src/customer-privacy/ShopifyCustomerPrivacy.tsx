@@ -1,5 +1,5 @@
-import { useLoadScript } from '@shopify/hydrogen';
-import { useEffect, useRef } from 'react';
+import {useLoadScript} from '@shopify/hydrogen';
+import {useEffect, useRef} from 'react';
 
 export type ConsentStatus = 'true' | 'false' | '';
 
@@ -19,7 +19,7 @@ export type VisitorConsentCollected = {
   thirdPartyMarketingAllowed: boolean;
 };
 
-export type CustomerPrivacyApiLoaded = boolean
+export type CustomerPrivacyApiLoaded = boolean;
 
 export type CustomerPrivacyConsentConfig = {
   checkoutRootDomain?: string;
@@ -92,7 +92,11 @@ const CONSENT_API_WITH_BANNER =
   'https://cdn.shopify.com/shopifycloud/privacy-banner/storefront-banner.js';
 
 export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
-  const { withPrivacyBanner = false, onVisitorConsentCollected, ...consentConfig } = props;
+  const {
+    withPrivacyBanner = false,
+    onVisitorConsentCollected,
+    ...consentConfig
+  } = props;
   const loadedEvent = useRef(false);
   const scriptStatus = useLoadScript(
     withPrivacyBanner ? CONSENT_API_WITH_BANNER : CONSENT_API,
@@ -140,7 +144,12 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
         );
       };
     }
-  }, [scriptStatus, onVisitorConsentCollected, withPrivacyBanner, consentConfig]);
+  }, [
+    scriptStatus,
+    onVisitorConsentCollected,
+    withPrivacyBanner,
+    consentConfig,
+  ]);
 
   return;
 }

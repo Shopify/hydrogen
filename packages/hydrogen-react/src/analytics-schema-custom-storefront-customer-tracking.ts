@@ -21,7 +21,7 @@ function prepareAdditionalPayload(payload: ShopifyPageViewPayload) {
   return {
     canonical_url: payload.canonicalUrl || payload.url,
     customer_id: parseInt(parseGid(payload.customerId).id || '0'),
-  }
+  };
 }
 
 export function pageView(
@@ -198,7 +198,9 @@ export function addToCart(
           cart_token,
           total_value: addToCartPayload.totalValue,
           products: formatProductPayload(addToCartPayload.products),
-          customer_id: parseInt(parseGid(addToCartPayload.customerId).id || '0'),
+          customer_id: parseInt(
+            parseGid(addToCartPayload.customerId).id || '0',
+          ),
         },
         formatPayload(addToCartPayload),
       ),

@@ -12,5 +12,5 @@ export const AnalyticsEvent = {
   PRODUCT_REMOVED_FROM_CART: 'product_removed_from_cart' as const,
 
   // Custom
-  CUSTOM_EVENT: `custom_` as `custom_${string}`
-}
+  CUSTOM_EVENT: `custom_` as `custom_${string}`,
+};

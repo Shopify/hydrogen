@@ -51,17 +51,11 @@ export function sendShopifyAnalytics(
       customerPageView2(pageViewPayload),
     );
   } else if (eventName === AnalyticsEventName.COLLECTION_VIEW) {
-    events = events.concat(
-      customerCollectionView(pageViewPayload),
-    );
+    events = events.concat(customerCollectionView(pageViewPayload));
   } else if (eventName === AnalyticsEventName.PRODUCT_VIEW) {
-    events = events.concat(
-      customerProductView(pageViewPayload),
-    );
+    events = events.concat(customerProductView(pageViewPayload));
   } else if (eventName === AnalyticsEventName.SEARCH_VIEW) {
-    events = events.concat(
-      customerSearchView(pageViewPayload),
-    );
+    events = events.concat(customerSearchView(pageViewPayload));
   }
 
   if (events.length) {
