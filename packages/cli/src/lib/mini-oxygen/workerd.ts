@@ -137,7 +137,7 @@ export async function startWorkerdServer({
               transformLocation: () => absoluteBundlePath,
             }),
           },
-          ...getWorkerOutboundService(),
+          ...conditionalUnsafeOutboundService(),
         },
       ],
     } satisfies MiniflareOptions);
@@ -318,9 +318,8 @@ async function logRequest(request: Request): Promise<Response> {
   return new Response('ok');
 }
 
-export function getWorkerOutboundService() {
-  const tlsRejectUnauthorized = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-  if (tlsRejectUnauthorized === '0') {
+export function conditionalUnsafeOutboundService() {
+  if (process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0') {
     // Opt-out of TLS validation in the worker environment,
     // and run network requests in Node environment.
     // https://nodejs.org/api/cli.html#node_tls_reject_unauthorizedvalue
@@ -333,29 +332,5 @@ export function getWorkerOutboundService() {
         return response;
       },
     };
-  }
-
-  const extraCaCerts = process.env.NODE_EXTRA_CA_CERTS;
-  if (extraCaCerts) {
-    try {
-      const content = readFileSync(extraCaCerts, 'utf-8');
-      const certs = content.split('\n\n');
-
-      // Pass the extra CA certs file to the worker environment.
-      // https://nodejs.org/api/cli.html#node_extra_ca_certsfile
-      return {
-        outboundService: {
-          network: {
-            allow: ['public'],
-            tlsOptions: {
-              trustBrowserCas: true,
-              trustedCertificates: certs,
-            },
-          },
-        },
-      };
-    } catch (error) {
-      console.error(error);
-    }
   }
 }
