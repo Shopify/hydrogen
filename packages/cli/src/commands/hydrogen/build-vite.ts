@@ -26,6 +26,8 @@ export default class Build extends Command {
     ...commonFlags.diff,
   };
 
+  static hidden = true;
+
   async run(): Promise<void> {
     const {flags} = await this.parse(Build);
     const originalDirectory = flags.path

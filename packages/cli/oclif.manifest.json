@@ -70,6 +70,7 @@
         }
       },
       "hasDynamicHelp": false,
+      "hidden": true,
       "hiddenAliases": [],
       "id": "hydrogen:build-vite",
       "pluginAlias": "@shopify/cli-hydrogen",
@@ -555,6 +556,7 @@
         }
       },
       "hasDynamicHelp": false,
+      "hidden": true,
       "hiddenAliases": [],
       "id": "hydrogen:dev-vite",
       "pluginAlias": "@shopify/cli-hydrogen",

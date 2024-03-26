@@ -36,6 +36,7 @@ import {
 } from '../../lib/bundle/analyzer.js';
 import {isCI} from '../../lib/is-ci.js';
 import {copyDiffBuild, prepareDiffDirectory} from '../../lib/template-diff.js';
+import {hasViteConfig} from '../../lib/vite-config.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
 const WORKER_BUILD_SIZE_LIMIT = 5;
@@ -68,11 +69,18 @@ export default class Build extends Command {
       directory = await prepareDiffDirectory(originalDirectory, false);
     }
 
-    await runBuild({
+    const buildParams = {
       ...flagsToCamelObject(flags),
       useCodegen: flags.codegen,
       directory,
-    });
+    };
+
+    if (await hasViteConfig(directory ?? process.cwd())) {
+      const {runViteBuild} = await import('./build-vite.js');
+      await runViteBuild(buildParams);
+    } else {
+      await runBuild(buildParams);
+    }
 
     if (flags.diff) {
       await copyDiffBuild(directory, originalDirectory);

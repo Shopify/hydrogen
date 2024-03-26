@@ -61,6 +61,8 @@ export default class DevVite extends Command {
     ...commonFlags.customerAccountPush,
   };
 
+  static hidden = true;
+
   async run(): Promise<void> {
     const {flags} = await this.parse(DevVite);
     let directory = flags.path ? path.resolve(flags.path) : process.cwd();
