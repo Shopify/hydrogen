@@ -71,6 +71,7 @@ export default {
        */
       const cart = createCartHandler({
         storefront,
+        customerAccount,
         getCartId: cartGetIdDefault(request.headers),
         setCartId: cartSetIdDefault(),
         cartQueryFragment: CART_QUERY_FRAGMENT,

@@ -7,7 +7,14 @@ export default defineConfig({
   plugins: [
     hydrogen(),
     oxygen(),
-    remix({buildDirectory: 'dist'}),
+    remix({
+      buildDirectory: 'dist',
+      future: {
+        v3_fetcherPersist: true,
+        v3_relativeSplatPath: true,
+        v3_throwAbortReason: true,
+      },
+    }),
     tsconfigPaths(),
   ],
 });
