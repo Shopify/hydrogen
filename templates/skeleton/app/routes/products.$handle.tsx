@@ -318,6 +318,14 @@ function AddToCartButton({
           >
             {children}
           </button>
+
+          {fetcher.data?.errors && (
+            <div className="text-red-500">
+              {fetcher.data.errors.map((error: any) => (
+                <div key={error.message}>{error.message}</div>
+              ))}
+            </div>
+          )}
         </>
       )}
     </CartForm>
