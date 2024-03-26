@@ -271,6 +271,7 @@ export function CartProvider({
   });
 
   const cartReady = useRef(false);
+  const [isCartReady, setIsCartReady] = useState(false);
   const cartCompleted = cartState.matches('cartCompleted');
 
   const countryChanged =
@@ -302,6 +303,8 @@ export function CartProvider({
         }
       }
       cartReady.current = true;
+      // Providing a separate cart ready state variable to avoid re-renders in this logic while still being able to pass the reactive status through context.
+      setIsCartReady(true);
     }
   }, [cart, cartReady, cartSend]);
 
@@ -393,6 +396,7 @@ export function CartProvider({
       error: cartDisplayState?.context?.errors,
       totalQuantity: cartDisplayState?.context?.cart?.totalQuantity ?? 0,
       cartCreate,
+      cartReady: isCartReady,
       linesAdd(lines: CartLineInput[]): void {
         if (cartDisplayState?.context?.cart?.id) {
           onCartReadySend({
@@ -455,6 +459,7 @@ export function CartProvider({
     };
   }, [
     cartCreate,
+    isCartReady,
     cartDisplayState?.context?.cart,
     cartDisplayState?.context?.errors,
     cartDisplayState.value,

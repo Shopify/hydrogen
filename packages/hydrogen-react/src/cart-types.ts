@@ -62,6 +62,8 @@ interface CartActions {
   totalQuantity?: number;
   /** The fragment used to query the cart object for all queries and mutations. */
   cartFragment: string;
+  /** A boolean indicating if the cart is ready to be interacted with. */
+  cartReady?: boolean;
 }
 
 export type Cart = PartialDeep<CartBase, {recurseIntoArrays: true}>;
