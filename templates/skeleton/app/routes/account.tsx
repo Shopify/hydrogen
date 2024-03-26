@@ -29,13 +29,7 @@ export async function loader({context}: LoaderFunctionArgs) {
 }
 
 export default function AccountLayout() {
-  const {setCustomerData} = useAnalytics();
   const {customer} = useLoaderData<typeof loader>();
-
-  useEffect(() => {
-    // @ts-ignore
-    setCustomerData(customer);
-  });
 
   const heading = customer
     ? customer.firstName

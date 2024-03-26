@@ -68,8 +68,6 @@ type AnalyticsContextValue = {
   shop: Awaited<AnalyticsProviderProps['shop']>;
   subscribe: typeof subscribe;
   register: (key: string) => { ready: () => void };
-  getCustomerData: () => Customer | null;
-  setCustomerData: (customerData: Customer) => void;
 }
 
 export const defaultAnalyticsContext: AnalyticsContextValue = {
@@ -82,8 +80,6 @@ export const defaultAnalyticsContext: AnalyticsContextValue = {
   shop: null,
   subscribe: () => {},
   register: () => ({ ready: () => {} }),
-  getCustomerData: () => null,
-  setCustomerData: () => {},
 };
 
 const AnalyticsContext = createContext<AnalyticsContextValue>(
@@ -238,7 +234,6 @@ function AnalyticsProvider({
   const [consentLoaded, setConsentLoaded] = useState(customCanTrack ? true : false);
   const [carts, setCarts] = useState<Carts>({ cart: null, prevCart: null });
   const [canTrack, setCanTrack] = useState(customCanTrack ? () => customCanTrack : () => shopifyCanTrack);
-  const [customer, setCustomer] = useState<Customer | null>(null);
 
   // Force a re-render of the value when
   useEffect(() => {
@@ -265,27 +260,8 @@ function AnalyticsProvider({
       shop,
       subscribe,
       register,
-      setCustomerData: (customerData: Customer) => {
-        if(canTrack() ) {
-          setCustomer(customerData);
-          localStorage.setItem('analyticsCustomerData', JSON.stringify(customerData));
-        } else {
-          setCustomer(null);
-          localStorage.removeItem('analyticsCustomerData');
-        }
-      },
-      getCustomerData: () => {
-        if (customer) return customer;
-        const customerData = localStorage.getItem('analyticsCustomerData');
-        if (customerData) {
-          const parsedData = JSON.parse(customerData);
-          setCustomer(parsedData);
-          return parsedData;
-        }
-        return null;
-      },
     }
-  }, [setCarts, consentLoaded, canTrack(), canTrack, JSON.stringify(canTrack), carts.cart?.updatedAt, carts.prevCart, publish, subscribe, customData, shop, register, customer]);
+  }, [setCarts, consentLoaded, canTrack(), canTrack, JSON.stringify(canTrack), carts.cart?.updatedAt, carts.prevCart, publish, subscribe, customData, shop, register]);
 
   return (
     <AnalyticsContext.Provider value={value}>
