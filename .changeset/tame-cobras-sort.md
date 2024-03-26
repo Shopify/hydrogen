@@ -1,5 +1,5 @@
 ---
-'@shopify/hydrogen-react': minor
+'@shopify/hydrogen-react': patch
 ---
 
 Expose `cartReady` state from the cart context.
