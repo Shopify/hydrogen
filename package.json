@@ -42,7 +42,6 @@
     "examples/partytown",
     "examples/subscriptions",
     "examples/third-party-queries-caching",
-    "examples/vite",
     "packages/cli",
     "packages/create-hydrogen",
     "packages/hydrogen",
