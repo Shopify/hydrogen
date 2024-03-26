@@ -32,10 +32,7 @@ import {
   parseToken,
 } from '@shopify/oxygen-cli/deploy';
 
-import {
-  findEnvironmentByBranchOrThrow,
-  findEnvironmentOrThrow,
-} from '../../lib/common.js';
+import {findEnvironmentOrThrow} from '../../lib/common.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
 import {OxygenDeploymentData} from '../../lib/graphql/admin/get-oxygen-data.js';
@@ -43,6 +40,7 @@ import {runBuild} from './build.js';
 import {runViteBuild} from './build-vite.js';
 import {getViteConfig} from '../../lib/vite-config.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
+import {hasRemixConfigFile} from '../../lib/remix-config.js';
 
 const DEPLOY_OUTPUT_FILE_HANDLE = 'h2_deploy_log.json';
 
@@ -393,11 +391,16 @@ export async function runDeploy(
   let assetsDir = 'dist/client';
   let workerDir = 'dist/worker';
 
-  const maybeVite = await getViteConfig(root).catch(() => null);
+  const isClassicCompiler = await hasRemixConfigFile(root);
 
-  if (maybeVite) {
-    assetsDir = relativePath(root, maybeVite.clientOutDir);
-    workerDir = relativePath(root, maybeVite.serverOutDir);
+  if (!isClassicCompiler) {
+    const viteConfig = await getViteConfig(root).catch(() => null);
+    if (viteConfig) {
+      assetsDir = relativePath(root, viteConfig.clientOutDir);
+      workerDir = relativePath(root, viteConfig.serverOutDir);
+    } else {
+      workerDir = 'dist/server';
+    }
   }
 
   const config: DeploymentConfig = {
@@ -489,7 +492,7 @@ export async function runDeploy(
         outputContent`${colors.whiteBright('Building project...')}`.value,
       );
 
-      const build = maybeVite ? runViteBuild : runBuild;
+      const build = isClassicCompiler ? runBuild : runViteBuild;
 
       await build({
         directory: root,

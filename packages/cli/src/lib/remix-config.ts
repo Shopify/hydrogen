@@ -9,8 +9,14 @@ import {outputWarn} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {muteRemixLogs} from './log.js';
 import {getRequiredRemixVersion} from './remix-version-check.js';
+import {findFileWithExtension} from './file.js';
 
 export type {RemixConfig, ServerMode};
+
+export async function hasRemixConfigFile(root: string) {
+  const result = await findFileWithExtension(root, 'remix.config');
+  return !!result.filepath;
+}
 
 const BUILD_DIR = 'dist'; // Hardcoded in Oxygen
 const CLIENT_SUBDIR = 'client';
