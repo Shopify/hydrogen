@@ -31,6 +31,7 @@
   },
   "workspaces": [
     "docs/preview",
+    "examples/classic-remix",
     "examples/custom-cart-method",
     "examples/express",
     "examples/infinite-scroll",
@@ -67,7 +68,7 @@
     "turbo": "1.12.0",
     "typescript": "^5.2.2",
     "yorkie": "^2.0.0",
-    "tiny-invariant":"^1.3.1"
+    "tiny-invariant": "^1.3.1"
   },
   "engines": {
     "node": ">=18.0.0"
