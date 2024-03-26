@@ -3,10 +3,10 @@
   "private": true,
   "sideEffects": false,
   "version": "1.0.6",
-  "type": "commonjs",
+  "type": "module",
   "scripts": {
-    "build": "shopify hydrogen build",
-    "dev": "shopify hydrogen dev --codegen --customer-account-push",
+    "build": "shopify hydrogen build-vite --codegen",
+    "dev": "shopify hydrogen dev-vite --codegen",
     "preview": "npm run build && shopify hydrogen preview",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "typecheck": "tsc --noEmit",
@@ -22,7 +22,7 @@
     "@shopify/remix-oxygen": "^2.0.3",
     "graphql": "^16.6.0",
     "graphql-tag": "^2.12.6",
-    "isbot": "^3.6.6",
+    "isbot": "^3.8.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -38,7 +38,9 @@
     "eslint": "^8.20.0",
     "eslint-plugin-hydrogen": "0.12.2",
     "prettier": "^2.8.4",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "vite": "~5.1.0",
+    "vite-tsconfig-paths": "^4.3.1"
   },
   "engines": {
     "node": ">=18.0.0"
