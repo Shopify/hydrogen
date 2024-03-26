@@ -20,7 +20,9 @@ import type {
   SearchViewPayload,
 } from './AnalyticsView';
 import {useEffect} from 'react';
-import {CartLine, ComponentizableCartLine, Maybe} from '@shopify/hydrogen-react/storefront-api-types';
+import {CartLine, ComponentizableCartLine, Customer, Maybe} from '@shopify/hydrogen-react/storefront-api-types';
+
+let customer: Customer | null = null;
 
 /**
  * This component is responsible for sending analytics events to Shopify.
@@ -28,17 +30,17 @@ import {CartLine, ComponentizableCartLine, Maybe} from '@shopify/hydrogen-react/
  * - page_viewed
  * - product_viewed
  * - collection_viewed
- * - cart_updated
- *   - product_added_to_cart
- *   - product_removed_from_cart
- *   - ...
+ * - search_viewed
+ * - product_added_to_cart
 */
 export function ShopifyAnalytics({consent}: {consent: AnalyticsProviderProps['consent']}) {
-  const {subscribe, register, canTrack} = useAnalytics();
+  const {subscribe, register, canTrack, getCustomerData} = useAnalytics();
   const {ready: shopifyAnalyticsReady} = register('ShopifyAnalytics');
   const {ready: customerPrivacyReady} = register('ShopifyCustomerPrivacy');
   const {checkoutRootDomain, shopDomain, storefrontAccessToken} = consent;
   checkoutRootDomain && shopDomain && storefrontAccessToken && useCustomerPrivacy(consent);
+
+  customer =  getCustomerData();
 
   useShopifyCookies({hasUserConsent: canTrack()});
   useEffect(() => {
@@ -82,6 +84,7 @@ function prepareBasePageViewPayload(payload: PageViewPayload | ProductViewPayloa
     ...getClientBrowserParameters(),
     ccpaEnforced: !customerPrivacy.saleOfDataAllowed(),
     gdprEnforced: !(customerPrivacy.marketingAllowed() && customerPrivacy.analyticsProcessingAllowed()),
+    customerId: customer?.id,
   };
 
   return eventPayload;

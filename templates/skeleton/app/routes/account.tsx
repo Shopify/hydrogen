@@ -1,6 +1,8 @@
 import {json, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {Form, NavLink, Outlet, useLoaderData} from '@remix-run/react';
 import {CUSTOMER_DETAILS_QUERY} from '~/graphql/customer-account/CustomerDetailsQuery';
+import { useAnalytics } from '@shopify/hydrogen';
+import { useEffect } from 'react';
 
 export function shouldRevalidate() {
   return true;
@@ -27,7 +29,13 @@ export async function loader({context}: LoaderFunctionArgs) {
 }
 
 export default function AccountLayout() {
+  const {setCustomerData} = useAnalytics();
   const {customer} = useLoaderData<typeof loader>();
+
+  useEffect(() => {
+    // @ts-ignore
+    setCustomerData(customer);
+  });
 
   const heading = customer
     ? customer.firstName

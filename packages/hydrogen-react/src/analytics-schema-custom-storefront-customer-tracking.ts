@@ -17,14 +17,19 @@ const PRODUCT_PAGE_RENDERED_EVENT_NAME = 'product_page_rendered';
 const PRODUCT_ADDED_TO_CART_EVENT_NAME = 'product_added_to_cart';
 const SEARCH_SUBMITTED_EVENT_NAME = 'search_submitted';
 
+function prepareAdditionalPayload(payload: ShopifyPageViewPayload) {
+  return {
+    canonical_url: payload.canonicalUrl || payload.url,
+    customer_id: parseInt(parseGid(payload.customerId).id || '0'),
+  }
+}
+
 export function pageView(
   payload: ShopifyPageViewPayload,
 ): ShopifyMonorailEvent[] {
   const pageViewPayload = payload;
-  const additionalPayload = {
-    canonical_url: pageViewPayload.canonicalUrl || pageViewPayload.url,
-    customer_id: pageViewPayload.customerId,
-  };
+  const additionalPayload = prepareAdditionalPayload(pageViewPayload);
+
   const pageType = pageViewPayload.pageType;
   const pageViewEvents = [];
 
@@ -97,10 +102,7 @@ export function pageView2(
   payload: ShopifyPageViewPayload,
 ): ShopifyMonorailEvent[] {
   const pageViewPayload = payload;
-  const additionalPayload = {
-    canonical_url: pageViewPayload.canonicalUrl || pageViewPayload.url,
-    customer_id: pageViewPayload.customerId,
-  };
+  const additionalPayload = prepareAdditionalPayload(pageViewPayload);
 
   return [
     schemaWrapper(
@@ -120,10 +122,7 @@ export function collectionView(
   payload: ShopifyPageViewPayload,
 ): ShopifyMonorailEvent[] {
   const pageViewPayload = payload;
-  const additionalPayload = {
-    canonical_url: pageViewPayload.canonicalUrl || pageViewPayload.url,
-    customer_id: pageViewPayload.customerId,
-  };
+  const additionalPayload = prepareAdditionalPayload(pageViewPayload);
 
   return [
     schemaWrapper(
@@ -144,10 +143,7 @@ export function productView(
   payload: ShopifyPageViewPayload,
 ): ShopifyMonorailEvent[] {
   const pageViewPayload = payload;
-  const additionalPayload = {
-    canonical_url: pageViewPayload.canonicalUrl || pageViewPayload.url,
-    customer_id: pageViewPayload.customerId,
-  };
+  const additionalPayload = prepareAdditionalPayload(pageViewPayload);
 
   return [
     schemaWrapper(
@@ -169,10 +165,7 @@ export function searchView(
   payload: ShopifyPageViewPayload,
 ): ShopifyMonorailEvent[] {
   const pageViewPayload = payload;
-  const additionalPayload = {
-    canonical_url: pageViewPayload.canonicalUrl || pageViewPayload.url,
-    customer_id: pageViewPayload.customerId,
-  };
+  const additionalPayload = prepareAdditionalPayload(pageViewPayload);
 
   return [
     schemaWrapper(
@@ -205,6 +198,7 @@ export function addToCart(
           cart_token,
           total_value: addToCartPayload.totalValue,
           products: formatProductPayload(addToCartPayload.products),
+          customer_id: parseInt(parseGid(addToCartPayload.customerId).id || '0'),
         },
         formatPayload(addToCartPayload),
       ),

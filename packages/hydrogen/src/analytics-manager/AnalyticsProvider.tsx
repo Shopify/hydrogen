@@ -18,8 +18,9 @@ import {
   type OtherData,
   type EventPayloads,
   CartLineUpdatePayload,
+  SearchViewPayload,
 } from "./AnalyticsView";
-import type { CurrencyCode, LanguageCode } from '@shopify/hydrogen-react/storefront-api-types';
+import type { CurrencyCode, Customer, LanguageCode } from '@shopify/hydrogen-react/storefront-api-types';
 import { AnalyticsEvent } from "./events";
 import { ShopifyAnalytics } from "./ShopifyAnalytics";
 import { CartAnalytics } from "./CartAnalytics";
@@ -67,6 +68,8 @@ type AnalyticsContextValue = {
   shop: Awaited<AnalyticsProviderProps['shop']>;
   subscribe: typeof subscribe;
   register: (key: string) => { ready: () => void };
+  getCustomerData: () => Customer | null;
+  setCustomerData: (customerData: Customer) => void;
 }
 
 export const defaultAnalyticsContext: AnalyticsContextValue = {
@@ -74,11 +77,13 @@ export const defaultAnalyticsContext: AnalyticsContextValue = {
   cart: null,
   customData: {},
   prevCart: null,
-  publish: () => { },
+  publish: () => {},
   setCarts: () => ({ cart: null, prevCart: null }),
   shop: null,
-  subscribe: () => { },
-  register: () => ({ ready: () => { } }),
+  subscribe: () => {},
+  register: () => ({ ready: () => {} }),
+  getCustomerData: () => null,
+  setCustomerData: () => {},
 };
 
 const AnalyticsContext = createContext<AnalyticsContextValue>(
@@ -117,6 +122,11 @@ function subscribe(
 function subscribe(
   event: typeof AnalyticsEvent.CART_VIEWED,
   callback: (payload: CartViewPayload) => void
+): void;
+
+function subscribe(
+  event: typeof AnalyticsEvent.SEARCH_VIEWED,
+  callback: (payload: SearchViewPayload) => void
 ): void;
 
 function subscribe(
@@ -228,6 +238,7 @@ function AnalyticsProvider({
   const [consentLoaded, setConsentLoaded] = useState(customCanTrack ? true : false);
   const [carts, setCarts] = useState<Carts>({ cart: null, prevCart: null });
   const [canTrack, setCanTrack] = useState(customCanTrack ? () => customCanTrack : () => shopifyCanTrack);
+  const [customer, setCustomer] = useState<Customer | null>(null);
 
   // Force a re-render of the value when
   useEffect(() => {
@@ -254,8 +265,27 @@ function AnalyticsProvider({
       shop,
       subscribe,
       register,
+      setCustomerData: (customerData: Customer) => {
+        if(canTrack() ) {
+          setCustomer(customerData);
+          localStorage.setItem('analyticsCustomerData', JSON.stringify(customerData));
+        } else {
+          setCustomer(null);
+          localStorage.removeItem('analyticsCustomerData');
+        }
+      },
+      getCustomerData: () => {
+        if (customer) return customer;
+        const customerData = localStorage.getItem('analyticsCustomerData');
+        if (customerData) {
+          const parsedData = JSON.parse(customerData);
+          setCustomer(parsedData);
+          return parsedData;
+        }
+        return null;
+      },
     }
-  }, [setCarts, consentLoaded, canTrack(), canTrack, JSON.stringify(canTrack), carts.cart?.updatedAt, carts.prevCart, publish, subscribe, customData, shop, register]);
+  }, [setCarts, consentLoaded, canTrack(), canTrack, JSON.stringify(canTrack), carts.cart?.updatedAt, carts.prevCart, publish, subscribe, customData, shop, register, customer]);
 
   return (
     <AnalyticsContext.Provider value={value}>
