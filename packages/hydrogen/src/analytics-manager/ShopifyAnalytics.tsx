@@ -26,7 +26,6 @@ import {useEffect} from 'react';
 import {
   CartLine,
   ComponentizableCartLine,
-  Customer,
   Maybe,
 } from '@shopify/hydrogen-react/storefront-api-types';
 

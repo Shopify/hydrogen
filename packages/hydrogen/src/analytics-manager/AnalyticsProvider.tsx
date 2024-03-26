@@ -31,6 +31,8 @@ import {
 import type {
   CurrencyCode,
   LanguageCode,
+  Shop,
+  Localization
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {AnalyticsEvent} from './events';
 import {ShopifyAnalytics} from './ShopifyAnalytics';
@@ -360,7 +362,7 @@ export async function getShopAnalytics(
     .query(SHOP_QUERY, {
       cache: context.storefront.CacheLong(),
     })
-    .then(({shop, localization}) => {
+    .then(({shop, localization}: {shop: Shop; localization: Localization}) => {
       return {
         shopId: shop.id,
         acceptedLanguage: localization.language.isoCode,
