@@ -16,7 +16,7 @@
     "vite-tsconfig-paths": "^4.3.1"
   },
   "h2:diff": {
-    "skip-files": [
+    "skipFiles": [
       "remix.config.js",
       "remix.env.d.ts",
       ".eslintrc.js"

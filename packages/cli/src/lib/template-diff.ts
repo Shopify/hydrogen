@@ -87,14 +87,22 @@ export async function prepareDiffDirectory(
   return targetDirectory;
 }
 
+type DiffOptions = {
+  skipFiles?: string[];
+  skipDependencies?: string[];
+  skipDevDependencies?: string[];
+};
+
 export async function applyTemplateDiff(
   targetDirectory: string,
   diffDirectory: string,
   templateDir = getStarterDir(),
 ) {
-  const pkgJson: Record<string, any> = await readAndParsePackageJson(
+  const diffPkgJson: Record<string, any> = await readAndParsePackageJson(
     joinPath(diffDirectory, 'package.json'),
   );
+
+  const diffOptions: DiffOptions = diffPkgJson['h2:diff'] ?? {};
 
   const createFilter =
     (re: RegExp, skipFiles?: string[]) => (filepath: string) => {
@@ -105,7 +113,7 @@ export async function applyTemplateDiff(
   await copyDirectory(templateDir, targetDirectory, {
     filter: createFilter(
       /(^|\/|\\)(dist|node_modules|\.cache|.turbo|CHANGELOG\.md)(\/|\\|$)/i,
-      pkgJson['h2:diff']?.['skip-files'] || [],
+      diffOptions.skipFiles || [],
     ),
   });
   await copyDirectory(diffDirectory, targetDirectory, {
@@ -121,6 +129,18 @@ export async function applyTemplateDiff(
         const scriptLine = pkgJson.scripts?.[key];
         if (pkgJson.scripts?.[key] && typeof scriptLine === 'string') {
           pkgJson.scripts[key] = scriptLine.replace(/\s+--diff/, '');
+        }
+      }
+
+      if (diffOptions.skipDependencies && pkgJson.dependencies) {
+        for (const dep of diffOptions.skipDependencies) {
+          delete pkgJson.dependencies[dep];
+        }
+      }
+
+      if (diffOptions.skipDevDependencies && pkgJson.devDependencies) {
+        for (const devDep of diffOptions.skipDevDependencies) {
+          delete pkgJson.devDependencies[devDep];
         }
       }
 
