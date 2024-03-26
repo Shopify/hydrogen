@@ -5,7 +5,8 @@
     "jsx": "react-jsx",
     "paths": {
       "@shopify/hydrogen": ["./src"]
-    }
+    },
+    "types": ["jest", "@testing-library/jest-dom"]
   },
   "exclude": ["src/cart/createCartHandler.example.ts"]
 }

@@ -8,6 +8,7 @@ import {
   ShopifyAnalyticsProduct,
   ShopifyAddToCartPayload,
   CartReturn,
+  AnalyticsEvent,
 } from '@shopify/hydrogen';
 import {useAnalytics, type AnalyticsProviderProps} from './AnalyticsProvider';
 import {
@@ -66,13 +67,13 @@ export function ShopifyAnalytics({
 
   useEffect(() => {
     // Views
-    subscribe('page_viewed', pageViewHandler);
-    subscribe('product_viewed', productViewHandler);
-    subscribe('collection_viewed', collectionViewHandler);
-    subscribe('search_viewed', searchViewHandler);
+    subscribe(AnalyticsEvent.PAGE_VIEWED, pageViewHandler);
+    subscribe(AnalyticsEvent.PRODUCT_VIEWED, productViewHandler);
+    subscribe(AnalyticsEvent.COLLECTION_VIEWED, collectionViewHandler);
+    subscribe(AnalyticsEvent.SEARCH_VIEWED, searchViewHandler);
 
     // Cart
-    subscribe('product_added_to_cart', productAddedToCartHandler);
+    subscribe(AnalyticsEvent.PRODUCT_ADD_TO_CART, productAddedToCartHandler);
 
     shopifyAnalyticsReady();
   }, [subscribe, shopifyAnalyticsReady]);

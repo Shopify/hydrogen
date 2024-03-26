@@ -71,7 +71,7 @@ export type Carts = {
   prevCart: Awaited<AnalyticsProviderProps['cart']>;
 };
 
-type AnalyticsContextValue = {
+export type AnalyticsContextValue = {
   canTrack: NonNullable<AnalyticsProviderProps['canTrack']>;
   cart: Awaited<AnalyticsProviderProps['cart']>;
   customData?: AnalyticsProviderProps['customData'];
@@ -305,6 +305,7 @@ function AnalyticsProvider({
     canTrack(),
     canTrack,
     JSON.stringify(canTrack),
+    carts,
     carts.cart?.updatedAt,
     carts.prevCart,
     publish,
@@ -319,7 +320,7 @@ function AnalyticsProvider({
       {children}
       {shop && <AnalyticsPageView />}
       {shop && currentCart && <CartAnalytics cart={currentCart} />}
-      {shop && <ShopifyAnalytics consent={consent} />}
+      {shop && consent && <ShopifyAnalytics consent={consent} />}
     </AnalyticsContext.Provider>
   );
 }
