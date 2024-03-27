@@ -20,6 +20,7 @@ import {getAssetDir} from '../../../lib/build.js';
 import {getCodeFormatOptions} from '../../../lib/format-code.js';
 import {hasViteConfig} from '../../../lib/vite-config.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
+import {outputNewline} from '@shopify/cli-kit/node/output';
 
 export default class SetupVite extends Command {
   static description = 'EXPERIMENTAL: Upgrades the project to use Vite.';
@@ -40,6 +41,7 @@ export default class SetupVite extends Command {
 }
 
 export async function runSetupVite({directory}: {directory: string}) {
+  outputNewline();
   if (await hasViteConfig(directory)) {
     throw new AbortError('This project already has a Vite config file.');
   }
@@ -83,10 +85,12 @@ export async function runSetupVite({directory}: {directory: string}) {
 
         mergePackageJson(viteAssets, directory, {
           onResult(pkgJson) {
-            if (pkgJson.devDependencies) {
+            if (pkgJson.dependencies) {
               // This dependency is not needed in Vite projects:
-              delete pkgJson.devDependencies['@remix-run/css-bundle'];
+              delete pkgJson.dependencies['@remix-run/css-bundle'];
+            }
 
+            if (pkgJson.devDependencies) {
               if (pkgJson.devDependencies['@vanilla-extract/css']) {
                 // This dependency is not needed in Vite projects:
                 pkgJson.devDependencies['@vanilla-extract/vite-plugin'] =
@@ -116,7 +120,7 @@ export async function runSetupVite({directory}: {directory: string}) {
                     /\n\n/g,
                     `\nimport {vanillaExtractPlugin} from '@vanilla-extract/vite-plugin';\n\n`,
                   )
-                  .replace(/^(\s+)\],/, '$1  vanillaExtractPlugin()\n$1],');
+                  .replace(/^(\s+)\],/m, '$1  vanillaExtractPlugin(),\n$1],');
               }
 
               return writeFile(
