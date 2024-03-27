@@ -9,7 +9,6 @@ export async function action({request, context}: ActionFunctionArgs) {
   try {
     const form = await request.formData();
     const companyLocationId = form.get('companyLocationId');
-    console.log(companyLocationId);
     context.session.set('company_location_id', companyLocationId);
 
     const result = await context.cart.updateBuyerIdentity({
@@ -20,7 +19,6 @@ export async function action({request, context}: ActionFunctionArgs) {
     });
 
     if (result) {
-      console.log(JSON.stringify(result));
       const cartHeaders = context.cart.setCartId(result.cart.id);
 
       cartHeaders.append('Set-Cookie', await context.session.commit());

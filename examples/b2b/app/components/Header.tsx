@@ -1,4 +1,4 @@
-import {Await, NavLink, useNavigate} from '@remix-run/react';
+import {Await, Form, NavLink} from '@remix-run/react';
 import {useState, Suspense} from 'react';
 import type {HeaderQuery} from 'storefrontapi.generated';
 import type {LayoutProps} from './Layout';
@@ -173,42 +173,39 @@ function LocationDropdown({
   const [selectedLocation, setSelectedLocation] = useState(
     companyLocationId ?? undefined,
   );
-  const navigate = useNavigate();
 
   const setLocation = async (event) => {
     const locationId = event.target.value;
-    await fetch(`/locations`, {
-      method: 'POST',
-      body: JSON.stringify({
-        locationId,
-      }),
-    });
     setSelectedLocation(locationId);
-    // force page reload
-    navigate('.', {replace: true});
   };
 
   if (locations.length === 1) return null;
 
   return (
-    <select
-      name="companyLocation"
-      id="companyLocationSelect"
-      onChange={setLocation}
-      value={selectedLocation}
-    >
-      {locations.map((location) => {
-        return (
-          <option
-            selected={selectedLocation === location.id}
-            value={location.id}
-            key={location.id}
-          >
-            {location.name}
-          </option>
-        );
-      })}
-    </select>
+    <Form action="/locations" method="POST">
+      <select
+        name="companyLocationId"
+        id="companyLocationSelect"
+        onChange={setLocation}
+        value={selectedLocation}
+        style={{marginRight: '4px'}}
+      >
+        {locations.map((location) => {
+          return (
+            <option
+              selected={selectedLocation === location.id}
+              value={location.id}
+              key={location.id}
+            >
+              {location.name}
+            </option>
+          );
+        })}
+      </select>
+      <button formAction="/locations" formMethod="POST" type="submit">
+        Choose Location
+      </button>
+    </Form>
   );
 }
 
