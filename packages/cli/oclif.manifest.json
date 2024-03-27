@@ -262,6 +262,14 @@
       "args": {},
       "description": "Builds and deploys a Hydrogen storefront to Oxygen.",
       "flags": {
+        "entry": {
+          "description": "Entry file for the worker. Defaults to `./server`.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_ENTRY",
+          "name": "entry",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "env": {
           "description": "Specifies the environment to perform the operation using its handle. Run `env list` to view an environment's handle ",
           "exclusive": [
