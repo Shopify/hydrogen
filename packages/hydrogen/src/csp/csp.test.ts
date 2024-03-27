@@ -32,6 +32,17 @@ describe('createContentSecurityPolicy', () => {
     );
   });
 
+  it('sets shopify domain directives', () => {
+    expect(
+      createContentSecurityPolicy({
+        storeDomain: 'test.myshopify.com',
+        checkoutDomain: 'checkout.myshopify.com',
+      }).header,
+    ).toBe(
+      `base-uri 'self'; default-src 'self' 'nonce-somenonce' https://cdn.shopify.com https://shopify.com; frame-ancestors 'none'; style-src 'self' 'unsafe-inline' https://cdn.shopify.com; connect-src 'self' https://monorail-edge.shopifysvc.com https://checkout.myshopify.com https://test.myshopify.com`
+    );
+  });
+
   it('adds nonce to custom directives', () => {
     expect(
       createContentSecurityPolicy({

@@ -1,4 +1,3 @@
-// FIX: AnalyticsProvider.tsx:301 Analytics publish error Cannot read properties of undefined (reading 'forEach')
 import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {
   type ReactNode,
@@ -53,13 +52,8 @@ export type AnalyticsProviderProps = {
   cart: Promise<CartReturn | null> | CartReturn | null;
   /** An optional function to set wether the user can be tracked. */
   canTrack?: () => boolean;
-
-  /** The optional customer object to pass to events **/
-  // customer?: Promise<Customer| null> | Customer| null;
-
   /** An optional custom payload to pass to all events. e.g language/locale/currency */
   customData?: Record<string, unknown>;
-
   /** The shop/store config required to publish events **/
   shop: Promise<ShopAnalytic | null> | ShopAnalytic | null;
   /** The customer privacy consent configuration and options */
@@ -202,7 +196,6 @@ function publish(
 ): void;
 function publish(event: any, payload: any): void {
   if (!areRegistersReady()) {
-    console.log('Not ready, queueing', registers);
     waitForReadyQueue.set(event, payload);
     return;
   }

@@ -21,14 +21,23 @@ type ContentSecurityPolicy = {
   NonceProvider: ComponentType<{children: ReactNode}>;
 };
 
+type CreateContentSecurityPolicy = {
+  [key: string]: string[] | string | boolean;
+}
+
+type ShopifyDomains = {
+  checkoutDomain?: string;
+  storeDomain?: string;
+}
+
 /**
  * @param directives - Pass custom [content security policy directives](https://content-security-policy.com/). This is important if you load content in your app from third-party domains.
  */
 export function createContentSecurityPolicy(
-  directives: Record<string, string[] | string | boolean> = {},
+  props?: ShopifyDomains & CreateContentSecurityPolicy
 ): ContentSecurityPolicy {
   const nonce = generateNonce();
-  const header = createCSPHeader(nonce, directives);
+  const header = createCSPHeader(nonce, props ?? {});
 
   const Provider = ({children}: {children: ReactNode}) => {
     return createElement(NonceProvider, {value: nonce}, children);
@@ -43,11 +52,20 @@ export function createContentSecurityPolicy(
 
 function createCSPHeader(
   nonce: string,
-  directives: Record<string, string[] | string | boolean> = {},
+  props?: CreateContentSecurityPolicy & ShopifyDomains,
 ): string {
+  const {checkoutDomain, storeDomain, ...directives} = props ?? {};
   const nonceString = `'nonce-${nonce}'`;
   const styleSrc = ["'self'", "'unsafe-inline'", 'https://cdn.shopify.com'];
   const connectSrc = ["'self'", 'https://monorail-edge.shopifysvc.com'];
+  if (checkoutDomain) {
+    connectSrc.push(`https://${checkoutDomain}`);
+  }
+
+  if (storeDomain) {
+    connectSrc.push(`https://${storeDomain}`);
+  }
+
   const defaultSrc = [
     "'self'",
     nonceString,
