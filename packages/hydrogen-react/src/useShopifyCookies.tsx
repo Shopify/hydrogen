@@ -44,7 +44,7 @@ export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {
       setCookie(SHOPIFY_Y, '', 0, domain);
       setCookie(SHOPIFY_S, '', 0, domain);
     }
-  }, [options]);
+  }, [options, hasUserConsent, domain]);
 }
 
 function setCookie(

@@ -1,4 +1,4 @@
-import {useLoadScript} from '@shopify/hydrogen';
+import {useLoadScript} from '@shopify/hydrogen-react';
 import {useEffect, useRef} from 'react';
 
 export type ConsentStatus = 'true' | 'false' | '';
