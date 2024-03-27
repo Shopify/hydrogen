@@ -1,8 +1,7 @@
-import {resolvePath} from '@shopify/cli-kit/node/path';
+import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
 import Command from '@shopify/cli-kit/node/base-command';
 import {renderSuccess, renderTasks} from '@shopify/cli-kit/node/ui';
 import {
-  copyFile,
   moveFile,
   readFile,
   removeFile,
@@ -13,11 +12,20 @@ import {
   installNodeModules,
 } from '@shopify/cli-kit/node/node-package-manager';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
-import {RemixConfig, getRemixConfig} from '../../../lib/remix-config.js';
-import {mergePackageJson, replaceFileContent} from '../../../lib/file.js';
+import {
+  RemixConfig,
+  RawRemixConfig,
+  getRemixConfig,
+  getRawRemixConfig,
+} from '../../../lib/remix-config.js';
+import {
+  findFileWithExtension,
+  mergePackageJson,
+  replaceFileContent,
+} from '../../../lib/file.js';
 import {importLangAstGrep} from '../../../lib/ast.js';
 import {getAssetDir} from '../../../lib/build.js';
-import {getCodeFormatOptions} from '../../../lib/format-code.js';
+import {formatCode, getCodeFormatOptions} from '../../../lib/format-code.js';
 import {hasViteConfig} from '../../../lib/vite-config.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {outputNewline} from '@shopify/cli-kit/node/output';
@@ -46,7 +54,8 @@ export async function runSetupVite({directory}: {directory: string}) {
     throw new AbortError('This project already has a Vite config file.');
   }
 
-  const remixConfigPromise = getRemixConfig(directory) as Promise<RemixConfig>;
+  const remixConfigPromise = getRawRemixConfig(directory);
+  const codeFormatOptPromise = getCodeFormatOptions(directory);
 
   const handlePartialIssue = () => {};
 
@@ -72,8 +81,8 @@ export async function runSetupVite({directory}: {directory: string}) {
       resolvePath(directory, 'postcss.config.js'),
       resolvePath(directory, 'postcss.config.cjs'),
     ).catch(handlePartialIssue),
-    remixConfigPromise.then((config) => {
-      const serverEntry = config.serverEntryPoint || 'server.js';
+    remixConfigPromise.then((rawRemixConfig) => {
+      const serverEntry = rawRemixConfig.server || 'server.js';
       const isTS = serverEntry.endsWith('.ts');
       const fileExt = isTS ? 'tsx' : 'jsx';
       const viteAssets = getAssetDir('vite');
@@ -110,7 +119,7 @@ export async function runSetupVite({directory}: {directory: string}) {
           },
         }).then((pkgJson) => {
           return readFile(resolvePath(viteAssets, 'vite.config.js')).then(
-            (viteConfigContent) => {
+            async (viteConfigContent) => {
               const hasVanillaExtract =
                 pkgJson.devDependencies?.['@vanilla-extract/vite-plugin'];
 
@@ -123,10 +132,58 @@ export async function runSetupVite({directory}: {directory: string}) {
                   .replace(/^(\s+)\],/m, '$1  vanillaExtractPlugin(),\n$1],');
               }
 
-              return writeFile(
-                resolvePath(directory, 'vite.config.' + fileExt.slice(0, 2)),
-                viteConfigContent,
+              const {future, appDirectory, ignoredRouteFiles, routes} =
+                rawRemixConfig;
+
+              // Future flags:
+              for (const flag of [
+                'v3_fetcherPersist',
+                'v3_throwAbortReason',
+                'v3_relativeSplatPath',
+              ] as const) {
+                if (!future?.[flag]) {
+                  viteConfigContent = viteConfigContent.replace(
+                    `${flag}: true`,
+                    `${flag}: false`,
+                  );
+                }
+              }
+
+              if (appDirectory && appDirectory !== 'app') {
+                viteConfigContent = viteConfigContent.replace(
+                  /^(\s+)(future:)/m,
+                  `$1appDirectory: '${appDirectory}',\n$1$2`,
+                );
+              }
+
+              if (ignoredRouteFiles) {
+                viteConfigContent = viteConfigContent.replace(
+                  /^(\s+)(future:)/m,
+                  `$1ignoredRouteFiles: ${JSON.stringify(
+                    ignoredRouteFiles,
+                  )},\n$1$2`,
+                );
+              }
+
+              if (routes) {
+                viteConfigContent = viteConfigContent.replace(
+                  /^(\s+)(future:)/m,
+                  `$1routes: ${routes.toString()},\n$1$2`,
+                );
+              }
+
+              const viteConfigPath = resolvePath(
+                directory,
+                'vite.config.' + fileExt.slice(0, 2),
               );
+
+              viteConfigContent = await formatCode(
+                viteConfigContent,
+                await codeFormatOptPromise,
+                viteConfigPath,
+              );
+
+              return writeFile(viteConfigPath, viteConfigContent);
             },
           );
         }),
@@ -141,20 +198,18 @@ export async function runSetupVite({directory}: {directory: string}) {
             ),
         ),
         importLangAstGrep(fileExt).then(async (astGrep) => {
-          const codeFormatOpt = getCodeFormatOptions(directory);
-          const rootFilepath = resolvePath(
-            config.appDirectory,
-            'root.' + fileExt,
+          const appDirectory = resolvePath(
+            directory,
+            rawRemixConfig.appDirectory ?? 'app',
           );
+
+          const rootFilepath = joinPath(appDirectory, 'root.' + fileExt);
 
           // Add ?url to all CSS imports:
           await new Promise(async (resolve, reject) => {
             const fileNumber = await astGrep.findInFiles(
               {
-                paths: [
-                  rootFilepath,
-                  resolvePath(config.appDirectory, 'routes'),
-                ],
+                paths: [rootFilepath, joinPath(appDirectory, 'routes')],
                 matcher: {
                   rule: {
                     kind: 'string_fragment',
@@ -216,7 +271,7 @@ export async function runSetupVite({directory}: {directory: string}) {
           // Remove the LiveReload import and usage:
           await replaceFileContent(
             rootFilepath,
-            await codeFormatOpt,
+            await codeFormatOptPromise,
             (content) => {
               const root = astGrep.parse(content).root();
               const liveReloadRegex = 'LiveReload';
