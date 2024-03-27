@@ -170,6 +170,11 @@ export async function runSetupVite({directory}: {directory: string}) {
                 >;
 
                 nodes.forEach((node) => {
+                  if (node.text().endsWith('.module.css')) {
+                    // Skip CSS modules
+                    return;
+                  }
+
                   const filename = node.getRoot().filename();
                   const content = node.getRoot().root().text();
                   const position = node.range().end.index;
