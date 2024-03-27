@@ -83,7 +83,15 @@ export async function runSetupVite({directory}: {directory: string}) {
           resolvePath(viteAssets, 'vite.config.js'),
           resolvePath(directory, 'vite.config.' + fileExt.slice(0, 2)),
         ),
-        mergePackageJson(viteAssets, directory),
+        mergePackageJson(viteAssets, directory, {
+          onResult(pkgJson) {
+            if (pkgJson.devDependencies) {
+              // This dependency is not needed in Vite projects:
+              delete pkgJson.devDependencies['@remix-run/css-bundle'];
+            }
+            return pkgJson;
+          },
+        }),
         replaceFileContent(
           resolvePath(directory, serverEntry),
           false,
@@ -216,7 +224,13 @@ export async function runSetupVite({directory}: {directory: string}) {
               }
 
               // Remove the trailing comma from the import statement:
-              return content.replace(/,\s*,/g, ',');
+              return content
+                .replace(/,\s*,/g, ',')
+                .replace(
+                  /import\s+{\s+cssBundleHref\s+}\s+from\s+['"]@remix-run\/css-bundle['"];?\n/,
+                  '',
+                )
+                .replace(/\.\.\.\(\s*cssBundleHref[^)]+\),?/, '');
             },
           );
         }),
