@@ -3,7 +3,7 @@
   "private": true,
   "prettier": "@shopify/prettier-config",
   "scripts": {
-    "build": "shopify hydrogen build --diff",
+    "build": "shopify hydrogen build --codegen --diff",
     "dev": "shopify hydrogen dev --codegen --customer-account-push --diff",
     "preview": "npm run build && shopify hydrogen preview",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",

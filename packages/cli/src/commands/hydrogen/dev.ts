@@ -86,8 +86,8 @@ export default class Dev extends Command {
     };
 
     if (await hasViteConfig(directory ?? process.cwd())) {
-      const {runDev: runDevVite} = await import('./dev-vite.js');
-      await runDevVite(devParams);
+      const {runViteDev} = await import('./dev-vite.js');
+      await runViteDev(devParams);
     } else {
       await runDev(devParams);
     }
