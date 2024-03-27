@@ -1,10 +1,6 @@
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import Command from '@shopify/cli-kit/node/base-command';
-import {
-  renderConfirmationPrompt,
-  renderSuccess,
-  renderTasks,
-} from '@shopify/cli-kit/node/ui';
+import {renderSuccess, renderTasks} from '@shopify/cli-kit/node/ui';
 import {
   copyFile,
   moveFile,
@@ -16,11 +12,13 @@ import {
   installNodeModules,
 } from '@shopify/cli-kit/node/node-package-manager';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
-import {getRemixConfig} from '../../../lib/remix-config.js';
+import {RemixConfig, getRemixConfig} from '../../../lib/remix-config.js';
 import {mergePackageJson, replaceFileContent} from '../../../lib/file.js';
 import {importLangAstGrep} from '../../../lib/ast.js';
 import {getAssetDir} from '../../../lib/build.js';
 import {getCodeFormatOptions} from '../../../lib/format-code.js';
+import {hasViteConfig} from '../../../lib/vite-config.js';
+import {AbortError} from '@shopify/cli-kit/node/error';
 
 export default class SetupVite extends Command {
   static description = 'EXPERIMENTAL: Upgrades the project to use Vite.';
@@ -41,14 +39,11 @@ export default class SetupVite extends Command {
 }
 
 export async function runSetupVite({directory}: {directory: string}) {
-  const remixConfigPromise = getRemixConfig(directory);
+  if (await hasViteConfig(directory)) {
+    throw new AbortError('This project already has a Vite config file.');
+  }
 
-  const shouldContinue = await renderConfirmationPrompt({
-    message:
-      'Are you sure you want to upgrade to Vite?\nThis is still an experimental feature and may not work as expected',
-  });
-
-  if (!shouldContinue) return;
+  const remixConfigPromise = getRemixConfig(directory) as Promise<RemixConfig>;
 
   const handlePartialIssue = () => {};
 
