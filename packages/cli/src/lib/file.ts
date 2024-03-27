@@ -87,7 +87,7 @@ export async function mergePackageJson(
     onResult?: (pkgJson: PackageJson) => PackageJson;
   },
 ) {
-  const targetPkgJson: PackageJson = await readAndParsePackageJson(
+  let targetPkgJson: PackageJson = await readAndParsePackageJson(
     joinPath(targetDir, 'package.json'),
   );
   const sourcePkgJson: PackageJson = await readAndParsePackageJson(
@@ -145,8 +145,9 @@ export async function mergePackageJson(
     }
   }
 
-  await writePackageJSON(
-    targetDir,
-    options?.onResult?.(targetPkgJson) ?? targetPkgJson,
-  );
+  targetPkgJson = options?.onResult?.(targetPkgJson) ?? targetPkgJson;
+
+  await writePackageJSON(targetDir, targetPkgJson);
+
+  return targetPkgJson;
 }

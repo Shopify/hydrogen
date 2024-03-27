@@ -4,6 +4,7 @@ import {renderSuccess, renderTasks} from '@shopify/cli-kit/node/ui';
 import {
   copyFile,
   moveFile,
+  readFile,
   removeFile,
   writeFile,
 } from '@shopify/cli-kit/node/fs';
@@ -79,18 +80,51 @@ export async function runSetupVite({directory}: {directory: string}) {
         removeFile(resolvePath(directory, 'remix.config.js')).catch(
           handlePartialIssue,
         ),
-        copyFile(
-          resolvePath(viteAssets, 'vite.config.js'),
-          resolvePath(directory, 'vite.config.' + fileExt.slice(0, 2)),
-        ),
+
         mergePackageJson(viteAssets, directory, {
           onResult(pkgJson) {
             if (pkgJson.devDependencies) {
               // This dependency is not needed in Vite projects:
               delete pkgJson.devDependencies['@remix-run/css-bundle'];
+
+              if (pkgJson.devDependencies['@vanilla-extract/css']) {
+                // This dependency is not needed in Vite projects:
+                pkgJson.devDependencies['@vanilla-extract/vite-plugin'] =
+                  '^4.0.0';
+
+                // Sort dependencies:
+                pkgJson.devDependencies = Object.keys(pkgJson.devDependencies)
+                  .sort()
+                  .reduce((acc, key) => {
+                    acc[key] = pkgJson.devDependencies?.[key]!;
+                    return acc;
+                  }, {} as Record<string, string>);
+              }
             }
+
             return pkgJson;
           },
+        }).then((pkgJson) => {
+          return readFile(resolvePath(viteAssets, 'vite.config.js')).then(
+            (viteConfigContent) => {
+              const hasVanillaExtract =
+                pkgJson.devDependencies?.['@vanilla-extract/vite-plugin'];
+
+              if (hasVanillaExtract) {
+                viteConfigContent = viteConfigContent
+                  .replace(
+                    /\n\n/g,
+                    `\nimport {vanillaExtractPlugin} from '@vanilla-extract/vite-plugin';\n\n`,
+                  )
+                  .replace(/^(\s+)\],/, '$1  vanillaExtractPlugin()\n$1],');
+              }
+
+              return writeFile(
+                resolvePath(directory, 'vite.config.' + fileExt.slice(0, 2)),
+                viteConfigContent,
+              );
+            },
+          );
         }),
         replaceFileContent(
           resolvePath(directory, serverEntry),
@@ -259,6 +293,9 @@ export async function runSetupVite({directory}: {directory: string}) {
 
   renderSuccess({
     headline: `Your Vite project is ready!`,
-    body: `We've modified your project to use Vite experimental.\nPlease use git to review the changes.`,
+    body: `We've modified your project to use Vite.\nPlease use git to review the changes.`,
+    nextSteps: [
+      `See more information about Vite in Remix at https://remix.run/docs/en/main/future/vite`,
+    ],
   });
 }
