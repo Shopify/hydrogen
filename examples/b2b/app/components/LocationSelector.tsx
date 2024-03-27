@@ -1,4 +1,4 @@
-import {useNavigate} from '@remix-run/react';
+import {Form, useNavigate} from '@remix-run/react';
 import {useState} from 'react';
 
 export function LocationSelector({customer}) {
@@ -30,24 +30,23 @@ export function LocationSelector({customer}) {
   function LocationItem({location}) {
     const addressLines = location?.shippingAddress?.formattedAddress ?? [];
     return (
-      <>
-        <fieldset
-          style={{
-            cursor: 'pointer',
-            background:
-              selectedLocation?.id === location.id ? '#F0F0F0' : 'none',
-          }}
-          onClick={() => setSelectedLocation(location)}
-        >
-          <p>
+      <label>
+        <div style={{display: 'flex', alignItems: 'baseline'}}>
+          <input
+            type="radio"
+            id={location.id}
+            name="companyLocationId"
+            value={location.id}
+            style={{marginRight: '1rem'}}
+          />
+          <div>
             <strong>{location.name}</strong>
-          </p>
-          {addressLines.map((line: string) => (
-            <p key={line}>{line}</p>
-          ))}
-        </fieldset>
-        <br />
-      </>
+            {addressLines.map((line: string) => (
+              <p key={line}>{line}</p>
+            ))}
+          </div>
+        </div>
+      </label>
     );
   }
 
@@ -56,16 +55,23 @@ export function LocationSelector({customer}) {
   return (
     <div>
       <h1>Logged in for {company.name}</h1>
-      <div>
-        {locations.map((location) => {
-          return (
-            <div key={location.id}>
-              <LocationItem location={location} />
-            </div>
-          );
-        })}
-        <button onClick={setLocation}>Choose location</button>
-      </div>
+      <Form id={'company-location-selector'}>
+        <fieldset>
+          <legend>Choose a location:</legend>
+          {locations.map((location) => {
+            return (
+              <div key={location.id}>
+                <LocationItem location={location} />
+                <br />
+                <br />
+              </div>
+            );
+          })}
+          <button formAction="/locations" formMethod="POST" type="submit">
+            Choose Location
+          </button>
+        </fieldset>
+      </Form>
     </div>
   );
 }
