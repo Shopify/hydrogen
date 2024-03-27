@@ -23,6 +23,8 @@ import {runCheckRoutes} from './check.js';
 import {runCodegen} from './codegen.js';
 import {runViteBuild} from './build-vite.js';
 import {runViteDev} from './dev-vite.js';
+import {runBuild as runClassicBuild} from './build.js';
+import {runDev as runClassicDev} from './dev.js';
 
 const {renderTasksHook} = vi.hoisted(() => ({renderTasksHook: vi.fn()}));
 
@@ -318,6 +320,116 @@ describe('init', () => {
         expect(output).toMatch('success');
         expect(output).not.toMatch('warning');
         expect(output).toMatch(/Language:\s*JavaScript/);
+      });
+    });
+
+    it('creates functional classic Remix projects', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        await runInit({
+          path: tmpDir,
+          git: false,
+          language: 'ts',
+          template: 'classic-remix',
+          routes: true,
+          installDeps: true,
+        });
+
+        const templateFiles = await glob('**/*', {
+          cwd: getSkeletonSourceDir()
+            .replace('templates', 'examples')
+            .replace('skeleton', 'classic-remix'),
+          ignore: ['**/node_modules/**', '**/dist/**'],
+        });
+        const resultFiles = await glob('**/*', {cwd: tmpDir});
+        const nonAppFiles = templateFiles.filter(
+          (item) => !item.startsWith('app/'),
+        );
+
+        expect(resultFiles).toEqual(expect.arrayContaining(nonAppFiles));
+        expect(resultFiles).not.toContain('vite.config.ts');
+        expect(resultFiles).not.toContain('env.d.ts');
+
+        await expect(readFile(`${tmpDir}/package.json`)).resolves.toMatch(
+          `"name": "example-classic-remix"`,
+        );
+
+        // ---- DEV
+        outputMock.clear();
+
+        const port = 1337;
+
+        const {close} = await runClassicDev({
+          path: tmpDir,
+          port,
+          inspectorPort: 9000,
+          disableVirtualRoutes: true,
+          disableVersionCheck: true,
+          cliConfig: {} as any,
+        });
+
+        try {
+          await vi.waitFor(
+            () => expect(outputMock.output()).toMatch('success'),
+            {timeout: 5000},
+          );
+
+          expect(outputMock.output()).toMatch(/View [^:]+? app:/i);
+
+          await expect(
+            fileExists(joinPath(tmpDir, 'dist', 'worker', 'index.js')),
+          ).resolves.toBeTruthy();
+
+          const response = await fetch(`http://localhost:${port}`);
+          expect(response.status).toEqual(200);
+          expect(response.headers.get('content-type')).toEqual('text/html');
+          await expect(response.text()).resolves.toMatch('Mock.shop');
+        } finally {
+          await close();
+        }
+
+        // ---- BUILD
+        outputMock.clear();
+        vi.stubEnv('NODE_ENV', 'production');
+
+        await expect(
+          runClassicBuild({directory: tmpDir}),
+        ).resolves.not.toThrow();
+
+        const expectedBundlePath = 'dist/worker/index.js';
+
+        const output = outputMock.output();
+        expect(output).toMatch(expectedBundlePath);
+        expect(
+          fileExists(joinPath(tmpDir, expectedBundlePath)),
+        ).resolves.toBeTruthy();
+
+        const mb = Number(output.match(/index\.js\s+([\d.]+)\s+MB/)?.[1] || '');
+
+        // Bundle size within 1 MB
+        expect(mb).toBeGreaterThan(0);
+        expect(mb).toBeLessThan(1);
+
+        // Bundle analysis
+        expect(output).toMatch('Complete analysis: file://');
+
+        const clientAnalysisPath = 'dist/worker/client-bundle-analyzer.html';
+        const workerAnalysisPath = 'dist/worker/worker-bundle-analyzer.html';
+
+        await expect(
+          fileExists(joinPath(tmpDir, clientAnalysisPath)),
+        ).resolves.toBeTruthy();
+
+        await expect(
+          fileExists(joinPath(tmpDir, workerAnalysisPath)),
+        ).resolves.toBeTruthy();
+
+        await expect(
+          readFile(joinPath(tmpDir, clientAnalysisPath)),
+        ).resolves.toMatch(/globalThis\.METAFILE = '.+';/g);
+
+        await expect(
+          readFile(joinPath(tmpDir, workerAnalysisPath)),
+        ).resolves.toMatch(/globalThis\.METAFILE = '.+';/g);
       });
     });
   });
@@ -761,28 +873,6 @@ describe('init', () => {
           // Bundle size within 1 MB
           expect(kB).toBeGreaterThan(0);
           expect(kB).toBeLessThan(1024);
-
-          // Bundle analysis
-          // expect(output).toMatch('Complete analysis: file://');
-
-          // const clientAnalysisPath = 'dist/worker/client-bundle-analyzer.html';
-          // const workerAnalysisPath = 'dist/worker/worker-bundle-analyzer.html';
-
-          // await expect(
-          //   fileExists(joinPath(tmpDir, clientAnalysisPath)),
-          // ).resolves.toBeTruthy();
-
-          // await expect(
-          //   fileExists(joinPath(tmpDir, workerAnalysisPath)),
-          // ).resolves.toBeTruthy();
-
-          // await expect(
-          //   readFile(joinPath(tmpDir, clientAnalysisPath)),
-          // ).resolves.toMatch(/globalThis\.METAFILE = '.+';/g);
-
-          // await expect(
-          //   readFile(joinPath(tmpDir, workerAnalysisPath)),
-          // ).resolves.toMatch(/globalThis\.METAFILE = '.+';/g);
         });
       });
 
