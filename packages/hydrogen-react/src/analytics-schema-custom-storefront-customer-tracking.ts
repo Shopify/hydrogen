@@ -17,7 +17,9 @@ const PRODUCT_PAGE_RENDERED_EVENT_NAME = 'product_page_rendered';
 const PRODUCT_ADDED_TO_CART_EVENT_NAME = 'product_added_to_cart';
 const SEARCH_SUBMITTED_EVENT_NAME = 'search_submitted';
 
-function prepareAdditionalPayload(payload: ShopifyPageViewPayload): Pick<ShopifyMonorailPayload, 'canonical_url' | 'customer_id'>{
+function prepareAdditionalPayload(
+  payload: ShopifyPageViewPayload,
+): Pick<ShopifyMonorailPayload, 'canonical_url' | 'customer_id'> {
   return {
     canonical_url: payload.canonicalUrl || payload.url,
     customer_id: parseInt(parseGid(payload.customerId).id || '0'),
