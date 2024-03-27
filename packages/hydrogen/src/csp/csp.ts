@@ -23,18 +23,18 @@ type ContentSecurityPolicy = {
 
 type CreateContentSecurityPolicy = {
   [key: string]: string[] | string | boolean;
-}
+};
 
 type ShopifyDomains = {
   checkoutDomain?: string;
   storeDomain?: string;
-}
+};
 
 /**
  * @param directives - Pass custom [content security policy directives](https://content-security-policy.com/). This is important if you load content in your app from third-party domains.
  */
 export function createContentSecurityPolicy(
-  props?: ShopifyDomains & CreateContentSecurityPolicy
+  props?: ShopifyDomains & CreateContentSecurityPolicy,
 ): ContentSecurityPolicy {
   const nonce = generateNonce();
   const header = createCSPHeader(nonce, props ?? {});

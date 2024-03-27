@@ -31,7 +31,7 @@ import type {
   CurrencyCode,
   LanguageCode,
   Shop,
-  Localization
+  Localization,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {AnalyticsEvent} from './events';
 import {ShopifyAnalytics} from './ShopifyAnalytics';
@@ -209,7 +209,12 @@ function publishEvent(event: any, payload: any): void {
       callback(payload);
     } catch (error) {
       if (typeof error === 'object' && error instanceof Error) {
-        console.error('Analytics publish error', error.message, subscriber, error.stack);
+        console.error(
+          'Analytics publish error',
+          error.message,
+          subscriber,
+          error.stack,
+        );
       } else {
         console.error('Analytics publish error', error, subscriber);
       }
@@ -309,7 +314,9 @@ function AnalyticsProvider({
     <AnalyticsContext.Provider value={value}>
       {children}
       {shop && <AnalyticsPageView />}
-      {shop && currentCart && <CartAnalytics cart={currentCart} setCarts={setCarts} />}
+      {shop && currentCart && (
+        <CartAnalytics cart={currentCart} setCarts={setCarts} />
+      )}
       {shop && consent && <ShopifyAnalytics consent={consent} />}
     </AnalyticsContext.Provider>
   );

@@ -13,8 +13,7 @@ export function CartAnalytics({
   cart: AnalyticsProviderProps['cart'];
   setCarts: React.Dispatch<React.SetStateAction<Carts>>;
 }) {
-  const {publish, shop, customData, canTrack, cart, prevCart} =
-    useAnalytics();
+  const {publish, shop, customData, canTrack, cart, prevCart} = useAnalytics();
   const lastEventId = useRef<string | null>(null);
 
   // resolve the cart that could have been deferred
