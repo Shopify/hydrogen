@@ -6,6 +6,7 @@ import {fileExists} from '@shopify/cli-kit/node/fs';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import {copyPublicFiles} from './build.js';
 import {
+  type RemixConfig,
   assertOxygenChecks,
   getProjectPaths,
   getRemixConfig,
@@ -138,7 +139,7 @@ export async function runDev({
   const cliCommandPromise = getCliCommand(root);
 
   const reloadConfig = async () => {
-    const config = await getRemixConfig(root);
+    const config = (await getRemixConfig(root)) as RemixConfig;
 
     return disableVirtualRoutes
       ? config

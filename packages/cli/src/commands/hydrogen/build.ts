@@ -19,6 +19,7 @@ import {resolvePath, relativePath, joinPath} from '@shopify/cli-kit/node/path';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 import colors from '@shopify/cli-kit/node/colors';
 import {
+  type RemixConfig,
   assertOxygenChecks,
   getProjectPaths,
   getRemixConfig,
@@ -136,7 +137,7 @@ export async function runBuild({
 
   const [remixConfig, [{build}, {logThrown}, {createFileWatchCache}]] =
     await Promise.all([
-      getRemixConfig(root),
+      getRemixConfig(root) as Promise<RemixConfig>,
       Promise.all([
         import('@remix-run/dev/dist/compiler/build.js'),
         import('@remix-run/dev/dist/compiler/utils/log.js'),

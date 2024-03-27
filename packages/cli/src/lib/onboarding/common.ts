@@ -364,7 +364,7 @@ export async function handleProjectLocation({
       }
     }
 
-    await rmdir(directory);
+    await rmdir(directory, {force: true});
   }
 
   return {
