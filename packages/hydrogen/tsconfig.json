@@ -6,7 +6,7 @@
     "paths": {
       "@shopify/hydrogen": ["./src"]
     },
-    "types": ["@shopify/oxygen-workers-types", "jest", "@testing-library/jest-dom"]
+    "types": ["@shopify/oxygen-workers-types", "node", "jest", "@testing-library/jest-dom"]
   },
   "exclude": ["src/cart/createCartHandler.example.ts"]
 }
