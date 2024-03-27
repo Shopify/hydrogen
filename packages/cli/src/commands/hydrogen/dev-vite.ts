@@ -249,19 +249,16 @@ export async function runDev({
     });
   }
 
-  if (customSections.length > 0) {
-    const {storefrontTitle} = await backgroundPromise;
-
-    renderInfo({
-      body: [
-        `View ${
-          storefrontTitle ? colors.cyan(storefrontTitle) : 'Hydrogen'
-        } app:`,
-        {link: {url: finalHost}},
-      ],
-      customSections,
-    });
-  }
+  const {storefrontTitle} = await backgroundPromise;
+  renderInfo({
+    body: [
+      `View ${
+        storefrontTitle ? colors.cyan(storefrontTitle) : 'Hydrogen'
+      } app:`,
+      {link: {url: finalHost}},
+    ],
+    customSections,
+  });
 
   checkRemixVersions();
   if (!disableVersionCheck) {
