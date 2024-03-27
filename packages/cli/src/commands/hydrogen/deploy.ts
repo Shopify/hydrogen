@@ -56,6 +56,7 @@ export const deploymentLogger: Logger = (
 export default class Deploy extends Command {
   static description = 'Builds and deploys a Hydrogen storefront to Oxygen.';
   static flags: any = {
+    ...commonFlags.entry,
     ...commonFlags.env,
     ...commonFlags.envBranch,
     'env-file': Flags.string({
@@ -185,6 +186,7 @@ interface OxygenDeploymentOptions {
   metadataUrl?: string;
   metadataUser?: string;
   metadataVersion?: string;
+  entry?: string;
 }
 
 interface GitCommit {
@@ -230,6 +232,7 @@ export async function runDeploy(
     metadataUrl,
     metadataUser,
     metadataVersion,
+    entry: ssrEntry,
   } = options;
   let {metadataDescription} = options;
 
@@ -394,7 +397,7 @@ export async function runDeploy(
   const isClassicCompiler = await hasRemixConfigFile(root);
 
   if (!isClassicCompiler) {
-    const viteConfig = await getViteConfig(root).catch(() => null);
+    const viteConfig = await getViteConfig(root, ssrEntry).catch(() => null);
     if (viteConfig) {
       assetsDir = relativePath(root, viteConfig.clientOutDir);
       workerDir = relativePath(root, viteConfig.serverOutDir);
@@ -500,6 +503,7 @@ export async function runDeploy(
         lockfileCheck,
         sourcemap: true,
         useCodegen: false,
+        entry: ssrEntry,
       });
     };
   }

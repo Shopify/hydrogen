@@ -6,6 +6,7 @@ import colors from '@shopify/cli-kit/node/colors';
 import {writeFile} from '@shopify/cli-kit/node/fs';
 import ansiEscapes from 'ansi-escapes';
 import {
+  type RemixConfig,
   getProjectPaths,
   getRemixConfig,
   handleRemixImportFail,
@@ -73,7 +74,7 @@ async function runDebugCpu({
 
   await watch(
     {
-      config: await getRemixConfig(root),
+      config: (await getRemixConfig(root)) as RemixConfig,
       options: {
         mode: process.env.NODE_ENV as ServerMode,
         sourcemap: true,
