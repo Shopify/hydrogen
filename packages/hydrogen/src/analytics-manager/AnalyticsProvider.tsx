@@ -77,7 +77,6 @@ export type AnalyticsContextValue = {
   customData?: AnalyticsProviderProps['customData'];
   prevCart: Awaited<AnalyticsProviderProps['cart']>;
   publish: typeof publish;
-  setCarts: React.Dispatch<React.SetStateAction<Carts>>;
   shop: Awaited<AnalyticsProviderProps['shop']>;
   subscribe: typeof subscribe;
   register: (key: string) => {ready: () => void};
@@ -89,7 +88,6 @@ export const defaultAnalyticsContext: AnalyticsContextValue = {
   customData: {},
   prevCart: null,
   publish: () => {},
-  setCarts: () => ({cart: null, prevCart: null}),
   shop: null,
   subscribe: () => {},
   register: () => ({ready: () => {}}),
@@ -204,6 +202,7 @@ function publish(
 ): void;
 function publish(event: any, payload: any): void {
   if (!areRegistersReady()) {
+    console.log('Not ready, queueing', registers);
     waitForReadyQueue.set(event, payload);
     return;
   }
@@ -212,14 +211,14 @@ function publish(event: any, payload: any): void {
 }
 
 function publishEvent(event: any, payload: any): void {
-  (subscribers.get(event) ?? new Map()).forEach((callback) => {
+  (subscribers.get(event) ?? new Map()).forEach((callback, subscriber) => {
     try {
       callback(payload);
     } catch (error) {
       if (typeof error === 'object' && error instanceof Error) {
-        console.error('Analytics publish error', error.message);
+        console.error('Analytics publish error', error.message, subscriber, error.stack);
       } else {
-        console.error('Analytics publish error', error);
+        console.error('Analytics publish error', error, subscriber);
       }
     }
   });
@@ -294,13 +293,11 @@ function AnalyticsProvider({
       ...carts,
       customData,
       publish: canTrack() ? publish : () => {},
-      setCarts,
       shop,
       subscribe,
       register,
     };
   }, [
-    setCarts,
     consentLoaded,
     canTrack(),
     canTrack,
@@ -319,7 +316,7 @@ function AnalyticsProvider({
     <AnalyticsContext.Provider value={value}>
       {children}
       {shop && <AnalyticsPageView />}
-      {shop && currentCart && <CartAnalytics cart={currentCart} />}
+      {shop && currentCart && <CartAnalytics cart={currentCart} setCarts={setCarts} />}
       {shop && consent && <ShopifyAnalytics consent={consent} />}
     </AnalyticsContext.Provider>
   );

@@ -8,10 +8,12 @@ import {type CartUpdatePayload} from './AnalyticsView';
 
 export function CartAnalytics({
   cart: currentCart,
+  setCarts,
 }: {
   cart: AnalyticsProviderProps['cart'];
+  setCarts: React.Dispatch<React.SetStateAction<Carts>>;
 }) {
-  const {publish, shop, customData, canTrack, cart, prevCart, setCarts} =
+  const {publish, shop, customData, canTrack, cart, prevCart} =
     useAnalytics();
   const lastEventId = useRef<string | null>(null);
 

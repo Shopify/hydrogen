@@ -225,7 +225,7 @@ function productAddedToCartHandler(payload: CartLineUpdatePayload) {
   const {cart, currentLine} = payload;
   const eventPayload = prepareBaseCartPayload(payload, cart);
 
-  if (!eventPayload || !currentLine) return;
+  if (!eventPayload || !currentLine?.id) return;
 
   sendCartAnalytics({
     matchedLine: currentLine,
