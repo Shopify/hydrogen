@@ -451,7 +451,8 @@ describe('init', () => {
       });
     });
 
-    describe('styling libraries', () => {
+    // TODO enable when we support it in Vite
+    describe.skip('styling libraries', () => {
       it('scaffolds Tailwind CSS', async () => {
         await inTemporaryDirectory(async (tmpDir) => {
           await runInit({
