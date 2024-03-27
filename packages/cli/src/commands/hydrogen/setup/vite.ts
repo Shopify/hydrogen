@@ -355,11 +355,20 @@ export async function runSetupVite({directory}: {directory: string}) {
     },
   ]);
 
+  const rawRemixConfig = await remixConfigPromise;
+  const nextSteps = [
+    `See more information about Vite in Remix at https://remix.run/docs/en/main/future/vite`,
+  ];
+
+  if (rawRemixConfig.mdx) {
+    nextSteps.unshift(
+      'Setup MDX support in Vite: https://remix.run/docs/en/main/future/vite#add-mdx-plugin',
+    );
+  }
+
   renderSuccess({
     headline: `Your Vite project is ready!`,
-    body: `We've modified your project to use Vite.\nPlease use git to review the changes.`,
-    nextSteps: [
-      `See more information about Vite in Remix at https://remix.run/docs/en/main/future/vite`,
-    ],
+    body: `We've modified your project to use Vite.\nPlease use Git to review the changes.`,
+    nextSteps,
   });
 }
