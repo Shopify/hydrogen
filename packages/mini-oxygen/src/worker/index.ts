@@ -218,6 +218,14 @@ function buildMiniflareOptions(
     return new Response('ok');
   }
 
+  const wrappedBindings = new Set(
+    workers
+      .flatMap((worker) => Object.values(worker.wrappedBindings || {}))
+      .filter(
+        (wrappedBinding) => typeof wrappedBinding === 'string',
+      ) as string[],
+  );
+
   return {
     cf: false,
     verbose: false,
@@ -256,7 +264,7 @@ function buildMiniflareOptions(
         },
       },
       ...workers.map((worker) => ({
-        ...OXYGEN_COMPAT_PARAMS,
+        ...(!wrappedBindings.has(worker.name) && OXYGEN_COMPAT_PARAMS),
         ...worker,
       })),
     ],

@@ -66,8 +66,6 @@ export async function startMiniOxygenRuntime({
         name: 'setup-environment',
         modules: true,
         scriptPath,
-        compatibilityDate: undefined,
-        compatibilityFlags: undefined,
         script: `
           const setupScripts = [${setupScripts ?? ''}];
           export default (env) => (request) => {
