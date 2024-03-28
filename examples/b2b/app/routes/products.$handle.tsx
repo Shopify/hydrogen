@@ -180,25 +180,37 @@ function ProductMain({
               product={product}
               selectedVariant={selectedVariant}
               variants={data.product?.variants.nodes || []}
+              /***********************************************/
+              /**********  EXAMPLE UPDATE STARTS  ************/
               quantity={selectedVariant?.quantityRule?.increment || 1}
+              /**********   EXAMPLE UPDATE END   ************/
+              /***********************************************/
             />
           )}
         </Await>
       </Suspense>
       <br />
-      {hasQuantityRules(selectedVariant?.quantityRule) ? (
-        <QuantityRules
-          maximum={selectedVariant.quantityRule.maximum}
-          minimum={selectedVariant.quantityRule.minimum}
-          increment={selectedVariant.quantityRule.increment}
-        />
-      ) : null}
+      {
+        /***********************************************/
+        /**********  EXAMPLE UPDATE STARTS  ************/
+        hasQuantityRules(selectedVariant?.quantityRule) ? (
+          <QuantityRules
+            maximum={selectedVariant.quantityRule.maximum}
+            minimum={selectedVariant.quantityRule.minimum}
+            increment={selectedVariant.quantityRule.increment}
+          />
+        ) : null
+      }
       <br />
-      {selectedVariant?.quantityPriceBreaks?.nodes?.length > 0 ? (
-        <PriceBreaks
-          priceBreaks={selectedVariant?.quantityPriceBreaks?.nodes}
-        />
-      ) : null}
+      {
+        selectedVariant?.quantityPriceBreaks?.nodes?.length > 0 ? (
+          <PriceBreaks
+            priceBreaks={selectedVariant?.quantityPriceBreaks?.nodes}
+          />
+        ) : null
+        /**********   EXAMPLE UPDATE END   ************/
+        /***********************************************/
+      }
       <br />
       <p>
         <strong>Description</strong>
@@ -235,6 +247,8 @@ function ProductPrice({
   );
 }
 
+/***********************************************/
+/**********  EXAMPLE UPDATE STARTS  ************/
 function ProductForm({
   product,
   selectedVariant,
@@ -246,6 +260,8 @@ function ProductForm({
   variants: Array<ProductVariantFragment>;
   quantity: number;
 }) {
+  /**********   EXAMPLE UPDATE END   ************/
+  /***********************************************/
   return (
     <div className="product-form">
       <VariantSelector
@@ -266,7 +282,11 @@ function ProductForm({
             ? [
                 {
                   merchandiseId: selectedVariant.id,
+                  /***********************************************/
+                  /**********  EXAMPLE UPDATE STARTS  ************/
                   quantity,
+                  /**********   EXAMPLE UPDATE END   ************/
+                  /***********************************************/
                 },
               ]
             : []
@@ -342,6 +362,8 @@ function AddToCartButton({
   );
 }
 
+/***********************************************/
+/**********  EXAMPLE UPDATE STARTS  ************/
 const PRODUCT_VARIANT_FRAGMENT = `#graphql
   fragment ProductVariant on ProductVariant {
     availableForSale
@@ -392,6 +414,8 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
     }
   }
 ` as const;
+/**********   EXAMPLE UPDATE END   ************/
+/***********************************************/
 
 const PRODUCT_FRAGMENT = `#graphql
   fragment Product on Product {
@@ -421,6 +445,8 @@ const PRODUCT_FRAGMENT = `#graphql
   ${PRODUCT_VARIANT_FRAGMENT}
 ` as const;
 
+/***********************************************/
+/**********  EXAMPLE UPDATE STARTS  ************/
 const PRODUCT_QUERY = `#graphql
   query Product(
     $country: CountryCode
@@ -435,6 +461,8 @@ const PRODUCT_QUERY = `#graphql
   }
   ${PRODUCT_FRAGMENT}
 ` as const;
+/**********   EXAMPLE UPDATE END   ************/
+/***********************************************/
 
 const PRODUCT_VARIANTS_FRAGMENT = `#graphql
   fragment ProductVariants on Product {
@@ -447,6 +475,8 @@ const PRODUCT_VARIANTS_FRAGMENT = `#graphql
   ${PRODUCT_VARIANT_FRAGMENT}
 ` as const;
 
+/***********************************************/
+/**********  EXAMPLE UPDATE STARTS  ************/
 const VARIANTS_QUERY = `#graphql
   ${PRODUCT_VARIANTS_FRAGMENT}
   query ProductVariants(
@@ -460,3 +490,5 @@ const VARIANTS_QUERY = `#graphql
     }
   }
 ` as const;
+/**********   EXAMPLE UPDATE END   ************/
+/***********************************************/

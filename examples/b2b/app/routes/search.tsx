@@ -66,6 +66,8 @@ export default function SearchPage() {
   );
 }
 
+/***********************************************/
+/**********  EXAMPLE UPDATE STARTS  ************/
 const SEARCH_QUERY = `#graphql
   fragment SearchProduct on Product {
     __typename
@@ -173,3 +175,5 @@ const SEARCH_QUERY = `#graphql
     }
   }
 ` as const;
+/**********   EXAMPLE UPDATE END   ************/
+/***********************************************/

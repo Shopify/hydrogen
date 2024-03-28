@@ -70,11 +70,15 @@ export const useRootLoaderData = () => {
   return root?.data as SerializeFrom<typeof loader>;
 };
 
-export async function loader({request, context}: LoaderFunctionArgs) {
-  const {storefront, customerAccount, cart, session} = context;
+export async function loader({context}: LoaderFunctionArgs) {
+  const {storefront, customerAccount, cart} = context;
   const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
 
+  /***********************************************/
+  /**********  EXAMPLE UPDATE STARTS  ************/
   const isLoggedIn = await customerAccount.isLoggedIn();
+  /**********   EXAMPLE UPDATE END   ************/
+  /***********************************************/
   const cartPromise = cart.get();
 
   // defer the footer query (below the fold)
@@ -93,6 +97,8 @@ export async function loader({request, context}: LoaderFunctionArgs) {
     },
   });
 
+  /***********************************************/
+  /**********  EXAMPLE UPDATE STARTS  ************/
   // B2B buyer context
   let companyLocationId;
   let company: Company;
@@ -117,16 +123,22 @@ export async function loader({request, context}: LoaderFunctionArgs) {
   }
 
   const showLocationSelector = Boolean(company && !companyLocationId);
+  /**********   EXAMPLE UPDATE END   ************/
+  /***********************************************/
 
   return defer(
     {
       cart: cartPromise,
       footer: footerPromise,
       header: await headerPromise,
+      /***********************************************/
+      /**********  EXAMPLE UPDATE STARTS  ************/
       isLoggedIn,
       publicStoreDomain,
       company,
       showLocationSelector,
+      /**********   EXAMPLE UPDATE END   ************/
+      /***********************************************/
     },
     {
       headers: {
@@ -149,16 +161,21 @@ export default function App() {
         <Links />
       </head>
       <body>
-        {data.showLocationSelector ? (
-          <main>
-            <LocationSelector company={data.company} />
-          </main>
-        ) : (
-          <Layout {...data}>
-            <Outlet />
-          </Layout>
-        )}
-
+        {
+          /***********************************************/
+          /**********  EXAMPLE UPDATE STARTS  ************/
+          data.showLocationSelector ? (
+            <main>
+              <LocationSelector company={data.company} />
+            </main>
+          ) : (
+            <Layout {...data}>
+              <Outlet />
+            </Layout>
+          )
+          /**********   EXAMPLE UPDATE END   ************/
+          /***********************************************/
+        }
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
         <LiveReload nonce={nonce} />

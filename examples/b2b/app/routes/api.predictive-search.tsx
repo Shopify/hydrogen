@@ -224,6 +224,8 @@ export function normalizePredictiveSearchResults(
   return {results, totalResults};
 }
 
+/***********************************************/
+/**********  EXAMPLE UPDATE STARTS  ************/
 const PREDICTIVE_SEARCH_QUERY = `#graphql
   fragment PredictiveArticle on Article {
     __typename
@@ -319,3 +321,5 @@ const PREDICTIVE_SEARCH_QUERY = `#graphql
     }
   }
 ` as const;
+/**********   EXAMPLE UPDATE END   ************/
+/***********************************************/

@@ -113,6 +113,8 @@ const FEATURED_COLLECTION_QUERY = `#graphql
   }
 ` as const;
 
+/***********************************************/
+/**********  EXAMPLE UPDATE STARTS  ************/
 const RECOMMENDED_PRODUCTS_QUERY = `#graphql
   fragment RecommendedProduct on Product {
     id
@@ -143,3 +145,5 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
     }
   }
 ` as const;
+/**********   EXAMPLE UPDATE END   ************/
+/***********************************************/
