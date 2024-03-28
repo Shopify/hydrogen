@@ -226,7 +226,7 @@ export async function startWorkerdServer({
 
 type Service = {fetch: typeof fetch};
 async function miniOxygenHandler(
-  request: Request,
+  oldRequest: Request,
   env: {
     hydrogen: Service;
     assets: Service;
@@ -237,6 +237,13 @@ async function miniOxygenHandler(
   },
   context: ExecutionContext,
 ) {
+  const request = oldRequest.url.includes('trycloudflare.com')
+    ? new Request(
+        oldRequest.url.replace('trycloudflare.com', 'tryhydrogen.dev'),
+        new Request(oldRequest) as any,
+      )
+    : oldRequest;
+
   const {pathname} = new URL(request.url);
 
   if (pathname === SUBREQUEST_PROFILER_ENDPOINT) {
