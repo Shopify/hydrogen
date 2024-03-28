@@ -5,19 +5,12 @@
 
 import {dirname} from 'node:path';
 import {readFile} from 'node:fs/promises';
-import {fetch} from '@shopify/cli-kit/node/http';
+import {fetch} from 'miniflare';
 import {SourceMapConsumer} from 'source-map';
 import {WebSocket} from 'ws';
 import {type Protocol} from 'devtools-protocol';
-import {
-  addInspectorConsoleLogger,
-  formatStack,
-} from './workerd-inspector-logs.js';
-import {AbortError} from '@shopify/cli-kit/node/error';
-import {
-  createInspectorProxy,
-  type InspectorProxy,
-} from './workerd-inspector-proxy.js';
+import {addInspectorConsoleLogger, formatStack} from './logger.js';
+import {createInspectorProxy, type InspectorProxy} from './devtools.js';
 
 // https://chromedevtools.github.io/devtools-protocol/#endpoints
 export interface InspectorWebSocketTarget {
@@ -55,10 +48,9 @@ export interface ErrorProperties {
 
 export function createInspectorConnector(options: {
   privateInspectorPort: number;
-  publicInspectorPort: number;
-  absoluteBundlePath: string;
+  publicInspectorPort?: number;
   sourceMapPath: string;
-  debug: boolean;
+  workerName: string;
 }) {
   let inspectorUrl: string | undefined;
   let inspectorConnection: InspectorConnection | undefined;
@@ -67,7 +59,10 @@ export function createInspectorConnector(options: {
   return async (onBeforeConnect?: () => void | Promise<void>) => {
     inspectorConnection?.close();
 
-    inspectorUrl ??= await findInspectorUrl(options.privateInspectorPort);
+    inspectorUrl ??= await findInspectorUrl(
+      options.privateInspectorPort,
+      options.workerName,
+    );
 
     await onBeforeConnect?.();
 
@@ -78,13 +73,12 @@ export function createInspectorConnector(options: {
 
     addInspectorConsoleLogger(inspectorConnection);
 
-    if (options.debug) {
+    if (options.publicInspectorPort) {
       if (inspectorProxy) {
         inspectorProxy.updateInspectorConnection(inspectorConnection);
       } else {
         inspectorProxy = createInspectorProxy(
           options.publicInspectorPort,
-          options.absoluteBundlePath,
           inspectorConnection,
         );
       }
@@ -92,7 +86,7 @@ export function createInspectorConnector(options: {
   };
 }
 
-async function findInspectorUrl(inspectorPort: number) {
+async function findInspectorUrl(inspectorPort: number, workerName: string) {
   try {
     // Fetch the inspector JSON response from the DevTools Inspector protocol
     const jsonUrl = `http://127.0.0.1:${inspectorPort}/json`;
@@ -101,7 +95,7 @@ async function findInspectorUrl(inspectorPort: number) {
     ).json()) as InspectorWebSocketTarget[];
 
     const url = body?.find(
-      ({id}) => id === 'core:user:hydrogen' || id === 'core:user:oxygen',
+      ({id}) => id === `core:user:${workerName}`,
     )?.webSocketDebuggerUrl;
 
     if (!url) {
@@ -109,14 +103,17 @@ async function findInspectorUrl(inspectorPort: number) {
     }
 
     return url;
-  } catch (error: unknown) {
-    const abortError = new AbortError(
-      'Unable to connect to Worker inspector',
-      `Please report this issue. ${(error as Error).stack}`,
-    );
+  } catch (error: any) {
+    const message =
+      'Unable to connect to Worker inspector. Please report this issue.';
 
-    abortError.stack = (error as Error).stack;
-    throw abortError;
+    if (!error || !error.message) {
+      error = new Error(message);
+    } else {
+      error.message = message + '\n' + error.message;
+    }
+
+    throw error;
   }
 }
 
@@ -362,6 +359,7 @@ function connectToInspector({inspectorUrl, sourceMapPath}: InspectorOptions) {
     ws,
     send,
     reconstructError,
+    sourceMapPath,
     getSourceMapConsumer,
     cleanupMessageQueue,
     isClosed,

@@ -7,22 +7,21 @@ import {
 } from 'node:http';
 import {WebSocketServer, type WebSocket, type MessageEvent} from 'ws';
 import type {Protocol} from 'devtools-protocol';
+import {request} from 'undici';
 import type {
   MessageData,
   InspectorWebSocketTarget,
   InspectorConnection,
-} from './workerd-inspector.js';
-import {request} from 'undici';
+} from './inspector.js';
 
 const CFW_DEVTOOLS = 'https://devtools.devprod.cloudflare.dev';
-const H2_FAVICON_URL =
+const FAVICON_URL =
   'https://cdn.shopify.com/s/files/1/0598/4822/8886/files/favicon.svg';
 
 export type InspectorProxy = ReturnType<typeof createInspectorProxy>;
 
 export function createInspectorProxy(
   port: number,
-  sourceFilePath: string,
   newInspectorConnection: InspectorConnection,
 ) {
   /**
@@ -42,6 +41,7 @@ export function createInspectorProxy(
    */
   let isDevToolsInBrowser = false;
 
+  const sourceMapPath = newInspectorConnection.sourceMapPath;
   const sourceMapPathname = '/__index.js.map';
   const sourceMapURL = `http://localhost:${port}${sourceMapPathname}`;
 
@@ -55,7 +55,7 @@ export function createInspectorProxy(
       case '/json/version':
         res.setHeader('Content-Type', 'application/json');
         res.end(
-          JSON.stringify({Browser: 'hydrogen/v2', 'Protocol-Version': '1.3'}),
+          JSON.stringify({Browser: 'MiniOxygen', 'Protocol-Version': '1.3'}),
         );
         break;
       case '/json':
@@ -75,8 +75,8 @@ export function createInspectorProxy(
                 devtoolsFrontendUrl,
                 devtoolsFrontendUrlCompat,
                 // Below are fields that are visible in the DevTools UI.
-                title: 'Hydrogen / Oxygen Worker',
-                faviconUrl: H2_FAVICON_URL,
+                title: 'MiniOxygen Worker',
+                faviconUrl: FAVICON_URL,
                 url: 'https://' + new URL(inspector.ws.url).host,
               } satisfies InspectorWebSocketTarget,
             ]),
@@ -92,10 +92,15 @@ export function createInspectorProxy(
           req.headers.origin ?? 'devtools://devtools',
         );
 
-        res.end(readFileSync(sourceFilePath + '.map', 'utf-8'));
+        if (sourceMapPath) {
+          res.end(readFileSync(sourceMapPath, 'utf-8'));
+        } else {
+          res.statusCode = 404;
+          res.end();
+        }
         break;
       case '/favicon.ico':
-        proxyHttp(H2_FAVICON_URL, req.headers, res);
+        proxyHttp(FAVICON_URL, req.headers, res);
         break;
       case '/':
         if (!queryString) {
@@ -130,7 +135,7 @@ export function createInspectorProxy(
           // Replace tab names in the sources section. Locales might
           // overwrite the original name, so we modify them too.
           proxyHttp(CFW_DEVTOOLS + url, req.headers, res, (content) =>
-            content.replace(/['"]Cloudflare['"]/g, '"Hydrogen"'),
+            content.replace(/['"]Cloudflare['"]/g, '"MiniOxygen"'),
           );
         } else {
           // Proxy all other assets to the CFW DevTools CDN.

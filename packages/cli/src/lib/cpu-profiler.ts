@@ -1,9 +1,12 @@
 import {readFile} from '@shopify/cli-kit/node/fs';
 import {Session, type Profiler} from 'node:inspector';
 import type {SourceMapConsumer} from 'source-map';
+import {handleMiniOxygenImportFail} from './mini-oxygen/common.js';
 
 export async function createCpuStartupProfiler() {
-  const {createMiniOxygen} = await import('@shopify/mini-oxygen');
+  const {createMiniOxygen} = await import('@shopify/mini-oxygen/node').catch(
+    handleMiniOxygenImportFail,
+  );
 
   const miniOxygen = createMiniOxygen({
     script: 'export default {}',

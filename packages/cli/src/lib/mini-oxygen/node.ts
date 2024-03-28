@@ -1,20 +1,14 @@
-import {randomUUID} from 'node:crypto';
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {readFile} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
-import {Response} from '@shopify/mini-oxygen';
-import {
-  startServer,
-  Request,
-  type MiniOxygenOptions as InternalMiniOxygenOptions,
-} from '@shopify/mini-oxygen';
 import colors from '@shopify/cli-kit/node/colors';
-import {DEFAULT_PORT} from '../flags.js';
+import type {MiniOxygenOptions as InternalMiniOxygenOptions} from '@shopify/mini-oxygen/node';
+import {DEFAULT_INSPECTOR_PORT} from '../flags.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
 import {
-  OXYGEN_HEADERS_MAP,
   SUBREQUEST_PROFILER_ENDPOINT,
   logRequestLine,
+  handleMiniOxygenImportFail,
 } from './common.js';
 import {
   H2O_BINDING_NAME,
@@ -22,9 +16,12 @@ import {
   handleDebugNetworkRequest,
   setConstructors,
 } from '../request-events.js';
+import {findPort} from '../find-port.js';
+import {getUtilityBannerlines} from '../dev-shared.js';
+import {outputNewline} from '@shopify/cli-kit/node/output';
 
 export async function startNodeServer({
-  port = DEFAULT_PORT,
+  appPort,
   watch = false,
   buildPathWorkerFile,
   buildPathClient,
@@ -32,11 +29,9 @@ export async function startNodeServer({
   debug = false,
   inspectorPort,
 }: MiniOxygenOptions): Promise<MiniOxygenInstance> {
-  const oxygenHeaders = Object.fromEntries(
-    Object.entries(OXYGEN_HEADERS_MAP).map(([key, value]) => {
-      return [key, value.defaultValue];
-    }),
-  );
+  const {startServer, Request, Response} = await import(
+    '@shopify/mini-oxygen/node'
+  ).catch(handleMiniOxygenImportFail);
 
   setConstructors({Response});
 
@@ -58,6 +53,7 @@ export async function startNodeServer({
   };
 
   if (debug) {
+    if (!inspectorPort) inspectorPort = await findPort(DEFAULT_INSPECTOR_PORT);
     (await import('node:inspector')).open(inspectorPort);
   }
 
@@ -66,7 +62,7 @@ export async function startNodeServer({
     workerFile: buildPathWorkerFile,
     assetsDir: buildPathClient,
     publicPath: '',
-    port,
+    port: appPort,
     watch,
     autoReload: watch,
     modules: true,
@@ -76,19 +72,13 @@ export async function startNodeServer({
       ...serviceBindings,
     },
     log: () => {},
-    oxygenHeaders,
     async onRequest(request, defaultDispatcher) {
       const url = new URL(request.url);
       if (url.pathname === SUBREQUEST_PROFILER_ENDPOINT) {
         return handleDebugNetworkRequest(request);
       }
 
-      let requestId = request.headers.get('request-id');
-      if (!requestId) {
-        requestId = randomUUID();
-        request.headers.set('request-id', requestId);
-      }
-
+      const requestId = request.headers.get('request-id')!;
       const startTimeMs = Date.now();
 
       // Provide headers to sub-requests and dispatch the request.
@@ -126,19 +116,15 @@ export async function startNodeServer({
       await miniOxygen.reload(nextOptions);
     },
     showBanner(options) {
-      console.log('');
+      outputNewline();
 
       const customSections = [];
 
-      if (options?.extraLines?.length) {
-        customSections.push({
-          body: options.extraLines.map((value, index) => ({
-            subdued: `${index != 0 ? '\n\n' : ''}${value}`,
-          })),
-        });
+      if (options?.host) {
+        customSections.push({body: getUtilityBannerlines(options.host)});
       }
 
-      if (debug) {
+      if (debug && inspectorPort) {
         customSections.push({
           body: {warn: `Debugger listening on ws://localhost:${inspectorPort}`},
         });

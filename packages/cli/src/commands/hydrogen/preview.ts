@@ -1,7 +1,12 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {muteDevLogs} from '../../lib/log.js';
 import {getProjectPaths} from '../../lib/remix-config.js';
-import {commonFlags, deprecated, flagsToCamelObject} from '../../lib/flags.js';
+import {
+  DEFAULT_APP_PORT,
+  commonFlags,
+  deprecated,
+  flagsToCamelObject,
+} from '../../lib/flags.js';
 import {startMiniOxygen} from '../../lib/mini-oxygen/index.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
@@ -35,12 +40,12 @@ export default class Preview extends Command {
 }
 
 type PreviewOptions = {
-  port: number;
+  port?: number;
   path?: string;
   legacyRuntime?: boolean;
   env?: string;
   envBranch?: string;
-  inspectorPort: number;
+  inspectorPort?: number;
   debug: boolean;
 };
 
@@ -73,8 +78,10 @@ export async function runPreview({
     envHandle,
   });
 
-  appPort = legacyRuntime ? appPort : await findPort(appPort);
-  inspectorPort = debug ? await findPort(inspectorPort) : inspectorPort;
+  if (!appPort) {
+    appPort = await findPort(DEFAULT_APP_PORT);
+  }
+
   const assetsPort = legacyRuntime ? 0 : await findPort(appPort + 100);
 
   // Note: we don't need to add any asset prefix in preview because
@@ -84,7 +91,7 @@ export async function runPreview({
   const miniOxygen = await startMiniOxygen(
     {
       root,
-      port: appPort,
+      appPort,
       assetsPort,
       env,
       buildPathClient,

@@ -1,11 +1,11 @@
 import {type Protocol} from 'devtools-protocol';
+import {SourceMapConsumer} from 'source-map';
+import {parse as parseStackTrace} from 'stack-trace';
 import type {
   InspectorConnection,
   ErrorProperties,
   MessageData,
-} from './workerd-inspector.js';
-import {SourceMapConsumer} from 'source-map';
-import {parse as parseStackTrace} from 'stack-trace';
+} from './inspector.js';
 
 export function addInspectorConsoleLogger(inspector: InspectorConnection) {
   inspector.ws.addEventListener('message', async (event) => {
