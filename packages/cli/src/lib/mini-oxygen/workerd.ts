@@ -136,6 +136,7 @@ export async function startWorkerdServer({
               transformLocation: () => absoluteBundlePath,
             }),
           },
+          ...conditionalUnsafeOutboundService(),
         },
       ],
     } satisfies MiniflareOptions);
@@ -314,4 +315,21 @@ async function logRequest(request: Request): Promise<Response> {
   });
 
   return new Response('ok');
+}
+
+export function conditionalUnsafeOutboundService() {
+  if (process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0') {
+    // Opt-out of TLS validation in the worker environment,
+    // and run network requests in Node environment.
+    // https://nodejs.org/api/cli.html#node_tls_reject_unauthorizedvalue
+    return {
+      async outboundService(request: Request) {
+        const response = await fetch(request.url, request);
+        // Remove brotli encoding:
+        // https://github.com/cloudflare/workers-sdk/issues/5345
+        response.headers.delete('Content-Encoding');
+        return response;
+      },
+    };
+  }
 }
