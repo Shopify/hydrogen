@@ -73,39 +73,45 @@ export default class Init extends Command {
   };
 
   async run(): Promise<void> {
-    // Rename markets => i18n
-    const {
-      flags: {markets, ..._flags},
-    } = await this.parse(Init);
-    const flags = {..._flags, i18n: markets};
-
-    if (flags.i18n && !I18N_CHOICES.includes(flags.i18n as I18nChoice)) {
-      throw new AbortError(
-        `Invalid URL structure strategy: ${
-          flags.i18n
-        }. Must be one of ${I18N_CHOICES.join(', ')}`,
-      );
-    }
-
-    if (
-      flags.styling &&
-      !STYLING_CHOICES.includes(flags.styling as StylingChoice)
-    ) {
-      throw new AbortError(
-        `Invalid styling strategy: ${
-          flags.styling
-        }. Must be one of ${STYLING_CHOICES.join(', ')}`,
-      );
-    }
-
+    const {flags} = await this.parse(Init);
     await runInit(flagsToCamelObject(flags) as InitOptions);
   }
 }
 
 export async function runInit(
-  options: InitOptions = parseProcessFlags(process.argv, FLAG_MAP),
+  {
+    markets,
+    ...options
+  }: InitOptions & {markets?: InitOptions['i18n']} = parseProcessFlags(
+    process.argv,
+    FLAG_MAP,
+  ),
 ) {
   supressNodeExperimentalWarnings();
+
+  // Rename markets => i18n
+  if (!options.i18n && markets) {
+    options.i18n = markets;
+  }
+
+  if (options.i18n && !I18N_CHOICES.includes(options.i18n as I18nChoice)) {
+    throw new AbortError(
+      `Invalid URL structure strategy: ${
+        options.i18n
+      }. Must be one of ${I18N_CHOICES.join(', ')}`,
+    );
+  }
+
+  if (
+    options.styling &&
+    !STYLING_CHOICES.includes(options.styling as StylingChoice)
+  ) {
+    throw new AbortError(
+      `Invalid styling strategy: ${
+        options.styling
+      }. Must be one of ${STYLING_CHOICES.join(', ')}`,
+    );
+  }
 
   options.git ??= true;
 
