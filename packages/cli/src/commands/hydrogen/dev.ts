@@ -6,6 +6,7 @@ import {fileExists} from '@shopify/cli-kit/node/fs';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import {copyPublicFiles} from './build.js';
 import {
+  type RemixConfig,
   assertOxygenChecks,
   getProjectPaths,
   getRemixConfig,
@@ -37,6 +38,7 @@ import {
   notifyIssueWithTunnelAndMockShop,
 } from '../../lib/dev-shared.js';
 import {getCliCommand} from '../../lib/shell.js';
+import {hasViteConfig} from '../../lib/vite-config.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -78,11 +80,18 @@ export default class Dev extends Command {
       directory = await prepareDiffDirectory(directory, true);
     }
 
-    await runDev({
+    const devParams = {
       ...flagsToCamelObject(flags),
       path: directory,
       cliConfig: this.config,
-    });
+    };
+
+    if (await hasViteConfig(directory ?? process.cwd())) {
+      const {runViteDev} = await import('./dev-vite.js');
+      await runViteDev(devParams);
+    } else {
+      await runDev(devParams);
+    }
   }
 }
 
@@ -100,7 +109,7 @@ type DevOptions = {
   sourcemap?: boolean;
   inspectorPort: number;
   customerAccountPush?: boolean;
-  cliConfig?: Config;
+  cliConfig: Config;
 };
 
 export async function runDev({
@@ -130,7 +139,7 @@ export async function runDev({
   const cliCommandPromise = getCliCommand(root);
 
   const reloadConfig = async () => {
-    const config = await getRemixConfig(root);
+    const config = (await getRemixConfig(root)) as RemixConfig;
 
     return disableVirtualRoutes
       ? config

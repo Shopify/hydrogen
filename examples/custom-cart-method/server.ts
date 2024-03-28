@@ -1,5 +1,6 @@
+// @ts-ignore
 // Virtual entry point for the app
-import * as remixBuild from '@remix-run/dev/server-build';
+import * as remixBuild from 'virtual:remix/server-build';
 import {
   cartGetIdDefault,
   cartSetIdDefault,

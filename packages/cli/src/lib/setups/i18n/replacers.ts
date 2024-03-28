@@ -204,10 +204,14 @@ export async function replaceRemixEnv(
   formatConfig: FormatOptions,
   localeExtractImpl: string,
 ) {
-  const remixEnvPath = joinPath(rootDirectory, 'remix.env.d.ts');
+  let envPath = joinPath(rootDirectory, 'env.d.ts');
 
-  if (!(await fileExists(remixEnvPath))) {
-    return; // Skip silently
+  if (!(await fileExists(envPath))) {
+    // Try classic d.ts path
+    envPath = 'remix.env.d.ts';
+    if (!(await fileExists(envPath))) {
+      return; // Skip silently
+    }
   }
 
   // E.g. `type I18nLocale = {...};`
@@ -222,7 +226,7 @@ export async function replaceRemixEnv(
     return; // Skip silently
   }
 
-  await replaceFileContent(remixEnvPath, formatConfig, async (content) => {
+  await replaceFileContent(envPath, formatConfig, async (content) => {
     if (content.includes(`Storefront<`)) return; // Already set up
 
     const astGrep = await importLangAstGrep('ts');
