@@ -6,6 +6,7 @@ import type {
 } from '@remix-run/server-runtime';
 import type {RequestEventPayload} from './vite/request-events';
 import {CUSTOMER_ACCOUNT_SESSION_KEY} from './constants';
+import type {BuyerInput} from '@shopify/hydrogen-react/storefront-api-types';
 
 export interface HydrogenSessionData {
   [CUSTOMER_ACCOUNT_SESSION_KEY]: {
@@ -19,10 +20,7 @@ export interface HydrogenSessionData {
     redirectPath?: string;
   };
   // for B2B buyer context
-  [BUYER_SESSION_KEY]: {
-    customerAccessToken?: string;
-    companyLocationId?: string;
-  };
+  [BUYER_SESSION_KEY]: Partial<BuyerInput>;
 }
 
 export interface HydrogenSession<

@@ -5,7 +5,10 @@ import type {
 import {type GraphQLError} from '../utils/graphql';
 import type {CrossRuntimeRequest} from '../utils/request';
 import type {HydrogenSession} from '../hydrogen';
-import {LanguageCode} from '@shopify/hydrogen-react/storefront-api-types';
+import type {
+  LanguageCode,
+  BuyerInput,
+} from '@shopify/hydrogen-react/storefront-api-types';
 
 // Return type of unauthorizedHandler = Return type of loader/action function
 // This type is not exported https://github.com/remix-run/react-router/blob/main/packages/router/utils.ts#L167
@@ -13,10 +16,7 @@ type DataFunctionValue = Response | NonNullable<unknown> | null;
 
 type JsonGraphQLError = ReturnType<GraphQLError['toJSON']>; // Equivalent to `Jsonify<GraphQLError>[]`
 
-export type Buyer = {
-  customerAccessToken?: string;
-  companyLocationId?: string;
-};
+export type Buyer = Partial<BuyerInput>;
 
 export type CustomerAPIResponse<ReturnType> = {
   data: ReturnType;

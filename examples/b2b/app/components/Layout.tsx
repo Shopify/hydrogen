@@ -13,40 +13,50 @@ import {
   PredictiveSearchForm,
   PredictiveSearchResults,
 } from '~/components/Search';
+import type {Company} from '@shopify/hydrogen-react/customer-account-api-types';
 
 export type LayoutProps = {
   cart: Promise<CartApiQueryFragment | null>;
   children?: React.ReactNode;
   footer: Promise<FooterQuery>;
   header: HeaderQuery;
-  isLoggedIn: Promise<boolean>;
-  customer: any;
-  companyLocationId?: string;
+  isLoggedIn: boolean;
+  /***********************************************/
+  /**********  EXAMPLE UPDATE STARTS  ************/
+  company: Company;
+  /**********   EXAMPLE UPDATE END   ************/
+  /***********************************************/
 };
 
+/***********************************************/
+/**********  EXAMPLE UPDATE STARTS  ************/
 export function Layout({
   cart,
   children = null,
   footer,
   header,
   isLoggedIn,
-  customer,
-  companyLocationId,
+  company,
 }: LayoutProps) {
+  /**********   EXAMPLE UPDATE END   ************/
+  /***********************************************/
   return (
     <>
       <CartAside cart={cart} />
       <SearchAside />
       <MobileMenuAside menu={header?.menu} shop={header?.shop} />
+      {/***********************************************/
+      /**********  EXAMPLE UPDATE STARTS  ************/}
       {header && (
         <Header
           header={header}
           cart={cart}
           isLoggedIn={isLoggedIn}
-          customer={customer}
-          companyLocationId={companyLocationId}
+          company={company}
         />
       )}
+      {/**********   EXAMPLE UPDATE END   ************/
+      /***********************************************/}
       <main>{children}</main>
       <Suspense>
         <Await resolve={footer}>
