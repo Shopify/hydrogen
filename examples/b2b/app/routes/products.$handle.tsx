@@ -427,7 +427,7 @@ const PRODUCT_FRAGMENT = `#graphql
 const PRODUCT_QUERY = `#graphql
   query Product(
     $country: CountryCode
-    $buyer: BuyerIdentityInput
+    $buyer: BuyerInput
     $handle: String!
     $language: LanguageCode
     $selectedOptions: [SelectedOptionInput!]!
@@ -454,7 +454,7 @@ const VARIANTS_QUERY = `#graphql
   ${PRODUCT_VARIANTS_FRAGMENT}
   query ProductVariants(
     $country: CountryCode
-    $buyer: BuyerIdentityInput
+    $buyer: BuyerInput
     $language: LanguageCode
     $handle: String!
   ) @inContext(country: $country, language: $language, buyer: $buyer) {

@@ -13,7 +13,11 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({context}: LoaderFunctionArgs) {
-  const {storefront} = context;
+  const {storefront, customerAccount} = context;
+  console.error(
+    '\x1b[42m%s\x1b[0m',
+    `token=${JSON.stringify(await customerAccount.getAccessToken())}`,
+  );
   const buyer = getBuyer({session: context.session});
   const {collections} = await storefront.query(FEATURED_COLLECTION_QUERY, {
     variables: {buyer},
@@ -140,7 +144,7 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
       }
     }
   }
-  query RecommendedProducts ($country: CountryCode, $language: LanguageCode, $buyer: BuyerIdentityInput)
+  query RecommendedProducts ($country: CountryCode, $language: LanguageCode, $buyer: BuyerInput)
     @inContext(country: $country, language: $language, buyer: $buyer) {
     products(first: 4, sortKey: UPDATED_AT, reverse: true) {
       nodes {

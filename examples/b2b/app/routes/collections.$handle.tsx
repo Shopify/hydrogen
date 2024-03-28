@@ -154,7 +154,7 @@ const COLLECTION_QUERY = `#graphql
   query Collection(
     $handle: String!
     $country: CountryCode
-    $buyer: BuyerIdentityInput
+    $buyer: BuyerInput
     $language: LanguageCode
     $first: Int
     $last: Int

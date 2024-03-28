@@ -292,7 +292,7 @@ const PREDICTIVE_SEARCH_QUERY = `#graphql
   query predictiveSearch(
     $country: CountryCode
     $language: LanguageCode
-    $buyer: BuyerIdentityInput
+    $buyer: BuyerInput
     $limit: Int!
     $limitScope: PredictiveSearchLimitScope!
     $searchTerm: String!

@@ -123,7 +123,7 @@ const SEARCH_QUERY = `#graphql
   }
   query search(
     $country: CountryCode
-    $buyer: BuyerIdentityInput
+    $buyer: BuyerInput
     $endCursor: String
     $first: Int
     $language: LanguageCode
