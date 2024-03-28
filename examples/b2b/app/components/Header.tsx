@@ -162,7 +162,7 @@ function LocationDropdown({company}: Pick<HeaderProps, 'company'>) {
     : [];
 
   const [selectedLocation, setSelectedLocation] = useState(
-    company.locations.edges[0].node.id ?? undefined,
+    company?.locations?.edges?.[0]?.node?.id ?? undefined,
   );
 
   const setLocation = async (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -170,7 +170,7 @@ function LocationDropdown({company}: Pick<HeaderProps, 'company'>) {
     setSelectedLocation(locationId);
   };
 
-  if (locations.length === 1) return null;
+  if (locations.length === 1 || !company) return null;
 
   return (
     <CartForm route="/cart" action={CartForm.ACTIONS.BuyerIdentityUpdate}>

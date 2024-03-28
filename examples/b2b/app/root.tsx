@@ -94,12 +94,17 @@ export async function loader({request, context}: LoaderFunctionArgs) {
   });
 
   // B2B buyer context
-  let companyLocationId = (await customerAccount.UNSTABLE_getBuyer())
-    ?.companyLocationId;
+  let companyLocationId;
+  let company: Company;
 
-  const customer = await customerAccount.query(CUSTOMER_LOCATIONS_QUERY);
-  const company: Company =
-    customer?.data?.customer?.companyContacts?.edges?.[0]?.node?.company;
+  if (isLoggedIn) {
+    companyLocationId = (await customerAccount.UNSTABLE_getBuyer())
+      ?.companyLocationId;
+
+    const customer = await customerAccount.query(CUSTOMER_LOCATIONS_QUERY);
+    company =
+      customer?.data?.customer?.companyContacts?.edges?.[0]?.node?.company;
+  }
 
   if (!companyLocationId && company?.locations?.edges?.length === 1) {
     companyLocationId = company.locations.edges[0].node.id;
