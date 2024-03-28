@@ -14,6 +14,7 @@ import {
   getStorefrontEnvironments,
 } from '../../../lib/graphql/admin/list-environments.js';
 import {pushStorefrontEnvVariables} from '../../../lib/graphql/admin/push-variables.js';
+import {dummyListEnvironments} from '../../../lib/graphql/admin/test-helper.js';
 
 import {runEnvPush} from './push__unstable.js';
 
@@ -49,32 +50,9 @@ const SHOPIFY_CONFIG = {
   },
 };
 
-const PRODUCTION_ENV: Environment = {
-  id: 'gid://shopify/HydrogenStorefrontEnvironment/1',
-  createdAt: '2024-01-01',
-  branch: 'main',
-  name: 'Production',
-  type: 'PRODUCTION',
-  url: 'production.com',
-};
-
-const PREVIEW_ENV: Environment = {
-  id: 'gid://shopify/HydrogenStorefrontEnvironment/2',
-  createdAt: '2024-01-01',
-  branch: null,
-  name: 'Preview',
-  type: 'PREVIEW',
-  url: null,
-};
-
-const CUSTOM_ENV: Environment = {
-  id: 'gid://shopify/HydrogenStorefrontEnvironment/3',
-  createdAt: '2024-01-01',
-  branch: 'staging',
-  name: 'Staging',
-  type: 'CUSTOM',
-  url: 'custom.com',
-};
+const storefrontWithEnvironments = dummyListEnvironments(
+  SHOPIFY_CONFIG.storefront.id,
+);
 
 const outputMock = mockAndCaptureOutput();
 const processExit = vi.spyOn(process, 'exit');
@@ -110,11 +88,9 @@ describe('pushVariables', () => {
       ],
     });
 
-    vi.mocked(getStorefrontEnvironments).mockResolvedValue({
-      id: SHOPIFY_CONFIG.storefront.id,
-      productionUrl: 'prod.com',
-      environments: [PRODUCTION_ENV, PREVIEW_ENV, CUSTOM_ENV],
-    });
+    vi.mocked(getStorefrontEnvironments).mockResolvedValue(
+      storefrontWithEnvironments,
+    );
 
     vi.mocked(pushStorefrontEnvVariables).mockResolvedValue({
       userErrors: [],
@@ -135,7 +111,7 @@ describe('pushVariables', () => {
       await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=2');
 
       await expect(
-        runEnvPush({path: tmpDir, env: 'Preview'}),
+        runEnvPush({path: tmpDir, env: 'preview'}),
       ).resolves.not.toThrow();
 
       expect(getStorefrontEnvironments).toHaveBeenCalledWith(
@@ -156,13 +132,15 @@ describe('pushVariables', () => {
       const filePath = joinPath(tmpDir, '.env');
       await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=2');
       await expect(
-        runEnvPush({path: tmpDir, env: 'Preview'}),
+        runEnvPush({path: tmpDir, env: 'preview'}),
       ).rejects.toThrowError('No environments found');
     });
   });
 
   it('prompts the user to select an environment', async () => {
-    vi.mocked(renderSelectPrompt).mockResolvedValue(PREVIEW_ENV.id);
+    vi.mocked(renderSelectPrompt).mockResolvedValue(
+      storefrontWithEnvironments.environments[0]!.id,
+    );
 
     await inTemporaryDirectory(async (tmpDir) => {
       const filePath = joinPath(tmpDir, '.env');
@@ -170,7 +148,8 @@ describe('pushVariables', () => {
       await expect(runEnvPush({path: tmpDir})).resolves.not.toThrow();
 
       expect(renderSelectPrompt).toHaveBeenCalledWith({
-        message: 'Select a set of environment variables to overwrite:',
+        message:
+          'Select an environment to overwrite its environment variables:',
         choices: [
           expect.objectContaining({label: expect.stringContaining('Preview')}),
           expect.objectContaining({label: expect.stringContaining('Staging')}),
@@ -182,42 +161,30 @@ describe('pushVariables', () => {
     });
   });
 
-  describe('when an environment is passed', () => {
+  describe('when env is passed', () => {
     it('errors when the environment does not match graphql', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
         const filePath = joinPath(tmpDir, '.env');
         await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=2');
         await expect(
-          runEnvPush({path: tmpDir, env: 'Something random'}),
+          runEnvPush({path: tmpDir, env: 'something-random'}),
         ).rejects.toThrowError('Environment not found');
       });
     });
 
-    it('prompts the user if there are multiple matches', async () => {
-      vi.mocked(renderSelectPrompt).mockResolvedValue(PREVIEW_ENV.id);
-
-      vi.mocked(getStorefrontEnvironments).mockResolvedValue({
-        id: SHOPIFY_CONFIG.storefront.id,
-        productionUrl: 'prod.com',
-        environments: [
-          PRODUCTION_ENV,
-          PREVIEW_ENV,
-          {...CUSTOM_ENV, name: 'Preview'},
-        ],
-      });
-
+    it("ensures getStorefrontEnvVariables is called with environment's handle", async () => {
       await inTemporaryDirectory(async (tmpDir) => {
         const filePath = joinPath(tmpDir, '.env');
         await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=2');
         await expect(
-          runEnvPush({path: tmpDir, env: 'Preview'}),
+          runEnvPush({path: tmpDir, env: 'production'}),
         ).resolves.not.toThrow();
 
-        expect(renderSelectPrompt).toHaveBeenCalledWith({
-          message:
-            'There were multiple environments found with the name Preview:',
-          choices: expect.any(Array),
-        });
+        await expect(getStorefrontEnvVariables).toHaveBeenCalledWith(
+          ADMIN_SESSION,
+          SHOPIFY_CONFIG.storefront.id,
+          'production',
+        );
       });
     });
   });
@@ -247,7 +214,7 @@ describe('pushVariables', () => {
       const filePath = joinPath(tmpDir, '.env');
       await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=2');
       await expect(
-        runEnvPush({path: tmpDir, env: 'Preview'}),
+        runEnvPush({path: tmpDir, env: 'preview'}),
       ).resolves.not.toThrow();
 
       expect(outputMock.info()).toMatch(
@@ -283,7 +250,7 @@ describe('pushVariables', () => {
       const filePath = joinPath(tmpDir, '.env');
       await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=2');
       await expect(
-        runEnvPush({path: tmpDir, env: 'Preview'}),
+        runEnvPush({path: tmpDir, env: 'preview'}),
       ).resolves.not.toThrow();
 
       expect(renderConfirmationPrompt).toHaveBeenCalled();
@@ -317,7 +284,7 @@ describe('pushVariables', () => {
       const filePath = joinPath(tmpDir, '.env');
       await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=2');
       await expect(
-        runEnvPush({path: tmpDir, env: 'Preview'}),
+        runEnvPush({path: tmpDir, env: 'preview'}),
       ).resolves.not.toThrow();
     });
 
@@ -353,7 +320,7 @@ describe('pushVariables', () => {
       const filePath = joinPath(tmpDir, '.env');
       await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=2');
       await expect(
-        runEnvPush({path: tmpDir, env: 'Preview'}),
+        runEnvPush({path: tmpDir, env: 'preview'}),
       ).resolves.not.toThrow();
 
       expect(outputMock.info()).toMatch(
@@ -389,7 +356,7 @@ describe('pushVariables', () => {
       const filePath = joinPath(tmpDir, '.env');
       await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=2');
       await expect(
-        runEnvPush({path: tmpDir, env: 'Preview'}),
+        runEnvPush({path: tmpDir, env: 'preview'}),
       ).resolves.not.toThrow();
 
       expect(pushStorefrontEnvVariables).not.toHaveBeenCalled();
@@ -423,7 +390,7 @@ describe('pushVariables', () => {
       const filePath = joinPath(tmpDir, '.env');
       await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=NEW_VALUE');
       await expect(
-        runEnvPush({path: tmpDir, env: 'Preview'}),
+        runEnvPush({path: tmpDir, env: 'preview'}),
       ).resolves.not.toThrow();
 
       expect(pushStorefrontEnvVariables).toHaveBeenCalledWith(

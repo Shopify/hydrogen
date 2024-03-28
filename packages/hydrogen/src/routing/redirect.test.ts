@@ -18,7 +18,7 @@ describe('storefrontRedirect', () => {
       }),
     ).resolves.toEqual(
       new Response(null, {
-        status: 302,
+        status: 301,
         headers: {location: shopifyDomain + '/admin'},
       }),
     );
@@ -38,6 +38,124 @@ describe('storefrontRedirect', () => {
       new Response(null, {
         status: 301,
         headers: {location: shopifyDomain + '/some-page'},
+      }),
+    );
+
+    expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
+      variables: {query: 'path:/some-page'},
+    });
+  });
+
+  it('strips remix _data query parameter on soft navigations', async () => {
+    queryMock.mockResolvedValueOnce({
+      urlRedirects: {edges: [{node: {target: shopifyDomain + '/some-page'}}]},
+    });
+
+    await expect(
+      storefrontRedirect({
+        storefront: storefrontMock,
+        request: new Request(
+          'https://domain.com/some-page?_data=%2Fcollections%2Fbackcountry',
+        ),
+      }),
+    ).resolves.toEqual(
+      new Response(null, {
+        status: 200,
+        headers: {
+          'X-Remix-Redirect': shopifyDomain + '/some-page',
+          'X-Remix-Status': '301',
+        },
+      }),
+    );
+
+    expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
+      variables: {query: 'path:/some-page'},
+    });
+  });
+
+  it('matches query parameters', async () => {
+    queryMock.mockResolvedValueOnce({
+      urlRedirects: {edges: [{node: {target: shopifyDomain + '/some-page'}}]},
+    });
+
+    await expect(
+      storefrontRedirect({
+        storefront: storefrontMock,
+        request: new Request(
+          'https://domain.com/some-page?test=true&_data=%2Fcollections%2Fbackcountry',
+        ),
+        matchQueryParams: true,
+      }),
+    ).resolves.toEqual(
+      new Response(null, {
+        status: 200,
+        headers: {
+          'X-Remix-Redirect': shopifyDomain + '/some-page',
+          'X-Remix-Status': '301',
+        },
+      }),
+    );
+
+    expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
+      variables: {query: 'path:/some-page?test=true'},
+    });
+  });
+
+  it('propogates query parameters to the final redirect', async () => {
+    queryMock.mockResolvedValueOnce({
+      urlRedirects: {
+        edges: [
+          {node: {target: shopifyDomain + '/some-redirect?redirectParam=true'}},
+        ],
+      },
+    });
+
+    await expect(
+      storefrontRedirect({
+        storefront: storefrontMock,
+        request: new Request(
+          'https://domain.com/some-page?requestParam=true&_data=%2Fcollections%2Fbackcountry',
+        ),
+      }),
+    ).resolves.toEqual(
+      new Response(null, {
+        status: 200,
+        headers: {
+          'X-Remix-Redirect':
+            shopifyDomain +
+            '/some-redirect?redirectParam=true&requestParam=true',
+          'X-Remix-Status': '301',
+        },
+      }),
+    );
+
+    expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
+      variables: {query: 'path:/some-page'},
+    });
+  });
+
+  it('propogates query parameters to the final redirect for relative URLs', async () => {
+    queryMock.mockResolvedValueOnce({
+      urlRedirects: {
+        edges: [{node: {target: '/some-redirect?redirectParam=true'}}],
+      },
+    });
+
+    await expect(
+      storefrontRedirect({
+        storefront: storefrontMock,
+        request: new Request(
+          'https://domain.com/some-page?requestParam=true&_data=%2Fcollections%2Fbackcountry',
+        ),
+      }),
+    ).resolves.toEqual(
+      new Response(null, {
+        status: 200,
+        headers: {
+          'X-Remix-Redirect':
+            '/some-redirect?redirectParam=true&requestParam=true',
+          'X-Remix-Status': '301',
+        },
       }),
     );
 
@@ -97,7 +215,7 @@ describe('storefrontRedirect', () => {
           ),
         }),
       ).resolves.toEqual(
-        new Response(null, {status: 302, headers: {location: '/some-page'}}),
+        new Response(null, {status: 301, headers: {location: '/some-page'}}),
       );
     });
 
@@ -114,7 +232,7 @@ describe('storefrontRedirect', () => {
           ),
         }),
       ).resolves.toEqual(
-        new Response(null, {status: 302, headers: {location: '/some-page'}}),
+        new Response(null, {status: 301, headers: {location: '/some-page'}}),
       );
     });
 
@@ -162,7 +280,7 @@ describe('storefrontRedirect', () => {
         }),
       ).resolves.toEqual(
         new Response(null, {
-          status: 302,
+          status: 301,
           headers: {location: '/some-page?param=https://another.com'},
         }),
       );

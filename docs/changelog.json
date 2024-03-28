@@ -1,7 +1,49 @@
 {
   "url": "https://github.com/Shopify/hydrogen/pulls?q=is%3Apr+is%3Aclosed+%5Bci%5D+release+in%3Atitle+is%3Amerged",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "releases": [
+    {
+      "title": "Fix bug in storefrontRedirect",
+      "version": "2024.1.5",
+      "hash": "e382e7252ea45807923b2a56fd86e74ee8d28ef9",
+      "pr": "https://github.com/Shopify/hydrogen/pull/1889",
+      "commit": "https://github.com/Shopify/hydrogen/pull/1837/commits/ceda89e85581c96f6947eca1a81b7a87e3cd7280",
+      "dependencies": {
+        "@remix-run/react": "2.8.0",
+        "@shopify/cli-hydrogen": "^7.1.2",
+        "@shopify/hydrogen": "^2024.1.5",
+        "@shopify/remix-oxygen": "^2.0.3"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "2.8.0",
+        "typescript": "^5.2.2",
+        "@shopify/cli": "3.56.3",
+        "@shopify/oxygen-workers-types": "^4.0.0",
+        "@remix-run/server-runtime": "2.8.0"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Fix storefrontRedirect error",
+          "pr": "Fix bug in storefrontRedirect",
+          "id": "1880"
+        }
+      ],
+      "features": []
+    },
     {
       "title": "Fix XSS vulnerability in the SEO component",
       "version": "2024.1.4",

@@ -4,6 +4,7 @@ import {
   getStorefrontEnvironments,
   type ListEnvironmentsSchema,
 } from './list-environments.js';
+import {dummyListEnvironments} from './test-helper.js';
 
 vi.mock('./client.js');
 
@@ -19,20 +20,9 @@ describe('getStorefrontEnvironments', () => {
 
   it('calls the graphql client and returns Hydrogen storefronts', async () => {
     const mockedResponse: ListEnvironmentsSchema = {
-      hydrogenStorefront: {
-        id: 'gid://shopify/HydrogenStorefront/123',
-        productionUrl: 'https://...',
-        environments: [
-          {
-            createdAt: '2021-01-01T00:00:00Z',
-            id: 'e123',
-            name: 'Staging',
-            type: 'CUSTOM',
-            branch: 'staging',
-            url: 'https://...',
-          },
-        ],
-      },
+      hydrogenStorefront: dummyListEnvironments(
+        'gid://shopify/HydrogenStorefront/1',
+      ),
     };
 
     vi.mocked(adminRequest<ListEnvironmentsSchema>).mockResolvedValue(

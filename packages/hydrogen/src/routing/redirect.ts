@@ -1,4 +1,3 @@
-import {redirect} from '@remix-run/server-runtime';
 import type {UrlRedirectConnection} from '@shopify/hydrogen-react/storefront-api-types';
 import type {I18nBase, Storefront} from '../storefront';
 import {getRedirectUrl} from '../utils/get-redirect-url';
@@ -12,6 +11,8 @@ type StorefrontRedirect = {
   response?: Response;
   /** By default the `/admin` route is redirected to the Shopify Admin page for the current storefront. Disable this redirect by passing `true`. */
   noAdminRedirect?: boolean;
+  /** By default, query parameters are not used to match redirects. Set this to `true` if you'd like redirects to be query parameter sensitive */
+  matchQueryParams?: boolean;
 };
 
 /**
@@ -29,14 +30,29 @@ export async function storefrontRedirect(
     storefront,
     request,
     noAdminRedirect,
+    matchQueryParams,
     response = new Response('Not Found', {status: 404}),
   } = options;
 
-  const {pathname, search} = new URL(request.url);
-  const redirectFrom = pathname + search;
+  const url = new URL(request.url);
+  const {pathname, searchParams} = url;
+  const isSoftNavigation = searchParams.has('_data');
 
-  if (pathname === '/admin' && !noAdminRedirect) {
-    return redirect(`${storefront.getShopifyDomain()}/admin`);
+  searchParams.delete('redirect');
+  searchParams.delete('return_to');
+  searchParams.delete('_data');
+
+  const redirectFrom = matchQueryParams
+    ? url.toString().replace(url.origin, '')
+    : pathname;
+
+  if (url.pathname === '/admin' && !noAdminRedirect) {
+    return createRedirectResponse(
+      `${storefront.getShopifyDomain()}/admin`,
+      isSoftNavigation,
+      searchParams,
+      matchQueryParams,
+    );
   }
 
   try {
@@ -49,13 +65,23 @@ export async function storefrontRedirect(
     const location = urlRedirects?.edges?.[0]?.node?.target;
 
     if (location) {
-      return new Response(null, {status: 301, headers: {location}});
+      return createRedirectResponse(
+        location,
+        isSoftNavigation,
+        searchParams,
+        matchQueryParams,
+      );
     }
 
     const redirectTo = getRedirectUrl(request.url);
 
     if (redirectTo) {
-      return redirect(redirectTo);
+      return createRedirectResponse(
+        redirectTo,
+        isSoftNavigation,
+        searchParams,
+        matchQueryParams,
+      );
     }
   } catch (error) {
     console.error(
@@ -67,17 +93,37 @@ export async function storefrontRedirect(
   return response;
 }
 
-function isLocalPath(requestUrl: string, redirectUrl: string) {
-  // We don't want to redirect cross domain,
-  // doing so could create phishing vulnerability
-  // Test for protocols, e.g. https://, http://, //
-  // and uris: mailto:, tel:, javascript:, etc.
-  try {
-    return (
-      new URL(requestUrl).origin === new URL(redirectUrl, requestUrl).origin
-    );
-  } catch (e) {
-    return false;
+const TEMP_DOMAIN = 'https://example.com';
+
+function createRedirectResponse(
+  location: string,
+  isSoftNavigation: boolean,
+  searchParams: URLSearchParams,
+  matchQueryParams?: boolean,
+) {
+  const url = new URL(location, TEMP_DOMAIN);
+
+  if (!matchQueryParams) {
+    for (const [key, value] of searchParams) {
+      // The redirect destination might include query params, so merge the
+      // original query params with the redirect destination query params
+      url.searchParams.append(key, value);
+    }
+  }
+
+  if (isSoftNavigation) {
+    return new Response(null, {
+      status: 200,
+      headers: {
+        'X-Remix-Redirect': url.toString().replace(TEMP_DOMAIN, ''),
+        'X-Remix-Status': '301',
+      },
+    });
+  } else {
+    return new Response(null, {
+      status: 301,
+      headers: {location: url.toString().replace(TEMP_DOMAIN, '')},
+    });
   }
 }
 

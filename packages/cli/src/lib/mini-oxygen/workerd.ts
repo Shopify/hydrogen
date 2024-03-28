@@ -2,6 +2,7 @@ import {dirname, resolvePath} from '@shopify/cli-kit/node/path';
 import {readFile} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
+import type {Request} from '@shopify/mini-oxygen';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
 import {
   SUBREQUEST_PROFILER_ENDPOINT,
@@ -139,4 +140,22 @@ export async function startWorkerdServer({
       await miniOxygen.dispose();
     },
   };
+}
+
+export function conditionalUnsafeOutboundService() {
+  if (process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0') {
+    // Opt-out of TLS validation in the worker environment,
+    // and run network requests in Node environment.
+    // https://nodejs.org/api/cli.html#node_tls_reject_unauthorizedvalue
+    return {
+      async outboundService(request: Request) {
+        const {fetch} = await import('@shopify/mini-oxygen');
+        const response = await fetch(request.url, request);
+        // Remove brotli encoding:
+        // https://github.com/cloudflare/workers-sdk/issues/5345
+        response.headers.delete('Content-Encoding');
+        return response;
+      },
+    };
+  }
 }

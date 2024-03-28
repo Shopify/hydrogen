@@ -24,6 +24,7 @@ export default class Preview extends Command {
     ...commonFlags.port,
     worker: deprecated('--worker', {isBoolean: true}),
     ...commonFlags.legacyRuntime,
+    ...commonFlags.env,
     ...commonFlags.envBranch,
     ...commonFlags.inspectorPort,
     ...commonFlags.debug,
@@ -42,6 +43,7 @@ type PreviewOptions = {
   port?: number;
   path?: string;
   legacyRuntime?: boolean;
+  env?: string;
   envBranch?: string;
   inspectorPort?: number;
   debug: boolean;
@@ -51,6 +53,7 @@ export async function runPreview({
   port: appPort,
   path: appPath,
   legacyRuntime = false,
+  env: envHandle,
   envBranch,
   inspectorPort,
   debug,
@@ -68,7 +71,12 @@ export async function runPreview({
 
   const {shop, storefront} = await getConfig(root);
   const fetchRemote = !!shop && !!storefront?.id;
-  const env = await getAllEnvironmentVariables({root, fetchRemote, envBranch});
+  const env = await getAllEnvironmentVariables({
+    root,
+    fetchRemote,
+    envBranch,
+    envHandle,
+  });
 
   if (!appPort) {
     appPort = await findPort(DEFAULT_APP_PORT);
