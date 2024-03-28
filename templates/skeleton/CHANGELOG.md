@@ -1,5 +1,38 @@
 # skeleton
 
+## 1.0.7
+
+### Patch Changes
+
+- ✨ Added `npx shopify hydrogen customer-account push` command to CLI that takes the url in `--dev-origin` and push the config to Shopify Admin ([#1804](https://github.com/Shopify/hydrogen/pull/1804)) by [@michenly](https://github.com/michenly)
+
+  ✨ Added `--customer-account-push` flag to the dev CLI command. This flag is meant be use for storefront that uses [Customer Account API](https://shopify.dev/docs/api/customer). It create a tunnel, and push the tunnel url to Shopify Admin.
+  ✨ skeleton template now use `dev --customer-account-push` to start dev server
+
+- Fix types returned by the `session` object. ([#1869](https://github.com/Shopify/hydrogen/pull/1869)) by [@frandiox](https://github.com/frandiox)
+
+  In `remix.env.d.ts` or `env.d.ts`, add the following types:
+
+  ```diff
+  import type {
+    // ...
+    HydrogenCart,
+  + HydrogenSessionData,
+  } from '@shopify/hydrogen';
+
+  // ...
+
+  declare module '@shopify/remix-oxygen' {
+    // ...
+
+  + interface SessionData extends HydrogenSessionData {}
+  }
+  ```
+
+- Updated dependencies [[`87072950`](https://github.com/Shopify/hydrogen/commit/870729505f7eb1f1c709799dd036ad02fd94be95), [`5f1295fe`](https://github.com/Shopify/hydrogen/commit/5f1295fe60b86396f364fefef339248a444c988a), [`3c8a7313`](https://github.com/Shopify/hydrogen/commit/3c8a7313cafb0ca21bbca19ac0b3f8ef4ab12655), [`ca1dcbb7`](https://github.com/Shopify/hydrogen/commit/ca1dcbb7d69c458006e25892c86c4478d394a428), [`11879b17`](https://github.com/Shopify/hydrogen/commit/11879b175d78e3326de090a56a044d1e55d0bae8), [`788d86b3`](https://github.com/Shopify/hydrogen/commit/788d86b3a737bff53b4ec3aa9667458b2d45ade7), [`da95bb1c`](https://github.com/Shopify/hydrogen/commit/da95bb1c8c644f450053ce649b40dc380e7375dc), [`5bb43304`](https://github.com/Shopify/hydrogen/commit/5bb43304c08427786cfd4f2529e59bd38f593252), [`062d6be7`](https://github.com/Shopify/hydrogen/commit/062d6be7e031c388498ec3d359de51a4bfdfdfd8), [`b3323e59`](https://github.com/Shopify/hydrogen/commit/b3323e59a4381647f1df797c5dc54793f6e0a29a), [`5f1295fe`](https://github.com/Shopify/hydrogen/commit/5f1295fe60b86396f364fefef339248a444c988a), [`8f05b8f2`](https://github.com/Shopify/hydrogen/commit/8f05b8f23fe9b3564760fcb67d142176b95c14d4), [`9e899218`](https://github.com/Shopify/hydrogen/commit/9e8992181ce7d27548d35f98b5a4f78b80795ce8), [`d007b7bc`](https://github.com/Shopify/hydrogen/commit/d007b7bc6f6c36e984d937108230ecc7c202fa42), [`a5511cd7`](https://github.com/Shopify/hydrogen/commit/a5511cd7bf9b0f0c4ef0e52cd72418f78c04785b), [`34fbae23`](https://github.com/Shopify/hydrogen/commit/34fbae23999eefbd1af1dff44816a52813d75b44)]:
+  - @shopify/hydrogen@2024.1.5
+  - @shopify/cli-hydrogen@7.2.0
+
 ## 1.0.6
 
 ### Patch Changes
