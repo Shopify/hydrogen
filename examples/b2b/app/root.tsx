@@ -70,11 +70,15 @@ export const useRootLoaderData = () => {
   return root?.data as SerializeFrom<typeof loader>;
 };
 
-export async function loader({request, context}: LoaderFunctionArgs) {
-  const {storefront, customerAccount, cart, session} = context;
+export async function loader({context}: LoaderFunctionArgs) {
+  const {storefront, customerAccount, cart} = context;
   const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
 
+  /***********************************************/
+  /**********  EXAMPLE UPDATE STARTS  ************/
   const isLoggedIn = await customerAccount.isLoggedIn();
+  /**********   EXAMPLE UPDATE END   ************/
+  /***********************************************/
   const cartPromise = cart.get();
 
   // defer the footer query (below the fold)
@@ -93,13 +97,20 @@ export async function loader({request, context}: LoaderFunctionArgs) {
     },
   });
 
+  /***********************************************/
+  /**********  EXAMPLE UPDATE STARTS  ************/
   // B2B buyer context
-  let companyLocationId = (await customerAccount.UNSTABLE_getBuyer())
-    ?.companyLocationId;
+  let companyLocationId;
+  let company: Company;
 
-  const customer = await customerAccount.query(CUSTOMER_LOCATIONS_QUERY);
-  const company: Company =
-    customer?.data?.customer?.companyContacts?.edges?.[0]?.node?.company;
+  if (isLoggedIn) {
+    companyLocationId = (await customerAccount.UNSTABLE_getBuyer())
+      ?.companyLocationId;
+
+    const customer = await customerAccount.query(CUSTOMER_LOCATIONS_QUERY);
+    company =
+      customer?.data?.customer?.companyContacts?.edges?.[0]?.node?.company;
+  }
 
   if (!companyLocationId && company?.locations?.edges?.length === 1) {
     companyLocationId = company.locations.edges[0].node.id;
@@ -107,21 +118,25 @@ export async function loader({request, context}: LoaderFunctionArgs) {
     customerAccount.UNSTABLE_setBuyer({
       companyLocationId,
     });
-
-    //updateBuyerIdentity
   }
 
   const showLocationSelector = Boolean(company && !companyLocationId);
+  /**********   EXAMPLE UPDATE END   ************/
+  /***********************************************/
 
   return defer(
     {
       cart: cartPromise,
       footer: footerPromise,
       header: await headerPromise,
+      /***********************************************/
+      /**********  EXAMPLE UPDATE STARTS  ************/
       isLoggedIn,
       publicStoreDomain,
       company,
       showLocationSelector,
+      /**********   EXAMPLE UPDATE END   ************/
+      /***********************************************/
     },
     {
       headers: {
@@ -144,16 +159,21 @@ export default function App() {
         <Links />
       </head>
       <body>
-        {data.showLocationSelector ? (
-          <main>
-            <LocationSelector company={data.company} />
-          </main>
-        ) : (
-          <Layout {...data}>
-            <Outlet />
-          </Layout>
-        )}
-
+        {
+          /***********************************************/
+          /**********  EXAMPLE UPDATE STARTS  ************/
+          data.showLocationSelector ? (
+            <main>
+              <LocationSelector company={data.company} />
+            </main>
+          ) : (
+            <Layout {...data}>
+              <Outlet />
+            </Layout>
+          )
+          /**********   EXAMPLE UPDATE END   ************/
+          /***********************************************/
+        }
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
         <LiveReload nonce={nonce} />

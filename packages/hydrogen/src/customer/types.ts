@@ -145,7 +145,7 @@ export type CustomerAccountOptions = {
   /** Whether it should print GraphQL errors automatically. Defaults to true */
   logErrors?: boolean | ((error?: Error) => boolean);
   /** UNSTABLE feature, this will eventually goes away. If true then we will exchange customerAccessToken for storefrontCustomerAccessToken. */
-  b2b?: boolean;
+  unstableB2b?: boolean;
 };
 
 /** Below are types meant for documentation only. Ensure it stay in sync with the type above. */

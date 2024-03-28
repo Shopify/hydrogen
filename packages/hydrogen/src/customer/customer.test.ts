@@ -1,7 +1,7 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import type {HydrogenSession, HydrogenSessionData} from '../hydrogen';
 import {createCustomerAccountClient} from './customer';
-import {CUSTOMER_ACCOUNT_SESSION_KEY} from './constants';
+import {BUYER_SESSION_KEY, CUSTOMER_ACCOUNT_SESSION_KEY} from '../constants';
 import crypto from 'node:crypto';
 
 if (!globalThis.crypto) {
@@ -55,11 +55,18 @@ const mockCustomerAccountSession: HydrogenSessionData['customerAccount'] = {
   nonce: 'nonce',
 };
 
+const mockBuyerSession = {
+  customerAccessToken: 'sha123',
+  companyLocationId: '1',
+};
+
 describe('customer', () => {
   beforeEach(() => {
     session = {
       commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
-      get: vi.fn(() => mockCustomerAccountSession) as HydrogenSession['get'],
+      get: vi.fn(() => {
+        return {...mockCustomerAccountSession, ...mockBuyerSession};
+      }) as HydrogenSession['get'],
       set: vi.fn(),
       unset: vi.fn(),
     };
@@ -519,7 +526,6 @@ describe('customer', () => {
           expiresAt: expect.any(String),
           idToken: 'e30=.eyJub25jZSI6ICJub25jZSJ9.signature',
           refreshToken: 'refresh_token',
-          redirectPath: undefined,
         }),
       );
     });
@@ -570,7 +576,50 @@ describe('customer', () => {
           expiresAt: expect.any(String),
           idToken: 'e30=.eyJub25jZSI6ICJub25jZSJ9.signature',
           refreshToken: 'refresh_token',
-          redirectPath: undefined,
+        }),
+      );
+    });
+
+    it('exchanges for a storefront customer access token for b2b', async () => {
+      const redirectPath = '/account/orders';
+      session = {
+        commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
+        get: vi.fn(() => {
+          return {...mockCustomerAccountSession, redirectPath};
+        }) as HydrogenSession['get'],
+        set: vi.fn(),
+        unset: vi.fn(),
+      };
+
+      const customer = createCustomerAccountClient({
+        session,
+        customerAccountId: 'customerAccountId',
+        customerAccountUrl: 'https://customer-api',
+        request: new Request('https://localhost?state=state&code=code'),
+        b2b: true,
+        waitUntil: vi.fn(),
+      });
+
+      fetch.mockResolvedValue(
+        createFetchResponse(
+          {
+            access_token: 'access_token',
+            expires_in: '',
+            id_token: `${btoa('{}')}.${btoa('{"nonce": "nonce"}')}.signature`,
+            refresh_token: 'refresh_token',
+          },
+          {ok: true},
+        ),
+      );
+
+      const response = await customer.authorize();
+
+      expect(response.status).toBe(302);
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('https://customer-api/account/customer/api'),
+        expect.objectContaining({
+          body: expect.stringContaining('storefrontCustomerAccessTokenCreate'),
         }),
       );
     });
@@ -833,6 +882,57 @@ describe('customer', () => {
       } catch {
         expect(customAuthStatusHandler).toHaveBeenCalledOnce();
       }
+    });
+  });
+
+  describe('setBuyer()', async () => {
+    it('set buyer in session', async () => {
+      const customer = createCustomerAccountClient({
+        session,
+        customerAccountId: 'customerAccountId',
+        customerAccountUrl: 'https://customer-api',
+        request: new Request('https://localhost'),
+        waitUntil: vi.fn(),
+      });
+
+      customer.UNSTABLE_setBuyer(mockBuyerSession);
+
+      expect(session.set).toHaveBeenCalledWith(
+        BUYER_SESSION_KEY,
+        expect.objectContaining(mockBuyerSession),
+      );
+    });
+  });
+
+  describe('setBuyer and getBuyer()', async () => {
+    it('returns a buyer when logged in', async () => {
+      const customer = createCustomerAccountClient({
+        session,
+        customerAccountId: 'customerAccountId',
+        customerAccountUrl: 'https://customer-api',
+        request: new Request('https://localhost'),
+        waitUntil: vi.fn(),
+      });
+
+      const buyer = await customer.UNSTABLE_getBuyer();
+
+      expect(buyer).toEqual(expect.objectContaining(mockBuyerSession));
+    });
+
+    it('returns undefined when not logged in', async () => {
+      const customer = createCustomerAccountClient({
+        session,
+        customerAccountId: 'customerAccountId',
+        customerAccountUrl: 'https://customer-api',
+        request: new Request('https://localhost'),
+        waitUntil: vi.fn(),
+      });
+
+      (session.get as any).mockReturnValueOnce(undefined);
+
+      const buyer = await customer.UNSTABLE_getBuyer();
+
+      expect(buyer).toBeUndefined();
     });
   });
 });

@@ -4,6 +4,10 @@ import {useState, Suspense} from 'react';
 import type {HeaderQuery} from 'storefrontapi.generated';
 import type {LayoutProps} from './Layout';
 import {useRootLoaderData} from '~/root';
+import type {
+  CompanyLocation,
+  CompanyLocationConnection,
+} from '@shopify/hydrogen-react/customer-account-api-types';
 
 /***********************************************/
 /**********  EXAMPLE UPDATE STARTS  ************/
@@ -156,13 +160,13 @@ function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
 /**********  EXAMPLE UPDATE STARTS  ************/
 function LocationDropdown({company}: Pick<HeaderProps, 'company'>) {
   const locations = company?.locations?.edges
-    ? company.locations.edges.map((location) => {
+    ? company.locations.edges.map((location: CompanyLocationConnection) => {
         return {...location.node};
       })
     : [];
 
   const [selectedLocation, setSelectedLocation] = useState(
-    company.locations.edges[0].node.id ?? undefined,
+    company?.locations?.edges?.[0]?.node?.id ?? undefined,
   );
 
   const setLocation = async (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -170,7 +174,7 @@ function LocationDropdown({company}: Pick<HeaderProps, 'company'>) {
     setSelectedLocation(locationId);
   };
 
-  if (locations.length === 1) return null;
+  if (locations.length === 1 || !company) return null;
 
   return (
     <CartForm route="/cart" action={CartForm.ACTIONS.BuyerIdentityUpdate}>
@@ -187,7 +191,7 @@ function LocationDropdown({company}: Pick<HeaderProps, 'company'>) {
             value={selectedLocation}
             style={{marginRight: '4px'}}
           >
-            {locations.map((location) => {
+            {locations.map((location: CompanyLocation) => {
               return (
                 <option
                   defaultValue={selectedLocation}

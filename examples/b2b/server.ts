@@ -51,7 +51,7 @@ export default {
         customerApiVersion: 'unstable',
         /***********************************************/
         /**********  EXAMPLE UPDATE STARTS  ************/
-        b2b: true,
+        unstableB2b: true,
         /**********   EXAMPLE UPDATE END   ************/
         /***********************************************/
       });
@@ -71,8 +71,8 @@ export default {
         storefrontApiVersion: 'unstable',
         /***********************************************/
         /**********  EXAMPLE UPDATE STARTS  ************/
-        b2b: true,
-        customerAccount,
+        unstableB2b: true,
+        unstableCustomerAccount: customerAccount,
         /**********   EXAMPLE UPDATE END   ************/
         /***********************************************/
       });

@@ -5,7 +5,7 @@ import {CartForm} from '@shopify/hydrogen';
 import {json, type ActionFunctionArgs} from '@shopify/remix-oxygen';
 import {CartMain} from '~/components/Cart';
 import {useRootLoaderData} from '~/root';
-import type {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-api-types';
+import type {CartBuyerIdentityInput} from '@shopify/hydrogen/storefront-api-types';
 
 export const meta: MetaFunction = () => {
   return [{title: `Hydrogen | Cart`}];
@@ -21,7 +21,8 @@ export async function action({request, context}: ActionFunctionArgs) {
   /***********************************************/
   /**********  EXAMPLE UPDATE STARTS  ************/
 
-  const companyLocationId = inputs.companyLocationId as string; // fix this type properly
+  const companyLocationId =
+    inputs.companyLocationId as CartBuyerIdentityInput['companyLocationId'];
 
   if (companyLocationId) {
     context.customerAccount.UNSTABLE_setBuyer({companyLocationId});

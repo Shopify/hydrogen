@@ -75,7 +75,7 @@ export function createCustomerAccountClient({
   authUrl,
   customAuthStatusHandler,
   logErrors = true,
-  b2b = false,
+  unstableB2b = false,
 }: CustomerAccountOptions): CustomerAccount {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.warn(
@@ -302,7 +302,7 @@ export function createCustomerAccountClient({
   }
 
   async function exchangeForStorefrontCustomerAccessToken() {
-    if (!b2b) {
+    if (!unstableB2b) {
       return;
     }
 

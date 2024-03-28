@@ -1876,8 +1876,6 @@ export type CountryCode =
   | 'UG'
   /** U.S. Outlying Islands. */
   | 'UM'
-  /** Unknown country code. */
-  | 'UNKNOWN__'
   /** United States. */
   | 'US'
   /** Uruguay. */
@@ -1947,27 +1945,10 @@ export type CropRegion =
   | 'CENTER'
   /** Keep the left of the image. */
   | 'LEFT'
-  /** Crop the exact region of the image specified by the crop_left, crop_top, crop_width and crop_height parameters. */
-  | 'REGION'
   /** Keep the right of the image. */
   | 'RIGHT'
   /** Keep the top of the image. */
   | 'TOP';
-
-/**
- * The input fields for defining an arbitrary cropping region.
- *
- */
-export type CropRegionInput = {
-  /** Height of the region of the image to extract when using the region crop mode. */
-  height: Scalars['Int']['input'];
-  /** Left position of the region of the image to extract when using the region crop mode. */
-  left: Scalars['Int']['input'];
-  /** Top position of the region of the image to extract when using the region crop mode. */
-  top: Scalars['Int']['input'];
-  /** Width of the region of the image to extract when using the region crop mode. */
-  width: Scalars['Int']['input'];
-};
 
 /**
  * The three-letter currency codes that represent the world currencies used in stores. These include standard ISO 4217 codes, legacy codes,
@@ -2298,16 +2279,8 @@ export type CurrencyCode =
   /** Zambian Kwacha (ZMW). */
   | 'ZMW';
 
-/** The gift card payment details related to a transaction. */
-export type CustomGiftCardPaymentDetails = {
-  __typename?: 'CustomGiftCardPaymentDetails';
-  /** The transaction identifier of the gift card used. */
-  last4?: Maybe<Scalars['String']['output']>;
-};
-
 /** Represents the personal information of a customer. */
 export type Customer = HasMetafields &
-  HasStoreCreditAccounts &
   Node & {
     __typename?: 'Customer';
     /** The addresses associated with the customer. */
@@ -2361,8 +2334,6 @@ export type Customer = HasMetafields &
     phoneNumber?: Maybe<CustomerPhoneNumber>;
     /** A Return identified by ID. */
     return?: Maybe<Return>;
-    /** Returns a list of store credit accounts that belong to the owner resource. */
-    storeCreditAccounts: StoreCreditAccountConnection;
     /** A Subscription Contract resource identified by ID. */
     subscriptionContract?: Maybe<SubscriptionContract>;
     /** The Subscription Contracts associated with the customer. */
@@ -2442,15 +2413,6 @@ export type CustomerOrdersArgs = {
 /** Represents the personal information of a customer. */
 export type CustomerReturnArgs = {
   id: Scalars['ID']['input'];
-};
-
-/** Represents the personal information of a customer. */
-export type CustomerStoreCreditAccountsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** Represents the personal information of a customer. */
@@ -3128,32 +3090,9 @@ export type Domain = Node & {
   id: Scalars['ID']['output'];
   /** The host of the primary domain that this domain redirects to (for example, `example.com`). */
   redirectHost?: Maybe<Scalars['String']['output']>;
-  /** The type of the domain. */
-  type: DomainType;
   /** The URL of the domain (for example, `example.com`). */
   url: Scalars['URL']['output'];
 };
-
-/** The type of domain. */
-export type DomainType =
-  /** A personalised Shopify-provided domain. */
-  | 'BRANDED_SHOPIFY_DOMAIN'
-  /** The permanent domain of the customer accounts. */
-  | 'CUSTOMER_ACCOUNT_PERMANENT_DOMAIN'
-  /** The permanent domain of the custom storefront. */
-  | 'CUSTOM_STOREFRONT_PERMANENT_DOMAIN'
-  /** A domain that is not connected to Shopify. */
-  | 'EXTERNAL_DOMAIN'
-  /** A domain purchased through a Google domain subscription. */
-  | 'GOOGLE_DOMAIN'
-  /** A domain purchased through Open SRS. */
-  | 'OPEN_SRS_DOMAIN'
-  /** The permanent domain of the shop. */
-  | 'PERMANENT_DOMAIN'
-  /** A Shopify-provided domain. */
-  | 'SHOPIFY_PROVIDED_DOMAIN'
-  /** A third-party domain. */
-  | 'THIRD_PARTY_DOMAIN';
 
 /** A draft order for the customer. Any fields related to money are in the presentment currency. */
 export type DraftOrder = Node & {
@@ -3225,10 +3164,6 @@ export type DraftOrder = Node & {
   taxExempt: Scalars['Boolean']['output'];
   /** Whether the line item prices include taxes. */
   taxesIncluded: Scalars['Boolean']['output'];
-  /** The total amount of additional fees for the draft order. A null response means it wasn't calculated. */
-  totalAdditionalFees?: Maybe<MoneyV2>;
-  /** The total amount of duties for the draft order. A null response means it wasn't calculated. */
-  totalDuties?: Maybe<MoneyV2>;
   /** The total price of line items for this draft order. */
   totalLineItemsPrice: MoneyV2;
   /**
@@ -4000,21 +3935,6 @@ export type HasMetafieldsIdentifier = {
   namespace: Scalars['String']['input'];
 };
 
-/** Represents information about the store credit accounts associated to the specified owner. */
-export type HasStoreCreditAccounts = {
-  /** Returns a list of store credit accounts that belong to the owner resource. */
-  storeCreditAccounts: StoreCreditAccountConnection;
-};
-
-/** Represents information about the store credit accounts associated to the specified owner. */
-export type HasStoreCreditAccountsStoreCreditAccountsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-};
-
 /** Represents an image resource. */
 export type Image = {
   __typename?: 'Image';
@@ -4037,15 +3957,6 @@ export type Image = {
    * @deprecated Use `url` instead.
    */
   src: Scalars['URL']['output'];
-  /**
-   * The ThumbHash of the image.
-   *
-   * Useful to display placeholder images while the original image is loading.
-   *
-   * See https://evanw.github.io/thumbhash/ for details on how to use it.
-   *
-   */
-  thumbhash?: Maybe<Scalars['String']['output']>;
   /**
    * The location of the transformed image as a URL.
    *
@@ -4086,8 +3997,6 @@ export type ImageUrlArgs = {
 
 /** List of supported image content types. */
 export type ImageContentType =
-  /** A BMP image. */
-  | 'BMP'
   /** A JPG image. */
   | 'JPG'
   /** A PNG image. */
@@ -4111,8 +4020,6 @@ export type ImageTransformInput = {
    *
    */
   crop?: InputMaybe<CropRegion>;
-  /** Defines an arbitrary cropping region. */
-  cropRegion?: InputMaybe<CropRegionInput>;
   /**
    * Image height in pixels between 1 and 5760.
    *
@@ -5024,74 +4931,12 @@ export type Node = {
   id: Scalars['ID']['output'];
 };
 
-/**
- * A line item that contains units which are not eligible for return.
- *
- */
-export type NonReturnableLineItem = {
-  __typename?: 'NonReturnableLineItem';
-  /** The line item associated with the non-returnable units. */
-  lineItem: LineItem;
-  /** The number of units that aren't eligible for return. */
-  quantity: Scalars['Int']['output'];
-  /** The detailed information about the non-returnable quantities, categorized by reason. */
-  quantityDetails: Array<NonReturnableQuantityDetail>;
-};
-
-/**
- * An auto-generated type for paginating through multiple NonReturnableLineItems.
- *
- */
-export type NonReturnableLineItemConnection = {
-  __typename?: 'NonReturnableLineItemConnection';
-  /** A list of edges. */
-  edges: Array<NonReturnableLineItemEdge>;
-  /** A list of the nodes contained in NonReturnableLineItemEdge. */
-  nodes: Array<NonReturnableLineItem>;
-  /** Information to aid in pagination. */
-  pageInfo: PageInfo;
-};
-
-/**
- * An auto-generated type which holds one NonReturnableLineItem and a cursor during pagination.
- *
- */
-export type NonReturnableLineItemEdge = {
-  __typename?: 'NonReturnableLineItemEdge';
-  /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
-  /** The item at the end of NonReturnableLineItemEdge. */
-  node: NonReturnableLineItem;
-};
-
-/** The total quantity that is not available for return for a specific reason. */
-export type NonReturnableQuantityDetail = {
-  __typename?: 'NonReturnableQuantityDetail';
-  /** The number of units that aren't eligible for return. */
-  quantity: Scalars['Int']['output'];
-  /** The reason why this quantity isn't eligible for return. */
-  reasonCode: NonReturnableReason;
-};
-
-/** The reason explaining why this quantity cannot be returned. */
-export type NonReturnableReason =
-  /** A return isn't accepted for this item quantity. */
-  | 'FINAL_SALE'
-  /** The item quantity has already been returned. */
-  | 'RETURNED'
-  /** The return window for the item has expired. */
-  | 'RETURN_WINDOW_EXPIRED'
-  /** The item quantity has not been fulfilled by the merchant. */
-  | 'UNFULFILLED';
-
 /** A customer’s completed request to purchase one or more products from a shop. */
 export type Order = HasMetafields &
   Node & {
     __typename?: 'Order';
     /** A list of sales agreements associated with the order. */
     agreements: SalesAgreementConnection;
-    /** Whether the order has automatic deferred payment collection. */
-    automaticDeferredPaymentCollection: Scalars['Boolean']['output'];
     /**
      * The mailing address provided by the customer. Not all orders have a mailing address.
      *
@@ -5149,8 +4994,6 @@ export type Order = HasMetafields &
     email?: Maybe<Scalars['String']['output']>;
     /** The email address of the customer. */
     emailAddress?: Maybe<CustomerEmailAddress>;
-    /** A refund estimate for the order based on a set of line items. */
-    estimatedRefund?: Maybe<OrderEstimatedRefund>;
     /** The financial status of the order. */
     financialStatus?: Maybe<OrderFinancialStatus>;
     /** The fulfillment status of the order. */
@@ -5206,8 +5049,6 @@ export type Order = HasMetafields &
     phone?: Maybe<Scalars['String']['output']>;
     /** The pickup information for the order. */
     pickupInformation?: Maybe<OrderPickupInformation>;
-    /** The pickup point information for the order. */
-    pickupPointInformation?: Maybe<OrderPickupPointInformation>;
     /** The purchase order number of the order. */
     poNumber?: Maybe<Scalars['String']['output']>;
     /**
@@ -5225,8 +5066,6 @@ export type Order = HasMetafields &
     reorderPath?: Maybe<Scalars['String']['output']>;
     /** Whether the order requires shipping. */
     requiresShipping: Scalars['Boolean']['output'];
-    /** The return information for the order. */
-    returnInformation: OrderReturnInformation;
     /** The list of returns for the order with pagination. */
     returns: ReturnConnection;
     /**
@@ -5293,11 +5132,6 @@ export type OrderDiscountApplicationsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
-/** A customer’s completed request to purchase one or more products from a shop. */
-export type OrderEstimatedRefundArgs = {
-  requestedLineItems: Array<RefundEstimateLineItemInput>;
 };
 
 /** A customer’s completed request to purchase one or more products from a shop. */
@@ -5592,46 +5426,10 @@ export type OrderEditSummaryChange = Node & {
   lineItem: LineItem;
 };
 
-/** The projected refund amount for a collection of line items, taxes, and shipping fees. */
-export type OrderEstimatedRefund = {
-  __typename?: 'OrderEstimatedRefund';
-  /** The total monetary value expected to be refunded, expressed in shop and presentment currencies. */
-  amountSet: MoneyBag;
-  /** The total of all discounted prices of the line items expected to be refunded. */
-  discountedSubtotalSet: MoneyBag;
-  /** A list of line items expected to be refunded, along with restock instructions. */
-  refundLineItems: RefundLineItemConnection;
-  /** The restocking fee generated by the return process. */
-  returnRestockingFee: ReturnRestockingFee;
-  /** The shipping fee generated by the return process. */
-  returnShippingFee: ReturnShippingFee;
-  /** The shipping costs expected to be refunded from the order. */
-  shipping: ShippingRefund;
-  /** The total of all amounts of the line items expected to be refunded in shop and presentment currencies. */
-  subtotalSet: MoneyBag;
-  /** A list of suggested order transactions. */
-  suggestedTransactions: Array<SuggestedOrderTransaction>;
-  /** The total cart discount amount that was applied to all line items in this expected refund. */
-  totalCartDiscountAmountSet: MoneyBag;
-  /** The total of the taxes expected to be refunded from the order in shop and presentment currencies. */
-  totalTaxSet: MoneyBag;
-};
-
-/** The projected refund amount for a collection of line items, taxes, and shipping fees. */
-export type OrderEstimatedRefundRefundLineItemsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
 /** Represents the order's current financial status. */
 export type OrderFinancialStatus =
   /** Displayed as **Authorized**. */
   | 'AUTHORIZED'
-  /** Displayed as **Expired**. */
-  | 'EXPIRED'
   /** Displayed as **Paid**. */
   | 'PAID'
   /** Displayed as **Partially paid**. */
@@ -5717,18 +5515,6 @@ export type OrderLineItemsSummary = {
   totalQuantityOfTipLineItems: Scalars['Int']['output'];
 };
 
-/**
- * The summary of reasons why the order is ineligible for return.
- *
- */
-export type OrderNonReturnableSummary = {
-  __typename?: 'OrderNonReturnableSummary';
-  /** The specific reasons why the order is ineligible for return. */
-  nonReturnableReasons: Array<NonReturnableReason>;
-  /** A message displayed to the customer summarizing why the order is ineligible for return. */
-  summaryMessage?: Maybe<Scalars['String']['output']>;
-};
-
 /** The summary of payment status information for the order. */
 export type OrderPaymentInformation = {
   __typename?: 'OrderPaymentInformation';
@@ -5779,70 +5565,11 @@ export type OrderPickupInformation = {
   updatedAt?: Maybe<Scalars['DateTime']['output']>;
 };
 
-/**
- * The pickup point information associated with an order.
- *
- */
-export type OrderPickupPointInformation = {
-  __typename?: 'OrderPickupPointInformation';
-  /** The pickup point address for the order. */
-  address: PickupAddress;
-  /** Logo of the carrier for this pickup point. */
-  carrierLogoUrl: Scalars['URL']['output'];
-  /** Name of the carrier for this pickup point. */
-  carrierName: Scalars['String']['output'];
-  /** Pickup point name. */
-  name: Scalars['String']['output'];
-};
-
 /** Return type for `orderRequestReturn` mutation. */
 export type OrderRequestReturnPayload = {
   __typename?: 'OrderRequestReturnPayload';
   /** The return request that has been made. */
   return?: Maybe<Return>;
-  /** The list of errors that occurred from executing the mutation. */
-  userErrors: Array<ReturnUserError>;
-};
-
-/** The return information for a specific order. */
-export type OrderReturnInformation = {
-  __typename?: 'OrderReturnInformation';
-  /** Whether the order has one or more restocking fees associated with its returnable line items. */
-  hasRestockingFee: Scalars['Boolean']['output'];
-  /** Whether the order has one or more return promises associated with any of its line items. */
-  hasReturnPromise: Scalars['Boolean']['output'];
-  /** Whether the order has one or more return shipping fees associated with its returnable line items. */
-  hasReturnShippingFee: Scalars['Boolean']['output'];
-  /** The line items that are not eligible for return. */
-  nonReturnableLineItems: NonReturnableLineItemConnection;
-  /** A summary of the reasons why an item in an order isn't returnable. */
-  nonReturnableSummary?: Maybe<OrderNonReturnableSummary>;
-  /** The aggregated subtotal of all fees applied on the order (includes return shipping and restocking. */
-  returnFees: Array<ReturnRestockingFee | ReturnShippingFee>;
-  /** The note for the buyer about the return shipping method. This field is translated. */
-  returnShippingMethodNote?: Maybe<Scalars['String']['output']>;
-  /** A set of return shipping methods associated with the order's returnable line items. */
-  returnShippingMethods: Array<ReturnShippingMethod>;
-  /** The line items that can be returned. */
-  returnableLineItems: ReturnableLineItemConnection;
-};
-
-/** The return information for a specific order. */
-export type OrderReturnInformationNonReturnableLineItemsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
-/** The return information for a specific order. */
-export type OrderReturnInformationReturnableLineItemsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 /** The group including the shipping lines of the order. */
@@ -5980,9 +5707,7 @@ export type OrderTransactionType =
   /** A money order transaction. */
   | 'MONEY_ORDER'
   /** A Shopify installments transaction. */
-  | 'SHOPIFY_INSTALLMENTS'
-  /** A store credit transaction. */
-  | 'STORE_CREDIT';
+  | 'SHOPIFY_INSTALLMENTS';
 
 /**
  * Returns information about pagination in a connection, in accordance with the
@@ -6003,7 +5728,7 @@ export type PageInfo = {
 };
 
 /** Payment details related to a transaction. */
-export type PaymentDetails = CardPaymentDetails | CustomGiftCardPaymentDetails;
+export type PaymentDetails = CardPaymentDetails;
 
 /** The payment icon to display for the transaction. */
 export type PaymentIcon = {
@@ -6033,15 +5758,6 @@ export type PaymentIconImage = Node & {
    * @deprecated Use `url` instead.
    */
   src: Scalars['URL']['output'];
-  /**
-   * The ThumbHash of the image.
-   *
-   * Useful to display placeholder images while the original image is loading.
-   *
-   * See https://evanw.github.io/thumbhash/ for details on how to use it.
-   *
-   */
-  thumbhash?: Maybe<Scalars['String']['output']>;
   /**
    * The location of the transformed image as a URL.
    *
@@ -6330,7 +6046,6 @@ export type PermittedOperation =
 
 /** Represents the personal information of a customer. */
 export type PersonalAccount = HasMetafields &
-  HasStoreCreditAccounts &
   Node & {
     __typename?: 'PersonalAccount';
     /**
@@ -6410,8 +6125,6 @@ export type PersonalAccount = HasMetafields &
     phone?: Maybe<Scalars['String']['output']>;
     /** A Return identified by ID. */
     return?: Maybe<Return>;
-    /** Returns a list of store credit accounts that belong to the owner resource. */
-    storeCreditAccounts: StoreCreditAccountConnection;
     /** A Subscription Contract resource identified by ID. */
     subscriptionContract?: Maybe<SubscriptionContract>;
     /** The Subscription Contracts associated with the customer. */
@@ -6501,15 +6214,6 @@ export type PersonalAccountOrdersArgs = {
 /** Represents the personal information of a customer. */
 export type PersonalAccountReturnArgs = {
   id: Scalars['ID']['input'];
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountStoreCreditAccountsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** Represents the personal information of a customer. */
@@ -6618,8 +6322,6 @@ export type ProductSale = Node &
 /** The data that about an order that is visible to anyone with the order ID. */
 export type PublicOrder = Node & {
   __typename?: 'PublicOrder';
-  /** Whether the order has automatic deferred payment collection. */
-  automaticDeferredPaymentCollection: Scalars['Boolean']['output'];
   /**
    * The date and time when the order was canceled.
    * Returns `null` if the order wasn't canceled.
@@ -6668,8 +6370,6 @@ export type PublicOrder = Node & {
   paymentInformation?: Maybe<OrderPaymentInformation>;
   /** The pickup information for the order. */
   pickupInformation?: Maybe<OrderPickupInformation>;
-  /** The pickup point information for the order. */
-  pickupPointInformation?: Maybe<OrderPickupPointInformation>;
   /** The purchase order number of the order. */
   poNumber?: Maybe<Scalars['String']['output']>;
   /**
@@ -6685,8 +6385,6 @@ export type PublicOrder = Node & {
   reorderPath?: Maybe<Scalars['String']['output']>;
   /** Whether the order requires shipping. */
   requiresShipping: Scalars['Boolean']['output'];
-  /** The return information for the order. */
-  returnInformation: OrderReturnInformation;
   /** The list of returns for the order with pagination. */
   returns: ReturnConnection;
   /** The list of shipping line groups for the order. */
@@ -6900,53 +6598,6 @@ export type RefundAgreementSalesArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/** The input fields for a requested line item. */
-export type RefundEstimateLineItemInput = {
-  /** The ID of the line item to be returned. */
-  lineItemId: Scalars['ID']['input'];
-  /** The quantity of the item to be returned. */
-  quantity: Scalars['Int']['input'];
-};
-
-/** A line item that is included in a refund. */
-export type RefundLineItem = Node & {
-  __typename?: 'RefundLineItem';
-  /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
-  /** The line item that was associated with the refund. */
-  lineItem: LineItem;
-  /** The quantity of the item that was refunded. */
-  quantity?: Maybe<Scalars['Int']['output']>;
-  /** The subtotal amount that was refunded, in both shop and presentment currencies. */
-  subtotalSet: MoneyBag;
-};
-
-/**
- * An auto-generated type for paginating through multiple RefundLineItems.
- *
- */
-export type RefundLineItemConnection = {
-  __typename?: 'RefundLineItemConnection';
-  /** A list of edges. */
-  edges: Array<RefundLineItemEdge>;
-  /** A list of the nodes contained in RefundLineItemEdge. */
-  nodes: Array<RefundLineItem>;
-  /** Information to aid in pagination. */
-  pageInfo: PageInfo;
-};
-
-/**
- * An auto-generated type which holds one RefundLineItem and a cursor during pagination.
- *
- */
-export type RefundLineItemEdge = {
-  __typename?: 'RefundLineItemEdge';
-  /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
-  /** The item at the end of RefundLineItemEdge. */
-  node: RefundLineItem;
-};
-
 /**
  * The information about the line items container for items that have not been refunded or removed.
  *
@@ -7112,8 +6763,6 @@ export type Return = Node & {
   closedAt?: Maybe<Scalars['DateTime']['output']>;
   /** The date when the return was created. */
   createdAt?: Maybe<Scalars['DateTime']['output']>;
-  /** The additional details about the declined return. */
-  decline?: Maybe<ReturnDecline>;
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
   /** The name assigned to the return. */
@@ -7187,27 +6836,6 @@ export type ReturnConnection = {
   pageInfo: PageInfo;
 };
 
-/** The extra information about why a merchant declined the customer's return request. */
-export type ReturnDecline = {
-  __typename?: 'ReturnDecline';
-  /**
-   * The notification message that was sent to the customer about their declined return.
-   *
-   */
-  note?: Maybe<Scalars['String']['output']>;
-  /** The reason for the decline. */
-  reason: ReturnDeclineReason;
-};
-
-/** The specific reason for the merchant declining a customer's return request. */
-export type ReturnDeclineReason =
-  /** The return request was declined because it contains items from a final sale. */
-  | 'FINAL_SALE'
-  /** The return request was declined due to another reason. */
-  | 'OTHER'
-  /** The return request was declined because the return period has ended. */
-  | 'RETURN_PERIOD_ENDED';
-
 /**
  * An auto-generated type which holds one Return and a cursor during pagination.
  *
@@ -7218,67 +6846,6 @@ export type ReturnEdge = {
   cursor: Scalars['String']['output'];
   /** The item at the end of ReturnEdge. */
   node: Return;
-};
-
-/** Possible error codes that can be returned by `ReturnUserError`. */
-export type ReturnErrorCode =
-  /** The requested resource already exists. */
-  | 'ALREADY_EXISTS'
-  /** The input value is blank. */
-  | 'BLANK'
-  /** A requested resource could not be created. */
-  | 'CREATION_FAILED'
-  /** The input value should be equal to the value allowed. */
-  | 'EQUAL_TO'
-  /** A required feature is not enabled. */
-  | 'FEATURE_NOT_ENABLED'
-  /** The input value should be greater than the minimum allowed value. */
-  | 'GREATER_THAN'
-  /** The input value should be greater than or equal to the minimum value allowed. */
-  | 'GREATER_THAN_OR_EQUAL_TO'
-  /** The input value isn't included in the list. */
-  | 'INCLUSION'
-  /** Unexpected internal error happened. */
-  | 'INTERNAL_ERROR'
-  /** The input value is invalid. */
-  | 'INVALID'
-  /** A resource was not in the correct state for the operation to succeed. */
-  | 'INVALID_STATE'
-  /** The input value should be less than the maximum value allowed. */
-  | 'LESS_THAN'
-  /** The input value should be less than or equal to the maximum value allowed. */
-  | 'LESS_THAN_OR_EQUAL_TO'
-  /** A requested notification could not be sent. */
-  | 'NOTIFICATION_FAILED'
-  /** A request is not authorized. */
-  | 'NOT_AUTHORIZED'
-  /** The input value is not a number. */
-  | 'NOT_A_NUMBER'
-  /** A requested item is not editable. */
-  | 'NOT_EDITABLE'
-  /** A requested item could not be found. */
-  | 'NOT_FOUND'
-  /** The input value needs to be blank. */
-  | 'PRESENT'
-  /** The input value is already taken. */
-  | 'TAKEN'
-  /** The input value is too big. */
-  | 'TOO_BIG'
-  /** The input value is too long. */
-  | 'TOO_LONG'
-  /** Too many arguments provided. */
-  | 'TOO_MANY_ARGUMENTS'
-  /** The input value is too short. */
-  | 'TOO_SHORT'
-  /** The input value is the wrong length. */
-  | 'WRONG_LENGTH';
-
-/** Fee generated by the return process. */
-export type ReturnFee = {
-  /** The total monetary value of the fee in shop and presentment currencies. */
-  amountSet: MoneyBag;
-  /** Human-readable name of the fee. */
-  title: Scalars['String']['output'];
 };
 
 /** A line item that is being returned. */
@@ -7343,31 +6910,6 @@ export type ReturnReason =
   /** The customer received the wrong item. */
   | 'WRONG_ITEM';
 
-/** The restocking fee incurred during the return process. */
-export type ReturnRestockingFee = ReturnFee & {
-  __typename?: 'ReturnRestockingFee';
-  /** The total monetary value of the fee in shop and presentment currencies. */
-  amountSet: MoneyBag;
-  /** Human-readable name of the fee. */
-  title: Scalars['String']['output'];
-};
-
-/** The shipping fee incurred during the return process. */
-export type ReturnShippingFee = ReturnFee & {
-  __typename?: 'ReturnShippingFee';
-  /** The total monetary value of the fee in shop and presentment currencies. */
-  amountSet: MoneyBag;
-  /** Human-readable name of the fee. */
-  title: Scalars['String']['output'];
-};
-
-/** The return shipping method. */
-export type ReturnShippingMethod =
-  /** The customer provides the shipping label. */
-  | 'CUSTOMER_PROVIDED_LABEL'
-  /** The merchant provides the shipping label. */
-  | 'MERCHANT_PROVIDED_LABEL';
-
 /** The set of valid sort keys for the Return query. */
 export type ReturnSortKeys =
   /** Sort by the `created_at` value. */
@@ -7401,55 +6943,6 @@ export type ReturnSupportedReason = {
   reason: ReturnReason;
   /** The user-friendly title for the return reason. */
   title: Scalars['String']['output'];
-};
-
-/** The errors that occur during the execution of a return mutation. */
-export type ReturnUserError = DisplayableError & {
-  __typename?: 'ReturnUserError';
-  /** The error code. */
-  code?: Maybe<ReturnErrorCode>;
-  /** The path to the input field that caused the error. */
-  field?: Maybe<Array<Scalars['String']['output']>>;
-  /** The error message. */
-  message: Scalars['String']['output'];
-};
-
-/**
- * A line item that contains some units eligible for return.
- *
- */
-export type ReturnableLineItem = {
-  __typename?: 'ReturnableLineItem';
-  /** The related line item. */
-  lineItem: LineItem;
-  /** The quantity of units that can be returned. */
-  quantity: Scalars['Int']['output'];
-};
-
-/**
- * An auto-generated type for paginating through multiple ReturnableLineItems.
- *
- */
-export type ReturnableLineItemConnection = {
-  __typename?: 'ReturnableLineItemConnection';
-  /** A list of edges. */
-  edges: Array<ReturnableLineItemEdge>;
-  /** A list of the nodes contained in ReturnableLineItemEdge. */
-  nodes: Array<ReturnableLineItem>;
-  /** Information to aid in pagination. */
-  pageInfo: PageInfo;
-};
-
-/**
- * An auto-generated type which holds one ReturnableLineItem and a cursor during pagination.
- *
- */
-export type ReturnableLineItemEdge = {
-  __typename?: 'ReturnableLineItemEdge';
-  /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
-  /** The item at the end of ReturnableLineItemEdge. */
-  node: ReturnableLineItem;
 };
 
 /**
@@ -7820,18 +7313,6 @@ export type ShippingRate = {
   price: MoneyV2;
   /** The title of this shipping rate. */
   title: Scalars['String']['output'];
-};
-
-/**
- * The shipping costs that are paid back with the refund.
- *
- */
-export type ShippingRefund = {
-  __typename?: 'ShippingRefund';
-  /** The maximum amount of shipping fees that can be refunded currently, in both shop and presentment currencies. */
-  maximumRefundableSet: MoneyBag;
-  /** The monetary value of the tax allocated to the shipping fees that are to be refunded, in both shop and presentment currencies. */
-  taxSet: MoneyBag;
 };
 
 /** A collection of the general information about the shop. */
@@ -8450,8 +7931,6 @@ export type SubscriptionContractsSortKeys =
    *
    */
   | 'RELEVANCE'
-  /** Sort by the `status` value. */
-  | 'STATUS'
   /** Sort by the `updated_at` value. */
   | 'UPDATED_AT';
 
@@ -8793,32 +8272,6 @@ export type SubscriptionShippingOption = {
   price: MoneyV2;
   /** The title of the shipping option. */
   title: Scalars['String']['output'];
-};
-
-/**
- * A suggested order transaction. Suggested transactions are usually used in the context of refunds
- * and exchanges.
- *
- */
-export type SuggestedOrderTransaction = {
-  __typename?: 'SuggestedOrderTransaction';
-  /** The brand of the card used or the card type. */
-  cardBrand?: Maybe<Scalars['String']['output']>;
-  /** The human-readable payment gateway name suggested to process the transaction. */
-  formattedGateway?: Maybe<Scalars['String']['output']>;
-  /** The suggested payment gateway used to process the transaction. */
-  gateway?: Maybe<Scalars['String']['output']>;
-  /** The last four digits of the card used. */
-  last4?: Maybe<Scalars['String']['output']>;
-  /** The available amount to refund on the gateway in shop and presentment currencies. Only available within SuggestedRefund. */
-  maximumRefundableSet?: Maybe<MoneyBag>;
-  /**
-   * Whether the payment provider supports refunds.
-   * If true, then the provider supports refunds.
-   * If false, then the provider doesn't support refunds.
-   *
-   */
-  refundedUsingGateway: Scalars['Boolean']['output'];
 };
 
 /** The available tax exemptions for a customer. */
@@ -10222,8 +9675,6 @@ export type UserErrorsPaymentInstrumentUserErrorsCode =
   | 'PHONE_NUMBER_NOT_VALID'
   /** The field is required. */
   | 'REQUIRED'
-  /** Saved payment methods is not enabled on this shop. */
-  | 'SAVED_PAYMENT_METHODS_NOT_ENABLED'
   /** This test card cannot be used for real transactions. */
   | 'TEST_MODE_LIVE_CARD'
   /** Address field is too long. */

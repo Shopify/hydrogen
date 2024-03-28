@@ -175,9 +175,9 @@ type HydrogenClientProps<TI18n> = {
   /** Whether it should print GraphQL errors automatically. Defaults to true */
   logErrors?: boolean | ((error?: Error) => boolean);
   /** /** UNSTABLE feature. When using Customer Account API with B2B, provided customerAccount client here for all the query to automatically get buyer Context. */
-  customerAccount?: CustomerAccount;
+  unstableCustomerAccount?: CustomerAccount;
   /** UNSTABLE feature. If true then we will exchange query a buyer context will automatically be provided. */
-  b2b?: boolean;
+  unstableB2b?: boolean;
 };
 
 export type CreateStorefrontClientOptions<TI18n extends I18nBase> =
@@ -223,8 +223,8 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     i18n,
     storefrontId,
     logErrors = true,
-    customerAccount,
-    b2b = false,
+    unstableCustomerAccount,
+    unstableB2b = false,
     ...clientOptions
   } = options;
   const H2_PREFIX_WARN = '[h2:warn:createStorefrontClient] ';
@@ -311,8 +311,8 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       }
     }
 
-    if (b2b && customerAccount) {
-      const buyer = await customerAccount.UNSTABLE_getBuyer();
+    if (unstableB2b && unstableCustomerAccount) {
+      const buyer = await unstableCustomerAccount.UNSTABLE_getBuyer();
 
       queryVariables.buyer = buyer;
     }

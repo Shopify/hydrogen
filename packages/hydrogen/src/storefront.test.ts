@@ -6,6 +6,11 @@ import {
   SHOPIFY_STOREFRONT_S_HEADER,
   SHOPIFY_STOREFRONT_Y_HEADER,
 } from '@shopify/hydrogen-react';
+import {
+  BUYER_ACCESS_TOKEN,
+  BUYER_LOCATION_ID,
+  mockCreateCustomerAccountClient,
+} from './cart/cart-test-helper';
 
 vi.mock('./cache/fetch.ts', async () => {
   const original = await vi.importActual<typeof import('./cache/fetch.ts')>(
@@ -132,6 +137,28 @@ describe('createStorefrontClient', () => {
     expect(vi.mocked(fetchWithServerCache).mock.lastCall?.[1]).toMatchObject({
       body: expect.stringMatching(
         '"variables":{"country":"US","language":"EN"}',
+      ),
+    });
+  });
+
+  it('adds buyer variables for b2b', async () => {
+    const {storefront} = createStorefrontClient({
+      storeDomain,
+      storefrontId,
+      storefrontHeaders,
+      publicStorefrontToken,
+      i18n: {language: 'EN', country: 'US'},
+      customerAccount: mockCreateCustomerAccountClient(),
+      b2b: true,
+    });
+
+    await expect(
+      storefront.query('query Name($something: String, $buyer: BuyerInput) {}'),
+    ).resolves.not.toThrow();
+
+    expect(vi.mocked(fetchWithServerCache).mock.lastCall?.[1]).toMatchObject({
+      body: expect.stringMatching(
+        `"variables":{"buyer":{"customerAccessToken":"${BUYER_ACCESS_TOKEN}","companyLocationId":"${BUYER_LOCATION_ID}"}}`,
       ),
     });
   });

@@ -467,7 +467,8 @@ aside li {
   display: inline-block;
 }
 
-
+/***********************************************/
+/**********  EXAMPLE UPDATE STARTS  ************/
 /*
 * --------------------------------------------------
 * Quantity Rules and price breaks
@@ -490,3 +491,5 @@ aside li {
   border: 0.5px darkgrey solid;
   font-weight: 400;
 }
+/**********   EXAMPLE UPDATE END   ************/
+/***********************************************/
