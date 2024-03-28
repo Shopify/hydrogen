@@ -6,6 +6,7 @@ import {OXYGEN_HEADERS_MAP, logRequestLine} from '../mini-oxygen/common.js';
 import {
   PRIVATE_WORKERD_INSPECTOR_PORT,
   OXYGEN_WORKERD_COMPAT_PARAMS,
+  conditionalUnsafeOutboundService,
 } from '../mini-oxygen/workerd.js';
 import {findPort} from '../find-port.js';
 import {createInspectorConnector} from '../mini-oxygen/workerd-inspector.js';
@@ -88,6 +89,7 @@ export async function startMiniOxygenRuntime({
         wrappedBindings: {
           __VITE_SETUP_ENV: 'setup-environment',
         },
+        ...conditionalUnsafeOutboundService(),
       },
       {
         name: 'setup-environment',
