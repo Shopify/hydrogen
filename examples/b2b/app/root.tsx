@@ -118,8 +118,6 @@ export async function loader({context}: LoaderFunctionArgs) {
     customerAccount.UNSTABLE_setBuyer({
       companyLocationId,
     });
-
-    //updateBuyerIdentity
   }
 
   const showLocationSelector = Boolean(company && !companyLocationId);
