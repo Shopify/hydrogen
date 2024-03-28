@@ -2,6 +2,7 @@ import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
 import Command from '@shopify/cli-kit/node/base-command';
 import {renderSuccess, renderTasks} from '@shopify/cli-kit/node/ui';
 import {
+  fileExists,
   moveFile,
   readFile,
   removeFile,
@@ -40,26 +41,40 @@ export default class SetupVite extends Command {
   }
 }
 
+const tailwindPostCSSConfig = `export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+};
+`;
+
 export async function runSetupVite({directory}: {directory: string}) {
   outputNewline();
   if (await hasViteConfig(directory)) {
     throw new AbortError('This project already has a Vite config file.');
   }
 
-  const [rawRemixConfig, pkgJson] = await Promise.all([
+  const [rawRemixConfig, pkgJson, formatOptions] = await Promise.all([
     getRawRemixConfig(directory),
     readAndParsePackageJson(joinPath(directory, 'package.json')),
+    getCodeFormatOptions(directory),
   ]);
 
-  const codeFormatOptPromise = getCodeFormatOptions(directory);
   const serverEntry = rawRemixConfig.server || 'server.js';
   const isTS = serverEntry.endsWith('.ts');
   const fileExt = isTS ? 'tsx' : 'jsx';
   const viteAssets = getAssetDir('vite');
+  const usesTailwind = !!rawRemixConfig.tailwind;
+  const postCssConfigPath = resolvePath(directory, 'postcss.config.js');
 
   const handlePartialIssue = () => {};
 
   const backgroundWorkPromise = Promise.all([
+    removeFile(resolvePath(directory, 'remix.config.js')).catch(
+      handlePartialIssue,
+    ),
+
     moveFile(
       resolvePath(directory, 'remix.env.d.ts'),
       resolvePath(directory, 'env.d.ts'),
@@ -79,14 +94,43 @@ export async function runSetupVite({directory}: {directory: string}) {
       resolvePath(directory, '.eslintrc.cjs'),
     ).catch(handlePartialIssue),
 
-    moveFile(
-      resolvePath(directory, 'postcss.config.js'),
-      resolvePath(directory, 'postcss.config.cjs'),
-    ).catch(handlePartialIssue),
+    // Adjust PostCSS configuration:
+    readFile(resolvePath(directory, 'postcss.config.js'))
+      .then(async (postCssContent) => {
+        // Classic Remix supported tailwind without adding it
+        // to the postcss.config.js file. We need to add it here now:
+        const hasTailwindPlugin = postCssContent.includes('tailwindcss');
+        if (!hasTailwindPlugin && usesTailwind) {
+          postCssContent = await formatCode(
+            postCssContent.replace(
+              /(plugins:\s+{)/,
+              '$1\n    tailwindcss: {},',
+            ),
+            formatOptions,
+          );
+        }
 
-    removeFile(resolvePath(directory, 'remix.config.js')).catch(
-      handlePartialIssue,
-    ),
+        const isCJS =
+          postCssContent.includes('module.exports') ||
+          postCssContent.includes('exports.') ||
+          postCssContent.includes('require(');
+
+        return writeFile(
+          isCJS ? postCssConfigPath.replace('.js', '.cjs') : postCssConfigPath,
+          postCssContent,
+        );
+      })
+      .catch(async () => {
+        // PostCSS file not found
+        if (
+          usesTailwind &&
+          !(await fileExists(postCssConfigPath)) &&
+          !(await fileExists(postCssConfigPath.replace('.js', '.cjs')))
+        ) {
+          return writeFile(postCssConfigPath, tailwindPostCSSConfig);
+        }
+      })
+      .catch(handlePartialIssue),
 
     // Adjust dependencies:
     mergePackageJson(viteAssets, directory, {
@@ -175,7 +219,7 @@ export async function runSetupVite({directory}: {directory: string}) {
 
         viteConfigContent = await formatCode(
           viteConfigContent,
-          await codeFormatOptPromise,
+          formatOptions,
           viteConfigPath,
         );
 
@@ -183,6 +227,7 @@ export async function runSetupVite({directory}: {directory: string}) {
       },
     ),
 
+    // Adjust server entry:
     replaceFileContent(
       resolvePath(directory, serverEntry),
       false,
@@ -194,7 +239,7 @@ export async function runSetupVite({directory}: {directory: string}) {
         ),
     ),
 
-    // Adjust CSS imports in the project:
+    // Adjust CSS imports in the project routes:
     importLangAstGrep(fileExt).then(async (astGrep) => {
       const appDirectory = resolvePath(
         directory,
@@ -266,72 +311,68 @@ export async function runSetupVite({directory}: {directory: string}) {
         if (fileNumber === 0) resolve(null);
       });
 
-      // Remove the LiveReload import and usage:
-      await replaceFileContent(
-        rootFilepath,
-        await codeFormatOptPromise,
-        (content) => {
-          const root = astGrep.parse(content).root();
-          const liveReloadRegex = 'LiveReload';
-          const hasLiveReloadRule = {
-            kind: 'identifier',
+      // Remove the deprecated LiveReload and cssBundleHref:
+      await replaceFileContent(rootFilepath, formatOptions, (content) => {
+        const root = astGrep.parse(content).root();
+        const liveReloadRegex = 'LiveReload';
+        const hasLiveReloadRule = {
+          kind: 'identifier',
+          regex: liveReloadRegex,
+        };
+
+        const liveReloadImport = root.find({
+          rule: {
+            kind: 'import_specifier',
             regex: liveReloadRegex,
-          };
-
-          const liveReloadImport = root.find({
-            rule: {
-              kind: 'import_specifier',
-              regex: liveReloadRegex,
-              inside: {
-                kind: 'import_statement',
-                stopBy: 'end',
-              },
+            inside: {
+              kind: 'import_statement',
+              stopBy: 'end',
             },
-          });
+          },
+        });
 
-          const liveReloadElements = root.findAll({
-            rule: {
-              any: [
-                {
-                  kind: 'jsx_self_closing_element',
+        const liveReloadElements = root.findAll({
+          rule: {
+            any: [
+              {
+                kind: 'jsx_self_closing_element',
+                has: hasLiveReloadRule,
+              },
+              {
+                kind: 'jsx_element',
+                has: {
+                  kind: 'jsx_opening_element',
                   has: hasLiveReloadRule,
                 },
-                {
-                  kind: 'jsx_element',
-                  has: {
-                    kind: 'jsx_opening_element',
-                    has: hasLiveReloadRule,
-                  },
-                },
-              ],
-            },
-          });
+              },
+            ],
+          },
+        });
 
-          for (const node of [
-            // From bottom to top
-            ...liveReloadElements.reverse(),
-            liveReloadImport,
-          ]) {
-            if (!node) continue;
+        for (const node of [
+          // From bottom to top
+          ...liveReloadElements.reverse(),
+          liveReloadImport,
+        ]) {
+          if (!node) continue;
 
-            const {start, end} = node.range();
-            content = content.slice(0, start.index) + content.slice(end.index);
-          }
+          const {start, end} = node.range();
+          content = content.slice(0, start.index) + content.slice(end.index);
+        }
 
-          return (
-            content
-              // Remove the trailing comma from the import statement:
-              .replace(/,\s*,/g, ',')
-              // Remove cssBundleHref import
-              .replace(
-                /import\s+{\s+cssBundleHref\s+}\s+from\s+['"]@remix-run\/css-bundle['"];?\n/,
-                '',
-              )
-              // Remove cssBundleHref usage
-              .replace(/\.\.\.\(\s*cssBundleHref[^)]+\),?/, '')
-          );
-        },
-      );
+        return (
+          content
+            // Remove the trailing comma from the import statement:
+            .replace(/,\s*,/g, ',')
+            // Remove cssBundleHref import
+            .replace(
+              /import\s+{\s+cssBundleHref\s+}\s+from\s+['"]@remix-run\/css-bundle['"];?\n/,
+              '',
+            )
+            // Remove cssBundleHref usage
+            .replace(/\.\.\.\(\s*cssBundleHref[^)]+\),?/, '')
+        );
+      });
     }),
   ]);
 
