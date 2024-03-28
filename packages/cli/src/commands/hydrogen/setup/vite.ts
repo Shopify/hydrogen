@@ -12,17 +12,8 @@ import {
   installNodeModules,
 } from '@shopify/cli-kit/node/node-package-manager';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
-import {
-  RemixConfig,
-  RawRemixConfig,
-  getRemixConfig,
-  getRawRemixConfig,
-} from '../../../lib/remix-config.js';
-import {
-  findFileWithExtension,
-  mergePackageJson,
-  replaceFileContent,
-} from '../../../lib/file.js';
+import {getRawRemixConfig} from '../../../lib/remix-config.js';
+import {mergePackageJson, replaceFileContent} from '../../../lib/file.js';
 import {importLangAstGrep} from '../../../lib/ast.js';
 import {getAssetDir} from '../../../lib/build.js';
 import {formatCode, getCodeFormatOptions} from '../../../lib/format-code.js';
@@ -101,7 +92,7 @@ export async function runSetupVite({directory}: {directory: string}) {
 
             if (pkgJson.devDependencies) {
               if (pkgJson.devDependencies['@vanilla-extract/css']) {
-                // This dependency is not needed in Vite projects:
+                // Required vanilla-extract dependency for Vite
                 pkgJson.devDependencies['@vanilla-extract/vite-plugin'] =
                   '^4.0.0';
 
@@ -121,7 +112,7 @@ export async function runSetupVite({directory}: {directory: string}) {
           return readFile(resolvePath(viteAssets, 'vite.config.js')).then(
             async (viteConfigContent) => {
               const hasVanillaExtract =
-                pkgJson.devDependencies?.['@vanilla-extract/vite-plugin'];
+                !!pkgJson.devDependencies?.['@vanilla-extract/vite-plugin'];
 
               if (hasVanillaExtract) {
                 viteConfigContent = viteConfigContent
@@ -230,7 +221,7 @@ export async function runSetupVite({directory}: {directory: string}) {
 
                 nodes.forEach((node) => {
                   if (node.text().endsWith('.module.css')) {
-                    // Skip CSS modules
+                    // Skip for CSS modules
                     return;
                   }
 
@@ -321,14 +312,18 @@ export async function runSetupVite({directory}: {directory: string}) {
                   content.slice(0, start.index) + content.slice(end.index);
               }
 
-              // Remove the trailing comma from the import statement:
-              return content
-                .replace(/,\s*,/g, ',')
-                .replace(
-                  /import\s+{\s+cssBundleHref\s+}\s+from\s+['"]@remix-run\/css-bundle['"];?\n/,
-                  '',
-                )
-                .replace(/\.\.\.\(\s*cssBundleHref[^)]+\),?/, '');
+              return (
+                content
+                  // Remove the trailing comma from the import statement:
+                  .replace(/,\s*,/g, ',')
+                  // Remove cssBundleHref import
+                  .replace(
+                    /import\s+{\s+cssBundleHref\s+}\s+from\s+['"]@remix-run\/css-bundle['"];?\n/,
+                    '',
+                  )
+                  // Remove cssBundleHref usage
+                  .replace(/\.\.\.\(\s*cssBundleHref[^)]+\),?/, '')
+              );
             },
           );
         }),
