@@ -1,6 +1,6 @@
 /**
  * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
- * Based on Storefront API 2024-01
+ * Based on Storefront API unstable
  * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run `npm run graphql-types`.
  * Except custom Scalars, which are defined in the `codegen.ts` file
  */
@@ -31,6 +31,7 @@ export type Scalars = {
   DateTime: {input: string; output: string};
   Decimal: {input: string; output: string};
   HTML: {input: string; output: string};
+  ISO8601DateTime: {input: unknown; output: unknown};
   JSON: {input: unknown; output: unknown};
   URL: {input: string; output: string};
   UnsignedInt64: {input: string; output: string};
@@ -505,6 +506,17 @@ export type BrandColors = {
   secondary: Array<BrandColorGroup>;
 };
 
+/**
+ * The input fields for obtaining the buyer's identity.
+ *
+ */
+export type BuyerInput = {
+  /** The identifier of the company location. */
+  companyLocationId?: InputMaybe<Scalars['ID']['input']>;
+  /** The storefront customer access token retrieved from the [Customer Accounts API](https://shopify.dev/docs/api/customer/reference/mutations/storefrontCustomerAccessTokenCreate). */
+  customerAccessToken: Scalars['String']['input'];
+};
+
 /** Card brand, such as Visa or Mastercard, which can be used for payments. */
 export type CardBrand =
   /** American Express. */
@@ -513,10 +525,14 @@ export type CardBrand =
   | 'DINERS_CLUB'
   /** Discover. */
   | 'DISCOVER'
+  /** Elo. */
+  | 'ELO'
   /** JCB. */
   | 'JCB'
   /** Mastercard. */
   | 'MASTERCARD'
+  /** UnionPay. */
+  | 'UNIONPAY'
   /** Visa. */
   | 'VISA';
 
@@ -601,6 +617,7 @@ export type CartDeliveryGroupsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  withCarrierRates?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 /**
@@ -677,6 +694,8 @@ export type CartBuyerIdentity = {
   email?: Maybe<Scalars['String']['output']>;
   /** The phone number of the buyer that's interacting with the cart. */
   phone?: Maybe<Scalars['String']['output']>;
+  /** The purchasing company associated with the cart. */
+  purchasingCompany?: Maybe<PurchasingCompany>;
   /**
    * A set of wallet preferences tied to the buyer that is interacting with the cart.
    * Preferences can be used to populate relevant payment fields in the checkout flow.
@@ -693,6 +712,8 @@ export type CartBuyerIdentity = {
  *
  */
 export type CartBuyerIdentityInput = {
+  /** The company location of the buyer that is interacting with the cart. */
+  companyLocationId?: InputMaybe<Scalars['ID']['input']>;
   /** The country where the buyer is located. */
   countryCode?: InputMaybe<CountryCode>;
   /** The access token used to identify the customer associated with the cart. */
@@ -854,6 +875,8 @@ export type CartDeliveryGroup = {
   deliveryAddress: MailingAddress;
   /** The delivery options available for the delivery group. */
   deliveryOptions: Array<CartDeliveryOption>;
+  /** The type of merchandise in the delivery group. */
+  groupType: CartDeliveryGroupType;
   /** The ID for the delivery group. */
   id: Scalars['ID']['output'];
   /** The selected delivery option for the delivery group. */
@@ -895,6 +918,20 @@ export type CartDeliveryGroupEdge = {
   node: CartDeliveryGroup;
 };
 
+/**
+ * Defines what type of merchandise is in the delivery group.
+ *
+ */
+export type CartDeliveryGroupType =
+  /**
+   * The delivery group only contains merchandise that is either a one time purchase or a first delivery of
+   * subscription merchandise.
+   *
+   */
+  | 'ONE_TIME_PURCHASE'
+  /** The delivery group only contains subscription merchandise. */
+  | 'SUBSCRIPTION';
+
 /** Information about a delivery option. */
 export type CartDeliveryOption = {
   __typename?: 'CartDeliveryOption';
@@ -908,6 +945,18 @@ export type CartDeliveryOption = {
   estimatedCost: MoneyV2;
   /** The unique identifier of the delivery option. */
   handle: Scalars['String']['output'];
+  /**
+   * The maximum date and time by which the delivery is expected to be completed. You must enable
+   *       [processing time](https://help.shopify.com/manual/shipping/setting-up-and-managing-your-shipping/set-up-delivery-dates) or enroll in [Shopify Logistics](https://www.shopify.com/fulfillment)
+   *       to have access to this field.
+   */
+  maxEstimatedDeliveryDate?: Maybe<Scalars['ISO8601DateTime']['output']>;
+  /**
+   * The minimum date and time by which the delivery is expected to be completed. You must enable
+   *       [processing time](https://help.shopify.com/manual/shipping/setting-up-and-managing-your-shipping/set-up-delivery-dates) or enroll in [Shopify Logistics](https://www.shopify.com/fulfillment)
+   *       to have access to this field.
+   */
+  minEstimatedDeliveryDate?: Maybe<Scalars['ISO8601DateTime']['output']>;
   /** The title of the delivery option. */
   title?: Maybe<Scalars['String']['output']>;
 };
@@ -951,12 +1000,28 @@ export type CartDiscountCodesUpdatePayload = {
 
 /** Possible error codes that can be returned by `CartUserError`. */
 export type CartErrorCode =
+  /** The specified address field contains emojis. */
+  | 'ADDRESS_FIELD_CONTAINS_EMOJIS'
+  /** The specified address field contains HTML tags. */
+  | 'ADDRESS_FIELD_CONTAINS_HTML_TAGS'
+  /** The specified address field contains a URL. */
+  | 'ADDRESS_FIELD_CONTAINS_URL'
+  /** The specified address field does not match the expected pattern. */
+  | 'ADDRESS_FIELD_DOES_NOT_MATCH_EXPECTED_PATTERN'
+  /** The specified address field is required. */
+  | 'ADDRESS_FIELD_IS_REQUIRED'
+  /** The specified address field is too long. */
+  | 'ADDRESS_FIELD_IS_TOO_LONG'
   /** The input value is invalid. */
   | 'INVALID'
+  /** Company location not found or not allowed. */
+  | 'INVALID_COMPANY_LOCATION'
   /** Delivery group was not found in cart. */
   | 'INVALID_DELIVERY_GROUP'
   /** Delivery option was not valid. */
   | 'INVALID_DELIVERY_OPTION'
+  /** The quantity must be a multiple of the specified increment. */
+  | 'INVALID_INCREMENT'
   /** Merchandise line was not found in cart. */
   | 'INVALID_MERCHANDISE_LINE'
   /** The metafields were not valid. */
@@ -965,16 +1030,32 @@ export type CartErrorCode =
   | 'INVALID_PAYMENT'
   /** Cannot update payment on an empty cart */
   | 'INVALID_PAYMENT_EMPTY_CART'
+  /** The given zip code is invalid for the provided country. */
+  | 'INVALID_ZIP_CODE_FOR_COUNTRY'
+  /** The given zip code is invalid for the provided province. */
+  | 'INVALID_ZIP_CODE_FOR_PROVINCE'
   /** The input value should be less than the maximum value allowed. */
   | 'LESS_THAN'
+  /** The quantity must be below the specified maximum for the item. */
+  | 'MAXIMUM_EXCEEDED'
+  /** The quantity must be above the specified minimum for the item. */
+  | 'MINIMUM_NOT_MET'
+  /** The customer access token is required when setting a company location. */
+  | 'MISSING_CUSTOMER_ACCESS_TOKEN'
   /** Missing discount code. */
   | 'MISSING_DISCOUNT_CODE'
   /** Missing note. */
   | 'MISSING_NOTE'
   /** The payment method is not supported. */
   | 'PAYMENT_METHOD_NOT_SUPPORTED'
+  /** The given province cannot be found. */
+  | 'PROVINCE_NOT_FOUND'
+  /** A general error occurred during address validation. */
+  | 'UNSPECIFIED_ADDRESS_ERROR'
   /** Validation failed. */
-  | 'VALIDATION_CUSTOM';
+  | 'VALIDATION_CUSTOM'
+  /** The given zip code is unsupported. */
+  | 'ZIP_CODE_NOT_SUPPORTED';
 
 /** The estimated costs that the buyer will pay at checkout. The estimated cost uses [`CartBuyerIdentity`](https://shopify.dev/api/storefront/reference/cart/cartbuyeridentity) to determine [international pricing](https://shopify.dev/custom-storefronts/internationalization/international-pricing). */
 export type CartEstimatedCost = {
@@ -2140,6 +2221,85 @@ export type CommentEdge = {
   node: Comment;
 };
 
+/** Represents information about a company which is also a customer of the shop. */
+export type Company = HasMetafields &
+  Node & {
+    __typename?: 'Company';
+    /** The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) at which the company was created in Shopify. */
+    createdAt: Scalars['DateTime']['output'];
+    /** A unique externally-supplied ID for the company. */
+    externalId?: Maybe<Scalars['String']['output']>;
+    /** A globally-unique ID. */
+    id: Scalars['ID']['output'];
+    /** Returns a metafield found by namespace and key. */
+    metafield?: Maybe<Metafield>;
+    /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
+    metafields: Array<Maybe<Metafield>>;
+    /** The name of the company. */
+    name: Scalars['String']['output'];
+    /** The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) at which the company was last modified. */
+    updatedAt: Scalars['DateTime']['output'];
+  };
+
+/** Represents information about a company which is also a customer of the shop. */
+export type CompanyMetafieldArgs = {
+  key: Scalars['String']['input'];
+  namespace?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Represents information about a company which is also a customer of the shop. */
+export type CompanyMetafieldsArgs = {
+  identifiers: Array<HasMetafieldsIdentifier>;
+};
+
+/** A company's main point of contact. */
+export type CompanyContact = Node & {
+  __typename?: 'CompanyContact';
+  /** The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) at which the company contact was created in Shopify. */
+  createdAt: Scalars['DateTime']['output'];
+  /** A globally-unique ID. */
+  id: Scalars['ID']['output'];
+  /** The company contact's locale (language). */
+  locale?: Maybe<Scalars['String']['output']>;
+  /** The company contact's job title. */
+  title?: Maybe<Scalars['String']['output']>;
+  /** The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) at which the company contact was last modified. */
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/** A company's location. */
+export type CompanyLocation = HasMetafields &
+  Node & {
+    __typename?: 'CompanyLocation';
+    /** The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) at which the company location was created in Shopify. */
+    createdAt: Scalars['DateTime']['output'];
+    /** A unique externally-supplied ID for the company. */
+    externalId?: Maybe<Scalars['String']['output']>;
+    /** A globally-unique ID. */
+    id: Scalars['ID']['output'];
+    /** The preferred locale of the company location. */
+    locale?: Maybe<Scalars['String']['output']>;
+    /** Returns a metafield found by namespace and key. */
+    metafield?: Maybe<Metafield>;
+    /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
+    metafields: Array<Maybe<Metafield>>;
+    /** The name of the company location. */
+    name: Scalars['String']['output'];
+    /** The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) at which the company location was last modified. */
+    updatedAt: Scalars['DateTime']['output'];
+  };
+
+/** A company's location. */
+export type CompanyLocationMetafieldArgs = {
+  key: Scalars['String']['input'];
+  namespace?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** A company's location. */
+export type CompanyLocationMetafieldsArgs = {
+  identifiers: Array<HasMetafieldsIdentifier>;
+};
+
 /** The action for the 3DS payment redirect. */
 export type CompletePaymentChallenge = {
   __typename?: 'CompletePaymentChallenge';
@@ -2208,6 +2368,157 @@ export type ComponentizableCartLine = BaseCartLine &
 /** Represents information about the grouped merchandise in the cart. */
 export type ComponentizableCartLineAttributeArgs = {
   key: Scalars['String']['input'];
+};
+
+/** Interaction of the current visitor consent with the configured consent policies of the shop. */
+export type ConsentManagement = {
+  __typename?: 'ConsentManagement';
+  /** The privacy banner that should be displayed to the visitor, if any, plus the list of country/regions configured in the cookie banner visibility. */
+  banner?: Maybe<ConsentManagementBanner>;
+  /** Given the provided visitor consent, the resulting ConsentManagementCookies that need to be setin the browser for the Consent Managament Platform to work and respect visitor consent. */
+  cookies: ConsentManagementCookies;
+  /** List of ISO3166 2-character country codes where the sale of data is enabled. */
+  saleOfDataRegions: Array<Scalars['String']['output']>;
+};
+
+/** Interaction of the current visitor consent with the configured consent policies of the shop. */
+export type ConsentManagementCookiesArgs = {
+  visitorConsent: VisitorConsent;
+};
+
+/** A shop's privacy banner settings. */
+export type ConsentManagementBanner = {
+  __typename?: 'ConsentManagementBanner';
+  /** Text for the accept button. */
+  buttonAcceptText: Scalars['String']['output'];
+  /** Text for the decline button. */
+  buttonDeclineText: Scalars['String']['output'];
+  /** Text for the preference button. */
+  buttonPrefsOpenText: Scalars['String']['output'];
+  /** Indicates if the banner is visible. */
+  enabled: Scalars['Boolean']['output'];
+  /** Text for the policy link. */
+  policyLinkText: Scalars['String']['output'];
+  /** URL for the policy link. */
+  policyLinkUrl: Scalars['String']['output'];
+  /** Position of the banner. */
+  position: ConsentManagementBannerPosition;
+  /** Fields for the banner preferences popup. */
+  preferences: ConsentManagementBannerPreferences;
+  /** List of ISO3166 2-character country codes where the banner should be visible. */
+  regionVisibility: Array<Scalars['String']['output']>;
+  /** Body text on the banner. */
+  text: Scalars['String']['output'];
+  /** Theme related fields of the banner. */
+  theme: ConsentManagementBannerTheme;
+  /** Title of the banner. */
+  title?: Maybe<Scalars['String']['output']>;
+};
+
+/**
+ * Bullet points that provide clarity on the actions and consequences of cookie acceptance.
+ *
+ */
+export type ConsentManagementBannerBulletPoints = {
+  __typename?: 'ConsentManagementBannerBulletPoints';
+  /** Whether bullet points are enabled. */
+  enabled?: Maybe<Scalars['Boolean']['output']>;
+  /** Text of the first bullet point. */
+  firstText?: Maybe<Scalars['String']['output']>;
+  /** Text of the second bullet point. */
+  secondText?: Maybe<Scalars['String']['output']>;
+  /** Text of the third bullet point. */
+  thirdText?: Maybe<Scalars['String']['output']>;
+  /** Title of the bullet points. */
+  title?: Maybe<Scalars['String']['output']>;
+};
+
+/** The possible positions of a privacy banner. */
+export type ConsentManagementBannerPosition =
+  /** Banner is centered at the bottom of the page. */
+  | 'bottom_center'
+  /** Banner spans the full width of the page at the bottom. */
+  | 'bottom_full_width'
+  /** Banner is aligned to the bottom left of the page. */
+  | 'bottom_left'
+  /** Banner is aligned to the bottom right of the page. */
+  | 'bottom_right'
+  /** Banner is centered on the page. */
+  | 'center';
+
+/** Settings related to the banner preferences. */
+export type ConsentManagementBannerPreferences = {
+  __typename?: 'ConsentManagementBannerPreferences';
+  /** Data related to the bullet points of consent. */
+  bulletPoints?: Maybe<ConsentManagementBannerBulletPoints>;
+  /** Accept button text. */
+  buttonAcceptText: Scalars['String']['output'];
+  /** Decline button text. */
+  buttonDeclineText: Scalars['String']['output'];
+  /** Save button text. */
+  buttonSaveText: Scalars['String']['output'];
+  /** Introduction text. */
+  introText: Scalars['String']['output'];
+  /** Introduction title. */
+  introTitle: Scalars['String']['output'];
+  /** Purpose descriptions. */
+  purposes: ConsentManagementBannerPurposes;
+  /** Title for the banner preferences. */
+  title?: Maybe<Scalars['String']['output']>;
+};
+
+/** Descriptions associated with each purpose. */
+export type ConsentManagementBannerPurposes = {
+  __typename?: 'ConsentManagementBannerPurposes';
+  /** Long description for the essential purpose. */
+  essentialDesc: Scalars['String']['output'];
+  /** Short description for the essential purpose. */
+  essentialName: Scalars['String']['output'];
+  /** Long description for the marketing purpose. */
+  marketingDesc: Scalars['String']['output'];
+  /** Short description for the marketing purpose. */
+  marketingName: Scalars['String']['output'];
+  /** Long description for the performance purpose. */
+  performanceDesc: Scalars['String']['output'];
+  /** Short description for the performance purpose. */
+  performanceName: Scalars['String']['output'];
+  /** Long description for the preferences purpose. */
+  preferencesDesc: Scalars['String']['output'];
+  /** Short description for the preferences purpose. */
+  preferencesName: Scalars['String']['output'];
+};
+
+/** Represents the theme settings for the privacy banner. */
+export type ConsentManagementBannerTheme = {
+  __typename?: 'ConsentManagementBannerTheme';
+  /** Background color. */
+  backgroundColor: Scalars['String']['output'];
+  /** Button background color. */
+  buttonBackgroundColor: Scalars['String']['output'];
+  /** Button font color. */
+  buttonFontColor: Scalars['String']['output'];
+  /** Font color. */
+  fontColor: Scalars['String']['output'];
+  /** The chosen theme. */
+  theme: ConsentManagementBannerThemeEnum;
+};
+
+/** Possible themes for a privacy banner. */
+export type ConsentManagementBannerThemeEnum =
+  /** Customized theme provided by the user. */
+  | 'custom'
+  /** Dark theme for the banner. */
+  | 'dark'
+  /** Light theme for the banner. */
+  | 'light';
+
+/** Computed cookies needed by the Consent Management Platform to respect and query visitor consent. */
+export type ConsentManagementCookies = {
+  __typename?: 'ConsentManagementCookies';
+  /** The _cmp_a cookie, already URI encoded and serialized. */
+  answersCookie: Scalars['String']['output'];
+  /** The _tracking_consent cookie, already URI encoded and serialized. */
+  trackingConsentCookie: Scalars['String']['output'];
 };
 
 /** A country. */
@@ -2773,10 +3084,27 @@ export type CropRegion =
   | 'CENTER'
   /** Keep the left of the image. */
   | 'LEFT'
+  /** Crop the exact region of the image specified by the crop_left, crop_top, crop_width and crop_height parameters. */
+  | 'REGION'
   /** Keep the right of the image. */
   | 'RIGHT'
   /** Keep the top of the image. */
   | 'TOP';
+
+/**
+ * The input fields for defining an arbitrary cropping region.
+ *
+ */
+export type CropRegionInput = {
+  /** Height of the region of the image to extract when using the region crop mode. */
+  height: Scalars['Int']['input'];
+  /** Left position of the region of the image to extract when using the region crop mode. */
+  left: Scalars['Int']['input'];
+  /** Top position of the region of the image to extract when using the region crop mode. */
+  top: Scalars['Int']['input'];
+  /** Width of the region of the image to extract when using the region crop mode. */
+  width: Scalars['Int']['input'];
+};
 
 /** A currency. */
 export type Currency = {
@@ -3531,7 +3859,23 @@ export type DeliveryAddressInput = {
   customerAddressId?: InputMaybe<Scalars['ID']['input']>;
   /** A delivery address preference of a buyer that is interacting with the cart. */
   deliveryAddress?: InputMaybe<MailingAddressInput>;
+  /** Defines what kind of address validation is requested. */
+  deliveryAddressValidationStrategy?: InputMaybe<DeliveryAddressValidationStrategy>;
 };
+
+/**
+ * Defines the types of available validation strategies for delivery addresses.
+ *
+ */
+export type DeliveryAddressValidationStrategy =
+  /** Only the country code is validated. */
+  | 'COUNTRY_CODE_ONLY'
+  /**
+   * Strict validation is performed, i.e. all fields in the address are validated
+   * according to Shopify's checkout rules. If the address fails validation, the cart will not be updated.
+   *
+   */
+  | 'STRICT';
 
 /** List of different delivery method types. */
 export type DeliveryMethodType =
@@ -3550,10 +3894,14 @@ export type DeliveryMethodType =
 
 /** Digital wallet, such as Apple Pay, which can be used for accelerated checkouts. */
 export type DigitalWallet =
+  /** Amazon Pay. */
+  | 'AMAZON_PAY'
   /** Android Pay. */
   | 'ANDROID_PAY'
   /** Apple Pay. */
   | 'APPLE_PAY'
+  /** Facebook Pay. */
+  | 'FACEBOOK_PAY'
   /** Google Pay. */
   | 'GOOGLE_PAY'
   /** Shopify Pay. */
@@ -3734,11 +4082,45 @@ export type Filter = {
   id: Scalars['String']['output'];
   /** A human-friendly string for this filter. */
   label: Scalars['String']['output'];
+  /** The logical operator used by the filter. */
+  operator?: Maybe<FilterOperatorType>;
+  /**
+   * Describes how to present the filter values.
+   * Returns a value only for filters of type `LIST`. Returns null for other types.
+   *
+   */
+  presentation?: Maybe<FilterPresentation>;
   /** An enumeration that denotes the type of data this filter represents. */
   type: FilterType;
   /** The list of values for this filter. */
   values: Array<FilterValue>;
 };
+
+/**
+ * Specifies the logical operator used for filtering multiple values within a filter.
+ * Example:
+ * Given the filter is 'color' and values are 'red' and 'blue':
+ *   - If 'AND' is used, it will filter items that are both red and blue.
+ *   - If 'OR' is used, it will filter items that are either red or blue or both.
+ *
+ */
+export type FilterOperatorType =
+  /** The logical operator AND. */
+  | 'AND'
+  /** The logical operator OR. */
+  | 'OR';
+
+/**
+ * Defines how to present the filter values, specifies the presentation of the filter.
+ *
+ */
+export type FilterPresentation =
+  /** Image presentation, filter values display an image. */
+  | 'IMAGE'
+  /** Swatch presentation, filter values display color or image patterns. */
+  | 'SWATCH'
+  /** Text presentation, no additional visual display for filter values. */
+  | 'TEXT';
 
 /**
  * The type of data that the filter group represents.
@@ -3762,6 +4144,8 @@ export type FilterValue = {
   count: Scalars['Int']['output'];
   /** A unique identifier. */
   id: Scalars['String']['output'];
+  /** The visual representation when the filter's presentation is `IMAGE`. */
+  image?: Maybe<MediaImage>;
   /**
    * An input object that can be used to filter by this value on the parent field.
    *
@@ -3773,6 +4157,8 @@ export type FilterValue = {
   input: Scalars['JSON']['output'];
   /** A human-friendly string for this filter value. */
   label: Scalars['String']['output'];
+  /** The visual representation when the filter's presentation is `SWATCH`. */
+  swatch?: Maybe<Swatch>;
 };
 
 /** Represents a single fulfillment in an order. */
@@ -3848,6 +4234,57 @@ export type FulfillmentTrackingInfo = {
   url?: Maybe<Scalars['URL']['output']>;
 };
 
+/** Represents a gate configuration. */
+export type GateConfiguration = HasMetafields &
+  Node & {
+    __typename?: 'GateConfiguration';
+    /**
+     * An ID that an owner can use to identify the gate configuration.
+     * @deprecated `appId` is deprecated and `handle` should be used for identifying a gate.
+     */
+    appId?: Maybe<Scalars['String']['output']>;
+    /** The date and time when the gate configuration was created. */
+    createdAt: Scalars['DateTime']['output'];
+    /** A non-unique string used to group gate configurations. */
+    handle?: Maybe<Scalars['String']['output']>;
+    /** The ID of the gate configuration. */
+    id: Scalars['ID']['output'];
+    /** Returns a metafield found by namespace and key. */
+    metafield?: Maybe<Metafield>;
+    /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
+    metafields: Array<Maybe<Metafield>>;
+    /** The name of the gate configuration. */
+    name?: Maybe<Scalars['String']['output']>;
+    /** The date and time when the gate configuration was updated. */
+    updatedAt: Scalars['DateTime']['output'];
+  };
+
+/** Represents a gate configuration. */
+export type GateConfigurationMetafieldArgs = {
+  key: Scalars['String']['input'];
+  namespace?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Represents a gate configuration. */
+export type GateConfigurationMetafieldsArgs = {
+  identifiers: Array<HasMetafieldsIdentifier>;
+};
+
+/** Represents a connection from a subject to a gate configuration. */
+export type GateSubject = Node & {
+  __typename?: 'GateSubject';
+  /** True when the subject gate is active, false otherwise. */
+  active: Scalars['Boolean']['output'];
+  /** The bound gate configuration. */
+  configuration: GateConfiguration;
+  /** The date and time when the gate subject was created. */
+  createdAt: Scalars['DateTime']['output'];
+  /** The ID of the gate subject. */
+  id: Scalars['ID']['output'];
+  /** The date and time when the gate subject was updated. */
+  updatedAt: Scalars['DateTime']['output'];
+};
+
 /** The generic file resource lets you manage files in a merchant’s store. Generic files include any file that doesn’t fit into a designated type such as image or video. Example: PDF, JSON. */
 export type GenericFile = Node & {
   __typename?: 'GenericFile';
@@ -3871,6 +4308,17 @@ export type GeoCoordinateInput = {
   latitude: Scalars['Float']['input'];
   /** The coordinate's longitude value. */
   longitude: Scalars['Float']['input'];
+};
+
+/** Represents information about gates bound to a subject. */
+export type HasGates = {
+  /** Returns a list of GateSubjects bound to the subject. */
+  gates: Array<GateSubject>;
+};
+
+/** Represents information about gates bound to a subject. */
+export type HasGatesGatesArgs = {
+  includeInactive?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 /** Represents information about the metafields associated to the specified resource. */
@@ -3922,6 +4370,15 @@ export type Image = {
    * @deprecated Use `url` instead.
    */
   src: Scalars['URL']['output'];
+  /**
+   * The ThumbHash of the image.
+   *
+   * Useful to display placeholder images while the original image is loading.
+   *
+   * See https://evanw.github.io/thumbhash/ for details on how to use it.
+   *
+   */
+  thumbhash?: Maybe<Scalars['String']['output']>;
   /**
    * The location of the transformed image as a URL.
    *
@@ -3976,6 +4433,8 @@ export type ImageConnection = {
 
 /** List of supported image content types. */
 export type ImageContentType =
+  /** A BMP image. */
+  | 'BMP'
   /** A JPG image. */
   | 'JPG'
   /** A PNG image. */
@@ -4014,6 +4473,8 @@ export type ImageTransformInput = {
    *
    */
   crop?: InputMaybe<CropRegion>;
+  /** Defines an arbitrary cropping region. */
+  cropRegion?: InputMaybe<CropRegionInput>;
   /**
    * Image height in pixels between 1 and 5760.
    *
@@ -4925,7 +5386,10 @@ export type MetafieldParentResource =
   | Blog
   | Cart
   | Collection
+  | Company
+  | CompanyLocation
   | Customer
+  | GateConfiguration
   | Location
   | Market
   | Order
@@ -4943,6 +5407,7 @@ export type MetafieldReference =
   | GenericFile
   | MediaImage
   | Metaobject
+  | Model3d
   | Page
   | Product
   | ProductVariant
@@ -5306,6 +5771,10 @@ export type Mutation = {
   customerResetByUrl?: Maybe<CustomerResetByUrlPayload>;
   /** Updates an existing customer. */
   customerUpdate?: Maybe<CustomerUpdatePayload>;
+  /** Create a new Shop Pay payment request session. */
+  shopPayPaymentRequestSessionCreate?: Maybe<ShopPayPaymentRequestSessionCreatePayload>;
+  /** Submits a Shop Pay payment request session. */
+  shopPayPaymentRequestSessionSubmit?: Maybe<ShopPayPaymentRequestSessionSubmitPayload>;
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
@@ -5328,7 +5797,7 @@ export type MutationCartCreateArgs = {
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCartDiscountCodesUpdateArgs = {
   cartId: Scalars['ID']['input'];
-  discountCodes?: InputMaybe<Array<Scalars['String']['input']>>;
+  discountCodes: Array<Scalars['String']['input']>;
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
@@ -5362,7 +5831,7 @@ export type MutationCartMetafieldsSetArgs = {
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCartNoteUpdateArgs = {
   cartId: Scalars['ID']['input'];
-  note?: InputMaybe<Scalars['String']['input']>;
+  note: Scalars['String']['input'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
@@ -5573,6 +6042,19 @@ export type MutationCustomerUpdateArgs = {
   customerAccessToken: Scalars['String']['input'];
 };
 
+/** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
+export type MutationShopPayPaymentRequestSessionCreateArgs = {
+  paymentRequest: ShopPayPaymentRequestInput;
+  sourceIdentifier: Scalars['String']['input'];
+};
+
+/** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
+export type MutationShopPayPaymentRequestSessionSubmitArgs = {
+  idempotencyKey: Scalars['String']['input'];
+  paymentRequest: ShopPayPaymentRequestInput;
+  token: Scalars['String']['input'];
+};
+
 /**
  * An object with an ID field to support global identification, in accordance with the
  * [Relay specification](https://relay.dev/graphql/objectidentification.htm#sec-Node-Interface).
@@ -5609,6 +6091,8 @@ export type Order = HasMetafields &
     currentTotalDuties?: Maybe<MoneyV2>;
     /** The total amount of the order, including duties, taxes and discounts, minus amounts for line items that have been removed. */
     currentTotalPrice: MoneyV2;
+    /** The total cost of shipping, excluding shipping lines that have been refunded or removed. Taxes aren't included unless the order is a taxes-included order. */
+    currentTotalShippingPrice: MoneyV2;
     /** The total of all taxes applied to the order, excluding taxes for returned line items. */
     currentTotalTax: MoneyV2;
     /** A list of the custom attributes added to the order. */
@@ -5785,6 +6269,8 @@ export type OrderEdge = {
 export type OrderFinancialStatus =
   /** Displayed as **Authorized**. */
   | 'AUTHORIZED'
+  /** Displayed as **Expired**. */
+  | 'EXPIRED'
   /** Displayed as **Paid**. */
   | 'PAID'
   /** Displayed as **Partially paid**. */
@@ -6123,7 +6609,8 @@ export type PricingValue = MoneyV2 | PricingPercentageValue;
  * customization of another product or an extended warranty).
  *
  */
-export type Product = HasMetafields &
+export type Product = HasGates &
+  HasMetafields &
   Node &
   OnlineStorePublishable &
   Trackable & {
@@ -6147,6 +6634,8 @@ export type Product = HasMetafields &
      *
      */
     featuredImage?: Maybe<Image>;
+    /** Returns a list of GateSubjects bound to the subject. */
+    gates: Array<GateSubject>;
     /**
      * A human-friendly unique string for the Product automatically generated from its title.
      * They are used by the Liquid templating language to refer to objects.
@@ -6238,6 +6727,17 @@ export type ProductCollectionsArgs = {
  */
 export type ProductDescriptionArgs = {
   truncateAt?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/**
+ * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
+ * For example, a digital download (such as a movie, music or ebook file) also
+ * qualifies as a product, as do services (such as equipment rental, work for hire,
+ * customization of another product or an extended warranty).
+ *
+ */
+export type ProductGatesArgs = {
+  includeInactive?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 /**
@@ -6554,6 +7054,10 @@ export type ProductVariant = HasMetafields &
     product: Product;
     /** The total sellable quantity of the variant for online sales channels. */
     quantityAvailable?: Maybe<Scalars['Int']['output']>;
+    /** A list of quantity breaks for the product variant. */
+    quantityPriceBreaks: QuantityPriceBreakConnection;
+    /** The quantity rule for the product variant in a given context. */
+    quantityRule: QuantityRule;
     /** Whether a customer needs to provide a shipping address when placing an order for the product variant. */
     requiresShipping: Scalars['Boolean']['output'];
     /** List of product options applied to the variant. */
@@ -6593,6 +7097,17 @@ export type ProductVariantMetafieldArgs = {
  */
 export type ProductVariantMetafieldsArgs = {
   identifiers: Array<HasMetafieldsIdentifier>;
+};
+
+/**
+ * A product variant represents a different version of a product, such as differing sizes or differing colors.
+ *
+ */
+export type ProductVariantQuantityPriceBreaksArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
 };
 
 /**
@@ -6663,6 +7178,91 @@ export type ProductVariantSortKeys =
   /** Sort by the `title` value. */
   | 'TITLE';
 
+/** Represents information about the buyer that is interacting with the cart. */
+export type PurchasingCompany = {
+  __typename?: 'PurchasingCompany';
+  /** The company associated to the order or draft order. */
+  company: Company;
+  /** The company contact associated to the order or draft order. */
+  contact?: Maybe<CompanyContact>;
+  /** The company location associated to the order or draft order. */
+  location: CompanyLocation;
+};
+
+/**
+ * Quantity price breaks lets you offer different rates that are based on the
+ * amount of a specific variant being ordered.
+ *
+ */
+export type QuantityPriceBreak = {
+  __typename?: 'QuantityPriceBreak';
+  /**
+   * Minimum quantity required to reach new quantity break price.
+   *
+   */
+  minimumQuantity: Scalars['Int']['output'];
+  /**
+   * The price of variant after reaching the minimum quanity.
+   *
+   */
+  price: MoneyV2;
+};
+
+/**
+ * An auto-generated type for paginating through multiple QuantityPriceBreaks.
+ *
+ */
+export type QuantityPriceBreakConnection = {
+  __typename?: 'QuantityPriceBreakConnection';
+  /** A list of edges. */
+  edges: Array<QuantityPriceBreakEdge>;
+  /** A list of the nodes contained in QuantityPriceBreakEdge. */
+  nodes: Array<QuantityPriceBreak>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+};
+
+/**
+ * An auto-generated type which holds one QuantityPriceBreak and a cursor during pagination.
+ *
+ */
+export type QuantityPriceBreakEdge = {
+  __typename?: 'QuantityPriceBreakEdge';
+  /** A cursor for use in pagination. */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of QuantityPriceBreakEdge. */
+  node: QuantityPriceBreak;
+};
+
+/**
+ * The quantity rule for the product variant in a given context.
+ *
+ */
+export type QuantityRule = {
+  __typename?: 'QuantityRule';
+  /**
+   * The value that specifies the quantity increment between minimum and maximum of the rule.
+   * Only quantities divisible by this value will be considered valid.
+   *
+   * The increment must be lower than or equal to the minimum and the maximum, and both minimum and maximum
+   * must be divisible by this value.
+   *
+   */
+  increment: Scalars['Int']['output'];
+  /**
+   * An optional value that defines the highest allowed quantity purchased by the customer.
+   * If defined, maximum must be lower than or equal to the minimum and must be a multiple of the increment.
+   *
+   */
+  maximum?: Maybe<Scalars['Int']['output']>;
+  /**
+   * The value that defines the lowest allowed quantity purchased by the customer.
+   * The minimum must be a multiple of the quantity rule's increment.
+   *
+   */
+  minimum: Scalars['Int']['output'];
+};
+
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRoot = {
   __typename?: 'QueryRoot';
@@ -6699,6 +7299,8 @@ export type QueryRoot = {
   collectionByHandle?: Maybe<Collection>;
   /** List of the shop’s collections. */
   collections: CollectionConnection;
+  /** Interaction of the current visitor consent with the configured consent policies of the shop. */
+  consentManagement: ConsentManagement;
   /**
    * The customer associated with the given access token. Tokens are obtained by using the
    * [`customerAccessTokenCreate` mutation](https://shopify.dev/docs/api/storefront/latest/mutations/customerAccessTokenCreate).
@@ -6732,8 +7334,13 @@ export type QueryRoot = {
     | CheckoutLineItem
     | Collection
     | Comment
+    | Company
+    | CompanyContact
+    | CompanyLocation
     | ComponentizableCartLine
     | ExternalVideo
+    | GateConfiguration
+    | GateSubject
     | GenericFile
     | Location
     | MailingAddress
@@ -6768,8 +7375,13 @@ export type QueryRoot = {
       | CheckoutLineItem
       | Collection
       | Comment
+      | Company
+      | CompanyContact
+      | CompanyLocation
       | ComponentizableCartLine
       | ExternalVideo
+      | GateConfiguration
+      | GateSubject
       | GenericFile
       | Location
       | MailingAddress
@@ -7494,6 +8106,374 @@ export type ShopMetafieldsArgs = {
   identifiers: Array<HasMetafieldsIdentifier>;
 };
 
+/** Represents a Shop Pay payment request. */
+export type ShopPayPaymentRequest = {
+  __typename?: 'ShopPayPaymentRequest';
+  /** The delivery methods for the payment request. */
+  deliveryMethods: Array<ShopPayPaymentRequestDeliveryMethod>;
+  /** The discount codes for the payment request. */
+  discountCodes: Array<Scalars['String']['output']>;
+  /** The discounts for the payment request order. */
+  discounts?: Maybe<Array<ShopPayPaymentRequestDiscount>>;
+  /** The line items for the payment request. */
+  lineItems: Array<ShopPayPaymentRequestLineItem>;
+  /** The locale for the payment request. */
+  locale: Scalars['String']['output'];
+  /** The presentment currency for the payment request. */
+  presentmentCurrency: CurrencyCode;
+  /** The delivery method type for the payment request. */
+  selectedDeliveryMethodType: ShopPayPaymentRequestDeliveryMethodType;
+  /** The shipping address for the payment request. */
+  shippingAddress?: Maybe<ShopPayPaymentRequestContactField>;
+  /** The shipping lines for the payment request. */
+  shippingLines: Array<ShopPayPaymentRequestShippingLine>;
+  /** The subtotal amount for the payment request. */
+  subtotal: MoneyV2;
+  /** The total amount for the payment request. */
+  total: MoneyV2;
+  /** The total shipping price for the payment request. */
+  totalShippingPrice?: Maybe<ShopPayPaymentRequestTotalShippingPrice>;
+  /** The total tax for the payment request. */
+  totalTax?: Maybe<MoneyV2>;
+};
+
+/** Represents a contact field for a Shop Pay payment request. */
+export type ShopPayPaymentRequestContactField = {
+  __typename?: 'ShopPayPaymentRequestContactField';
+  /** The first address line of the contact field. */
+  address1: Scalars['String']['output'];
+  /** The second address line of the contact field. */
+  address2?: Maybe<Scalars['String']['output']>;
+  /** The city of the contact field. */
+  city: Scalars['String']['output'];
+  /** The company name of the contact field. */
+  companyName?: Maybe<Scalars['String']['output']>;
+  /** The country of the contact field. */
+  countryCode: Scalars['String']['output'];
+  /** The email of the contact field. */
+  email?: Maybe<Scalars['String']['output']>;
+  /** The first name of the contact field. */
+  firstName: Scalars['String']['output'];
+  /** The first name of the contact field. */
+  lastName: Scalars['String']['output'];
+  /** The phone number of the contact field. */
+  phone?: Maybe<Scalars['String']['output']>;
+  /** The postal code of the contact field. */
+  postalCode?: Maybe<Scalars['String']['output']>;
+  /** The province of the contact field. */
+  provinceCode?: Maybe<Scalars['String']['output']>;
+};
+
+/** The input fields to create a contact field for a Shop Pay payment request. */
+export type ShopPayPaymentRequestContactFieldInput = {
+  /** The first address line of the contact field. */
+  address1?: InputMaybe<Scalars['String']['input']>;
+  /** The second address line of the contact field. */
+  address2?: InputMaybe<Scalars['String']['input']>;
+  /** The city of the contact field. */
+  city?: InputMaybe<Scalars['String']['input']>;
+  /** The company name of the contact field. */
+  companyName?: InputMaybe<Scalars['String']['input']>;
+  /** The country of the contact field. */
+  countryCode?: InputMaybe<Scalars['String']['input']>;
+  /** The email of the contact field. */
+  email?: InputMaybe<Scalars['String']['input']>;
+  /** The first name of the contact field. */
+  firstName?: InputMaybe<Scalars['String']['input']>;
+  /** The first name of the contact field. */
+  lastName?: InputMaybe<Scalars['String']['input']>;
+  /** The phone number of the contact field. */
+  phone?: InputMaybe<Scalars['String']['input']>;
+  /** The postal code of the contact field. */
+  postalCode?: InputMaybe<Scalars['String']['input']>;
+  /** The province of the contact field. */
+  provinceCode?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Represents a delivery method for a Shop Pay payment request. */
+export type ShopPayPaymentRequestDeliveryMethod = {
+  __typename?: 'ShopPayPaymentRequestDeliveryMethod';
+  /** The amount for the delivery method. */
+  amount: MoneyV2;
+  /** The code of the delivery method. */
+  code: Scalars['String']['output'];
+  /** The detail about when the delivery may be expected. */
+  deliveryExpectationLabel?: Maybe<Scalars['String']['output']>;
+  /** The detail of the delivery method. */
+  detail?: Maybe<Scalars['String']['output']>;
+  /** The label of the delivery method. */
+  label: Scalars['String']['output'];
+  /** The maximum delivery date for the delivery method. */
+  maxDeliveryDate?: Maybe<Scalars['ISO8601DateTime']['output']>;
+  /** The minimum delivery date for the delivery method. */
+  minDeliveryDate?: Maybe<Scalars['ISO8601DateTime']['output']>;
+};
+
+/** The input fields to create a delivery method for a Shop Pay payment request. */
+export type ShopPayPaymentRequestDeliveryMethodInput = {
+  /** The amount for the delivery method. */
+  amount?: InputMaybe<MoneyInput>;
+  /** The code of the delivery method. */
+  code?: InputMaybe<Scalars['String']['input']>;
+  /** The detail about when the delivery may be expected. */
+  deliveryExpectationLabel?: InputMaybe<Scalars['String']['input']>;
+  /** The detail of the delivery method. */
+  detail?: InputMaybe<Scalars['String']['input']>;
+  /** The label of the delivery method. */
+  label?: InputMaybe<Scalars['String']['input']>;
+  /** The maximum delivery date for the delivery method. */
+  maxDeliveryDate?: InputMaybe<Scalars['ISO8601DateTime']['input']>;
+  /** The minimum delivery date for the delivery method. */
+  minDeliveryDate?: InputMaybe<Scalars['ISO8601DateTime']['input']>;
+};
+
+/** Represents the delivery method type for a Shop Pay payment request. */
+export type ShopPayPaymentRequestDeliveryMethodType =
+  /** The delivery method type is pickup. */
+  | 'PICKUP'
+  /** The delivery method type is shipping. */
+  | 'SHIPPING';
+
+/** Represents a discount for a Shop Pay payment request. */
+export type ShopPayPaymentRequestDiscount = {
+  __typename?: 'ShopPayPaymentRequestDiscount';
+  /** The amount of the discount. */
+  amount: MoneyV2;
+  /** The label of the discount. */
+  label: Scalars['String']['output'];
+};
+
+/** The input fields to create a discount for a Shop Pay payment request. */
+export type ShopPayPaymentRequestDiscountInput = {
+  /** The amount of the discount. */
+  amount?: InputMaybe<MoneyInput>;
+  /** The label of the discount. */
+  label?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Represents an image for a Shop Pay payment request line item. */
+export type ShopPayPaymentRequestImage = {
+  __typename?: 'ShopPayPaymentRequestImage';
+  /** The alt text of the image. */
+  alt?: Maybe<Scalars['String']['output']>;
+  /** The source URL of the image. */
+  url: Scalars['String']['output'];
+};
+
+/** The input fields to create an image for a Shop Pay payment request. */
+export type ShopPayPaymentRequestImageInput = {
+  /** The alt text of the image. */
+  alt?: InputMaybe<Scalars['String']['input']>;
+  /** The source URL of the image. */
+  url: Scalars['String']['input'];
+};
+
+/** The input fields represent a Shop Pay payment request. */
+export type ShopPayPaymentRequestInput = {
+  /**
+   * The delivery methods for the payment request.
+   *
+   * The input must not contain more than `250` values.
+   */
+  deliveryMethods?: InputMaybe<Array<ShopPayPaymentRequestDeliveryMethodInput>>;
+  /**
+   * The discount codes for the payment request.
+   *
+   * The input must not contain more than `250` values.
+   */
+  discountCodes?: InputMaybe<Array<Scalars['String']['input']>>;
+  /**
+   * The discounts for the payment request order.
+   *
+   * The input must not contain more than `250` values.
+   */
+  discounts?: InputMaybe<Array<ShopPayPaymentRequestDiscountInput>>;
+  /**
+   * The line items for the payment request.
+   *
+   * The input must not contain more than `250` values.
+   */
+  lineItems?: InputMaybe<Array<ShopPayPaymentRequestLineItemInput>>;
+  /** The locale for the payment request. */
+  locale: Scalars['String']['input'];
+  /** The encrypted payment method for the payment request. */
+  paymentMethod?: InputMaybe<Scalars['String']['input']>;
+  /** The presentment currency for the payment request. */
+  presentmentCurrency: CurrencyCode;
+  /** The delivery method type for the payment request. */
+  selectedDeliveryMethodType?: InputMaybe<ShopPayPaymentRequestDeliveryMethodType>;
+  /** The shipping address for the payment request. */
+  shippingAddress?: InputMaybe<ShopPayPaymentRequestContactFieldInput>;
+  /**
+   * The shipping lines for the payment request.
+   *
+   * The input must not contain more than `250` values.
+   */
+  shippingLines?: InputMaybe<Array<ShopPayPaymentRequestShippingLineInput>>;
+  /** The subtotal amount for the payment request. */
+  subtotal: MoneyInput;
+  /** The total amount for the payment request. */
+  total: MoneyInput;
+  /** The total shipping price for the payment request. */
+  totalShippingPrice?: InputMaybe<ShopPayPaymentRequestTotalShippingPriceInput>;
+  /** The total tax for the payment request. */
+  totalTax?: InputMaybe<MoneyInput>;
+};
+
+/** Represents a line item for a Shop Pay payment request. */
+export type ShopPayPaymentRequestLineItem = {
+  __typename?: 'ShopPayPaymentRequestLineItem';
+  /**
+   * The amount for the line item.
+   * @deprecated This field is deprecated. Use final_line_price instead.
+   */
+  amount: MoneyV2;
+  /** The final item price for the line item. */
+  finalItemPrice: MoneyV2;
+  /** The final line price for the line item. */
+  finalLinePrice: MoneyV2;
+  /** The image of the line item. */
+  image?: Maybe<ShopPayPaymentRequestImage>;
+  /** The item discounts for the line item. */
+  itemDiscounts?: Maybe<Array<ShopPayPaymentRequestDiscount>>;
+  /** The label of the line item. */
+  label: Scalars['String']['output'];
+  /** The line discounts for the line item. */
+  lineDiscounts?: Maybe<Array<ShopPayPaymentRequestDiscount>>;
+  /** The original item price for the line item. */
+  originalItemPrice?: Maybe<MoneyV2>;
+  /** The original line price for the line item. */
+  originalLinePrice?: Maybe<MoneyV2>;
+  /** The quantity of the line item. */
+  quantity: Scalars['Int']['output'];
+  /** Whether the line item requires shipping. */
+  requiresShipping?: Maybe<Scalars['Boolean']['output']>;
+  /** The SKU of the line item. */
+  sku?: Maybe<Scalars['String']['output']>;
+};
+
+/** The input fields to create a line item for a Shop Pay payment request. */
+export type ShopPayPaymentRequestLineItemInput = {
+  /** The final item price for the line item. */
+  finalItemPrice?: InputMaybe<MoneyInput>;
+  /** The final line price for the line item. */
+  finalLinePrice?: InputMaybe<MoneyInput>;
+  /** The image of the line item. */
+  image?: InputMaybe<ShopPayPaymentRequestImageInput>;
+  /**
+   * The item discounts for the line item.
+   *
+   * The input must not contain more than `250` values.
+   */
+  itemDiscounts?: InputMaybe<Array<ShopPayPaymentRequestDiscountInput>>;
+  /** The label of the line item. */
+  label?: InputMaybe<Scalars['String']['input']>;
+  /**
+   * The line discounts for the line item.
+   *
+   * The input must not contain more than `250` values.
+   */
+  lineDiscounts?: InputMaybe<Array<ShopPayPaymentRequestDiscountInput>>;
+  /** The original item price for the line item. */
+  originalItemPrice?: InputMaybe<MoneyInput>;
+  /** The original line price for the line item. */
+  originalLinePrice?: InputMaybe<MoneyInput>;
+  /** The quantity of the line item. */
+  quantity: Scalars['Int']['input'];
+  /** Whether the line item requires shipping. */
+  requiresShipping?: InputMaybe<Scalars['Boolean']['input']>;
+  /** The SKU of the line item. */
+  sku?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Represents a receipt for a Shop Pay payment request. */
+export type ShopPayPaymentRequestReceipt = {
+  __typename?: 'ShopPayPaymentRequestReceipt';
+  /** The payment request object. */
+  paymentRequest: ShopPayPaymentRequest;
+  /** The processing status. */
+  processingStatusType: Scalars['String']['output'];
+  /** The token of the receipt. */
+  token: Scalars['String']['output'];
+};
+
+/** Represents a Shop Pay payment request session. */
+export type ShopPayPaymentRequestSession = {
+  __typename?: 'ShopPayPaymentRequestSession';
+  /** The checkout URL of the Shop Pay payment request session. */
+  checkoutUrl: Scalars['URL']['output'];
+  /** The payment request associated with the Shop Pay payment request session. */
+  paymentRequest: ShopPayPaymentRequest;
+  /** The source identifier of the Shop Pay payment request session. */
+  sourceIdentifier: Scalars['String']['output'];
+  /** The token of the Shop Pay payment request session. */
+  token: Scalars['String']['output'];
+};
+
+/** Return type for `shopPayPaymentRequestSessionCreate` mutation. */
+export type ShopPayPaymentRequestSessionCreatePayload = {
+  __typename?: 'ShopPayPaymentRequestSessionCreatePayload';
+  /** The new Shop Pay payment request session object. */
+  shopPayPaymentRequestSession?: Maybe<ShopPayPaymentRequestSession>;
+  /** Error codes for failed Shop Pay payment request session mutations. */
+  userErrors: Array<UserErrorsShopPayPaymentRequestSessionUserErrors>;
+};
+
+/** Return type for `shopPayPaymentRequestSessionSubmit` mutation. */
+export type ShopPayPaymentRequestSessionSubmitPayload = {
+  __typename?: 'ShopPayPaymentRequestSessionSubmitPayload';
+  /** The checkout on which the payment was applied. */
+  paymentRequestReceipt?: Maybe<ShopPayPaymentRequestReceipt>;
+  /** Error codes for failed Shop Pay payment request session mutations. */
+  userErrors: Array<UserErrorsShopPayPaymentRequestSessionUserErrors>;
+};
+
+/** Represents a shipping line for a Shop Pay payment request. */
+export type ShopPayPaymentRequestShippingLine = {
+  __typename?: 'ShopPayPaymentRequestShippingLine';
+  /** The amount for the shipping line. */
+  amount: MoneyV2;
+  /** The code of the shipping line. */
+  code: Scalars['String']['output'];
+  /** The label of the shipping line. */
+  label: Scalars['String']['output'];
+};
+
+/** The input fields to create a shipping line for a Shop Pay payment request. */
+export type ShopPayPaymentRequestShippingLineInput = {
+  /** The amount for the shipping line. */
+  amount?: InputMaybe<MoneyInput>;
+  /** The code of the shipping line. */
+  code?: InputMaybe<Scalars['String']['input']>;
+  /** The label of the shipping line. */
+  label?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Represents a shipping total for a Shop Pay payment request. */
+export type ShopPayPaymentRequestTotalShippingPrice = {
+  __typename?: 'ShopPayPaymentRequestTotalShippingPrice';
+  /** The discounts for the shipping total. */
+  discounts: Array<ShopPayPaymentRequestDiscount>;
+  /** The final total for the shipping total. */
+  finalTotal: MoneyV2;
+  /** The original total for the shipping total. */
+  originalTotal?: Maybe<MoneyV2>;
+};
+
+/** The input fields to create a shipping total for a Shop Pay payment request. */
+export type ShopPayPaymentRequestTotalShippingPriceInput = {
+  /**
+   * The discounts for the shipping total.
+   *
+   * The input must not contain more than `250` values.
+   */
+  discounts?: InputMaybe<Array<ShopPayPaymentRequestDiscountInput>>;
+  /** The final total for the shipping total. */
+  finalTotal?: InputMaybe<MoneyInput>;
+  /** The original total for the shipping total. */
+  originalTotal?: InputMaybe<MoneyInput>;
+};
+
 /**
  * The input fields for submitting Shop Pay payment method information for checkout.
  *
@@ -7733,6 +8713,8 @@ export type SubmitSuccess = {
   __typename?: 'SubmitSuccess';
   /** The ID of the cart completion attempt that will be used for polling for the result. */
   attemptId: Scalars['String']['output'];
+  /** The url to which the buyer should be redirected after the cart is successfully submitted. */
+  redirectUrl: Scalars['URL']['output'];
 };
 
 /** Cart submit for checkout completion is throttled. */
@@ -7745,6 +8727,15 @@ export type SubmitThrottled = {
    *
    */
   pollAfter: Scalars['DateTime']['output'];
+};
+
+/** Color and image for visual representation. */
+export type Swatch = {
+  __typename?: 'Swatch';
+  /** The swatch color. */
+  color?: Maybe<Scalars['Color']['output']>;
+  /** The swatch image. */
+  image?: Maybe<MediaImage>;
 };
 
 /**
@@ -7933,6 +8924,27 @@ export type UserError = DisplayableError & {
   message: Scalars['String']['output'];
 };
 
+/** Represents an error that happens during execution of a customer mutation. */
+export type UserErrorsShopPayPaymentRequestSessionUserErrors =
+  DisplayableError & {
+    __typename?: 'UserErrorsShopPayPaymentRequestSessionUserErrors';
+    /** The error code. */
+    code?: Maybe<UserErrorsShopPayPaymentRequestSessionUserErrorsCode>;
+    /** The path to the input field that caused the error. */
+    field?: Maybe<Array<Scalars['String']['output']>>;
+    /** The error message. */
+    message: Scalars['String']['output'];
+  };
+
+/** Possible error codes that can be returned by `ShopPayPaymentRequestSessionUserErrors`. */
+export type UserErrorsShopPayPaymentRequestSessionUserErrorsCode =
+  /** Idempotency key has already been used. */
+  | 'IDEMPOTENCY_KEY_ALREADY_USED'
+  /** Payment request input is invalid. */
+  | 'PAYMENT_REQUEST_INVALID_INPUT'
+  /** Payment request not found. */
+  | 'PAYMENT_REQUEST_NOT_FOUND';
+
 /** The input fields for a filter used to view a subset of products in a collection matching a specific variant option. */
 export type VariantOptionFilter = {
   /** The name of the variant option to filter on. */
@@ -7972,6 +8984,18 @@ export type VideoSource = {
   url: Scalars['String']['output'];
   /** The width of the video. */
   width: Scalars['Int']['output'];
+};
+
+/** The new consent to data processing purposes provided by a visitor of the shop. true meansaccepting the purposes, false declining them, and null means that the visitor didn't express a preference. */
+export type VisitorConsent = {
+  /** The visitor accepts or rejects the analytics data processing purpose. */
+  analytics?: InputMaybe<Scalars['Boolean']['input']>;
+  /** The visitor accepts or rejects the first and third party marketing data processing purposes. */
+  marketing?: InputMaybe<Scalars['Boolean']['input']>;
+  /** The visitor accepts or rejects the preferences data processing purpose. */
+  preferences?: InputMaybe<Scalars['Boolean']['input']>;
+  /** The visitor accepts or rejects the sale or sharing of their data with third parties. */
+  saleOfData?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 /** Units of measurement for weight. */

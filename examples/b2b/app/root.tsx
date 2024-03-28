@@ -23,6 +23,7 @@ import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
 import {LocationSelector} from '~/components/LocationSelector';
 import {CUSTOMER_LOCATIONS_QUERY} from '~/graphql/customer-account/CustomerLocationsQuery';
+import type {Company} from '@shopify/hydrogen-react/customer-account-api-types';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -73,7 +74,7 @@ export async function loader({request, context}: LoaderFunctionArgs) {
   const {storefront, customerAccount, cart, session} = context;
   const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
 
-  const isLoggedInPromise = await customerAccount.isLoggedIn();
+  const isLoggedIn = await customerAccount.isLoggedIn();
   const cartPromise = cart.get();
 
   // defer the footer query (below the fold)
@@ -96,34 +97,31 @@ export async function loader({request, context}: LoaderFunctionArgs) {
   let companyLocationId = (await customerAccount.UNSTABLE_getBuyer())
     ?.companyLocationId;
 
-  const customer = await customerAccount.query(CUSTOMER_LOCATIONS_QUERY, {
-    variables: {},
-    context,
-    request,
-  });
-  const companyData =
+  const customer = await customerAccount.query(CUSTOMER_LOCATIONS_QUERY);
+  const company: Company =
     customer?.data?.customer?.companyContacts?.edges?.[0]?.node?.company;
 
-  if (!companyLocationId && companyData?.locations?.edges?.length === 1) {
-    companyLocationId = companyData.locations.edges[0].node.id;
+  if (!companyLocationId && company?.locations?.edges?.length === 1) {
+    companyLocationId = company.locations.edges[0].node.id;
 
     customerAccount.UNSTABLE_setBuyer({
       companyLocationId,
     });
+
+    //updateBuyerIdentity
   }
 
-  const showLocationSelector = Boolean(companyData && !companyLocationId);
+  const showLocationSelector = Boolean(company && !companyLocationId);
 
   return defer(
     {
       cart: cartPromise,
       footer: footerPromise,
       header: await headerPromise,
-      isLoggedIn: isLoggedInPromise,
+      isLoggedIn,
       publicStoreDomain,
-      customer,
+      company,
       showLocationSelector,
-      companyLocationId,
     },
     {
       headers: {
@@ -148,7 +146,7 @@ export default function App() {
       <body>
         {data.showLocationSelector ? (
           <main>
-            <LocationSelector customer={data.customer} />
+            <LocationSelector company={data.company} />
           </main>
         ) : (
           <Layout {...data}>

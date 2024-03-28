@@ -5,20 +5,22 @@ import type {HeaderQuery} from 'storefrontapi.generated';
 import type {LayoutProps} from './Layout';
 import {useRootLoaderData} from '~/root';
 
+/***********************************************/
+/**********  EXAMPLE UPDATE STARTS  ************/
 type HeaderProps = Pick<
   LayoutProps,
-  'header' | 'cart' | 'isLoggedIn' | 'customer' | 'companyLocationId'
+  'header' | 'cart' | 'isLoggedIn' | 'company'
 >;
+/**********   EXAMPLE UPDATE END   ************/
+/***********************************************/
 
 type Viewport = 'desktop' | 'mobile';
 
-export function Header({
-  header,
-  isLoggedIn,
-  cart,
-  customer,
-  companyLocationId,
-}: HeaderProps) {
+/***********************************************/
+/**********  EXAMPLE UPDATE STARTS  ************/
+export function Header({header, isLoggedIn, cart, company}: HeaderProps) {
+  /**********   EXAMPLE UPDATE END   ************/
+  /***********************************************/
   const {shop, menu} = header;
   return (
     <header className="header">
@@ -30,12 +32,11 @@ export function Header({
         viewport="desktop"
         primaryDomainUrl={header.shop.primaryDomain.url}
       />
-      <HeaderCtas
-        isLoggedIn={isLoggedIn}
-        cart={cart}
-        customer={customer}
-        companyLocationId={companyLocationId}
-      />
+      {/***********************************************/
+      /**********  EXAMPLE UPDATE STARTS  ************/}
+      <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} company={company} />
+      {/**********   EXAMPLE UPDATE END   ************/
+      /***********************************************/}
     </header>
   );
 }
@@ -100,34 +101,27 @@ export function HeaderMenu({
   );
 }
 
+/***********************************************/
+/**********  EXAMPLE UPDATE STARTS  ************/
 function HeaderCtas({
   isLoggedIn,
   cart,
-  customer,
-  companyLocationId,
-}: Pick<
-  HeaderProps,
-  'isLoggedIn' | 'cart' | 'customer' | 'companyLocationId'
->) {
+  company,
+}: Pick<HeaderProps, 'isLoggedIn' | 'cart' | 'company'>) {
   return (
     <nav className="header-ctas" role="navigation">
       <HeaderMenuMobileToggle />
-      <LocationDropdown
-        customer={customer}
-        companyLocationId={companyLocationId}
-      />
+      <LocationDropdown company={company} />
       <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
-        <Suspense fallback="Sign in">
-          <Await resolve={isLoggedIn} errorElement="Sign in">
-            {(isLoggedIn) => (isLoggedIn ? 'Account' : 'Sign in')}
-          </Await>
-        </Suspense>
+        {isLoggedIn ? 'Account' : 'Sign in'}
       </NavLink>
       <SearchToggle />
       <CartToggle cart={cart} />
     </nav>
   );
 }
+/**********   EXAMPLE UPDATE END   ************/
+/***********************************************/
 
 function HeaderMenuMobileToggle() {
   return (
@@ -158,24 +152,20 @@ function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
   );
 }
 
-function LocationDropdown({
-  customer,
-  companyLocationId,
-}: Pick<HeaderProps, 'customer' | 'companyLocationId'>) {
-  const company =
-    customer?.data?.customer?.companyContacts?.edges?.[0]?.node?.company;
-
+/***********************************************/
+/**********  EXAMPLE UPDATE STARTS  ************/
+function LocationDropdown({company}: Pick<HeaderProps, 'company'>) {
   const locations = company?.locations?.edges
-    ? company.locations.edges.map((loc) => {
-        return {...loc.node};
+    ? company.locations.edges.map((location) => {
+        return {...location.node};
       })
     : [];
 
   const [selectedLocation, setSelectedLocation] = useState(
-    companyLocationId ?? undefined,
+    company.locations.edges[0].node.id ?? undefined,
   );
 
-  const setLocation = async (event) => {
+  const setLocation = async (event: React.ChangeEvent<HTMLSelectElement>) => {
     const locationId = event.target.value;
     setSelectedLocation(locationId);
   };
@@ -217,6 +207,8 @@ function LocationDropdown({
     </CartForm>
   );
 }
+/**********   EXAMPLE UPDATE END   ************/
+/***********************************************/
 
 const FALLBACK_HEADER_MENU = {
   id: 'gid://shopify/Menu/199655587896',

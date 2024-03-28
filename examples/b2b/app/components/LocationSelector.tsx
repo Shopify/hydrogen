@@ -1,16 +1,17 @@
 import {CartForm} from '@shopify/hydrogen';
+import type {
+  Company,
+  CompanyLocation,
+} from '@shopify/hydrogen-react/customer-account-api-types';
 
-export function LocationSelector({customer}) {
-  const company =
-    customer?.data?.customer?.companyContacts?.edges?.[0]?.node?.company;
-
+export function LocationSelector({company}: {company: Company}) {
   const locations = company?.locations?.edges
     ? company.locations.edges.map((loc) => {
         return {...loc.node};
       })
     : [];
 
-  function LocationItem({location}) {
+  function LocationItem({location}: {location: CompanyLocation}) {
     const addressLines = location?.shippingAddress?.formattedAddress ?? [];
     return (
       <label>
