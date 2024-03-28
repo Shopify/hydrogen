@@ -1,5 +1,11 @@
 import {joinPath} from '@shopify/cli-kit/node/path';
 import type {RemixPluginContext} from '@remix-run/dev/dist/vite/plugin.js';
+import {findFileWithExtension} from './file.js';
+
+export async function hasViteConfig(root: string) {
+  const result = await findFileWithExtension(root, 'vite.config');
+  return !!result.filepath;
+}
 
 export async function getViteConfig(root: string) {
   const vite = await import('vite');
