@@ -1,4 +1,32 @@
 import {AbortError} from '@shopify/cli-kit/node/error';
+import colors from '@shopify/cli-kit/node/colors';
+
+export function orderEnvironmentsBySafety<
+  Environment extends {type: 'PREVIEW' | 'PRODUCTION' | 'CUSTOM'},
+>(environments: Array<Environment>) {
+  return [
+    ...environments.filter((environment) => environment.type === 'PREVIEW'),
+    ...environments.filter((environment) => environment.type === 'CUSTOM'),
+    ...environments.filter((environment) => environment.type === 'PRODUCTION'),
+  ];
+}
+
+export function createEnvironmentCliChoiceLabel(
+  name: string,
+  handle: string,
+  branch: string | null,
+) {
+  const metadataStringified = Object.entries({handle, branch})
+    .reduce((acc, [key, val]) => {
+      if (val) {
+        acc.push(`${key}: ${val}`);
+      }
+      return acc;
+    }, [] as Array<string>)
+    .join(', ');
+
+  return `${name} ${colors.dim(`(${metadataStringified})`)}`;
+}
 
 export function findEnvironmentOrThrow<Environment extends {handle: string}>(
   environments: Array<Environment>,

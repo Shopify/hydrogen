@@ -9,14 +9,12 @@ import {
 
 import {type AdminSession, login} from '../../../lib/auth.js';
 import {getStorefrontEnvVariables} from '../../../lib/graphql/admin/pull-variables.js';
-import {
-  Environment,
-  getStorefrontEnvironments,
-} from '../../../lib/graphql/admin/list-environments.js';
+import {getStorefrontEnvironments} from '../../../lib/graphql/admin/list-environments.js';
 import {pushStorefrontEnvVariables} from '../../../lib/graphql/admin/push-variables.js';
 import {dummyListEnvironments} from '../../../lib/graphql/admin/test-helper.js';
 
 import {runEnvPush} from './push__unstable.js';
+import {AbortError} from '@shopify/cli-kit/node/error';
 
 vi.mock('@shopify/cli-kit/node/ui', async () => {
   const original = await vi.importActual<
@@ -185,6 +183,47 @@ describe('pushVariables', () => {
           SHOPIFY_CONFIG.storefront.id,
           'production',
         );
+      });
+    });
+  });
+
+  describe('how environment file path is resolved', () => {
+    it('uses the .env file in the current path', async () => {
+      const filePath = joinPath(process.cwd(), '.env');
+      await writeFile(filePath, 'NEW_TOKEN_1=1\nNEW_TOKEN_2=2');
+
+      await expect(runEnvPush({env: 'production'})).resolves.not.toThrow();
+    });
+
+    it('uses the .env file in the provided path', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        const filePath = joinPath(tmpDir, '.env');
+        await writeFile(filePath, 'NEW_TOKEN_1=1\nNEW_TOKEN_2=2');
+
+        await expect(
+          runEnvPush({path: tmpDir, env: 'production'}),
+        ).resolves.not.toThrow();
+      });
+    });
+
+    it('uses the .env file provided by the `--env-file` flag', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        const filePath = joinPath(tmpDir, '.env');
+        await writeFile(filePath, 'NEW_TOKEN_1=1\nNEW_TOKEN_2=2');
+
+        await expect(
+          runEnvPush({envFile: filePath, env: 'production'}),
+        ).resolves.not.toThrow();
+      });
+    });
+
+    it('throws an error if the .env file does not exist', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        const filePath = joinPath(tmpDir, 'fake-file.env');
+
+        await expect(
+          runEnvPush({envFile: filePath, env: 'production'}),
+        ).rejects.toThrow(AbortError);
       });
     });
   });
