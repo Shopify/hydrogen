@@ -1,6 +1,10 @@
-export const AnalyticsEventName: AnalyticsEventName = {
+export const AnalyticsEventName = {
   PAGE_VIEW: 'PAGE_VIEW',
   ADD_TO_CART: 'ADD_TO_CART',
+  PAGE_VIEW_2: 'PAGE_VIEW_2',
+  COLLECTION_VIEW: 'COLLECTION_VIEW',
+  PRODUCT_VIEW: 'PRODUCT_VIEW',
+  SEARCH_VIEW: 'SEARCH_VIEW',
 } as const;
 
 export const AnalyticsPageType: AnalyticsPageType = {

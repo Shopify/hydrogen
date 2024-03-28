@@ -1,4 +1,4 @@
-import {useNonce} from '@shopify/hydrogen';
+import {Analytics, useNonce, getShopAnalytics} from '@shopify/hydrogen';
 import {
   defer,
   type SerializeFrom,
@@ -21,6 +21,7 @@ import favicon from './assets/favicon.svg';
 import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
+import {CustomAnalytics} from './components/CustomAnalytics';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -70,6 +71,7 @@ export const useRootLoaderData = () => {
 export async function loader({context}: LoaderFunctionArgs) {
   const {storefront, customerAccount, cart} = context;
   const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
+  const env = context.env;
 
   const isLoggedInPromise = customerAccount.isLoggedIn();
   const cartPromise = cart.get();
@@ -97,6 +99,13 @@ export async function loader({context}: LoaderFunctionArgs) {
       header: await headerPromise,
       isLoggedIn: isLoggedInPromise,
       publicStoreDomain,
+      shop: getShopAnalytics(context),
+      consent: {
+        checkoutRootDomain: env.PUBLIC_CHECKOUT_DOMAIN,
+        shopDomain: env.PUBLIC_STORE_DOMAIN,
+        storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+        withPrivacyBanner: true,
+      },
     },
     {
       headers: {
@@ -119,9 +128,18 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout {...data}>
-          <Outlet />
-        </Layout>
+        <Analytics.Provider
+          cart={data.cart}
+          shop={data.shop}
+          canTrack={() => true}
+          consent={data.consent}
+          customData={{test: 'juan'}}
+        >
+          <Layout {...data}>
+            <Outlet />
+          </Layout>
+          <CustomAnalytics />
+        </Analytics.Provider>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
         <LiveReload nonce={nonce} />

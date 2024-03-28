@@ -3,6 +3,7 @@ import {Suspense} from 'react';
 import type {HeaderQuery} from 'storefrontapi.generated';
 import type {LayoutProps} from './Layout';
 import {useRootLoaderData} from '~/root';
+import {useAnalytics} from '@shopify/hydrogen';
 
 type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'>;
 
@@ -117,17 +118,34 @@ function SearchToggle() {
   return <a href="#search-aside">Search</a>;
 }
 
-function CartBadge({count}: {count: number}) {
-  return <a href="#cart-aside">Cart {count}</a>;
+function CartBadge({count, onClick}: {count: number; onClick?: () => void}) {
+  return (
+    <a href="#cart-aside" onClick={onClick}>
+      Cart {count}
+    </a>
+  );
 }
 
 function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
+  const {publish} = useAnalytics();
+  // Example of how to publish a custom event when the side cart is viewed
+  function publishSideCartViewed() {
+    publish('custom_sidecart_viewed', {cart});
+  }
   return (
-    <Suspense fallback={<CartBadge count={0} />}>
+    <Suspense
+      fallback={<CartBadge count={0} onClick={publishSideCartViewed} />}
+    >
       <Await resolve={cart}>
         {(cart) => {
-          if (!cart) return <CartBadge count={0} />;
-          return <CartBadge count={cart.totalQuantity || 0} />;
+          if (!cart)
+            return <CartBadge count={0} onClick={publishSideCartViewed} />;
+          return (
+            <CartBadge
+              count={cart.totalQuantity || 0}
+              onClick={publishSideCartViewed}
+            />
+          );
         }}
       </Await>
     </Suspense>

@@ -77,6 +77,38 @@ export {
 export {ShopPayButton} from './shop/ShopPayButton';
 
 export {
+  Analytics,
+  useAnalytics,
+  getShopAnalytics,
+} from './analytics-manager/AnalyticsProvider';
+export {AnalyticsEvent} from './analytics-manager/events';
+export {ShopifyAnalytics} from './analytics-manager/ShopifyAnalytics';
+export {
+  type PageViewPayload,
+  type ProductViewPayload,
+  type CollectionViewPayload,
+  type CartViewPayload,
+  type SearchViewPayload,
+  type CartUpdatePayload,
+} from './analytics-manager/AnalyticsView';
+
+export {
+  type ConsentStatus,
+  type VisitorConsent,
+  type VisitorConsentCollected,
+  type CustomerPrivacyConsentConfig,
+  type SetConsentHeadlessParams,
+  type CustomerPrivacy,
+  type PrivacyBanner,
+  type CustomEventMap,
+  type PrivacyConsentBannerProps,
+  type CustomerPrivacyApiProps,
+  useCustomerPrivacy,
+  getCustomerPrivacy,
+  getCustomerPrivacyRequired,
+} from './customer-privacy/ShopifyCustomerPrivacy';
+
+export {
   AnalyticsEventName,
   AnalyticsPageType,
   ExternalVideo,
@@ -105,7 +137,8 @@ export type {
   ParsedMetafields,
   ShopifyAddToCart,
   ShopifyAddToCartPayload,
-  ShopifyAnalytics,
+  // TODO: document this change
+  ShopifyAnalytics as SendShopifyAnalyticsEvent,
   ShopifyAnalyticsPayload,
   ShopifyAnalyticsProduct,
   ShopifyCookies,

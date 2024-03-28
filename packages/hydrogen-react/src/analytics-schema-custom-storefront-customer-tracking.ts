@@ -17,14 +17,21 @@ const PRODUCT_PAGE_RENDERED_EVENT_NAME = 'product_page_rendered';
 const PRODUCT_ADDED_TO_CART_EVENT_NAME = 'product_added_to_cart';
 const SEARCH_SUBMITTED_EVENT_NAME = 'search_submitted';
 
+function prepareAdditionalPayload(
+  payload: ShopifyPageViewPayload,
+): Pick<ShopifyMonorailPayload, 'canonical_url' | 'customer_id'> {
+  return {
+    canonical_url: payload.canonicalUrl || payload.url,
+    customer_id: parseInt(parseGid(payload.customerId).id || '0'),
+  };
+}
+
 export function pageView(
   payload: ShopifyPageViewPayload,
 ): ShopifyMonorailEvent[] {
   const pageViewPayload = payload;
-  const additionalPayload = {
-    canonical_url: pageViewPayload.canonicalUrl || pageViewPayload.url,
-    customer_id: pageViewPayload.customerId,
-  };
+  const additionalPayload = prepareAdditionalPayload(pageViewPayload);
+
   const pageType = pageViewPayload.pageType;
   const pageViewEvents = [];
 
@@ -93,6 +100,90 @@ export function pageView(
   return pageViewEvents;
 }
 
+export function pageView2(
+  payload: ShopifyPageViewPayload,
+): ShopifyMonorailEvent[] {
+  const pageViewPayload = payload;
+  const additionalPayload = prepareAdditionalPayload(pageViewPayload);
+
+  return [
+    schemaWrapper(
+      SCHEMA_ID,
+      addDataIf(
+        {
+          event_name: PAGE_RENDERED_EVENT_NAME,
+          ...additionalPayload,
+        },
+        formatPayload(pageViewPayload),
+      ),
+    ),
+  ];
+}
+
+export function collectionView(
+  payload: ShopifyPageViewPayload,
+): ShopifyMonorailEvent[] {
+  const pageViewPayload = payload;
+  const additionalPayload = prepareAdditionalPayload(pageViewPayload);
+
+  return [
+    schemaWrapper(
+      SCHEMA_ID,
+      addDataIf(
+        {
+          event_name: COLLECTION_PAGE_RENDERED_EVENT_NAME,
+          ...additionalPayload,
+          collection_name: pageViewPayload.collectionHandle,
+        },
+        formatPayload(pageViewPayload),
+      ),
+    ),
+  ];
+}
+
+export function productView(
+  payload: ShopifyPageViewPayload,
+): ShopifyMonorailEvent[] {
+  const pageViewPayload = payload;
+  const additionalPayload = prepareAdditionalPayload(pageViewPayload);
+
+  return [
+    schemaWrapper(
+      SCHEMA_ID,
+      addDataIf(
+        {
+          event_name: PRODUCT_PAGE_RENDERED_EVENT_NAME,
+          ...additionalPayload,
+          products: formatProductPayload(pageViewPayload.products),
+          total_value: pageViewPayload.totalValue,
+        },
+        formatPayload(pageViewPayload),
+      ),
+    ),
+  ];
+}
+
+export function searchView(
+  payload: ShopifyPageViewPayload,
+): ShopifyMonorailEvent[] {
+  const pageViewPayload = payload;
+  const additionalPayload = prepareAdditionalPayload(pageViewPayload);
+
+  return [
+    schemaWrapper(
+      SCHEMA_ID,
+      addDataIf(
+        {
+          event_name: SEARCH_SUBMITTED_EVENT_NAME,
+          ...additionalPayload,
+          search_string: pageViewPayload.searchString,
+        },
+        formatPayload(pageViewPayload),
+      ),
+    ),
+  ];
+}
+
 export function addToCart(
   payload: ShopifyAddToCartPayload,
 ): ShopifyMonorailEvent[] {
@@ -109,6 +200,9 @@ export function addToCart(
           cart_token,
           total_value: addToCartPayload.totalValue,
           products: formatProductPayload(addToCartPayload.products),
+          customer_id: parseInt(
+            parseGid(addToCartPayload.customerId).id || '0',
+          ),
         },
         formatPayload(addToCartPayload),
       ),

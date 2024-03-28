@@ -13,6 +13,10 @@ import {getShopifyCookies} from './cookies-utils.js';
 import {pageView as trekkiePageView} from './analytics-schema-trekkie-storefront-page-view.js';
 import {
   pageView as customerPageView,
+  pageView2 as customerPageView2,
+  collectionView as customerCollectionView,
+  productView as customerProductView,
+  searchView as customerSearchView,
   addToCart as customerAddToCart,
 } from './analytics-schema-custom-storefront-customer-tracking.js';
 
@@ -30,9 +34,9 @@ export function sendShopifyAnalytics(
   if (!payload.hasUserConsent) return Promise.resolve();
 
   let events: ShopifyMonorailEvent[] = [];
+  const pageViewPayload = payload as ShopifyPageViewPayload;
 
   if (eventName === AnalyticsEventName.PAGE_VIEW) {
-    const pageViewPayload = payload as ShopifyPageViewPayload;
     events = events.concat(
       trekkiePageView(pageViewPayload),
       customerPageView(pageViewPayload),
@@ -41,6 +45,17 @@ export function sendShopifyAnalytics(
     events = events.concat(
       customerAddToCart(payload as ShopifyAddToCartPayload),
     );
+  } else if (eventName === AnalyticsEventName.PAGE_VIEW_2) {
+    events = events.concat(
+      trekkiePageView(pageViewPayload),
+      customerPageView2(pageViewPayload),
+    );
+  } else if (eventName === AnalyticsEventName.COLLECTION_VIEW) {
+    events = events.concat(customerCollectionView(pageViewPayload));
+  } else if (eventName === AnalyticsEventName.PRODUCT_VIEW) {
+    events = events.concat(customerProductView(pageViewPayload));
+  } else if (eventName === AnalyticsEventName.SEARCH_VIEW) {
+    events = events.concat(customerSearchView(pageViewPayload));
   }
 
   if (events.length) {
