@@ -9,13 +9,14 @@ import {
   handleMiniOxygenImportFail,
   logRequestLine,
 } from './common.js';
-import {getDebugBannerLine} from '../dev-shared.js';
+import {getDebugBannerLine, getUtilityBannerlines} from '../dev-shared.js';
 import {
   H2O_BINDING_NAME,
   handleDebugNetworkRequest,
   createLogRequestEvent,
   setConstructors,
 } from '../request-events.js';
+import {outputNewline} from '@shopify/cli-kit/node/output';
 
 export async function startWorkerdServer({
   root,
@@ -101,16 +102,12 @@ export async function startWorkerdServer({
       });
     },
     showBanner(options) {
-      console.log(''); // New line
+      outputNewline();
 
       const customSections = [];
 
-      if (options?.extraLines?.length) {
-        customSections.push({
-          body: options.extraLines.map((value, index) => ({
-            subdued: `${index != 0 ? '\n\n' : ''}${value}`,
-          })),
-        });
+      if (options?.host) {
+        customSections.push({body: getUtilityBannerlines(options.host)});
       }
 
       if (inspectorUrl) {

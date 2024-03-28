@@ -39,7 +39,6 @@ import {
   getDevConfigInBackground,
   isMockShop,
   notifyIssueWithTunnelAndMockShop,
-  getUtilityBannerlines,
 } from '../../lib/dev-shared.js';
 import {getCliCommand} from '../../lib/shell.js';
 
@@ -246,7 +245,6 @@ export async function runDev({
           ? `Initial build: ${initialBuildDurationMs}ms\n`
           : '',
       host,
-      extraLines: getUtilityBannerlines(host),
     });
 
     if (useCodegen) {

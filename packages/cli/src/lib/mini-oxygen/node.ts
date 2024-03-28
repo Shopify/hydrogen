@@ -17,6 +17,8 @@ import {
   setConstructors,
 } from '../request-events.js';
 import {findPort} from '../find-port.js';
+import {getUtilityBannerlines} from '../dev-shared.js';
+import {outputNewline} from '@shopify/cli-kit/node/output';
 
 export async function startNodeServer({
   appPort,
@@ -114,16 +116,12 @@ export async function startNodeServer({
       await miniOxygen.reload(nextOptions);
     },
     showBanner(options) {
-      console.log('');
+      outputNewline();
 
       const customSections = [];
 
-      if (options?.extraLines?.length) {
-        customSections.push({
-          body: options.extraLines.map((value, index) => ({
-            subdued: `${index != 0 ? '\n\n' : ''}${value}`,
-          })),
-        });
+      if (options?.host) {
+        customSections.push({body: getUtilityBannerlines(options.host)});
       }
 
       if (debug && inspectorPort) {

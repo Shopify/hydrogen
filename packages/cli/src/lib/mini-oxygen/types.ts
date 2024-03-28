@@ -21,7 +21,6 @@ export type MiniOxygenInstance = {
     mode?: string;
     headlinePrefix?: string;
     host?: string;
-    extraLines?: TokenItem[];
     appName?: string;
     tunnelHost?: string;
   }) => void;
