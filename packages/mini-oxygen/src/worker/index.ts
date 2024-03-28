@@ -192,6 +192,19 @@ const oxygenHeadersMap = Object.values(OXYGEN_HEADERS_MAP).reduce(
   {} as Record<string, string>,
 );
 
+// Opt-out of TLS validation in the worker environment,
+// and run network requests in Node environment.
+// https://nodejs.org/api/cli.html#node_tls_reject_unauthorizedvalue
+const UNSAFE_OUTBOUND_SERVICE = {
+  async outboundService(request: Request) {
+    const response = await fetch(request.url, request);
+    // Remove brotli encoding:
+    // https://github.com/cloudflare/workers-sdk/issues/5345
+    response.headers.delete('Content-Encoding');
+    return response;
+  },
+};
+
 function buildMiniflareOptions(
   {workers, ...mfOverwriteOptions}: InputMiniflareOptions,
   logRequestLine: LogRequestLine | null = defaultLogRequestLine,
@@ -263,10 +276,17 @@ function buildMiniflareOptions(
           ...(handleAssets && {assets: handleAssets}),
         },
       },
-      ...workers.map((worker) => ({
-        ...(!wrappedBindings.has(worker.name) && OXYGEN_COMPAT_PARAMS),
-        ...worker,
-      })),
+      ...workers.map((worker) => {
+        const isNormalWorker = !wrappedBindings.has(worker.name);
+        const useUnsafeOutboundService =
+          isNormalWorker && process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0';
+
+        return {
+          ...(isNormalWorker && OXYGEN_COMPAT_PARAMS),
+          ...(useUnsafeOutboundService && UNSAFE_OUTBOUND_SERVICE),
+          ...worker,
+        };
+      }),
     ],
   };
 }

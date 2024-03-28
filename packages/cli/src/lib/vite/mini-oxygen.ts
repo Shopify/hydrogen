@@ -8,7 +8,6 @@ import {
 import {logRequestLine} from '../mini-oxygen/common.js';
 import {MiniOxygenOptions} from '../mini-oxygen/types.js';
 import {getHmrUrl, pipeFromWeb, toURL, toWeb} from './utils.js';
-import {conditionalUnsafeOutboundService} from '../mini-oxygen/workerd.js';
 
 import type {ViteEnv} from './worker-entry.js';
 const scriptPath = fileURLToPath(new URL('./worker-entry.js', import.meta.url));
@@ -60,7 +59,6 @@ export async function startMiniOxygenRuntime({
         wrappedBindings: {
           __VITE_SETUP_ENV: 'setup-environment',
         },
-        ...conditionalUnsafeOutboundService(),
       },
       {
         name: 'setup-environment',
