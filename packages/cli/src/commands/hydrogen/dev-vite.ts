@@ -150,7 +150,7 @@ export async function runDev({
       cliOptions: {
         debug,
         ssrEntry,
-        envPromise,
+        envPromise: envPromise.then(({allVariables}) => allVariables),
         inspectorPort,
         disableVirtualRoutes,
       },
@@ -220,7 +220,9 @@ export async function runDev({
     cliCommand,
   });
 
-  const envVariables = await envPromise; // Prints the injected env vars
+  const {logInjectedVariables, localVariables} = await envPromise;
+
+  logInjectedVariables();
   console.log('');
   viteServer.printUrls();
   viteServer.bindCLIShortcuts({print: true});
@@ -266,7 +268,7 @@ export async function runDev({
     displayDevUpgradeNotice({targetPath: root});
   }
 
-  if (customerAccountPushFlag && isMockShop(envVariables)) {
+  if (customerAccountPushFlag && isMockShop(localVariables)) {
     notifyIssueWithTunnelAndMockShop(cliCommand);
   }
 
