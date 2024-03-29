@@ -70,12 +70,14 @@ function warningDebouncer([first]: unknown[]) {
 
 function injectLogReplacer(
   method: ConsoleMethod,
-  debouncer?: (args: unknown[]) => true | number | undefined,
+  debouncer?: false | ((args: unknown[]) => true | number | undefined),
 ) {
   if (!methodsReplaced.has(method)) {
     methodsReplaced.add(method);
     console[method] = (...args: unknown[]) => {
-      if (debounceMessage(args, debouncer?.(args))) return;
+      if (debouncer !== false && debounceMessage(args, debouncer?.(args))) {
+        return;
+      }
 
       const replacers = messageReplacers.reduce((acc, [matcher, replacer]) => {
         if (matcher(args)) acc.push(replacer);
@@ -101,6 +103,7 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
   injectLogReplacer('log');
   injectLogReplacer('error');
   injectLogReplacer('warn', warningDebouncer);
+  injectLogReplacer('debug', false);
 
   let isFirstWorkerReload = true;
   addMessageReplacers('dev-node', [
@@ -163,6 +166,33 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
           /^Network connection lost/i.test(message)
         );
       },
+      () => {},
+    ],
+  );
+
+  addMessageReplacers(
+    'dev-vite',
+    // Vite logs
+    [
+      // This log must come from Rollup and does not go through Vite's customLogger
+      ([first]) =>
+        typeof first === 'string' && /^Sourcemap for .*@remix-run/i.test(first),
+      () => {},
+    ],
+    [
+      // Log generated from Workerd HMR connection to Vite
+      ([first]) =>
+        typeof first === 'string' &&
+        /^\[vite\] (connected|program reload)/i.test(first),
+      () => {},
+    ],
+    [
+      // Log that gets entangled with our initial dev logs
+      ([first]) =>
+        typeof first === 'string' &&
+        /^Re-optimizing dependencies because vite config has changed/i.test(
+          first,
+        ),
       () => {},
     ],
   );
