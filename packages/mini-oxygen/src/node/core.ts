@@ -14,6 +14,7 @@ import sourceMapSupport from 'source-map-support';
 
 import {createServer, MiniOxygenServerOptions} from './server.js';
 import {StorageFactory} from './storage.js';
+import {isO2Verbose} from '../common/debug.js';
 
 const PLUGINS = {
   CorePlugin,
@@ -46,7 +47,7 @@ export class MiniOxygen extends MiniflareCore<MiniOxygenType> {
     super(
       PLUGINS,
       {
-        log: new Log(LogLevel.ERROR),
+        log: new Log(isO2Verbose() ? LogLevel.VERBOSE : LogLevel.ERROR),
         storageFactory,
         scriptRunner: new VMScriptRunner(),
         queueBroker: new QueueBroker(),

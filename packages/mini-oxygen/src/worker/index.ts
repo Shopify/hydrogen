@@ -20,6 +20,7 @@ import {miniOxygenHandler} from './handler.js';
 import {OXYGEN_HEADERS_MAP} from '../common/headers.js';
 import {findPort} from '../common/find-port.js';
 import {OXYGEN_COMPAT_PARAMS} from '../common/compat.js';
+import {isO2Verbose} from '../common/debug.js';
 
 export {
   buildAssetsUrl,
@@ -241,25 +242,29 @@ function buildMiniflareOptions(
 
   return {
     cf: false,
-    verbose: false,
-    log: new NoOpLog(),
     port: 0,
     // Avoid using 'host' here, there's a bug when mixed with port:0 in Node 18:
     // https://github.com/cloudflare/workers-sdk/issues/4563
     // host: 'localhost',
     inspectorPort: 0,
     liveReload: false,
-    handleRuntimeStdio(stdout, stderr) {
-      // TODO: handle runtime stdio and remove inspector logs
-      // stdout.pipe(process.stdout);
-      // stderr.pipe(process.stderr);
+    ...(isO2Verbose()
+      ? {verbose: true}
+      : {
+          verbose: false,
+          log: new NoOpLog(),
+          handleRuntimeStdio(stdout, stderr) {
+            // TODO: handle runtime stdio and remove inspector logs
+            // stdout.pipe(process.stdout);
+            // stderr.pipe(process.stderr);
 
-      // Destroy these streams to prevent memory leaks
-      // until we start piping them to the terminal.
-      // https://github.com/Shopify/hydrogen/issues/1720
-      stdout.destroy();
-      stderr.destroy();
-    },
+            // Destroy these streams to prevent memory leaks
+            // until we start piping them to the terminal.
+            // https://github.com/Shopify/hydrogen/issues/1720
+            stdout.destroy();
+            stderr.destroy();
+          },
+        }),
     ...mfOverwriteOptions,
     workers: [
       {
