@@ -8,7 +8,7 @@ import {
 } from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import colors from '@shopify/cli-kit/node/colors';
-import {renderInfo} from '@shopify/cli-kit/node/ui';
+import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {Flags, Config} from '@oclif/core';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
@@ -250,7 +250,7 @@ export async function runDev({
   if (customSections.length > 0) {
     const {storefrontTitle} = await backgroundPromise;
 
-    renderInfo({
+    renderSuccess({
       body: [
         `View ${
           storefrontTitle ? colors.cyan(storefrontTitle) : 'Hydrogen'
