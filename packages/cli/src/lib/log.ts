@@ -14,7 +14,7 @@ type ConsoleMethod = 'log' | 'warn' | 'error' | 'debug' | 'info';
 const originalConsole = {...console};
 const methodsReplaced = new Set<ConsoleMethod>();
 
-type Matcher = (args: Array<any>) => boolean;
+type Matcher = (args: Array<any>, existingMatches: number) => boolean;
 type Replacer = (args: Array<any>) => void | string[];
 const addedReplacers = new Set<string>();
 const messageReplacers: Array<[Matcher, Replacer]> = [];
@@ -80,7 +80,7 @@ function injectLogReplacer(
       }
 
       const replacers = messageReplacers.reduce((acc, [matcher, replacer]) => {
-        if (matcher(args)) acc.push(replacer);
+        if (matcher(args, acc.length)) acc.push(replacer);
         return acc;
       }, [] as Replacer[]);
 
@@ -170,6 +170,7 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
     ],
   );
 
+  let isLastLineVite = false;
   addMessageReplacers(
     'dev-vite',
     // Vite logs
@@ -195,6 +196,23 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
         ),
       () => {},
     ],
+    [
+      // Log new lines between Vite logs and dev-server logs
+      ([first], existingMatches) => {
+        // If this log is not going to be filtered by other replacers:
+        if (existingMatches === 0 && typeof first === 'string') {
+          const isVite = /\[vite\]/i.test(first);
+          if ((isVite && !isLastLineVite) || (!isVite && isLastLineVite)) {
+            process.stdout.write('\n');
+          }
+
+          isLastLineVite = isVite;
+        }
+
+        return false;
+      },
+      (params) => params,
+    ],
   );
 }
 
@@ -216,7 +234,7 @@ export function muteAuthLogs({
       if (typeof item !== 'string') return write(item, cb);
 
       const replacers = messageReplacers.reduce((acc, [matcher, replacer]) => {
-        if (matcher([item])) acc.push(replacer);
+        if (matcher([item], acc.length)) acc.push(replacer);
         return acc;
       }, [] as Replacer[]);
 
