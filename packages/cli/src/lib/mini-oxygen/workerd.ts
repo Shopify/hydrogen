@@ -1,6 +1,8 @@
+import {createRequire} from 'node:module';
 import {dirname, resolvePath} from '@shopify/cli-kit/node/path';
-import {readFile} from '@shopify/cli-kit/node/fs';
+import {readFile, createFileReadStream} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
+import {outputNewline} from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
 import {
@@ -15,7 +17,6 @@ import {
   createLogRequestEvent,
   setConstructors,
 } from '../request-events.js';
-import {outputNewline} from '@shopify/cli-kit/node/output';
 
 export async function startWorkerdServer({
   root,
@@ -34,6 +35,19 @@ export async function startWorkerdServer({
 
   setConstructors({Response});
 
+  // TODO: Remove this workaround when CAA is fixed
+  async function handleCustomerAccountSchema() {
+    // Request coming from /graphiql
+    const require = createRequire(import.meta.url);
+    const filePath = require.resolve(
+      '@shopify/hydrogen/customer-account.schema.json',
+    );
+
+    return new Response(createFileReadStream(filePath), {
+      headers: {'Content-Type': 'application/json'},
+    });
+  }
+
   const absoluteBundlePath = resolvePath(root, buildPathWorkerFile);
   const mainWorkerName = 'hydrogen';
 
@@ -48,15 +62,20 @@ export async function startWorkerdServer({
     assets: {port: assetsPort, directory: buildPathClient},
     workers: [
       {
-        name: 'subrequest-profiler',
+        name: 'hydrogen-router',
         modules: true,
-        script: `export default { fetch: (request, env) =>
-          new URL(request.url).pathname === '${SUBREQUEST_PROFILER_ENDPOINT}'
+        script: `export default { fetch: (request, env) => {
+          const {pathname} = new URL(request.url);
+          return pathname === '${SUBREQUEST_PROFILER_ENDPOINT}'
             ? env.profiler.fetch(request)
+            : pathname === '/graphiql/customer-account.schema.json'
+            ? env.assets.fetch(request)
             : env.next.fetch(request)
+          }
         }`,
         serviceBindings: {
           profiler: handleDebugNetworkRequest,
+          assets: handleCustomerAccountSchema,
           next: mainWorkerName,
         },
       },

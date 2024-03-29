@@ -52,16 +52,7 @@ export function createAssetsServer(assetsDirectory: string) {
       : pathname;
 
     if (isValidAssetPath) {
-      let filePath = path.join(assetsDirectory, relativeAssetPath);
-
-      // Request coming from /graphiql
-      if (relativeAssetPath === '/graphiql/customer-account.schema.json') {
-        // TODO: Remove this workaround when CAA is fixed
-        const require = createRequire(import.meta.url);
-        filePath = require.resolve(
-          '@shopify/hydrogen/customer-account.schema.json',
-        );
-      }
+      const filePath = path.join(assetsDirectory, relativeAssetPath);
 
       // Ignore errors and just return 404
       const file = await fs.open(filePath).catch(() => {});
