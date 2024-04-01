@@ -181,6 +181,14 @@ export const commonFlags = {
       env: 'SHOPIFY_HYDROGEN_FLAG_CUSTOMER_ACCOUNT_PUSH',
     }),
   },
+  verbose: {
+    verbose: Flags.boolean({
+      description: "Outputs more information about the command's execution.",
+      required: false,
+      default: false,
+      env: 'SHOPIFY_HYDROGEN_FLAG_VERBOSE',
+    }),
+  },
 } satisfies Record<string, Record<Lowercase<string>, FlagProps>>;
 
 export function flagsToCamelObject<T extends Record<string, any>>(obj: T) {

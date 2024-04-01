@@ -14,7 +14,7 @@ type ConsoleMethod = 'log' | 'warn' | 'error' | 'debug' | 'info';
 const originalConsole = {...console};
 const methodsReplaced = new Set<ConsoleMethod>();
 
-type Matcher = (args: Array<any>) => boolean;
+type Matcher = (args: Array<any>, existingMatches: number) => boolean;
 type Replacer = (args: Array<any>) => void | string[];
 const addedReplacers = new Set<string>();
 const messageReplacers: Array<[Matcher, Replacer]> = [];
@@ -70,15 +70,17 @@ function warningDebouncer([first]: unknown[]) {
 
 function injectLogReplacer(
   method: ConsoleMethod,
-  debouncer?: (args: unknown[]) => true | number | undefined,
+  debouncer?: false | ((args: unknown[]) => true | number | undefined),
 ) {
   if (!methodsReplaced.has(method)) {
     methodsReplaced.add(method);
     console[method] = (...args: unknown[]) => {
-      if (debounceMessage(args, debouncer?.(args))) return;
+      if (debouncer !== false && debounceMessage(args, debouncer?.(args))) {
+        return;
+      }
 
       const replacers = messageReplacers.reduce((acc, [matcher, replacer]) => {
-        if (matcher(args)) acc.push(replacer);
+        if (matcher(args, acc.length)) acc.push(replacer);
         return acc;
       }, [] as Replacer[]);
 
@@ -101,6 +103,7 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
   injectLogReplacer('log');
   injectLogReplacer('error');
   injectLogReplacer('warn', warningDebouncer);
+  injectLogReplacer('debug', false);
 
   let isFirstWorkerReload = true;
   addMessageReplacers('dev-node', [
@@ -166,6 +169,51 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
       () => {},
     ],
   );
+
+  let isLastLineVite = false;
+  addMessageReplacers(
+    'dev-vite',
+    // Vite logs
+    [
+      // This log must come from Rollup and does not go through Vite's customLogger
+      ([first]) =>
+        typeof first === 'string' && /^Sourcemap for .*@remix-run/i.test(first),
+      () => {},
+    ],
+    [
+      // Log generated from Workerd HMR connection to Vite
+      ([first]) =>
+        typeof first === 'string' &&
+        /^\[vite\] (connected|program reload)/i.test(first),
+      () => {},
+    ],
+    [
+      // Log that gets entangled with our initial dev logs
+      ([first]) =>
+        typeof first === 'string' &&
+        /^Re-optimizing dependencies because vite config has changed/i.test(
+          first,
+        ),
+      () => {},
+    ],
+    [
+      // Log new lines between Vite logs and dev-server logs
+      ([first], existingMatches) => {
+        // If this log is not going to be filtered by other replacers:
+        if (existingMatches === 0 && typeof first === 'string') {
+          const isVite = /\[vite\]/i.test(first);
+          if ((isVite && !isLastLineVite) || (!isVite && isLastLineVite)) {
+            process.stdout.write('\n');
+          }
+
+          isLastLineVite = isVite;
+        }
+
+        return false;
+      },
+      (params) => params,
+    ],
+  );
 }
 
 const originalWrite = process.stdout.write;
@@ -186,7 +234,7 @@ export function muteAuthLogs({
       if (typeof item !== 'string') return write(item, cb);
 
       const replacers = messageReplacers.reduce((acc, [matcher, replacer]) => {
-        if (matcher([item])) acc.push(replacer);
+        if (matcher([item], acc.length)) acc.push(replacer);
         return acc;
       }, [] as Replacer[]);
 
@@ -422,4 +470,20 @@ export async function muteRemixLogs() {
   } catch {
     // --
   }
+}
+
+export function setH2OVerbose() {
+  if (!process.env.DEBUG || process.env.DEBUG === '*') {
+    process.env.DEBUG = 'h2:*,o2:*';
+  } else {
+    process.env.DEBUG += ',h2:*,o2:*';
+  }
+}
+
+export function isH2Verbose() {
+  return !!(process.env.DEBUG === '*' || process.env.DEBUG?.includes('h2:*'));
+}
+
+export function isO2Verbose() {
+  return !!(process.env.DEBUG === '*' || process.env.DEBUG?.includes('o2:*'));
 }

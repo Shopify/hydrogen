@@ -1,6 +1,11 @@
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
+import {
+  enhanceH2Logs,
+  isH2Verbose,
+  muteDevLogs,
+  setH2OVerbose,
+} from '../../lib/log.js';
 import {
   DEFAULT_APP_PORT,
   DEFAULT_INSPECTOR_PORT,
@@ -10,7 +15,7 @@ import {
 } from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import colors from '@shopify/cli-kit/node/colors';
-import {type AlertCustomSection, renderInfo} from '@shopify/cli-kit/node/ui';
+import {type AlertCustomSection, renderSuccess} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {Flags, Config} from '@oclif/core';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
@@ -62,6 +67,7 @@ export default class DevVite extends Command {
     }),
     ...commonFlags.diff,
     ...commonFlags.customerAccountPush,
+    ...commonFlags.verbose,
   };
 
   async run(): Promise<void> {
@@ -98,6 +104,7 @@ type DevOptions = {
   isLocalDev?: boolean;
   customerAccountPush?: boolean;
   cliConfig: Config;
+  verbose?: boolean;
 };
 
 export async function runDev({
@@ -116,10 +123,12 @@ export async function runDev({
   isLocalDev = false,
   customerAccountPush: customerAccountPushFlag = false,
   cliConfig,
+  verbose,
 }: DevOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
-  muteDevLogs();
+  if (verbose) setH2OVerbose();
+  if (!isH2Verbose()) muteDevLogs();
 
   const root = appPath ?? process.cwd();
 
@@ -160,7 +169,7 @@ export async function runDev({
       cliOptions: {
         debug,
         ssrEntry,
-        envPromise,
+        envPromise: envPromise.then(({allVariables}) => allVariables),
         inspectorPort,
         disableVirtualRoutes,
       },
@@ -231,7 +240,9 @@ export async function runDev({
     cliCommand,
   });
 
-  const envVariables = await envPromise; // Prints the injected env vars
+  const {logInjectedVariables, localVariables} = await envPromise;
+
+  logInjectedVariables();
   console.log('');
   viteServer.printUrls();
   viteServer.bindCLIShortcuts({print: true});
@@ -252,7 +263,7 @@ export async function runDev({
   if (customSections.length > 0) {
     const {storefrontTitle} = await backgroundPromise;
 
-    renderInfo({
+    renderSuccess({
       body: [
         `View ${
           storefrontTitle ? colors.cyan(storefrontTitle) : 'Hydrogen'
@@ -268,7 +279,7 @@ export async function runDev({
     displayDevUpgradeNotice({targetPath: root});
   }
 
-  if (customerAccountPushFlag && isMockShop(envVariables)) {
+  if (customerAccountPushFlag && isMockShop(localVariables)) {
     notifyIssueWithTunnelAndMockShop(cliCommand);
   }
 

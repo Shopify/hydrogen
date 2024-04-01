@@ -10,6 +10,7 @@ import {MiniOxygenOptions} from '../mini-oxygen/types.js';
 import {getHmrUrl, pipeFromWeb, toURL, toWeb} from './utils.js';
 
 import type {ViteEnv} from './worker-entry.js';
+import {isO2Verbose} from '../log.js';
 const scriptPath = fileURLToPath(new URL('./worker-entry.js', import.meta.url));
 
 const FETCH_MODULE_PATHNAME = '/__vite_fetch_module';
