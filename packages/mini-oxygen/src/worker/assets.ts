@@ -6,7 +6,7 @@ import {
   type IncomingMessage,
   type ServerResponse,
 } from 'node:http';
-import {lookupMimeType} from '@shopify/cli-kit/node/mimes';
+import {lookup as lookupMimeType} from 'mrmime';
 
 const html = String.raw;
 
@@ -24,7 +24,7 @@ export function buildAssetsUrl(assetsPort: number) {
  * Creates a server that serves static assets from the build directory.
  * Mimics Shopify CDN URLs for Oxygen v2.
  */
-export function createAssetsServer(buildPathClient: string) {
+export function createAssetsServer(assetsDirectory: string) {
   return createServer(async (req: IncomingMessage, res: ServerResponse) => {
     // Similar headers to Shopify CDN
     if (req.method === 'OPTIONS') {
@@ -52,15 +52,7 @@ export function createAssetsServer(buildPathClient: string) {
       : pathname;
 
     if (isValidAssetPath) {
-      let filePath = path.join(buildPathClient, relativeAssetPath);
-
-      // Request coming from /graphiql
-      if (relativeAssetPath === '/graphiql/customer-account.schema.json') {
-        const require = createRequire(import.meta.url);
-        filePath = require.resolve(
-          '@shopify/hydrogen/customer-account.schema.json',
-        );
-      }
+      const filePath = path.join(assetsDirectory, relativeAssetPath);
 
       // Ignore errors and just return 404
       const file = await fs.open(filePath).catch(() => {});

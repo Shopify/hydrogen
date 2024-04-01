@@ -496,7 +496,6 @@
           "description": "The port where the inspector is available. Defaults to 9229.",
           "env": "SHOPIFY_HYDROGEN_FLAG_INSPECTOR_PORT",
           "name": "inspector-port",
-          "default": 9229,
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
@@ -594,7 +593,6 @@
           "description": "The port to run the server on. Defaults to 3000.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PORT",
           "name": "port",
-          "default": 3000,
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
@@ -654,7 +652,6 @@
           "description": "The port where the inspector is available. Defaults to 9229.",
           "env": "SHOPIFY_HYDROGEN_FLAG_INSPECTOR_PORT",
           "name": "inspector-port",
-          "default": 9229,
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
@@ -1019,7 +1016,6 @@
           "description": "The port to run the server on. Defaults to 3000.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PORT",
           "name": "port",
-          "default": 3000,
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
@@ -1062,7 +1058,6 @@
           "description": "The port where the inspector is available. Defaults to 9229.",
           "env": "SHOPIFY_HYDROGEN_FLAG_INSPECTOR_PORT",
           "name": "inspector-port",
-          "default": 9229,
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"

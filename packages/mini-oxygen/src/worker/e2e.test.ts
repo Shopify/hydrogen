@@ -1,15 +1,11 @@
+import path from 'node:path';
+import fs from 'node:fs/promises';
+import {ensureFile as touchFile, remove as removeFile} from 'fs-extra/esm';
+import {temporaryDirectoryTask} from 'tempy';
 import {it, vi, describe, expect} from 'vitest';
 import {transformWithEsbuild} from 'vite';
-import {buildAssetsUrl, startMiniOxygen} from './index.js';
-import {joinPath} from '@shopify/cli-kit/node/path';
-import {
-  inTemporaryDirectory,
-  removeFile,
-  touchFile,
-  writeFile,
-} from '@shopify/cli-kit/node/fs';
-import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
-import getPort from 'get-port';
+import {buildAssetsUrl} from './assets.js';
+import {createMiniOxygen, type MiniOxygenOptions} from './index.js';
 
 describe('MiniOxygen Worker Runtime', () => {
   it('receives HTML from test worker', async () => {
@@ -37,12 +33,12 @@ describe('MiniOxygen Worker Runtime', () => {
       async ({writeHandler}) => {
         await writeHandler((req, env) => new Response('foo'));
       },
-      async ({fetch, writeHandler, miniOxygen}) => {
+      async ({fetch, writeHandler, reloadMiniOxygen}) => {
         let response = await fetch('/');
         await expect(response.text()).resolves.toEqual('foo');
 
         await writeHandler((req, env) => new Response('bar'));
-        await miniOxygen.reload();
+        await reloadMiniOxygen();
 
         response = await fetch('/');
         await expect(response.text()).resolves.toEqual('bar');
@@ -54,13 +50,13 @@ describe('MiniOxygen Worker Runtime', () => {
     await withFixtures(
       async ({writeHandler}) => {
         await writeHandler((req, env) => new Response(env.TEST));
-        return {env: {TEST: 'foo'}};
+        return {bindings: {TEST: 'foo'}};
       },
-      async ({fetch, miniOxygen}) => {
+      async ({fetch, reloadMiniOxygen}) => {
         let response = await fetch('/');
         await expect(response.text()).resolves.toEqual('foo');
 
-        await miniOxygen.reload({env: {TEST: 'bar'}});
+        await reloadMiniOxygen({bindings: {TEST: 'bar'}});
 
         response = await fetch('/');
         await expect(response.text()).resolves.toEqual('bar');
@@ -138,7 +134,7 @@ describe('MiniOxygen Worker Runtime', () => {
           {sourcemap: true},
         );
       },
-      async ({fetch, miniOxygen, miniOxygenOptions}) => {
+      async ({fetch, reloadMiniOxygen, miniOxygenOptions}) => {
         const spy = vi.spyOn(console, 'error').mockImplementation((error) => {
           // Hide logs
           // console.debug(error.stack);
@@ -177,8 +173,8 @@ describe('MiniOxygen Worker Runtime', () => {
 
         // -- Test without sourcemaps:
 
-        await removeFile(miniOxygenOptions.buildPathWorkerFile + '.map');
-        await miniOxygen.reload();
+        await removeFile(miniOxygenOptions.sourceMapPath!);
+        await reloadMiniOxygen();
 
         await fetch('/');
         await vi.waitFor(
@@ -224,9 +220,11 @@ type WithFixturesSetupParams = {
 type WithFixturesTestParams = WithFixturesSetupParams & {
   fetch: (pathname: string) => Promise<Response>;
   fetchAsset: (pathname: string) => Promise<Response>;
-  miniOxygen: MiniOxygenInstance;
-  miniOxygenOptions: MiniOxygenOptions;
+  reloadMiniOxygen: (options?: ReloadOptions) => Promise<void>;
+  miniOxygenOptions: Partial<MiniOxygenOptions>;
 };
+
+type ReloadOptions = Pick<MiniOxygenOptions['workers'][0], 'bindings'>;
 
 /**
  * Runs MiniOxygen in a temporary project directory.
@@ -236,21 +234,21 @@ type WithFixturesTestParams = WithFixturesSetupParams & {
 function withFixtures(
   setup: (
     params: WithFixturesSetupParams,
-  ) => Promise<void | Partial<MiniOxygenOptions>>,
+  ) => Promise<void | Partial<ReloadOptions>>,
   runTest: (params: WithFixturesTestParams) => Promise<void>,
 ) {
-  return inTemporaryDirectory(async (tmpDir) => {
-    const relativeDistClient = joinPath('dist', 'client');
-    const relativeDistWorker = joinPath('dist', 'worker');
-    const relativeWorkerEntry = joinPath(relativeDistWorker, 'index.js');
+  return temporaryDirectoryTask(async (tmpDir) => {
+    const relativeDistClient = path.join('dist', 'client');
+    const relativeDistWorker = path.join('dist', 'worker');
+    const relativeWorkerEntry = path.join(relativeDistWorker, 'index.js');
 
     const writeFixture: WriteFixture = async (filename, content) => {
-      const filepath = joinPath(tmpDir, filename);
+      const filepath = path.join(tmpDir, filename);
       await touchFile(filepath);
-      await writeFile(filepath, content);
+      await fs.writeFile(filepath, content, 'utf-8');
     };
     const writeAsset: WriteFixture = (filepath, content) =>
-      writeFixture(joinPath(relativeDistClient, filepath), content);
+      writeFixture(path.join(relativeDistClient, filepath), content);
 
     const writeHandler = async (
       handler: Function,
@@ -280,32 +278,64 @@ function withFixtures(
       writeHandler,
     });
 
-    const miniOxygenOptions = {
-      root: tmpDir,
-      port: await getPort(),
-      buildPathWorkerFile: joinPath(tmpDir, relativeWorkerEntry),
-      buildPathClient: joinPath(tmpDir, relativeDistClient),
-      inspectorPort: 9229,
-      assetsPort: 1347,
-      env: {},
-      ...optionsFromSetup,
-    };
+    const absoluteBundlePath = path.join(tmpDir, relativeWorkerEntry);
 
-    const miniOxygen = await startMiniOxygen(miniOxygenOptions);
+    const miniOxygenOptions = {
+      assets: {
+        directory: path.join(tmpDir, relativeDistClient),
+        port: 1347,
+      },
+      workers: [
+        {
+          name: 'test',
+          modulesRoot: path.dirname(absoluteBundlePath),
+          modules: [
+            {
+              type: 'ESModule',
+              path: absoluteBundlePath,
+              contents: await fs.readFile(absoluteBundlePath, 'utf-8'),
+            },
+          ],
+          bindings: {...optionsFromSetup?.bindings},
+        },
+      ],
+      sourceMapPath: path.join(tmpDir, relativeWorkerEntry + '.map'),
+      logRequestLine: null,
+    } satisfies MiniOxygenOptions;
+
+    const miniOxygen = createMiniOxygen(miniOxygenOptions);
+    const {workerUrl} = await miniOxygen.ready;
+
+    const reloadMiniOxygen = async (options: ReloadOptions = {}) => {
+      await miniOxygen.reload(async ({workers}) => {
+        const testWorker = workers[0];
+        Object.assign(testWorker, options);
+
+        if (Array.isArray(testWorker.modules)) {
+          // Reload contents
+          testWorker.modules[0].contents = await fs.readFile(
+            absoluteBundlePath,
+            'utf-8',
+          );
+        }
+
+        return {workers};
+      });
+    };
 
     try {
       await runTest({
         writeFixture,
         writeHandler,
         writeAsset,
-        miniOxygen,
+        reloadMiniOxygen,
         miniOxygenOptions,
-        fetch: (pathname: string) => fetch(miniOxygen.listeningAt + pathname),
+        fetch: (pathname: string) => fetch(workerUrl.origin + pathname),
         fetchAsset: (pathname: string) =>
-          fetch(buildAssetsUrl(miniOxygenOptions.assetsPort) + pathname),
+          fetch(buildAssetsUrl(miniOxygenOptions.assets.port) + pathname),
       });
     } finally {
-      await miniOxygen.close();
+      await miniOxygen.dispose();
     }
   });
 }

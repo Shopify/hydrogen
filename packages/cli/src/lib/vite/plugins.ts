@@ -18,6 +18,8 @@ import {
 } from './shared.js';
 import {H2O_BINDING_NAME, createLogRequestEvent} from '../request-events.js';
 
+let miniOxygen: MiniOxygen;
+
 /**
  * Enables Hydrogen utilities for local development
  * such as GraphiQL, Subrequest Profiler, etc.
@@ -129,6 +131,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
           getH2OPluginContext(resolvedConfig) || {};
 
         if (shouldStartRuntime && !shouldStartRuntime(resolvedConfig)) return;
+        if (miniOxygen) return;
 
         const workerEntryFile =
           cliOptions?.ssrEntry ?? pluginOptions.ssrEntry ?? DEFAULT_SSR_ENTRY;
@@ -138,7 +141,6 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
 
         const envPromise = cliOptions?.envPromise ?? Promise.resolve();
 
-        let miniOxygen: MiniOxygen;
         const miniOxygenPromise = envPromise.then((remoteEnv) => {
           return startMiniOxygenRuntime({
             viteDevServer,
@@ -148,7 +150,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
             env: {...remoteEnv, ...pluginOptions.env},
             debug: cliOptions?.debug ?? pluginOptions.debug ?? false,
             inspectorPort:
-              cliOptions?.inspectorPort ?? pluginOptions.inspectorPort ?? 9229,
+              cliOptions?.inspectorPort ?? pluginOptions.inspectorPort,
           });
         });
 
@@ -163,7 +165,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
         return () => {
           setupOxygenMiddleware(viteDevServer, async (request) => {
             miniOxygen ??= await miniOxygenPromise;
-            return miniOxygen.dispatch(request);
+            return miniOxygen.dispatchFetch(request);
           });
         };
       },
