@@ -14,6 +14,7 @@ import {
 import {getLocalVariables} from '../lib/environment-variables.js';
 import {startTunnelPlugin, pollTunnelURL} from './tunneling.js';
 import {getConfig} from './shopify-config.js';
+import {getGraphiQLUrl} from './graphiql-url.js';
 
 export function isMockShop(envVariables: Record<string, string>) {
   return (
@@ -107,4 +108,17 @@ export function getDebugBannerLine(publicInspectorPort: number) {
     debuggingDocsLink,
   )} or open DevTools in http://localhost:${String(publicInspectorPort)}.`
     .value;
+}
+
+export function getUtilityBannerlines(host: string) {
+  host = host.endsWith('/') ? host.slice(0, -1) : host;
+
+  return [
+    `View GraphiQL API browser: \n${getGraphiQLUrl({
+      host: host,
+    })}`,
+    `View server network requests: \n${host}/subrequest-profiler`,
+  ].map((value, index) => ({
+    subdued: `${index === 0 ? '' : '\n\n'}${value}`,
+  }));
 }
