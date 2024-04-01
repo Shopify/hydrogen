@@ -1,5 +1,5 @@
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {joinPath} from '@shopify/cli-kit/node/path';
+import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {findFileWithExtension, replaceFileContent} from '../../file.js';
 import type {FormatOptions} from '../../format-code.js';
@@ -335,7 +335,7 @@ async function findEntryFile({
     | undefined;
 
   const {filepath, astType} = match
-    ? {filepath: joinPath(rootDirectory, serverEntryPoint), astType: match}
+    ? {filepath: resolvePath(rootDirectory, serverEntryPoint), astType: match}
     : await findFileWithExtension(rootDirectory, serverEntryPoint);
 
   if (!filepath || !astType) {
