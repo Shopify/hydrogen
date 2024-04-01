@@ -2,51 +2,69 @@
 
 ## Getting Started
 
-For modules support (necessary for module workers), the node instance that spawns this module should be launched with the `--experimental-vm-modules` option. For a cross platform way of adding this flag to your runtime, you could take a look at Miniflare's implementation [here](https://github.com/cloudflare/miniflare/blob/870b401ef520c1826339ff060fd8a0a576392a91/packages/miniflare/bootstrap.js).
+MiniOxygen is a local runtime that simulates Oxygen production. It is based on Cloudflare's [workerd](https://github.com/cloudflare/workerd) via [Miniflare](https://miniflare.dev/).
 
-To use Mini Oxygen within your app, follow these steps:
+To use MiniOxygen within your app, follow these steps:
 
 Add `@shopify/mini-oxygen` as a dev dependency of your app:
-
-```shell
-yarn add --dev @shopify/mini-oxygen
-```
-
-or
 
 ```shell
 npm install --save-dev @shopify/mini-oxygen
 ```
 
-Mini Oxygen can then be loaded with:
+Import it and create a new instance of Mini Oxygen:
 
-```javascript
-import {startServer} from '@shopify/mini-oxygen';
+```js
+import {createMiniOxygen} from '@shopify/mini-oxygen';
+
+const miniOxygen = createMiniOxygen({
+  workers: [
+    {
+      name: 'main',
+      modules: true,
+      script: `export default {
+        async fetch() {
+          const response = await fetch("https://hydrogen.shopify.dev");
+          return response;
+        }
+      }`,
+    },
+  ],
+});
 ```
 
-A Mini Oxygen server can then be activated with:
+Dispatch requests to MiniOxygen from the browser or any other environment:
 
-```javascript
-await startServer({<MiniOxygenPreviewOptions>})
+```js
+const response = await miniOxygen.dispatchFetch('http://placeholder');
+// Or with the following code via network request:
+// const {workerUrl} = await miniOxygen.ready;
+// const response = await fetch(workerUrl);
+
+console.log(await response.text());
+
+await miniOxygen.dispose();
 ```
 
-`MiniOxygenPreviewOptions` has the following attributes:
+### Legacy Node.js Sandbox runtime
 
-- `port`: the TCP port used for the local web server on localhost
-- `workerFile`: path to the worker file related to the current dir
-- `assetsDir`: path to the built assets directory related to the current dir
-- `publicPath`: URL or pathname for public/static assets that prefixes file names
-- `proxyServer`: proxy server address and port (<address>:<port>) to proxy requests to
-- `buildCommand`: a command to re-build the project
-- `watch`: enable or disable rebuild on source file changes
-- `buildWatchPaths`: an array of directories to watch for changes
-- `autoReload`: enables auto reload of the browser after re-building
-- `modules`: enables module syntax in the worker script
-- `envPath`: (optional) path to the .env file to be loaded automatically
-- `env`: specify environment variables available in the worker script
+The previous Node.js sandbox runtime has been moved to the `@shopify/mini-oxygen/node` export. It is not recommended for new projects, but can be used as follows:
 
-The following server hooks can be specified as part of the options:
+```js
+import {createMiniOxygen} from '@shopify/mini-oxygen/node';
 
-- `onRequest`: (optional) function taking in `Request` parameter
-- `onReponse`: (optional) function taking in parameters of type `Request` and `Response`
-- `onResponseError`: (optional) function that accepts `Response` and unknown `error` attribute.
+const miniOxygen = createMiniOxygen({
+  script: `export default {
+  async fetch() {
+     const response = await fetch("https://hydrogen.shopify.dev");
+     return response;
+  }
+ }`,
+});
+
+const response = await miniOxygen.dispatchFetch('http://placeholder');
+
+console.log(await response.text());
+
+await miniOxygen.dispose();
+```

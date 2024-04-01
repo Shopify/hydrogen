@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "@remix-run/dev": "^2.8.0",
+    "@shopify/mini-oxygen": "^2.2.5",
     "@shopify/oxygen-workers-types": "^4.0.0",
     "@shopify/prettier-config": "^1.1.2",
     "@types/eslint": "^8.4.10",

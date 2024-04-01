@@ -7,9 +7,9 @@ import colors from '@shopify/cli-kit/node/colors';
 import type {CamelCasedProperties, PartialDeep} from 'type-fest';
 import {STYLING_CHOICES} from './setups/css/index.js';
 import {I18N_CHOICES} from './setups/i18n/index.js';
-import {DEFAULT_INSPECTOR_PORT} from './mini-oxygen/common.js';
 
-export const DEFAULT_PORT = 3000;
+export const DEFAULT_APP_PORT = 3000;
+export const DEFAULT_INSPECTOR_PORT = 9229;
 
 export const commonFlags = {
   path: {
@@ -21,9 +21,8 @@ export const commonFlags = {
   },
   port: {
     port: Flags.integer({
-      description: `The port to run the server on. Defaults to ${DEFAULT_PORT}.`,
+      description: `The port to run the server on. Defaults to ${DEFAULT_APP_PORT}.`,
       env: 'SHOPIFY_HYDROGEN_FLAG_PORT',
-      default: DEFAULT_PORT,
     }),
   },
   legacyRuntime: {
@@ -141,7 +140,6 @@ export const commonFlags = {
     'inspector-port': Flags.integer({
       description: `The port where the inspector is available. Defaults to ${DEFAULT_INSPECTOR_PORT}.`,
       env: 'SHOPIFY_HYDROGEN_FLAG_INSPECTOR_PORT',
-      default: DEFAULT_INSPECTOR_PORT,
     }),
   },
   diff: {

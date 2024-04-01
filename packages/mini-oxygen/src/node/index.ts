@@ -1,11 +1,13 @@
-import * as path from 'path';
-import * as fs from 'fs';
-import type {Socket} from 'net';
+import * as path from 'node:path';
+import * as fs from 'node:fs';
+import type {Socket} from 'node:net';
 
-import getPort, {portNumbers} from 'get-port';
+import {MiniOxygen} from './core.js';
+import type {DispatchFetch, MiniOxygenServerOptions, fetch} from './server.js';
+import {findPort} from '../common/find-port.js';
+import {OXYGEN_COMPAT_PARAMS} from '../common/compat.js';
 
-import {MiniOxygen} from './mini-oxygen/core.js';
-import type {MiniOxygenServerOptions, fetch} from './mini-oxygen/server.js';
+export {Request, Response, fetch} from './server.js';
 
 class WorkerNotFoundError extends Error {
   name = 'WorkerNotFoundError';
@@ -37,6 +39,7 @@ export type MiniOxygenPreviewOptions = MiniOxygenOptions &
 
 interface MiniOxygenPublicInstance {
   ready: () => Promise<void>;
+  dispatchFetch: DispatchFetch;
   dispose: () => Promise<void>;
   reload: (
     options?: Partial<Pick<MiniOxygenPreviewOptions, 'env' | 'script'>>,
@@ -92,8 +95,7 @@ export function createMiniOxygen(
       // This prevents the process from exiting when an unhandled rejection occurs.
       logUnhandledRejections: true,
       // this should stay in sync with oxygen-dms
-      compatibilityFlags: ['streams_enable_constructors'],
-      compatibilityDate: '2022-10-31',
+      ...OXYGEN_COMPAT_PARAMS,
     },
     env,
   );
@@ -104,6 +106,7 @@ export function createMiniOxygen(
       // which means that it has loaded the initial worker code.
       await mf.getPlugins();
     },
+    dispatchFetch: (request) => mf.dispatchFetch(request),
     async reload({env, ...nextOptions} = {}) {
       await mf.setOptions({...nextOptions, ...(env && {bindings: env})});
     },
@@ -114,7 +117,7 @@ export function createMiniOxygen(
       const {
         assetsDir,
         publicPath,
-        port = 3000,
+        port,
         autoReload = false,
         proxyServer,
         oxygenHeaders,
@@ -149,12 +152,7 @@ export function createMiniOxygen(
         onResponseError,
       });
 
-      const actualPort = await getPort({port: portNumbers(port, port + 100)});
-      if (actualPort !== port) {
-        log(
-          `\nWARNING: Port ${port} is not available. Using ${actualPort} instead.`,
-        );
-      }
+      const actualPort = port ?? (await findPort(3000));
 
       const sockets = new Set<Socket>();
       app.on('connection', (socket) => {

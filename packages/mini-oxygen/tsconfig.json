@@ -3,17 +3,11 @@
   "include": ["src"],
   "exclude": ["dist", "tests", "node_modules", ".turbo"],
   "compilerOptions": {
-    "baseUrl": "src",
     "rootDir": "src",
-    "declaration": true,
-    "jsx": "react",
     "target": "ES2022",
     "outDir": "dist",
-    "module": "ES2022",
-    "moduleResolution": "node",
-    "lib": ["ESNext", "DOM"],
-    "types": ["node"],
-    "strict": true,
-    "esModuleInterop": true
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["@shopify/oxygen-workers-types", "node"]
   }
 }

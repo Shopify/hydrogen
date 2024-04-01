@@ -794,14 +794,11 @@ describe('init', () => {
           // Clear previous success messages
           outputMock.clear();
 
-          const port = 1337;
-
-          const {close} = await runDev({
+          const {close, getUrl} = await runDev({
             path: tmpDir,
-            port,
-            inspectorPort: 9000,
             disableVirtualRoutes: true,
             disableVersionCheck: true,
+            shouldLiveReload: false,
           });
 
           try {
@@ -810,15 +807,13 @@ describe('init', () => {
               {timeout: 5000},
             );
 
-            expect(outputMock.output()).toMatch(/View Hydrogen app/i);
+            expect(outputMock.output()).toMatch(/View [^:]+? app:/i);
 
             await expect(
               fileExists(joinPath(tmpDir, 'dist', 'worker', 'index.js')),
             ).resolves.toBeTruthy();
 
-            // await expect(runBuild({directory: tmpDir})).resolves.not.toThrow();
-
-            const response = await fetch(`http://localhost:${port}`);
+            const response = await fetch(getUrl());
             expect(response.status).toEqual(200);
             expect(response.headers.get('content-type')).toEqual('text/html');
             await expect(response.text()).resolves.toMatch('Mock.shop');

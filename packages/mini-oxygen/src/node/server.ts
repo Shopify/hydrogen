@@ -1,54 +1,32 @@
-import path from 'path';
-import http from 'http';
-import type {IncomingMessage} from 'http';
-import fs from 'fs';
+import path from 'node:path';
+import http from 'node:http';
+import type {IncomingMessage} from 'node:http';
+import fs from 'node:fs';
 import {randomUUID} from 'node:crypto';
 
-import mime from 'mime';
+import {lookup as lookupMimeType} from 'mrmime';
 import {Request, Response} from '@miniflare/core';
 import connect from 'connect';
 import type {NextHandleFunction} from 'connect';
 import bodyParser from 'body-parser';
 
 import type {MiniOxygen} from './core.js';
+import {OXYGEN_HEADERS_MAP} from '../common/headers.js';
 
 export {Request, Response, fetch} from '@miniflare/core';
+
+export type DispatchFetch = (request: Request) => Promise<Response>;
 
 export interface MiniOxygenServerHooks {
   onRequest?: (
     request: Request,
-    defaultDispatcher: (request?: Request) => Promise<Response>,
+    defaultDispatcher: DispatchFetch,
   ) => void | Response | Promise<void | Response>;
   onResponse?: (request: Request, response: Response) => void | Promise<void>;
   onResponseError?: (request: Request, error: unknown) => void;
 }
 
-// https://shopify.dev/docs/custom-storefronts/oxygen/worker-runtime-apis#custom-headers
-const OXYGEN_HEADERS_MAP = {
-  ip: {name: 'oxygen-buyer-ip', defaultValue: '127.0.0.1'},
-  longitude: {name: 'oxygen-buyer-longitude', defaultValue: '-122.40140'},
-  latitude: {name: 'oxygen-buyer-latitude', defaultValue: '37.78855'},
-  continent: {name: 'oxygen-buyer-continent', defaultValue: 'NA'},
-  country: {name: 'oxygen-buyer-country', defaultValue: 'US'},
-  region: {name: 'oxygen-buyer-region', defaultValue: 'California'},
-  regionCode: {name: 'oxygen-buyer-region-code', defaultValue: 'CA'},
-  city: {name: 'oxygen-buyer-city', defaultValue: 'San Francisco'},
-  isEuCountry: {name: 'oxygen-buyer-is-eu-country', defaultValue: ''},
-  timezone: {
-    name: 'oxygen-buyer-timezone',
-    defaultValue: 'America/Los_Angeles',
-  },
-
-  // Not documented but available in Oxygen:
-  deploymentId: {name: 'oxygen-buyer-deployment-id', defaultValue: 'local'},
-  shopId: {name: 'oxygen-buyer-shop-id', defaultValue: 'development'},
-  storefrontId: {
-    name: 'oxygen-buyer-storefront-id',
-    defaultValue: 'development',
-  },
-} as const;
-
-type OxygenHeaderParams = keyof typeof OXYGEN_HEADERS_MAP;
+export type OxygenHeaderParams = keyof typeof OXYGEN_HEADERS_MAP;
 
 export interface MiniOxygenServerOptions extends MiniOxygenServerHooks {
   assetsDir?: string;
@@ -112,7 +90,7 @@ function createAssetMiddleware({
 
       res.setHeader(
         'Content-Type',
-        mime.getType(filePath) || 'application/octet-stream',
+        lookupMimeType(filePath) || 'application/octet-stream',
       );
       res.setHeader('Content-Length', size);
 

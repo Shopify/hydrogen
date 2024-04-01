@@ -7,13 +7,15 @@ import {
   setH2OVerbose,
 } from '../../lib/log.js';
 import {
+  DEFAULT_APP_PORT,
+  DEFAULT_INSPECTOR_PORT,
   commonFlags,
   flagsToCamelObject,
   overrideFlag,
 } from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import colors from '@shopify/cli-kit/node/colors';
-import {renderSuccess} from '@shopify/cli-kit/node/ui';
+import {type AlertCustomSection, renderSuccess} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {Flags, Config} from '@oclif/core';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
@@ -22,15 +24,16 @@ import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {setH2OPluginContext} from '../../lib/vite/shared.js';
-import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 import {
   getDebugBannerLine,
   startTunnelAndPushConfig,
   isMockShop,
   notifyIssueWithTunnelAndMockShop,
   getDevConfigInBackground,
+  getUtilityBannerlines,
 } from '../../lib/dev-shared.js';
 import {getCliCommand} from '../../lib/shell.js';
+import {findPort} from '../../lib/find-port.js';
 
 export default class DevVite extends Command {
   static description =
@@ -97,7 +100,7 @@ type DevOptions = {
   env?: string;
   debug?: boolean;
   sourcemap?: boolean;
-  inspectorPort: number;
+  inspectorPort?: number;
   isLocalDev?: boolean;
   customerAccountPush?: boolean;
   cliConfig: Config;
@@ -144,6 +147,13 @@ export async function runDev({
       localVariables,
     }),
   );
+
+  if (debug && !inspectorPort) {
+    // The Vite plugin can find and return a port for the inspector
+    // but we need to print the URLs before the runtime is ready,
+    // so we find a port early here.
+    inspectorPort = await findPort(DEFAULT_INSPECTOR_PORT);
+  }
 
   const vite = await import('vite');
 
@@ -197,7 +207,8 @@ export async function runDev({
   });
 
   // Store the port passed by the user in the config.
-  const publicPort = appPort ?? viteServer.config.server.port ?? 3000;
+  const publicPort =
+    appPort ?? viteServer.config.server.port ?? DEFAULT_APP_PORT;
 
   // TODO -- Need to change Remix' <Scripts/> component
   // const assetsPort = await findPort(publicPort + 100);
@@ -237,22 +248,13 @@ export async function runDev({
   viteServer.bindCLIShortcuts({print: true});
   console.log('\n');
 
-  const customSections = [];
+  const customSections: AlertCustomSection[] = [];
 
   if (!disableVirtualRoutes) {
-    customSections.push({
-      body: [
-        `View GraphiQL API browser: \n${getGraphiQLUrl({
-          host: finalHost,
-        })}`,
-        `View server network requests: \n${finalHost}/subrequest-profiler`,
-      ].map((value, index) => ({
-        subdued: `${index != 0 ? '\n\n' : ''}${value}`,
-      })),
-    });
+    customSections.push({body: getUtilityBannerlines(finalHost)});
   }
 
-  if (debug) {
+  if (debug && inspectorPort) {
     customSections.push({
       body: {warn: getDebugBannerLine(inspectorPort)},
     });

@@ -2,12 +2,12 @@ import path from 'node:path';
 import {EventEmitter} from 'node:events';
 import {ReadableStream} from 'node:stream/web';
 import {getGraphiQLUrl} from './graphiql-url.js';
-import type {Request, Response} from '@shopify/mini-oxygen';
+import type {Request, Response} from '@shopify/mini-oxygen/node';
 import type {
   Request as WorkerdRequest,
   Response as WorkerdResponse,
   ResponseInit,
-} from 'miniflare';
+} from '@shopify/mini-oxygen';
 import {mapSourcePosition} from 'source-map-support';
 
 export const H2O_BINDING_NAME = 'H2O_LOG_EVENT';
@@ -28,7 +28,11 @@ export function setConstructors(constructors: {
   ResponseConstructor = constructors.Response;
 }
 
-export const DEV_ROUTES = new Set(['/graphiql', '/subrequest-profiler']);
+export const DEV_ROUTES = new Set([
+  '/graphiql',
+  '/subrequest-profiler',
+  '/__vite_warmup',
+]);
 
 type RequestEvent = {
   event: string;
