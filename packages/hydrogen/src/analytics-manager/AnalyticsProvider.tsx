@@ -66,14 +66,22 @@ export type Carts = {
 };
 
 export type AnalyticsContextValue = {
+  /** A function to tell you the current state of if the user can be tracked by analytics */
   canTrack: NonNullable<AnalyticsProviderProps['canTrack']>;
+  /** The current cart state */
   cart: Awaited<AnalyticsProviderProps['cart']>;
+  /** The custom data passed in from the `AnalyticsProvider` */
   customData?: AnalyticsProviderProps['customData'];
+  /** The previous cart state */
   prevCart: Awaited<AnalyticsProviderProps['cart']>;
+  /** A function to publish an analytics event */
   publish: typeof publish;
-  shop: Awaited<AnalyticsProviderProps['shop']>;
-  subscribe: typeof subscribe;
+  /** A function to register with the analytics provider */
   register: (key: string) => {ready: () => void};
+  /** The shop configuration required to publish events to Shopify */
+  shop: Awaited<AnalyticsProviderProps['shop']>;
+  /** A function to subscribe to analytics events */
+  subscribe: typeof subscribe;
 };
 
 export const defaultAnalyticsContext: AnalyticsContextValue = {
@@ -326,7 +334,7 @@ export function useAnalytics(): AnalyticsContextValue {
   const analyticsContext = useContext(AnalyticsContext);
   if (!analyticsContext) {
     throw new Error(
-      `'useAnalyticsProvider()' must be a descendent of <AnalyticsProvider/>`,
+      `'useAnalytics()' must be a descendent of <AnalyticsProvider/>`,
     );
   }
   return analyticsContext;
@@ -395,7 +403,6 @@ export const Analytics = {
   CartView: AnalyticsCartView,
   CollectionView: AnalyticsCollectionView,
   CustomView: AnalyticsCustomView,
-  PageView: AnalyticsPageView,
   ProductView: AnalyticsProductView,
   Provider: AnalyticsProvider,
   SearchView: AnalyticsSearchView,

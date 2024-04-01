@@ -77,12 +77,11 @@ export {
 export {ShopPayButton} from './shop/ShopPayButton';
 
 export {
-  Analytics,
-  useAnalytics,
+  Analytics as Unstable__Analytics,
+  useAnalytics as useUnstable__Analytics,
   getShopAnalytics,
 } from './analytics-manager/AnalyticsProvider';
 export {AnalyticsEvent} from './analytics-manager/events';
-export {ShopifyAnalytics} from './analytics-manager/ShopifyAnalytics';
 export {
   type PageViewPayload,
   type ProductViewPayload,

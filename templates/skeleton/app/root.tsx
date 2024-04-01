@@ -1,4 +1,4 @@
-import {Analytics, useNonce, getShopAnalytics} from '@shopify/hydrogen';
+import {useNonce, getShopAnalytics, Unstable__Analytics} from '@shopify/hydrogen';
 import {
   defer,
   type SerializeFrom,
@@ -128,7 +128,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Analytics.Provider
+        <Unstable__Analytics.Provider
           cart={data.cart}
           shop={data.shop}
           canTrack={() => true}
@@ -139,7 +139,7 @@ export default function App() {
             <Outlet />
           </Layout>
           <CustomAnalytics />
-        </Analytics.Provider>
+        </Unstable__Analytics.Provider>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
         <LiveReload nonce={nonce} />

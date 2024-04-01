@@ -1,5 +1,921 @@
 [
   {
+    "name": "Analytics.Provider",
+    "category": "components",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "Provides a context to track page view, cart events and send them to Shopify. It is integrated with the Customer Privacy API for consent management. It is flexible for other analytics platform to integrate into its subscribe and publish system. It provides the `useAnalytics` hook to access the analytics provider context.",
+    "type": "component",
+    "defaultExample": {
+      "description": "This is the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {Analytics, getShopAnalytics} from '@shopify/hydrogen';\nimport {defer} from '@shopify/remix-oxygen';\nimport {Outlet, useLoaderData} from '@remix-run/react';\n\nexport async function loader({context}) {\n  const {cart, env} = context;\n  const cartPromise = cart.get();\n\n  return defer({\n    cart: cartPromise,\n    shop: getShopAnalytics(context),\n    consent: {\n      checkoutRootDomain: env.PUBLIC_CHECKOUT_DOMAIN,\n      shopDomain: env.PUBLIC_STORE_DOMAIN,\n      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n      withPrivacyBanner: true,\n    },\n  });\n}\n\nexport default function App() {\n  const data = useLoaderData();\n\n  return (\n    &lt;html lang=\"en\"&gt;\n      &lt;head&gt;\n        &lt;meta charSet=\"utf-8\" /&gt;\n        &lt;meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" /&gt;\n      &lt;/head&gt;\n      &lt;body&gt;\n        &lt;Analytics.Provider\n          cart={data.cart}\n          shop={data.shop}\n          consent={data.consent}\n        &gt;\n          &lt;Outlet /&gt;\n        &lt;/Analytics.Provider&gt;\n      &lt;/body&gt;\n    &lt;/html&gt;\n  );\n}\n",
+            "language": "js"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {Analytics, getShopAnalytics} from '@shopify/hydrogen';\nimport {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';\nimport {Outlet, useLoaderData} from '@remix-run/react';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const {cart, env} = context;\n  const cartPromise = cart.get();\n\n  return defer({\n    cart: cartPromise,\n    shop: getShopAnalytics(context),\n    consent: {\n      checkoutRootDomain: env.PUBLIC_CHECKOUT_DOMAIN,\n      shopDomain: env.PUBLIC_STORE_DOMAIN,\n      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n      withPrivacyBanner: true,\n    },\n  });\n}\n\nexport default function App() {\n  const data = useLoaderData&lt;typeof loader&gt;();\n\n  return (\n    &lt;html lang=\"en\"&gt;\n      &lt;head&gt;\n        &lt;meta charSet=\"utf-8\" /&gt;\n        &lt;meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" /&gt;\n      &lt;/head&gt;\n      &lt;body&gt;\n        &lt;Analytics.Provider\n          cart={data.cart}\n          shop={data.shop}\n          consent={data.consent}\n        &gt;\n          &lt;Outlet /&gt;\n        &lt;/Analytics.Provider&gt;\n      &lt;/body&gt;\n    &lt;/html&gt;\n  );\n}\n",
+            "language": "ts"
+          }
+        ],
+        "title": "example"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "AnalyticsProviderProps",
+        "typeDefinitions": {
+          "AnalyticsProviderProps": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "AnalyticsProviderProps",
+            "value": "{\n  /** React children to render. */\n  children?: ReactNode;\n  /** The cart or cart promise to track. */\n  cart: Promise<CartReturn | null> | CartReturn | null;\n  /** An optional function to set wether the user can be tracked. */\n  canTrack?: () => boolean;\n  /** An optional custom payload to pass to all events. e.g language/locale/currency */\n  customData?: Record<string, unknown>;\n  /** The shop/store config required to publish events **/\n  shop: Promise<ShopAnalytic | null> | ShopAnalytic | null;\n  /** The customer privacy consent configuration and options */\n  consent: CustomerPrivacyApiProps;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "children",
+                "value": "ReactNode",
+                "description": "React children to render.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "cart",
+                "value": "CartReturn | Promise<CartReturn>",
+                "description": "The cart or cart promise to track."
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "canTrack",
+                "value": "() => boolean",
+                "description": "An optional function to set wether the user can be tracked.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "customData",
+                "value": "Record<string, unknown>",
+                "description": "An optional custom payload to pass to all events. e.g language/locale/currency",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "shop",
+                "value": "ShopAnalytic | Promise<ShopAnalytic>",
+                "description": "The shop/store config required to publish events *"
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "consent",
+                "value": "CustomerPrivacyApiProps",
+                "description": "The customer privacy consent configuration and options"
+              }
+            ]
+          },
+          "CartReturn": {
+            "filePath": "/cart/queries/cart-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartReturn",
+            "value": "Cart & {\n  errors?: StorefrontApiErrors;\n}",
+            "description": ""
+          },
+          "Cart": {
+            "description": "",
+            "name": "Cart",
+            "value": "Cart",
+            "members": [],
+            "override": "[Cart](/docs/api/storefront/2024-01/objects/Cart) - Storefront API type"
+          },
+          "StorefrontApiErrors": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "StorefrontApiErrors",
+            "value": "JsonGraphQLError[] | undefined",
+            "description": ""
+          },
+          "ShopAnalytic": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopAnalytic",
+            "value": "{\n  shopId: string;\n  acceptedLanguage: LanguageCode;\n  currency: CurrencyCode;\n  hydrogenSubchannelId: string | '0';\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "shopId",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "acceptedLanguage",
+                "value": "LanguageCode",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "currency",
+                "value": "CurrencyCode",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "hydrogenSubchannelId",
+                "value": "string",
+                "description": ""
+              }
+            ]
+          },
+          "CustomerPrivacyApiProps": {
+            "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CustomerPrivacyApiProps",
+            "value": "PrivacyConsentBannerProps & {\n  withPrivacyBanner: boolean;\n  onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;\n}",
+            "description": ""
+          },
+          "PrivacyConsentBannerProps": {
+            "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "PrivacyConsentBannerProps",
+            "value": "{\n  shopDomain: string;\n  checkoutRootDomain: string;\n  storefrontAccessToken: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "shopDomain",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "checkoutRootDomain",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "storefrontAccessToken",
+                "value": "string",
+                "description": ""
+              }
+            ]
+          },
+          "PrivacyBanner": {
+            "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "PrivacyBanner",
+            "value": "{\n  loadBanner: (options: CustomerPrivacyConsentConfig) => void;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "loadBanner",
+                "value": "(options: CustomerPrivacyConsentConfig) => void",
+                "description": ""
+              }
+            ]
+          },
+          "CustomerPrivacyConsentConfig": {
+            "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CustomerPrivacyConsentConfig",
+            "value": "{\n  checkoutRootDomain?: string;\n  storefrontRootDomain?: string;\n  storefrontAccessToken?: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "checkoutRootDomain",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "storefrontRootDomain",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "storefrontAccessToken",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              }
+            ]
+          },
+          "VisitorConsentCollected": {
+            "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "VisitorConsentCollected",
+            "value": "{\n  analyticsAllowed: boolean;\n  firstPartyMarketingAllowed: boolean;\n  marketingAllowed: boolean;\n  preferencesAllowed: boolean;\n  saleOfDataAllowed: boolean;\n  thirdPartyMarketingAllowed: boolean;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "analyticsAllowed",
+                "value": "boolean",
+                "description": ""
+              },
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "firstPartyMarketingAllowed",
+                "value": "boolean",
+                "description": ""
+              },
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "marketingAllowed",
+                "value": "boolean",
+                "description": ""
+              },
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "preferencesAllowed",
+                "value": "boolean",
+                "description": ""
+              },
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "saleOfDataAllowed",
+                "value": "boolean",
+                "description": ""
+              },
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "thirdPartyMarketingAllowed",
+                "value": "boolean",
+                "description": ""
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "examples": {
+      "description": "List of components available with `Analytics`:",
+      "exampleGroups": [
+        {
+          "title": "Analytics.CartView",
+          "examples": [
+            {
+              "description": "Publishes a `cart_viewed` event to the `Analytics.Provider`.",
+              "codeblock": {
+                "title": "Analytics.CartView",
+                "tabs": [
+                  {
+                    "title": "JavaScript",
+                    "code": "export default function CartView() {\n  return (\n    &lt;div className=\"cart\"&gt;\n      &lt;h1&gt;Cart&lt;/h1&gt;\n      &lt;Analytics.CartView /&gt;\n    &lt;/div&gt;\n  );\n}\n",
+                    "language": "js"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "title": "Analytics.CollectionView",
+          "examples": [
+            {
+              "description": "Publishes a `collection_viewed` event to the `Analytics.Provider`.",
+              "codeblock": {
+                "title": "Analytics.CollectionView",
+                "tabs": [
+                  {
+                    "title": "JavaScript",
+                    "code": "export default function Collection() {\n  const {collection} = useLoaderData();\n  return (\n    &lt;div className=\"collection\"&gt;\n      &lt;h1&gt;{collection.title}&lt;/h1&gt;\n      &lt;Analytics.CollectionView\n        data={{\n          collection: {\n            id: collection.id,\n            handle: collection.handle,\n          },\n        }}\n      /&gt;\n    &lt;/div&gt;\n  );\n}\n",
+                    "language": "js"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "title": "Analytics.CustomView",
+          "examples": [
+            {
+              "description": "Publishes a custom page view event to the `Analytics.Provider`. The `type` prop must be preceded by `custom_`.",
+              "codeblock": {
+                "title": "Analytics.CustomView",
+                "tabs": [
+                  {
+                    "title": "JavaScript",
+                    "code": "export default function Promotion() {\n  return (\n    &lt;div className=\"promotion\"&gt;\n      &lt;h1&gt;Promotion page&lt;/h1&gt;\n      &lt;Analytics.CustomView\n        type=\"custom_promotion_viewed\"\n        data={{\n          promotion: {\n            id: '123',\n          },\n        }}\n      /&gt;\n    &lt;/div&gt;\n  );\n}\n",
+                    "language": "js"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "title": "Analytics.ProductView",
+          "examples": [
+            {
+              "description": "Publishes a `product_viewed` event to the `Analytics.Provider`.",
+              "codeblock": {
+                "title": "Analytics.ProductView",
+                "tabs": [
+                  {
+                    "title": "JavaScript",
+                    "code": "export default function Product() {\n  const {product} = useLoaderData();\n  const {selectedVariant} = product;\n\n  return (\n    &lt;div className=\"product\"&gt;\n      &lt;h1&gt;{product.title}&lt;/h1&gt;\n      &lt;Analytics.ProductView\n        data={{\n          products: [\n            {\n              id: product.id,\n              title: product.title,\n              price: selectedVariant?.price.amount || '0',\n              vendor: product.vendor,\n              variantId: selectedVariant?.id || '',\n              variantTitle: selectedVariant?.title || '',\n              quantity: 1,\n            },\n          ],\n        }}\n      /&gt;\n    &lt;/div&gt;\n  );\n}\n",
+                    "language": "js"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "title": "Analytics.SearchView",
+          "examples": [
+            {
+              "description": "Publishes a `collection_viewed` event to the `Analytics.Provider`.",
+              "codeblock": {
+                "title": "Analytics.SearchView",
+                "tabs": [
+                  {
+                    "title": "JavaScript",
+                    "code": "export default function SearchPage() {\n  const {searchTerm} = useLoaderData();\n  return (\n    &lt;div className=\"search\"&gt;\n      &lt;h1&gt;Search&lt;/h1&gt;\n      &lt;Analytics.SearchView data={{searchTerm}} /&gt;\n    &lt;/div&gt;\n  );\n}\n",
+                    "language": "js"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "getShopAnalytics",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "A function that queries for shop required analytics data to be used in the `Analytics.Provider` component.",
+    "type": "utility",
+    "defaultExample": {
+      "description": "This is the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {Analytics, getShopAnalytics} from '@shopify/hydrogen';\nimport {defer} from '@shopify/remix-oxygen';\nimport {Outlet, useLoaderData} from '@remix-run/react';\n\nexport async function loader({context}) {\n  const {cart, env} = context;\n  const cartPromise = cart.get();\n\n  return defer({\n    cart: cartPromise,\n    shop: getShopAnalytics(context),\n    consent: {\n      checkoutRootDomain: env.PUBLIC_CHECKOUT_DOMAIN,\n      shopDomain: env.PUBLIC_STORE_DOMAIN,\n      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n      withPrivacyBanner: true,\n    },\n  });\n}\n\nexport default function App() {\n  const data = useLoaderData();\n\n  return (\n    &lt;html lang=\"en\"&gt;\n      &lt;head&gt;\n        &lt;meta charSet=\"utf-8\" /&gt;\n        &lt;meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" /&gt;\n      &lt;/head&gt;\n      &lt;body&gt;\n        &lt;Analytics.Provider\n          cart={data.cart}\n          shop={data.shop}\n          consent={data.consent}\n        &gt;\n          &lt;Outlet /&gt;\n        &lt;/Analytics.Provider&gt;\n      &lt;/body&gt;\n    &lt;/html&gt;\n  );\n}\n",
+            "language": "js"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {Analytics, getShopAnalytics} from '@shopify/hydrogen';\nimport {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';\nimport {Outlet, useLoaderData} from '@remix-run/react';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const {cart, env} = context;\n  const cartPromise = cart.get();\n\n  return defer({\n    cart: cartPromise,\n    shop: getShopAnalytics(context),\n    consent: {\n      checkoutRootDomain: env.PUBLIC_CHECKOUT_DOMAIN,\n      shopDomain: env.PUBLIC_STORE_DOMAIN,\n      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n      withPrivacyBanner: true,\n    },\n  });\n}\n\nexport default function App() {\n  const data = useLoaderData&lt;typeof loader&gt;();\n\n  return (\n    &lt;html lang=\"en\"&gt;\n      &lt;head&gt;\n        &lt;meta charSet=\"utf-8\" /&gt;\n        &lt;meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" /&gt;\n      &lt;/head&gt;\n      &lt;body&gt;\n        &lt;Analytics.Provider\n          cart={data.cart}\n          shop={data.shop}\n          consent={data.consent}\n        &gt;\n          &lt;Outlet /&gt;\n        &lt;/Analytics.Provider&gt;\n      &lt;/body&gt;\n    &lt;/html&gt;\n  );\n}\n",
+            "language": "ts"
+          }
+        ],
+        "title": "example"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "GetShopAnalyticsGeneratedType",
+        "typeDefinitions": {
+          "GetShopAnalyticsGeneratedType": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "name": "GetShopAnalyticsGeneratedType",
+            "description": "",
+            "params": [
+              {
+                "name": "context",
+                "description": "",
+                "value": "AppLoadContext",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+              "description": "",
+              "name": "Promise<ShopAnalytic | null>",
+              "value": "Promise<ShopAnalytic | null>"
+            },
+            "value": "export async function getShopAnalytics(\n  context: LoaderFunctionArgs['context'],\n): Promise<ShopAnalytic | null> {\n  return context.storefront\n    .query(SHOP_QUERY, {\n      cache: context.storefront.CacheLong(),\n    })\n    .then(({shop, localization}: {shop: Shop; localization: Localization}) => {\n      return {\n        shopId: shop.id,\n        acceptedLanguage: localization.language.isoCode,\n        currency: localization.country.currency.isoCode,\n        hydrogenSubchannelId: context.env.PUBLIC_STOREFRONT_ID || '0',\n      };\n    });\n}"
+          },
+          "ShopAnalytic": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopAnalytic",
+            "value": "{\n  shopId: string;\n  acceptedLanguage: LanguageCode;\n  currency: CurrencyCode;\n  hydrogenSubchannelId: string | '0';\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "shopId",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "acceptedLanguage",
+                "value": "LanguageCode",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "currency",
+                "value": "CurrencyCode",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "hydrogenSubchannelId",
+                "value": "string",
+                "description": ""
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "useAnalytics",
+    "category": "hooks",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "A hook that provides access to the analytics provider context. Must be a descendent of `Analytics.Provider`.",
+    "type": "hook",
+    "defaultExample": {
+      "description": "This is the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {useAnalytics} from '@shopify/hydrogen';\nimport {useEffect} from 'react';\n\nexport function CustomAnalytics() {\n  const {subscribe, register} = useAnalytics();\n  const {ready} = register('CustomAnalytics'); // unique string identifier\n\n  useEffect(() =&gt; {\n    // Standard events\n    subscribe('page_viewed', (data) =&gt; {\n      console.log('CustomAnalytics - Page viewed:', data);\n    });\n    subscribe('product_viewed', (data) =&gt; {\n      console.log('CustomAnalytics - Product viewed:', data);\n    });\n    subscribe('collection_viewed', (data) =&gt; {\n      console.log('CustomAnalytics - Collection viewed:', data);\n    });\n    subscribe('cart_viewed', (data) =&gt; {\n      console.log('CustomAnalytics - Cart viewed:', data);\n    });\n    subscribe('cart_updated', (data) =&gt; {\n      console.log('CustomAnalytics - Cart updated:', data);\n    });\n\n    // Custom events\n    subscribe('custom_sidecart_viewed', (data) =&gt; {\n      console.log('CustomAnalytics - Custom sidecart opened:', data);\n    });\n\n    // Register the CustomAnalytics component as ready\n    ready();\n  }, []);\n\n  return null;\n}\n",
+            "language": "js"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {\n  type PageViewPayload,\n  type ProductViewPayload,\n  type CollectionViewPayload,\n  type CartViewPayload,\n  type CartUpdatePayload,\n  useAnalytics,\n} from '@shopify/hydrogen';\nimport {useEffect} from 'react';\n\nexport function CustomAnalytics() {\n  const {subscribe, register} = useAnalytics();\n  const {ready} = register('CustomAnalytics'); // unique string identifier\n\n  useEffect(() =&gt; {\n    // Standard events\n    subscribe('page_viewed', (data: PageViewPayload) =&gt; {\n      console.log('CustomAnalytics - Page viewed:', data);\n    });\n    subscribe('product_viewed', (data: ProductViewPayload) =&gt; {\n      console.log('CustomAnalytics - Product viewed:', data);\n    });\n    subscribe('collection_viewed', (data: CollectionViewPayload) =&gt; {\n      console.log('CustomAnalytics - Collection viewed:', data);\n    });\n    subscribe('cart_viewed', (data: CartViewPayload) =&gt; {\n      console.log('CustomAnalytics - Cart viewed:', data);\n    });\n    subscribe('cart_updated', (data: CartUpdatePayload) =&gt; {\n      console.log('CustomAnalytics - Cart updated:', data);\n    });\n\n    // Custom events\n    subscribe('custom_sidecart_viewed', (data: unknown) =&gt; {\n      console.log('CustomAnalytics - Custom sidecart opened:', data);\n    });\n\n    // Register the CustomAnalytics component as ready\n    ready();\n  }, []);\n\n  return null;\n}\n",
+            "language": "ts"
+          }
+        ],
+        "title": "example"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "AnalyticsContextValue",
+        "typeDefinitions": {
+          "AnalyticsContextValue": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "AnalyticsContextValue",
+            "value": "{\n  /** A function to tell you the current state of if the user can be tracked by analytics */\n  canTrack: NonNullable<AnalyticsProviderProps['canTrack']>;\n  /** The current cart state */\n  cart: Awaited<AnalyticsProviderProps['cart']>;\n  /** The custom data passed in from the `AnalyticsProvider` */\n  customData?: AnalyticsProviderProps['customData'];\n  /** The previous cart state */\n  prevCart: Awaited<AnalyticsProviderProps['cart']>;\n  /** A function to publish an analytics event */\n  publish: typeof publish;\n  /** A function to register with the analytics provider */\n  register: (key: string) => {ready: () => void};\n  /** The shop configuration required to publish events to Shopify */\n  shop: Awaited<AnalyticsProviderProps['shop']>;\n  /** A function to subscribe to analytics events */\n  subscribe: typeof subscribe;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "canTrack",
+                "value": "NonNullable<AnalyticsProviderProps['canTrack']>",
+                "description": "A function to tell you the current state of if the user can be tracked by analytics"
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "cart",
+                "value": "Awaited<AnalyticsProviderProps['cart']>",
+                "description": "The current cart state"
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "customData",
+                "value": "Record<string, unknown>",
+                "description": "The custom data passed in from the `AnalyticsProvider`",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "prevCart",
+                "value": "Awaited<AnalyticsProviderProps['cart']>",
+                "description": "The previous cart state"
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "publish",
+                "value": "{ (event: \"page_viewed\", payload: PageViewPayload): void; (event: \"product_viewed\", payload: ProductViewPayload): void; (event: \"collection_viewed\", payload: CollectionViewPayload): void; (event: \"cart_viewed\", payload: CartViewPayload): void; (event: \"cart_updated\", payload: CartUpdatePayload): void; (event: \"product_added_to_cart\", payload: CartLineUpdatePayload): void; (event: \"product_removed_from_cart\", payload: CartLineUpdatePayload): void; (event: `custom_${string}`, payload: OtherData): void; }",
+                "description": "A function to publish an analytics event"
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "register",
+                "value": "(key: string) => { ready: () => void; }",
+                "description": "A function to register with the analytics provider"
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "shop",
+                "value": "Awaited<AnalyticsProviderProps['shop']>",
+                "description": "The shop configuration required to publish events to Shopify"
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "subscribe",
+                "value": "{ (event: \"page_viewed\", callback: (payload: PageViewPayload) => void): void; (event: \"product_viewed\", callback: (payload: ProductViewPayload) => void): void; (event: \"collection_viewed\", callback: (payload: CollectionViewPayload) => void): void; (event: \"cart_viewed\", callback: (payload: CartViewPayload) => void): void; (event: \"search_viewed\", callback: (payload: SearchViewPayload) => void): void; (event: \"cart_updated\", callback: (payload: CartUpdatePayload) => void): void; (event: \"product_added_to_cart\", callback: (payload: CartLineUpdatePayload) => void): void; (event: \"product_removed_from_cart\", callback: (payload: CartLineUpdatePayload) => void): void; (event: `custom_${string}`, callback: (payload: CustomEventPayload) => void): void; }",
+                "description": "A function to subscribe to analytics events"
+              }
+            ]
+          },
+          "AnalyticsProviderProps": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "AnalyticsProviderProps",
+            "value": "{\n  /** React children to render. */\n  children?: ReactNode;\n  /** The cart or cart promise to track. */\n  cart: Promise<CartReturn | null> | CartReturn | null;\n  /** An optional function to set wether the user can be tracked. */\n  canTrack?: () => boolean;\n  /** An optional custom payload to pass to all events. e.g language/locale/currency */\n  customData?: Record<string, unknown>;\n  /** The shop/store config required to publish events **/\n  shop: Promise<ShopAnalytic | null> | ShopAnalytic | null;\n  /** The customer privacy consent configuration and options */\n  consent: CustomerPrivacyApiProps;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "children",
+                "value": "ReactNode",
+                "description": "React children to render.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "cart",
+                "value": "CartReturn | Promise<CartReturn>",
+                "description": "The cart or cart promise to track."
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "canTrack",
+                "value": "() => boolean",
+                "description": "An optional function to set wether the user can be tracked.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "customData",
+                "value": "Record<string, unknown>",
+                "description": "An optional custom payload to pass to all events. e.g language/locale/currency",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "shop",
+                "value": "ShopAnalytic | Promise<ShopAnalytic>",
+                "description": "The shop/store config required to publish events *"
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "consent",
+                "value": "CustomerPrivacyApiProps",
+                "description": "The customer privacy consent configuration and options"
+              }
+            ]
+          },
+          "CartReturn": {
+            "filePath": "/cart/queries/cart-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartReturn",
+            "value": "Cart & {\n  errors?: StorefrontApiErrors;\n}",
+            "description": ""
+          },
+          "Cart": {
+            "description": "",
+            "name": "Cart",
+            "value": "Cart",
+            "members": [],
+            "override": "[Cart](/docs/api/storefront/2024-01/objects/Cart) - Storefront API type"
+          },
+          "StorefrontApiErrors": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "StorefrontApiErrors",
+            "value": "JsonGraphQLError[] | undefined",
+            "description": ""
+          },
+          "ShopAnalytic": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopAnalytic",
+            "value": "{\n  shopId: string;\n  acceptedLanguage: LanguageCode;\n  currency: CurrencyCode;\n  hydrogenSubchannelId: string | '0';\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "shopId",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "acceptedLanguage",
+                "value": "LanguageCode",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "currency",
+                "value": "CurrencyCode",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "hydrogenSubchannelId",
+                "value": "string",
+                "description": ""
+              }
+            ]
+          },
+          "CustomerPrivacyApiProps": {
+            "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CustomerPrivacyApiProps",
+            "value": "PrivacyConsentBannerProps & {\n  withPrivacyBanner: boolean;\n  onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;\n}",
+            "description": ""
+          },
+          "PrivacyConsentBannerProps": {
+            "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "PrivacyConsentBannerProps",
+            "value": "{\n  shopDomain: string;\n  checkoutRootDomain: string;\n  storefrontAccessToken: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "shopDomain",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "checkoutRootDomain",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "storefrontAccessToken",
+                "value": "string",
+                "description": ""
+              }
+            ]
+          },
+          "PrivacyBanner": {
+            "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "PrivacyBanner",
+            "value": "{\n  loadBanner: (options: CustomerPrivacyConsentConfig) => void;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "loadBanner",
+                "value": "(options: CustomerPrivacyConsentConfig) => void",
+                "description": ""
+              }
+            ]
+          },
+          "CustomerPrivacyConsentConfig": {
+            "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CustomerPrivacyConsentConfig",
+            "value": "{\n  checkoutRootDomain?: string;\n  storefrontRootDomain?: string;\n  storefrontAccessToken?: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "checkoutRootDomain",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "storefrontRootDomain",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "storefrontAccessToken",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              }
+            ]
+          },
+          "VisitorConsentCollected": {
+            "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "VisitorConsentCollected",
+            "value": "{\n  analyticsAllowed: boolean;\n  firstPartyMarketingAllowed: boolean;\n  marketingAllowed: boolean;\n  preferencesAllowed: boolean;\n  saleOfDataAllowed: boolean;\n  thirdPartyMarketingAllowed: boolean;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "analyticsAllowed",
+                "value": "boolean",
+                "description": ""
+              },
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "firstPartyMarketingAllowed",
+                "value": "boolean",
+                "description": ""
+              },
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "marketingAllowed",
+                "value": "boolean",
+                "description": ""
+              },
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "preferencesAllowed",
+                "value": "boolean",
+                "description": ""
+              },
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "saleOfDataAllowed",
+                "value": "boolean",
+                "description": ""
+              },
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "thirdPartyMarketingAllowed",
+                "value": "boolean",
+                "description": ""
+              }
+            ]
+          },
+          "PageViewPayload": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "PageViewPayload",
+            "value": "{\n  url: string;\n  cart: CartReturn | null;\n  prevCart: CartReturn | null;\n} & BasePayload",
+            "description": ""
+          },
+          "BasePayload": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "BasePayload",
+            "value": "{\n  eventTimestamp: number;\n  shop: ShopAnalytic | null;\n  customData?: AnalyticsProviderProps['customData'];\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "eventTimestamp",
+                "value": "number",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "shop",
+                "value": "ShopAnalytic",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "customData",
+                "value": "Record<string, unknown>",
+                "description": "",
+                "isOptional": true
+              }
+            ]
+          },
+          "ProductViewPayload": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ProductViewPayload",
+            "value": "{\n  products: Array<{\n    id: Product['id'];\n    title: Product['title'];\n    price: ProductVariant['price']['amount'];\n    vendor: Product['vendor'];\n    variantId: ProductVariant['id'];\n    variantTitle: ProductVariant['title'];\n    quantity: number;\n    sku?: ProductVariant['sku'];\n    productType?: Product['productType'];\n    [key: string]: unknown;\n  }>;\n} & BasePayload",
+            "description": ""
+          },
+          "CollectionViewPayload": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CollectionViewPayload",
+            "value": "{\n  collection: {\n    id: string;\n    handle: string;\n  };\n} & BasePayload",
+            "description": ""
+          },
+          "CartViewPayload": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartViewPayload",
+            "value": "{\n  cart: CartReturn | null;\n  prevCart: CartReturn | null;\n} & BasePayload",
+            "description": ""
+          },
+          "CartUpdatePayload": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartUpdatePayload",
+            "value": "{\n  cart: CartReturn | null;\n  prevCart: CartReturn | null;\n} & BasePayload",
+            "description": ""
+          },
+          "CartLineUpdatePayload": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartLineUpdatePayload",
+            "value": "{\n  cart: CartReturn | null;\n  prevCart: CartReturn | null;\n  prevLine?: CartLine | ComponentizableCartLine;\n  currentLine?: CartLine | ComponentizableCartLine;\n} & BasePayload",
+            "description": ""
+          },
+          "OtherData": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "OtherData",
+            "value": "{\n  [key: string]: unknown;\n}",
+            "description": "",
+            "members": []
+          },
+          "SearchViewPayload": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "SearchViewPayload",
+            "value": "{\n  cart: CartReturn | null;\n  prevCart: CartReturn | null;\n  searchTerm: string;\n  results: Array<any>;\n} & BasePayload",
+            "description": ""
+          },
+          "CustomEventPayload": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CustomEventPayload",
+            "value": "{\n  [key: string]: unknown;\n} & BasePayload",
+            "description": ""
+          }
+        }
+      }
+    ]
+  },
+  {
     "name": "CacheCustom",
     "category": "utilities",
     "isVisualComponent": false,
@@ -4998,7 +5914,7 @@
             "filePath": "/customer/types.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CustomerAccount",
-            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action.\n   * It redirects the customer to a Shopify login domain. It also defined the final path the customer\n   * lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is\n   * automatically setup unless `customAuthStatusHandler` option is in use)\n   *\n   * @param options.uiLocales - The displayed language of the login page. Only support for the following languages:\n   * `en`, `fr`, `cs`, `da`, `de`, `es`, `fi`, `it`, `ja`, `ko`, `nb`, `nl`, `pl`, `pt-BR`, `pt-PT`,\n   * `sv`, `th`, `tr`, `vi`, `zh-CN`, `zh-TW`. If supplied any other language code, it will default to `en`.\n   * */\n  login: (options?: LoginOptions) => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken: () => Promise<string | undefined>;\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/\n  getApiUrl: () => string;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/\n  logout: () => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      CustomerAccountQueries,\n      RawGqlString\n    >\n  ) => Promise<\n    Omit<\n      CustomerAPIResponse<\n        ClientReturn<CustomerAccountQueries, RawGqlString, OverrideReturnType>\n      >,\n      'errors'\n    > & {errors?: JsonGraphQLError[]}\n  >;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      CustomerAccountMutations,\n      RawGqlString\n    >\n  ) => Promise<\n    Omit<\n      CustomerAPIResponse<\n        ClientReturn<CustomerAccountMutations, RawGqlString, OverrideReturnType>\n      >,\n      'errors'\n    > & {errors?: JsonGraphQLError[]}\n  >;\n}",
+            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action.\n   * It redirects the customer to a Shopify login domain. It also defined the final path the customer\n   * lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is\n   * automatically setup unless `customAuthStatusHandler` option is in use)\n   *\n   * @param options.uiLocales - The displayed language of the login page. Only support for the following languages:\n   * `en`, `fr`, `cs`, `da`, `de`, `es`, `fi`, `it`, `ja`, `ko`, `nb`, `nl`, `pl`, `pt-BR`, `pt-PT`,\n   * `sv`, `th`, `tr`, `vi`, `zh-CN`, `zh-TW`. If supplied any other language code, it will default to `en`.\n   * */\n  login: (options?: LoginOptions) => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken: () => Promise<string | undefined>;\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/\n  getApiUrl: () => string;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.\n   *\n   * @param options.postLogoutRedirectUri - The url to redirect customer to after logout, should be a relative URL. This url will need to included in Customer Account API's application setup for logout URI. The default value is current app origin, which is automatically setup in admin when using `--customer-account-push` flag with dev.\n   * */\n  logout: (options?: LogoutOptions) => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      CustomerAccountQueries,\n      RawGqlString\n    >\n  ) => Promise<\n    Omit<\n      CustomerAPIResponse<\n        ClientReturn<CustomerAccountQueries, RawGqlString, OverrideReturnType>\n      >,\n      'errors'\n    > & {errors?: JsonGraphQLError[]}\n  >;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      CustomerAccountMutations,\n      RawGqlString\n    >\n  ) => Promise<\n    Omit<\n      CustomerAPIResponse<\n        ClientReturn<CustomerAccountMutations, RawGqlString, OverrideReturnType>\n      >,\n      'errors'\n    > & {errors?: JsonGraphQLError[]}\n  >;\n}",
             "description": "",
             "members": [
               {
@@ -5047,7 +5963,7 @@
                 "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "logout",
-                "value": "() => Promise<Response>",
+                "value": "(options?: LogoutOptions) => Promise<Response>",
                 "description": "Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin."
               },
               {
@@ -5089,6 +6005,23 @@
             "name": "DataFunctionValue",
             "value": "Response | NonNullable<unknown> | null",
             "description": ""
+          },
+          "LogoutOptions": {
+            "filePath": "/customer/types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "LogoutOptions",
+            "value": "{\n  postLogoutRedirectUri?: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/customer/types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "postLogoutRedirectUri",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              }
+            ]
           },
           "CustomerAccountQueries": {
             "filePath": "/customer/types.ts",
@@ -9415,11 +10348,10 @@
             "description": "",
             "params": [
               {
-                "name": "directives",
-                "description": "Pass custom [content security policy directives](https://content-security-policy.com/). This is important if you load content in your app from third-party domains.",
-                "value": "Record<string, string | boolean | string[]>",
+                "name": "props",
+                "description": "",
+                "value": "ShopifyDomains & CreateContentSecurityPolicy",
                 "isOptional": true,
-                "defaultValue": "{}",
                 "filePath": "/csp/csp.ts"
               }
             ],
@@ -9429,7 +10361,40 @@
               "name": "ContentSecurityPolicy",
               "value": "ContentSecurityPolicy"
             },
-            "value": "export function createContentSecurityPolicy(\n  directives: Record<string, string[] | string | boolean> = {},\n): ContentSecurityPolicy {\n  const nonce = generateNonce();\n  const header = createCSPHeader(nonce, directives);\n\n  const Provider = ({children}: {children: ReactNode}) => {\n    return createElement(NonceProvider, {value: nonce}, children);\n  };\n\n  return {\n    nonce,\n    header,\n    NonceProvider: Provider,\n  };\n}"
+            "value": "export function createContentSecurityPolicy(\n  props?: ShopifyDomains & CreateContentSecurityPolicy,\n): ContentSecurityPolicy {\n  const nonce = generateNonce();\n  const header = createCSPHeader(nonce, props ?? {});\n\n  const Provider = ({children}: {children: ReactNode}) => {\n    return createElement(NonceProvider, {value: nonce}, children);\n  };\n\n  return {\n    nonce,\n    header,\n    NonceProvider: Provider,\n  };\n}"
+          },
+          "ShopifyDomains": {
+            "filePath": "/csp/csp.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyDomains",
+            "value": "{\n  checkoutDomain?: string;\n  storeDomain?: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "checkoutDomain",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "storeDomain",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              }
+            ]
+          },
+          "CreateContentSecurityPolicy": {
+            "filePath": "/csp/csp.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CreateContentSecurityPolicy",
+            "value": "{\n  [key: string]: string[] | string | boolean;\n}",
+            "description": "",
+            "members": []
           },
           "ContentSecurityPolicy": {
             "filePath": "/csp/csp.ts",
@@ -9688,7 +10653,7 @@
             "filePath": "/customer/types.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CustomerAccountForDocs",
-            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action.\n   * It redirects the customer to a Shopify login domain. It also defined the final path the customer\n   * lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is\n   * automatically setup unless `customAuthStatusHandler` option is in use)\n   *\n   * @param options.uiLocales - The displayed language of the login page. Only support for the following languages:\n   * `en`, `fr`, `cs`, `da`, `de`, `es`, `fi`, `it`, `ja`, `ko`, `nb`, `nl`, `pl`, `pt-BR`, `pt-PT`,\n   * `sv`, `th`, `tr`, `vi`, `zh-CN`, `zh-TW`. If supplied any other language code, it will default to `en`.\n   * */\n  login: (options?: LoginOptions) => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize?: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn?: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus?: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken?: () => Promise<string | undefined>;\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/\n  getApiUrl: () => string;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/\n  logout?: () => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query?: <TData = any>(\n    query: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n}",
+            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action.\n   * It redirects the customer to a Shopify login domain. It also defined the final path the customer\n   * lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is\n   * automatically setup unless `customAuthStatusHandler` option is in use)\n   *\n   * @param options.uiLocales - The displayed language of the login page. Only support for the following languages:\n   * `en`, `fr`, `cs`, `da`, `de`, `es`, `fi`, `it`, `ja`, `ko`, `nb`, `nl`, `pl`, `pt-BR`, `pt-PT`,\n   * `sv`, `th`, `tr`, `vi`, `zh-CN`, `zh-TW`. If supplied any other language code, it will default to `en`.\n   * */\n  login?: (options?: LoginOptions) => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize?: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn?: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus?: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken?: () => Promise<string | undefined>;\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/\n  getApiUrl?: () => string;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.\n   *\n   * @param options.postLogoutRedirectUri - The url to redirect customer to after logout, should be a relative URL. This url will need to included in Customer Account API's application setup for logout URI. The default value is current app origin, which is automatically setup in admin when using `--customer-account-push` flag with dev.\n   * */\n  logout?: (options?: LogoutOptions) => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query?: <TData = any>(\n    query: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n}",
             "description": "Below are types meant for documentation only. Ensure it stay in sync with the type above.",
             "members": [
               {
@@ -9696,7 +10661,8 @@
                 "syntaxKind": "PropertySignature",
                 "name": "login",
                 "value": "(options?: LoginOptions) => Promise<Response>",
-                "description": "Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use)"
+                "description": "Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use)",
+                "isOptional": true
               },
               {
                 "filePath": "/customer/types.ts",
@@ -9735,13 +10701,14 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
                 "value": "() => string",
-                "description": "Creates the fully-qualified URL to your store's GraphQL endpoint."
+                "description": "Creates the fully-qualified URL to your store's GraphQL endpoint.",
+                "isOptional": true
               },
               {
                 "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "logout",
-                "value": "() => Promise<Response>",
+                "value": "(options?: LogoutOptions) => Promise<Response>",
                 "description": "Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.",
                 "isOptional": true
               },
@@ -9786,6 +10753,23 @@
             "name": "DataFunctionValue",
             "value": "Response | NonNullable<unknown> | null",
             "description": ""
+          },
+          "LogoutOptions": {
+            "filePath": "/customer/types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "LogoutOptions",
+            "value": "{\n  postLogoutRedirectUri?: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/customer/types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "postLogoutRedirectUri",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              }
+            ]
           },
           "CustomerAccountQueryOptionsForDocs": {
             "filePath": "/customer/types.ts",
@@ -10551,13 +11535,13 @@
               "name": "Promise<Response>",
               "value": "Promise<Response>"
             },
-            "value": "export async function storefrontRedirect(\n  options: StorefrontRedirect,\n): Promise<Response> {\n  const {\n    storefront,\n    request,\n    noAdminRedirect,\n    response = new Response('Not Found', {status: 404}),\n  } = options;\n\n  const {pathname, search} = new URL(request.url);\n  const redirectFrom = pathname + search;\n\n  if (pathname === '/admin' && !noAdminRedirect) {\n    return redirect(`${storefront.getShopifyDomain()}/admin`);\n  }\n\n  try {\n    const {urlRedirects} = await storefront.query<{\n      urlRedirects: UrlRedirectConnection;\n    }>(REDIRECT_QUERY, {\n      variables: {query: 'path:' + redirectFrom},\n    });\n\n    const location = urlRedirects?.edges?.[0]?.node?.target;\n\n    if (location) {\n      return new Response(null, {status: 301, headers: {location}});\n    }\n\n    const redirectTo = getRedirectUrl(request.url);\n\n    if (redirectTo) {\n      return redirect(redirectTo);\n    }\n  } catch (error) {\n    console.error(\n      `Failed to fetch redirects from Storefront API for route ${redirectFrom}`,\n      error,\n    );\n  }\n\n  return response;\n}"
+            "value": "export async function storefrontRedirect(\n  options: StorefrontRedirect,\n): Promise<Response> {\n  const {\n    storefront,\n    request,\n    noAdminRedirect,\n    matchQueryParams,\n    response = new Response('Not Found', {status: 404}),\n  } = options;\n\n  const url = new URL(request.url);\n  const {pathname, searchParams} = url;\n  const isSoftNavigation = searchParams.has('_data');\n\n  searchParams.delete('redirect');\n  searchParams.delete('return_to');\n  searchParams.delete('_data');\n\n  const redirectFrom = matchQueryParams\n    ? url.toString().replace(url.origin, '')\n    : pathname;\n\n  if (url.pathname === '/admin' && !noAdminRedirect) {\n    return createRedirectResponse(\n      `${storefront.getShopifyDomain()}/admin`,\n      isSoftNavigation,\n      searchParams,\n      matchQueryParams,\n    );\n  }\n\n  try {\n    const {urlRedirects} = await storefront.query<{\n      urlRedirects: UrlRedirectConnection;\n    }>(REDIRECT_QUERY, {\n      variables: {query: 'path:' + redirectFrom},\n    });\n\n    const location = urlRedirects?.edges?.[0]?.node?.target;\n\n    if (location) {\n      return createRedirectResponse(\n        location,\n        isSoftNavigation,\n        searchParams,\n        matchQueryParams,\n      );\n    }\n\n    const redirectTo = getRedirectUrl(request.url);\n\n    if (redirectTo) {\n      return createRedirectResponse(\n        redirectTo,\n        isSoftNavigation,\n        searchParams,\n        matchQueryParams,\n      );\n    }\n  } catch (error) {\n    console.error(\n      `Failed to fetch redirects from Storefront API for route ${redirectFrom}`,\n      error,\n    );\n  }\n\n  return response;\n}"
           },
           "StorefrontRedirect": {
             "filePath": "/routing/redirect.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontRedirect",
-            "value": "{\n  /** The [Storefront client](/docs/api/hydrogen/2024-01/utilities/createstorefrontclient) instance */\n  storefront: Storefront<I18nBase>;\n  /** The [MDN Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object that was passed to the `server.ts` request handler. */\n  request: Request;\n  /** The [MDN Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) object created by `handleRequest` */\n  response?: Response;\n  /** By default the `/admin` route is redirected to the Shopify Admin page for the current storefront. Disable this redirect by passing `true`. */\n  noAdminRedirect?: boolean;\n}",
+            "value": "{\n  /** The [Storefront client](/docs/api/hydrogen/2024-01/utilities/createstorefrontclient) instance */\n  storefront: Storefront<I18nBase>;\n  /** The [MDN Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object that was passed to the `server.ts` request handler. */\n  request: Request;\n  /** The [MDN Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) object created by `handleRequest` */\n  response?: Response;\n  /** By default the `/admin` route is redirected to the Shopify Admin page for the current storefront. Disable this redirect by passing `true`. */\n  noAdminRedirect?: boolean;\n  /** By default, query parameters are not used to match redirects. Set this to `true` if you'd like redirects to be query parameter sensitive */\n  matchQueryParams?: boolean;\n}",
             "description": "",
             "members": [
               {
@@ -10588,6 +11572,14 @@
                 "name": "noAdminRedirect",
                 "value": "boolean",
                 "description": "By default the `/admin` route is redirected to the Shopify Admin page for the current storefront. Disable this redirect by passing `true`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/routing/redirect.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "matchQueryParams",
+                "value": "boolean",
+                "description": "By default, query parameters are not used to match redirects. Set this to `true` if you'd like redirects to be query parameter sensitive",
                 "isOptional": true
               }
             ]
@@ -11504,7 +12496,7 @@
                 "isOptional": true
               }
             ],
-            "value": "interface ExternalVideoBaseProps {\n  /**\n   * An object with fields that correspond to the Storefront API's [ExternalVideo object](https://shopify.dev/api/storefront/reference/products/externalvideo).\n   */\n  data: PartialDeep<ExternalVideoType, {recurseIntoArrays: true}>;\n  /** An object containing the options available for either\n   * [YouTube](https://developers.google.com/youtube/player_parameters#Parameters) or\n   * [Vimeo](https://vimeo.zendesk.com/hc/en-us/articles/360001494447-Using-Player-Parameters).\n   */\n  options?: YouTube | Vimeo;\n}"
+            "value": "export interface ExternalVideoBaseProps {\n  /**\n   * An object with fields that correspond to the Storefront API's [ExternalVideo object](https://shopify.dev/api/storefront/reference/products/externalvideo).\n   */\n  data: PartialDeep<ExternalVideoType, {recurseIntoArrays: true}>;\n  /** An object containing the options available for either\n   * [YouTube](https://developers.google.com/youtube/player_parameters#Parameters) or\n   * [Vimeo](https://vimeo.zendesk.com/hc/en-us/articles/360001494447-Using-Player-Parameters).\n   */\n  options?: YouTube | Vimeo;\n}"
           },
           "YouTube": {
             "filePath": "/ExternalVideo.tsx",
@@ -15603,14 +16595,14 @@
               {
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "MethodSignature",
-                "name": "__@iterator@417",
+                "name": "__@iterator@452",
                 "value": "() => IterableIterator<unknown>",
                 "description": "Iterator"
               },
               {
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "MethodSignature",
-                "name": "__@unscopables@419",
+                "name": "__@unscopables@454",
                 "value": "() => { copyWithin: boolean; entries: boolean; fill: boolean; find: boolean; findIndex: boolean; keys: boolean; values: boolean; }",
                 "description": "Returns an object whose properties have the value 'true'\r\nwhen they will be absent when used in a 'with' statement."
               },
@@ -16252,7 +17244,7 @@
                 "description": "Shopify Headless sales channel"
               }
             ],
-            "value": "interface ShopifySalesChannel {\n  /** Shopify Hydrogen sales channel */\n  hydrogen: 'hydrogen';\n  /** Shopify Headless sales channel */\n  headless: 'headless';\n}"
+            "value": "export interface ShopifySalesChannel {\n  /** Shopify Hydrogen sales channel */\n  hydrogen: 'hydrogen';\n  /** Shopify Headless sales channel */\n  headless: 'headless';\n}"
           },
           "ShopifyAnalyticsProduct": {
             "filePath": "/analytics-types.ts",
@@ -16535,7 +17527,7 @@
                 "description": "Add to cart"
               }
             ],
-            "value": "interface AnalyticsEventName {\n  /** Page view */\n  PAGE_VIEW: 'PAGE_VIEW';\n  /** Add to cart */\n  ADD_TO_CART: 'ADD_TO_CART';\n}"
+            "value": "export interface AnalyticsEventName {\n  /** Page view */\n  PAGE_VIEW: 'PAGE_VIEW';\n  /** Add to cart */\n  ADD_TO_CART: 'ADD_TO_CART';\n}"
           }
         }
       },
@@ -16704,7 +17696,7 @@
                 "description": ""
               }
             ],
-            "value": "interface AnalyticsPageType {\n  article: 'article';\n  blog: 'blog';\n  captcha: 'captcha';\n  cart: 'cart';\n  collection: 'collection';\n  customersAccount: 'customers/account';\n  customersActivateAccount: 'customers/activate_account';\n  customersAddresses: 'customers/addresses';\n  customersLogin: 'customers/login';\n  customersOrder: 'customers/order';\n  customersRegister: 'customers/register';\n  customersResetPassword: 'customers/reset_password';\n  giftCard: 'gift_card';\n  home: 'index';\n  listCollections: 'list-collections';\n  forbidden: '403';\n  notFound: '404';\n  page: 'page';\n  password: 'password';\n  product: 'product';\n  policy: 'policy';\n  search: 'search';\n}"
+            "value": "export interface AnalyticsPageType {\n  article: 'article';\n  blog: 'blog';\n  captcha: 'captcha';\n  cart: 'cart';\n  collection: 'collection';\n  customersAccount: 'customers/account';\n  customersActivateAccount: 'customers/activate_account';\n  customersAddresses: 'customers/addresses';\n  customersLogin: 'customers/login';\n  customersOrder: 'customers/order';\n  customersRegister: 'customers/register';\n  customersResetPassword: 'customers/reset_password';\n  giftCard: 'gift_card';\n  home: 'index';\n  listCollections: 'list-collections';\n  forbidden: '403';\n  notFound: '404';\n  page: 'page';\n  password: 'password';\n  product: 'product';\n  policy: 'policy';\n  search: 'search';\n}"
           }
         }
       },
@@ -16733,7 +17725,7 @@
                 "description": "Shopify Headless sales channel"
               }
             ],
-            "value": "interface ShopifySalesChannel {\n  /** Shopify Hydrogen sales channel */\n  hydrogen: 'hydrogen';\n  /** Shopify Headless sales channel */\n  headless: 'headless';\n}"
+            "value": "export interface ShopifySalesChannel {\n  /** Shopify Hydrogen sales channel */\n  hydrogen: 'hydrogen';\n  /** Shopify Headless sales channel */\n  headless: 'headless';\n}"
           }
         }
       }

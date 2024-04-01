@@ -3,7 +3,7 @@ import {Suspense} from 'react';
 import type {HeaderQuery} from 'storefrontapi.generated';
 import type {LayoutProps} from './Layout';
 import {useRootLoaderData} from '~/root';
-import {useAnalytics} from '@shopify/hydrogen';
+import {useUnstable__Analytics} from '@shopify/hydrogen';
 
 type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'>;
 
@@ -127,7 +127,7 @@ function CartBadge({count, onClick}: {count: number; onClick?: () => void}) {
 }
 
 function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
-  const {publish} = useAnalytics();
+  const {publish} = useUnstable__Analytics();
   // Example of how to publish a custom event when the side cart is viewed
   function publishSideCartViewed() {
     publish('custom_sidecart_viewed', {cart});

@@ -2,7 +2,8 @@ import {useUnstable__Analytics} from '@shopify/hydrogen';
 import {useEffect} from 'react';
 
 export function CustomAnalytics() {
-  const {subscribe} = useUnstable__Analytics();
+  const {subscribe, register} = useUnstable__Analytics();
+  const {ready} = register('CustomAnalytics'); // unique string identifier
 
   useEffect(() => {
     // Standard events
@@ -26,6 +27,9 @@ export function CustomAnalytics() {
     subscribe('custom_sidecart_viewed', (data) => {
       console.log('CustomAnalytics - Custom sidecart opened:', data);
     });
+
+    // Register the CustomAnalytics component as ready
+    ready();
   }, []);
 
   return null;
