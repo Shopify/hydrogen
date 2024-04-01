@@ -217,7 +217,8 @@ export async function runDev({
   async function safeStartMiniOxygen() {
     if (miniOxygen) return;
 
-    const envVariables = await envPromise;
+    const {allVariables, localVariables, logInjectedVariables} =
+      await envPromise;
 
     miniOxygen = await startMiniOxygen(
       {
@@ -229,10 +230,12 @@ export async function runDev({
         watch: !liveReload,
         buildPathWorkerFile,
         buildPathClient,
-        env: envVariables,
+        env: allVariables,
       },
       legacyRuntime,
     );
+
+    logInjectedVariables();
 
     const host = (await tunnelPromise) ?? miniOxygen.listeningAt;
 
@@ -269,7 +272,7 @@ export async function runDev({
       displayDevUpgradeNotice({targetPath: appPath});
     }
 
-    if (customerAccountPushFlag && isMockShop(envVariables)) {
+    if (customerAccountPushFlag && isMockShop(localVariables)) {
       notifyIssueWithTunnelAndMockShop(cliCommand);
     }
   }
@@ -351,13 +354,18 @@ export async function runDev({
         if (relative.endsWith('.env')) {
           skipRebuildLogs = true;
           const {fetchRemote} = await backgroundPromise;
-          await miniOxygen.reload({
-            env: await getAllEnvironmentVariables({
+          const {allVariables, logInjectedVariables} =
+            await getAllEnvironmentVariables({
               root,
               fetchRemote,
               envBranch,
               envHandle,
-            }),
+            });
+
+          logInjectedVariables();
+
+          await miniOxygen.reload({
+            env: allVariables,
           });
         }
 

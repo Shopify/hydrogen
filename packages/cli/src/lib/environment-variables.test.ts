@@ -58,6 +58,16 @@ describe('getAllEnvironmentVariables()', () => {
     mockAndCaptureOutput().clear();
   });
 
+  it('returns all variables', async () => {
+    await inTemporaryDirectory(async (tmpDir) => {
+      const {allVariables} = await getAllEnvironmentVariables({
+        root: tmpDir,
+      });
+
+      expect(allVariables).toMatchObject({PUBLIC_API_TOKEN: 'abc123'});
+    });
+  });
+
   it('calls pullRemoteEnvironmentVariables using handle', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       await getAllEnvironmentVariables({
@@ -100,23 +110,19 @@ describe('getAllEnvironmentVariables()', () => {
     });
   });
 
-  it('renders a message about injection', async () => {
+  it('returns a logger that renders information about variables', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       const outputMock = mockAndCaptureOutput();
 
-      await getAllEnvironmentVariables({root: tmpDir});
+      const {logInjectedVariables} = await getAllEnvironmentVariables({
+        root: tmpDir,
+      });
+
+      logInjectedVariables();
 
       expect(outputMock.info()).toMatch(
         /Environment variables injected into MiniOxygen:/,
       );
-    });
-  });
-
-  it('lists all of the variables being used', async () => {
-    await inTemporaryDirectory(async (tmpDir) => {
-      const outputMock = mockAndCaptureOutput();
-
-      await getAllEnvironmentVariables({root: tmpDir});
 
       expect(outputMock.info()).toMatch(/PUBLIC_API_TOKEN\s+from Oxygen/);
     });
@@ -130,7 +136,11 @@ describe('getAllEnvironmentVariables()', () => {
 
       const outputMock = mockAndCaptureOutput();
 
-      await getAllEnvironmentVariables({root: tmpDir});
+      const {logInjectedVariables} = await getAllEnvironmentVariables({
+        root: tmpDir,
+      });
+
+      logInjectedVariables();
 
       expect(outputMock.info()).not.toMatch(/PUBLIC_API_TOKEN\s+from Oxygen/);
       expect(outputMock.warn()).toMatch(/failed to load/i);
@@ -157,7 +167,11 @@ describe('getAllEnvironmentVariables()', () => {
       await inTemporaryDirectory(async (tmpDir) => {
         const outputMock = mockAndCaptureOutput();
 
-        await getAllEnvironmentVariables({root: tmpDir});
+        const {logInjectedVariables} = await getAllEnvironmentVariables({
+          root: tmpDir,
+        });
+
+        logInjectedVariables();
 
         expect(outputMock.info()).toMatch(
           /PUBLIC_API_TOKEN\s+from Oxygen \(Marked as secret\)/,
@@ -174,7 +188,11 @@ describe('getAllEnvironmentVariables()', () => {
 
         const outputMock = mockAndCaptureOutput();
 
-        await getAllEnvironmentVariables({root: tmpDir});
+        const {logInjectedVariables} = await getAllEnvironmentVariables({
+          root: tmpDir,
+        });
+
+        logInjectedVariables();
 
         expect(outputMock.info()).toMatch(/LOCAL_TOKEN\s+from local \.env/);
       });
@@ -188,7 +206,11 @@ describe('getAllEnvironmentVariables()', () => {
 
           const outputMock = mockAndCaptureOutput();
 
-          await getAllEnvironmentVariables({root: tmpDir});
+          const {logInjectedVariables} = await getAllEnvironmentVariables({
+            root: tmpDir,
+          });
+
+          logInjectedVariables();
 
           expect(outputMock.info()).not.toMatch(
             /PUBLIC_API_TOKEN\s+from Oxygen/,
