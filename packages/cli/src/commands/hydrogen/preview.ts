@@ -70,12 +70,14 @@ export async function runPreview({
 
   const {shop, storefront} = await getConfig(root);
   const fetchRemote = !!shop && !!storefront?.id;
-  const env = await getAllEnvironmentVariables({
-    root,
-    fetchRemote,
-    envBranch,
-    envHandle,
-  });
+  const {allVariables, logInjectedVariables} = await getAllEnvironmentVariables(
+    {
+      root,
+      fetchRemote,
+      envBranch,
+      envHandle,
+    },
+  );
 
   appPort = legacyRuntime ? appPort : await findPort(appPort);
   inspectorPort = debug ? await findPort(inspectorPort) : inspectorPort;
@@ -85,12 +87,14 @@ export async function runPreview({
   // we don't control the build at this point. However, the assets server
   // still need to be started to serve redirections from the worker runtime.
 
+  logInjectedVariables();
+
   const miniOxygen = await startMiniOxygen(
     {
       root,
       port: appPort,
       assetsPort,
-      env,
+      env: allVariables,
       buildPathClient,
       buildPathWorkerFile,
       inspectorPort,
