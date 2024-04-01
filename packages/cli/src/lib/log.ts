@@ -423,3 +423,19 @@ export async function muteRemixLogs() {
     // --
   }
 }
+
+export function setH2OVerbose() {
+  if (!process.env.DEBUG || process.env.DEBUG === '*') {
+    process.env.DEBUG = 'h2:*,o2:*';
+  } else {
+    process.env.DEBUG += ',h2:*,o2:*';
+  }
+}
+
+export function isH2Verbose() {
+  return !!(process.env.DEBUG === '*' || process.env.DEBUG?.includes('h2:*'));
+}
+
+export function isO2Verbose() {
+  return !!(process.env.DEBUG === '*' || process.env.DEBUG?.includes('o2:*'));
+}

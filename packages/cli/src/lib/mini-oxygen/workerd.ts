@@ -31,6 +31,7 @@ import {
   STATIC_ASSET_EXTENSIONS,
 } from './assets.js';
 import {getDebugBannerLine} from '../dev-shared.js';
+import {isO2Verbose} from '../log.js';
 
 // This should probably be `0` and let workerd find a free port,
 // but at the moment we can't get the port from workerd (afaik?).
@@ -86,23 +87,27 @@ export async function startWorkerdServer({
   const buildMiniOxygenOptions = async () =>
     ({
       cf: false,
-      verbose: false,
       port: appPort,
       inspectorPort: privateInspectorPort,
-      log: new NoOpLog(),
       liveReload: watch,
       host: 'localhost',
-      handleRuntimeStdio(stdout, stderr) {
-        // TODO: handle runtime stdio and remove inspector logs
-        // stdout.pipe(process.stdout);
-        // stderr.pipe(process.stderr);
+      ...(isO2Verbose()
+        ? {verbose: true}
+        : {
+            verbose: false,
+            log: new NoOpLog(),
+            handleRuntimeStdio(stdout, stderr) {
+              // TODO: handle runtime stdio and remove inspector logs
+              // stdout.pipe(process.stdout);
+              // stderr.pipe(process.stderr);
 
-        // Destroy these streams to prevent memory leaks
-        // until we start piping them to the terminal.
-        // https://github.com/Shopify/hydrogen/issues/1720
-        stdout.destroy();
-        stderr.destroy();
-      },
+              // Destroy these streams to prevent memory leaks
+              // until we start piping them to the terminal.
+              // https://github.com/Shopify/hydrogen/issues/1720
+              stdout.destroy();
+              stderr.destroy();
+            },
+          }),
       workers: [
         {
           name: 'mini-oxygen',

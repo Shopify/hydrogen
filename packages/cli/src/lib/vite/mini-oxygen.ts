@@ -14,6 +14,7 @@ import {MiniOxygenOptions} from '../mini-oxygen/types.js';
 import {getHmrUrl, pipeFromWeb, toURL, toWeb} from './utils.js';
 
 import type {ViteEnv} from './worker-entry.js';
+import {isO2Verbose} from '../log.js';
 const scriptPath = fileURLToPath(new URL('./worker-entry.js', import.meta.url));
 
 const FETCH_MODULE_PATHNAME = '/__vite_fetch_module';
@@ -56,20 +57,24 @@ export async function startMiniOxygenRuntime({
 
   const mf = new Miniflare({
     cf: false,
-    verbose: false,
-    log: new NoOpLog(),
     inspectorPort: privateInspectorPort,
-    handleRuntimeStdio(stdout, stderr) {
-      // TODO: handle runtime stdio and remove inspector logs
-      // stdout.pipe(process.stdout);
-      // stderr.pipe(process.stderr);
+    ...(isO2Verbose()
+      ? {verbose: true}
+      : {
+          verbose: false,
+          log: new NoOpLog(),
+          handleRuntimeStdio(stdout, stderr) {
+            // TODO: handle runtime stdio and remove inspector logs
+            // stdout.pipe(process.stdout);
+            // stderr.pipe(process.stderr);
 
-      // Destroy these streams to prevent memory leaks
-      // until we start piping them to the terminal.
-      // https://github.com/Shopify/hydrogen/issues/1720
-      stdout.destroy();
-      stderr.destroy();
-    },
+            // Destroy these streams to prevent memory leaks
+            // until we start piping them to the terminal.
+            // https://github.com/Shopify/hydrogen/issues/1720
+            stdout.destroy();
+            stderr.destroy();
+          },
+        }),
     workers: [
       {
         name: 'oxygen',

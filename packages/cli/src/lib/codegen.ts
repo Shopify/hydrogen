@@ -74,7 +74,9 @@ export function spawnCodegenProcess({
 
     const {message, details} = normalizeCodegenError(dataString, rootDirectory);
 
+    // Filter these logs even on verbose mode because it floods the terminal:
     if (/`punycode`/.test(message)) return;
+    if (/\.body\[\d\]/) return;
 
     console.log('');
     renderWarning({headline: message, body: details});

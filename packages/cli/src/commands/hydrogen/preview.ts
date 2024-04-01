@@ -1,5 +1,5 @@
 import Command from '@shopify/cli-kit/node/base-command';
-import {muteDevLogs} from '../../lib/log.js';
+import {isH2Verbose, muteDevLogs, setH2OVerbose} from '../../lib/log.js';
 import {getProjectPaths} from '../../lib/remix-config.js';
 import {commonFlags, deprecated, flagsToCamelObject} from '../../lib/flags.js';
 import {startMiniOxygen} from '../../lib/mini-oxygen/index.js';
@@ -23,6 +23,7 @@ export default class Preview extends Command {
     ...commonFlags.envBranch,
     ...commonFlags.inspectorPort,
     ...commonFlags.debug,
+    ...commonFlags.verbose,
   };
 
   async run(): Promise<void> {
@@ -42,6 +43,7 @@ type PreviewOptions = {
   envBranch?: string;
   inspectorPort: number;
   debug: boolean;
+  verbose?: boolean;
 };
 
 export async function runPreview({
@@ -52,10 +54,12 @@ export async function runPreview({
   envBranch,
   inspectorPort,
   debug,
+  verbose,
 }: PreviewOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production';
 
-  muteDevLogs({workerReload: false});
+  if (verbose) setH2OVerbose();
+  if (!isH2Verbose()) muteDevLogs();
 
   let {root, buildPathWorkerFile, buildPathClient} = getProjectPaths(appPath);
 

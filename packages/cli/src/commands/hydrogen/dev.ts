@@ -12,7 +12,13 @@ import {
   handleRemixImportFail,
   type ServerMode,
 } from '../../lib/remix-config.js';
-import {createRemixLogger, enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
+import {
+  createRemixLogger,
+  enhanceH2Logs,
+  isH2Verbose,
+  muteDevLogs,
+  setH2OVerbose,
+} from '../../lib/log.js';
 import {commonFlags, deprecated, flagsToCamelObject} from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags, Config} from '@oclif/core';
@@ -68,6 +74,7 @@ export default class Dev extends Command {
     }),
     ...commonFlags.diff,
     ...commonFlags.customerAccountPush,
+    ...commonFlags.verbose,
   };
 
   async run(): Promise<void> {
@@ -101,6 +108,7 @@ type DevOptions = {
   inspectorPort: number;
   customerAccountPush?: boolean;
   cliConfig?: Config;
+  verbose?: boolean;
 };
 
 export async function runDev({
@@ -118,10 +126,12 @@ export async function runDev({
   inspectorPort,
   customerAccountPush: customerAccountPushFlag = false,
   cliConfig,
+  verbose,
 }: DevOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
-  muteDevLogs();
+  if (verbose) setH2OVerbose();
+  if (!isH2Verbose()) muteDevLogs();
 
   const {root, publicPath, buildPathClient, buildPathWorkerFile} =
     getProjectPaths(appPath);
