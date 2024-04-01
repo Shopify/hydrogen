@@ -505,7 +505,6 @@
           "description": "The port where the inspector is available. Defaults to 9229.",
           "env": "SHOPIFY_HYDROGEN_FLAG_INSPECTOR_PORT",
           "name": "inspector-port",
-          "default": 9229,
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
@@ -561,6 +560,14 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "verbose": {
+          "description": "Outputs more information about the command's execution.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_VERBOSE",
+          "name": "verbose",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
         }
       },
       "hasDynamicHelp": false,
@@ -596,7 +603,6 @@
           "description": "The port to run the server on. Defaults to 3000.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PORT",
           "name": "port",
-          "default": 3000,
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
@@ -656,7 +662,6 @@
           "description": "The port where the inspector is available. Defaults to 9229.",
           "env": "SHOPIFY_HYDROGEN_FLAG_INSPECTOR_PORT",
           "name": "inspector-port",
-          "default": 9229,
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
@@ -702,6 +707,14 @@
           "description": "Use tunneling for local development and push the tunneling domain to admin. Required to use Customer Account API's Oauth flow",
           "env": "SHOPIFY_HYDROGEN_FLAG_CUSTOMER_ACCOUNT_PUSH",
           "name": "customer-account-push",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Outputs more information about the command's execution.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_VERBOSE",
+          "name": "verbose",
           "required": false,
           "allowNo": false,
           "type": "boolean"
@@ -1013,7 +1026,6 @@
           "description": "The port to run the server on. Defaults to 3000.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PORT",
           "name": "port",
-          "default": 3000,
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
@@ -1056,7 +1068,6 @@
           "description": "The port where the inspector is available. Defaults to 9229.",
           "env": "SHOPIFY_HYDROGEN_FLAG_INSPECTOR_PORT",
           "name": "inspector-port",
-          "default": 9229,
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
@@ -1065,6 +1076,14 @@
           "description": "Enables inspector connections to the server with a debugger such as Visual Studio Code or Chrome DevTools.",
           "env": "SHOPIFY_HYDROGEN_FLAG_DEBUG",
           "name": "debug",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Outputs more information about the command's execution.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_VERBOSE",
+          "name": "verbose",
+          "required": false,
           "allowNo": false,
           "type": "boolean"
         }

@@ -356,12 +356,8 @@ describe('init', () => {
         // ---- DEV
         outputMock.clear();
 
-        const port = 1337;
-
-        const {close} = await runClassicDev({
+        const {close, getUrl} = await runClassicDev({
           path: tmpDir,
-          port,
-          inspectorPort: 9000,
           disableVirtualRoutes: true,
           disableVersionCheck: true,
           cliConfig: {} as any,
@@ -379,7 +375,7 @@ describe('init', () => {
             fileExists(joinPath(tmpDir, 'dist', 'worker', 'index.js')),
           ).resolves.toBeTruthy();
 
-          const response = await fetch(`http://localhost:${port}`);
+          const response = await fetch(getUrl());
           expect(response.status).toEqual(200);
           expect(response.headers.get('content-type')).toEqual('text/html');
           await expect(response.text()).resolves.toMatch('Mock.shop');
@@ -891,12 +887,8 @@ describe('init', () => {
           // Clear previous success messages
           outputMock.clear();
 
-          const port = 1337;
-
-          const {close} = await runViteDev({
+          const {close, getUrl} = await runViteDev({
             path: tmpDir,
-            port,
-            inspectorPort: 9000,
             disableVirtualRoutes: true,
             disableVersionCheck: true,
             cliConfig: {} as any,
@@ -908,7 +900,7 @@ describe('init', () => {
               {timeout: 5000},
             );
 
-            const response = await fetch(`http://localhost:${port}`);
+            const response = await fetch(getUrl());
             expect(response.status).toEqual(200);
             expect(response.headers.get('content-type')).toEqual('text/html');
             await expect(response.text()).resolves.toMatch('Mock.shop');

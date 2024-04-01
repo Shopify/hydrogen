@@ -20,6 +20,7 @@ function CartComponent() {
     discountCodes,
     linesAdd,
     cartCreate,
+    cartReady,
     linesUpdate,
     linesRemove,
     noteUpdate,
@@ -51,6 +52,8 @@ function CartComponent() {
         <h1>This is your current cart</h1>
         <h3>Cart status</h3>
         <p>{status}</p>
+        <h3>Cart ready</h3>
+        <p>{cartReady ? 'true' : 'false'}</p>
         <h3>Fetched from local storage with this cart id</h3>
         <p>{localStorageId}</p>
         <h3>Cart lines</h3>

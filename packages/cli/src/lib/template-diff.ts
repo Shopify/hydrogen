@@ -1,11 +1,7 @@
 import {rmdirSync} from 'node:fs';
 import {temporaryDirectory} from 'tempy';
-import {
-  createSymlink,
-  copy as copyDirectory,
-  remove as removeDirectory,
-} from 'fs-extra/esm';
-import {copyFile, removeFile} from '@shopify/cli-kit/node/fs';
+import {createSymlink, copy as copyDirectory} from 'fs-extra/esm';
+import {copyFile, removeFile as remove} from '@shopify/cli-kit/node/fs';
 import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
 import {readAndParsePackageJson} from '@shopify/cli-kit/node/node-package-manager';
 import colors from '@shopify/cli-kit/node/colors';
@@ -76,7 +72,7 @@ export async function prepareDiffDirectory(
           );
 
           return event.type === 'delete'
-            ? removeFile(targetFile).catch(() => {})
+            ? remove(targetFile).catch(() => {})
             : copyFile(event.path, targetFile);
         });
       },
@@ -154,7 +150,7 @@ export async function copyDiffBuild(
   diffDirectory: string,
 ) {
   const targetDist = joinPath(diffDirectory, 'dist');
-  await removeDirectory(targetDist);
+  await remove(targetDist);
   await Promise.all([
     copyDirectory(joinPath(targetDirectory, 'dist'), targetDist, {
       overwrite: true,

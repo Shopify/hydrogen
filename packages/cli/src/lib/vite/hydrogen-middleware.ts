@@ -35,7 +35,7 @@ export function setupHydrogenMiddleware(
       // to gather the required CSS and avoid flashes of unstyled content in dev.
 
       toWeb(req)
-        .json()
+        .then((webRequest) => webRequest.json())
         .then(async (args: any) => {
           // @ts-expect-error Remix global magic
           const result = await globalThis[
@@ -57,8 +57,9 @@ export function setupHydrogenMiddleware(
     function h2HandleSubrequestProfilerEvent(req, res) {
       // This request comes from Hydrogen's Subrequest Profiler UI.
 
-      const webResponse = handleDebugNetworkRequest(toWeb(req));
-      pipeFromWeb(webResponse, res);
+      toWeb(req)
+        .then(handleDebugNetworkRequest)
+        .then((webResponse) => pipeFromWeb(webResponse, res));
     },
   );
 

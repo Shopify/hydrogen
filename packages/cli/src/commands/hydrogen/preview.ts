@@ -1,7 +1,12 @@
 import Command from '@shopify/cli-kit/node/base-command';
-import {muteDevLogs} from '../../lib/log.js';
+import {isH2Verbose, muteDevLogs, setH2OVerbose} from '../../lib/log.js';
 import {getProjectPaths, hasRemixConfigFile} from '../../lib/remix-config.js';
-import {commonFlags, deprecated, flagsToCamelObject} from '../../lib/flags.js';
+import {
+  DEFAULT_APP_PORT,
+  commonFlags,
+  deprecated,
+  flagsToCamelObject,
+} from '../../lib/flags.js';
 import {startMiniOxygen} from '../../lib/mini-oxygen/index.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
@@ -22,6 +27,7 @@ export default class Preview extends Command {
     ...commonFlags.envBranch,
     ...commonFlags.inspectorPort,
     ...commonFlags.debug,
+    ...commonFlags.verbose,
   };
 
   async run(): Promise<void> {
@@ -34,13 +40,14 @@ export default class Preview extends Command {
 }
 
 type PreviewOptions = {
-  port: number;
+  port?: number;
   path?: string;
   legacyRuntime?: boolean;
   env?: string;
   envBranch?: string;
-  inspectorPort: number;
+  inspectorPort?: number;
   debug: boolean;
+  verbose?: boolean;
 };
 
 export async function runPreview({
@@ -51,10 +58,12 @@ export async function runPreview({
   envBranch,
   inspectorPort,
   debug,
+  verbose,
 }: PreviewOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production';
 
-  muteDevLogs({workerReload: false});
+  if (verbose) setH2OVerbose();
+  if (!isH2Verbose()) muteDevLogs();
 
   let {root, buildPath, buildPathWorkerFile, buildPathClient} =
     getProjectPaths(appPath);
@@ -67,27 +76,33 @@ export async function runPreview({
 
   const {shop, storefront} = await getConfig(root);
   const fetchRemote = !!shop && !!storefront?.id;
-  const env = await getAllEnvironmentVariables({
-    root,
-    fetchRemote,
-    envBranch,
-    envHandle,
-  });
+  const {allVariables, logInjectedVariables} = await getAllEnvironmentVariables(
+    {
+      root,
+      fetchRemote,
+      envBranch,
+      envHandle,
+    },
+  );
 
-  appPort = legacyRuntime ? appPort : await findPort(appPort);
-  inspectorPort = debug ? await findPort(inspectorPort) : inspectorPort;
+  if (!appPort) {
+    appPort = await findPort(DEFAULT_APP_PORT);
+  }
+
   const assetsPort = legacyRuntime ? 0 : await findPort(appPort + 100);
 
   // Note: we don't need to add any asset prefix in preview because
   // we don't control the build at this point. However, the assets server
   // still need to be started to serve redirections from the worker runtime.
 
+  logInjectedVariables();
+
   const miniOxygen = await startMiniOxygen(
     {
       root,
-      port: appPort,
+      appPort,
       assetsPort,
-      env,
+      env: allVariables,
       buildPathClient,
       buildPathWorkerFile,
       inspectorPort,

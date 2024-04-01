@@ -1,15 +1,22 @@
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
 import {
+  enhanceH2Logs,
+  isH2Verbose,
+  muteDevLogs,
+  setH2OVerbose,
+} from '../../lib/log.js';
+import {
+  DEFAULT_APP_PORT,
+  DEFAULT_INSPECTOR_PORT,
   commonFlags,
   flagsToCamelObject,
   overrideFlag,
 } from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import colors from '@shopify/cli-kit/node/colors';
-import {renderInfo} from '@shopify/cli-kit/node/ui';
 import {collectLog} from '@shopify/cli-kit/node/output';
+import {type AlertCustomSection, renderSuccess} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {Flags, Config} from '@oclif/core';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
@@ -17,15 +24,16 @@ import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {setH2OPluginContext} from '../../lib/vite/shared.js';
-import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 import {
   getDebugBannerLine,
   startTunnelAndPushConfig,
   isMockShop,
   notifyIssueWithTunnelAndMockShop,
   getDevConfigInBackground,
+  getUtilityBannerlines,
 } from '../../lib/dev-shared.js';
 import {getCliCommand} from '../../lib/shell.js';
+import {findPort} from '../../lib/find-port.js';
 
 export default class DevVite extends Command {
   static description =
@@ -59,6 +67,7 @@ export default class DevVite extends Command {
     }),
     ...commonFlags.diff,
     ...commonFlags.customerAccountPush,
+    ...commonFlags.verbose,
   };
 
   static hidden = true;
@@ -93,10 +102,11 @@ type DevOptions = {
   env?: string;
   debug?: boolean;
   sourcemap?: boolean;
-  inspectorPort: number;
+  inspectorPort?: number;
   isLocalDev?: boolean;
   customerAccountPush?: boolean;
   cliConfig: Config;
+  verbose?: boolean;
 };
 
 export async function runViteDev({
@@ -115,10 +125,12 @@ export async function runViteDev({
   isLocalDev = false,
   customerAccountPush: customerAccountPushFlag = false,
   cliConfig,
+  verbose,
 }: DevOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
-  muteDevLogs();
+  if (verbose) setH2OVerbose();
+  if (!isH2Verbose()) muteDevLogs();
 
   const root = appPath ?? process.cwd();
 
@@ -137,6 +149,13 @@ export async function runViteDev({
       localVariables,
     }),
   );
+
+  if (debug && !inspectorPort) {
+    // The Vite plugin can find and return a port for the inspector
+    // but we need to print the URLs before the runtime is ready,
+    // so we find a port early here.
+    inspectorPort = await findPort(DEFAULT_INSPECTOR_PORT);
+  }
 
   const vite = await import('vite');
 
@@ -161,7 +180,7 @@ export async function runViteDev({
       cliOptions: {
         debug,
         ssrEntry,
-        envPromise,
+        envPromise: envPromise.then(({allVariables}) => allVariables),
         inspectorPort,
         disableVirtualRoutes,
       },
@@ -199,7 +218,8 @@ export async function runViteDev({
   });
 
   // Store the port passed by the user in the config.
-  const publicPort = appPort ?? viteServer.config.server.port ?? 3000;
+  const publicPort =
+    appPort ?? viteServer.config.server.port ?? DEFAULT_APP_PORT;
 
   // TODO -- Need to change Remix' <Scripts/> component
   // const assetsPort = await findPort(publicPort + 100);
@@ -231,35 +251,28 @@ export async function runViteDev({
     cliCommand,
   });
 
-  const envVariables = await envPromise; // Prints the injected env vars
+  const {logInjectedVariables, localVariables} = await envPromise;
+
+  logInjectedVariables();
   console.log('');
   viteServer.printUrls();
   viteServer.bindCLIShortcuts({print: true});
   console.log('\n');
 
-  const customSections = [];
+  const customSections: AlertCustomSection[] = [];
 
   if (!disableVirtualRoutes) {
-    customSections.push({
-      body: [
-        `View GraphiQL API browser: \n${getGraphiQLUrl({
-          host: finalHost,
-        })}`,
-        `View server network requests: \n${finalHost}/subrequest-profiler`,
-      ].map((value, index) => ({
-        subdued: `${index != 0 ? '\n\n' : ''}${value}`,
-      })),
-    });
+    customSections.push({body: getUtilityBannerlines(finalHost)});
   }
 
-  if (debug) {
+  if (debug && inspectorPort) {
     customSections.push({
       body: {warn: getDebugBannerLine(inspectorPort)},
     });
   }
 
   const {storefrontTitle} = await backgroundPromise;
-  renderInfo({
+  renderSuccess({
     body: [
       `View ${
         storefrontTitle ? colors.cyan(storefrontTitle) : 'Hydrogen'
@@ -273,11 +286,12 @@ export async function runViteDev({
     displayDevUpgradeNotice({targetPath: root});
   }
 
-  if (customerAccountPushFlag && isMockShop(envVariables)) {
+  if (customerAccountPushFlag && isMockShop(localVariables)) {
     notifyIssueWithTunnelAndMockShop(cliCommand);
   }
 
   return {
+    getUrl: () => finalHost,
     async close() {
       codegenProcess?.kill(0);
       await viteServer.close();
