@@ -1,6 +1,11 @@
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
+import {
+  enhanceH2Logs,
+  isH2Verbose,
+  muteDevLogs,
+  setH2OVerbose,
+} from '../../lib/log.js';
 import {
   commonFlags,
   flagsToCamelObject,
@@ -59,6 +64,7 @@ export default class DevVite extends Command {
     }),
     ...commonFlags.diff,
     ...commonFlags.customerAccountPush,
+    ...commonFlags.verbose,
   };
 
   async run(): Promise<void> {
@@ -95,6 +101,7 @@ type DevOptions = {
   isLocalDev?: boolean;
   customerAccountPush?: boolean;
   cliConfig: Config;
+  verbose?: boolean;
 };
 
 export async function runDev({
@@ -113,10 +120,12 @@ export async function runDev({
   isLocalDev = false,
   customerAccountPush: customerAccountPushFlag = false,
   cliConfig,
+  verbose,
 }: DevOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
-  muteDevLogs();
+  if (verbose) setH2OVerbose();
+  if (!isH2Verbose()) muteDevLogs();
 
   const root = appPath ?? process.cwd();
 
