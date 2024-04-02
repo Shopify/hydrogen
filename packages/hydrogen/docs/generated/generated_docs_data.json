@@ -4,7 +4,7 @@
     "category": "components",
     "isVisualComponent": false,
     "related": [],
-    "description": "Provides a context to track page view, cart events and send them to Shopify. It is integrated with the Customer Privacy API for consent management. It is flexible for other analytics platform to integrate into its subscribe and publish system. It provides the [`unstable_useAnalytics`](/docs/api/hydrogen/2024-01/hooks/useunstable__analytics) hook to access the analytics provider context.",
+    "description": "Provides a context to track page view, cart events and send them to Shopify. It is integrated with the Customer Privacy API for consent management. It is flexible for other analytics platform to integrate into its subscribe and publish system. It provides the [`unstable_useAnalytics`](/docs/api/hydrogen/2024-01/hooks/unstable_useanalytics) hook to access the analytics provider context.",
     "type": "component",
     "defaultExample": {
       "description": "This is the default example",
@@ -435,7 +435,7 @@
     "category": "hooks",
     "isVisualComponent": false,
     "related": [],
-    "description": "A hook that provides access to the analytics provider context. Must be a descendent of [`UNSTABLE_Analytics.Provider`](/docs/api/hydrogen/2024-01/components/unstable__analytics-provider).",
+    "description": "A hook that provides access to the analytics provider context. Must be a descendent of [`UNSTABLE_Analytics.Provider`](/docs/api/hydrogen/2024-01/components/unstable_analytics-provider).",
     "type": "hook",
     "defaultExample": {
       "description": "This is the default example",
@@ -465,7 +465,7 @@
             "filePath": "/analytics-manager/AnalyticsProvider.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "AnalyticsContextValueForDoc",
-            "value": "{\n  /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.userCanBeTracked()`. */\n  canTrack?: () => boolean;\n  /** The current cart state. */\n  cart?: Promise<CartReturn | null> | CartReturn | null;\n  /** The custom data passed in from the `AnalyticsProvider`. */\n  customData?: Record<string, unknown>;\n  /** The previous cart state. */\n  prevCart?: Promise<CartReturn | null> | CartReturn | null;\n  /** A function to publish an analytics event. */\n  publish?: AnalyticsContextPublishForDoc;\n  /** A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/2024-01/hooks/useunstable__analytics#example-useunstable__analytics.register). */\n  register?: (key: string) => {ready: () => void};\n  /** The shop configuration required to publish events to Shopify. */\n  shop?: Promise<ShopAnalytic | null> | ShopAnalytic | null;\n  /** A function to subscribe to analytics events. */\n  subscribe?: AnalyticsContextSubscribeForDoc;\n}",
+            "value": "{\n  /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.userCanBeTracked()`. */\n  canTrack?: () => boolean;\n  /** The current cart state. */\n  cart?: Promise<CartReturn | null> | CartReturn | null;\n  /** The custom data passed in from the `AnalyticsProvider`. */\n  customData?: Record<string, unknown>;\n  /** The previous cart state. */\n  prevCart?: Promise<CartReturn | null> | CartReturn | null;\n  /** A function to publish an analytics event. */\n  publish?: AnalyticsContextPublishForDoc;\n  /** A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/2024-01/hooks/unstable_useanalytics#example-unstable_useanalytics.register). */\n  register?: (key: string) => {ready: () => void};\n  /** The shop configuration required to publish events to Shopify. */\n  shop?: Promise<ShopAnalytic | null> | ShopAnalytic | null;\n  /** A function to subscribe to analytics events. */\n  subscribe?: AnalyticsContextSubscribeForDoc;\n}",
             "description": "",
             "members": [
               {
@@ -513,7 +513,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "register",
                 "value": "(key: string) => { ready: () => void; }",
-                "description": "A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/2024-01/hooks/useunstable__analytics#example-useunstable__analytics.register).",
+                "description": "A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/2024-01/hooks/unstable_useanalytics#example-unstable_useanalytics.register).",
                 "isOptional": true
               },
               {

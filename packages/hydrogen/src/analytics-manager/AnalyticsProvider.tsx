@@ -423,7 +423,7 @@ export type AnalyticsContextValueForDoc = {
   prevCart?: Promise<CartReturn | null> | CartReturn | null;
   /** A function to publish an analytics event. */
   publish?: AnalyticsContextPublishForDoc;
-  /** A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/2024-01/hooks/useunstable__analytics#example-useunstable__analytics.register). */
+  /** A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/2024-01/hooks/unstable_useanalytics#example-unstable_useanalytics.register). */
   register?: (key: string) => {ready: () => void};
   /** The shop configuration required to publish events to Shopify. */
   shop?: Promise<ShopAnalytic | null> | ShopAnalytic | null;
