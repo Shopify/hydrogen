@@ -1,13 +1,18 @@
 import {normalizePath, type ViteDevServer, type ResolvedConfig} from 'vite';
 import path from 'node:path';
 import {createRequire} from 'node:module';
-import {createFileReadStream} from '@shopify/cli-kit/node/fs';
-import {handleDebugNetworkRequest, setConstructors} from '../request-events.js';
-import {SUBREQUEST_PROFILER_ENDPOINT} from '../mini-oxygen/common.js';
-import {pipeFromWeb, toWeb} from './utils.js';
+import {createReadStream} from 'node:fs';
+import {
+  clearHistory,
+  setConstructors,
+  streamRequestEvents,
+  SUBREQUEST_PROFILER_ENDPOINT,
+} from './request-events.js';
 import type {RemixPluginContext} from '@remix-run/dev/dist/vite/plugin.js';
-import {addVirtualRoutes} from '../virtual-routes.js';
-import type {HydrogenPluginOptions} from './shared.js';
+import {addVirtualRoutes} from './add-virtual-routes.js';
+import type {HydrogenPluginOptions} from './types.js';
+
+const H2_PREFIX_WARN = '[h2:warn:vite] ';
 
 // Function to be passed as a setup function to the Oxygen worker.
 // It runs within workerd and sets up Remix dev server hooks.
@@ -20,6 +25,7 @@ export function setupRemixDevServerHooks(viteUrl: string) {
       fetch(new URL('/__vite_critical_css', viteUrl), {
         method: 'POST',
         body: JSON.stringify(args),
+        headers: {'Content-Type': 'application/json'},
       }).then((res) => res.json()),
   };
 }
@@ -34,16 +40,20 @@ export function setupHydrogenMiddleware(
       // This request comes from Remix's `getCriticalCss` function
       // to gather the required CSS and avoid flashes of unstyled content in dev.
 
-      toWeb(req)
-        .then((webRequest) => webRequest.json())
-        .then(async (args: any) => {
+      let body = '';
+      req.on('data', (chunk) => (body += chunk));
+
+      req.on('end', () => {
+        const args = body ? JSON.parse(body) : [];
+
+        Promise.resolve(
           // @ts-expect-error Remix global magic
-          const result = await globalThis[
-            '__remix_devServerHooks'
-          ]?.getCriticalCss?.(...args);
+          globalThis['__remix_devServerHooks']?.getCriticalCss?.(...args),
+        ).then((result?: string) => {
           res.writeHead(200, {'Content-Type': 'application/json'});
           res.end(JSON.stringify(result ?? ''));
         });
+      });
     },
   );
 
@@ -56,10 +66,7 @@ export function setupHydrogenMiddleware(
     SUBREQUEST_PROFILER_ENDPOINT,
     function h2HandleSubrequestProfilerEvent(req, res) {
       // This request comes from Hydrogen's Subrequest Profiler UI.
-
-      toWeb(req)
-        .then(handleDebugNetworkRequest)
-        .then((webResponse) => pipeFromWeb(webResponse, res));
+      req.method === 'DELETE' ? clearHistory() : streamRequestEvents(req, res);
     },
   );
 
@@ -76,7 +83,7 @@ export function setupHydrogenMiddleware(
       );
 
       res.writeHead(200, {'Content-Type': 'application/json'});
-      createFileReadStream(filePath).pipe(res);
+      createReadStream(filePath).pipe(res);
     },
   );
 }
@@ -121,8 +128,9 @@ async function reloadRemixVirtualRoutes(config: ResolvedConfig) {
     // Seen this fail when somehow NPM doesn't publish
     // the full 'virtual-routes' directory.
     // E.g. https://unpkg.com/browse/@shopify/cli-hydrogen@0.0.0-next-aa15969-20230703072007/dist/virtual-routes/
-    console.debug(
-      'Could not add virtual routes: ' +
+    console.warn(
+      H2_PREFIX_WARN +
+        'Could not add virtual routes: ' +
         (error?.stack ?? error?.message ?? error),
     );
   });

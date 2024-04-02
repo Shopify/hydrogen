@@ -1,13 +1,7 @@
-/**
- * This file is only used for the classic compiler.
- * Refer to `hydrogen/src/vite/add-virtual-routes.ts` for Vite.
- * @deprecated
- */
-
 import {fileURLToPath} from 'node:url';
-import {glob} from '@shopify/cli-kit/node/fs';
-import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
-import type {RemixConfig} from './remix-config.js';
+import path from 'node:path';
+import {readdir} from 'node:fs/promises';
+import type {RemixConfig} from '@remix-run/dev/dist/config.js';
 
 export const VIRTUAL_ROUTES_DIR = 'virtual-routes/routes';
 export const VIRTUAL_ROOT = 'virtual-routes/virtual-root';
@@ -21,13 +15,13 @@ export async function addVirtualRoutes<T extends MinimalRemixConfig>(
   config: T,
 ): Promise<T> {
   const userRouteList = Object.values(config.routes);
-  const distPath = fileURLToPath(new URL('..', import.meta.url));
-  const virtualRoutesPath = joinPath(distPath, VIRTUAL_ROUTES_DIR);
+  const distPath = path.dirname(fileURLToPath(import.meta.url));
+  const virtualRoutesPath = path.join(distPath, VIRTUAL_ROUTES_DIR);
 
-  for (const absoluteFilePath of await glob(
-    joinPath(virtualRoutesPath, '**', '*'),
-  )) {
-    const relativeFilePath = relativePath(virtualRoutesPath, absoluteFilePath);
+  for (const relativeFilePath of await readdir(virtualRoutesPath, {
+    recursive: true,
+  })) {
+    const absoluteFilePath = path.join(virtualRoutesPath, relativeFilePath);
     const routePath = relativeFilePath
       .replace(/\.[jt]sx?$/, '')
       .replaceAll('\\', '/');
@@ -53,16 +47,16 @@ export async function addVirtualRoutes<T extends MinimalRemixConfig>(
         path: normalizedVirtualRoutePath,
         index: isIndex || undefined,
         caseSensitive: undefined,
-        file: relativePath(config.appDirectory, absoluteFilePath),
+        file: path.relative(config.appDirectory, absoluteFilePath),
       };
 
       if (!config.routes[VIRTUAL_ROOT]) {
         config.routes[VIRTUAL_ROOT] = {
           id: VIRTUAL_ROOT,
           path: '',
-          file: relativePath(
+          file: path.relative(
             config.appDirectory,
-            joinPath(distPath, VIRTUAL_ROOT + '.jsx'),
+            path.join(distPath, VIRTUAL_ROOT + '.jsx'),
           ),
         };
       }

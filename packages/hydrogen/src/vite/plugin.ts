@@ -1,15 +1,11 @@
 import path from 'node:path';
-import type {Plugin, ResolvedConfig} from 'vite';
+import type {Plugin, ResolvedConfig, UserConfig} from 'vite';
 import {
   setupHydrogenMiddleware,
   setupRemixDevServerHooks,
 } from './hydrogen-middleware.js';
-import {
-  getH2OPluginContext,
-  setH2OPluginContext,
-  type HydrogenPluginOptions,
-} from './shared.js';
-import {H2O_BINDING_NAME, createLogRequestEvent} from '../request-events.js';
+import type {HydrogenPluginOptions, H2PluginContext} from './types.js';
+import {H2O_BINDING_NAME, createLogRequestEvent} from './request-events.js';
 
 /**
  * Enables Hydrogen utilities for local development
@@ -50,6 +46,7 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
             setupScripts: [setupRemixDevServerHooks],
             shouldStartRuntime: (config) => !isRemixChildCompiler(config),
             services: {
+              // @ts-ignore
               [H2O_BINDING_NAME]: createLogRequestEvent({
                 transformLocation: (partialLocation) =>
                   path.join(config.root ?? process.cwd(), partialLocation),
@@ -73,4 +70,14 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
       },
     },
   ];
+}
+
+const H2O_CONTEXT_KEY = '__h2oPluginContext';
+
+function getH2OPluginContext(config: UserConfig | ResolvedConfig) {
+  return (config as any)?.[H2O_CONTEXT_KEY] as H2PluginContext;
+}
+
+function setH2OPluginContext(options: Partial<H2PluginContext>) {
+  return {[H2O_CONTEXT_KEY]: options} as Record<string, any>;
 }

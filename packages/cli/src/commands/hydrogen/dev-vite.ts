@@ -23,7 +23,6 @@ import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
-import {setH2OPluginContext} from '../../lib/vite/shared.js';
 import {
   getDebugBannerLine,
   startTunnelAndPushConfig,
@@ -291,4 +290,31 @@ export async function runDev({
       await viteServer.close();
     },
   };
+}
+
+type H2OPluginContext = {
+  cliOptions?: Partial<
+    HydrogenPluginOptions &
+      OxygenPluginOptions & {
+        envPromise: Promise<Record<string, any>>;
+      }
+  >;
+};
+
+type HydrogenPluginOptions = {
+  disableVirtualRoutes?: boolean;
+};
+
+type OxygenPluginOptions = {
+  ssrEntry?: string;
+  debug?: boolean;
+  inspectorPort?: number;
+  env?: Record<string, any>;
+  logRequestLine?: null | ((request: Request) => void);
+};
+
+const H2O_CONTEXT_KEY = '__h2oPluginContext';
+
+function setH2OPluginContext(options: Partial<H2OPluginContext>) {
+  return {[H2O_CONTEXT_KEY]: options} as Record<string, any>;
 }

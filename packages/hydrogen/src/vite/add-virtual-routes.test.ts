@@ -1,16 +1,22 @@
 import {describe, it, expect} from 'vitest';
-import {fileURLToPath} from 'url';
-import type {RemixConfig} from './remix-config.js';
+import {fileURLToPath} from 'node:url';
+import path from 'node:path';
+import type {RemixConfig} from '@remix-run/dev/dist/config.js';
 import {
   addVirtualRoutes,
   VIRTUAL_ROOT,
   VIRTUAL_ROUTES_DIR,
-} from './virtual-routes.js';
+} from './add-virtual-routes.js';
+
+const appDirectory = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  'virtual-test',
+);
 
 describe('virtual routes', () => {
   it('adds virtual routes', async () => {
     const config = {
-      appDirectory: fileURLToPath(new URL('../virtual-test', import.meta.url)),
+      appDirectory,
       routes: {},
     } as RemixConfig;
 
@@ -45,7 +51,7 @@ describe('virtual routes', () => {
     };
 
     const config = {
-      appDirectory: fileURLToPath(new URL('../virtual-test', import.meta.url)),
+      appDirectory,
       routes: {
         [existingIndexRoute.id]: existingIndexRoute,
       },
