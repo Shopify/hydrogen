@@ -34,6 +34,9 @@ interface SeoProps {
 
 type SeoWrapper = undefined | {seo: any};
 
+/**
+ * @deprecated - use `getSeoMeta` instead
+ */
 export function Seo({debug}: SeoProps) {
   const matches = useMatches();
   const location = useLocation();
