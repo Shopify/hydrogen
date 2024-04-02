@@ -41,7 +41,7 @@ const data: ReferenceEntityTemplateSchema = {
         examples: [
           {
             description:
-              'Registers an unique key for the analytics provider to wait for ready callback before sending any events.',
+              'Registers a unique key with the analytics provider component, enabling custom analytics integrations to wait for a callback before sending event data.',
             codeblock: {
               title: '',
               tabs: [
