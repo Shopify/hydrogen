@@ -16,6 +16,7 @@ import {
 } from '@shopify/cli-kit/node/git';
 import {relativePath, resolvePath} from '@shopify/cli-kit/node/path';
 import {
+  renderConfirmationPrompt,
   renderSelectPrompt,
   renderSuccess,
   renderTasks,
@@ -33,8 +34,10 @@ import {
 } from '@shopify/oxygen-cli/deploy';
 
 import {
+  createEnvironmentCliChoiceLabel,
   findEnvironmentByBranchOrThrow,
   findEnvironmentOrThrow,
+  orderEnvironmentsBySafety,
 } from '../../lib/common.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
@@ -259,7 +262,7 @@ export async function runDeploy(
   let branch: string | undefined | null;
   let commitHash: string | undefined;
   let deploymentData: OxygenDeploymentData | undefined;
-  let deploymentEnvironmentTag: string | undefined | null = undefined;
+  let userChosenEnvironmentTag: string | undefined | null = undefined;
   let gitCommit: GitCommit;
 
   try {
@@ -299,6 +302,7 @@ export async function runDeploy(
   }
 
   let userProvidedEnvironmentTag: string | null = null;
+  let isPreview = false;
 
   if (isCI && envHandle) {
     throw new AbortError(
@@ -324,8 +328,15 @@ export async function runDeploy(
         deploymentData.environments || [],
         envHandle,
       ).branch;
+
+      if (userProvidedEnvironmentTag === null) {
+        isPreview = true;
+      }
     } else if (envBranch) {
-      userProvidedEnvironmentTag = envBranch;
+      userProvidedEnvironmentTag = findEnvironmentByBranchOrThrow(
+        deploymentData.environments || [],
+        envBranch,
+      ).branch;
     }
   }
 
@@ -343,23 +354,25 @@ export async function runDeploy(
   if (
     !isCI &&
     !defaultEnvironment &&
-    !userProvidedEnvironmentTag &&
+    !envHandle &&
+    !envBranch &&
     deploymentData?.environments
   ) {
     if (deploymentData.environments.length > 1) {
-      const choices = [
-        ...deploymentData.environments.map(({name, branch, type}) => ({
-          label: name,
-          // The preview environment will never have an associated branch so
-          // we're using a custom string here to identify it later in our code.
-          // Using a period at the end of the value is an invalid branch name
-          // in Git so we can be sure that this won't conflict with a merchant's
-          // repository.
-          value: type === 'PREVIEW' ? 'shopify-preview-environment.' : branch,
-        })),
-      ];
+      const environments = orderEnvironmentsBySafety(
+        deploymentData.environments,
+      );
+      const choices = environments.map(({name, branch, handle, type}) => ({
+        label: createEnvironmentCliChoiceLabel(name, handle, branch),
+        // The preview environment will never have an associated branch so
+        // we're using a custom string here to identify it later in our code.
+        // Using a period at the end of the value is an invalid branch name
+        // in Git so we can be sure that this won't conflict with a merchant's
+        // repository.
+        value: type === 'PREVIEW' ? 'shopify-preview-environment.' : branch,
+      }));
 
-      deploymentEnvironmentTag = await renderSelectPrompt({
+      userChosenEnvironmentTag = await renderSelectPrompt({
         message: 'Select an environment to deploy to',
         choices,
         defaultValue: branch,
@@ -380,13 +393,12 @@ export async function runDeploy(
   }
 
   let fallbackEnvironmentTag = branch;
-  let isPreview = false;
 
   // If the user has explicitly selected `Preview` then we should not pass an
   // environment tag at all.
-  if (deploymentEnvironmentTag === 'shopify-preview-environment.') {
+  if (userChosenEnvironmentTag === 'shopify-preview-environment.') {
     fallbackEnvironmentTag = undefined;
-    deploymentEnvironmentTag = undefined;
+    userChosenEnvironmentTag = undefined;
     isPreview = true;
   }
 
@@ -408,7 +420,7 @@ export async function runDeploy(
     deploymentToken: parseToken(token as string),
     environmentTag:
       userProvidedEnvironmentTag ||
-      deploymentEnvironmentTag ||
+      userChosenEnvironmentTag ||
       fallbackEnvironmentTag,
     generateAuthBypassToken,
     verificationMaxDuration: 180,
@@ -425,6 +437,52 @@ export async function runDeploy(
     workerDir,
     overriddenEnvironmentVariables,
   };
+
+  if (
+    !isCI &&
+    (userProvidedEnvironmentTag ||
+      userChosenEnvironmentTag ||
+      config.defaultEnvironment)
+  ) {
+    let chosenEnvironment: {
+      name: string;
+      branch: string | null;
+      handle: string;
+    } | null = null;
+
+    if (config.defaultEnvironment) {
+      chosenEnvironment = findEnvironmentOrThrow(
+        deploymentData!.environments!,
+        'preview',
+      );
+    } else if (config.environmentTag) {
+      chosenEnvironment = findEnvironmentByBranchOrThrow(
+        deploymentData!.environments!,
+        config.environmentTag,
+      );
+    }
+
+    let confirmationMessage = 'Creating a deployment';
+
+    if (chosenEnvironment) {
+      confirmationMessage += ` against ${createEnvironmentCliChoiceLabel(
+        chosenEnvironment.name,
+        chosenEnvironment.handle,
+        chosenEnvironment.branch,
+      )}`;
+    }
+
+    const confirmPush = await renderConfirmationPrompt({
+      confirmationMessage: 'Yes, confirm deploy',
+      cancellationMessage: 'No, cancel deploy',
+      message: outputContent`${confirmationMessage}
+
+Continue?`.value,
+    });
+
+    // Cancelled making changes
+    if (!confirmPush) return;
+  }
 
   let resolveUpload: () => void;
   const uploadPromise = new Promise<void>((resolve) => {
