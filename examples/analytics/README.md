@@ -27,7 +27,11 @@ The following files have been added (🆕) or changed from the default Hydration
 | 🆕 [`app/components/CustomAnalytics.tsx`](app/components/CustomAnalytics.tsx)                     | A component that subscribes to all default analytics events and can be used to publish events to third-party services.
 | [`env.d.ts`](/env.d.ts)                                                                    |  Updated `Env` interface to include `PUBLIC_CHECKOUT_DOMAIN`. Required for TypeScript only.
 | [`app/root.tsx`](app/root.tsx)                                                                    | Updated the root layout with the `Analytics` provider and `getShopAnalytics` |
-| [`app/entry.server.tsx`](app/entry.server.tsx)                                                  | Updated the `createContentSecurityPolicy` with `checkoutDomain` and `storeDomain` properties
+| [`app/entry.server.tsx`](app/entry.server.tsx)                                                  | Updated the `createContentSecurityPolicy` with `checkoutDomain` and `storeDomain` properties |
+| [`app/routes/products.$handle.tsx`](app/routes/products.$handle.tsx)                              | Added Analytics.ProductView component |
+| [`app/routes/collections.$handle.tsx`](app/routes/collections.$handle.tsx)                        | Added Analytics.CollectionView component |
+| [`app/routes/cart.tsx`](app/routes/cart.tsx)                        | Added Analytics.CartView component |
+| [`app/routes/search.tsx`](app/routes/search.tsx)                        | Added Analytics.SearchView component |
 
 ## Instructions
 
