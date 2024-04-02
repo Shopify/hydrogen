@@ -40,7 +40,7 @@ const data: ReferenceEntityTemplateSchema = {
         title: 'getCustomerPrivacy',
         examples: [
           {
-            description: 'Returns `window.Shopify.customerPrivacy` if exists.',
+            description: 'Returns the value of `window.Shopify.customerPrivacy` if it exists.',
             codeblock: {
               title: '',
               tabs: [
