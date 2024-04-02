@@ -4,7 +4,8 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "paths": {
-      "@shopify/hydrogen": ["./src"]
+      "@shopify/hydrogen": ["./src"],
+      "~/mini-oxygen/*": ["../mini-oxygen/src/*"]
     }
   },
   "exclude": ["src/cart/createCartHandler.example.ts"]

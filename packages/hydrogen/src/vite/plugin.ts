@@ -7,6 +7,9 @@ import {
 import type {HydrogenPluginOptions} from './types.js';
 import {H2O_BINDING_NAME, createLogRequestEvent} from './request-events.js';
 
+// @ts-ignore -- Module outside of the rootDir
+import type {OxygenApiOptions} from '~/mini-oxygen/vite/plugin.js';
+
 export type {HydrogenPluginOptions};
 
 /**
@@ -64,6 +67,7 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
           setupScripts: [setupRemixDevServerHooks],
           shouldStartRuntime: () => !isRemixChildCompiler(resolvedConfig),
           services: {
+            // @ts-ignore
             [H2O_BINDING_NAME]: createLogRequestEvent({
               transformLocation: (partialLocation) =>
                 path.join(
@@ -72,7 +76,7 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
                 ),
             }),
           },
-        });
+        } satisfies OxygenApiOptions);
       },
       configureServer(viteDevServer) {
         if (isRemixChildCompiler(viteDevServer.config)) return;

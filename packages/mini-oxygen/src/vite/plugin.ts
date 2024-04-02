@@ -20,6 +20,10 @@ export type OxygenPluginOptions = Partial<
   >
 >;
 
+/**
+ * For internal use only.
+ * @private
+ */
 export type OxygenApiOptions = OxygenPluginOptions &
   InternalMiniOxygenOptions & {
     envPromise?: Promise<Record<string, any>>;

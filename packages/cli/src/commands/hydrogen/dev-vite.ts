@@ -35,6 +35,11 @@ import {getCliCommand} from '../../lib/shell.js';
 import {findPort} from '../../lib/find-port.js';
 import {logRequestLine} from '../../lib/mini-oxygen/common.js';
 
+// @ts-ignore -- Module outside of the rootDir
+import type {OxygenApiOptions} from '~/mini-oxygen/vite/plugin.js';
+// @ts-ignore -- Module outside of the rootDir
+import type {HydrogenPluginOptions} from '~/hydrogen/vite/plugin.js';
+
 export default class DevVite extends Command {
   static description =
     'Runs Hydrogen storefront in an Oxygen worker for development.';
@@ -170,16 +175,15 @@ export async function runDev({
         configResolved(config) {
           findPlugin(config, 'hydrogen:main')?.api?.registerPluginOptions({
             disableVirtualRoutes,
-          });
+          } satisfies HydrogenPluginOptions);
 
           findPlugin(config, 'oxygen:main')?.api?.registerPluginOptions({
             debug,
-            ssrEntry,
+            entry: ssrEntry,
             envPromise: envPromise.then(({allVariables}) => allVariables),
             inspectorPort,
-            disableVirtualRoutes,
             logRequestLine,
-          });
+          } satisfies OxygenApiOptions);
         },
       },
     ],
