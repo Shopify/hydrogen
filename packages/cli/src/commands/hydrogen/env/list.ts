@@ -11,6 +11,7 @@ import {
 import {linkStorefront} from '../link.js';
 import {commonFlags} from '../../../lib/flags.js';
 import {getStorefrontEnvironments} from '../../../lib/graphql/admin/list-environments.js';
+import {createEnvironmentCliChoiceLabel} from '../../../lib/common.js';
 import {
   renderMissingLink,
   renderMissingStorefront,
@@ -103,24 +104,9 @@ export async function runEnvList({path: root = process.cwd()}: Flags) {
     const environmentUrl =
       type === 'PRODUCTION' ? storefront.productionUrl : url;
 
-    const metadata = {
-      handle,
-      branch,
-    };
-
-    const metadataStringified = Object.entries(metadata)
-      .reduce((acc, [key, val]) => {
-        if (val) {
-          acc.push(`${key}: ${val}`);
-        }
-        return acc;
-      }, [] as Array<string>)
-      .join(', ');
-
     outputInfo(
-      outputContent`${colors.bold(name)} ${colors.dim(
-        `(${metadataStringified})`,
-      )}`.value,
+      outputContent`${createEnvironmentCliChoiceLabel(name, handle, branch)}`
+        .value,
     );
     if (environmentUrl) {
       outputInfo(outputContent`    ${environmentUrl}`.value);

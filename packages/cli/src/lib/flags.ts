@@ -61,7 +61,7 @@ export const commonFlags = {
   env: {
     env: Flags.string({
       description:
-        "Specifies the environment to perform the operation using its handle. Run `env list` to view an environment's handle ",
+        'Specifies the environment to perform the operation using its handle. Fetch the handle using the `env list` command.',
       exclusive: ['env-branch'],
     }),
   },
