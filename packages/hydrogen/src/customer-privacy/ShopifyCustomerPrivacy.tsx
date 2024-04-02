@@ -75,14 +75,16 @@ export interface CustomEventMap {
   customerPrivacyApiLoaded: CustomEvent<CustomerPrivacyApiLoaded>;
 }
 
-export type PrivacyConsentBannerProps = {
+export type CustomerPrivacyApiProps = {
+  /** The production shop domain url. */
   shopDomain: string;
+  /** The production shop checkout domain url.  */
   checkoutRootDomain: string;
+  /** The storefront access token for the shop. */
   storefrontAccessToken: string;
-};
-
-export type CustomerPrivacyApiProps = PrivacyConsentBannerProps & {
+  /** Whether to load the Shopify privacy banner as configured in Shopify admin. */
   withPrivacyBanner: boolean;
+  /** Callback to be called when visitor consent is collected. */
   onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;
 };
 

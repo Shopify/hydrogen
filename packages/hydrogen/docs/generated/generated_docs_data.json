@@ -1,10 +1,10 @@
 [
   {
-    "name": "Analytics.Provider",
+    "name": "Unstable__Analytics.Provider",
     "category": "components",
     "isVisualComponent": false,
     "related": [],
-    "description": "Provides a context to track page view, cart events and send them to Shopify. It is integrated with the Customer Privacy API for consent management. It is flexible for other analytics platform to integrate into its subscribe and publish system. It provides the `useAnalytics` hook to access the analytics provider context.",
+    "description": "Provides a context to track page view, cart events and send them to Shopify. It is integrated with the Customer Privacy API for consent management. It is flexible for other analytics platform to integrate into its subscribe and publish system. It provides the [`useUnstable__Analytics`](/docs/api/hydrogen/2024-01/hooks/useunstable__analytics) hook to access the analytics provider context.",
     "type": "component",
     "defaultExample": {
       "description": "This is the default example",
@@ -12,7 +12,7 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {Analytics, getShopAnalytics} from '@shopify/hydrogen';\nimport {defer} from '@shopify/remix-oxygen';\nimport {Outlet, useLoaderData} from '@remix-run/react';\n\nexport async function loader({context}) {\n  const {cart, env} = context;\n  const cartPromise = cart.get();\n\n  return defer({\n    cart: cartPromise,\n    shop: getShopAnalytics(context),\n    consent: {\n      checkoutRootDomain: env.PUBLIC_CHECKOUT_DOMAIN,\n      shopDomain: env.PUBLIC_STORE_DOMAIN,\n      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n      withPrivacyBanner: true,\n    },\n  });\n}\n\nexport default function App() {\n  const data = useLoaderData();\n\n  return (\n    &lt;html lang=\"en\"&gt;\n      &lt;head&gt;\n        &lt;meta charSet=\"utf-8\" /&gt;\n        &lt;meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" /&gt;\n      &lt;/head&gt;\n      &lt;body&gt;\n        &lt;Analytics.Provider\n          cart={data.cart}\n          shop={data.shop}\n          consent={data.consent}\n        &gt;\n          &lt;Outlet /&gt;\n        &lt;/Analytics.Provider&gt;\n      &lt;/body&gt;\n    &lt;/html&gt;\n  );\n}\n",
+            "code": "import {Unstable__Analytics, getShopAnalytics} from '@shopify/hydrogen';\nimport {defer} from '@shopify/remix-oxygen';\nimport {Outlet, useLoaderData} from '@remix-run/react';\n\nexport async function loader({context}) {\n  const {cart, env} = context;\n  const cartPromise = cart.get();\n\n  return defer({\n    cart: cartPromise,\n    shop: getShopAnalytics(context),\n    consent: {\n      checkoutRootDomain: env.PUBLIC_CHECKOUT_DOMAIN,\n      shopDomain: env.PUBLIC_STORE_DOMAIN,\n      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n      withPrivacyBanner: true,\n    },\n  });\n}\n\nexport default function App() {\n  const data = useLoaderData();\n\n  return (\n    &lt;html lang=\"en\"&gt;\n      &lt;head&gt;\n        &lt;meta charSet=\"utf-8\" /&gt;\n        &lt;meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" /&gt;\n      &lt;/head&gt;\n      &lt;body&gt;\n        &lt;Unstable__Analytics.Provider\n          cart={data.cart}\n          shop={data.shop}\n          consent={data.consent}\n        &gt;\n          &lt;Outlet /&gt;\n        &lt;/Unstable__Analytics.Provider&gt;\n      &lt;/body&gt;\n    &lt;/html&gt;\n  );\n}\n",
             "language": "js"
           },
           {
@@ -34,7 +34,7 @@
             "filePath": "/analytics-manager/AnalyticsProvider.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "AnalyticsProviderProps",
-            "value": "{\n  /** React children to render. */\n  children?: ReactNode;\n  /** The cart or cart promise to track. */\n  cart: Promise<CartReturn | null> | CartReturn | null;\n  /** An optional function to set wether the user can be tracked. */\n  canTrack?: () => boolean;\n  /** An optional custom payload to pass to all events. e.g language/locale/currency */\n  customData?: Record<string, unknown>;\n  /** The shop/store config required to publish events **/\n  shop: Promise<ShopAnalytic | null> | ShopAnalytic | null;\n  /** The customer privacy consent configuration and options */\n  consent: CustomerPrivacyApiProps;\n}",
+            "value": "{\n  /** React children to render. */\n  children?: ReactNode;\n  /** The cart or cart promise to track for cart analytics. When there is a difference between the state of the cart, `AnalyticsProvider` will trigger a `cart_updated` event. It will also produce `product_added_to_cart` and `product_removed_from_cart` based on cart line quantity and cart line id changes. */\n  cart: Promise<CartReturn | null> | CartReturn | null;\n  /** An optional function to set wether the user can be tracked. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.userCanBeTracked()`. */\n  canTrack?: () => boolean;\n  /** An optional custom payload to pass to all events. e.g language/locale/currency. */\n  customData?: Record<string, unknown>;\n  /** The shop configuration required to publish analytics events to Shopify. Use [`getShopAnalytics`](/docs/api/hydrogen/2024-01/utilities/getshopanalytics). */\n  shop: Promise<ShopAnalytic | null> | ShopAnalytic | null;\n  /** The customer privacy consent configuration and options. */\n  consent: CustomerPrivacyApiProps;\n}",
             "description": "",
             "members": [
               {
@@ -50,14 +50,14 @@
                 "syntaxKind": "PropertySignature",
                 "name": "cart",
                 "value": "CartReturn | Promise<CartReturn>",
-                "description": "The cart or cart promise to track."
+                "description": "The cart or cart promise to track for cart analytics. When there is a difference between the state of the cart, `AnalyticsProvider` will trigger a `cart_updated` event. It will also produce `product_added_to_cart` and `product_removed_from_cart` based on cart line quantity and cart line id changes."
               },
               {
                 "filePath": "/analytics-manager/AnalyticsProvider.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "canTrack",
                 "value": "() => boolean",
-                "description": "An optional function to set wether the user can be tracked.",
+                "description": "An optional function to set wether the user can be tracked. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.userCanBeTracked()`.",
                 "isOptional": true
               },
               {
@@ -65,7 +65,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "customData",
                 "value": "Record<string, unknown>",
-                "description": "An optional custom payload to pass to all events. e.g language/locale/currency",
+                "description": "An optional custom payload to pass to all events. e.g language/locale/currency.",
                 "isOptional": true
               },
               {
@@ -73,14 +73,14 @@
                 "syntaxKind": "PropertySignature",
                 "name": "shop",
                 "value": "ShopAnalytic | Promise<ShopAnalytic>",
-                "description": "The shop/store config required to publish events *"
+                "description": "The shop configuration required to publish analytics events to Shopify. Use [`getShopAnalytics`](/docs/api/hydrogen/2024-01/utilities/getshopanalytics)."
               },
               {
                 "filePath": "/analytics-manager/AnalyticsProvider.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "consent",
                 "value": "CustomerPrivacyApiProps",
-                "description": "The customer privacy consent configuration and options"
+                "description": "The customer privacy consent configuration and options."
               }
             ]
           },
@@ -109,7 +109,7 @@
             "filePath": "/analytics-manager/AnalyticsProvider.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ShopAnalytic",
-            "value": "{\n  shopId: string;\n  acceptedLanguage: LanguageCode;\n  currency: CurrencyCode;\n  hydrogenSubchannelId: string | '0';\n}",
+            "value": "{\n  /** The shop ID. */\n  shopId: string;\n  /** The language code that is being displayed to user. */\n  acceptedLanguage: LanguageCode;\n  /** The currency code that is being displayed to user. */\n  currency: CurrencyCode;\n  /** The Hydrogen subchannel ID generated by Oxygen in the environment variable. */\n  hydrogenSubchannelId: string | '0';\n}",
             "description": "",
             "members": [
               {
@@ -117,28 +117,28 @@
                 "syntaxKind": "PropertySignature",
                 "name": "shopId",
                 "value": "string",
-                "description": ""
+                "description": "The shop ID."
               },
               {
                 "filePath": "/analytics-manager/AnalyticsProvider.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "acceptedLanguage",
                 "value": "LanguageCode",
-                "description": ""
+                "description": "The language code that is being displayed to user."
               },
               {
                 "filePath": "/analytics-manager/AnalyticsProvider.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "currency",
                 "value": "CurrencyCode",
-                "description": ""
+                "description": "The currency code that is being displayed to user."
               },
               {
                 "filePath": "/analytics-manager/AnalyticsProvider.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "hydrogenSubchannelId",
                 "value": "string",
-                "description": ""
+                "description": "The Hydrogen subchannel ID generated by Oxygen in the environment variable."
               }
             ]
           },
@@ -146,14 +146,7 @@
             "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CustomerPrivacyApiProps",
-            "value": "PrivacyConsentBannerProps & {\n  withPrivacyBanner: boolean;\n  onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;\n}",
-            "description": ""
-          },
-          "PrivacyConsentBannerProps": {
-            "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "PrivacyConsentBannerProps",
-            "value": "{\n  shopDomain: string;\n  checkoutRootDomain: string;\n  storefrontAccessToken: string;\n}",
+            "value": "{\n  /** The production shop domain url. */\n  shopDomain: string;\n  /** The production shop checkout domain url.  */\n  checkoutRootDomain: string;\n  /** The storefront access token for the shop. */\n  storefrontAccessToken: string;\n  /** Whether to load the Shopify privacy banner as configured in Shopify admin. */\n  withPrivacyBanner: boolean;\n  /** Callback to be called when visitor consent is collected. */\n  onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;\n}",
             "description": "",
             "members": [
               {
@@ -161,69 +154,35 @@
                 "syntaxKind": "PropertySignature",
                 "name": "shopDomain",
                 "value": "string",
-                "description": ""
+                "description": "The production shop domain url."
               },
               {
                 "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "checkoutRootDomain",
                 "value": "string",
-                "description": ""
+                "description": "The production shop checkout domain url."
               },
               {
                 "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "storefrontAccessToken",
                 "value": "string",
-                "description": ""
-              }
-            ]
-          },
-          "PrivacyBanner": {
-            "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "PrivacyBanner",
-            "value": "{\n  loadBanner: (options: CustomerPrivacyConsentConfig) => void;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "loadBanner",
-                "value": "(options: CustomerPrivacyConsentConfig) => void",
-                "description": ""
-              }
-            ]
-          },
-          "CustomerPrivacyConsentConfig": {
-            "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CustomerPrivacyConsentConfig",
-            "value": "{\n  checkoutRootDomain?: string;\n  storefrontRootDomain?: string;\n  storefrontAccessToken?: string;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "checkoutRootDomain",
-                "value": "string",
-                "description": "",
-                "isOptional": true
+                "description": "The storefront access token for the shop."
               },
               {
                 "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
                 "syntaxKind": "PropertySignature",
-                "name": "storefrontRootDomain",
-                "value": "string",
-                "description": "",
-                "isOptional": true
+                "name": "withPrivacyBanner",
+                "value": "boolean",
+                "description": "Whether to load the Shopify privacy banner as configured in Shopify admin."
               },
               {
                 "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
                 "syntaxKind": "PropertySignature",
-                "name": "storefrontAccessToken",
-                "value": "string",
-                "description": "",
+                "name": "onVisitorConsentCollected",
+                "value": "(consent: VisitorConsentCollected) => void",
+                "description": "Callback to be called when visitor consent is collected.",
                 "isOptional": true
               }
             ]
@@ -286,16 +245,16 @@
       "description": "List of components available with `Analytics`:",
       "exampleGroups": [
         {
-          "title": "Analytics.CartView",
+          "title": "Unstable__Analytics.CartView",
           "examples": [
             {
-              "description": "Publishes a `cart_viewed` event to the `Analytics.Provider`.",
+              "description": "Publishes a `cart_viewed` event to the `Unstable__Analytics.Provider`.",
               "codeblock": {
-                "title": "Analytics.CartView",
+                "title": "",
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "export default function CartView() {\n  return (\n    &lt;div className=\"cart\"&gt;\n      &lt;h1&gt;Cart&lt;/h1&gt;\n      &lt;Analytics.CartView /&gt;\n    &lt;/div&gt;\n  );\n}\n",
+                    "code": "import {Unstable__Analytics} from '@shopify/hydrogen';\n\nexport default function CartView() {\n  return (\n    &lt;div className=\"cart\"&gt;\n      &lt;h1&gt;Cart&lt;/h1&gt;\n      &lt;Unstable__Analytics.CartView /&gt;\n    &lt;/div&gt;\n  );\n}\n",
                     "language": "js"
                   }
                 ]
@@ -304,16 +263,16 @@
           ]
         },
         {
-          "title": "Analytics.CollectionView",
+          "title": "Unstable__Analytics.CollectionView",
           "examples": [
             {
-              "description": "Publishes a `collection_viewed` event to the `Analytics.Provider`.",
+              "description": "Publishes a `collection_viewed` event to the `Unstable__Analytics.Provider`.",
               "codeblock": {
-                "title": "Analytics.CollectionView",
+                "title": "",
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "export default function Collection() {\n  const {collection} = useLoaderData();\n  return (\n    &lt;div className=\"collection\"&gt;\n      &lt;h1&gt;{collection.title}&lt;/h1&gt;\n      &lt;Analytics.CollectionView\n        data={{\n          collection: {\n            id: collection.id,\n            handle: collection.handle,\n          },\n        }}\n      /&gt;\n    &lt;/div&gt;\n  );\n}\n",
+                    "code": "import {Unstable__Analytics} from '@shopify/hydrogen';\n\nexport default function Collection() {\n  const {collection} = useLoaderData();\n  return (\n    &lt;div className=\"collection\"&gt;\n      &lt;h1&gt;{collection.title}&lt;/h1&gt;\n      &lt;Unstable__Analytics.CollectionView\n        data={{\n          collection: {\n            id: collection.id,\n            handle: collection.handle,\n          },\n        }}\n      /&gt;\n    &lt;/div&gt;\n  );\n}\n",
                     "language": "js"
                   }
                 ]
@@ -322,16 +281,16 @@
           ]
         },
         {
-          "title": "Analytics.CustomView",
+          "title": "Unstable__Analytics.CustomView",
           "examples": [
             {
-              "description": "Publishes a custom page view event to the `Analytics.Provider`. The `type` prop must be preceded by `custom_`.",
+              "description": "Publishes a custom page view event to the `Unstable__Analytics.Provider`. The `type` prop must be preceded by `custom_`.",
               "codeblock": {
-                "title": "Analytics.CustomView",
+                "title": "",
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "export default function Promotion() {\n  return (\n    &lt;div className=\"promotion\"&gt;\n      &lt;h1&gt;Promotion page&lt;/h1&gt;\n      &lt;Analytics.CustomView\n        type=\"custom_promotion_viewed\"\n        data={{\n          promotion: {\n            id: '123',\n          },\n        }}\n      /&gt;\n    &lt;/div&gt;\n  );\n}\n",
+                    "code": "import {Unstable__Analytics} from '@shopify/hydrogen';\n\nexport default function Promotion() {\n  return (\n    &lt;div className=\"promotion\"&gt;\n      &lt;h1&gt;Promotion page&lt;/h1&gt;\n      &lt;Unstable__Analytics.CustomView\n        type=\"custom_promotion_viewed\"\n        data={{\n          promotion: {\n            id: '123',\n          },\n        }}\n      /&gt;\n    &lt;/div&gt;\n  );\n}\n",
                     "language": "js"
                   }
                 ]
@@ -340,16 +299,16 @@
           ]
         },
         {
-          "title": "Analytics.ProductView",
+          "title": "Unstable__Analytics.ProductView",
           "examples": [
             {
-              "description": "Publishes a `product_viewed` event to the `Analytics.Provider`.",
+              "description": "Publishes a `product_viewed` event to the `Unstable__Analytics.Provider`.",
               "codeblock": {
-                "title": "Analytics.ProductView",
+                "title": "",
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "export default function Product() {\n  const {product} = useLoaderData();\n  const {selectedVariant} = product;\n\n  return (\n    &lt;div className=\"product\"&gt;\n      &lt;h1&gt;{product.title}&lt;/h1&gt;\n      &lt;Analytics.ProductView\n        data={{\n          products: [\n            {\n              id: product.id,\n              title: product.title,\n              price: selectedVariant?.price.amount || '0',\n              vendor: product.vendor,\n              variantId: selectedVariant?.id || '',\n              variantTitle: selectedVariant?.title || '',\n              quantity: 1,\n            },\n          ],\n        }}\n      /&gt;\n    &lt;/div&gt;\n  );\n}\n",
+                    "code": "import {Unstable__Analytics} from '@shopify/hydrogen';\n\nexport default function Product() {\n  const {product} = useLoaderData();\n  const {selectedVariant} = product;\n\n  return (\n    &lt;div className=\"product\"&gt;\n      &lt;h1&gt;{product.title}&lt;/h1&gt;\n      &lt;Unstable__Analytics.ProductView\n        data={{\n          products: [\n            {\n              id: product.id,\n              title: product.title,\n              price: selectedVariant?.price.amount || '0',\n              vendor: product.vendor,\n              variantId: selectedVariant?.id || '',\n              variantTitle: selectedVariant?.title || '',\n              quantity: 1,\n            },\n          ],\n        }}\n      /&gt;\n    &lt;/div&gt;\n  );\n}\n",
                     "language": "js"
                   }
                 ]
@@ -358,16 +317,16 @@
           ]
         },
         {
-          "title": "Analytics.SearchView",
+          "title": "Unstable__Analytics.SearchView",
           "examples": [
             {
-              "description": "Publishes a `collection_viewed` event to the `Analytics.Provider`.",
+              "description": "Publishes a `collection_viewed` event to the `Unstable__Analytics.Provider`.",
               "codeblock": {
-                "title": "Analytics.SearchView",
+                "title": "",
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "export default function SearchPage() {\n  const {searchTerm} = useLoaderData();\n  return (\n    &lt;div className=\"search\"&gt;\n      &lt;h1&gt;Search&lt;/h1&gt;\n      &lt;Analytics.SearchView data={{searchTerm}} /&gt;\n    &lt;/div&gt;\n  );\n}\n",
+                    "code": "import {Unstable__Analytics} from '@shopify/hydrogen';\n\nexport default function SearchPage() {\n  const {searchTerm} = useLoaderData();\n  return (\n    &lt;div className=\"search\"&gt;\n      &lt;h1&gt;Search&lt;/h1&gt;\n      &lt;Unstable__Analytics.SearchView data={{searchTerm}} /&gt;\n    &lt;/div&gt;\n  );\n}\n",
                     "language": "js"
                   }
                 ]
@@ -433,7 +392,7 @@
             "filePath": "/analytics-manager/AnalyticsProvider.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ShopAnalytic",
-            "value": "{\n  shopId: string;\n  acceptedLanguage: LanguageCode;\n  currency: CurrencyCode;\n  hydrogenSubchannelId: string | '0';\n}",
+            "value": "{\n  /** The shop ID. */\n  shopId: string;\n  /** The language code that is being displayed to user. */\n  acceptedLanguage: LanguageCode;\n  /** The currency code that is being displayed to user. */\n  currency: CurrencyCode;\n  /** The Hydrogen subchannel ID generated by Oxygen in the environment variable. */\n  hydrogenSubchannelId: string | '0';\n}",
             "description": "",
             "members": [
               {
@@ -441,28 +400,28 @@
                 "syntaxKind": "PropertySignature",
                 "name": "shopId",
                 "value": "string",
-                "description": ""
+                "description": "The shop ID."
               },
               {
                 "filePath": "/analytics-manager/AnalyticsProvider.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "acceptedLanguage",
                 "value": "LanguageCode",
-                "description": ""
+                "description": "The language code that is being displayed to user."
               },
               {
                 "filePath": "/analytics-manager/AnalyticsProvider.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "currency",
                 "value": "CurrencyCode",
-                "description": ""
+                "description": "The currency code that is being displayed to user."
               },
               {
                 "filePath": "/analytics-manager/AnalyticsProvider.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "hydrogenSubchannelId",
                 "value": "string",
-                "description": ""
+                "description": "The Hydrogen subchannel ID generated by Oxygen in the environment variable."
               }
             ]
           }
@@ -471,11 +430,11 @@
     ]
   },
   {
-    "name": "useAnalytics",
+    "name": "useUnstable__Analytics",
     "category": "hooks",
     "isVisualComponent": false,
     "related": [],
-    "description": "A hook that provides access to the analytics provider context. Must be a descendent of `Analytics.Provider`.",
+    "description": "A hook that provides access to the analytics provider context. Must be a descendent of [`Unstable__Analytics.Provider`](/docs/api/hydrogen/2024-01/components/unstable__analytics-provider).",
     "type": "hook",
     "defaultExample": {
       "description": "This is the default example",
@@ -483,12 +442,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {useAnalytics} from '@shopify/hydrogen';\nimport {useEffect} from 'react';\n\nexport function CustomAnalytics() {\n  const {subscribe, register} = useAnalytics();\n  const {ready} = register('CustomAnalytics'); // unique string identifier\n\n  useEffect(() =&gt; {\n    // Standard events\n    subscribe('page_viewed', (data) =&gt; {\n      console.log('CustomAnalytics - Page viewed:', data);\n    });\n    subscribe('product_viewed', (data) =&gt; {\n      console.log('CustomAnalytics - Product viewed:', data);\n    });\n    subscribe('collection_viewed', (data) =&gt; {\n      console.log('CustomAnalytics - Collection viewed:', data);\n    });\n    subscribe('cart_viewed', (data) =&gt; {\n      console.log('CustomAnalytics - Cart viewed:', data);\n    });\n    subscribe('cart_updated', (data) =&gt; {\n      console.log('CustomAnalytics - Cart updated:', data);\n    });\n\n    // Custom events\n    subscribe('custom_sidecart_viewed', (data) =&gt; {\n      console.log('CustomAnalytics - Custom sidecart opened:', data);\n    });\n\n    // Register the CustomAnalytics component as ready\n    ready();\n  }, []);\n\n  return null;\n}\n",
+            "code": "import {useUnstable__Analytics} from '@shopify/hydrogen';\nimport {useEffect} from 'react';\n\nexport function CustomAnalytics() {\n  const {subscribe, register} = useUnstable__Analytics();\n  const {ready} = register('CustomAnalytics'); // unique string identifier\n\n  useEffect(() =&gt; {\n    // Triggers on every page navigation\n    subscribe('page_viewed', (data) =&gt; {\n      console.log('CustomAnalytics - Page viewed:', data);\n    });\n\n    // Triggers on a page that uses `&lt;Analytics.ProductView&gt;`\n    subscribe('product_viewed', (data) =&gt; {\n      console.log('CustomAnalytics - Product viewed:', data);\n    });\n\n    // Triggers on a page that uses `&lt;Analytics.CollectionView&gt;`\n    subscribe('collection_viewed', (data) =&gt; {\n      console.log('CustomAnalytics - Collection viewed:', data);\n    });\n\n    // Triggers on a page that uses `&lt;Analytics.CartView&gt;`\n    subscribe('cart_viewed', (data) =&gt; {\n      console.log('CustomAnalytics - Cart viewed:', data);\n    });\n\n    // Triggers on a page that uses `&lt;Analytics.SearchView&gt;`\n    subscribe('search_viewed', (data) =&gt; {\n      console.log('CustomAnalytics - Search viewed:', data);\n    });\n\n    // Triggers on a page that uses `&lt;Analytics.CustomView type=\"custom_promotion_viewed\"&gt;`\n    subscribe('custom_promotion_viewed', (data) =&gt; {\n      console.log('CustomAnalytics - Promotion viewed:', data);\n    });\n\n    // Triggers when the cart is updated\n    subscribe('cart_updated', (data) =&gt; {\n      console.log('CustomAnalytics - Cart updated:', data);\n    });\n\n    // Triggers when an existing cart line increases in quantity or a new cart line is added\n    subscribe('product_added_to_cart', (data) =&gt; {\n      console.log('CustomAnalytics - Product added to cart:', data);\n    });\n\n    // Triggers when an existing cart line decreases in quantity or a cart line is removed\n    subscribe('product_removed_from_cart', (data) =&gt; {\n      console.log('CustomAnalytics - Product removed from cart:', data);\n    });\n\n    // Register the CustomAnalytics component as ready\n    ready();\n  }, []);\n\n  return null;\n}\n",
             "language": "js"
           },
           {
             "title": "TypeScript",
-            "code": "import {\n  type PageViewPayload,\n  type ProductViewPayload,\n  type CollectionViewPayload,\n  type CartViewPayload,\n  type CartUpdatePayload,\n  useAnalytics,\n} from '@shopify/hydrogen';\nimport {useEffect} from 'react';\n\nexport function CustomAnalytics() {\n  const {subscribe, register} = useAnalytics();\n  const {ready} = register('CustomAnalytics'); // unique string identifier\n\n  useEffect(() =&gt; {\n    // Standard events\n    subscribe('page_viewed', (data: PageViewPayload) =&gt; {\n      console.log('CustomAnalytics - Page viewed:', data);\n    });\n    subscribe('product_viewed', (data: ProductViewPayload) =&gt; {\n      console.log('CustomAnalytics - Product viewed:', data);\n    });\n    subscribe('collection_viewed', (data: CollectionViewPayload) =&gt; {\n      console.log('CustomAnalytics - Collection viewed:', data);\n    });\n    subscribe('cart_viewed', (data: CartViewPayload) =&gt; {\n      console.log('CustomAnalytics - Cart viewed:', data);\n    });\n    subscribe('cart_updated', (data: CartUpdatePayload) =&gt; {\n      console.log('CustomAnalytics - Cart updated:', data);\n    });\n\n    // Custom events\n    subscribe('custom_sidecart_viewed', (data: unknown) =&gt; {\n      console.log('CustomAnalytics - Custom sidecart opened:', data);\n    });\n\n    // Register the CustomAnalytics component as ready\n    ready();\n  }, []);\n\n  return null;\n}\n",
+            "code": "import {\n  type PageViewPayload,\n  type ProductViewPayload,\n  type CollectionViewPayload,\n  type CartViewPayload,\n  type CartUpdatePayload,\n  useUnstable__Analytics,\n  SearchViewPayload,\n} from '@shopify/hydrogen';\nimport {useEffect} from 'react';\nimport {CartLineUpdatePayload} from './AnalyticsView';\n\nexport function CustomAnalytics() {\n  const {subscribe, register} = useUnstable__Analytics();\n  const {ready} = register('CustomAnalytics'); // unique string identifier\n\n  useEffect(() =&gt; {\n    // Triggers on every page navigation\n    subscribe('page_viewed', (data: PageViewPayload) =&gt; {\n      console.log('CustomAnalytics - Page viewed:', data);\n    });\n\n    // Triggers on a page that uses `&lt;Analytics.ProductView&gt;`\n    subscribe('product_viewed', (data: ProductViewPayload) =&gt; {\n      console.log('CustomAnalytics - Product viewed:', data);\n    });\n\n    // Triggers on a page that uses `&lt;Analytics.CollectionView&gt;`\n    subscribe('collection_viewed', (data: CollectionViewPayload) =&gt; {\n      console.log('CustomAnalytics - Collection viewed:', data);\n    });\n\n    // Triggers on a page that uses `&lt;Analytics.CartView&gt;`\n    subscribe('cart_viewed', (data: CartViewPayload) =&gt; {\n      console.log('CustomAnalytics - Cart viewed:', data);\n    });\n\n    // Triggers on a page that uses `&lt;Analytics.SearchView&gt;`\n    subscribe('search_viewed', (data: SearchViewPayload) =&gt; {\n      console.log('CustomAnalytics - Search viewed:', data);\n    });\n\n    // Triggers on a page that uses `&lt;Analytics.CustomView type=\"custom_promotion_viewed\"&gt;`\n    subscribe('custom_promotion_viewed', (data: unknown) =&gt; {\n      console.log('CustomAnalytics - Promotion viewed:', data);\n    });\n\n    // Triggers when the cart is updated\n    subscribe('cart_updated', (data: CartUpdatePayload) =&gt; {\n      console.log('CustomAnalytics - Cart updated:', data);\n    });\n\n    // Triggers when an existing cart line increases in quantity or a new cart line is added\n    subscribe('product_added_to_cart', (data: CartLineUpdatePayload) =&gt; {\n      console.log('CustomAnalytics - Product added to cart:', data);\n    });\n\n    // Triggers when an existing cart line decreases in quantity or a cart line is removed\n    subscribe('product_removed_from_cart', (data: CartLineUpdatePayload) =&gt; {\n      console.log('CustomAnalytics - Product removed from cart:', data);\n    });\n\n    // Register the CustomAnalytics component as ready\n    ready();\n  }, []);\n\n  return null;\n}\n",
             "language": "ts"
           }
         ],
@@ -497,89 +456,23 @@
     },
     "definitions": [
       {
-        "title": "Props",
+        "title": "Returns",
         "description": "",
-        "type": "AnalyticsContextValue",
+        "type": "AnalyticsContextValueForDoc",
         "typeDefinitions": {
-          "AnalyticsContextValue": {
+          "AnalyticsContextValueForDoc": {
             "filePath": "/analytics-manager/AnalyticsProvider.tsx",
             "syntaxKind": "TypeAliasDeclaration",
-            "name": "AnalyticsContextValue",
-            "value": "{\n  /** A function to tell you the current state of if the user can be tracked by analytics */\n  canTrack: NonNullable<AnalyticsProviderProps['canTrack']>;\n  /** The current cart state */\n  cart: Awaited<AnalyticsProviderProps['cart']>;\n  /** The custom data passed in from the `AnalyticsProvider` */\n  customData?: AnalyticsProviderProps['customData'];\n  /** The previous cart state */\n  prevCart: Awaited<AnalyticsProviderProps['cart']>;\n  /** A function to publish an analytics event */\n  publish: typeof publish;\n  /** A function to register with the analytics provider */\n  register: (key: string) => {ready: () => void};\n  /** The shop configuration required to publish events to Shopify */\n  shop: Awaited<AnalyticsProviderProps['shop']>;\n  /** A function to subscribe to analytics events */\n  subscribe: typeof subscribe;\n}",
+            "name": "AnalyticsContextValueForDoc",
+            "value": "{\n  /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.userCanBeTracked()`. */\n  canTrack?: () => boolean;\n  /** The current cart state. */\n  cart?: Promise<CartReturn | null> | CartReturn | null;\n  /** The custom data passed in from the `AnalyticsProvider`. */\n  customData?: Record<string, unknown>;\n  /** The previous cart state. */\n  prevCart?: Promise<CartReturn | null> | CartReturn | null;\n  /** A function to publish an analytics event. */\n  publish?: AnalyticsContextPublishForDoc;\n  /** A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/2024-01/hooks/useunstable__analytics#example-useunstable__analytics.register). */\n  register?: (key: string) => {ready: () => void};\n  /** The shop configuration required to publish events to Shopify. */\n  shop?: Promise<ShopAnalytic | null> | ShopAnalytic | null;\n  /** A function to subscribe to analytics events. */\n  subscribe?: AnalyticsContextSubscribeForDoc;\n}",
             "description": "",
             "members": [
               {
                 "filePath": "/analytics-manager/AnalyticsProvider.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "canTrack",
-                "value": "NonNullable<AnalyticsProviderProps['canTrack']>",
-                "description": "A function to tell you the current state of if the user can be tracked by analytics"
-              },
-              {
-                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "cart",
-                "value": "Awaited<AnalyticsProviderProps['cart']>",
-                "description": "The current cart state"
-              },
-              {
-                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "customData",
-                "value": "Record<string, unknown>",
-                "description": "The custom data passed in from the `AnalyticsProvider`",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "prevCart",
-                "value": "Awaited<AnalyticsProviderProps['cart']>",
-                "description": "The previous cart state"
-              },
-              {
-                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "publish",
-                "value": "{ (event: \"page_viewed\", payload: PageViewPayload): void; (event: \"product_viewed\", payload: ProductViewPayload): void; (event: \"collection_viewed\", payload: CollectionViewPayload): void; (event: \"cart_viewed\", payload: CartViewPayload): void; (event: \"cart_updated\", payload: CartUpdatePayload): void; (event: \"product_added_to_cart\", payload: CartLineUpdatePayload): void; (event: \"product_removed_from_cart\", payload: CartLineUpdatePayload): void; (event: `custom_${string}`, payload: OtherData): void; }",
-                "description": "A function to publish an analytics event"
-              },
-              {
-                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "register",
-                "value": "(key: string) => { ready: () => void; }",
-                "description": "A function to register with the analytics provider"
-              },
-              {
-                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "shop",
-                "value": "Awaited<AnalyticsProviderProps['shop']>",
-                "description": "The shop configuration required to publish events to Shopify"
-              },
-              {
-                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "subscribe",
-                "value": "{ (event: \"page_viewed\", callback: (payload: PageViewPayload) => void): void; (event: \"product_viewed\", callback: (payload: ProductViewPayload) => void): void; (event: \"collection_viewed\", callback: (payload: CollectionViewPayload) => void): void; (event: \"cart_viewed\", callback: (payload: CartViewPayload) => void): void; (event: \"search_viewed\", callback: (payload: SearchViewPayload) => void): void; (event: \"cart_updated\", callback: (payload: CartUpdatePayload) => void): void; (event: \"product_added_to_cart\", callback: (payload: CartLineUpdatePayload) => void): void; (event: \"product_removed_from_cart\", callback: (payload: CartLineUpdatePayload) => void): void; (event: `custom_${string}`, callback: (payload: CustomEventPayload) => void): void; }",
-                "description": "A function to subscribe to analytics events"
-              }
-            ]
-          },
-          "AnalyticsProviderProps": {
-            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "AnalyticsProviderProps",
-            "value": "{\n  /** React children to render. */\n  children?: ReactNode;\n  /** The cart or cart promise to track. */\n  cart: Promise<CartReturn | null> | CartReturn | null;\n  /** An optional function to set wether the user can be tracked. */\n  canTrack?: () => boolean;\n  /** An optional custom payload to pass to all events. e.g language/locale/currency */\n  customData?: Record<string, unknown>;\n  /** The shop/store config required to publish events **/\n  shop: Promise<ShopAnalytic | null> | ShopAnalytic | null;\n  /** The customer privacy consent configuration and options */\n  consent: CustomerPrivacyApiProps;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "children",
-                "value": "ReactNode",
-                "description": "React children to render.",
+                "value": "() => boolean",
+                "description": "A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.userCanBeTracked()`.",
                 "isOptional": true
               },
               {
@@ -587,14 +480,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "cart",
                 "value": "CartReturn | Promise<CartReturn>",
-                "description": "The cart or cart promise to track."
-              },
-              {
-                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "canTrack",
-                "value": "() => boolean",
-                "description": "An optional function to set wether the user can be tracked.",
+                "description": "The current cart state.",
                 "isOptional": true
               },
               {
@@ -602,7 +488,31 @@
                 "syntaxKind": "PropertySignature",
                 "name": "customData",
                 "value": "Record<string, unknown>",
-                "description": "An optional custom payload to pass to all events. e.g language/locale/currency",
+                "description": "The custom data passed in from the `AnalyticsProvider`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "prevCart",
+                "value": "CartReturn | Promise<CartReturn>",
+                "description": "The previous cart state.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "publish",
+                "value": "AnalyticsContextPublishForDoc",
+                "description": "A function to publish an analytics event.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "register",
+                "value": "(key: string) => { ready: () => void; }",
+                "description": "A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/2024-01/hooks/useunstable__analytics#example-useunstable__analytics.register).",
                 "isOptional": true
               },
               {
@@ -610,14 +520,16 @@
                 "syntaxKind": "PropertySignature",
                 "name": "shop",
                 "value": "ShopAnalytic | Promise<ShopAnalytic>",
-                "description": "The shop/store config required to publish events *"
+                "description": "The shop configuration required to publish events to Shopify.",
+                "isOptional": true
               },
               {
                 "filePath": "/analytics-manager/AnalyticsProvider.tsx",
                 "syntaxKind": "PropertySignature",
-                "name": "consent",
-                "value": "CustomerPrivacyApiProps",
-                "description": "The customer privacy consent configuration and options"
+                "name": "subscribe",
+                "value": "AnalyticsContextSubscribeForDoc",
+                "description": "A function to subscribe to analytics events.",
+                "isOptional": true
               }
             ]
           },
@@ -642,192 +554,67 @@
             "value": "JsonGraphQLError[] | undefined",
             "description": ""
           },
-          "ShopAnalytic": {
+          "AnalyticsContextPublishForDoc": {
             "filePath": "/analytics-manager/AnalyticsProvider.tsx",
             "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopAnalytic",
-            "value": "{\n  shopId: string;\n  acceptedLanguage: LanguageCode;\n  currency: CurrencyCode;\n  hydrogenSubchannelId: string | '0';\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "shopId",
-                "value": "string",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "acceptedLanguage",
-                "value": "LanguageCode",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "currency",
-                "value": "CurrencyCode",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "hydrogenSubchannelId",
-                "value": "string",
-                "description": ""
-              }
-            ]
-          },
-          "CustomerPrivacyApiProps": {
-            "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CustomerPrivacyApiProps",
-            "value": "PrivacyConsentBannerProps & {\n  withPrivacyBanner: boolean;\n  onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;\n}",
+            "name": "AnalyticsContextPublishForDoc",
+            "value": "PublishPageView | PublishProductView | PublishCollectionView | PublishCartView | PublishSearchView | PublishCartUpdated | PublishProductAddedToCart | PublishProductRemovedFromCart | PublishCustomEvent",
             "description": ""
           },
-          "PrivacyConsentBannerProps": {
-            "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "PrivacyConsentBannerProps",
-            "value": "{\n  shopDomain: string;\n  checkoutRootDomain: string;\n  storefrontAccessToken: string;\n}",
+          "PublishPageView": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "name": "PublishPageView",
             "description": "",
-            "members": [
+            "params": [
               {
-                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "shopDomain",
-                "value": "string",
-                "description": ""
-              },
-              {
-                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "checkoutRootDomain",
-                "value": "string",
-                "description": ""
-              },
-              {
-                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "storefrontAccessToken",
-                "value": "string",
-                "description": ""
-              }
-            ]
-          },
-          "PrivacyBanner": {
-            "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "PrivacyBanner",
-            "value": "{\n  loadBanner: (options: CustomerPrivacyConsentConfig) => void;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "loadBanner",
-                "value": "(options: CustomerPrivacyConsentConfig) => void",
-                "description": ""
-              }
-            ]
-          },
-          "CustomerPrivacyConsentConfig": {
-            "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CustomerPrivacyConsentConfig",
-            "value": "{\n  checkoutRootDomain?: string;\n  storefrontRootDomain?: string;\n  storefrontAccessToken?: string;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "checkoutRootDomain",
-                "value": "string",
+                "name": "event",
                 "description": "",
-                "isOptional": true
+                "value": "\"page_viewed\"",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
               },
               {
-                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "storefrontRootDomain",
-                "value": "string",
+                "name": "payload",
                 "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "storefrontAccessToken",
-                "value": "string",
-                "description": "",
-                "isOptional": true
+                "value": "PageViewPayload",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
               }
-            ]
-          },
-          "VisitorConsentCollected": {
-            "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "VisitorConsentCollected",
-            "value": "{\n  analyticsAllowed: boolean;\n  firstPartyMarketingAllowed: boolean;\n  marketingAllowed: boolean;\n  preferencesAllowed: boolean;\n  saleOfDataAllowed: boolean;\n  thirdPartyMarketingAllowed: boolean;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "analyticsAllowed",
-                "value": "boolean",
-                "description": ""
-              },
-              {
-                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "firstPartyMarketingAllowed",
-                "value": "boolean",
-                "description": ""
-              },
-              {
-                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "marketingAllowed",
-                "value": "boolean",
-                "description": ""
-              },
-              {
-                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "preferencesAllowed",
-                "value": "boolean",
-                "description": ""
-              },
-              {
-                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "saleOfDataAllowed",
-                "value": "boolean",
-                "description": ""
-              },
-              {
-                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "thirdPartyMarketingAllowed",
-                "value": "boolean",
-                "description": ""
-              }
-            ]
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+              "description": "",
+              "name": "void",
+              "value": "void"
+            },
+            "value": "type PublishPageView = (event: 'page_viewed', payload: PageViewPayload) => void;"
           },
           "PageViewPayload": {
             "filePath": "/analytics-manager/AnalyticsView.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "PageViewPayload",
-            "value": "{\n  url: string;\n  cart: CartReturn | null;\n  prevCart: CartReturn | null;\n} & BasePayload",
+            "value": "ViewBasePayload & BasePayload",
             "description": ""
+          },
+          "ViewBasePayload": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ViewBasePayload",
+            "value": "{\n  /** The url location of when this event is collected. */\n  url: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "url",
+                "value": "string",
+                "description": "The url location of when this event is collected."
+              }
+            ]
           },
           "BasePayload": {
             "filePath": "/analytics-manager/AnalyticsView.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "BasePayload",
-            "value": "{\n  eventTimestamp: number;\n  shop: ShopAnalytic | null;\n  customData?: AnalyticsProviderProps['customData'];\n}",
+            "value": "{\n  /** The timestamp in ms at the time of event collection. */\n  eventTimestamp: number;\n  /** The shop data passed in from the `AnalyticsProvider`. */\n  shop: ShopAnalytic | null;\n  /** The custom data passed in from the `AnalyticsProvider`. */\n  customData?: AnalyticsProviderProps['customData'];\n}",
             "description": "",
             "members": [
               {
@@ -835,85 +622,788 @@
                 "syntaxKind": "PropertySignature",
                 "name": "eventTimestamp",
                 "value": "number",
-                "description": ""
+                "description": "The timestamp in ms at the time of event collection."
               },
               {
                 "filePath": "/analytics-manager/AnalyticsView.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "shop",
                 "value": "ShopAnalytic",
-                "description": ""
+                "description": "The shop data passed in from the `AnalyticsProvider`."
               },
               {
                 "filePath": "/analytics-manager/AnalyticsView.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "customData",
                 "value": "Record<string, unknown>",
-                "description": "",
+                "description": "The custom data passed in from the `AnalyticsProvider`.",
                 "isOptional": true
               }
             ]
+          },
+          "ShopAnalytic": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopAnalytic",
+            "value": "{\n  /** The shop ID. */\n  shopId: string;\n  /** The language code that is being displayed to user. */\n  acceptedLanguage: LanguageCode;\n  /** The currency code that is being displayed to user. */\n  currency: CurrencyCode;\n  /** The Hydrogen subchannel ID generated by Oxygen in the environment variable. */\n  hydrogenSubchannelId: string | '0';\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "shopId",
+                "value": "string",
+                "description": "The shop ID."
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "acceptedLanguage",
+                "value": "LanguageCode",
+                "description": "The language code that is being displayed to user."
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "currency",
+                "value": "CurrencyCode",
+                "description": "The currency code that is being displayed to user."
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "hydrogenSubchannelId",
+                "value": "string",
+                "description": "The Hydrogen subchannel ID generated by Oxygen in the environment variable."
+              }
+            ]
+          },
+          "PublishProductView": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "name": "PublishProductView",
+            "description": "",
+            "params": [
+              {
+                "name": "event",
+                "description": "",
+                "value": "\"product_viewed\"",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              },
+              {
+                "name": "payload",
+                "description": "",
+                "value": "ProductViewPayload",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+              "description": "",
+              "name": "void",
+              "value": "void"
+            },
+            "value": "type PublishProductView = (\n  event: 'product_viewed',\n  payload: ProductViewPayload,\n) => void;"
           },
           "ProductViewPayload": {
             "filePath": "/analytics-manager/AnalyticsView.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ProductViewPayload",
-            "value": "{\n  products: Array<{\n    id: Product['id'];\n    title: Product['title'];\n    price: ProductVariant['price']['amount'];\n    vendor: Product['vendor'];\n    variantId: ProductVariant['id'];\n    variantTitle: ProductVariant['title'];\n    quantity: number;\n    sku?: ProductVariant['sku'];\n    productType?: Product['productType'];\n    [key: string]: unknown;\n  }>;\n} & BasePayload",
+            "value": "ProductsPayload & ViewBasePayload & BasePayload",
             "description": ""
+          },
+          "ProductsPayload": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ProductsPayload",
+            "value": "{\n  /** The products associated with this event. */\n  products: Array<ProductPayload>;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "products",
+                "value": "Array<ProductPayload>",
+                "description": "The products associated with this event."
+              }
+            ]
+          },
+          "ProductPayload": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ProductPayload",
+            "value": "{\n  /** The product id. */\n  id: Product['id'];\n  /** The product title. */\n  title: Product['title'];\n  /** The displaying variant price. */\n  price: ProductVariant['price']['amount'];\n  /** The product vendor. */\n  vendor: Product['vendor'];\n  /** The displaying variant id. */\n  variantId: ProductVariant['id'];\n  /** The displaying variant title. */\n  variantTitle: ProductVariant['title'];\n  /** The quantity of product. */\n  quantity: number;\n  /** The product sku. */\n  sku?: ProductVariant['sku'];\n  /** The product type. */\n  productType?: Product['productType'];\n  /** Any other data that should be included in the event. */\n  [key: string]: unknown;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "id",
+                "value": "string",
+                "description": "The product id."
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "title",
+                "value": "string",
+                "description": "The product title."
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "price",
+                "value": "string",
+                "description": "The displaying variant price."
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "vendor",
+                "value": "string",
+                "description": "The product vendor."
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "variantId",
+                "value": "string",
+                "description": "The displaying variant id."
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "variantTitle",
+                "value": "string",
+                "description": "The displaying variant title."
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "quantity",
+                "value": "number",
+                "description": "The quantity of product."
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "sku",
+                "value": "string",
+                "description": "The product sku.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "productType",
+                "value": "string",
+                "description": "The product type.",
+                "isOptional": true
+              }
+            ]
+          },
+          "PublishCollectionView": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "name": "PublishCollectionView",
+            "description": "",
+            "params": [
+              {
+                "name": "event",
+                "description": "",
+                "value": "\"collection_viewed\"",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              },
+              {
+                "name": "payload",
+                "description": "",
+                "value": "CollectionViewPayload",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+              "description": "",
+              "name": "void",
+              "value": "void"
+            },
+            "value": "type PublishCollectionView = (\n  event: 'collection_viewed',\n  payload: CollectionViewPayload,\n) => void;"
           },
           "CollectionViewPayload": {
             "filePath": "/analytics-manager/AnalyticsView.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CollectionViewPayload",
-            "value": "{\n  collection: {\n    id: string;\n    handle: string;\n  };\n} & BasePayload",
+            "value": "CollectionPayload & ViewBasePayload & BasePayload",
             "description": ""
+          },
+          "CollectionPayload": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CollectionPayload",
+            "value": "{\n  collection: CollectionPayloadDetails;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "collection",
+                "value": "CollectionPayloadDetails",
+                "description": ""
+              }
+            ]
+          },
+          "CollectionPayloadDetails": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CollectionPayloadDetails",
+            "value": "{\n  /** The collection id. */\n  id: string;\n  /** The collection handle. */\n  handle: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "id",
+                "value": "string",
+                "description": "The collection id."
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "handle",
+                "value": "string",
+                "description": "The collection handle."
+              }
+            ]
+          },
+          "PublishCartView": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "name": "PublishCartView",
+            "description": "",
+            "params": [
+              {
+                "name": "event",
+                "description": "",
+                "value": "\"cart_viewed\"",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              },
+              {
+                "name": "payload",
+                "description": "",
+                "value": "CartViewPayload",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+              "description": "",
+              "name": "void",
+              "value": "void"
+            },
+            "value": "type PublishCartView = (event: 'cart_viewed', payload: CartViewPayload) => void;"
           },
           "CartViewPayload": {
             "filePath": "/analytics-manager/AnalyticsView.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartViewPayload",
-            "value": "{\n  cart: CartReturn | null;\n  prevCart: CartReturn | null;\n} & BasePayload",
+            "value": "ViewBasePayload & BasePayload",
             "description": ""
           },
-          "CartUpdatePayload": {
-            "filePath": "/analytics-manager/AnalyticsView.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartUpdatePayload",
-            "value": "{\n  cart: CartReturn | null;\n  prevCart: CartReturn | null;\n} & BasePayload",
-            "description": ""
-          },
-          "CartLineUpdatePayload": {
-            "filePath": "/analytics-manager/AnalyticsView.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartLineUpdatePayload",
-            "value": "{\n  cart: CartReturn | null;\n  prevCart: CartReturn | null;\n  prevLine?: CartLine | ComponentizableCartLine;\n  currentLine?: CartLine | ComponentizableCartLine;\n} & BasePayload",
-            "description": ""
-          },
-          "OtherData": {
-            "filePath": "/analytics-manager/AnalyticsView.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "OtherData",
-            "value": "{\n  [key: string]: unknown;\n}",
+          "PublishSearchView": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "name": "PublishSearchView",
             "description": "",
-            "members": []
+            "params": [
+              {
+                "name": "event",
+                "description": "",
+                "value": "\"search_viewed\"",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              },
+              {
+                "name": "payload",
+                "description": "",
+                "value": "SearchViewPayload",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+              "description": "",
+              "name": "void",
+              "value": "void"
+            },
+            "value": "type PublishSearchView = (\n  event: 'search_viewed',\n  payload: SearchViewPayload,\n) => void;"
           },
           "SearchViewPayload": {
             "filePath": "/analytics-manager/AnalyticsView.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "SearchViewPayload",
-            "value": "{\n  cart: CartReturn | null;\n  prevCart: CartReturn | null;\n  searchTerm: string;\n  results: Array<any>;\n} & BasePayload",
+            "value": "SearchPayload & ViewBasePayload & BasePayload",
             "description": ""
           },
-          "CustomEventPayload": {
+          "SearchPayload": {
             "filePath": "/analytics-manager/AnalyticsView.tsx",
             "syntaxKind": "TypeAliasDeclaration",
-            "name": "CustomEventPayload",
-            "value": "{\n  [key: string]: unknown;\n} & BasePayload",
+            "name": "SearchPayload",
+            "value": "{\n  /** The search term used for the search results page */\n  searchTerm: string;\n  /** The search results */\n  results?: Array<any>;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "searchTerm",
+                "value": "string",
+                "description": "The search term used for the search results page"
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "results",
+                "value": "Array<any>",
+                "description": "The search results",
+                "isOptional": true
+              }
+            ]
+          },
+          "PublishCartUpdated": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "name": "PublishCartUpdated",
+            "description": "",
+            "params": [
+              {
+                "name": "event",
+                "description": "",
+                "value": "\"cart_updated\"",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              },
+              {
+                "name": "payload",
+                "description": "",
+                "value": "CartUpdatePayload",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+              "description": "",
+              "name": "void",
+              "value": "void"
+            },
+            "value": "type PublishCartUpdated = (\n  event: 'cart_updated',\n  payload: CartUpdatePayload,\n) => void;"
+          },
+          "CartUpdatePayload": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartUpdatePayload",
+            "value": "CartPayload & BasePayload",
             "description": ""
+          },
+          "CartPayload": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartPayload",
+            "value": "{\n  /** The current cart state. */\n  cart: CartReturn | null;\n  /** The previous cart state. */\n  prevCart: CartReturn | null;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "cart",
+                "value": "CartReturn",
+                "description": "The current cart state."
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "prevCart",
+                "value": "CartReturn",
+                "description": "The previous cart state."
+              }
+            ]
+          },
+          "PublishProductAddedToCart": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "name": "PublishProductAddedToCart",
+            "description": "",
+            "params": [
+              {
+                "name": "event",
+                "description": "",
+                "value": "\"product_added_to_cart\"",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              },
+              {
+                "name": "payload",
+                "description": "",
+                "value": "CartLineUpdatePayload",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+              "description": "",
+              "name": "void",
+              "value": "void"
+            },
+            "value": "type PublishProductAddedToCart = (\n  event: 'product_added_to_cart',\n  payload: CartLineUpdatePayload,\n) => void;"
+          },
+          "CartLineUpdatePayload": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartLineUpdatePayload",
+            "value": "CartLinePayload & CartPayload & BasePayload",
+            "description": ""
+          },
+          "CartLinePayload": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartLinePayload",
+            "value": "{\n  /** The previous state of the cart line that got updated. */\n  prevLine?: CartLine | ComponentizableCartLine;\n  /** The current state of the cart line that got updated. */\n  currentLine?: CartLine | ComponentizableCartLine;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "prevLine",
+                "value": "CartLine | ComponentizableCartLine",
+                "description": "The previous state of the cart line that got updated.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "currentLine",
+                "value": "CartLine | ComponentizableCartLine",
+                "description": "The current state of the cart line that got updated.",
+                "isOptional": true
+              }
+            ]
+          },
+          "PublishProductRemovedFromCart": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "name": "PublishProductRemovedFromCart",
+            "description": "",
+            "params": [
+              {
+                "name": "event",
+                "description": "",
+                "value": "\"product_removed_from_cart\"",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              },
+              {
+                "name": "payload",
+                "description": "",
+                "value": "CartLineUpdatePayload",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+              "description": "",
+              "name": "void",
+              "value": "void"
+            },
+            "value": "type PublishProductRemovedFromCart = (\n  event: 'product_removed_from_cart',\n  payload: CartLineUpdatePayload,\n) => void;"
+          },
+          "PublishCustomEvent": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "name": "PublishCustomEvent",
+            "description": "",
+            "params": [
+              {
+                "name": "event",
+                "description": "",
+                "value": "`custom_${string}`",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              },
+              {
+                "name": "payload",
+                "description": "",
+                "value": "OtherData",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+              "description": "",
+              "name": "void",
+              "value": "void"
+            },
+            "value": "type PublishCustomEvent = (\n  event: `custom_${string}`,\n  payload: OtherData,\n) => void;"
+          },
+          "OtherData": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "OtherData",
+            "value": "{\n  /** Any other data that should be included in the event. */\n  [key: string]: unknown;\n}",
+            "description": "",
+            "members": []
+          },
+          "AnalyticsContextSubscribeForDoc": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "AnalyticsContextSubscribeForDoc",
+            "value": "SubscribePageView | SubscribeProductView | SubscribeCollectionView | SubscribeCartView | SubscribeSearchView | SubscribeCartUpdated | SubscribeProductAddedToCart | SubscribeProductRemovedFromCart | SubscribeCustomEvent",
+            "description": ""
+          },
+          "SubscribePageView": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "name": "SubscribePageView",
+            "description": "",
+            "params": [
+              {
+                "name": "event",
+                "description": "",
+                "value": "\"page_viewed\"",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              },
+              {
+                "name": "callback",
+                "description": "",
+                "value": "(payload: PageViewPayload) => void",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+              "description": "",
+              "name": "void",
+              "value": "void"
+            },
+            "value": "type SubscribePageView = (\n  event: 'page_viewed',\n  callback: (payload: PageViewPayload) => void,\n) => void;"
+          },
+          "SubscribeProductView": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "name": "SubscribeProductView",
+            "description": "",
+            "params": [
+              {
+                "name": "event",
+                "description": "",
+                "value": "\"product_viewed\"",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              },
+              {
+                "name": "callback",
+                "description": "",
+                "value": "(payload: ProductViewPayload) => void",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+              "description": "",
+              "name": "void",
+              "value": "void"
+            },
+            "value": "type SubscribeProductView = (\n  event: 'product_viewed',\n  callback: (payload: ProductViewPayload) => void,\n) => void;"
+          },
+          "SubscribeCollectionView": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "name": "SubscribeCollectionView",
+            "description": "",
+            "params": [
+              {
+                "name": "event",
+                "description": "",
+                "value": "\"collection_viewed\"",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              },
+              {
+                "name": "callback",
+                "description": "",
+                "value": "(payload: CollectionViewPayload) => void",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+              "description": "",
+              "name": "void",
+              "value": "void"
+            },
+            "value": "type SubscribeCollectionView = (\n  event: 'collection_viewed',\n  callback: (payload: CollectionViewPayload) => void,\n) => void;"
+          },
+          "SubscribeCartView": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "name": "SubscribeCartView",
+            "description": "",
+            "params": [
+              {
+                "name": "event",
+                "description": "",
+                "value": "\"cart_viewed\"",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              },
+              {
+                "name": "callback",
+                "description": "",
+                "value": "(payload: CartViewPayload) => void",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+              "description": "",
+              "name": "void",
+              "value": "void"
+            },
+            "value": "type SubscribeCartView = (\n  event: 'cart_viewed',\n  callback: (payload: CartViewPayload) => void,\n) => void;"
+          },
+          "SubscribeSearchView": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "name": "SubscribeSearchView",
+            "description": "",
+            "params": [
+              {
+                "name": "event",
+                "description": "",
+                "value": "\"search_viewed\"",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              },
+              {
+                "name": "callback",
+                "description": "",
+                "value": "(payload: SearchViewPayload) => void",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+              "description": "",
+              "name": "void",
+              "value": "void"
+            },
+            "value": "type SubscribeSearchView = (\n  event: 'search_viewed',\n  callback: (payload: SearchViewPayload) => void,\n) => void;"
+          },
+          "SubscribeCartUpdated": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "name": "SubscribeCartUpdated",
+            "description": "",
+            "params": [
+              {
+                "name": "event",
+                "description": "",
+                "value": "\"cart_updated\"",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              },
+              {
+                "name": "callback",
+                "description": "",
+                "value": "(payload: CartUpdatePayload) => void",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+              "description": "",
+              "name": "void",
+              "value": "void"
+            },
+            "value": "type SubscribeCartUpdated = (\n  event: 'cart_updated',\n  callback: (payload: CartUpdatePayload) => void,\n) => void;"
+          },
+          "SubscribeProductAddedToCart": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "name": "SubscribeProductAddedToCart",
+            "description": "",
+            "params": [
+              {
+                "name": "event",
+                "description": "",
+                "value": "\"product_added_to_cart\"",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              },
+              {
+                "name": "callback",
+                "description": "",
+                "value": "(payload: CartLineUpdatePayload) => void",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+              "description": "",
+              "name": "void",
+              "value": "void"
+            },
+            "value": "type SubscribeProductAddedToCart = (\n  event: 'product_added_to_cart',\n  callback: (payload: CartLineUpdatePayload) => void,\n) => void;"
+          },
+          "SubscribeProductRemovedFromCart": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "name": "SubscribeProductRemovedFromCart",
+            "description": "",
+            "params": [
+              {
+                "name": "event",
+                "description": "",
+                "value": "\"product_removed_from_cart\"",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              },
+              {
+                "name": "callback",
+                "description": "",
+                "value": "(payload: CartLineUpdatePayload) => void",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+              "description": "",
+              "name": "void",
+              "value": "void"
+            },
+            "value": "type SubscribeProductRemovedFromCart = (\n  event: 'product_removed_from_cart',\n  callback: (payload: CartLineUpdatePayload) => void,\n) => void;"
+          },
+          "SubscribeCustomEvent": {
+            "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+            "name": "SubscribeCustomEvent",
+            "description": "",
+            "params": [
+              {
+                "name": "event",
+                "description": "",
+                "value": "`custom_${string}`",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              },
+              {
+                "name": "callback",
+                "description": "",
+                "value": "(payload: OtherData) => void",
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+              "description": "",
+              "name": "void",
+              "value": "void"
+            },
+            "value": "type SubscribeCustomEvent = (\n  event: `custom_${string}`,\n  callback: (payload: OtherData) => void,\n) => void;"
           }
         }
       }
-    ]
+    ],
+    "examples": {
+      "description": "Example usage with `useUnstable__Analytics`:",
+      "exampleGroups": [
+        {
+          "title": "useUnstable__Analytics.register",
+          "examples": [
+            {
+              "description": "Registers an unique key for the analytics provider to wait for ready callback before sending any events.",
+              "codeblock": {
+                "title": "",
+                "tabs": [
+                  {
+                    "title": "JavaScript",
+                    "code": "import {\n  type PageViewPayload,\n  useUnstable__Analytics,\n  useLoadScript,\n} from '@shopify/hydrogen';\nimport {useEffect} from 'react';\n\nexport function MyAnalytics() {\n  const {subscribe, register} = useUnstable__Analytics();\n\n  // Load the 3p analytics script\n  const scriptStatus = useLoadScript(\n    'https://example.com/some-3p-analytics-script.js',\n  );\n\n  // unique string identifier\n  const {ready} = register('MyAnalytics');\n\n  useEffect(() =&gt; {\n    // Make sure the 3p script is loaded\n    if (scriptStatus !== 'done') return;\n\n    // Initialize the 3p analytics script\n\n    // Subscribe to analytics events\n    subscribe('page_viewed', (data: PageViewPayload) =&gt; {\n      // report to 3p analytics\n    });\n\n    // Register the MyAnalytics component as ready\n    ready();\n  }, []);\n\n  return null;\n}\n",
+                    "language": "js"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "name": "CacheCustom",

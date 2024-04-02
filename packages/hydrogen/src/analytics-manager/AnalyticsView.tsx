@@ -15,71 +15,97 @@ import {
 } from '@shopify/hydrogen-react/storefront-api-types';
 
 export type OtherData = {
+  /** Any other data that should be included in the event. */
   [key: string]: unknown;
 };
 
-export type BasePayload = {
+type BasePayload = {
+  /** The timestamp in ms at the time of event collection. */
   eventTimestamp: number;
+  /** The shop data passed in from the `AnalyticsProvider`. */
   shop: ShopAnalytic | null;
+  /** The custom data passed in from the `AnalyticsProvider`. */
   customData?: AnalyticsProviderProps['customData'];
 };
 
-// Event payloads
-export type CollectionViewPayload = {
-  collection: {
-    id: string;
-    handle: string;
-  };
-} & BasePayload;
-
-export type ProductViewPayload = {
-  products: Array<{
-    id: Product['id'];
-    title: Product['title'];
-    price: ProductVariant['price']['amount'];
-    vendor: Product['vendor'];
-    variantId: ProductVariant['id'];
-    variantTitle: ProductVariant['title'];
-    quantity: number;
-    sku?: ProductVariant['sku'];
-    productType?: Product['productType'];
-    [key: string]: unknown;
-  }>;
-} & BasePayload;
-
-export type CartViewPayload = {
-  cart: CartReturn | null;
-  prevCart: CartReturn | null;
-} & BasePayload;
-
-export type PageViewPayload = {
+type ViewBasePayload = {
+  /** The url location of when this event is collected. */
   url: string;
-  cart: CartReturn | null;
-  prevCart: CartReturn | null;
-} & BasePayload;
+};
 
-export type SearchViewPayload = {
-  cart: CartReturn | null;
-  prevCart: CartReturn | null;
-  searchTerm: string;
-  results: Array<any>;
-} & BasePayload;
-
-export type CartUpdatePayload = {
-  cart: CartReturn | null;
-  prevCart: CartReturn | null;
-} & BasePayload;
-
-export type CartLineUpdatePayload = {
-  cart: CartReturn | null;
-  prevCart: CartReturn | null;
-  prevLine?: CartLine | ComponentizableCartLine;
-  currentLine?: CartLine | ComponentizableCartLine;
-} & BasePayload;
-
-export type CustomEventPayload = {
+type ProductPayload = {
+  /** The product id. */
+  id: Product['id'];
+  /** The product title. */
+  title: Product['title'];
+  /** The displaying variant price. */
+  price: ProductVariant['price']['amount'];
+  /** The product vendor. */
+  vendor: Product['vendor'];
+  /** The displaying variant id. */
+  variantId: ProductVariant['id'];
+  /** The displaying variant title. */
+  variantTitle: ProductVariant['title'];
+  /** The quantity of product. */
+  quantity: number;
+  /** The product sku. */
+  sku?: ProductVariant['sku'];
+  /** The product type. */
+  productType?: Product['productType'];
+  /** Any other data that should be included in the event. */
   [key: string]: unknown;
-} & BasePayload;
+};
+
+type ProductsPayload = {
+  /** The products associated with this event. */
+  products: Array<ProductPayload>;
+};
+
+type CollectionPayloadDetails = {
+  /** The collection id. */
+  id: string;
+  /** The collection handle. */
+  handle: string;
+};
+
+type CollectionPayload = {
+  collection: CollectionPayloadDetails;
+};
+
+type SearchPayload = {
+  /** The search term used for the search results page */
+  searchTerm: string;
+  /** The search results */
+  results?: Array<any>;
+};
+
+type CartPayload = {
+  /** The current cart state. */
+  cart: CartReturn | null;
+  /** The previous cart state. */
+  prevCart: CartReturn | null;
+};
+
+type CartLinePayload = {
+  /** The previous state of the cart line that got updated. */
+  prevLine?: CartLine | ComponentizableCartLine;
+  /** The current state of the cart line that got updated. */
+  currentLine?: CartLine | ComponentizableCartLine;
+};
+
+// Event payloads
+export type CollectionViewPayload = CollectionPayload &
+  ViewBasePayload &
+  BasePayload;
+export type ProductViewPayload = ProductsPayload &
+  ViewBasePayload &
+  BasePayload;
+export type CartViewPayload = ViewBasePayload & BasePayload;
+export type PageViewPayload = ViewBasePayload & BasePayload;
+export type SearchViewPayload = SearchPayload & ViewBasePayload & BasePayload;
+export type CartUpdatePayload = CartPayload & BasePayload;
+export type CartLineUpdatePayload = CartLinePayload & CartPayload & BasePayload;
+export type CustomEventPayload = OtherData & BasePayload;
 
 export type EventPayloads =
   | PageViewPayload

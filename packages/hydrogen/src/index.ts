@@ -100,7 +100,6 @@ export {
   type CustomerPrivacy,
   type PrivacyBanner,
   type CustomEventMap,
-  type PrivacyConsentBannerProps,
   type CustomerPrivacyApiProps,
   useCustomerPrivacy,
   getCustomerPrivacy,

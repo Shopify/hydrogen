@@ -6,7 +6,7 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description:
-    'Provides a context to track page view, cart events and send them to Shopify. It is integrated with the Customer Privacy API for consent management. It is flexible for other analytics platform to integrate into its subscribe and publish system. It provides the `useAnalytics` hook to access the analytics provider context.',
+    'Provides a context to track page view, cart events and send them to Shopify. It is integrated with the Customer Privacy API for consent management. It is flexible for other analytics platform to integrate into its subscribe and publish system. It provides the [`useUnstable__Analytics`](/docs/api/hydrogen/2024-01/hooks/useunstable__analytics) hook to access the analytics provider context.',
   type: 'component',
   defaultExample: {
     description: 'This is the default example',
@@ -43,7 +43,7 @@ const data: ReferenceEntityTemplateSchema = {
             description:
               'Publishes a `cart_viewed` event to the `Unstable__Analytics.Provider`.',
             codeblock: {
-              title: 'Unstable__Analytics.CartView',
+              title: '',
               tabs: [
                 {
                   title: 'JavaScript',
@@ -62,7 +62,7 @@ const data: ReferenceEntityTemplateSchema = {
             description:
               'Publishes a `collection_viewed` event to the `Unstable__Analytics.Provider`.',
             codeblock: {
-              title: 'Unstable__Analytics.CollectionView',
+              title: '',
               tabs: [
                 {
                   title: 'JavaScript',
@@ -81,7 +81,7 @@ const data: ReferenceEntityTemplateSchema = {
             description:
               'Publishes a custom page view event to the `Unstable__Analytics.Provider`. The `type` prop must be preceded by `custom_`.',
             codeblock: {
-              title: 'Unstable__Analytics.CustomView',
+              title: '',
               tabs: [
                 {
                   title: 'JavaScript',
@@ -100,7 +100,7 @@ const data: ReferenceEntityTemplateSchema = {
             description:
               'Publishes a `product_viewed` event to the `Unstable__Analytics.Provider`.',
             codeblock: {
-              title: 'Unstable__Analytics.ProductView',
+              title: '',
               tabs: [
                 {
                   title: 'JavaScript',
@@ -119,7 +119,7 @@ const data: ReferenceEntityTemplateSchema = {
             description:
               'Publishes a `collection_viewed` event to the `Unstable__Analytics.Provider`.',
             codeblock: {
-              title: 'Unstable__Analytics.SearchView',
+              title: '',
               tabs: [
                 {
                   title: 'JavaScript',
