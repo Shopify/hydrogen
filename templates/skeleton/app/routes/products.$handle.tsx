@@ -19,7 +19,7 @@ import {
   type VariantOption,
   getSelectedProductOptions,
   CartForm,
-  Unstable__Analytics,
+  UNSTABLE_Analytics,
 } from '@shopify/hydrogen';
 import type {
   CartLineInput,
@@ -124,7 +124,7 @@ export default function Product() {
         product={product}
         variants={variants}
       />
-      <Unstable__Analytics.ProductView
+      <UNSTABLE_Analytics.ProductView
         data={{
           products: [
             {

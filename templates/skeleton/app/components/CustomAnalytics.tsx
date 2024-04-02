@@ -1,8 +1,8 @@
-import {useUnstable__Analytics} from '@shopify/hydrogen';
+import {unstable_useAnalytics} from '@shopify/hydrogen';
 import {useEffect} from 'react';
 
 export function CustomAnalytics() {
-  const {subscribe} = useUnstable__Analytics();
+  const {subscribe} = unstable_useAnalytics();
 
   useEffect(() => {
     // Standard events

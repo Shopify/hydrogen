@@ -1,4 +1,4 @@
-import {Unstable__Analytics} from '@shopify/hydrogen';
+import {UNSTABLE_Analytics} from '@shopify/hydrogen';
 
 export default function Product() {
   const {product} = useLoaderData();
@@ -7,7 +7,7 @@ export default function Product() {
   return (
     <div className="product">
       <h1>{product.title}</h1>
-      <Unstable__Analytics.ProductView
+      <UNSTABLE_Analytics.ProductView
         data={{
           products: [
             {

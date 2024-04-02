@@ -1,8 +1,8 @@
-import {useUnstable__Analytics} from '@shopify/hydrogen';
+import {unstable_useAnalytics} from '@shopify/hydrogen';
 import {useEffect} from 'react';
 
 export function CustomAnalytics() {
-  const {subscribe, register} = useUnstable__Analytics();
+  const {subscribe, register} = unstable_useAnalytics();
   const {ready} = register('CustomAnalytics'); // unique string identifier
 
   useEffect(() => {

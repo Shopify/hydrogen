@@ -5,7 +5,7 @@ import {
   getPaginationVariables,
   Image,
   Money,
-  Unstable__Analytics,
+  UNSTABLE_Analytics,
 } from '@shopify/hydrogen';
 import type {ProductItemFragment} from 'storefrontapi.generated';
 import {useVariantUrl} from '~/lib/variants';
@@ -58,7 +58,7 @@ export default function Collection() {
           </>
         )}
       </Pagination>
-      <Unstable__Analytics.CollectionView
+      <UNSTABLE_Analytics.CollectionView
         data={{
           collection: {
             id: collection.id,
