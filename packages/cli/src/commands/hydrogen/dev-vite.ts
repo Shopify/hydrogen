@@ -49,7 +49,6 @@ export default class DevVite extends Command {
       description:
         "Disable rendering fallback routes when a route file doesn't exist.",
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_VIRTUAL_ROUTES',
-      default: false,
     }),
     ...commonFlags.debug,
     ...commonFlags.inspectorPort,
@@ -262,7 +261,12 @@ export async function runDev({
 
   const customSections: AlertCustomSection[] = [];
 
-  if (!disableVirtualRoutes) {
+  const h2PluginOptions = findPlugin(
+    viteServer.config,
+    'hydrogen:main',
+  )?.api?.getPluginOptions?.();
+
+  if (!h2PluginOptions?.disableVirtualRoutes) {
     customSections.push({body: getUtilityBannerlines(finalHost)});
   }
 
