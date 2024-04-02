@@ -28,7 +28,7 @@ const outDir = 'dist';
 export default defineConfig([
   {
     ...commonConfig,
-    entry: ['src/**/*.ts', '!src/lib/vite/worker-entry.ts'],
+    entry: ['src/**/*.ts'],
     outDir,
     // Generate types only for the exposed entry points
     dts: {entry: ['src/lib/vite/plugins.ts', 'src/commands/hydrogen/init.ts']},
@@ -61,13 +61,6 @@ export default defineConfig([
       await execAsync('node ./scripts/generate-manifest.mjs');
       console.log('', 'Oclif manifest generated.\n');
     },
-  },
-  {
-    entry: ['src/lib/vite/worker-entry.ts'],
-    outDir: 'dist/lib/vite',
-    format: 'esm',
-    noExternal: [/./],
-    dts: false,
   },
   {
     ...commonConfig,

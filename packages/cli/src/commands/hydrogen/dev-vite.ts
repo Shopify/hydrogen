@@ -34,6 +34,7 @@ import {
 } from '../../lib/dev-shared.js';
 import {getCliCommand} from '../../lib/shell.js';
 import {findPort} from '../../lib/find-port.js';
+import {logRequestLine} from '../../lib/mini-oxygen/common.js';
 
 export default class DevVite extends Command {
   static description =
@@ -172,6 +173,7 @@ export async function runDev({
         envPromise: envPromise.then(({allVariables}) => allVariables),
         inspectorPort,
         disableVirtualRoutes,
+        logRequestLine,
       },
     }),
   });

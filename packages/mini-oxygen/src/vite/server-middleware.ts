@@ -4,13 +4,10 @@ import {
   createMiniOxygen,
   type Request,
   type Response,
-} from '@shopify/mini-oxygen';
-import {logRequestLine} from '../mini-oxygen/common.js';
-import {MiniOxygenOptions} from '../mini-oxygen/types.js';
+} from '../worker/index.js';
 import {getHmrUrl, pipeFromWeb, toURL, toWeb} from './utils.js';
 
 import type {ViteEnv} from './worker-entry.js';
-import {isO2Verbose} from '../log.js';
 const scriptPath = fileURLToPath(new URL('./worker-entry.js', import.meta.url));
 
 const FETCH_MODULE_PATHNAME = '/__vite_fetch_module';
@@ -21,11 +18,14 @@ export type InternalMiniOxygenOptions = {
   services?: Record<string, (request: Request) => Response | Promise<Response>>;
 };
 
-type MiniOxygenViteOptions = InternalMiniOxygenOptions &
-  Pick<MiniOxygenOptions, 'env' | 'debug' | 'inspectorPort'> & {
-    viteDevServer: ViteDevServer;
-    workerEntryFile: string;
-  };
+export type MiniOxygenViteOptions = InternalMiniOxygenOptions & {
+  viteDevServer: ViteDevServer;
+  entry: string;
+  env?: {[key: string]: string};
+  debug?: boolean;
+  inspectorPort?: number;
+  logRequestLine?: null | ((request: Request) => void);
+};
 
 export type MiniOxygen = Awaited<ReturnType<typeof startMiniOxygenRuntime>>;
 
@@ -35,8 +35,9 @@ export async function startMiniOxygenRuntime({
   services,
   debug = false,
   inspectorPort,
-  workerEntryFile,
   setupScripts,
+  logRequestLine,
+  entry: workerEntryFile,
 }: MiniOxygenViteOptions) {
   const miniOxygen = createMiniOxygen({
     debug,
@@ -145,8 +146,7 @@ export function setupOxygenMiddleware(
     // find it in the project. Therefore, we assume this is a
     // request for a backend route, and we forward it to workerd.
 
-    toWeb(req)
-      .then(dispatchFetch)
+    dispatchFetch(toWeb(req))
       .then((webResponse) => pipeFromWeb(webResponse, res))
       .catch((error) => {
         console.error('Error during evaluation:', error);

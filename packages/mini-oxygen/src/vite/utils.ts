@@ -1,6 +1,8 @@
 import type {ServerResponse, IncomingMessage} from 'node:http';
+import path from 'node:path';
 import {Readable} from 'node:stream';
-import type {Response} from '@shopify/mini-oxygen';
+import {Request, type Response} from '../worker/index.js';
+import type {ViteDevServer} from 'vite';
 
 /**
  * Creates a fully qualified URL from a Node request or a string.
@@ -21,11 +23,10 @@ export function toURL(req: string | IncomingMessage = '/', origin?: string) {
 /**
  * Turns a Node request into a Web request by using native Node APIs.
  */
-export async function toWeb(
-  req: IncomingMessage,
-  headers?: Record<string, string>,
-) {
-  const {Request} = await import('@shopify/mini-oxygen');
+export function toWeb(req: IncomingMessage, headers?: Record<string, string>) {
+  if (!req.headers.host) {
+    throw new Error('Request must contain a host header.');
+  }
 
   return new Request(toURL(req), {
     method: req.method,
@@ -56,4 +57,26 @@ export function pipeFromWeb(webResponse: Response, res: ServerResponse) {
   } else {
     res.end();
   }
+}
+
+export function getHmrUrl(viteDevServer: ViteDevServer) {
+  const userHmrValue = viteDevServer.config.server?.hmr;
+
+  if (userHmrValue === false) {
+    console.warn(
+      'HMR is disabled. Code changes will not be reflected in neither browser or server.',
+    );
+
+    return '';
+  }
+
+  const configHmr = typeof userHmrValue === 'object' ? userHmrValue : {};
+
+  const hmrPort = configHmr.port;
+  const hmrPath = configHmr.path;
+
+  let hmrBase = viteDevServer.config.base;
+  if (hmrPath) hmrBase = path.posix.join(hmrBase, hmrPath);
+
+  return (hmrPort ? `http://localhost:${hmrPort}` : '') + hmrBase;
 }
