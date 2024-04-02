@@ -3,7 +3,7 @@ import {Suspense} from 'react';
 import type {HeaderQuery} from 'storefrontapi.generated';
 import type {LayoutProps} from './Layout';
 import {useRootLoaderData} from '~/root';
-import {useAnalytics} from '@shopify/hydrogen';
+import {unstable_useAnalytics as useAnalytics} from '@shopify/hydrogen';
 
 type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'>;
 
@@ -206,4 +206,3 @@ function activeLinkStyle({
     color: isPending ? 'grey' : 'black',
   };
 }
-

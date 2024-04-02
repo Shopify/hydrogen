@@ -60,7 +60,7 @@ In the Shopify admin, head over to / Settings / Customer Privacy / Cookie Banner
 ```diff
 import {
   useNonce,
-+ Analytics,
++ UNSTABLE_Analytics as Analytics,
 + getShopAnalytics
 } from '@shopify/hydrogen';
 ```

@@ -1,4 +1,4 @@
-import {useAnalytics} from '@shopify/hydrogen';
+import {unstable_useAnalytics as useAnalytics} from '@shopify/hydrogen';
 import {useEffect} from 'react';
 
 export function CustomAnalytics() {

@@ -1,4 +1,8 @@
-import {Analytics, useNonce, getShopAnalytics} from '@shopify/hydrogen';
+import {
+  UNSTABLE_Analytics as Analytics,
+  useNonce,
+  getShopAnalytics,
+} from '@shopify/hydrogen';
 import {
   defer,
   type SerializeFrom,
@@ -20,7 +24,7 @@ import favicon from './assets/favicon.svg';
 import resetStyles from './styles/reset.css?url';
 import appStyles from './styles/app.css?url';
 import {Layout} from '~/components/Layout';
-import {CustomAnalytics} from './components/CustomAnalytics';
+import {CustomAnalytics} from '~/components/CustomAnalytics';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations

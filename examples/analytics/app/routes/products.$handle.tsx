@@ -19,7 +19,7 @@ import {
   type VariantOption,
   getSelectedProductOptions,
   CartForm,
-  Analytics,
+  UNSTABLE_Analytics as Analytics,
 } from '@shopify/hydrogen';
 import type {
   CartLineInput,
@@ -137,6 +137,7 @@ export default function Product() {
               quantity: 1,
             },
           ],
+          url: window.location.href,
         }}
       />
     </div>
