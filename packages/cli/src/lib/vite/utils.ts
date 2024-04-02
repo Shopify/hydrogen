@@ -29,6 +29,10 @@ export async function toWeb(
 ) {
   const {Request} = await import('@shopify/mini-oxygen');
 
+  if (!req.headers.host) {
+    throw new Error('Request must contain a host header.');
+  }
+
   return new Request(toURL(req), {
     method: req.method,
     headers: {...headers, ...(req.headers as object)},
