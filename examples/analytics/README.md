@@ -1,4 +1,4 @@
-# Hydrogen example: Shopify Analytics & Consent
+# Hydrogen example: Shopify Analytics & Consent (unstable)
 
 This folder contains an end-to-end example including first (Shopify) and third-party analytics instrumentation events and consent management leveraging the [Customer Privacy API](https://shopify.dev/docs/api/customer-privacy).
 
@@ -102,7 +102,8 @@ export async function loader({context}: LoaderFunctionArgs) {
 
 #### 3.4 Update the `App` component
 
-Wrap the application `Layout` with the `Analytics` provider
+Wrap the application `Layout` with the `Analytics` provider. The analytics provider is
+responsible for managing and orchestrating cart, custom and page view events.
 
 ```diff
 export default function App() {
@@ -174,7 +175,157 @@ export default function App() {
 
 [View the complete component file](app/root.tsx) to see these updates in context.
 
-## 4. Update Content Security Policy
+## 4. Update the `product`, `collection`, `cart`, `search` routes
+
+Add the `Analytics.ProductView` component to the product route `/app/routes/product.$handle.tsx`
+
+```diff
+import {
+  //...other code
++ UNSTABLE_Analytics as Analytics,
+} from '@shopify/hydrogen';
+
+export default function Product() {
+  const {product, variants} = useLoaderData<typeof loader>();
+  const {selectedVariant} = product;
+  return (
+    <div className="product">
+      <ProductImage image={selectedVariant?.image} />
+      <ProductMain
+        selectedVariant={selectedVariant}
+        product={product}
+        variants={variants}
+      />
++     <Analytics.ProductView
++       data={{
++         products: [
++           {
++             id: product.id,
++             title: product.title,
++             price: selectedVariant?.price.amount || '0',
++             vendor: product.vendor,
++             variantId: selectedVariant?.id || '',
++             variantTitle: selectedVariant?.title || '',
++             quantity: 1,
++           },
++         ],
++         url: window.location.href,
++       }}
++     />
+    </div>
+  );
+}
+```
+
+Add the `Analytics.CollectionView` component to the collection route `/app/routes/collection.$handle.tsx`
+
+```diff
+import {
+  //...other code
++ UNSTABLE_Analytics as Analytics,
+} from '@shopify/hydrogen';
+
+export default function Collection() {
+  const {collection} = useLoaderData<typeof loader>();
+
+  return (
+    <div className="collection">
+      <h1>{collection.title}</h1>
+      <p className="collection-description">{collection.description}</p>
+      <Pagination connection={collection.products}>
+        {({nodes, isLoading, PreviousLink, NextLink}) => (
+          <>
+            <PreviousLink>
+              {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
+            </PreviousLink>
+            <ProductsGrid products={nodes} />
+            <br />
+            <NextLink>
+              {isLoading ? 'Loading...' : <span>Load more ↓</span>}
+            </NextLink>
+          </>
+        )}
+      </Pagination>
++     <Analytics.CollectionView
++       data={{
++         collection: {
++           id: collection.id,
++           handle: collection.handle,
++         },
++         url: window.location.href,
++       }}
++     />
+    </div>
+  );
+}
+```
+
+Add the `Analytics.CartView` component to the cart route `/app/routes/cart.tsx`
+
+```diff
+import {
+  //...other code
++ UNSTABLE_Analytics as Analytics,
+} from '@shopify/hydrogen';
+
+export default function Cart() {
+  const rootData = useRootLoaderData();
+  const cartPromise = rootData.cart;
+
+  return (
+    <div className="cart">
+      <h1>Cart</h1>
+      <Suspense fallback={<p>Loading cart ...</p>}>
+        <Await
+          resolve={cartPromise}
+          errorElement={<div>An error occurred</div>}
+        >
+          {(cart) => {
+            return <CartMain layout="page" cart={cart} />;
+          }}
+        </Await>
+      </Suspense>
++     <Analytics.CartView />
+    </div>
+  );
+}
+```
+
+Add the `Analytics.SearchView` component to the search route `/app/routes/search.tsx`
+
+```diff
+
+```diff
+import {
+  //...other code
++ UNSTABLE_Analytics as Analytics,
+} from '@shopify/hydrogen';
+
+
+export default function SearchPage() {
+  const {searchTerm, searchResults} = useLoaderData<typeof loader>();
+
+  return (
+    <div className="search">
+      <h1>Search</h1>
+      <SearchForm searchTerm={searchTerm} />
+      {!searchTerm || !searchResults.totalResults ? (
+        <NoSearchResults />
+      ) : (
+        <SearchResults
+          results={searchResults.results}
+          searchTerm={searchTerm}
+        />
+      )}
++     <Analytics.SearchView
++       data={{searchTerm, searchResults, url: window.location.href}}
++     />
+    </div>
+  );
+}
+```
+
+## 5. Update Content Security Policy
 
 Add `storeDomain` and `checkoutDomain` to the Content-Security-Policy
 
@@ -199,7 +350,7 @@ export default async function handleRequest(
 
 [View the complete component file](app/entry.server.tsx) to see these updates in context.
 
-## 5. (TypeScript only) - Add the new environment variable to the `ENV` type definition
+## 6. (TypeScript only) - Add the new environment variable to the `ENV` type definition
 
 Update the `remix.d.ts` file
 
