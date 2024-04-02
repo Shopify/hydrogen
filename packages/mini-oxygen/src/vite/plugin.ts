@@ -1,5 +1,5 @@
 import path from 'node:path';
-import type {Plugin, ResolvedConfig, UserConfig} from 'vite';
+import type {Plugin, ResolvedConfig} from 'vite';
 import {
   setupOxygenMiddleware,
   startMiniOxygenRuntime,
@@ -21,19 +21,13 @@ type OxygenPluginOptions = Partial<
 >;
 
 type O2PluginContext = InternalMiniOxygenOptions & {
-  shouldStartRuntime?: (config: ResolvedConfig) => boolean;
+  shouldStartRuntime?: () => boolean;
   cliOptions?: Partial<
     OxygenPluginOptions & {
       envPromise: Promise<Record<string, any>>;
     }
   >;
 };
-
-const H2O_CONTEXT_KEY = '__h2oPluginContext';
-
-function getH2OPluginContext(config: UserConfig | ResolvedConfig) {
-  return (config as any)?.[H2O_CONTEXT_KEY] as O2PluginContext | undefined;
-}
 
 /**
  * Runs backend code in an Oxygen worker instead of Node.js during development.
@@ -43,6 +37,7 @@ function getH2OPluginContext(config: UserConfig | ResolvedConfig) {
 export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
   let resolvedConfig: ResolvedConfig;
   let absoluteWorkerEntryFile: string;
+  let apiOptions: O2PluginContext = {};
 
   return [
     {
@@ -74,15 +69,24 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
             }),
         };
       },
+      api: {
+        registerPluginOptions(newOptions: O2PluginContext) {
+          apiOptions = {
+            ...apiOptions,
+            ...newOptions,
+            services: {...apiOptions.services, ...newOptions.services},
+            cliOptions: {...apiOptions.cliOptions, ...newOptions.cliOptions},
+          };
+        },
+      },
       configureServer(viteDevServer) {
-        resolvedConfig = viteDevServer.config;
-
-        // Get options from Hydrogen plugin and CLI.
-        const {shouldStartRuntime, cliOptions, setupScripts, services} =
-          getH2OPluginContext(resolvedConfig) || {};
-
-        if (shouldStartRuntime && !shouldStartRuntime(resolvedConfig)) return;
         if (miniOxygen) return;
+
+        // Get options from Hydrogen
+        const {shouldStartRuntime, cliOptions, setupScripts, services} =
+          apiOptions;
+
+        if (shouldStartRuntime?.() !== true) return;
 
         const entry =
           cliOptions?.entry ?? pluginOptions.entry ?? DEFAULT_SSR_ENTRY;

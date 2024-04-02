@@ -165,16 +165,27 @@ export async function runDev({
   const viteServer = await vite.createServer({
     root,
     server: {fs, host: host ? true : undefined},
-    ...setH2OPluginContext({
-      cliOptions: {
-        debug,
-        ssrEntry,
-        envPromise: envPromise.then(({allVariables}) => allVariables),
-        inspectorPort,
-        disableVirtualRoutes,
-        logRequestLine,
+    plugins: [
+      {
+        name: 'hydrogen:cli',
+        configResolved(config) {
+          findPlugin(config, 'hydrogen:main')?.api?.registerPluginOptions({
+            disableVirtualRoutes,
+          });
+
+          findPlugin(config, 'oxygen:main')?.api?.registerPluginOptions({
+            cliOptions: {
+              debug,
+              ssrEntry,
+              envPromise: envPromise.then(({allVariables}) => allVariables),
+              inspectorPort,
+              disableVirtualRoutes,
+              logRequestLine,
+            },
+          });
+        },
       },
-    }),
+    ],
   });
 
   process.once('SIGTERM', async () => {
@@ -292,29 +303,11 @@ export async function runDev({
   };
 }
 
-type H2OPluginContext = {
-  cliOptions?: Partial<
-    HydrogenPluginOptions &
-      OxygenPluginOptions & {
-        envPromise: Promise<Record<string, any>>;
-      }
-  >;
-};
-
-type HydrogenPluginOptions = {
-  disableVirtualRoutes?: boolean;
-};
-
-type OxygenPluginOptions = {
-  ssrEntry?: string;
-  debug?: boolean;
-  inspectorPort?: number;
-  env?: Record<string, any>;
-  logRequestLine?: null | ((request: Request) => void);
-};
-
-const H2O_CONTEXT_KEY = '__h2oPluginContext';
-
-function setH2OPluginContext(options: Partial<H2OPluginContext>) {
-  return {[H2O_CONTEXT_KEY]: options} as Record<string, any>;
+function findPlugin<Config extends {plugins: Readonly<Array<{name: string}>>}>(
+  config: Config,
+  name: string,
+) {
+  return config.plugins.find((plugin) => plugin.name === name) as
+    | Config['plugins'][number]
+    | undefined;
 }

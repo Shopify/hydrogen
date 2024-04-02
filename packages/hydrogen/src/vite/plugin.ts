@@ -1,10 +1,10 @@
 import path from 'node:path';
-import type {Plugin, ResolvedConfig, UserConfig} from 'vite';
+import type {Plugin, ResolvedConfig} from 'vite';
 import {
   setupHydrogenMiddleware,
   setupRemixDevServerHooks,
 } from './hydrogen-middleware.js';
-import type {HydrogenPluginOptions, H2PluginContext} from './types.js';
+import type {HydrogenPluginOptions} from './types.js';
 import {H2O_BINDING_NAME, createLogRequestEvent} from './request-events.js';
 
 /**
@@ -14,13 +14,14 @@ import {H2O_BINDING_NAME, createLogRequestEvent} from './request-events.js';
  * @experimental
  */
 export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
+  let apiOptions: HydrogenPluginOptions = {};
   const isRemixChildCompiler = (config: ResolvedConfig) =>
     !config.plugins?.some((plugin) => plugin.name === 'remix');
 
   return [
     {
       name: 'hydrogen:main',
-      config(config) {
+      config() {
         return {
           ssr: {
             optimizeDeps: {
@@ -41,43 +42,57 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
               ],
             },
           },
-          // Pass the setup functions to the Oxygen runtime.
-          ...setH2OPluginContext({
-            setupScripts: [setupRemixDevServerHooks],
-            shouldStartRuntime: (config) => !isRemixChildCompiler(config),
-            services: {
-              // @ts-ignore
-              [H2O_BINDING_NAME]: createLogRequestEvent({
-                transformLocation: (partialLocation) =>
-                  path.join(config.root ?? process.cwd(), partialLocation),
-              }),
-            },
-          }),
         };
+      },
+      api: {
+        registerPluginOptions(newOptions: HydrogenPluginOptions) {
+          apiOptions = mergeOptions(apiOptions, newOptions);
+        },
+        getPluginOptions() {
+          return mergeOptions(pluginOptions, apiOptions);
+        },
+      },
+      configResolved(resolvedConfig) {
+        // Pass the setup functions to the Oxygen runtime.
+        const oxygenPlugin = resolvedConfig.plugins.find(
+          (plugin) => plugin.name === 'oxygen:main',
+        );
+
+        oxygenPlugin?.api?.registerPluginOptions?.({
+          setupScripts: [setupRemixDevServerHooks],
+          shouldStartRuntime: () => !isRemixChildCompiler(resolvedConfig),
+          services: {
+            [H2O_BINDING_NAME]: createLogRequestEvent({
+              transformLocation: (partialLocation) =>
+                path.join(
+                  resolvedConfig.root ?? process.cwd(),
+                  partialLocation,
+                ),
+            }),
+          },
+        });
       },
       configureServer(viteDevServer) {
         if (isRemixChildCompiler(viteDevServer.config)) return;
 
-        // Get options from Hydrogen CLI.
-        const {cliOptions} = getH2OPluginContext(viteDevServer.config) || {};
-
         return () => {
-          setupHydrogenMiddleware(viteDevServer, {
-            ...pluginOptions,
-            ...cliOptions,
-          });
+          setupHydrogenMiddleware(
+            viteDevServer,
+            mergeOptions(pluginOptions, apiOptions),
+          );
         };
       },
     },
   ];
 }
 
-const H2O_CONTEXT_KEY = '__h2oPluginContext';
+function mergeOptions(
+  acc: HydrogenPluginOptions,
+  newOptions: HydrogenPluginOptions,
+) {
+  const newOptionsWithoutUndefined = Object.fromEntries(
+    Object.entries(newOptions).filter(([_, value]) => value !== undefined),
+  );
 
-function getH2OPluginContext(config: UserConfig | ResolvedConfig) {
-  return (config as any)?.[H2O_CONTEXT_KEY] as H2PluginContext;
-}
-
-function setH2OPluginContext(options: Partial<H2PluginContext>) {
-  return {[H2O_CONTEXT_KEY]: options} as Record<string, any>;
+  return {...acc, ...newOptionsWithoutUndefined};
 }
