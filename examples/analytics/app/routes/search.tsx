@@ -65,7 +65,6 @@ export default function SearchPage() {
           searchTerm={searchTerm}
         />
       )}
-      {/*  TODO: add search results */}
       <Analytics.SearchView
         data={{searchTerm, searchResults, url: window.location.href}}
       />

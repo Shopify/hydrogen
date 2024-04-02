@@ -76,7 +76,7 @@ type SearchPayload = {
   /** The search term used for the search results page */
   searchTerm: string;
   /** The search results */
-  searchResults?: Array<any>;
+  searchResults?: any;
 };
 
 type CartPayload = {
