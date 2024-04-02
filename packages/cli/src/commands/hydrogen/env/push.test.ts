@@ -12,6 +12,7 @@ import {getStorefrontEnvVariables} from '../../../lib/graphql/admin/pull-variabl
 import {getStorefrontEnvironments} from '../../../lib/graphql/admin/list-environments.js';
 import {pushStorefrontEnvVariables} from '../../../lib/graphql/admin/push-variables.js';
 import {dummyListEnvironments} from '../../../lib/graphql/admin/test-helper.js';
+import {verifyLinkedStorefront} from '../../../lib/verify-linked-storefront.js';
 
 import {runEnvPush} from './push.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
@@ -31,6 +32,7 @@ vi.mock('../../../lib/auth.js');
 vi.mock('../../../lib/render-errors.js');
 vi.mock('../../../lib/graphql/admin/pull-variables.js');
 vi.mock('../../../lib/graphql/admin/list-environments.js');
+vi.mock('../../../lib/verify-linked-storefront.js');
 vi.mock('../../../lib/graphql/admin/push-variables.js');
 
 const ADMIN_SESSION: AdminSession = {
@@ -64,6 +66,12 @@ describe('pushVariables', () => {
     vi.mocked(login).mockResolvedValue({
       session: ADMIN_SESSION,
       config: SHOPIFY_CONFIG,
+    });
+
+    vi.mocked(verifyLinkedStorefront).mockResolvedValue({
+      id: SHOPIFY_CONFIG.storefront.id,
+      title: SHOPIFY_CONFIG.storefront.title,
+      productionUrl: 'https://my-shop.myshopify.com',
     });
 
     vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
@@ -224,6 +232,25 @@ describe('pushVariables', () => {
         await expect(
           runEnvPush({envFile: filePath, env: 'production'}),
         ).rejects.toThrow(AbortError);
+      });
+    });
+  });
+
+  describe('when there is no linked storefront', () => {
+    beforeEach(() => {
+      vi.mocked(verifyLinkedStorefront).mockResolvedValue(undefined);
+    });
+
+    it("doesn't fetch environment info to push env vars", async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        const filePath = joinPath(tmpDir, '.env');
+        await writeFile(filePath, 'NEW_TOKEN_1=1\nNEW_TOKEN_2=2');
+
+        await expect(
+          runEnvPush({path: tmpDir, env: 'production'}),
+        ).resolves.not.toThrow();
+
+        expect(getStorefrontEnvironments).not.toHaveBeenCalled();
       });
     });
   });

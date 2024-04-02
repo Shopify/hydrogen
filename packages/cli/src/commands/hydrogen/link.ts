@@ -96,7 +96,13 @@ export async function linkStorefront(
     force = false,
     flagStorefront,
     cliCommand,
-  }: {force?: boolean; flagStorefront?: string; cliCommand: string},
+    storefronts,
+  }: {
+    force?: boolean;
+    flagStorefront?: string;
+    cliCommand: string;
+    storefronts?: ParsedHydrogenStorefront[];
+  },
 ) {
   if (!config.shop) {
     throw new AbortError('No shop found in local config, login first.');
@@ -112,7 +118,9 @@ export async function linkStorefront(
     }
   }
 
-  const storefronts: ParsedHydrogenStorefront[] = await getStorefronts(session);
+  if (!storefronts) {
+    storefronts = await getStorefronts(session);
+  }
 
   let selectedStorefront: HydrogenStorefront | undefined;
 
