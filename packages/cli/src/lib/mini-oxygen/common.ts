@@ -31,7 +31,7 @@ export function logRequestLine(
 ): void {
   try {
     const url = new URL(request.url);
-    if (DEV_ROUTES.has(url.pathname)) return;
+    if (DEV_ROUTES.has(url.pathname) || url.pathname === '/favicon.ico') return;
 
     const isDataRequest = url.searchParams.has('_data');
     let route = request.url.replace(url.origin, '');
