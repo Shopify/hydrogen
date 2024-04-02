@@ -11,26 +11,18 @@ export async function miniOxygenHandler(
   },
   context: ExecutionContext,
 ) {
-  const url = new URL(request.url);
-
-  // Replace branded tunnel domains:
-  if (url.hostname.endsWith('.trycloudflare.com')) {
-    url.hostname = url.hostname.replace(
-      '.trycloudflare.com',
-      '.tryhydrogen.dev',
-    );
-  }
+  const {pathname} = new URL(request.url);
 
   if (env.assets && env.staticAssetExtensions && request.method === 'GET') {
     const staticAssetExtensions = new Set(env.staticAssetExtensions);
-    const wellKnown = url.pathname.startsWith('/.well-known');
-    const extension = url.pathname.split('.').at(-1) ?? '';
+    const wellKnown = pathname.startsWith('/.well-known');
+    const extension = pathname.split('.').at(-1) ?? '';
     const isAsset =
       wellKnown || !!staticAssetExtensions.has(extension.toUpperCase());
 
     if (isAsset) {
       const response = await env.assets.fetch(
-        new Request(url, {
+        new Request(request.url, {
           signal: request.signal,
           headers: request.headers,
         }),
@@ -49,15 +41,12 @@ export async function miniOxygenHandler(
   } satisfies RequestInit;
 
   const startTimeMs = Date.now();
-  const response = await env.entry.fetch(
-    url,
-    new Request(request, requestInit),
-  );
+  const response = await env.entry.fetch(request, requestInit);
   const durationMs = Date.now() - startTimeMs;
 
   context.waitUntil(
     env.logRequest.fetch(
-      new Request(url, {
+      new Request(request.url, {
         method: request.method,
         signal: request.signal,
         headers: {
