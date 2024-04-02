@@ -173,14 +173,12 @@ export async function runDev({
           });
 
           findPlugin(config, 'oxygen:main')?.api?.registerPluginOptions({
-            cliOptions: {
-              debug,
-              ssrEntry,
-              envPromise: envPromise.then(({allVariables}) => allVariables),
-              inspectorPort,
-              disableVirtualRoutes,
-              logRequestLine,
-            },
+            debug,
+            ssrEntry,
+            envPromise: envPromise.then(({allVariables}) => allVariables),
+            inspectorPort,
+            disableVirtualRoutes,
+            logRequestLine,
           });
         },
       },

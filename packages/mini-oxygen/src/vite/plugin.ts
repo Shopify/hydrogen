@@ -13,21 +13,18 @@ const DEFAULT_SSR_ENTRY = './server';
 
 let miniOxygen: MiniOxygen;
 
-type OxygenPluginOptions = Partial<
+export type OxygenPluginOptions = Partial<
   Pick<
     MiniOxygenViteOptions,
     'entry' | 'env' | 'inspectorPort' | 'logRequestLine' | 'debug'
   >
 >;
 
-type O2PluginContext = InternalMiniOxygenOptions & {
-  shouldStartRuntime?: () => boolean;
-  cliOptions?: Partial<
-    OxygenPluginOptions & {
-      envPromise: Promise<Record<string, any>>;
-    }
-  >;
-};
+export type OxygenApiOptions = OxygenPluginOptions &
+  InternalMiniOxygenOptions & {
+    envPromise?: Promise<Record<string, any>>;
+    shouldStartRuntime?: () => boolean;
+  };
 
 /**
  * Runs backend code in an Oxygen worker instead of Node.js during development.
@@ -37,7 +34,7 @@ type O2PluginContext = InternalMiniOxygenOptions & {
 export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
   let resolvedConfig: ResolvedConfig;
   let absoluteWorkerEntryFile: string;
-  let apiOptions: O2PluginContext = {};
+  let apiOptions: OxygenApiOptions = {};
 
   return [
     {
@@ -70,48 +67,43 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
         };
       },
       api: {
-        registerPluginOptions(newOptions: O2PluginContext) {
+        registerPluginOptions(newOptions: OxygenApiOptions) {
           apiOptions = {
             ...apiOptions,
             ...newOptions,
+            env: {...apiOptions.env, ...newOptions.env},
             services: {...apiOptions.services, ...newOptions.services},
-            cliOptions: {...apiOptions.cliOptions, ...newOptions.cliOptions},
           };
         },
       },
       configureServer(viteDevServer) {
         if (miniOxygen) return;
-
-        // Get options from Hydrogen
-        const {shouldStartRuntime, cliOptions, setupScripts, services} =
-          apiOptions;
-
-        if (shouldStartRuntime?.() !== true) return;
+        if (apiOptions.shouldStartRuntime?.() !== true) return;
 
         const entry =
-          cliOptions?.entry ?? pluginOptions.entry ?? DEFAULT_SSR_ENTRY;
+          apiOptions.entry ?? pluginOptions.entry ?? DEFAULT_SSR_ENTRY;
+
         absoluteWorkerEntryFile = path.isAbsolute(entry)
           ? entry
           : path.resolve(viteDevServer.config.root, entry);
 
-        const envPromise = cliOptions?.envPromise ?? Promise.resolve();
-
-        const miniOxygenPromise = envPromise.then((remoteEnv) => {
-          return startMiniOxygenRuntime({
-            entry,
-            viteDevServer,
-            setupScripts,
-            services,
-            env: {...remoteEnv, ...pluginOptions.env},
-            debug: cliOptions?.debug ?? pluginOptions.debug ?? false,
-            inspectorPort:
-              cliOptions?.inspectorPort ?? pluginOptions.inspectorPort,
-            logRequestLine:
-              // Give priority to the plugin option over the CLI option here,
-              // since the CLI one is just a default, not a user-provided flag.
-              pluginOptions?.logRequestLine ?? cliOptions?.logRequestLine,
-          });
-        });
+        const miniOxygenPromise = Promise.resolve(apiOptions.envPromise).then(
+          (remoteEnv) =>
+            startMiniOxygenRuntime({
+              entry,
+              viteDevServer,
+              setupScripts: apiOptions.setupScripts,
+              services: apiOptions.services,
+              env: {...remoteEnv, ...apiOptions.env, ...pluginOptions.env},
+              debug: apiOptions.debug ?? pluginOptions.debug ?? false,
+              inspectorPort:
+                apiOptions.inspectorPort ?? pluginOptions.inspectorPort,
+              logRequestLine:
+                // Give priority to the plugin option over the CLI option here,
+                // since the CLI one is just a default, not a user-provided flag.
+                pluginOptions?.logRequestLine ?? apiOptions.logRequestLine,
+            }),
+        );
 
         process.once('SIGTERM', async () => {
           try {

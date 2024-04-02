@@ -7,6 +7,8 @@ import {
 import type {HydrogenPluginOptions} from './types.js';
 import {H2O_BINDING_NAME, createLogRequestEvent} from './request-events.js';
 
+export type {HydrogenPluginOptions};
+
 /**
  * Enables Hydrogen utilities for local development
  * such as GraphiQL, Subrequest Profiler, etc.
