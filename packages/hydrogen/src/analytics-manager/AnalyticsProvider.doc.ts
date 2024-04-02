@@ -6,7 +6,7 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description:
-    'Provides a context to track page view, cart events and send them to Shopify. It is integrated with the Customer Privacy API for consent management. It is flexible for other analytics platform to integrate into its subscribe and publish system. It provides the [`unstable_useAnalytics`](/docs/api/hydrogen/2024-01/hooks/unstable_useanalytics) hook to access the analytics provider context.',
+    'Provides a context for tracking page views and cart events, and transmitting the data to Shopify. It's integrated with the Customer Privacy API for consent management. The provider can also be used to connect third-party analytics services through its subscribe and publish system. It provides the [`unstable_useAnalytics`](/docs/api/hydrogen/2024-01/hooks/unstable_useanalytics) hook to access the analytics provider context.',
   type: 'component',
   defaultExample: {
     description: 'This is the default example',
