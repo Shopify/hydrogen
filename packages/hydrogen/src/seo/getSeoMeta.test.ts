@@ -45,22 +45,20 @@ describe('getSeoMeta', () => {
       const output = getSeoMeta(input);
 
       // Then
-      expect(output).toEqual(
-        expect.arrayContaining([
-          {
-            title: 'Snowdevil',
-          },
-          {
-            property: 'og:title',
-            content: 'Snowdevil',
-          },
+      expect(output).toEqual([
+        {
+          title: 'Snowdevil',
+        },
+        {
+          property: 'og:title',
+          content: 'Snowdevil',
+        },
 
-          {
-            property: 'twitter:title',
-            content: 'Snowdevil',
-          },
-        ]),
-      );
+        {
+          property: 'twitter:title',
+          content: 'Snowdevil',
+        },
+      ]);
     });
 
     it('should fill the title with a template', () => {
@@ -74,22 +72,20 @@ describe('getSeoMeta', () => {
       const output = getSeoMeta(input);
 
       // Then
-      expect(output).toEqual(
-        expect.arrayContaining([
-          {
-            title: 'Snowdevil - A headless storefront',
-          },
-          {
-            property: 'og:title',
-            content: 'Snowdevil - A headless storefront',
-          },
+      expect(output).toEqual([
+        {
+          title: 'Snowdevil - A headless storefront',
+        },
+        {
+          property: 'og:title',
+          content: 'Snowdevil - A headless storefront',
+        },
 
-          {
-            property: 'twitter:title',
-            content: 'Snowdevil - A headless storefront',
-          },
-        ]),
-      );
+        {
+          property: 'twitter:title',
+          content: 'Snowdevil - A headless storefront',
+        },
+      ]);
     });
 
     it('should warn if the title is too long', () => {
@@ -119,22 +115,20 @@ describe('getSeoMeta', () => {
       const output = getSeoMeta(input);
 
       // Then
-      expect(output).toEqual(
-        expect.arrayContaining([
-          {
-            name: 'description',
-            content: 'A headless storefront',
-          },
-          {
-            property: 'og:description',
-            content: 'A headless storefront',
-          },
-          {
-            property: 'twitter:description',
-            content: 'A headless storefront',
-          },
-        ]),
-      );
+      expect(output).toEqual([
+        {
+          name: 'description',
+          content: 'A headless storefront',
+        },
+        {
+          property: 'og:description',
+          content: 'A headless storefront',
+        },
+        {
+          property: 'twitter:description',
+          content: 'A headless storefront',
+        },
+      ]);
     });
 
     it('should warn if the description is too long', () => {
@@ -165,19 +159,17 @@ describe('getSeoMeta', () => {
       const output = getSeoMeta(input);
 
       // Then
-      expect(output).toEqual(
-        expect.arrayContaining([
-          {
-            href: 'https://hydrogen.shop/collections',
-            rel: 'canonical',
-            tagName: 'link',
-          },
-          {
-            property: 'og:url',
-            content: 'https://hydrogen.shop/collections',
-          },
-        ]),
-      );
+      expect(output).toEqual([
+        {
+          href: 'https://hydrogen.shop/collections',
+          rel: 'canonical',
+          tagName: 'link',
+        },
+        {
+          property: 'og:url',
+          content: 'https://hydrogen.shop/collections',
+        },
+      ]);
     });
 
     it('should warn if the url is not a url', () => {
@@ -206,15 +198,17 @@ describe('getSeoMeta', () => {
       const output = getSeoMeta(input);
 
       // Then
-      expect(output).toEqual(
-        expect.arrayContaining([
-          {
-            href: 'https://hydrogen.shop/products/snowboard',
-            rel: 'canonical',
-            tagName: 'link',
-          },
-        ]),
-      );
+      expect(output).toEqual([
+        {
+          href: 'https://hydrogen.shop/products/snowboard',
+          rel: 'canonical',
+          tagName: 'link',
+        },
+        {
+          content: 'https://hydrogen.shop/products/snowboard',
+          property: 'og:url',
+        },
+      ]);
     });
   });
 
@@ -229,14 +223,12 @@ describe('getSeoMeta', () => {
       const output = getSeoMeta(input);
 
       // Then
-      expect(output).toEqual(
-        expect.arrayContaining([
-          {
-            content: 'https://example.com/image.jpg',
-            property: 'og:image',
-          },
-        ]),
-      );
+      expect(output).toEqual([
+        {
+          content: 'https://example.com/image.jpg',
+          property: 'og:image',
+        },
+      ]);
     });
 
     it('should add media tags when given an array of strings', () => {
@@ -252,18 +244,16 @@ describe('getSeoMeta', () => {
       const output = getSeoMeta(input);
 
       // Then
-      expect(output).toEqual(
-        expect.arrayContaining([
-          {
-            content: 'https://example.com/image-1.jpg',
-            property: 'og:image',
-          },
-          {
-            content: 'https://example.com/image-2.jpg',
-            property: 'og:image',
-          },
-        ]),
-      );
+      expect(output).toEqual([
+        {
+          content: 'https://example.com/image-1.jpg',
+          property: 'og:image',
+        },
+        {
+          content: 'https://example.com/image-2.jpg',
+          property: 'og:image',
+        },
+      ]);
     });
 
     it('should add media tags when given an object', () => {
@@ -279,26 +269,24 @@ describe('getSeoMeta', () => {
       const output = getSeoMeta(input);
 
       // Then
-      expect(output).toEqual(
-        expect.arrayContaining([
-          {
-            content: 'https://example.com/image-1.jpg',
-            property: 'og:image:url',
-          },
-          {
-            content: 100,
-            property: 'og:image:height',
-          },
-          {
-            content: 'https://example.com/image-1.jpg',
-            property: 'og:image:secure_url',
-          },
-          {
-            content: 'image/jpeg',
-            property: 'og:image:type',
-          },
-        ]),
-      );
+      expect(output).toEqual([
+        {
+          content: 'https://example.com/image-1.jpg',
+          property: 'og:image:url',
+        },
+        {
+          content: 'https://example.com/image-1.jpg',
+          property: 'og:image:secure_url',
+        },
+        {
+          content: 'image/jpeg',
+          property: 'og:image:type',
+        },
+        {
+          content: 100,
+          property: 'og:image:height',
+        },
+      ]);
     });
 
     it('should add media tags when given an array of objects', () => {
@@ -320,42 +308,40 @@ describe('getSeoMeta', () => {
       const output = getSeoMeta(input);
 
       // Then
-      expect(output).toEqual(
-        expect.arrayContaining([
-          {
-            content: 'https://example.com/image-1.jpg',
-            property: 'og:image:url',
-          },
-          {
-            content: 100,
-            property: 'og:image:height',
-          },
-          {
-            content: 'https://example.com/image-1.jpg',
-            property: 'og:image:secure_url',
-          },
-          {
-            content: 'image/jpeg',
-            property: 'og:image:type',
-          },
-          {
-            content: 'https://example.com/image-2.jpg',
-            property: 'og:image:url',
-          },
-          {
-            content: 'https://example.com/image-2.jpg',
-            property: 'og:image:secure_url',
-          },
-          {
-            content: 'image/jpeg',
-            property: 'og:image:type',
-          },
-          {
-            content: 100,
-            property: 'og:image:width',
-          },
-        ]),
-      );
+      expect(output).toEqual([
+        {
+          content: 'https://example.com/image-1.jpg',
+          property: 'og:image:url',
+        },
+        {
+          content: 'https://example.com/image-1.jpg',
+          property: 'og:image:secure_url',
+        },
+        {
+          content: 'image/jpeg',
+          property: 'og:image:type',
+        },
+        {
+          content: 100,
+          property: 'og:image:height',
+        },
+        {
+          content: 'https://example.com/image-2.jpg',
+          property: 'og:image:url',
+        },
+        {
+          content: 'https://example.com/image-2.jpg',
+          property: 'og:image:secure_url',
+        },
+        {
+          content: 'image/jpeg',
+          property: 'og:image:type',
+        },
+        {
+          content: 100,
+          property: 'og:image:width',
+        },
+      ]);
     });
 
     it('should add media tags for multiple types of media', () => {
@@ -445,18 +431,16 @@ describe('getSeoMeta', () => {
       const output = getSeoMeta(input);
 
       // Then
-      expect(output).toEqual(
-        expect.arrayContaining([
-          {
-            content: '@shopify',
-            property: 'twitter:creator',
-          },
-          {
-            content: '@shopify',
-            property: 'twitter:site',
-          },
-        ]),
-      );
+      expect(output).toEqual([
+        {
+          content: '@shopify',
+          property: 'twitter:site',
+        },
+        {
+          content: '@shopify',
+          property: 'twitter:creator',
+        },
+      ]);
     });
 
     it('should warn if the handle is not a valid', () => {
@@ -497,22 +481,20 @@ describe('getSeoMeta', () => {
       const output = getSeoMeta(input);
 
       // Then
-      expect(output).toEqual(
-        expect.arrayContaining([
-          {
-            tagName: 'link',
-            href: 'https://hydrogen.shop.com/de/products/1234',
-            hrefLang: 'de',
-            rel: 'alternate',
-          },
-          {
-            tagName: 'link',
-            href: 'https://hydrogen.shop.com/fr/products/1234',
-            hrefLang: 'fr-default',
-            rel: 'alternate',
-          },
-        ]),
-      );
+      expect(output).toEqual([
+        {
+          tagName: 'link',
+          href: 'https://hydrogen.shop.com/fr/products/1234',
+          hrefLang: 'fr-default',
+          rel: 'alternate',
+        },
+        {
+          tagName: 'link',
+          href: 'https://hydrogen.shop.com/de/products/1234',
+          hrefLang: 'de',
+          rel: 'alternate',
+        },
+      ]);
     });
   });
 
@@ -530,14 +512,12 @@ describe('getSeoMeta', () => {
       const output = getSeoMeta(input);
 
       // Then
-      expect(output).toEqual(
-        expect.arrayContaining([
-          {
-            content: 'noindex,nofollow',
-            name: 'robots',
-          },
-        ]),
-      );
+      expect(output).toEqual([
+        {
+          content: 'noindex,nofollow',
+          name: 'robots',
+        },
+      ]);
     });
   });
 
@@ -554,14 +534,12 @@ describe('getSeoMeta', () => {
     const output = getSeoMeta(input);
 
     // Then
-    expect(output).toEqual(
-      expect.arrayContaining([
-        {
-          content: 'index,follow',
-          name: 'robots',
-        },
-      ]),
-    );
+    expect(output).toEqual([
+      {
+        content: 'index,follow',
+        name: 'robots',
+      },
+    ]);
   });
 
   it('should add all the robots meta tags', () => {
@@ -585,15 +563,13 @@ describe('getSeoMeta', () => {
     const output = getSeoMeta(input);
 
     // Then
-    expect(output).toEqual(
-      expect.arrayContaining([
-        {
-          content:
-            'noindex,nofollow,noarchive,noimageindex,nosnippet,notranslate,max-image-preview:large,max-snippet:100,max-video-preview:100,unavailable_after:2023-01-01',
-          name: 'robots',
-        },
-      ]),
-    );
+    expect(output).toEqual([
+      {
+        content:
+          'noindex,nofollow,noarchive,noimageindex,nosnippet,notranslate,max-image-preview:large,max-snippet:100,max-video-preview:100,unavailable_after:2023-01-01',
+        name: 'robots',
+      },
+    ]);
   });
 
   describe('jsonLd', () => {
@@ -607,7 +583,7 @@ describe('getSeoMeta', () => {
       const output = getSeoMeta(input);
 
       // Then
-      expect(output).toEqual(expect.arrayContaining([]));
+      expect(output).toEqual([]);
     });
 
     it('should generate Organization jsonLd tag', () => {
@@ -633,13 +609,11 @@ describe('getSeoMeta', () => {
       const output = getSeoMeta(input);
 
       // Then
-      expect(output).toEqual(
-        expect.arrayContaining([
-          {
-            'script:ld+json': input.jsonLd,
-          },
-        ]),
-      );
+      expect(output).toEqual([
+        {
+          'script:ld+json': input.jsonLd,
+        },
+      ]);
     });
 
     it('should generate Product jsonLd tag', () => {
@@ -673,13 +647,11 @@ describe('getSeoMeta', () => {
       const output = getSeoMeta(input);
 
       // Then
-      expect(output).toEqual(
-        expect.arrayContaining([
-          {
-            'script:ld+json': input.jsonLd,
-          },
-        ]),
-      );
+      expect(output).toEqual([
+        {
+          'script:ld+json': input.jsonLd,
+        },
+      ]);
     });
   });
 
@@ -730,15 +702,122 @@ describe('getSeoMeta', () => {
     const output = getSeoMeta(input);
 
     // Then
-    expect(output).toEqual(
-      expect.arrayContaining([
+    expect(output).toEqual([
+      {
+        'script:ld+json': input.jsonLd[0],
+      },
+      {
+        'script:ld+json': input.jsonLd[1],
+      },
+    ]);
+  });
+
+  describe('overrides', () => {
+    it('should override the title', () => {
+      // Given
+      const input = {
+        title: 'Snowdevil',
+      };
+
+      // When
+      const output = getSeoMeta(input, () => [
         {
-          'script:ld+json': input.jsonLd[0],
+          title: 'Custom title',
+        },
+      ]);
+
+      // Then
+      expect(output).toEqual([
+        {
+          title: 'Custom title',
         },
         {
-          'script:ld+json': input.jsonLd[1],
+          property: 'og:title',
+          content: 'Snowdevil',
         },
-      ]),
-    );
+
+        {
+          property: 'twitter:title',
+          content: 'Snowdevil',
+        },
+      ]);
+    });
+
+    it('should append meta', () => {
+      // Given
+      const input = {
+        title: 'Snowdevil',
+      };
+
+      // When
+      const output = getSeoMeta(input, null, () => [
+        {
+          property: 'something',
+          content: 'new',
+        },
+      ]);
+
+      // Then
+      expect(output).toEqual([
+        {
+          title: 'Snowdevil',
+        },
+        {
+          property: 'og:title',
+          content: 'Snowdevil',
+        },
+        {
+          property: 'twitter:title',
+          content: 'Snowdevil',
+        },
+        {
+          property: 'something',
+          content: 'new',
+        },
+      ]);
+    });
+
+    it('should override the title and append meta', () => {
+      // Given
+      const input = {
+        title: 'Snowdevil',
+      };
+
+      // When
+      const output = getSeoMeta(
+        input,
+        () => [
+          {
+            title: 'Custom title',
+          },
+        ],
+        () => [
+          {
+            property: 'something',
+            content: 'new',
+          },
+        ],
+      );
+
+      // Then
+      expect(output).toEqual([
+        {
+          title: 'Custom title',
+        },
+        {
+          property: 'og:title',
+          content: 'Snowdevil',
+        },
+
+        {
+          property: 'twitter:title',
+          content: 'Snowdevil',
+        },
+        {
+          property: 'something',
+          content: 'new',
+        },
+      ]);
+    });
   });
 });

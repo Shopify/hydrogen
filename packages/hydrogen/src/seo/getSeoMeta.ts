@@ -20,6 +20,8 @@ type GetSeoMetaTypeForDocs = {
   appendFn?: (meta: GetSeoMetaReturn) => GetSeoMetaReturn;
 };
 
+type Nullable<T> = T | null;
+
 /**
  * Generate a Remix meta array based on the seo property used by the `Seo` component.
  */
@@ -28,8 +30,8 @@ export function getSeoMeta<
   T extends SeoConfig<Schema> = SeoConfig<Schema>,
 >(
   seoInput: T,
-  overrideFn?: (meta: GetSeoMetaReturn) => GetSeoMetaReturn,
-  appendFn?: (meta: GetSeoMetaReturn) => GetSeoMetaReturn,
+  overrideFn?: Nullable<(meta: GetSeoMetaReturn) => GetSeoMetaReturn>,
+  appendFn?: Nullable<(meta: GetSeoMetaReturn) => GetSeoMetaReturn>,
 ): GetSeoMetaReturn {
   let tagResults: GetSeoMetaReturn = [];
 
@@ -162,7 +164,7 @@ export function getSeoMeta<
         const jsonLdBlocks = ensureArray(seoInput.jsonLd);
         let index = 0;
         for (const block of jsonLdBlocks) {
-          if (typeof block !== 'object') {
+          if (typeof block !== 'object' || Object.keys(block).length === 0) {
             continue;
           }
 
