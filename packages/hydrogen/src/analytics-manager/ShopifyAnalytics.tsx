@@ -51,19 +51,12 @@ export function ShopifyAnalytics({
   checkoutRootDomain &&
     shopDomain &&
     storefrontAccessToken &&
-    useCustomerPrivacy(consent);
+    useCustomerPrivacy({
+      ...consent,
+      onVisitorConsentCollected: customerPrivacyReady,
+    });
 
   useShopifyCookies({hasUserConsent: canTrack()});
-  useEffect(() => {
-    document.addEventListener('visitorConsentCollected', customerPrivacyReady);
-
-    return () => {
-      document.removeEventListener(
-        'visitorConsentCollected',
-        customerPrivacyReady,
-      );
-    };
-  }, [customerPrivacyReady]);
 
   useEffect(() => {
     // Views

@@ -83,8 +83,8 @@ export type CustomerPrivacyApiProps = {
   /** The storefront access token for the shop. */
   storefrontAccessToken: string;
   /** Whether to load the Shopify privacy banner as configured in Shopify admin. */
-  withPrivacyBanner: boolean;
-  /** Callback to be called when visitor consent is collected. */
+  withPrivacyBanner?: boolean;
+  /** Callback to be called when visitor consent is collected. Defaults to true. */
   onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;
 };
 
@@ -95,7 +95,7 @@ const CONSENT_API_WITH_BANNER =
 
 export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   const {
-    withPrivacyBanner = false,
+    withPrivacyBanner = true,
     onVisitorConsentCollected,
     ...consentConfig
   } = props;
@@ -171,7 +171,7 @@ export function getCustomerPrivacyRequired() {
 
   if (!customerPrivacy) {
     throw new Error(
-      'Shopify Customer Privacy API not available. Make sure to load the Shopify Customer Privacy API with useCustomerPrivacyApi().',
+      'Shopify Customer Privacy API not available. Must be used within a useEffect. Make sure to load the Shopify Customer Privacy API with useCustomerPrivacy() or <AnalyticsProvider>.',
     );
   }
 

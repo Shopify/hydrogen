@@ -1,4 +1,4 @@
-import {Analytics, getShopAnalytics} from '@shopify/hydrogen';
+import {Unstable__Analytics, getShopAnalytics} from '@shopify/hydrogen';
 import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {Outlet, useLoaderData} from '@remix-run/react';
 
@@ -28,13 +28,13 @@ export default function App() {
         <meta name="viewport" content="width=device-width,initial-scale=1" />
       </head>
       <body>
-        <Analytics.Provider
+        <Unstable__Analytics.Provider
           cart={data.cart}
           shop={data.shop}
           consent={data.consent}
         >
           <Outlet />
-        </Analytics.Provider>
+        </Unstable__Analytics.Provider>
       </body>
     </html>
   );

@@ -89,6 +89,7 @@ export {
   type CartViewPayload,
   type SearchViewPayload,
   type CartUpdatePayload,
+  type CartLineUpdatePayload,
 } from './analytics-manager/AnalyticsView';
 
 export {

@@ -4,11 +4,11 @@ import {
   type CollectionViewPayload,
   type CartViewPayload,
   type CartUpdatePayload,
+  type CartLineUpdatePayload,
+  type SearchViewPayload,
   useUnstable__Analytics,
-  SearchViewPayload,
 } from '@shopify/hydrogen';
 import {useEffect} from 'react';
-import {CartLineUpdatePayload} from './AnalyticsView';
 
 export function CustomAnalytics() {
   const {subscribe, register} = useUnstable__Analytics();
