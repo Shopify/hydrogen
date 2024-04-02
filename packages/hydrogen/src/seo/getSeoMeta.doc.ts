@@ -27,13 +27,8 @@ const data: ReferenceEntityTemplateSchema = {
   },
   definitions: [
     {
-      title: 'Parameters',
-      type: 'SeoConfig',
-      description: '',
-    },
-    {
-      title: 'Returns',
-      type: 'GetSeoMetaReturn',
+      title: 'getSeoMeta',
+      type: 'GetSeoMetaTypeForDocs',
       description: '',
     },
   ],

@@ -24,5 +24,16 @@ export async function loader({context}: LoaderFunctionArgs) {
 // call `getSeoMeta` from within meta in each route that has
 // an `seo` prop returned from the loader.
 export const meta: MetaFunction<typeof loader> = ({data}) => {
-  return getSeoMeta(data!.seo);
+  return getSeoMeta(
+    data!.seo,
+    // these override meta
+    () => {
+      return [{title: 'Custom title'}];
+    },
+
+    // these append meta
+    () => {
+      return [{name: 'author', content: 'Hydrogen'}];
+    },
+  );
 };

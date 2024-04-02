@@ -11,14 +11,27 @@ import {MetaFunction} from '@remix-run/react';
 
 export type GetSeoMetaReturn = ReturnType<MetaFunction>;
 
+type GetSeoMetaTypeForDocs = {
+  /** An object that generates SEO metadata */
+  seoInput: SeoConfig;
+  /** Use this optional callback to override the default meta output. It is passed an argument containing all the meta to be generated. */
+  overrideFn?: (meta: GetSeoMetaReturn) => GetSeoMetaReturn;
+  /** Use this optional callback to append the default meta output. It is passed an argument containing all the meta to be generated. */
+  appendFn?: (meta: GetSeoMetaReturn) => GetSeoMetaReturn;
+};
+
 /**
  * Generate a Remix meta array based on the seo property used by the `Seo` component.
  */
 export function getSeoMeta<
   Schema extends Thing,
   T extends SeoConfig<Schema> = SeoConfig<Schema>,
->(seoInput: T) {
-  const tagResults: GetSeoMetaReturn = [];
+>(
+  seoInput: T,
+  overrideFn?: (meta: GetSeoMetaReturn) => GetSeoMetaReturn,
+  appendFn?: (meta: GetSeoMetaReturn) => GetSeoMetaReturn,
+): GetSeoMetaReturn {
+  let tagResults: GetSeoMetaReturn = [];
 
   for (const seoKey of Object.keys(seoInput)) {
     switch (seoKey) {
@@ -237,6 +250,38 @@ export function getSeoMeta<
 
         break;
       }
+    }
+  }
+
+  // replace any parent meta with the same name or property with the override
+  if (overrideFn) {
+    let overrides = overrideFn([...tagResults]);
+
+    if (overrides) {
+      for (let override of overrides) {
+        let index = tagResults.findIndex(
+          (meta) =>
+            ('name' in meta &&
+              'name' in override &&
+              meta.name === override.name) ||
+            ('property' in meta &&
+              'property' in override &&
+              meta.property === override.property) ||
+            ('title' in meta && 'title' in override),
+        );
+        if (index !== -1) {
+          tagResults.splice(index, 1, override);
+        }
+      }
+    }
+  }
+
+  // append any additional meta
+  if (appendFn) {
+    const results = appendFn([...tagResults]);
+
+    if (results) {
+      tagResults = tagResults.concat(results);
     }
   }
 

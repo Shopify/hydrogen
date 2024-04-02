@@ -63,3 +63,38 @@ Migration steps:
 +   return getSeoMeta(data.seo);
 +};
 ```
+
+**3. Merge root route meta data**
+
+If your root route loader also returns an `seo` property, make sure to merge that data:
+
+```ts
+export const meta = ({data, matches}) => {
+  return getSeoMeta({
+    ...args.matches[0].data.seo,
+    // the current route seo data overrides the root route data
+    ...data.seo,
+  });
+};
+```
+
+**4. Override meta**
+
+Sometimes `getSeoMeta` might produce a property in a way you'd like to change. Override any property by passing a second array:
+
+```ts
+export const meta = ({data}) => {
+  return getSeoMeta(
+    data.seo,
+    // these override meta
+    () => {
+      return [{title: data.project.name}];
+    },
+
+    // these append meta
+    () => {
+      return [{name: 'author', content: 'Hydrogen'}];
+    },
+  );
+};
+```

@@ -10938,12 +10938,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {getSeoMeta} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  const {shop} = await context.storefront.query(`\n    query layout {\n      shop {\n        name\n        description\n      }\n    }\n  `);\n\n  return {\n    seo: {\n      title: shop.title,\n      description: shop.description,\n    },\n  };\n}\n\n// Instead of rendering the `&lt;Seo /&gt;` component in root.tsx\n// call `getSeoMeta` from within meta in each route that has\n// an `seo` prop returned from the loader.\nexport const meta = ({data}) =&gt; {\n  return getSeoMeta(data.seo);\n};\n",
+            "code": "import {getSeoMeta} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  const {shop} = await context.storefront.query(`\n    query layout {\n      shop {\n        name\n        description\n      }\n    }\n  `);\n\n  return {\n    seo: {\n      title: shop.title,\n      description: shop.description,\n    },\n  };\n}\n\nexport const meta = ({data}) =&gt; {\n  return getSeoMeta(\n    data.seo,\n    // these override meta\n    () =&gt; {\n      return [{title: 'Custom title'}];\n    },\n\n    // these append meta\n    () =&gt; {\n      return [{name: 'author', content: 'Hydrogen'}];\n    },\n  );\n};\n",
             "language": "js"
           },
           {
             "title": "TypeScript",
-            "code": "import {MetaFunction} from '@remix-run/react';\nimport {LoaderFunctionArgs} from '@remix-run/server-runtime';\nimport {getSeoMeta} from '@shopify/hydrogen';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const {shop} = await context.storefront.query(`\n    query layout {\n      shop {\n        name\n        description\n      }\n    }\n  `);\n\n  return {\n    seo: {\n      title: shop.title,\n      description: shop.description,\n    },\n  };\n}\n\n// Instead of rendering the `&lt;Seo /&gt;` component in root.tsx\n// call `getSeoMeta` from within meta in each route that has\n// an `seo` prop returned from the loader.\nexport const meta: MetaFunction&lt;typeof loader&gt; = ({data}) =&gt; {\n  return getSeoMeta(data!.seo);\n};\n",
+            "code": "import {MetaFunction} from '@remix-run/react';\nimport {LoaderFunctionArgs} from '@remix-run/server-runtime';\nimport {getSeoMeta} from '@shopify/hydrogen';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const {shop} = await context.storefront.query(`\n    query layout {\n      shop {\n        name\n        description\n      }\n    }\n  `);\n\n  return {\n    seo: {\n      title: shop.title,\n      description: shop.description,\n    },\n  };\n}\n\n// Instead of rendering the `&lt;Seo /&gt;` component in root.tsx\n// call `getSeoMeta` from within meta in each route that has\n// an `seo` prop returned from the loader.\nexport const meta: MetaFunction&lt;typeof loader&gt; = ({data}) =&gt; {\n  return getSeoMeta(\n    data!.seo,\n    // these override meta\n    () =&gt; {\n      return [{title: 'Custom title'}];\n    },\n\n    // these append meta\n    () =&gt; {\n      return [{name: 'author', content: 'Hydrogen'}];\n    },\n  );\n};\n",
             "language": "ts"
           }
         ],
@@ -10952,10 +10952,42 @@
     },
     "definitions": [
       {
-        "title": "Parameters",
+        "title": "getSeoMeta",
         "description": "",
-        "type": "SeoConfig",
+        "type": "GetSeoMetaTypeForDocs",
         "typeDefinitions": {
+          "GetSeoMetaTypeForDocs": {
+            "filePath": "/seo/getSeoMeta.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "GetSeoMetaTypeForDocs",
+            "value": "{\n  /** An object that generates SEO metadata */\n  seoInput: SeoConfig;\n  /** Use this optional callback to override the default meta output. It is passed an argument containing all the meta to be generated. */\n  overrideFn?: (meta: GetSeoMetaReturn) => GetSeoMetaReturn;\n  /** Use this optional callback to append the default meta output. It is passed an argument containing all the meta to be generated. */\n  appendFn?: (meta: GetSeoMetaReturn) => GetSeoMetaReturn;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/seo/getSeoMeta.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "seoInput",
+                "value": "SeoConfig",
+                "description": "An object that generates SEO metadata"
+              },
+              {
+                "filePath": "/seo/getSeoMeta.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "overrideFn",
+                "value": "(meta: MetaDescriptor[]) => MetaDescriptor[]",
+                "description": "Use this optional callback to override the default meta output. It is passed an argument containing all the meta to be generated.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/getSeoMeta.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "appendFn",
+                "value": "(meta: MetaDescriptor[]) => MetaDescriptor[]",
+                "description": "Use this optional callback to append the default meta output. It is passed an argument containing all the meta to be generated.",
+                "isOptional": true
+              }
+            ]
+          },
           "SeoConfig": {
             "filePath": "/seo/generate-seo-tags.ts",
             "name": "SeoConfig",
@@ -11257,267 +11289,6 @@
               }
             ],
             "value": "export interface RobotsOptions {\n  /**\n   * Set the maximum size of an image preview for this page in a search results Can be one of the following:\n   *\n   * - `none` - No image preview is to be shown.\n   * - `standard` - A default image preview may be shown.\n   * - `large` - A larger image preview, up to the width of the viewport, may be shown.\n   *\n   * If no value is specified a default image preview size is used.\n   */\n  maxImagePreview?: 'none' | 'standard' | 'large';\n  /**\n   * A number representing the maximum of amount characters to use as a textual snippet for a search result. This value\n   * can also be set to one of the following special values:\n   *\n   * - 0 - No snippet is to be shown. Equivalent to nosnippet.\n   * - 1 - The Search engine will choose the snippet length that it believes is most effective to help users discover\n   *   your content and direct users to your site\n   * - -1 - No limit on the number of characters that can be shown in the snippet.\n   */\n  maxSnippet?: number;\n  /**\n   * The maximum number of seconds for videos on this page to show in search results. This value can also be set to one\n   * of the following special values:\n   *\n   * - 0 - A static image may be used with the `maxImagePreview` setting.\n   * - 1 - There is no limit to the size of the video preview.\n   *\n   * This applies to all forms of search results (at Google: web search, Google Images, Google Videos, Discover,\n   * Assistant).\n   */\n  maxVideoPreview?: number;\n  /**\n   * Do not show a cached link in search results.\n   */\n  noArchive?: boolean;\n  /**\n   * Do not follow the links on this page.\n   *\n   * @see https://developers.google.com/search/docs/advanced/guidelines/qualify-outbound-links\n   */\n  noFollow?: boolean;\n  /**\n   * Do not index images on this page.\n   */\n  noImageIndex?: boolean;\n  /**\n   * Do not show this page, media, or resource in search results.\n   */\n  noIndex?: boolean;\n  /**\n   * Do not show a text snippet or video preview in the search results for this page.\n   */\n  noSnippet?: boolean;\n  /**\n   * Do not offer translation of this page in search results.\n   */\n  noTranslate?: boolean;\n  /**\n   * Do not show this page in search results after the specified date/time.\n   */\n  unavailableAfter?: string;\n}"
-          }
-        }
-      },
-      {
-        "title": "Returns",
-        "description": "",
-        "type": "GetSeoMetaReturn",
-        "typeDefinitions": {
-          "GetSeoMetaReturn": {
-            "filePath": "/seo/seo-meta.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "GetSeoMetaReturn",
-            "value": "ReturnType<MetaFunction>",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "length",
-                "value": "number",
-                "description": "Gets or sets the length of the array. This is a number one higher than the highest index in the array."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "toString",
-                "value": "() => string",
-                "description": "Returns a string representation of an array."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "toLocaleString",
-                "value": "() => string",
-                "description": "Returns a string representation of an array. The elements are converted to string using their toLocaleString methods."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "pop",
-                "value": "() => MetaDescriptor",
-                "description": "Removes the last element from an array and returns it.\r\nIf the array is empty, undefined is returned and the array is not modified."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "push",
-                "value": "(...items: MetaDescriptor[]) => number",
-                "description": "Appends new elements to the end of an array, and returns the new length of the array."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "concat",
-                "value": "{ (...items: ConcatArray<MetaDescriptor>[]): MetaDescriptor[]; (...items: (MetaDescriptor | ConcatArray<MetaDescriptor>)[]): MetaDescriptor[]; }",
-                "description": "Combines two or more arrays.\r\nThis method returns a new array without modifying any existing arrays."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "join",
-                "value": "(separator?: string) => string",
-                "description": "Adds all the elements of an array into a string, separated by the specified separator string."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "reverse",
-                "value": "() => MetaDescriptor[]",
-                "description": "Reverses the elements in an array in place.\r\nThis method mutates the array and returns a reference to the same array."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "shift",
-                "value": "() => MetaDescriptor",
-                "description": "Removes the first element from an array and returns it.\r\nIf the array is empty, undefined is returned and the array is not modified."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "slice",
-                "value": "(start?: number, end?: number) => MetaDescriptor[]",
-                "description": "Returns a copy of a section of an array.\r\nFor both start and end, a negative index can be used to indicate an offset from the end of the array.\r\nFor example, -2 refers to the second to last element of the array."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "sort",
-                "value": "(compareFn?: (a: MetaDescriptor, b: MetaDescriptor) => number) => MetaDescriptor[]",
-                "description": "Sorts an array in place.\r\nThis method mutates the array and returns a reference to the same array."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "splice",
-                "value": "{ (start: number, deleteCount?: number): MetaDescriptor[]; (start: number, deleteCount: number, ...items: MetaDescriptor[]): MetaDescriptor[]; }",
-                "description": "Removes elements from an array and, if necessary, inserts new elements in their place, returning the deleted elements."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "unshift",
-                "value": "(...items: MetaDescriptor[]) => number",
-                "description": "Inserts new elements at the start of an array, and returns the new length of the array."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "indexOf",
-                "value": "(searchElement: MetaDescriptor, fromIndex?: number) => number",
-                "description": "Returns the index of the first occurrence of a value in an array, or -1 if it is not present."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "lastIndexOf",
-                "value": "(searchElement: MetaDescriptor, fromIndex?: number) => number",
-                "description": "Returns the index of the last occurrence of a specified value in an array, or -1 if it is not present."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "every",
-                "value": "{ <S extends MetaDescriptor>(predicate: (value: MetaDescriptor, index: number, array: MetaDescriptor[]) => value is S, thisArg?: any): this is S[]; (predicate: (value: MetaDescriptor, index: number, array: MetaDescriptor[]) => unknown, thisArg?: any): boolean; }",
-                "description": "Determines whether all the members of an array satisfy the specified test."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "some",
-                "value": "(predicate: (value: MetaDescriptor, index: number, array: MetaDescriptor[]) => unknown, thisArg?: any) => boolean",
-                "description": "Determines whether the specified callback function returns true for any element of an array."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "forEach",
-                "value": "(callbackfn: (value: MetaDescriptor, index: number, array: MetaDescriptor[]) => void, thisArg?: any) => void",
-                "description": "Performs the specified action for each element in an array."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "map",
-                "value": "<U>(callbackfn: (value: MetaDescriptor, index: number, array: MetaDescriptor[]) => U, thisArg?: any) => U[]",
-                "description": "Calls a defined callback function on each element of an array, and returns an array that contains the results."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "filter",
-                "value": "{ <S extends MetaDescriptor>(predicate: (value: MetaDescriptor, index: number, array: MetaDescriptor[]) => value is S, thisArg?: any): S[]; (predicate: (value: MetaDescriptor, index: number, array: MetaDescriptor[]) => unknown, thisArg?: any): MetaDescriptor[]; }",
-                "description": "Returns the elements of an array that meet the condition specified in a callback function."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "reduce",
-                "value": "{ (callbackfn: (previousValue: MetaDescriptor, currentValue: MetaDescriptor, currentIndex: number, array: MetaDescriptor[]) => MetaDescriptor): MetaDescriptor; (callbackfn: (previousValue: MetaDescriptor, currentValue: MetaDescriptor, currentIndex: number, array: MetaDescriptor[]) => MetaDescriptor, initialValue: MetaDescriptor): MetaDescriptor; <U>(callbackfn: (previousValue: U, currentValue: MetaDescriptor, currentIndex: number, array: MetaDescriptor[]) => U, initialValue: U): U; }",
-                "description": "Calls the specified callback function for all the elements in an array. The return value of the callback function is the accumulated result, and is provided as an argument in the next call to the callback function."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "reduceRight",
-                "value": "{ (callbackfn: (previousValue: MetaDescriptor, currentValue: MetaDescriptor, currentIndex: number, array: MetaDescriptor[]) => MetaDescriptor): MetaDescriptor; (callbackfn: (previousValue: MetaDescriptor, currentValue: MetaDescriptor, currentIndex: number, array: MetaDescriptor[]) => MetaDescriptor, initialValue: MetaDescriptor): MetaDescriptor; <U>(callbackfn: (previousValue: U, currentValue: MetaDescriptor, currentIndex: number, array: MetaDescriptor[]) => U, initialValue: U): U; }",
-                "description": "Calls the specified callback function for all the elements in an array, in descending order. The return value of the callback function is the accumulated result, and is provided as an argument in the next call to the callback function."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "find",
-                "value": "{ <S extends MetaDescriptor>(predicate: (this: void, value: MetaDescriptor, index: number, obj: MetaDescriptor[]) => value is S, thisArg?: any): S; (predicate: (value: MetaDescriptor, index: number, obj: MetaDescriptor[]) => unknown, thisArg?: any): MetaDescriptor; }",
-                "description": "Returns the value of the first element in the array where predicate is true, and undefined\r\notherwise."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "findIndex",
-                "value": "(predicate: (value: MetaDescriptor, index: number, obj: MetaDescriptor[]) => unknown, thisArg?: any) => number",
-                "description": "Returns the index of the first element in the array where predicate is true, and -1\r\notherwise."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "fill",
-                "value": "(value: MetaDescriptor, start?: number, end?: number) => MetaDescriptor[]",
-                "description": "Changes all array elements from `start` to `end` index to a static `value` and returns the modified array"
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "copyWithin",
-                "value": "(target: number, start: number, end?: number) => MetaDescriptor[]",
-                "description": "Returns the this object after copying a section of the array identified by start and end\r\nto the same array starting at position target"
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "entries",
-                "value": "() => IterableIterator<[number, MetaDescriptor]>",
-                "description": "Returns an iterable of key, value pairs for every entry in the array"
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "keys",
-                "value": "() => IterableIterator<number>",
-                "description": "Returns an iterable of keys in the array"
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "values",
-                "value": "() => IterableIterator<MetaDescriptor>",
-                "description": "Returns an iterable of values in the array"
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "includes",
-                "value": "(searchElement: MetaDescriptor, fromIndex?: number) => boolean",
-                "description": "Determines whether an array includes a certain element, returning true or false as appropriate."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "flatMap",
-                "value": "<U, This = undefined>(callback: (this: This, value: MetaDescriptor, index: number, array: MetaDescriptor[]) => U | readonly U[], thisArg?: This) => U[]",
-                "description": "Calls a defined callback function on each element of an array. Then, flattens the result into\r\na new array.\r\nThis is identical to a map followed by flat with depth 1."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "flat",
-                "value": "<A, D extends number = 1>(this: A, depth?: D) => FlatArray<A, D>[]",
-                "description": "Returns a new array with all sub-array elements concatenated into it recursively up to the\r\nspecified depth."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "__@iterator@478",
-                "value": "() => IterableIterator<MetaDescriptor>",
-                "description": "Iterator"
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "__@unscopables@5752",
-                "value": "() => { copyWithin: boolean; entries: boolean; fill: boolean; find: boolean; findIndex: boolean; keys: boolean; values: boolean; }",
-                "description": "Returns an object whose properties have the value 'true'\r\nwhen they will be absent when used in a 'with' statement."
-              },
-              {
-                "filePath": "/seo/seo-meta.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "at",
-                "value": "(index: number) => MetaDescriptor",
-                "description": "Takes an integer value and returns the item at that index, allowing for positive and negative integers. Negative integers count back from the last item in the array."
-              }
-            ]
           }
         }
       }
