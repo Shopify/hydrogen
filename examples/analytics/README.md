@@ -1,17 +1,17 @@
 # Hydrogen example: Shopify Analytics & Consent (unstable)
 
-This folder contains an end-to-end example including first (Shopify) and third-party analytics instrumentation events and consent management leveraging the [Customer Privacy API](https://shopify.dev/docs/api/customer-privacy).
+This folder contains an end-to-end example of how to implement analytics for Hydrogen. Hydrogen supports both Shopify analytics, as well as third-party services.
 
-The Customer Privacy API is a browser-based, JavaScript API that you can use to verify data processing permissions or build a cookie consent banner.
+Hydrogen includes built in support for the [Customer Privacy API](https://shopify.dev/docs/api/customer-privacy), a browser-based JavaScript API that you can use to display cookie-consent banners and verify data processing permissions.
 
 ## Requirements
 
-- [Configuring customer privacy settings](https://help.shopify.com/en/manual/privacy-and-security/privacy/customer-privacy-settings/privacy-settings?shpxid=9f9c768e-AC66-497C-98D0-701334C8173E) - You can configure and manage customer privacy settings within your Shopify admin to help comply with privacy and data protection laws.
-- [Add a cookie Banner](https://help.shopify.com/en/manual/privacy-and-security/privacy/customer-privacy-settings/privacy-settings#add-a-cookie-banner) - A cookie banner is a notification displayed on a website that informs visitors about the use of cookies and asks for their consent for data collection and tracking activities.
+- [Configure customer privacy settings](https://help.shopify.com/en/manual/privacy-and-security/privacy/customer-privacy-settings/privacy-settings?shpxid=9f9c768e-AC66-497C-98D0-701334C8173E) - You can configure and manage customer privacy settings within your Shopify admin to help comply with privacy and data protection laws.
+- [Add a cookie banner](https://help.shopify.com/en/manual/privacy-and-security/privacy/customer-privacy-settings/privacy-settings#add-a-cookie-banner) - A cookie banner is a notification displayed on a website that informs visitors about the use of cookies and asks for their consent for data collection and tracking activities.
 
 ## Install
 
-Setup a new project with this example:
+Set up a new project with this example:
 
 ```bash
 npm create @shopify/hydrogen@latest -- --template analytics
@@ -60,6 +60,9 @@ In the Shopify admin, head over to / Settings / Customer Privacy / Cookie Banner
 ### 3. Edit the `root.tsx` layout file
 
 #### 3.1 Import the required hydrogen `Analytics` component and `getShopAnalytics` utility
+
+> [!TIP]
+> Importing `UNSTABLE_Analytics as Analytics` makes it easier to upgrade to the stable component later, since you’ll only need to update your import statements.
 
 ```diff
 import {
@@ -142,7 +145,7 @@ export default function App() {
 }
 ```
 
-Add the `CustomAnalytics` component to listen to events
+Add the `CustomAnalytics` component to listen to events:
 
 ```diff
 export default function App() {
@@ -181,7 +184,7 @@ export default function App() {
 
 ## 4. Update the `product`, `collection`, `cart`, `search` routes
 
-Add the `Analytics.ProductView` component to the product route `/app/routes/product.$handle.tsx`
+Add the `Analytics.ProductView` component to the product details page route, `/app/routes/product.$handle.tsx`:
 
 ```diff
 import {
@@ -221,7 +224,7 @@ export default function Product() {
 }
 ```
 
-Add the `Analytics.CollectionView` component to the collection route `/app/routes/collection.$handle.tsx`
+Add the `Analytics.CollectionView` component to the collection route, `/app/routes/collection.$handle.tsx`:
 
 ```diff
 import {
