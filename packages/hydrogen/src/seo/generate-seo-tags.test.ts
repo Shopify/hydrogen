@@ -774,7 +774,7 @@ describe('generateSeoTags', () => {
       // Given
       const input = {
         jsonLd: {},
-      } as SeoConfig<Thing>;
+      } as SeoConfig;
 
       // When
       const output = generateSeoTags(input);
@@ -800,7 +800,7 @@ describe('generateSeoTags', () => {
           ],
           url: 'http://localhost:3000/products/the-full-stack',
         },
-      } satisfies SeoConfig<Organization>;
+      } satisfies SeoConfig;
 
       // When
       const output = generateSeoTags(input);
@@ -845,7 +845,7 @@ describe('generateSeoTags', () => {
             ],
           },
         },
-      } satisfies SeoConfig<Product>;
+      } satisfies SeoConfig;
 
       // When
       const output = generateSeoTags(input);
@@ -907,7 +907,7 @@ describe('generateSeoTags', () => {
           },
         },
       ],
-    } satisfies SeoConfig<Organization | Product>;
+    } satisfies SeoConfig;
 
     // When
     const output = generateSeoTags(input);

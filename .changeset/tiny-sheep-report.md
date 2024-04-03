@@ -70,31 +70,37 @@ If your root route loader also returns an `seo` property, make sure to merge tha
 
 ```ts
 export const meta = ({data, matches}) => {
-  return getSeoMeta({
-    ...args.matches[0].data.seo,
+  return getSeoMeta(
+    args.matches[0].data.seo,
     // the current route seo data overrides the root route data
-    ...data.seo,
-  });
+    data.seo,
+  );
+};
+```
+
+Or more simply:
+
+```ts
+export const meta = ({data, matches}) => {
+  return getSeoMeta(...matches.map((match) => match.data.seo));
 };
 ```
 
 **4. Override meta**
 
-Sometimes `getSeoMeta` might produce a property in a way you'd like to change. Override any property by passing a second array:
+Sometimes `getSeoMeta` might produce a property in a way you'd like to change. Map over the resulting array to change it. For example, Hydrogen removes query parameters from canonical URLs, add them back:
 
 ```ts
-export const meta = ({data}) => {
-  return getSeoMeta(
-    data.seo,
-    // these override meta
-    () => {
-      return [{title: data.project.name}];
-    },
+export const meta = ({data, location}) => {
+  return getSeoMeta(data.seo).map((meta) => {
+    if (meta.rel === 'canonical') {
+      return {
+        ...meta,
+        href: meta.href + location.search,
+      };
+    }
 
-    // these append meta
-    () => {
-      return [{name: 'author', content: 'Hydrogen'}];
-    },
-  );
+    return meta;
+  });
 };
 ```

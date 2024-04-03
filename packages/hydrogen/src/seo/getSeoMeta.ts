@@ -1,4 +1,3 @@
-import type {Thing} from 'schema-dts';
 import {
   ensureArray,
   inferMimeType,
@@ -12,34 +11,62 @@ import {MetaFunction} from '@remix-run/react';
 export type GetSeoMetaReturn = ReturnType<MetaFunction>;
 
 type GetSeoMetaTypeForDocs = {
-  /** An object that generates SEO metadata */
-  seoInput: SeoConfig;
-  /** Use this optional callback to override the default meta output. It is passed an argument containing all the meta to be generated. */
-  overrideFn?: (meta: GetSeoMetaReturn) => GetSeoMetaReturn;
-  /** Use this optional callback to append the default meta output. It is passed an argument containing all the meta to be generated. */
-  appendFn?: (meta: GetSeoMetaReturn) => GetSeoMetaReturn;
+  /** `getSeoMeta` takes an arbitrary number of configuration object parameters. Values in each object are overwritten based on the object order. \`jsonLd\` properties are preserved between each configuration object. */
+  seoInputs: SeoConfig[];
 };
 
-type Nullable<T> = T | null;
+type SeoKey = keyof SeoConfig;
+
+type Optional<T> = T | null | undefined;
 
 /**
- * Generate a Remix meta array based on the seo property used by the `Seo` component.
+ * Generate a Remix meta array from one or more SEO configuration objects. This is useful to pass SEO configuration for the parent route(s) and the current route. Similar to `Object.assign()`, each property is overwritten based on the object order. The exception is `jsonLd`, which is preserved so that each route has it's own independent jsonLd meta data.
  */
-export function getSeoMeta<
-  Schema extends Thing,
-  T extends SeoConfig<Schema> = SeoConfig<Schema>,
->(
-  seoInput: T,
-  overrideFn?: Nullable<(meta: GetSeoMetaReturn) => GetSeoMetaReturn>,
-  appendFn?: Nullable<(meta: GetSeoMetaReturn) => GetSeoMetaReturn>,
+export function getSeoMeta(
+  ...seoInputs: Optional<SeoConfig>[]
 ): GetSeoMetaReturn {
   let tagResults: GetSeoMetaReturn = [];
 
-  for (const seoKey of Object.keys(seoInput)) {
+  const dedupedSeoInput =
+    seoInputs.reduce((acc, current) => {
+      if (!current) return acc as SeoConfig;
+
+      // remove seo properties with falsy values
+      Object.keys(current).forEach(
+        (key) => !current[key as SeoKey] && delete current[key as SeoKey],
+      );
+
+      const {jsonLd} = current;
+
+      if (!jsonLd) {
+        return {...acc, ...current} as SeoConfig;
+      }
+
+      // concatenate jsonLds if present
+      if (!acc?.jsonLd) {
+        return {...acc, ...current, jsonLd: [jsonLd]} as SeoConfig;
+      } else {
+        if (Array.isArray(jsonLd)) {
+          return {
+            ...acc,
+            ...current,
+            jsonLd: [...ensureArray(acc.jsonLd), ...jsonLd],
+          } as SeoConfig;
+        } else {
+          return {
+            ...acc,
+            ...current,
+            jsonLd: [...ensureArray(acc.jsonLd), jsonLd],
+          } as SeoConfig;
+        }
+      }
+    }, {}) || {};
+
+  for (const seoKey of Object.keys(dedupedSeoInput)) {
     switch (seoKey) {
       case 'title': {
-        const content = validate(schema.title, seoInput.title);
-        const title = renderTitle(seoInput?.titleTemplate, content);
+        const content = validate(schema.title, dedupedSeoInput.title);
+        const title = renderTitle(dedupedSeoInput?.titleTemplate, content);
 
         if (!title) {
           break;
@@ -55,7 +82,10 @@ export function getSeoMeta<
       }
 
       case 'description': {
-        const content = validate(schema.description, seoInput.description);
+        const content = validate(
+          schema.description,
+          dedupedSeoInput.description,
+        );
 
         if (!content) {
           break;
@@ -80,7 +110,7 @@ export function getSeoMeta<
       }
 
       case 'url': {
-        const content = validate(schema.url, seoInput.url);
+        const content = validate(schema.url, dedupedSeoInput.url);
 
         if (!content) {
           break;
@@ -105,7 +135,7 @@ export function getSeoMeta<
       }
 
       case 'handle': {
-        const content = validate(schema.handle, seoInput.handle);
+        const content = validate(schema.handle, dedupedSeoInput.handle);
 
         if (!content) {
           break;
@@ -121,7 +151,7 @@ export function getSeoMeta<
 
       case 'media': {
         let content;
-        const values = ensureArray(seoInput.media);
+        const values = ensureArray(dedupedSeoInput.media);
 
         for (const media of values) {
           if (typeof media === 'string') {
@@ -161,7 +191,7 @@ export function getSeoMeta<
       }
 
       case 'jsonLd': {
-        const jsonLdBlocks = ensureArray(seoInput.jsonLd);
+        const jsonLdBlocks = ensureArray(dedupedSeoInput.jsonLd);
         let index = 0;
         for (const block of jsonLdBlocks) {
           if (typeof block !== 'object' || Object.keys(block).length === 0) {
@@ -177,7 +207,7 @@ export function getSeoMeta<
       }
 
       case 'alternates': {
-        const alternates = ensureArray(seoInput.alternates);
+        const alternates = ensureArray(dedupedSeoInput.alternates);
 
         for (const alternate of alternates) {
           if (!alternate) {
@@ -202,7 +232,7 @@ export function getSeoMeta<
       }
 
       case 'robots': {
-        if (!seoInput.robots) {
+        if (!dedupedSeoInput.robots) {
           break;
         }
 
@@ -217,7 +247,7 @@ export function getSeoMeta<
           noSnippet,
           noTranslate,
           unavailableAfter,
-        } = seoInput.robots;
+        } = dedupedSeoInput.robots;
 
         const robotsParams = [
           noArchive && 'noarchive',
@@ -252,38 +282,6 @@ export function getSeoMeta<
 
         break;
       }
-    }
-  }
-
-  // replace any parent meta with the same name or property with the override
-  if (overrideFn) {
-    let overrides = overrideFn([...tagResults]);
-
-    if (overrides) {
-      for (let override of overrides) {
-        let index = tagResults.findIndex(
-          (meta) =>
-            ('name' in meta &&
-              'name' in override &&
-              meta.name === override.name) ||
-            ('property' in meta &&
-              'property' in override &&
-              meta.property === override.property) ||
-            ('title' in meta && 'title' in override),
-        );
-        if (index !== -1) {
-          tagResults.splice(index, 1, override);
-        }
-      }
-    }
-  }
-
-  // append any additional meta
-  if (appendFn) {
-    const results = appendFn([...tagResults]);
-
-    if (results) {
-      tagResults = tagResults.concat(results);
     }
   }
 

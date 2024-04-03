@@ -577,7 +577,7 @@ describe('getSeoMeta', () => {
       // Given
       const input = {
         jsonLd: {},
-      } as SeoConfig<Thing>;
+      } as SeoConfig;
 
       // When
       const output = getSeoMeta(input);
@@ -603,7 +603,7 @@ describe('getSeoMeta', () => {
           ],
           url: 'http://localhost:3000/products/the-full-stack',
         },
-      } satisfies SeoConfig<Organization>;
+      } satisfies SeoConfig;
 
       // When
       const output = getSeoMeta(input);
@@ -641,7 +641,7 @@ describe('getSeoMeta', () => {
             ],
           },
         },
-      } satisfies SeoConfig<Product>;
+      } satisfies SeoConfig;
 
       // When
       const output = getSeoMeta(input);
@@ -696,7 +696,7 @@ describe('getSeoMeta', () => {
           },
         },
       ],
-    } satisfies SeoConfig<Organization | Product>;
+    } satisfies SeoConfig;
 
     // When
     const output = getSeoMeta(input);
@@ -704,10 +704,7 @@ describe('getSeoMeta', () => {
     // Then
     expect(output).toEqual([
       {
-        'script:ld+json': input.jsonLd[0],
-      },
-      {
-        'script:ld+json': input.jsonLd[1],
+        'script:ld+json': [input.jsonLd[0], input.jsonLd[1]],
       },
     ]);
   });
@@ -720,11 +717,9 @@ describe('getSeoMeta', () => {
       };
 
       // When
-      const output = getSeoMeta(input, () => [
-        {
-          title: 'Custom title',
-        },
-      ]);
+      const output = getSeoMeta(input, {
+        title: 'Custom title',
+      });
 
       // Then
       expect(output).toEqual([
@@ -733,89 +728,154 @@ describe('getSeoMeta', () => {
         },
         {
           property: 'og:title',
-          content: 'Snowdevil',
+          content: 'Custom title',
         },
 
         {
           property: 'twitter:title',
-          content: 'Snowdevil',
+          content: 'Custom title',
         },
       ]);
     });
 
-    it('should append meta', () => {
+    it('should preserve multiple json/ld tags', () => {
       // Given
-      const input = {
-        title: 'Snowdevil',
-      };
+      const inputArray1 = {
+        jsonLd: [
+          {
+            '@context': 'https://schema.org',
+            '@type': 'Person',
+            additionalName: 'array1',
+          },
+        ],
+      } satisfies SeoConfig;
 
-      // When
-      const output = getSeoMeta(input, null, () => [
+      const inputArray2 = {
+        jsonLd: [
+          {
+            '@context': 'https://schema.org',
+            '@type': 'Person',
+            additionalName: 'array2',
+          },
+        ],
+      } satisfies SeoConfig;
+
+      const inputObject1 = {
+        jsonLd: {
+          '@context': 'https://schema.org',
+          '@type': 'Person',
+          additionalName: 'obj1',
+        },
+      } satisfies SeoConfig;
+
+      const inputObject2 = {
+        jsonLd: {
+          '@context': 'https://schema.org',
+          '@type': 'Person',
+          additionalName: 'obj2',
+        },
+      } satisfies SeoConfig;
+
+      expect(getSeoMeta(inputArray1, inputArray2)).toEqual([
         {
-          property: 'something',
-          content: 'new',
+          'script:ld+json': [inputArray1.jsonLd[0]],
+        },
+        {
+          'script:ld+json': inputArray2.jsonLd[0],
         },
       ]);
 
-      // Then
-      expect(output).toEqual([
+      expect(getSeoMeta(inputObject1, inputObject2)).toEqual([
         {
-          title: 'Snowdevil',
+          'script:ld+json': inputObject1.jsonLd,
         },
         {
-          property: 'og:title',
-          content: 'Snowdevil',
+          'script:ld+json': inputObject2.jsonLd,
+        },
+      ]);
+
+      expect(
+        getSeoMeta(inputArray1, inputArray2, inputObject1, inputObject2),
+      ).toEqual([
+        {
+          'script:ld+json': [inputArray1.jsonLd[0]],
         },
         {
-          property: 'twitter:title',
-          content: 'Snowdevil',
+          'script:ld+json': inputArray2.jsonLd[0],
         },
         {
-          property: 'something',
-          content: 'new',
+          'script:ld+json': inputObject1.jsonLd,
+        },
+        {
+          'script:ld+json': inputObject2.jsonLd,
         },
       ]);
     });
 
-    it('should override the title and append meta', () => {
+    it('should preserve multiple json/ld tags mixed with regular meta', () => {
       // Given
-      const input = {
-        title: 'Snowdevil',
-      };
-
-      // When
-      const output = getSeoMeta(
-        input,
-        () => [
+      const inputArray1 = {
+        title: 'Should not be here',
+        jsonLd: [
           {
-            title: 'Custom title',
+            '@context': 'https://schema.org',
+            '@type': 'Person',
+            additionalName: 'name 1',
           },
         ],
-        () => [
+      } satisfies SeoConfig;
+
+      const inputArray2 = {
+        title: 'Should be here',
+        jsonLd: [
           {
-            property: 'something',
-            content: 'new',
+            '@context': 'https://schema.org',
+            '@type': 'Person',
+            additionalName: 'name 2',
           },
         ],
-      );
+      } satisfies SeoConfig;
 
-      // Then
-      expect(output).toEqual([
+      expect(getSeoMeta(inputArray1, inputArray2)).toEqual([
         {
-          title: 'Custom title',
+          title: 'Should be here',
         },
         {
           property: 'og:title',
-          content: 'Snowdevil',
+          content: 'Should be here',
         },
 
         {
           property: 'twitter:title',
-          content: 'Snowdevil',
+          content: 'Should be here',
         },
         {
-          property: 'something',
-          content: 'new',
+          'script:ld+json': [inputArray1.jsonLd[0]],
+        },
+        {
+          'script:ld+json': inputArray2.jsonLd[0],
+        },
+      ]);
+    });
+
+    it('ignores undefined arguments', () => {
+      // Given
+      const input = {
+        title: 'Hello world',
+      } satisfies SeoConfig;
+
+      expect(getSeoMeta(undefined, null, input)).toEqual([
+        {
+          title: 'Hello world',
+        },
+        {
+          property: 'og:title',
+          content: 'Hello world',
+        },
+
+        {
+          property: 'twitter:title',
+          content: 'Hello world',
         },
       ]);
     });

@@ -6,7 +6,6 @@ import {
   useMatches,
 } from '@remix-run/react';
 import {generateSeoTags, type SeoConfig} from './generate-seo-tags';
-import {type Thing} from 'schema-dts';
 
 import type {LoaderFunction, SerializeFrom} from '@remix-run/server-runtime';
 
@@ -14,7 +13,6 @@ const SeoLogger = lazy(() => import('./log-seo-tags'));
 
 export interface SeoHandleFunction<
   Loader extends LoaderFunction | unknown = unknown,
-  StructuredDataSchema extends Thing = Thing,
 > {
   (args: {
     data: Loader extends LoaderFunction ? SerializeFrom<Loader> : unknown;
@@ -24,7 +22,7 @@ export interface SeoHandleFunction<
     search: Location['search'];
     hash: Location['hash'];
     key: string;
-  }): Partial<SeoConfig<StructuredDataSchema>>;
+  }): Partial<SeoConfig>;
 }
 
 interface SeoProps {
@@ -96,7 +94,7 @@ export function Seo({debug}: SeoProps) {
               };
             }
           }
-        }, {} as SeoConfig<Thing>)
+        }, {} as SeoConfig)
     );
   }, [matches, location]);
 

@@ -4998,7 +4998,7 @@
             "filePath": "/customer/types.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CustomerAccount",
-            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action.\n   * It redirects the customer to a Shopify login domain. It also defined the final path the customer\n   * lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is\n   * automatically setup unless `customAuthStatusHandler` option is in use)\n   *\n   * @param options.uiLocales - The displayed language of the login page. Only support for the following languages:\n   * `en`, `fr`, `cs`, `da`, `de`, `es`, `fi`, `it`, `ja`, `ko`, `nb`, `nl`, `pl`, `pt-BR`, `pt-PT`,\n   * `sv`, `th`, `tr`, `vi`, `zh-CN`, `zh-TW`. If supplied any other language code, it will default to `en`.\n   * */\n  login: (options?: LoginOptions) => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken: () => Promise<string | undefined>;\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/\n  getApiUrl: () => string;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/\n  logout: () => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      CustomerAccountQueries,\n      RawGqlString\n    >\n  ) => Promise<\n    Omit<\n      CustomerAPIResponse<\n        ClientReturn<CustomerAccountQueries, RawGqlString, OverrideReturnType>\n      >,\n      'errors'\n    > & {errors?: JsonGraphQLError[]}\n  >;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      CustomerAccountMutations,\n      RawGqlString\n    >\n  ) => Promise<\n    Omit<\n      CustomerAPIResponse<\n        ClientReturn<CustomerAccountMutations, RawGqlString, OverrideReturnType>\n      >,\n      'errors'\n    > & {errors?: JsonGraphQLError[]}\n  >;\n}",
+            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action.\n   * It redirects the customer to a Shopify login domain. It also defined the final path the customer\n   * lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is\n   * automatically setup unless `customAuthStatusHandler` option is in use)\n   *\n   * @param options.uiLocales - The displayed language of the login page. Only support for the following languages:\n   * `en`, `fr`, `cs`, `da`, `de`, `es`, `fi`, `it`, `ja`, `ko`, `nb`, `nl`, `pl`, `pt-BR`, `pt-PT`,\n   * `sv`, `th`, `tr`, `vi`, `zh-CN`, `zh-TW`. If supplied any other language code, it will default to `en`.\n   * */\n  login: (options?: LoginOptions) => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken: () => Promise<string | undefined>;\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/\n  getApiUrl: () => string;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.\n   *\n   * @param options.postLogoutRedirectUri - The url to redirect customer to after logout, should be a relative URL. This url will need to included in Customer Account API's application setup for logout URI. The default value is current app origin, which is automatically setup in admin when using `--customer-account-push` flag with dev.\n   * */\n  logout: (options?: LogoutOptions) => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      CustomerAccountQueries,\n      RawGqlString\n    >\n  ) => Promise<\n    Omit<\n      CustomerAPIResponse<\n        ClientReturn<CustomerAccountQueries, RawGqlString, OverrideReturnType>\n      >,\n      'errors'\n    > & {errors?: JsonGraphQLError[]}\n  >;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      CustomerAccountMutations,\n      RawGqlString\n    >\n  ) => Promise<\n    Omit<\n      CustomerAPIResponse<\n        ClientReturn<CustomerAccountMutations, RawGqlString, OverrideReturnType>\n      >,\n      'errors'\n    > & {errors?: JsonGraphQLError[]}\n  >;\n}",
             "description": "",
             "members": [
               {
@@ -5047,7 +5047,7 @@
                 "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "logout",
-                "value": "() => Promise<Response>",
+                "value": "(options?: LogoutOptions) => Promise<Response>",
                 "description": "Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin."
               },
               {
@@ -5089,6 +5089,23 @@
             "name": "DataFunctionValue",
             "value": "Response | NonNullable<unknown> | null",
             "description": ""
+          },
+          "LogoutOptions": {
+            "filePath": "/customer/types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "LogoutOptions",
+            "value": "{\n  postLogoutRedirectUri?: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/customer/types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "postLogoutRedirectUri",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              }
+            ]
           },
           "CustomerAccountQueries": {
             "filePath": "/customer/types.ts",
@@ -9688,7 +9705,7 @@
             "filePath": "/customer/types.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CustomerAccountForDocs",
-            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action.\n   * It redirects the customer to a Shopify login domain. It also defined the final path the customer\n   * lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is\n   * automatically setup unless `customAuthStatusHandler` option is in use)\n   *\n   * @param options.uiLocales - The displayed language of the login page. Only support for the following languages:\n   * `en`, `fr`, `cs`, `da`, `de`, `es`, `fi`, `it`, `ja`, `ko`, `nb`, `nl`, `pl`, `pt-BR`, `pt-PT`,\n   * `sv`, `th`, `tr`, `vi`, `zh-CN`, `zh-TW`. If supplied any other language code, it will default to `en`.\n   * */\n  login: (options?: LoginOptions) => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize?: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn?: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus?: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken?: () => Promise<string | undefined>;\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/\n  getApiUrl: () => string;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/\n  logout?: () => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query?: <TData = any>(\n    query: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n}",
+            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action.\n   * It redirects the customer to a Shopify login domain. It also defined the final path the customer\n   * lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is\n   * automatically setup unless `customAuthStatusHandler` option is in use)\n   *\n   * @param options.uiLocales - The displayed language of the login page. Only support for the following languages:\n   * `en`, `fr`, `cs`, `da`, `de`, `es`, `fi`, `it`, `ja`, `ko`, `nb`, `nl`, `pl`, `pt-BR`, `pt-PT`,\n   * `sv`, `th`, `tr`, `vi`, `zh-CN`, `zh-TW`. If supplied any other language code, it will default to `en`.\n   * */\n  login?: (options?: LoginOptions) => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize?: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn?: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus?: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken?: () => Promise<string | undefined>;\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/\n  getApiUrl?: () => string;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.\n   *\n   * @param options.postLogoutRedirectUri - The url to redirect customer to after logout, should be a relative URL. This url will need to included in Customer Account API's application setup for logout URI. The default value is current app origin, which is automatically setup in admin when using `--customer-account-push` flag with dev.\n   * */\n  logout?: (options?: LogoutOptions) => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query?: <TData = any>(\n    query: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n}",
             "description": "Below are types meant for documentation only. Ensure it stay in sync with the type above.",
             "members": [
               {
@@ -9696,7 +9713,8 @@
                 "syntaxKind": "PropertySignature",
                 "name": "login",
                 "value": "(options?: LoginOptions) => Promise<Response>",
-                "description": "Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use)"
+                "description": "Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use)",
+                "isOptional": true
               },
               {
                 "filePath": "/customer/types.ts",
@@ -9735,13 +9753,14 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
                 "value": "() => string",
-                "description": "Creates the fully-qualified URL to your store's GraphQL endpoint."
+                "description": "Creates the fully-qualified URL to your store's GraphQL endpoint.",
+                "isOptional": true
               },
               {
                 "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "logout",
-                "value": "() => Promise<Response>",
+                "value": "(options?: LogoutOptions) => Promise<Response>",
                 "description": "Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.",
                 "isOptional": true
               },
@@ -9786,6 +9805,23 @@
             "name": "DataFunctionValue",
             "value": "Response | NonNullable<unknown> | null",
             "description": ""
+          },
+          "LogoutOptions": {
+            "filePath": "/customer/types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "LogoutOptions",
+            "value": "{\n  postLogoutRedirectUri?: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/customer/types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "postLogoutRedirectUri",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              }
+            ]
           },
           "CustomerAccountQueryOptionsForDocs": {
             "filePath": "/customer/types.ts",
@@ -10551,13 +10587,13 @@
               "name": "Promise<Response>",
               "value": "Promise<Response>"
             },
-            "value": "export async function storefrontRedirect(\n  options: StorefrontRedirect,\n): Promise<Response> {\n  const {\n    storefront,\n    request,\n    noAdminRedirect,\n    response = new Response('Not Found', {status: 404}),\n  } = options;\n\n  const {pathname, search} = new URL(request.url);\n  const redirectFrom = pathname + search;\n\n  if (pathname === '/admin' && !noAdminRedirect) {\n    return redirect(`${storefront.getShopifyDomain()}/admin`);\n  }\n\n  try {\n    const {urlRedirects} = await storefront.query<{\n      urlRedirects: UrlRedirectConnection;\n    }>(REDIRECT_QUERY, {\n      variables: {query: 'path:' + redirectFrom},\n    });\n\n    const location = urlRedirects?.edges?.[0]?.node?.target;\n\n    if (location) {\n      return new Response(null, {status: 301, headers: {location}});\n    }\n\n    const redirectTo = getRedirectUrl(request.url);\n\n    if (redirectTo) {\n      return redirect(redirectTo);\n    }\n  } catch (error) {\n    console.error(\n      `Failed to fetch redirects from Storefront API for route ${redirectFrom}`,\n      error,\n    );\n  }\n\n  return response;\n}"
+            "value": "export async function storefrontRedirect(\n  options: StorefrontRedirect,\n): Promise<Response> {\n  const {\n    storefront,\n    request,\n    noAdminRedirect,\n    matchQueryParams,\n    response = new Response('Not Found', {status: 404}),\n  } = options;\n\n  const url = new URL(request.url);\n  const {pathname, searchParams} = url;\n  const isSoftNavigation = searchParams.has('_data');\n\n  searchParams.delete('redirect');\n  searchParams.delete('return_to');\n  searchParams.delete('_data');\n\n  const redirectFrom = matchQueryParams\n    ? url.toString().replace(url.origin, '')\n    : pathname;\n\n  if (url.pathname === '/admin' && !noAdminRedirect) {\n    return createRedirectResponse(\n      `${storefront.getShopifyDomain()}/admin`,\n      isSoftNavigation,\n      searchParams,\n      matchQueryParams,\n    );\n  }\n\n  try {\n    const {urlRedirects} = await storefront.query<{\n      urlRedirects: UrlRedirectConnection;\n    }>(REDIRECT_QUERY, {\n      variables: {query: 'path:' + redirectFrom},\n    });\n\n    const location = urlRedirects?.edges?.[0]?.node?.target;\n\n    if (location) {\n      return createRedirectResponse(\n        location,\n        isSoftNavigation,\n        searchParams,\n        matchQueryParams,\n      );\n    }\n\n    const redirectTo = getRedirectUrl(request.url);\n\n    if (redirectTo) {\n      return createRedirectResponse(\n        redirectTo,\n        isSoftNavigation,\n        searchParams,\n        matchQueryParams,\n      );\n    }\n  } catch (error) {\n    console.error(\n      `Failed to fetch redirects from Storefront API for route ${redirectFrom}`,\n      error,\n    );\n  }\n\n  return response;\n}"
           },
           "StorefrontRedirect": {
             "filePath": "/routing/redirect.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontRedirect",
-            "value": "{\n  /** The [Storefront client](/docs/api/hydrogen/2024-01/utilities/createstorefrontclient) instance */\n  storefront: Storefront<I18nBase>;\n  /** The [MDN Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object that was passed to the `server.ts` request handler. */\n  request: Request;\n  /** The [MDN Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) object created by `handleRequest` */\n  response?: Response;\n  /** By default the `/admin` route is redirected to the Shopify Admin page for the current storefront. Disable this redirect by passing `true`. */\n  noAdminRedirect?: boolean;\n}",
+            "value": "{\n  /** The [Storefront client](/docs/api/hydrogen/2024-01/utilities/createstorefrontclient) instance */\n  storefront: Storefront<I18nBase>;\n  /** The [MDN Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object that was passed to the `server.ts` request handler. */\n  request: Request;\n  /** The [MDN Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) object created by `handleRequest` */\n  response?: Response;\n  /** By default the `/admin` route is redirected to the Shopify Admin page for the current storefront. Disable this redirect by passing `true`. */\n  noAdminRedirect?: boolean;\n  /** By default, query parameters are not used to match redirects. Set this to `true` if you'd like redirects to be query parameter sensitive */\n  matchQueryParams?: boolean;\n}",
             "description": "",
             "members": [
               {
@@ -10588,6 +10624,14 @@
                 "name": "noAdminRedirect",
                 "value": "boolean",
                 "description": "By default the `/admin` route is redirected to the Shopify Admin page for the current storefront. Disable this redirect by passing `true`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/routing/redirect.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "matchQueryParams",
+                "value": "boolean",
+                "description": "By default, query parameters are not used to match redirects. Set this to `true` if you'd like redirects to be query parameter sensitive",
                 "isOptional": true
               }
             ]
@@ -10930,7 +10974,7 @@
     "category": "utilities",
     "isVisualComponent": false,
     "related": [],
-    "description": "Generate a Remix meta array based on the seo property used by the `Seo` component. Use it to help generate SEO return data from your meta funcitons. Learn more about [how SEO works in Hydrogen](https://shopify.dev/docs/custom-storefronts/hydrogen/seo).",
+    "description": "Generate a [Remix meta array](https://remix.run/docs/en/main/route/meta) from one or more SEO configuration objects. Pass SEO configuration for the parent route(s) and the current route to preserve meta data for all active routes. Similar to [`Object.assign()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign), each property is overwritten based on the object order. The exception is `jsonLd`, which is preserved so that each route has it's own independent jsonLd meta data. Learn more about [how SEO works in Hydrogen](https://shopify.dev/docs/custom-storefronts/hydrogen/seo).",
     "type": "utility",
     "defaultExample": {
       "description": "I am the default example",
@@ -10938,12 +10982,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {getSeoMeta} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  const {shop} = await context.storefront.query(`\n    query layout {\n      shop {\n        name\n        description\n      }\n    }\n  `);\n\n  return {\n    seo: {\n      title: shop.title,\n      description: shop.description,\n    },\n  };\n}\n\nexport const meta = ({data}) =&gt; {\n  return getSeoMeta(\n    data.seo,\n    // these override meta\n    () =&gt; {\n      return [{title: 'Custom title'}];\n    },\n\n    // these append meta\n    () =&gt; {\n      return [{name: 'author', content: 'Hydrogen'}];\n    },\n  );\n};\n",
+            "code": "import {getSeoMeta} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  const {shop} = await context.storefront.query(`\n    query layout {\n      shop {\n        name\n        description\n      }\n    }\n  `);\n\n  return {\n    seo: {\n      title: shop.title,\n      description: shop.description,\n    },\n  };\n}\n\nexport const meta = ({data, matches}) =&gt; {\n  // Pass one or more arguments, preserving properties from parent routes\n  return getSeoMeta(matches[0].data.seo, data.seo);\n};\n",
             "language": "js"
           },
           {
             "title": "TypeScript",
-            "code": "import {MetaFunction} from '@remix-run/react';\nimport {LoaderFunctionArgs} from '@remix-run/server-runtime';\nimport {getSeoMeta} from '@shopify/hydrogen';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const {shop} = await context.storefront.query(`\n    query layout {\n      shop {\n        name\n        description\n      }\n    }\n  `);\n\n  return {\n    seo: {\n      title: shop.title,\n      description: shop.description,\n    },\n  };\n}\n\n// Instead of rendering the `&lt;Seo /&gt;` component in root.tsx\n// call `getSeoMeta` from within meta in each route that has\n// an `seo` prop returned from the loader.\nexport const meta: MetaFunction&lt;typeof loader&gt; = ({data}) =&gt; {\n  return getSeoMeta(\n    data!.seo,\n    // these override meta\n    () =&gt; {\n      return [{title: 'Custom title'}];\n    },\n\n    // these append meta\n    () =&gt; {\n      return [{name: 'author', content: 'Hydrogen'}];\n    },\n  );\n};\n",
+            "code": "import {MetaFunction} from '@remix-run/react';\nimport {LoaderFunctionArgs} from '@remix-run/server-runtime';\nimport {getSeoMeta} from '@shopify/hydrogen';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const {shop} = await context.storefront.query(`\n    query layout {\n      shop {\n        name\n        description\n      }\n    }\n  `);\n\n  return {\n    seo: {\n      title: shop.title,\n      description: shop.description,\n    },\n  };\n}\n\nexport const meta: MetaFunction&lt;typeof loader&gt; = ({data, matches}) =&gt; {\n  // Pass one or more arguments, preserving properties from parent routes\n  return getSeoMeta((matches as any).data.seo, data!.seo);\n};\n",
             "language": "ts"
           }
         ],
@@ -10960,31 +11004,15 @@
             "filePath": "/seo/getSeoMeta.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "GetSeoMetaTypeForDocs",
-            "value": "{\n  /** An object that generates SEO metadata */\n  seoInput: SeoConfig;\n  /** Use this optional callback to override the default meta output. It is passed an argument containing all the meta to be generated. */\n  overrideFn?: (meta: GetSeoMetaReturn) => GetSeoMetaReturn;\n  /** Use this optional callback to append the default meta output. It is passed an argument containing all the meta to be generated. */\n  appendFn?: (meta: GetSeoMetaReturn) => GetSeoMetaReturn;\n}",
+            "value": "{\n  /** `getSeoMeta` takes an arbitrary number of configuration object parameters. Values in each object are overwritten based on the object order. \\`jsonLd\\` properties are preserved between each configuration object. */\n  seoInputs: SeoConfig[];\n}",
             "description": "",
             "members": [
               {
                 "filePath": "/seo/getSeoMeta.ts",
                 "syntaxKind": "PropertySignature",
-                "name": "seoInput",
-                "value": "SeoConfig",
-                "description": "An object that generates SEO metadata"
-              },
-              {
-                "filePath": "/seo/getSeoMeta.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "overrideFn",
-                "value": "(meta: MetaDescriptor[]) => MetaDescriptor[]",
-                "description": "Use this optional callback to override the default meta output. It is passed an argument containing all the meta to be generated.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/seo/getSeoMeta.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "appendFn",
-                "value": "(meta: MetaDescriptor[]) => MetaDescriptor[]",
-                "description": "Use this optional callback to append the default meta output. It is passed an argument containing all the meta to be generated.",
-                "isOptional": true
+                "name": "seoInputs",
+                "value": "SeoConfig[]",
+                "description": "`getSeoMeta` takes an arbitrary number of configuration object parameters. Values in each object are overwritten based on the object order. \\`jsonLd\\` properties are preserved between each configuration object."
               }
             ]
           },
@@ -10998,7 +11026,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "title",
                 "value": "Maybe<string>",
-                "description": "The <title> HTML element defines the document's title that is shown in a browser's title bar or a page's tab. It only contains text; tags within the element are ignored.",
+                "description": "The `&lt;title&gt;` HTML element defines the document's title that is shown in a browser's title bar or a page's tab. It only contains text; tags within the element are ignored.",
                 "isOptional": true
               },
               {
@@ -11081,8 +11109,8 @@
                 "filePath": "/seo/generate-seo-tags.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "jsonLd",
-                "value": "WithContext<Schema> | WithContext<Schema>[]",
-                "description": "The `jsonLd` property is used to generate the `application/ld+json` script tag. This is used to provide structured data to search engines. The value should be an object that conforms to the schema.org spec. The `type` property should be the type of schema you are using. The `type` property is required and should be one of the following:\n\n- `Product` - `ItemList` - `Organization` - `WebSite` - `WebPage` - `BlogPosting` - `Thing`",
+                "value": "WithContext<Thing> | WithContext<Thing>[]",
+                "description": "The `jsonLd` property is used to generate the `application/ld+json` script tag. This is used to provide structured data to search engines. The value should be an object that conforms to the schema.org spec. The `type` property should be the type of schema you are using. The `type` property is required and should be one of the following:\n\n- `Product` - `ItemList` - `Organization` - `WebSite` - `WebPage` - `BlogPosting` - `Thing`\n\nThe value is validated via [schema-dts](https://www.npmjs.com/package/schema-dts)",
                 "isOptional": true,
                 "examples": [
                   {
@@ -11126,7 +11154,7 @@
                 "isOptional": true
               }
             ],
-            "value": "export interface SeoConfig<Schema extends Thing = Thing> {\n  /**\n   * The <title> HTML element defines the document's title that is shown in a browser's title bar or a page's tab. It\n   * only contains text; tags within the element are ignored.\n   *\n   * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/title\n   */\n  title?: Maybe<string>;\n  /**\n   * Generate the title from a template that includes a `%s` placeholder for the title.\n   *\n   * @example\n   * ```js\n   * {\n   *   title: 'My Page',\n   *   titleTemplate: 'My Site - %s',\n   * }\n   * ```\n   */\n  titleTemplate?: Maybe<string> | null;\n  /**\n   * The media associated with the given page (images, videos, etc). If you pass a string, it will be used as the\n   * `og:image` meta tag. If you pass an object or an array of objects, that will be used to generate `og:<type of\n   * media>` meta tags. The `url` property should be the URL of the media. The `height` and `width` properties are\n   * optional and should be the height and width of the media. The `altText` property is optional and should be a\n   * description of the media.\n   *\n   * @example\n   * ```js\n   * {\n   *   media: [\n   *     {\n   *       url: 'https://example.com/image.jpg',\n   *       type: 'image',\n   *       height: '400',\n   *       width: '400',\n   *       altText: 'A custom snowboard with an alpine color pallet.',\n   *     }\n   *   ]\n   * }\n   * ```\n   *\n   */\n  media?:\n    | Maybe<string>\n    | Partial<SeoMedia>\n    | (Partial<SeoMedia> | Maybe<string>)[];\n  /**\n   * The description of the page. This is used in the `name=\"description\"` meta tag as well as the `og:description` meta\n   * tag.\n   *\n   * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta\n   */\n  description?: Maybe<string>;\n  /**\n   * The canonical URL of the page. This is used to tell search engines which URL is the canonical version of a page.\n   * This is useful when you have multiple URLs that point to the same page. The value here will be used in the\n   * `rel=\"canonical\"` link tag as well as the `og:url` meta tag.\n   *\n   * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link\n   */\n  url?: Maybe<string>;\n  /**\n   * The handle is used to generate the `twitter:site` and `twitter:creator` meta tags. Include the `@` symbol in the\n   * handle.\n   *\n   * @example\n   * ```js\n   * {\n   *   handle: '@shopify'\n   * }\n   * ```\n   */\n  handle?: Maybe<string>;\n  /**\n   * The `jsonLd` property is used to generate the `application/ld+json` script tag. This is used to provide structured\n   * data to search engines. The value should be an object that conforms to the schema.org spec. The `type` property\n   * should be the type of schema you are using. The `type` property is required and should be one of the following:\n   *\n   * - `Product`\n   * - `ItemList`\n   * - `Organization`\n   * - `WebSite`\n   * - `WebPage`\n   * - `BlogPosting`\n   * - `Thing`\n   *\n   * @example\n   * ```js\n   * {\n   *   jsonLd: {\n   *     '@context': 'https://schema.org',\n   *     '@type': 'Product',\n   *     name: 'My Product',\n   *     image: 'https://hydrogen.shop/image.jpg',\n   *     description: 'A product that is great',\n   *     sku: '12345',\n   *     mpn: '12345',\n   *     brand: {\n   *       '@type': 'Thing',\n   *       name: 'My Brand',\n   *     },\n   *     aggregateRating: {\n   *       '@type': 'AggregateRating',\n   *       ratingValue: '4.5',\n   *       reviewCount: '100',\n   *     },\n   *     offers: {\n   *       '@type': 'Offer',\n   *       priceCurrency: 'USD',\n   *       price: '100',\n   *       priceValidUntil: '2020-11-05',\n   *       itemCondition: 'https://schema.org/NewCondition',\n   *       availability: 'https://schema.org/InStock',\n   *       seller: {\n   *         '@type': 'Organization',\n   *         name: 'My Brand',\n   *       },\n   *     },\n   *   }\n   * }\n   * ```\n   *\n   * @see https://schema.org/docs/schemas.html\n   * @see https://developers.google.com/search/docs/guides/intro-structured-data\n   * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script\n   *\n   */\n  jsonLd?: WithContext<Schema> | WithContext<Schema>[];\n  /**\n   * The `alternates` property is used to specify the language and geographical targeting when you have multiple\n   * versions of the same page in different languages. The `url` property tells search engines about these variations\n   * and helps them to serve the correct version to their users.\n   *\n   * @example\n   * ```js\n   * {\n   *   alternates: [\n   *     {\n   *       language: 'en-US',\n   *       url: 'https://hydrogen.shop/en-us',\n   *       default: true,\n   *     },\n   *     {\n   *       language: 'fr-CA',\n   *       url: 'https://hydrogen.shop/fr-ca',\n   *     },\n   *   ]\n   * }\n   * ```\n   *\n   * @see https://support.google.com/webmasters/answer/189077?hl=en\n   */\n  alternates?: LanguageAlternate | LanguageAlternate[];\n  /**\n   * The `robots` property is used to specify the robots meta tag. This is used to tell search engines which pages\n   * should be indexed and which should not.\n   *\n   * @see https://developers.google.com/search/reference/robots_meta_tag\n   */\n  robots?: RobotsOptions;\n}"
+            "value": "export interface SeoConfig {\n  /**\n   * The `&lt;title&gt;` HTML element defines the document's title that is shown in a browser's title bar or a page's tab. It\n   * only contains text; tags within the element are ignored.\n   *\n   * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/title\n   */\n  title?: Maybe<string>;\n  /**\n   * Generate the title from a template that includes a `%s` placeholder for the title.\n   *\n   * @example\n   * ```js\n   * {\n   *   title: 'My Page',\n   *   titleTemplate: 'My Site - %s',\n   * }\n   * ```\n   */\n  titleTemplate?: Maybe<string> | null;\n  /**\n   * The media associated with the given page (images, videos, etc). If you pass a string, it will be used as the\n   * `og:image` meta tag. If you pass an object or an array of objects, that will be used to generate `og:<type of\n   * media>` meta tags. The `url` property should be the URL of the media. The `height` and `width` properties are\n   * optional and should be the height and width of the media. The `altText` property is optional and should be a\n   * description of the media.\n   *\n   * @example\n   * ```js\n   * {\n   *   media: [\n   *     {\n   *       url: 'https://example.com/image.jpg',\n   *       type: 'image',\n   *       height: '400',\n   *       width: '400',\n   *       altText: 'A custom snowboard with an alpine color pallet.',\n   *     }\n   *   ]\n   * }\n   * ```\n   *\n   */\n  media?:\n    | Maybe<string>\n    | Partial<SeoMedia>\n    | (Partial<SeoMedia> | Maybe<string>)[];\n  /**\n   * The description of the page. This is used in the `name=\"description\"` meta tag as well as the `og:description` meta\n   * tag.\n   *\n   * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta\n   */\n  description?: Maybe<string>;\n  /**\n   * The canonical URL of the page. This is used to tell search engines which URL is the canonical version of a page.\n   * This is useful when you have multiple URLs that point to the same page. The value here will be used in the\n   * `rel=\"canonical\"` link tag as well as the `og:url` meta tag.\n   *\n   * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link\n   */\n  url?: Maybe<string>;\n  /**\n   * The handle is used to generate the `twitter:site` and `twitter:creator` meta tags. Include the `@` symbol in the\n   * handle.\n   *\n   * @example\n   * ```js\n   * {\n   *   handle: '@shopify'\n   * }\n   * ```\n   */\n  handle?: Maybe<string>;\n  /**\n   * The `jsonLd` property is used to generate the `application/ld+json` script tag. This is used to provide structured\n   * data to search engines. The value should be an object that conforms to the schema.org spec. The `type` property\n   * should be the type of schema you are using. The `type` property is required and should be one of the following:\n   *\n   * - `Product`\n   * - `ItemList`\n   * - `Organization`\n   * - `WebSite`\n   * - `WebPage`\n   * - `BlogPosting`\n   * - `Thing`\n   *\n   * The value is validated via [schema-dts](https://www.npmjs.com/package/schema-dts)\n   *\n   * @example\n   * ```js\n   * {\n   *   jsonLd: {\n   *     '@context': 'https://schema.org',\n   *     '@type': 'Product',\n   *     name: 'My Product',\n   *     image: 'https://hydrogen.shop/image.jpg',\n   *     description: 'A product that is great',\n   *     sku: '12345',\n   *     mpn: '12345',\n   *     brand: {\n   *       '@type': 'Thing',\n   *       name: 'My Brand',\n   *     },\n   *     aggregateRating: {\n   *       '@type': 'AggregateRating',\n   *       ratingValue: '4.5',\n   *       reviewCount: '100',\n   *     },\n   *     offers: {\n   *       '@type': 'Offer',\n   *       priceCurrency: 'USD',\n   *       price: '100',\n   *       priceValidUntil: '2020-11-05',\n   *       itemCondition: 'https://schema.org/NewCondition',\n   *       availability: 'https://schema.org/InStock',\n   *       seller: {\n   *         '@type': 'Organization',\n   *         name: 'My Brand',\n   *       },\n   *     },\n   *   }\n   * }\n   * ```\n   *\n   * @see https://schema.org/docs/schemas.html\n   * @see https://developers.google.com/search/docs/guides/intro-structured-data\n   * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script\n   *\n   */\n  jsonLd?: WithContext<Thing> | WithContext<Thing>[];\n  /**\n   * The `alternates` property is used to specify the language and geographical targeting when you have multiple\n   * versions of the same page in different languages. The `url` property tells search engines about these variations\n   * and helps them to serve the correct version to their users.\n   *\n   * @example\n   * ```js\n   * {\n   *   alternates: [\n   *     {\n   *       language: 'en-US',\n   *       url: 'https://hydrogen.shop/en-us',\n   *       default: true,\n   *     },\n   *     {\n   *       language: 'fr-CA',\n   *       url: 'https://hydrogen.shop/fr-ca',\n   *     },\n   *   ]\n   * }\n   * ```\n   *\n   * @see https://support.google.com/webmasters/answer/189077?hl=en\n   */\n  alternates?: LanguageAlternate | LanguageAlternate[];\n  /**\n   * The `robots` property is used to specify the robots meta tag. This is used to tell search engines which pages\n   * should be indexed and which should not.\n   *\n   * @see https://developers.google.com/search/reference/robots_meta_tag\n   */\n  robots?: RobotsOptions;\n}"
           },
           "SeoMedia": {
             "filePath": "/seo/generate-seo-tags.ts",

@@ -20,20 +20,7 @@ export async function loader({context}: LoaderFunctionArgs) {
   };
 }
 
-// Instead of rendering the `<Seo />` component in root.tsx
-// call `getSeoMeta` from within meta in each route that has
-// an `seo` prop returned from the loader.
-export const meta: MetaFunction<typeof loader> = ({data}) => {
-  return getSeoMeta(
-    data!.seo,
-    // these override meta
-    () => {
-      return [{title: 'Custom title'}];
-    },
-
-    // these append meta
-    () => {
-      return [{name: 'author', content: 'Hydrogen'}];
-    },
-  );
+export const meta: MetaFunction<typeof loader> = ({data, matches}) => {
+  // Pass one or more arguments, preserving properties from parent routes
+  return getSeoMeta((matches as any).data.seo, data!.seo);
 };

@@ -18,17 +18,7 @@ export async function loader({context}) {
   };
 }
 
-export const meta = ({data}) => {
-  return getSeoMeta(
-    data.seo,
-    // these override meta
-    () => {
-      return [{title: 'Custom title'}];
-    },
-
-    // these append meta
-    () => {
-      return [{name: 'author', content: 'Hydrogen'}];
-    },
-  );
+export const meta = ({data, matches}) => {
+  // Pass one or more arguments, preserving properties from parent routes
+  return getSeoMeta(matches[0].data.seo, data.seo);
 };
