@@ -1,14 +1,21 @@
+// [START import]
 import {unstable_useAnalytics as useAnalytics} from '@shopify/hydrogen';
+// [END import]
 import {useEffect} from 'react';
 
+// [START export]
 export function CustomAnalytics() {
+  // [START use]
   const {subscribe} = useAnalytics();
+  // [END use]
 
   useEffect(() => {
+    // [START subscribe]
     // Standard events
     subscribe('page_viewed', (data) => {
       console.log('CustomAnalytics - Page viewed:', data);
     });
+    // [END subscribe]
     subscribe('product_viewed', (data) => {
       console.log('CustomAnalytics - Product viewed:', data);
     });
@@ -30,3 +37,4 @@ export function CustomAnalytics() {
 
   return null;
 }
+// [END export]
