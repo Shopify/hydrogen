@@ -354,7 +354,45 @@ export default async function handleRequest(
 
 [View the complete component file](app/entry.server.tsx) to see these updates in context.
 
-## 6. (TypeScript only) - Add the new environment variable to the `ENV` type definition
+## 6. (Optional) Publishing and subscribing to custom event(s)
+
+Modify `app/components/Header.tsx` to trigger a `custom_sidecart_viewed` when the cart icon
+is toggled
+
+```diff
++ import {useAnalytics} from '@shopify/hydrogen'
+
+function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
++ const {publish} = useAnalytics();
++ function publishSideCartViewed() {
++   publish('custom_sidecart_viewed', {cart});
++ }
+  return (
+    <Suspense
+-     fallback={<CartBadge count={0} />}
++     fallback={<CartBadge count={0} onClick={publishSideCartViewed} />}
+    >
+      <Await resolve={cart}>
+        {(cart) => {
+          if (!cart)
+-           return <CartBadge count={0} />;
++           return <CartBadge count={0} onClick={publishSideCartViewed} />;
+          return (
+            <CartBadge
+              count={cart.totalQuantity || 0}
++             onClick={publishSideCartViewed}
+            />
+          );
+        }}
+      </Await>
+    </Suspense>
+  );
+}
+```
+
+[View the complete component file](app/components/Header.tsx) to see these updates in context.
+
+## 7. (TypeScript only) - Add the new environment variable to the `ENV` type definition
 
 Update the `remix.d.ts` file
 
