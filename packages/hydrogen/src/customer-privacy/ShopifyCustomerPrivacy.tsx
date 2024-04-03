@@ -76,15 +76,13 @@ export interface CustomEventMap {
 }
 
 export type CustomerPrivacyApiProps = {
-  /** The production store domain url. */
-  storeDomain: string;
   /** The production shop checkout domain url.  */
   checkoutDomain: string;
   /** The storefront access token for the shop. */
   storefrontAccessToken: string;
-  /** Whether to load the Shopify privacy banner as configured in Shopify admin. */
+  /** Whether to load the Shopify privacy banner as configured in Shopify admin. Defaults to true. */
   withPrivacyBanner?: boolean;
-  /** Callback to be called when visitor consent is collected. Defaults to true. */
+  /** Callback to be called when visitor consent is collected. */
   onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;
 };
 
@@ -116,7 +114,6 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
 
     if (withPrivacyBanner && window?.privacyBanner) {
       window?.privacyBanner?.loadBanner({
-        shopDomain: consentConfig.storeDomain,
         checkoutRootDomain: consentConfig.checkoutDomain,
         storefrontAccessToken: consentConfig.storefrontAccessToken,
       });

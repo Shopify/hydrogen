@@ -11,9 +11,7 @@ export async function loader({context}: LoaderFunctionArgs) {
     shop: getShopAnalytics(context),
     consent: {
       checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
-      storeDomain: env.PUBLIC_STORE_DOMAIN,
       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-      withPrivacyBanner: true,
     },
   });
 }

@@ -322,12 +322,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {UNSTABLE_Analytics, getShopAnalytics} from '@shopify/hydrogen';\nimport {defer} from '@shopify/remix-oxygen';\nimport {Outlet, useLoaderData} from '@remix-run/react';\n\nexport async function loader({context}) {\n  const {cart, env} = context;\n  const cartPromise = cart.get();\n\n  return defer({\n    cart: cartPromise,\n    shop: getShopAnalytics(context),\n    consent: {\n      checkoutRootDomain: env.PUBLIC_CHECKOUT_DOMAIN,\n      shopDomain: env.PUBLIC_STORE_DOMAIN,\n      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n      withPrivacyBanner: true,\n    },\n  });\n}\n\nexport default function App() {\n  const data = useLoaderData();\n\n  return (\n    &lt;html lang=\"en\"&gt;\n      &lt;head&gt;\n        &lt;meta charSet=\"utf-8\" /&gt;\n        &lt;meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" /&gt;\n      &lt;/head&gt;\n      &lt;body&gt;\n        &lt;UNSTABLE_Analytics.Provider\n          cart={data.cart}\n          shop={data.shop}\n          consent={data.consent}\n        &gt;\n          &lt;Outlet /&gt;\n        &lt;/UNSTABLE_Analytics.Provider&gt;\n      &lt;/body&gt;\n    &lt;/html&gt;\n  );\n}\n",
+            "code": "import {UNSTABLE_Analytics, getShopAnalytics} from '@shopify/hydrogen';\nimport {defer} from '@shopify/remix-oxygen';\nimport {Outlet, useLoaderData} from '@remix-run/react';\n\nexport async function loader({context}) {\n  const {cart, env} = context;\n  const cartPromise = cart.get();\n\n  return defer({\n    cart: cartPromise,\n    shop: getShopAnalytics(context),\n    consent: {\n      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,\n      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n    },\n  });\n}\n\nexport default function App() {\n  const data = useLoaderData();\n\n  return (\n    &lt;html lang=\"en\"&gt;\n      &lt;head&gt;\n        &lt;meta charSet=\"utf-8\" /&gt;\n        &lt;meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" /&gt;\n      &lt;/head&gt;\n      &lt;body&gt;\n        &lt;UNSTABLE_Analytics.Provider\n          cart={data.cart}\n          shop={data.shop}\n          consent={data.consent}\n        &gt;\n          &lt;Outlet /&gt;\n        &lt;/UNSTABLE_Analytics.Provider&gt;\n      &lt;/body&gt;\n    &lt;/html&gt;\n  );\n}\n",
             "language": "js"
           },
           {
             "title": "TypeScript",
-            "code": "import {UNSTABLE_Analytics, getShopAnalytics} from '@shopify/hydrogen';\nimport {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';\nimport {Outlet, useLoaderData} from '@remix-run/react';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const {cart, env} = context;\n  const cartPromise = cart.get();\n\n  return defer({\n    cart: cartPromise,\n    shop: getShopAnalytics(context),\n    consent: {\n      checkoutRootDomain: env.PUBLIC_CHECKOUT_DOMAIN,\n      shopDomain: env.PUBLIC_STORE_DOMAIN,\n      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n      withPrivacyBanner: true,\n    },\n  });\n}\n\nexport default function App() {\n  const data = useLoaderData&lt;typeof loader&gt;();\n\n  return (\n    &lt;html lang=\"en\"&gt;\n      &lt;head&gt;\n        &lt;meta charSet=\"utf-8\" /&gt;\n        &lt;meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" /&gt;\n      &lt;/head&gt;\n      &lt;body&gt;\n        &lt;UNSTABLE_Analytics.Provider\n          cart={data.cart}\n          shop={data.shop}\n          consent={data.consent}\n        &gt;\n          &lt;Outlet /&gt;\n        &lt;/UNSTABLE_Analytics.Provider&gt;\n      &lt;/body&gt;\n    &lt;/html&gt;\n  );\n}\n",
+            "code": "import {UNSTABLE_Analytics, getShopAnalytics} from '@shopify/hydrogen';\nimport {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';\nimport {Outlet, useLoaderData} from '@remix-run/react';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const {cart, env} = context;\n  const cartPromise = cart.get();\n\n  return defer({\n    cart: cartPromise,\n    shop: getShopAnalytics(context),\n    consent: {\n      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,\n      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n    },\n  });\n}\n\nexport default function App() {\n  const data = useLoaderData&lt;typeof loader&gt;();\n\n  return (\n    &lt;html lang=\"en\"&gt;\n      &lt;head&gt;\n        &lt;meta charSet=\"utf-8\" /&gt;\n        &lt;meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" /&gt;\n      &lt;/head&gt;\n      &lt;body&gt;\n        &lt;UNSTABLE_Analytics.Provider\n          cart={data.cart}\n          shop={data.shop}\n          consent={data.consent}\n        &gt;\n          &lt;Outlet /&gt;\n        &lt;/UNSTABLE_Analytics.Provider&gt;\n      &lt;/body&gt;\n    &lt;/html&gt;\n  );\n}\n",
             "language": "ts"
           }
         ],
@@ -456,20 +456,13 @@
             "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CustomerPrivacyApiProps",
-            "value": "{\n  /** The production shop domain url. */\n  shopDomain: string;\n  /** The production shop checkout domain url.  */\n  checkoutRootDomain: string;\n  /** The storefront access token for the shop. */\n  storefrontAccessToken: string;\n  /** Whether to load the Shopify privacy banner as configured in Shopify admin. */\n  withPrivacyBanner?: boolean;\n  /** Callback to be called when visitor consent is collected. Defaults to true. */\n  onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;\n}",
+            "value": "{\n  /** The production shop checkout domain url.  */\n  checkoutDomain: string;\n  /** The storefront access token for the shop. */\n  storefrontAccessToken: string;\n  /** Whether to load the Shopify privacy banner as configured in Shopify admin. Defaults to true. */\n  withPrivacyBanner?: boolean;\n  /** Callback to be called when visitor consent is collected. */\n  onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;\n}",
             "description": "",
             "members": [
               {
                 "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
                 "syntaxKind": "PropertySignature",
-                "name": "shopDomain",
-                "value": "string",
-                "description": "The production shop domain url."
-              },
-              {
-                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "checkoutRootDomain",
+                "name": "checkoutDomain",
                 "value": "string",
                 "description": "The production shop checkout domain url."
               },
@@ -485,7 +478,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "withPrivacyBanner",
                 "value": "boolean",
-                "description": "Whether to load the Shopify privacy banner as configured in Shopify admin.",
+                "description": "Whether to load the Shopify privacy banner as configured in Shopify admin. Defaults to true.",
                 "isOptional": true
               },
               {
@@ -493,7 +486,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "onVisitorConsentCollected",
                 "value": "(consent: VisitorConsentCollected) => void",
-                "description": "Callback to be called when visitor consent is collected. Defaults to true.",
+                "description": "Callback to be called when visitor consent is collected.",
                 "isOptional": true
               }
             ]
@@ -855,12 +848,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {UNSTABLE_Analytics, getShopAnalytics} from '@shopify/hydrogen';\nimport {defer} from '@shopify/remix-oxygen';\nimport {Outlet, useLoaderData} from '@remix-run/react';\n\nexport async function loader({context}) {\n  const {cart, env} = context;\n  const cartPromise = cart.get();\n\n  return defer({\n    cart: cartPromise,\n    shop: getShopAnalytics(context),\n    consent: {\n      checkoutRootDomain: env.PUBLIC_CHECKOUT_DOMAIN,\n      shopDomain: env.PUBLIC_STORE_DOMAIN,\n      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n      withPrivacyBanner: true,\n    },\n  });\n}\n\nexport default function App() {\n  const data = useLoaderData();\n\n  return (\n    &lt;html lang=\"en\"&gt;\n      &lt;head&gt;\n        &lt;meta charSet=\"utf-8\" /&gt;\n        &lt;meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" /&gt;\n      &lt;/head&gt;\n      &lt;body&gt;\n        &lt;UNSTABLE_Analytics.Provider\n          cart={data.cart}\n          shop={data.shop}\n          consent={data.consent}\n        &gt;\n          &lt;Outlet /&gt;\n        &lt;/UNSTABLE_Analytics.Provider&gt;\n      &lt;/body&gt;\n    &lt;/html&gt;\n  );\n}\n",
+            "code": "import {UNSTABLE_Analytics, getShopAnalytics} from '@shopify/hydrogen';\nimport {defer} from '@shopify/remix-oxygen';\nimport {Outlet, useLoaderData} from '@remix-run/react';\n\nexport async function loader({context}) {\n  const {cart, env} = context;\n  const cartPromise = cart.get();\n\n  return defer({\n    cart: cartPromise,\n    shop: getShopAnalytics(context),\n    consent: {\n      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,\n      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n    },\n  });\n}\n\nexport default function App() {\n  const data = useLoaderData();\n\n  return (\n    &lt;html lang=\"en\"&gt;\n      &lt;head&gt;\n        &lt;meta charSet=\"utf-8\" /&gt;\n        &lt;meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" /&gt;\n      &lt;/head&gt;\n      &lt;body&gt;\n        &lt;UNSTABLE_Analytics.Provider\n          cart={data.cart}\n          shop={data.shop}\n          consent={data.consent}\n        &gt;\n          &lt;Outlet /&gt;\n        &lt;/UNSTABLE_Analytics.Provider&gt;\n      &lt;/body&gt;\n    &lt;/html&gt;\n  );\n}\n",
             "language": "js"
           },
           {
             "title": "TypeScript",
-            "code": "import {UNSTABLE_Analytics, getShopAnalytics} from '@shopify/hydrogen';\nimport {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';\nimport {Outlet, useLoaderData} from '@remix-run/react';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const {cart, env} = context;\n  const cartPromise = cart.get();\n\n  return defer({\n    cart: cartPromise,\n    shop: getShopAnalytics(context),\n    consent: {\n      checkoutRootDomain: env.PUBLIC_CHECKOUT_DOMAIN,\n      shopDomain: env.PUBLIC_STORE_DOMAIN,\n      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n      withPrivacyBanner: true,\n    },\n  });\n}\n\nexport default function App() {\n  const data = useLoaderData&lt;typeof loader&gt;();\n\n  return (\n    &lt;html lang=\"en\"&gt;\n      &lt;head&gt;\n        &lt;meta charSet=\"utf-8\" /&gt;\n        &lt;meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" /&gt;\n      &lt;/head&gt;\n      &lt;body&gt;\n        &lt;UNSTABLE_Analytics.Provider\n          cart={data.cart}\n          shop={data.shop}\n          consent={data.consent}\n        &gt;\n          &lt;Outlet /&gt;\n        &lt;/UNSTABLE_Analytics.Provider&gt;\n      &lt;/body&gt;\n    &lt;/html&gt;\n  );\n}\n",
+            "code": "import {UNSTABLE_Analytics, getShopAnalytics} from '@shopify/hydrogen';\nimport {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';\nimport {Outlet, useLoaderData} from '@remix-run/react';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const {cart, env} = context;\n  const cartPromise = cart.get();\n\n  return defer({\n    cart: cartPromise,\n    shop: getShopAnalytics(context),\n    consent: {\n      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,\n      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n    },\n  });\n}\n\nexport default function App() {\n  const data = useLoaderData&lt;typeof loader&gt;();\n\n  return (\n    &lt;html lang=\"en\"&gt;\n      &lt;head&gt;\n        &lt;meta charSet=\"utf-8\" /&gt;\n        &lt;meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" /&gt;\n      &lt;/head&gt;\n      &lt;body&gt;\n        &lt;UNSTABLE_Analytics.Provider\n          cart={data.cart}\n          shop={data.shop}\n          consent={data.consent}\n        &gt;\n          &lt;Outlet /&gt;\n        &lt;/UNSTABLE_Analytics.Provider&gt;\n      &lt;/body&gt;\n    &lt;/html&gt;\n  );\n}\n",
             "language": "ts"
           }
         ],
@@ -11489,12 +11482,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {useCustomerPrivacy} from '@shopify/hydrogen';\n\nexport function MyComponent() {\n  useCustomerPrivacy({\n    storefrontAccessToken: '12345',\n    shopDomain: 'example.com',\n    checkoutRootDomain: 'checkout.example.com',\n    onVisitorConsentCollected: (consent) =&gt; {\n      console.log('Visitor consent collected:', consent);\n    },\n  });\n}\n",
+            "code": "import {useCustomerPrivacy} from '@shopify/hydrogen';\n\nexport function MyComponent() {\n  useCustomerPrivacy({\n    storefrontAccessToken: '12345',\n    checkoutDomain: 'checkout.example.com',\n    onVisitorConsentCollected: (consent) =&gt; {\n      console.log('Visitor consent collected:', consent);\n    },\n  });\n}\n",
             "language": "js"
           },
           {
             "title": "TypeScript",
-            "code": "import {\n  type VisitorConsentCollected,\n  useCustomerPrivacy,\n} from '@shopify/hydrogen';\n\nexport function MyComponent() {\n  useCustomerPrivacy({\n    storefrontAccessToken: '12345',\n    shopDomain: 'example.com',\n    checkoutRootDomain: 'checkout.example.com',\n    onVisitorConsentCollected: (consent: VisitorConsentCollected) =&gt; {\n      console.log('Visitor consent collected:', consent);\n    },\n  });\n}\n",
+            "code": "import {\n  type VisitorConsentCollected,\n  useCustomerPrivacy,\n} from '@shopify/hydrogen';\n\nexport function MyComponent() {\n  useCustomerPrivacy({\n    storefrontAccessToken: '12345',\n    checkoutDomain: 'checkout.example.com',\n    onVisitorConsentCollected: (consent: VisitorConsentCollected) =&gt; {\n      console.log('Visitor consent collected:', consent);\n    },\n  });\n}\n",
             "language": "ts"
           }
         ],
@@ -11525,26 +11518,19 @@
               "name": "",
               "value": ""
             },
-            "value": "export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {\n  const {\n    withPrivacyBanner = true,\n    onVisitorConsentCollected,\n    ...consentConfig\n  } = props;\n  const loadedEvent = useRef(false);\n  const scriptStatus = useLoadScript(\n    withPrivacyBanner ? CONSENT_API_WITH_BANNER : CONSENT_API,\n    {\n      attributes: {\n        id: 'customer-privacy-api',\n      },\n    },\n  );\n\n  useEffect(() => {\n    if (scriptStatus !== 'done' || loadedEvent.current) return;\n\n    loadedEvent.current = true;\n\n    if (withPrivacyBanner && window?.privacyBanner) {\n      window?.privacyBanner?.loadBanner(consentConfig);\n    }\n\n    if (onVisitorConsentCollected) {\n      document.addEventListener(\n        'visitorConsentCollected',\n        (event: CustomEvent<VisitorConsentCollected>) => {\n          onVisitorConsentCollected(event.detail);\n        },\n      );\n    }\n\n    // Override the setTrackingConsent method to include the headless storefront configuration\n    if (window.Shopify?.customerPrivacy) {\n      const originalSetTrackingConsent =\n        window.Shopify.customerPrivacy.setTrackingConsent;\n      window.Shopify.customerPrivacy.setTrackingConsent = (\n        consent: VisitorConsent,\n        callback: () => void,\n      ) => {\n        originalSetTrackingConsent(\n          {\n            ...consent,\n            headlessStorefront: true,\n            checkoutRootDomain: consentConfig.checkoutRootDomain,\n            storefrontAccessToken: consentConfig.storefrontAccessToken,\n          },\n          callback,\n        );\n      };\n    }\n  }, [\n    scriptStatus,\n    onVisitorConsentCollected,\n    withPrivacyBanner,\n    consentConfig,\n  ]);\n\n  return;\n}"
+            "value": "export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {\n  const {\n    withPrivacyBanner = true,\n    onVisitorConsentCollected,\n    ...consentConfig\n  } = props;\n  const loadedEvent = useRef(false);\n  const scriptStatus = useLoadScript(\n    withPrivacyBanner ? CONSENT_API_WITH_BANNER : CONSENT_API,\n    {\n      attributes: {\n        id: 'customer-privacy-api',\n      },\n    },\n  );\n\n  useEffect(() => {\n    if (scriptStatus !== 'done' || loadedEvent.current) return;\n\n    loadedEvent.current = true;\n\n    if (withPrivacyBanner && window?.privacyBanner) {\n      window?.privacyBanner?.loadBanner({\n        checkoutRootDomain: consentConfig.checkoutDomain,\n        storefrontAccessToken: consentConfig.storefrontAccessToken,\n      });\n    }\n\n    if (onVisitorConsentCollected) {\n      document.addEventListener(\n        'visitorConsentCollected',\n        (event: CustomEvent<VisitorConsentCollected>) => {\n          onVisitorConsentCollected(event.detail);\n        },\n      );\n    }\n\n    // Override the setTrackingConsent method to include the headless storefront configuration\n    if (window.Shopify?.customerPrivacy) {\n      const originalSetTrackingConsent =\n        window.Shopify.customerPrivacy.setTrackingConsent;\n      window.Shopify.customerPrivacy.setTrackingConsent = (\n        consent: VisitorConsent,\n        callback: () => void,\n      ) => {\n        originalSetTrackingConsent(\n          {\n            ...consent,\n            headlessStorefront: true,\n            checkoutRootDomain: consentConfig.checkoutDomain,\n            storefrontAccessToken: consentConfig.storefrontAccessToken,\n          },\n          callback,\n        );\n      };\n    }\n  }, [\n    scriptStatus,\n    onVisitorConsentCollected,\n    withPrivacyBanner,\n    consentConfig,\n  ]);\n\n  return;\n}"
           },
           "CustomerPrivacyApiProps": {
             "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CustomerPrivacyApiProps",
-            "value": "{\n  /** The production shop domain url. */\n  shopDomain: string;\n  /** The production shop checkout domain url.  */\n  checkoutRootDomain: string;\n  /** The storefront access token for the shop. */\n  storefrontAccessToken: string;\n  /** Whether to load the Shopify privacy banner as configured in Shopify admin. */\n  withPrivacyBanner?: boolean;\n  /** Callback to be called when visitor consent is collected. Defaults to true. */\n  onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;\n}",
+            "value": "{\n  /** The production shop checkout domain url.  */\n  checkoutDomain: string;\n  /** The storefront access token for the shop. */\n  storefrontAccessToken: string;\n  /** Whether to load the Shopify privacy banner as configured in Shopify admin. Defaults to true. */\n  withPrivacyBanner?: boolean;\n  /** Callback to be called when visitor consent is collected. */\n  onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;\n}",
             "description": "",
             "members": [
               {
                 "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
                 "syntaxKind": "PropertySignature",
-                "name": "shopDomain",
-                "value": "string",
-                "description": "The production shop domain url."
-              },
-              {
-                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "checkoutRootDomain",
+                "name": "checkoutDomain",
                 "value": "string",
                 "description": "The production shop checkout domain url."
               },
@@ -11560,7 +11546,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "withPrivacyBanner",
                 "value": "boolean",
-                "description": "Whether to load the Shopify privacy banner as configured in Shopify admin.",
+                "description": "Whether to load the Shopify privacy banner as configured in Shopify admin. Defaults to true.",
                 "isOptional": true
               },
               {
@@ -11568,7 +11554,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "onVisitorConsentCollected",
                 "value": "(consent: VisitorConsentCollected) => void",
-                "description": "Callback to be called when visitor consent is collected. Defaults to true.",
+                "description": "Callback to be called when visitor consent is collected.",
                 "isOptional": true
               }
             ]
