@@ -1,10 +1,12 @@
 import type {Plugin, ResolvedConfig} from 'vite';
+import type {Preset as RemixPreset} from '@remix-run/dev';
 import {setupHydrogenMiddleware} from './hydrogen-middleware.js';
 import type {HydrogenPluginOptions} from './types.js';
 
 // @ts-ignore -- Module outside of the rootDir
 import type {OxygenApiOptions} from '~/mini-oxygen/vite/plugin.js';
 import {type RequestEventPayload, emitRequestEvent} from './request-events.js';
+import {getVirtualRoutes} from './add-virtual-routes.js';
 
 export type {HydrogenPluginOptions};
 
@@ -14,6 +16,8 @@ declare global {
     | undefined
     | {getCriticalCss: (...args: unknown[]) => any};
 }
+
+const sharedOptions: Pick<HydrogenPluginOptions, 'disableVirtualRoutes'> = {};
 
 /**
  * Enables Hydrogen utilities for local development
@@ -55,6 +59,10 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
       api: {
         registerPluginOptions(newOptions: HydrogenPluginOptions) {
           apiOptions = mergeOptions(apiOptions, newOptions);
+          if ('disableVirtualRoutes' in apiOptions) {
+            sharedOptions.disableVirtualRoutes =
+              apiOptions.disableVirtualRoutes;
+          }
         },
         getPluginOptions() {
           return mergeOptions(pluginOptions, apiOptions);
@@ -129,3 +137,24 @@ function mergeOptions(
 
   return {...acc, ...newOptionsWithoutUndefined};
 }
+
+hydrogen.preset = () =>
+  ({
+    name: 'hydrogen',
+    remixConfig() {
+      if (sharedOptions.disableVirtualRoutes) return {};
+
+      return {
+        async routes(defineRoutes) {
+          if (sharedOptions.disableVirtualRoutes) return {};
+          const virtualRoutes = await getVirtualRoutes();
+
+          return defineRoutes((route) => {
+            virtualRoutes.map((routeTuple) => {
+              route(...routeTuple);
+            });
+          });
+        },
+      };
+    },
+  } satisfies RemixPreset);
