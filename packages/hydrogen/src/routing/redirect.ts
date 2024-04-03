@@ -42,9 +42,9 @@ export async function storefrontRedirect(
   searchParams.delete('return_to');
   searchParams.delete('_data');
 
-  const redirectFrom = matchQueryParams
-    ? url.toString().replace(url.origin, '')
-    : pathname;
+  const redirectFrom = (
+    matchQueryParams ? url.toString().replace(url.origin, '') : pathname
+  ).toLowerCase();
 
   if (url.pathname === '/admin' && !noAdminRedirect) {
     return createRedirectResponse(
