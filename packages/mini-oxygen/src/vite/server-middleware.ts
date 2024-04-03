@@ -1,6 +1,7 @@
 import {fetchModule, type ViteDevServer} from 'vite';
 import {fileURLToPath} from 'node:url';
 import {
+  fetch,
   createMiniOxygen,
   type Request,
   type Response,
@@ -15,7 +16,7 @@ const WARMUP_PATHNAME = '/__vite_warmup';
 
 export type InternalMiniOxygenOptions = {
   setupScripts?: Array<(viteUrl: string) => void>;
-  services?: Record<string, (request: Request) => Response | Promise<Response>>;
+  services?: Record<string, string | URL>;
 };
 
 export type MiniOxygenViteOptions = InternalMiniOxygenOptions & {
@@ -39,6 +40,16 @@ export async function startMiniOxygenRuntime({
   logRequestLine,
   entry: workerEntryFile,
 }: MiniOxygenViteOptions) {
+  const serviceBindings =
+    services &&
+    Object.fromEntries(
+      Object.entries(services).map(([name, url]) => [
+        name,
+        (request: Request) =>
+          fetch(new URL(url, getViteUrl(viteDevServer)), request),
+      ]),
+    );
+
   const miniOxygen = createMiniOxygen({
     debug,
     inspectorPort,
@@ -48,7 +59,7 @@ export async function startMiniOxygenRuntime({
         name: 'vite-env',
         modulesRoot: '/',
         modules: [{type: 'ESModule', path: scriptPath}],
-        serviceBindings: {...services},
+        serviceBindings,
         bindings: {
           ...env,
           __VITE_ROOT: viteDevServer.config.root,
@@ -78,17 +89,7 @@ export async function startMiniOxygenRuntime({
   });
 
   const warmupWorkerdCache = () => {
-    let viteUrl =
-      viteDevServer.resolvedUrls?.local[0] ??
-      viteDevServer.resolvedUrls?.network[0];
-
-    if (!viteUrl) {
-      const address = viteDevServer.httpServer?.address?.();
-      viteUrl =
-        address && typeof address !== 'string'
-          ? `http://localhost:${address.port}`
-          : address ?? undefined;
-    }
+    const viteUrl = getViteUrl(viteDevServer);
 
     if (viteUrl) {
       miniOxygen
@@ -154,4 +155,20 @@ export function setupOxygenMiddleware(
         res.end();
       });
   });
+}
+
+function getViteUrl(viteDevServer: ViteDevServer) {
+  let viteUrl =
+    viteDevServer.resolvedUrls?.local[0] ??
+    viteDevServer.resolvedUrls?.network[0];
+
+  if (!viteUrl) {
+    const address = viteDevServer.httpServer?.address?.();
+    viteUrl =
+      address && typeof address !== 'string'
+        ? `http://localhost:${address.port}`
+        : address ?? undefined;
+  }
+
+  return viteUrl;
 }
