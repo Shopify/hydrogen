@@ -61,7 +61,7 @@ describe(`analytics schema - trekkie storefront page view`, () => {
         isPersistentCookie: false,
         pageType: 'product',
         contentLanguage: 'FR',
-        customerId: '1',
+        customerId: 1,
         resourceId: 1,
         resourceType: 'product',
       },

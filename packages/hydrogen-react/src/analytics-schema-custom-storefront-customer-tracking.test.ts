@@ -56,7 +56,7 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
           event_name: 'page_rendered',
           hydrogenSubchannelId: '1',
           is_persistent_cookie: false,
-          customer_id: '1',
+          customer_id: 1,
           canonical_url: pageViewPayload.canonicalUrl,
         }),
       );
