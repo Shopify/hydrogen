@@ -1,10 +1,10 @@
-// [START import]
 import {
   useNonce,
+// [START import]
   getShopAnalytics,
   UNSTABLE_Analytics as Analytics,
-} from '@shopify/hydrogen';
 // [END import]
+} from '@shopify/hydrogen';
 import {
   defer,
   type SerializeFrom,
@@ -107,9 +107,9 @@ export async function loader({context}: LoaderFunctionArgs) {
       header: await headerPromise,
       isLoggedIn: isLoggedInPromise,
       publicStoreDomain,
-      // [START getshopanalytics]
+      // [START getshop]
       shop: getShopAnalytics(context),
-      // [END getshopanalytics]
+      // [END getshop]
       // [START consent]
       consent: {
         checkoutRootDomain: env.PUBLIC_CHECKOUT_DOMAIN,
