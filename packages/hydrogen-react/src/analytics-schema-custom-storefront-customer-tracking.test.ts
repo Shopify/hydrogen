@@ -40,7 +40,7 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
         shopifySalesChannel: ShopifySalesChannel.hydrogen,
         storefrontId: '1',
         acceptedLanguage: 'FR',
-        customerId: '1',
+        customerId: 'gid://shopify/Customer/1',
         pageType: 'index',
         resourceId: 'gid://shopify/Product/1',
         canonicalUrl: 'https://example.com',
