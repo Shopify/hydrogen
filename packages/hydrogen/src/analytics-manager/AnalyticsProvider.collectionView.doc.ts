@@ -7,7 +7,7 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description:
-    'Publishes a `collection_viewed` event to the `UNSTABLE_Analytics.Provider`.',
+    'Publishes a `collection_viewed` event to the `UNSTABLE_Analytics.Provider` component.',
   type: 'component',
   defaultExample: {
     description: 'This is the default example',
