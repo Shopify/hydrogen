@@ -9,7 +9,7 @@ const scriptPath = fileURLToPath(new URL('./worker-entry.js', import.meta.url));
 const FETCH_MODULE_PATHNAME = '/__vite_fetch_module';
 const WARMUP_PATHNAME = '/__vite_warmup';
 
-type Binding = (...args: unknown[]) => Promise<unknown>;
+type Binding = (...args: unknown[]) => unknown | Promise<unknown> | void;
 
 export type InternalMiniOxygenOptions = {
   /**

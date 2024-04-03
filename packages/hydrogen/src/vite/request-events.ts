@@ -15,14 +15,13 @@ const EVENT_MAP: Record<string, string> = {
   subrequest: 'Sub request',
 };
 
-// Make sure to match this type with the one in packages/remix-oxygen/src/event-logger.ts
-type H2OEvent = {
+export type RequestEventPayload = {
   url: string;
   eventType: 'request' | 'subrequest';
   requestId?: string | null;
   purpose?: string | null;
   startTime: number;
-  endTime: number;
+  endTime?: number;
   cacheStatus?: 'MISS' | 'HIT' | 'STALE' | 'PUT';
   waitUntil?: ExecutionContext['waitUntil'];
   graphql?: string | null;
@@ -42,7 +41,7 @@ type H2OEvent = {
   displayName?: string;
 };
 
-function getEventInfo(data: H2OEvent) {
+function getEventInfo(data: RequestEventPayload) {
   return {
     ...data,
     requestId: data.requestId ?? '',
@@ -63,35 +62,27 @@ function getEventInfo(data: H2OEvent) {
 const eventEmitter = new EventEmitter();
 const eventHistory: RequestEvent[] = [];
 
-type EmitRequestEventOptions = {
-  urlPathname: string;
-  payload: unknown;
-  root: string;
-};
+export function emitRequestEvent(payload: unknown, root: string) {
+  const maybeEvent = payload as RequestEventPayload;
 
-export function emitRequestEvent({
-  urlPathname,
-  payload,
-  root,
-}: EmitRequestEventOptions) {
-  if (DEV_ROUTES.has(urlPathname)) return;
-
-  if (!payload || !('requestId' in (payload as H2OEvent))) {
+  if (!maybeEvent || !('url' in maybeEvent) || !('requestId' in maybeEvent)) {
     return;
   }
 
+  const {pathname} = new URL(maybeEvent.url, 'http://localhost');
+  if (DEV_ROUTES.has(pathname)) return;
+
   const {
-    url: displayUrl,
+    url: descriptionUrl,
     displayName: displayNameData,
     eventType,
     purpose,
     graphql,
     stackInfo,
     ...data
-  } = getEventInfo(payload as H2OEvent);
+  } = getEventInfo(maybeEvent);
 
   let graphiqlLink = '';
-  let descriptionUrl = urlPathname;
   let displayName = displayNameData;
 
   if (eventType === 'subrequest') {
@@ -100,7 +91,6 @@ export function emitRequestEvent({
       graphql?.query
         .match(/(query|mutation)\s+(\w+)/)?.[0]
         ?.replace(/\s+/, ' ');
-    descriptionUrl = displayUrl || urlPathname;
 
     if (graphql) {
       graphiqlLink = getGraphiQLUrl(graphql);

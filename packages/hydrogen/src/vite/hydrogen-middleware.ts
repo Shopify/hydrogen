@@ -2,23 +2,12 @@ import {normalizePath, type ViteDevServer, type ResolvedConfig} from 'vite';
 import path from 'node:path';
 import {createRequire} from 'node:module';
 import {createReadStream} from 'node:fs';
-import type {IncomingMessage} from 'node:http';
-import {
-  clearHistory,
-  emitRequestEvent,
-  streamRequestEvents,
-} from './request-events.js';
+import {clearHistory, streamRequestEvents} from './request-events.js';
 import type {RemixPluginContext} from '@remix-run/dev/dist/vite/plugin.js';
 import {addVirtualRoutes} from './add-virtual-routes.js';
 import type {HydrogenPluginOptions} from './types.js';
 
 const H2_PREFIX_WARN = '[h2:warn:vite] ';
-
-/** Used by Subrequest Profiler UI */
-const SUBREQUEST_PROFILER_ENDPOINT = '/debug-network-server';
-/** Used by Hydrogen */
-export const SUBREQUEST_PROFILER_EVENT_EMITTER_ENDPOINT =
-  '/__h2_emit_request_event';
 
 export function setupHydrogenMiddleware(
   viteDevServer: ViteDevServer,
@@ -29,33 +18,7 @@ export function setupHydrogenMiddleware(
   addVirtualRoutesToRemix(viteDevServer);
 
   viteDevServer.middlewares.use(
-    SUBREQUEST_PROFILER_EVENT_EMITTER_ENDPOINT,
-    function h2LogEvent(req, res) {
-      // This request comes from Hydrogen internals.
-
-      readJsonBody(req)
-        .then((payload) => {
-          emitRequestEvent({
-            urlPathname: req.url!,
-            root: viteDevServer.config.root ?? process.cwd(),
-            payload,
-          });
-          res.writeHead(200);
-          res.end();
-        })
-        .catch((error: Error) => {
-          console.warn(
-            H2_PREFIX_WARN + 'Error logging subrequest profiler event:',
-            error.message,
-          );
-          res.writeHead(500);
-          res.end();
-        });
-    },
-  );
-
-  viteDevServer.middlewares.use(
-    SUBREQUEST_PROFILER_ENDPOINT,
+    '/debug-network-server',
     function h2HandleSubrequestProfilerEvent(req, res) {
       // This request comes from Hydrogen's Subrequest Profiler UI.
       req.method === 'DELETE'
@@ -136,18 +99,4 @@ async function reloadRemixVirtualRoutes(config: ResolvedConfig) {
     remixPluginContext?.remixConfig?.appDirectory ??
     path.join(config.root, 'app')
   );
-}
-
-function readJsonBody(req: IncomingMessage) {
-  return new Promise((resolve, reject) => {
-    let body = '';
-    req.on('data', (chunk) => (body += chunk));
-    req.on('end', () => {
-      try {
-        resolve(JSON.parse(body));
-      } catch (error) {
-        reject(error);
-      }
-    });
-  });
 }

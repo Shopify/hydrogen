@@ -1,14 +1,19 @@
 import type {Plugin, ResolvedConfig} from 'vite';
-import {
-  setupHydrogenMiddleware,
-  SUBREQUEST_PROFILER_EVENT_EMITTER_ENDPOINT,
-} from './hydrogen-middleware.js';
+import {setupHydrogenMiddleware} from './hydrogen-middleware.js';
 import type {HydrogenPluginOptions} from './types.js';
 
 // @ts-ignore -- Module outside of the rootDir
 import type {OxygenApiOptions} from '~/mini-oxygen/vite/plugin.js';
+import {type RequestEventPayload, emitRequestEvent} from './request-events.js';
 
 export type {HydrogenPluginOptions};
+
+declare global {
+  var __H2O_LOG_EVENT: undefined | ((event: RequestEventPayload) => void);
+  var __remix_devServerHooks:
+    | undefined
+    | {getCriticalCss: (...args: unknown[]) => any};
+}
 
 /**
  * Enables Hydrogen utilities for local development
@@ -63,9 +68,6 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
 
         oxygenPlugin?.api?.registerPluginOptions?.({
           shouldStartRuntime: () => !isRemixChildCompiler(resolvedConfig),
-          services: {
-            H2O_LOG_EVENT: SUBREQUEST_PROFILER_EVENT_EMITTER_ENDPOINT,
-          },
           crossBoundarySetup: [
             /**
              * To avoid initial CSS flash during development,
@@ -83,15 +85,21 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
               script: (binding) => {
                 // Setup global dev hooks in Remix in the worker environment
                 // using the binding function passed from Node environment:
-                // @ts-expect-error Remix global magic
                 globalThis.__remix_devServerHooks = {getCriticalCss: binding};
               },
               binding: (...args) => {
                 // Call the global Remix dev hook for critical CSS in Node environment:
-                // @ts-expect-error Remix global magic
                 return globalThis.__remix_devServerHooks?.getCriticalCss?.(
                   ...args,
                 );
+              },
+            },
+            {
+              script: (binding) => {
+                globalThis.__H2O_LOG_EVENT = binding;
+              },
+              binding: (data) => {
+                emitRequestEvent(data, resolvedConfig.root);
               },
             },
           ],

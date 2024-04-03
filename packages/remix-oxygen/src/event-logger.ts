@@ -27,6 +27,9 @@ export type H2OEvent = {
 
 let hasWarned = false;
 
+/**
+ * @deprecated Only used with the classic Remix compiler
+ */
 export function createEventLogger(appLoadContext: Record<string, unknown>) {
   const context = (appLoadContext || {}) as {
     env?: Record<string, any>;
