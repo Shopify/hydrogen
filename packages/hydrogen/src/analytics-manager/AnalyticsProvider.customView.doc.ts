@@ -7,7 +7,7 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description:
-    'Publishes a custom page view event to the `UNSTABLE_Analytics.Provider`. The `type` prop must be preceded by `custom_`.',
+    'Publishes a custom page view event to the `UNSTABLE_Analytics.Provider` component. The `type` prop must be preceded by `custom_`.',
   type: 'component',
   defaultExample: {
     description: 'This is the default example',
