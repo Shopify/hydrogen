@@ -137,7 +137,6 @@ export default function Product() {
               quantity: 1,
             },
           ],
-          url: window.location.href,
         }}
       />
     </div>

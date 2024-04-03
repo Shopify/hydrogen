@@ -127,10 +127,10 @@ function CartBadge({count, onClick}: {count: number; onClick?: () => void}) {
 }
 
 function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
-  const {publish} = useAnalytics();
+  const {publish, cart: analyticsCart} = useAnalytics();
   // Example: publishing a custom event when the side cart is toggled
   function publishSideCartViewed() {
-    publish('custom_sidecart_viewed', {cart});
+    publish('custom_sidecart_viewed', {cart: analyticsCart});
   }
   return (
     <Suspense

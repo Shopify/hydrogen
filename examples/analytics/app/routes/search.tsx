@@ -66,7 +66,7 @@ export default function SearchPage() {
         />
       )}
       <Analytics.SearchView
-        data={{searchTerm, searchResults, url: window.location.href}}
+        data={{searchTerm, searchResults}}
       />
     </div>
   );
