@@ -96,8 +96,8 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
             startMiniOxygenRuntime({
               entry,
               viteDevServer,
-              setupScripts: apiOptions.setupScripts,
               services: apiOptions.services,
+              crossBoundarySetup: apiOptions.crossBoundarySetup,
               env: {...remoteEnv, ...apiOptions.env, ...pluginOptions.env},
               debug: apiOptions.debug ?? pluginOptions.debug ?? false,
               inspectorPort:

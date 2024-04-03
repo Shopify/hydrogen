@@ -1,11 +1,6 @@
 import {fetchModule, type ViteDevServer} from 'vite';
 import {fileURLToPath} from 'node:url';
-import {
-  fetch,
-  createMiniOxygen,
-  type Request,
-  type Response,
-} from '../worker/index.js';
+import {fetch, createMiniOxygen, Request, Response} from '../worker/index.js';
 import {getHmrUrl, pipeFromWeb, toURL, toWeb} from './utils.js';
 
 import type {ViteEnv} from './worker-entry.js';
@@ -14,9 +9,37 @@ const scriptPath = fileURLToPath(new URL('./worker-entry.js', import.meta.url));
 const FETCH_MODULE_PATHNAME = '/__vite_fetch_module';
 const WARMUP_PATHNAME = '/__vite_warmup';
 
+type Binding = (...args: unknown[]) => Promise<unknown>;
+
 export type InternalMiniOxygenOptions = {
-  setupScripts?: Array<(viteUrl: string) => void>;
+  /**
+   * Creates bindings in `env` that can be used to fetch external services.
+   */
   services?: Record<string, string | URL>;
+  /**
+   * Allows setting up global state in the worker process
+   * that can optionally run code from the parent process.
+   */
+  crossBoundarySetup?: Array<
+    | {
+        /**
+         * Function that is stringified and runs in the worker.
+         */
+        script: () => void;
+        binding?: never;
+      }
+    | {
+        /**
+         * Function that is stringified and runs in the worker.
+         * It gets the binding function as its first argument.
+         */
+        script: (binding: Binding) => void;
+        /**
+         * The binding function that runs in the parent process.
+         */
+        binding: Binding;
+      }
+  >;
 };
 
 export type MiniOxygenViteOptions = InternalMiniOxygenOptions & {
@@ -36,8 +59,8 @@ export async function startMiniOxygenRuntime({
   services,
   debug = false,
   inspectorPort,
-  setupScripts,
   logRequestLine,
+  crossBoundarySetup,
   entry: workerEntryFile,
 }: MiniOxygenViteOptions) {
   const serviceBindings =
@@ -76,12 +99,39 @@ export async function startMiniOxygenRuntime({
       {
         name: 'setup-environment',
         modules: true,
-        scriptPath,
+        serviceBindings: crossBoundarySetup?.reduce((acc, {binding}, index) => {
+          if (binding) {
+            acc[`wrapped_service_${index}`] = async (request: Request) => {
+              const payload = (await request.json()) as unknown[];
+              const result = await binding(...payload);
+              return new Response(JSON.stringify(result ?? ''));
+            };
+          }
+          return acc;
+        }, {} as Record<string, (request: Request) => Promise<Response>>),
         script: `
-          const setupScripts = [${setupScripts ?? ''}];
-          export default (env) => (request) => {
-            const viteUrl = new URL(request.url).origin;
-            setupScripts.forEach((setup) => setup?.(viteUrl));
+          const setupScripts = [${
+            crossBoundarySetup?.map((boundary) => boundary.script) ?? ''
+          }];
+          export default (env) => () => {
+            setupScripts.forEach((setup, index) => {
+              if (!setup) return;
+
+              const service = env['wrapped_service_' + index];
+              const wrappedBinding = service 
+                ? (...args) => {
+                  return service.fetch(
+                    new Request(
+                      'http://localhost',
+                      {method: 'POST', body: JSON.stringify(args)}
+                    )
+                  ).then(response => response.json());
+                }
+                : undefined;
+
+              setup(wrappedBinding);
+            });
+
             setupScripts.length = 0;
           }`,
       },

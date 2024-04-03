@@ -1,7 +1,6 @@
 import type {Plugin, ResolvedConfig} from 'vite';
 import {
   setupHydrogenMiddleware,
-  setupRemixDevServerHooks,
   SUBREQUEST_PROFILER_EVENT_EMITTER_ENDPOINT,
 } from './hydrogen-middleware.js';
 import type {HydrogenPluginOptions} from './types.js';
@@ -63,11 +62,39 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
         );
 
         oxygenPlugin?.api?.registerPluginOptions?.({
-          setupScripts: [setupRemixDevServerHooks],
           shouldStartRuntime: () => !isRemixChildCompiler(resolvedConfig),
           services: {
             H2O_LOG_EVENT: SUBREQUEST_PROFILER_EVENT_EMITTER_ENDPOINT,
           },
+          crossBoundarySetup: [
+            /**
+             * To avoid initial CSS flash during development,
+             * most frameworks implement a way to gather critical CSS.
+             * Remix does this by calling a global function that their
+             * Vite plugin creates in the Node.js process:
+             * @see https://github.com/remix-run/remix/blob/b07921efd5e8eed98e2996749852777c71bc3e50/packages/remix-server-runtime/dev.ts#L37-L47
+             *
+             * Here we are setting up a stub function in the Oxygen worker
+             * that will be called by Remix during development. Then, we forward
+             * this request to the Node.js process (Vite server) where the actual
+             * Remix function is called and the critical CSS is returned to the worker.
+             */
+            {
+              script: (binding) => {
+                // Setup global dev hooks in Remix in the worker environment
+                // using the binding function passed from Node environment:
+                // @ts-expect-error Remix global magic
+                globalThis.__remix_devServerHooks = {getCriticalCss: binding};
+              },
+              binding: (...args) => {
+                // Call the global Remix dev hook for critical CSS in Node environment:
+                // @ts-expect-error Remix global magic
+                return globalThis.__remix_devServerHooks?.getCriticalCss?.(
+                  ...args,
+                );
+              },
+            },
+          ],
         } satisfies OxygenApiOptions);
       },
       configureServer(viteDevServer) {
