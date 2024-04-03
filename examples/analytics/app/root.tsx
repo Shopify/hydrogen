@@ -1,8 +1,10 @@
+// [START import]
 import {
-  UNSTABLE_Analytics as Analytics,
   useNonce,
   getShopAnalytics,
+  UNSTABLE_Analytics as Analytics,
 } from '@shopify/hydrogen';
+// [END import]
 import {
   defer,
   type SerializeFrom,
@@ -24,7 +26,9 @@ import favicon from './assets/favicon.svg';
 import resetStyles from './styles/reset.css?url';
 import appStyles from './styles/app.css?url';
 import {Layout} from '~/components/Layout';
+// [START import-custom]
 import {CustomAnalytics} from '~/components/CustomAnalytics';
+// [END import-custom]
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -72,7 +76,9 @@ export const useRootLoaderData = () => {
 };
 
 export async function loader({context}: LoaderFunctionArgs) {
+  // [START env]
   const {storefront, customerAccount, cart, env} = context;
+  // [END env]
   const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
 
   const isLoggedInPromise = customerAccount.isLoggedIn();
@@ -101,13 +107,17 @@ export async function loader({context}: LoaderFunctionArgs) {
       header: await headerPromise,
       isLoggedIn: isLoggedInPromise,
       publicStoreDomain,
+      // [START getshopanalytics]
       shop: getShopAnalytics(context),
+      // [END getshopanalytics]
+      // [START consent]
       consent: {
         checkoutRootDomain: env.PUBLIC_CHECKOUT_DOMAIN,
         shopDomain: env.PUBLIC_STORE_DOMAIN,
         storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
         withPrivacyBanner: true,
       },
+      // [END consent]
     },
     {
       headers: {
@@ -130,17 +140,23 @@ export default function App() {
         <Links />
       </head>
       <body>
+        // [START provider]
         <Analytics.Provider
           cart={data.cart}
           shop={data.shop}
           consent={data.consent}
           customData={{foo: 'bar'}}
         >
+        // [END provider]
           <Layout {...data}>
             <Outlet />
           </Layout>
+          // [START custom-component]
           <CustomAnalytics />
+          // [END custom-component]
+        // [START provider]
         </Analytics.Provider>
+        // [END provider]
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>
