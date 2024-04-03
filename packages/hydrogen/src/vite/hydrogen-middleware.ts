@@ -2,6 +2,7 @@ import {normalizePath, type ViteDevServer, type ResolvedConfig} from 'vite';
 import path from 'node:path';
 import {createRequire} from 'node:module';
 import {createReadStream} from 'node:fs';
+import type {IncomingMessage} from 'node:http';
 import {
   clearHistory,
   setConstructors,
@@ -14,10 +15,23 @@ import type {HydrogenPluginOptions} from './types.js';
 
 const H2_PREFIX_WARN = '[h2:warn:vite] ';
 
-// Function to be passed as a setup function to the Oxygen worker.
-// It runs within workerd and sets up Remix dev server hooks.
-// It is eventually stringified to be initialized in the worker,
-// so do not use any external variables or imports.
+/**
+ * This is passed as a setup function to the Oxygen worker.
+ * It runs within workerd and sets up Remix dev server hooks.
+ * It is eventually stringified to be initialized in the worker,
+ * so __do not__ use any external variables or imports.
+ *
+ * More context: To avoid initial CSS flash during development,
+ * most frameworks implement a way to gather critical CSS.
+ * Remix does this by calling a global function that their
+ * Vite plugin creates in the Node.js process:
+ * @see https://github.com/remix-run/remix/blob/b07921efd5e8eed98e2996749852777c71bc3e50/packages/remix-server-runtime/dev.ts#L37-L47
+ *
+ * Here we are setting up a stub function in the Oxygen worker
+ * that will be called by Remix during development. Then, we forward
+ * this request to the Node.js process (Vite server) where the actual
+ * Remix function is called and the critical CSS is returned to the worker.
+ */
 export function setupRemixDevServerHooks(viteUrl: string) {
   // @ts-expect-error Remix global magic
   globalThis['__remix_devServerHooks'] = {
@@ -40,20 +54,25 @@ export function setupHydrogenMiddleware(
       // This request comes from Remix's `getCriticalCss` function
       // to gather the required CSS and avoid flashes of unstyled content in dev.
 
-      let body = '';
-      req.on('data', (chunk) => (body += chunk));
-
-      req.on('end', () => {
-        const args = body ? JSON.parse(body) : [];
-
-        Promise.resolve(
-          // @ts-expect-error Remix global magic
-          globalThis['__remix_devServerHooks']?.getCriticalCss?.(...args),
-        ).then((result?: string) => {
+      readJsonBody(req)
+        .then((args) =>
+          Promise.resolve(
+            // @ts-expect-error Remix global magic
+            globalThis['__remix_devServerHooks']?.getCriticalCss?.(...args),
+          ),
+        )
+        .then((result?: string) => {
           res.writeHead(200, {'Content-Type': 'application/json'});
           res.end(JSON.stringify(result ?? ''));
+        })
+        .catch((error: Error) => {
+          console.warn(
+            H2_PREFIX_WARN + 'Error handling critical CSS request:',
+            error.message,
+          );
+          res.writeHead(500);
+          res.end();
         });
-      });
     },
   );
 
@@ -142,4 +161,18 @@ async function reloadRemixVirtualRoutes(config: ResolvedConfig) {
     remixPluginContext?.remixConfig?.appDirectory ??
     path.join(config.root, 'app')
   );
+}
+
+function readJsonBody(req: IncomingMessage) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', (chunk) => (body += chunk));
+    req.on('end', () => {
+      try {
+        resolve(JSON.parse(body));
+      } catch (error) {
+        reject(error);
+      }
+    });
+  });
 }
