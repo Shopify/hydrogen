@@ -13,7 +13,7 @@ export async function loader() {
 }
 
 export default function Collection() {
-  const {collection} = useLoaderData();
+  const {collection} = useLoaderData<typeof loader>();
   return (
     <div className="collection">
       <h1>{collection.title}</h1>

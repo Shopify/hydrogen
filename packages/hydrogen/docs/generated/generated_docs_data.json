@@ -1,10 +1,320 @@
 [
   {
-    "name": "UNSTABLE_Analytics.Provider",
+    "name": "UNSTABLE_Analytics.CartView",
     "category": "components",
+    "subCategory": "analytics",
     "isVisualComponent": false,
     "related": [],
-    "description": "Provides a context to track page view, cart events and send them to Shopify. It is integrated with the Customer Privacy API for consent management. It is flexible for other analytics platform to integrate into its subscribe and publish system. It provides the [`unstable_useAnalytics`](/docs/api/hydrogen/2024-01/hooks/unstable_useanalytics) hook to access the analytics provider context.",
+    "description": "Publishes a `cart_viewed` event to the `UNSTABLE_Analytics.Provider`.",
+    "type": "component",
+    "defaultExample": {
+      "description": "This is the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {UNSTABLE_Analytics} from '@shopify/hydrogen';\n\nexport default function CartView() {\n  return (\n    &lt;div className=\"cart\"&gt;\n      &lt;h1&gt;Cart&lt;/h1&gt;\n      &lt;UNSTABLE_Analytics.CartView /&gt;\n    &lt;/div&gt;\n  );\n}\n",
+            "language": "js"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {UNSTABLE_Analytics} from '@shopify/hydrogen';\n\nexport default function CartView() {\n  return (\n    &lt;div className=\"cart\"&gt;\n      &lt;h1&gt;Cart&lt;/h1&gt;\n      &lt;UNSTABLE_Analytics.CartView /&gt;\n    &lt;/div&gt;\n  );\n}\n",
+            "language": "ts"
+          }
+        ],
+        "title": "example"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "AnalyticsCartViewGeneratedType",
+        "typeDefinitions": {
+          "AnalyticsCartViewGeneratedType": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "name": "AnalyticsCartViewGeneratedType",
+            "description": "",
+            "params": [
+              {
+                "name": "props",
+                "description": "",
+                "value": "BasicViewProps",
+                "filePath": "/analytics-manager/AnalyticsView.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsView.tsx",
+              "description": "",
+              "name": "",
+              "value": ""
+            },
+            "value": "export function AnalyticsCartView(props: BasicViewProps) {\n  return <AnalyticsView {...props} type=\"cart_viewed\" />;\n}"
+          },
+          "BasicViewProps": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "BasicViewProps",
+            "value": "{\n  data?: OtherData;\n  customData?: OtherData;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "data",
+                "value": "OtherData",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "customData",
+                "value": "OtherData",
+                "description": "",
+                "isOptional": true
+              }
+            ]
+          },
+          "OtherData": {
+            "description": "",
+            "name": "OtherData",
+            "value": "OtherData",
+            "members": [],
+            "override": "Any `<key: string, value: unknown>` pair"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "UNSTABLE_Analytics.CollectionView",
+    "category": "components",
+    "subCategory": "analytics",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "Publishes a `collection_viewed` event to the `UNSTABLE_Analytics.Provider`.",
+    "type": "component",
+    "defaultExample": {
+      "description": "This is the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {useLoaderData} from '@remix-run/react';\nimport {json} from '@shopify/remix-oxygen';\nimport {UNSTABLE_Analytics} from '@shopify/hydrogen';\n\nexport async function loader() {\n  return json({\n    collection: {\n      id: '123',\n      title: 'ABC',\n      handle: 'abc',\n    },\n  });\n}\n\nexport default function Collection() {\n  const {collection} = useLoaderData();\n  return (\n    &lt;div className=\"collection\"&gt;\n      &lt;h1&gt;{collection.title}&lt;/h1&gt;\n      &lt;UNSTABLE_Analytics.CollectionView\n        data={{\n          collection: {\n            id: collection.id,\n            handle: collection.handle,\n          },\n        }}\n      /&gt;\n    &lt;/div&gt;\n  );\n}\n",
+            "language": "js"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {useLoaderData} from '@remix-run/react';\nimport {json} from '@shopify/remix-oxygen';\nimport {UNSTABLE_Analytics} from '@shopify/hydrogen';\n\nexport async function loader() {\n  return json({\n    collection: {\n      id: '123',\n      title: 'ABC',\n      handle: 'abc',\n    },\n  });\n}\n\nexport default function Collection() {\n  const {collection} = useLoaderData&lt;typeof loader&gt;();\n  return (\n    &lt;div className=\"collection\"&gt;\n      &lt;h1&gt;{collection.title}&lt;/h1&gt;\n      &lt;UNSTABLE_Analytics.CollectionView\n        data={{\n          collection: {\n            id: collection.id,\n            handle: collection.handle,\n          },\n        }}\n      /&gt;\n    &lt;/div&gt;\n  );\n}\n",
+            "language": "ts"
+          }
+        ],
+        "title": "example"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "AnalyticsCollectionViewGeneratedType",
+        "typeDefinitions": {
+          "AnalyticsCollectionViewGeneratedType": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "name": "AnalyticsCollectionViewGeneratedType",
+            "description": "",
+            "params": [
+              {
+                "name": "props",
+                "description": "",
+                "value": "CollectionViewProps",
+                "filePath": "/analytics-manager/AnalyticsView.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsView.tsx",
+              "description": "",
+              "name": "",
+              "value": ""
+            },
+            "value": "export function AnalyticsCollectionView(props: CollectionViewProps) {\n  return <AnalyticsView {...props} type=\"collection_viewed\" />;\n}"
+          },
+          "CollectionViewProps": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CollectionViewProps",
+            "value": "{\n  data: CollectionPayload;\n  customData?: OtherData;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "data",
+                "value": "CollectionPayload",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "customData",
+                "value": "OtherData",
+                "description": "",
+                "isOptional": true
+              }
+            ]
+          },
+          "CollectionPayload": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CollectionPayload",
+            "value": "{\n  collection: CollectionPayloadDetails;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "collection",
+                "value": "CollectionPayloadDetails",
+                "description": ""
+              }
+            ]
+          },
+          "CollectionPayloadDetails": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CollectionPayloadDetails",
+            "value": "{\n  /** The collection id. */\n  id: string;\n  /** The collection handle. */\n  handle: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "id",
+                "value": "string",
+                "description": "The collection id."
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "handle",
+                "value": "string",
+                "description": "The collection handle."
+              }
+            ]
+          },
+          "OtherData": {
+            "description": "",
+            "name": "OtherData",
+            "value": "OtherData",
+            "members": [],
+            "override": "Any `<key: string, value: unknown>` pair"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "UNSTABLE_Analytics.CustomView",
+    "category": "components",
+    "subCategory": "analytics",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "Publishes a custom page view event to the `UNSTABLE_Analytics.Provider`. The `type` prop must be preceded by `custom_`.",
+    "type": "component",
+    "defaultExample": {
+      "description": "This is the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {UNSTABLE_Analytics} from '@shopify/hydrogen';\n\nexport default function Promotion() {\n  return (\n    &lt;div className=\"promotion\"&gt;\n      &lt;h1&gt;Promotion page&lt;/h1&gt;\n      &lt;UNSTABLE_Analytics.CustomView\n        type=\"custom_promotion_viewed\"\n        data={{\n          promotion: {\n            id: '123',\n          },\n        }}\n      /&gt;\n    &lt;/div&gt;\n  );\n}\n",
+            "language": "js"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {UNSTABLE_Analytics} from '@shopify/hydrogen';\n\nexport default function Promotion() {\n  return (\n    &lt;div className=\"promotion\"&gt;\n      &lt;h1&gt;Promotion page&lt;/h1&gt;\n      &lt;UNSTABLE_Analytics.CustomView\n        type=\"custom_promotion_viewed\"\n        data={{\n          promotion: {\n            id: '123',\n          },\n        }}\n      /&gt;\n    &lt;/div&gt;\n  );\n}\n",
+            "language": "ts"
+          }
+        ],
+        "title": "example"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "AnalyticsCustomViewGeneratedType",
+        "typeDefinitions": {
+          "AnalyticsCustomViewGeneratedType": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "name": "AnalyticsCustomViewGeneratedType",
+            "description": "",
+            "params": [
+              {
+                "name": "props",
+                "description": "",
+                "value": "CustomViewProps",
+                "filePath": "/analytics-manager/AnalyticsView.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsView.tsx",
+              "description": "",
+              "name": "",
+              "value": ""
+            },
+            "value": "export function AnalyticsCustomView(props: CustomViewProps) {\n  return <AnalyticsView {...props} />;\n}"
+          },
+          "CustomViewProps": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CustomViewProps",
+            "value": "{\n  type: typeof AnalyticsEvent.CUSTOM_EVENT;\n  data?: OtherData;\n  customData?: OtherData;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "type",
+                "value": "`custom_${string}`",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "data",
+                "value": "OtherData",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "customData",
+                "value": "OtherData",
+                "description": "",
+                "isOptional": true
+              }
+            ]
+          },
+          "OtherData": {
+            "description": "",
+            "name": "OtherData",
+            "value": "OtherData",
+            "members": [],
+            "override": "Any `<key: string, value: unknown>` pair"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "UNSTABLE_Analytics.Provider",
+    "category": "components",
+    "subCategory": "analytics",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "Provides a context for tracking page views and cart events, and transmitting the data to Shopify. It's integrated with the Customer Privacy API for consent management. The provider can also be used to connect third-party analytics services through its subscribe and publish system. It provides the [`unstable_useAnalytics`](/docs/api/hydrogen/2024-01/hooks/unstable_useanalytics) hook to access the analytics provider context.",
     "type": "component",
     "defaultExample": {
       "description": "This is the default example",
@@ -241,102 +551,296 @@
           }
         }
       }
-    ],
-    "examples": {
-      "description": "List of components available with `Analytics`:",
-      "exampleGroups": [
-        {
-          "title": "UNSTABLE_Analytics.CartView",
-          "examples": [
-            {
-              "description": "Publishes a `cart_viewed` event to the `UNSTABLE_Analytics.Provider`.",
-              "codeblock": {
-                "title": "",
-                "tabs": [
-                  {
-                    "title": "JavaScript",
-                    "code": "import {UNSTABLE_Analytics} from '@shopify/hydrogen';\n\nexport default function CartView() {\n  return (\n    &lt;div className=\"cart\"&gt;\n      &lt;h1&gt;Cart&lt;/h1&gt;\n      &lt;UNSTABLE_Analytics.CartView /&gt;\n    &lt;/div&gt;\n  );\n}\n",
-                    "language": "js"
-                  }
-                ]
+    ]
+  },
+  {
+    "name": "UNSTABLE_Analytics.ProductView",
+    "category": "components",
+    "subCategory": "analytics",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "Publishes a `product_viewed` event to the `UNSTABLE_Analytics.Provider`.",
+    "type": "component",
+    "defaultExample": {
+      "description": "This is the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {useLoaderData} from '@remix-run/react';\nimport {json} from '@shopify/remix-oxygen';\nimport {UNSTABLE_Analytics} from '@shopify/hydrogen';\n\nexport async function loader() {\n  return json({\n    product: {\n      id: '123',\n      title: 'ABC',\n      vendor: 'abc',\n      selectedVariant: {\n        id: '456',\n        title: 'DEF',\n        price: {\n          amount: '100',\n        },\n      },\n    },\n  });\n}\n\nexport default function Product() {\n  const {product} = useLoaderData();\n  const {selectedVariant} = product;\n\n  return (\n    &lt;div className=\"product\"&gt;\n      &lt;h1&gt;{product.title}&lt;/h1&gt;\n      &lt;UNSTABLE_Analytics.ProductView\n        data={{\n          products: [\n            {\n              id: product.id,\n              title: product.title,\n              price: selectedVariant?.price.amount || '0',\n              vendor: product.vendor,\n              variantId: selectedVariant?.id || '',\n              variantTitle: selectedVariant?.title || '',\n              quantity: 1,\n            },\n          ],\n        }}\n      /&gt;\n    &lt;/div&gt;\n  );\n}\n",
+            "language": "js"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {useLoaderData} from '@remix-run/react';\nimport {json} from '@shopify/remix-oxygen';\nimport {UNSTABLE_Analytics} from '@shopify/hydrogen';\n\nexport async function loader() {\n  return json({\n    product: {\n      id: '123',\n      title: 'ABC',\n      vendor: 'abc',\n      selectedVariant: {\n        id: '456',\n        title: 'DEF',\n        price: {\n          amount: '100',\n        },\n      },\n    },\n  });\n}\n\nexport default function Product() {\n  const {product} = useLoaderData&lt;typeof loader&gt;();\n  const {selectedVariant} = product;\n\n  return (\n    &lt;div className=\"product\"&gt;\n      &lt;h1&gt;{product.title}&lt;/h1&gt;\n      &lt;UNSTABLE_Analytics.ProductView\n        data={{\n          products: [\n            {\n              id: product.id,\n              title: product.title,\n              price: selectedVariant?.price.amount || '0',\n              vendor: product.vendor,\n              variantId: selectedVariant?.id || '',\n              variantTitle: selectedVariant?.title || '',\n              quantity: 1,\n            },\n          ],\n        }}\n      /&gt;\n    &lt;/div&gt;\n  );\n}\n",
+            "language": "ts"
+          }
+        ],
+        "title": "example"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "AnalyticsProductViewGeneratedType",
+        "typeDefinitions": {
+          "AnalyticsProductViewGeneratedType": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "name": "AnalyticsProductViewGeneratedType",
+            "description": "",
+            "params": [
+              {
+                "name": "props",
+                "description": "",
+                "value": "ProductViewProps",
+                "filePath": "/analytics-manager/AnalyticsView.tsx"
               }
-            }
-          ]
-        },
-        {
-          "title": "UNSTABLE_Analytics.CollectionView",
-          "examples": [
-            {
-              "description": "Publishes a `collection_viewed` event to the `UNSTABLE_Analytics.Provider`.",
-              "codeblock": {
-                "title": "",
-                "tabs": [
-                  {
-                    "title": "JavaScript",
-                    "code": "import {UNSTABLE_Analytics} from '@shopify/hydrogen';\n\nexport default function Collection() {\n  const {collection} = useLoaderData();\n  return (\n    &lt;div className=\"collection\"&gt;\n      &lt;h1&gt;{collection.title}&lt;/h1&gt;\n      &lt;UNSTABLE_Analytics.CollectionView\n        data={{\n          collection: {\n            id: collection.id,\n            handle: collection.handle,\n          },\n        }}\n      /&gt;\n    &lt;/div&gt;\n  );\n}\n",
-                    "language": "js"
-                  }
-                ]
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsView.tsx",
+              "description": "",
+              "name": "",
+              "value": ""
+            },
+            "value": "export function AnalyticsProductView(props: ProductViewProps) {\n  return <AnalyticsView {...props} type=\"product_viewed\" />;\n}"
+          },
+          "ProductViewProps": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ProductViewProps",
+            "value": "{\n  data: ProductsPayload;\n  customData?: OtherData;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "data",
+                "value": "ProductsPayload",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "customData",
+                "value": "OtherData",
+                "description": "",
+                "isOptional": true
               }
-            }
-          ]
-        },
-        {
-          "title": "UNSTABLE_Analytics.CustomView",
-          "examples": [
-            {
-              "description": "Publishes a custom page view event to the `UNSTABLE_Analytics.Provider`. The `type` prop must be preceded by `custom_`.",
-              "codeblock": {
-                "title": "",
-                "tabs": [
-                  {
-                    "title": "JavaScript",
-                    "code": "import {UNSTABLE_Analytics} from '@shopify/hydrogen';\n\nexport default function Promotion() {\n  return (\n    &lt;div className=\"promotion\"&gt;\n      &lt;h1&gt;Promotion page&lt;/h1&gt;\n      &lt;UNSTABLE_Analytics.CustomView\n        type=\"custom_promotion_viewed\"\n        data={{\n          promotion: {\n            id: '123',\n          },\n        }}\n      /&gt;\n    &lt;/div&gt;\n  );\n}\n",
-                    "language": "js"
-                  }
-                ]
+            ]
+          },
+          "ProductsPayload": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ProductsPayload",
+            "value": "{\n  /** The products associated with this event. */\n  products: Array<ProductPayload & OtherData>;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "products",
+                "value": "Array<ProductPayload & OtherData>",
+                "description": "The products associated with this event."
               }
-            }
-          ]
-        },
-        {
-          "title": "UNSTABLE_Analytics.ProductView",
-          "examples": [
-            {
-              "description": "Publishes a `product_viewed` event to the `UNSTABLE_Analytics.Provider`.",
-              "codeblock": {
-                "title": "",
-                "tabs": [
-                  {
-                    "title": "JavaScript",
-                    "code": "import {UNSTABLE_Analytics} from '@shopify/hydrogen';\n\nexport default function Product() {\n  const {product} = useLoaderData();\n  const {selectedVariant} = product;\n\n  return (\n    &lt;div className=\"product\"&gt;\n      &lt;h1&gt;{product.title}&lt;/h1&gt;\n      &lt;UNSTABLE_Analytics.ProductView\n        data={{\n          products: [\n            {\n              id: product.id,\n              title: product.title,\n              price: selectedVariant?.price.amount || '0',\n              vendor: product.vendor,\n              variantId: selectedVariant?.id || '',\n              variantTitle: selectedVariant?.title || '',\n              quantity: 1,\n            },\n          ],\n        }}\n      /&gt;\n    &lt;/div&gt;\n  );\n}\n",
-                    "language": "js"
-                  }
-                ]
+            ]
+          },
+          "ProductPayload": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ProductPayload",
+            "value": "{\n  /** The product id. */\n  id: Product['id'];\n  /** The product title. */\n  title: Product['title'];\n  /** The displaying variant price. */\n  price: ProductVariant['price']['amount'];\n  /** The product vendor. */\n  vendor: Product['vendor'];\n  /** The displaying variant id. */\n  variantId: ProductVariant['id'];\n  /** The displaying variant title. */\n  variantTitle: ProductVariant['title'];\n  /** The quantity of product. */\n  quantity: number;\n  /** The product sku. */\n  sku?: ProductVariant['sku'];\n  /** The product type. */\n  productType?: Product['productType'];\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "id",
+                "value": "string",
+                "description": "The product id."
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "title",
+                "value": "string",
+                "description": "The product title."
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "price",
+                "value": "string",
+                "description": "The displaying variant price."
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "vendor",
+                "value": "string",
+                "description": "The product vendor."
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "variantId",
+                "value": "string",
+                "description": "The displaying variant id."
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "variantTitle",
+                "value": "string",
+                "description": "The displaying variant title."
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "quantity",
+                "value": "number",
+                "description": "The quantity of product."
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "sku",
+                "value": "string",
+                "description": "The product sku.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "productType",
+                "value": "string",
+                "description": "The product type.",
+                "isOptional": true
               }
-            }
-          ]
-        },
-        {
-          "title": "UNSTABLE_Analytics.SearchView",
-          "examples": [
-            {
-              "description": "Publishes a `collection_viewed` event to the `UNSTABLE_Analytics.Provider`.",
-              "codeblock": {
-                "title": "",
-                "tabs": [
-                  {
-                    "title": "JavaScript",
-                    "code": "import {UNSTABLE_Analytics} from '@shopify/hydrogen';\n\nexport default function SearchPage() {\n  const {searchTerm} = useLoaderData();\n  return (\n    &lt;div className=\"search\"&gt;\n      &lt;h1&gt;Search&lt;/h1&gt;\n      &lt;UNSTABLE_Analytics.SearchView data={{searchTerm}} /&gt;\n    &lt;/div&gt;\n  );\n}\n",
-                    "language": "js"
-                  }
-                ]
-              }
-            }
-          ]
+            ]
+          },
+          "OtherData": {
+            "description": "",
+            "name": "OtherData",
+            "value": "OtherData",
+            "members": [],
+            "override": "Any `<key: string, value: unknown>` pair"
+          }
         }
-      ]
-    }
+      }
+    ]
+  },
+  {
+    "name": "UNSTABLE_Analytics.SearchView",
+    "category": "components",
+    "subCategory": "analytics",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "Publishes a `search_viewed` event to the `UNSTABLE_Analytics.Provider`.",
+    "type": "component",
+    "defaultExample": {
+      "description": "This is the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {UNSTABLE_Analytics} from '@shopify/hydrogen';\n\nexport default function SearchPage() {\n  const {searchTerm} = useLoaderData();\n  return (\n    &lt;div className=\"search\"&gt;\n      &lt;h1&gt;Search&lt;/h1&gt;\n      &lt;UNSTABLE_Analytics.SearchView data={{searchTerm}} /&gt;\n    &lt;/div&gt;\n  );\n}\n",
+            "language": "js"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {UNSTABLE_Analytics} from '@shopify/hydrogen';\nimport {type LoaderFunctionArgs, json} from '@shopify/remix-oxygen';\nimport {useLoaderData} from '@remix-run/react';\n\nexport async function loader({request}: LoaderFunctionArgs) {\n  const url = new URL(request.url);\n  const searchParams = new URLSearchParams(url.search);\n  const searchTerm = String(searchParams.get('q') || '');\n\n  return json({\n    searchTerm,\n  });\n}\n\nexport default function SearchPage() {\n  const {searchTerm} = useLoaderData&lt;typeof loader&gt;();\n  return (\n    &lt;div className=\"search\"&gt;\n      &lt;h1&gt;Search&lt;/h1&gt;\n      &lt;UNSTABLE_Analytics.SearchView data={{searchTerm}} /&gt;\n    &lt;/div&gt;\n  );\n}\n",
+            "language": "ts"
+          }
+        ],
+        "title": "example"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "AnalyticsSearchViewGeneratedType",
+        "typeDefinitions": {
+          "AnalyticsSearchViewGeneratedType": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "name": "AnalyticsSearchViewGeneratedType",
+            "description": "",
+            "params": [
+              {
+                "name": "props",
+                "description": "",
+                "value": "SearchViewProps",
+                "filePath": "/analytics-manager/AnalyticsView.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-manager/AnalyticsView.tsx",
+              "description": "",
+              "name": "",
+              "value": ""
+            },
+            "value": "export function AnalyticsSearchView(props: SearchViewProps) {\n  return <AnalyticsView {...props} type=\"search_viewed\" />;\n}"
+          },
+          "SearchViewProps": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "SearchViewProps",
+            "value": "{\n  data?: SearchPayload;\n  customData?: OtherData;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "data",
+                "value": "SearchPayload",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "customData",
+                "value": "OtherData",
+                "description": "",
+                "isOptional": true
+              }
+            ]
+          },
+          "SearchPayload": {
+            "filePath": "/analytics-manager/AnalyticsView.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "SearchPayload",
+            "value": "{\n  /** The search term used for the search results page */\n  searchTerm: string;\n  /** The search results */\n  searchResults?: any;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "searchTerm",
+                "value": "string",
+                "description": "The search term used for the search results page"
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsView.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "searchResults",
+                "value": "any",
+                "description": "The search results",
+                "isOptional": true
+              }
+            ]
+          },
+          "OtherData": {
+            "description": "",
+            "name": "OtherData",
+            "value": "OtherData",
+            "members": [],
+            "override": "Any `<key: string, value: unknown>` pair"
+          }
+        }
+      }
+    ]
   },
   {
     "name": "getShopAnalytics",
@@ -592,13 +1096,13 @@
             "filePath": "/analytics-manager/AnalyticsView.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "PageViewPayload",
-            "value": "ViewBasePayload & BasePayload",
+            "value": "UrlPayload & BasePayload",
             "description": ""
           },
-          "ViewBasePayload": {
+          "UrlPayload": {
             "filePath": "/analytics-manager/AnalyticsView.tsx",
             "syntaxKind": "TypeAliasDeclaration",
-            "name": "ViewBasePayload",
+            "name": "UrlPayload",
             "value": "{\n  /** The url location of when this event is collected. */\n  url: string;\n}",
             "description": "",
             "members": [
@@ -615,16 +1119,9 @@
             "filePath": "/analytics-manager/AnalyticsView.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "BasePayload",
-            "value": "{\n  /** The timestamp in ms at the time of event collection. */\n  eventTimestamp: number;\n  /** The shop data passed in from the `AnalyticsProvider`. */\n  shop: ShopAnalytic | null;\n  /** The custom data passed in from the `AnalyticsProvider`. */\n  customData?: AnalyticsProviderProps['customData'];\n}",
+            "value": "{\n  /** The shop data passed in from the `AnalyticsProvider`. */\n  shop: ShopAnalytic | null;\n  /** The custom data passed in from the `AnalyticsProvider`. */\n  customData?: AnalyticsProviderProps['customData'];\n}",
             "description": "",
             "members": [
-              {
-                "filePath": "/analytics-manager/AnalyticsView.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "eventTimestamp",
-                "value": "number",
-                "description": "The timestamp in ms at the time of event collection."
-              },
               {
                 "filePath": "/analytics-manager/AnalyticsView.tsx",
                 "syntaxKind": "PropertySignature",
@@ -709,21 +1206,21 @@
             "filePath": "/analytics-manager/AnalyticsView.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ProductViewPayload",
-            "value": "ProductsPayload & ViewBasePayload & BasePayload",
+            "value": "ProductsPayload & UrlPayload & BasePayload",
             "description": ""
           },
           "ProductsPayload": {
             "filePath": "/analytics-manager/AnalyticsView.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ProductsPayload",
-            "value": "{\n  /** The products associated with this event. */\n  products: Array<ProductPayload>;\n}",
+            "value": "{\n  /** The products associated with this event. */\n  products: Array<ProductPayload & OtherData>;\n}",
             "description": "",
             "members": [
               {
                 "filePath": "/analytics-manager/AnalyticsView.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "products",
-                "value": "Array<ProductPayload>",
+                "value": "Array<ProductPayload & OtherData>",
                 "description": "The products associated with this event."
               }
             ]
@@ -732,7 +1229,7 @@
             "filePath": "/analytics-manager/AnalyticsView.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ProductPayload",
-            "value": "{\n  /** The product id. */\n  id: Product['id'];\n  /** The product title. */\n  title: Product['title'];\n  /** The displaying variant price. */\n  price: ProductVariant['price']['amount'];\n  /** The product vendor. */\n  vendor: Product['vendor'];\n  /** The displaying variant id. */\n  variantId: ProductVariant['id'];\n  /** The displaying variant title. */\n  variantTitle: ProductVariant['title'];\n  /** The quantity of product. */\n  quantity: number;\n  /** The product sku. */\n  sku?: ProductVariant['sku'];\n  /** The product type. */\n  productType?: Product['productType'];\n  /** Any other data that should be included in the event. */\n  [key: string]: unknown;\n}",
+            "value": "{\n  /** The product id. */\n  id: Product['id'];\n  /** The product title. */\n  title: Product['title'];\n  /** The displaying variant price. */\n  price: ProductVariant['price']['amount'];\n  /** The product vendor. */\n  vendor: Product['vendor'];\n  /** The displaying variant id. */\n  variantId: ProductVariant['id'];\n  /** The displaying variant title. */\n  variantTitle: ProductVariant['title'];\n  /** The quantity of product. */\n  quantity: number;\n  /** The product sku. */\n  sku?: ProductVariant['sku'];\n  /** The product type. */\n  productType?: Product['productType'];\n}",
             "description": "",
             "members": [
               {
@@ -802,6 +1299,13 @@
               }
             ]
           },
+          "OtherData": {
+            "description": "",
+            "name": "OtherData",
+            "value": "OtherData",
+            "members": [],
+            "override": "Any `<key: string, value: unknown>` pair"
+          },
           "PublishCollectionView": {
             "filePath": "/analytics-manager/AnalyticsProvider.tsx",
             "name": "PublishCollectionView",
@@ -832,7 +1336,7 @@
             "filePath": "/analytics-manager/AnalyticsView.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CollectionViewPayload",
-            "value": "CollectionPayload & ViewBasePayload & BasePayload",
+            "value": "CollectionPayload & UrlPayload & BasePayload",
             "description": ""
           },
           "CollectionPayload": {
@@ -904,7 +1408,7 @@
             "filePath": "/analytics-manager/AnalyticsView.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartViewPayload",
-            "value": "ViewBasePayload & BasePayload",
+            "value": "UrlPayload & BasePayload",
             "description": ""
           },
           "PublishSearchView": {
@@ -937,14 +1441,14 @@
             "filePath": "/analytics-manager/AnalyticsView.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "SearchViewPayload",
-            "value": "SearchPayload & ViewBasePayload & BasePayload",
+            "value": "SearchPayload & UrlPayload & BasePayload",
             "description": ""
           },
           "SearchPayload": {
             "filePath": "/analytics-manager/AnalyticsView.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "SearchPayload",
-            "value": "{\n  /** The search term used for the search results page */\n  searchTerm: string;\n  /** The search results */\n  results?: Array<any>;\n}",
+            "value": "{\n  /** The search term used for the search results page */\n  searchTerm: string;\n  /** The search results */\n  searchResults?: any;\n}",
             "description": "",
             "members": [
               {
@@ -957,8 +1461,8 @@
               {
                 "filePath": "/analytics-manager/AnalyticsView.tsx",
                 "syntaxKind": "PropertySignature",
-                "name": "results",
-                "value": "Array<any>",
+                "name": "searchResults",
+                "value": "any",
                 "description": "The search results",
                 "isOptional": true
               }
@@ -994,7 +1498,7 @@
             "filePath": "/analytics-manager/AnalyticsView.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartUpdatePayload",
-            "value": "CartPayload & BasePayload",
+            "value": "CartPayload & BasePayload & OtherData",
             "description": ""
           },
           "CartPayload": {
@@ -1050,7 +1554,7 @@
             "filePath": "/analytics-manager/AnalyticsView.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartLineUpdatePayload",
-            "value": "CartLinePayload & CartPayload & BasePayload",
+            "value": "CartLinePayload & CartPayload & BasePayload & OtherData",
             "description": ""
           },
           "CartLinePayload": {
@@ -1129,14 +1633,6 @@
               "value": "void"
             },
             "value": "type PublishCustomEvent = (\n  event: `custom_${string}`,\n  payload: OtherData,\n) => void;"
-          },
-          "OtherData": {
-            "filePath": "/analytics-manager/AnalyticsView.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "OtherData",
-            "value": "{\n  /** Any other data that should be included in the event. */\n  [key: string]: unknown;\n}",
-            "description": "",
-            "members": []
           },
           "AnalyticsContextSubscribeForDoc": {
             "filePath": "/analytics-manager/AnalyticsProvider.tsx",
@@ -1389,7 +1885,7 @@
           "title": "unstable_useAnalytics.register",
           "examples": [
             {
-              "description": "Registers an unique key for the analytics provider to wait for ready callback before sending any events.",
+              "description": "Registers a unique key with the analytics provider component, enabling custom analytics integrations to wait for a callback before sending event data.",
               "codeblock": {
                 "title": "",
                 "tabs": [
@@ -11138,7 +11634,7 @@
           "title": "getCustomerPrivacy",
           "examples": [
             {
-              "description": "Returns `window.Shopify.customerPrivacy` if exists.",
+              "description": "Returns the value of `window.Shopify.customerPrivacy` if it exists.",
               "codeblock": {
                 "title": "",
                 "tabs": [
@@ -11156,7 +11652,7 @@
           "title": "getCustomerPrivacyRequired",
           "examples": [
             {
-              "description": "Returns `window.Shopify.customerPrivacy` and throws error if it doesn't exists.",
+              "description": "Returns the value of `window.Shopify.customerPrivacy`, and throws an error if it doesn't exist.",
               "codeblock": {
                 "title": "",
                 "tabs": [

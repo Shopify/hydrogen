@@ -1,13 +1,13 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'UNSTABLE_Analytics.Provider',
+  name: 'UNSTABLE_Analytics.SearchView',
   category: 'components',
   subCategory: 'analytics',
   isVisualComponent: false,
   related: [],
   description:
-    "Provides a context for tracking page views and cart events, and transmitting the data to Shopify. It's integrated with the Customer Privacy API for consent management. The provider can also be used to connect third-party analytics services through its subscribe and publish system. It provides the [`unstable_useAnalytics`](/docs/api/hydrogen/2024-01/hooks/unstable_useanalytics) hook to access the analytics provider context.",
+    'Publishes a `search_viewed` event to the `UNSTABLE_Analytics.Provider`.',
   type: 'component',
   defaultExample: {
     description: 'This is the default example',
@@ -15,12 +15,12 @@ const data: ReferenceEntityTemplateSchema = {
       tabs: [
         {
           title: 'JavaScript',
-          code: './AnalyticsProvider.example.jsx',
+          code: './AnalyticsProvider.searchView.example.jsx',
           language: 'js',
         },
         {
           title: 'TypeScript',
-          code: './AnalyticsProvider.example.tsx',
+          code: './AnalyticsProvider.searchView.example.tsx',
           language: 'ts',
         },
       ],
@@ -30,7 +30,7 @@ const data: ReferenceEntityTemplateSchema = {
   definitions: [
     {
       title: 'Props',
-      type: 'AnalyticsProviderProps',
+      type: 'AnalyticsSearchViewGeneratedType',
       description: '',
     },
   ],

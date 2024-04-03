@@ -20,15 +20,13 @@ export type OtherData = {
 };
 
 type BasePayload = {
-  /** The timestamp in ms at the time of event collection. */
-  eventTimestamp: number;
   /** The shop data passed in from the `AnalyticsProvider`. */
   shop: ShopAnalytic | null;
   /** The custom data passed in from the `AnalyticsProvider`. */
   customData?: AnalyticsProviderProps['customData'];
 };
 
-type ViewBasePayload = {
+type UrlPayload = {
   /** The url location of when this event is collected. */
   url: string;
 };
@@ -52,13 +50,11 @@ type ProductPayload = {
   sku?: ProductVariant['sku'];
   /** The product type. */
   productType?: Product['productType'];
-  /** Any other data that should be included in the event. */
-  [key: string]: unknown;
 };
 
 type ProductsPayload = {
   /** The products associated with this event. */
-  products: Array<ProductPayload>;
+  products: Array<ProductPayload & OtherData>;
 };
 
 type CollectionPayloadDetails = {
@@ -95,17 +91,26 @@ type CartLinePayload = {
 
 // Event payloads
 export type CollectionViewPayload = CollectionPayload &
-  ViewBasePayload &
+  UrlPayload &
   BasePayload;
-export type ProductViewPayload = ProductsPayload &
-  ViewBasePayload &
-  BasePayload;
-export type CartViewPayload = ViewBasePayload & BasePayload;
-export type PageViewPayload = ViewBasePayload & BasePayload;
-export type SearchViewPayload = SearchPayload & ViewBasePayload & BasePayload;
-export type CartUpdatePayload = CartPayload & BasePayload;
-export type CartLineUpdatePayload = CartLinePayload & CartPayload & BasePayload;
-export type CustomEventPayload = OtherData & BasePayload;
+export type ProductViewPayload = ProductsPayload & UrlPayload & BasePayload;
+export type CartViewPayload = UrlPayload & BasePayload;
+export type PageViewPayload = UrlPayload & BasePayload;
+export type SearchViewPayload = SearchPayload & UrlPayload & BasePayload;
+
+type ViewPayload =
+  | PageViewPayload
+  | ProductViewPayload
+  | CollectionViewPayload
+  | CartViewPayload
+  | SearchViewPayload;
+
+export type CartUpdatePayload = CartPayload & BasePayload & OtherData;
+export type CartLineUpdatePayload = CartLinePayload &
+  CartPayload &
+  BasePayload &
+  OtherData;
+export type CustomEventPayload = BasePayload & OtherData;
 
 export type EventPayloads =
   | PageViewPayload
@@ -132,45 +137,24 @@ type BaseViewProps = {
   customData?: OtherData;
 };
 
-// Event types
-type PageViewProps = BaseViewProps & {
-  type: typeof AnalyticsEvent.PAGE_VIEWED;
-  data?: OtherData;
-};
-
-type ProductViewProps = BaseViewProps & {
-  type: typeof AnalyticsEvent.PRODUCT_VIEWED;
-  data: Omit<ProductViewPayload, keyof BasePayload>;
-};
-
-type CollectionViewProps = BaseViewProps & {
-  type: typeof AnalyticsEvent.COLLECTION_VIEWED;
-  data: Omit<CollectionViewPayload, keyof BasePayload>;
-};
-
-type CartViewProps = BaseViewProps & {
-  type: typeof AnalyticsEvent.CART_VIEWED;
-  data?: Omit<CartViewPayload, keyof BasePayload>;
-};
-
-type SearchViewProps = BaseViewProps & {
-  type: typeof AnalyticsEvent.SEARCH_VIEWED;
-  data?: Omit<SearchViewPayload, keyof BasePayload>;
-};
-
-type CustomViewProps = BaseViewProps & {
-  type: typeof AnalyticsEvent.CUSTOM_EVENT;
-  data?: OtherData;
-};
-
-function AnalyticsView(props: PageViewProps): null;
-function AnalyticsView(props: ProductViewProps): null;
-function AnalyticsView(props: CollectionViewProps): null;
-function AnalyticsView(props: CartViewProps): null;
-function AnalyticsView(props: SearchViewProps): null;
+function AnalyticsView(
+  props: BasicViewProps & {type: typeof AnalyticsEvent.PAGE_VIEWED},
+): null;
+function AnalyticsView(
+  props: ProductViewProps & {type: typeof AnalyticsEvent.PRODUCT_VIEWED},
+): null;
+function AnalyticsView(
+  props: CollectionViewProps & {type: typeof AnalyticsEvent.COLLECTION_VIEWED},
+): null;
+function AnalyticsView(
+  props: BasicViewProps & {type: typeof AnalyticsEvent.CART_VIEWED},
+): null;
+function AnalyticsView(
+  props: SearchViewProps & {type: typeof AnalyticsEvent.SEARCH_VIEWED},
+): null;
 function AnalyticsView(props: CustomViewProps): null;
 function AnalyticsView(props: any) {
-  const {type, data = {}} = props;
+  const {type, data = {}, customData} = props;
   const location = useLocation();
   const lastLocationPathname = useRef<string>('');
   const {publish, cart, prevCart, shop} = useAnalytics();
@@ -183,8 +167,9 @@ function AnalyticsView(props: any) {
     // don't publish the event until we have the shop
     if (!shop) return;
 
-    const viewPayload: PageViewPayload = {
+    const viewPayload: ViewPayload = {
       ...data,
+      customData,
       url: window.location.href,
       cart,
       prevCart,
@@ -199,25 +184,49 @@ function AnalyticsView(props: any) {
   return null;
 }
 
-export function AnalyticsPageView(props: Omit<PageViewProps, 'type'>) {
+type BasicViewProps = {
+  data?: OtherData;
+  customData?: OtherData;
+};
+
+type ProductViewProps = {
+  data: ProductsPayload;
+  customData?: OtherData;
+};
+
+type CollectionViewProps = {
+  data: CollectionPayload;
+  customData?: OtherData;
+};
+
+type SearchViewProps = {
+  data?: SearchPayload;
+  customData?: OtherData;
+};
+
+type CustomViewProps = {
+  type: typeof AnalyticsEvent.CUSTOM_EVENT;
+  data?: OtherData;
+  customData?: OtherData;
+};
+
+export function AnalyticsPageView(props: BasicViewProps) {
   return <AnalyticsView {...props} type="page_viewed" />;
 }
 
-export function AnalyticsProductView(props: Omit<ProductViewProps, 'type'>) {
+export function AnalyticsProductView(props: ProductViewProps) {
   return <AnalyticsView {...props} type="product_viewed" />;
 }
 
-export function AnalyticsCollectionView(
-  props: Omit<CollectionViewProps, 'type'>,
-) {
+export function AnalyticsCollectionView(props: CollectionViewProps) {
   return <AnalyticsView {...props} type="collection_viewed" />;
 }
 
-export function AnalyticsCartView(props: Omit<CartViewProps, 'type'>) {
+export function AnalyticsCartView(props: BasicViewProps) {
   return <AnalyticsView {...props} type="cart_viewed" />;
 }
 
-export function AnalyticsSearchView(props: Omit<SearchViewProps, 'type'>) {
+export function AnalyticsSearchView(props: SearchViewProps) {
   return <AnalyticsView {...props} type="search_viewed" />;
 }
 

@@ -20,7 +20,7 @@ export async function loader() {
 }
 
 export default function Product() {
-  const {product} = useLoaderData();
+  const {product} = useLoaderData<typeof loader>();
   const {selectedVariant} = product;
 
   return (
