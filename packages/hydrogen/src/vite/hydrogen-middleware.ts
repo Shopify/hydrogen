@@ -5,15 +5,20 @@ import {createReadStream} from 'node:fs';
 import type {IncomingMessage} from 'node:http';
 import {
   clearHistory,
-  setConstructors,
+  emitRequestEvent,
   streamRequestEvents,
-  SUBREQUEST_PROFILER_ENDPOINT,
 } from './request-events.js';
 import type {RemixPluginContext} from '@remix-run/dev/dist/vite/plugin.js';
 import {addVirtualRoutes} from './add-virtual-routes.js';
 import type {HydrogenPluginOptions} from './types.js';
 
 const H2_PREFIX_WARN = '[h2:warn:vite] ';
+
+/** Used by Subrequest Profiler UI */
+const SUBREQUEST_PROFILER_ENDPOINT = '/debug-network-server';
+/** Used by Hydrogen */
+export const SUBREQUEST_PROFILER_EVENT_EMITTER_ENDPOINT =
+  '/__h2_emit_request_event';
 
 /**
  * This is passed as a setup function to the Oxygen worker.
@@ -79,13 +84,40 @@ export function setupHydrogenMiddleware(
   if (options.disableVirtualRoutes) return;
 
   addVirtualRoutesToRemix(viteDevServer);
-  setConstructors({Response: globalThis.Response});
+
+  viteDevServer.middlewares.use(
+    SUBREQUEST_PROFILER_EVENT_EMITTER_ENDPOINT,
+    function h2LogEvent(req, res) {
+      // This request comes from Hydrogen internals.
+
+      readJsonBody(req)
+        .then((payload) => {
+          emitRequestEvent({
+            urlPathname: req.url!,
+            root: viteDevServer.config.root ?? process.cwd(),
+            payload,
+          });
+          res.writeHead(200);
+          res.end();
+        })
+        .catch((error: Error) => {
+          console.warn(
+            H2_PREFIX_WARN + 'Error logging subrequest profiler event:',
+            error.message,
+          );
+          res.writeHead(500);
+          res.end();
+        });
+    },
+  );
 
   viteDevServer.middlewares.use(
     SUBREQUEST_PROFILER_ENDPOINT,
     function h2HandleSubrequestProfilerEvent(req, res) {
       // This request comes from Hydrogen's Subrequest Profiler UI.
-      req.method === 'DELETE' ? clearHistory() : streamRequestEvents(req, res);
+      req.method === 'DELETE'
+        ? clearHistory(req, res)
+        : streamRequestEvents(req, res);
     },
   );
 

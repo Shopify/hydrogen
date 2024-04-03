@@ -3,31 +3,7 @@ import {EventEmitter} from 'node:events';
 import type {IncomingMessage, ServerResponse} from 'node:http';
 import {mapSourcePosition} from 'source-map-support';
 
-export const H2O_BINDING_NAME = 'H2O_LOG_EVENT';
-export const SUBREQUEST_PROFILER_ENDPOINT = '/debug-network-server';
-
-// These 2 types are based on Undici but have slight differences
-type RequestKind = {
-  url: string;
-  headers: Request['headers'];
-  json: () => Promise<unknown>;
-  method: string;
-  signal: AbortSignal;
-};
-
-let ResponseConstructor = Response;
-
-export function setConstructors(constructors: {
-  Response: typeof ResponseConstructor;
-}) {
-  ResponseConstructor = constructors.Response;
-}
-
-export const DEV_ROUTES = new Set([
-  '/graphiql',
-  '/subrequest-profiler',
-  '/__vite_warmup',
-]);
+const DEV_ROUTES = new Set(['/graphiql', '/subrequest-profiler']);
 
 type RequestEvent = {
   event: string;
@@ -40,7 +16,7 @@ const EVENT_MAP: Record<string, string> = {
 };
 
 // Make sure to match this type with the one in packages/remix-oxygen/src/event-logger.ts
-export type H2OEvent = {
+type H2OEvent = {
   url: string;
   eventType: 'request' | 'subrequest';
   requestId?: string | null;
@@ -66,9 +42,7 @@ export type H2OEvent = {
   displayName?: string;
 };
 
-async function getRequestInfo(request: RequestKind) {
-  const data = (await request.json()) as H2OEvent;
-
+function getEventInfo(data: H2OEvent) {
   return {
     ...data,
     requestId: data.requestId ?? '',
@@ -89,96 +63,96 @@ async function getRequestInfo(request: RequestKind) {
 const eventEmitter = new EventEmitter();
 const eventHistory: RequestEvent[] = [];
 
-function createResponse(main = 'ok', init?: Pick<ResponseInit, 'headers'>) {
-  // @ts-ignore
-  return new ResponseConstructor(main, init);
-}
+type EmitRequestEventOptions = {
+  urlPathname: string;
+  payload: unknown;
+  root: string;
+};
 
-export function createLogRequestEvent(options?: {
-  transformLocation?: (partialPath: string) => string;
-}) {
-  return async function logRequestEvent(
-    request: RequestKind,
-  ): Promise<Response> {
-    const url = new URL(request.url);
-    if (DEV_ROUTES.has(url.pathname)) {
-      return createResponse();
+export function emitRequestEvent({
+  urlPathname,
+  payload,
+  root,
+}: EmitRequestEventOptions) {
+  if (DEV_ROUTES.has(urlPathname)) return;
+
+  if (!payload || !('requestId' in (payload as H2OEvent))) {
+    return;
+  }
+
+  const {
+    url: displayUrl,
+    displayName: displayNameData,
+    eventType,
+    purpose,
+    graphql,
+    stackInfo,
+    ...data
+  } = getEventInfo(payload as H2OEvent);
+
+  let graphiqlLink = '';
+  let descriptionUrl = urlPathname;
+  let displayName = displayNameData;
+
+  if (eventType === 'subrequest') {
+    displayName =
+      displayName ||
+      graphql?.query
+        .match(/(query|mutation)\s+(\w+)/)?.[0]
+        ?.replace(/\s+/, ' ');
+    descriptionUrl = displayUrl || urlPathname;
+
+    if (graphql) {
+      graphiqlLink = getGraphiQLUrl(graphql);
     }
+  }
 
-    const {
-      url: displayUrl,
-      displayName: displayNameData,
-      eventType,
-      purpose,
-      graphql,
-      stackInfo,
-      ...data
-    } = await getRequestInfo(request);
+  let stackLine: string | null = null;
+  let stackLink: string | null = null;
 
-    let graphiqlLink = '';
-    let descriptionUrl = request.url;
-    let displayName = displayNameData;
+  if (stackInfo?.file) {
+    stackInfo.file = path.join(root, stackInfo.file);
 
-    if (eventType === 'subrequest') {
-      displayName =
-        displayName ||
-        graphql?.query
-          .match(/(query|mutation)\s+(\w+)/)?.[0]
-          ?.replace(/\s+/, ' ');
-      descriptionUrl = displayUrl || request.url;
+    const {source, line, column} = mapSourcePosition({
+      source: stackInfo.file,
+      line: stackInfo.line ?? 0,
+      column: stackInfo.column ?? 0,
+    });
 
-      if (graphql) {
-        graphiqlLink = getGraphiQLUrl(graphql);
-      }
+    stackLine = `${source}:${line}:${column + 1}`;
+    stackLink = `vscode://${path.join('file', stackLine)}`;
+
+    stackLine = stackLine.split(path.sep + 'app' + path.sep)[1] ?? stackLine;
+    if (stackInfo.func) {
+      stackLine = `${stackInfo.func.replace(/\d+$/, '')} (${stackLine})`;
     }
+  }
 
-    let stackLine: string | null = null;
-    let stackLink: string | null = null;
-
-    if (stackInfo?.file) {
-      if (options?.transformLocation) {
-        stackInfo.file = options.transformLocation(stackInfo.file);
-      }
-
-      const {source, line, column} = mapSourcePosition({
-        source: stackInfo.file,
-        line: stackInfo.line ?? 0,
-        column: stackInfo.column ?? 0,
-      });
-
-      stackLine = `${source}:${line}:${column + 1}`;
-      stackLink = `vscode://${path.join('file', stackLine)}`;
-
-      stackLine = stackLine.split(path.sep + 'app' + path.sep)[1] ?? stackLine;
-      if (stackInfo.func) {
-        stackLine = `${stackInfo.func.replace(/\d+$/, '')} (${stackLine})`;
-      }
-    }
-
-    const event = {
-      event: EVENT_MAP[eventType] || eventType,
-      data: JSON.stringify({
-        ...data,
-        displayName,
-        url: `${purpose} ${descriptionUrl}`.trim(),
-        graphiqlLink,
-        stackLine,
-        stackLink,
-      }),
-    };
-
-    eventHistory.push(event);
-    if (eventHistory.length > 100) eventHistory.shift();
-
-    eventEmitter.emit('request', event);
-
-    return createResponse();
+  const event = {
+    event: EVENT_MAP[eventType] || eventType,
+    data: JSON.stringify({
+      ...data,
+      displayName,
+      url: `${purpose} ${descriptionUrl}`.trim(),
+      graphiqlLink,
+      stackLine,
+      stackLink,
+    }),
   };
+
+  eventHistory.push(event);
+  if (eventHistory.length > 100) eventHistory.shift();
+
+  eventEmitter.emit('request', event);
 }
 
-export function clearHistory(): Response {
+export function clearHistory(
+  req: IncomingMessage,
+  res: ServerResponse<IncomingMessage>,
+) {
   eventHistory.length = 0;
-  return createResponse();
+  res.writeHead(200);
+  res.end();
 }
 
 export function streamRequestEvents(
