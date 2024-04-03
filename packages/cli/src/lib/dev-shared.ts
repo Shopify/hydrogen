@@ -65,6 +65,11 @@ export function getDevConfigInBackground(
   });
 }
 
+export const TUNNEL_DOMAIN = Object.freeze({
+  ORIGINAL: '.trycloudflare.com',
+  REBRANDED: '.tryhydrogen.dev',
+});
+
 export async function startTunnelAndPushConfig(
   root: string,
   cliConfig: Config,
@@ -74,7 +79,10 @@ export async function startTunnelAndPushConfig(
   outputInfo('\nStarting tunnel...\n');
 
   const tunnel = await startTunnelPlugin(cliConfig, port, 'cloudflare');
-  const host = await pollTunnelURL(tunnel);
+  const host = await pollTunnelURL(tunnel).then((host) =>
+    // Replace branded tunnel domain:
+    host.replace(TUNNEL_DOMAIN.ORIGINAL, TUNNEL_DOMAIN.REBRANDED),
+  );
 
   try {
     await runCustomerAccountPush({
