@@ -20,8 +20,8 @@ const SHOP_DATA = {
 };
 
 const CONSENT_DATA = {
-  checkoutRootDomain: 'https://checkout.hydrogen.shop',
-  shopDomain: 'https://hydrogen.shop',
+  checkoutDomain: 'https://checkout.hydrogen.shop',
+  storeDomain: 'https://hydrogen.shop',
   storefrontAccessToken: '33ad0f277e864013b8e3c21d19432501',
   withPrivacyBanner: true,
 };

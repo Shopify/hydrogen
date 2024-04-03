@@ -96,8 +96,8 @@ export async function loader({context}: LoaderFunctionArgs) {
 
 +     // 3. return the `consent` config for analytics
 +     consent: {
-+       checkoutRootDomain: env.PUBLIC_CHECKOUT_DOMAIN,
-+       shopDomain: env.PUBLIC_STORE_DOMAIN,
++       checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
++       storeDomain: env.PUBLIC_STORE_DOMAIN,
 +       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
 +       withPrivacyBanner: true,
 +     },

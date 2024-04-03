@@ -76,10 +76,10 @@ export interface CustomEventMap {
 }
 
 export type CustomerPrivacyApiProps = {
-  /** The production shop domain url. */
-  shopDomain: string;
+  /** The production store domain url. */
+  storeDomain: string;
   /** The production shop checkout domain url.  */
-  checkoutRootDomain: string;
+  checkoutDomain: string;
   /** The storefront access token for the shop. */
   storefrontAccessToken: string;
   /** Whether to load the Shopify privacy banner as configured in Shopify admin. */
@@ -115,7 +115,11 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     loadedEvent.current = true;
 
     if (withPrivacyBanner && window?.privacyBanner) {
-      window?.privacyBanner?.loadBanner(consentConfig);
+      window?.privacyBanner?.loadBanner({
+        shopDomain: consentConfig.storeDomain,
+        checkoutRootDomain: consentConfig.checkoutDomain,
+        storefrontAccessToken: consentConfig.storefrontAccessToken,
+      });
     }
 
     if (onVisitorConsentCollected) {
@@ -139,7 +143,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
           {
             ...consent,
             headlessStorefront: true,
-            checkoutRootDomain: consentConfig.checkoutRootDomain,
+            checkoutRootDomain: consentConfig.checkoutDomain,
             storefrontAccessToken: consentConfig.storefrontAccessToken,
           },
           callback,

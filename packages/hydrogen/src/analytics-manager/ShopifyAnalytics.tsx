@@ -47,9 +47,9 @@ export function ShopifyAnalytics({
   const {subscribe, register, canTrack} = useAnalytics();
   const {ready: shopifyAnalyticsReady} = register('ShopifyAnalytics');
   const {ready: customerPrivacyReady} = register('ShopifyCustomerPrivacy');
-  const {checkoutRootDomain, shopDomain, storefrontAccessToken} = consent;
-  checkoutRootDomain &&
-    shopDomain &&
+  const {checkoutDomain, storeDomain, storefrontAccessToken} = consent;
+  checkoutDomain &&
+    storeDomain &&
     storefrontAccessToken &&
     useCustomerPrivacy({
       ...consent,

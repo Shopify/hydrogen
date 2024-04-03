@@ -1,4 +1,4 @@
-import type {Storefront} from '@shopify/hydrogen';
+import type {HydrogenCart, Storefront} from '@shopify/hydrogen';
 
 declare global {
   /**
@@ -15,6 +15,7 @@ declare global {
     PRIVATE_STOREFRONT_API_TOKEN: string;
     PUBLIC_STORE_DOMAIN: string;
     PUBLIC_STOREFRONT_ID: string;
+    PUBLIC_CHECKOUT_DOMAIN: string;
   }
 }
 
@@ -25,5 +26,6 @@ declare module '@shopify/remix-oxygen' {
   export interface AppLoadContext {
     storefront: Storefront;
     env: Env;
+    cart: HydrogenCart;
   }
 }
