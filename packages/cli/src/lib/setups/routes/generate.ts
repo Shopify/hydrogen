@@ -368,6 +368,9 @@ async function findRouteDependencies(
       // Skip imports that are not relative (local)
       if (!match || !/^(\.|~)/.test(match)) continue;
 
+      // Remove querystrings
+      match = match.replace(/\?[a-z.]+$/, '');
+
       // Resolve leading '~' to the app directory
       match = match.replace(
         '~', // import from '~/components/...'

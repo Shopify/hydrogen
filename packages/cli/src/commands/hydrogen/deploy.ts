@@ -46,6 +46,7 @@ import {runBuild} from './build.js';
 import {runViteBuild} from './build-vite.js';
 import {getViteConfig} from '../../lib/vite-config.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
+import {hasRemixConfigFile} from '../../lib/remix-config.js';
 
 const DEPLOY_OUTPUT_FILE_HANDLE = 'h2_deploy_log.json';
 
@@ -61,6 +62,7 @@ export const deploymentLogger: Logger = (
 export default class Deploy extends Command {
   static description = 'Builds and deploys a Hydrogen storefront to Oxygen.';
   static flags: any = {
+    ...commonFlags.entry,
     ...commonFlags.env,
     ...commonFlags.envBranch,
     'env-file': Flags.string({
@@ -190,6 +192,7 @@ interface OxygenDeploymentOptions {
   metadataUrl?: string;
   metadataUser?: string;
   metadataVersion?: string;
+  entry?: string;
 }
 
 interface GitCommit {
@@ -235,6 +238,7 @@ export async function runDeploy(
     metadataUrl,
     metadataUser,
     metadataVersion,
+    entry: ssrEntry,
   } = options;
   let {metadataDescription} = options;
 
@@ -405,11 +409,16 @@ export async function runDeploy(
   let assetsDir = 'dist/client';
   let workerDir = 'dist/worker';
 
-  const maybeVite = await getViteConfig(root).catch(() => null);
+  const isClassicCompiler = await hasRemixConfigFile(root);
 
-  if (maybeVite) {
-    assetsDir = relativePath(root, maybeVite.clientOutDir);
-    workerDir = relativePath(root, maybeVite.serverOutDir);
+  if (!isClassicCompiler) {
+    const viteConfig = await getViteConfig(root, ssrEntry).catch(() => null);
+    if (viteConfig) {
+      assetsDir = relativePath(root, viteConfig.clientOutDir);
+      workerDir = relativePath(root, viteConfig.serverOutDir);
+    } else {
+      workerDir = 'dist/server';
+    }
   }
 
   const config: DeploymentConfig = {
@@ -547,7 +556,7 @@ Continue?`.value,
         outputContent`${colors.whiteBright('Building project...')}`.value,
       );
 
-      const build = maybeVite ? runViteBuild : runBuild;
+      const build = isClassicCompiler ? runBuild : runViteBuild;
 
       await build({
         directory: root,
@@ -555,6 +564,7 @@ Continue?`.value,
         lockfileCheck,
         sourcemap: true,
         useCodegen: false,
+        entry: ssrEntry,
       });
     };
   }

@@ -1,8 +1,8 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {AbortController} from '@shopify/cli-kit/node/abort';
 import {renderTasks} from '@shopify/cli-kit/node/ui';
-import {basename, resolvePath} from '@shopify/cli-kit/node/path';
-import {copyFile} from '@shopify/cli-kit/node/fs';
+import {basename, joinPath, resolvePath} from '@shopify/cli-kit/node/path';
+import {copyFile, fileExists, glob} from '@shopify/cli-kit/node/fs';
 import {
   commonFlags,
   overrideFlag,
@@ -58,8 +58,11 @@ type RunSetupOptions = {
 
 export async function runSetup(options: RunSetupOptions) {
   const controller = new AbortController();
-  const remixConfig = await getRemixConfig(options.directory);
-  const location = basename(remixConfig.rootDirectory);
+  const {rootDirectory, appDirectory, serverEntryPoint} = await getRemixConfig(
+    options.directory,
+  );
+
+  const location = basename(rootDirectory);
   const cliCommandPromise = getCliCommand();
 
   // TODO: add CSS setup + install deps
@@ -90,37 +93,32 @@ export async function runSetup(options: RunSetupOptions) {
   let routes: Record<string, string[]> | undefined;
 
   if (needsRouteGeneration) {
-    const typescript = !!remixConfig.tsconfigPath;
+    const templateRoot = getTemplateAppFile('..');
+    const [typescript, dtsFiles] = await Promise.all([
+      fileExists(joinPath(rootDirectory, 'tsconfig.json')),
+      glob('*.d.ts', {cwd: templateRoot}),
+    ]);
 
     backgroundWorkPromise = backgroundWorkPromise
       .then(() =>
         Promise.all([
-          ...(typescript
-            ? [
-                copyFile(
-                  getTemplateAppFile('../remix.env.d.ts'),
-                  resolvePath(remixConfig.rootDirectory, 'remix.env.d.ts'),
-                ),
-                copyFile(
-                  getTemplateAppFile('../storefrontapi.generated.d.ts'),
-                  resolvePath(
-                    remixConfig.rootDirectory,
-                    'storefrontapi.generated.d.ts',
-                  ),
-                ),
-              ]
-            : []),
+          ...dtsFiles.map((filename) =>
+            copyFile(
+              joinPath(templateRoot, filename),
+              resolvePath(rootDirectory, filename),
+            ),
+          ),
           // Copy app entries
           generateProjectEntries({
-            rootDirectory: remixConfig.rootDirectory,
-            appDirectory: remixConfig.appDirectory,
+            rootDirectory,
+            appDirectory,
             typescript,
           }),
         ]),
       )
       .then(async () => {
         routes = await setupRoutes(
-          remixConfig.rootDirectory,
+          rootDirectory,
           typescript ? 'ts' : 'js',
           i18n,
         );
@@ -131,7 +129,7 @@ export async function runSetup(options: RunSetupOptions) {
     // i18n setup needs to happen after copying the app entries,
     // because it needs to modify the server entry point.
     backgroundWorkPromise = backgroundWorkPromise.then(() =>
-      setupI18nStrategy(i18n, remixConfig),
+      setupI18nStrategy(i18n, {rootDirectory, serverEntryPoint}),
     );
   }
 
@@ -161,7 +159,7 @@ export async function runSetup(options: RunSetupOptions) {
     {
       location,
       name: location,
-      directory: remixConfig.rootDirectory,
+      directory: rootDirectory,
     },
     {
       cliCommand,

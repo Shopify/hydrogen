@@ -9,7 +9,6 @@ import {
   Meta,
   Outlet,
   Scripts,
-  LiveReload,
   useMatches,
   useRouteError,
   useLoaderData,
@@ -18,8 +17,8 @@ import {
   type ShouldRevalidateFunction,
 } from '@remix-run/react';
 import favicon from './assets/favicon.svg';
-import resetStyles from './styles/reset.css';
-import appStyles from './styles/app.css';
+import resetStyles from './styles/reset.css?url';
+import appStyles from './styles/app.css?url';
 import {Layout} from '~/components/Layout';
 
 /**
@@ -124,7 +123,6 @@ export default function App() {
         </Layout>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
-        <LiveReload nonce={nonce} />
       </body>
     </html>
   );
@@ -166,7 +164,6 @@ export function ErrorBoundary() {
         </Layout>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
-        <LiveReload nonce={nonce} />
       </body>
     </html>
   );

@@ -10,10 +10,16 @@ import {fileExists} from '@shopify/cli-kit/node/fs';
 import {muteRemixLogs} from './log.js';
 import {getRequiredRemixVersion} from './remix-version-check.js';
 import {findFileWithExtension} from './file.js';
+import {getViteConfig} from './vite-config.js';
 
 type RawRemixConfig = AppConfig;
 
 export type {RemixConfig, ServerMode, RawRemixConfig};
+
+export async function hasRemixConfigFile(root: string) {
+  const result = await findFileWithExtension(root, 'remix.config');
+  return !!result.filepath;
+}
 
 const BUILD_DIR = 'dist'; // Hardcoded in Oxygen
 const CLIENT_SUBDIR = 'client';
@@ -57,6 +63,10 @@ export async function getRemixConfig(
   root: string,
   mode = process.env.NODE_ENV as ServerMode,
 ) {
+  if (!(await hasRemixConfigFile(root))) {
+    return (await getViteConfig(root)).remixConfig;
+  }
+
   await muteRemixLogs();
   const {readConfig} = await import('@remix-run/dev/dist/config.js').catch(
     handleRemixImportFail,

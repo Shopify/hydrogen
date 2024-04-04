@@ -11,7 +11,7 @@ import {
   installNodeModules,
 } from '@shopify/cli-kit/node/node-package-manager';
 import {Args} from '@oclif/core';
-import {getRemixConfig} from '../../../lib/remix-config.js';
+import {getRemixConfig, hasRemixConfigFile} from '../../../lib/remix-config.js';
 import {
   setupCssStrategy,
   SETUP_CSS_STRATEGIES,
@@ -19,6 +19,7 @@ import {
   type CssStrategy,
   renderCssPrompt,
 } from '../../../lib/setups/css/index.js';
+import {AbortError} from '@shopify/cli-kit/node/error';
 
 export default class SetupCSS extends Command {
   static description = 'Setup CSS strategies for your project.';
@@ -60,6 +61,12 @@ export async function runSetupCSS({
   force?: boolean;
   installDeps: boolean;
 }) {
+  if (!(await hasRemixConfigFile(directory))) {
+    throw new AbortError(
+      'No remix.config.js file found. This command is not supported in Vite projects.',
+    );
+  }
+
   const remixConfigPromise = getRemixConfig(directory);
   const strategy = flagStrategy ? flagStrategy : await renderCssPrompt();
 
