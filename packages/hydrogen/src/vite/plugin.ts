@@ -160,13 +160,32 @@ hydrogen.preset = () =>
 
           const {root, routes: virtualRoutes} = await getVirtualRoutes();
 
-          return defineRoutes((route) => {
+          const result = defineRoutes((route) => {
             route(root.path, root.file, {id: root.id}, () => {
               virtualRoutes.map(({path, file, index, id}) => {
                 route(path, file, {id, index});
               });
             });
           });
+
+          // - Goal: stop matching the user's root with our virtual routes
+          // to avoid adding layouts and calling user loaders.
+          //
+          // - Problem: Even though root-less routes work in Remix, it always
+          // adds the user root as the parentId of every route when we leave it
+          // as undefined. Even if we delete it manually here, it adds it back:
+          // https://github.com/remix-run/remix/blob/b07921efd5e8eed98e2996749852777c71bc3e50/packages/remix-dev/config.ts#L565
+          //
+          // - Solution:
+          // The String object tricks Remix into thinking that the
+          // parentId is defined (!!new String('') === true) so it doesn't
+          // overwrite it with `root`. Later, this value acts as an
+          // undefined / empty string when matching routes so it
+          // doesn't match the user root.
+          // @ts-expect-error
+          result[root.id].parentId = new String('');
+
+          return result;
         },
       };
     },
