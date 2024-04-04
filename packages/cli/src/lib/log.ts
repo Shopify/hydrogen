@@ -483,7 +483,3 @@ export function setH2OVerbose() {
 export function isH2Verbose() {
   return !!(process.env.DEBUG === '*' || process.env.DEBUG?.includes('h2:*'));
 }
-
-export function isO2Verbose() {
-  return !!(process.env.DEBUG === '*' || process.env.DEBUG?.includes('o2:*'));
-}

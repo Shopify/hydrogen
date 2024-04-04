@@ -1,5 +1,3 @@
-import type {TokenItem} from '@shopify/cli-kit/node/ui';
-
 export type MiniOxygenOptions = {
   root: string;
   appPort?: number;
