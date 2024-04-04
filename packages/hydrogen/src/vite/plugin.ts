@@ -150,6 +150,7 @@ hydrogen.preset = () =>
       if (sharedOptions.disableVirtualRoutes) return {};
 
       return {
+        buildDirectory: 'dist',
         async routes(defineRoutes) {
           if (
             sharedOptions.disableVirtualRoutes ||
