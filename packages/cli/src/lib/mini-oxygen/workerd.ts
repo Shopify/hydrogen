@@ -10,7 +10,11 @@ import {
   handleMiniOxygenImportFail,
   logRequestLine,
 } from './common.js';
-import {getDebugBannerLine, getUtilityBannerlines} from '../dev-shared.js';
+import {
+  getDebugBannerLine,
+  getUtilityBannerlines,
+  TUNNEL_DOMAIN,
+} from '../dev-shared.js';
 import {
   H2O_BINDING_NAME,
   handleDebugNetworkRequest,
@@ -62,15 +66,22 @@ export async function startWorkerdServer({
     assets: {port: assetsPort, directory: buildPathClient},
     workers: [
       {
-        name: 'hydrogen-router',
+        name: 'hydrogen:middleware',
         modules: true,
         script: `export default { fetch: (request, env) => {
-          const {pathname} = new URL(request.url);
-          return pathname === '${SUBREQUEST_PROFILER_ENDPOINT}'
-            ? env.profiler.fetch(request)
-            : pathname === '/graphiql/customer-account.schema.json'
-            ? env.assets.fetch(request)
-            : env.next.fetch(request)
+          const url = new URL(request.url);
+          if (url.hostname.endsWith('${TUNNEL_DOMAIN.ORIGINAL}')) {
+            url.hostname = url.hostname.replace(
+              '${TUNNEL_DOMAIN.ORIGINAL}',
+              '${TUNNEL_DOMAIN.REBRANDED}',
+            );
+          }
+
+          return url.pathname === '${SUBREQUEST_PROFILER_ENDPOINT}'
+            ? env.profiler.fetch(url, request)
+            : url.pathname === '/graphiql/customer-account.schema.json'
+            ? env.assets.fetch(url, request)
+            : env.next.fetch(url, request)
           }
         }`,
         serviceBindings: {

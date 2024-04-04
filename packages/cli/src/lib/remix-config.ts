@@ -3,7 +3,7 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {readdir} from 'node:fs/promises';
 import type {ServerMode} from '@remix-run/dev/dist/config/serverModes.js';
-import type {RemixConfig} from '@remix-run/dev/dist/config.js';
+import type {RemixConfig, AppConfig} from '@remix-run/dev/dist/config.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {outputWarn} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
@@ -12,7 +12,9 @@ import {getRequiredRemixVersion} from './remix-version-check.js';
 import {findFileWithExtension} from './file.js';
 import {getViteConfig} from './vite-config.js';
 
-export type {RemixConfig, ServerMode};
+type RawRemixConfig = AppConfig;
+
+export type {RemixConfig, ServerMode, RawRemixConfig};
 
 export async function hasRemixConfigFile(root: string) {
   const result = await findFileWithExtension(root, 'remix.config');
@@ -48,6 +50,13 @@ export function handleRemixImportFail(): never {
     `Please make sure you have \`@remix-run/dev@${remixVersion}\` installed` +
       ` and all the other Remix packages have the same version.`,
   );
+}
+
+export function getRawRemixConfig(root: string) {
+  return findFileWithExtension(root, 'remix.config').then(({filepath}) => {
+    if (!filepath) throw new AbortError('No remix.config.js file found.');
+    return createRequire(import.meta.url)(filepath) as RawRemixConfig;
+  });
 }
 
 export async function getRemixConfig(
