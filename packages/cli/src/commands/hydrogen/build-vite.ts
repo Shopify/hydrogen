@@ -1,6 +1,5 @@
-import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
-import {outputWarn} from '@shopify/cli-kit/node/output';
+import {outputWarn, collectLog} from '@shopify/cli-kit/node/output';
 import {fileSize, removeFile} from '@shopify/cli-kit/node/fs';
 import {resolvePath, joinPath} from '@shopify/cli-kit/node/path';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
@@ -25,6 +24,8 @@ export default class Build extends Command {
     ...commonFlags.codegen,
     ...commonFlags.diff,
   };
+
+  static hidden = true;
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Build);
@@ -81,24 +82,31 @@ export async function runViteBuild({
     await checkLockfileStatus(root, isCI());
   }
 
-  const {
-    userViteConfig,
-    remixConfig,
-    clientOutDir,
-    serverOutDir,
-    serverOutFile,
-  } = await getViteConfig(root);
+  const [
+    vite,
+    {userViteConfig, remixConfig, clientOutDir, serverOutDir, serverOutFile},
+  ] = await Promise.all([
+    // Avoid static imports because this file is imported by `deploy` command,
+    // which must have a hard dependency on 'vite'.
+    import('vite'),
+    getViteConfig(root, ssrEntry),
+  ]);
+
+  const customLogger = vite.createLogger();
+  if (process.env.SHOPIFY_UNIT_TEST) {
+    // Make logs from Vite visible in tests
+    customLogger.info = (msg) => collectLog('info', msg);
+    customLogger.warn = (msg) => collectLog('warn', msg);
+    customLogger.error = (msg) => collectLog('error', msg);
+  }
 
   const serverMinify = userViteConfig.build?.minify ?? true;
   const commonConfig = {
     root,
     mode: process.env.NODE_ENV,
     base: assetPath,
+    customLogger,
   };
-
-  // Avoid static imports because this file is imported by `deploy` command,
-  // which must have a hard dependency on 'vite'.
-  const vite = await import('vite');
 
   // Client build first
   await vite.build({
