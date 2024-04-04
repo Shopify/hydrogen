@@ -39,6 +39,7 @@ import {
   findEnvironmentOrThrow,
   orderEnvironmentsBySafety,
 } from '../../lib/common.js';
+import {execAsync} from '../../lib/process.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
 import {OxygenDeploymentData} from '../../lib/graphql/admin/get-oxygen-data.js';
@@ -252,11 +253,22 @@ export async function runDeploy(
     }
 
     if (!forceOnUncommitedChanges && !isCleanGit) {
-      throw new AbortError('Uncommitted changes detected.', null, [
+      let errorMessage = 'Uncommitted changes detected';
+      let changedFiles = undefined;
+
+      try {
+        changedFiles = (await execAsync('git status -s', {cwd: root})).stdout;
+      } catch (error) {}
+
+      if (changedFiles) {
+        errorMessage += `:\n\n${changedFiles.trimEnd()}`;
+      }
+
+      throw new AbortError(errorMessage, null, [
         [
-          'Commit your changes before deploying or use the ',
+          'Commit your changes before deploying or use the',
           {command: '--force'},
-          ' flag to deploy with uncommitted changes.',
+          'flag to deploy with uncommitted changes.',
         ],
       ]);
     }

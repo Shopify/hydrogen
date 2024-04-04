@@ -19,6 +19,7 @@ import {
 
 import {deploymentLogger, runDeploy} from './deploy.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
+import {execAsync} from '../../lib/process.js';
 import {createEnvironmentCliChoiceLabel} from '../../lib/common.js';
 import {
   CompletedDeployment,
@@ -33,6 +34,7 @@ vi.mock('@shopify/cli-kit/node/dot-env');
 vi.mock('@shopify/cli-kit/node/fs');
 vi.mock('@shopify/cli-kit/node/context/local');
 vi.mock('../../lib/get-oxygen-deployment-data.js');
+vi.mock('../../lib/process.js');
 vi.mock('./build-vite.js');
 vi.mock('../../lib/auth.js');
 vi.mock('../../lib/shopify-config.js');
@@ -321,11 +323,15 @@ describe('deploy', () => {
   });
 
   it('errors when there are uncommited changes', async () => {
+    vi.mocked(execAsync).mockReturnValue(
+      Promise.resolve({stdout: ' M file.ts\n', stderr: ''}) as any,
+    );
+
     vi.mocked(ensureIsClean).mockRejectedValue(
       new GitDirectoryNotCleanError('Uncommitted changes'),
     );
     await expect(runDeploy(deployParams)).rejects.toThrowError(
-      'Uncommitted changes detected',
+      'Uncommitted changes detected:\n\n M file.ts',
     );
     expect(vi.mocked(createDeploy)).not.toHaveBeenCalled;
   });
