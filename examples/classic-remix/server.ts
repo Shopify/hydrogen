@@ -1,6 +1,5 @@
 // Virtual entry point for the app
-// @ts-ignore
-import * as remixBuild from 'virtual:remix/server-build';
+import * as remixBuild from '@remix-run/dev/server-build';
 import {
   cartGetIdDefault,
   cartSetIdDefault,
@@ -71,6 +70,7 @@ export default {
        */
       const cart = createCartHandler({
         storefront,
+        customerAccount,
         getCartId: cartGetIdDefault(request.headers),
         setCartId: cartSetIdDefault(),
         cartQueryFragment: CART_QUERY_FRAGMENT,

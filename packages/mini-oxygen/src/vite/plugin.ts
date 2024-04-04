@@ -81,6 +81,9 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
         },
       },
       configureServer(viteDevServer) {
+        // For transform hook:
+        resolvedConfig = viteDevServer.config;
+
         if (miniOxygen) return;
         if (apiOptions.shouldStartRuntime?.() !== true) return;
 
@@ -89,7 +92,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
 
         absoluteWorkerEntryFile = path.isAbsolute(entry)
           ? entry
-          : path.resolve(viteDevServer.config.root, entry);
+          : path.resolve(resolvedConfig.root, entry);
 
         const miniOxygenPromise = Promise.resolve(apiOptions.envPromise).then(
           (remoteEnv) =>

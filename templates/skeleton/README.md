@@ -10,6 +10,7 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
 - Remix
 - Hydrogen
 - Oxygen
+- Vite
 - Shopify CLI
 - ESLint
 - Prettier
@@ -21,7 +22,7 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
 
 **Requirements:**
 
-- Node.js version 16.14.0 or higher
+- Node.js version 18.0.0 or higher
 
 ```bash
 npm create @shopify/hydrogen@latest
@@ -41,4 +42,4 @@ npm run dev
 
 ## Setup for using Customer Account API (`/account` section)
 
-Follow step 1 and 2 of https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development
+Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
