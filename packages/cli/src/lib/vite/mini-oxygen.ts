@@ -1,16 +1,11 @@
 import {fetchModule, type ViteDevServer} from 'vite';
 import {fileURLToPath} from 'node:url';
-import {
-  createMiniOxygen,
-  type Request,
-  type Response,
-} from '@shopify/mini-oxygen';
+import type {Request, Response} from '@shopify/mini-oxygen';
 import {logRequestLine} from '../mini-oxygen/common.js';
 import {MiniOxygenOptions} from '../mini-oxygen/types.js';
 import {getHmrUrl, pipeFromWeb, toURL, toWeb} from './utils.js';
 
 import type {ViteEnv} from './worker-entry.js';
-import {isO2Verbose} from '../log.js';
 const scriptPath = fileURLToPath(new URL('./worker-entry.js', import.meta.url));
 
 const FETCH_MODULE_PATHNAME = '/__vite_fetch_module';
@@ -38,6 +33,8 @@ export async function startMiniOxygenRuntime({
   workerEntryFile,
   setupScripts,
 }: MiniOxygenViteOptions) {
+  const {createMiniOxygen} = await import('@shopify/mini-oxygen');
+
   const miniOxygen = createMiniOxygen({
     debug,
     inspectorPort,
