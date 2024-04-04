@@ -26,14 +26,14 @@ import {
   parseToken,
 } from '@shopify/oxygen-cli/deploy';
 import {ciPlatform} from '@shopify/cli-kit/node/context/local';
-import {runBuild} from './build.js';
+import {runViteBuild} from './build-vite.js';
 
 vi.mock('@shopify/oxygen-cli/deploy');
 vi.mock('@shopify/cli-kit/node/dot-env');
 vi.mock('@shopify/cli-kit/node/fs');
 vi.mock('@shopify/cli-kit/node/context/local');
 vi.mock('../../lib/get-oxygen-deployment-data.js');
-vi.mock('./build.js');
+vi.mock('./build-vite.js');
 vi.mock('../../lib/auth.js');
 vi.mock('../../lib/shopify-config.js');
 vi.mock('../../lib/graphql/admin/link-storefront.js');
@@ -129,7 +129,7 @@ describe('deploy', () => {
     rootPath: deployParams.path,
     skipBuild: false,
     workerOnly: false,
-    workerDir: 'dist/worker',
+    workerDir: 'dist/server',
   };
 
   const expectedHooks = {
@@ -523,7 +523,7 @@ describe('deploy', () => {
     });
     await runDeploy(params);
 
-    expect(vi.mocked(runBuild)).toHaveBeenCalledWith({
+    expect(vi.mocked(runViteBuild)).toHaveBeenCalledWith({
       assetPath: 'some-cool-asset-path',
       directory: params.path,
       lockfileCheck: false,

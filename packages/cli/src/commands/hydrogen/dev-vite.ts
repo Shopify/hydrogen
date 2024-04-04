@@ -15,12 +15,12 @@ import {
 } from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import colors from '@shopify/cli-kit/node/colors';
+import {collectLog} from '@shopify/cli-kit/node/output';
 import {type AlertCustomSection, renderSuccess} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {Flags, Config} from '@oclif/core';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
-import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {
@@ -75,6 +75,8 @@ export default class DevVite extends Command {
     ...commonFlags.verbose,
   };
 
+  static hidden = true;
+
   async run(): Promise<void> {
     const {flags} = await this.parse(DevVite);
     let directory = flags.path ? path.resolve(flags.path) : process.cwd();
@@ -83,7 +85,7 @@ export default class DevVite extends Command {
       directory = await prepareDiffDirectory(directory, true);
     }
 
-    await runDev({
+    await runViteDev({
       ...flagsToCamelObject(flags),
       path: directory,
       isLocalDev: flags.diff,
@@ -112,7 +114,7 @@ type DevOptions = {
   verbose?: boolean;
 };
 
-export async function runDev({
+export async function runViteDev({
   entry: ssrEntry,
   port: appPort,
   path: appPath,
@@ -167,8 +169,18 @@ export async function runDev({
     ? {allow: [root, fileURLToPath(new URL('../../../../', import.meta.url))]}
     : undefined;
 
+  const customLogger = vite.createLogger();
+  if (process.env.SHOPIFY_UNIT_TEST) {
+    // Make logs from Vite visible in tests
+    customLogger.info = (msg) => collectLog('info', msg);
+    customLogger.warn = (msg) => collectLog('warn', msg);
+    customLogger.error = (msg) => collectLog('error', msg);
+  }
+
   const viteServer = await vite.createServer({
     root,
+    customLogger,
+    clearScreen: false,
     server: {fs, host: host ? true : undefined},
     plugins: [
       {
@@ -293,21 +305,17 @@ export async function runDev({
     });
   }
 
-  if (customSections.length > 0) {
-    const {storefrontTitle} = await backgroundPromise;
+  const {storefrontTitle} = await backgroundPromise;
+  renderSuccess({
+    body: [
+      `View ${
+        storefrontTitle ? colors.cyan(storefrontTitle) : 'Hydrogen'
+      } app:`,
+      {link: {url: finalHost}},
+    ],
+    customSections,
+  });
 
-    renderSuccess({
-      body: [
-        `View ${
-          storefrontTitle ? colors.cyan(storefrontTitle) : 'Hydrogen'
-        } app:`,
-        {link: {url: finalHost}},
-      ],
-      customSections,
-    });
-  }
-
-  checkRemixVersions();
   if (!disableVersionCheck) {
     displayDevUpgradeNotice({targetPath: root});
   }
@@ -317,6 +325,7 @@ export async function runDev({
   }
 
   return {
+    getUrl: () => finalHost,
     async close() {
       codegenProcess?.kill(0);
       await viteServer.close();

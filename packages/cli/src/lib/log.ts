@@ -170,7 +170,8 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
     ],
   );
 
-  let isLastLineVite = false;
+  let isLastLineBlank = false;
+  let isLastLineRequestLog = false;
   addMessageReplacers(
     'dev-vite',
     // Vite logs
@@ -191,22 +192,30 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
       // Log that gets entangled with our initial dev logs
       ([first]) =>
         typeof first === 'string' &&
-        /^Re-optimizing dependencies because vite config has changed/i.test(
-          first,
-        ),
+        /^Re-optimizing dependencies because/i.test(first),
       () => {},
     ],
     [
-      // Log new lines between Vite logs and dev-server logs
+      // Log new lines between Request logs and other logs
       ([first], existingMatches) => {
         // If this log is not going to be filtered by other replacers:
         if (existingMatches === 0 && typeof first === 'string') {
-          const isVite = /\[vite\]/i.test(first);
-          if ((isVite && !isLastLineVite) || (!isVite && isLastLineVite)) {
+          // Example: "  GET  200  render  /products/1234  0.0ms"
+          const isRequestLog = /^\s+[A-Z]+\s+\d{3}\s+[a-z]+\s+\//.test(
+            // Clear ANSI colors before matching
+            first.replace(/\u001b\[.*?m/g, ''),
+          );
+
+          if (
+            !isLastLineBlank &&
+            ((isRequestLog && !isLastLineRequestLog) ||
+              (!isRequestLog && isLastLineRequestLog))
+          ) {
             process.stdout.write('\n');
           }
 
-          isLastLineVite = isVite;
+          isLastLineRequestLog = isRequestLog;
+          isLastLineBlank = /\n$/.test(first);
         }
 
         return false;
