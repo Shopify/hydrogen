@@ -176,6 +176,7 @@ export async function runViteDev({
   const viteServer = await vite.createServer({
     root,
     customLogger,
+    clearScreen: false,
     server: {fs, host: host ? true : undefined},
     plugins: customerAccountPushFlag
       ? [
