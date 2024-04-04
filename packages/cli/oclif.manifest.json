@@ -262,7 +262,7 @@
       "description": "Builds and deploys a Hydrogen storefront to Oxygen.",
       "flags": {
         "env": {
-          "description": "Specifies the environment to perform the operation using its handle. Run `env list` to view an environment's handle ",
+          "description": "Specifies the environment to perform the operation using its handle. Fetch the handle using the `env list` command.",
           "exclusive": [
             "env-branch"
           ],
@@ -508,7 +508,7 @@
           "type": "boolean"
         },
         "env": {
-          "description": "Specifies the environment to perform the operation using its handle. Run `env list` to view an environment's handle ",
+          "description": "Specifies the environment to perform the operation using its handle. Fetch the handle using the `env list` command.",
           "exclusive": [
             "env-branch"
           ],
@@ -657,7 +657,7 @@
           "type": "option"
         },
         "env": {
-          "description": "Specifies the environment to perform the operation using its handle. Run `env list` to view an environment's handle ",
+          "description": "Specifies the environment to perform the operation using its handle. Fetch the handle using the `env list` command.",
           "exclusive": [
             "env-branch"
           ],
@@ -1033,7 +1033,7 @@
           "type": "boolean"
         },
         "env": {
-          "description": "Specifies the environment to perform the operation using its handle. Run `env list` to view an environment's handle ",
+          "description": "Specifies the environment to perform the operation using its handle. Fetch the handle using the `env list` command.",
           "exclusive": [
             "env-branch"
           ],
@@ -1389,7 +1389,7 @@
       "description": "Populate your .env with variables from your Hydrogen storefront.",
       "flags": {
         "env": {
-          "description": "Specifies the environment to perform the operation using its handle. Run `env list` to view an environment's handle ",
+          "description": "Specifies the environment to perform the operation using its handle. Fetch the handle using the `env list` command.",
           "exclusive": [
             "env-branch"
           ],
@@ -1449,7 +1449,7 @@
       "description": "Push environment variables from the local .env file to your linked Hydrogen storefront.",
       "flags": {
         "env": {
-          "description": "Specifies the environment to perform the operation using its handle. Run `env list` to view an environment's handle ",
+          "description": "Specifies the environment to perform the operation using its handle. Fetch the handle using the `env list` command.",
           "exclusive": [
             "env-branch"
           ],
@@ -1459,8 +1459,7 @@
           "type": "option"
         },
         "env-file": {
-          "description": "Specify the environment variable file name. Default value is '.env'.",
-          "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_FILENAME",
+          "description": "Path to an environment file to override existing environment variables for the selected environment. Defaults to the '.env' located in your project path `--path`.",
           "name": "env-file",
           "hasDynamicHelp": false,
           "multiple": false,

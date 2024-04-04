@@ -30,6 +30,7 @@ import {
   notifyIssueWithTunnelAndMockShop,
   getDevConfigInBackground,
   getUtilityBannerlines,
+  TUNNEL_DOMAIN,
 } from '../../lib/dev-shared.js';
 import {getCliCommand} from '../../lib/shell.js';
 import {findPort} from '../../lib/find-port.js';
@@ -185,6 +186,22 @@ export async function runDev({
             logRequestLine,
           } satisfies OxygenApiOptions);
         },
+        configureServer: (viteDevServer) => {
+          if (customerAccountPushFlag) {
+            viteDevServer.middlewares.use((req, res, next) => {
+              const host = req.headers.host;
+
+              if (host?.includes(TUNNEL_DOMAIN.ORIGINAL)) {
+                req.headers.host = host.replace(
+                  TUNNEL_DOMAIN.ORIGINAL,
+                  TUNNEL_DOMAIN.REBRANDED,
+                );
+              }
+
+              next();
+            });
+          }
+        },
       },
     ],
   });
@@ -197,9 +214,7 @@ export async function runDev({
     }
   });
 
-  if (
-    !viteServer.config.plugins.find((plugin) => plugin.name === 'hydrogen:main')
-  ) {
+  if (!findPlugin(viteServer.config, 'hydrogen:main')) {
     await viteServer.close();
     throw new AbortError(
       'Hydrogen plugin not found.',
