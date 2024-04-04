@@ -158,11 +158,13 @@ hydrogen.preset = () =>
             return {};
           }
 
-          const virtualRoutes = await getVirtualRoutes();
+          const {root, routes: virtualRoutes} = await getVirtualRoutes();
 
           return defineRoutes((route) => {
-            virtualRoutes.map((routeTuple) => {
-              route(...routeTuple);
+            route(root.path, root.file, {id: root.id}, () => {
+              virtualRoutes.map(({path, file, index, id}) => {
+                route(path, file, {id, index});
+              });
             });
           });
         },

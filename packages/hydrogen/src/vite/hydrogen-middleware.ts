@@ -1,4 +1,4 @@
-import {type ViteDevServer} from 'vite';
+import type {ViteDevServer} from 'vite';
 import {createRequire} from 'node:module';
 import {createReadStream} from 'node:fs';
 import {clearHistory, streamRequestEvents} from './request-events.js';
