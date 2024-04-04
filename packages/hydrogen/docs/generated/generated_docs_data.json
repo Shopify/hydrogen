@@ -5,7 +5,7 @@
     "subCategory": "analytics",
     "isVisualComponent": false,
     "related": [],
-    "description": "Publishes a `cart_viewed` event to the `UNSTABLE_Analytics.Provider`.",
+    "description": "Publishes a `cart_viewed` event to the `UNSTABLE_Analytics.Provider` component.",
     "type": "component",
     "defaultExample": {
       "description": "This is the default example",
@@ -93,7 +93,7 @@
     "subCategory": "analytics",
     "isVisualComponent": false,
     "related": [],
-    "description": "Publishes a `collection_viewed` event to the `UNSTABLE_Analytics.Provider`.",
+    "description": "Publishes a `collection_viewed` event to the `UNSTABLE_Analytics.Provider` component.",
     "type": "component",
     "defaultExample": {
       "description": "This is the default example",
@@ -219,7 +219,7 @@
     "subCategory": "analytics",
     "isVisualComponent": false,
     "related": [],
-    "description": "Publishes a custom page view event to the `UNSTABLE_Analytics.Provider`. The `type` prop must be preceded by `custom_`.",
+    "description": "Publishes a custom page view event to the `UNSTABLE_Analytics.Provider` component. The `type` prop must be preceded by `custom_`.",
     "type": "component",
     "defaultExample": {
       "description": "This is the default example",
@@ -314,7 +314,7 @@
     "subCategory": "analytics",
     "isVisualComponent": false,
     "related": [],
-    "description": "Provides a context for tracking page views and cart events, and transmitting the data to Shopify. It's integrated with the Customer Privacy API for consent management. The provider can also be used to connect third-party analytics services through its subscribe and publish system. It provides the [`unstable_useAnalytics`](/docs/api/hydrogen/2024-01/hooks/unstable_useanalytics) hook to access the analytics provider context.",
+    "description": "Provides a context for tracking page views and cart events to send as analytics data to Shopify. This component is integrated with the Customer Privacy API for consent management. The provider can also be used to connect third-party analytics services through its subscribe and publish system. It provides the [`unstable_useAnalytics`](/docs/api/hydrogen/2024-01/hooks/unstable_useanalytics) hook to access the analytics provider context.",
     "type": "component",
     "defaultExample": {
       "description": "This is the default example",
@@ -552,7 +552,7 @@
     "subCategory": "analytics",
     "isVisualComponent": false,
     "related": [],
-    "description": "Publishes a `product_viewed` event to the `UNSTABLE_Analytics.Provider`.",
+    "description": "Publishes a `product_viewed` event to the `UNSTABLE_Analytics.Provider` component.",
     "type": "component",
     "defaultExample": {
       "description": "This is the default example",
@@ -729,7 +729,7 @@
     "subCategory": "analytics",
     "isVisualComponent": false,
     "related": [],
-    "description": "Publishes a `search_viewed` event to the `UNSTABLE_Analytics.Provider`.",
+    "description": "Publishes a `search_viewed` event to the `UNSTABLE_Analytics.Provider` component.",
     "type": "component",
     "defaultExample": {
       "description": "This is the default example",
@@ -737,7 +737,7 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {UNSTABLE_Analytics} from '@shopify/hydrogen';\n\nexport default function SearchPage() {\n  const {searchTerm} = useLoaderData();\n  return (\n    &lt;div className=\"search\"&gt;\n      &lt;h1&gt;Search&lt;/h1&gt;\n      &lt;UNSTABLE_Analytics.SearchView data={{searchTerm}} /&gt;\n    &lt;/div&gt;\n  );\n}\n",
+            "code": "import {UNSTABLE_Analytics} from '@shopify/hydrogen';\nimport {json} from '@shopify/remix-oxygen';\nimport {useLoaderData} from '@remix-run/react';\n\nexport async function loader({request}) {\n  const url = new URL(request.url);\n  const searchParams = new URLSearchParams(url.search);\n  const searchTerm = String(searchParams.get('q') || '');\n\n  return json({\n    searchTerm,\n  });\n}\n\nexport default function SearchPage() {\n  const {searchTerm} = useLoaderData();\n  return (\n    &lt;div className=\"search\"&gt;\n      &lt;h1&gt;Search&lt;/h1&gt;\n      &lt;UNSTABLE_Analytics.SearchView data={{searchTerm}} /&gt;\n    &lt;/div&gt;\n  );\n}\n",
             "language": "js"
           },
           {
@@ -840,7 +840,7 @@
     "category": "utilities",
     "isVisualComponent": false,
     "related": [],
-    "description": "A function that queries for shop required analytics data to be used in the `Analytics.Provider` component.",
+    "description": "A function that queries for shop required analytics data to be used in the [`UNSTABLE_Analytics.Provider`](/docs/api/hydrogen/2024-04/components/unstable_analytics-provider) component.",
     "type": "utility",
     "defaultExample": {
       "description": "This is the default example",
@@ -932,7 +932,7 @@
     "category": "hooks",
     "isVisualComponent": false,
     "related": [],
-    "description": "A hook that provides access to the analytics provider context. Must be a descendent of [`UNSTABLE_Analytics.Provider`](/docs/api/hydrogen/2024-01/components/unstable_analytics-provider).",
+    "description": "A hook that provides access to the analytics provider context. Must be a descendent of [`UNSTABLE_Analytics.Provider`](/docs/api/hydrogen/2024-04/components/unstable_analytics-provider).",
     "type": "hook",
     "defaultExample": {
       "description": "This is the default example",
@@ -11347,7 +11347,7 @@
             "filePath": "/csp/csp.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ShopifyDomains",
-            "value": "{\n  checkoutDomain?: string;\n  storeDomain?: string;\n}",
+            "value": "{\n  /** The production shop checkout domain url.  */\n  checkoutDomain?: string;\n  /** The production shop domain url. */\n  storeDomain?: string;\n}",
             "description": "",
             "members": [
               {
@@ -11355,7 +11355,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "checkoutDomain",
                 "value": "string",
-                "description": "",
+                "description": "The production shop checkout domain url.",
                 "isOptional": true
               },
               {
@@ -11363,7 +11363,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "storeDomain",
                 "value": "string",
-                "description": "",
+                "description": "The production shop domain url.",
                 "isOptional": true
               }
             ]

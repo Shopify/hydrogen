@@ -26,7 +26,9 @@ type CreateContentSecurityPolicy = {
 };
 
 type ShopifyDomains = {
+  /** The production shop checkout domain url.  */
   checkoutDomain?: string;
+  /** The production shop domain url. */
   storeDomain?: string;
 };
 
