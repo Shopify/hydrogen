@@ -191,9 +191,7 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
       // Log that gets entangled with our initial dev logs
       ([first]) =>
         typeof first === 'string' &&
-        /^Re-optimizing dependencies because vite config has changed/i.test(
-          first,
-        ),
+        /^Re-optimizing dependencies because/i.test(first),
       () => {},
     ],
     [
