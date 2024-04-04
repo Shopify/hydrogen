@@ -3,7 +3,12 @@
   "changelog": ["./hydrogen-changelog-config.js", {"repo": "shopify/hydrogen"}],
   "commit": false,
   "fixed": [],
-  "linked": [],
+  "linked": [
+    ["create-hydrogen", "hydrogen"],
+    ["create-hydrogen", "cli"],
+    ["create-hydrogen", "remix-oxygen"],
+    ["create-hydrogen", "mini-oxygen"],
+  ],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
