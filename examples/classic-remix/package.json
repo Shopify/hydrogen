@@ -1,13 +1,24 @@
 {
-  "name": "example-third-party-queries-caching",
+  "name": "example-classic-remix",
   "private": true,
+  "type": "commonjs",
   "prettier": "@shopify/prettier-config",
   "scripts": {
-    "build": "shopify hydrogen build --codegen --diff",
+    "build": "shopify hydrogen build --diff",
     "dev": "shopify hydrogen dev --codegen --customer-account-push --diff",
     "preview": "npm run build && shopify hydrogen preview",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "typecheck": "tsc --noEmit",
     "codegen": "shopify hydrogen codegen"
+  },
+  "h2:diff": {
+    "skipFiles": [
+      "vite.config.ts",
+      "env.d.ts"
+    ],
+    "skipDevDependencies": [
+      "vite",
+      "vite-tsconfig-paths"
+    ]
   }
 }
