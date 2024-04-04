@@ -1,4 +1,4 @@
-import type {Plugin, ResolvedConfig} from 'vite';
+import type {Plugin, ResolvedConfig, ConfigEnv} from 'vite';
 import type {Preset as RemixPreset} from '@remix-run/dev';
 import {setupHydrogenMiddleware} from './hydrogen-middleware.js';
 import type {HydrogenPluginOptions} from './types.js';
@@ -17,7 +17,10 @@ declare global {
     | {getCriticalCss: (...args: unknown[]) => any};
 }
 
-const sharedOptions: Pick<HydrogenPluginOptions, 'disableVirtualRoutes'> = {};
+const sharedOptions: Partial<
+  Pick<HydrogenPluginOptions, 'disableVirtualRoutes'> &
+    Pick<ConfigEnv, 'command'>
+> = {};
 
 /**
  * Enables Hydrogen utilities for local development
@@ -33,7 +36,9 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
   return [
     {
       name: 'hydrogen:main',
-      config() {
+      config(_, env) {
+        sharedOptions.command = env.command;
+
         return {
           ssr: {
             optimizeDeps: {
@@ -146,7 +151,13 @@ hydrogen.preset = () =>
 
       return {
         async routes(defineRoutes) {
-          if (sharedOptions.disableVirtualRoutes) return {};
+          if (
+            sharedOptions.disableVirtualRoutes ||
+            sharedOptions.command !== 'serve'
+          ) {
+            return {};
+          }
+
           const virtualRoutes = await getVirtualRoutes();
 
           return defineRoutes((route) => {
