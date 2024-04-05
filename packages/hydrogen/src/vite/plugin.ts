@@ -6,7 +6,7 @@ import type {HydrogenPluginOptions} from './types.js';
 // @ts-ignore -- Module outside of the rootDir
 import type {OxygenApiOptions} from '~/mini-oxygen/vite/plugin.js';
 import {type RequestEventPayload, emitRequestEvent} from './request-events.js';
-import {getVirtualRoutes} from './add-virtual-routes.js';
+import {getVirtualRoutes} from './get-virtual-routes.js';
 
 export type {HydrogenPluginOptions};
 
