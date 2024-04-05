@@ -20,8 +20,11 @@ type MinimalRemixConfig = {
 export async function addVirtualRoutes<T extends MinimalRemixConfig>(
   config: T,
 ): Promise<T> {
+  const distPath = process.env.SHOPIFY_UNIT_TEST
+    ? fileURLToPath(new URL('../../../hydrogen/src/vite', import.meta.url))
+    : fileURLToPath(new URL('..', import.meta.url));
+
   const userRouteList = Object.values(config.routes);
-  const distPath = fileURLToPath(new URL('..', import.meta.url));
   const virtualRoutesPath = joinPath(distPath, VIRTUAL_ROUTES_DIR);
 
   for (const absoluteFilePath of await glob(
