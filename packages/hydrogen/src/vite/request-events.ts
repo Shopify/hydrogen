@@ -16,6 +16,7 @@ const EVENT_MAP: Record<string, string> = {
 };
 
 export type RequestEventPayload = {
+  __fromVite?: boolean;
   url: string;
   eventType: 'request' | 'subrequest';
   requestId?: string | null;
@@ -32,7 +33,7 @@ export type RequestEventPayload = {
     column?: number;
   };
   responsePayload?: any;
-  responseInit?: ResponseInit;
+  responseInit?: Omit<ResponseInit, 'headers'> & {headers?: [string, string][]};
   cache?: {
     status?: string;
     strategy?: string;
@@ -62,14 +63,21 @@ function getEventInfo(data: RequestEventPayload) {
 const eventEmitter = new EventEmitter();
 const eventHistory: RequestEvent[] = [];
 
-export function emitRequestEvent(payload: unknown, root: string) {
-  const maybeEvent = payload as RequestEventPayload;
-
-  if (!maybeEvent || !('url' in maybeEvent) || !('requestId' in maybeEvent)) {
+export function emitRequestEvent(payload: RequestEventPayload, root: string) {
+  if (!payload || !payload.url || !payload.requestId) {
+    // Ignore incorrect events, although this should not happen.
     return;
   }
 
-  const {pathname} = new URL(maybeEvent.url, 'http://localhost');
+  if (payload.eventType === 'request' && !payload.__fromVite) {
+    // Filter out events that come from @shopify/remix-oxygen,
+    // which is a deprecated way to send events.
+    return;
+  }
+
+  delete payload.__fromVite;
+
+  const {pathname} = new URL(payload.url, 'http://localhost');
   if (DEV_ROUTES.has(pathname)) return;
 
   const {
@@ -80,7 +88,7 @@ export function emitRequestEvent(payload: unknown, root: string) {
     graphql,
     stackInfo,
     ...data
-  } = getEventInfo(maybeEvent);
+  } = getEventInfo(payload);
 
   let graphiqlLink = '';
   let displayName = displayNameData;

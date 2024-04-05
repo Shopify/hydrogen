@@ -94,7 +94,7 @@ export type RequestHookInfo = {
 export async function withRequestHook({
   handleRequest,
   request,
-  headers = {},
+  headers,
   hook,
   context,
 }: RequestHookOptions) {
@@ -111,7 +111,7 @@ export async function withRequestHook({
         request: {
           url: request.url,
           method: request.method,
-          headers,
+          headers: headers ?? Object.fromEntries(request.headers.entries()),
         },
         response: {
           status: response.status,

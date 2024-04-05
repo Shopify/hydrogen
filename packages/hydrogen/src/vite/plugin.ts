@@ -1,7 +1,7 @@
 import type {Plugin, ResolvedConfig} from 'vite';
 import {setupHydrogenMiddleware} from './hydrogen-middleware.js';
 import type {HydrogenPluginOptions} from './types.js';
-import {emitRequestEvent} from './request-events.js';
+import {type RequestEventPayload, emitRequestEvent} from './request-events.js';
 
 // Do not import JS from here, only types
 import type {OxygenApiOptions} from '~/mini-oxygen/vite/plugin.js';
@@ -62,7 +62,39 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
         if (oxygenPlugin) {
           oxygenPlugin.api?.registerPluginOptions?.({
             shouldStartRuntime: () => !isRemixChildCompiler(resolvedConfig),
+            requestHook: ({request, response, meta}) => {
+              // Emit events for requests
+              emitRequestEvent(
+                {
+                  __fromVite: true,
+                  eventType: 'request',
+                  url: request.url,
+                  requestId: request.headers['request-id'],
+                  purpose: request.headers['purpose'],
+                  startTime: meta.startTimeMs,
+                  responseInit: {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.entries(response.headers),
+                  },
+                },
+                resolvedConfig.root,
+              );
+            },
             crossBoundarySetup: [
+              {
+                // Setup the global function in the Oxygen worker
+                script: (binding) => {
+                  globalThis.__H2O_LOG_EVENT = binding;
+                },
+                binding: (data) => {
+                  // Emit events for subrequests from the parent process
+                  emitRequestEvent(
+                    data as RequestEventPayload,
+                    resolvedConfig.root,
+                  );
+                },
+              },
               /**
                * To avoid initial CSS flash during development,
                * most frameworks implement a way to gather critical CSS.
@@ -86,14 +118,6 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
                   return globalThis.__remix_devServerHooks?.getCriticalCss?.(
                     ...args,
                   );
-                },
-              },
-              {
-                script: (binding) => {
-                  globalThis.__H2O_LOG_EVENT = binding;
-                },
-                binding: (data) => {
-                  emitRequestEvent(data, resolvedConfig.root);
                 },
               },
             ],
