@@ -28,7 +28,7 @@ const outDir = 'dist';
 export default defineConfig([
   {
     ...commonConfig,
-    entry: ['src/**/*.ts'],
+    entry: ['src/**/*.ts', '!src/**/*.test.ts'],
     outDir,
     // Generate types only for the exposed entry points
     dts: {entry: ['src/commands/hydrogen/init.ts']},
