@@ -36,10 +36,9 @@ import {getCliCommand} from '../../lib/shell.js';
 import {findPort} from '../../lib/find-port.js';
 import {logRequestLine} from '../../lib/mini-oxygen/common.js';
 
-// @ts-ignore -- Module outside of the rootDir
-import type {OxygenApiOptions} from '~/mini-oxygen/vite/plugin.js';
-// @ts-ignore -- Module outside of the rootDir
-import type {HydrogenPluginOptions} from '~/hydrogen/vite/plugin.js';
+// Do not import JS from here, only types
+import type {OxygenApiOptions} from '@shopify/mini-oxygen/vite';
+import type {HydrogenPluginOptions} from '@shopify/hydrogen/vite';
 
 export default class DevVite extends Command {
   static description =

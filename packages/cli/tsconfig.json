@@ -9,10 +9,6 @@
     "rootDir": "src",
     "noUncheckedIndexedAccess": true,
     "types": ["@shopify/oxygen-workers-types", "node", "@remix-run/dev"],
-    "outDir": "dist",
-    "paths": {
-      "~/mini-oxygen/*": ["../mini-oxygen/src/*"],
-      "~/hydrogen/*": ["../hydrogen/src/*"]
-    }
+    "outDir": "dist"
   }
 }
