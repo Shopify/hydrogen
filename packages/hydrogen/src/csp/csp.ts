@@ -21,8 +21,32 @@ type ContentSecurityPolicy = {
   NonceProvider: ComponentType<{children: ReactNode}>;
 };
 
+type DirectiveValues = string[] | string | boolean;
+
 type CreateContentSecurityPolicy = {
-  [key: string]: string[] | string | boolean;
+  defaultSrc?: DirectiveValues;
+  scriptSrc?: DirectiveValues;
+  styleSrc?: DirectiveValues;
+  imgSrc?: DirectiveValues;
+  connectSrc?: DirectiveValues;
+  fontSrc?: DirectiveValues;
+  objectSrc?: DirectiveValues;
+  mediaSrc?: DirectiveValues;
+  frameSrc?: DirectiveValues;
+  sandbox?: DirectiveValues;
+  reportUri?: DirectiveValues;
+  childSrc?: DirectiveValues;
+  formAction?: DirectiveValues;
+  frameAncestors?: DirectiveValues;
+  pluginTypes?: DirectiveValues;
+  baseUri?: DirectiveValues;
+  reportTo?: DirectiveValues;
+  workerSrc?: DirectiveValues;
+  manifestSrc?: DirectiveValues;
+  prefetchSrc?: DirectiveValues;
+  navigateTo?: DirectiveValues;
+  upgradeInsecureRequests?: boolean;
+  blockAllMixedContent?: boolean;
 };
 
 type ShopifyDomains = {
@@ -32,14 +56,19 @@ type ShopifyDomains = {
   storeDomain?: string;
 };
 
+type ShopProp = {
+  /** Shop specific configurations */
+  shop?: ShopifyDomains;
+};
+
 /**
  * @param directives - Pass custom [content security policy directives](https://content-security-policy.com/). This is important if you load content in your app from third-party domains.
  */
 export function createContentSecurityPolicy(
-  props?: ShopifyDomains & CreateContentSecurityPolicy,
+  props?: CreateContentSecurityPolicy & ShopProp,
 ): ContentSecurityPolicy {
   const nonce = generateNonce();
-  const header = createCSPHeader(nonce, props ?? {});
+  const header = createCSPHeader(nonce, props);
 
   const Provider = ({children}: {children: ReactNode}) => {
     return createElement(NonceProvider, {value: nonce}, children);
@@ -54,18 +83,18 @@ export function createContentSecurityPolicy(
 
 function createCSPHeader(
   nonce: string,
-  props?: CreateContentSecurityPolicy & ShopifyDomains,
+  props?: CreateContentSecurityPolicy & ShopProp,
 ): string {
-  const {checkoutDomain, storeDomain, ...directives} = props ?? {};
+  const {shop, ...directives} = props ?? {};
   const nonceString = `'nonce-${nonce}'`;
   const styleSrc = ["'self'", "'unsafe-inline'", 'https://cdn.shopify.com'];
   const connectSrc = ["'self'", 'https://monorail-edge.shopifysvc.com'];
-  if (checkoutDomain) {
-    connectSrc.push(`https://${checkoutDomain}`);
+  if (shop && shop.checkoutDomain) {
+    connectSrc.push(`https://${shop.checkoutDomain}`);
   }
 
-  if (storeDomain) {
-    connectSrc.push(`https://${storeDomain}`);
+  if (shop && shop.storeDomain) {
+    connectSrc.push(`https://${shop.storeDomain}`);
   }
 
   const defaultSrc = [
@@ -102,9 +131,10 @@ function createCSPHeader(
 
   //add defaults if it was override
   for (const key in defaultDirectives) {
-    if (directives[key]) {
+    const directive = directives[key  as keyof CreateContentSecurityPolicy];
+    if (key && directive) {
       combinedDirectives[key] = addCspDirective(
-        directives[key],
+        directive,
         defaultDirectives[key],
       );
     }
