@@ -4,16 +4,9 @@ import type {HydrogenPluginOptions} from './types.js';
 
 // @ts-ignore -- Module outside of the rootDir
 import type {OxygenApiOptions} from '~/mini-oxygen/vite/plugin.js';
-import {type RequestEventPayload, emitRequestEvent} from './request-events.js';
+import {emitRequestEvent} from './request-events.js';
 
 export type {HydrogenPluginOptions};
-
-declare global {
-  var __H2O_LOG_EVENT: undefined | ((event: RequestEventPayload) => void);
-  var __remix_devServerHooks:
-    | undefined
-    | {getCriticalCss: (...args: unknown[]) => any};
-}
 
 /**
  * Enables Hydrogen utilities for local development
