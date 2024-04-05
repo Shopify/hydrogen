@@ -54,7 +54,8 @@ async function miniOxygenHandler(
     ? withRequestHook({
         ...requestInit,
         handleRequest,
-        request: new Request(request, requestInit),
+        request,
+        headers: requestInit.headers,
         hook: env.hook,
         context,
       })
@@ -66,7 +67,7 @@ type RequestHookOptions = {
   request: Request;
   headers?: Record<string, string>;
   context: ExecutionContext;
-  hook?: Service;
+  hook: Service;
 };
 
 export async function withRequestHook({
@@ -80,19 +81,17 @@ export async function withRequestHook({
   const response = await handleRequest();
   const durationMs = Date.now() - startTimeMs;
 
-  if (hook) {
-    context.waitUntil(
-      hook.fetch(request.url, {
-        method: request.method,
-        signal: request.signal,
-        headers: {
-          ...headers,
-          'o2-duration-ms': String(durationMs),
-          'o2-response-status': String(response.status),
-        },
-      }),
-    );
-  }
+  context.waitUntil(
+    hook.fetch(request.url, {
+      method: request.method,
+      signal: request.signal,
+      headers: {
+        ...headers,
+        'o2-duration-ms': String(durationMs),
+        'o2-response-status': String(response.status),
+      },
+    }),
+  );
 
   return response;
 }

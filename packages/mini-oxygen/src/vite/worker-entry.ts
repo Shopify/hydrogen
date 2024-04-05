@@ -49,14 +49,18 @@ export default {
       return new globalThis.Response(null);
     }
 
+    const handleRequest = () =>
+      module.default.fetch(request, createUserEnv(env), context);
+
     // Execute the user app's entry module.
-    return withRequestHook({
-      request,
-      context,
-      hook: env.__VITE_REQUEST_HOOK,
-      handleRequest: () =>
-        module.default.fetch(request, createUserEnv(env), context),
-    });
+    return env.__VITE_REQUEST_HOOK
+      ? withRequestHook({
+          request,
+          context,
+          hook: env.__VITE_REQUEST_HOOK,
+          handleRequest,
+        })
+      : handleRequest();
   },
 };
 
