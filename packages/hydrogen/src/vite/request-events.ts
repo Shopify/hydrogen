@@ -3,7 +3,11 @@ import {EventEmitter} from 'node:events';
 import type {IncomingMessage, ServerResponse} from 'node:http';
 import {mapSourcePosition} from 'source-map-support';
 
-const DEV_ROUTES = new Set(['/graphiql', '/subrequest-profiler']);
+const DEV_ROUTES = new Set([
+  '/graphiql',
+  '/subrequest-profiler',
+  '/debug-network-server',
+]);
 
 type RequestEvent = {
   event: string;

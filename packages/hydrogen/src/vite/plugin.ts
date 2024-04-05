@@ -1,5 +1,8 @@
 import type {Plugin, ResolvedConfig} from 'vite';
-import {setupHydrogenMiddleware} from './hydrogen-middleware.js';
+import {
+  HydrogenMiddlewareOptions,
+  setupHydrogenMiddleware,
+} from './hydrogen-middleware.js';
 import type {HydrogenPluginOptions} from './types.js';
 import {type RequestEventPayload, emitRequestEvent} from './request-events.js';
 
@@ -15,7 +18,7 @@ export type {HydrogenPluginOptions};
  * @experimental
  */
 export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
-  let apiOptions: HydrogenPluginOptions = {};
+  let middlewareOptions: HydrogenMiddlewareOptions = {};
   const isRemixChildCompiler = (config: ResolvedConfig) =>
     !config.plugins?.some((plugin) => plugin.name === 'remix');
 
@@ -47,10 +50,10 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
       },
       api: {
         registerPluginOptions(newOptions: HydrogenPluginOptions) {
-          apiOptions = mergeOptions(apiOptions, newOptions);
+          middlewareOptions = mergeOptions(middlewareOptions, newOptions);
         },
         getPluginOptions() {
-          return mergeOptions(pluginOptions, apiOptions);
+          return mergeOptions(pluginOptions, middlewareOptions);
         },
       },
       configResolved(resolvedConfig) {
@@ -59,76 +62,71 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
           (plugin) => plugin.name === 'oxygen:main',
         );
 
-        if (oxygenPlugin) {
-          oxygenPlugin.api?.registerPluginOptions?.({
-            shouldStartRuntime: () => !isRemixChildCompiler(resolvedConfig),
-            requestHook: ({request, response, meta}) => {
-              // Emit events for requests
-              emitRequestEvent(
-                {
-                  __fromVite: true,
-                  eventType: 'request',
-                  url: request.url,
-                  requestId: request.headers['request-id'],
-                  purpose: request.headers['purpose'],
-                  startTime: meta.startTimeMs,
-                  responseInit: {
-                    status: response.status,
-                    statusText: response.statusText,
-                    headers: Object.entries(response.headers),
-                  },
+        middlewareOptions.isOxygen = !!oxygenPlugin;
+
+        oxygenPlugin?.api?.registerPluginOptions?.({
+          shouldStartRuntime: () => !isRemixChildCompiler(resolvedConfig),
+          requestHook: ({request, response, meta}) => {
+            // Emit events for requests
+            emitRequestEvent(
+              {
+                __fromVite: true,
+                eventType: 'request',
+                url: request.url,
+                requestId: request.headers['request-id'],
+                purpose: request.headers['purpose'],
+                startTime: meta.startTimeMs,
+                endTime: meta.endTimeMs,
+                responseInit: {
+                  status: response.status,
+                  statusText: response.statusText,
+                  headers: Object.entries(response.headers),
                 },
-                resolvedConfig.root,
-              );
+              },
+              resolvedConfig.root,
+            );
+          },
+          crossBoundarySetup: [
+            {
+              // Setup the global function in the Oxygen worker
+              script: (binding) => {
+                globalThis.__H2O_LOG_EVENT = binding;
+              },
+              binding: (data) => {
+                // Emit events for subrequests from the parent process
+                emitRequestEvent(
+                  data as RequestEventPayload,
+                  resolvedConfig.root,
+                );
+              },
             },
-            crossBoundarySetup: [
-              {
-                // Setup the global function in the Oxygen worker
-                script: (binding) => {
-                  globalThis.__H2O_LOG_EVENT = binding;
-                },
-                binding: (data) => {
-                  // Emit events for subrequests from the parent process
-                  emitRequestEvent(
-                    data as RequestEventPayload,
-                    resolvedConfig.root,
-                  );
-                },
+            /**
+             * To avoid initial CSS flash during development,
+             * most frameworks implement a way to gather critical CSS.
+             * Remix does this by calling a global function that their
+             * Vite plugin creates in the Node.js process:
+             * @see https://github.com/remix-run/remix/blob/b07921efd5e8eed98e2996749852777c71bc3e50/packages/remix-server-runtime/dev.ts#L37-L47
+             *
+             * Here we are setting up a stub function in the Oxygen worker
+             * that will be called by Remix during development. Then, we forward
+             * this request to the Node.js process (Vite server) where the actual
+             * Remix function is called and the critical CSS is returned to the worker.
+             */
+            {
+              script: (binding) => {
+                // Setup global dev hooks in Remix in the worker environment
+                // using the binding function passed from Node environment:
+                globalThis.__remix_devServerHooks = {getCriticalCss: binding};
               },
-              /**
-               * To avoid initial CSS flash during development,
-               * most frameworks implement a way to gather critical CSS.
-               * Remix does this by calling a global function that their
-               * Vite plugin creates in the Node.js process:
-               * @see https://github.com/remix-run/remix/blob/b07921efd5e8eed98e2996749852777c71bc3e50/packages/remix-server-runtime/dev.ts#L37-L47
-               *
-               * Here we are setting up a stub function in the Oxygen worker
-               * that will be called by Remix during development. Then, we forward
-               * this request to the Node.js process (Vite server) where the actual
-               * Remix function is called and the critical CSS is returned to the worker.
-               */
-              {
-                script: (binding) => {
-                  // Setup global dev hooks in Remix in the worker environment
-                  // using the binding function passed from Node environment:
-                  globalThis.__remix_devServerHooks = {getCriticalCss: binding};
-                },
-                binding: (...args) => {
-                  // Call the global Remix dev hook for critical CSS in Node environment:
-                  return globalThis.__remix_devServerHooks?.getCriticalCss?.(
-                    ...args,
-                  );
-                },
+              binding: (...args) => {
+                // Call the global Remix dev hook for critical CSS in Node environment:
+                return globalThis.__remix_devServerHooks?.getCriticalCss?.(
+                  ...args,
+                );
               },
-            ],
-          } satisfies OxygenApiOptions);
-        } else {
-          // If Oxygen is not present, we are probably running
-          // on Node.js, so we can setup the global functions directly.
-          globalThis.__H2O_LOG_EVENT = (data) => {
-            emitRequestEvent(data, resolvedConfig.root);
-          };
-        }
+            },
+          ],
+        } satisfies OxygenApiOptions);
       },
       configureServer(viteDevServer) {
         if (isRemixChildCompiler(viteDevServer.config)) return;
@@ -136,7 +134,7 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
         return () => {
           setupHydrogenMiddleware(
             viteDevServer,
-            mergeOptions(pluginOptions, apiOptions),
+            mergeOptions(pluginOptions, middlewareOptions),
           );
         };
       },
