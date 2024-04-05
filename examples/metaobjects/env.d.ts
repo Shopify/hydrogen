@@ -1,12 +1,16 @@
-/// <reference types="@remix-run/dev" />
+/// <reference types="vite/client" />
 /// <reference types="@shopify/remix-oxygen" />
 /// <reference types="@shopify/oxygen-workers-types" />
 
 // Enhance TypeScript's built-in typings.
 import '@total-typescript/ts-reset';
 
-import type {Storefront, HydrogenCart} from '@shopify/hydrogen';
-import type {CustomerAccessToken} from '@shopify/hydrogen/storefront-api-types';
+import type {
+  Storefront,
+  CustomerAccount,
+  HydrogenCart,
+  HydrogenSessionData,
+} from '@shopify/hydrogen';
 import type {AppSession} from '~/lib/session';
 
 declare global {
@@ -24,6 +28,13 @@ declare global {
     PRIVATE_STOREFRONT_API_TOKEN: string;
     PUBLIC_STORE_DOMAIN: string;
     PUBLIC_STOREFRONT_ID: string;
+    PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID: string;
+    PUBLIC_CUSTOMER_ACCOUNT_API_URL: string;
+    /***********************************************/
+    /**********  EXAMPLE UPDATE STARTS  ************/
+    PUBLIC_SHOPIFY_STORE_DOMAIN: string;
+    /**********   EXAMPLE UPDATE END   ************/
+    /***********************************************/
   }
 }
 
@@ -31,18 +42,17 @@ declare module '@shopify/remix-oxygen' {
   /**
    * Declare local additions to the Remix loader context.
    */
-  export interface AppLoadContext {
+  interface AppLoadContext {
     env: Env;
     cart: HydrogenCart;
     storefront: Storefront;
+    customerAccount: CustomerAccount;
     session: AppSession;
     waitUntil: ExecutionContext['waitUntil'];
   }
 
   /**
-   * Declare the data we expect to access via `context.session`.
+   * Declare local additions to the Remix session data.
    */
-  export interface SessionData {
-    customerAccessToken: CustomerAccessToken;
-  }
+  interface SessionData extends HydrogenSessionData {}
 }

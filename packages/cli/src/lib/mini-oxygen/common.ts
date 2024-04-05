@@ -5,11 +5,19 @@ import {
 } from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
 import {DEV_ROUTES} from '../request-events.js';
+import {AbortError} from '@shopify/cli-kit/node/error';
 
 // Default port used for debugging in VSCode and Chrome DevTools.
 export const DEFAULT_INSPECTOR_PORT = 9229;
 
 export const SUBREQUEST_PROFILER_ENDPOINT = '/debug-network-server';
+
+export function handleMiniOxygenImportFail(): never {
+  throw new AbortError(
+    'Could not load MiniOxygen.',
+    'Please make sure you have `@shopify/mini-oxygen` installed.',
+  );
+}
 
 export function logRequestLine(
   // Minimal overlap between Fetch, Miniflare@2 and Miniflare@3 request types.
@@ -23,7 +31,7 @@ export function logRequestLine(
 ): void {
   try {
     const url = new URL(request.url);
-    if (DEV_ROUTES.has(url.pathname)) return;
+    if (DEV_ROUTES.has(url.pathname) || url.pathname === '/favicon.ico') return;
 
     const isDataRequest = url.searchParams.has('_data');
     let route = request.url.replace(url.origin, '');
@@ -61,28 +69,3 @@ export function logRequestLine(
     }
   }
 }
-
-// https://shopify.dev/docs/custom-storefronts/oxygen/worker-runtime-apis#custom-headers
-export const OXYGEN_HEADERS_MAP = {
-  ip: {name: 'oxygen-buyer-ip', defaultValue: '127.0.0.1'},
-  longitude: {name: 'oxygen-buyer-longitude', defaultValue: '-122.40140'},
-  latitude: {name: 'oxygen-buyer-latitude', defaultValue: '37.78855'},
-  continent: {name: 'oxygen-buyer-continent', defaultValue: 'NA'},
-  country: {name: 'oxygen-buyer-country', defaultValue: 'US'},
-  region: {name: 'oxygen-buyer-region', defaultValue: 'California'},
-  regionCode: {name: 'oxygen-buyer-region-code', defaultValue: 'CA'},
-  city: {name: 'oxygen-buyer-city', defaultValue: 'San Francisco'},
-  isEuCountry: {name: 'oxygen-buyer-is-eu-country', defaultValue: ''},
-  timezone: {
-    name: 'oxygen-buyer-timezone',
-    defaultValue: 'America/Los_Angeles',
-  },
-
-  // Not documented but available in Oxygen:
-  deploymentId: {name: 'oxygen-buyer-deployment-id', defaultValue: 'local'},
-  shopId: {name: 'oxygen-buyer-shop-id', defaultValue: 'development'},
-  storefrontId: {
-    name: 'oxygen-buyer-storefront-id',
-    defaultValue: 'development',
-  },
-} as const;

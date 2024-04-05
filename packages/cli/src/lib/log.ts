@@ -14,7 +14,7 @@ type ConsoleMethod = 'log' | 'warn' | 'error' | 'debug' | 'info';
 const originalConsole = {...console};
 const methodsReplaced = new Set<ConsoleMethod>();
 
-type Matcher = (args: Array<any>) => boolean;
+type Matcher = (args: Array<any>, existingMatches: number) => boolean;
 type Replacer = (args: Array<any>) => void | string[];
 const addedReplacers = new Set<string>();
 const messageReplacers: Array<[Matcher, Replacer]> = [];
@@ -70,15 +70,17 @@ function warningDebouncer([first]: unknown[]) {
 
 function injectLogReplacer(
   method: ConsoleMethod,
-  debouncer?: (args: unknown[]) => true | number | undefined,
+  debouncer?: false | ((args: unknown[]) => true | number | undefined),
 ) {
   if (!methodsReplaced.has(method)) {
     methodsReplaced.add(method);
     console[method] = (...args: unknown[]) => {
-      if (debounceMessage(args, debouncer?.(args))) return;
+      if (debouncer !== false && debounceMessage(args, debouncer?.(args))) {
+        return;
+      }
 
       const replacers = messageReplacers.reduce((acc, [matcher, replacer]) => {
-        if (matcher(args)) acc.push(replacer);
+        if (matcher(args, acc.length)) acc.push(replacer);
         return acc;
       }, [] as Replacer[]);
 
@@ -101,6 +103,7 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
   injectLogReplacer('log');
   injectLogReplacer('error');
   injectLogReplacer('warn', warningDebouncer);
+  injectLogReplacer('debug', false);
 
   let isFirstWorkerReload = true;
   addMessageReplacers('dev-node', [
@@ -166,6 +169,60 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
       () => {},
     ],
   );
+
+  let isLastLineBlank = false;
+  let isLastLineRequestLog = false;
+  addMessageReplacers(
+    'dev-vite',
+    // Vite logs
+    [
+      // This log must come from Rollup and does not go through Vite's customLogger
+      ([first]) =>
+        typeof first === 'string' && /^Sourcemap for .*@remix-run/i.test(first),
+      () => {},
+    ],
+    [
+      // Log generated from Workerd HMR connection to Vite
+      ([first]) =>
+        typeof first === 'string' &&
+        /^\[vite\] (connected|program reload)/i.test(first),
+      () => {},
+    ],
+    [
+      // Log that gets entangled with our initial dev logs
+      ([first]) =>
+        typeof first === 'string' &&
+        /^Re-optimizing dependencies because/i.test(first),
+      () => {},
+    ],
+    [
+      // Log new lines between Request logs and other logs
+      ([first], existingMatches) => {
+        // If this log is not going to be filtered by other replacers:
+        if (existingMatches === 0 && typeof first === 'string') {
+          // Example: "  GET  200  render  /products/1234  0.0ms"
+          const isRequestLog = /^\s+[A-Z]+\s+\d{3}\s+[a-z]+\s+\//.test(
+            // Clear ANSI colors before matching
+            first.replace(/\u001b\[.*?m/g, ''),
+          );
+
+          if (
+            !isLastLineBlank &&
+            ((isRequestLog && !isLastLineRequestLog) ||
+              (!isRequestLog && isLastLineRequestLog))
+          ) {
+            process.stdout.write('\n');
+          }
+
+          isLastLineRequestLog = isRequestLog;
+          isLastLineBlank = /\n$/.test(first);
+        }
+
+        return false;
+      },
+      (params) => params,
+    ],
+  );
 }
 
 const originalWrite = process.stdout.write;
@@ -186,7 +243,7 @@ export function muteAuthLogs({
       if (typeof item !== 'string') return write(item, cb);
 
       const replacers = messageReplacers.reduce((acc, [matcher, replacer]) => {
-        if (matcher([item])) acc.push(replacer);
+        if (matcher([item], acc.length)) acc.push(replacer);
         return acc;
       }, [] as Replacer[]);
 
@@ -422,4 +479,16 @@ export async function muteRemixLogs() {
   } catch {
     // --
   }
+}
+
+export function setH2OVerbose() {
+  if (!process.env.DEBUG || process.env.DEBUG === '*') {
+    process.env.DEBUG = 'h2:*,o2:*';
+  } else {
+    process.env.DEBUG += ',h2:*,o2:*';
+  }
+}
+
+export function isH2Verbose() {
+  return !!(process.env.DEBUG === '*' || process.env.DEBUG?.includes('h2:*'));
 }

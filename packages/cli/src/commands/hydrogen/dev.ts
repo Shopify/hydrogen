@@ -6,14 +6,26 @@ import {fileExists} from '@shopify/cli-kit/node/fs';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import {copyPublicFiles} from './build.js';
 import {
+  type RemixConfig,
   assertOxygenChecks,
   getProjectPaths,
   getRemixConfig,
   handleRemixImportFail,
   type ServerMode,
 } from '../../lib/remix-config.js';
-import {createRemixLogger, enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
-import {commonFlags, deprecated, flagsToCamelObject} from '../../lib/flags.js';
+import {
+  createRemixLogger,
+  enhanceH2Logs,
+  muteDevLogs,
+  isH2Verbose,
+  setH2OVerbose,
+} from '../../lib/log.js';
+import {
+  DEFAULT_APP_PORT,
+  commonFlags,
+  deprecated,
+  flagsToCamelObject,
+} from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags, Config} from '@oclif/core';
 import {
@@ -26,7 +38,6 @@ import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {setupLiveReload} from '../../lib/live-reload.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
-import {getGraphiQLUrl} from '../../lib/graphiql-url.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {findPort} from '../../lib/find-port.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
@@ -37,6 +48,7 @@ import {
   notifyIssueWithTunnelAndMockShop,
 } from '../../lib/dev-shared.js';
 import {getCliCommand} from '../../lib/shell.js';
+import {hasViteConfig} from '../../lib/vite-config.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -68,6 +80,7 @@ export default class Dev extends Command {
     }),
     ...commonFlags.diff,
     ...commonFlags.customerAccountPush,
+    ...commonFlags.verbose,
   };
 
   async run(): Promise<void> {
@@ -78,16 +91,23 @@ export default class Dev extends Command {
       directory = await prepareDiffDirectory(directory, true);
     }
 
-    await runDev({
+    const devParams = {
       ...flagsToCamelObject(flags),
       path: directory,
       cliConfig: this.config,
-    });
+    };
+
+    if (await hasViteConfig(directory ?? process.cwd())) {
+      const {runViteDev} = await import('./dev-vite.js');
+      await runViteDev(devParams);
+    } else {
+      await runDev(devParams);
+    }
   }
 }
 
 type DevOptions = {
-  port: number;
+  port?: number;
   path?: string;
   codegen?: boolean;
   legacyRuntime?: boolean;
@@ -98,9 +118,11 @@ type DevOptions = {
   envBranch?: string;
   debug?: boolean;
   sourcemap?: boolean;
-  inspectorPort: number;
+  inspectorPort?: number;
   customerAccountPush?: boolean;
-  cliConfig?: Config;
+  cliConfig: Config;
+  shouldLiveReload?: boolean;
+  verbose?: boolean;
 };
 
 export async function runDev({
@@ -117,11 +139,14 @@ export async function runDev({
   disableVersionCheck = false,
   inspectorPort,
   customerAccountPush: customerAccountPushFlag = false,
+  shouldLiveReload = true,
   cliConfig,
+  verbose,
 }: DevOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
-  muteDevLogs();
+  if (verbose) setH2OVerbose();
+  if (!isH2Verbose()) muteDevLogs();
 
   const {root, publicPath, buildPathClient, buildPathWorkerFile} =
     getProjectPaths(appPath);
@@ -130,7 +155,7 @@ export async function runDev({
   const cliCommandPromise = getCliCommand(root);
 
   const reloadConfig = async () => {
-    const config = await getRemixConfig(root);
+    const config = (await getRemixConfig(root)) as RemixConfig;
 
     return disableVirtualRoutes
       ? config
@@ -154,13 +179,14 @@ export async function runDev({
 
   const serverBundleExists = () => fileExists(buildPathWorkerFile);
 
-  inspectorPort = debug ? await findPort(inspectorPort) : inspectorPort;
-  appPort = legacyRuntime ? appPort : await findPort(appPort); // findPort is already called for Node sandbox
+  if (!appPort) {
+    appPort = await findPort(DEFAULT_APP_PORT);
+  }
 
   const assetsPort = legacyRuntime ? 0 : await findPort(appPort + 100);
   if (assetsPort) {
     // Note: Set this env before loading Remix config!
-    process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
+    process.env.HYDROGEN_ASSET_BASE_URL = await buildAssetsUrl(assetsPort);
   }
 
   const backgroundPromise = getDevConfigInBackground(
@@ -198,7 +224,7 @@ export async function runDev({
   let initialBuildDurationMs = 0;
   let initialBuildStartTimeMs = Date.now();
 
-  const liveReload = true // TODO: option to disable HMR?
+  const liveReload = shouldLiveReload
     ? await setupLiveReload(remixConfig.dev?.port ?? 8002)
     : undefined;
 
@@ -207,22 +233,25 @@ export async function runDev({
   async function safeStartMiniOxygen() {
     if (miniOxygen) return;
 
-    const envVariables = await envPromise;
+    const {allVariables, localVariables, logInjectedVariables} =
+      await envPromise;
 
     miniOxygen = await startMiniOxygen(
       {
         root,
         debug,
+        appPort,
         assetsPort,
         inspectorPort,
-        port: appPort,
         watch: !liveReload,
         buildPathWorkerFile,
         buildPathClient,
-        env: envVariables,
+        env: allVariables,
       },
       legacyRuntime,
     );
+
+    logInjectedVariables();
 
     const host = (await tunnelPromise) ?? miniOxygen.listeningAt;
 
@@ -238,12 +267,6 @@ export async function runDev({
           ? `Initial build: ${initialBuildDurationMs}ms\n`
           : '',
       host,
-      extraLines: [
-        `View GraphiQL API browser: \n${getGraphiQLUrl({
-          host,
-        })}`,
-        `View server network requests: \n${host}/subrequest-profiler`,
-      ],
     });
 
     if (useCodegen) {
@@ -259,7 +282,7 @@ export async function runDev({
       displayDevUpgradeNotice({targetPath: appPath});
     }
 
-    if (customerAccountPushFlag && isMockShop(envVariables)) {
+    if (customerAccountPushFlag && isMockShop(localVariables)) {
       notifyIssueWithTunnelAndMockShop(cliCommand);
     }
   }
@@ -341,13 +364,18 @@ export async function runDev({
         if (relative.endsWith('.env')) {
           skipRebuildLogs = true;
           const {fetchRemote} = await backgroundPromise;
-          await miniOxygen.reload({
-            env: await getAllEnvironmentVariables({
+          const {allVariables, logInjectedVariables} =
+            await getAllEnvironmentVariables({
               root,
               fetchRemote,
               envBranch,
               envHandle,
-            }),
+            });
+
+          logInjectedVariables();
+
+          await miniOxygen.reload({
+            env: allVariables,
           });
         }
 
@@ -372,6 +400,7 @@ export async function runDev({
   );
 
   return {
+    getUrl: () => miniOxygen.listeningAt,
     async close() {
       codegenProcess?.kill(0);
       await Promise.all([closeWatcher(), miniOxygen?.close()]);

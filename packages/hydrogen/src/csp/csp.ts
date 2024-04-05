@@ -123,7 +123,7 @@ function createCSPHeader(
       // For HMR:
       'ws://localhost:*',
       'ws://127.0.0.1:*',
-      'ws://*.trycloudflare.com:*',
+      'ws://*.tryhydrogen.dev:*',
     ];
   }
 

@@ -1,9 +1,17 @@
+import {handleMiniOxygenImportFail} from './common.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
 
 export type MiniOxygen = MiniOxygenInstance;
 
 export {DEFAULT_INSPECTOR_PORT} from './common.js';
-export {buildAssetsUrl} from './assets.js';
+
+export async function buildAssetsUrl(port: number) {
+  const {buildAssetsUrl: _buildAssetsUrl} = await import(
+    '@shopify/mini-oxygen'
+  ).catch(handleMiniOxygenImportFail);
+
+  return _buildAssetsUrl(port);
+}
 
 export async function startMiniOxygen(
   options: MiniOxygenOptions,

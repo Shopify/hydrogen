@@ -1,14 +1,7 @@
 import {fetchModule, type ViteDevServer} from 'vite';
 import {fileURLToPath} from 'node:url';
-import crypto from 'node:crypto';
-import {Miniflare, NoOpLog, Request, type Response} from 'miniflare';
-import {OXYGEN_HEADERS_MAP, logRequestLine} from '../mini-oxygen/common.js';
-import {
-  PRIVATE_WORKERD_INSPECTOR_PORT,
-  OXYGEN_WORKERD_COMPAT_PARAMS,
-} from '../mini-oxygen/workerd.js';
-import {findPort} from '../find-port.js';
-import {createInspectorConnector} from '../mini-oxygen/workerd-inspector.js';
+import type {Request, Response} from '@shopify/mini-oxygen';
+import {logRequestLine} from '../mini-oxygen/common.js';
 import {MiniOxygenOptions} from '../mini-oxygen/types.js';
 import {getHmrUrl, pipeFromWeb, toURL, toWeb} from './utils.js';
 
@@ -17,14 +10,6 @@ const scriptPath = fileURLToPath(new URL('./worker-entry.js', import.meta.url));
 
 const FETCH_MODULE_PATHNAME = '/__vite_fetch_module';
 const WARMUP_PATHNAME = '/__vite_warmup';
-
-const oxygenHeadersMap = Object.values(OXYGEN_HEADERS_MAP).reduce(
-  (acc, item) => {
-    acc[item.name] = item.defaultValue;
-    return acc;
-  },
-  {} as Record<string, string>,
-);
 
 export type InternalMiniOxygenOptions = {
   setupScripts?: Array<(viteUrl: string) => void>;
@@ -48,33 +33,17 @@ export async function startMiniOxygenRuntime({
   workerEntryFile,
   setupScripts,
 }: MiniOxygenViteOptions) {
-  const [publicInspectorPort, privateInspectorPort] = await Promise.all([
-    findPort(inspectorPort),
-    findPort(PRIVATE_WORKERD_INSPECTOR_PORT),
-  ]);
+  const {createMiniOxygen} = await import('@shopify/mini-oxygen');
 
-  const mf = new Miniflare({
-    cf: false,
-    verbose: false,
-    log: new NoOpLog(),
-    inspectorPort: privateInspectorPort,
-    handleRuntimeStdio(stdout, stderr) {
-      // TODO: handle runtime stdio and remove inspector logs
-      // stdout.pipe(process.stdout);
-      // stderr.pipe(process.stderr);
-
-      // Destroy these streams to prevent memory leaks
-      // until we start piping them to the terminal.
-      // https://github.com/Shopify/hydrogen/issues/1720
-      stdout.destroy();
-      stderr.destroy();
-    },
+  const miniOxygen = createMiniOxygen({
+    debug,
+    inspectorPort,
+    logRequestLine,
     workers: [
       {
-        name: 'oxygen',
+        name: 'vite-env',
         modulesRoot: '/',
         modules: [{type: 'ESModule', path: scriptPath}],
-        ...OXYGEN_WORKERD_COMPAT_PARAMS,
         serviceBindings: {...services},
         bindings: {
           ...env,
@@ -118,7 +87,9 @@ export async function startMiniOxygenRuntime({
     }
 
     if (viteUrl) {
-      mf.dispatchFetch(new URL(WARMUP_PATHNAME, viteUrl)).catch(() => {});
+      miniOxygen
+        .dispatchFetch(new URL(WARMUP_PATHNAME, viteUrl))
+        .catch(() => {});
     }
   };
 
@@ -126,26 +97,7 @@ export async function startMiniOxygenRuntime({
     ? warmupWorkerdCache()
     : viteDevServer.httpServer?.once('listening', warmupWorkerdCache);
 
-  mf.ready.then(() => {
-    const reconnect = createInspectorConnector({
-      debug,
-      sourceMapPath: '',
-      absoluteBundlePath: '',
-      privateInspectorPort,
-      publicInspectorPort,
-    });
-
-    return reconnect();
-  });
-
-  return {
-    ready: mf.ready,
-    publicInspectorPort,
-    dispatch: (webRequest: Request) => mf.dispatchFetch(webRequest),
-    async dispose() {
-      await mf.dispose();
-    },
-  };
+  return miniOxygen;
 }
 
 export function setupOxygenMiddleware(
@@ -165,8 +117,8 @@ export function setupOxygenMiddleware(
       const importer = url.searchParams.get('importer') ?? undefined;
 
       if (id) {
-        res.setHeader('cache-control', 'no-store');
-        res.setHeader('content-type', 'application/json');
+        res.setHeader('Cache-Control', 'no-store');
+        res.setHeader('Content-Type', 'application/json');
 
         // `fetchModule` is similar to `viteDevServer.ssrFetchModule`,
         // but it treats source maps differently (avoids adding empty lines).
@@ -178,7 +130,6 @@ export function setupOxygenMiddleware(
             res.end('Internal server error');
           });
       } else {
-        res.statusCode = 400;
         res.writeHead(400, {'Content-Type': 'text/plain'});
         res.end('Invalid request');
       }
@@ -191,24 +142,9 @@ export function setupOxygenMiddleware(
     // find it in the project. Therefore, we assume this is a
     // request for a backend route, and we forward it to workerd.
 
-    if (!req.headers.host) throw new Error('Missing host header');
-
-    const webRequest = toWeb(req, {
-      'request-id': crypto.randomUUID(),
-      ...oxygenHeadersMap,
-    });
-
-    const startTimeMs = Date.now();
-
-    dispatchFetch(webRequest)
-      .then((webResponse) => {
-        pipeFromWeb(webResponse, res);
-
-        logRequestLine(webRequest, {
-          responseStatus: webResponse.status,
-          durationMs: Date.now() - startTimeMs,
-        });
-      })
+    toWeb(req)
+      .then(dispatchFetch)
+      .then((webResponse) => pipeFromWeb(webResponse, res))
       .catch((error) => {
         console.error('Error during evaluation:', error);
         res.writeHead(500);

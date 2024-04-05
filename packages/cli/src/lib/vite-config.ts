@@ -1,7 +1,18 @@
-import {joinPath} from '@shopify/cli-kit/node/path';
+import {
+  basename,
+  dirname,
+  joinPath,
+  resolvePath,
+} from '@shopify/cli-kit/node/path';
 import type {RemixPluginContext} from '@remix-run/dev/dist/vite/plugin.js';
+import {findFileWithExtension} from './file.js';
 
-export async function getViteConfig(root: string) {
+export async function hasViteConfig(root: string) {
+  const result = await findFileWithExtension(root, 'vite.config');
+  return !!result.filepath;
+}
+
+export async function getViteConfig(root: string, ssrEntryFlag?: string) {
   const vite = await import('vite');
 
   const command = 'build';
@@ -35,13 +46,31 @@ export async function getViteConfig(root: string) {
     typeof entryFileNames === 'string' ? entryFileNames : 'index.js',
   );
 
+  const ssrEntry = ssrEntryFlag ?? resolvedViteConfig.build.ssr;
+  const {...remixPluginConfig} = getRemixConfigFromVite(resolvedViteConfig);
+
+  const resolvedSsrEntry = resolvePath(
+    resolvedViteConfig.root,
+    typeof ssrEntry === 'string' ? ssrEntry : 'server',
+  );
+
   return {
     clientOutDir,
     serverOutDir,
     serverOutFile,
     resolvedViteConfig,
     userViteConfig: maybeConfig.config,
-    remixConfig: getRemixConfigFromVite(resolvedViteConfig),
+    remixConfig: {
+      ...remixPluginConfig,
+      rootDirectory: resolvedViteConfig.root,
+      serverEntryPoint:
+        (
+          await findFileWithExtension(
+            dirname(resolvedSsrEntry),
+            basename(resolvedSsrEntry),
+          )
+        ).filepath || resolvedSsrEntry,
+    },
   };
 }
 
@@ -51,5 +80,8 @@ function getRemixConfigFromVite(viteConfig: any) {
       remixConfig: {appDirectory: joinPath(viteConfig.root, 'app')},
     };
 
-  return remixConfig;
+  type RemixPluginConfig = typeof remixConfig;
+
+  // Remove these types because they create TS problems.
+  return remixConfig as Omit<RemixPluginConfig, 'future' | 'buildEnd'>;
 }

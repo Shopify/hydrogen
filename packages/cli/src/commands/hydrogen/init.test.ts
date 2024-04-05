@@ -21,8 +21,10 @@ import {execAsync} from '../../lib/process.js';
 import {createSymlink, remove as rmdir} from 'fs-extra/esm';
 import {runCheckRoutes} from './check.js';
 import {runCodegen} from './codegen.js';
-import {runBuild} from './build.js';
-import {runDev} from './dev.js';
+import {runViteBuild} from './build-vite.js';
+import {runViteDev} from './dev-vite.js';
+import {runBuild as runClassicBuild} from './build.js';
+import {runDev as runClassicDev} from './dev.js';
 
 const {renderTasksHook} = vi.hoisted(() => ({renderTasksHook: vi.fn()}));
 
@@ -57,7 +59,6 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
     renderConfirmationPrompt: vi.fn(),
     renderSelectPrompt: vi.fn(),
     renderTextPrompt: vi.fn(),
-    renderInfo: vi.fn(),
     renderTasks: vi.fn(async (args) => {
       await original.renderTasks(args);
       renderTasksHook();
@@ -321,6 +322,112 @@ describe('init', () => {
         expect(output).toMatch(/Language:\s*JavaScript/);
       });
     });
+
+    it('creates functional classic Remix projects', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        await runInit({
+          path: tmpDir,
+          git: false,
+          language: 'ts',
+          template: 'classic-remix',
+          routes: true,
+          installDeps: true,
+        });
+
+        const templateFiles = await glob('**/*', {
+          cwd: getSkeletonSourceDir()
+            .replace('templates', 'examples')
+            .replace('skeleton', 'classic-remix'),
+          ignore: ['**/node_modules/**', '**/dist/**'],
+        });
+        const resultFiles = await glob('**/*', {cwd: tmpDir});
+        const nonAppFiles = templateFiles.filter(
+          (item) => !item.startsWith('app/'),
+        );
+
+        expect(resultFiles).toEqual(expect.arrayContaining(nonAppFiles));
+        expect(resultFiles).not.toContain('vite.config.ts');
+        expect(resultFiles).not.toContain('env.d.ts');
+
+        await expect(readFile(`${tmpDir}/package.json`)).resolves.toMatch(
+          `"name": "example-classic-remix"`,
+        );
+
+        // ---- DEV
+        outputMock.clear();
+
+        const {close, getUrl} = await runClassicDev({
+          path: tmpDir,
+          disableVirtualRoutes: true,
+          disableVersionCheck: true,
+          cliConfig: {} as any,
+        });
+
+        try {
+          await vi.waitFor(
+            () => expect(outputMock.output()).toMatch('success'),
+            {timeout: 5000},
+          );
+
+          expect(outputMock.output()).toMatch(/View [^:]+? app:/i);
+
+          await expect(
+            fileExists(joinPath(tmpDir, 'dist', 'worker', 'index.js')),
+          ).resolves.toBeTruthy();
+
+          const response = await fetch(getUrl());
+          expect(response.status).toEqual(200);
+          expect(response.headers.get('content-type')).toEqual('text/html');
+          await expect(response.text()).resolves.toMatch('Mock.shop');
+        } finally {
+          await close();
+        }
+
+        // ---- BUILD
+        outputMock.clear();
+        vi.stubEnv('NODE_ENV', 'production');
+
+        await expect(
+          runClassicBuild({directory: tmpDir}),
+        ).resolves.not.toThrow();
+
+        const expectedBundlePath = 'dist/worker/index.js';
+
+        const output = outputMock.output();
+        expect(output).toMatch(expectedBundlePath);
+        expect(
+          fileExists(joinPath(tmpDir, expectedBundlePath)),
+        ).resolves.toBeTruthy();
+
+        const mb = Number(output.match(/index\.js\s+([\d.]+)\s+MB/)?.[1] || '');
+
+        // Bundle size within 1 MB
+        expect(mb).toBeGreaterThan(0);
+        expect(mb).toBeLessThan(1);
+
+        // Bundle analysis
+        expect(output).toMatch('Complete analysis: file://');
+
+        const clientAnalysisPath = 'dist/worker/client-bundle-analyzer.html';
+        const workerAnalysisPath = 'dist/worker/worker-bundle-analyzer.html';
+
+        await expect(
+          fileExists(joinPath(tmpDir, clientAnalysisPath)),
+        ).resolves.toBeTruthy();
+
+        await expect(
+          fileExists(joinPath(tmpDir, workerAnalysisPath)),
+        ).resolves.toBeTruthy();
+
+        await expect(
+          readFile(joinPath(tmpDir, clientAnalysisPath)),
+        ).resolves.toMatch(/globalThis\.METAFILE = '.+';/g);
+
+        await expect(
+          readFile(joinPath(tmpDir, workerAnalysisPath)),
+        ).resolves.toMatch(/globalThis\.METAFILE = '.+';/g);
+      });
+    });
   });
 
   describe('local templates', () => {
@@ -451,7 +558,8 @@ describe('init', () => {
       });
     });
 
-    describe('styling libraries', () => {
+    // TODO enable when we support it in Vite
+    describe.skip('styling libraries', () => {
       it('scaffolds Tailwind CSS', async () => {
         await inTemporaryDirectory(async (tmpDir) => {
           await runInit({
@@ -641,7 +749,9 @@ describe('init', () => {
             expect.arrayContaining([
               expect.stringContaining('Lockfile'),
               expect.stringContaining('Generate routes for core functionality'),
-              expect.stringContaining('Setup Tailwind'),
+              // TODO
+              // expect.stringContaining('Setup Tailwind'),
+              expect.stringContaining('Setup markets support using domains'),
               expect.stringContaining('Scaffold Storefront'),
             ]),
           );
@@ -737,45 +847,28 @@ describe('init', () => {
           outputMock.clear();
           vi.stubEnv('NODE_ENV', 'production');
 
-          await expect(runBuild({directory: tmpDir})).resolves.not.toThrow();
+          await expect(
+            runViteBuild({directory: tmpDir}),
+          ).resolves.not.toThrow();
 
-          const expectedBundlePath = 'dist/worker/index.js';
+          const expectedBundlePath = 'dist/server/index.js';
 
           const output = outputMock.output();
           expect(output).toMatch(expectedBundlePath);
+          expect(output).toMatch('building for productio');
+          expect(output).toMatch('dist/client/assets/root-');
+          expect(output).toMatch('building SSR bundle for productio');
           expect(
             fileExists(joinPath(tmpDir, expectedBundlePath)),
           ).resolves.toBeTruthy();
 
-          const mb = Number(
-            output.match(/index\.js\s+([\d.]+)\s+MB/)?.[1] || '',
+          const kB = Number(
+            output.match(/dist\/server\/index\.js\s+([\d.]+)\s+kB/)?.[1] || '',
           );
 
           // Bundle size within 1 MB
-          expect(mb).toBeGreaterThan(0);
-          expect(mb).toBeLessThan(1);
-
-          // Bundle analysis
-          expect(output).toMatch('Complete analysis: file://');
-
-          const clientAnalysisPath = 'dist/worker/client-bundle-analyzer.html';
-          const workerAnalysisPath = 'dist/worker/worker-bundle-analyzer.html';
-
-          await expect(
-            fileExists(joinPath(tmpDir, clientAnalysisPath)),
-          ).resolves.toBeTruthy();
-
-          await expect(
-            fileExists(joinPath(tmpDir, workerAnalysisPath)),
-          ).resolves.toBeTruthy();
-
-          await expect(
-            readFile(joinPath(tmpDir, clientAnalysisPath)),
-          ).resolves.toMatch(/globalThis\.METAFILE = '.+';/g);
-
-          await expect(
-            readFile(joinPath(tmpDir, workerAnalysisPath)),
-          ).resolves.toMatch(/globalThis\.METAFILE = '.+';/g);
+          expect(kB).toBeGreaterThan(0);
+          expect(kB).toBeLessThan(1024);
         });
       });
 
@@ -794,31 +887,20 @@ describe('init', () => {
           // Clear previous success messages
           outputMock.clear();
 
-          const port = 1337;
-
-          const {close} = await runDev({
+          const {close, getUrl} = await runViteDev({
             path: tmpDir,
-            port,
-            inspectorPort: 9000,
             disableVirtualRoutes: true,
             disableVersionCheck: true,
+            cliConfig: {} as any,
           });
 
           try {
             await vi.waitFor(
-              () => expect(outputMock.output()).toMatch('success'),
+              () => expect(outputMock.output()).toMatch(/View [^:]+? app:/i),
               {timeout: 5000},
             );
 
-            expect(outputMock.output()).toMatch(/View Hydrogen app/i);
-
-            await expect(
-              fileExists(joinPath(tmpDir, 'dist', 'worker', 'index.js')),
-            ).resolves.toBeTruthy();
-
-            // await expect(runBuild({directory: tmpDir})).resolves.not.toThrow();
-
-            const response = await fetch(`http://localhost:${port}`);
+            const response = await fetch(getUrl());
             expect(response.status).toEqual(200);
             expect(response.headers.get('content-type')).toEqual('text/html');
             await expect(response.text()).resolves.toMatch('Mock.shop');
@@ -868,7 +950,8 @@ describe('init', () => {
           expect(output).toMatch('success');
           expect(output).toMatch(/Shopify:\s+Mock.shop/);
           expect(output).toMatch(/Language:\s+JavaScript/);
-          expect(output).toMatch(/Styling:\s+Tailwind/);
+          // TODO
+          // expect(output).toMatch(/Styling:\s+Tailwind/);
           expect(output).toMatch('Routes');
           expect(output).toMatch('Next steps');
         });

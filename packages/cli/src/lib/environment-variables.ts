@@ -61,33 +61,41 @@ export async function getAllEnvironmentVariables({
   const remotePublicKeys = Object.keys(remoteVariables);
   const localKeys = Object.keys(localVariables);
 
-  if (
-    localKeys.length > 0 ||
-    remotePublicKeys.length + remoteSecretKeys.length > 0
-  ) {
-    outputInfo('\nEnvironment variables injected into MiniOxygen:\n');
+  function logInjectedVariables() {
+    if (
+      localKeys.length > 0 ||
+      remotePublicKeys.length + remoteSecretKeys.length > 0
+    ) {
+      outputInfo('\nEnvironment variables injected into MiniOxygen:\n');
 
-    outputInfo(
-      linesToColumns([
-        ...remotePublicKeys
-          .filter((key) => !localKeys.includes(key))
-          .map((key) => [key, 'from Oxygen']),
-        ...localKeys.map((key) => [key, 'from local .env']),
-        // Ensure secret variables always get added to the bottom of the list
-        ...remoteSecretKeys
-          .filter((key) => !localKeys.includes(key))
-          .map((key) => [
-            colors.dim(key),
-            colors.dim('from Oxygen (Marked as secret)'),
-          ]),
-      ]),
-    );
+      outputInfo(
+        linesToColumns([
+          ...remotePublicKeys
+            .filter((key) => !localKeys.includes(key))
+            .map((key) => [key, 'from Oxygen']),
+          ...localKeys.map((key) => [key, 'from local .env']),
+          // Ensure secret variables always get added to the bottom of the list
+          ...remoteSecretKeys
+            .filter((key) => !localKeys.includes(key))
+            .map((key) => [
+              colors.dim(key),
+              colors.dim('from Oxygen (Marked as secret)'),
+            ]),
+        ]),
+      );
+    }
   }
 
   return {
-    ...remoteSecrets,
-    ...remoteVariables,
-    ...localVariables,
+    logInjectedVariables,
+    remoteVariables,
+    remoteSecrets,
+    localVariables,
+    allVariables: {
+      ...remoteSecrets,
+      ...remoteVariables,
+      ...localVariables,
+    },
   };
 }
 

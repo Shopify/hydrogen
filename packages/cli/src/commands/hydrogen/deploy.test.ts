@@ -5,6 +5,7 @@ import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {writeFile} from '@shopify/cli-kit/node/fs';
 import {
+  renderConfirmationPrompt,
   renderSelectPrompt,
   renderFatalError,
   renderSuccess,
@@ -18,20 +19,21 @@ import {
 
 import {deploymentLogger, runDeploy} from './deploy.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
+import {createEnvironmentCliChoiceLabel} from '../../lib/common.js';
 import {
   CompletedDeployment,
   createDeploy,
   parseToken,
 } from '@shopify/oxygen-cli/deploy';
 import {ciPlatform} from '@shopify/cli-kit/node/context/local';
-import {runBuild} from './build.js';
+import {runViteBuild} from './build-vite.js';
 
 vi.mock('@shopify/oxygen-cli/deploy');
 vi.mock('@shopify/cli-kit/node/dot-env');
 vi.mock('@shopify/cli-kit/node/fs');
 vi.mock('@shopify/cli-kit/node/context/local');
 vi.mock('../../lib/get-oxygen-deployment-data.js');
-vi.mock('./build.js');
+vi.mock('./build-vite.js');
 vi.mock('../../lib/auth.js');
 vi.mock('../../lib/shopify-config.js');
 vi.mock('../../lib/graphql/admin/link-storefront.js');
@@ -48,6 +50,7 @@ vi.mock('@shopify/cli-kit/node/output', async () => {
 vi.mock('@shopify/cli-kit/node/ui', async () => {
   return {
     renderFatalError: vi.fn(),
+    renderConfirmationPrompt: vi.fn(),
     renderSelectPrompt: vi.fn(),
     renderSuccess: vi.fn(),
     renderTasks: vi.fn(),
@@ -126,7 +129,7 @@ describe('deploy', () => {
     rootPath: deployParams.path,
     skipBuild: false,
     workerOnly: false,
-    workerDir: 'dist/worker',
+    workerDir: 'dist/server',
   };
 
   const expectedHooks = {
@@ -155,7 +158,8 @@ describe('deploy', () => {
         productionUrl: 'https://example.com',
       },
     ]);
-    vi.mocked(renderSelectPrompt).mockResolvedValue(FULL_SHOPIFY_CONFIG.shop);
+    vi.mocked(renderSelectPrompt).mockResolvedValue('main');
+    vi.mocked(renderConfirmationPrompt).mockResolvedValue(true);
     vi.mocked(createDeploy).mockResolvedValue({
       authBypassToken: 'some-token',
       url: 'https://a-lovely-deployment.com',
@@ -292,6 +296,15 @@ describe('deploy', () => {
     ).rejects.toThrowError('Environment not found');
   });
 
+  it("errors when the env provided doesn't match any environment", async () => {
+    await expect(
+      runDeploy({
+        ...deployParams,
+        envBranch: 'fake-branch',
+      }),
+    ).rejects.toThrowError('Environment not found');
+  });
+
   it('errors when env is provided while running in CI', async () => {
     vi.mocked(ciPlatform).mockReturnValue({
       isCI: true,
@@ -411,17 +424,22 @@ describe('deploy', () => {
   });
 
   it('calls renderSelectPrompt when there are multiple environments', async () => {
+    const productionEnvironment = {
+      name: 'Production',
+      handle: 'production',
+      branch: 'main',
+      type: 'PRODUCTION' as 'PRODUCTION',
+    };
+    const previewEnvironment = {
+      name: 'Preview',
+      handle: 'preview',
+      branch: null,
+      type: 'PREVIEW' as 'PREVIEW',
+    };
+
     vi.mocked(getOxygenDeploymentData).mockResolvedValue({
       oxygenDeploymentToken: 'some-encoded-token',
-      environments: [
-        {
-          name: 'Production',
-          handle: 'production',
-          branch: 'main',
-          type: 'PRODUCTION',
-        },
-        {name: 'Preview', handle: 'preview', branch: null, type: 'PREVIEW'},
-      ],
+      environments: [productionEnvironment, previewEnvironment],
     });
 
     await runDeploy(deployParams);
@@ -429,8 +447,22 @@ describe('deploy', () => {
     expect(vi.mocked(renderSelectPrompt)).toHaveBeenCalledWith({
       message: 'Select an environment to deploy to',
       choices: [
-        {label: 'Production', value: 'main'},
-        {label: 'Preview', value: 'shopify-preview-environment.'},
+        {
+          label: createEnvironmentCliChoiceLabel(
+            previewEnvironment.name,
+            previewEnvironment.handle,
+            previewEnvironment.branch,
+          ),
+          value: 'shopify-preview-environment.',
+        },
+        {
+          label: createEnvironmentCliChoiceLabel(
+            productionEnvironment.name,
+            productionEnvironment.handle,
+            productionEnvironment.branch,
+          ),
+          value: 'main',
+        },
       ],
     });
   });
@@ -491,7 +523,7 @@ describe('deploy', () => {
     });
     await runDeploy(params);
 
-    expect(vi.mocked(runBuild)).toHaveBeenCalledWith({
+    expect(vi.mocked(runViteBuild)).toHaveBeenCalledWith({
       assetPath: 'some-cool-asset-path',
       directory: params.path,
       lockfileCheck: false,

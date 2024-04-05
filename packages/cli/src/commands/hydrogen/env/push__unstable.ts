@@ -16,7 +16,11 @@ import {
   outputToken,
   outputWarn,
 } from '@shopify/cli-kit/node/output';
-import {findEnvironmentOrThrow} from '../../../lib/common.js';
+import {
+  createEnvironmentCliChoiceLabel,
+  findEnvironmentOrThrow,
+  orderEnvironmentsBySafety,
+} from '../../../lib/common.js';
 import {renderMissingLink} from '../../../lib/render-errors.js';
 import {
   Environment,
@@ -37,8 +41,8 @@ export default class EnvPush extends Command {
     ...commonFlags.env,
     'env-file': Flags.string({
       description:
-        "Specify the environment variable file name. Default value is '.env'.",
-      env: 'SHOPIFY_HYDROGEN_ENVIRONMENT_FILENAME',
+        "Path to an environment file to override existing environment variables for the selected environment. \
+Defaults to the '.env' located in your project path `--path`.",
     }),
     ...commonFlags.path,
   };
@@ -57,13 +61,13 @@ interface Flags {
 
 export async function runEnvPush({
   env: envHandle,
-  envFile = '.env',
+  envFile,
   path = process.cwd(),
 }: Flags) {
   let validatedEnvironment: Environment;
 
   // Ensure local .env file
-  const dotEnvPath = resolvePath(path, envFile);
+  const dotEnvPath = envFile || resolvePath(path, '.env');
   const {variables: localVariables} = await readAndParseDotEnv(dotEnvPath);
 
   // Authenticate
@@ -98,14 +102,7 @@ export async function runEnvPush({
     throw new AbortError('Failed to fetch environments');
   }
 
-  // Order environments
-  const environments = [
-    ...environmentsData.filter((environment) => environment.type === 'PREVIEW'),
-    ...environmentsData.filter((environment) => environment.type === 'CUSTOM'),
-    ...environmentsData.filter(
-      (environment) => environment.type === 'PRODUCTION',
-    ),
-  ];
+  const environments = orderEnvironmentsBySafety(environmentsData);
 
   if (environments.length === 0) {
     throw new AbortError('No environments found');
@@ -117,10 +114,12 @@ export async function runEnvPush({
   } else {
     // Environment flag not passed
     const choices = [
-      ...environments.map(({id, name, branch}) => ({
-        label: branch ? `${name} (${branch})` : name,
-        value: id,
-      })),
+      ...environments.map(({id, name, branch, handle}) => {
+        return {
+          label: createEnvironmentCliChoiceLabel(name, handle, branch),
+          value: id,
+        };
+      }),
     ];
 
     const pushToBranchSelection = await renderSelectPrompt({

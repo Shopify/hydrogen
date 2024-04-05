@@ -12,7 +12,7 @@ import {getSkeletonSourceDir} from '../../build.js';
 import {replaceRemixEnv, replaceServerI18n} from './replacers.js';
 import {DEFAULT_COMPILER_OPTIONS} from '../../transpile/morph/index.js';
 
-const remixDts = 'remix.env.d.ts';
+const envDts = 'env.d.ts';
 const serverTs = 'server.ts';
 
 const checkTypes = (content: string) => {
@@ -35,10 +35,7 @@ describe('i18n replacers', () => {
   it('adds i18n type to remix.env.d.ts', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       const skeletonDir = getSkeletonSourceDir();
-      await copyFile(
-        joinPath(skeletonDir, remixDts),
-        joinPath(tmpDir, remixDts),
-      );
+      await copyFile(joinPath(skeletonDir, envDts), joinPath(tmpDir, envDts));
 
       await replaceRemixEnv(
         {rootDirectory: tmpDir},
@@ -48,11 +45,11 @@ describe('i18n replacers', () => {
         ),
       );
 
-      const newContent = await readFile(joinPath(tmpDir, remixDts));
+      const newContent = await readFile(joinPath(tmpDir, envDts));
       expect(() => checkTypes(newContent)).not.toThrow();
 
       expect(newContent).toMatchInlineSnapshot(`
-        "/// <reference types="@remix-run/dev" />
+        "/// <reference types="vite/client" />
         /// <reference types="@shopify/remix-oxygen" />
         /// <reference types="@shopify/oxygen-workers-types" />
 
@@ -145,8 +142,9 @@ describe('i18n replacers', () => {
       expect(() => checkTypes(newContent)).not.toThrow();
 
       expect(newContent).toMatchInlineSnapshot(`
-        "// Virtual entry point for the app
-        import * as remixBuild from "@remix-run/dev/server-build";
+        "// @ts-ignore
+        // Virtual entry point for the app
+        import * as remixBuild from "virtual:remix/server-build";
         import {
           cartGetIdDefault,
           cartSetIdDefault,

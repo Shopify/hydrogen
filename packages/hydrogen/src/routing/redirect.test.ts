@@ -46,6 +46,28 @@ describe('storefrontRedirect', () => {
     });
   });
 
+  it('queries the SFAPI with the url lower cased', async () => {
+    queryMock.mockResolvedValueOnce({
+      urlRedirects: {edges: [{node: {target: shopifyDomain + '/some-page'}}]},
+    });
+
+    await expect(
+      storefrontRedirect({
+        storefront: storefrontMock,
+        request: new Request('https://domain.com/some-PAGE'),
+      }),
+    ).resolves.toEqual(
+      new Response(null, {
+        status: 301,
+        headers: {location: shopifyDomain + '/some-page'},
+      }),
+    );
+
+    expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
+      variables: {query: 'path:/some-page'},
+    });
+  });
+
   it('strips remix _data query parameter on soft navigations', async () => {
     queryMock.mockResolvedValueOnce({
       urlRedirects: {edges: [{node: {target: shopifyDomain + '/some-page'}}]},
