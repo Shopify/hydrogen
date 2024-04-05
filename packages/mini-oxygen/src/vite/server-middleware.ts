@@ -12,7 +12,7 @@ import type {OnlyBindings, OnlyServices} from '../worker/utils.js';
 import {getHmrUrl, pipeFromWeb, toURL, toWeb} from './utils.js';
 
 import type {ViteEnv} from './worker-entry.js';
-import {getRequestInfo} from '../worker/handler.js';
+import {type RequestHookInfo} from '../worker/handler.js';
 const scriptPath = fileURLToPath(new URL('./worker-entry.js', import.meta.url));
 
 const FETCH_MODULE_PATHNAME = '/__vite_fetch_module';
@@ -72,10 +72,10 @@ export async function startMiniOxygenRuntime({
   services,
   debug = false,
   inspectorPort,
-  logRequestLine = defaultLogRequestLine,
   crossBoundarySetup,
   entry: workerEntryFile,
   requestHook,
+  logRequestLine = defaultLogRequestLine,
 }: MiniOxygenViteOptions) {
   const serviceBindings =
     services &&
@@ -90,12 +90,9 @@ export async function startMiniOxygenRuntime({
   const wrappedHook =
     requestHook || logRequestLine
       ? async (request: Request) => {
-          const info = getRequestInfo(request.headers);
+          const info = (await request.json()) as RequestHookInfo;
 
-          await Promise.all([
-            requestHook?.(request, info),
-            logRequestLine?.(request, info),
-          ]);
+          await Promise.all([requestHook?.(info), logRequestLine?.(info)]);
 
           return new Response('ok');
         }

@@ -1,5 +1,3 @@
-// This file is stringified, do not import anything here.
-
 type Service = {fetch: typeof fetch};
 
 export type MiniOxygenHandlerEnv = {
@@ -14,6 +12,7 @@ export function getMiniOxygenHandlerScript() {
   return `export default { fetch: ${miniOxygenHandler} }\n${withRequestHook}`;
 }
 
+// This function is stringified, do not use anything from outer scope here:
 async function miniOxygenHandler(
   request: Request,
   env: MiniOxygenHandlerEnv,
@@ -70,35 +69,63 @@ type RequestHookOptions = {
   hook: Service;
 };
 
+/**
+ * @public
+ */
+export type RequestHookInfo = {
+  request: {
+    url: string;
+    method: string;
+    headers: Record<string, string>;
+  };
+  response: {
+    status: number;
+    statusText: string;
+    headers: Record<string, string>;
+  };
+  meta: {
+    startTimeMs: number;
+    endTimeMs: number;
+    durationMs: number;
+  };
+};
+
+// This function is stringified, do not use anything from outer scope here:
 export async function withRequestHook({
   handleRequest,
   request,
-  headers,
+  headers = {},
   hook,
   context,
 }: RequestHookOptions) {
   const startTimeMs = Date.now();
   const response = await handleRequest();
-  const durationMs = Date.now() - startTimeMs;
+  const endTimeMs = Date.now();
+  const durationMs = endTimeMs - startTimeMs;
 
   context.waitUntil(
     hook.fetch(request.url, {
-      method: request.method,
+      method: 'POST',
       signal: request.signal,
-      headers: {
-        ...headers,
-        'o2-duration-ms': String(durationMs),
-        'o2-response-status': String(response.status),
-      },
+      body: JSON.stringify({
+        request: {
+          url: request.url,
+          method: request.method,
+          headers,
+        },
+        response: {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+        },
+        meta: {
+          startTimeMs,
+          endTimeMs,
+          durationMs,
+        },
+      } satisfies RequestHookInfo),
     }),
   );
 
   return response;
-}
-
-export function getRequestInfo(headers: {get(name: string): string | null}) {
-  return {
-    durationMs: Number(headers.get('o2-duration-ms') || 0),
-    responseStatus: Number(headers.get('o2-response-status') || 200),
-  };
 }

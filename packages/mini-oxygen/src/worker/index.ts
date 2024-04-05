@@ -18,8 +18,8 @@ import {
 } from './assets.js';
 import {
   getMiniOxygenHandlerScript,
-  getRequestInfo,
   type MiniOxygenHandlerEnv,
+  type RequestHookInfo,
 } from './handler.js';
 import {OXYGEN_HEADERS_MAP} from '../common/headers.js';
 import {findPort} from '../common/find-port.js';
@@ -34,6 +34,7 @@ export {
   fetch,
   type RequestInit,
   type ResponseInit,
+  type RequestHookInfo,
 };
 
 const DEFAULT_PUBLIC_INSPECTOR_PORT = 9229;
@@ -174,17 +175,11 @@ export function createMiniOxygen({
   };
 }
 
-export type RequestHook = (
-  request: Request,
-  opt: {responseStatus: number; durationMs: number},
-) => void | Promise<void>;
+export type RequestHook = (info: RequestHookInfo) => void | Promise<void>;
 
-export const defaultLogRequestLine: RequestHook = (
-  request,
-  {responseStatus},
-) => {
+export const defaultLogRequestLine: RequestHook = ({request, response}) => {
   console.log(
-    `${request.method}  ${responseStatus}  ${request.url.replace(
+    `${request.method}  ${response.status}  ${request.url.replace(
       new URL(request.url).origin,
       '',
     )}`,
@@ -231,7 +226,7 @@ function buildMiniflareOptions(
 
   const wrappedHook = requestHook
     ? async (request: Request) => {
-        await requestHook(request, getRequestInfo(request.headers));
+        await requestHook((await request.json()) as RequestHookInfo);
         return new Response('ok');
       }
     : null;
