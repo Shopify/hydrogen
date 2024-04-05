@@ -1,15 +1,22 @@
-import type {Plugin, ResolvedConfig} from 'vite';
+import type {Plugin, ResolvedConfig, ConfigEnv} from 'vite';
+import type {Preset as RemixPreset} from '@remix-run/dev';
 import {
-  HydrogenMiddlewareOptions,
   setupHydrogenMiddleware,
+  type HydrogenMiddlewareOptions,
 } from './hydrogen-middleware.js';
 import type {HydrogenPluginOptions} from './types.js';
 import {type RequestEventPayload, emitRequestEvent} from './request-events.js';
+import {getVirtualRoutes} from './get-virtual-routes.js';
 
 // Do not import JS from here, only types
 import type {OxygenApiOptions} from '~/mini-oxygen/vite/plugin.js';
 
 export type {HydrogenPluginOptions};
+
+const sharedOptions: Partial<
+  Pick<HydrogenPluginOptions, 'disableVirtualRoutes'> &
+    Pick<ConfigEnv, 'command'>
+> = {};
 
 /**
  * Enables Hydrogen utilities for local development
@@ -25,7 +32,9 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
   return [
     {
       name: 'hydrogen:main',
-      config() {
+      config(_, env) {
+        sharedOptions.command = env.command;
+
         return {
           ssr: {
             optimizeDeps: {
@@ -51,6 +60,10 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
       api: {
         registerPluginOptions(newOptions: HydrogenPluginOptions) {
           middlewareOptions = mergeOptions(middlewareOptions, newOptions);
+          if ('disableVirtualRoutes' in middlewareOptions) {
+            sharedOptions.disableVirtualRoutes =
+              middlewareOptions.disableVirtualRoutes;
+          }
         },
         getPluginOptions() {
           return mergeOptions(pluginOptions, middlewareOptions);
@@ -152,3 +165,52 @@ function mergeOptions(
 
   return {...acc, ...newOptionsWithoutUndefined};
 }
+
+hydrogen.preset = () =>
+  ({
+    name: 'hydrogen',
+    remixConfig() {
+      if (sharedOptions.disableVirtualRoutes) return {};
+
+      return {
+        buildDirectory: 'dist',
+        async routes(defineRoutes) {
+          if (
+            sharedOptions.disableVirtualRoutes ||
+            sharedOptions.command !== 'serve'
+          ) {
+            return {};
+          }
+
+          const {root, routes: virtualRoutes} = await getVirtualRoutes();
+
+          const result = defineRoutes((route) => {
+            route(root.path, root.file, {id: root.id}, () => {
+              virtualRoutes.map(({path, file, index, id}) => {
+                route(path, file, {id, index});
+              });
+            });
+          });
+
+          // - Goal: stop matching the user's root with our virtual routes
+          // to avoid adding layouts and calling user loaders.
+          //
+          // - Problem: Even though root-less routes work in Remix, it always
+          // adds the user root as the parentId of every route when we leave it
+          // as undefined. Even if we delete it manually here, it adds it back:
+          // https://github.com/remix-run/remix/blob/b07921efd5e8eed98e2996749852777c71bc3e50/packages/remix-dev/config.ts#L565
+          //
+          // - Solution:
+          // The String object tricks Remix into thinking that the
+          // parentId is defined (!!new String('') === true) so it doesn't
+          // overwrite it with `root`. Later, this value acts as an
+          // undefined / empty string when matching routes so it
+          // doesn't match the user root.
+          // @ts-expect-error
+          result[root.id].parentId = new String('');
+
+          return result;
+        },
+      };
+    },
+  } satisfies RemixPreset);
