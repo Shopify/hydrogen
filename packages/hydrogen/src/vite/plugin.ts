@@ -13,10 +13,19 @@ import type {OxygenApiOptions} from '~/mini-oxygen/vite/plugin.js';
 
 export type {HydrogenPluginOptions};
 
-const sharedOptions: Partial<
+/**
+ * @private
+ */
+export type HydrogenSharedOptions = Partial<
   Pick<HydrogenPluginOptions, 'disableVirtualRoutes'> &
-    Pick<ConfigEnv, 'command'>
-> = {};
+    Pick<ConfigEnv, 'command'> & {
+      remixConfig?: Parameters<
+        NonNullable<RemixPreset['remixConfigResolved']>
+      >[0]['remixConfig'];
+    }
+>;
+
+const sharedOptions: HydrogenSharedOptions = {};
 
 /**
  * Enables Hydrogen utilities for local development
@@ -66,7 +75,7 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
           }
         },
         getPluginOptions() {
-          return mergeOptions(pluginOptions, middlewareOptions);
+          return sharedOptions;
         },
       },
       configResolved(resolvedConfig) {
@@ -169,6 +178,9 @@ function mergeOptions(
 hydrogen.preset = () =>
   ({
     name: 'hydrogen',
+    remixConfigResolved({remixConfig}) {
+      sharedOptions.remixConfig = remixConfig;
+    },
     remixConfig() {
       if (sharedOptions.disableVirtualRoutes) return {};
 

@@ -38,7 +38,10 @@ import {logRequestLine} from '../../lib/mini-oxygen/common.js';
 
 // Do not import JS from here, only types
 import type {OxygenApiOptions} from '~/mini-oxygen/vite/plugin.js';
-import type {HydrogenPluginOptions} from '~/hydrogen/vite/plugin.js';
+import type {
+  HydrogenPluginOptions,
+  HydrogenSharedOptions,
+} from '~/hydrogen/vite/plugin.js';
 
 export default class DevVite extends Command {
   static description =
@@ -233,10 +236,16 @@ export async function runViteDev({
     );
   }
 
+  const h2PluginOptions: HydrogenSharedOptions | undefined = findPlugin(
+    viteServer.config,
+    'hydrogen:main',
+  )?.api?.getPluginOptions?.();
+
   const codegenProcess = useCodegen
     ? spawnCodegenProcess({
         rootDirectory: root,
         configFilePath: codegenConfigPath,
+        appDirectory: h2PluginOptions?.remixConfig?.appDirectory,
       })
     : undefined;
 
@@ -288,11 +297,6 @@ export async function runViteDev({
   console.log('\n');
 
   const customSections: AlertCustomSection[] = [];
-
-  const h2PluginOptions = findPlugin(
-    viteServer.config,
-    'hydrogen:main',
-  )?.api?.getPluginOptions?.();
 
   if (!h2PluginOptions?.disableVirtualRoutes) {
     customSections.push({body: getUtilityBannerlines(finalHost)});
