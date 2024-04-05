@@ -48,31 +48,36 @@ async function miniOxygenHandler(
     },
   } satisfies RequestInit;
 
+  const handleRequest = () => env.entry.fetch(request, requestInit);
+
   return env.hook
     ? withRequestHook({
+        ...requestInit,
+        handleRequest,
         request: new Request(request, requestInit),
-        handler: env.entry,
         hook: env.hook,
         context,
       })
-    : env.entry.fetch(request, requestInit);
+    : handleRequest();
 }
 
 type RequestHookOptions = {
-  handler: Service;
+  handleRequest: () => Response | Promise<Response>;
   request: Request;
+  headers?: Record<string, string>;
   context: ExecutionContext;
   hook?: Service;
 };
 
 export async function withRequestHook({
+  handleRequest,
   request,
-  handler,
+  headers,
   hook,
   context,
 }: RequestHookOptions) {
   const startTimeMs = Date.now();
-  const response = await handler.fetch(request);
+  const response = await handleRequest();
   const durationMs = Date.now() - startTimeMs;
 
   if (hook) {
@@ -81,7 +86,7 @@ export async function withRequestHook({
         method: request.method,
         signal: request.signal,
         headers: {
-          ...Object.fromEntries(request.headers.entries()),
+          ...headers,
           'o2-duration-ms': String(durationMs),
           'o2-response-status': String(response.status),
         },
@@ -90,4 +95,11 @@ export async function withRequestHook({
   }
 
   return response;
+}
+
+export function getRequestInfo(headers: {get(name: string): string | null}) {
+  return {
+    durationMs: Number(headers.get('o2-duration-ms') || 0),
+    responseStatus: Number(headers.get('o2-response-status') || 200),
+  };
 }

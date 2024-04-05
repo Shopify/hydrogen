@@ -1,15 +1,28 @@
 import {fetchModule, type ViteDevServer} from 'vite';
 import {fileURLToPath} from 'node:url';
-import {fetch, createMiniOxygen, Request, Response} from '../worker/index.js';
+import {
+  fetch,
+  createMiniOxygen,
+  Request,
+  Response,
+  type RequestHook,
+  defaultLogRequestLine,
+} from '../worker/index.js';
+import type {OnlyBindings, OnlyServices} from '../worker/utils.js';
 import {getHmrUrl, pipeFromWeb, toURL, toWeb} from './utils.js';
 
 import type {ViteEnv} from './worker-entry.js';
+import {getRequestInfo} from '../worker/handler.js';
 const scriptPath = fileURLToPath(new URL('./worker-entry.js', import.meta.url));
 
 const FETCH_MODULE_PATHNAME = '/__vite_fetch_module';
 const WARMUP_PATHNAME = '/__vite_warmup';
 
 export type InternalMiniOxygenOptions = {
+  /**
+   * A function called asynchronously when the worker gets a response.
+   */
+  requestHook?: RequestHook;
   /**
    * Creates bindings in `env` that can be used to fetch external services.
    */
@@ -48,7 +61,7 @@ export type MiniOxygenViteOptions = InternalMiniOxygenOptions & {
   env?: {[key: string]: string};
   debug?: boolean;
   inspectorPort?: number;
-  logRequestLine?: null | ((request: Request) => void);
+  logRequestLine?: null | RequestHook;
 };
 
 export type MiniOxygen = Awaited<ReturnType<typeof startMiniOxygenRuntime>>;
@@ -59,9 +72,10 @@ export async function startMiniOxygenRuntime({
   services,
   debug = false,
   inspectorPort,
-  logRequestLine,
+  logRequestLine = defaultLogRequestLine,
   crossBoundarySetup,
   entry: workerEntryFile,
+  requestHook,
 }: MiniOxygenViteOptions) {
   const serviceBindings =
     services &&
@@ -73,6 +87,20 @@ export async function startMiniOxygenRuntime({
       ]),
     );
 
+  const wrappedHook =
+    requestHook || logRequestLine
+      ? async (request: Request) => {
+          const info = getRequestInfo(request.headers);
+
+          await Promise.all([
+            requestHook?.(request, info),
+            logRequestLine?.(request, info),
+          ]);
+
+          return new Response('ok');
+        }
+      : null;
+
   const miniOxygen = createMiniOxygen({
     debug,
     inspectorPort,
@@ -82,7 +110,10 @@ export async function startMiniOxygenRuntime({
         name: 'vite-env',
         modulesRoot: '/',
         modules: [{type: 'ESModule', path: scriptPath}],
-        serviceBindings,
+        serviceBindings: {
+          ...serviceBindings,
+          ...(wrappedHook && {__VITE_REQUEST_HOOK: wrappedHook}),
+        } satisfies OnlyServices<ViteEnv>,
         bindings: {
           ...env,
           __VITE_ROOT: viteDevServer.config.root,
@@ -90,11 +121,9 @@ export async function startMiniOxygenRuntime({
           __VITE_FETCH_MODULE_PATHNAME: FETCH_MODULE_PATHNAME,
           __VITE_HMR_URL: getHmrUrl(viteDevServer),
           __VITE_WARMUP_PATHNAME: WARMUP_PATHNAME,
-        } satisfies Omit<ViteEnv, '__VITE_UNSAFE_EVAL' | '__VITE_SETUP_ENV'>,
+        } satisfies OnlyBindings<ViteEnv>,
         unsafeEvalBinding: '__VITE_UNSAFE_EVAL',
-        wrappedBindings: {
-          __VITE_SETUP_ENV: 'setup-environment',
-        },
+        wrappedBindings: {__VITE_SETUP_ENV: 'setup-environment'},
       },
       {
         name: 'setup-environment',

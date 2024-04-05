@@ -18,12 +18,14 @@ import {
 } from './assets.js';
 import {
   getMiniOxygenHandlerScript,
+  getRequestInfo,
   type MiniOxygenHandlerEnv,
 } from './handler.js';
 import {OXYGEN_HEADERS_MAP} from '../common/headers.js';
 import {findPort} from '../common/find-port.js';
 import {OXYGEN_COMPAT_PARAMS} from '../common/compat.js';
 import {isO2Verbose} from '../common/debug.js';
+import type {OnlyBindings, OnlyServices} from './utils.js';
 
 export {
   buildAssetsUrl,
@@ -172,12 +174,15 @@ export function createMiniOxygen({
   };
 }
 
-type RequestHook = (
+export type RequestHook = (
   request: Request,
   opt: {responseStatus: number; durationMs: number},
 ) => void | Promise<void>;
 
-const defaultRequestHook: RequestHook = (request, {responseStatus}) => {
+export const defaultLogRequestLine: RequestHook = (
+  request,
+  {responseStatus},
+) => {
   console.log(
     `${request.method}  ${responseStatus}  ${request.url.replace(
       new URL(request.url).origin,
@@ -211,7 +216,7 @@ const UNSAFE_OUTBOUND_SERVICE = {
 
 function buildMiniflareOptions(
   {workers, ...mfOverwriteOptions}: InputMiniflareOptions,
-  requestHook: RequestHook | null = defaultRequestHook,
+  requestHook: RequestHook | null = defaultLogRequestLine,
   assetsOptions?: AssetOptions,
 ): OutputMiniflareOptions {
   const entryWorker = workers.find((worker) => !!worker.name);
@@ -226,16 +231,7 @@ function buildMiniflareOptions(
 
   const wrappedHook = requestHook
     ? async (request: Request) => {
-        const durationMs = Number(request.headers.get('o2-duration-ms') || 0);
-        const responseStatus = Number(
-          request.headers.get('o2-response-status') || 200,
-        );
-
-        await requestHook(request, {
-          responseStatus,
-          durationMs,
-        });
-
+        await requestHook(request, getRequestInfo(request.headers));
         return new Response('ok');
       }
     : null;
@@ -320,22 +316,3 @@ function createAssetHandler(options: Partial<AssetOptions>) {
     );
   };
 }
-
-// --- Utility types:
-type OnlyServiceKeys<T> = Exclude<
-  {
-    [P in keyof T]: NonNullable<T[P]> extends {fetch: Function} ? P : never;
-  }[keyof T],
-  undefined
->;
-
-type OnlyServices<T> = Pick<
-  {[key in keyof T]: string | ((request: Request) => Promise<any>)},
-  OnlyServiceKeys<T>
->;
-
-type UnionUndefinedToNull<T> = T extends undefined ? null : T;
-type OnlyBindings<T> = Omit<
-  {[key in keyof T]: UnionUndefinedToNull<T[key]>},
-  OnlyServiceKeys<T>
->;
