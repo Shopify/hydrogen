@@ -91,6 +91,11 @@ const CONSENT_API =
 const CONSENT_API_WITH_BANNER =
   'https://cdn.shopify.com/shopifycloud/privacy-banner/storefront-banner.js';
 
+function logMissingConfig(fieldName: string) {
+  // eslint-disable-next-line no-console
+  console.error(`Unable to setup Customer Privacy API: Missing consent.${fieldName} consent configuration.`);
+}
+
 export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   const {
     withPrivacyBanner = true,
@@ -107,6 +112,30 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     },
   );
 
+  if (!consentConfig.checkoutDomain) logMissingConfig('checkoutDomain');
+  if (!consentConfig.storefrontAccessToken) logMissingConfig('storefrontAccessToken');
+
+  useEffect(() => {
+    const consentCollectedHandler = (event: CustomEvent<VisitorConsentCollected>) => {
+      if (onVisitorConsentCollected) {
+        onVisitorConsentCollected(event.detail);
+      }
+    }
+
+    document.addEventListener(
+      'visitorConsentCollected',
+      consentCollectedHandler,
+    );
+
+    return () => {
+      document.removeEventListener(
+        'visitorConsentCollected',
+        consentCollectedHandler,
+      );
+    };
+
+  }, [onVisitorConsentCollected]);
+
   useEffect(() => {
     if (scriptStatus !== 'done' || loadedEvent.current) return;
 
@@ -117,15 +146,6 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
         checkoutRootDomain: consentConfig.checkoutDomain,
         storefrontAccessToken: consentConfig.storefrontAccessToken,
       });
-    }
-
-    if (onVisitorConsentCollected) {
-      document.addEventListener(
-        'visitorConsentCollected',
-        (event: CustomEvent<VisitorConsentCollected>) => {
-          onVisitorConsentCollected(event.detail);
-        },
-      );
     }
 
     // Override the setTrackingConsent method to include the headless storefront configuration
@@ -149,7 +169,6 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     }
   }, [
     scriptStatus,
-    onVisitorConsentCollected,
     withPrivacyBanner,
     consentConfig,
   ]);

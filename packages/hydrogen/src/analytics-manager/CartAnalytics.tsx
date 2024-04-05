@@ -6,6 +6,16 @@ import {
 } from './AnalyticsProvider';
 import {type CartUpdatePayload} from './AnalyticsView';
 
+function logMissingField(fieldName: string) {
+  // eslint-disable-next-line no-console
+  console.error(`Unable to set up cart analytics events: ${fieldName} is missing.`);
+}
+
+type CartStorage = {
+  updatedAt: string;
+  id: string;
+}
+
 export function CartAnalytics({
   cart: currentCart,
   setCarts,
@@ -20,6 +30,16 @@ export function CartAnalytics({
   useEffect(() => {
     if (!currentCart) return;
     Promise.resolve(currentCart).then((updatedCart) => {
+      if (updatedCart) {
+        if (!updatedCart.id) {
+          logMissingField('cart.id');
+          return;
+        }
+        if (!updatedCart.updatedAt) {
+          logMissingField('cart.updatedAt');
+          return;
+        }
+      }
       setCarts(({cart, prevCart}: Carts) => {
         if (updatedCart?.updatedAt !== cart?.updatedAt)
           return {cart: updatedCart, prevCart: cart};
@@ -33,8 +53,15 @@ export function CartAnalytics({
     if (!cart || !cart?.updatedAt) return;
     if (cart?.updatedAt === prevCart?.updatedAt) return;
 
-    const cartLastUpdatedAt = localStorage.getItem('cartLastUpdatedAt');
-    if (cart.updatedAt === cartLastUpdatedAt) return;
+
+    let cartLastUpdatedAt: CartStorage | null;
+    try {
+      cartLastUpdatedAt = JSON.parse(localStorage.getItem('cartLastUpdatedAt') || '');
+    } catch (e) {
+      cartLastUpdatedAt = null;
+    }
+
+    if (cart.id === cartLastUpdatedAt?.id && cart.updatedAt === cartLastUpdatedAt?.updatedAt) return;
 
     const payload: CartUpdatePayload = {
       eventTimestamp: Date.now(),
@@ -45,6 +72,7 @@ export function CartAnalytics({
     };
 
     // prevent duplicate events
+    // TODO: add cart id check
     if (cart.updatedAt === lastEventId.current) return;
     lastEventId.current = cart.updatedAt;
 
@@ -53,7 +81,10 @@ export function CartAnalytics({
     // We store the last cart update timestamp in localStorage to be able
     // to detect if the cart has been updated since the last page render
     // this prevents sending duplicate cart_updated events on first render
-    localStorage.setItem('cartLastUpdatedAt', cart.updatedAt);
+    localStorage.setItem('cartLastUpdatedAt', JSON.stringify({
+      id: cart.id,
+      updatedAt: cart.updatedAt,
+    }));
 
     // Detect quantity changes and missing cart lines
     prevCart?.lines?.nodes?.forEach((prevLine) => {

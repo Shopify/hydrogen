@@ -156,14 +156,11 @@ function AnalyticsView(props: CustomViewProps): null;
 function AnalyticsView(props: any) {
   const {type, data = {}, customData} = props;
   const location = useLocation();
-  const lastLocationPathname = useRef<string>('');
   const {publish, cart, prevCart, shop} = useAnalytics();
   const url = location.pathname + location.search;
 
   // Publish page_viewed events when the URL changes
   useEffect(() => {
-    if (lastLocationPathname.current === url) return;
-
     // don't publish the event until we have the shop
     if (!shop) return;
 
@@ -175,8 +172,6 @@ function AnalyticsView(props: any) {
       prevCart,
       shop,
     };
-
-    lastLocationPathname.current = url;
 
     publish(type, viewPayload);
   }, [publish, url, cart, prevCart, shop]);

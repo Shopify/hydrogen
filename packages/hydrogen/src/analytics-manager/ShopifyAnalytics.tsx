@@ -45,8 +45,8 @@ export function ShopifyAnalytics({
   consent: AnalyticsProviderProps['consent'];
 }) {
   const {subscribe, register, canTrack} = useAnalytics();
-  const {ready: shopifyAnalyticsReady} = register('ShopifyAnalytics');
-  const {ready: customerPrivacyReady} = register('ShopifyCustomerPrivacy');
+  const {ready: shopifyAnalyticsReady} = register('Internal_Shopify_Analytics');
+  const {ready: customerPrivacyReady} = register('Internal_Shopify_CustomerPrivacy');
   const {checkoutDomain, storefrontAccessToken} = consent;
   checkoutDomain &&
     storefrontAccessToken &&
@@ -73,6 +73,11 @@ export function ShopifyAnalytics({
   return null;
 }
 
+function logMissingConfig(fieldName: string) {
+  // eslint-disable-next-line no-console
+  console.error(`Unable to send Shopify analytics: Missing shop.${fieldName} configuration.`);
+}
+
 function prepareBasePageViewPayload(
   payload:
     | PageViewPayload
@@ -85,8 +90,19 @@ function prepareBasePageViewPayload(
   const hasUserConsent = customerPrivacy.userCanBeTracked();
 
   if (!payload?.shop?.shopId) {
-    // eslint-disable-next-line no-console
-    console.warn('ShopifyAnalytics - Missing shopId in page view payload');
+    logMissingConfig('shopId');
+    return;
+  }
+  if (!payload?.shop?.acceptedLanguage) {
+    logMissingConfig('acceptedLanguage');
+    return;
+  }
+  if (!payload?.shop?.currency) {
+    logMissingConfig('currency');
+    return;
+  }
+  if (!payload?.shop?.hydrogenSubchannelId) {
+    logMissingConfig('hydrogenSubchannelId');
     return;
   }
 
@@ -311,6 +327,11 @@ function validateProducts({
   fromSource: string;
   products: Array<Record<string, unknown>>;
 }) {
+  if (!products || products.length === 0) {
+    missingErrorMessage(eventName, `${productField}`, fromSource);
+    return false;
+  }
+
   products.forEach((product) => {
     if (!product.id) {
       missingErrorMessage(eventName, `${productField}.id`, fromSource);

@@ -320,6 +320,7 @@ function AnalyticsProvider({
     customData,
     shop,
     register,
+    JSON.stringify(registers),
   ]);
 
   return (
