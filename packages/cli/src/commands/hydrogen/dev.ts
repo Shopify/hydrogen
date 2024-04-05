@@ -198,7 +198,12 @@ export async function runDev({
     cliConfig &&
     backgroundPromise.then(({customerAccountPush, storefrontId}) => {
       if (customerAccountPush) {
-        return startTunnelAndPushConfig(root, cliConfig, appPort, storefrontId);
+        return startTunnelAndPushConfig(
+          root,
+          cliConfig,
+          appPort!,
+          storefrontId,
+        );
       }
     });
 
