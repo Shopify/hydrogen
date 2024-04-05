@@ -1,14 +1,22 @@
+// This file is stringified, do not import anything here.
+
 type Service = {fetch: typeof fetch};
 
-export async function miniOxygenHandler(
+export type MiniOxygenHandlerEnv = {
+  entry: Service;
+  assets?: Service;
+  hook?: Service;
+  staticAssetExtensions?: string[];
+  oxygenHeadersMap: Record<string, string>;
+};
+
+export function getMiniOxygenHandlerScript() {
+  return `export default { fetch: ${miniOxygenHandler} }\n${withRequestHook}`;
+}
+
+async function miniOxygenHandler(
   request: Request,
-  env: {
-    entry: Service;
-    assets?: Service;
-    logRequest: Service;
-    staticAssetExtensions?: string[];
-    oxygenHeadersMap: Record<string, string>;
-  },
+  env: MiniOxygenHandlerEnv,
   context: ExecutionContext,
 ) {
   const {pathname} = new URL(request.url);
@@ -40,23 +48,46 @@ export async function miniOxygenHandler(
     },
   } satisfies RequestInit;
 
+  return env.hook
+    ? withRequestHook({
+        request: new Request(request, requestInit),
+        handler: env.entry,
+        hook: env.hook,
+        context,
+      })
+    : env.entry.fetch(request, requestInit);
+}
+
+type RequestHookOptions = {
+  handler: Service;
+  request: Request;
+  context: ExecutionContext;
+  hook?: Service;
+};
+
+export async function withRequestHook({
+  request,
+  handler,
+  hook,
+  context,
+}: RequestHookOptions) {
   const startTimeMs = Date.now();
-  const response = await env.entry.fetch(request, requestInit);
+  const response = await handler.fetch(request);
   const durationMs = Date.now() - startTimeMs;
 
-  context.waitUntil(
-    env.logRequest.fetch(
-      new Request(request.url, {
+  if (hook) {
+    context.waitUntil(
+      hook.fetch(request.url, {
         method: request.method,
         signal: request.signal,
         headers: {
-          ...requestInit.headers,
+          ...Object.fromEntries(request.headers.entries()),
           'o2-duration-ms': String(durationMs),
           'o2-response-status': String(response.status),
         },
       }),
-    ),
-  );
+    );
+  }
 
   return response;
 }

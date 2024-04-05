@@ -16,7 +16,10 @@ import {
   buildAssetsUrl,
   createAssetsServer,
 } from './assets.js';
-import {miniOxygenHandler} from './handler.js';
+import {
+  getMiniOxygenHandlerScript,
+  type MiniOxygenHandlerEnv,
+} from './handler.js';
 import {OXYGEN_HEADERS_MAP} from '../common/headers.js';
 import {findPort} from '../common/find-port.js';
 import {OXYGEN_COMPAT_PARAMS} from '../common/compat.js';
@@ -64,7 +67,7 @@ export type MiniOxygenOptions = InputMiniflareOptions & {
   debug?: boolean;
   sourceMapPath?: string;
   assets?: AssetOptions;
-  logRequestLine?: LogRequestLine | null;
+  requestHook?: RequestHook | null;
   inspectWorkerName?: string;
 };
 
@@ -75,12 +78,12 @@ export function createMiniOxygen({
   inspectorPort,
   assets,
   sourceMapPath = '',
-  logRequestLine,
+  requestHook,
   inspectWorkerName,
   ...miniflareOptions
 }: MiniOxygenOptions) {
   const mf = new Miniflare(
-    buildMiniflareOptions(miniflareOptions, logRequestLine, assets),
+    buildMiniflareOptions(miniflareOptions, requestHook, assets),
   );
 
   if (!sourceMapPath) {
@@ -155,7 +158,7 @@ export function createMiniOxygen({
         mf.setOptions(
           buildMiniflareOptions(
             {...miniflareOptions, ...newOptions},
-            logRequestLine,
+            requestHook,
             assets,
           ),
         ),
@@ -169,12 +172,12 @@ export function createMiniOxygen({
   };
 }
 
-type LogRequestLine = (
+type RequestHook = (
   request: Request,
   opt: {responseStatus: number; durationMs: number},
-) => void;
+) => void | Promise<void>;
 
-const defaultLogRequestLine: LogRequestLine = (request, {responseStatus}) => {
+const defaultRequestHook: RequestHook = (request, {responseStatus}) => {
   console.log(
     `${request.method}  ${responseStatus}  ${request.url.replace(
       new URL(request.url).origin,
@@ -208,7 +211,7 @@ const UNSAFE_OUTBOUND_SERVICE = {
 
 function buildMiniflareOptions(
   {workers, ...mfOverwriteOptions}: InputMiniflareOptions,
-  logRequestLine: LogRequestLine | null = defaultLogRequestLine,
+  requestHook: RequestHook | null = defaultRequestHook,
   assetsOptions?: AssetOptions,
 ): OutputMiniflareOptions {
   const entryWorker = workers.find((worker) => !!worker.name);
@@ -221,16 +224,21 @@ function buildMiniflareOptions(
     ? STATIC_ASSET_EXTENSIONS.slice()
     : null;
 
-  async function logRequest(request: Request): Promise<Response> {
-    const durationMs = Number(request.headers.get('o2-duration-ms') || 0);
-    const responseStatus = Number(
-      request.headers.get('o2-response-status') || 200,
-    );
+  const wrappedHook = requestHook
+    ? async (request: Request) => {
+        const durationMs = Number(request.headers.get('o2-duration-ms') || 0);
+        const responseStatus = Number(
+          request.headers.get('o2-response-status') || 200,
+        );
 
-    logRequestLine?.(request, {responseStatus, durationMs});
+        await requestHook(request, {
+          responseStatus,
+          durationMs,
+        });
 
-    return new Response('ok');
-  }
+        return new Response('ok');
+      }
+    : null;
 
   const wrappedBindings = new Set(
     workers
@@ -270,16 +278,16 @@ function buildMiniflareOptions(
       {
         name: ROUTING_WORKER_NAME,
         modules: true,
-        script: `export default { fetch: ${miniOxygenHandler.toString()} }`,
+        script: getMiniOxygenHandlerScript(),
         bindings: {
           staticAssetExtensions,
           oxygenHeadersMap,
-        },
+        } satisfies OnlyBindings<MiniOxygenHandlerEnv>,
         serviceBindings: {
           entry: entryWorker.name,
-          logRequest,
+          ...(wrappedHook && {hook: wrappedHook}),
           ...(handleAssets && {assets: handleAssets}),
-        },
+        } satisfies OnlyServices<MiniOxygenHandlerEnv>,
       },
       ...workers.map((worker) => {
         const isNormalWorker = !wrappedBindings.has(worker.name);
@@ -312,3 +320,22 @@ function createAssetHandler(options: Partial<AssetOptions>) {
     );
   };
 }
+
+// --- Utility types:
+type OnlyServiceKeys<T> = Exclude<
+  {
+    [P in keyof T]: NonNullable<T[P]> extends {fetch: Function} ? P : never;
+  }[keyof T],
+  undefined
+>;
+
+type OnlyServices<T> = Pick<
+  {[key in keyof T]: string | ((request: Request) => Promise<any>)},
+  OnlyServiceKeys<T>
+>;
+
+type UnionUndefinedToNull<T> = T extends undefined ? null : T;
+type OnlyBindings<T> = Omit<
+  {[key in keyof T]: UnionUndefinedToNull<T[key]>},
+  OnlyServiceKeys<T>
+>;

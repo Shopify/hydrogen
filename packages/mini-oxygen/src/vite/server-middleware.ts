@@ -76,7 +76,7 @@ export async function startMiniOxygenRuntime({
   const miniOxygen = createMiniOxygen({
     debug,
     inspectorPort,
-    logRequestLine,
+    requestHook: null,
     workers: [
       {
         name: 'vite-env',
