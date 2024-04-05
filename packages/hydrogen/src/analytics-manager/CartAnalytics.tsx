@@ -8,13 +8,15 @@ import {type CartUpdatePayload} from './AnalyticsView';
 
 function logMissingField(fieldName: string) {
   // eslint-disable-next-line no-console
-  console.error(`Unable to set up cart analytics events: ${fieldName} is missing.`);
+  console.error(
+    `Unable to set up cart analytics events: ${fieldName} is missing.`,
+  );
 }
 
 type CartStorage = {
   updatedAt: string;
   id: string;
-}
+};
 
 export function CartAnalytics({
   cart: currentCart,
@@ -53,15 +55,20 @@ export function CartAnalytics({
     if (!cart || !cart?.updatedAt) return;
     if (cart?.updatedAt === prevCart?.updatedAt) return;
 
-
     let cartLastUpdatedAt: CartStorage | null;
     try {
-      cartLastUpdatedAt = JSON.parse(localStorage.getItem('cartLastUpdatedAt') || '');
+      cartLastUpdatedAt = JSON.parse(
+        localStorage.getItem('cartLastUpdatedAt') || '',
+      );
     } catch (e) {
       cartLastUpdatedAt = null;
     }
 
-    if (cart.id === cartLastUpdatedAt?.id && cart.updatedAt === cartLastUpdatedAt?.updatedAt) return;
+    if (
+      cart.id === cartLastUpdatedAt?.id &&
+      cart.updatedAt === cartLastUpdatedAt?.updatedAt
+    )
+      return;
 
     const payload: CartUpdatePayload = {
       eventTimestamp: Date.now(),
@@ -81,10 +88,13 @@ export function CartAnalytics({
     // We store the last cart update timestamp in localStorage to be able
     // to detect if the cart has been updated since the last page render
     // this prevents sending duplicate cart_updated events on first render
-    localStorage.setItem('cartLastUpdatedAt', JSON.stringify({
-      id: cart.id,
-      updatedAt: cart.updatedAt,
-    }));
+    localStorage.setItem(
+      'cartLastUpdatedAt',
+      JSON.stringify({
+        id: cart.id,
+        updatedAt: cart.updatedAt,
+      }),
+    );
 
     // Detect quantity changes and missing cart lines
     prevCart?.lines?.nodes?.forEach((prevLine) => {

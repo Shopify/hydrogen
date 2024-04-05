@@ -11330,7 +11330,7 @@
               {
                 "name": "props",
                 "description": "",
-                "value": "ShopifyDomains & CreateContentSecurityPolicy",
+                "value": "CreateContentSecurityPolicy & ShopProp",
                 "isOptional": true,
                 "filePath": "/csp/csp.ts"
               }
@@ -11341,7 +11341,224 @@
               "name": "ContentSecurityPolicy",
               "value": "ContentSecurityPolicy"
             },
-            "value": "export function createContentSecurityPolicy(\n  props?: ShopifyDomains & CreateContentSecurityPolicy,\n): ContentSecurityPolicy {\n  const nonce = generateNonce();\n  const header = createCSPHeader(nonce, props ?? {});\n\n  const Provider = ({children}: {children: ReactNode}) => {\n    return createElement(NonceProvider, {value: nonce}, children);\n  };\n\n  return {\n    nonce,\n    header,\n    NonceProvider: Provider,\n  };\n}"
+            "value": "export function createContentSecurityPolicy(\n  props?: CreateContentSecurityPolicy & ShopProp,\n): ContentSecurityPolicy {\n  const nonce = generateNonce();\n  const header = createCSPHeader(nonce, props);\n\n  const Provider = ({children}: {children: ReactNode}) => {\n    return createElement(NonceProvider, {value: nonce}, children);\n  };\n\n  return {\n    nonce,\n    header,\n    NonceProvider: Provider,\n  };\n}"
+          },
+          "CreateContentSecurityPolicy": {
+            "filePath": "/csp/csp.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CreateContentSecurityPolicy",
+            "value": "{\n  defaultSrc?: DirectiveValues;\n  scriptSrc?: DirectiveValues;\n  styleSrc?: DirectiveValues;\n  imgSrc?: DirectiveValues;\n  connectSrc?: DirectiveValues;\n  fontSrc?: DirectiveValues;\n  objectSrc?: DirectiveValues;\n  mediaSrc?: DirectiveValues;\n  frameSrc?: DirectiveValues;\n  sandbox?: DirectiveValues;\n  reportUri?: DirectiveValues;\n  childSrc?: DirectiveValues;\n  formAction?: DirectiveValues;\n  frameAncestors?: DirectiveValues;\n  pluginTypes?: DirectiveValues;\n  baseUri?: DirectiveValues;\n  reportTo?: DirectiveValues;\n  workerSrc?: DirectiveValues;\n  manifestSrc?: DirectiveValues;\n  prefetchSrc?: DirectiveValues;\n  navigateTo?: DirectiveValues;\n  upgradeInsecureRequests?: boolean;\n  blockAllMixedContent?: boolean;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "defaultSrc",
+                "value": "DirectiveValues",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "scriptSrc",
+                "value": "DirectiveValues",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "styleSrc",
+                "value": "DirectiveValues",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "imgSrc",
+                "value": "DirectiveValues",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "connectSrc",
+                "value": "DirectiveValues",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "fontSrc",
+                "value": "DirectiveValues",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "objectSrc",
+                "value": "DirectiveValues",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "mediaSrc",
+                "value": "DirectiveValues",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "frameSrc",
+                "value": "DirectiveValues",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "sandbox",
+                "value": "DirectiveValues",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "reportUri",
+                "value": "DirectiveValues",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "childSrc",
+                "value": "DirectiveValues",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "formAction",
+                "value": "DirectiveValues",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "frameAncestors",
+                "value": "DirectiveValues",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "pluginTypes",
+                "value": "DirectiveValues",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "baseUri",
+                "value": "DirectiveValues",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "reportTo",
+                "value": "DirectiveValues",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "workerSrc",
+                "value": "DirectiveValues",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "manifestSrc",
+                "value": "DirectiveValues",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "prefetchSrc",
+                "value": "DirectiveValues",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "navigateTo",
+                "value": "DirectiveValues",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "upgradeInsecureRequests",
+                "value": "boolean",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "blockAllMixedContent",
+                "value": "boolean",
+                "description": "",
+                "isOptional": true
+              }
+            ]
+          },
+          "DirectiveValues": {
+            "filePath": "/csp/csp.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "DirectiveValues",
+            "value": "string[] | string | boolean",
+            "description": ""
+          },
+          "ShopProp": {
+            "filePath": "/csp/csp.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopProp",
+            "value": "{\n  /** Shop specific configurations */\n  shop?: ShopifyDomains;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "shop",
+                "value": "ShopifyDomains",
+                "description": "Shop specific configurations",
+                "isOptional": true
+              }
+            ]
           },
           "ShopifyDomains": {
             "filePath": "/csp/csp.ts",
@@ -11367,14 +11584,6 @@
                 "isOptional": true
               }
             ]
-          },
-          "CreateContentSecurityPolicy": {
-            "filePath": "/csp/csp.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CreateContentSecurityPolicy",
-            "value": "{\n  [key: string]: string[] | string | boolean;\n}",
-            "description": "",
-            "members": []
           },
           "ContentSecurityPolicy": {
             "filePath": "/csp/csp.ts",
@@ -11518,7 +11727,7 @@
               "name": "",
               "value": ""
             },
-            "value": "export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {\n  const {\n    withPrivacyBanner = true,\n    onVisitorConsentCollected,\n    ...consentConfig\n  } = props;\n  const loadedEvent = useRef(false);\n  const scriptStatus = useLoadScript(\n    withPrivacyBanner ? CONSENT_API_WITH_BANNER : CONSENT_API,\n    {\n      attributes: {\n        id: 'customer-privacy-api',\n      },\n    },\n  );\n\n  useEffect(() => {\n    if (scriptStatus !== 'done' || loadedEvent.current) return;\n\n    loadedEvent.current = true;\n\n    if (withPrivacyBanner && window?.privacyBanner) {\n      window?.privacyBanner?.loadBanner({\n        checkoutRootDomain: consentConfig.checkoutDomain,\n        storefrontAccessToken: consentConfig.storefrontAccessToken,\n      });\n    }\n\n    if (onVisitorConsentCollected) {\n      document.addEventListener(\n        'visitorConsentCollected',\n        (event: CustomEvent<VisitorConsentCollected>) => {\n          onVisitorConsentCollected(event.detail);\n        },\n      );\n    }\n\n    // Override the setTrackingConsent method to include the headless storefront configuration\n    if (window.Shopify?.customerPrivacy) {\n      const originalSetTrackingConsent =\n        window.Shopify.customerPrivacy.setTrackingConsent;\n      window.Shopify.customerPrivacy.setTrackingConsent = (\n        consent: VisitorConsent,\n        callback: () => void,\n      ) => {\n        originalSetTrackingConsent(\n          {\n            ...consent,\n            headlessStorefront: true,\n            checkoutRootDomain: consentConfig.checkoutDomain,\n            storefrontAccessToken: consentConfig.storefrontAccessToken,\n          },\n          callback,\n        );\n      };\n    }\n  }, [\n    scriptStatus,\n    onVisitorConsentCollected,\n    withPrivacyBanner,\n    consentConfig,\n  ]);\n\n  return;\n}"
+            "value": "export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {\n  const {\n    withPrivacyBanner = true,\n    onVisitorConsentCollected,\n    ...consentConfig\n  } = props;\n  const loadedEvent = useRef(false);\n  const scriptStatus = useLoadScript(\n    withPrivacyBanner ? CONSENT_API_WITH_BANNER : CONSENT_API,\n    {\n      attributes: {\n        id: 'customer-privacy-api',\n      },\n    },\n  );\n\n  if (!consentConfig.checkoutDomain) logMissingConfig('checkoutDomain');\n  if (!consentConfig.storefrontAccessToken)\n    logMissingConfig('storefrontAccessToken');\n\n  useEffect(() => {\n    const consentCollectedHandler = (\n      event: CustomEvent<VisitorConsentCollected>,\n    ) => {\n      if (onVisitorConsentCollected) {\n        onVisitorConsentCollected(event.detail);\n      }\n    };\n\n    document.addEventListener(\n      'visitorConsentCollected',\n      consentCollectedHandler,\n    );\n\n    return () => {\n      document.removeEventListener(\n        'visitorConsentCollected',\n        consentCollectedHandler,\n      );\n    };\n  }, [onVisitorConsentCollected]);\n\n  useEffect(() => {\n    if (scriptStatus !== 'done' || loadedEvent.current) return;\n\n    loadedEvent.current = true;\n\n    if (withPrivacyBanner && window?.privacyBanner) {\n      window?.privacyBanner?.loadBanner({\n        checkoutRootDomain: consentConfig.checkoutDomain,\n        storefrontAccessToken: consentConfig.storefrontAccessToken,\n      });\n    }\n\n    // Override the setTrackingConsent method to include the headless storefront configuration\n    if (window.Shopify?.customerPrivacy) {\n      const originalSetTrackingConsent =\n        window.Shopify.customerPrivacy.setTrackingConsent;\n      window.Shopify.customerPrivacy.setTrackingConsent = (\n        consent: VisitorConsent,\n        callback: () => void,\n      ) => {\n        originalSetTrackingConsent(\n          {\n            ...consent,\n            headlessStorefront: true,\n            checkoutRootDomain: consentConfig.checkoutDomain,\n            storefrontAccessToken: consentConfig.storefrontAccessToken,\n          },\n          callback,\n        );\n      };\n    }\n  }, [scriptStatus, withPrivacyBanner, consentConfig]);\n\n  return;\n}"
           },
           "CustomerPrivacyApiProps": {
             "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
@@ -12701,7 +12910,7 @@
               "name": "Promise<Response>",
               "value": "Promise<Response>"
             },
-            "value": "export async function storefrontRedirect(\n  options: StorefrontRedirect,\n): Promise<Response> {\n  const {\n    storefront,\n    request,\n    noAdminRedirect,\n    matchQueryParams,\n    response = new Response('Not Found', {status: 404}),\n  } = options;\n\n  const url = new URL(request.url);\n  const {pathname, searchParams} = url;\n  const isSoftNavigation = searchParams.has('_data');\n\n  searchParams.delete('redirect');\n  searchParams.delete('return_to');\n  searchParams.delete('_data');\n\n  const redirectFrom = matchQueryParams\n    ? url.toString().replace(url.origin, '')\n    : pathname;\n\n  if (url.pathname === '/admin' && !noAdminRedirect) {\n    return createRedirectResponse(\n      `${storefront.getShopifyDomain()}/admin`,\n      isSoftNavigation,\n      searchParams,\n      matchQueryParams,\n    );\n  }\n\n  try {\n    const {urlRedirects} = await storefront.query<{\n      urlRedirects: UrlRedirectConnection;\n    }>(REDIRECT_QUERY, {\n      variables: {query: 'path:' + redirectFrom},\n    });\n\n    const location = urlRedirects?.edges?.[0]?.node?.target;\n\n    if (location) {\n      return createRedirectResponse(\n        location,\n        isSoftNavigation,\n        searchParams,\n        matchQueryParams,\n      );\n    }\n\n    const redirectTo = getRedirectUrl(request.url);\n\n    if (redirectTo) {\n      return createRedirectResponse(\n        redirectTo,\n        isSoftNavigation,\n        searchParams,\n        matchQueryParams,\n      );\n    }\n  } catch (error) {\n    console.error(\n      `Failed to fetch redirects from Storefront API for route ${redirectFrom}`,\n      error,\n    );\n  }\n\n  return response;\n}"
+            "value": "export async function storefrontRedirect(\n  options: StorefrontRedirect,\n): Promise<Response> {\n  const {\n    storefront,\n    request,\n    noAdminRedirect,\n    matchQueryParams,\n    response = new Response('Not Found', {status: 404}),\n  } = options;\n\n  const url = new URL(request.url);\n  const {pathname, searchParams} = url;\n  const isSoftNavigation = searchParams.has('_data');\n\n  searchParams.delete('redirect');\n  searchParams.delete('return_to');\n  searchParams.delete('_data');\n\n  const redirectFrom = (\n    matchQueryParams ? url.toString().replace(url.origin, '') : pathname\n  ).toLowerCase();\n\n  if (url.pathname === '/admin' && !noAdminRedirect) {\n    return createRedirectResponse(\n      `${storefront.getShopifyDomain()}/admin`,\n      isSoftNavigation,\n      searchParams,\n      matchQueryParams,\n    );\n  }\n\n  try {\n    const {urlRedirects} = await storefront.query<{\n      urlRedirects: UrlRedirectConnection;\n    }>(REDIRECT_QUERY, {\n      variables: {query: 'path:' + redirectFrom},\n    });\n\n    const location = urlRedirects?.edges?.[0]?.node?.target;\n\n    if (location) {\n      return createRedirectResponse(\n        location,\n        isSoftNavigation,\n        searchParams,\n        matchQueryParams,\n      );\n    }\n\n    const redirectTo = getRedirectUrl(request.url);\n\n    if (redirectTo) {\n      return createRedirectResponse(\n        redirectTo,\n        isSoftNavigation,\n        searchParams,\n        matchQueryParams,\n      );\n    }\n  } catch (error) {\n    console.error(\n      `Failed to fetch redirects from Storefront API for route ${redirectFrom}`,\n      error,\n    );\n  }\n\n  return response;\n}"
           },
           "StorefrontRedirect": {
             "filePath": "/routing/redirect.ts",

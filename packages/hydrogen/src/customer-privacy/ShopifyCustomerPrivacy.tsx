@@ -93,7 +93,9 @@ const CONSENT_API_WITH_BANNER =
 
 function logMissingConfig(fieldName: string) {
   // eslint-disable-next-line no-console
-  console.error(`Unable to setup Customer Privacy API: Missing consent.${fieldName} consent configuration.`);
+  console.error(
+    `Unable to setup Customer Privacy API: Missing consent.${fieldName} consent configuration.`,
+  );
 }
 
 export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
@@ -113,14 +115,17 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   );
 
   if (!consentConfig.checkoutDomain) logMissingConfig('checkoutDomain');
-  if (!consentConfig.storefrontAccessToken) logMissingConfig('storefrontAccessToken');
+  if (!consentConfig.storefrontAccessToken)
+    logMissingConfig('storefrontAccessToken');
 
   useEffect(() => {
-    const consentCollectedHandler = (event: CustomEvent<VisitorConsentCollected>) => {
+    const consentCollectedHandler = (
+      event: CustomEvent<VisitorConsentCollected>,
+    ) => {
       if (onVisitorConsentCollected) {
         onVisitorConsentCollected(event.detail);
       }
-    }
+    };
 
     document.addEventListener(
       'visitorConsentCollected',
@@ -133,7 +138,6 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
         consentCollectedHandler,
       );
     };
-
   }, [onVisitorConsentCollected]);
 
   useEffect(() => {
@@ -167,11 +171,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
         );
       };
     }
-  }, [
-    scriptStatus,
-    withPrivacyBanner,
-    consentConfig,
-  ]);
+  }, [scriptStatus, withPrivacyBanner, consentConfig]);
 
   return;
 }

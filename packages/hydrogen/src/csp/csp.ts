@@ -131,7 +131,7 @@ function createCSPHeader(
 
   //add defaults if it was override
   for (const key in defaultDirectives) {
-    const directive = directives[key  as keyof CreateContentSecurityPolicy];
+    const directive = directives[key as keyof CreateContentSecurityPolicy];
     if (key && directive) {
       combinedDirectives[key] = addCspDirective(
         directive,

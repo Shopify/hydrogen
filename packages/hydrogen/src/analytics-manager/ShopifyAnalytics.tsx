@@ -46,7 +46,9 @@ export function ShopifyAnalytics({
 }) {
   const {subscribe, register, canTrack} = useAnalytics();
   const {ready: shopifyAnalyticsReady} = register('Internal_Shopify_Analytics');
-  const {ready: customerPrivacyReady} = register('Internal_Shopify_CustomerPrivacy');
+  const {ready: customerPrivacyReady} = register(
+    'Internal_Shopify_CustomerPrivacy',
+  );
   const {checkoutDomain, storefrontAccessToken} = consent;
   checkoutDomain &&
     storefrontAccessToken &&
@@ -75,7 +77,9 @@ export function ShopifyAnalytics({
 
 function logMissingConfig(fieldName: string) {
   // eslint-disable-next-line no-console
-  console.error(`Unable to send Shopify analytics: Missing shop.${fieldName} configuration.`);
+  console.error(
+    `Unable to send Shopify analytics: Missing shop.${fieldName} configuration.`,
+  );
 }
 
 function prepareBasePageViewPayload(
