@@ -97,11 +97,13 @@ export function createMiniOxygen({
         )) ||
       miniflareOptions.workers[0];
 
-    if ('scriptPath' in mainWorker) {
-      sourceMapPath = mainWorker.scriptPath + '.map';
-    } else if (Array.isArray(mainWorker?.modules)) {
-      const modulePath = mainWorker?.modules[0]!.path;
-      sourceMapPath = modulePath + '.map';
+    if (mainWorker) {
+      if ('scriptPath' in mainWorker) {
+        sourceMapPath = mainWorker.scriptPath + '.map';
+      } else if (Array.isArray(mainWorker?.modules)) {
+        const modulePath = mainWorker?.modules[0]!.path;
+        sourceMapPath = modulePath + '.map';
+      }
     }
   }
 

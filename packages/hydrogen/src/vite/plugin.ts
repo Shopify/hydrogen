@@ -1,10 +1,10 @@
 import type {Plugin, ResolvedConfig} from 'vite';
 import {setupHydrogenMiddleware} from './hydrogen-middleware.js';
 import type {HydrogenPluginOptions} from './types.js';
-
-// @ts-ignore -- Module outside of the rootDir
-import type {OxygenApiOptions} from '~/mini-oxygen/vite/plugin.js';
 import {emitRequestEvent} from './request-events.js';
+
+// Do not import JS from here, only types
+import type {OxygenApiOptions} from '~/mini-oxygen/vite/plugin.js';
 
 export type {HydrogenPluginOptions};
 

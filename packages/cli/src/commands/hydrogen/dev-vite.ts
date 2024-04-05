@@ -37,8 +37,8 @@ import {findPort} from '../../lib/find-port.js';
 import {logRequestLine} from '../../lib/mini-oxygen/common.js';
 
 // Do not import JS from here, only types
-import type {OxygenApiOptions} from '@shopify/mini-oxygen/vite';
-import type {HydrogenPluginOptions} from '@shopify/hydrogen/vite';
+import type {OxygenApiOptions} from '~/mini-oxygen/vite/plugin.js';
+import type {HydrogenPluginOptions} from '~/hydrogen/vite/plugin.js';
 
 export default class DevVite extends Command {
   static description =
