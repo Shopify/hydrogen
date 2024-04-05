@@ -9,8 +9,6 @@ const scriptPath = fileURLToPath(new URL('./worker-entry.js', import.meta.url));
 const FETCH_MODULE_PATHNAME = '/__vite_fetch_module';
 const WARMUP_PATHNAME = '/__vite_warmup';
 
-type Binding = (...args: unknown[]) => unknown | Promise<unknown> | void;
-
 export type InternalMiniOxygenOptions = {
   /**
    * Creates bindings in `env` that can be used to fetch external services.
@@ -33,11 +31,13 @@ export type InternalMiniOxygenOptions = {
          * Function that is stringified and runs in the worker.
          * It gets the binding function as its first argument.
          */
-        script: (binding: Binding) => void;
+        script: (
+          binding: (...args: unknown[]) => Promise<unknown | void>,
+        ) => void;
         /**
          * The binding function that runs in the parent process.
          */
-        binding: Binding;
+        binding: (...args: unknown[]) => unknown | Promise<unknown> | void;
       }
   >;
 };
