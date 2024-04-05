@@ -105,6 +105,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
               debug: apiOptions.debug ?? pluginOptions.debug ?? false,
               inspectorPort:
                 apiOptions.inspectorPort ?? pluginOptions.inspectorPort,
+              requestHook: apiOptions.requestHook,
               logRequestLine:
                 // Give priority to the plugin option over the CLI option here,
                 // since the CLI one is just a default, not a user-provided flag.

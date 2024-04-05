@@ -3,7 +3,6 @@
   "include": ["src"],
   "exclude": ["dist", "tests", "node_modules", ".turbo"],
   "compilerOptions": {
-    "rootDir": "src",
     "target": "ES2022",
     "outDir": "dist",
     "module": "NodeNext",

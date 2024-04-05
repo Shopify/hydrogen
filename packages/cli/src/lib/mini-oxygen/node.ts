@@ -87,9 +87,24 @@ export async function startNodeServer({
         () => defaultDispatcher(request),
       );
 
-      logRequestLine(request, {
-        responseStatus: response.status,
-        durationMs: startTimeMs > 0 ? Date.now() - startTimeMs : 0,
+      const endTimeMs = Date.now();
+
+      logRequestLine({
+        request: {
+          url: request.url,
+          method: request.method,
+          headers: Object.fromEntries(request.headers.entries()),
+        },
+        response: {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+        },
+        meta: {
+          startTimeMs,
+          endTimeMs,
+          durationMs: startTimeMs > 0 ? endTimeMs - startTimeMs : 0,
+        },
       });
 
       return response;

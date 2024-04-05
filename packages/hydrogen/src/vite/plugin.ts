@@ -1,21 +1,17 @@
 import type {Plugin, ResolvedConfig, ConfigEnv} from 'vite';
 import type {Preset as RemixPreset} from '@remix-run/dev';
-import {setupHydrogenMiddleware} from './hydrogen-middleware.js';
+import {
+  setupHydrogenMiddleware,
+  type HydrogenMiddlewareOptions,
+} from './hydrogen-middleware.js';
 import type {HydrogenPluginOptions} from './types.js';
-
-// @ts-ignore -- Module outside of the rootDir
-import type {OxygenApiOptions} from '~/mini-oxygen/vite/plugin.js';
 import {type RequestEventPayload, emitRequestEvent} from './request-events.js';
 import {getVirtualRoutes} from './get-virtual-routes.js';
 
-export type {HydrogenPluginOptions};
+// Do not import JS from here, only types
+import type {OxygenApiOptions} from '~/mini-oxygen/vite/plugin.js';
 
-declare global {
-  var __H2O_LOG_EVENT: undefined | ((event: RequestEventPayload) => void);
-  var __remix_devServerHooks:
-    | undefined
-    | {getCriticalCss: (...args: unknown[]) => any};
-}
+export type {HydrogenPluginOptions};
 
 const sharedOptions: Partial<
   Pick<HydrogenPluginOptions, 'disableVirtualRoutes'> &
@@ -29,7 +25,7 @@ const sharedOptions: Partial<
  * @experimental
  */
 export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
-  let apiOptions: HydrogenPluginOptions = {};
+  let middlewareOptions: HydrogenMiddlewareOptions = {};
   const isRemixChildCompiler = (config: ResolvedConfig) =>
     !config.plugins?.some((plugin) => plugin.name === 'remix');
 
@@ -63,14 +59,14 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
       },
       api: {
         registerPluginOptions(newOptions: HydrogenPluginOptions) {
-          apiOptions = mergeOptions(apiOptions, newOptions);
-          if ('disableVirtualRoutes' in apiOptions) {
+          middlewareOptions = mergeOptions(middlewareOptions, newOptions);
+          if ('disableVirtualRoutes' in middlewareOptions) {
             sharedOptions.disableVirtualRoutes =
-              apiOptions.disableVirtualRoutes;
+              middlewareOptions.disableVirtualRoutes;
           }
         },
         getPluginOptions() {
-          return mergeOptions(pluginOptions, apiOptions);
+          return mergeOptions(pluginOptions, middlewareOptions);
         },
       },
       configResolved(resolvedConfig) {
@@ -79,9 +75,44 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
           (plugin) => plugin.name === 'oxygen:main',
         );
 
+        middlewareOptions.isOxygen = !!oxygenPlugin;
+
         oxygenPlugin?.api?.registerPluginOptions?.({
           shouldStartRuntime: () => !isRemixChildCompiler(resolvedConfig),
+          requestHook: ({request, response, meta}) => {
+            // Emit events for requests
+            emitRequestEvent(
+              {
+                __fromVite: true,
+                eventType: 'request',
+                url: request.url,
+                requestId: request.headers['request-id'],
+                purpose: request.headers['purpose'],
+                startTime: meta.startTimeMs,
+                endTime: meta.endTimeMs,
+                responseInit: {
+                  status: response.status,
+                  statusText: response.statusText,
+                  headers: Object.entries(response.headers),
+                },
+              },
+              resolvedConfig.root,
+            );
+          },
           crossBoundarySetup: [
+            {
+              // Setup the global function in the Oxygen worker
+              script: (binding) => {
+                globalThis.__H2O_LOG_EVENT = binding;
+              },
+              binding: (data) => {
+                // Emit events for subrequests from the parent process
+                emitRequestEvent(
+                  data as RequestEventPayload,
+                  resolvedConfig.root,
+                );
+              },
+            },
             /**
              * To avoid initial CSS flash during development,
              * most frameworks implement a way to gather critical CSS.
@@ -107,14 +138,6 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
                 );
               },
             },
-            {
-              script: (binding) => {
-                globalThis.__H2O_LOG_EVENT = binding;
-              },
-              binding: (data) => {
-                emitRequestEvent(data, resolvedConfig.root);
-              },
-            },
           ],
         } satisfies OxygenApiOptions);
       },
@@ -124,7 +147,7 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
         return () => {
           setupHydrogenMiddleware(
             viteDevServer,
-            mergeOptions(pluginOptions, apiOptions),
+            mergeOptions(pluginOptions, middlewareOptions),
           );
         };
       },

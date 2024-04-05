@@ -13,6 +13,7 @@ import {
 } from 'vite/runtime';
 import type {HMRPayload} from 'vite';
 import type {Response} from 'miniflare';
+import {withRequestHook} from '../worker/handler.js';
 
 export interface ViteEnv {
   __VITE_ROOT: string;
@@ -20,6 +21,7 @@ export interface ViteEnv {
   __VITE_FETCH_MODULE_PATHNAME: string;
   __VITE_RUNTIME_EXECUTE_URL: string;
   __VITE_WARMUP_PATHNAME: string;
+  __VITE_REQUEST_HOOK?: {fetch: typeof fetch};
   __VITE_SETUP_ENV: (request: Request) => void;
   // Ref: https://github.com/cloudflare/workerd/blob/main/src/workerd/api/unsafe.h
   __VITE_UNSAFE_EVAL: {
@@ -35,7 +37,7 @@ export default {
   /**
    * Worker entry module that wraps the user app's entry module.
    */
-  async fetch(request: Request, env: ViteEnv, ctx: any) {
+  async fetch(request: Request, env: ViteEnv, context: ExecutionContext) {
     env.__VITE_SETUP_ENV(request);
     const url = new URL(request.url);
 
@@ -47,8 +49,18 @@ export default {
       return new globalThis.Response(null);
     }
 
+    const handleRequest = () =>
+      module.default.fetch(request, createUserEnv(env), context);
+
     // Execute the user app's entry module.
-    return module.default.fetch(request, createUserEnv(env), ctx);
+    return env.__VITE_REQUEST_HOOK
+      ? withRequestHook({
+          request,
+          context,
+          hook: env.__VITE_REQUEST_HOOK,
+          handleRequest,
+        })
+      : handleRequest();
   },
 };
 
