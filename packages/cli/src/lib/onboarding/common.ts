@@ -31,8 +31,6 @@ import {
 import {
   outputDebug,
   formatPackageManagerCommand,
-  outputToken,
-  outputContent,
 } from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
 import {type AdminSession, login, renderLoginSuccess} from '../auth.js';
@@ -689,17 +687,15 @@ export async function renderProjectReady(
                 [
                   'Run',
                   {
-                    command: outputContent`${outputToken.genericShellCommand(
-                      [
-                        project.directory === process.cwd()
-                          ? undefined
-                          : `cd ${project.location.replace(/^\.\//, '')}`,
-                        depsInstalled ? undefined : `${packageManager} install`,
-                        formatPackageManagerCommand(packageManager, 'dev'),
-                      ]
-                        .filter(Boolean)
-                        .join(' && '),
-                    )}`.value,
+                    command: [
+                      project.directory === process.cwd()
+                        ? undefined
+                        : `cd ${project.location.replace(/^\.\//, '')}`,
+                      depsInstalled ? undefined : `${packageManager} install`,
+                      formatPackageManagerCommand(packageManager, 'dev'),
+                    ]
+                      .filter(Boolean)
+                      .join(' && '),
                   },
                 ],
               ].filter((step): step is string[] => Boolean(step)),
