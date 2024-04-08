@@ -3,7 +3,7 @@ import type {I18nBase, Storefront} from '../storefront';
 import {getRedirectUrl} from '../utils/get-redirect-url';
 
 type StorefrontRedirect = {
-  /** The [Storefront client](/docs/api/hydrogen/2024-01/utilities/createstorefrontclient) instance */
+  /** The [Storefront client](/docs/api/hydrogen/2024-04/utilities/createstorefrontclient) instance */
   storefront: Storefront<I18nBase>;
   /** The [MDN Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object that was passed to the `server.ts` request handler. */
   request: Request;
