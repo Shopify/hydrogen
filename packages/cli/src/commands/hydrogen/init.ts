@@ -70,6 +70,11 @@ export default class Init extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_QUICKSTART',
       default: false,
     }),
+    'package-manager': Flags.string({
+      env: 'SHOPIFY_HYDROGEN_FLAG_PACKAGE_MANAGER',
+      hidden: true,
+      options: ['npm', 'yarn', 'pnpm', 'unknown'],
+    }),
   };
 
   async run(): Promise<void> {
@@ -140,7 +145,7 @@ export async function runInit(
   );
 
   if (showUpgrade) {
-    const packageManager = packageManagerFromUserAgent();
+    const packageManager = options.packageManager ?? packageManagerFromUserAgent();
     showUpgrade(
       packageManager === 'unknown'
         ? ''

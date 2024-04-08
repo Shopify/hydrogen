@@ -851,6 +851,20 @@
           "name": "quickstart",
           "allowNo": false,
           "type": "boolean"
+        },
+        "package-manager": {
+          "env": "SHOPIFY_HYDROGEN_FLAG_PACKAGE_MANAGER",
+          "hidden": true,
+          "name": "package-manager",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "npm",
+            "yarn",
+            "pnpm",
+            "unknown"
+          ],
+          "type": "option"
         }
       },
       "hasDynamicHelp": false,
@@ -1265,6 +1279,45 @@
         "upgrade.js"
       ]
     },
+    "hydrogen:debug:cpu": {
+      "aliases": [],
+      "args": {},
+      "description": "Builds and profiles the server startup time the app.",
+      "flags": {
+        "path": {
+          "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
+          "name": "path",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "output": {
+          "description": "Specify a path to generate the profile file. Defaults to \"startup.cpuprofile\".",
+          "name": "output",
+          "required": false,
+          "default": "startup.cpuprofile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "hydrogen:debug:cpu",
+      "pluginAlias": "@shopify/cli-hydrogen",
+      "pluginName": "@shopify/cli-hydrogen",
+      "pluginType": "core",
+      "strict": true,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "hydrogen",
+        "debug",
+        "cpu.js"
+      ]
+    },
     "hydrogen:customer-account:push": {
       "aliases": [],
       "args": {},
@@ -1322,45 +1375,6 @@
         "hydrogen",
         "customer-account",
         "push.js"
-      ]
-    },
-    "hydrogen:debug:cpu": {
-      "aliases": [],
-      "args": {},
-      "description": "Builds and profiles the server startup time the app.",
-      "flags": {
-        "path": {
-          "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
-          "name": "path",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "output": {
-          "description": "Specify a path to generate the profile file. Defaults to \"startup.cpuprofile\".",
-          "name": "output",
-          "required": false,
-          "default": "startup.cpuprofile",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        }
-      },
-      "hasDynamicHelp": false,
-      "hiddenAliases": [],
-      "id": "hydrogen:debug:cpu",
-      "pluginAlias": "@shopify/cli-hydrogen",
-      "pluginName": "@shopify/cli-hydrogen",
-      "pluginType": "core",
-      "strict": true,
-      "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "hydrogen",
-        "debug",
-        "cpu.js"
       ]
     },
     "hydrogen:env:list": {
