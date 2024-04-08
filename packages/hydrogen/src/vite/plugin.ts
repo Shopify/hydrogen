@@ -9,14 +9,11 @@ import {type RequestEventPayload, emitRequestEvent} from './request-events.js';
 import {getVirtualRoutes} from './get-virtual-routes.js';
 
 // Do not import JS from here, only types
-import type {OxygenApiOptions} from '~/mini-oxygen/vite/plugin.js';
+import type {OxygenPlugin} from '~/mini-oxygen/vite/plugin.js';
 
 export type {HydrogenPluginOptions};
 
-/**
- * @private
- */
-export type HydrogenSharedOptions = Partial<
+type HydrogenSharedOptions = Partial<
   Pick<HydrogenPluginOptions, 'disableVirtualRoutes'> &
     Pick<ConfigEnv, 'command'> & {
       remixConfig?: Parameters<
@@ -28,12 +25,18 @@ export type HydrogenSharedOptions = Partial<
 const sharedOptions: HydrogenSharedOptions = {};
 
 /**
+ * For internal use only.
+ * @private
+ */
+export type HydrogenPlugin = ReturnType<typeof hydrogen>[0];
+
+/**
  * Enables Hydrogen utilities for local development
  * such as GraphiQL, Subrequest Profiler, etc.
  * It must be used in combination with the `oxygen` plugin and Hydrogen CLI.
  * @experimental
  */
-export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
+export function hydrogen(pluginOptions: HydrogenPluginOptions = {}) {
   let middlewareOptions: HydrogenMiddlewareOptions = {};
   const isRemixChildCompiler = (config: ResolvedConfig) =>
     !config.plugins?.some((plugin) => plugin.name === 'remix');
@@ -82,7 +85,7 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
         // Pass the setup functions to the Oxygen runtime.
         const oxygenPlugin = resolvedConfig.plugins.find(
           (plugin) => plugin.name === 'oxygen:main',
-        );
+        ) as undefined | OxygenPlugin;
 
         middlewareOptions.isOxygen = !!oxygenPlugin;
 
@@ -148,7 +151,7 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
               },
             },
           ],
-        } satisfies OxygenApiOptions);
+        });
       },
       configureServer(viteDevServer) {
         if (isRemixChildCompiler(viteDevServer.config)) return;
@@ -161,7 +164,7 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
         };
       },
     },
-  ];
+  ] satisfies Plugin[];
 }
 
 function mergeOptions(

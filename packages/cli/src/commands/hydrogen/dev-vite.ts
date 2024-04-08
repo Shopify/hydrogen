@@ -35,13 +35,7 @@ import {
 import {getCliCommand} from '../../lib/shell.js';
 import {findPort} from '../../lib/find-port.js';
 import {logRequestLine} from '../../lib/mini-oxygen/common.js';
-
-// Do not import JS from here, only types
-import type {OxygenApiOptions} from '~/mini-oxygen/vite/plugin.js';
-import type {
-  HydrogenPluginOptions,
-  HydrogenSharedOptions,
-} from '~/hydrogen/vite/plugin.js';
+import {findHydrogenPlugin, findOxygenPlugin} from '../../lib/vite-config.js';
 
 export default class DevVite extends Command {
   static description =
@@ -188,17 +182,17 @@ export async function runViteDev({
       {
         name: 'hydrogen:cli',
         configResolved(config) {
-          findPlugin(config, 'hydrogen:main')?.api?.registerPluginOptions({
+          findHydrogenPlugin(config)?.api?.registerPluginOptions({
             disableVirtualRoutes,
-          } satisfies HydrogenPluginOptions);
+          });
 
-          findPlugin(config, 'oxygen:main')?.api?.registerPluginOptions({
+          findOxygenPlugin(config)?.api?.registerPluginOptions({
             debug,
             entry: ssrEntry,
             envPromise: envPromise.then(({allVariables}) => allVariables),
             inspectorPort,
             logRequestLine,
-          } satisfies OxygenApiOptions);
+          });
         },
         configureServer: (viteDevServer) => {
           if (customerAccountPushFlag) {
@@ -228,7 +222,8 @@ export async function runViteDev({
     }
   });
 
-  if (!findPlugin(viteServer.config, 'hydrogen:main')) {
+  const h2Plugin = findHydrogenPlugin(viteServer.config);
+  if (!h2Plugin) {
     await viteServer.close();
     throw new AbortError(
       'Hydrogen plugin not found.',
@@ -236,10 +231,7 @@ export async function runViteDev({
     );
   }
 
-  const h2PluginOptions: HydrogenSharedOptions | undefined = findPlugin(
-    viteServer.config,
-    'hydrogen:main',
-  )?.api?.getPluginOptions?.();
+  const h2PluginOptions = h2Plugin.api?.getPluginOptions?.();
 
   const codegenProcess = useCodegen
     ? spawnCodegenProcess({
@@ -334,13 +326,4 @@ export async function runViteDev({
       await viteServer.close();
     },
   };
-}
-
-function findPlugin<Config extends {plugins: Readonly<Array<{name: string}>>}>(
-  config: Config,
-  name: string,
-) {
-  return config.plugins.find((plugin) => plugin.name === name) as
-    | Config['plugins'][number]
-    | undefined;
 }

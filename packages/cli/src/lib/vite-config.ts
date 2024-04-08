@@ -7,6 +7,10 @@ import {
 import type {RemixPluginContext} from '@remix-run/dev/dist/vite/plugin.js';
 import {findFileWithExtension} from './file.js';
 
+// Do not import JS from here, only types
+import type {HydrogenPlugin} from '~/hydrogen/vite/plugin.js';
+import type {OxygenPlugin} from '~/mini-oxygen/vite/plugin.js';
+
 export async function hasViteConfig(root: string) {
   const result = await findFileWithExtension(root, 'vite.config');
   return !!result.filepath;
@@ -84,4 +88,26 @@ function getRemixConfigFromVite(viteConfig: any) {
 
   // Remove these types because they create TS problems.
   return remixConfig as Omit<RemixPluginConfig, 'future' | 'buildEnd'>;
+}
+
+type MinimalViteConfig = {plugins: Readonly<Array<{name: string}>>};
+
+function findPlugin<
+  PluginType extends Config['plugins'][number],
+  Config extends MinimalViteConfig = MinimalViteConfig,
+>(config: Config, name: string) {
+  return config.plugins.find((plugin) => plugin.name === name) as
+    | PluginType
+    | undefined;
+}
+
+export function findHydrogenPlugin<Config extends MinimalViteConfig>(
+  config: Config,
+) {
+  return findPlugin<HydrogenPlugin>(config, 'hydrogen:main');
+}
+export function findOxygenPlugin<Config extends MinimalViteConfig>(
+  config: Config,
+) {
+  return findPlugin<OxygenPlugin>(config, 'oxygen:main');
 }

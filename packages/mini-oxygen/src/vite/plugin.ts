@@ -20,22 +20,24 @@ export type OxygenPluginOptions = Partial<
   >
 >;
 
-/**
- * For internal use only.
- * @private
- */
-export type OxygenApiOptions = OxygenPluginOptions &
+type OxygenApiOptions = OxygenPluginOptions &
   InternalMiniOxygenOptions & {
     envPromise?: Promise<Record<string, any>>;
     shouldStartRuntime?: () => boolean;
   };
 
 /**
+ * For internal use only.
+ * @private
+ */
+export type OxygenPlugin = ReturnType<typeof oxygen>[0];
+
+/**
  * Runs backend code in an Oxygen worker instead of Node.js during development.
  * It must be placed after `hydrogen` but before `remix` in the Vite plugins list.
  * @experimental
  */
-export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
+export function oxygen(pluginOptions: OxygenPluginOptions = {}) {
   let resolvedConfig: ResolvedConfig;
   let absoluteWorkerEntryFile: string;
   let apiOptions: OxygenApiOptions = {};
@@ -144,5 +146,5 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
         }
       },
     },
-  ];
+  ] satisfies Plugin[];
 }
