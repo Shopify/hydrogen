@@ -24,10 +24,6 @@ export type InternalMiniOxygenOptions = {
    */
   requestHook?: RequestHook;
   /**
-   * Creates bindings in `env` that can be used to fetch external services.
-   */
-  services?: Record<string, string | URL>;
-  /**
    * Allows setting up global state in the worker process
    * that can optionally run code from the parent process.
    */
@@ -69,7 +65,6 @@ export type MiniOxygen = Awaited<ReturnType<typeof startMiniOxygenRuntime>>;
 export async function startMiniOxygenRuntime({
   viteDevServer,
   env,
-  services,
   debug = false,
   inspectorPort,
   crossBoundarySetup,
@@ -77,16 +72,6 @@ export async function startMiniOxygenRuntime({
   requestHook,
   logRequestLine = defaultLogRequestLine,
 }: MiniOxygenViteOptions) {
-  const serviceBindings =
-    services &&
-    Object.fromEntries(
-      Object.entries(services).map(([name, url]) => [
-        name,
-        (request: Request) =>
-          fetch(new URL(url, getViteUrl(viteDevServer)), request),
-      ]),
-    );
-
   const wrappedHook =
     requestHook || logRequestLine
       ? async (request: Request) => {
@@ -108,7 +93,6 @@ export async function startMiniOxygenRuntime({
         modulesRoot: '/',
         modules: [{type: 'ESModule', path: scriptPath}],
         serviceBindings: {
-          ...serviceBindings,
           ...(wrappedHook && {__VITE_REQUEST_HOOK: wrappedHook}),
         } satisfies OnlyServices<ViteEnv>,
         bindings: {

@@ -80,7 +80,10 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
             ...apiOptions,
             ...newOptions,
             env: {...apiOptions.env, ...newOptions.env},
-            services: {...apiOptions.services, ...newOptions.services},
+            crossBoundarySetup: [
+              ...(apiOptions.crossBoundarySetup || []),
+              ...(newOptions.crossBoundarySetup || []),
+            ],
           };
         },
       },
@@ -103,7 +106,6 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
             startMiniOxygenRuntime({
               entry,
               viteDevServer,
-              services: apiOptions.services,
               crossBoundarySetup: apiOptions.crossBoundarySetup,
               env: {...remoteEnv, ...apiOptions.env, ...pluginOptions.env},
               debug: apiOptions.debug ?? pluginOptions.debug ?? false,
