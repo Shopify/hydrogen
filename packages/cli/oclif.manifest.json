@@ -378,18 +378,6 @@
           "multiple": false,
           "type": "option"
         },
-        "env-branch": {
-          "deprecated": {
-            "to": "env",
-            "message": "--env-branch is deprecated. Use --env instead."
-          },
-          "description": "Specifies the environment to perform the operation using its Git branch name.",
-          "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH",
-          "name": "env-branch",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
         "env-file": {
           "description": "Path to an environment file to override existing environment variables for the deployment.",
           "name": "env-file",
@@ -558,11 +546,6 @@
           "multiple": false,
           "type": "option"
         },
-        "worker": {
-          "hidden": true,
-          "name": "worker",
-          "type": "boolean"
-        },
         "legacy-runtime": {
           "description": "Runs the app in a Node.js sandbox instead of an Oxygen worker.",
           "env": "SHOPIFY_HYDROGEN_FLAG_WORKER",
@@ -623,18 +606,6 @@
             "env-branch"
           ],
           "name": "env",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "env-branch": {
-          "deprecated": {
-            "to": "env",
-            "message": "--env-branch is deprecated. Use --env instead."
-          },
-          "description": "Specifies the environment to perform the operation using its Git branch name.",
-          "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH",
-          "name": "env-branch",
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
@@ -773,18 +744,6 @@
           "multiple": false,
           "type": "option"
         },
-        "env-branch": {
-          "deprecated": {
-            "to": "env",
-            "message": "--env-branch is deprecated. Use --env instead."
-          },
-          "description": "Specifies the environment to perform the operation using its Git branch name.",
-          "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH",
-          "name": "env-branch",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
         "disable-version-check": {
           "description": "Skip the version check when running `hydrogen dev`",
           "name": "disable-version-check",
@@ -874,18 +833,6 @@
             "env-branch"
           ],
           "name": "env",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "env-branch": {
-          "deprecated": {
-            "to": "env",
-            "message": "--env-branch is deprecated. Use --env instead."
-          },
-          "description": "Specifies the environment to perform the operation using its Git branch name.",
-          "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH",
-          "name": "env-branch",
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
@@ -1408,11 +1355,6 @@
           "multiple": false,
           "type": "option"
         },
-        "worker": {
-          "hidden": true,
-          "name": "worker",
-          "type": "boolean"
-        },
         "legacy-runtime": {
           "description": "Runs the app in a Node.js sandbox instead of an Oxygen worker.",
           "env": "SHOPIFY_HYDROGEN_FLAG_WORKER",
@@ -1426,18 +1368,6 @@
             "env-branch"
           ],
           "name": "env",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "env-branch": {
-          "deprecated": {
-            "to": "env",
-            "message": "--env-branch is deprecated. Use --env instead."
-          },
-          "description": "Specifies the environment to perform the operation using its Git branch name.",
-          "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH",
-          "name": "env-branch",
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"

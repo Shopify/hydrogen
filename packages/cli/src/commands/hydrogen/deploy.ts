@@ -64,7 +64,6 @@ export default class Deploy extends Command {
   static flags: any = {
     ...commonFlags.entry,
     ...commonFlags.env,
-    ...commonFlags.envBranch,
     'env-file': Flags.string({
       description:
         'Path to an environment file to override existing environment variables for the deployment.',
@@ -179,7 +178,6 @@ interface OxygenDeploymentOptions {
   buildCommand?: string;
   defaultEnvironment: boolean;
   env?: string;
-  envBranch?: string;
   environmentFile?: string;
   force: boolean;
   noVerify: boolean;
@@ -227,7 +225,6 @@ export async function runDeploy(
     buildCommand,
     defaultEnvironment,
     env: envHandle,
-    envBranch,
     environmentFile,
     force: forceOnUncommitedChanges,
     noVerify,
@@ -336,11 +333,6 @@ export async function runDeploy(
       if (userProvidedEnvironmentTag === null) {
         isPreview = true;
       }
-    } else if (envBranch) {
-      userProvidedEnvironmentTag = findEnvironmentByBranchOrThrow(
-        deploymentData.environments || [],
-        envBranch,
-      ).branch;
     }
   }
 
@@ -359,7 +351,6 @@ export async function runDeploy(
     !isCI &&
     !defaultEnvironment &&
     !envHandle &&
-    !envBranch &&
     deploymentData?.environments
   ) {
     if (deploymentData.environments.length > 1) {

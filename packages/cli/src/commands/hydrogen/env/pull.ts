@@ -37,7 +37,6 @@ export default class EnvPull extends Command {
 
   static flags = {
     ...commonFlags.env,
-    ...commonFlags.envBranch,
     ...commonFlags.path,
     ...commonFlags.force,
   };
@@ -50,14 +49,12 @@ export default class EnvPull extends Command {
 
 interface Flags {
   env?: string;
-  envBranch?: string;
   force?: boolean;
   path?: string;
 }
 
 export async function runEnvPull({
   env: envHandle,
-  envBranch,
   path: root = process.cwd(),
   force,
 }: Flags) {
@@ -84,17 +81,12 @@ export async function runEnvPull({
 
   if (!config.storefront?.id) return;
 
-  if (envHandle || envBranch) {
+  if (envHandle) {
     const environments =
       (await getStorefrontEnvironments(session, config.storefront.id))
         ?.environments || [];
     if (envHandle) {
       findEnvironmentOrThrow(environments, envHandle);
-    } else if (envBranch) {
-      envHandle = findEnvironmentByBranchOrThrow(
-        environments,
-        envBranch,
-      ).handle;
     }
   }
 

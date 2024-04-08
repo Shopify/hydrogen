@@ -86,7 +86,7 @@ describe('getAllEnvironmentVariables()', () => {
   it('calls pullRemoteEnvironmentVariables using branch', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       await getAllEnvironmentVariables({
-        envBranch: 'main',
+        envHandle: 'main',
         root: tmpDir,
       });
 
@@ -101,7 +101,7 @@ describe('getAllEnvironmentVariables()', () => {
   it('does not call pullRemoteEnvironmentVariables when indicated', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       await getAllEnvironmentVariables({
-        envBranch: 'main',
+        envHandle: 'main',
         root: tmpDir,
         fetchRemote: false,
       });

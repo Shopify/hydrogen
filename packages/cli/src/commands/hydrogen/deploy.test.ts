@@ -256,7 +256,7 @@ describe('deploy', () => {
     expect(vi.mocked(renderSuccess)).toHaveBeenCalled;
   });
 
-  it('calls createDeploy against a environment selected by envBranch', async () => {
+  it('calls createDeploy against a environment selected by env', async () => {
     vi.mocked(getOxygenDeploymentData).mockResolvedValue({
       oxygenDeploymentToken: 'some-encoded-token',
       environments: [
@@ -273,7 +273,7 @@ describe('deploy', () => {
 
     await runDeploy({
       ...deployParams,
-      envBranch: 'stage-1',
+      env: 'stage-1',
     });
 
     expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
@@ -300,7 +300,7 @@ describe('deploy', () => {
     await expect(
       runDeploy({
         ...deployParams,
-        envBranch: 'fake-branch',
+        env: 'fake-branch',
       }),
     ).rejects.toThrowError('Environment not found');
   });

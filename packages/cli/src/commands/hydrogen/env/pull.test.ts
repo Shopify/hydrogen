@@ -103,7 +103,7 @@ describe('pullVariables', () => {
 
     it('calls getStorefrontEnvVariables when branch is provided', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        await runEnvPull({path: tmpDir, envBranch: 'main'});
+        await runEnvPull({path: tmpDir, env: 'main'});
 
         expect(getStorefrontEnvVariables).toHaveBeenCalledWith(
           ADMIN_SESSION,
@@ -124,7 +124,7 @@ describe('pullVariables', () => {
     it('throws error if branch does not map to any environment', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
         await expect(
-          runEnvPull({path: tmpDir, envBranch: 'fake'}),
+          runEnvPull({path: tmpDir, env: 'fake'}),
         ).rejects.toThrowError('Environment not found');
       });
     });
