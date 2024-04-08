@@ -16,11 +16,16 @@ import {
   buildAssetsUrl,
   createAssetsServer,
 } from './assets.js';
-import {miniOxygenHandler} from './handler.js';
+import {
+  getMiniOxygenHandlerScript,
+  type MiniOxygenHandlerEnv,
+  type RequestHookInfo,
+} from './handler.js';
 import {OXYGEN_HEADERS_MAP} from '../common/headers.js';
 import {findPort} from '../common/find-port.js';
 import {OXYGEN_COMPAT_PARAMS} from '../common/compat.js';
 import {isO2Verbose} from '../common/debug.js';
+import type {OnlyBindings, OnlyServices} from './utils.js';
 
 export {
   buildAssetsUrl,
@@ -29,6 +34,7 @@ export {
   fetch,
   type RequestInit,
   type ResponseInit,
+  type RequestHookInfo,
 };
 
 const DEFAULT_PUBLIC_INSPECTOR_PORT = 9229;
@@ -64,7 +70,7 @@ export type MiniOxygenOptions = InputMiniflareOptions & {
   debug?: boolean;
   sourceMapPath?: string;
   assets?: AssetOptions;
-  logRequestLine?: LogRequestLine | null;
+  requestHook?: RequestHook | null;
   inspectWorkerName?: string;
 };
 
@@ -75,12 +81,12 @@ export function createMiniOxygen({
   inspectorPort,
   assets,
   sourceMapPath = '',
-  logRequestLine,
+  requestHook,
   inspectWorkerName,
   ...miniflareOptions
 }: MiniOxygenOptions) {
   const mf = new Miniflare(
-    buildMiniflareOptions(miniflareOptions, logRequestLine, assets),
+    buildMiniflareOptions(miniflareOptions, requestHook, assets),
   );
 
   if (!sourceMapPath) {
@@ -91,11 +97,13 @@ export function createMiniOxygen({
         )) ||
       miniflareOptions.workers[0];
 
-    if ('scriptPath' in mainWorker) {
-      sourceMapPath = mainWorker.scriptPath + '.map';
-    } else if (Array.isArray(mainWorker?.modules)) {
-      const modulePath = mainWorker?.modules[0]!.path;
-      sourceMapPath = modulePath + '.map';
+    if (mainWorker) {
+      if ('scriptPath' in mainWorker) {
+        sourceMapPath = mainWorker.scriptPath + '.map';
+      } else if (Array.isArray(mainWorker?.modules)) {
+        const modulePath = mainWorker?.modules[0]!.path;
+        sourceMapPath = modulePath + '.map';
+      }
     }
   }
 
@@ -155,7 +163,7 @@ export function createMiniOxygen({
         mf.setOptions(
           buildMiniflareOptions(
             {...miniflareOptions, ...newOptions},
-            logRequestLine,
+            requestHook,
             assets,
           ),
         ),
@@ -169,14 +177,11 @@ export function createMiniOxygen({
   };
 }
 
-type LogRequestLine = (
-  request: Request,
-  opt: {responseStatus: number; durationMs: number},
-) => void;
+export type RequestHook = (info: RequestHookInfo) => void | Promise<void>;
 
-const defaultLogRequestLine: LogRequestLine = (request, {responseStatus}) => {
+export const defaultLogRequestLine: RequestHook = ({request, response}) => {
   console.log(
-    `${request.method}  ${responseStatus}  ${request.url.replace(
+    `${request.method}  ${response.status}  ${request.url.replace(
       new URL(request.url).origin,
       '',
     )}`,
@@ -208,7 +213,7 @@ const UNSAFE_OUTBOUND_SERVICE = {
 
 function buildMiniflareOptions(
   {workers, ...mfOverwriteOptions}: InputMiniflareOptions,
-  logRequestLine: LogRequestLine | null = defaultLogRequestLine,
+  requestHook: RequestHook | null = defaultLogRequestLine,
   assetsOptions?: AssetOptions,
 ): OutputMiniflareOptions {
   const entryWorker = workers.find((worker) => !!worker.name);
@@ -221,16 +226,12 @@ function buildMiniflareOptions(
     ? STATIC_ASSET_EXTENSIONS.slice()
     : null;
 
-  async function logRequest(request: Request): Promise<Response> {
-    const durationMs = Number(request.headers.get('o2-duration-ms') || 0);
-    const responseStatus = Number(
-      request.headers.get('o2-response-status') || 200,
-    );
-
-    logRequestLine?.(request, {responseStatus, durationMs});
-
-    return new Response('ok');
-  }
+  const wrappedHook = requestHook
+    ? async (request: Request) => {
+        await requestHook((await request.json()) as RequestHookInfo);
+        return new Response('ok');
+      }
+    : null;
 
   const wrappedBindings = new Set(
     workers
@@ -270,16 +271,16 @@ function buildMiniflareOptions(
       {
         name: ROUTING_WORKER_NAME,
         modules: true,
-        script: `export default { fetch: ${miniOxygenHandler.toString()} }`,
+        script: getMiniOxygenHandlerScript(),
         bindings: {
           staticAssetExtensions,
           oxygenHeadersMap,
-        },
+        } satisfies OnlyBindings<MiniOxygenHandlerEnv>,
         serviceBindings: {
           entry: entryWorker.name,
-          logRequest,
+          ...(wrappedHook && {hook: wrappedHook}),
           ...(handleAssets && {assets: handleAssets}),
-        },
+        } satisfies OnlyServices<MiniOxygenHandlerEnv>,
       },
       ...workers.map((worker) => {
         const isNormalWorker = !wrappedBindings.has(worker.name);

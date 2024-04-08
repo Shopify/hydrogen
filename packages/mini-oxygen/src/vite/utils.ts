@@ -1,9 +1,8 @@
 import type {ServerResponse, IncomingMessage} from 'node:http';
 import path from 'node:path';
 import {Readable} from 'node:stream';
-import type {Response} from '@shopify/mini-oxygen';
+import {Request, type Response} from '../worker/index.js';
 import type {ViteDevServer} from 'vite';
-import {handleMiniOxygenImportFail} from '../mini-oxygen/common.js';
 
 /**
  * Creates a fully qualified URL from a Node request or a string.
@@ -24,14 +23,7 @@ export function toURL(req: string | IncomingMessage = '/', origin?: string) {
 /**
  * Turns a Node request into a Web request by using native Node APIs.
  */
-export async function toWeb(
-  req: IncomingMessage,
-  headers?: Record<string, string>,
-) {
-  const {Request} = await import('@shopify/mini-oxygen').catch(
-    handleMiniOxygenImportFail,
-  );
-
+export function toWeb(req: IncomingMessage, headers?: Record<string, string>) {
   if (!req.headers.host) {
     throw new Error('Request must contain a host header.');
   }
