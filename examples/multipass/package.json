@@ -26,8 +26,8 @@
     "snakecase-keys": "^5.5.0"
   },
   "devDependencies": {
-    "@remix-run/dev": "^2.8.0",
-    "@remix-run/eslint-config": "^2.8.0",
+    "@remix-run/dev": "^2.8.1",
+    "@remix-run/eslint-config": "^2.8.1",
     "@shopify/mini-oxygen": "^2.2.5",
     "@shopify/oxygen-workers-types": "^4.0.0",
     "@shopify/prettier-config": "^1.1.2",
