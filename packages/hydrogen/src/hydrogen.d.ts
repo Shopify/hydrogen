@@ -4,6 +4,7 @@ import type {
   SessionData,
   FlashSessionData,
 } from '@remix-run/server-runtime';
+import type {RequestEventPayload} from './vite/request-events';
 
 export interface HydrogenSessionData {
   customerAccount: {
@@ -48,4 +49,8 @@ declare global {
     ): void;
     dispatchEvent<K extends keyof CustomEventMap>(ev: CustomEventMap[K]): void;
   }
+  var __H2O_LOG_EVENT: undefined | ((event: RequestEventPayload) => void);
+  var __remix_devServerHooks:
+    | undefined
+    | {getCriticalCss: (...args: unknown[]) => any};
 }

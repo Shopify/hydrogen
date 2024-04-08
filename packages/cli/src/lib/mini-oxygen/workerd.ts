@@ -57,10 +57,10 @@ export async function startWorkerdServer({
 
   const miniOxygen = createMiniOxygen({
     debug,
-    logRequestLine,
     port: appPort,
     host: 'localhost',
     liveReload: watch,
+    requestHook: logRequestLine,
     inspectorPort: publicInspectorPort,
     inspectWorkerName: mainWorkerName,
     assets: {port: assetsPort, directory: buildPathClient},

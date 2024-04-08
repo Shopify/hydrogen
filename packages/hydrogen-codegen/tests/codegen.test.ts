@@ -2,7 +2,6 @@ import {describe, it, expect} from 'vitest';
 import path from 'node:path';
 import {executeCodegen} from '@graphql-codegen/cli';
 import {preset, schema, pluckConfig} from '../src/index.js';
-import {getDefaultOptions} from '../src/defaults.js';
 
 describe('Hydrogen Codegen', async () => {
   const getCodegenOptions = (fixture: string, output = 'out.d.ts') => ({
@@ -144,6 +143,10 @@ describe('Hydrogen Codegen', async () => {
             & Pick<StorefrontAPI.MediaImage, 'id' | 'mediaContentType' | 'alt'>
             & { image?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url' | 'width' | 'height'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
           ) | (
+            { __typename: 'Model3d' }
+            & Pick<StorefrontAPI.Model3d, 'id' | 'mediaContentType' | 'alt'>
+            & { sources: Array<Pick<StorefrontAPI.Model3dSource, 'mimeType' | 'url'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
+          ) | (
             { __typename: 'Video' }
             & Pick<StorefrontAPI.Video, 'id' | 'mediaContentType' | 'alt'>
             & { sources: Array<Pick<StorefrontAPI.VideoSource, 'mimeType' | 'url'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
@@ -151,6 +154,10 @@ describe('Hydrogen Codegen', async () => {
             { __typename: 'MediaImage' }
             & Pick<StorefrontAPI.MediaImage, 'id' | 'mediaContentType' | 'alt'>
             & { image?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url' | 'width' | 'height'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
+          ) | (
+            { __typename: 'Model3d' }
+            & Pick<StorefrontAPI.Model3d, 'id' | 'mediaContentType' | 'alt'>
+            & { sources: Array<Pick<StorefrontAPI.Model3dSource, 'mimeType' | 'url'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
           ) | (
             { __typename: 'Video' }
             & Pick<StorefrontAPI.Video, 'id' | 'mediaContentType' | 'alt'>
@@ -172,6 +179,10 @@ describe('Hydrogen Codegen', async () => {
               & Pick<StorefrontAPI.MediaImage, 'id' | 'mediaContentType' | 'alt'>
               & { image?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url' | 'width' | 'height'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
             ) | (
+              { __typename: 'Model3d' }
+              & Pick<StorefrontAPI.Model3d, 'id' | 'mediaContentType' | 'alt'>
+              & { sources: Array<Pick<StorefrontAPI.Model3dSource, 'mimeType' | 'url'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
+            ) | (
               { __typename: 'Video' }
               & Pick<StorefrontAPI.Video, 'id' | 'mediaContentType' | 'alt'>
               & { sources: Array<Pick<StorefrontAPI.VideoSource, 'mimeType' | 'url'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
@@ -179,6 +190,10 @@ describe('Hydrogen Codegen', async () => {
               { __typename: 'MediaImage' }
               & Pick<StorefrontAPI.MediaImage, 'id' | 'mediaContentType' | 'alt'>
               & { image?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url' | 'width' | 'height'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
+            ) | (
+              { __typename: 'Model3d' }
+              & Pick<StorefrontAPI.Model3d, 'id' | 'mediaContentType' | 'alt'>
+              & { sources: Array<Pick<StorefrontAPI.Model3dSource, 'mimeType' | 'url'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
             ) | (
               { __typename: 'Video' }
               & Pick<StorefrontAPI.Video, 'id' | 'mediaContentType' | 'alt'>

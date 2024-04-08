@@ -1,6 +1,6 @@
 /**
  * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
- * Based on Storefront API 2024-01
+ * Based on Storefront API 2024-04
  * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run `npm run graphql-types`.
  * Except custom Scalars, which are defined in the `codegen.ts` file
  */
@@ -505,6 +505,17 @@ export type BrandColors = {
   secondary: Array<BrandColorGroup>;
 };
 
+/**
+ * The input fields for obtaining the buyer's identity.
+ *
+ */
+export type BuyerInput = {
+  /** The identifier of the company location. */
+  companyLocationId?: InputMaybe<Scalars['ID']['input']>;
+  /** The storefront customer access token retrieved from the [Customer Accounts API](https://shopify.dev/docs/api/customer/reference/mutations/storefrontCustomerAccessTokenCreate). */
+  customerAccessToken: Scalars['String']['input'];
+};
+
 /** Card brand, such as Visa or Mastercard, which can be used for payments. */
 export type CardBrand =
   /** American Express. */
@@ -677,6 +688,8 @@ export type CartBuyerIdentity = {
   email?: Maybe<Scalars['String']['output']>;
   /** The phone number of the buyer that's interacting with the cart. */
   phone?: Maybe<Scalars['String']['output']>;
+  /** The purchasing company associated with the cart. */
+  purchasingCompany?: Maybe<PurchasingCompany>;
   /**
    * A set of wallet preferences tied to the buyer that is interacting with the cart.
    * Preferences can be used to populate relevant payment fields in the checkout flow.
@@ -693,6 +706,8 @@ export type CartBuyerIdentity = {
  *
  */
 export type CartBuyerIdentityInput = {
+  /** The company location of the buyer that is interacting with the cart. */
+  companyLocationId?: InputMaybe<Scalars['ID']['input']>;
   /** The country where the buyer is located. */
   countryCode?: InputMaybe<CountryCode>;
   /** The access token used to identify the customer associated with the cart. */
@@ -854,6 +869,8 @@ export type CartDeliveryGroup = {
   deliveryAddress: MailingAddress;
   /** The delivery options available for the delivery group. */
   deliveryOptions: Array<CartDeliveryOption>;
+  /** The type of merchandise in the delivery group. */
+  groupType: CartDeliveryGroupType;
   /** The ID for the delivery group. */
   id: Scalars['ID']['output'];
   /** The selected delivery option for the delivery group. */
@@ -894,6 +911,20 @@ export type CartDeliveryGroupEdge = {
   /** The item at the end of CartDeliveryGroupEdge. */
   node: CartDeliveryGroup;
 };
+
+/**
+ * Defines what type of merchandise is in the delivery group.
+ *
+ */
+export type CartDeliveryGroupType =
+  /**
+   * The delivery group only contains merchandise that is either a one time purchase or a first delivery of
+   * subscription merchandise.
+   *
+   */
+  | 'ONE_TIME_PURCHASE'
+  /** The delivery group only contains subscription merchandise. */
+  | 'SUBSCRIPTION';
 
 /** Information about a delivery option. */
 export type CartDeliveryOption = {
@@ -951,12 +982,28 @@ export type CartDiscountCodesUpdatePayload = {
 
 /** Possible error codes that can be returned by `CartUserError`. */
 export type CartErrorCode =
+  /** The specified address field contains emojis. */
+  | 'ADDRESS_FIELD_CONTAINS_EMOJIS'
+  /** The specified address field contains HTML tags. */
+  | 'ADDRESS_FIELD_CONTAINS_HTML_TAGS'
+  /** The specified address field contains a URL. */
+  | 'ADDRESS_FIELD_CONTAINS_URL'
+  /** The specified address field does not match the expected pattern. */
+  | 'ADDRESS_FIELD_DOES_NOT_MATCH_EXPECTED_PATTERN'
+  /** The specified address field is required. */
+  | 'ADDRESS_FIELD_IS_REQUIRED'
+  /** The specified address field is too long. */
+  | 'ADDRESS_FIELD_IS_TOO_LONG'
   /** The input value is invalid. */
   | 'INVALID'
+  /** Company location not found or not allowed. */
+  | 'INVALID_COMPANY_LOCATION'
   /** Delivery group was not found in cart. */
   | 'INVALID_DELIVERY_GROUP'
   /** Delivery option was not valid. */
   | 'INVALID_DELIVERY_OPTION'
+  /** The quantity must be a multiple of the specified increment. */
+  | 'INVALID_INCREMENT'
   /** Merchandise line was not found in cart. */
   | 'INVALID_MERCHANDISE_LINE'
   /** The metafields were not valid. */
@@ -965,16 +1012,32 @@ export type CartErrorCode =
   | 'INVALID_PAYMENT'
   /** Cannot update payment on an empty cart */
   | 'INVALID_PAYMENT_EMPTY_CART'
+  /** The given zip code is invalid for the provided country. */
+  | 'INVALID_ZIP_CODE_FOR_COUNTRY'
+  /** The given zip code is invalid for the provided province. */
+  | 'INVALID_ZIP_CODE_FOR_PROVINCE'
   /** The input value should be less than the maximum value allowed. */
   | 'LESS_THAN'
+  /** The quantity must be below the specified maximum for the item. */
+  | 'MAXIMUM_EXCEEDED'
+  /** The quantity must be above the specified minimum for the item. */
+  | 'MINIMUM_NOT_MET'
+  /** The customer access token is required when setting a company location. */
+  | 'MISSING_CUSTOMER_ACCESS_TOKEN'
   /** Missing discount code. */
   | 'MISSING_DISCOUNT_CODE'
   /** Missing note. */
   | 'MISSING_NOTE'
   /** The payment method is not supported. */
   | 'PAYMENT_METHOD_NOT_SUPPORTED'
+  /** The given province cannot be found. */
+  | 'PROVINCE_NOT_FOUND'
+  /** A general error occurred during address validation. */
+  | 'UNSPECIFIED_ADDRESS_ERROR'
   /** Validation failed. */
-  | 'VALIDATION_CUSTOM';
+  | 'VALIDATION_CUSTOM'
+  /** The given zip code is unsupported. */
+  | 'ZIP_CODE_NOT_SUPPORTED';
 
 /** The estimated costs that the buyer will pay at checkout. The estimated cost uses [`CartBuyerIdentity`](https://shopify.dev/api/storefront/reference/cart/cartbuyeridentity) to determine [international pricing](https://shopify.dev/custom-storefronts/internationalization/international-pricing). */
 export type CartEstimatedCost = {
@@ -1339,7 +1402,12 @@ export type CartWalletPaymentMethodInput = {
   shopPayWalletContent?: InputMaybe<ShopPayWalletContentInput>;
 };
 
-/** A container for all the information required to checkout items and pay. */
+/**
+ * A container for all the information required to checkout items and pay.
+ *
+ * The Storefront GraphQL Checkout API is deprecated and will be removed in a future version. Please see https://shopify.dev/changelog/deprecation-of-checkout-apis for more information.
+ *
+ */
 export type Checkout = Node & {
   __typename?: 'Checkout';
   /** The gift cards used on the checkout. */
@@ -1436,7 +1504,12 @@ export type Checkout = Node & {
   webUrl: Scalars['URL']['output'];
 };
 
-/** A container for all the information required to checkout items and pay. */
+/**
+ * A container for all the information required to checkout items and pay.
+ *
+ * The Storefront GraphQL Checkout API is deprecated and will be removed in a future version. Please see https://shopify.dev/changelog/deprecation-of-checkout-apis for more information.
+ *
+ */
 export type CheckoutDiscountApplicationsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -1445,7 +1518,12 @@ export type CheckoutDiscountApplicationsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/** A container for all the information required to checkout items and pay. */
+/**
+ * A container for all the information required to checkout items and pay.
+ *
+ * The Storefront GraphQL Checkout API is deprecated and will be removed in a future version. Please see https://shopify.dev/changelog/deprecation-of-checkout-apis for more information.
+ *
+ */
 export type CheckoutLineItemsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -2138,6 +2216,85 @@ export type CommentEdge = {
   cursor: Scalars['String']['output'];
   /** The item at the end of CommentEdge. */
   node: Comment;
+};
+
+/** Represents information about a company which is also a customer of the shop. */
+export type Company = HasMetafields &
+  Node & {
+    __typename?: 'Company';
+    /** The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) at which the company was created in Shopify. */
+    createdAt: Scalars['DateTime']['output'];
+    /** A unique externally-supplied ID for the company. */
+    externalId?: Maybe<Scalars['String']['output']>;
+    /** A globally-unique ID. */
+    id: Scalars['ID']['output'];
+    /** Returns a metafield found by namespace and key. */
+    metafield?: Maybe<Metafield>;
+    /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
+    metafields: Array<Maybe<Metafield>>;
+    /** The name of the company. */
+    name: Scalars['String']['output'];
+    /** The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) at which the company was last modified. */
+    updatedAt: Scalars['DateTime']['output'];
+  };
+
+/** Represents information about a company which is also a customer of the shop. */
+export type CompanyMetafieldArgs = {
+  key: Scalars['String']['input'];
+  namespace?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Represents information about a company which is also a customer of the shop. */
+export type CompanyMetafieldsArgs = {
+  identifiers: Array<HasMetafieldsIdentifier>;
+};
+
+/** A company's main point of contact. */
+export type CompanyContact = Node & {
+  __typename?: 'CompanyContact';
+  /** The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) at which the company contact was created in Shopify. */
+  createdAt: Scalars['DateTime']['output'];
+  /** A globally-unique ID. */
+  id: Scalars['ID']['output'];
+  /** The company contact's locale (language). */
+  locale?: Maybe<Scalars['String']['output']>;
+  /** The company contact's job title. */
+  title?: Maybe<Scalars['String']['output']>;
+  /** The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) at which the company contact was last modified. */
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/** A company's location. */
+export type CompanyLocation = HasMetafields &
+  Node & {
+    __typename?: 'CompanyLocation';
+    /** The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) at which the company location was created in Shopify. */
+    createdAt: Scalars['DateTime']['output'];
+    /** A unique externally-supplied ID for the company. */
+    externalId?: Maybe<Scalars['String']['output']>;
+    /** A globally-unique ID. */
+    id: Scalars['ID']['output'];
+    /** The preferred locale of the company location. */
+    locale?: Maybe<Scalars['String']['output']>;
+    /** Returns a metafield found by namespace and key. */
+    metafield?: Maybe<Metafield>;
+    /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
+    metafields: Array<Maybe<Metafield>>;
+    /** The name of the company location. */
+    name: Scalars['String']['output'];
+    /** The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) at which the company location was last modified. */
+    updatedAt: Scalars['DateTime']['output'];
+  };
+
+/** A company's location. */
+export type CompanyLocationMetafieldArgs = {
+  key: Scalars['String']['input'];
+  namespace?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** A company's location. */
+export type CompanyLocationMetafieldsArgs = {
+  identifiers: Array<HasMetafieldsIdentifier>;
 };
 
 /** The action for the 3DS payment redirect. */
@@ -3138,7 +3295,10 @@ export type Customer = HasMetafields & {
   firstName?: Maybe<Scalars['String']['output']>;
   /** A unique ID for the customer. */
   id: Scalars['ID']['output'];
-  /** The customer's most recently updated, incomplete checkout. */
+  /**
+   * The customer's most recently updated, incomplete checkout.
+   * @deprecated The Storefront GraphQL Checkout API is deprecated and will be removed in a future version. Please see https://shopify.dev/changelog/deprecation-of-checkout-apis for more information.
+   */
   lastIncompleteCheckout?: Maybe<Checkout>;
   /** The customer’s last name. */
   lastName?: Maybe<Scalars['String']['output']>;
@@ -3531,7 +3691,23 @@ export type DeliveryAddressInput = {
   customerAddressId?: InputMaybe<Scalars['ID']['input']>;
   /** A delivery address preference of a buyer that is interacting with the cart. */
   deliveryAddress?: InputMaybe<MailingAddressInput>;
+  /** Defines what kind of address validation is requested. */
+  deliveryAddressValidationStrategy?: InputMaybe<DeliveryAddressValidationStrategy>;
 };
+
+/**
+ * Defines the types of available validation strategies for delivery addresses.
+ *
+ */
+export type DeliveryAddressValidationStrategy =
+  /** Only the country code is validated. */
+  | 'COUNTRY_CODE_ONLY'
+  /**
+   * Strict validation is performed, i.e. all fields in the address are validated
+   * according to Shopify's checkout rules. If the address fails validation, the cart will not be updated.
+   *
+   */
+  | 'STRICT';
 
 /** List of different delivery method types. */
 export type DeliveryMethodType =
@@ -3734,11 +3910,29 @@ export type Filter = {
   id: Scalars['String']['output'];
   /** A human-friendly string for this filter. */
   label: Scalars['String']['output'];
+  /**
+   * Describes how to present the filter values.
+   * Returns a value only for filters of type `LIST`. Returns null for other types.
+   *
+   */
+  presentation?: Maybe<FilterPresentation>;
   /** An enumeration that denotes the type of data this filter represents. */
   type: FilterType;
   /** The list of values for this filter. */
   values: Array<FilterValue>;
 };
+
+/**
+ * Defines how to present the filter values, specifies the presentation of the filter.
+ *
+ */
+export type FilterPresentation =
+  /** Image presentation, filter values display an image. */
+  | 'IMAGE'
+  /** Swatch presentation, filter values display color or image patterns. */
+  | 'SWATCH'
+  /** Text presentation, no additional visual display for filter values. */
+  | 'TEXT';
 
 /**
  * The type of data that the filter group represents.
@@ -3762,6 +3956,8 @@ export type FilterValue = {
   count: Scalars['Int']['output'];
   /** A unique identifier. */
   id: Scalars['String']['output'];
+  /** The visual representation when the filter's presentation is `IMAGE`. */
+  image?: Maybe<MediaImage>;
   /**
    * An input object that can be used to filter by this value on the parent field.
    *
@@ -3773,6 +3969,8 @@ export type FilterValue = {
   input: Scalars['JSON']['output'];
   /** A human-friendly string for this filter value. */
   label: Scalars['String']['output'];
+  /** The visual representation when the filter's presentation is `SWATCH`. */
+  swatch?: Maybe<Swatch>;
 };
 
 /** Represents a single fulfillment in an order. */
@@ -4925,6 +5123,8 @@ export type MetafieldParentResource =
   | Blog
   | Cart
   | Collection
+  | Company
+  | CompanyLocation
   | Customer
   | Location
   | Market
@@ -4943,6 +5143,7 @@ export type MetafieldReference =
   | GenericFile
   | MediaImage
   | Metaobject
+  | Model3d
   | Page
   | Product
   | ProductVariant
@@ -5204,41 +5405,95 @@ export type Mutation = {
   cartSelectedDeliveryOptionsUpdate?: Maybe<CartSelectedDeliveryOptionsUpdatePayload>;
   /** Submit the cart for checkout completion. */
   cartSubmitForCompletion?: Maybe<CartSubmitForCompletionPayload>;
-  /** Updates the attributes of a checkout if `allowPartialAddresses` is `true`. */
+  /**
+   * Updates the attributes of a checkout if `allowPartialAddresses` is `true`.
+   * @deprecated The Storefront GraphQL Checkout API is deprecated and will be removed in a future version. Please see https://shopify.dev/changelog/deprecation-of-checkout-apis for more information.
+   */
   checkoutAttributesUpdateV2?: Maybe<CheckoutAttributesUpdateV2Payload>;
-  /** Completes a checkout without providing payment information. You can use this mutation for free items or items whose purchase price is covered by a gift card. */
+  /**
+   * Completes a checkout without providing payment information. You can use this mutation for free items or items whose purchase price is covered by a gift card.
+   * @deprecated The Storefront GraphQL Checkout API is deprecated and will be removed in a future version. Please see https://shopify.dev/changelog/deprecation-of-checkout-apis for more information.
+   */
   checkoutCompleteFree?: Maybe<CheckoutCompleteFreePayload>;
-  /** Completes a checkout using a credit card token from Shopify's card vault. Before you can complete checkouts using CheckoutCompleteWithCreditCardV2, you need to  [_request payment processing_](https://shopify.dev/apps/channels/getting-started#request-payment-processing). */
+  /**
+   * Completes a checkout using a credit card token from Shopify's card vault. Before you can complete checkouts using CheckoutCompleteWithCreditCardV2, you need to  [_request payment processing_](https://shopify.dev/apps/channels/getting-started#request-payment-processing).
+   * @deprecated The Storefront GraphQL Checkout API is deprecated and will be removed in a future version. Please see https://shopify.dev/changelog/deprecation-of-checkout-apis for more information.
+   */
   checkoutCompleteWithCreditCardV2?: Maybe<CheckoutCompleteWithCreditCardV2Payload>;
-  /** Completes a checkout with a tokenized payment. */
+  /**
+   * Completes a checkout with a tokenized payment.
+   * @deprecated The Storefront GraphQL Checkout API is deprecated and will be removed in a future version. Please see https://shopify.dev/changelog/deprecation-of-checkout-apis for more information.
+   */
   checkoutCompleteWithTokenizedPaymentV3?: Maybe<CheckoutCompleteWithTokenizedPaymentV3Payload>;
-  /** Creates a new checkout. */
+  /**
+   * Creates a new checkout.
+   * @deprecated The Storefront GraphQL Checkout API is deprecated and will be removed in a future version. Please see https://shopify.dev/changelog/deprecation-of-checkout-apis for more information.
+   */
   checkoutCreate?: Maybe<CheckoutCreatePayload>;
-  /** Associates a customer to the checkout. */
+  /**
+   * Associates a customer to the checkout.
+   * @deprecated The Storefront GraphQL Checkout API is deprecated and will be removed in a future version. Please see https://shopify.dev/changelog/deprecation-of-checkout-apis for more information.
+   */
   checkoutCustomerAssociateV2?: Maybe<CheckoutCustomerAssociateV2Payload>;
-  /** Disassociates the current checkout customer from the checkout. */
+  /**
+   * Disassociates the current checkout customer from the checkout.
+   * @deprecated The Storefront GraphQL Checkout API is deprecated and will be removed in a future version. Please see https://shopify.dev/changelog/deprecation-of-checkout-apis for more information.
+   */
   checkoutCustomerDisassociateV2?: Maybe<CheckoutCustomerDisassociateV2Payload>;
-  /** Applies a discount to an existing checkout using a discount code. */
+  /**
+   * Applies a discount to an existing checkout using a discount code.
+   * @deprecated The Storefront GraphQL Checkout API is deprecated and will be removed in a future version. Please see https://shopify.dev/changelog/deprecation-of-checkout-apis for more information.
+   */
   checkoutDiscountCodeApplyV2?: Maybe<CheckoutDiscountCodeApplyV2Payload>;
-  /** Removes the applied discounts from an existing checkout. */
+  /**
+   * Removes the applied discounts from an existing checkout.
+   * @deprecated The Storefront GraphQL Checkout API is deprecated and will be removed in a future version. Please see https://shopify.dev/changelog/deprecation-of-checkout-apis for more information.
+   */
   checkoutDiscountCodeRemove?: Maybe<CheckoutDiscountCodeRemovePayload>;
-  /** Updates the email on an existing checkout. */
+  /**
+   * Updates the email on an existing checkout.
+   * @deprecated The Storefront GraphQL Checkout API is deprecated and will be removed in a future version. Please see https://shopify.dev/changelog/deprecation-of-checkout-apis for more information.
+   */
   checkoutEmailUpdateV2?: Maybe<CheckoutEmailUpdateV2Payload>;
-  /** Removes an applied gift card from the checkout. */
+  /**
+   * Removes an applied gift card from the checkout.
+   * @deprecated The Storefront GraphQL Checkout API is deprecated and will be removed in a future version. Please see https://shopify.dev/changelog/deprecation-of-checkout-apis for more information.
+   */
   checkoutGiftCardRemoveV2?: Maybe<CheckoutGiftCardRemoveV2Payload>;
-  /** Appends gift cards to an existing checkout. */
+  /**
+   * Appends gift cards to an existing checkout.
+   * @deprecated The Storefront GraphQL Checkout API is deprecated and will be removed in a future version. Please see https://shopify.dev/changelog/deprecation-of-checkout-apis for more information.
+   */
   checkoutGiftCardsAppend?: Maybe<CheckoutGiftCardsAppendPayload>;
-  /** Adds a list of line items to a checkout. */
+  /**
+   * Adds a list of line items to a checkout.
+   * @deprecated The Storefront GraphQL Checkout API is deprecated and will be removed in a future version. Please see https://shopify.dev/changelog/deprecation-of-checkout-apis for more information.
+   */
   checkoutLineItemsAdd?: Maybe<CheckoutLineItemsAddPayload>;
-  /** Removes line items from an existing checkout. */
+  /**
+   * Removes line items from an existing checkout.
+   * @deprecated The Storefront GraphQL Checkout API is deprecated and will be removed in a future version. Please see https://shopify.dev/changelog/deprecation-of-checkout-apis for more information.
+   */
   checkoutLineItemsRemove?: Maybe<CheckoutLineItemsRemovePayload>;
-  /** Sets a list of line items to a checkout. */
+  /**
+   * Sets a list of line items to a checkout.
+   * @deprecated The Storefront GraphQL Checkout API is deprecated and will be removed in a future version. Please see https://shopify.dev/changelog/deprecation-of-checkout-apis for more information.
+   */
   checkoutLineItemsReplace?: Maybe<CheckoutLineItemsReplacePayload>;
-  /** Updates line items on a checkout. */
+  /**
+   * Updates line items on a checkout.
+   * @deprecated The Storefront GraphQL Checkout API is deprecated and will be removed in a future version. Please see https://shopify.dev/changelog/deprecation-of-checkout-apis for more information.
+   */
   checkoutLineItemsUpdate?: Maybe<CheckoutLineItemsUpdatePayload>;
-  /** Updates the shipping address of an existing checkout. */
+  /**
+   * Updates the shipping address of an existing checkout.
+   * @deprecated The Storefront GraphQL Checkout API is deprecated and will be removed in a future version. Please see https://shopify.dev/changelog/deprecation-of-checkout-apis for more information.
+   */
   checkoutShippingAddressUpdateV2?: Maybe<CheckoutShippingAddressUpdateV2Payload>;
-  /** Updates the shipping lines on an existing checkout. */
+  /**
+   * Updates the shipping lines on an existing checkout.
+   * @deprecated The Storefront GraphQL Checkout API is deprecated and will be removed in a future version. Please see https://shopify.dev/changelog/deprecation-of-checkout-apis for more information.
+   */
   checkoutShippingLineUpdate?: Maybe<CheckoutShippingLineUpdatePayload>;
   /**
    * Creates a customer access token.
@@ -5362,7 +5617,7 @@ export type MutationCartMetafieldsSetArgs = {
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCartNoteUpdateArgs = {
   cartId: Scalars['ID']['input'];
-  note?: InputMaybe<Scalars['String']['input']>;
+  note: Scalars['String']['input'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
@@ -6554,6 +6809,10 @@ export type ProductVariant = HasMetafields &
     product: Product;
     /** The total sellable quantity of the variant for online sales channels. */
     quantityAvailable?: Maybe<Scalars['Int']['output']>;
+    /** A list of quantity breaks for the product variant. */
+    quantityPriceBreaks: QuantityPriceBreakConnection;
+    /** The quantity rule for the product variant in a given context. */
+    quantityRule: QuantityRule;
     /** Whether a customer needs to provide a shipping address when placing an order for the product variant. */
     requiresShipping: Scalars['Boolean']['output'];
     /** List of product options applied to the variant. */
@@ -6593,6 +6852,17 @@ export type ProductVariantMetafieldArgs = {
  */
 export type ProductVariantMetafieldsArgs = {
   identifiers: Array<HasMetafieldsIdentifier>;
+};
+
+/**
+ * A product variant represents a different version of a product, such as differing sizes or differing colors.
+ *
+ */
+export type ProductVariantQuantityPriceBreaksArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
 };
 
 /**
@@ -6663,6 +6933,91 @@ export type ProductVariantSortKeys =
   /** Sort by the `title` value. */
   | 'TITLE';
 
+/** Represents information about the buyer that is interacting with the cart. */
+export type PurchasingCompany = {
+  __typename?: 'PurchasingCompany';
+  /** The company associated to the order or draft order. */
+  company: Company;
+  /** The company contact associated to the order or draft order. */
+  contact?: Maybe<CompanyContact>;
+  /** The company location associated to the order or draft order. */
+  location: CompanyLocation;
+};
+
+/**
+ * Quantity price breaks lets you offer different rates that are based on the
+ * amount of a specific variant being ordered.
+ *
+ */
+export type QuantityPriceBreak = {
+  __typename?: 'QuantityPriceBreak';
+  /**
+   * Minimum quantity required to reach new quantity break price.
+   *
+   */
+  minimumQuantity: Scalars['Int']['output'];
+  /**
+   * The price of variant after reaching the minimum quanity.
+   *
+   */
+  price: MoneyV2;
+};
+
+/**
+ * An auto-generated type for paginating through multiple QuantityPriceBreaks.
+ *
+ */
+export type QuantityPriceBreakConnection = {
+  __typename?: 'QuantityPriceBreakConnection';
+  /** A list of edges. */
+  edges: Array<QuantityPriceBreakEdge>;
+  /** A list of the nodes contained in QuantityPriceBreakEdge. */
+  nodes: Array<QuantityPriceBreak>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+};
+
+/**
+ * An auto-generated type which holds one QuantityPriceBreak and a cursor during pagination.
+ *
+ */
+export type QuantityPriceBreakEdge = {
+  __typename?: 'QuantityPriceBreakEdge';
+  /** A cursor for use in pagination. */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of QuantityPriceBreakEdge. */
+  node: QuantityPriceBreak;
+};
+
+/**
+ * The quantity rule for the product variant in a given context.
+ *
+ */
+export type QuantityRule = {
+  __typename?: 'QuantityRule';
+  /**
+   * The value that specifies the quantity increment between minimum and maximum of the rule.
+   * Only quantities divisible by this value will be considered valid.
+   *
+   * The increment must be lower than or equal to the minimum and the maximum, and both minimum and maximum
+   * must be divisible by this value.
+   *
+   */
+  increment: Scalars['Int']['output'];
+  /**
+   * An optional value that defines the highest allowed quantity purchased by the customer.
+   * If defined, maximum must be lower than or equal to the minimum and must be a multiple of the increment.
+   *
+   */
+  maximum?: Maybe<Scalars['Int']['output']>;
+  /**
+   * The value that defines the lowest allowed quantity purchased by the customer.
+   * The minimum must be a multiple of the quantity rule's increment.
+   *
+   */
+  minimum: Scalars['Int']['output'];
+};
+
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRoot = {
   __typename?: 'QueryRoot';
@@ -6732,6 +7087,9 @@ export type QueryRoot = {
     | CheckoutLineItem
     | Collection
     | Comment
+    | Company
+    | CompanyContact
+    | CompanyLocation
     | ComponentizableCartLine
     | ExternalVideo
     | GenericFile
@@ -6768,6 +7126,9 @@ export type QueryRoot = {
       | CheckoutLineItem
       | Collection
       | Comment
+      | Company
+      | CompanyContact
+      | CompanyLocation
       | ComponentizableCartLine
       | ExternalVideo
       | GenericFile
@@ -7745,6 +8106,15 @@ export type SubmitThrottled = {
    *
    */
   pollAfter: Scalars['DateTime']['output'];
+};
+
+/** Color and image for visual representation. */
+export type Swatch = {
+  __typename?: 'Swatch';
+  /** The swatch color. */
+  color?: Maybe<Scalars['Color']['output']>;
+  /** The swatch image. */
+  image?: Maybe<MediaImage>;
 };
 
 /**

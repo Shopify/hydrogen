@@ -300,7 +300,7 @@ function withFixtures(
         },
       ],
       sourceMapPath: path.join(tmpDir, relativeWorkerEntry + '.map'),
-      logRequestLine: null,
+      requestHook: null,
     } satisfies MiniOxygenOptions;
 
     const miniOxygen = createMiniOxygen(miniOxygenOptions);
