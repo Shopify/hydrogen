@@ -13,6 +13,7 @@ interface GraphqlError {
   path: string[];
 }
 
+// TODO: Can we now use a stable version of the Admin API?
 /**
  * This is a temporary workaround until cli-kit includes a way to specify
  * API versions for the Admin API because we need to target the unstable

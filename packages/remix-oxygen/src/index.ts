@@ -16,6 +16,7 @@ export {
   MaxPartSizeExceededError,
   redirect,
   redirectDocument,
+  // TODO: Have these become stable or deprecated?
   unstable_composeUploadHandlers,
   unstable_createMemoryUploadHandler,
   unstable_parseMultipartFormData,
