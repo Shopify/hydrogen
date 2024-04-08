@@ -143,7 +143,8 @@ export async function createPlatformShortcut() {
 
 const BASH_ZSH_COMMAND = `
 # Shopify Hydrogen alias to local projects
-alias ${ALIAS_NAME}='$(npm prefix -s)/node_modules/.bin/shopify hydrogen'`;
+alias ${ALIAS_NAME}='$(npm prefix -s)/node_modules/.bin/shopify hydrogen'
+`;
 
 const FISH_FUNCTION = `
 function ${ALIAS_NAME} --wraps='shopify hydrogen' --description 'Shortcut for the Hydrogen CLI'
