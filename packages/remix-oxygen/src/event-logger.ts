@@ -1,32 +1,10 @@
-// Make sure to match this type with the one in packages/cli/src/lib/request-events.ts
-export type H2OEvent = {
-  url: string;
-  eventType: 'request' | 'subrequest';
-  requestId?: string | null;
-  purpose?: string | null;
-  startTime: number;
-  endTime?: number;
-  cacheStatus?: 'MISS' | 'HIT' | 'STALE' | 'PUT';
-  waitUntil?: ExecutionContext['waitUntil'];
-  graphql?: string | null;
-  stackInfo?: {
-    file?: string;
-    func?: string;
-    line?: number;
-    column?: number;
-  };
-  responsePayload?: any;
-  responseInit?: ResponseInit;
-  cache?: {
-    status?: string;
-    strategy?: string;
-    key?: string | readonly unknown[];
-  };
-  displayName?: string;
-};
+type H2OEvent = Parameters<NonNullable<typeof __H2O_LOG_EVENT>>[0];
 
 let hasWarned = false;
 
+/**
+ * @deprecated Only used with the classic Remix compiler
+ */
 export function createEventLogger(appLoadContext: Record<string, unknown>) {
   const context = (appLoadContext || {}) as {
     env?: Record<string, any>;

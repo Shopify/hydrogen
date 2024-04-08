@@ -196,6 +196,20 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
       () => {},
     ],
     [
+      // This error is fixed in new Remix versions:
+      // https://github.com/remix-run/remix/pull/9194
+      ([first]) => {
+        const message: string = first?.message ?? first;
+        return (
+          /virtual-routes/.test(message) &&
+          /(Failed to load url|Could not resolve module for file)/i.test(
+            message,
+          )
+        );
+      },
+      () => {},
+    ],
+    [
       // Log new lines between Request logs and other logs
       ([first], existingMatches) => {
         // If this log is not going to be filtered by other replacers:

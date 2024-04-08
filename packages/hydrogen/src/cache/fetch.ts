@@ -1,5 +1,3 @@
-/// <reference types="@shopify/remix-oxygen" />
-
 import {hashKey} from '../utils/hash.js';
 import {
   CacheShort,

@@ -6,6 +6,7 @@ import {
 import colors from '@shopify/cli-kit/node/colors';
 import {DEV_ROUTES} from '../request-events.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
+import type {RequestHookInfo} from '@shopify/mini-oxygen';
 
 // Default port used for debugging in VSCode and Chrome DevTools.
 export const DEFAULT_INSPECTOR_PORT = 9229;
@@ -19,16 +20,11 @@ export function handleMiniOxygenImportFail(): never {
   );
 }
 
-export function logRequestLine(
-  // Minimal overlap between Fetch, Miniflare@2 and Miniflare@3 request types.
-  request: Pick<Request, 'method' | 'url'> & {
-    headers: {get: (key: string) => string | null};
-  },
-  {
-    responseStatus = 200,
-    durationMs = 0,
-  }: {responseStatus?: number; durationMs?: number} = {},
-): void {
+export function logRequestLine({
+  request,
+  response,
+  meta,
+}: RequestHookInfo): void {
   try {
     const url = new URL(request.url);
     if (DEV_ROUTES.has(url.pathname) || url.pathname === '/favicon.ico') return;
@@ -46,26 +42,26 @@ export function logRequestLine(
     }
 
     const colorizeStatus =
-      responseStatus < 300
+      response.status < 300
         ? outputToken.green
-        : responseStatus < 400
+        : response.status < 400
         ? outputToken.cyan
         : outputToken.errorText;
 
     outputInfo(
       outputContent`${request.method.padStart(6)}  ${colorizeStatus(
-        String(responseStatus),
+        String(response.status),
       )}  ${outputToken.italic(type.padEnd(7, ' '))} ${route} ${
-        durationMs > 0 ? colors.dim(` ${durationMs}ms`) : ''
+        meta.durationMs > 0 ? colors.dim(` ${meta.durationMs}ms`) : ''
       }${info ? '  ' + colors.dim(info) : ''}${
-        request.headers.get('purpose') === 'prefetch'
+        request.headers['purpose'] === 'prefetch'
           ? outputToken.italic(colors.dim('  prefetch'))
           : ''
       }`,
     );
   } catch {
-    if (request && responseStatus) {
-      outputInfo(`${request.method} ${responseStatus} ${request.url}`);
+    if (request && response?.status) {
+      outputInfo(`${request.method} ${response.status} ${request.url}`);
     }
   }
 }

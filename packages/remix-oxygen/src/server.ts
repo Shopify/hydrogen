@@ -1,13 +1,10 @@
+/// <reference types="@shopify/hydrogen" />
 import {
   createRequestHandler as createRemixRequestHandler,
   type AppLoadContext,
   type ServerBuild,
 } from '@remix-run/server-runtime';
-import {createEventLogger, type H2OEvent} from './event-logger';
-
-declare global {
-  var __H2O_LOG_EVENT: undefined | ((event: H2OEvent) => void);
-}
+import {createEventLogger} from './event-logger';
 
 const originalErrorToString = Error.prototype.toString;
 Error.prototype.toString = function () {
@@ -36,7 +33,7 @@ export function createRequestHandler<Context = unknown>({
       // Store logger in globalThis so it can be accessed from the worker.
       // The global property must be different from the binding name,
       // otherwise Miniflare throws an error when accessing it.
-      globalThis.__H2O_LOG_EVENT = createEventLogger(context);
+      globalThis.__H2O_LOG_EVENT ??= createEventLogger(context);
     }
 
     const startTime = Date.now();

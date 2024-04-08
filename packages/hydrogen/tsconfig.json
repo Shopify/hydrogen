@@ -3,8 +3,10 @@
   "include": ["src", "./hydrogen.config.d.ts"],
   "compilerOptions": {
     "jsx": "react-jsx",
+    "types": ["@shopify/oxygen-workers-types", "node", "vite/client"],
     "paths": {
-      "@shopify/hydrogen": ["./src"]
+      "@shopify/hydrogen": ["./src"],
+      "~/mini-oxygen/*": ["../mini-oxygen/src/*"]
     }
   },
   "exclude": ["src/cart/createCartHandler.example.ts"]

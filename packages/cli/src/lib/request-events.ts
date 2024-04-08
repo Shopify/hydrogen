@@ -30,8 +30,9 @@ export function setConstructors(constructors: {
 
 export const DEV_ROUTES = new Set([
   '/graphiql',
+  '/graphiql/customer-account.schema.json',
   '/subrequest-profiler',
-  '/__vite_warmup',
+  '/debug-network-server',
 ]);
 
 type RequestEvent = {

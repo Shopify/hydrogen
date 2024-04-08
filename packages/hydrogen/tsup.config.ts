@@ -13,13 +13,13 @@ const commonConfig = defineConfig({
   sourcemap: true,
 });
 
-export default [
-  defineConfig({
+export default defineConfig([
+  {
     ...commonConfig,
     env: {NODE_ENV: 'development'},
     outDir: path.join(outDir, 'development'),
-  }),
-  defineConfig({
+  },
+  {
     ...commonConfig,
     env: {NODE_ENV: 'production'},
     // Bundle types from hydrogen-codgen so that we
@@ -63,5 +63,41 @@ export default [
 
       console.log('\n', 'Customer API types copied from hydrogen-react', '\n');
     },
-  }),
-];
+  },
+  {
+    entry: [
+      'src/vite/**/*.ts',
+      '!src/vite/**/*.test.ts',
+      '!src/vite/virtual-routes/**/*',
+    ],
+    outDir: 'dist/vite',
+    format: 'esm',
+    minify: false,
+    bundle: false,
+    sourcemap: false,
+    dts: true,
+  },
+  {
+    entry: ['src/vite/virtual-routes/**/*.tsx'],
+    outDir: `${outDir}/vite/virtual-routes`,
+    outExtension: () => ({js: '.jsx'}),
+    format: 'esm',
+    minify: false,
+    bundle: false,
+    splitting: false,
+    treeshake: false,
+    sourcemap: false,
+    publicDir: false,
+    dts: false,
+    clean: false, // Avoid deleting the assets folder
+    async onSuccess() {
+      await fs.cp(
+        'src/vite/virtual-routes/assets',
+        `${outDir}/vite/virtual-routes/assets`,
+        {recursive: true},
+      );
+
+      console.log('\n', 'Copied virtual route assets to build directory', '\n');
+    },
+  },
+]);

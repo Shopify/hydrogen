@@ -35,6 +35,10 @@
       "types": "./dist/node/index.d.ts",
       "default": "./dist/node/index.js"
     },
+    "./vite": {
+      "types": "./dist/vite/plugin.d.ts",
+      "default": "./dist/vite/plugin.js"
+    },
     "./package.json": "./package.json"
   },
   "dependencies": {
@@ -70,5 +74,13 @@
     "fs-extra": "^11.1.0",
     "tempy": "3.0.0",
     "vitest": "^1.0.4"
+  },
+  "peerDependencies": {
+    "vite": "~5.1.0"
+  },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": true
+    }
   }
 }
