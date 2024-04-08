@@ -14,7 +14,6 @@ import {RequestDetails} from '../components/RequestDetails.jsx';
 import {IconClose} from '../components/IconClose.jsx';
 import {IconDiscard} from '../components/IconDiscard.jsx';
 
-// @ts-expect-error
 import styles from '../assets/debug-network.css?url';
 
 export const links: LinksFunction = () => {
