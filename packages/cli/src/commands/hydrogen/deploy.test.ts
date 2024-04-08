@@ -322,89 +322,95 @@ describe('deploy', () => {
     ).rejects.toThrowError("Can't specify an environment handle in CI");
   });
 
-  it('errors when there are uncommited changes', async () => {
-    vi.mocked(execAsync).mockReturnValue(
-      Promise.resolve({stdout: ' M file.ts\n', stderr: ''}) as any,
-    );
+  describe('when there are uncommitted changes', () => {
+    it('throws an error', async () => {
+      vi.mocked(execAsync).mockReturnValue(
+        Promise.resolve({stdout: ' M file.ts\n', stderr: ''}) as any,
+      );
 
-    vi.mocked(ensureIsClean).mockRejectedValue(
-      new GitDirectoryNotCleanError('Uncommitted changes'),
-    );
-    await expect(runDeploy(deployParams)).rejects.toThrowError(
-      'Uncommitted changes detected:\n\n M file.ts',
-    );
-    expect(vi.mocked(createDeploy)).not.toHaveBeenCalled;
-  });
-
-  it('proceeds with warning and modified description when there are uncommited changes and the force flag is used', async () => {
-    vi.mocked(ensureIsClean).mockRejectedValue(
-      new GitDirectoryNotCleanError('Uncommitted changes'),
-    );
-    vi.mocked(getLatestGitCommit).mockResolvedValue({
-      hash: '123',
-      message: 'test commit',
-      date: '2021-01-01',
-      author_name: 'test author',
-      author_email: 'test@author.com',
-      body: 'test body',
-      refs: 'HEAD -> main',
+      vi.mocked(ensureIsClean).mockRejectedValue(
+        new GitDirectoryNotCleanError('Uncommitted changes'),
+      );
+      await expect(runDeploy(deployParams)).rejects.toThrowError(
+        'Uncommitted changes detected:\n\n M file.ts',
+      );
+      expect(vi.mocked(createDeploy)).not.toHaveBeenCalled;
     });
 
-    await runDeploy({
-      ...deployParams,
-      force: true,
-    });
+    describe('and the force flag is used', () => {
+      it('proceeds with a warning and modifies the description', async () => {
+        vi.mocked(ensureIsClean).mockRejectedValue(
+          new GitDirectoryNotCleanError('Uncommitted changes'),
+        );
+        vi.mocked(getLatestGitCommit).mockResolvedValue({
+          hash: '123',
+          message: 'test commit',
+          date: '2021-01-01',
+          author_name: 'test author',
+          author_email: 'test@author.com',
+          body: 'test body',
+          refs: 'HEAD -> main',
+        });
 
-    expect(vi.mocked(renderWarning)).toHaveBeenCalledWith({
-      headline: 'No deployment description provided',
-      body: expect.anything(),
-    });
-    expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-      config: {
-        ...expectedConfig,
-        environmentTag: 'main',
-        metadata: {
-          ...expectedConfig.metadata,
-          description: '123 with additional changes',
-        },
-      },
-      hooks: expectedHooks,
-      logger: deploymentLogger,
-    });
-  });
+        await runDeploy({
+          ...deployParams,
+          force: true,
+        });
 
-  it('proceeds with provided description without warning when there are uncommited changes and the force flag is used', async () => {
-    vi.mocked(ensureIsClean).mockRejectedValue(
-      new GitDirectoryNotCleanError('Uncommitted changes'),
-    );
-    vi.mocked(getLatestGitCommit).mockResolvedValue({
-      hash: '123',
-      message: 'test commit',
-      date: '2021-01-01',
-      author_name: 'test author',
-      author_email: 'test@author.com',
-      body: 'test body',
-      refs: 'HEAD -> main',
-    });
+        expect(vi.mocked(renderWarning)).toHaveBeenCalledWith({
+          headline: 'No deployment description provided',
+          body: expect.anything(),
+        });
+        expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
+          config: {
+            ...expectedConfig,
+            environmentTag: 'main',
+            metadata: {
+              ...expectedConfig.metadata,
+              description: '123 with additional changes',
+            },
+          },
+          hooks: expectedHooks,
+          logger: deploymentLogger,
+        });
+      });
 
-    await runDeploy({
-      ...deployParams,
-      force: true,
-      metadataDescription: 'cool new stuff',
-    });
+      describe('and a custom description is used', () => {
+        it('uses the provided description', async () => {
+          vi.mocked(ensureIsClean).mockRejectedValue(
+            new GitDirectoryNotCleanError('Uncommitted changes'),
+          );
+          vi.mocked(getLatestGitCommit).mockResolvedValue({
+            hash: '123',
+            message: 'test commit',
+            date: '2021-01-01',
+            author_name: 'test author',
+            author_email: 'test@author.com',
+            body: 'test body',
+            refs: 'HEAD -> main',
+          });
 
-    expect(vi.mocked(renderWarning)).not.toHaveBeenCalled;
-    expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-      config: {
-        ...expectedConfig,
-        environmentTag: 'main',
-        metadata: {
-          ...expectedConfig.metadata,
-          description: 'cool new stuff',
-        },
-      },
-      hooks: expectedHooks,
-      logger: deploymentLogger,
+          await runDeploy({
+            ...deployParams,
+            force: true,
+            metadataDescription: 'cool new stuff',
+          });
+
+          expect(vi.mocked(renderWarning)).not.toHaveBeenCalled;
+          expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
+            config: {
+              ...expectedConfig,
+              environmentTag: 'main',
+              metadata: {
+                ...expectedConfig.metadata,
+                description: 'cool new stuff',
+              },
+            },
+            hooks: expectedHooks,
+            logger: deploymentLogger,
+          });
+        });
+      });
     });
   });
 
