@@ -48,6 +48,7 @@ import {runViteBuild} from './build-vite.js';
 import {getViteConfig} from '../../lib/vite-config.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {hasRemixConfigFile} from '../../lib/remix-config.js';
+import {packageManagers} from '../../lib/package-managers.js';
 
 const DEPLOY_OUTPUT_FILE_HANDLE = 'h2_deploy_log.json';
 
@@ -256,21 +257,33 @@ export async function runDeploy(
       let errorMessage = 'Uncommitted changes detected';
       let changedFiles = undefined;
 
-      try {
-        changedFiles = (await execAsync('git status -s', {cwd: root})).stdout;
-      } catch (error) {}
-
-      if (changedFiles) {
-        errorMessage += `:\n\n${changedFiles.trimEnd()}`;
-      }
-
-      throw new AbortError(errorMessage, null, [
+      const nextSteps = [
         [
           'Commit your changes before deploying or use the',
           {command: '--force'},
           'flag to deploy with uncommitted changes.',
         ],
-      ]);
+      ];
+
+      try {
+        changedFiles = (await execAsync('git status -s', {cwd: root})).stdout;
+      } catch {}
+
+      if (changedFiles) {
+        errorMessage += `:\n\n${changedFiles.trimEnd()}`;
+
+        packageManagers.forEach(({name, lockfile, installCommand}) => {
+          if (changedFiles.includes(lockfile)) {
+            nextSteps.push([
+              `If you are using ${name}, try running`,
+              {command: installCommand},
+              `to avoid changes to ${lockfile}.`,
+            ]);
+          }
+        });
+      }
+
+      throw new AbortError(errorMessage, null, nextSteps);
     }
   }
 

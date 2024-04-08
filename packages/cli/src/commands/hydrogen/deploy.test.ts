@@ -42,13 +42,6 @@ vi.mock('../../lib/graphql/admin/link-storefront.js');
 vi.mock('../../lib/graphql/admin/create-storefront.js');
 vi.mock('../../lib/graphql/admin/fetch-job.js');
 vi.mock('../../lib/shell.js', () => ({getCliCommand: () => 'h2'}));
-vi.mock('@shopify/cli-kit/node/output', async () => {
-  return {
-    outputContent: () => ({value: ''}),
-    outputInfo: () => {},
-    outputWarn: () => {},
-  };
-});
 vi.mock('@shopify/cli-kit/node/ui', async () => {
   return {
     renderFatalError: vi.fn(),
@@ -335,6 +328,36 @@ describe('deploy', () => {
         'Uncommitted changes detected:\n\n M file.ts',
       );
       expect(vi.mocked(createDeploy)).not.toHaveBeenCalled;
+    });
+
+    describe('and there are untracked lockfiles', () => {
+      it('includes additional options for next steps', async () => {
+        vi.mocked(execAsync).mockReturnValue(
+          Promise.resolve({
+            stdout: ' M package-lock.json\n',
+            stderr: '',
+          }) as any,
+        );
+
+        vi.mocked(ensureIsClean).mockRejectedValue(
+          new GitDirectoryNotCleanError('Uncommitted changes'),
+        );
+
+        await expect(runDeploy(deployParams)).rejects.toThrow(
+          expect.objectContaining({
+            message: 'Uncommitted changes detected:\n\n M package-lock.json',
+            nextSteps: expect.arrayContaining([
+              [
+                'If you are using npm, try running',
+                {command: 'npm ci'},
+                'to avoid changes to package-lock.json.',
+              ],
+            ]),
+          }),
+        );
+
+        expect(vi.mocked(createDeploy)).not.toHaveBeenCalled;
+      });
     });
 
     describe('and the force flag is used', () => {
