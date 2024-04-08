@@ -137,7 +137,7 @@
     "@graphql-codegen/cli": "^5.0.1",
     "@graphql-codegen/introspection": "^4.0.1",
     "@graphql-codegen/typescript": "^4.0.2",
-    "@ladle/react": "^2.9.0",
+    "@ladle/react": "^4.0.3",
     "@shopify/generate-docs": "^0.11.1",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^14.0.0",
