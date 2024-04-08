@@ -28,7 +28,10 @@ const sharedOptions: HydrogenSharedOptions = {};
  * For internal use only.
  * @private
  */
-export type HydrogenPlugin = ReturnType<typeof hydrogen>[0];
+export type HydrogenPlugin = Plugin<{
+  registerPluginOptions(newOptions: HydrogenPluginOptions): void;
+  getPluginOptions(): HydrogenSharedOptions;
+}>;
 
 /**
  * Enables Hydrogen utilities for local development
@@ -36,7 +39,7 @@ export type HydrogenPlugin = ReturnType<typeof hydrogen>[0];
  * It must be used in combination with the `oxygen` plugin and Hydrogen CLI.
  * @experimental
  */
-export function hydrogen(pluginOptions: HydrogenPluginOptions = {}) {
+export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
   let middlewareOptions: HydrogenMiddlewareOptions = {};
   const isRemixChildCompiler = (config: ResolvedConfig) =>
     !config.plugins?.some((plugin) => plugin.name === 'remix');
@@ -70,7 +73,7 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}) {
         };
       },
       api: {
-        registerPluginOptions(newOptions: HydrogenPluginOptions) {
+        registerPluginOptions(newOptions) {
           middlewareOptions = mergeOptions(middlewareOptions, newOptions);
           if ('disableVirtualRoutes' in middlewareOptions) {
             sharedOptions.disableVirtualRoutes =
@@ -163,8 +166,8 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}) {
           );
         };
       },
-    },
-  ] satisfies Plugin[];
+    } satisfies HydrogenPlugin,
+  ];
 }
 
 function mergeOptions(

@@ -30,14 +30,16 @@ type OxygenApiOptions = OxygenPluginOptions &
  * For internal use only.
  * @private
  */
-export type OxygenPlugin = ReturnType<typeof oxygen>[0];
+export type OxygenPlugin = Plugin<{
+  registerPluginOptions(newOptions: OxygenApiOptions): void;
+}>;
 
 /**
  * Runs backend code in an Oxygen worker instead of Node.js during development.
  * It must be placed after `hydrogen` but before `remix` in the Vite plugins list.
  * @experimental
  */
-export function oxygen(pluginOptions: OxygenPluginOptions = {}) {
+export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
   let resolvedConfig: ResolvedConfig;
   let absoluteWorkerEntryFile: string;
   let apiOptions: OxygenApiOptions = {};
@@ -73,7 +75,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}) {
         };
       },
       api: {
-        registerPluginOptions(newOptions: OxygenApiOptions) {
+        registerPluginOptions(newOptions) {
           apiOptions = {
             ...apiOptions,
             ...newOptions,
@@ -145,6 +147,6 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}) {
           };
         }
       },
-    },
-  ] satisfies Plugin[];
+    } satisfies OxygenPlugin,
+  ];
 }
