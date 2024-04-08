@@ -4,7 +4,6 @@ import {getProjectPaths, hasRemixConfigFile} from '../../lib/remix-config.js';
 import {
   DEFAULT_APP_PORT,
   commonFlags,
-  deprecated,
   flagsToCamelObject,
 } from '../../lib/flags.js';
 import {startMiniOxygen} from '../../lib/mini-oxygen/index.js';
@@ -21,10 +20,8 @@ export default class Preview extends Command {
   static flags = {
     ...commonFlags.path,
     ...commonFlags.port,
-    worker: deprecated('--worker', {isBoolean: true}),
     ...commonFlags.legacyRuntime,
     ...commonFlags.env,
-    ...commonFlags.envBranch,
     ...commonFlags.inspectorPort,
     ...commonFlags.debug,
     ...commonFlags.verbose,
@@ -44,7 +41,6 @@ type PreviewOptions = {
   path?: string;
   legacyRuntime?: boolean;
   env?: string;
-  envBranch?: string;
   inspectorPort?: number;
   debug: boolean;
   verbose?: boolean;
@@ -55,7 +51,6 @@ export async function runPreview({
   path: appPath,
   legacyRuntime = false,
   env: envHandle,
-  envBranch,
   inspectorPort,
   debug,
   verbose,
@@ -80,7 +75,6 @@ export async function runPreview({
     {
       root,
       fetchRemote,
-      envBranch,
       envHandle,
     },
   );

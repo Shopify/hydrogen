@@ -65,20 +65,6 @@ export const commonFlags = {
       exclusive: ['env-branch'],
     }),
   },
-  /**
-   * @deprecated use `env` instead.
-   */
-  envBranch: {
-    'env-branch': Flags.string({
-      description:
-        'Specifies the environment to perform the operation using its Git branch name.',
-      env: 'SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH',
-      deprecated: {
-        to: 'env',
-        message: '--env-branch is deprecated. Use --env instead.',
-      },
-    }),
-  },
   sourcemap: {
     sourcemap: Flags.boolean({
       description:

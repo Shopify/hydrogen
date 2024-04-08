@@ -23,7 +23,6 @@ import {
 import {
   DEFAULT_APP_PORT,
   commonFlags,
-  deprecated,
   flagsToCamelObject,
 } from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
@@ -59,7 +58,6 @@ export default class Dev extends Command {
   static flags = {
     ...commonFlags.path,
     ...commonFlags.port,
-    worker: deprecated('--worker', {isBoolean: true}),
     ...commonFlags.legacyRuntime,
     ...commonFlags.codegen,
     ...commonFlags.sourcemap,
@@ -72,7 +70,6 @@ export default class Dev extends Command {
     ...commonFlags.debug,
     ...commonFlags.inspectorPort,
     ...commonFlags.env,
-    ...commonFlags.envBranch,
     'disable-version-check': Flags.boolean({
       description: 'Skip the version check when running `hydrogen dev`',
       default: false,
@@ -115,7 +112,6 @@ type DevOptions = {
   disableVirtualRoutes?: boolean;
   disableVersionCheck?: boolean;
   env?: string;
-  envBranch?: string;
   debug?: boolean;
   sourcemap?: boolean;
   inspectorPort?: number;
@@ -133,7 +129,6 @@ export async function runDev({
   codegenConfigPath,
   disableVirtualRoutes,
   env: envHandle,
-  envBranch,
   debug = false,
   sourcemap = true,
   disableVersionCheck = false,
@@ -209,7 +204,6 @@ export async function runDev({
     getAllEnvironmentVariables({
       root,
       fetchRemote,
-      envBranch,
       envHandle,
       localVariables,
     }),
@@ -368,7 +362,6 @@ export async function runDev({
             await getAllEnvironmentVariables({
               root,
               fetchRemote,
-              envBranch,
               envHandle,
             });
 
