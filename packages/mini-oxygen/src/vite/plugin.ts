@@ -36,8 +36,7 @@ export type OxygenPlugin = Plugin<{
 
 /**
  * Runs backend code in an Oxygen worker instead of Node.js during development.
- * It must be placed after `hydrogen` but before `remix` in the Vite plugins list.
- * @experimental
+ * If used with `remix`, place it before it in the Vite plugin list.
  */
 export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
   let resolvedConfig: ResolvedConfig;

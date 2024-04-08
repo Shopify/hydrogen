@@ -36,8 +36,6 @@ export type HydrogenPlugin = Plugin<{
 /**
  * Enables Hydrogen utilities for local development
  * such as GraphiQL, Subrequest Profiler, etc.
- * It must be used in combination with the `oxygen` plugin and Hydrogen CLI.
- * @experimental
  */
 export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
   let middlewareOptions: HydrogenMiddlewareOptions = {};
