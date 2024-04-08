@@ -693,7 +693,7 @@ export async function renderProjectReady(
                 [
                   'Run',
                   {
-                    command: outputContent`${outputToken.genericShellCommand(
+                    command:
                       [
                         project.directory === process.cwd()
                           ? undefined
@@ -701,9 +701,8 @@ export async function renderProjectReady(
                         depsInstalled ? undefined : `${packageManager} install`,
                         formatPackageManagerCommand(packageManager, 'dev'),
                       ]
-                        .filter(Boolean)
-                        .join(' && '),
-                    )}`.value,
+                      .filter(Boolean)
+                      .join(' && '),
                   },
                 ],
               ].filter((step): step is string[] => Boolean(step)),
