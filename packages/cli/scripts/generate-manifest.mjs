@@ -28,13 +28,23 @@ const plugin = new Plugin({
   type: 'core',
   ignoreManifest: true,
   errorOnManifestCreate: true,
+  respectNoCacheDefault: true,
 });
 
 await plugin.load(true);
 
+// Oclif resolves commands in parallel, so the order is not guaranteed.
+// Sort commands here alphabetically to avoid Git conflicts:
+const {manifest} = plugin;
+manifest.commands = Object.fromEntries(
+  Object.entries(manifest.commands).sort(([commandA], [commandB]) =>
+    commandA.localeCompare(commandB),
+  ),
+);
+
 await writeFile(
   path.join(cwd, 'oclif.manifest.json'),
-  JSON.stringify(plugin.manifest, null, 2),
+  JSON.stringify(manifest, null, 2),
 );
 
 console.log('', 'Oclif manifest generated.\n');
