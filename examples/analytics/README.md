@@ -133,7 +133,6 @@ export default function App() {
           <Layout {...data}>
             <Outlet />
           </Layout>
-+         <CustomAnalytics />
 +       </Analytics.Provider>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
