@@ -21,8 +21,9 @@ declare global {
 
 /**
  * Declare local additions to `AppLoadContext` to include the session utilities we injected in `server.ts`.
+ * This is used in code for examples.
  */
-declare module '@remix-run/server-runtime' {
+declare module '@shopify/remix-oxygen' {
   export interface AppLoadContext {
     storefront: Storefront;
     env: Env;

@@ -368,7 +368,7 @@ function useShopAnalytics(shopProp: AnalyticsProviderProps['shop']): {
 
 export async function getShopAnalytics(context: {
   storefront: Storefront;
-  env: Env | Record<string, any>;
+  env: Record<string, any>;
 }): Promise<ShopAnalytic | null> {
   return context.storefront
     .query(SHOP_QUERY, {
