@@ -14,10 +14,6 @@ Codegen dependencies must be now listed directly in `package.json`:
     "@shopify/mini-oxygen": "^2.2.5",
     "@shopify/oxygen-workers-types": "^4.0.0",
     ...
-    "eslint-plugin-hydrogen": "0.12.2",
-+   "graphql-config": "5.0.3",
-    "prettier": "^2.8.4",
-    ...
   }
 }
 ```
