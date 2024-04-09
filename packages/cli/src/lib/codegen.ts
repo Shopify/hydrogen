@@ -213,8 +213,10 @@ async function generateDefaultConfig(
   const defaultGlob = '*!(*.d).{ts,tsx,js,jsx}'; // No d.ts files
   const appDirRelative = relativePath(rootDirectory, appDirectory);
 
-  const caapiSchema = getSchema('customer-account');
-  const caapiProject = findGqlProject(caapiSchema, gqlConfig);
+  const caapiSchema = getSchema('customer-account', {throwIfMissing: false});
+  const caapiProject = caapiSchema
+    ? findGqlProject(caapiSchema, gqlConfig)
+    : undefined;
 
   const customerAccountAPIConfig = caapiProject?.documents
     ? {
