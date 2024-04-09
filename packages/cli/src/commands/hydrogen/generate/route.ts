@@ -15,6 +15,7 @@ import {
 import {isV1RouteConventionInstalled} from '../../../lib/remix-version-interop.js';
 
 export default class GenerateRoute extends Command {
+  static descriptionWithMarkdown = `Generates a set of default routes from the starter template.`;
   static description = 'Generates a standard Shopify route.';
   static flags = {
     adapter: Flags.string({

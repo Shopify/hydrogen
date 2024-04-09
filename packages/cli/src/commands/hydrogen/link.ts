@@ -28,6 +28,12 @@ import {
 } from '../../lib/onboarding/common.js';
 
 export default class Link extends Command {
+  static descriptionWithMarkdown = `Links your local development environment to a remote Hydrogen storefront. You can link an unlimited number of development environments to a single Hydrogen storefront.
+
+  Linking to a Hydrogen storefront enables you to run [dev](https://shopify.dev/docs/api/shopify-cli/hydrogen-commands/hydrogen-dev) and automatically inject your linked Hydrogen storefront's environment variables directly into the server runtime.
+
+  After you run the \`link\` command, you can access the [env list](https://shopify.dev/docs/api/shopify-cli/hydrogen-commands/hydrogen-env-list), [env pull](https://shopify.dev/docs/api/shopify-cli/hydrogen-commands/hydrogen-env-pull), and [unlink](https://shopify.dev/docs/api/shopify-cli/hydrogen-commands/hydrogen-unlink) commands.`;
+
   static description =
     "Link a local project to one of your shop's Hydrogen storefronts.";
 

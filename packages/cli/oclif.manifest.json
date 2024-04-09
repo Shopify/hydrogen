@@ -74,6 +74,7 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
+      "descriptionWithMarkdown": "Builds a Hydrogen storefront for production. The client and app worker files are compiled to a `/dist` folder in your Hydrogen project directory.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -197,6 +198,7 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
+      "descriptionWithMarkdown": "Checks whether your Hydrogen app includes a set of standard Shopify routes.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -249,6 +251,7 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
+      "descriptionWithMarkdown": "Automatically generates GraphQL types for your project’s Storefront API queries.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -346,6 +349,7 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
+      "descriptionWithMarkdown": "Builds the app and runs the resulting code to profile the server startup time, watching for changes. This command can be used to [debug slow app startup times](https://shopify.dev/docs/custom-storefronts/hydrogen/debugging/cpu-startup) that cause failed deployments in Oxygen.\n\n  The profiling results are written to a `.cpuprofile` file that can be viewed with certain tools such as [Flame Chart Visualizer for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-js-profile-flame).",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -529,6 +533,7 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
+      "descriptionWithMarkdown": "Builds and deploys your Hydrogen storefront to Oxygen. Requires an Oxygen deployment token to be set with the `--token` flag or an environment variable (`SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN`). If the storefront is [linked](https://shopify.dev/docs/api/shopify-cli/hydrogen-commands/hydrogen-link) then the Oxygen deployment token for the linked storefront will be used automatically.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -678,6 +683,7 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
+      "descriptionWithMarkdown": "Runs a Hydrogen storefront in a local runtime that emulates an Oxygen worker for development.\n\n  If your project is [linked](https://shopify.dev/docs/api/shopify-cli/hydrogen-commands/hydrogen-link) to a Hydrogen storefront, then its environment variables will be loaded with the runtime.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -854,6 +860,7 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
+      "descriptionWithMarkdown": "Lists all environments available on the linked Hydrogen storefront.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -914,6 +921,7 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
+      "descriptionWithMarkdown": "Pulls environment variables from the linked Hydrogen storefront and writes them to an `.env` file.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -1064,6 +1072,7 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
+      "descriptionWithMarkdown": "Generates a set of default routes from the starter template.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -1252,6 +1261,7 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
+      "descriptionWithMarkdown": "Creates a new Hydrogen storefront.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -1297,6 +1307,7 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
+      "descriptionWithMarkdown": "Links your local development environment to a remote Hydrogen storefront. You can link an unlimited number of development environments to a single Hydrogen storefront.\n\n  Linking to a Hydrogen storefront enables you to run [dev](https://shopify.dev/docs/api/shopify-cli/hydrogen-commands/hydrogen-dev) and automatically inject your linked Hydrogen storefront's environment variables directly into the server runtime.\n\n  After you run the `link` command, you can access the [env list](https://shopify.dev/docs/api/shopify-cli/hydrogen-commands/hydrogen-env-list), [env pull](https://shopify.dev/docs/api/shopify-cli/hydrogen-commands/hydrogen-env-pull), and [unlink](https://shopify.dev/docs/api/shopify-cli/hydrogen-commands/hydrogen-unlink) commands.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -1326,6 +1337,7 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
+      "descriptionWithMarkdown": "Lists all remote Hydrogen storefronts available to link to your local development environment.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -1364,6 +1376,7 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
+      "descriptionWithMarkdown": "Logs in to the specified shop and saves the shop domain to the project.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -1393,6 +1406,7 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
+      "descriptionWithMarkdown": "Log out from the current shop.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -1487,6 +1501,7 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
+      "descriptionWithMarkdown": "Runs a server in your local development environment that serves your Hydrogen app's production build. Requires running the [build](https://shopify.dev/docs/api/shopify-cli/hydrogen-commands/hydrogen-build) command first.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -1609,6 +1624,7 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
+      "descriptionWithMarkdown": "Adds support for certain CSS strategies to your project.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -1649,6 +1665,7 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
+      "descriptionWithMarkdown": "Adds support for multiple [markets](https://shopify.dev/docs/custom-storefronts/hydrogen/markets) to your project by using the URL structure.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -1700,6 +1717,7 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
+      "descriptionWithMarkdown": "Creates a global h2 shortcut for Shopify CLI using shell aliases.\n\n  The following shells are supported:\n\n  - Bash (using `~/.bashrc`)\n  - ZSH (using `~/.zshrc`)\n  - Fish (using `~/.config/fish/functions`)\n  - PowerShell (added to `$PROFILE`)\n\n  After the alias is created, you can call Shopify CLI from anywhere in your project using `h2 <command>`.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -1729,6 +1747,7 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
+      "descriptionWithMarkdown": "Unlinks your local development environment from a remote Hydrogen storefront.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -1775,6 +1794,7 @@
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
+      "descriptionWithMarkdown": "Upgrade Hydrogen project dependencies, preview features, fixes and breaking changes. The command also generates an instruction file for each upgrade.",
       "isESM": true,
       "relativePath": [
         "dist",

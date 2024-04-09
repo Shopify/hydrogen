@@ -5,6 +5,8 @@ import {commonFlags} from '../../lib/flags.js';
 import {logout} from '../../lib/auth.js';
 
 export default class Logout extends Command {
+  static descriptionWithMarkdown = 'Log out from the current shop.';
+
   static description = 'Logout of your local session.';
 
   static flags = {

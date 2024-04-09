@@ -8,6 +8,9 @@ import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {codegen} from '../../lib/codegen.js';
 
 export default class Codegen extends Command {
+  static descriptionWithMarkdown =
+    'Automatically generates GraphQL types for your project’s Storefront API queries.';
+
   static description =
     'Generate types for the Storefront API queries found in your project.';
   static flags = {

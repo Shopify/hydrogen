@@ -19,6 +19,9 @@ import {login} from '../../lib/auth.js';
 import {getCliCommand} from '../../lib/shell.js';
 
 export default class List extends Command {
+  static descriptionWithMarkdown =
+    'Lists all remote Hydrogen storefronts available to link to your local development environment.';
+
   static description =
     'Returns a list of Hydrogen storefronts available on a given shop.';
 

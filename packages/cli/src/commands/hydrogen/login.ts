@@ -4,6 +4,9 @@ import {commonFlags} from '../../lib/flags.js';
 import {login, renderLoginSuccess} from '../../lib/auth.js';
 
 export default class Login extends Command {
+  static descriptionWithMarkdown =
+    'Logs in to the specified shop and saves the shop domain to the project.';
+
   static description = 'Login to your Shopify account.';
 
   static flags = {
