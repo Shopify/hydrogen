@@ -7,8 +7,7 @@ import {findMissingRoutes, logMissingRoutes} from '../../lib/missing-routes.js';
 import {Args} from '@oclif/core';
 
 export default class GenerateRoute extends Command {
-
-  static descriptionWithMarkdown = `Checks whether your Hydrogen app includes a set of standard Shopify routes.`
+  static descriptionWithMarkdown = `Checks whether your Hydrogen app includes a set of standard Shopify routes.`;
 
   static description =
     'Returns diagnostic information about a Hydrogen storefront.';

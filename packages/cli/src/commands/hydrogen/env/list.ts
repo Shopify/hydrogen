@@ -20,7 +20,8 @@ import {login} from '../../../lib/auth.js';
 import {getCliCommand} from '../../../lib/shell.js';
 
 export default class EnvList extends Command {
-  static descriptionWithMarkdown = "Lists all environments available on the linked Hydrogen storefront."
+  static descriptionWithMarkdown =
+    'Lists all environments available on the linked Hydrogen storefront.';
 
   static description =
     'List the environments on your linked Hydrogen storefront.';
