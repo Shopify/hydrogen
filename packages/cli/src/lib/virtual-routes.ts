@@ -1,3 +1,9 @@
+/**
+ * This file is only used for the classic compiler.
+ * Refer to `hydrogen/src/vite/add-virtual-routes.ts` for Vite.
+ * @deprecated
+ */
+
 import {fileURLToPath} from 'node:url';
 import {glob} from '@shopify/cli-kit/node/fs';
 import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
@@ -14,8 +20,11 @@ type MinimalRemixConfig = {
 export async function addVirtualRoutes<T extends MinimalRemixConfig>(
   config: T,
 ): Promise<T> {
+  const distPath = process.env.SHOPIFY_UNIT_TEST
+    ? fileURLToPath(new URL('../../../hydrogen/src/vite', import.meta.url))
+    : fileURLToPath(new URL('..', import.meta.url));
+
   const userRouteList = Object.values(config.routes);
-  const distPath = fileURLToPath(new URL('..', import.meta.url));
   const virtualRoutesPath = joinPath(distPath, VIRTUAL_ROUTES_DIR);
 
   for (const absoluteFilePath of await glob(

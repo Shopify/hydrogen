@@ -208,17 +208,17 @@ export type CartHandlerOptionsForDocs<
   storefront: Storefront;
   /**
    * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.
-   * See the [example usage](/docs/api/hydrogen/2024-01/utilities/createcarthandler#example-cart-fragments) in the documentation.
+   * See the [example usage](/docs/api/hydrogen/2024-04/utilities/createcarthandler#example-cart-fragments) in the documentation.
    */
   cartMutateFragment?: string;
   /**
    * The cart query fragment used by `cart.get()`.
-   * See the [example usage](/docs/api/hydrogen/2024-01/utilities/createcarthandler#example-cart-fragments) in the documentation.
+   * See the [example usage](/docs/api/hydrogen/2024-04/utilities/createcarthandler#example-cart-fragments) in the documentation.
    */
   cartQueryFragment?: string;
   /**
    * Define custom methods or override existing methods for your cart API instance.
-   * See the [example usage](/docs/api/hydrogen/2024-01/utilities/createcarthandler#example-custom-methods) in the documentation.
+   * See the [example usage](/docs/api/hydrogen/2024-04/utilities/createcarthandler#example-custom-methods) in the documentation.
    */
   customMethods?: TCustomMethods;
 };
