@@ -933,7 +933,7 @@
         "pull.js"
       ]
     },
-    "hydrogen:env:push__unstable": {
+    "hydrogen:env:push": {
       "aliases": [],
       "args": {},
       "description": "Push environment variables from the local .env file to your linked Hydrogen storefront.",
@@ -965,9 +965,8 @@
         }
       },
       "hasDynamicHelp": false,
-      "hidden": true,
       "hiddenAliases": [],
-      "id": "hydrogen:env:push__unstable",
+      "id": "hydrogen:env:push",
       "pluginAlias": "@shopify/cli-hydrogen",
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
@@ -978,7 +977,7 @@
         "commands",
         "hydrogen",
         "env",
-        "push__unstable.js"
+        "push.js"
       ]
     },
     "hydrogen:g": {
