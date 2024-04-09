@@ -32,7 +32,7 @@ export function CartAnalytics({
   useEffect(() => {
     if (!currentCart) return;
     Promise.resolve(currentCart).then((updatedCart) => {
-      if (updatedCart) {
+      if (updatedCart && updatedCart.lines) {
         if (!updatedCart.id) {
           logMissingField('cart.id');
           return;
