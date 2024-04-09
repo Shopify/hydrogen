@@ -13,6 +13,8 @@ import {
 } from '../../../lib/setups/i18n/index.js';
 
 export default class SetupMarkets extends Command {
+  static descriptionWithMarkdown = "Adds support for multiple [markets](https://shopify.dev/docs/custom-storefronts/hydrogen/markets) to your project by using the URL structure."
+
   static description = 'Setup support for multiple markets in your project.';
 
   static flags = {

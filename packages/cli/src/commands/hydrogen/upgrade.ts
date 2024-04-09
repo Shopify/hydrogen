@@ -100,6 +100,9 @@ export type CumulativeRelease = {
 const INSTRUCTIONS_FOLDER = '.hydrogen';
 
 export default class Upgrade extends Command {
+
+  static descriptionWithMarkdown = "Upgrade Hydrogen project dependencies, preview features, fixes and breaking changes. The command also generates an instruction file for each upgrade."
+
   static description = 'Upgrade Remix and Hydrogen npm dependencies.';
 
   static flags = {

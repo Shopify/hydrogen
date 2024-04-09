@@ -60,6 +60,7 @@ export const deploymentLogger: Logger = (
 };
 
 export default class Deploy extends Command {
+  static descriptionWithMarkdown = `Builds and deploys your Hydrogen storefront to Oxygen. Requires an Oxygen deployment token to be set with the \`--token\` flag or an environment variable (\`SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN\`). If the storefront is [linked](https://shopify.dev/docs/api/shopify-cli/hydrogen-commands/hydrogen-link) then the Oxygen deployment token for the linked storefront will be used automatically.`
   static description = 'Builds and deploys a Hydrogen storefront to Oxygen.';
   static flags: any = {
     ...commonFlags.entry,

@@ -43,6 +43,8 @@ const LOG_WORKER_BUILT = '📦 Worker built';
 const WORKER_BUILD_SIZE_LIMIT = 5;
 
 export default class Build extends Command {
+  static descriptionWithMarkdown = `Builds a Hydrogen storefront for production. The client and app worker files are compiled to a \`/dist\` folder in your Hydrogen project directory.`
+
   static description = 'Builds a Hydrogen storefront for production.';
   static flags = {
     ...commonFlags.path,

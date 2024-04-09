@@ -32,6 +32,8 @@ import {getStorefrontEnvironments} from '../../../lib/graphql/admin/list-environ
 import {getStorefrontEnvVariables} from '../../../lib/graphql/admin/pull-variables.js';
 
 export default class EnvPull extends Command {
+
+  static descriptionWithMarkdown = "Pulls environment variables from the linked Hydrogen storefront and writes them to an \`.env\` file."
   static description =
     'Populate your .env with variables from your Hydrogen storefront.';
 

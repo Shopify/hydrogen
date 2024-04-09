@@ -6,6 +6,9 @@ import {commonFlags} from '../../lib/flags.js';
 import {getConfig, unsetStorefront} from '../../lib/shopify-config.js';
 
 export default class Unlink extends Command {
+
+  static descriptionWithMarkdown = "Unlinks your local development environment from a remote Hydrogen storefront."
+
   static description = 'Unlink a local project from a Hydrogen storefront.';
 
   static flags = {

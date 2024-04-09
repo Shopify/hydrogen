@@ -26,6 +26,7 @@ import {LANGUAGES} from '../../lib/onboarding/common.js';
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 
 export default class Init extends Command {
+  static descriptionWithMarkdown = "Creates a new Hydrogen storefront."
   static description = 'Creates a new Hydrogen storefront.';
   static flags = {
     ...commonFlags.force,
