@@ -303,7 +303,7 @@ function missingErrorMessage(
 ) {
   // eslint-disable-next-line no-console
   console.error(
-    `ShopifyAnalytics - ${eventName}: ${missingFieldName} is required from the ${fromSource}.`,
+    `[h2:error:ShopifyAnalytics] ${eventName}: ${missingFieldName} is required from the ${fromSource}.`,
   );
 }
 
