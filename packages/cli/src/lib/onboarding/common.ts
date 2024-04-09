@@ -76,6 +76,7 @@ export type InitOptions = {
   installDeps?: boolean;
   git?: boolean;
   quickstart?: boolean;
+  packageManager?: PackageManager;
 };
 
 export const LANGUAGES = {
@@ -459,9 +460,11 @@ export async function handleCssStrategy(
 export async function handleDependencies(
   projectDir: string,
   controller: AbortController,
+  packageManagerFromFlag?: PackageManager,
   shouldInstallDeps?: boolean,
 ) {
-  const detectedPackageManager = packageManagerFromUserAgent();
+  const detectedPackageManager =
+    packageManagerFromFlag ?? packageManagerFromUserAgent();
   let actualPackageManager: PackageManager = 'npm';
 
   if (shouldInstallDeps !== false) {
@@ -689,17 +692,15 @@ export async function renderProjectReady(
                 [
                   'Run',
                   {
-                    command: outputContent`${outputToken.genericShellCommand(
-                      [
-                        project.directory === process.cwd()
-                          ? undefined
-                          : `cd ${project.location.replace(/^\.\//, '')}`,
-                        depsInstalled ? undefined : `${packageManager} install`,
-                        formatPackageManagerCommand(packageManager, 'dev'),
-                      ]
-                        .filter(Boolean)
-                        .join(' && '),
-                    )}`.value,
+                    command: [
+                      project.directory === process.cwd()
+                        ? undefined
+                        : `cd ${project.location.replace(/^\.\//, '')}`,
+                      depsInstalled ? undefined : `${packageManager} install`,
+                      formatPackageManagerCommand(packageManager, 'dev'),
+                    ]
+                      .filter(Boolean)
+                      .join(' && '),
                   },
                 ],
               ].filter((step): step is string[] => Boolean(step)),
