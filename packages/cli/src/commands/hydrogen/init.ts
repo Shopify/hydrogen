@@ -145,7 +145,8 @@ export async function runInit(
   );
 
   if (showUpgrade) {
-    const packageManager = options.packageManager ?? packageManagerFromUserAgent();
+    const packageManager =
+      options.packageManager ?? packageManagerFromUserAgent();
     showUpgrade(
       packageManager === 'unknown'
         ? ''

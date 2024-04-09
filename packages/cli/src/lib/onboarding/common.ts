@@ -463,7 +463,8 @@ export async function handleDependencies(
   packageManagerFromFlag?: PackageManager,
   shouldInstallDeps?: boolean,
 ) {
-  const detectedPackageManager = packageManagerFromFlag ?? packageManagerFromUserAgent();
+  const detectedPackageManager =
+    packageManagerFromFlag ?? packageManagerFromUserAgent();
   let actualPackageManager: PackageManager = 'npm';
 
   if (shouldInstallDeps !== false) {
@@ -691,14 +692,13 @@ export async function renderProjectReady(
                 [
                   'Run',
                   {
-                    command:
-                      [
-                        project.directory === process.cwd()
-                          ? undefined
-                          : `cd ${project.location.replace(/^\.\//, '')}`,
-                        depsInstalled ? undefined : `${packageManager} install`,
-                        formatPackageManagerCommand(packageManager, 'dev'),
-                      ]
+                    command: [
+                      project.directory === process.cwd()
+                        ? undefined
+                        : `cd ${project.location.replace(/^\.\//, '')}`,
+                      depsInstalled ? undefined : `${packageManager} install`,
+                      formatPackageManagerCommand(packageManager, 'dev'),
+                    ]
                       .filter(Boolean)
                       .join(' && '),
                   },
