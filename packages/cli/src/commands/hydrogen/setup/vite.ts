@@ -24,7 +24,8 @@ import {AbortError} from '@shopify/cli-kit/node/error';
 import {outputNewline} from '@shopify/cli-kit/node/output';
 
 export default class SetupVite extends Command {
-  static description = 'EXPERIMENTAL: Upgrades the project to use Vite.';
+  static description =
+    'Upgrades a project using the Classic Remix Compiler to Vite.';
 
   static flags = {
     ...commonFlags.path,

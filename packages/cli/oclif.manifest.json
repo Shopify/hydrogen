@@ -1678,7 +1678,7 @@
     "hydrogen:setup:vite": {
       "aliases": [],
       "args": {},
-      "description": "EXPERIMENTAL: Upgrades the project to use Vite.",
+      "description": "Upgrades a project using the Classic Remix Compiler to Vite.",
       "flags": {
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
