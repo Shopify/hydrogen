@@ -173,7 +173,8 @@ export const commonFlags = {
     }),
   },
   customerAccountPush: {
-    'customer-account-push': Flags.boolean({
+    'customer-account-push__unstable': Flags.boolean({
+      hidden: true,
       description:
         "Use tunneling for local development and push the tunneling domain to admin. Required to use Customer Account API's Oauth flow",
       required: false,
