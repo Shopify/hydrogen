@@ -7,9 +7,7 @@
  * @param api
  * @returns
  */
-export const getSchema = (
-  api = 'storefront' as 'storefront' | 'customer-account',
-) => {
+export const getSchema = (api: 'storefront' | 'customer-account') => {
   if (api !== 'storefront' && api !== 'customer-account') {
     throw new Error(
       `The provided API type "${api}" is unknown. Please use "storefront" or "customer-account".`,
@@ -18,18 +16,3 @@ export const getSchema = (
 
   return require.resolve(`@shopify/hydrogen-react/${api}.schema.json`);
 };
-
-let staticSFAPISchema = '';
-
-try {
-  staticSFAPISchema = getSchema('storefront');
-} catch (error) {
-  // This can happen at build time or when '@shopify/hydrogen-react' is not found.
-  // Generally this shouldn't be an issue in real apps so let's ignore the error.
-  // Also, this package could be used in non-Hydrogen apps.
-}
-
-/**
- * The resolved schema path for the Storefront API.
- */
-export const schema = staticSFAPISchema;
