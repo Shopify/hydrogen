@@ -8,7 +8,10 @@ export async function loader({context}: LoaderFunctionArgs) {
 
   return defer({
     cart: cartPromise,
-    shop: getShopAnalytics(context),
+    shop: getShopAnalytics({
+      storefront: context.storefront,
+      publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
+    }),
     consent: {
       checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,

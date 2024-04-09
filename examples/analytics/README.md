@@ -92,7 +92,10 @@ export async function loader({context}: LoaderFunctionArgs) {
       // ...other code
 
 +     // 2. return the `shop` environment for analytics
-+     shop: getShopAnalytics(context),
++     shop: getShopAnalytics({
++       storefront: storefront,
++       publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
++     }),
 
 +     // 3. return the `consent` config for analytics
 +     consent: {
@@ -213,7 +216,6 @@ export default function Product() {
 +             quantity: 1,
 +           },
 +         ],
-+         url: window.location.href,
 +       }}
 +     />
     </div>
@@ -256,7 +258,6 @@ export default function Collection() {
 +           id: collection.id,
 +           handle: collection.handle,
 +         },
-+         url: window.location.href,
 +       }}
 +     />
     </div>
@@ -322,7 +323,7 @@ export default function SearchPage() {
         />
       )}
 +     <Analytics.SearchView
-+       data={{searchTerm, searchResults, url: window.location.href}}
++       data={{searchTerm, searchResults}}
 +     />
     </div>
   );
@@ -341,11 +342,14 @@ export default async function handleRequest(
   responseStatusCode: number,
   responseHeaders: Headers,
   remixContext: EntryContext,
++  context: AppLoadContext,
 ) {
 - const {nonce, header, NonceProvider} = createContentSecurityPolicy();
 + const {nonce, header, NonceProvider} = createContentSecurityPolicy({
-+   checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
-+   storeDomain: context.env.PUBLIC_STORE_DOMAIN,
++   shop: {
++     checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
++     storeDomain: context.env.PUBLIC_STORE_DOMAIN,
++   },
 + });
 
   //...other code

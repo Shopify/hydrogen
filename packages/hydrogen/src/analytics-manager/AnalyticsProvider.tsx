@@ -38,7 +38,7 @@ import {CartAnalytics} from './CartAnalytics';
 import type {CustomerPrivacyApiProps} from '../customer-privacy/ShopifyCustomerPrivacy';
 import type {Storefront} from '../storefront';
 
-export type ShopAnalytic = {
+export type ShopAnalytics = {
   /** The shop ID. */
   shopId: string;
   /** The language code that is being displayed to user. */
@@ -59,7 +59,7 @@ export type AnalyticsProviderProps = {
   /** An optional custom payload to pass to all events. e.g language/locale/currency. */
   customData?: Record<string, unknown>;
   /** The shop configuration required to publish analytics events to Shopify. Use [`getShopAnalytics`](/docs/api/hydrogen/2024-01/utilities/getshopanalytics). */
-  shop: Promise<ShopAnalytic | null> | ShopAnalytic | null;
+  shop: Promise<ShopAnalytics | null> | ShopAnalytics | null;
   /** The customer privacy consent configuration and options. */
   consent: CustomerPrivacyApiProps;
 };
@@ -344,7 +344,7 @@ export function useAnalytics(): AnalyticsContextValue {
  * and returns the shop analytics.
  */
 function useShopAnalytics(shopProp: AnalyticsProviderProps['shop']): {
-  shop: ShopAnalytic | null;
+  shop: ShopAnalytics | null;
 } {
   const [shop, setShop] =
     useState<Awaited<AnalyticsProviderProps['shop']>>(null);
@@ -360,20 +360,23 @@ function useShopAnalytics(shopProp: AnalyticsProviderProps['shop']): {
 
 // TODO: useCustomerAnalytics hook
 
-export async function getShopAnalytics(context: {
+export async function getShopAnalytics({
+  storefront,
+  publicStorefrontId = '0',
+}: {
   storefront: Storefront;
-  env: Record<string, any>;
-}): Promise<ShopAnalytic | null> {
-  return context.storefront
+  publicStorefrontId: string;
+}): Promise<ShopAnalytics | null> {
+  return storefront
     .query(SHOP_QUERY, {
-      cache: context.storefront.CacheLong(),
+      cache: storefront.CacheLong(),
     })
     .then(({shop, localization}: {shop: Shop; localization: Localization}) => {
       return {
         shopId: shop.id,
         acceptedLanguage: localization.language.isoCode,
         currency: localization.country.currency.isoCode,
-        hydrogenSubchannelId: context.env?.PUBLIC_STOREFRONT_ID || '0',
+        hydrogenSubchannelId: publicStorefrontId,
       };
     });
 }
@@ -422,7 +425,7 @@ export type AnalyticsContextValueForDoc = {
   /** A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/2024-01/hooks/unstable_useanalytics#example-unstable_useanalytics.register). */
   register?: (key: string) => {ready: () => void};
   /** The shop configuration required to publish events to Shopify. */
-  shop?: Promise<ShopAnalytic | null> | ShopAnalytic | null;
+  shop?: Promise<ShopAnalytics | null> | ShopAnalytics | null;
   /** A function to subscribe to analytics events. */
   subscribe?: AnalyticsContextSubscribeForDoc;
 };

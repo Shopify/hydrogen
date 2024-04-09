@@ -13,7 +13,7 @@ import {AnalyticsEvent} from './events';
 import {useAnalytics, type AnalyticsProviderProps} from './AnalyticsProvider';
 import {
   useCustomerPrivacy,
-  getCustomerPrivacyRequired,
+  getCustomerPrivacy,
 } from '../customer-privacy/ShopifyCustomerPrivacy';
 import type {
   PageViewPayload,
@@ -29,6 +29,18 @@ import {
   ComponentizableCartLine,
   Maybe,
 } from '@shopify/hydrogen-react/storefront-api-types';
+
+function getCustomerPrivacyRequired() {
+  const customerPrivacy = getCustomerPrivacy();
+
+  if (!customerPrivacy) {
+    throw new Error(
+      'Shopify Customer Privacy API not available. Must be used within a useEffect. Make sure to load the Shopify Customer Privacy API with useCustomerPrivacy() or <AnalyticsProvider>.',
+    );
+  }
+
+  return customerPrivacy;
+}
 
 /**
  * This component is responsible for sending analytics events to Shopify.

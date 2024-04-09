@@ -185,15 +185,3 @@ export function getCustomerPrivacy() {
     return null;
   }
 }
-
-export function getCustomerPrivacyRequired() {
-  const customerPrivacy = getCustomerPrivacy();
-
-  if (!customerPrivacy) {
-    throw new Error(
-      'Shopify Customer Privacy API not available. Must be used within a useEffect. Make sure to load the Shopify Customer Privacy API with useCustomerPrivacy() or <AnalyticsProvider>.',
-    );
-  }
-
-  return customerPrivacy;
-}

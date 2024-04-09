@@ -58,7 +58,6 @@ export async function action({request, context}: ActionFunctionArgs) {
       throw new Error(`${action} cart action is not defined`);
   }
 
-  const cartId = result.cart.id;
   const headers = cart.setCartId(result.cart.id);
   const {cart: cartResult, errors} = result;
 
@@ -74,9 +73,6 @@ export async function action({request, context}: ActionFunctionArgs) {
     {
       cart: cartResult,
       errors,
-      analytics: {
-        cartId,
-      },
     },
     {status, headers},
   );

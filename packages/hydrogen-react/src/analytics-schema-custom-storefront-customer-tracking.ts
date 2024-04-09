@@ -26,6 +26,8 @@ function prepareAdditionalPayload(
   };
 }
 
+// Send the page view event to the Monorail server.
+// It also sends additional page view events based on the page type.
 export function pageView(
   payload: ShopifyPageViewPayload,
 ): ShopifyMonorailEvent[] {
@@ -100,6 +102,7 @@ export function pageView(
   return pageViewEvents;
 }
 
+// Sends page view event to the Monorail server.
 export function pageView2(
   payload: ShopifyPageViewPayload,
 ): ShopifyMonorailEvent[] {
@@ -120,6 +123,7 @@ export function pageView2(
   ];
 }
 
+// Sends collection view event to the Monorail server.
 export function collectionView(
   payload: ShopifyPageViewPayload,
 ): ShopifyMonorailEvent[] {
@@ -141,6 +145,7 @@ export function collectionView(
   ];
 }
 
+// Sends product view event to the Monorail server.
 export function productView(
   payload: ShopifyPageViewPayload,
 ): ShopifyMonorailEvent[] {
@@ -163,6 +168,7 @@ export function productView(
   ];
 }
 
+// Sends search view event to the Monorail server.
 export function searchView(
   payload: ShopifyPageViewPayload,
 ): ShopifyMonorailEvent[] {

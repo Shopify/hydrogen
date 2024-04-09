@@ -102,7 +102,6 @@ export {
   type CustomerPrivacyApiProps,
   useCustomerPrivacy,
   getCustomerPrivacy,
-  getCustomerPrivacyRequired,
 } from './customer-privacy/ShopifyCustomerPrivacy';
 
 export {

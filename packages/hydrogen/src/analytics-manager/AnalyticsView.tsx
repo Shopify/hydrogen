@@ -1,7 +1,7 @@
 import {useLocation} from '@remix-run/react';
-import {useEffect, useRef} from 'react';
+import {useEffect} from 'react';
 import {
-  type ShopAnalytic,
+  type ShopAnalytics,
   type AnalyticsProviderProps,
   useAnalytics,
 } from './AnalyticsProvider';
@@ -21,7 +21,7 @@ export type OtherData = {
 
 type BasePayload = {
   /** The shop data passed in from the `AnalyticsProvider`. */
-  shop: ShopAnalytic | null;
+  shop: ShopAnalytics | null;
   /** The custom data passed in from the `AnalyticsProvider`. */
   customData?: AnalyticsProviderProps['customData'];
 };

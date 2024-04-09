@@ -6,7 +6,7 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description:
-    'A hook that loads the [Customer Privacy API](/docs/api/customer-privacy).\n\nYou can get the customer privacy instance with `getCustomerPrivacy()` or `getCustomerPrivacyRequired()`.',
+    'A hook that loads the [Customer Privacy API](/docs/api/customer-privacy).\n\nYou can get the customer privacy instance with `getCustomerPrivacy()`.',
   type: 'hook',
   defaultExample: {
     description: 'This is the default example',
@@ -48,25 +48,6 @@ const data: ReferenceEntityTemplateSchema = {
                 {
                   title: 'JavaScript',
                   code: './useCustomerPrivacy.get.example.jsx',
-                  language: 'js',
-                },
-              ],
-            },
-          },
-        ],
-      },
-      {
-        title: 'getCustomerPrivacyRequired',
-        examples: [
-          {
-            description:
-              "Returns the value of `window.Shopify.customerPrivacy`, and throws an error if it doesn't exist.",
-            codeblock: {
-              title: '',
-              tabs: [
-                {
-                  title: 'JavaScript',
-                  code: './useCustomerPrivacy.getRequired.example.jsx',
                   language: 'js',
                 },
               ],
