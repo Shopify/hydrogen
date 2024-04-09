@@ -72,9 +72,9 @@ export const schema = {
   },
 };
 
-export interface SeoConfig<Schema extends Thing = Thing> {
+export interface SeoConfig {
   /**
-   * The <title> HTML element defines the document's title that is shown in a browser's title bar or a page's tab. It
+   * The `title` HTML element defines the document's title that is shown in a browser's title bar or a page's tab. It
    * only contains text; tags within the element are ignored.
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/title
@@ -159,6 +159,8 @@ export interface SeoConfig<Schema extends Thing = Thing> {
    * - `BlogPosting`
    * - `Thing`
    *
+   * The value is validated via [schema-dts](https://www.npmjs.com/package/schema-dts)
+   *
    * @example
    * ```js
    * {
@@ -200,7 +202,7 @@ export interface SeoConfig<Schema extends Thing = Thing> {
    * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script
    *
    */
-  jsonLd?: WithContext<Schema> | WithContext<Schema>[];
+  jsonLd?: WithContext<Thing> | WithContext<Thing>[];
   /**
    * The `alternates` property is used to specify the language and geographical targeting when you have multiple
    * versions of the same page in different languages. The `url` property tells search engines about these variations
@@ -354,10 +356,7 @@ export interface CustomHeadTagObject {
  * pairs well with the SEO component in `@shopify/hydrogen` when building a Hydrogen Remix app, but can be used on its
  * own if you want to generate the tags yourself.
  */
-export function generateSeoTags<
-  Schema extends Thing,
-  T extends SeoConfig<Schema> = SeoConfig<Schema>,
->(seoInput: T): CustomHeadTagObject[] {
+export function generateSeoTags(seoInput: SeoConfig): CustomHeadTagObject[] {
   const tagResults: CustomHeadTagObject[] = [];
 
   for (const seoKey of Object.keys(seoInput)) {
@@ -685,7 +684,7 @@ export function generateKey(tag: CustomHeadTagObject, group?: string) {
   return `${tagName}-${props.type}`;
 }
 
-function renderTitle<T extends CustomHeadTagObject['children']>(
+export function renderTitle<T extends CustomHeadTagObject['children']>(
   template?:
     | string
     | ((title: string) => string | undefined)
@@ -708,7 +707,7 @@ function renderTitle<T extends CustomHeadTagObject['children']>(
   return template.replace('%s', title ?? '');
 }
 
-function inferMimeType(url: Maybe<string> | undefined) {
+export function inferMimeType(url: Maybe<string> | undefined) {
   const ext = url && url.split('.').pop();
 
   switch (ext) {
@@ -738,11 +737,11 @@ export type SchemaType =
   | 'BlogPosting'
   | 'Thing';
 
-function ensureArray<T>(value: T | T[]): T[] {
+export function ensureArray<T>(value: T | T[]): T[] {
   return Array.isArray(value) ? value : [value];
 }
 
-function validate<T>(
+export function validate<T>(
   schema: {validate: <T>(data: T) => NonNullable<T>},
   data: T,
 ): T {
