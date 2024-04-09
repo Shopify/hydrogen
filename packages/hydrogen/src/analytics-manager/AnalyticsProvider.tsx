@@ -110,13 +110,7 @@ const subscribers = new Map<
 const registers: Record<string, boolean> = {};
 
 function areRegistersReady() {
-  let ready = true;
-  Object.keys(registers).forEach((key) => {
-    if (!registers[key]) {
-      ready = false;
-    }
-  });
-  return ready;
+  return Object.values(registers).every(Boolean);
 }
 
 // Overload functions for each subscribe event
