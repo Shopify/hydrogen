@@ -34,10 +34,8 @@
   },
   "dependencies": {
     "@ast-grep/napi": "0.11.0",
-    "@graphql-codegen/cli": "5.0.1",
     "@oclif/core": "3.15.1",
     "@shopify/cli-kit": "3.56.3",
-    "@shopify/hydrogen-codegen": "^0.2.2",
     "@shopify/oxygen-cli": "4.3.6",
     "@shopify/plugin-cloudflare": "3.56.3",
     "ansi-escapes": "^6.2.0",
@@ -45,7 +43,6 @@
     "diff": "^5.1.0",
     "fs-extra": "^11.1.0",
     "get-port": "^7.0.0",
-    "graphql-config": "5.0.3",
     "gunzip-maybe": "^1.4.2",
     "prettier": "^2.8.4",
     "semver": "^7.5.3",
@@ -60,15 +57,27 @@
     "@parcel/watcher": "^2.3.0"
   },
   "peerDependencies": {
+    "@graphql-codegen/cli": "^5.0.2",
     "@remix-run/dev": "^2.1.0",
+    "@shopify/hydrogen-codegen": "^0.2.2",
     "@shopify/mini-oxygen": "^2.2.5",
+    "graphql-config": "^5.0.3",
     "vite": "^5.1.0"
   },
   "peerDependenciesMeta": {
+    "@graphql-codegen/cli": {
+      "optional": true
+    },
     "@remix-run/dev": {
       "optional": true
     },
+    "@shopify/hydrogen-codegen": {
+      "optional": true
+    },
     "@shopify/mini-oxygen": {
+      "optional": true
+    },
+    "graphql-config": {
       "optional": true
     },
     "vite": {
