@@ -78,7 +78,7 @@ export function ShopifyAnalytics({
 function logMissingConfig(fieldName: string) {
   // eslint-disable-next-line no-console
   console.error(
-    `Unable to send Shopify analytics: Missing shop.${fieldName} configuration.`,
+    `[h2:error:ShopifyAnalytics] Unable to send Shopify analytics: Missing shop.${fieldName} configuration.`,
   );
 }
 
