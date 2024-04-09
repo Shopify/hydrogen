@@ -4998,7 +4998,7 @@
             "filePath": "/customer/types.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CustomerAccount",
-            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action.\n   * It redirects the customer to a Shopify login domain. It also defined the final path the customer\n   * lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is\n   * automatically setup unless `customAuthStatusHandler` option is in use)\n   *\n   * @param options.uiLocales - The displayed language of the login page. Only support for the following languages:\n   * `en`, `fr`, `cs`, `da`, `de`, `es`, `fi`, `it`, `ja`, `ko`, `nb`, `nl`, `pl`, `pt-BR`, `pt-PT`,\n   * `sv`, `th`, `tr`, `vi`, `zh-CN`, `zh-TW`. If supplied any other language code, it will default to `en`.\n   * */\n  login: (options?: LoginOptions) => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken: () => Promise<string | undefined>;\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/\n  getApiUrl: () => string;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/\n  logout: () => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      CustomerAccountQueries,\n      RawGqlString\n    >\n  ) => Promise<\n    Omit<\n      CustomerAPIResponse<\n        ClientReturn<CustomerAccountQueries, RawGqlString, OverrideReturnType>\n      >,\n      'errors'\n    > & {errors?: JsonGraphQLError[]}\n  >;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      CustomerAccountMutations,\n      RawGqlString\n    >\n  ) => Promise<\n    Omit<\n      CustomerAPIResponse<\n        ClientReturn<CustomerAccountMutations, RawGqlString, OverrideReturnType>\n      >,\n      'errors'\n    > & {errors?: JsonGraphQLError[]}\n  >;\n}",
+            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action.\n   * It redirects the customer to a Shopify login domain. It also defined the final path the customer\n   * lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is\n   * automatically setup unless `customAuthStatusHandler` option is in use)\n   *\n   * @param options.uiLocales - The displayed language of the login page. Only support for the following languages:\n   * `en`, `fr`, `cs`, `da`, `de`, `es`, `fi`, `it`, `ja`, `ko`, `nb`, `nl`, `pl`, `pt-BR`, `pt-PT`,\n   * `sv`, `th`, `tr`, `vi`, `zh-CN`, `zh-TW`. If supplied any other language code, it will default to `en`.\n   * */\n  login: (options?: LoginOptions) => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken: () => Promise<string | undefined>;\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/\n  getApiUrl: () => string;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.\n   *\n   * @param options.postLogoutRedirectUri - The url to redirect customer to after logout, should be a relative URL. This url will need to included in Customer Account API's application setup for logout URI. The default value is current app origin, which is automatically setup in admin when using `--customer-account-push` flag with dev.\n   * */\n  logout: (options?: LogoutOptions) => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      CustomerAccountQueries,\n      RawGqlString\n    >\n  ) => Promise<\n    Omit<\n      CustomerAPIResponse<\n        ClientReturn<CustomerAccountQueries, RawGqlString, OverrideReturnType>\n      >,\n      'errors'\n    > & {errors?: JsonGraphQLError[]}\n  >;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      CustomerAccountMutations,\n      RawGqlString\n    >\n  ) => Promise<\n    Omit<\n      CustomerAPIResponse<\n        ClientReturn<CustomerAccountMutations, RawGqlString, OverrideReturnType>\n      >,\n      'errors'\n    > & {errors?: JsonGraphQLError[]}\n  >;\n}",
             "description": "",
             "members": [
               {
@@ -5047,7 +5047,7 @@
                 "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "logout",
-                "value": "() => Promise<Response>",
+                "value": "(options?: LogoutOptions) => Promise<Response>",
                 "description": "Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin."
               },
               {
@@ -5089,6 +5089,23 @@
             "name": "DataFunctionValue",
             "value": "Response | NonNullable<unknown> | null",
             "description": ""
+          },
+          "LogoutOptions": {
+            "filePath": "/customer/types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "LogoutOptions",
+            "value": "{\n  postLogoutRedirectUri?: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/customer/types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "postLogoutRedirectUri",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              }
+            ]
           },
           "CustomerAccountQueries": {
             "filePath": "/customer/types.ts",
@@ -9688,7 +9705,7 @@
             "filePath": "/customer/types.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CustomerAccountForDocs",
-            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action.\n   * It redirects the customer to a Shopify login domain. It also defined the final path the customer\n   * lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is\n   * automatically setup unless `customAuthStatusHandler` option is in use)\n   *\n   * @param options.uiLocales - The displayed language of the login page. Only support for the following languages:\n   * `en`, `fr`, `cs`, `da`, `de`, `es`, `fi`, `it`, `ja`, `ko`, `nb`, `nl`, `pl`, `pt-BR`, `pt-PT`,\n   * `sv`, `th`, `tr`, `vi`, `zh-CN`, `zh-TW`. If supplied any other language code, it will default to `en`.\n   * */\n  login: (options?: LoginOptions) => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize?: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn?: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus?: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken?: () => Promise<string | undefined>;\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/\n  getApiUrl: () => string;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.*/\n  logout?: () => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query?: <TData = any>(\n    query: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n}",
+            "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action.\n   * It redirects the customer to a Shopify login domain. It also defined the final path the customer\n   * lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is\n   * automatically setup unless `customAuthStatusHandler` option is in use)\n   *\n   * @param options.uiLocales - The displayed language of the login page. Only support for the following languages:\n   * `en`, `fr`, `cs`, `da`, `de`, `es`, `fi`, `it`, `ja`, `ko`, `nb`, `nl`, `pl`, `pt-BR`, `pt-PT`,\n   * `sv`, `th`, `tr`, `vi`, `zh-CN`, `zh-TW`. If supplied any other language code, it will default to `en`.\n   * */\n  login?: (options?: LoginOptions) => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize?: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn?: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus?: () => void | DataFunctionValue;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken?: () => Promise<string | undefined>;\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/\n  getApiUrl?: () => string;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.\n   *\n   * @param options.postLogoutRedirectUri - The url to redirect customer to after logout, should be a relative URL. This url will need to included in Customer Account API's application setup for logout URI. The default value is current app origin, which is automatically setup in admin when using `--customer-account-push` flag with dev.\n   * */\n  logout?: (options?: LogoutOptions) => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query?: <TData = any>(\n    query: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n}",
             "description": "Below are types meant for documentation only. Ensure it stay in sync with the type above.",
             "members": [
               {
@@ -9696,7 +9713,8 @@
                 "syntaxKind": "PropertySignature",
                 "name": "login",
                 "value": "(options?: LoginOptions) => Promise<Response>",
-                "description": "Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use)"
+                "description": "Start the OAuth login flow. This function should be called and returned from a Remix action. It redirects the customer to a Shopify login domain. It also defined the final path the customer lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is automatically setup unless `customAuthStatusHandler` option is in use)",
+                "isOptional": true
               },
               {
                 "filePath": "/customer/types.ts",
@@ -9735,13 +9753,14 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
                 "value": "() => string",
-                "description": "Creates the fully-qualified URL to your store's GraphQL endpoint."
+                "description": "Creates the fully-qualified URL to your store's GraphQL endpoint.",
+                "isOptional": true
               },
               {
                 "filePath": "/customer/types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "logout",
-                "value": "() => Promise<Response>",
+                "value": "(options?: LogoutOptions) => Promise<Response>",
                 "description": "Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.",
                 "isOptional": true
               },
@@ -9786,6 +9805,23 @@
             "name": "DataFunctionValue",
             "value": "Response | NonNullable<unknown> | null",
             "description": ""
+          },
+          "LogoutOptions": {
+            "filePath": "/customer/types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "LogoutOptions",
+            "value": "{\n  postLogoutRedirectUri?: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/customer/types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "postLogoutRedirectUri",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              }
+            ]
           },
           "CustomerAccountQueryOptionsForDocs": {
             "filePath": "/customer/types.ts",
@@ -10551,13 +10587,13 @@
               "name": "Promise<Response>",
               "value": "Promise<Response>"
             },
-            "value": "export async function storefrontRedirect(\n  options: StorefrontRedirect,\n): Promise<Response> {\n  const {\n    storefront,\n    request,\n    noAdminRedirect,\n    response = new Response('Not Found', {status: 404}),\n  } = options;\n\n  const {pathname, search} = new URL(request.url);\n  const redirectFrom = pathname + search;\n\n  if (pathname === '/admin' && !noAdminRedirect) {\n    return redirect(`${storefront.getShopifyDomain()}/admin`);\n  }\n\n  try {\n    const {urlRedirects} = await storefront.query<{\n      urlRedirects: UrlRedirectConnection;\n    }>(REDIRECT_QUERY, {\n      variables: {query: 'path:' + redirectFrom},\n    });\n\n    const location = urlRedirects?.edges?.[0]?.node?.target;\n\n    if (location) {\n      return new Response(null, {status: 301, headers: {location}});\n    }\n\n    const redirectTo = getRedirectUrl(request.url);\n\n    if (redirectTo) {\n      return redirect(redirectTo);\n    }\n  } catch (error) {\n    console.error(\n      `Failed to fetch redirects from Storefront API for route ${redirectFrom}`,\n      error,\n    );\n  }\n\n  return response;\n}"
+            "value": "export async function storefrontRedirect(\n  options: StorefrontRedirect,\n): Promise<Response> {\n  const {\n    storefront,\n    request,\n    noAdminRedirect,\n    matchQueryParams,\n    response = new Response('Not Found', {status: 404}),\n  } = options;\n\n  const url = new URL(request.url);\n  const {pathname, searchParams} = url;\n  const isSoftNavigation = searchParams.has('_data');\n\n  searchParams.delete('redirect');\n  searchParams.delete('return_to');\n  searchParams.delete('_data');\n\n  const redirectFrom = matchQueryParams\n    ? url.toString().replace(url.origin, '')\n    : pathname;\n\n  if (url.pathname === '/admin' && !noAdminRedirect) {\n    return createRedirectResponse(\n      `${storefront.getShopifyDomain()}/admin`,\n      isSoftNavigation,\n      searchParams,\n      matchQueryParams,\n    );\n  }\n\n  try {\n    const {urlRedirects} = await storefront.query<{\n      urlRedirects: UrlRedirectConnection;\n    }>(REDIRECT_QUERY, {\n      variables: {query: 'path:' + redirectFrom},\n    });\n\n    const location = urlRedirects?.edges?.[0]?.node?.target;\n\n    if (location) {\n      return createRedirectResponse(\n        location,\n        isSoftNavigation,\n        searchParams,\n        matchQueryParams,\n      );\n    }\n\n    const redirectTo = getRedirectUrl(request.url);\n\n    if (redirectTo) {\n      return createRedirectResponse(\n        redirectTo,\n        isSoftNavigation,\n        searchParams,\n        matchQueryParams,\n      );\n    }\n  } catch (error) {\n    console.error(\n      `Failed to fetch redirects from Storefront API for route ${redirectFrom}`,\n      error,\n    );\n  }\n\n  return response;\n}"
           },
           "StorefrontRedirect": {
             "filePath": "/routing/redirect.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontRedirect",
-            "value": "{\n  /** The [Storefront client](/docs/api/hydrogen/2024-01/utilities/createstorefrontclient) instance */\n  storefront: Storefront<I18nBase>;\n  /** The [MDN Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object that was passed to the `server.ts` request handler. */\n  request: Request;\n  /** The [MDN Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) object created by `handleRequest` */\n  response?: Response;\n  /** By default the `/admin` route is redirected to the Shopify Admin page for the current storefront. Disable this redirect by passing `true`. */\n  noAdminRedirect?: boolean;\n}",
+            "value": "{\n  /** The [Storefront client](/docs/api/hydrogen/2024-01/utilities/createstorefrontclient) instance */\n  storefront: Storefront<I18nBase>;\n  /** The [MDN Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object that was passed to the `server.ts` request handler. */\n  request: Request;\n  /** The [MDN Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) object created by `handleRequest` */\n  response?: Response;\n  /** By default the `/admin` route is redirected to the Shopify Admin page for the current storefront. Disable this redirect by passing `true`. */\n  noAdminRedirect?: boolean;\n  /** By default, query parameters are not used to match redirects. Set this to `true` if you'd like redirects to be query parameter sensitive */\n  matchQueryParams?: boolean;\n}",
             "description": "",
             "members": [
               {
@@ -10588,6 +10624,14 @@
                 "name": "noAdminRedirect",
                 "value": "boolean",
                 "description": "By default the `/admin` route is redirected to the Shopify Admin page for the current storefront. Disable this redirect by passing `true`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/routing/redirect.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "matchQueryParams",
+                "value": "boolean",
+                "description": "By default, query parameters are not used to match redirects. Set this to `true` if you'd like redirects to be query parameter sensitive",
                 "isOptional": true
               }
             ]
@@ -10926,11 +10970,364 @@
     ]
   },
   {
+    "name": "getSeoMeta",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "Generate a [Remix meta array](https://remix.run/docs/en/main/route/meta) from one or more SEO configuration objects. Pass SEO configuration for the parent route(s) and the current route to preserve meta data for all active routes. Similar to [`Object.assign()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign), each property is overwritten based on the object order. The exception is `jsonLd`, which is preserved so that each route has it's own independent jsonLd meta data. Learn more about [how SEO works in Hydrogen](https://shopify.dev/docs/custom-storefronts/hydrogen/seo).",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {getSeoMeta} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  const {shop} = await context.storefront.query(`\n    query layout {\n      shop {\n        name\n        description\n      }\n    }\n  `);\n\n  return {\n    seo: {\n      title: shop.title,\n      description: shop.description,\n    },\n  };\n}\n\nexport const meta = ({data, matches}) =&gt; {\n  // Pass one or more arguments, preserving properties from parent routes\n  return getSeoMeta(matches[0].data.seo, data.seo);\n};\n",
+            "language": "js"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {MetaFunction} from '@remix-run/react';\nimport {LoaderFunctionArgs} from '@remix-run/server-runtime';\nimport {getSeoMeta} from '@shopify/hydrogen';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const {shop} = await context.storefront.query(`\n    query layout {\n      shop {\n        name\n        description\n      }\n    }\n  `);\n\n  return {\n    seo: {\n      title: shop.title,\n      description: shop.description,\n    },\n  };\n}\n\nexport const meta: MetaFunction&lt;typeof loader&gt; = ({data, matches}) =&gt; {\n  // Pass one or more arguments, preserving properties from parent routes\n  return getSeoMeta((matches as any).data.seo, data!.seo);\n};\n",
+            "language": "ts"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "getSeoMeta",
+        "description": "",
+        "type": "GetSeoMetaTypeForDocs",
+        "typeDefinitions": {
+          "GetSeoMetaTypeForDocs": {
+            "filePath": "/seo/getSeoMeta.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "GetSeoMetaTypeForDocs",
+            "value": "{\n  /** `getSeoMeta` takes an arbitrary number of configuration object parameters. Values in each object are overwritten based on the object order. \\`jsonLd\\` properties are preserved between each configuration object. */\n  seoInputs: SeoConfig[];\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/seo/getSeoMeta.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "seoInputs",
+                "value": "SeoConfig[]",
+                "description": "`getSeoMeta` takes an arbitrary number of configuration object parameters. Values in each object are overwritten based on the object order. \\`jsonLd\\` properties are preserved between each configuration object."
+              }
+            ]
+          },
+          "SeoConfig": {
+            "filePath": "/seo/generate-seo-tags.ts",
+            "name": "SeoConfig",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "title",
+                "value": "Maybe<string>",
+                "description": "The `&lt;title&gt;` HTML element defines the document's title that is shown in a browser's title bar or a page's tab. It only contains text; tags within the element are ignored.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "titleTemplate",
+                "value": "string",
+                "description": "Generate the title from a template that includes a `%s` placeholder for the title.",
+                "isOptional": true,
+                "examples": [
+                  {
+                    "title": "Example",
+                    "description": "",
+                    "tabs": [
+                      {
+                        "code": "{\n  title: 'My Page',\n  titleTemplate: 'My Site - %s',\n}",
+                        "title": "Example"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "media",
+                "value": "string | Partial<SeoMedia> | (string | Partial<SeoMedia>)[]",
+                "description": "The media associated with the given page (images, videos, etc). If you pass a string, it will be used as the `og:image` meta tag. If you pass an object or an array of objects, that will be used to generate `og:<type of media>` meta tags. The `url` property should be the URL of the media. The `height` and `width` properties are optional and should be the height and width of the media. The `altText` property is optional and should be a description of the media.",
+                "isOptional": true,
+                "examples": [
+                  {
+                    "title": "Example",
+                    "description": "",
+                    "tabs": [
+                      {
+                        "code": "{\n  media: [\n    {\n      url: 'https://example.com/image.jpg',\n      type: 'image',\n      height: '400',\n      width: '400',\n      altText: 'A custom snowboard with an alpine color pallet.',\n    }\n  ]\n}",
+                        "title": "Example"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "description",
+                "value": "Maybe<string>",
+                "description": "The description of the page. This is used in the `name=\"description\"` meta tag as well as the `og:description` meta tag.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "url",
+                "value": "Maybe<string>",
+                "description": "The canonical URL of the page. This is used to tell search engines which URL is the canonical version of a page. This is useful when you have multiple URLs that point to the same page. The value here will be used in the `rel=\"canonical\"` link tag as well as the `og:url` meta tag.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "handle",
+                "value": "Maybe<string>",
+                "description": "The handle is used to generate the `twitter:site` and `twitter:creator` meta tags. Include the `@` symbol in the handle.",
+                "isOptional": true,
+                "examples": [
+                  {
+                    "title": "Example",
+                    "description": "",
+                    "tabs": [
+                      {
+                        "code": "{\n  handle: '@shopify'\n}",
+                        "title": "Example"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "jsonLd",
+                "value": "WithContext<Thing> | WithContext<Thing>[]",
+                "description": "The `jsonLd` property is used to generate the `application/ld+json` script tag. This is used to provide structured data to search engines. The value should be an object that conforms to the schema.org spec. The `type` property should be the type of schema you are using. The `type` property is required and should be one of the following:\n\n- `Product` - `ItemList` - `Organization` - `WebSite` - `WebPage` - `BlogPosting` - `Thing`\n\nThe value is validated via [schema-dts](https://www.npmjs.com/package/schema-dts)",
+                "isOptional": true,
+                "examples": [
+                  {
+                    "title": "Example",
+                    "description": "",
+                    "tabs": [
+                      {
+                        "code": "{\n  jsonLd: {\n    '@context': 'https://schema.org',\n    '@type': 'Product',\n    name: 'My Product',\n    image: 'https://hydrogen.shop/image.jpg',\n    description: 'A product that is great',\n    sku: '12345',\n    mpn: '12345',\n    brand: {\n      '@type': 'Thing',\n      name: 'My Brand',\n    },\n    aggregateRating: {\n      '@type': 'AggregateRating',\n      ratingValue: '4.5',\n      reviewCount: '100',\n    },\n    offers: {\n      '@type': 'Offer',\n      priceCurrency: 'USD',\n      price: '100',\n      priceValidUntil: '2020-11-05',\n      itemCondition: 'https://schema.org/NewCondition',\n      availability: 'https://schema.org/InStock',\n      seller: {\n        '@type': 'Organization',\n        name: 'My Brand',\n      },\n    },\n  }\n}",
+                        "title": "Example"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "alternates",
+                "value": "LanguageAlternate | LanguageAlternate[]",
+                "description": "The `alternates` property is used to specify the language and geographical targeting when you have multiple versions of the same page in different languages. The `url` property tells search engines about these variations and helps them to serve the correct version to their users.",
+                "isOptional": true,
+                "examples": [
+                  {
+                    "title": "Example",
+                    "description": "",
+                    "tabs": [
+                      {
+                        "code": "{\n  alternates: [\n    {\n      language: 'en-US',\n      url: 'https://hydrogen.shop/en-us',\n      default: true,\n    },\n    {\n      language: 'fr-CA',\n      url: 'https://hydrogen.shop/fr-ca',\n    },\n  ]\n}",
+                        "title": "Example"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "robots",
+                "value": "RobotsOptions",
+                "description": "The `robots` property is used to specify the robots meta tag. This is used to tell search engines which pages should be indexed and which should not.",
+                "isOptional": true
+              }
+            ],
+            "value": "export interface SeoConfig {\n  /**\n   * The `&lt;title&gt;` HTML element defines the document's title that is shown in a browser's title bar or a page's tab. It\n   * only contains text; tags within the element are ignored.\n   *\n   * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/title\n   */\n  title?: Maybe<string>;\n  /**\n   * Generate the title from a template that includes a `%s` placeholder for the title.\n   *\n   * @example\n   * ```js\n   * {\n   *   title: 'My Page',\n   *   titleTemplate: 'My Site - %s',\n   * }\n   * ```\n   */\n  titleTemplate?: Maybe<string> | null;\n  /**\n   * The media associated with the given page (images, videos, etc). If you pass a string, it will be used as the\n   * `og:image` meta tag. If you pass an object or an array of objects, that will be used to generate `og:<type of\n   * media>` meta tags. The `url` property should be the URL of the media. The `height` and `width` properties are\n   * optional and should be the height and width of the media. The `altText` property is optional and should be a\n   * description of the media.\n   *\n   * @example\n   * ```js\n   * {\n   *   media: [\n   *     {\n   *       url: 'https://example.com/image.jpg',\n   *       type: 'image',\n   *       height: '400',\n   *       width: '400',\n   *       altText: 'A custom snowboard with an alpine color pallet.',\n   *     }\n   *   ]\n   * }\n   * ```\n   *\n   */\n  media?:\n    | Maybe<string>\n    | Partial<SeoMedia>\n    | (Partial<SeoMedia> | Maybe<string>)[];\n  /**\n   * The description of the page. This is used in the `name=\"description\"` meta tag as well as the `og:description` meta\n   * tag.\n   *\n   * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta\n   */\n  description?: Maybe<string>;\n  /**\n   * The canonical URL of the page. This is used to tell search engines which URL is the canonical version of a page.\n   * This is useful when you have multiple URLs that point to the same page. The value here will be used in the\n   * `rel=\"canonical\"` link tag as well as the `og:url` meta tag.\n   *\n   * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link\n   */\n  url?: Maybe<string>;\n  /**\n   * The handle is used to generate the `twitter:site` and `twitter:creator` meta tags. Include the `@` symbol in the\n   * handle.\n   *\n   * @example\n   * ```js\n   * {\n   *   handle: '@shopify'\n   * }\n   * ```\n   */\n  handle?: Maybe<string>;\n  /**\n   * The `jsonLd` property is used to generate the `application/ld+json` script tag. This is used to provide structured\n   * data to search engines. The value should be an object that conforms to the schema.org spec. The `type` property\n   * should be the type of schema you are using. The `type` property is required and should be one of the following:\n   *\n   * - `Product`\n   * - `ItemList`\n   * - `Organization`\n   * - `WebSite`\n   * - `WebPage`\n   * - `BlogPosting`\n   * - `Thing`\n   *\n   * The value is validated via [schema-dts](https://www.npmjs.com/package/schema-dts)\n   *\n   * @example\n   * ```js\n   * {\n   *   jsonLd: {\n   *     '@context': 'https://schema.org',\n   *     '@type': 'Product',\n   *     name: 'My Product',\n   *     image: 'https://hydrogen.shop/image.jpg',\n   *     description: 'A product that is great',\n   *     sku: '12345',\n   *     mpn: '12345',\n   *     brand: {\n   *       '@type': 'Thing',\n   *       name: 'My Brand',\n   *     },\n   *     aggregateRating: {\n   *       '@type': 'AggregateRating',\n   *       ratingValue: '4.5',\n   *       reviewCount: '100',\n   *     },\n   *     offers: {\n   *       '@type': 'Offer',\n   *       priceCurrency: 'USD',\n   *       price: '100',\n   *       priceValidUntil: '2020-11-05',\n   *       itemCondition: 'https://schema.org/NewCondition',\n   *       availability: 'https://schema.org/InStock',\n   *       seller: {\n   *         '@type': 'Organization',\n   *         name: 'My Brand',\n   *       },\n   *     },\n   *   }\n   * }\n   * ```\n   *\n   * @see https://schema.org/docs/schemas.html\n   * @see https://developers.google.com/search/docs/guides/intro-structured-data\n   * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script\n   *\n   */\n  jsonLd?: WithContext<Thing> | WithContext<Thing>[];\n  /**\n   * The `alternates` property is used to specify the language and geographical targeting when you have multiple\n   * versions of the same page in different languages. The `url` property tells search engines about these variations\n   * and helps them to serve the correct version to their users.\n   *\n   * @example\n   * ```js\n   * {\n   *   alternates: [\n   *     {\n   *       language: 'en-US',\n   *       url: 'https://hydrogen.shop/en-us',\n   *       default: true,\n   *     },\n   *     {\n   *       language: 'fr-CA',\n   *       url: 'https://hydrogen.shop/fr-ca',\n   *     },\n   *   ]\n   * }\n   * ```\n   *\n   * @see https://support.google.com/webmasters/answer/189077?hl=en\n   */\n  alternates?: LanguageAlternate | LanguageAlternate[];\n  /**\n   * The `robots` property is used to specify the robots meta tag. This is used to tell search engines which pages\n   * should be indexed and which should not.\n   *\n   * @see https://developers.google.com/search/reference/robots_meta_tag\n   */\n  robots?: RobotsOptions;\n}"
+          },
+          "SeoMedia": {
+            "filePath": "/seo/generate-seo-tags.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "SeoMedia",
+            "value": "{\n  /**\n   * Used to generate og:<type of media> meta tag\n   */\n  type: 'image' | 'video' | 'audio';\n  /**\n   * The url value populates both url and secure_url and is used to infer the og:<type of media>:type meta tag.\n   */\n  url: Maybe<string> | undefined;\n  /**\n   * The height in pixels of the media. This is used to generate the og:<type of media>:height meta tag.\n   */\n  height: Maybe<number> | undefined;\n  /**\n   * The width in pixels of the media. This is used to generate the og:<type of media>:width meta tag.\n   */\n  width: Maybe<number> | undefined;\n  /**\n   * The alt text for the media. This is used to generate the og:<type of media>:alt meta tag.\n   */\n  altText: Maybe<string> | undefined;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "type",
+                "value": "\"image\" | \"video\" | \"audio\"",
+                "description": "Used to generate og:<type of media> meta tag"
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "url",
+                "value": "string",
+                "description": "The url value populates both url and secure_url and is used to infer the og:<type of media>:type meta tag."
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "height",
+                "value": "number",
+                "description": "The height in pixels of the media. This is used to generate the og:<type of media>:height meta tag."
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "width",
+                "value": "number",
+                "description": "The width in pixels of the media. This is used to generate the og:<type of media>:width meta tag."
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "altText",
+                "value": "string",
+                "description": "The alt text for the media. This is used to generate the og:<type of media>:alt meta tag."
+              }
+            ]
+          },
+          "LanguageAlternate": {
+            "filePath": "/seo/generate-seo-tags.ts",
+            "name": "LanguageAlternate",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "language",
+                "value": "string",
+                "description": "Language code for the alternate page. This is used to generate the hreflang meta tag property."
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "default",
+                "value": "boolean",
+                "description": "Whether the alternate page is the default page. This will add the `x-default` attribution to the language code.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "url",
+                "value": "string",
+                "description": "The url of the alternate page. This is used to generate the hreflang meta tag property."
+              }
+            ],
+            "value": "export interface LanguageAlternate {\n  /**\n   * Language code for the alternate page. This is used to generate the hreflang meta tag property.\n   */\n  language: string;\n  /**\n   * Whether the alternate page is the default page. This will add the `x-default` attribution to the language code.\n   */\n  default?: boolean;\n  /**\n   * The url of the alternate page. This is used to generate the hreflang meta tag property.\n   */\n  url: string;\n}"
+          },
+          "RobotsOptions": {
+            "filePath": "/seo/generate-seo-tags.ts",
+            "name": "RobotsOptions",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "maxImagePreview",
+                "value": "\"none\" | \"standard\" | \"large\"",
+                "description": "Set the maximum size of an image preview for this page in a search results Can be one of the following:\n\n- `none` - No image preview is to be shown. - `standard` - A default image preview may be shown. - `large` - A larger image preview, up to the width of the viewport, may be shown.\n\nIf no value is specified a default image preview size is used.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "maxSnippet",
+                "value": "number",
+                "description": "A number representing the maximum of amount characters to use as a textual snippet for a search result. This value can also be set to one of the following special values:\n\n- 0 - No snippet is to be shown. Equivalent to nosnippet. - 1 - The Search engine will choose the snippet length that it believes is most effective to help users discover   your content and direct users to your site - -1 - No limit on the number of characters that can be shown in the snippet.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "maxVideoPreview",
+                "value": "number",
+                "description": "The maximum number of seconds for videos on this page to show in search results. This value can also be set to one of the following special values:\n\n- 0 - A static image may be used with the `maxImagePreview` setting. - 1 - There is no limit to the size of the video preview.\n\nThis applies to all forms of search results (at Google: web search, Google Images, Google Videos, Discover, Assistant).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "noArchive",
+                "value": "boolean",
+                "description": "Do not show a cached link in search results.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "noFollow",
+                "value": "boolean",
+                "description": "Do not follow the links on this page.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "noImageIndex",
+                "value": "boolean",
+                "description": "Do not index images on this page.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "noIndex",
+                "value": "boolean",
+                "description": "Do not show this page, media, or resource in search results.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "noSnippet",
+                "value": "boolean",
+                "description": "Do not show a text snippet or video preview in the search results for this page.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "noTranslate",
+                "value": "boolean",
+                "description": "Do not offer translation of this page in search results.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "unavailableAfter",
+                "value": "string",
+                "description": "Do not show this page in search results after the specified date/time.",
+                "isOptional": true
+              }
+            ],
+            "value": "export interface RobotsOptions {\n  /**\n   * Set the maximum size of an image preview for this page in a search results Can be one of the following:\n   *\n   * - `none` - No image preview is to be shown.\n   * - `standard` - A default image preview may be shown.\n   * - `large` - A larger image preview, up to the width of the viewport, may be shown.\n   *\n   * If no value is specified a default image preview size is used.\n   */\n  maxImagePreview?: 'none' | 'standard' | 'large';\n  /**\n   * A number representing the maximum of amount characters to use as a textual snippet for a search result. This value\n   * can also be set to one of the following special values:\n   *\n   * - 0 - No snippet is to be shown. Equivalent to nosnippet.\n   * - 1 - The Search engine will choose the snippet length that it believes is most effective to help users discover\n   *   your content and direct users to your site\n   * - -1 - No limit on the number of characters that can be shown in the snippet.\n   */\n  maxSnippet?: number;\n  /**\n   * The maximum number of seconds for videos on this page to show in search results. This value can also be set to one\n   * of the following special values:\n   *\n   * - 0 - A static image may be used with the `maxImagePreview` setting.\n   * - 1 - There is no limit to the size of the video preview.\n   *\n   * This applies to all forms of search results (at Google: web search, Google Images, Google Videos, Discover,\n   * Assistant).\n   */\n  maxVideoPreview?: number;\n  /**\n   * Do not show a cached link in search results.\n   */\n  noArchive?: boolean;\n  /**\n   * Do not follow the links on this page.\n   *\n   * @see https://developers.google.com/search/docs/advanced/guidelines/qualify-outbound-links\n   */\n  noFollow?: boolean;\n  /**\n   * Do not index images on this page.\n   */\n  noImageIndex?: boolean;\n  /**\n   * Do not show this page, media, or resource in search results.\n   */\n  noIndex?: boolean;\n  /**\n   * Do not show a text snippet or video preview in the search results for this page.\n   */\n  noSnippet?: boolean;\n  /**\n   * Do not offer translation of this page in search results.\n   */\n  noTranslate?: boolean;\n  /**\n   * Do not show this page in search results after the specified date/time.\n   */\n  unavailableAfter?: string;\n}"
+          }
+        }
+      }
+    ]
+  },
+  {
     "name": "Seo",
     "category": "components",
     "isVisualComponent": false,
     "related": [],
-    "description": "The `<Seo />` component renders SEO meta tags in the document `head`. Add the `<Seo />` to your `root.jsx` before the `<Meta />` and `<Link />` components. SEO metadata is set on a per-route basis using Remix [loader functions](https://remix.run/docs/en/v1/guides/data-loading). Learn more about [how SEO works in Hydrogen](https://shopify.dev/docs/custom-storefronts/hydrogen/seo).",
+    "description": "The `<Seo />` component renders SEO meta tags in the document `head`. Add the `<Seo />` to your `root.jsx` before the `<Meta />` and `<Link />` components. SEO metadata is set on a per-route basis using Remix [loader functions](https://remix.run/docs/en/v1/guides/data-loading). Learn more about [how SEO works in Hydrogen](https://shopify.dev/docs/custom-storefronts/hydrogen/seo).\n  \n  **Note: the Seo component is deprecated** - Use [getSeoMeta](/docs/api/hydrogen/utilities/getseometa) to migrate.",
     "type": "component",
     "defaultExample": {
       "description": "I am the default example",
@@ -11504,7 +11901,7 @@
                 "isOptional": true
               }
             ],
-            "value": "interface ExternalVideoBaseProps {\n  /**\n   * An object with fields that correspond to the Storefront API's [ExternalVideo object](https://shopify.dev/api/storefront/reference/products/externalvideo).\n   */\n  data: PartialDeep<ExternalVideoType, {recurseIntoArrays: true}>;\n  /** An object containing the options available for either\n   * [YouTube](https://developers.google.com/youtube/player_parameters#Parameters) or\n   * [Vimeo](https://vimeo.zendesk.com/hc/en-us/articles/360001494447-Using-Player-Parameters).\n   */\n  options?: YouTube | Vimeo;\n}"
+            "value": "export interface ExternalVideoBaseProps {\n  /**\n   * An object with fields that correspond to the Storefront API's [ExternalVideo object](https://shopify.dev/api/storefront/reference/products/externalvideo).\n   */\n  data: PartialDeep<ExternalVideoType, {recurseIntoArrays: true}>;\n  /** An object containing the options available for either\n   * [YouTube](https://developers.google.com/youtube/player_parameters#Parameters) or\n   * [Vimeo](https://vimeo.zendesk.com/hc/en-us/articles/360001494447-Using-Player-Parameters).\n   */\n  options?: YouTube | Vimeo;\n}"
           },
           "YouTube": {
             "filePath": "/ExternalVideo.tsx",
@@ -15603,14 +16000,14 @@
               {
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "MethodSignature",
-                "name": "__@iterator@417",
+                "name": "__@iterator@452",
                 "value": "() => IterableIterator<unknown>",
                 "description": "Iterator"
               },
               {
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "MethodSignature",
-                "name": "__@unscopables@419",
+                "name": "__@unscopables@454",
                 "value": "() => { copyWithin: boolean; entries: boolean; fill: boolean; find: boolean; findIndex: boolean; keys: boolean; values: boolean; }",
                 "description": "Returns an object whose properties have the value 'true'\r\nwhen they will be absent when used in a 'with' statement."
               },
@@ -16252,7 +16649,7 @@
                 "description": "Shopify Headless sales channel"
               }
             ],
-            "value": "interface ShopifySalesChannel {\n  /** Shopify Hydrogen sales channel */\n  hydrogen: 'hydrogen';\n  /** Shopify Headless sales channel */\n  headless: 'headless';\n}"
+            "value": "export interface ShopifySalesChannel {\n  /** Shopify Hydrogen sales channel */\n  hydrogen: 'hydrogen';\n  /** Shopify Headless sales channel */\n  headless: 'headless';\n}"
           },
           "ShopifyAnalyticsProduct": {
             "filePath": "/analytics-types.ts",
@@ -16535,7 +16932,7 @@
                 "description": "Add to cart"
               }
             ],
-            "value": "interface AnalyticsEventName {\n  /** Page view */\n  PAGE_VIEW: 'PAGE_VIEW';\n  /** Add to cart */\n  ADD_TO_CART: 'ADD_TO_CART';\n}"
+            "value": "export interface AnalyticsEventName {\n  /** Page view */\n  PAGE_VIEW: 'PAGE_VIEW';\n  /** Add to cart */\n  ADD_TO_CART: 'ADD_TO_CART';\n}"
           }
         }
       },
@@ -16704,7 +17101,7 @@
                 "description": ""
               }
             ],
-            "value": "interface AnalyticsPageType {\n  article: 'article';\n  blog: 'blog';\n  captcha: 'captcha';\n  cart: 'cart';\n  collection: 'collection';\n  customersAccount: 'customers/account';\n  customersActivateAccount: 'customers/activate_account';\n  customersAddresses: 'customers/addresses';\n  customersLogin: 'customers/login';\n  customersOrder: 'customers/order';\n  customersRegister: 'customers/register';\n  customersResetPassword: 'customers/reset_password';\n  giftCard: 'gift_card';\n  home: 'index';\n  listCollections: 'list-collections';\n  forbidden: '403';\n  notFound: '404';\n  page: 'page';\n  password: 'password';\n  product: 'product';\n  policy: 'policy';\n  search: 'search';\n}"
+            "value": "export interface AnalyticsPageType {\n  article: 'article';\n  blog: 'blog';\n  captcha: 'captcha';\n  cart: 'cart';\n  collection: 'collection';\n  customersAccount: 'customers/account';\n  customersActivateAccount: 'customers/activate_account';\n  customersAddresses: 'customers/addresses';\n  customersLogin: 'customers/login';\n  customersOrder: 'customers/order';\n  customersRegister: 'customers/register';\n  customersResetPassword: 'customers/reset_password';\n  giftCard: 'gift_card';\n  home: 'index';\n  listCollections: 'list-collections';\n  forbidden: '403';\n  notFound: '404';\n  page: 'page';\n  password: 'password';\n  product: 'product';\n  policy: 'policy';\n  search: 'search';\n}"
           }
         }
       },
@@ -16733,7 +17130,7 @@
                 "description": "Shopify Headless sales channel"
               }
             ],
-            "value": "interface ShopifySalesChannel {\n  /** Shopify Hydrogen sales channel */\n  hydrogen: 'hydrogen';\n  /** Shopify Headless sales channel */\n  headless: 'headless';\n}"
+            "value": "export interface ShopifySalesChannel {\n  /** Shopify Hydrogen sales channel */\n  hydrogen: 'hydrogen';\n  /** Shopify Headless sales channel */\n  headless: 'headless';\n}"
           }
         }
       }
