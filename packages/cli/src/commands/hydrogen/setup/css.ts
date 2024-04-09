@@ -22,6 +22,9 @@ import {
 import {AbortError} from '@shopify/cli-kit/node/error';
 
 export default class SetupCSS extends Command {
+  static descriptionWithMarkdown =
+    'Adds support for certain CSS strategies to your project.';
+
   static description = 'Setup CSS strategies for your project.';
 
   static flags = {
