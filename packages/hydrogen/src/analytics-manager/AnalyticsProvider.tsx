@@ -1,4 +1,3 @@
-import type {LoaderFunctionArgs} from '@remix-run/server-runtime';
 import {
   type ReactNode,
   useEffect,
@@ -36,7 +35,8 @@ import type {
 import {AnalyticsEvent} from './events';
 import {ShopifyAnalytics} from './ShopifyAnalytics';
 import {CartAnalytics} from './CartAnalytics';
-import {type CustomerPrivacyApiProps} from '../customer-privacy/ShopifyCustomerPrivacy';
+import type {CustomerPrivacyApiProps} from '../customer-privacy/ShopifyCustomerPrivacy';
+import type {Storefront} from '../storefront';
 
 export type ShopAnalytic = {
   /** The shop ID. */
@@ -366,9 +366,10 @@ function useShopAnalytics(shopProp: AnalyticsProviderProps['shop']): {
 
 // TODO: useCustomerAnalytics hook
 
-export async function getShopAnalytics(
-  context: LoaderFunctionArgs['context'],
-): Promise<ShopAnalytic | null> {
+export async function getShopAnalytics(context: {
+  storefront: Storefront;
+  env: Env | Record<string, any>;
+}): Promise<ShopAnalytic | null> {
   return context.storefront
     .query(SHOP_QUERY, {
       cache: context.storefront.CacheLong(),
@@ -378,7 +379,7 @@ export async function getShopAnalytics(
         shopId: shop.id,
         acceptedLanguage: localization.language.isoCode,
         currency: localization.country.currency.isoCode,
-        hydrogenSubchannelId: context.env.PUBLIC_STOREFRONT_ID || '0',
+        hydrogenSubchannelId: context.env?.PUBLIC_STOREFRONT_ID || '0',
       };
     });
 }
