@@ -46,21 +46,13 @@ export function getSeoMeta(
       if (!acc?.jsonLd) {
         return {...acc, ...current, jsonLd: [jsonLd]} as SeoConfig;
       } else {
-        if (Array.isArray(jsonLd)) {
-          return {
-            ...acc,
-            ...current,
-            jsonLd: [...ensureArray(acc.jsonLd), ...jsonLd],
-          } as SeoConfig;
-        } else {
-          return {
-            ...acc,
-            ...current,
-            jsonLd: [...ensureArray(acc.jsonLd), jsonLd],
-          } as SeoConfig;
-        }
+        return {
+          ...acc,
+          ...current,
+          jsonLd: ensureArray(acc.jsonLd).concat(jsonLd),
+        };
       }
-    }, {}) || {};
+    }, {}) || ({} as SeoConfig);
 
   for (const seoKey of Object.keys(dedupedSeoInput)) {
     switch (seoKey) {
