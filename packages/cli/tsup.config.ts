@@ -28,10 +28,10 @@ const outDir = 'dist';
 export default defineConfig([
   {
     ...commonConfig,
-    entry: ['src/**/*.ts', '!src/lib/vite/worker-entry.ts'],
+    entry: ['src/**/*.ts', '!src/**/*.test.ts'],
     outDir,
     // Generate types only for the exposed entry points
-    dts: {entry: ['src/lib/vite/plugins.ts', 'src/commands/hydrogen/init.ts']},
+    dts: {entry: ['src/commands/hydrogen/init.ts']},
     async onSuccess() {
       // Copy TS templates
       const i18nTemplatesPath = 'lib/setups/i18n/templates';
@@ -63,15 +63,9 @@ export default defineConfig([
     },
   },
   {
-    entry: ['src/lib/vite/worker-entry.ts'],
-    outDir: 'dist/lib/vite',
-    format: 'esm',
-    noExternal: [/./],
-    dts: false,
-  },
-  {
     ...commonConfig,
-    entry: ['src/virtual-routes/**/*.tsx'],
+    // TODO remove virtual routes copy when deprecating classic compiler
+    entry: ['../hydrogen/src/vite/virtual-routes/**/*.tsx'],
     outDir: `${outDir}/virtual-routes`,
     outExtension: () => ({js: '.jsx'}),
     dts: false,
@@ -96,7 +90,7 @@ export default defineConfig([
       // For some reason, it seems that publicDir => outDir might be skipped on CI,
       // so ensure here that asset files are copied:
       await fs.copy(
-        'src/virtual-routes/assets',
+        '../hydrogen/src/vite/virtual-routes/assets',
         `${outDir}/virtual-routes/assets`,
       );
 

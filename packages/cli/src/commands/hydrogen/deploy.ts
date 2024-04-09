@@ -39,6 +39,7 @@ import {
   findEnvironmentOrThrow,
   orderEnvironmentsBySafety,
 } from '../../lib/common.js';
+import {execAsync} from '../../lib/process.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
 import {OxygenDeploymentData} from '../../lib/graphql/admin/get-oxygen-data.js';
@@ -47,6 +48,7 @@ import {runViteBuild} from './build-vite.js';
 import {getViteConfig} from '../../lib/vite-config.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {hasRemixConfigFile} from '../../lib/remix-config.js';
+import {packageManagers} from '../../lib/package-managers.js';
 
 const DEPLOY_OUTPUT_FILE_HANDLE = 'h2_deploy_log.json';
 
@@ -60,6 +62,7 @@ export const deploymentLogger: Logger = (
 };
 
 export default class Deploy extends Command {
+  static descriptionWithMarkdown = `Builds and deploys your Hydrogen storefront to Oxygen. Requires an Oxygen deployment token to be set with the \`--token\` flag or an environment variable (\`SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN\`). If the storefront is [linked](https://shopify.dev/docs/api/shopify-cli/hydrogen-commands/hydrogen-link) then the Oxygen deployment token for the linked storefront will be used automatically.`;
   static description = 'Builds and deploys a Hydrogen storefront to Oxygen.';
   static flags: any = {
     ...commonFlags.entry,
@@ -251,13 +254,36 @@ export async function runDeploy(
     }
 
     if (!forceOnUncommitedChanges && !isCleanGit) {
-      throw new AbortError('Uncommitted changes detected.', null, [
+      let errorMessage = 'Uncommitted changes detected';
+      let changedFiles = undefined;
+
+      const nextSteps = [
         [
-          'Commit your changes before deploying or use the ',
+          'Commit your changes before deploying or use the',
           {command: '--force'},
-          ' flag to deploy with uncommitted changes.',
+          'flag to deploy with uncommitted changes.',
         ],
-      ]);
+      ];
+
+      try {
+        changedFiles = (await execAsync('git status -s', {cwd: root})).stdout;
+      } catch {}
+
+      if (changedFiles) {
+        errorMessage += `:\n\n${changedFiles.trimEnd()}`;
+
+        packageManagers.forEach(({name, lockfile, installCommand}) => {
+          if (changedFiles.includes(lockfile)) {
+            nextSteps.push([
+              `If you are using ${name}, try running`,
+              {command: installCommand},
+              `to avoid changes to ${lockfile}.`,
+            ]);
+          }
+        });
+      }
+
+      throw new AbortError(errorMessage, null, nextSteps);
     }
   }
 

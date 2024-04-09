@@ -26,6 +26,7 @@ import {LANGUAGES} from '../../lib/onboarding/common.js';
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 
 export default class Init extends Command {
+  static descriptionWithMarkdown = 'Creates a new Hydrogen storefront.';
   static description = 'Creates a new Hydrogen storefront.';
   static flags = {
     ...commonFlags.force,
@@ -69,6 +70,11 @@ export default class Init extends Command {
         'Scaffolds a new Hydrogen project with a set of sensible defaults.',
       env: 'SHOPIFY_HYDROGEN_FLAG_QUICKSTART',
       default: false,
+    }),
+    'package-manager': Flags.string({
+      env: 'SHOPIFY_HYDROGEN_FLAG_PACKAGE_MANAGER',
+      hidden: true,
+      options: ['npm', 'yarn', 'pnpm', 'unknown'],
     }),
   };
 
@@ -140,7 +146,8 @@ export async function runInit(
   );
 
   if (showUpgrade) {
-    const packageManager = packageManagerFromUserAgent();
+    const packageManager =
+      options.packageManager ?? packageManagerFromUserAgent();
     showUpgrade(
       packageManager === 'unknown'
         ? ''

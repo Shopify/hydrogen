@@ -15,14 +15,13 @@ export {type CacheKey} from './cache/fetch';
 export {storefrontRedirect} from './routing/redirect';
 export {graphiqlLoader} from './routing/graphiql';
 export {Seo} from './seo/seo';
+export {getSeoMeta} from './seo/getSeoMeta';
 export {type SeoConfig} from './seo/generate-seo-tags';
 export type {SeoHandleFunction} from './seo/seo';
 export {Pagination, getPaginationVariables} from './pagination/Pagination';
 export {createCustomerAccountClient} from './customer/customer';
 export type {
   CustomerAccount,
-  // CustomerClient is a deprecated type that will be remove after 2024-01
-  CustomerAccount as CustomerClient,
   CustomerAccountQueries,
   CustomerAccountMutations,
 } from './customer/types';

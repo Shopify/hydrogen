@@ -3,10 +3,7 @@ import {resolvePath} from '@shopify/cli-kit/node/path';
 import {checkIfIgnoredInGitRepository} from '@shopify/cli-kit/node/git';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {
-  lockfiles,
-  type Lockfile,
-} from '@shopify/cli-kit/node/node-package-manager';
+import {packageManagers, type PackageManager} from './package-managers.js';
 
 function missingLockfileWarning(shouldExit: boolean) {
   const headline = 'No lockfile found';
@@ -31,16 +28,12 @@ function missingLockfileWarning(shouldExit: boolean) {
   }
 }
 
-function multipleLockfilesWarning(lockfiles: Lockfile[], shouldExit: boolean) {
-  const packageManagers = {
-    'bun.lockb': 'bun',
-    'yarn.lock': 'yarn',
-    'package-lock.json': 'npm',
-    'pnpm-lock.yaml': 'pnpm',
-  };
-
-  const lockfileList = lockfiles.map((lockfile) => {
-    return `${lockfile} (created by ${packageManagers[lockfile]})`;
+function multipleLockfilesWarning(
+  packageManagers: PackageManager[],
+  shouldExit: boolean,
+) {
+  const lockfileList = packageManagers.map(({name, lockfile}) => {
+    return `${lockfile} (created by ${name})`;
   });
 
   const headline = 'Multiple lockfiles found';
@@ -82,22 +75,22 @@ export async function checkLockfileStatus(
 ) {
   if (process.env.LOCAL_DEV) return;
 
-  const availableLockfiles: Lockfile[] = [];
-  for (const lockFileName of lockfiles) {
-    if (await fileExists(resolvePath(directory, lockFileName))) {
-      availableLockfiles.push(lockFileName);
+  const foundPackageManagers: PackageManager[] = [];
+  for (const packageManager of packageManagers) {
+    if (await fileExists(resolvePath(directory, packageManager.lockfile))) {
+      foundPackageManagers.push(packageManager);
     }
   }
 
-  if (availableLockfiles.length === 0) {
+  if (foundPackageManagers.length === 0) {
     return missingLockfileWarning(shouldExit);
   }
 
-  if (availableLockfiles.length > 1) {
-    return multipleLockfilesWarning(availableLockfiles, shouldExit);
+  if (foundPackageManagers.length > 1) {
+    return multipleLockfilesWarning(foundPackageManagers, shouldExit);
   }
 
-  const lockfile = availableLockfiles[0]!;
+  const lockfile = foundPackageManagers[0]!.lockfile;
   const ignoredLockfile = await checkIfIgnoredInGitRepository(directory, [
     lockfile,
   ]).catch(() => {

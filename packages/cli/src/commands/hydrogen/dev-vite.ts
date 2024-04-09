@@ -23,7 +23,6 @@ import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
-import {setH2OPluginContext} from '../../lib/vite/shared.js';
 import {
   getDebugBannerLine,
   startTunnelAndPushConfig,
@@ -35,6 +34,8 @@ import {
 } from '../../lib/dev-shared.js';
 import {getCliCommand} from '../../lib/shell.js';
 import {findPort} from '../../lib/find-port.js';
+import {logRequestLine} from '../../lib/mini-oxygen/common.js';
+import {findHydrogenPlugin, findOxygenPlugin} from '../../lib/vite-config.js';
 
 export default class DevVite extends Command {
   static description =
@@ -50,7 +51,6 @@ export default class DevVite extends Command {
       description:
         "Disable rendering fallback routes when a route file doesn't exist.",
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_VIRTUAL_ROUTES',
-      default: false,
     }),
     ...commonFlags.debug,
     ...commonFlags.inspectorPort,
@@ -83,6 +83,7 @@ export default class DevVite extends Command {
 
     await runViteDev({
       ...flagsToCamelObject(flags),
+      customerAccountPush: flags['customer-account-push__unstable'],
       path: directory,
       isLocalDev: flags.diff,
       cliConfig: this.config,
@@ -178,36 +179,40 @@ export async function runViteDev({
     customLogger,
     clearScreen: false,
     server: {fs, host: host ? true : undefined},
-    plugins: customerAccountPushFlag
-      ? [
-          {
-            name: 'hydrogen:tunnel',
-            configureServer: (viteDevServer) => {
-              viteDevServer.middlewares.use((req, res, next) => {
-                const host = req.headers.host;
+    plugins: [
+      {
+        name: 'hydrogen:cli',
+        configResolved(config) {
+          findHydrogenPlugin(config)?.api?.registerPluginOptions({
+            disableVirtualRoutes,
+          });
 
-                if (host?.includes(TUNNEL_DOMAIN.ORIGINAL)) {
-                  req.headers.host = host.replace(
-                    TUNNEL_DOMAIN.ORIGINAL,
-                    TUNNEL_DOMAIN.REBRANDED,
-                  );
-                }
+          findOxygenPlugin(config)?.api?.registerPluginOptions({
+            debug,
+            entry: ssrEntry,
+            envPromise: envPromise.then(({allVariables}) => allVariables),
+            inspectorPort,
+            logRequestLine,
+          });
+        },
+        configureServer: (viteDevServer) => {
+          if (customerAccountPushFlag) {
+            viteDevServer.middlewares.use((req, res, next) => {
+              const host = req.headers.host;
 
-                next();
-              });
-            },
-          },
-        ]
-      : [],
-    ...setH2OPluginContext({
-      cliOptions: {
-        debug,
-        ssrEntry,
-        envPromise: envPromise.then(({allVariables}) => allVariables),
-        inspectorPort,
-        disableVirtualRoutes,
+              if (host?.includes(TUNNEL_DOMAIN.ORIGINAL)) {
+                req.headers.host = host.replace(
+                  TUNNEL_DOMAIN.ORIGINAL,
+                  TUNNEL_DOMAIN.REBRANDED,
+                );
+              }
+
+              next();
+            });
+          }
+        },
       },
-    }),
+    ],
   });
 
   process.once('SIGTERM', async () => {
@@ -218,9 +223,8 @@ export async function runViteDev({
     }
   });
 
-  if (
-    !viteServer.config.plugins.find((plugin) => plugin.name === 'hydrogen:main')
-  ) {
+  const h2Plugin = findHydrogenPlugin(viteServer.config);
+  if (!h2Plugin) {
     await viteServer.close();
     throw new AbortError(
       'Hydrogen plugin not found.',
@@ -228,10 +232,13 @@ export async function runViteDev({
     );
   }
 
+  const h2PluginOptions = h2Plugin.api?.getPluginOptions?.();
+
   const codegenProcess = useCodegen
     ? spawnCodegenProcess({
         rootDirectory: root,
         configFilePath: codegenConfigPath,
+        appDirectory: h2PluginOptions?.remixConfig?.appDirectory,
       })
     : undefined;
 
@@ -284,7 +291,7 @@ export async function runViteDev({
 
   const customSections: AlertCustomSection[] = [];
 
-  if (!disableVirtualRoutes) {
+  if (!h2PluginOptions?.disableVirtualRoutes) {
     customSections.push({body: getUtilityBannerlines(finalHost)});
   }
 

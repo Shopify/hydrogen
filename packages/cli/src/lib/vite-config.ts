@@ -4,8 +4,11 @@ import {
   joinPath,
   resolvePath,
 } from '@shopify/cli-kit/node/path';
-import type {RemixPluginContext} from '@remix-run/dev/dist/vite/plugin.js';
 import {findFileWithExtension} from './file.js';
+
+// Do not import JS from here, only types
+import type {HydrogenPlugin} from '~/hydrogen/vite/plugin.js';
+import type {OxygenPlugin} from '~/mini-oxygen/vite/plugin.js';
 
 export async function hasViteConfig(root: string) {
   const result = await findFileWithExtension(root, 'vite.config');
@@ -35,20 +38,24 @@ export async function getViteConfig(root: string, ssrEntryFlag?: string) {
     mode,
   );
 
+  const {appDirectory, serverBuildFile, routes} =
+    getRemixConfigFromVite(resolvedViteConfig);
+
   const serverOutDir = resolvedViteConfig.build.outDir;
   const clientOutDir = serverOutDir.replace(/server$/, 'client');
 
   const rollupOutput = resolvedViteConfig.build.rollupOptions.output;
   const {entryFileNames} =
     (Array.isArray(rollupOutput) ? rollupOutput[0] : rollupOutput) ?? {};
+
   const serverOutFile = joinPath(
     serverOutDir,
-    typeof entryFileNames === 'string' ? entryFileNames : 'index.js',
+    typeof entryFileNames === 'string'
+      ? entryFileNames
+      : serverBuildFile ?? 'index.js',
   );
 
   const ssrEntry = ssrEntryFlag ?? resolvedViteConfig.build.ssr;
-  const {...remixPluginConfig} = getRemixConfigFromVite(resolvedViteConfig);
-
   const resolvedSsrEntry = resolvePath(
     resolvedViteConfig.root,
     typeof ssrEntry === 'string' ? ssrEntry : 'server',
@@ -61,7 +68,8 @@ export async function getViteConfig(root: string, ssrEntryFlag?: string) {
     resolvedViteConfig,
     userViteConfig: maybeConfig.config,
     remixConfig: {
-      ...remixPluginConfig,
+      routes: routes ?? {},
+      appDirectory: appDirectory ?? joinPath(resolvedViteConfig.root, 'app'),
       rootDirectory: resolvedViteConfig.root,
       serverEntryPoint:
         (
@@ -76,12 +84,35 @@ export async function getViteConfig(root: string, ssrEntryFlag?: string) {
 
 function getRemixConfigFromVite(viteConfig: any) {
   const {remixConfig} =
-    (viteConfig.__remixPluginContext as RemixPluginContext) || {
-      remixConfig: {appDirectory: joinPath(viteConfig.root, 'app')},
-    };
+    findHydrogenPlugin(viteConfig)?.api?.getPluginOptions() ?? {};
 
-  type RemixPluginConfig = typeof remixConfig;
+  return remixConfig
+    ? {
+        appDirectory: remixConfig.appDirectory,
+        serverBuildFile: remixConfig.serverBuildFile,
+        routes: remixConfig.routes,
+      }
+    : {};
+}
 
-  // Remove these types because they create TS problems.
-  return remixConfig as Omit<RemixPluginConfig, 'future' | 'buildEnd'>;
+type MinimalViteConfig = {plugins: Readonly<Array<{name: string}>>};
+
+function findPlugin<
+  PluginType extends Config['plugins'][number],
+  Config extends MinimalViteConfig = MinimalViteConfig,
+>(config: Config, name: string) {
+  return config.plugins.find((plugin) => plugin.name === name) as
+    | PluginType
+    | undefined;
+}
+
+export function findHydrogenPlugin<Config extends MinimalViteConfig>(
+  config: Config,
+) {
+  return findPlugin<HydrogenPlugin>(config, 'hydrogen:main');
+}
+export function findOxygenPlugin<Config extends MinimalViteConfig>(
+  config: Config,
+) {
+  return findPlugin<OxygenPlugin>(config, 'oxygen:main');
 }

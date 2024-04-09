@@ -74,6 +74,7 @@ export type InitOptions = {
   installDeps?: boolean;
   git?: boolean;
   quickstart?: boolean;
+  packageManager?: PackageManager;
 };
 
 export const LANGUAGES = {
@@ -457,9 +458,11 @@ export async function handleCssStrategy(
 export async function handleDependencies(
   projectDir: string,
   controller: AbortController,
+  packageManagerFromFlag?: PackageManager,
   shouldInstallDeps?: boolean,
 ) {
-  const detectedPackageManager = packageManagerFromUserAgent();
+  const detectedPackageManager =
+    packageManagerFromFlag ?? packageManagerFromUserAgent();
   let actualPackageManager: PackageManager = 'npm';
 
   if (shouldInstallDeps !== false) {
