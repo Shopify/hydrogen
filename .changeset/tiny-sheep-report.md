@@ -71,7 +71,7 @@ If your root route loader also returns an `seo` property, make sure to merge tha
 ```ts
 export const meta = ({data, matches}) => {
   return getSeoMeta(
-    args.matches[0].data.seo,
+    matches[0].data.seo,
     // the current route seo data overrides the root route data
     data.seo,
   );
