@@ -9,7 +9,7 @@ import {type CartUpdatePayload} from './AnalyticsView';
 function logMissingField(fieldName: string) {
   // eslint-disable-next-line no-console
   console.error(
-    `Unable to set up cart analytics events: ${fieldName} is missing.`,
+    `[h2:error:CartAnalytics] Unable to set up cart analytics events: ${fieldName} is missing.`,
   );
 }
 
