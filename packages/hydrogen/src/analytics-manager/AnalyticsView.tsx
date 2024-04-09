@@ -122,16 +122,7 @@ export type EventPayloads =
   | CartLineUpdatePayload
   | CustomEventPayload;
 
-export type EventTypes =
-  | (typeof AnalyticsEvent)['PAGE_VIEWED']
-  | (typeof AnalyticsEvent)['PRODUCT_VIEWED']
-  | (typeof AnalyticsEvent)['COLLECTION_VIEWED']
-  | (typeof AnalyticsEvent)['CART_VIEWED']
-  | (typeof AnalyticsEvent)['SEARCH_VIEWED']
-  | (typeof AnalyticsEvent)['CART_UPDATED']
-  | (typeof AnalyticsEvent)['PRODUCT_ADD_TO_CART']
-  | (typeof AnalyticsEvent)['PRODUCT_REMOVED_FROM_CART']
-  | (typeof AnalyticsEvent)['CUSTOM_EVENT'];
+export type EventTypes = (typeof AnalyticsEvent)[keyof typeof AnalyticsEvent];
 
 type BaseViewProps = {
   customData?: OtherData;
