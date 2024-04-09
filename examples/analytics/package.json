@@ -4,22 +4,11 @@
   "type": "module",
   "prettier": "@shopify/prettier-config",
   "scripts": {
-    "build": "shopify hydrogen build-vite --diff",
-    "dev": "shopify hydrogen dev-vite --codegen --customer-account-push --diff",
+    "build": "shopify hydrogen build --codegen --diff",
+    "dev": "shopify hydrogen dev --codegen --customer-account-push --diff",
     "preview": "npm run build && shopify hydrogen preview",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "typecheck": "tsc --noEmit",
     "codegen": "shopify hydrogen codegen"
-  },
-  "devDependencies": {
-    "vite": "~5.1.0",
-    "vite-tsconfig-paths": "^4.3.1"
-  },
-  "h2:diff": {
-    "skip-files": [
-      "remix.config.js",
-      "remix.env.d.ts",
-      ".eslintrc.js"
-    ]
   }
 }

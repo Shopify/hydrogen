@@ -1,7 +1,7 @@
 import {Await, NavLink} from '@remix-run/react';
 import {Suspense} from 'react';
 import type {HeaderQuery} from 'storefrontapi.generated';
-import type {LayoutProps} from './Layout';
+import type {LayoutProps} from '~/components/Layout';
 import {useRootLoaderData} from '~/root';
 import {unstable_useAnalytics as useAnalytics} from '@shopify/hydrogen';
 
