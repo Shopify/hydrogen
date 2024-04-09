@@ -25,6 +25,7 @@ import {runViteBuild} from './build-vite.js';
 import {runViteDev} from './dev-vite.js';
 import {runBuild as runClassicBuild} from './build.js';
 import {runDev as runClassicDev} from './dev.js';
+import { renderSelectPrompt } from '@shopify/cli-kit/node/ui';
 
 const {renderTasksHook} = vi.hoisted(() => ({renderTasksHook: vi.fn()}));
 
@@ -485,6 +486,20 @@ describe('init', () => {
           // Output contains banner characters. USe [^\w]*? to match them.
           /Run `cd .*? &&[^\w]*?npm[^\w]*?install[^\w]*?&&[^\w]*?npm[^\w]*?run[^\w]*?dev`/ims,
         );
+      });
+    });
+
+    it('creates project prompting for package-manager', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        await runInit({
+          path: tmpDir,
+          git: false,
+          language: 'ts',
+          packageManager: 'unknown',
+          mockShop: true
+        });
+
+        expect(renderSelectPrompt).toHaveBeenCalledWith(expect.objectContaining({message: "Select package manager to install dependencies"}));
       });
     });
 

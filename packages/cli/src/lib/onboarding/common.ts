@@ -466,8 +466,6 @@ export async function handleDependencies(
   const detectedPackageManager = packageManagerFromFlag ?? packageManagerFromUserAgent();
   let actualPackageManager: PackageManager = 'npm';
 
-  console.log("detectedPackageManager: ", detectedPackageManager);
-
   if (shouldInstallDeps !== false) {
     if (detectedPackageManager === 'unknown') {
       const result = await renderSelectPrompt<'no' | PackageManager>({
