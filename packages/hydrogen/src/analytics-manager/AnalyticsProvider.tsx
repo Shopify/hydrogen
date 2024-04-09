@@ -339,7 +339,7 @@ export function useAnalytics(): AnalyticsContextValue {
   const analyticsContext = useContext(AnalyticsContext);
   if (!analyticsContext) {
     throw new Error(
-      `'useAnalytics()' must be a descendent of <AnalyticsProvider/>`,
+      `[h2:error:useAnalytics] 'useAnalytics()' must be a descendent of <AnalyticsProvider/>`,
     );
   }
   return analyticsContext;
