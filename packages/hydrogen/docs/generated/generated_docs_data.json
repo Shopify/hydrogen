@@ -314,7 +314,7 @@
     "subCategory": "analytics",
     "isVisualComponent": false,
     "related": [],
-    "description": "Provides a context for tracking page views and cart events to send as analytics data to Shopify. This component is integrated with the Customer Privacy API for consent management. The provider can also be used to connect third-party analytics services through its subscribe and publish system. It provides the [`unstable_useAnalytics`](/docs/api/hydrogen/2024-01/hooks/unstable_useanalytics) hook to access the analytics provider context.",
+    "description": "Provides a context for tracking page views and cart events to send as analytics data to Shopify. This component is integrated with the Customer Privacy API for consent management. The provider can also be used to connect third-party analytics services through its subscribe and publish system. It provides the [`unstable_useAnalytics`](/docs/api/hydrogen/2024-04/hooks/unstable_useanalytics) hook to access the analytics provider context.",
     "type": "component",
     "defaultExample": {
       "description": "This is the default example",
@@ -344,7 +344,7 @@
             "filePath": "/analytics-manager/AnalyticsProvider.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "AnalyticsProviderProps",
-            "value": "{\n  /** React children to render. */\n  children?: ReactNode;\n  /** The cart or cart promise to track for cart analytics. When there is a difference between the state of the cart, `AnalyticsProvider` will trigger a `cart_updated` event. It will also produce `product_added_to_cart` and `product_removed_from_cart` based on cart line quantity and cart line id changes. */\n  cart: Promise<CartReturn | null> | CartReturn | null;\n  /** An optional function to set wether the user can be tracked. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.userCanBeTracked()`. */\n  canTrack?: () => boolean;\n  /** An optional custom payload to pass to all events. e.g language/locale/currency. */\n  customData?: Record<string, unknown>;\n  /** The shop configuration required to publish analytics events to Shopify. Use [`getShopAnalytics`](/docs/api/hydrogen/2024-01/utilities/getshopanalytics). */\n  shop: Promise<ShopAnalytic | null> | ShopAnalytic | null;\n  /** The customer privacy consent configuration and options. */\n  consent: CustomerPrivacyApiProps;\n}",
+            "value": "{\n  /** React children to render. */\n  children?: ReactNode;\n  /** The cart or cart promise to track for cart analytics. When there is a difference between the state of the cart, `AnalyticsProvider` will trigger a `cart_updated` event. It will also produce `product_added_to_cart` and `product_removed_from_cart` based on cart line quantity and cart line id changes. */\n  cart: Promise<CartReturn | null> | CartReturn | null;\n  /** An optional function to set wether the user can be tracked. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.userCanBeTracked()`. */\n  canTrack?: () => boolean;\n  /** An optional custom payload to pass to all events. e.g language/locale/currency. */\n  customData?: Record<string, unknown>;\n  /** The shop configuration required to publish analytics events to Shopify. Use [`getShopAnalytics`](/docs/api/hydrogen/2024-04/utilities/getshopanalytics). */\n  shop: Promise<ShopAnalytics | null> | ShopAnalytics | null;\n  /** The customer privacy consent configuration and options. */\n  consent: CustomerPrivacyApiProps;\n}",
             "description": "",
             "members": [
               {
@@ -382,8 +382,8 @@
                 "filePath": "/analytics-manager/AnalyticsProvider.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "shop",
-                "value": "ShopAnalytic | Promise<ShopAnalytic>",
-                "description": "The shop configuration required to publish analytics events to Shopify. Use [`getShopAnalytics`](/docs/api/hydrogen/2024-01/utilities/getshopanalytics)."
+                "value": "ShopAnalytics | Promise<ShopAnalytics>",
+                "description": "The shop configuration required to publish analytics events to Shopify. Use [`getShopAnalytics`](/docs/api/hydrogen/2024-04/utilities/getshopanalytics)."
               },
               {
                 "filePath": "/analytics-manager/AnalyticsProvider.tsx",
@@ -406,7 +406,7 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2024-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2024-04/objects/Cart) - Storefront API type"
           },
           "StorefrontApiErrors": {
             "filePath": "/storefront.ts",
@@ -415,10 +415,10 @@
             "value": "JsonGraphQLError[] | undefined",
             "description": ""
           },
-          "ShopAnalytic": {
+          "ShopAnalytics": {
             "filePath": "/analytics-manager/AnalyticsProvider.tsx",
             "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopAnalytic",
+            "name": "ShopAnalytics",
             "value": "{\n  /** The shop ID. */\n  shopId: string;\n  /** The language code that is being displayed to user. */\n  acceptedLanguage: LanguageCode;\n  /** The currency code that is being displayed to user. */\n  currency: CurrencyCode;\n  /** The Hydrogen subchannel ID generated by Oxygen in the environment variable. */\n  hydrogenSubchannelId: string | '0';\n}",
             "description": "",
             "members": [
@@ -848,12 +848,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {UNSTABLE_Analytics, getShopAnalytics} from '@shopify/hydrogen';\nimport {defer} from '@shopify/remix-oxygen';\nimport {Outlet, useLoaderData} from '@remix-run/react';\n\nexport async function loader({context}) {\n  const {cart, env} = context;\n  const cartPromise = cart.get();\n\n  return defer({\n    cart: cartPromise,\n    shop: getShopAnalytics(context),\n    consent: {\n      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,\n      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n    },\n  });\n}\n\nexport default function App() {\n  const data = useLoaderData();\n\n  return (\n    &lt;html lang=\"en\"&gt;\n      &lt;head&gt;\n        &lt;meta charSet=\"utf-8\" /&gt;\n        &lt;meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" /&gt;\n      &lt;/head&gt;\n      &lt;body&gt;\n        &lt;UNSTABLE_Analytics.Provider\n          cart={data.cart}\n          shop={data.shop}\n          consent={data.consent}\n        &gt;\n          &lt;Outlet /&gt;\n        &lt;/UNSTABLE_Analytics.Provider&gt;\n      &lt;/body&gt;\n    &lt;/html&gt;\n  );\n}\n",
+            "code": "import {UNSTABLE_Analytics, getShopAnalytics} from '@shopify/hydrogen';\nimport {defer} from '@shopify/remix-oxygen';\nimport {Outlet, useLoaderData} from '@remix-run/react';\n\nexport async function loader({context}) {\n  const {cart, env} = context;\n  const cartPromise = cart.get();\n\n  return defer({\n    cart: cartPromise,\n    shop: getShopAnalytics({\n      storefront: context.storefront,\n      publicStorefrontId: env.PUBLIC_STOREFRONT_ID,\n    }),\n    consent: {\n      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,\n      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n    },\n  });\n}\n\nexport default function App() {\n  const data = useLoaderData();\n\n  return (\n    &lt;html lang=\"en\"&gt;\n      &lt;head&gt;\n        &lt;meta charSet=\"utf-8\" /&gt;\n        &lt;meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" /&gt;\n      &lt;/head&gt;\n      &lt;body&gt;\n        &lt;UNSTABLE_Analytics.Provider\n          cart={data.cart}\n          shop={data.shop}\n          consent={data.consent}\n        &gt;\n          &lt;Outlet /&gt;\n        &lt;/UNSTABLE_Analytics.Provider&gt;\n      &lt;/body&gt;\n    &lt;/html&gt;\n  );\n}\n",
             "language": "js"
           },
           {
             "title": "TypeScript",
-            "code": "import {UNSTABLE_Analytics, getShopAnalytics} from '@shopify/hydrogen';\nimport {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';\nimport {Outlet, useLoaderData} from '@remix-run/react';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const {cart, env} = context;\n  const cartPromise = cart.get();\n\n  return defer({\n    cart: cartPromise,\n    shop: getShopAnalytics(context),\n    consent: {\n      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,\n      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n    },\n  });\n}\n\nexport default function App() {\n  const data = useLoaderData&lt;typeof loader&gt;();\n\n  return (\n    &lt;html lang=\"en\"&gt;\n      &lt;head&gt;\n        &lt;meta charSet=\"utf-8\" /&gt;\n        &lt;meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" /&gt;\n      &lt;/head&gt;\n      &lt;body&gt;\n        &lt;UNSTABLE_Analytics.Provider\n          cart={data.cart}\n          shop={data.shop}\n          consent={data.consent}\n        &gt;\n          &lt;Outlet /&gt;\n        &lt;/UNSTABLE_Analytics.Provider&gt;\n      &lt;/body&gt;\n    &lt;/html&gt;\n  );\n}\n",
+            "code": "import {UNSTABLE_Analytics, getShopAnalytics} from '@shopify/hydrogen';\nimport {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';\nimport {Outlet, useLoaderData} from '@remix-run/react';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const {cart, env} = context;\n  const cartPromise = cart.get();\n\n  return defer({\n    cart: cartPromise,\n    shop: getShopAnalytics({\n      storefront: context.storefront,\n      publicStorefrontId: env.PUBLIC_STOREFRONT_ID,\n    }),\n    consent: {\n      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,\n      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n    },\n  });\n}\n\nexport default function App() {\n  const data = useLoaderData&lt;typeof loader&gt;();\n\n  return (\n    &lt;html lang=\"en\"&gt;\n      &lt;head&gt;\n        &lt;meta charSet=\"utf-8\" /&gt;\n        &lt;meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" /&gt;\n      &lt;/head&gt;\n      &lt;body&gt;\n        &lt;UNSTABLE_Analytics.Provider\n          cart={data.cart}\n          shop={data.shop}\n          consent={data.consent}\n        &gt;\n          &lt;Outlet /&gt;\n        &lt;/UNSTABLE_Analytics.Provider&gt;\n      &lt;/body&gt;\n    &lt;/html&gt;\n  );\n}\n",
             "language": "ts"
           }
         ],
@@ -872,24 +872,353 @@
             "description": "",
             "params": [
               {
-                "name": "context",
+                "name": "input1",
                 "description": "",
-                "value": "AppLoadContext",
+                "value": "{ storefront: Storefront<I18nBase>; publicStorefrontId: string; }",
                 "filePath": "/analytics-manager/AnalyticsProvider.tsx"
               }
             ],
             "returns": {
               "filePath": "/analytics-manager/AnalyticsProvider.tsx",
               "description": "",
-              "name": "Promise<ShopAnalytic | null>",
-              "value": "Promise<ShopAnalytic | null>"
+              "name": "Promise<ShopAnalytics | null>",
+              "value": "Promise<ShopAnalytics | null>"
             },
-            "value": "export async function getShopAnalytics(\n  context: LoaderFunctionArgs['context'],\n): Promise<ShopAnalytic | null> {\n  return context.storefront\n    .query(SHOP_QUERY, {\n      cache: context.storefront.CacheLong(),\n    })\n    .then(({shop, localization}: {shop: Shop; localization: Localization}) => {\n      return {\n        shopId: shop.id,\n        acceptedLanguage: localization.language.isoCode,\n        currency: localization.country.currency.isoCode,\n        hydrogenSubchannelId: context.env.PUBLIC_STOREFRONT_ID || '0',\n      };\n    });\n}"
+            "value": "export async function getShopAnalytics({\n  storefront,\n  publicStorefrontId = '0',\n}: {\n  storefront: Storefront;\n  publicStorefrontId: string;\n}): Promise<ShopAnalytics | null> {\n  return storefront\n    .query(SHOP_QUERY, {\n      cache: storefront.CacheLong(),\n    })\n    .then(({shop, localization}: {shop: Shop; localization: Localization}) => {\n      return {\n        shopId: shop.id,\n        acceptedLanguage: localization.language.isoCode,\n        currency: localization.country.currency.isoCode,\n        hydrogenSubchannelId: publicStorefrontId,\n      };\n    });\n}"
           },
-          "ShopAnalytic": {
+          "Storefront": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "Storefront",
+            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  isApiError: (error: any) => boolean;\n  i18n: TI18n;\n}",
+            "description": "Interface to interact with the Storefront API.",
+            "members": [
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "query",
+                "value": "<OverrideReturnType extends unknown = never, RawGqlString extends string = string>(query: RawGqlString, ...options: IsOptionalVariables<StorefrontQueries[RawGqlString][\"variables\"], AutoAddedVariableNames, Omit<StorefrontQueries[RawGqlString][\"variables\"], AutoAddedVariableNames>> extends true ? [(StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, \"cache\"> & ClientVariables<StorefrontQueries, RawGqlString, AutoAddedVariableNames, \"variables\", RawGqlString extends never ? { [KeyType in keyof ({ [KeyType in keyof StorefrontQueries[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof StorefrontQueries[RawGqlString][\"variables\"], AutoAddedVariableNames>>]: StorefrontQueries[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<StorefrontQueries[RawGqlString][\"variables\"], Extract<keyof StorefrontQueries[RawGqlString][\"variables\"], AutoAddedVariableNames>>>)]: ({ [KeyType in keyof StorefrontQueries[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof StorefrontQueries[RawGqlString][\"variables\"], AutoAddedVariableNames>>]: StorefrontQueries[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<StorefrontQueries[RawGqlString][\"variables\"], Extract<keyof StorefrontQueries[RawGqlString][\"variables\"], AutoAddedVariableNames>>>)[KeyType]; } : { readonly [variable: string]: unknown; }, Record<\"variables\", RawGqlString extends never ? { [KeyType in keyof ({ [KeyType in keyof StorefrontQueries[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof StorefrontQueries[RawGqlString][\"variables\"], AutoAddedVariableNames>>]: StorefrontQueries[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<StorefrontQueries[RawGqlString][\"variables\"], Extract<keyof StorefrontQueries[RawGqlString][\"variables\"], AutoAddedVariableNames>>>)]: ({ [KeyType in keyof StorefrontQueries[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof StorefrontQueries[RawGqlString][\"variables\"], AutoAddedVariableNames>>]: StorefrontQueries[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<StorefrontQueries[RawGqlString][\"variables\"], Extract<keyof StorefrontQueries[RawGqlString][\"variables\"], AutoAddedVariableNames>>>)[KeyType]; } : { readonly [variable: string]: unknown; }>>)?] : [StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, \"cache\"> & ClientVariables<StorefrontQueries, RawGqlString, AutoAddedVariableNames, \"variables\", RawGqlString extends never ? { [KeyType in keyof ({ [KeyType in keyof StorefrontQueries[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof StorefrontQueries[RawGqlString][\"variables\"], AutoAddedVariableNames>>]: StorefrontQueries[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<StorefrontQueries[RawGqlString][\"variables\"], Extract<keyof StorefrontQueries[RawGqlString][\"variables\"], AutoAddedVariableNames>>>)]: ({ [KeyType in keyof StorefrontQueries[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof StorefrontQueries[RawGqlString][\"variables\"], AutoAddedVariableNames>>]: StorefrontQueries[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<StorefrontQueries[RawGqlString][\"variables\"], Extract<keyof StorefrontQueries[RawGqlString][\"variables\"], AutoAddedVariableNames>>>)[KeyType]; } : { readonly [variable: string]: unknown; }, Record<\"variables\", RawGqlString extends never ? { [KeyType in keyof ({ [KeyType in keyof StorefrontQueries[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof StorefrontQueries[RawGqlString][\"variables\"], AutoAddedVariableNames>>]: StorefrontQueries[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<StorefrontQueries[RawGqlString][\"variables\"], Extract<keyof StorefrontQueries[RawGqlString][\"variables\"], AutoAddedVariableNames>>>)]: ({ [KeyType in keyof StorefrontQueries[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof StorefrontQueries[RawGqlString][\"variables\"], AutoAddedVariableNames>>]: StorefrontQueries[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<StorefrontQueries[RawGqlString][\"variables\"], Extract<keyof StorefrontQueries[RawGqlString][\"variables\"], AutoAddedVariableNames>>>)[KeyType]; } : { readonly [variable: string]: unknown; }>>]) => Promise<ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> & StorefrontError>",
+                "description": ""
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "mutate",
+                "value": "<OverrideReturnType extends unknown = never, RawGqlString extends string = string>(mutation: RawGqlString, ...options: IsOptionalVariables<StorefrontMutations[RawGqlString][\"variables\"], AutoAddedVariableNames, Omit<StorefrontMutations[RawGqlString][\"variables\"], AutoAddedVariableNames>> extends true ? [(StorefrontCommonExtraParams & ClientVariables<StorefrontMutations, RawGqlString, AutoAddedVariableNames, \"variables\", RawGqlString extends never ? { [KeyType in keyof ({ [KeyType in keyof StorefrontMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof StorefrontMutations[RawGqlString][\"variables\"], AutoAddedVariableNames>>]: StorefrontMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<StorefrontMutations[RawGqlString][\"variables\"], Extract<keyof StorefrontMutations[RawGqlString][\"variables\"], AutoAddedVariableNames>>>)]: ({ [KeyType in keyof StorefrontMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof StorefrontMutations[RawGqlString][\"variables\"], AutoAddedVariableNames>>]: StorefrontMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<StorefrontMutations[RawGqlString][\"variables\"], Extract<keyof StorefrontMutations[RawGqlString][\"variables\"], AutoAddedVariableNames>>>)[KeyType]; } : { readonly [variable: string]: unknown; }, Record<\"variables\", RawGqlString extends never ? { [KeyType in keyof ({ [KeyType in keyof StorefrontMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof StorefrontMutations[RawGqlString][\"variables\"], AutoAddedVariableNames>>]: StorefrontMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<StorefrontMutations[RawGqlString][\"variables\"], Extract<keyof StorefrontMutations[RawGqlString][\"variables\"], AutoAddedVariableNames>>>)]: ({ [KeyType in keyof StorefrontMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof StorefrontMutations[RawGqlString][\"variables\"], AutoAddedVariableNames>>]: StorefrontMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<StorefrontMutations[RawGqlString][\"variables\"], Extract<keyof StorefrontMutations[RawGqlString][\"variables\"], AutoAddedVariableNames>>>)[KeyType]; } : { readonly [variable: string]: unknown; }>>)?] : [StorefrontCommonExtraParams & ClientVariables<StorefrontMutations, RawGqlString, AutoAddedVariableNames, \"variables\", RawGqlString extends never ? { [KeyType in keyof ({ [KeyType in keyof StorefrontMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof StorefrontMutations[RawGqlString][\"variables\"], AutoAddedVariableNames>>]: StorefrontMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<StorefrontMutations[RawGqlString][\"variables\"], Extract<keyof StorefrontMutations[RawGqlString][\"variables\"], AutoAddedVariableNames>>>)]: ({ [KeyType in keyof StorefrontMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof StorefrontMutations[RawGqlString][\"variables\"], AutoAddedVariableNames>>]: StorefrontMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<StorefrontMutations[RawGqlString][\"variables\"], Extract<keyof StorefrontMutations[RawGqlString][\"variables\"], AutoAddedVariableNames>>>)[KeyType]; } : { readonly [variable: string]: unknown; }, Record<\"variables\", RawGqlString extends never ? { [KeyType in keyof ({ [KeyType in keyof StorefrontMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof StorefrontMutations[RawGqlString][\"variables\"], AutoAddedVariableNames>>]: StorefrontMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<StorefrontMutations[RawGqlString][\"variables\"], Extract<keyof StorefrontMutations[RawGqlString][\"variables\"], AutoAddedVariableNames>>>)]: ({ [KeyType in keyof StorefrontMutations[RawGqlString][\"variables\"] as Filter<KeyType, Extract<keyof StorefrontMutations[RawGqlString][\"variables\"], AutoAddedVariableNames>>]: StorefrontMutations[RawGqlString][\"variables\"][KeyType]; } & Partial<Pick<StorefrontMutations[RawGqlString][\"variables\"], Extract<keyof StorefrontMutations[RawGqlString][\"variables\"], AutoAddedVariableNames>>>)[KeyType]; } : { readonly [variable: string]: unknown; }>>]) => Promise<ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> & StorefrontError>",
+                "description": ""
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "cache",
+                "value": "Cache",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "CacheNone",
+                "value": "() => NoStoreStrategy",
+                "description": ""
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "CacheLong",
+                "value": "(overrideOptions?: AllCacheOptions) => AllCacheOptions",
+                "description": ""
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "CacheShort",
+                "value": "(overrideOptions?: AllCacheOptions) => AllCacheOptions",
+                "description": ""
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "CacheCustom",
+                "value": "(overrideOptions: AllCacheOptions) => AllCacheOptions",
+                "description": ""
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "generateCacheControlHeader",
+                "value": "(cacheOptions: AllCacheOptions) => string",
+                "description": ""
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "getPublicTokenHeaders",
+                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"publicStorefrontToken\">) => Record<string, string>",
+                "description": ""
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "getPrivateTokenHeaders",
+                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"privateStorefrontToken\"> & { buyerIp?: string; }) => Record<string, string>",
+                "description": ""
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "getShopifyDomain",
+                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\">>) => string",
+                "description": ""
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "getApiUrl",
+                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
+                "description": ""
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "isApiError",
+                "value": "(error: any) => boolean",
+                "description": ""
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "i18n",
+                "value": "TI18n",
+                "description": ""
+              }
+            ]
+          },
+          "StorefrontQueries": {
+            "filePath": "/storefront.ts",
+            "name": "StorefrontQueries",
+            "description": "Maps all the queries found in the project to variables and return types.",
+            "members": [],
+            "value": "export interface StorefrontQueries {\n  // Example of how a generated query type looks like:\n  // '#graphql query q1 {...}': {return: Q1Query; variables: Q1QueryVariables};\n}"
+          },
+          "AutoAddedVariableNames": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "AutoAddedVariableNames",
+            "value": "'country' | 'language'",
+            "description": ""
+          },
+          "StorefrontCommonExtraParams": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "StorefrontCommonExtraParams",
+            "value": "{\n  headers?: HeadersInit;\n  storefrontApiVersion?: string;\n  displayName?: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "headers",
+                "value": "HeadersInit",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "storefrontApiVersion",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "displayName",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              }
+            ]
+          },
+          "StorefrontQueryOptions": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "StorefrontQueryOptions",
+            "value": "StorefrontCommonExtraParams & {\n  query: string;\n  mutation?: never;\n  cache?: CachingStrategy;\n}",
+            "description": ""
+          },
+          "CachingStrategy": {
+            "filePath": "/cache/strategies.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CachingStrategy",
+            "value": "AllCacheOptions",
+            "description": "Use the `CachingStrategy` to define a custom caching mechanism for your data. Or use one of the pre-defined caching strategies: CacheNone, CacheShort, CacheLong.",
+            "members": [
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "mode",
+                "value": "string",
+                "description": "The caching mode, generally `public`, `private`, or `no-store`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "maxAge",
+                "value": "number",
+                "description": "The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "staleWhileRevalidate",
+                "value": "number",
+                "description": "Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "sMaxAge",
+                "value": "number",
+                "description": "Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "staleIfError",
+                "value": "number",
+                "description": "Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).",
+                "isOptional": true
+              }
+            ]
+          },
+          "StorefrontError": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "StorefrontError",
+            "value": "{\n  errors?: StorefrontApiErrors;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "errors",
+                "value": "StorefrontApiErrors",
+                "description": "",
+                "isOptional": true
+              }
+            ]
+          },
+          "StorefrontApiErrors": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "StorefrontApiErrors",
+            "value": "JsonGraphQLError[] | undefined",
+            "description": ""
+          },
+          "StorefrontMutations": {
+            "filePath": "/storefront.ts",
+            "name": "StorefrontMutations",
+            "description": "Maps all the mutations found in the project to variables and return types.",
+            "members": [],
+            "value": "export interface StorefrontMutations {\n  // Example of how a generated mutation type looks like:\n  // '#graphql mutation m1 {...}': {return: M1Mutation; variables: M1MutationVariables};\n}"
+          },
+          "NoStoreStrategy": {
+            "filePath": "/cache/strategies.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "NoStoreStrategy",
+            "value": "{\n  mode: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "mode",
+                "value": "string",
+                "description": ""
+              }
+            ]
+          },
+          "AllCacheOptions": {
+            "filePath": "/cache/strategies.ts",
+            "name": "AllCacheOptions",
+            "description": "Override options for a cache strategy.",
+            "members": [
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "mode",
+                "value": "string",
+                "description": "The caching mode, generally `public`, `private`, or `no-store`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "maxAge",
+                "value": "number",
+                "description": "The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "staleWhileRevalidate",
+                "value": "number",
+                "description": "Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "sMaxAge",
+                "value": "number",
+                "description": "Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "staleIfError",
+                "value": "number",
+                "description": "Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).",
+                "isOptional": true
+              }
+            ],
+            "value": "export interface AllCacheOptions {\n  /**\n   * The caching mode, generally `public`, `private`, or `no-store`.\n   */\n  mode?: string;\n  /**\n   * The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).\n   */\n  maxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).\n   */\n  staleWhileRevalidate?: number;\n  /**\n   * Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).\n   */\n  sMaxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).\n   */\n  staleIfError?: number;\n}"
+          },
+          "I18nBase": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "I18nBase",
+            "value": "{\n  language: LanguageCode;\n  country: CountryCode;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "language",
+                "value": "LanguageCode",
+                "description": ""
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "country",
+                "value": "CountryCode",
+                "description": ""
+              }
+            ]
+          },
+          "ShopAnalytics": {
             "filePath": "/analytics-manager/AnalyticsProvider.tsx",
             "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopAnalytic",
+            "name": "ShopAnalytics",
             "value": "{\n  /** The shop ID. */\n  shopId: string;\n  /** The language code that is being displayed to user. */\n  acceptedLanguage: LanguageCode;\n  /** The currency code that is being displayed to user. */\n  currency: CurrencyCode;\n  /** The Hydrogen subchannel ID generated by Oxygen in the environment variable. */\n  hydrogenSubchannelId: string | '0';\n}",
             "description": "",
             "members": [
@@ -962,7 +1291,7 @@
             "filePath": "/analytics-manager/AnalyticsProvider.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "AnalyticsContextValueForDoc",
-            "value": "{\n  /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.userCanBeTracked()`. */\n  canTrack?: () => boolean;\n  /** The current cart state. */\n  cart?: Promise<CartReturn | null> | CartReturn | null;\n  /** The custom data passed in from the `AnalyticsProvider`. */\n  customData?: Record<string, unknown>;\n  /** The previous cart state. */\n  prevCart?: Promise<CartReturn | null> | CartReturn | null;\n  /** A function to publish an analytics event. */\n  publish?: AnalyticsContextPublishForDoc;\n  /** A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/2024-01/hooks/unstable_useanalytics#example-unstable_useanalytics.register). */\n  register?: (key: string) => {ready: () => void};\n  /** The shop configuration required to publish events to Shopify. */\n  shop?: Promise<ShopAnalytic | null> | ShopAnalytic | null;\n  /** A function to subscribe to analytics events. */\n  subscribe?: AnalyticsContextSubscribeForDoc;\n}",
+            "value": "{\n  /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.userCanBeTracked()`. */\n  canTrack?: () => boolean;\n  /** The current cart state. */\n  cart?: Promise<CartReturn | null> | CartReturn | null;\n  /** The custom data passed in from the `AnalyticsProvider`. */\n  customData?: Record<string, unknown>;\n  /** The previous cart state. */\n  prevCart?: Promise<CartReturn | null> | CartReturn | null;\n  /** A function to publish an analytics event. */\n  publish?: AnalyticsContextPublishForDoc;\n  /** A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/2024-04/hooks/unstable_useanalytics#example-unstable_useanalytics.register). */\n  register?: (key: string) => {ready: () => void};\n  /** The shop configuration required to publish events to Shopify. */\n  shop?: Promise<ShopAnalytics | null> | ShopAnalytics | null;\n  /** A function to subscribe to analytics events. */\n  subscribe?: AnalyticsContextSubscribeForDoc;\n}",
             "description": "",
             "members": [
               {
@@ -1010,14 +1339,14 @@
                 "syntaxKind": "PropertySignature",
                 "name": "register",
                 "value": "(key: string) => { ready: () => void; }",
-                "description": "A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/2024-01/hooks/unstable_useanalytics#example-unstable_useanalytics.register).",
+                "description": "A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/2024-04/hooks/unstable_useanalytics#example-unstable_useanalytics.register).",
                 "isOptional": true
               },
               {
                 "filePath": "/analytics-manager/AnalyticsProvider.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "shop",
-                "value": "ShopAnalytic | Promise<ShopAnalytic>",
+                "value": "ShopAnalytics | Promise<ShopAnalytics>",
                 "description": "The shop configuration required to publish events to Shopify.",
                 "isOptional": true
               },
@@ -1043,7 +1372,7 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2024-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2024-04/objects/Cart) - Storefront API type"
           },
           "StorefrontApiErrors": {
             "filePath": "/storefront.ts",
@@ -1112,14 +1441,14 @@
             "filePath": "/analytics-manager/AnalyticsView.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "BasePayload",
-            "value": "{\n  /** The shop data passed in from the `AnalyticsProvider`. */\n  shop: ShopAnalytic | null;\n  /** The custom data passed in from the `AnalyticsProvider`. */\n  customData?: AnalyticsProviderProps['customData'];\n}",
+            "value": "{\n  /** The shop data passed in from the `AnalyticsProvider`. */\n  shop: ShopAnalytics | null;\n  /** The custom data passed in from the `AnalyticsProvider`. */\n  customData?: AnalyticsProviderProps['customData'];\n}",
             "description": "",
             "members": [
               {
                 "filePath": "/analytics-manager/AnalyticsView.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "shop",
-                "value": "ShopAnalytic",
+                "value": "ShopAnalytics",
                 "description": "The shop data passed in from the `AnalyticsProvider`."
               },
               {
@@ -1132,10 +1461,10 @@
               }
             ]
           },
-          "ShopAnalytic": {
+          "ShopAnalytics": {
             "filePath": "/analytics-manager/AnalyticsProvider.tsx",
             "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopAnalytic",
+            "name": "ShopAnalytics",
             "value": "{\n  /** The shop ID. */\n  shopId: string;\n  /** The language code that is being displayed to user. */\n  acceptedLanguage: LanguageCode;\n  /** The currency code that is being displayed to user. */\n  currency: CurrencyCode;\n  /** The Hydrogen subchannel ID generated by Oxygen in the environment variable. */\n  hydrogenSubchannelId: string | '0';\n}",
             "description": "",
             "members": [
@@ -2559,7 +2888,7 @@
             "name": "AttributeInput",
             "value": "AttributeInput",
             "members": [],
-            "override": "[AttributeInput](/docs/api/storefront/2024-01/input-objects/AttributeInput) - Storefront API type"
+            "override": "[AttributeInput](/docs/api/storefront/2024-04/input-objects/AttributeInput) - Storefront API type"
           },
           "OtherFormData": {
             "description": "",
@@ -2597,7 +2926,7 @@
             "name": "CartBuyerIdentityInput",
             "value": "CartBuyerIdentityInput",
             "members": [],
-            "override": "[CartBuyerIdentityInput](/docs/api/storefront/2024-01/input-objects/CartBuyerIdentityInput) - Storefront API type"
+            "override": "[CartBuyerIdentityInput](/docs/api/storefront/2024-04/input-objects/CartBuyerIdentityInput) - Storefront API type"
           },
           "CartCreateProps": {
             "filePath": "/cart/CartForm.tsx",
@@ -2628,7 +2957,7 @@
             "name": "CartInput",
             "value": "CartInput",
             "members": [],
-            "override": "[CartInput](/docs/api/storefront/2024-01/input-objects/CartInput) - Storefront API type"
+            "override": "[CartInput](/docs/api/storefront/2024-04/input-objects/CartInput) - Storefront API type"
           },
           "CartDiscountCodesUpdateProps": {
             "filePath": "/cart/CartForm.tsx",
@@ -2683,7 +3012,7 @@
             "name": "CartLineInput",
             "value": "CartLineInput",
             "members": [],
-            "override": "[CartLineInput](/docs/api/storefront/2024-01/input-objects/CartLineInput) - Storefront API type"
+            "override": "[CartLineInput](/docs/api/storefront/2024-04/input-objects/CartLineInput) - Storefront API type"
           },
           "CartLinesUpdateProps": {
             "filePath": "/cart/CartForm.tsx",
@@ -2714,7 +3043,7 @@
             "name": "CartLineUpdateInput",
             "value": "CartLineUpdateInput",
             "members": [],
-            "override": "[CartLineUpdateInput](/docs/api/storefront/2024-01/input-objects/CartLineUpdateInput) - Storefront API type"
+            "override": "[CartLineUpdateInput](/docs/api/storefront/2024-04/input-objects/CartLineUpdateInput) - Storefront API type"
           },
           "CartLinesRemoveProps": {
             "filePath": "/cart/CartForm.tsx",
@@ -2793,7 +3122,7 @@
             "name": "CartSelectedDeliveryOptionInput",
             "value": "CartSelectedDeliveryOptionInput",
             "members": [],
-            "override": "[CartSelectedDeliveryOptionInput](/docs/api/storefront/2024-01/input-objects/CartSelectedDeliveryOptionInput) - Storefront API type"
+            "override": "[CartSelectedDeliveryOptionInput](/docs/api/storefront/2024-04/input-objects/CartSelectedDeliveryOptionInput) - Storefront API type"
           },
           "CartMetafieldsSetProps": {
             "filePath": "/cart/CartForm.tsx",
@@ -2824,7 +3153,7 @@
             "name": "MetafieldWithoutOwnerId",
             "value": "MetafieldWithoutOwnerId",
             "members": [],
-            "override": "Same as [CartMetafieldsSetInput](https://shopify.dev/docs/api/storefront/2024-01/input-objects/CartMetafieldsSetInput) Storefront API type but without `ownerId`. `ownerId` is always set to the cart id."
+            "override": "Same as [CartMetafieldsSetInput](https://shopify.dev/docs/api/storefront/2024-04/input-objects/CartMetafieldsSetInput) Storefront API type but without `ownerId`. `ownerId` is always set to the cart id."
           },
           "CartMetafieldDeleteProps": {
             "filePath": "/cart/CartForm.tsx",
@@ -3192,7 +3521,7 @@
             "filePath": "/cart/createCartHandler.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartHandlerOptionsForDocs",
-            "value": "{\n  /**\n   * A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`.\n   */\n  getCartId: () => string | undefined;\n  /**\n   * A function that sets the cart ID.\n   */\n  setCartId: (cartId: string) => Headers;\n  /**\n   * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/latest/utilities/createstorefrontclient).\n   */\n  storefront: Storefront;\n  /**\n   * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.\n   * See the [example usage](/docs/api/hydrogen/2024-01/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartMutateFragment?: string;\n  /**\n   * The cart query fragment used by `cart.get()`.\n   * See the [example usage](/docs/api/hydrogen/2024-01/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartQueryFragment?: string;\n  /**\n   * Define custom methods or override existing methods for your cart API instance.\n   * See the [example usage](/docs/api/hydrogen/2024-01/utilities/createcarthandler#example-custom-methods) in the documentation.\n   */\n  customMethods?: TCustomMethods;\n}",
+            "value": "{\n  /**\n   * A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`.\n   */\n  getCartId: () => string | undefined;\n  /**\n   * A function that sets the cart ID.\n   */\n  setCartId: (cartId: string) => Headers;\n  /**\n   * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/latest/utilities/createstorefrontclient).\n   */\n  storefront: Storefront;\n  /**\n   * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.\n   * See the [example usage](/docs/api/hydrogen/2024-04/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartMutateFragment?: string;\n  /**\n   * The cart query fragment used by `cart.get()`.\n   * See the [example usage](/docs/api/hydrogen/2024-04/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartQueryFragment?: string;\n  /**\n   * Define custom methods or override existing methods for your cart API instance.\n   * See the [example usage](/docs/api/hydrogen/2024-04/utilities/createcarthandler#example-custom-methods) in the documentation.\n   */\n  customMethods?: TCustomMethods;\n}",
             "description": "",
             "members": [
               {
@@ -3221,7 +3550,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "cartMutateFragment",
                 "value": "string",
-                "description": "The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`. See the [example usage](/docs/api/hydrogen/2024-01/utilities/createcarthandler#example-cart-fragments) in the documentation.",
+                "description": "The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`. See the [example usage](/docs/api/hydrogen/2024-04/utilities/createcarthandler#example-cart-fragments) in the documentation.",
                 "isOptional": true
               },
               {
@@ -3229,7 +3558,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "cartQueryFragment",
                 "value": "string",
-                "description": "The cart query fragment used by `cart.get()`. See the [example usage](/docs/api/hydrogen/2024-01/utilities/createcarthandler#example-cart-fragments) in the documentation.",
+                "description": "The cart query fragment used by `cart.get()`. See the [example usage](/docs/api/hydrogen/2024-04/utilities/createcarthandler#example-cart-fragments) in the documentation.",
                 "isOptional": true
               },
               {
@@ -3237,7 +3566,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "customMethods",
                 "value": "TCustomMethods",
-                "description": "Define custom methods or override existing methods for your cart API instance. See the [example usage](/docs/api/hydrogen/2024-01/utilities/createcarthandler#example-custom-methods) in the documentation.",
+                "description": "Define custom methods or override existing methods for your cart API instance. See the [example usage](/docs/api/hydrogen/2024-04/utilities/createcarthandler#example-custom-methods) in the documentation.",
                 "isOptional": true
               }
             ]
@@ -3559,7 +3888,7 @@
       },
       {
         "title": "Returns",
-        "description": "The handler returns the following default methods. Any [custom](/docs/api/hydrogen/2024-01/utilities/createcarthandler#example-custom-methods) or overwritten methods will also be available in the returned cart instance.",
+        "description": "The handler returns the following default methods. Any [custom](/docs/api/hydrogen/2024-04/utilities/createcarthandler#example-custom-methods) or overwritten methods will also be available in the returned cart instance.",
         "type": "HydrogenCartForDocs",
         "typeDefinitions": {
           "HydrogenCartForDocs": {
@@ -3715,7 +4044,7 @@
             "name": "CartLineInput",
             "value": "CartLineInput",
             "members": [],
-            "override": "[CartLineInput](/docs/api/storefront/2024-01/input-objects/CartLineInput) - Storefront API type"
+            "override": "[CartLineInput](/docs/api/storefront/2024-04/input-objects/CartLineInput) - Storefront API type"
           },
           "CartOptionalInput": {
             "filePath": "/cart/queries/cart-types.ts",
@@ -3789,28 +4118,28 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2024-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2024-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2024-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2024-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-04/objects/MetafieldDeleteUserError) - Storefront API type"
           },
           "StorefrontApiErrors": {
             "filePath": "/storefront.ts",
@@ -3851,7 +4180,7 @@
             "name": "CartInput",
             "value": "CartInput",
             "members": [],
-            "override": "[CartInput](/docs/api/storefront/2024-01/input-objects/CartInput) - Storefront API type"
+            "override": "[CartInput](/docs/api/storefront/2024-04/input-objects/CartInput) - Storefront API type"
           },
           "CartMetafieldDeleteFunction": {
             "filePath": "/cart/queries/cartMetafieldDeleteDefault.ts",
@@ -4019,7 +4348,7 @@
             "name": "MetafieldWithoutOwnerId",
             "value": "MetafieldWithoutOwnerId",
             "members": [],
-            "override": "Same as [CartMetafieldsSetInput](https://shopify.dev/docs/api/storefront/2024-01/input-objects/CartMetafieldsSetInput) Storefront API type but without `ownerId`. `ownerId` is always set to the cart id."
+            "override": "Same as [CartMetafieldsSetInput](https://shopify.dev/docs/api/storefront/2024-04/input-objects/CartMetafieldsSetInput) Storefront API type but without `ownerId`. `ownerId` is always set to the cart id."
           },
           "CartAttributesUpdateFunction": {
             "filePath": "/cart/queries/cartAttributesUpdateDefault.ts",
@@ -4053,7 +4382,7 @@
             "name": "AttributeInput",
             "value": "AttributeInput",
             "members": [],
-            "override": "[AttributeInput](/docs/api/storefront/2024-01/input-objects/AttributeInput) - Storefront API type"
+            "override": "[AttributeInput](/docs/api/storefront/2024-04/input-objects/AttributeInput) - Storefront API type"
           },
           "CartBuyerIdentityUpdateFunction": {
             "filePath": "/cart/queries/cartBuyerIdentityUpdateDefault.ts",
@@ -4087,7 +4416,7 @@
             "name": "CartBuyerIdentityInput",
             "value": "CartBuyerIdentityInput",
             "members": [],
-            "override": "[CartBuyerIdentityInput](/docs/api/storefront/2024-01/input-objects/CartBuyerIdentityInput) - Storefront API type"
+            "override": "[CartBuyerIdentityInput](/docs/api/storefront/2024-04/input-objects/CartBuyerIdentityInput) - Storefront API type"
           },
           "CartDiscountCodesUpdateFunction": {
             "filePath": "/cart/queries/cartDiscountCodesUpdateDefault.ts",
@@ -4148,7 +4477,7 @@
             "name": "CartLineUpdateInput",
             "value": "CartLineUpdateInput",
             "members": [],
-            "override": "[CartLineUpdateInput](/docs/api/storefront/2024-01/input-objects/CartLineUpdateInput) - Storefront API type"
+            "override": "[CartLineUpdateInput](/docs/api/storefront/2024-04/input-objects/CartLineUpdateInput) - Storefront API type"
           },
           "CartNoteUpdateFunction": {
             "filePath": "/cart/queries/cartNoteUpdateDefault.ts",
@@ -4209,7 +4538,7 @@
             "name": "CartSelectedDeliveryOptionInput",
             "value": "CartSelectedDeliveryOptionInput",
             "members": [],
-            "override": "[CartSelectedDeliveryOptionInput](/docs/api/storefront/2024-01/input-objects/CartSelectedDeliveryOptionInput) - Storefront API type"
+            "override": "[CartSelectedDeliveryOptionInput](/docs/api/storefront/2024-04/input-objects/CartSelectedDeliveryOptionInput) - Storefront API type"
           }
         }
       }
@@ -4448,7 +4777,7 @@
     "category": "utilities",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a function that accepts an array of [AttributeInput](/docs/api/storefront/2024-01/input-objects/AttributeInput) and updates attributes to a cart",
+    "description": "Creates a function that accepts an array of [AttributeInput](/docs/api/storefront/2024-04/input-objects/AttributeInput) and updates attributes to a cart",
     "type": "utility",
     "defaultExample": {
       "description": "This is the default example",
@@ -4858,7 +5187,7 @@
             "name": "AttributeInput",
             "value": "AttributeInput",
             "members": [],
-            "override": "[AttributeInput](/docs/api/storefront/2024-01/input-objects/AttributeInput) - Storefront API type"
+            "override": "[AttributeInput](/docs/api/storefront/2024-04/input-objects/AttributeInput) - Storefront API type"
           },
           "CartOptionalInput": {
             "filePath": "/cart/queries/cart-types.ts",
@@ -4932,28 +5261,28 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2024-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2024-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2024-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2024-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-04/objects/MetafieldDeleteUserError) - Storefront API type"
           }
         }
       }
@@ -4964,7 +5293,7 @@
     "category": "utilities",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a function that accepts an object of [CartBuyerIdentityInput](/docs/api/storefront/2024-01/input-objects/CartBuyerIdentityInput) and updates the buyer identity of a cart",
+    "description": "Creates a function that accepts an object of [CartBuyerIdentityInput](/docs/api/storefront/2024-04/input-objects/CartBuyerIdentityInput) and updates the buyer identity of a cart",
     "type": "utility",
     "defaultExample": {
       "description": "This is the default example",
@@ -5374,7 +5703,7 @@
             "name": "CartBuyerIdentityInput",
             "value": "CartBuyerIdentityInput",
             "members": [],
-            "override": "[CartBuyerIdentityInput](/docs/api/storefront/2024-01/input-objects/CartBuyerIdentityInput) - Storefront API type"
+            "override": "[CartBuyerIdentityInput](/docs/api/storefront/2024-04/input-objects/CartBuyerIdentityInput) - Storefront API type"
           },
           "CartOptionalInput": {
             "filePath": "/cart/queries/cart-types.ts",
@@ -5448,28 +5777,28 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2024-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2024-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2024-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2024-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-04/objects/MetafieldDeleteUserError) - Storefront API type"
           }
         }
       }
@@ -5480,7 +5809,7 @@
     "category": "utilities",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a function that accepts an object of [CartInput](/docs/api/storefront/2024-01/input-objects/CartInput) and returns a new cart",
+    "description": "Creates a function that accepts an object of [CartInput](/docs/api/storefront/2024-04/input-objects/CartInput) and returns a new cart",
     "type": "utility",
     "defaultExample": {
       "description": "This is the default example",
@@ -5890,7 +6219,7 @@
             "name": "CartInput",
             "value": "CartInput",
             "members": [],
-            "override": "[CartInput](/docs/api/storefront/2024-01/input-objects/CartInput) - Storefront API type"
+            "override": "[CartInput](/docs/api/storefront/2024-04/input-objects/CartInput) - Storefront API type"
           },
           "CartOptionalInput": {
             "filePath": "/cart/queries/cart-types.ts",
@@ -5964,28 +6293,28 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2024-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2024-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2024-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2024-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-04/objects/MetafieldDeleteUserError) - Storefront API type"
           }
         }
       }
@@ -6473,28 +6802,28 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2024-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2024-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2024-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2024-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-04/objects/MetafieldDeleteUserError) - Storefront API type"
           }
         }
       }
@@ -7095,7 +7424,7 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2024-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2024-04/objects/Cart) - Storefront API type"
           }
         }
       }
@@ -7106,7 +7435,7 @@
     "category": "utilities",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a function that accepts an array of [CartLineInput](/docs/api/storefront/2024-01/input-objects/CartLineInput) and adds the line items to a cart",
+    "description": "Creates a function that accepts an array of [CartLineInput](/docs/api/storefront/2024-04/input-objects/CartLineInput) and adds the line items to a cart",
     "type": "utility",
     "defaultExample": {
       "description": "This is the default example",
@@ -7516,7 +7845,7 @@
             "name": "CartLineInput",
             "value": "CartLineInput",
             "members": [],
-            "override": "[CartLineInput](/docs/api/storefront/2024-01/input-objects/CartLineInput) - Storefront API type"
+            "override": "[CartLineInput](/docs/api/storefront/2024-04/input-objects/CartLineInput) - Storefront API type"
           },
           "CartOptionalInput": {
             "filePath": "/cart/queries/cart-types.ts",
@@ -7590,28 +7919,28 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2024-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2024-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2024-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2024-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-04/objects/MetafieldDeleteUserError) - Storefront API type"
           }
         }
       }
@@ -8099,28 +8428,28 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2024-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2024-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2024-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2024-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-04/objects/MetafieldDeleteUserError) - Storefront API type"
           }
         }
       }
@@ -8131,7 +8460,7 @@
     "category": "utilities",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a function that accepts an array of [CartLineUpdateInput](/docs/api/storefront/2024-01/input-objects/CartLineUpdateInput) and updates the line items in a cart",
+    "description": "Creates a function that accepts an array of [CartLineUpdateInput](/docs/api/storefront/2024-04/input-objects/CartLineUpdateInput) and updates the line items in a cart",
     "type": "utility",
     "defaultExample": {
       "description": "This is the default example",
@@ -8541,7 +8870,7 @@
             "name": "CartLineUpdateInput",
             "value": "CartLineUpdateInput",
             "members": [],
-            "override": "[CartLineUpdateInput](/docs/api/storefront/2024-01/input-objects/CartLineUpdateInput) - Storefront API type"
+            "override": "[CartLineUpdateInput](/docs/api/storefront/2024-04/input-objects/CartLineUpdateInput) - Storefront API type"
           },
           "CartOptionalInput": {
             "filePath": "/cart/queries/cart-types.ts",
@@ -8615,28 +8944,28 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2024-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2024-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2024-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2024-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-04/objects/MetafieldDeleteUserError) - Storefront API type"
           }
         }
       }
@@ -9124,28 +9453,28 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2024-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2024-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2024-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2024-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-04/objects/MetafieldDeleteUserError) - Storefront API type"
           }
         }
       }
@@ -9156,7 +9485,7 @@
     "category": "utilities",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a function that accepts an array of [CartMetafieldsSetInput](https://shopify.dev/docs/api/storefront/2024-01/input-objects/CartMetafieldsSetInput) without `ownerId` and set the metafields to a cart",
+    "description": "Creates a function that accepts an array of [CartMetafieldsSetInput](https://shopify.dev/docs/api/storefront/2024-04/input-objects/CartMetafieldsSetInput) without `ownerId` and set the metafields to a cart",
     "type": "utility",
     "defaultExample": {
       "description": "This is the default example",
@@ -9566,7 +9895,7 @@
             "name": "MetafieldWithoutOwnerId",
             "value": "MetafieldWithoutOwnerId",
             "members": [],
-            "override": "Same as [CartMetafieldsSetInput](https://shopify.dev/docs/api/storefront/2024-01/input-objects/CartMetafieldsSetInput) Storefront API type but without `ownerId`. `ownerId` is always set to the cart id."
+            "override": "Same as [CartMetafieldsSetInput](https://shopify.dev/docs/api/storefront/2024-04/input-objects/CartMetafieldsSetInput) Storefront API type but without `ownerId`. `ownerId` is always set to the cart id."
           },
           "CartOptionalInput": {
             "filePath": "/cart/queries/cart-types.ts",
@@ -9640,28 +9969,28 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2024-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2024-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2024-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2024-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-04/objects/MetafieldDeleteUserError) - Storefront API type"
           }
         }
       }
@@ -10149,28 +10478,28 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2024-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2024-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2024-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2024-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-04/objects/MetafieldDeleteUserError) - Storefront API type"
           }
         }
       }
@@ -10181,7 +10510,7 @@
     "category": "utilities",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a function that accepts an object of [CartSelectedDeliveryOptionInput](/docs/api/storefront/2024-01/input-objects/CartSelectedDeliveryOptionInput) and updates the selected delivery option of a cart",
+    "description": "Creates a function that accepts an object of [CartSelectedDeliveryOptionInput](/docs/api/storefront/2024-04/input-objects/CartSelectedDeliveryOptionInput) and updates the selected delivery option of a cart",
     "type": "utility",
     "defaultExample": {
       "description": "This is the default example",
@@ -10591,7 +10920,7 @@
             "name": "CartSelectedDeliveryOptionInput",
             "value": "CartSelectedDeliveryOptionInput",
             "members": [],
-            "override": "[CartSelectedDeliveryOptionInput](/docs/api/storefront/2024-01/input-objects/CartSelectedDeliveryOptionInput) - Storefront API type"
+            "override": "[CartSelectedDeliveryOptionInput](/docs/api/storefront/2024-04/input-objects/CartSelectedDeliveryOptionInput) - Storefront API type"
           },
           "CartOptionalInput": {
             "filePath": "/cart/queries/cart-types.ts",
@@ -10665,28 +10994,28 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2024-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2024-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2024-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2024-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2024-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2024-04/objects/MetafieldDeleteUserError) - Storefront API type"
           }
         }
       }
@@ -10700,30 +11029,30 @@
       {
         "name": "CacheNone",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2024-01/utilities/cachenone"
+        "url": "/docs/api/hydrogen/2024-04/utilities/cachenone"
       },
       {
         "name": "CacheShort",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2024-01/utilities/cacheshort"
+        "url": "/docs/api/hydrogen/2024-04/utilities/cacheshort"
       },
       {
         "name": "CacheLong",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2024-01/utilities/cachelong"
+        "url": "/docs/api/hydrogen/2024-04/utilities/cachelong"
       },
       {
         "name": "CacheCustom",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2024-01/utilities/cachecustom"
+        "url": "/docs/api/hydrogen/2024-04/utilities/cachecustom"
       },
       {
         "name": "InMemoryCache",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2024-01/utilities/inmemorycache"
+        "url": "/docs/api/hydrogen/2024-04/utilities/inmemorycache"
       }
     ],
-    "description": "This function extends `createStorefrontClient` from [Hydrogen React](/docs/api/hydrogen-react/2024-01/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.\n\nLearn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",
+    "description": "This function extends `createStorefrontClient` from [Hydrogen React](/docs/api/hydrogen-react/2024-04/utilities/createstorefrontclient).\nThe additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.\n\nLearn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",
     "type": "utility",
     "defaultExample": {
       "description": "I am the default example",
@@ -10878,7 +11207,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontForDoc",
-            "value": "{\n  /** The function to run a query on Storefront API. */\n  query?: <TData = any>(\n    query: string,\n    options: StorefrontQueryOptionsForDocs,\n  ) => Promise<TData & StorefrontError>;\n  /** The function to run a mutation on Storefront API. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: StorefrontMutationOptionsForDocs,\n  ) => Promise<TData & StorefrontError>;\n  /** The cache instance passed in from the `createStorefrontClient` argument. */\n  cache?: Cache;\n  /** Re-export of [`CacheNone`](/docs/api/hydrogen/2024-01/utilities/cachenone). */\n  CacheNone?: typeof CacheNone;\n  /** Re-export of [`CacheLong`](/docs/api/hydrogen/2024-01/utilities/cachelong). */\n  CacheLong?: typeof CacheLong;\n  /** Re-export of [`CacheShort`](/docs/api/hydrogen/2024-01/utilities/cacheshort). */\n  CacheShort?: typeof CacheShort;\n  /** Re-export of [`CacheCustom`](/docs/api/hydrogen/2024-01/utilities/cachecustom). */\n  CacheCustom?: typeof CacheCustom;\n  /** Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/2024-01/utilities/generatecachecontrolheader). */\n  generateCacheControlHeader?: typeof generateCacheControlHeader;\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2024-01/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details. */\n  getPublicTokenHeaders?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2024-01/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.*/\n  getPrivateTokenHeaders?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  /** Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2024-01/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details. */\n  getShopifyDomain?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2024-01/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.*/\n  getApiUrl?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  /**\n   * @deprecated Use the `errors` object returned from the API if exists.\n   * */\n  isApiError?: (error: any) => boolean;\n  /** The `i18n` object passed in from the `createStorefrontClient` argument. */\n  i18n?: TI18n;\n}",
+            "value": "{\n  /** The function to run a query on Storefront API. */\n  query?: <TData = any>(\n    query: string,\n    options: StorefrontQueryOptionsForDocs,\n  ) => Promise<TData & StorefrontError>;\n  /** The function to run a mutation on Storefront API. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: StorefrontMutationOptionsForDocs,\n  ) => Promise<TData & StorefrontError>;\n  /** The cache instance passed in from the `createStorefrontClient` argument. */\n  cache?: Cache;\n  /** Re-export of [`CacheNone`](/docs/api/hydrogen/2024-04/utilities/cachenone). */\n  CacheNone?: typeof CacheNone;\n  /** Re-export of [`CacheLong`](/docs/api/hydrogen/2024-04/utilities/cachelong). */\n  CacheLong?: typeof CacheLong;\n  /** Re-export of [`CacheShort`](/docs/api/hydrogen/2024-04/utilities/cacheshort). */\n  CacheShort?: typeof CacheShort;\n  /** Re-export of [`CacheCustom`](/docs/api/hydrogen/2024-04/utilities/cachecustom). */\n  CacheCustom?: typeof CacheCustom;\n  /** Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/2024-04/utilities/generatecachecontrolheader). */\n  generateCacheControlHeader?: typeof generateCacheControlHeader;\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2024-04/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details. */\n  getPublicTokenHeaders?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2024-04/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.*/\n  getPrivateTokenHeaders?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  /** Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2024-04/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details. */\n  getShopifyDomain?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2024-04/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.*/\n  getApiUrl?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  /**\n   * @deprecated Use the `errors` object returned from the API if exists.\n   * */\n  isApiError?: (error: any) => boolean;\n  /** The `i18n` object passed in from the `createStorefrontClient` argument. */\n  i18n?: TI18n;\n}",
             "description": "",
             "members": [
               {
@@ -10910,7 +11239,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "CacheNone",
                 "value": "() => NoStoreStrategy",
-                "description": "Re-export of [`CacheNone`](/docs/api/hydrogen/2024-01/utilities/cachenone).",
+                "description": "Re-export of [`CacheNone`](/docs/api/hydrogen/2024-04/utilities/cachenone).",
                 "isOptional": true
               },
               {
@@ -10918,7 +11247,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "CacheLong",
                 "value": "(overrideOptions?: AllCacheOptions) => AllCacheOptions",
-                "description": "Re-export of [`CacheLong`](/docs/api/hydrogen/2024-01/utilities/cachelong).",
+                "description": "Re-export of [`CacheLong`](/docs/api/hydrogen/2024-04/utilities/cachelong).",
                 "isOptional": true
               },
               {
@@ -10926,7 +11255,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "CacheShort",
                 "value": "(overrideOptions?: AllCacheOptions) => AllCacheOptions",
-                "description": "Re-export of [`CacheShort`](/docs/api/hydrogen/2024-01/utilities/cacheshort).",
+                "description": "Re-export of [`CacheShort`](/docs/api/hydrogen/2024-04/utilities/cacheshort).",
                 "isOptional": true
               },
               {
@@ -10934,7 +11263,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "CacheCustom",
                 "value": "(overrideOptions: AllCacheOptions) => AllCacheOptions",
-                "description": "Re-export of [`CacheCustom`](/docs/api/hydrogen/2024-01/utilities/cachecustom).",
+                "description": "Re-export of [`CacheCustom`](/docs/api/hydrogen/2024-04/utilities/cachecustom).",
                 "isOptional": true
               },
               {
@@ -10942,7 +11271,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "generateCacheControlHeader",
                 "value": "(cacheOptions: AllCacheOptions) => string",
-                "description": "Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/2024-01/utilities/generatecachecontrolheader).",
+                "description": "Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/2024-04/utilities/generatecachecontrolheader).",
                 "isOptional": true
               },
               {
@@ -10950,7 +11279,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getPublicTokenHeaders",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"publicStorefrontToken\">) => Record<string, string>",
-                "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2024-01/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details.",
+                "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2024-04/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details.",
                 "isOptional": true
               },
               {
@@ -10958,7 +11287,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getPrivateTokenHeaders",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"privateStorefrontToken\"> & { buyerIp?: string; }) => Record<string, string>",
-                "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2024-01/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.",
+                "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2024-04/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.",
                 "isOptional": true
               },
               {
@@ -10966,7 +11295,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getShopifyDomain",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\">>) => string",
-                "description": "Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2024-01/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details.",
+                "description": "Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2024-04/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details.",
                 "isOptional": true
               },
               {
@@ -10974,7 +11303,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
-                "description": "Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2024-01/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.",
+                "description": "Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2024-04/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.",
                 "isOptional": true
               },
               {
@@ -11235,12 +11564,12 @@
       {
         "name": "createContentSecurityPolicy",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2024-01/utilities/createcontentsecuritypolicy"
+        "url": "/docs/api/hydrogen/2024-04/utilities/createcontentsecuritypolicy"
       },
       {
         "name": "useNonce",
         "type": "hooks",
-        "url": "/docs/api/hydrogen/2024-01/hooks/usenonce"
+        "url": "/docs/api/hydrogen/2024-04/hooks/usenonce"
       }
     ],
     "description": "Use the `Script` component to add third-party scripts to your app. It automatically adds a nonce attribute from your [content security policy](/docs/custom-storefronts/hydrogen/content-security-policy).",
@@ -11288,12 +11617,12 @@
       {
         "name": "useNonce",
         "type": "hooks",
-        "url": "/docs/api/hydrogen/2024-01/hooks/usenonce"
+        "url": "/docs/api/hydrogen/2024-04/hooks/usenonce"
       },
       {
         "name": "Script",
         "type": "components",
-        "url": "/docs/api/hydrogen/2024-01/components/script"
+        "url": "/docs/api/hydrogen/2024-04/components/script"
       }
     ],
     "description": "Create a [content security policy](/docs/custom-storefronts/hydrogen/content-security-policy) to secure your application. The default content security policy includes exclusions for cdn.shopify.com and a script nonce.",
@@ -11627,12 +11956,12 @@
       {
         "name": "createContentSecurityPolicy",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2024-01/utilities/createcontentsecuritypolicy"
+        "url": "/docs/api/hydrogen/2024-04/utilities/createcontentsecuritypolicy"
       },
       {
         "name": "Script",
         "type": "components",
-        "url": "/docs/api/hydrogen/2024-01/components/script"
+        "url": "/docs/api/hydrogen/2024-04/components/script"
       }
     ],
     "description": "The `useNonce` hook returns the [content security policy](/docs/custom-storefronts/hydrogen/content-security-policy) nonce. Use the hook to manually add a nonce to third party scripts. The `Script` component automatically does this for you. Note, the nonce should never be available in the client, and should always return undefined in the browser.",
@@ -11683,7 +12012,7 @@
     "category": "hooks",
     "isVisualComponent": false,
     "related": [],
-    "description": "A hook that loads the [Customer Privacy API](/docs/api/customer-privacy).\n\nYou can get the customer privacy instance with `getCustomerPrivacy()` or `getCustomerPrivacyRequired()`.",
+    "description": "A hook that loads the [Customer Privacy API](/docs/api/customer-privacy).\n\nYou can get the customer privacy instance with `getCustomerPrivacy()`.",
     "type": "hook",
     "defaultExample": {
       "description": "This is the default example",
@@ -11842,24 +12171,6 @@
               }
             }
           ]
-        },
-        {
-          "title": "getCustomerPrivacyRequired",
-          "examples": [
-            {
-              "description": "Returns the value of `window.Shopify.customerPrivacy`, and throws an error if it doesn't exist.",
-              "codeblock": {
-                "title": "",
-                "tabs": [
-                  {
-                    "title": "JavaScript",
-                    "code": "import {getCustomerPrivacyRequired} from '@shopify/hydrogen';\nimport {useEffect} from 'react';\n\nexport function MyComponent() {\n  useEffect(() =&gt; {\n    // This throws if the customer privacy is not available.\n    const customerPrivacy = getCustomerPrivacyRequired();\n    console.log('Customer privacy:', customerPrivacy);\n  }, []);\n}\n",
-                    "language": "js"
-                  }
-                ]
-              }
-            }
-          ]
         }
       ]
     }
@@ -11872,7 +12183,7 @@
       {
         "name": "createStorefrontClient",
         "type": "utility",
-        "url": "/docs/api/hydrogen/2024-01/utilities/createstorefrontclient"
+        "url": "/docs/api/hydrogen/2024-04/utilities/createstorefrontclient"
       }
     ],
     "description": "\nThe `createCustomerAccountClient` function creates a GraphQL client for querying the [Customer Account API](https://shopify.dev/docs/api/customer). It also provides methods to authenticate and check if the user is logged in.",
@@ -12339,7 +12650,7 @@
       {
         "name": "getPaginationVariables",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2024-01/utilities/getpaginationvariables"
+        "url": "/docs/api/hydrogen/2024-04/utilities/getpaginationvariables"
       }
     ],
     "description": "The [Storefront API uses cursors](https://shopify.dev/docs/api/usage/pagination-graphql) to paginate through lists of data and the `<Pagination />` component makes it easy to paginate data from the Storefront API. It is important for pagination state to be maintained in the URL, so that the user can navigate to a product and return back to the same scrolled position in a list. It is also important that the list state is shareable via URL. The `<Pagination>` component provides a render prop with properties to load more elements into your list.",
@@ -12522,7 +12833,7 @@
       {
         "name": "Pagination",
         "type": "components",
-        "url": "/docs/api/hydrogen/2024-01/components/pagination"
+        "url": "/docs/api/hydrogen/2024-04/components/pagination"
       }
     ],
     "description": "The `getPaginationVariables` function is used with the [`<Pagination>`](/docs/api/hydrogen/components/pagnination) component to generate the variables needed to fetch paginated data from the Storefront API. The returned variables should be used within your storefront GraphQL query.",
@@ -12591,7 +12902,7 @@
       {
         "name": "getSelectedProductOptions",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2024-01/utilities/getselectedproductoptions"
+        "url": "/docs/api/hydrogen/2024-04/utilities/getselectedproductoptions"
       }
     ],
     "description": "The `VariantSelector` component helps you build a form for selecting available variants of a product. It is important for variant selection state to be maintained in the URL, so that the user can navigate to a product and return back to the same variant selection. It is also important that the variant selection state is shareable via URL. The `VariantSelector` component provides a render prop that renders for each product option.",
@@ -12624,7 +12935,7 @@
             "filePath": "/product/VariantSelector.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "VariantSelectorProps",
-            "value": "{\n  /** The product handle for all of the variants */\n  handle: string;\n  /** Product options from the [Storefront API](/docs/api/storefront/2024-01/objects/ProductOption). Make sure both `name` and `values` are apart of your query. */\n  options: Array<PartialDeep<ProductOption>> | undefined;\n  /** Product variants from the [Storefront API](/docs/api/storefront/2024-01/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`. */\n  variants?:\n    | PartialDeep<ProductVariantConnection>\n    | Array<PartialDeep<ProductVariant>>;\n  /** By default all products are under /products. Use this prop to provide a custom path. */\n  productPath?: string;\n  children: ({option}: {option: VariantOption}) => ReactNode;\n}",
+            "value": "{\n  /** The product handle for all of the variants */\n  handle: string;\n  /** Product options from the [Storefront API](/docs/api/storefront/2024-04/objects/ProductOption). Make sure both `name` and `values` are apart of your query. */\n  options: Array<PartialDeep<ProductOption>> | undefined;\n  /** Product variants from the [Storefront API](/docs/api/storefront/2024-04/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`. */\n  variants?:\n    | PartialDeep<ProductVariantConnection>\n    | Array<PartialDeep<ProductVariant>>;\n  /** By default all products are under /products. Use this prop to provide a custom path. */\n  productPath?: string;\n  children: ({option}: {option: VariantOption}) => ReactNode;\n}",
             "description": "",
             "members": [
               {
@@ -12639,14 +12950,14 @@
                 "syntaxKind": "PropertySignature",
                 "name": "options",
                 "value": "PartialObjectDeep<ProductOption, {}>[]",
-                "description": "Product options from the [Storefront API](/docs/api/storefront/2024-01/objects/ProductOption). Make sure both `name` and `values` are apart of your query."
+                "description": "Product options from the [Storefront API](/docs/api/storefront/2024-04/objects/ProductOption). Make sure both `name` and `values` are apart of your query."
               },
               {
                 "filePath": "/product/VariantSelector.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "variants",
                 "value": "PartialObjectDeep<ProductVariantConnection, {}> | PartialObjectDeep<ProductVariant, {}>[]",
-                "description": "Product variants from the [Storefront API](/docs/api/storefront/2024-01/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`.",
+                "description": "Product variants from the [Storefront API](/docs/api/storefront/2024-04/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`.",
                 "isOptional": true
               },
               {
@@ -12753,10 +13064,10 @@
       {
         "name": "VariantSelector",
         "type": "components",
-        "url": "/docs/api/hydrogen/2024-01/components/variantselector"
+        "url": "/docs/api/hydrogen/2024-04/components/variantselector"
       }
     ],
-    "description": "The `getSelectedProductOptions` returns the selected options from the Request search parameters. The selected options can then be easily passed to your GraphQL query with [`variantBySelectedOptions`](https://shopify.dev/docs/api/storefront/2024-01/objects/product#field-product-variantbyselectedoptions).",
+    "description": "The `getSelectedProductOptions` returns the selected options from the Request search parameters. The selected options can then be easily passed to your GraphQL query with [`variantBySelectedOptions`](https://shopify.dev/docs/api/storefront/2024-04/objects/product#field-product-variantbyselectedoptions).",
     "type": "component",
     "defaultExample": {
       "description": "I am the default example",
@@ -12916,7 +13227,7 @@
             "filePath": "/routing/redirect.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontRedirect",
-            "value": "{\n  /** The [Storefront client](/docs/api/hydrogen/2024-01/utilities/createstorefrontclient) instance */\n  storefront: Storefront<I18nBase>;\n  /** The [MDN Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object that was passed to the `server.ts` request handler. */\n  request: Request;\n  /** The [MDN Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) object created by `handleRequest` */\n  response?: Response;\n  /** By default the `/admin` route is redirected to the Shopify Admin page for the current storefront. Disable this redirect by passing `true`. */\n  noAdminRedirect?: boolean;\n  /** By default, query parameters are not used to match redirects. Set this to `true` if you'd like redirects to be query parameter sensitive */\n  matchQueryParams?: boolean;\n}",
+            "value": "{\n  /** The [Storefront client](/docs/api/hydrogen/2024-04/utilities/createstorefrontclient) instance */\n  storefront: Storefront<I18nBase>;\n  /** The [MDN Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object that was passed to the `server.ts` request handler. */\n  request: Request;\n  /** The [MDN Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) object created by `handleRequest` */\n  response?: Response;\n  /** By default the `/admin` route is redirected to the Shopify Admin page for the current storefront. Disable this redirect by passing `true`. */\n  noAdminRedirect?: boolean;\n  /** By default, query parameters are not used to match redirects. Set this to `true` if you'd like redirects to be query parameter sensitive */\n  matchQueryParams?: boolean;\n}",
             "description": "",
             "members": [
               {
@@ -12924,7 +13235,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "storefront",
                 "value": "Storefront<I18nBase>",
-                "description": "The [Storefront client](/docs/api/hydrogen/2024-01/utilities/createstorefrontclient) instance"
+                "description": "The [Storefront client](/docs/api/hydrogen/2024-04/utilities/createstorefrontclient) instance"
               },
               {
                 "filePath": "/routing/redirect.ts",
@@ -13293,11 +13604,364 @@
     ]
   },
   {
+    "name": "getSeoMeta",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "Generate a [Remix meta array](https://remix.run/docs/en/main/route/meta) from one or more SEO configuration objects. Pass SEO configuration for the parent route(s) and the current route to preserve meta data for all active routes. Similar to [`Object.assign()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign), each property is overwritten based on the object order. The exception is `jsonLd`, which is preserved so that each route has it's own independent jsonLd meta data. Learn more about [how SEO works in Hydrogen](https://shopify.dev/docs/custom-storefronts/hydrogen/seo).",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {getSeoMeta} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  const {shop} = await context.storefront.query(`\n    query layout {\n      shop {\n        name\n        description\n      }\n    }\n  `);\n\n  return {\n    seo: {\n      title: shop.title,\n      description: shop.description,\n    },\n  };\n}\n\nexport const meta = ({data, matches}) =&gt; {\n  // Pass one or more arguments, preserving properties from parent routes\n  return getSeoMeta(matches[0].data.seo, data.seo);\n};\n",
+            "language": "js"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {MetaFunction} from '@remix-run/react';\nimport {LoaderFunctionArgs} from '@remix-run/server-runtime';\nimport {getSeoMeta} from '@shopify/hydrogen';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const {shop} = await context.storefront.query(`\n    query layout {\n      shop {\n        name\n        description\n      }\n    }\n  `);\n\n  return {\n    seo: {\n      title: shop.title,\n      description: shop.description,\n    },\n  };\n}\n\nexport const meta: MetaFunction&lt;typeof loader&gt; = ({data, matches}) =&gt; {\n  // Pass one or more arguments, preserving properties from parent routes\n  return getSeoMeta((matches as any).data.seo, data!.seo);\n};\n",
+            "language": "ts"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "getSeoMeta",
+        "description": "",
+        "type": "GetSeoMetaTypeForDocs",
+        "typeDefinitions": {
+          "GetSeoMetaTypeForDocs": {
+            "filePath": "/seo/getSeoMeta.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "GetSeoMetaTypeForDocs",
+            "value": "{\n  /** `getSeoMeta` takes an arbitrary number of configuration object parameters. Values in each object are overwritten based on the object order. \\`jsonLd\\` properties are preserved between each configuration object. */\n  seoInputs: SeoConfig[];\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/seo/getSeoMeta.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "seoInputs",
+                "value": "SeoConfig[]",
+                "description": "`getSeoMeta` takes an arbitrary number of configuration object parameters. Values in each object are overwritten based on the object order. \\`jsonLd\\` properties are preserved between each configuration object."
+              }
+            ]
+          },
+          "SeoConfig": {
+            "filePath": "/seo/generate-seo-tags.ts",
+            "name": "SeoConfig",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "title",
+                "value": "Maybe<string>",
+                "description": "The `title` HTML element defines the document's title that is shown in a browser's title bar or a page's tab. It only contains text; tags within the element are ignored.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "titleTemplate",
+                "value": "string",
+                "description": "Generate the title from a template that includes a `%s` placeholder for the title.",
+                "isOptional": true,
+                "examples": [
+                  {
+                    "title": "Example",
+                    "description": "",
+                    "tabs": [
+                      {
+                        "code": "{\n  title: 'My Page',\n  titleTemplate: 'My Site - %s',\n}",
+                        "title": "Example"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "media",
+                "value": "string | Partial<SeoMedia> | (string | Partial<SeoMedia>)[]",
+                "description": "The media associated with the given page (images, videos, etc). If you pass a string, it will be used as the `og:image` meta tag. If you pass an object or an array of objects, that will be used to generate `og:<type of media>` meta tags. The `url` property should be the URL of the media. The `height` and `width` properties are optional and should be the height and width of the media. The `altText` property is optional and should be a description of the media.",
+                "isOptional": true,
+                "examples": [
+                  {
+                    "title": "Example",
+                    "description": "",
+                    "tabs": [
+                      {
+                        "code": "{\n  media: [\n    {\n      url: 'https://example.com/image.jpg',\n      type: 'image',\n      height: '400',\n      width: '400',\n      altText: 'A custom snowboard with an alpine color pallet.',\n    }\n  ]\n}",
+                        "title": "Example"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "description",
+                "value": "Maybe<string>",
+                "description": "The description of the page. This is used in the `name=\"description\"` meta tag as well as the `og:description` meta tag.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "url",
+                "value": "Maybe<string>",
+                "description": "The canonical URL of the page. This is used to tell search engines which URL is the canonical version of a page. This is useful when you have multiple URLs that point to the same page. The value here will be used in the `rel=\"canonical\"` link tag as well as the `og:url` meta tag.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "handle",
+                "value": "Maybe<string>",
+                "description": "The handle is used to generate the `twitter:site` and `twitter:creator` meta tags. Include the `@` symbol in the handle.",
+                "isOptional": true,
+                "examples": [
+                  {
+                    "title": "Example",
+                    "description": "",
+                    "tabs": [
+                      {
+                        "code": "{\n  handle: '@shopify'\n}",
+                        "title": "Example"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "jsonLd",
+                "value": "WithContext<Thing> | WithContext<Thing>[]",
+                "description": "The `jsonLd` property is used to generate the `application/ld+json` script tag. This is used to provide structured data to search engines. The value should be an object that conforms to the schema.org spec. The `type` property should be the type of schema you are using. The `type` property is required and should be one of the following:\n\n- `Product` - `ItemList` - `Organization` - `WebSite` - `WebPage` - `BlogPosting` - `Thing`\n\nThe value is validated via [schema-dts](https://www.npmjs.com/package/schema-dts)",
+                "isOptional": true,
+                "examples": [
+                  {
+                    "title": "Example",
+                    "description": "",
+                    "tabs": [
+                      {
+                        "code": "{\n  jsonLd: {\n    '@context': 'https://schema.org',\n    '@type': 'Product',\n    name: 'My Product',\n    image: 'https://hydrogen.shop/image.jpg',\n    description: 'A product that is great',\n    sku: '12345',\n    mpn: '12345',\n    brand: {\n      '@type': 'Thing',\n      name: 'My Brand',\n    },\n    aggregateRating: {\n      '@type': 'AggregateRating',\n      ratingValue: '4.5',\n      reviewCount: '100',\n    },\n    offers: {\n      '@type': 'Offer',\n      priceCurrency: 'USD',\n      price: '100',\n      priceValidUntil: '2020-11-05',\n      itemCondition: 'https://schema.org/NewCondition',\n      availability: 'https://schema.org/InStock',\n      seller: {\n        '@type': 'Organization',\n        name: 'My Brand',\n      },\n    },\n  }\n}",
+                        "title": "Example"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "alternates",
+                "value": "LanguageAlternate | LanguageAlternate[]",
+                "description": "The `alternates` property is used to specify the language and geographical targeting when you have multiple versions of the same page in different languages. The `url` property tells search engines about these variations and helps them to serve the correct version to their users.",
+                "isOptional": true,
+                "examples": [
+                  {
+                    "title": "Example",
+                    "description": "",
+                    "tabs": [
+                      {
+                        "code": "{\n  alternates: [\n    {\n      language: 'en-US',\n      url: 'https://hydrogen.shop/en-us',\n      default: true,\n    },\n    {\n      language: 'fr-CA',\n      url: 'https://hydrogen.shop/fr-ca',\n    },\n  ]\n}",
+                        "title": "Example"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "robots",
+                "value": "RobotsOptions",
+                "description": "The `robots` property is used to specify the robots meta tag. This is used to tell search engines which pages should be indexed and which should not.",
+                "isOptional": true
+              }
+            ],
+            "value": "export interface SeoConfig {\n  /**\n   * The `title` HTML element defines the document's title that is shown in a browser's title bar or a page's tab. It\n   * only contains text; tags within the element are ignored.\n   *\n   * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/title\n   */\n  title?: Maybe<string>;\n  /**\n   * Generate the title from a template that includes a `%s` placeholder for the title.\n   *\n   * @example\n   * ```js\n   * {\n   *   title: 'My Page',\n   *   titleTemplate: 'My Site - %s',\n   * }\n   * ```\n   */\n  titleTemplate?: Maybe<string> | null;\n  /**\n   * The media associated with the given page (images, videos, etc). If you pass a string, it will be used as the\n   * `og:image` meta tag. If you pass an object or an array of objects, that will be used to generate `og:<type of\n   * media>` meta tags. The `url` property should be the URL of the media. The `height` and `width` properties are\n   * optional and should be the height and width of the media. The `altText` property is optional and should be a\n   * description of the media.\n   *\n   * @example\n   * ```js\n   * {\n   *   media: [\n   *     {\n   *       url: 'https://example.com/image.jpg',\n   *       type: 'image',\n   *       height: '400',\n   *       width: '400',\n   *       altText: 'A custom snowboard with an alpine color pallet.',\n   *     }\n   *   ]\n   * }\n   * ```\n   *\n   */\n  media?:\n    | Maybe<string>\n    | Partial<SeoMedia>\n    | (Partial<SeoMedia> | Maybe<string>)[];\n  /**\n   * The description of the page. This is used in the `name=\"description\"` meta tag as well as the `og:description` meta\n   * tag.\n   *\n   * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta\n   */\n  description?: Maybe<string>;\n  /**\n   * The canonical URL of the page. This is used to tell search engines which URL is the canonical version of a page.\n   * This is useful when you have multiple URLs that point to the same page. The value here will be used in the\n   * `rel=\"canonical\"` link tag as well as the `og:url` meta tag.\n   *\n   * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link\n   */\n  url?: Maybe<string>;\n  /**\n   * The handle is used to generate the `twitter:site` and `twitter:creator` meta tags. Include the `@` symbol in the\n   * handle.\n   *\n   * @example\n   * ```js\n   * {\n   *   handle: '@shopify'\n   * }\n   * ```\n   */\n  handle?: Maybe<string>;\n  /**\n   * The `jsonLd` property is used to generate the `application/ld+json` script tag. This is used to provide structured\n   * data to search engines. The value should be an object that conforms to the schema.org spec. The `type` property\n   * should be the type of schema you are using. The `type` property is required and should be one of the following:\n   *\n   * - `Product`\n   * - `ItemList`\n   * - `Organization`\n   * - `WebSite`\n   * - `WebPage`\n   * - `BlogPosting`\n   * - `Thing`\n   *\n   * The value is validated via [schema-dts](https://www.npmjs.com/package/schema-dts)\n   *\n   * @example\n   * ```js\n   * {\n   *   jsonLd: {\n   *     '@context': 'https://schema.org',\n   *     '@type': 'Product',\n   *     name: 'My Product',\n   *     image: 'https://hydrogen.shop/image.jpg',\n   *     description: 'A product that is great',\n   *     sku: '12345',\n   *     mpn: '12345',\n   *     brand: {\n   *       '@type': 'Thing',\n   *       name: 'My Brand',\n   *     },\n   *     aggregateRating: {\n   *       '@type': 'AggregateRating',\n   *       ratingValue: '4.5',\n   *       reviewCount: '100',\n   *     },\n   *     offers: {\n   *       '@type': 'Offer',\n   *       priceCurrency: 'USD',\n   *       price: '100',\n   *       priceValidUntil: '2020-11-05',\n   *       itemCondition: 'https://schema.org/NewCondition',\n   *       availability: 'https://schema.org/InStock',\n   *       seller: {\n   *         '@type': 'Organization',\n   *         name: 'My Brand',\n   *       },\n   *     },\n   *   }\n   * }\n   * ```\n   *\n   * @see https://schema.org/docs/schemas.html\n   * @see https://developers.google.com/search/docs/guides/intro-structured-data\n   * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script\n   *\n   */\n  jsonLd?: WithContext<Thing> | WithContext<Thing>[];\n  /**\n   * The `alternates` property is used to specify the language and geographical targeting when you have multiple\n   * versions of the same page in different languages. The `url` property tells search engines about these variations\n   * and helps them to serve the correct version to their users.\n   *\n   * @example\n   * ```js\n   * {\n   *   alternates: [\n   *     {\n   *       language: 'en-US',\n   *       url: 'https://hydrogen.shop/en-us',\n   *       default: true,\n   *     },\n   *     {\n   *       language: 'fr-CA',\n   *       url: 'https://hydrogen.shop/fr-ca',\n   *     },\n   *   ]\n   * }\n   * ```\n   *\n   * @see https://support.google.com/webmasters/answer/189077?hl=en\n   */\n  alternates?: LanguageAlternate | LanguageAlternate[];\n  /**\n   * The `robots` property is used to specify the robots meta tag. This is used to tell search engines which pages\n   * should be indexed and which should not.\n   *\n   * @see https://developers.google.com/search/reference/robots_meta_tag\n   */\n  robots?: RobotsOptions;\n}"
+          },
+          "SeoMedia": {
+            "filePath": "/seo/generate-seo-tags.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "SeoMedia",
+            "value": "{\n  /**\n   * Used to generate og:<type of media> meta tag\n   */\n  type: 'image' | 'video' | 'audio';\n  /**\n   * The url value populates both url and secure_url and is used to infer the og:<type of media>:type meta tag.\n   */\n  url: Maybe<string> | undefined;\n  /**\n   * The height in pixels of the media. This is used to generate the og:<type of media>:height meta tag.\n   */\n  height: Maybe<number> | undefined;\n  /**\n   * The width in pixels of the media. This is used to generate the og:<type of media>:width meta tag.\n   */\n  width: Maybe<number> | undefined;\n  /**\n   * The alt text for the media. This is used to generate the og:<type of media>:alt meta tag.\n   */\n  altText: Maybe<string> | undefined;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "type",
+                "value": "\"image\" | \"video\" | \"audio\"",
+                "description": "Used to generate og:<type of media> meta tag"
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "url",
+                "value": "string",
+                "description": "The url value populates both url and secure_url and is used to infer the og:<type of media>:type meta tag."
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "height",
+                "value": "number",
+                "description": "The height in pixels of the media. This is used to generate the og:<type of media>:height meta tag."
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "width",
+                "value": "number",
+                "description": "The width in pixels of the media. This is used to generate the og:<type of media>:width meta tag."
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "altText",
+                "value": "string",
+                "description": "The alt text for the media. This is used to generate the og:<type of media>:alt meta tag."
+              }
+            ]
+          },
+          "LanguageAlternate": {
+            "filePath": "/seo/generate-seo-tags.ts",
+            "name": "LanguageAlternate",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "language",
+                "value": "string",
+                "description": "Language code for the alternate page. This is used to generate the hreflang meta tag property."
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "default",
+                "value": "boolean",
+                "description": "Whether the alternate page is the default page. This will add the `x-default` attribution to the language code.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "url",
+                "value": "string",
+                "description": "The url of the alternate page. This is used to generate the hreflang meta tag property."
+              }
+            ],
+            "value": "export interface LanguageAlternate {\n  /**\n   * Language code for the alternate page. This is used to generate the hreflang meta tag property.\n   */\n  language: string;\n  /**\n   * Whether the alternate page is the default page. This will add the `x-default` attribution to the language code.\n   */\n  default?: boolean;\n  /**\n   * The url of the alternate page. This is used to generate the hreflang meta tag property.\n   */\n  url: string;\n}"
+          },
+          "RobotsOptions": {
+            "filePath": "/seo/generate-seo-tags.ts",
+            "name": "RobotsOptions",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "maxImagePreview",
+                "value": "\"none\" | \"standard\" | \"large\"",
+                "description": "Set the maximum size of an image preview for this page in a search results Can be one of the following:\n\n- `none` - No image preview is to be shown. - `standard` - A default image preview may be shown. - `large` - A larger image preview, up to the width of the viewport, may be shown.\n\nIf no value is specified a default image preview size is used.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "maxSnippet",
+                "value": "number",
+                "description": "A number representing the maximum of amount characters to use as a textual snippet for a search result. This value can also be set to one of the following special values:\n\n- 0 - No snippet is to be shown. Equivalent to nosnippet. - 1 - The Search engine will choose the snippet length that it believes is most effective to help users discover   your content and direct users to your site - -1 - No limit on the number of characters that can be shown in the snippet.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "maxVideoPreview",
+                "value": "number",
+                "description": "The maximum number of seconds for videos on this page to show in search results. This value can also be set to one of the following special values:\n\n- 0 - A static image may be used with the `maxImagePreview` setting. - 1 - There is no limit to the size of the video preview.\n\nThis applies to all forms of search results (at Google: web search, Google Images, Google Videos, Discover, Assistant).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "noArchive",
+                "value": "boolean",
+                "description": "Do not show a cached link in search results.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "noFollow",
+                "value": "boolean",
+                "description": "Do not follow the links on this page.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "noImageIndex",
+                "value": "boolean",
+                "description": "Do not index images on this page.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "noIndex",
+                "value": "boolean",
+                "description": "Do not show this page, media, or resource in search results.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "noSnippet",
+                "value": "boolean",
+                "description": "Do not show a text snippet or video preview in the search results for this page.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "noTranslate",
+                "value": "boolean",
+                "description": "Do not offer translation of this page in search results.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/seo/generate-seo-tags.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "unavailableAfter",
+                "value": "string",
+                "description": "Do not show this page in search results after the specified date/time.",
+                "isOptional": true
+              }
+            ],
+            "value": "export interface RobotsOptions {\n  /**\n   * Set the maximum size of an image preview for this page in a search results Can be one of the following:\n   *\n   * - `none` - No image preview is to be shown.\n   * - `standard` - A default image preview may be shown.\n   * - `large` - A larger image preview, up to the width of the viewport, may be shown.\n   *\n   * If no value is specified a default image preview size is used.\n   */\n  maxImagePreview?: 'none' | 'standard' | 'large';\n  /**\n   * A number representing the maximum of amount characters to use as a textual snippet for a search result. This value\n   * can also be set to one of the following special values:\n   *\n   * - 0 - No snippet is to be shown. Equivalent to nosnippet.\n   * - 1 - The Search engine will choose the snippet length that it believes is most effective to help users discover\n   *   your content and direct users to your site\n   * - -1 - No limit on the number of characters that can be shown in the snippet.\n   */\n  maxSnippet?: number;\n  /**\n   * The maximum number of seconds for videos on this page to show in search results. This value can also be set to one\n   * of the following special values:\n   *\n   * - 0 - A static image may be used with the `maxImagePreview` setting.\n   * - 1 - There is no limit to the size of the video preview.\n   *\n   * This applies to all forms of search results (at Google: web search, Google Images, Google Videos, Discover,\n   * Assistant).\n   */\n  maxVideoPreview?: number;\n  /**\n   * Do not show a cached link in search results.\n   */\n  noArchive?: boolean;\n  /**\n   * Do not follow the links on this page.\n   *\n   * @see https://developers.google.com/search/docs/advanced/guidelines/qualify-outbound-links\n   */\n  noFollow?: boolean;\n  /**\n   * Do not index images on this page.\n   */\n  noImageIndex?: boolean;\n  /**\n   * Do not show this page, media, or resource in search results.\n   */\n  noIndex?: boolean;\n  /**\n   * Do not show a text snippet or video preview in the search results for this page.\n   */\n  noSnippet?: boolean;\n  /**\n   * Do not offer translation of this page in search results.\n   */\n  noTranslate?: boolean;\n  /**\n   * Do not show this page in search results after the specified date/time.\n   */\n  unavailableAfter?: string;\n}"
+          }
+        }
+      }
+    ]
+  },
+  {
     "name": "Seo",
     "category": "components",
     "isVisualComponent": false,
     "related": [],
-    "description": "The `<Seo />` component renders SEO meta tags in the document `head`. Add the `<Seo />` to your `root.jsx` before the `<Meta />` and `<Link />` components. SEO metadata is set on a per-route basis using Remix [loader functions](https://remix.run/docs/en/v1/guides/data-loading). Learn more about [how SEO works in Hydrogen](https://shopify.dev/docs/custom-storefronts/hydrogen/seo).",
+    "description": "The `<Seo />` component renders SEO meta tags in the document `head`. Add the `<Seo />` to your `root.jsx` before the `<Meta />` and `<Link />` components. SEO metadata is set on a per-route basis using Remix [loader functions](https://remix.run/docs/en/v1/guides/data-loading). Learn more about [how SEO works in Hydrogen](https://shopify.dev/docs/custom-storefronts/hydrogen/seo).\n  \n  **Note: the Seo component is deprecated** - Use [getSeoMeta](/docs/api/hydrogen/utilities/getseometa) to migrate.",
     "type": "component",
     "defaultExample": {
       "description": "I am the default example",
@@ -13630,7 +14294,7 @@
             "filePath": "/Image.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "HydrogenImageBaseProps",
-            "value": "{\n  /** The aspect ratio of the image, in the format of `width/height`.\n   *\n   * @example\n   * ```\n   * <Image data={productImage} aspectRatio=\"4/5\" />\n   * ```\n   */\n  aspectRatio?: string;\n  /** The crop position of the image.\n   *\n   * @remarks\n   * In the event that AspectRatio is set, without specifying a crop,\n   * the Shopify CDN won't return the expected image.\n   *\n   * @defaultValue `center`\n   */\n  crop?: Crop;\n  /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2024-01/objects/Image) object. Must be an Image object.\n   *\n   * @example\n   * ```\n   * import {IMAGE_FRAGMENT, Image} from '@shopify/hydrogen';\n   *\n   * export const IMAGE_QUERY = `#graphql\n   * ${IMAGE_FRAGMENT}\n   * query {\n   *   product {\n   *     featuredImage {\n   *       ...Image\n   *     }\n   *   }\n   * }`\n   *\n   * <Image\n   *   data={productImage}\n   *   sizes=\"(min-width: 45em) 50vw, 100vw\"\n   *   aspectRatio=\"4/5\"\n   * />\n   * ```\n   *\n   * Image: {@link https://shopify.dev/api/storefront/reference/common-objects/image}\n   */\n  data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;\n  /** A function that returns a URL string for an image.\n   *\n   * @remarks\n   * By default, this uses Shopify’s CDN {@link https://cdn.shopify.com/} but you can provide\n   * your own function to use a another provider, as long as they support URL based image transformations.\n   */\n  loader?: Loader;\n  /** An optional prop you can use to change the default srcSet generation behaviour */\n  srcSetOptions?: SrcSetOptions;\n}",
+            "value": "{\n  /** The aspect ratio of the image, in the format of `width/height`.\n   *\n   * @example\n   * ```\n   * <Image data={productImage} aspectRatio=\"4/5\" />\n   * ```\n   */\n  aspectRatio?: string;\n  /** The crop position of the image.\n   *\n   * @remarks\n   * In the event that AspectRatio is set, without specifying a crop,\n   * the Shopify CDN won't return the expected image.\n   *\n   * @defaultValue `center`\n   */\n  crop?: Crop;\n  /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2024-04/objects/Image) object. Must be an Image object.\n   *\n   * @example\n   * ```\n   * import {IMAGE_FRAGMENT, Image} from '@shopify/hydrogen';\n   *\n   * export const IMAGE_QUERY = `#graphql\n   * ${IMAGE_FRAGMENT}\n   * query {\n   *   product {\n   *     featuredImage {\n   *       ...Image\n   *     }\n   *   }\n   * }`\n   *\n   * <Image\n   *   data={productImage}\n   *   sizes=\"(min-width: 45em) 50vw, 100vw\"\n   *   aspectRatio=\"4/5\"\n   * />\n   * ```\n   *\n   * Image: {@link https://shopify.dev/api/storefront/reference/common-objects/image}\n   */\n  data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;\n  /** A function that returns a URL string for an image.\n   *\n   * @remarks\n   * By default, this uses Shopify’s CDN {@link https://cdn.shopify.com/} but you can provide\n   * your own function to use a another provider, as long as they support URL based image transformations.\n   */\n  loader?: Loader;\n  /** An optional prop you can use to change the default srcSet generation behaviour */\n  srcSetOptions?: SrcSetOptions;\n}",
             "description": "",
             "members": [
               {
@@ -13667,7 +14331,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "data",
                 "value": "PartialDeep<ImageType, {recurseIntoArrays: true}>",
-                "description": "Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2024-01/objects/Image) object. Must be an Image object.",
+                "description": "Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2024-04/objects/Image) object. Must be an Image object.",
                 "isOptional": true,
                 "examples": [
                   {
@@ -16471,7 +17135,7 @@
             "filePath": "/Image.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "HydrogenImageBaseProps",
-            "value": "{\n  /** The aspect ratio of the image, in the format of `width/height`.\n   *\n   * @example\n   * ```\n   * <Image data={productImage} aspectRatio=\"4/5\" />\n   * ```\n   */\n  aspectRatio?: string;\n  /** The crop position of the image.\n   *\n   * @remarks\n   * In the event that AspectRatio is set, without specifying a crop,\n   * the Shopify CDN won't return the expected image.\n   *\n   * @defaultValue `center`\n   */\n  crop?: Crop;\n  /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2024-01/objects/Image) object. Must be an Image object.\n   *\n   * @example\n   * ```\n   * import {IMAGE_FRAGMENT, Image} from '@shopify/hydrogen';\n   *\n   * export const IMAGE_QUERY = `#graphql\n   * ${IMAGE_FRAGMENT}\n   * query {\n   *   product {\n   *     featuredImage {\n   *       ...Image\n   *     }\n   *   }\n   * }`\n   *\n   * <Image\n   *   data={productImage}\n   *   sizes=\"(min-width: 45em) 50vw, 100vw\"\n   *   aspectRatio=\"4/5\"\n   * />\n   * ```\n   *\n   * Image: {@link https://shopify.dev/api/storefront/reference/common-objects/image}\n   */\n  data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;\n  /** A function that returns a URL string for an image.\n   *\n   * @remarks\n   * By default, this uses Shopify’s CDN {@link https://cdn.shopify.com/} but you can provide\n   * your own function to use a another provider, as long as they support URL based image transformations.\n   */\n  loader?: Loader;\n  /** An optional prop you can use to change the default srcSet generation behaviour */\n  srcSetOptions?: SrcSetOptions;\n}",
+            "value": "{\n  /** The aspect ratio of the image, in the format of `width/height`.\n   *\n   * @example\n   * ```\n   * <Image data={productImage} aspectRatio=\"4/5\" />\n   * ```\n   */\n  aspectRatio?: string;\n  /** The crop position of the image.\n   *\n   * @remarks\n   * In the event that AspectRatio is set, without specifying a crop,\n   * the Shopify CDN won't return the expected image.\n   *\n   * @defaultValue `center`\n   */\n  crop?: Crop;\n  /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2024-04/objects/Image) object. Must be an Image object.\n   *\n   * @example\n   * ```\n   * import {IMAGE_FRAGMENT, Image} from '@shopify/hydrogen';\n   *\n   * export const IMAGE_QUERY = `#graphql\n   * ${IMAGE_FRAGMENT}\n   * query {\n   *   product {\n   *     featuredImage {\n   *       ...Image\n   *     }\n   *   }\n   * }`\n   *\n   * <Image\n   *   data={productImage}\n   *   sizes=\"(min-width: 45em) 50vw, 100vw\"\n   *   aspectRatio=\"4/5\"\n   * />\n   * ```\n   *\n   * Image: {@link https://shopify.dev/api/storefront/reference/common-objects/image}\n   */\n  data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;\n  /** A function that returns a URL string for an image.\n   *\n   * @remarks\n   * By default, this uses Shopify’s CDN {@link https://cdn.shopify.com/} but you can provide\n   * your own function to use a another provider, as long as they support URL based image transformations.\n   */\n  loader?: Loader;\n  /** An optional prop you can use to change the default srcSet generation behaviour */\n  srcSetOptions?: SrcSetOptions;\n}",
             "description": "",
             "members": [
               {
@@ -16508,7 +17172,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "data",
                 "value": "PartialDeep<ImageType, {recurseIntoArrays: true}>",
-                "description": "Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2024-01/objects/Image) object. Must be an Image object.",
+                "description": "Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2024-04/objects/Image) object. Must be an Image object.",
                 "isOptional": true,
                 "examples": [
                   {
@@ -16732,7 +17396,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "measurement",
                 "value": "PartialDeep<UnitPriceMeasurement, {recurseIntoArrays: true}>",
-                "description": "A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/2024-01/objects/unitpricemeasurement).",
+                "description": "A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/2024-04/objects/unitpricemeasurement).",
                 "isOptional": true
               },
               {
@@ -16744,7 +17408,7 @@
                 "isOptional": true
               }
             ],
-            "value": "export interface MoneyPropsBase<ComponentGeneric extends React.ElementType> {\n  /** An HTML tag or React Component to be rendered as the base element wrapper. The default is `div`. */\n  as?: ComponentGeneric;\n  /** An object with fields that correspond to the Storefront API's [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2). */\n  data: PartialDeep<MoneyV2, {recurseIntoArrays: true}>;\n  /** Whether to remove the currency symbol from the output. */\n  withoutCurrency?: boolean;\n  /** Whether to remove trailing zeros (fractional money) from the output. */\n  withoutTrailingZeros?: boolean;\n  /** A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/2024-01/objects/unitpricemeasurement). */\n  measurement?: PartialDeep<UnitPriceMeasurement, {recurseIntoArrays: true}>;\n  /** Customizes the separator between the money output and the measurement output. Used with the `measurement` prop. Defaults to `'/'`. */\n  measurementSeparator?: ReactNode;\n}"
+            "value": "export interface MoneyPropsBase<ComponentGeneric extends React.ElementType> {\n  /** An HTML tag or React Component to be rendered as the base element wrapper. The default is `div`. */\n  as?: ComponentGeneric;\n  /** An object with fields that correspond to the Storefront API's [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2). */\n  data: PartialDeep<MoneyV2, {recurseIntoArrays: true}>;\n  /** Whether to remove the currency symbol from the output. */\n  withoutCurrency?: boolean;\n  /** Whether to remove trailing zeros (fractional money) from the output. */\n  withoutTrailingZeros?: boolean;\n  /** A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/2024-04/objects/unitpricemeasurement). */\n  measurement?: PartialDeep<UnitPriceMeasurement, {recurseIntoArrays: true}>;\n  /** Customizes the separator between the money output and the measurement output. Used with the `measurement` prop. Defaults to `'/'`. */\n  measurementSeparator?: ReactNode;\n}"
           }
         }
       }
@@ -16791,7 +17455,7 @@
             "filePath": "/ModelViewer.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ModelViewerBaseProps",
-            "value": "{\n  /** An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2024-01/objects/model3d). */\n  data: PartialDeep<Model3d, {recurseIntoArrays: true}>;\n  /** The callback to invoke when the 'error' event is triggered. Refer to [error in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-error). */\n  onError?: (event: Event) => void;\n  /** The callback to invoke when the `load` event is triggered. Refer to [load in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-load). */\n  onLoad?: (event: Event) => void;\n  /** The callback to invoke when the 'preload' event is triggered. Refer to [preload in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-preload). */\n  onPreload?: (event: Event) => void;\n  /** The callback to invoke when the 'model-visibility' event is triggered. Refer to [model-visibility in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-modelVisibility). */\n  onModelVisibility?: (event: Event) => void;\n  /** The callback to invoke when the 'progress' event is triggered. Refer to [progress in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-progress). */\n  onProgress?: (event: Event) => void;\n  /** The callback to invoke when the 'ar-status' event is triggered. Refer to [ar-status in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-arStatus). */\n  onArStatus?: (event: Event) => void;\n  /** The callback to invoke when the 'ar-tracking' event is triggered. Refer to [ar-tracking in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-arTracking). */\n  onArTracking?: (event: Event) => void;\n  /** The callback to invoke when the 'quick-look-button-tapped' event is triggered. Refer to [quick-look-button-tapped in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-quickLookButtonTapped). */\n  onQuickLookButtonTapped?: (event: Event) => void;\n  /** The callback to invoke when the 'camera-change' event is triggered. Refer to [camera-change in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-stagingandcameras-events-cameraChange). */\n  onCameraChange?: (event: Event) => void;\n  /** The callback to invoke when the 'environment-change' event is triggered. Refer to [environment-change in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-lightingandenv-events-environmentChange).  */\n  onEnvironmentChange?: (event: Event) => void;\n  /**  The callback to invoke when the 'play' event is triggered. Refer to [play in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-animation-events-play). */\n  onPlay?: (event: Event) => void;\n  /**  The callback to invoke when the 'pause' event is triggered. Refer to [pause in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-animation-events-pause). */\n  onPause?: (event: Event) => void;\n  /** The callback to invoke when the 'scene-graph-ready' event is triggered. Refer to [scene-graph-ready in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-scenegraph-events-sceneGraphReady). */\n  onSceneGraphReady?: (event: Event) => void;\n}",
+            "value": "{\n  /** An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2024-04/objects/model3d). */\n  data: PartialDeep<Model3d, {recurseIntoArrays: true}>;\n  /** The callback to invoke when the 'error' event is triggered. Refer to [error in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-error). */\n  onError?: (event: Event) => void;\n  /** The callback to invoke when the `load` event is triggered. Refer to [load in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-load). */\n  onLoad?: (event: Event) => void;\n  /** The callback to invoke when the 'preload' event is triggered. Refer to [preload in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-preload). */\n  onPreload?: (event: Event) => void;\n  /** The callback to invoke when the 'model-visibility' event is triggered. Refer to [model-visibility in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-modelVisibility). */\n  onModelVisibility?: (event: Event) => void;\n  /** The callback to invoke when the 'progress' event is triggered. Refer to [progress in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-progress). */\n  onProgress?: (event: Event) => void;\n  /** The callback to invoke when the 'ar-status' event is triggered. Refer to [ar-status in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-arStatus). */\n  onArStatus?: (event: Event) => void;\n  /** The callback to invoke when the 'ar-tracking' event is triggered. Refer to [ar-tracking in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-arTracking). */\n  onArTracking?: (event: Event) => void;\n  /** The callback to invoke when the 'quick-look-button-tapped' event is triggered. Refer to [quick-look-button-tapped in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-quickLookButtonTapped). */\n  onQuickLookButtonTapped?: (event: Event) => void;\n  /** The callback to invoke when the 'camera-change' event is triggered. Refer to [camera-change in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-stagingandcameras-events-cameraChange). */\n  onCameraChange?: (event: Event) => void;\n  /** The callback to invoke when the 'environment-change' event is triggered. Refer to [environment-change in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-lightingandenv-events-environmentChange).  */\n  onEnvironmentChange?: (event: Event) => void;\n  /**  The callback to invoke when the 'play' event is triggered. Refer to [play in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-animation-events-play). */\n  onPlay?: (event: Event) => void;\n  /**  The callback to invoke when the 'pause' event is triggered. Refer to [pause in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-animation-events-pause). */\n  onPause?: (event: Event) => void;\n  /** The callback to invoke when the 'scene-graph-ready' event is triggered. Refer to [scene-graph-ready in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-scenegraph-events-sceneGraphReady). */\n  onSceneGraphReady?: (event: Event) => void;\n}",
             "description": "",
             "members": [
               {
@@ -16799,7 +17463,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "data",
                 "value": "PartialDeep<Model3d, {recurseIntoArrays: true}>",
-                "description": "An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2024-01/objects/model3d)."
+                "description": "An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2024-04/objects/model3d)."
               },
               {
                 "filePath": "/ModelViewer.tsx",
@@ -16945,12 +17609,12 @@
             "tabs": [
               {
                 "title": "JavaScript",
-                "code": "import {ShopifyProvider, ShopPayButton} from '@shopify/hydrogen';\n\nexport default function App() {\n  return (\n    &lt;ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2024-01\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    &gt;\n      &lt;AddVariantQuantity1 variantId=\"gid://shopify/ProductVariant/1\" /&gt;\n    &lt;/ShopifyProvider&gt;\n  );\n}\n\nexport function AddVariantQuantity1({variantId}) {\n  return &lt;ShopPayButton variantIds={[variantId]} /&gt;;\n}\n",
+                "code": "import {ShopifyProvider, ShopPayButton} from '@shopify/hydrogen';\n\nexport default function App() {\n  return (\n    &lt;ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2024-04\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    &gt;\n      &lt;AddVariantQuantity1 variantId=\"gid://shopify/ProductVariant/1\" /&gt;\n    &lt;/ShopifyProvider&gt;\n  );\n}\n\nexport function AddVariantQuantity1({variantId}) {\n  return &lt;ShopPayButton variantIds={[variantId]} /&gt;;\n}\n",
                 "language": "jsx"
               },
               {
                 "title": "TypeScript",
-                "code": "import {ShopifyProvider, ShopPayButton} from '@shopify/hydrogen';\n\nexport default function App() {\n  return (\n    &lt;ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2024-01\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    &gt;\n      &lt;AddVariantQuantity1 variantId=\"gid://shopify/ProductVariant/1\" /&gt;\n    &lt;/ShopifyProvider&gt;\n  );\n}\n\nexport function AddVariantQuantity1({variantId}: {variantId: string}) {\n  return &lt;ShopPayButton variantIds={[variantId]} /&gt;;\n}\n",
+                "code": "import {ShopifyProvider, ShopPayButton} from '@shopify/hydrogen';\n\nexport default function App() {\n  return (\n    &lt;ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2024-04\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    &gt;\n      &lt;AddVariantQuantity1 variantId=\"gid://shopify/ProductVariant/1\" /&gt;\n    &lt;/ShopifyProvider&gt;\n  );\n}\n\nexport function AddVariantQuantity1({variantId}: {variantId: string}) {\n  return &lt;ShopPayButton variantIds={[variantId]} /&gt;;\n}\n",
                 "language": "tsx"
               }
             ],
@@ -17135,7 +17799,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "data",
                 "value": "PartialDeep<VideoType, {recurseIntoArrays: true}>",
-                "description": "An object with fields that correspond to the Storefront API's [Video object](https://shopify.dev/api/storefront/2024-01/objects/video)."
+                "description": "An object with fields that correspond to the Storefront API's [Video object](https://shopify.dev/api/storefront/2024-04/objects/video)."
               },
               {
                 "filePath": "/Video.tsx",
@@ -17154,7 +17818,7 @@
                 "isOptional": true
               }
             ],
-            "value": "export interface VideoProps {\n  /** An object with fields that correspond to the Storefront API's [Video object](https://shopify.dev/api/storefront/2024-01/objects/video). */\n  data: PartialDeep<VideoType, {recurseIntoArrays: true}>;\n  /** An object of image size options for the video's `previewImage`. Uses `shopifyImageLoader` to generate the `poster` URL. */\n  previewImageOptions?: Parameters<typeof shopifyLoader>[0];\n  /** Props that will be passed to the `video` element's `source` children elements. */\n  sourceProps?: HTMLAttributes<HTMLSourceElement> & {\n    'data-testid'?: string;\n  };\n}"
+            "value": "export interface VideoProps {\n  /** An object with fields that correspond to the Storefront API's [Video object](https://shopify.dev/api/storefront/2024-04/objects/video). */\n  data: PartialDeep<VideoType, {recurseIntoArrays: true}>;\n  /** An object of image size options for the video's `previewImage`. Uses `shopifyImageLoader` to generate the `poster` URL. */\n  previewImageOptions?: Parameters<typeof shopifyLoader>[0];\n  /** Props that will be passed to the `video` element's `source` children elements. */\n  sourceProps?: HTMLAttributes<HTMLSourceElement> & {\n    'data-testid'?: string;\n  };\n}"
           },
           "LoaderParams": {
             "filePath": "/Image.tsx",
@@ -17619,7 +18283,7 @@
               "name": "void",
               "value": "void"
             },
-            "value": "export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {\n  const {hasUserConsent = false, domain = ''} = options || {};\n  useEffect(() => {\n    const cookies = getShopifyCookies(document.cookie);\n\n    /**\n     * Set user and session cookies and refresh the expiry time\n     */\n    if (hasUserConsent) {\n      setCookie(\n        SHOPIFY_Y,\n        cookies[SHOPIFY_Y] || buildUUID(),\n        longTermLength,\n        domain,\n      );\n      setCookie(\n        SHOPIFY_S,\n        cookies[SHOPIFY_S] || buildUUID(),\n        shortTermLength,\n        domain,\n      );\n    } else {\n      setCookie(SHOPIFY_Y, '', 0, domain);\n      setCookie(SHOPIFY_S, '', 0, domain);\n    }\n  });\n}"
+            "value": "export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {\n  const {hasUserConsent = false, domain = ''} = options || {};\n  useEffect(() => {\n    const cookies = getShopifyCookies(document.cookie);\n\n    /**\n     * Set user and session cookies and refresh the expiry time\n     */\n    if (hasUserConsent) {\n      setCookie(\n        SHOPIFY_Y,\n        cookies[SHOPIFY_Y] || buildUUID(),\n        longTermLength,\n        domain,\n      );\n      setCookie(\n        SHOPIFY_S,\n        cookies[SHOPIFY_S] || buildUUID(),\n        shortTermLength,\n        domain,\n      );\n    } else {\n      setCookie(SHOPIFY_Y, '', 0, domain);\n      setCookie(SHOPIFY_S, '', 0, domain);\n    }\n  }, [options, hasUserConsent, domain]);\n}"
           },
           "UseShopifyCookiesOptions": {
             "filePath": "/useShopifyCookies.tsx",
@@ -18373,7 +19037,7 @@
               "name": "Promise<void>",
               "value": "Promise<void>"
             },
-            "value": "export function sendShopifyAnalytics(\n  event: ShopifyAnalytics,\n  shopDomain?: string,\n): Promise<void> {\n  const {eventName, payload} = event;\n  if (!payload.hasUserConsent) return Promise.resolve();\n\n  let events: ShopifyMonorailEvent[] = [];\n\n  if (eventName === AnalyticsEventName.PAGE_VIEW) {\n    const pageViewPayload = payload as ShopifyPageViewPayload;\n    events = events.concat(\n      trekkiePageView(pageViewPayload),\n      customerPageView(pageViewPayload),\n    );\n  } else if (eventName === AnalyticsEventName.ADD_TO_CART) {\n    events = events.concat(\n      customerAddToCart(payload as ShopifyAddToCartPayload),\n    );\n  }\n\n  if (events.length) {\n    return sendToShopify(events, shopDomain);\n  } else {\n    return Promise.resolve();\n  }\n}"
+            "value": "export function sendShopifyAnalytics(\n  event: ShopifyAnalytics,\n  shopDomain?: string,\n): Promise<void> {\n  const {eventName, payload} = event;\n  if (!payload.hasUserConsent) return Promise.resolve();\n\n  let events: ShopifyMonorailEvent[] = [];\n  const pageViewPayload = payload as ShopifyPageViewPayload;\n\n  if (eventName === AnalyticsEventName.PAGE_VIEW) {\n    events = events.concat(\n      trekkiePageView(pageViewPayload),\n      customerPageView(pageViewPayload),\n    );\n  } else if (eventName === AnalyticsEventName.ADD_TO_CART) {\n    events = events.concat(\n      customerAddToCart(payload as ShopifyAddToCartPayload),\n    );\n  } else if (eventName === AnalyticsEventName.PAGE_VIEW_2) {\n    events = events.concat(\n      trekkiePageView(pageViewPayload),\n      customerPageView2(pageViewPayload),\n    );\n  } else if (eventName === AnalyticsEventName.COLLECTION_VIEW) {\n    events = events.concat(customerCollectionView(pageViewPayload));\n  } else if (eventName === AnalyticsEventName.PRODUCT_VIEW) {\n    events = events.concat(customerProductView(pageViewPayload));\n  } else if (eventName === AnalyticsEventName.SEARCH_VIEW) {\n    events = events.concat(customerSearchView(pageViewPayload));\n  }\n\n  if (events.length) {\n    return sendToShopify(events, shopDomain);\n  } else {\n    return Promise.resolve();\n  }\n}"
           },
           "ShopifyAnalytics": {
             "filePath": "/analytics-types.ts",
@@ -18517,6 +19181,22 @@
                 "name": "products",
                 "value": "ShopifyAnalyticsProduct[]",
                 "description": "Product list.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "ccpaEnforced",
+                "value": "boolean",
+                "description": "Result of customerPrivacyApi.saleOfDataNotAllowed()",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "gdprEnforced",
+                "value": "boolean",
+                "description": "Result of customerPrivacyApi.notMarketingOrAnalyticsAllowed()",
                 "isOptional": true
               },
               {
@@ -18800,6 +19480,22 @@
                 "name": "products",
                 "value": "ShopifyAnalyticsProduct[]",
                 "description": "Product list.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "ccpaEnforced",
+                "value": "boolean",
+                "description": "Result of customerPrivacyApi.saleOfDataNotAllowed()",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "gdprEnforced",
+                "value": "boolean",
+                "description": "Result of customerPrivacyApi.notMarketingOrAnalyticsAllowed()",
                 "isOptional": true
               },
               {
