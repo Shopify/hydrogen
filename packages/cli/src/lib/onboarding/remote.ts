@@ -89,6 +89,7 @@ export async function setupRemoteTemplate(
     await handleDependencies(
       project.directory,
       controller,
+      options.packageManager,
       options.installDeps,
     );
 

@@ -1229,6 +1229,20 @@
           "name": "quickstart",
           "allowNo": false,
           "type": "boolean"
+        },
+        "package-manager": {
+          "env": "SHOPIFY_HYDROGEN_FLAG_PACKAGE_MANAGER",
+          "hidden": true,
+          "name": "package-manager",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "npm",
+            "yarn",
+            "pnpm",
+            "unknown"
+          ],
+          "type": "option"
         }
       },
       "hasDynamicHelp": false,
