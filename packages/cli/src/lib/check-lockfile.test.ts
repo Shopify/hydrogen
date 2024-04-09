@@ -63,6 +63,12 @@ describe('checkLockfileStatus()', () => {
         expect(outputMock.warn()).toMatch(
           / warning .+ Multiple lockfiles found .+/is,
         );
+        expect(outputMock.warn()).toMatch(
+          /package-lock\.json \(created by npm\)/is,
+        );
+        expect(outputMock.warn()).toMatch(
+          /pnpm-lock\.yaml \(created by pnpm\)/is,
+        );
       });
     });
 
