@@ -83,6 +83,7 @@ export default class DevVite extends Command {
 
     await runViteDev({
       ...flagsToCamelObject(flags),
+      customerAccountPush: flags['customer-account-push__unstable'],
       path: directory,
       isLocalDev: flags.diff,
       cliConfig: this.config,
