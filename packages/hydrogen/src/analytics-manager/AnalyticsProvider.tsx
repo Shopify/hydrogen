@@ -249,7 +249,7 @@ function register(key: string) {
 
 // This functions attempts to automatically determine if the user can be tracked if the
 // customer privacy API is available. If not, it will default to false.
-function shopifyCanTrack() {
+function shopifyCanTrack(): boolean {
   if (
     typeof window !== 'undefined' &&
     typeof window?.Shopify === 'object' &&
@@ -275,7 +275,7 @@ function AnalyticsProvider({
     customCanTrack ? true : false,
   );
   const [carts, setCarts] = useState<Carts>({cart: null, prevCart: null});
-  const [canTrack, setCanTrack] = useState(
+  const [canTrack, setCanTrack] = useState<() => boolean>(
     customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
   );
 

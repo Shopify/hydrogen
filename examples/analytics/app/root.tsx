@@ -101,7 +101,10 @@ export async function loader({context}: LoaderFunctionArgs) {
       header: await headerPromise,
       isLoggedIn: isLoggedInPromise,
       publicStoreDomain,
-      shop: getShopAnalytics(context),
+      shop: getShopAnalytics({
+        storefront,
+        publicStorefrontId: env.PUBLIC_STOREFRONT_ID
+      }),
       consent: {
         checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
         storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
