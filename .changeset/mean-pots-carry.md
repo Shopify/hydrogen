@@ -2,7 +2,7 @@
 'skeleton': patch
 ---
 
-If you deploy to Oxygen, please add `@shopify/mini-oxygen` as a dev dependency in your project for local development:
+Add `@shopify/mini-oxygen` as a dev dependency for local development:
 
 ```diff
   "devDependencies": {

@@ -2,4 +2,4 @@
 '@shopify/cli-hydrogen': patch
 ---
 
-List the uncommitted files that the deploy command errors on
+List uncommitted files in the `deploy` command's "uncommitted changes" error message.

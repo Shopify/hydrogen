@@ -3,4 +3,4 @@
 '@shopify/create-hydrogen': patch
 ---
 
-Add `--quickstart` flag option to init/create command
+Add `--quickstart` flag option to init/create command.

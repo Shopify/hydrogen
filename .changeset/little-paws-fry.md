@@ -2,7 +2,7 @@
 'skeleton': patch
 ---
 
-In Vite projects, the way that plugins are imported and the options passed to Remix have changed:
+Update Vite plugin imports, and how their options are passed to Remix:
 
 ```diff
 -import {hydrogen, oxygen} from '@shopify/cli-hydrogen/experimental-vite';
