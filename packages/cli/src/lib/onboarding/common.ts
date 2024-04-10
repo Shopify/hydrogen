@@ -31,8 +31,6 @@ import {
 import {
   outputDebug,
   formatPackageManagerCommand,
-  outputToken,
-  outputContent,
 } from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
 import {type AdminSession, login, renderLoginSuccess} from '../auth.js';

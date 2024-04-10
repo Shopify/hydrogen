@@ -13,7 +13,7 @@ import {getStorefrontEnvironments} from '../../../lib/graphql/admin/list-environ
 import {pushStorefrontEnvVariables} from '../../../lib/graphql/admin/push-variables.js';
 import {dummyListEnvironments} from '../../../lib/graphql/admin/test-helper.js';
 
-import {runEnvPush} from './push__unstable.js';
+import {runEnvPush} from './push.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
 
 vi.mock('@shopify/cli-kit/node/ui', async () => {
