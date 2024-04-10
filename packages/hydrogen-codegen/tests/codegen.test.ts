@@ -1,7 +1,7 @@
 import {describe, it, expect} from 'vitest';
 import path from 'node:path';
 import {executeCodegen} from '@graphql-codegen/cli';
-import {preset, schema, pluckConfig} from '../src/index.js';
+import {preset, getSchema, pluckConfig} from '../src/index.js';
 
 describe('Hydrogen Codegen', async () => {
   const getCodegenOptions = (fixture: string, output = 'out.d.ts') => ({
@@ -9,7 +9,7 @@ describe('Hydrogen Codegen', async () => {
     generates: {
       [output]: {
         preset,
-        schema,
+        schema: getSchema('storefront'),
         documents: path.join(__dirname, `fixtures/${fixture}`),
       },
     },
