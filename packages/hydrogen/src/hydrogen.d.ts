@@ -32,6 +32,23 @@ export interface HydrogenSession<
 }
 
 declare global {
+  interface Window {
+    privacyBanner: PrivacyBanner;
+    Shopify: {
+      customerPrivacy: CustomerPrivacy;
+    };
+  }
+  interface Document {
+    addEventListener<K extends keyof CustomEventMap>(
+      type: K,
+      listener: (this: Document, ev: CustomEventMap[K]) => void,
+    ): void;
+    removeEventListener<K extends keyof CustomEventMap>(
+      type: K,
+      listener: (this: Document, ev: CustomEventMap[K]) => void,
+    ): void;
+    dispatchEvent<K extends keyof CustomEventMap>(ev: CustomEventMap[K]): void;
+  }
   var __H2O_LOG_EVENT: undefined | ((event: RequestEventPayload) => void);
   var __remix_devServerHooks:
     | undefined

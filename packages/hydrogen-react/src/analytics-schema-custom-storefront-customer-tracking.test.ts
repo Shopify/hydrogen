@@ -40,7 +40,7 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
         shopifySalesChannel: ShopifySalesChannel.hydrogen,
         storefrontId: '1',
         acceptedLanguage: 'FR',
-        customerId: '1',
+        customerId: 'gid://shopify/Customer/1',
         pageType: 'index',
         resourceId: 'gid://shopify/Product/1',
         canonicalUrl: 'https://example.com',
@@ -56,7 +56,7 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
           event_name: 'page_rendered',
           hydrogenSubchannelId: '1',
           is_persistent_cookie: false,
-          customer_id: '1',
+          customer_id: 1,
           canonical_url: pageViewPayload.canonicalUrl,
         }),
       );

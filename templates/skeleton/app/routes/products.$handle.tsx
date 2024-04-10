@@ -12,7 +12,6 @@ import type {
   ProductVariantsQuery,
   ProductVariantFragment,
 } from 'storefrontapi.generated';
-
 import {
   Image,
   Money,

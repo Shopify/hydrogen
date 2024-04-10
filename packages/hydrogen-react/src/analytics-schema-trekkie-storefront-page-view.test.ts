@@ -42,7 +42,7 @@ describe(`analytics schema - trekkie storefront page view`, () => {
       shopifySalesChannel: ShopifySalesChannel.hydrogen,
       storefrontId: '1',
       acceptedLanguage: 'FR',
-      customerId: '1',
+      customerId: 'gid://shopify/Customer/1',
       pageType: 'product',
       resourceId: 'gid://shopify/Product/1',
     };
@@ -61,7 +61,7 @@ describe(`analytics schema - trekkie storefront page view`, () => {
         isPersistentCookie: false,
         pageType: 'product',
         contentLanguage: 'FR',
-        customerId: '1',
+        customerId: 1,
         resourceId: 1,
         resourceType: 'product',
       },
