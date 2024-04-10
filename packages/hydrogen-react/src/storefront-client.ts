@@ -2,7 +2,7 @@ import {SFAPI_VERSION} from './storefront-api-constants.js';
 
 export type StorefrontClientProps = {
   /** The host name of the domain (eg: `{shop}.myshopify.com`). */
-  storeDomain: string;
+  storeDomain?: string;
   /** The Storefront API delegate access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) and [delegate access token](https://shopify.dev/apps/auth/oauth/delegate-access-tokens) documentation for more details. */
   privateStorefrontToken?: string;
   /** The Storefront API access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */
@@ -17,28 +17,26 @@ export type StorefrontClientProps = {
   contentType?: 'json' | 'graphql';
 };
 
-const isMockShop = (domain: string): boolean => domain.includes('mock.shop');
+const MOCK_SHOP_DOMAIN = 'mock.shop';
+const isMockShop = (domain: string): boolean =>
+  domain.includes(MOCK_SHOP_DOMAIN);
 
 /**
  * The `createStorefrontClient()` function creates helpers that enable you to quickly query the Shopify Storefront API.
  *
  * When used on the server, it is recommended to use the `privateStorefrontToken` prop. When used on the client, it is recommended to use the `publicStorefrontToken` prop.
  */
-export function createStorefrontClient(
-  props: StorefrontClientProps,
-): StorefrontClientReturn {
-  const {
-    storeDomain,
-    privateStorefrontToken,
-    publicStorefrontToken,
-    storefrontApiVersion = SFAPI_VERSION,
-    contentType,
-  } = props;
-
+export function createStorefrontClient({
+  storeDomain,
+  privateStorefrontToken,
+  publicStorefrontToken,
+  storefrontApiVersion = SFAPI_VERSION,
+  contentType,
+}: StorefrontClientProps): StorefrontClientReturn {
   if (!storeDomain) {
-    throw new Error(
-      H2_PREFIX_ERROR +
-        `\`storeDomain\` is required when creating a new Storefront client.\nReceived "${storeDomain}".`,
+    storeDomain = MOCK_SHOP_DOMAIN;
+    warnOnce(
+      `No \`storeDomain\` was provided; defaulting to "${MOCK_SHOP_DOMAIN}".`,
     );
   }
 
