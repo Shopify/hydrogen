@@ -36,7 +36,7 @@ export function createStorefrontClient({
   if (!storeDomain) {
     storeDomain = MOCK_SHOP_DOMAIN;
     warnOnce(
-      `No \`storeDomain\` was provided; defaulting to "${MOCK_SHOP_DOMAIN}".`,
+      `storeDomain missing, defaulting to ${MOCK_SHOP_DOMAIN}`,
       'info',
     );
   }
