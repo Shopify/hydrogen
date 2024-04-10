@@ -1,9 +1,9 @@
-import path from 'node:path';
 import fs from 'node:fs/promises';
 import type {ChildProcess} from 'node:child_process';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
+import {relativePath, resolvePath} from '@shopify/cli-kit/node/path';
 import {copyPublicFiles} from './build.js';
 import {
   type RemixConfig,
@@ -40,7 +40,10 @@ import {setupLiveReload} from '../../lib/live-reload.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {findPort} from '../../lib/find-port.js';
-import {prepareDiffDirectory} from '../../lib/template-diff.js';
+import {
+  copyShopifyConfig,
+  prepareDiffDirectory,
+} from '../../lib/template-diff.js';
 import {
   startTunnelAndPushConfig,
   getDevConfigInBackground,
@@ -89,7 +92,10 @@ export default class Dev extends Command {
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Dev);
-    let directory = flags.path ? path.resolve(flags.path) : process.cwd();
+    const originalDirectory = flags.path
+      ? resolvePath(flags.path)
+      : process.cwd();
+    let directory = originalDirectory;
 
     if (flags.diff) {
       directory = await prepareDiffDirectory(directory, true);
@@ -102,11 +108,29 @@ export default class Dev extends Command {
       cliConfig: this.config,
     };
 
-    if (await hasViteConfig(directory ?? process.cwd())) {
-      const {runViteDev} = await import('./dev-vite.js');
-      await runViteDev(devParams);
-    } else {
-      await runDev(devParams);
+    const {close} = (await hasViteConfig(directory ?? process.cwd()))
+      ? await import('./dev-vite.js').then(({runViteDev}) =>
+          runViteDev(devParams),
+        )
+      : await runDev(devParams);
+
+    // Note: Shopify CLI is hooking into process events and calling process.exit.
+    // This means we are unable to hook into 'beforeExit' or 'SIGINT" events
+    // to cleanup resources. In addition, Miniflare uses `exit-hook` dependency
+    // to do the same thing. This is a workaround to ensure we cleanup resources:
+    let closingPromise: Promise<void>;
+    const processExit = process.exit;
+    // @ts-expect-error - Async function
+    process.exit = async (code?: number | undefined) => {
+      // This function will be called multiple times,
+      // but we only want to cleanup resources once.
+      closingPromise ??= close();
+      await closingPromise;
+      return processExit(code);
+    };
+
+    if (flags.diff) {
+      await copyShopifyConfig(directory, originalDirectory);
     }
   }
 }
@@ -178,8 +202,8 @@ export async function runDev({
   };
 
   const getFilePaths = (file: string) => {
-    const fileRelative = path.relative(root, file);
-    return [fileRelative, path.resolve(root, fileRelative)] as const;
+    const fileRelative = relativePath(root, file);
+    return [fileRelative, resolvePath(root, fileRelative)] as const;
   };
 
   const serverBundleExists = () => fileExists(buildPathWorkerFile);
@@ -263,7 +287,7 @@ export async function runDev({
 
     logInjectedVariables();
 
-    const host = (await tunnelPromise) ?? miniOxygen.listeningAt;
+    const host = (await tunnelPromise)?.host ?? miniOxygen.listeningAt;
 
     const cliCommand = await cliCommandPromise;
     enhanceH2Logs({host, cliCommand, ...remixConfig});
@@ -412,8 +436,13 @@ export async function runDev({
   return {
     getUrl: () => miniOxygen.listeningAt,
     async close() {
-      codegenProcess?.kill(0);
-      await Promise.all([closeWatcher(), miniOxygen?.close()]);
+      codegenProcess?.removeAllListeners('close');
+      codegenProcess?.kill('SIGINT');
+      await Promise.allSettled([
+        closeWatcher(),
+        miniOxygen?.close(),
+        Promise.resolve(tunnelPromise).then((tunnel) => tunnel?.cleanup?.()),
+      ]);
     },
   };
 }

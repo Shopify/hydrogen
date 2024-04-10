@@ -162,6 +162,12 @@ export async function startMiniOxygenRuntime({
     ? warmupWorkerdCache()
     : viteDevServer.httpServer?.once('listening', warmupWorkerdCache);
 
+  // Ensure MiniOxygen is disposed when Vite is closed
+  const viteClose = viteDevServer.close;
+  viteDevServer.close = async () => {
+    await Promise.allSettled([viteClose(), miniOxygen.dispose()]);
+  };
+
   return miniOxygen;
 }
 
