@@ -1,9 +1,9 @@
-import path from 'node:path';
 import fs from 'node:fs/promises';
 import type {ChildProcess} from 'node:child_process';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
+import {relativePath, resolvePath} from '@shopify/cli-kit/node/path';
 import {copyPublicFiles} from './build.js';
 import {
   type RemixConfig,
@@ -40,7 +40,10 @@ import {setupLiveReload} from '../../lib/live-reload.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
 import {findPort} from '../../lib/find-port.js';
-import {prepareDiffDirectory} from '../../lib/template-diff.js';
+import {
+  copyShopifyConfig,
+  prepareDiffDirectory,
+} from '../../lib/template-diff.js';
 import {
   startTunnelAndPushConfig,
   getDevConfigInBackground,
@@ -89,7 +92,10 @@ export default class Dev extends Command {
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Dev);
-    let directory = flags.path ? path.resolve(flags.path) : process.cwd();
+    const originalDirectory = flags.path
+      ? resolvePath(flags.path)
+      : process.cwd();
+    let directory = originalDirectory;
 
     if (flags.diff) {
       directory = await prepareDiffDirectory(directory, true);
@@ -107,6 +113,10 @@ export default class Dev extends Command {
       await runViteDev(devParams);
     } else {
       await runDev(devParams);
+    }
+
+    if (flags.diff) {
+      await copyShopifyConfig(directory, originalDirectory);
     }
   }
 }
@@ -178,8 +188,8 @@ export async function runDev({
   };
 
   const getFilePaths = (file: string) => {
-    const fileRelative = path.relative(root, file);
-    return [fileRelative, path.resolve(root, fileRelative)] as const;
+    const fileRelative = relativePath(root, file);
+    return [fileRelative, resolvePath(root, fileRelative)] as const;
   };
 
   const serverBundleExists = () => fileExists(buildPathWorkerFile);
