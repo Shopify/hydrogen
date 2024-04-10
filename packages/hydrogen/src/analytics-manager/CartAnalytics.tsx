@@ -136,7 +136,7 @@ export function CartAnalytics({
         });
       }
     });
-  }, [cart, prevCart, setCarts, publish, shop, customData, canTrack]);
+  }, [cart, prevCart, publish, shop, customData, canTrack]);
 
   return null;
 }
