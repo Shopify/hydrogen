@@ -2,9 +2,9 @@
 '@shopify/hydrogen': patch
 ---
 
-Deprecate the `<Seo />` component in favor of directly using Remix meta route exports. Add the `getSeoMeta` to make migration easier:
+Deprecate the `<Seo />` component in favor of directly using Remix [meta route exports](https://remix.run/docs/en/main/route/meta). Add the `getSeoMeta` to make migration easier.
 
-Migration steps:
+### Migration steps:
 
 **1. Remove the `<Seo />` component from `root.jsx`:**
 

@@ -2,4 +2,4 @@
 '@shopify/hydrogen': patch
 ---
 
-✨ Add `postLogoutRedirectUri` option to customer account client's logout method
+Add `postLogoutRedirectUri` option to the Customer Account API client's logout method.

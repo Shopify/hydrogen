@@ -2,7 +2,7 @@
 'skeleton': patch
 ---
 
-Codegen dependencies must be now listed directly in `package.json`:
+Codegen dependencies must be now listed explicitly in `package.json`:
 
 ```diff
 {

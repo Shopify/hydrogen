@@ -2,7 +2,8 @@
 '@shopify/mini-oxygen': major
 ---
 
-The main runtime exported from `@shopify/mini-oxygen` is now based on workerd.
+The default runtime exported from `@shopify/mini-oxygen` is now based on workerd.
+
 The previous Node.js sandbox runtime has been moved to the `@shopify/mini-oxygen/node` export.
 
 Example usage:

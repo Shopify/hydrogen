@@ -3,6 +3,7 @@
 ---
 
 Fix types returned by the `session` object.
+
 In `remix.env.d.ts` or `env.d.ts`, add the following types:
 
 ```diff

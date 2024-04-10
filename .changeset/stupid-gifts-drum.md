@@ -2,4 +2,4 @@
 '@shopify/hydrogen': patch
 ---
 
-Allow ui_locale to be pass to customer account login
+Allow `ui_locale` to be passed to the customer account login page.
