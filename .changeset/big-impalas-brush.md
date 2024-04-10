@@ -2,4 +2,4 @@
 '@shopify/hydrogen': patch
 ---
 
-Change StorefrontRedirect to base case insensitive in querying redirect URLs from the Storefront API.
+Make `StorefrontRedirect` case insensitive when querying redirect URLs from the Storefront API.

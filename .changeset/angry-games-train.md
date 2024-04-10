@@ -2,7 +2,7 @@
 'skeleton': patch
 ---
 
-Updated internal libraries for parsing `.env` file.
+Update internal libraries for parsing `.env` files.
 
 Please update the `@shopify/cli` dependency in your app to avoid duplicated subdependencies:
 

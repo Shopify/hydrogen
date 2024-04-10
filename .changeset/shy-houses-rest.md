@@ -2,4 +2,4 @@
 '@shopify/hydrogen': patch
 ---
 
-Make sure 400-500 sub-requests are not cached
+Ensure sub-requests with 4xx or 5xx response codes aren't cached.
