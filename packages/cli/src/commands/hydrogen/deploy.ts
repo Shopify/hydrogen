@@ -149,6 +149,8 @@ export default class Deploy extends Command {
     const {flags} = await this.parse(Deploy);
     const deploymentOptions = this.flagsToOxygenDeploymentOptions(flags);
 
+    console.log({env: process.env});
+
     if (flags.diff) {
       deploymentOptions.path = await prepareDiffDirectory(
         deploymentOptions.path,
