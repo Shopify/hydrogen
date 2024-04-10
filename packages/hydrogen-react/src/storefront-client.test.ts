@@ -200,11 +200,9 @@ describe(`createStorefrontClient`, () => {
 
 type StorefrontClientProps = Parameters<typeof createStorefrontClient>[0];
 
-function generateConfig(
-  props?: Partial<StorefrontClientProps>,
-): StorefrontClientProps {
+function generateConfig(props?: Partial<StorefrontClientProps>) {
   return {
     storeDomain: 'https://testing.myshopify.com',
     ...props,
-  };
+  } satisfies StorefrontClientProps;
 }
