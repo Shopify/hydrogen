@@ -37,6 +37,7 @@ export function createStorefrontClient({
     storeDomain = MOCK_SHOP_DOMAIN;
     warnOnce(
       `No \`storeDomain\` was provided; defaulting to "${MOCK_SHOP_DOMAIN}".`,
+      'info',
     );
   }
 
@@ -171,10 +172,9 @@ export function getPublicTokenHeadersRaw(
 
 const warnings = new Set<string>();
 const H2_PREFIX_ERROR = '[h2:error:createStorefrontClient] ';
-const H2_PREFIX_WARN = '[h2:warn:createStorefrontClient] ';
-const warnOnce = (string: string): void => {
+const warnOnce = (string: string, type: 'warn' | 'info' = 'warn'): void => {
   if (!warnings.has(string)) {
-    console.warn(H2_PREFIX_WARN + string);
+    console[type](`[h2:${type}:createStorefrontClient] ` + string);
     warnings.add(string);
   }
 };
