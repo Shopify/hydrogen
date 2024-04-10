@@ -97,6 +97,7 @@ export default class Dev extends Command {
 
     const devParams = {
       ...flagsToCamelObject(flags),
+      customerAccountPush: flags['customer-account-push__unstable'],
       path: directory,
       cliConfig: this.config,
     };
@@ -202,7 +203,12 @@ export async function runDev({
     cliConfig &&
     backgroundPromise.then(({customerAccountPush, storefrontId}) => {
       if (customerAccountPush) {
-        return startTunnelAndPushConfig(root, cliConfig, appPort, storefrontId);
+        return startTunnelAndPushConfig(
+          root,
+          cliConfig,
+          appPort!,
+          storefrontId,
+        );
       }
     });
 
