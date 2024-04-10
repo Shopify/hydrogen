@@ -149,7 +149,7 @@ export default class Deploy extends Command {
     const {flags} = await this.parse(Deploy);
     const deploymentOptions = this.flagsToOxygenDeploymentOptions(flags);
 
-    console.log({env: process.env});
+    console.log({GITHUB_HEAD_REF: process.env.GITHUB_HEAD_REF});
 
     if (flags.diff) {
       deploymentOptions.path = await prepareDiffDirectory(
@@ -617,6 +617,10 @@ Continue?`.value,
       },
     ]);
   };
+
+  console.log('Running createDeploy', {
+    GITHUB_HEAD_REF: process.env.GITHUB_HEAD_REF,
+  });
 
   await createDeploy({config, hooks, logger: deploymentLogger})
     .then(async (completedDeployment: CompletedDeployment | undefined) => {
