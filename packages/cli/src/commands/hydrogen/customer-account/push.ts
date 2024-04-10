@@ -175,6 +175,9 @@ export async function runCustomerAccountPush({
   }
 }
 
+/**
+ * Removes existing Customer Application URLs from the storefront.
+ */
 async function cleanupCustomerApplicationUrls(
   session: AdminSession,
   storefrontId: string,
