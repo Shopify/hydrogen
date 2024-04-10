@@ -84,13 +84,11 @@ export async function startTunnelAndPushConfig(
     host.replace(TUNNEL_DOMAIN.ORIGINAL, TUNNEL_DOMAIN.REBRANDED),
   );
 
-  try {
-    await runCustomerAccountPush({
-      path: root,
-      devOrigin: host,
-      storefrontId,
-    });
-  } catch (error) {
+  const cleanup = await runCustomerAccountPush({
+    path: root,
+    devOrigin: host,
+    storefrontId,
+  }).catch((error) => {
     if (error instanceof AbortError) {
       renderInfo({
         headline: 'Customer Account Application setup update fail.',
@@ -98,9 +96,9 @@ export async function startTunnelAndPushConfig(
         nextSteps: error.nextSteps,
       });
     }
-  }
+  });
 
-  return host;
+  return {host, cleanup};
 }
 
 export function getDebugBannerLine(publicInspectorPort: number) {

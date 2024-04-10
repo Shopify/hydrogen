@@ -215,14 +215,6 @@ export async function runViteDev({
     ],
   });
 
-  process.once('SIGTERM', async () => {
-    try {
-      await viteServer.close();
-    } finally {
-      process.exit();
-    }
-  });
-
   const h2Plugin = findHydrogenPlugin(viteServer.config);
   if (!h2Plugin) {
     await viteServer.close();
@@ -258,7 +250,7 @@ export async function runViteDev({
   //   process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
   // }
 
-  const [tunnelHost, cliCommand] = await Promise.all([
+  const [tunnel, cliCommand] = await Promise.all([
     backgroundPromise.then(({customerAccountPush, storefrontId}) =>
       customerAccountPush
         ? startTunnelAndPushConfig(root, cliConfig, publicPort, storefrontId)
@@ -272,7 +264,7 @@ export async function runViteDev({
     viteServer.resolvedUrls!.local[0] ?? viteServer.resolvedUrls!.network[0]!,
   );
 
-  const finalHost = tunnelHost || publicUrl.toString() || publicUrl.origin;
+  const finalHost = tunnel?.host || publicUrl.toString() || publicUrl.origin;
 
   // Start the public facing server with the port passed by the user.
   enhanceH2Logs({
@@ -323,8 +315,9 @@ export async function runViteDev({
   return {
     getUrl: () => finalHost,
     async close() {
-      codegenProcess?.kill(0);
-      await viteServer.close();
+      codegenProcess?.removeAllListeners('close');
+      codegenProcess?.kill('SIGINT');
+      await Promise.allSettled([viteServer.close(), tunnel?.cleanup?.()]);
     },
   };
 }
