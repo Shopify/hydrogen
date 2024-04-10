@@ -215,14 +215,6 @@ export async function runViteDev({
     ],
   });
 
-  process.once('SIGTERM', async () => {
-    try {
-      await viteServer.close();
-    } finally {
-      process.exit();
-    }
-  });
-
   const h2Plugin = findHydrogenPlugin(viteServer.config);
   if (!h2Plugin) {
     await viteServer.close();

@@ -108,12 +108,26 @@ export default class Dev extends Command {
       cliConfig: this.config,
     };
 
-    if (await hasViteConfig(directory ?? process.cwd())) {
-      const {runViteDev} = await import('./dev-vite.js');
-      await runViteDev(devParams);
-    } else {
-      await runDev(devParams);
-    }
+    const {close} = (await hasViteConfig(directory ?? process.cwd()))
+      ? await import('./dev-vite.js').then(({runViteDev}) =>
+          runViteDev(devParams),
+        )
+      : await runDev(devParams);
+
+    // Note: Shopify CLI is hooking into process events and calling process.exit.
+    // This means we are unable to hook into 'beforeExit' or 'SIGINT" events
+    // to cleanup resources. In addition, Miniflare uses `exit-hook` dependency
+    // to do the same thing. This is a workaround to ensure we cleanup resources:
+    let closingPromise: Promise<void>;
+    const processExit = process.exit;
+    // @ts-expect-error - Async function
+    process.exit = async (code?: number | undefined) => {
+      // This function will be called multiple times,
+      // but we only want to cleanup resources once.
+      closingPromise ??= close();
+      await closingPromise;
+      return processExit(code);
+    };
 
     if (flags.diff) {
       await copyShopifyConfig(directory, originalDirectory);
