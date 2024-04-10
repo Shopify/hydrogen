@@ -62,8 +62,9 @@ function debounceMessage(args: unknown[], debounceFor?: true | number) {
 function warningDebouncer([first]: unknown[]) {
   return typeof first === 'string' &&
     // Show these warnings only once.
-    (first.includes('[h2:warn:createStorefrontClient]') ||
-      first.includes('[h2:warn:createCustomerAccountClient]'))
+    /\[h2:(warn|info):(createStorefrontClient|createCustomerAccountClient)\]/.test(
+      first,
+    )
     ? true
     : undefined;
 }
@@ -325,6 +326,7 @@ export function enhanceH2Logs(options: {
   injectLogReplacer('error');
   injectLogReplacer('warn', warningDebouncer);
   injectLogReplacer('log', warningDebouncer);
+  injectLogReplacer('info', warningDebouncer);
 
   addMessageReplacers('h2-warn', [
     ([first]) => {
@@ -338,7 +340,15 @@ export function enhanceH2Logs(options: {
           ? (firstArg as Error)
           : undefined;
 
-      const stringArg = errorObject?.message ?? (firstArg as string);
+      let stringArg = errorObject?.message ?? (firstArg as string);
+
+      if (
+        stringArg.startsWith('[h2:info:createStorefrontClient]') &&
+        stringArg.includes('"mock.shop"')
+      ) {
+        // This message comes from hydrogen-react. Let's enhance it:
+        stringArg += '\nRun `h2 link` to link your store.';
+      }
 
       const [, type, scope, message] =
         stringArg.match(/\[h2:([^:]+):([^\]]+)\]\s+(.*)$/ims) || [];
