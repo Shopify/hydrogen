@@ -422,7 +422,8 @@ export async function runDev({
   return {
     getUrl: () => miniOxygen.listeningAt,
     async close() {
-      codegenProcess?.kill(0);
+      codegenProcess?.removeAllListeners('close');
+      codegenProcess?.kill('SIGINT');
       await Promise.allSettled([
         closeWatcher(),
         miniOxygen?.close(),

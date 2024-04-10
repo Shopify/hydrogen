@@ -323,7 +323,8 @@ export async function runViteDev({
   return {
     getUrl: () => finalHost,
     async close() {
-      codegenProcess?.kill(0);
+      codegenProcess?.removeAllListeners('close');
+      codegenProcess?.kill('SIGINT');
       await Promise.allSettled([viteServer.close(), tunnel?.cleanup?.()]);
     },
   };
