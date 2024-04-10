@@ -16,8 +16,9 @@ jobs:
       - name: Setup node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 'lts/*'
-          check-latest: true
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
 
       - name: Cache node modules
         id: cache-npm
@@ -35,8 +36,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: 📦 Build packages
+        run: CI=true npm run build:pkg
+
       - name: Build and Deploy to Oxygen
         id: deploy
+        working-directory: templates/skeleton
         run: npx shopify hydrogen deploy
         env:
           SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN: ${{ secrets.GRAY_TEST_TOKEN }}
