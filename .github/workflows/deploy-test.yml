@@ -42,6 +42,6 @@ jobs:
       - name: Build and Deploy to Oxygen
         id: deploy
         working-directory: templates/skeleton
-        run: npx shopify hydrogen deploy
+        run: npx shopify hydrogen deploy --no-lockfile-check
         env:
           SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN: ${{ secrets.GRAY_TEST_TOKEN }}
