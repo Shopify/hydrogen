@@ -37,7 +37,7 @@
     "@oclif/core": "3.19.6",
     "@shopify/cli-kit": "3.58.0",
     "@shopify/oxygen-cli": "~4.4.0",
-    "@shopify/plugin-cloudflare": "3.56.3",
+    "@shopify/plugin-cloudflare": "3.58.0",
     "ansi-escapes": "^6.2.0",
     "cli-truncate": "^4.0.0",
     "diff": "^5.1.0",
