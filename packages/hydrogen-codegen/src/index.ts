@@ -1,5 +1,5 @@
 export {preset, type PresetConfig} from './preset.js';
-export {schema, getSchema} from './schema.js';
+export {getSchema} from './schema.js';
 export {
   plugin,
   pluckConfig,

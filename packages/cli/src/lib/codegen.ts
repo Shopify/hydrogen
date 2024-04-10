@@ -129,7 +129,12 @@ async function generateTypes({
 }: CodegenOptions) {
   const {generate, loadCodegenConfig, CodegenContext} = await import(
     '@graphql-codegen/cli'
-  );
+  ).catch(() => {
+    throw new AbortError(
+      'Could not load GraphQL Codegen CLI.',
+      'Please make sure you have `@graphql-codegen/cli` installed as a dev dependency.',
+    );
+  });
 
   const {config: codegenConfig} =
     // Load <root>/codegen.ts if available
@@ -181,9 +186,20 @@ async function generateDefaultConfig(
 ): Promise<LoadCodegenConfigResult> {
   const {getSchema, preset, pluckConfig} = await import(
     '@shopify/hydrogen-codegen'
-  );
+  ).catch(() => {
+    throw new AbortError(
+      'Could not load Hydrogen Codegen.',
+      'Please make sure you have `@shopify/hydrogen-codegen` installed as a dev dependency.',
+    );
+  });
 
-  const {loadConfig} = await import('graphql-config');
+  const {loadConfig} = await import('graphql-config').catch(() => {
+    throw new AbortError(
+      'Could not load GraphQL Config.',
+      'Please make sure you have `graphql-config` installed as a dev dependency.',
+    );
+  });
+
   const gqlConfig = await loadConfig({
     rootDir: rootDirectory,
     throwOnEmpty: false,
@@ -197,8 +213,10 @@ async function generateDefaultConfig(
   const defaultGlob = '*!(*.d).{ts,tsx,js,jsx}'; // No d.ts files
   const appDirRelative = relativePath(rootDirectory, appDirectory);
 
-  const caapiSchema = getSchema('customer-account');
-  const caapiProject = findGqlProject(caapiSchema, gqlConfig);
+  const caapiSchema = getSchema('customer-account', {throwIfMissing: false});
+  const caapiProject = caapiSchema
+    ? findGqlProject(caapiSchema, gqlConfig)
+    : undefined;
 
   const customerAccountAPIConfig = caapiProject?.documents
     ? {

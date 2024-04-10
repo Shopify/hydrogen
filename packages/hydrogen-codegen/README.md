@@ -1,6 +1,6 @@
 # Hydrogen Codegen
 
-A codegen plugin and preset for generating TypeScript types from GraphQL queries in a `d.ts` file. It does not require any function wrapper and adds no runtime overhead (0 bytes to the bundle).
+A codegen plugin and preset for generating TypeScript types from GraphQL queries in a `d.ts` file. It wraps the [`@shopify/graphql-codegen` package](https://github.com/Shopify/graphql-codegen) and adds utilities for Hydrogen. It does not require any function wrapper and adds no runtime overhead (0 bytes to the bundle).
 
 ```ts
 const {shop} = await client.query(`#graphql
@@ -16,7 +16,7 @@ The GraphQL client must use TypeScript interfaces that are extended in the gener
 
 ## Usage
 
-When using Hydrogen CLI, this package is already included and configured for you to generate types for the Shopify Storefront API. However, if you want to use it standalone with the GraphQL CLI or just want to add other APIs to Hydrogen, you can use the following example configuration:
+When using Hydrogen CLI, this package is already configured for you to generate types for the Shopify Storefront API. However, if you want to use it standalone with the GraphQL CLI or just want to add other APIs to Hydrogen, you can use the following example configuration:
 
 ```ts
 // <root>/codegen.ts
@@ -51,3 +51,5 @@ export default {
   },
 } as CodegenConfig;
 ```
+
+For more examples and information, refer to [@shopify/graphql-codegen](https://github.com/Shopify/graphql-codegen).
