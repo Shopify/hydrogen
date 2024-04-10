@@ -94,7 +94,7 @@ const CONSENT_API_WITH_BANNER =
 function logMissingConfig(fieldName: string) {
   // eslint-disable-next-line no-console
   console.error(
-    `Unable to setup Customer Privacy API: Missing consent.${fieldName} consent configuration.`,
+    `[h2:error:useCustomerPrivacy] Unable to setup Customer Privacy API: Missing consent.${fieldName} consent configuration.`,
   );
 }
 
