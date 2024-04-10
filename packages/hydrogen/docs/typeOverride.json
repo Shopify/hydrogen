@@ -13,5 +13,6 @@
   "MetafieldDeleteUserError": "[MetafieldDeleteUserError](/docs/api/storefront/2024-04/objects/MetafieldDeleteUserError) - Storefront API type",
   "MetafieldsSetUserError": "[MetafieldsSetUserError](/docs/api/storefront/2024-04/objects/MetafieldsSetUserError) - Storefront API type",
   "MetafieldWithoutOwnerId": "Same as [CartMetafieldsSetInput](https://shopify.dev/docs/api/storefront/2024-04/input-objects/CartMetafieldsSetInput) Storefront API type but without `ownerId`. `ownerId` is always set to the cart id.",
+  "OtherData": "Any `<key: string, value: unknown>` pair",
   "OtherFormData": "Any `<key: string, value: unknown>` pair"
 }

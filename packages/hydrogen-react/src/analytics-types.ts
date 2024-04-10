@@ -113,6 +113,10 @@ type ShopifyAnalyticsBase = {
   totalValue?: number;
   /** Product list. */
   products?: ShopifyAnalyticsProduct[];
+  /** Result of customerPrivacyApi.saleOfDataNotAllowed() */
+  ccpaEnforced?: boolean;
+  /** Result of customerPrivacyApi.notMarketingOrAnalyticsAllowed() */
+  gdprEnforced?: boolean;
 };
 
 export type ShopifySalesChannels = keyof typeof ShopifySalesChannel;

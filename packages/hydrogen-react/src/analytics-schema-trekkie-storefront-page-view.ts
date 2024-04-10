@@ -22,7 +22,7 @@ export function pageView(
       addDataIf(
         {
           pageType: pageViewPayload.pageType,
-          customerId: pageViewPayload.customerId,
+          customerId: parseInt(parseGid(pageViewPayload.customerId).id || '0'),
           resourceType,
           resourceId: parseInt(id),
         },
