@@ -1,16 +1,17 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
 import {AbortError} from '@shopify/cli-kit/node/error';
+import {outputDebug} from '@shopify/cli-kit/node/output';
 import {linkStorefront} from '../link.js';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import {getCliCommand} from '../../../lib/shell.js';
-import {login} from '../../../lib/auth.js';
+import {type AdminSession, login} from '../../../lib/auth.js';
 import {
+  type ShopifyConfig,
   getConfig,
   setCustomerAccountConfig,
 } from '../../../lib/shopify-config.js';
 import {replaceCustomerApplicationUrls} from '../../../lib/graphql/admin/customer-application-update.js';
-import {FatalErrorType} from '@shopify/cli-kit/node/error';
 
 export default class CustomerAccountPush extends Command {
   static description = 'Push project configuration to admin';
@@ -110,6 +111,13 @@ export async function runCustomerAccountPush({
       javascriptOrigin,
       logoutUri,
     });
+
+    return () =>
+      cleanupCustomerApplicationUrls(session, storefrontId, {
+        redirectUri,
+        javascriptOrigin,
+        logoutUri,
+      });
   } catch (error: any) {
     let confidentialAccessFound = false;
 
@@ -165,6 +173,30 @@ export async function runCustomerAccountPush({
       nextSteps,
     );
   }
+}
+
+async function cleanupCustomerApplicationUrls(
+  session: AdminSession,
+  storefrontId: string,
+  customerAccountConfig: NonNullable<
+    NonNullable<ShopifyConfig['storefront']>['customerAccountConfig']
+  > = {},
+) {
+  if (!Object.values(customerAccountConfig).some(Boolean)) return;
+
+  outputDebug(
+    `Cleaning up Customer Application url "${customerAccountConfig.redirectUri}"`,
+  );
+
+  await replaceCustomerApplicationUrls(session, storefrontId, {
+    redirectUri: {removeRegex: customerAccountConfig?.redirectUri},
+    javascriptOrigin: {removeRegex: customerAccountConfig?.javascriptOrigin},
+    logoutUris: {removeRegex: customerAccountConfig?.logoutUri},
+  }).catch((error) => {
+    outputDebug(
+      `Failed to clean up Customer Application url "${customerAccountConfig.redirectUri}":\n${error?.message}`,
+    );
+  });
 }
 
 export async function getStorefrontId(

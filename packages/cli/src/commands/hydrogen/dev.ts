@@ -273,7 +273,7 @@ export async function runDev({
 
     logInjectedVariables();
 
-    const host = (await tunnelPromise) ?? miniOxygen.listeningAt;
+    const host = (await tunnelPromise)?.host ?? miniOxygen.listeningAt;
 
     const cliCommand = await cliCommandPromise;
     enhanceH2Logs({host, cliCommand, ...remixConfig});
@@ -423,7 +423,11 @@ export async function runDev({
     getUrl: () => miniOxygen.listeningAt,
     async close() {
       codegenProcess?.kill(0);
-      await Promise.all([closeWatcher(), miniOxygen?.close()]);
+      await Promise.allSettled([
+        closeWatcher(),
+        miniOxygen?.close(),
+        Promise.resolve(tunnelPromise).then((tunnel) => tunnel?.cleanup?.()),
+      ]);
     },
   };
 }

@@ -258,7 +258,7 @@ export async function runViteDev({
   //   process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
   // }
 
-  const [tunnelHost, cliCommand] = await Promise.all([
+  const [tunnel, cliCommand] = await Promise.all([
     backgroundPromise.then(({customerAccountPush, storefrontId}) =>
       customerAccountPush
         ? startTunnelAndPushConfig(root, cliConfig, publicPort, storefrontId)
@@ -272,7 +272,7 @@ export async function runViteDev({
     viteServer.resolvedUrls!.local[0] ?? viteServer.resolvedUrls!.network[0]!,
   );
 
-  const finalHost = tunnelHost || publicUrl.toString() || publicUrl.origin;
+  const finalHost = tunnel?.host || publicUrl.toString() || publicUrl.origin;
 
   // Start the public facing server with the port passed by the user.
   enhanceH2Logs({
@@ -324,7 +324,7 @@ export async function runViteDev({
     getUrl: () => finalHost,
     async close() {
       codegenProcess?.kill(0);
-      await viteServer.close();
+      await Promise.allSettled([viteServer.close(), tunnel?.cleanup?.()]);
     },
   };
 }
