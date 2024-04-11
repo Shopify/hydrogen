@@ -76,7 +76,8 @@ export function spawnCodegenProcess({
 
     // Filter these logs even on verbose mode because it floods the terminal:
     if (/`punycode`/.test(message)) return;
-    if (/\.body\[\d\]/) return;
+    if (/\.body\[\d\]/.test(message)) return;
+    if (/console\.time(End)?\(\)/.test(message)) return;
 
     console.log('');
     renderWarning({headline: message, body: details});
