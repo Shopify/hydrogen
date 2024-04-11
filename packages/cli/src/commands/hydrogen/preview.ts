@@ -16,7 +16,7 @@ import {getViteConfig} from '../../lib/vite-config.js';
 
 export default class Preview extends Command {
   static descriptionWithMarkdown =
-    "Runs a server in your local development environment that serves your Hydrogen app's production build. Requires running the [build](https://shopify.dev/docs/api/shopify-cli/hydrogen-commands/hydrogen-build) command first.";
+    "Runs a server in your local development environment that serves your Hydrogen app's production build. Requires running the [build](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-build) command first.";
 
   static description =
     'Runs a Hydrogen storefront in an Oxygen worker for production.';
