@@ -99,7 +99,7 @@ function OrderItem({order}: {order: OrderItemFragment}) {
   return (
     <>
       <fieldset>
-        <Link to={`/account/orders/${order.id}`}>
+        <Link to={`/account/orders/${btoa(order.id)}`}>
           <strong>#{order.number}</strong>
         </Link>
         <p>{new Date(order.processedAt).toDateString()}</p>
