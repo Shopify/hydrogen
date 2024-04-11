@@ -34,8 +34,18 @@ export function createStorefrontClient({
   contentType,
 }: StorefrontClientProps): StorefrontClientReturn {
   if (!storeDomain) {
-    storeDomain = MOCK_SHOP_DOMAIN;
-    warnOnce(`storeDomain missing, defaulting to ${MOCK_SHOP_DOMAIN}`, 'info');
+    if (__HYDROGEN_DEV__) {
+      storeDomain = MOCK_SHOP_DOMAIN;
+      warnOnce(
+        `storeDomain missing, defaulting to ${MOCK_SHOP_DOMAIN}`,
+        'info',
+      );
+    } else {
+      throw new Error(
+        H2_PREFIX_ERROR +
+          `\`storeDomain\` is required when creating a new Storefront client in production.`,
+      );
+    }
   }
 
   if (storefrontApiVersion !== SFAPI_VERSION) {

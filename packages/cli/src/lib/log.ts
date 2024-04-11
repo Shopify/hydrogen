@@ -344,7 +344,7 @@ export function enhanceH2Logs(options: {
 
       if (
         stringArg.startsWith('[h2:info:createStorefrontClient]') &&
-        stringArg.includes('"mock.shop"')
+        stringArg.includes('defaulting to mock.shop')
       ) {
         // This message comes from hydrogen-react. Let's enhance it:
         stringArg += '\nRun `h2 link` to link your store.';
