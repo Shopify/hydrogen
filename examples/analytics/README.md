@@ -41,15 +41,15 @@ In the Shopify admin, head over to / Settings / Customer Privacy / Cookie Banner
 
 #### 1.1 Configure the region(s) visibility for the banner
 
-<img src="/public/banner-region-visibility.jpeg">
+![banner-region-visibility](https://github.com/Shopify/hydrogen/assets/2319002/f2b961f0-1218-4557-95e5-a99045a96211)
 
 #### 1.2 (Optional) Customize the appearance of the Cookie banner and Cookie preferences
 
-<img src="/public/banner-appearance.jpeg">
+![banner-appearance](https://github.com/Shopify/hydrogen/assets/2319002/42646348-4063-4942-9cb1-ce3a91dc048a)
 
 #### 1.3 (Optional) Customize the position of the banner
 
-<img src="/public/banner-position.jpeg">
+![banner-position](https://github.com/Shopify/hydrogen/assets/2319002/2aaeab20-ccee-48a0-8a57-054f9a6ef3d7)
 
 ### 2. Copy over the new files
 
