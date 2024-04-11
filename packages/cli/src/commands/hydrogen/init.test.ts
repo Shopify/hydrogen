@@ -356,6 +356,7 @@ describe('init', () => {
 
         // ---- DEV
         outputMock.clear();
+        vi.stubEnv('NODE_ENV', 'development');
 
         const {close, getUrl} = await runClassicDev({
           path: tmpDir,
