@@ -26,6 +26,14 @@ if (isStandaloneProcess) {
 }
 
 function normalizeCodegenError(errorMessage: string, rootDirectory?: string) {
+  if (errorMessage.includes('AbortError: ')) {
+    const parsedError = errorMessage.split('AbortError: ')[1] ?? '';
+    const message = parsedError.split('\n')[0];
+    const details = parsedError.match(/tryMessage: '(.*)',$/m)?.[1];
+
+    if (message) return {message, details};
+  }
+
   const [first = '', ...rest] = errorMessage
     .replaceAll('[FAILED]', '')
     .replace(/\s{2,}/g, '\n')
@@ -108,6 +116,8 @@ type CodegenOptions = ProjectDirs & {
 
 export function codegen(options: CodegenOptions) {
   return generateTypes(options).catch((error: Error) => {
+    if (error instanceof AbortError) throw error;
+
     const {message, details} = normalizeCodegenError(
       error.message,
       options.rootDirectory,
