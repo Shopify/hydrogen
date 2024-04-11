@@ -1,7 +1,288 @@
 {
   "url": "https://github.com/Shopify/hydrogen/pulls?q=is%3Apr+is%3Aclosed+%5Bci%5D+release+in%3Atitle+is%3Amerged",
-  "version": "1.4.2",
+  "version": "2024.4.0",
   "releases": [
+    {
+      "title": "SFAPI 2024.4, Vite, Analytics (unstable), Remix 2.8.0, CLI improvements",
+      "version": "2024.4.0",
+      "hash": "4c80d7cd61e70c6efea931c3e14d28131850f439",
+      "pr": "https://github.com/Shopify/hydrogen/pull/1855",
+      "commit": "https://github.com/Shopify/hydrogen/pull/1855/commits/4fa33fdaab06ff5258b7c7cec4f5f24492bd7349",
+      "dependencies": {
+        "@remix-run/react": "^2.8.0",
+        "@shopify/cli-hydrogen": "8.0.0",
+        "@shopify/hydrogen": "2024.4.0",
+        "@shopify/remix-oxygen": "2.0.4"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.8.0",
+        "@remix-run/server-runtime": "^2.8.0",
+        "@shopify/cli": "3.58.0",
+        "@shopify/oxygen-workers-types": "4.0.0",
+        "typescript": "^5.2.2",
+        "@graphql-codegen/cli": "5.0.2",
+        "@shopify/mini-oxygen": "3.0.0",
+        "@shopify/hydrogen-codegen": "0.3.0"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        },
+        "@graphql-codegen/cli": {
+          "required": true
+        },
+        "@shopify/mini-oxygen": {
+          "required": true
+        },
+        "@shopify/hydrogen-codegen": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Update @shopify/cli to 3.58.0",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1946",
+          "id": "1946"
+        },
+        {
+          "title": "Make `StorefrontRedirect` case insensitive when querying redirect URLs from the Storefront API",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1941",
+          "id": "1941"
+        },
+        {
+          "title": "Avoid throwing error in h2 dev --codegen when the Customer Account schema is not found",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1962",
+          "id": "1962"
+        },
+        {
+          "title": "Fix bug where storefrontRedirect would return an error on soft page navigations.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1900",
+          "id": "1900"
+        },
+        {
+          "title": "Fix a bug where cart could be null, even though a new cart was created by adding a line item.",
+          "description": "This allows calling the cart .get() method right after creating a new cart with one of the mutation methods: create(), addLines(), updateDiscountCodes(), updateBuyerIdentity(), updateNote(), updateAttributes(), setMetafields().",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1865",
+          "id": "1865",
+          "steps": [
+            {
+              "title": "Example",
+              "code": "YGBgdHMKaW1wb3J0IHsKICBjcmVhdGVDYXJ0SGFuZGxlciwKICBjYXJ0R2V0SWREZWZhdWx0LAogIGNhcnRTZXRJZERlZmF1bHQsCn0gZnJvbSAnQHNob3BpZnkvaHlkcm9nZW4nOwoKY29uc3QgY2FydEhhbmRsZXIgPSBjcmVhdGVDYXJ0SGFuZGxlcih7CiAgc3RvcmVmcm9udCwKICBnZXRDYXJ0SWQ6IGNhcnRHZXRJZERlZmF1bHQocmVxdWVzdC5oZWFkZXJzKSwKICBzZXRDYXJ0SWQ6IGNhcnRTZXRJZERlZmF1bHQoKSwKICBjYXJ0UXVlcnlGcmFnbWVudDogQ0FSVF9RVUVSWV9GUkFHTUVOVCwKICBjYXJ0TXV0YXRlRnJhZ21lbnQ6IENBUlRfTVVUQVRFX0ZSQUdNRU5ULAp9KTsKCmF3YWl0IGNhcnRIYW5kbGVyLmFkZExpbmVzKFt7bWVyY2hhbmRpc2VJZDogJy4uLid9XSk7Ci8vIC5nZXQoKSBub3cgcmV0dXJucyB0aGUgY2FydCBhcyBleHBlY3RlZApjb25zdCBjYXJ0ID0gYXdhaXQgY2FydEhhbmRsZXIuZ2V0KCk7CmBgYA=="
+            }
+          ]
+        },
+        {
+          "title": "Update Vite plugin imports, and how their options are passed to Remix",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1935",
+          "id": "1935",
+          "steps": [
+            {
+              "title": "vite.config.js",
+              "code": "YGBgZGlmZgotaW1wb3J0IHtoeWRyb2dlbiwgb3h5Z2VufSBmcm9tICdAc2hvcGlmeS9jbGktaHlkcm9nZW4vZXhwZXJpbWVudGFsLXZpdGUnOworaW1wb3J0IHtoeWRyb2dlbn0gZnJvbSAnQHNob3BpZnkvaHlkcm9nZW4vdml0ZSc7CitpbXBvcnQge294eWdlbn0gZnJvbSAnQHNob3BpZnkvbWluaS1veHlnZW4vdml0ZSc7CmltcG9ydCB7dml0ZVBsdWdpbiBhcyByZW1peH0gZnJvbSAnQHJlbWl4LXJ1bi9kZXYnOwoKZXhwb3J0IGRlZmF1bHQgZGVmaW5lQ29uZmlnKHsKICAgIGh5ZHJvZ2VuKCksCiAgICBveHlnZW4oKSwKICAgIHJlbWl4KHsKLSAgICAgYnVpbGREaXJlY3Rvcnk6ICdkaXN0JywKKyAgICAgcHJlc2V0czogW2h5ZHJvZ2VuLnByZXNldCgpXSwKICAgICAgZnV0dXJlOiB7CmBgYA=="
+            }
+          ]
+        },
+        {
+          "title": "Deprecate the --env-branch flag, in favor of --env",
+          "description": "--env accepts the environment's handle, instead of the environment's associated branch name. Run env list to display all environments and their handles.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1841",
+          "id": "1841"
+        },
+        {
+          "title": "Hydrogen CLI now requires `@shopify/mini-oxygen` to be installed separately as a dev dependency.",
+          "description": "It is still used automatically under the hood so there is no need to change your application code aside from installing the dependency.\nAlso, if a port provided via --port or --inspector-port flags is already in use, the CLI will now exit with an error message instead of finding a new open port. When the flags are not provided, the CLI will still find an open port.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1891",
+          "id": "1891"
+        },
+        {
+          "title": "Change `storefrontRedirect` to ignore query parameters when matching redirects",
+          "description": "For example, a redirect in the admin from `/snowboards` to `/collections/snowboards` will now match on the URL `/snowboards?utm_campaign=buffer` and redirect the user to `/collections/snowboards?utm_campaign=buffer`",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1900",
+          "id": "1900",
+          "steps": [
+            {
+              "title": "This is a breaking change. If you want to retain the legacy functionality that is query parameter sensitive, pass matchQueryParams to storefrontRedirect():",
+              "code": "YGBganMKc3RvcmVmcm9udFJlZGlyZWN0KHsKICByZXF1ZXN0LAogIHJlc3BvbnNlLAogIHN0b3JlZnJvbnQsCisgIG1hdGNoUXVlcnlQYXJhbXM6IHRydWUsCn0pOwpgYGA="
+            }
+          ]
+        },
+        {
+          "title": "Fix compatibility of /subrequest-profiler with Vite",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1935",
+          "id": "1935"
+        },
+        {
+          "title": "Fix default content security policy directive for frameAncestors",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1883",
+          "id": "1883"
+        },
+        {
+          "title": "Fall back to `mock.shop` when no value is passed in `storeDomain` to `createStorefrontClient` in development",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1971",
+          "id": "1971"
+        },
+        {
+          "title": "Fix the --markets flag when using npm create @shopify/hydrogen",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1916",
+          "id": "1916"
+        },
+        {
+          "title": "Fix types returned by the session object",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1869",
+          "id": "1869",
+          "steps": [
+            {
+              "title": "In remix.env.d.ts or env.d.ts, add the following types",
+              "code": "YGBgZGlmZgppbXBvcnQgdHlwZSB7CiAgLy8gLi4uCiAgSHlkcm9nZW5DYXJ0LAorIEh5ZHJvZ2VuU2Vzc2lvbkRhdGEsCn0gZnJvbSAnQHNob3BpZnkvaHlkcm9nZW4nOwoKLy8gLi4uCgpkZWNsYXJlIG1vZHVsZSAnQHNob3BpZnkvcmVtaXgtb3h5Z2VuJyB7CiAgLy8gLi4uCgorIGludGVyZmFjZSBTZXNzaW9uRGF0YSBleHRlbmRzIEh5ZHJvZ2VuU2Vzc2lvbkRhdGEge30KfQpgYGA="
+            }
+          ]
+        }
+      ],
+      "features": [
+        {
+          "title": "Update to 2024.4 Storefront API version",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1951",
+          "id": "1951"
+        },
+        {
+          "title": "Update to Remix 2.8.0",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1781",
+          "id": "1781"
+        },
+        {
+          "title": "Move the Hydrogen CLI's `env pushh` command to stable",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1946",
+          "id": "1946",
+          "docs": "https://shopify.dev/docs/custom-storefronts/hydrogen/cli#env-push"
+        },
+        {
+          "title": "Add magic catalog route `/collections/all` to the Skeleton template",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1967",
+          "id": "1967"
+        },
+        {
+          "title": "Add postLogoutRedirectUri option to the Customer Account API client's logout method",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1871",
+          "id": "1871"
+        },
+        {
+          "title": "Add `@shopify/mini-oxygen` as a dev dependency for local development",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1891",
+          "id": "1891",
+          "steps": [
+            {
+              "title": "package.json",
+              "code": "YGBgZGlmZgogImRldkRlcGVuZGVuY2llcyI6IHsKICAgICJAcmVtaXgtcnVuL2RldiI6ICJeMi44LjAiLAogICAgIkByZW1peC1ydW4vZXNsaW50LWNvbmZpZyI6ICJeMi44LjAiLAorICAgIkBzaG9waWZ5L21pbmktb3h5Z2VuIjogIl4zLjAuMCIsCiAgICAiQHNob3BpZnkvb3h5Z2VuLXdvcmtlcnMtdHlwZXMiOiAiXjQuMC4wIiwKICAgIC4uLgogIH0KYGBg"
+            }
+          ]
+        },
+        {
+          "title": "Introduce <UNSTABLE_Analytics.Provider> that also includes support for Shopify analytics, Customer Privacy API and Privacy banner",
+          "description": "Adds the following compoonents and utilities, `UNSTABLE_Analytics`, `getShopAnalytics`, `unstable_useAnalytics` and more",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1789",
+          "id": "1789"
+        },
+        {
+          "title": "Add new analytics example (unstable)",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1789",
+          "docs": "https://github.com/Shopify/hydrogen/blob/main/examples/analytics/README.md",
+          "id": "1789"
+        },
+        {
+          "title": "Export new Hydrogen Vite plugin from `@shopify/hydrogen/vite`",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1935",
+          "id": "1935"
+        },
+        {
+          "title": "Support scaffolding projects from external repositories using the `--template` flag",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1867",
+          "id": "1867",
+          "steps": [
+             {
+               "title": "The following examples are equivalent",
+               "code": "YGBgYmFzaApucG0gY3JlYXRlIEBzaG9waWZ5L2h5ZHJvZ2VuIC0tIC0tdGVtcGxhdGUgc2hvcGlmeS9oeWRyb2dlbi1kZW1vLXN0b3JlCm5wbSBjcmVhdGUgQHNob3BpZnkvaHlkcm9nZW4gLS0gLS10ZW1wbGF0ZSBnaXRodWIuY29tL3Nob3BpZnkvaHlkcm9nZW4tZGVtby1zdG9yZQpucG0gY3JlYXRlIEBzaG9waWZ5L2h5ZHJvZ2VuIC0tIC0tdGVtcGxhdGUgaHR0cHM6Ly9naXRodWIuY29tL3Nob3BpZnkvaHlkcm9nZW4tZGVtby1zdG9yZQpgYGA="
+             }
+          ]
+        },
+        {
+          "title": "Add `--quickstart` flag option to init/create command",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1822",
+          "id": "1822"
+        },
+        {
+          "title": "Add the unstable `--customer-account-push` flag to the Hydrogen CLI",
+          "description": "This allows you to push the current `--dev-origin` URL to the Shopify admin to enable secure connection to the Customer Account API for local development",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1961",
+          "id": "1961"
+        },
+        {
+          "title": "Export new Vite plugin from `@shopify/mini-oxygen/vite`",
+          "description": "It integrates Vite with MiniOxygen by running the application code within a worker",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1935",
+          "id": "1935"
+        },
+        {
+          "title": "Allow `ui_locale` to be passed to the customer account login page",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1842",
+          "id": "1842"
+        },
+        {
+          "title": "Expose `cartReady` state from the cart context inb hydrogen-react" ,
+          "pr": "https://github.com/Shopify/hydrogen/pull/1885",
+          "id": "1885"
+        },
+        {
+          "title": "Deprecate the `<Seo />` component in favor of directly using Remix meta route exports",
+          "description": "Use the `getSeoMeta` utility to make migration easier",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1875",
+          "id": "1875",
+          "steps": [
+            {
+              "title": "Remove the `<Seo />` component from `root.jsx`",
+              "code": "YGBgZGlmZgpleHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBBcHAoKSB7CiAgIGNvbnN0IG5vbmNlID0gdXNlTm9uY2UoKTsKICAgY29uc3QgZGF0YSA9IHVzZUxvYWRlckRhdGE8dHlwZW9mIGxvYWRlcj4oKTsKCiAgIHJldHVybiAoCiAgICAgPGh0bWwgbGFuZz0iZW4iPgogICAgICAgPGhlYWQ+CiAgICAgICAgIDxtZXRhIGNoYXJTZXQ9InV0Zi04IiAvPgogICAgICAgICA8bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLGluaXRpYWwtc2NhbGU9MSIgLz4KLSAgICAgICAgPFNlbyAvPgogICAgICAgICA8TWV0YSAvPgogICAgICAgICA8TGlua3MgLz4KICAgICAgIDwvaGVhZD4KICAgICAgIDxib2R5PgogICAgICAgICA8TGF5b3V0IHsuLi5kYXRhfT4KICAgICAgICAgICA8T3V0bGV0IC8+CiAgICAgICAgIDwvTGF5b3V0PgogICAgICAgICA8U2Nyb2xsUmVzdG9yYXRpb24gbm9uY2U9e25vbmNlfSAvPgogICAgICAgICA8U2NyaXB0cyBub25jZT17bm9uY2V9IC8+CiAgICAgICAgIDxMaXZlUmVsb2FkIG5vbmNlPXtub25jZX0gLz4KICAgICAgIDwvYm9keT4KICAgICA8L2h0bWw+CiAgICk7CiB9CmBgYA=="
+            },
+            {
+              "title": "Add a Remix meta export to each route that returns an seo property from a loader or handle:",
+              "code": "YGBgZGlmZgoraW1wb3J0IHtnZXRTZW9NZXRhfSBmcm9tICdAc2hvcGlmeS9oeWRyb2dlbic7CgogZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIGxvYWRlcih7Y29udGV4dH0pIHsKICAgY29uc3Qge3Nob3B9ID0gYXdhaXQgY29udGV4dC5zdG9yZWZyb250LnF1ZXJ5KGAKICAgICBxdWVyeSBsYXlvdXQgewogICAgICAgc2hvcCB7CiAgICAgICAgIG5hbWUKICAgICAgICAgZGVzY3JpcHRpb24KICAgICAgIH0KICAgICB9CiAgIGApOwoKICAgcmV0dXJuIHsKICAgICBzZW86IHsKICAgICAgIHRpdGxlOiBzaG9wLnRpdGxlLAogICAgICAgZGVzY3JpcHRpb246IHNob3AuZGVzY3JpcHRpb24sCiAgICAgfSwKICAgfTsKIH0KCitleHBvcnQgY29uc3QgbWV0YSA9ICh7ZGF0YX0pID0+IHsKKyAgIHJldHVybiBnZXRTZW9NZXRhKGRhdGEuc2VvKTsKK307CmBgYA=="
+            },
+            {
+              "title": "Merge root route meta data",
+              "code": "SWYgeW91ciByb290IHJvdXRlIGxvYWRlciBhbHNvIHJldHVybnMgYW4gc2VvIHByb3BlcnR5LCBtYWtlIHN1cmUgdG8gbWVyZ2UgdGhhdCBkYXRhOgoKYGBganMKZXhwb3J0IGNvbnN0IG1ldGEgPSAoe2RhdGEsIG1hdGNoZXN9KSA9PiB7CiAgcmV0dXJuIGdldFNlb01ldGEoCiAgICBtYXRjaGVzWzBdLmRhdGEuc2VvLAogICAgLy8gdGhlIGN1cnJlbnQgcm91dGUgc2VvIGRhdGEgb3ZlcnJpZGVzIHRoZSByb290IHJvdXRlIGRhdGEKICAgIGRhdGEuc2VvLAogICk7Cn07CmBgYApPciBtb3JlIHNpbXBseToKCmBgYGpzCmV4cG9ydCBjb25zdCBtZXRhID0gKHtkYXRhLCBtYXRjaGVzfSkgPT4gewogIHJldHVybiBnZXRTZW9NZXRhKC4uLm1hdGNoZXMubWFwKChtYXRjaCkgPT4gbWF0Y2guZGF0YS5zZW8pKTsKfTsKYGBg"
+            },
+            {
+              "title": "Override meta",
+              "code": "U29tZXRpbWVzIGdldFNlb01ldGEgbWlnaHQgcHJvZHVjZSBhIHByb3BlcnR5IGluIGEgd2F5IHlvdSdkIGxpa2UgdG8gY2hhbmdlLiBNYXAgb3ZlciB0aGUgcmVzdWx0aW5nIGFycmF5IHRvIGNoYW5nZSBpdC4gRm9yIGV4YW1wbGUsIEh5ZHJvZ2VuIHJlbW92ZXMgcXVlcnkgcGFyYW1ldGVycyBmcm9tIGNhbm9uaWNhbCBVUkxzLCBhZGQgdGhlbSBiYWNrOgoKYGBganMKZXhwb3J0IGNvbnN0IG1ldGEgPSAoe2RhdGEsIGxvY2F0aW9ufSkgPT4gewogIHJldHVybiBnZXRTZW9NZXRhKGRhdGEuc2VvKS5tYXAoKG1ldGEpID0+IHsKICAgIGlmIChtZXRhLnJlbCA9PT0gJ2Nhbm9uaWNhbCcpIHsKICAgICAgcmV0dXJuIHsKICAgICAgICAuLi5tZXRhLAogICAgICAgIGhyZWY6IG1ldGEuaHJlZiArIGxvY2F0aW9uLnNlYXJjaCwKICAgICAgfTsKICAgIH0KCiAgICByZXR1cm4gbWV0YTsKICB9KTsKfTsKYGBg"
+            }
+          ]
+        },
+        {
+          "title": "Codegen dependencies must be now listed explicitly in package.json",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1962",
+          "id": "1962",
+          "steps": [
+            {
+              "title": "Update package.json",
+              "code": "YGBgZGlmZgp7CiAgImRldkRlcGVuZGVuY2llcyI6IHsKKyAgICJAZ3JhcGhxbC1jb2RlZ2VuL2NsaSI6ICI1LjAuMiIsCiAgICAiQHJlbWl4LXJ1bi9kZXYiOiAiXjIuOC4wIiwKICAgICJAcmVtaXgtcnVuL2VzbGludC1jb25maWciOiAiXjIuOC4wIiwKKyAgICJAc2hvcGlmeS9oeWRyb2dlbi1jb2RlZ2VuIjogIl4wLjMuMCIsCiAgICAiQHNob3BpZnkvbWluaS1veHlnZW4iOiAiXjIuMi41IiwKICAgICJAc2hvcGlmeS9veHlnZW4td29ya2Vycy10eXBlcyI6ICJeNC4wLjAiLAogICAgLi4uCiAgfQp9CmBgYA=="
+            }
+          ]
+        },
+        {
+          "title": "Add `--verbose` flag to `h2 dev` and `h2 preview` commands to enable verbose logging",
+          "description": "Only CLI logs become verbose by default. If you also want to see verbose logs from Vite as well, use DEBUG=* h2 dev instead",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1928",
+          "id": "1928"
+        }
+      ]
+    },
     {
       "title": "Fix bug in storefrontRedirect",
       "version": "2024.1.5",
