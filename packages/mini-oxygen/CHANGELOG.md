@@ -1,5 +1,43 @@
 # @shopify/mini-oxygen
 
+## 3.0.0
+
+### Major Changes
+
+- The default runtime exported from `@shopify/mini-oxygen` is now based on workerd. ([#1891](https://github.com/Shopify/hydrogen/pull/1891)) by [@frandiox](https://github.com/frandiox)
+
+  The previous Node.js sandbox runtime has been moved to the `@shopify/mini-oxygen/node` export.
+
+  Example usage:
+
+  ```js
+  import {createMiniOxygen} from '@shopify/mini-oxygen';
+
+  const miniOxygen = createMiniOxygen({
+    workers: [
+      {
+        name: 'main',
+        modules: true,
+        script: `export default {
+          async fetch() {
+            const response = await fetch("https://hydrogen.shopify.dev");
+            return response;
+          }
+        }`,
+      },
+    ],
+  });
+
+  const response = await miniOxygen.dispatchFetch('http://placeholder');
+  console.log(await response.text());
+
+  await miniOxygen.dispose();
+  ```
+
+### Minor Changes
+
+- Export new Vite plugin from `@shopify/mini-oxygen/vite`. It integrates Vite with MiniOxygen by running the application code within a worker. ([#1935](https://github.com/Shopify/hydrogen/pull/1935)) by [@frandiox](https://github.com/frandiox)
+
 ## 2.2.5
 
 ### Patch Changes

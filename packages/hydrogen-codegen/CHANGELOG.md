@@ -1,5 +1,11 @@
 # @shopify/hydrogen-codegen
 
+## 0.3.0
+
+### Minor Changes
+
+- Remove deprecated `schema` export. Use `getSchema('storefront')` instead. ([#1962](https://github.com/Shopify/hydrogen/pull/1962)) by [@frandiox](https://github.com/frandiox)
+
 ## 0.2.2
 
 ### Patch Changes
