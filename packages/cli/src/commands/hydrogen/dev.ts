@@ -59,7 +59,7 @@ const LOG_REBUILT = '🚀 Rebuilt';
 export default class Dev extends Command {
   static descriptionWithMarkdown = `Runs a Hydrogen storefront in a local runtime that emulates an Oxygen worker for development.
 
-  If your project is [linked](https://shopify.dev/docs/api/shopify-cli/hydrogen-commands/hydrogen-link) to a Hydrogen storefront, then its environment variables will be loaded with the runtime.`;
+  If your project is [linked](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-link) to a Hydrogen storefront, then its environment variables will be loaded with the runtime.`;
 
   static description =
     'Runs Hydrogen storefront in an Oxygen worker for development.';
