@@ -1,5 +1,15 @@
 # @shopify/hydrogen-react
 
+## 2024.4.0
+
+### Patch Changes
+
+- Introducing `<UNSTABLE_Analytics.Provider>` that also includes Shopify analytics, Customer Privacy API and Privacy banner ([#1789](https://github.com/Shopify/hydrogen/pull/1789)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Fall back to "mock.shop" when no value is passed in `storeDomain` to `createStorefrontClient` in development. ([#1971](https://github.com/Shopify/hydrogen/pull/1971)) by [@frandiox](https://github.com/frandiox)
+
+- Expose `cartReady` state from the cart context. ([#1885](https://github.com/Shopify/hydrogen/pull/1885)) by [@celsowhite](https://github.com/celsowhite)
+
 ## 2024.1.1
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @shopify/create-hydrogen
 
+## 4.3.6
+
+### Patch Changes
+
+- Add `--quickstart` flag option to init/create command. ([#1822](https://github.com/Shopify/hydrogen/pull/1822)) by [@gfscott](https://github.com/gfscott)
+
+- Updated dependencies [[`4eaec272`](https://github.com/Shopify/hydrogen/commit/4eaec272696f1a718aa7cab1070a54385ebc3686), [`646b78d4`](https://github.com/Shopify/hydrogen/commit/646b78d4bc26310121b16000ed4d1c5d5e63957d), [`5f1295fe`](https://github.com/Shopify/hydrogen/commit/5f1295fe60b86396f364fefef339248a444c988a), [`11879b17`](https://github.com/Shopify/hydrogen/commit/11879b175d78e3326de090a56a044d1e55d0bae8), [`788d86b3`](https://github.com/Shopify/hydrogen/commit/788d86b3a737bff53b4ec3aa9667458b2d45ade7), [`da95bb1c`](https://github.com/Shopify/hydrogen/commit/da95bb1c8c644f450053ce649b40dc380e7375dc), [`5bb43304`](https://github.com/Shopify/hydrogen/commit/5bb43304c08427786cfd4f2529e59bd38f593252), [`140e4768`](https://github.com/Shopify/hydrogen/commit/140e4768c880aaed4ba95b1d4c707df6963e011c), [`b3323e59`](https://github.com/Shopify/hydrogen/commit/b3323e59a4381647f1df797c5dc54793f6e0a29a), [`ab0df5a5`](https://github.com/Shopify/hydrogen/commit/ab0df5a52bc587515880ae26f4edd18ba2be83cd), [`ebaf5529`](https://github.com/Shopify/hydrogen/commit/ebaf5529287b24a70b3146444b18f95b64f9f336), [`a5511cd7`](https://github.com/Shopify/hydrogen/commit/a5511cd7bf9b0f0c4ef0e52cd72418f78c04785b), [`34fbae23`](https://github.com/Shopify/hydrogen/commit/34fbae23999eefbd1af1dff44816a52813d75b44), [`e3baaba5`](https://github.com/Shopify/hydrogen/commit/e3baaba54c701a48923ab3fe8078278f2db2c53f), [`99d72f7a`](https://github.com/Shopify/hydrogen/commit/99d72f7afc354abb66ed0e4ffb020bede2781286), [`9351f9f5`](https://github.com/Shopify/hydrogen/commit/9351f9f564267124bcbf986f5550a542c4bf1e30)]:
+  - @shopify/cli-hydrogen@8.0.0
+
 ## 4.3.5
 
 ### Patch Changes

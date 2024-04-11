@@ -1,5 +1,11 @@
 # @shopify/remix-oxygen
 
+## 2.0.4
+
+### Patch Changes
+
+- Fix compatibility of `/subrequest-profiler` with Vite. ([#1935](https://github.com/Shopify/hydrogen/pull/1935)) by [@frandiox](https://github.com/frandiox)
+
 ## 2.0.3
 
 ### Patch Changes

@@ -1,5 +1,75 @@
 # @shopify/cli-hydrogen
 
+## 8.0.0
+
+### Major Changes
+
+- Hydrogen CLI now requires `@shopify/mini-oxygen` to be installed separately as a dev dependency. It is still used automatically under the hood so there is no need to change your application code aside from installing the dependency. ([#1891](https://github.com/Shopify/hydrogen/pull/1891)) by [@frandiox](https://github.com/frandiox)
+
+  Also, if a port provided via `--port` or `--inspector-port` flags is already in use, the CLI will now exit with an error message instead of finding a new open port. When the flags are not provided, the CLI will still find an open port.
+
+### Minor Changes
+
+- Move the Hydrogen CLI's `env push` command to stable. ([#1946](https://github.com/Shopify/hydrogen/pull/1946)) by [@aswamy](https://github.com/aswamy)
+
+- Deprecate the `--env-branch` flag, in favor of `--env`. ([#1841](https://github.com/Shopify/hydrogen/pull/1841)) by [@aswamy](https://github.com/aswamy)
+
+  - `--env` accepts the environment's handle, instead of the environment's associated branch name
+    - Run `env list` to display all environments and their handles
+  - Any CLI commands that accepted the `--env-branch` flag now accept the `--env` flag.
+
+- Support scaffolding projects from external repositories using the `--template` flag. ([#1867](https://github.com/Shopify/hydrogen/pull/1867)) by [@frandiox](https://github.com/frandiox)
+
+  The following examples are equivalent:
+
+  ```sh
+  npm create @shopify/hydrogen -- --template shopify/hydrogen-demo-store
+  npm create @shopify/hydrogen -- --template github.com/shopify/hydrogen-demo-store
+  npm create @shopify/hydrogen -- --template https://github.com/shopify/hydrogen-demo-store
+  ```
+
+- Add the `customer-account push` command to the Hydrogen CLI. This allows you to push the current `--dev-origin` URL to the Shopify admin to enable secure connection to the Customer Account API for local development. ([#1804](https://github.com/Shopify/hydrogen/pull/1804)) by [@michenly](https://github.com/michenly)
+
+- Remove the `@shopify/cli-hydrogen/experimental-vite` import path in favor of `@shopify/hydrogen/vite` and `@shopify/mini-oxygen/vite`. ([#1935](https://github.com/Shopify/hydrogen/pull/1935)) by [@frandiox](https://github.com/frandiox)
+
+### Patch Changes
+
+- Avoid throwing error in `h2 dev --codegen` when the Customer Account schema is not found. ([#1962](https://github.com/Shopify/hydrogen/pull/1962)) by [@frandiox](https://github.com/frandiox)
+
+- Bump internal workerd dependency to fix a bug when running on Node 21. ([#1866](https://github.com/Shopify/hydrogen/pull/1866)) by [@frandiox](https://github.com/frandiox)
+
+- Support Node's `NODE_TLS_REJECT_UNAUTHORIZED` and `NODE_EXTRA_CA_CERTS` [environment variables](https://nodejs.org/api/cli.html#environment-variables) in the worker environment. ([#1882](https://github.com/Shopify/hydrogen/pull/1882)) by [@frandiox](https://github.com/frandiox)
+
+  Use this at your own risk to disable certificate validation or provide additional CA certificates when making HTTPS requests from the worker:
+
+  ```sh
+  # Disable certificate validation
+  NODE_TLS_REJECT_UNAUTHORIZED=0 npm run dev
+
+  # Provide additional CA certificates
+  NODE_EXTRA_CA_CERTS=/usr/.../ca-certificates/my-file.crt npm run dev
+  ```
+
+- Add `--quickstart` flag option to init/create command. ([#1822](https://github.com/Shopify/hydrogen/pull/1822)) by [@gfscott](https://github.com/gfscott)
+
+- Add a newline after the `h2` alias created in ZSH/Bash profiles. ([#1950](https://github.com/Shopify/hydrogen/pull/1950)) by [@madmath](https://github.com/madmath)
+
+- Fix the `--markets` flag when using `npm create @shopify/hydrogen`. ([#1916](https://github.com/Shopify/hydrogen/pull/1916)) by [@frandiox](https://github.com/frandiox)
+
+- Handle duplicate storefront names when running `link` command. ([#1860](https://github.com/Shopify/hydrogen/pull/1860)) by [@gfscott](https://github.com/gfscott)
+
+- List uncommitted files in the `deploy` command's "uncommitted changes" error message. ([#1944](https://github.com/Shopify/hydrogen/pull/1944)) by [@graygilmore](https://github.com/graygilmore)
+
+- Improve `h2 setup vite` command to cover more migration steps (e.g. vanilla-extract, css-modules, etc.) and keep Remix future flags. ([#1915](https://github.com/Shopify/hydrogen/pull/1915)) by [@frandiox](https://github.com/frandiox)
+
+- Add `--verbose` flag to `h2 dev` and `h2 preview` commands to enable verbose logging. ([#1928](https://github.com/Shopify/hydrogen/pull/1928)) by [@frandiox](https://github.com/frandiox)
+
+  Only CLI logs become verbose by default. If you also want to see verbose logs from Vite as well, use `DEBUG=* h2 dev` instead.
+
+- Updated dependencies [[`646b78d4`](https://github.com/Shopify/hydrogen/commit/646b78d4bc26310121b16000ed4d1c5d5e63957d), [`140e4768`](https://github.com/Shopify/hydrogen/commit/140e4768c880aaed4ba95b1d4c707df6963e011c), [`ebaf5529`](https://github.com/Shopify/hydrogen/commit/ebaf5529287b24a70b3146444b18f95b64f9f336)]:
+  - @shopify/hydrogen-codegen@0.3.0
+  - @shopify/mini-oxygen@3.0.0
+
 ## 7.1.2
 
 ### Patch Changes
