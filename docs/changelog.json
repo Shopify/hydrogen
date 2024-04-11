@@ -159,7 +159,7 @@
           "id": "1781"
         },
         {
-          "title": "Move the Hydrogen CLI's `env pushh` command to stable",
+          "title": "Move the Hydrogen CLI's `env push` command to stable",
           "pr": "https://github.com/Shopify/hydrogen/pull/1946",
           "id": "1946",
           "docs": "https://shopify.dev/docs/custom-storefronts/hydrogen/cli#env-push"
