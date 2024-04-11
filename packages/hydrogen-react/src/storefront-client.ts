@@ -35,10 +35,7 @@ export function createStorefrontClient({
 }: StorefrontClientProps): StorefrontClientReturn {
   if (!storeDomain) {
     storeDomain = MOCK_SHOP_DOMAIN;
-    warnOnce(
-      `storeDomain missing, defaulting to ${MOCK_SHOP_DOMAIN}`,
-      'info',
-    );
+    warnOnce(`storeDomain missing, defaulting to ${MOCK_SHOP_DOMAIN}`, 'info');
   }
 
   if (storefrontApiVersion !== SFAPI_VERSION) {
