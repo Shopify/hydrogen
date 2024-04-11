@@ -1,5 +1,6 @@
+// @ts-ignore
 // Virtual entry point for the app
-import * as remixBuild from '@remix-run/dev/server-build';
+import * as remixBuild from 'virtual:remix/server-build';
 import {
   cartGetIdDefault,
   cartSetIdDefault,
@@ -15,6 +16,7 @@ import {
 } from '@shopify/remix-oxygen';
 import {AppSession} from '~/lib/session';
 import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
+
 
 /**
  * Export a fetch handler in module format.
@@ -48,7 +50,6 @@ export default {
         session,
         customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID,
         customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_API_URL,
-        customerApiVersion: 'unstable',
         /***********************************************/
         /**********  EXAMPLE UPDATE STARTS  ************/
         unstableB2b: true,
@@ -68,7 +69,6 @@ export default {
         storeDomain: env.PUBLIC_STORE_DOMAIN,
         storefrontId: env.PUBLIC_STOREFRONT_ID,
         storefrontHeaders: getStorefrontHeaders(request),
-        storefrontApiVersion: 'unstable',
         /***********************************************/
         /**********  EXAMPLE UPDATE STARTS  ************/
         unstableB2b: true,

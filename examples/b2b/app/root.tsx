@@ -134,6 +134,7 @@ export async function loader({context}: LoaderFunctionArgs) {
       isLoggedIn,
       publicStoreDomain,
       company,
+      companyLocationId,
       showLocationSelector,
       /**********   EXAMPLE UPDATE END   ************/
       /***********************************************/
@@ -176,7 +177,6 @@ export default function App() {
         }
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
-        <LiveReload nonce={nonce} />
       </body>
     </html>
   );
@@ -218,7 +218,6 @@ export function ErrorBoundary() {
         </Layout>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
-        <LiveReload nonce={nonce} />
       </body>
     </html>
   );

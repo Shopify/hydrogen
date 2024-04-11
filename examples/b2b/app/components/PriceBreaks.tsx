@@ -19,9 +19,9 @@ export function PriceBreaks({priceBreaks}: PriceBreaksProps) {
           <th className="table-haeading">Minimum Quantity</th>
           <th className="table-haeading">Unit Price</th>
         </tr>
-        {priceBreaks.map((priceBreak) => {
+        {priceBreaks.map((priceBreak, index) => {
           return (
-            <tr>
+            <tr key={index}>
               <th className="table-item">{priceBreak.minimumQuantity}</th>
               <th className="table-item">
                 <Money data={priceBreak.price} />

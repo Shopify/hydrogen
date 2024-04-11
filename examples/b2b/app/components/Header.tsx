@@ -1,4 +1,4 @@
-import {Await, Form, NavLink} from '@remix-run/react';
+import {Await, useLocation, NavLink} from '@remix-run/react';
 import {CartForm} from '@shopify/hydrogen';
 import {useState, Suspense} from 'react';
 import type {HeaderQuery} from 'storefrontapi.generated';
@@ -13,7 +13,7 @@ import type {
 /**********  EXAMPLE UPDATE STARTS  ************/
 type HeaderProps = Pick<
   LayoutProps,
-  'header' | 'cart' | 'isLoggedIn' | 'company'
+  'header' | 'cart' | 'isLoggedIn' | 'company' | 'companyLocationId'
 >;
 /**********   EXAMPLE UPDATE END   ************/
 /***********************************************/
@@ -22,7 +22,13 @@ type Viewport = 'desktop' | 'mobile';
 
 /***********************************************/
 /**********  EXAMPLE UPDATE STARTS  ************/
-export function Header({header, isLoggedIn, cart, company}: HeaderProps) {
+export function Header({
+  header,
+  isLoggedIn,
+  cart,
+  company,
+  companyLocationId,
+}: HeaderProps) {
   /**********   EXAMPLE UPDATE END   ************/
   /***********************************************/
   const {shop, menu} = header;
@@ -38,7 +44,12 @@ export function Header({header, isLoggedIn, cart, company}: HeaderProps) {
       />
       {/***********************************************/
       /**********  EXAMPLE UPDATE STARTS  ************/}
-      <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} company={company} />
+      <HeaderCtas
+        isLoggedIn={isLoggedIn}
+        cart={cart}
+        company={company}
+        companyLocationId={companyLocationId}
+      />
       {/**********   EXAMPLE UPDATE END   ************/
       /***********************************************/}
     </header>
@@ -111,11 +122,15 @@ function HeaderCtas({
   isLoggedIn,
   cart,
   company,
-}: Pick<HeaderProps, 'isLoggedIn' | 'cart' | 'company'>) {
+  companyLocationId,
+}: Pick<HeaderProps, 'isLoggedIn' | 'cart' | 'company' | 'companyLocationId'>) {
   return (
     <nav className="header-ctas" role="navigation">
       <HeaderMenuMobileToggle />
-      <LocationDropdown company={company} />
+      <LocationDropdown
+        company={company}
+        companyLocationId={companyLocationId}
+      />
       <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
         {isLoggedIn ? 'Account' : 'Sign in'}
       </NavLink>
@@ -158,7 +173,12 @@ function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
 
 /***********************************************/
 /**********  EXAMPLE UPDATE STARTS  ************/
-function LocationDropdown({company}: Pick<HeaderProps, 'company'>) {
+function LocationDropdown({
+  company,
+  companyLocationId,
+}: Pick<HeaderProps, 'company' | 'companyLocationId'>) {
+  const location = useLocation();
+
   const locations = company?.locations?.edges
     ? company.locations.edges.map((location: CompanyLocationConnection) => {
         return {...location.node};
@@ -166,7 +186,7 @@ function LocationDropdown({company}: Pick<HeaderProps, 'company'>) {
     : [];
 
   const [selectedLocation, setSelectedLocation] = useState(
-    company?.locations?.edges?.[0]?.node?.id ?? undefined,
+    companyLocationId ?? undefined,
   );
 
   const setLocation = async (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -203,9 +223,15 @@ function LocationDropdown({company}: Pick<HeaderProps, 'company'>) {
               );
             })}
           </select>
-          <noscript>
-            <button type="submit">Choose Location</button>
-          </noscript>
+          <input
+            style={{display: 'none'}}
+            type="text"
+            id="redirectTo"
+            name="redirectTo"
+            readOnly
+            value={location.pathname}
+          />
+          <button type="submit">Choose Location</button>
         </>
       )}
     </CartForm>

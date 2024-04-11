@@ -24,6 +24,7 @@ export type LayoutProps = {
   /***********************************************/
   /**********  EXAMPLE UPDATE STARTS  ************/
   company: Company;
+  companyLocationId: string;
   /**********   EXAMPLE UPDATE END   ************/
   /***********************************************/
 };
@@ -37,6 +38,7 @@ export function Layout({
   header,
   isLoggedIn,
   company,
+  companyLocationId,
 }: LayoutProps) {
   /**********   EXAMPLE UPDATE END   ************/
   /***********************************************/
@@ -53,6 +55,7 @@ export function Layout({
           cart={cart}
           isLoggedIn={isLoggedIn}
           company={company}
+          companyLocationId={companyLocationId}
         />
       )}
       {/**********   EXAMPLE UPDATE END   ************/
