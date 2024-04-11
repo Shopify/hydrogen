@@ -80,7 +80,7 @@ export function findMissingRoutes(
           requiredRoute
             .replaceAll('.', '\\.') // Escape dots
             .replace(/\//g, `\\/(${optionalSegment}\\/)?`) // Has optional segments in the middle
-            .replace(/:[^/)?]+/g, ':[^\\/]+') + // Replace params with regex
+            .replace(/:[^/)?]+/g, '(:[^\\/]+|\\*)') + // Replace params with regex
           `(\\/${optionalSegment})?$`; // Ends with an optional segment
 
         if (new RegExp(reString).test(currentRoute.path)) {
