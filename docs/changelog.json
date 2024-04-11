@@ -182,13 +182,15 @@
           ]
         },
         {
-          "title": "Introduce <UNSTABLE_Analytics.Provider> that also includes Shopify analytics, Customer Privacy API and Privacy banner",
+          "title": "Introduce <UNSTABLE_Analytics.Provider> that also includes support for Shopify analytics, Customer Privacy API and Privacy banner",
+          "description": "Adds the following compoonents and utilities, `UNSTABLE_Analytics`, `getShopAnalytics`, `unstable_useAnalytics` and more",
           "pr": "https://github.com/Shopify/hydrogen/pull/1789",
           "id": "1789"
         },
         {
           "title": "Add new analytics example (unstable)",
           "pr": "https://github.com/Shopify/hydrogen/pull/1789",
+          "docs": "https://github.com/Shopify/hydrogen/blob/main/examples/analytics/README.md",
           "id": "1789"
         },
         {
