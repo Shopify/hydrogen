@@ -203,7 +203,7 @@ export type CartHandlerOptionsForDocs<
    */
   setCartId: (cartId: string) => Headers;
   /**
-   * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/latest/utilities/createstorefrontclient).
+   * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/2024-04/utilities/createstorefrontclient).
    */
   storefront: Storefront;
   /**

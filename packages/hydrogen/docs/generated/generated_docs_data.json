@@ -913,7 +913,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Storefront",
-            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  isApiError: (error: any) => boolean;\n  i18n: TI18n;\n}",
+            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  i18n: TI18n;\n}",
             "description": "Interface to interact with the Storefront API.",
             "members": [
               {
@@ -999,13 +999,6 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
-                "description": ""
-              },
-              {
-                "filePath": "/storefront.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "isApiError",
-                "value": "(error: any) => boolean",
                 "description": ""
               },
               {
@@ -3582,7 +3575,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Storefront",
-            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  isApiError: (error: any) => boolean;\n  i18n: TI18n;\n}",
+            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  i18n: TI18n;\n}",
             "description": "Interface to interact with the Storefront API.",
             "members": [
               {
@@ -3668,13 +3661,6 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
-                "description": ""
-              },
-              {
-                "filePath": "/storefront.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "isApiError",
-                "value": "(error: any) => boolean",
                 "description": ""
               },
               {
@@ -4853,7 +4839,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Storefront",
-            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  isApiError: (error: any) => boolean;\n  i18n: TI18n;\n}",
+            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  i18n: TI18n;\n}",
             "description": "Interface to interact with the Storefront API.",
             "members": [
               {
@@ -4939,13 +4925,6 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
-                "description": ""
-              },
-              {
-                "filePath": "/storefront.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "isApiError",
-                "value": "(error: any) => boolean",
                 "description": ""
               },
               {
@@ -5369,7 +5348,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Storefront",
-            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  isApiError: (error: any) => boolean;\n  i18n: TI18n;\n}",
+            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  i18n: TI18n;\n}",
             "description": "Interface to interact with the Storefront API.",
             "members": [
               {
@@ -5455,13 +5434,6 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
-                "description": ""
-              },
-              {
-                "filePath": "/storefront.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "isApiError",
-                "value": "(error: any) => boolean",
                 "description": ""
               },
               {
@@ -5885,7 +5857,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Storefront",
-            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  isApiError: (error: any) => boolean;\n  i18n: TI18n;\n}",
+            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  i18n: TI18n;\n}",
             "description": "Interface to interact with the Storefront API.",
             "members": [
               {
@@ -5971,13 +5943,6 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
-                "description": ""
-              },
-              {
-                "filePath": "/storefront.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "isApiError",
-                "value": "(error: any) => boolean",
                 "description": ""
               },
               {
@@ -6401,7 +6366,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Storefront",
-            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  isApiError: (error: any) => boolean;\n  i18n: TI18n;\n}",
+            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  i18n: TI18n;\n}",
             "description": "Interface to interact with the Storefront API.",
             "members": [
               {
@@ -6487,13 +6452,6 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
-                "description": ""
-              },
-              {
-                "filePath": "/storefront.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "isApiError",
-                "value": "(error: any) => boolean",
                 "description": ""
               },
               {
@@ -6917,7 +6875,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Storefront",
-            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  isApiError: (error: any) => boolean;\n  i18n: TI18n;\n}",
+            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  i18n: TI18n;\n}",
             "description": "Interface to interact with the Storefront API.",
             "members": [
               {
@@ -7003,13 +6961,6 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
-                "description": ""
-              },
-              {
-                "filePath": "/storefront.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "isApiError",
-                "value": "(error: any) => boolean",
                 "description": ""
               },
               {
@@ -7511,7 +7462,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Storefront",
-            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  isApiError: (error: any) => boolean;\n  i18n: TI18n;\n}",
+            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  i18n: TI18n;\n}",
             "description": "Interface to interact with the Storefront API.",
             "members": [
               {
@@ -7597,13 +7548,6 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
-                "description": ""
-              },
-              {
-                "filePath": "/storefront.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "isApiError",
-                "value": "(error: any) => boolean",
                 "description": ""
               },
               {
@@ -8027,7 +7971,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Storefront",
-            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  isApiError: (error: any) => boolean;\n  i18n: TI18n;\n}",
+            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  i18n: TI18n;\n}",
             "description": "Interface to interact with the Storefront API.",
             "members": [
               {
@@ -8113,13 +8057,6 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
-                "description": ""
-              },
-              {
-                "filePath": "/storefront.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "isApiError",
-                "value": "(error: any) => boolean",
                 "description": ""
               },
               {
@@ -8536,7 +8473,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Storefront",
-            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  isApiError: (error: any) => boolean;\n  i18n: TI18n;\n}",
+            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  i18n: TI18n;\n}",
             "description": "Interface to interact with the Storefront API.",
             "members": [
               {
@@ -8622,13 +8559,6 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
-                "description": ""
-              },
-              {
-                "filePath": "/storefront.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "isApiError",
-                "value": "(error: any) => boolean",
                 "description": ""
               },
               {
@@ -9052,7 +8982,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Storefront",
-            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  isApiError: (error: any) => boolean;\n  i18n: TI18n;\n}",
+            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  i18n: TI18n;\n}",
             "description": "Interface to interact with the Storefront API.",
             "members": [
               {
@@ -9138,13 +9068,6 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
-                "description": ""
-              },
-              {
-                "filePath": "/storefront.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "isApiError",
-                "value": "(error: any) => boolean",
                 "description": ""
               },
               {
@@ -9561,7 +9484,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Storefront",
-            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  isApiError: (error: any) => boolean;\n  i18n: TI18n;\n}",
+            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  i18n: TI18n;\n}",
             "description": "Interface to interact with the Storefront API.",
             "members": [
               {
@@ -9647,13 +9570,6 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
-                "description": ""
-              },
-              {
-                "filePath": "/storefront.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "isApiError",
-                "value": "(error: any) => boolean",
                 "description": ""
               },
               {
@@ -10077,7 +9993,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Storefront",
-            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  isApiError: (error: any) => boolean;\n  i18n: TI18n;\n}",
+            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  i18n: TI18n;\n}",
             "description": "Interface to interact with the Storefront API.",
             "members": [
               {
@@ -10163,13 +10079,6 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
-                "description": ""
-              },
-              {
-                "filePath": "/storefront.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "isApiError",
-                "value": "(error: any) => boolean",
                 "description": ""
               },
               {
@@ -10586,7 +10495,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Storefront",
-            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  isApiError: (error: any) => boolean;\n  i18n: TI18n;\n}",
+            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  i18n: TI18n;\n}",
             "description": "Interface to interact with the Storefront API.",
             "members": [
               {
@@ -10672,13 +10581,6 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
-                "description": ""
-              },
-              {
-                "filePath": "/storefront.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "isApiError",
-                "value": "(error: any) => boolean",
                 "description": ""
               },
               {
@@ -11207,7 +11109,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontForDoc",
-            "value": "{\n  /** The function to run a query on Storefront API. */\n  query?: <TData = any>(\n    query: string,\n    options: StorefrontQueryOptionsForDocs,\n  ) => Promise<TData & StorefrontError>;\n  /** The function to run a mutation on Storefront API. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: StorefrontMutationOptionsForDocs,\n  ) => Promise<TData & StorefrontError>;\n  /** The cache instance passed in from the `createStorefrontClient` argument. */\n  cache?: Cache;\n  /** Re-export of [`CacheNone`](/docs/api/hydrogen/2024-04/utilities/cachenone). */\n  CacheNone?: typeof CacheNone;\n  /** Re-export of [`CacheLong`](/docs/api/hydrogen/2024-04/utilities/cachelong). */\n  CacheLong?: typeof CacheLong;\n  /** Re-export of [`CacheShort`](/docs/api/hydrogen/2024-04/utilities/cacheshort). */\n  CacheShort?: typeof CacheShort;\n  /** Re-export of [`CacheCustom`](/docs/api/hydrogen/2024-04/utilities/cachecustom). */\n  CacheCustom?: typeof CacheCustom;\n  /** Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/2024-04/utilities/generatecachecontrolheader). */\n  generateCacheControlHeader?: typeof generateCacheControlHeader;\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2024-04/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details. */\n  getPublicTokenHeaders?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2024-04/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.*/\n  getPrivateTokenHeaders?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  /** Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2024-04/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details. */\n  getShopifyDomain?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2024-04/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.*/\n  getApiUrl?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  /**\n   * @deprecated Use the `errors` object returned from the API if exists.\n   * */\n  isApiError?: (error: any) => boolean;\n  /** The `i18n` object passed in from the `createStorefrontClient` argument. */\n  i18n?: TI18n;\n}",
+            "value": "{\n  /** The function to run a query on Storefront API. */\n  query?: <TData = any>(\n    query: string,\n    options: StorefrontQueryOptionsForDocs,\n  ) => Promise<TData & StorefrontError>;\n  /** The function to run a mutation on Storefront API. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: StorefrontMutationOptionsForDocs,\n  ) => Promise<TData & StorefrontError>;\n  /** The cache instance passed in from the `createStorefrontClient` argument. */\n  cache?: Cache;\n  /** Re-export of [`CacheNone`](/docs/api/hydrogen/2024-04/utilities/cachenone). */\n  CacheNone?: typeof CacheNone;\n  /** Re-export of [`CacheLong`](/docs/api/hydrogen/2024-04/utilities/cachelong). */\n  CacheLong?: typeof CacheLong;\n  /** Re-export of [`CacheShort`](/docs/api/hydrogen/2024-04/utilities/cacheshort). */\n  CacheShort?: typeof CacheShort;\n  /** Re-export of [`CacheCustom`](/docs/api/hydrogen/2024-04/utilities/cachecustom). */\n  CacheCustom?: typeof CacheCustom;\n  /** Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/2024-04/utilities/generatecachecontrolheader). */\n  generateCacheControlHeader?: typeof generateCacheControlHeader;\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2024-04/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details. */\n  getPublicTokenHeaders?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2024-04/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.*/\n  getPrivateTokenHeaders?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  /** Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2024-04/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details. */\n  getShopifyDomain?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2024-04/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.*/\n  getApiUrl?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  /** The `i18n` object passed in from the `createStorefrontClient` argument. */\n  i18n?: TI18n;\n}",
             "description": "",
             "members": [
               {
@@ -11305,15 +11207,6 @@
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
                 "description": "Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2024-04/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.",
                 "isOptional": true
-              },
-              {
-                "filePath": "/storefront.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "isApiError",
-                "value": "(error: any) => boolean",
-                "description": "",
-                "isOptional": true,
-                "deprecationMessage": "Use the `errors` object returned from the API if exists."
               },
               {
                 "filePath": "/storefront.ts",
@@ -13274,7 +13167,7 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Storefront",
-            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  isApiError: (error: any) => boolean;\n  i18n: TI18n;\n}",
+            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  i18n: TI18n;\n}",
             "description": "Interface to interact with the Storefront API.",
             "members": [
               {
@@ -13360,13 +13253,6 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
-                "description": ""
-              },
-              {
-                "filePath": "/storefront.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "isApiError",
-                "value": "(error: any) => boolean",
                 "description": ""
               },
               {
