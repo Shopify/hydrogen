@@ -1,6 +1,6 @@
 # @shopify/hydrogen
 
-## 2024.5.0
+## 2024.4.0
 
 ### Minor Changes
 
@@ -166,7 +166,7 @@
   ```
 
 - Updated dependencies [[`f4d6e5b0`](https://github.com/Shopify/hydrogen/commit/f4d6e5b0244392a7c13b9fa51c5046fd103c3e4f), [`a209019f`](https://github.com/Shopify/hydrogen/commit/a209019f722ece4b65f8d5f37c8018c949956b1e), [`e50f4349`](https://github.com/Shopify/hydrogen/commit/e50f4349b665a1ff547a8d6229a6269157d867bd)]:
-  - @shopify/hydrogen-react@2024.4.1
+  - @shopify/hydrogen-react@2024.4.0
 
 ## 2024.1.4
 
