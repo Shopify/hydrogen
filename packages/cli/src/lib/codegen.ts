@@ -85,15 +85,10 @@ export function spawnCodegenProcess({
 
   child.on('close', (code) => {
     if (code && code > 0) {
-      renderFatalError({
-        type: 0,
-        name: 'CodegenError',
-        message: `Codegen process exited with code ${code}`,
-        skipOclifErrorHandling: true,
-        tryMessage: 'Try restarting the dev server.',
+      renderWarning({
+        headline: 'Codegen process exited with code ' + code,
+        body: 'There should be more logs above.',
       });
-
-      process.exit(code);
     }
   });
 
