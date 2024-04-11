@@ -999,7 +999,8 @@ export async function displayDevUpgradeNotice({
 
   const isPrerelease = semver.prerelease(currentVersion);
 
-  if (isPrerelease) {
+  if (isPrerelease || /^[a-z]+$/i.test(currentVersion)) {
+    // Skip prereleases or versions like 'next' or 'latest'
     return;
   }
 

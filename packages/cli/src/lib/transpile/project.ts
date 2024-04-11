@@ -4,6 +4,7 @@ import {outputDebug} from '@shopify/cli-kit/node/output';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {formatCode, getCodeFormatOptions} from '../format-code.js';
 import {transpileFile} from './file.js';
+import {findFileWithExtension} from '../file.js';
 
 const DEFAULT_JS_CONFIG: Omit<CompilerOptions, 'jsx'> = {
   checkJs: false,
@@ -157,15 +158,20 @@ export async function transpileProject(projectDir: string, keepTypes = true) {
 
   // Remove TS from ESLint
   try {
-    const eslintrcPath = joinPath(projectDir, '.eslintrc.js');
-    let eslintrc = await readFile(eslintrcPath);
+    const {filepath = joinPath(projectDir, '.eslintrc.cjs')} =
+      await findFileWithExtension(projectDir, '.eslintrc', ['cjs', 'js']);
+
+    let eslintrc = await readFile(filepath);
+
+    if (!keepTypes) {
+      eslintrc = eslintrc.replace(/\/\*\*[\s*]+@type.+\s+\*\/\s?/gim, '');
+    }
 
     eslintrc = eslintrc
-      .replace(/\/\*\*[\s*]+@type.+\s+\*\/\s?/gim, '')
       .replace(/\s*,?\s*['"`]plugin:hydrogen\/typescript['"`]/gim, '')
       .replace(/\s+['"`]@typescript-eslint\/.+,/gim, '');
 
-    await writeFile(eslintrcPath, eslintrc);
+    await writeFile(filepath, await formatCode(eslintrc, formatConfig));
   } catch (error) {
     outputDebug(
       'Could not remove TS rules from .eslintrc:\n' + (error as Error).stack,

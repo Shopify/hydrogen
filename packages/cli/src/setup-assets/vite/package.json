@@ -1,8 +1,8 @@
 {
   "type": "module",
   "scripts": {
-    "build": "shopify hydrogen build-vite --codegen",
-    "dev": "shopify hydrogen dev-vite --codegen"
+    "build": "shopify hydrogen build --codegen",
+    "dev": "shopify hydrogen dev --codegen"
   },
   "dependencies": {
     "isbot": "^3.8.0"
