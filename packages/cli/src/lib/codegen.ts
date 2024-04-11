@@ -26,6 +26,14 @@ if (isStandaloneProcess) {
 }
 
 function normalizeCodegenError(errorMessage: string, rootDirectory?: string) {
+  if (errorMessage.includes('AbortError: ')) {
+    const parsedError = errorMessage.split('AbortError: ')[1] ?? '';
+    const message = parsedError.split('\n')[0];
+    const details = parsedError.match(/tryMessage: '(.*)',$/m)?.[1];
+
+    if (message) return {message, details};
+  }
+
   const [first = '', ...rest] = errorMessage
     .replaceAll('[FAILED]', '')
     .replace(/\s{2,}/g, '\n')
@@ -76,7 +84,8 @@ export function spawnCodegenProcess({
 
     // Filter these logs even on verbose mode because it floods the terminal:
     if (/`punycode`/.test(message)) return;
-    if (/\.body\[\d\]/) return;
+    if (/\.body\[\d\]/.test(message)) return;
+    if (/console\.time(End)?\(\)/.test(message)) return;
 
     console.log('');
     renderWarning({headline: message, body: details});
@@ -84,15 +93,10 @@ export function spawnCodegenProcess({
 
   child.on('close', (code) => {
     if (code && code > 0) {
-      renderFatalError({
-        type: 0,
-        name: 'CodegenError',
-        message: `Codegen process exited with code ${code}`,
-        skipOclifErrorHandling: true,
-        tryMessage: 'Try restarting the dev server.',
+      renderWarning({
+        headline: 'Codegen process exited with code ' + code,
+        body: 'There should be more logs above.',
       });
-
-      process.exit(code);
     }
   });
 
@@ -112,6 +116,8 @@ type CodegenOptions = ProjectDirs & {
 
 export function codegen(options: CodegenOptions) {
   return generateTypes(options).catch((error: Error) => {
+    if (error instanceof AbortError) throw error;
+
     const {message, details} = normalizeCodegenError(
       error.message,
       options.rootDirectory,
