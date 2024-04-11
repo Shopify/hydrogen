@@ -1,5 +1,173 @@
 # @shopify/hydrogen
 
+## 2024.5.0
+
+### Minor Changes
+
+- Change `storefrontRedirect` to ignore query parameters when matching redirects. For example, a redirect in the admin from `/snowboards` to `/collections/snowboards` will now match on the URL `/snowboards?utm_campaign=buffer` and redirect the user to `/collections/snowboards?utm_campaign=buffer`. ([#1900](https://github.com/Shopify/hydrogen/pull/1900)) by [@blittle](https://github.com/blittle)
+
+  This is a breaking change. If you want to retain the legacy functionality that is query parameter sensitive, pass `matchQueryParams` to `storefrontRedirect()`:
+
+  ```ts
+  storefrontRedirect({
+    request,
+    response,
+    storefront,
+    matchQueryParams: true,
+  });
+  ```
+
+### Patch Changes
+
+- Make `StorefrontRedirect` case insensitive when querying redirect URLs from the Storefront API. ([#1941](https://github.com/Shopify/hydrogen/pull/1941)) by [@blittle](https://github.com/blittle)
+
+- Fix bug where `storefrontRedirect` would return an error on soft page navigations. ([#1880](https://github.com/Shopify/hydrogen/pull/1880)) by [@blittle](https://github.com/blittle)
+
+- Fix a bug where `cart` could be null, even though a new cart was created by adding a line item. ([#1865](https://github.com/Shopify/hydrogen/pull/1865)) by [@blittle](https://github.com/blittle)
+
+  This allows calling the cart `.get()` method right after creating a new cart with
+  one of the mutation methods: `create()`, `addLines()`, `updateDiscountCodes()`, `updateBuyerIdentity()`, `updateNote()`, `updateAttributes()`, `setMetafields()`.
+
+  ```ts
+  import {
+    createCartHandler,
+    cartGetIdDefault,
+    cartSetIdDefault,
+  } from '@shopify/hydrogen';
+
+  const cartHandler = createCartHandler({
+    storefront,
+    getCartId: cartGetIdDefault(request.headers),
+    setCartId: cartSetIdDefault(),
+    cartQueryFragment: CART_QUERY_FRAGMENT,
+    cartMutateFragment: CART_MUTATE_FRAGMENT,
+  });
+
+  await cartHandler.addLines([{merchandiseId: '...'}]);
+  // .get() now returns the cart as expected
+  const cart = await cartHandler.get();
+  ```
+
+- Add `postLogoutRedirectUri` option to the Customer Account API client's logout method. ([#1871](https://github.com/Shopify/hydrogen/pull/1871)) by [@michenly](https://github.com/michenly)
+
+- Introducing `<UNSTABLE_Analytics.Provider>` that also includes Shopify analytics, Customer Privacy API and Privacy banner ([#1789](https://github.com/Shopify/hydrogen/pull/1789)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Export new Hydrogen Vite plugin from `@shopify/hydrogen/vite`. ([#1935](https://github.com/Shopify/hydrogen/pull/1935)) by [@frandiox](https://github.com/frandiox)
+
+- Add the `customer-account push` command to the Hydrogen CLI. This allows you to push the current `--dev-origin` URL to the Shopify admin to enable secure connection to the Customer Account API for local development. ([#1804](https://github.com/Shopify/hydrogen/pull/1804)) by [@michenly](https://github.com/michenly)
+
+- Fix default content security policy directive for `frameAncestors`. ([#1883](https://github.com/Shopify/hydrogen/pull/1883)) by [@blittle](https://github.com/blittle)
+
+- Fall back to "mock.shop" when no value is passed in `storeDomain` to `createStorefrontClient` in development. ([#1971](https://github.com/Shopify/hydrogen/pull/1971)) by [@frandiox](https://github.com/frandiox)
+
+- Allow `ui_locale` to be passed to the customer account login page. ([#1842](https://github.com/Shopify/hydrogen/pull/1842)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Deprecate the `<Seo />` component in favor of directly using Remix [meta route exports](https://remix.run/docs/en/main/route/meta). Add the `getSeoMeta` to make migration easier. ([#1875](https://github.com/Shopify/hydrogen/pull/1875)) by [@blittle](https://github.com/blittle)
+
+  ### Migration steps:
+
+  **1. Remove the `<Seo />` component from `root.jsx`:**
+
+  ```diff
+   export default function App() {
+     const nonce = useNonce();
+     const data = useLoaderData<typeof loader>();
+
+     return (
+       <html lang="en">
+         <head>
+           <meta charSet="utf-8" />
+           <meta name="viewport" content="width=device-width,initial-scale=1" />
+  -        <Seo />
+           <Meta />
+           <Links />
+         </head>
+         <body>
+           <Layout {...data}>
+             <Outlet />
+           </Layout>
+           <ScrollRestoration nonce={nonce} />
+           <Scripts nonce={nonce} />
+           <LiveReload nonce={nonce} />
+         </body>
+       </html>
+     );
+   }
+
+  ```
+
+  **2. Add a Remix meta export to each route that returns an `seo` property from a `loader` or `handle`:**
+
+  ```diff
+  +import {getSeoMeta} from '@shopify/hydrogen';
+
+   export async function loader({context}) {
+     const {shop} = await context.storefront.query(`
+       query layout {
+         shop {
+           name
+           description
+         }
+       }
+     `);
+
+     return {
+       seo: {
+         title: shop.title,
+         description: shop.description,
+       },
+     };
+   }
+
+  +export const meta = ({data}) => {
+  +   return getSeoMeta(data.seo);
+  +};
+  ```
+
+  **3. Merge root route meta data**
+
+  If your root route loader also returns an `seo` property, make sure to merge that data:
+
+  ```ts
+  export const meta = ({data, matches}) => {
+    return getSeoMeta(
+      matches[0].data.seo,
+      // the current route seo data overrides the root route data
+      data.seo,
+    );
+  };
+  ```
+
+  Or more simply:
+
+  ```ts
+  export const meta = ({data, matches}) => {
+    return getSeoMeta(...matches.map((match) => match.data.seo));
+  };
+  ```
+
+  **4. Override meta**
+
+  Sometimes `getSeoMeta` might produce a property in a way you'd like to change. Map over the resulting array to change it. For example, Hydrogen removes query parameters from canonical URLs, add them back:
+
+  ```ts
+  export const meta = ({data, location}) => {
+    return getSeoMeta(data.seo).map((meta) => {
+      if (meta.rel === 'canonical') {
+        return {
+          ...meta,
+          href: meta.href + location.search,
+        };
+      }
+
+      return meta;
+    });
+  };
+  ```
+
+- Updated dependencies [[`f4d6e5b0`](https://github.com/Shopify/hydrogen/commit/f4d6e5b0244392a7c13b9fa51c5046fd103c3e4f), [`a209019f`](https://github.com/Shopify/hydrogen/commit/a209019f722ece4b65f8d5f37c8018c949956b1e), [`e50f4349`](https://github.com/Shopify/hydrogen/commit/e50f4349b665a1ff547a8d6229a6269157d867bd)]:
+  - @shopify/hydrogen-react@2024.4.1
+
 ## 2024.1.4
 
 ### Patch Changes

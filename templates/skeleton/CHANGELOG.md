@@ -1,5 +1,94 @@
 # skeleton
 
+## 1.0.7
+
+### Patch Changes
+
+- Update internal libraries for parsing `.env` files. ([#1946](https://github.com/Shopify/hydrogen/pull/1946)) by [@aswamy](https://github.com/aswamy)
+
+  Please update the `@shopify/cli` dependency in your app to avoid duplicated subdependencies:
+
+  ```diff
+  "dependencies": {
+  -   "@shopify/cli": "3.56.3",
+  +   "@shopify/cli": "3.58.0",
+  }
+  ```
+
+- Add Adds magic Catalog route ([#1967](https://github.com/Shopify/hydrogen/pull/1967)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Update Vite plugin imports, and how their options are passed to Remix: ([#1935](https://github.com/Shopify/hydrogen/pull/1935)) by [@frandiox](https://github.com/frandiox)
+
+  ```diff
+  -import {hydrogen, oxygen} from '@shopify/cli-hydrogen/experimental-vite';
+  +import {hydrogen} from '@shopify/hydrogen/vite';
+  +import {oxygen} from '@shopify/mini-oxygen/vite';
+  import {vitePlugin as remix} from '@remix-run/dev';
+
+  export default defineConfig({
+      hydrogen(),
+      oxygen(),
+      remix({
+  -     buildDirectory: 'dist',
+  +     presets: [hydrogen.preset()],
+        future: {
+  ```
+
+- Add `@shopify/mini-oxygen` as a dev dependency for local development: ([#1891](https://github.com/Shopify/hydrogen/pull/1891)) by [@frandiox](https://github.com/frandiox)
+
+  ```diff
+    "devDependencies": {
+      "@remix-run/dev": "^2.8.0",
+      "@remix-run/eslint-config": "^2.8.0",
+  +   "@shopify/mini-oxygen": "^3.0.0",
+      "@shopify/oxygen-workers-types": "^4.0.0",
+      ...
+    },
+  ```
+
+- Add the `customer-account push` command to the Hydrogen CLI. This allows you to push the current `--dev-origin` URL to the Shopify admin to enable secure connection to the Customer Account API for local development. ([#1804](https://github.com/Shopify/hydrogen/pull/1804)) by [@michenly](https://github.com/michenly)
+
+- Fix types returned by the `session` object. ([#1869](https://github.com/Shopify/hydrogen/pull/1869)) by [@frandiox](https://github.com/frandiox)
+
+  In `remix.env.d.ts` or `env.d.ts`, add the following types:
+
+  ```diff
+  import type {
+    // ...
+    HydrogenCart,
+  + HydrogenSessionData,
+  } from '@shopify/hydrogen';
+
+  // ...
+
+  declare module '@shopify/remix-oxygen' {
+    // ...
+
+  + interface SessionData extends HydrogenSessionData {}
+  }
+  ```
+
+- Codegen dependencies must be now listed explicitly in `package.json`: ([#1962](https://github.com/Shopify/hydrogen/pull/1962)) by [@frandiox](https://github.com/frandiox)
+
+  ```diff
+  {
+    "devDependencies": {
+  +   "@graphql-codegen/cli": "5.0.2",
+      "@remix-run/dev": "^2.8.0",
+      "@remix-run/eslint-config": "^2.8.0",
+  +   "@shopify/hydrogen-codegen": "^0.3.0",
+      "@shopify/mini-oxygen": "^2.2.5",
+      "@shopify/oxygen-workers-types": "^4.0.0",
+      ...
+    }
+  }
+  ```
+
+- Updated dependencies [[`4eaec272`](https://github.com/Shopify/hydrogen/commit/4eaec272696f1a718aa7cab1070a54385ebc3686), [`14bb5df1`](https://github.com/Shopify/hydrogen/commit/14bb5df1c1513a7991183d34e72220cb2b139cf5), [`646b78d4`](https://github.com/Shopify/hydrogen/commit/646b78d4bc26310121b16000ed4d1c5d5e63957d), [`87072950`](https://github.com/Shopify/hydrogen/commit/870729505f7eb1f1c709799dd036ad02fd94be95), [`5f1295fe`](https://github.com/Shopify/hydrogen/commit/5f1295fe60b86396f364fefef339248a444c988a), [`3c8a7313`](https://github.com/Shopify/hydrogen/commit/3c8a7313cafb0ca21bbca19ac0b3f8ef4ab12655), [`ca1dcbb7`](https://github.com/Shopify/hydrogen/commit/ca1dcbb7d69c458006e25892c86c4478d394a428), [`11879b17`](https://github.com/Shopify/hydrogen/commit/11879b175d78e3326de090a56a044d1e55d0bae8), [`f4d6e5b0`](https://github.com/Shopify/hydrogen/commit/f4d6e5b0244392a7c13b9fa51c5046fd103c3e4f), [`788d86b3`](https://github.com/Shopify/hydrogen/commit/788d86b3a737bff53b4ec3aa9667458b2d45ade7), [`ebaf5529`](https://github.com/Shopify/hydrogen/commit/ebaf5529287b24a70b3146444b18f95b64f9f336), [`da95bb1c`](https://github.com/Shopify/hydrogen/commit/da95bb1c8c644f450053ce649b40dc380e7375dc), [`5bb43304`](https://github.com/Shopify/hydrogen/commit/5bb43304c08427786cfd4f2529e59bd38f593252), [`140e4768`](https://github.com/Shopify/hydrogen/commit/140e4768c880aaed4ba95b1d4c707df6963e011c), [`062d6be7`](https://github.com/Shopify/hydrogen/commit/062d6be7e031c388498ec3d359de51a4bfdfdfd8), [`b3323e59`](https://github.com/Shopify/hydrogen/commit/b3323e59a4381647f1df797c5dc54793f6e0a29a), [`ab0df5a5`](https://github.com/Shopify/hydrogen/commit/ab0df5a52bc587515880ae26f4edd18ba2be83cd), [`ebaf5529`](https://github.com/Shopify/hydrogen/commit/ebaf5529287b24a70b3146444b18f95b64f9f336), [`ebaf5529`](https://github.com/Shopify/hydrogen/commit/ebaf5529287b24a70b3146444b18f95b64f9f336), [`9e899218`](https://github.com/Shopify/hydrogen/commit/9e8992181ce7d27548d35f98b5a4f78b80795ce8), [`a209019f`](https://github.com/Shopify/hydrogen/commit/a209019f722ece4b65f8d5f37c8018c949956b1e), [`d007b7bc`](https://github.com/Shopify/hydrogen/commit/d007b7bc6f6c36e984d937108230ecc7c202fa42), [`a5511cd7`](https://github.com/Shopify/hydrogen/commit/a5511cd7bf9b0f0c4ef0e52cd72418f78c04785b), [`4afedb4d`](https://github.com/Shopify/hydrogen/commit/4afedb4d7202715df9a153e877e8eb281cc3e928), [`34fbae23`](https://github.com/Shopify/hydrogen/commit/34fbae23999eefbd1af1dff44816a52813d75b44), [`e3baaba5`](https://github.com/Shopify/hydrogen/commit/e3baaba54c701a48923ab3fe8078278f2db2c53f), [`99d72f7a`](https://github.com/Shopify/hydrogen/commit/99d72f7afc354abb66ed0e4ffb020bede2781286), [`9351f9f5`](https://github.com/Shopify/hydrogen/commit/9351f9f564267124bcbf986f5550a542c4bf1e30)]:
+  - @shopify/cli-hydrogen@8.0.0
+  - @shopify/hydrogen@2024.5.0
+  - @shopify/remix-oxygen@2.0.4
+
 ## 1.0.6
 
 ### Patch Changes
