@@ -30,7 +30,14 @@ export async function replaceFileContent(
   return writeFile(filepath, content);
 }
 
-const DEFAULT_EXTENSIONS = ['tsx', 'ts', 'jsx', 'js', 'mjs', 'cjs'] as const;
+const DEFAULT_EXTENSIONS = [
+  'tsx' as const,
+  'ts' as const,
+  'jsx' as const,
+  'js' as const,
+  'mjs' as const,
+  'cjs' as const,
+];
 
 export async function findFileWithExtension(
   directory: string,
