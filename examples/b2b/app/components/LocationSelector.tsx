@@ -1,18 +1,18 @@
 import {CartForm} from '@shopify/hydrogen';
 import type {
-  Company,
-  CompanyLocation,
-  CompanyLocationConnection,
-} from '@shopify/hydrogen-react/customer-account-api-types';
+  CustomerCompany,
+  CustomerCompanyLocation,
+  CustomerCompanyLocationConnection,
+} from '~/root';
 
-export function LocationSelector({company}: {company: Company}) {
+export function LocationSelector({company}: {company: CustomerCompany}) {
   const locations = company?.locations?.edges
-    ? company.locations.edges.map((location: CompanyLocationConnection) => {
+    ? company.locations.edges.map((location: CustomerCompanyLocationConnection) => {
         return {...location.node};
       })
     : [];
 
-  function LocationItem({location}: {location: CompanyLocation}) {
+  function LocationItem({location}: {location: CustomerCompanyLocation}) {
     const addressLines = location?.shippingAddress?.formattedAddress ?? [];
     return (
       <label>
@@ -43,7 +43,7 @@ export function LocationSelector({company}: {company: Company}) {
       <CartForm route="/cart" action={CartForm.ACTIONS.BuyerIdentityUpdate}>
         <fieldset>
           <legend>Choose a location:</legend>
-          {locations.map((location: CompanyLocation) => {
+          {locations.map((location: CustomerCompanyLocation) => {
             return (
               <div key={location.id}>
                 <LocationItem location={location} />

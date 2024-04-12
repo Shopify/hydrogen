@@ -13,8 +13,8 @@ import {
   PredictiveSearchForm,
   PredictiveSearchResults,
 } from '~/components/Search';
-import type {Company, InputMaybe} from '@shopify/hydrogen/customer-account-api-types';
-import { CustomerCompany } from 'app/root';
+import type {InputMaybe} from '@shopify/hydrogen/customer-account-api-types';
+import type {CustomerCompany} from 'app/root';
 
 export type LayoutProps = {
   cart: Promise<CartApiQueryFragment | null>;

@@ -1,10 +1,12 @@
+import type {Maybe} from '@shopify/hydrogen/customer-account-api-types';
+
 export type QuantityRulesProps = {
-  maximum: number;
-  minimum: number;
-  increment: number;
+  maximum?: Maybe<number> | undefined;
+  minimum?: Maybe<number> | undefined;
+  increment?: Maybe<number> | undefined;
 };
 
-export const hasQuantityRules = (quantityRule: QuantityRulesProps) => {
+export const hasQuantityRules = (quantityRule?: QuantityRulesProps) => {
   return (
     quantityRule &&
     (quantityRule?.increment != 1 ||

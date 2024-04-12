@@ -168,6 +168,7 @@ function ProductMain({
             product={product}
             selectedVariant={selectedVariant}
             variants={[]}
+            quantity={1}
           />
         }
       >
@@ -195,15 +196,15 @@ function ProductMain({
         /**********  EXAMPLE UPDATE STARTS  ************/
         hasQuantityRules(selectedVariant?.quantityRule) ? (
           <QuantityRules
-            maximum={selectedVariant.quantityRule.maximum}
-            minimum={selectedVariant.quantityRule.minimum}
-            increment={selectedVariant.quantityRule.increment}
+            maximum={selectedVariant?.quantityRule.maximum}
+            minimum={selectedVariant?.quantityRule.minimum}
+            increment={selectedVariant?.quantityRule.increment}
           />
         ) : null
       }
       <br />
       {
-        selectedVariant?.quantityPriceBreaks?.nodes?.length > 0 ? (
+        selectedVariant?.quantityPriceBreaks?.nodes && selectedVariant?.quantityPriceBreaks?.nodes?.length > 0 ? (
           <PriceBreaks
             priceBreaks={selectedVariant?.quantityPriceBreaks?.nodes}
           />
