@@ -1,7 +1,9 @@
 import {spawn} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {formatCode, getCodeFormatOptions} from './format-code.js';
-import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
+import {renderWarning} from '@shopify/cli-kit/node/ui';
+import glob from 'glob';
+
 import {
   joinPath,
   relativePath,
@@ -114,7 +116,7 @@ type CodegenOptions = ProjectDirs & {
   forceSfapiVersion?: string;
 };
 
-export function codegen(options: CodegenOptions) {
+export async function codegen(options: CodegenOptions) {
   return generateTypes(options).catch((error: Error) => {
     if (error instanceof AbortError) throw error;
 
@@ -224,7 +226,11 @@ async function generateDefaultConfig(
     ? findGqlProject(caapiSchema, gqlConfig)
     : undefined;
 
-  const customerAccountAPIConfig = caapiProject?.documents
+
+  const caapiDocuments = (caapiProject?.documents ?? []) as string[];
+  const caapiFiles = glob.sync(caapiDocuments[0] ?? '');
+
+  const customerAccountAPIConfig = caapiProject?.documents && caapiFiles.length > 0
     ? {
         ['customer-accountapi.generated.d.ts']: {
           preset,
@@ -234,40 +240,46 @@ async function generateDefaultConfig(
       }
     : undefined;
 
+  const storefrontAPIConfig = {
+    ['storefrontapi.generated.d.ts']: {
+      preset,
+      schema: sfapiSchema,
+      documents: sfapiProject?.documents ?? [
+        defaultGlob, // E.g. ./server.(t|j)s
+        joinPath(appDirRelative, '**', defaultGlob), // E.g. app/routes/_index.(t|j)sx
+        joinPath(appDirRelative, '**', '**', defaultGlob), // E.g. app/graphql/_index.(t|j)sx
+        joinPath(appDirRelative, '**', '**', '**', defaultGlob), // E.g. app/graphql/_index.(t|j)sx
+      ],
+
+      ...(!!forceSfapiVersion && {
+        presetConfig: {importTypes: false},
+        schema: {
+          [`https://hydrogen-preview.myshopify.com/api/${
+            forceSfapiVersion.split(':')[0]
+          }/graphql.json`]: {
+            headers: {
+              'content-type': 'application/json',
+              'X-Shopify-Storefront-Access-Token':
+                forceSfapiVersion.split(':')[1] ??
+                '3b580e70970c4528da70c98e097c2fa0',
+            },
+          },
+        },
+        config: {
+          defaultScalarType: 'string',
+          scalars: {JSON: 'unknown'},
+        },
+      }),
+    },
+  }
+
   return {
     filepath: 'virtual:codegen',
     config: {
       overwrite: true,
       pluckConfig: pluckConfig as any,
       generates: {
-        ['storefrontapi.generated.d.ts']: {
-          preset,
-          schema: sfapiSchema,
-          documents: sfapiProject?.documents ?? [
-            defaultGlob, // E.g. ./server.(t|j)s
-            joinPath(appDirRelative, '**', defaultGlob), // E.g. app/routes/_index.(t|j)sx
-          ],
-
-          ...(!!forceSfapiVersion && {
-            presetConfig: {importTypes: false},
-            schema: {
-              [`https://hydrogen-preview.myshopify.com/api/${
-                forceSfapiVersion.split(':')[0]
-              }/graphql.json`]: {
-                headers: {
-                  'content-type': 'application/json',
-                  'X-Shopify-Storefront-Access-Token':
-                    forceSfapiVersion.split(':')[1] ??
-                    '3b580e70970c4528da70c98e097c2fa0',
-                },
-              },
-            },
-            config: {
-              defaultScalarType: 'string',
-              scalars: {JSON: 'unknown'},
-            },
-          }),
-        },
+        ...storefrontAPIConfig,
         ...customerAccountAPIConfig,
       },
     },
