@@ -3,11 +3,11 @@ import {CartForm} from '@shopify/hydrogen';
 import {useState, Suspense} from 'react';
 import type {HeaderQuery} from 'storefrontapi.generated';
 import type {LayoutProps} from './Layout';
-import {useRootLoaderData} from '~/root';
-import type {
-  CompanyLocation,
-  CompanyLocationConnection,
-} from '@shopify/hydrogen-react/customer-account-api-types';
+import {
+  type CustomerCompanyLocation,
+  type CustomerCompanyLocationConnection,
+  useRootLoaderData
+} from '~/root';
 
 /***********************************************/
 /**********  EXAMPLE UPDATE STARTS  ************/
@@ -180,7 +180,7 @@ function LocationDropdown({
   const location = useLocation();
 
   const locations = company?.locations?.edges
-    ? company.locations.edges.map((location: CompanyLocationConnection) => {
+    ? company.locations.edges.map((location: CustomerCompanyLocationConnection) => {
         return {...location.node};
       })
     : [];
@@ -211,7 +211,7 @@ function LocationDropdown({
             value={selectedLocation}
             style={{marginRight: '4px'}}
           >
-            {locations.map((location: CompanyLocation) => {
+            {locations.map((location: CustomerCompanyLocation) => {
               return (
                 <option
                   defaultValue={selectedLocation}

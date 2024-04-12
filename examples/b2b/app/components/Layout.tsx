@@ -13,7 +13,8 @@ import {
   PredictiveSearchForm,
   PredictiveSearchResults,
 } from '~/components/Search';
-import type {Company} from '@shopify/hydrogen-react/customer-account-api-types';
+import type {Company, InputMaybe} from '@shopify/hydrogen/customer-account-api-types';
+import { CustomerCompany } from 'app/root';
 
 export type LayoutProps = {
   cart: Promise<CartApiQueryFragment | null>;
@@ -23,8 +24,8 @@ export type LayoutProps = {
   isLoggedIn: boolean;
   /***********************************************/
   /**********  EXAMPLE UPDATE STARTS  ************/
-  company: Company;
-  companyLocationId: string;
+  company?: CustomerCompany;
+  companyLocationId?: InputMaybe<string> | undefined;
   /**********   EXAMPLE UPDATE END   ************/
   /***********************************************/
 };

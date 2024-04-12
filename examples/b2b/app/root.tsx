@@ -23,7 +23,7 @@ import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
 import {LocationSelector} from '~/components/LocationSelector';
 import {CUSTOMER_LOCATIONS_QUERY} from '~/graphql/customer-account/CustomerLocationsQuery';
-import type {Company} from '@shopify/hydrogen-react/customer-account-api-types';
+import type {Company, CompanyAddress, CompanyLocation, InputMaybe, Maybe} from '@shopify/hydrogen/customer-account-api-types';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -61,6 +61,20 @@ export function links() {
     {rel: 'icon', type: 'image/svg+xml', href: favicon},
   ];
 }
+
+export type CustomerCompanyLocation = Pick<CompanyLocation, "name" | "id"> & {
+  shippingAddress?: Maybe<Pick<CompanyAddress, "countryCode" | "formattedAddress">> | undefined;
+};
+
+export type CustomerCompanyLocationConnection = {
+  node: CustomerCompanyLocation;
+};
+
+export type CustomerCompany = Maybe<Pick<Company, "name" | "id"> & {
+  locations: {
+      edges: CustomerCompanyLocationConnection[];
+  };
+}> | undefined;
 
 /**
  * Access the result of the root loader from a React component.
@@ -100,8 +114,8 @@ export async function loader({context}: LoaderFunctionArgs) {
   /***********************************************/
   /**********  EXAMPLE UPDATE STARTS  ************/
   // B2B buyer context
-  let companyLocationId;
-  let company: Company;
+  let companyLocationId: InputMaybe<string> | undefined;
+  let company: CustomerCompany;
 
   if (isLoggedIn) {
     companyLocationId = (await customerAccount.UNSTABLE_getBuyer())
@@ -109,7 +123,7 @@ export async function loader({context}: LoaderFunctionArgs) {
 
     const customer = await customerAccount.query(CUSTOMER_LOCATIONS_QUERY);
     company =
-      customer?.data?.customer?.companyContacts?.edges?.[0]?.node?.company;
+      customer?.data?.customer?.companyContacts?.edges?.[0]?.node?.company || null;
   }
 
   if (!companyLocationId && company?.locations?.edges?.length === 1) {
