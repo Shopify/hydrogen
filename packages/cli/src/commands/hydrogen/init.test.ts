@@ -1,4 +1,4 @@
-import {fileURLToPath} from 'node:url';
+import '../../lib/onboarding/setup-template.mocks.js';
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {runInit} from './init.js';
 import {exec} from '@shopify/cli-kit/node/system';
@@ -9,16 +9,14 @@ import {
   isDirectory,
   readFile,
   removeFile,
-  writeFile,
   inTemporaryDirectory,
 } from '@shopify/cli-kit/node/fs';
 import {basename, joinPath} from '@shopify/cli-kit/node/path';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {handleProjectLocation} from '../../lib/onboarding/common.js';
 import glob from 'fast-glob';
-import {getRepoNodeModules, getSkeletonSourceDir} from '../../lib/build.js';
+import {getSkeletonSourceDir} from '../../lib/build.js';
 import {execAsync} from '../../lib/process.js';
-import {createSymlink, remove as rmdir} from 'fs-extra/esm';
 import {runCheckRoutes} from './check.js';
 import {runCodegen} from './codegen.js';
 import {runViteBuild} from './build-vite.js';
@@ -27,92 +25,7 @@ import {runBuild as runClassicBuild} from './build.js';
 import {runDev as runClassicDev} from './dev.js';
 import {renderSelectPrompt} from '@shopify/cli-kit/node/ui';
 
-const {renderTasksHook} = vi.hoisted(() => ({renderTasksHook: vi.fn()}));
-
 vi.mock('../../lib/check-version.js');
-
-vi.mock('../../lib/template-downloader.js', async () => ({
-  downloadMonorepoTemplates: () =>
-    Promise.resolve({
-      version: '',
-      templatesDir: fileURLToPath(
-        new URL('../../../../../templates', import.meta.url),
-      ),
-      examplesDir: fileURLToPath(
-        new URL('../../../../../examples', import.meta.url),
-      ),
-    }),
-  downloadExternalRepo: () =>
-    Promise.resolve({
-      templateDir: fileURLToPath(
-        new URL('../../../../../templates/skeleton', import.meta.url),
-      ),
-    }),
-}));
-
-vi.mock('@shopify/cli-kit/node/ui', async () => {
-  const original = await vi.importActual<
-    typeof import('@shopify/cli-kit/node/ui')
-  >('@shopify/cli-kit/node/ui');
-
-  return {
-    ...original,
-    renderConfirmationPrompt: vi.fn(),
-    renderSelectPrompt: vi.fn(),
-    renderTextPrompt: vi.fn(),
-    renderTasks: vi.fn(async (args) => {
-      await original.renderTasks(args);
-      renderTasksHook();
-    }),
-  };
-});
-
-vi.mock(
-  '@shopify/cli-kit/node/node-package-manager',
-  async (importOriginal) => {
-    const original = await importOriginal<
-      typeof import('@shopify/cli-kit/node/node-package-manager')
-    >();
-
-    return {
-      ...original,
-      getPackageManager: () => Promise.resolve('npm'),
-      packageManagerFromUserAgent: () => 'npm',
-      installNodeModules: vi.fn(async ({directory}: {directory: string}) => {
-        // Create lockfile at a later moment to simulate a slow install
-        renderTasksHook.mockImplementationOnce(async () => {
-          await writeFile(`${directory}/package-lock.json`, '{}');
-        });
-
-        // "Install" dependencies by linking to monorepo's node_modules
-        await rmdir(joinPath(directory, 'node_modules')).catch(() => {});
-        await createSymlink(
-          await getRepoNodeModules(),
-          joinPath(directory, 'node_modules'),
-        );
-      }),
-    };
-  },
-);
-
-vi.mock('../../lib/onboarding/common.js', async (importOriginal) => {
-  type ModType = typeof import('../../lib/onboarding/common.js');
-  const original = await importOriginal<ModType>();
-
-  return Object.keys(original).reduce((acc, item) => {
-    const key = item as keyof ModType;
-    const value = original[key];
-    if (typeof value === 'function') {
-      // @ts-ignore
-      acc[key] = vi.fn(value);
-    } else {
-      // @ts-ignore
-      acc[key] = value;
-    }
-
-    return acc;
-  }, {} as ModType);
-});
 
 describe('init', () => {
   const outputMock = mockAndCaptureOutput();
