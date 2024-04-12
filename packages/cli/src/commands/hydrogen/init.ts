@@ -3,7 +3,6 @@ import {fileURLToPath} from 'node:url';
 import {packageManagerFromUserAgent} from '@shopify/cli-kit/node/node-package-manager';
 import {Flags} from '@oclif/core';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {AbortController} from '@shopify/cli-kit/node/abort';
 import {
   commonFlags,
   parseProcessFlags,
@@ -16,11 +15,7 @@ import {
 } from './../../lib/setups/css/index.js';
 import {I18N_CHOICES, type I18nChoice} from '../../lib/setups/i18n/index.js';
 import {supressNodeExperimentalWarnings} from '../../lib/process.js';
-import {
-  setupRemoteTemplate,
-  setupLocalStarterTemplate,
-  type InitOptions,
-} from '../../lib/onboarding/index.js';
+import {setupTemplate, type InitOptions} from '../../lib/onboarding/index.js';
 import {LANGUAGES} from '../../lib/onboarding/common.js';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
@@ -155,16 +150,5 @@ export async function runInit(
     );
   }
 
-  const controller = new AbortController();
-
-  try {
-    const template = options.template;
-
-    return template
-      ? await setupRemoteTemplate({...options, template}, controller)
-      : await setupLocalStarterTemplate(options, controller);
-  } catch (error) {
-    controller.abort();
-    throw error;
-  }
+  return setupTemplate(options);
 }
