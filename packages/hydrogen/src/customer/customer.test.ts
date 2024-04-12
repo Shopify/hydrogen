@@ -596,7 +596,7 @@ describe('customer', () => {
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'https://customer-api',
         request: new Request('https://localhost?state=state&code=code'),
-        b2b: true,
+        unstableB2b: true,
         waitUntil: vi.fn(),
       });
 

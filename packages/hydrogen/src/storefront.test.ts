@@ -13,7 +13,7 @@ import {
 } from './cart/cart-test-helper';
 
 vi.mock('./cache/fetch.ts', async () => {
-  const original = await vi.importActual<typeof import('./cache/fetch.ts')>(
+  const original = await vi.importActual<typeof import('./cache/fetch')>(
     './cache/fetch.ts',
   );
 
@@ -148,8 +148,8 @@ describe('createStorefrontClient', () => {
       storefrontHeaders,
       publicStorefrontToken,
       i18n: {language: 'EN', country: 'US'},
-      customerAccount: mockCreateCustomerAccountClient(),
-      b2b: true,
+      unstableCustomerAccount: mockCreateCustomerAccountClient(),
+      unstableB2b: true,
     });
 
     await expect(
