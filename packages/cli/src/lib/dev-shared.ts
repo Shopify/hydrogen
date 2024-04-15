@@ -18,8 +18,9 @@ import {getGraphiQLUrl} from './graphiql-url.js';
 
 export function isMockShop(envVariables: Record<string, string>) {
   return (
-    envVariables.PUBLIC_STORE_DOMAIN &&
-    envVariables.PUBLIC_STORE_DOMAIN.includes('mock.shop')
+    // We fallback to mock.shop if the env var is not set
+    !envVariables.PUBLIC_STORE_DOMAIN ||
+    envVariables.PUBLIC_STORE_DOMAIN === 'mock.shop'
   );
 }
 

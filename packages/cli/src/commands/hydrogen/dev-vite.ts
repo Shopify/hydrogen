@@ -273,7 +273,7 @@ export async function runViteDev({
     cliCommand,
   });
 
-  const {logInjectedVariables, localVariables} = await envPromise;
+  const {logInjectedVariables, allVariables} = await envPromise;
 
   logInjectedVariables();
   console.log('');
@@ -308,7 +308,7 @@ export async function runViteDev({
     displayDevUpgradeNotice({targetPath: root});
   }
 
-  if (customerAccountPushFlag && isMockShop(localVariables)) {
+  if (customerAccountPushFlag && isMockShop(allVariables)) {
     notifyIssueWithTunnelAndMockShop(cliCommand);
   }
 
