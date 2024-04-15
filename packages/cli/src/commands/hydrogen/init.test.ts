@@ -19,7 +19,7 @@ import {getSkeletonSourceDir} from '../../lib/build.js';
 import {execAsync} from '../../lib/process.js';
 import {runCheckRoutes} from './check.js';
 import {runCodegen} from './codegen.js';
-import {runViteBuild} from './build-vite.js';
+import {runBuild} from './build.js';
 import {runDev} from './dev.js';
 import {renderSelectPrompt} from '@shopify/cli-kit/node/ui';
 
@@ -671,9 +671,7 @@ describe('init', () => {
           outputMock.clear();
           vi.stubEnv('NODE_ENV', 'production');
 
-          await expect(
-            runViteBuild({directory: tmpDir}),
-          ).resolves.not.toThrow();
+          await expect(runBuild({directory: tmpDir})).resolves.not.toThrow();
 
           const expectedBundlePath = 'dist/server/index.js';
 
