@@ -20,7 +20,7 @@ import {execAsync} from '../../lib/process.js';
 import {runCheckRoutes} from './check.js';
 import {runCodegen} from './codegen.js';
 import {runViteBuild} from './build-vite.js';
-import {runViteDev} from './dev-vite.js';
+import {runDev} from './dev.js';
 import {renderSelectPrompt} from '@shopify/cli-kit/node/ui';
 
 vi.mock('../../lib/check-version.js');
@@ -712,7 +712,7 @@ describe('init', () => {
           outputMock.clear();
           vi.stubEnv('NODE_ENV', 'development');
 
-          const {close, getUrl} = await runViteDev({
+          const {close, getUrl} = await runDev({
             path: tmpDir,
             disableVirtualRoutes: true,
             disableVersionCheck: true,
