@@ -1,15 +1,15 @@
 import {fetchModule, type ViteDevServer} from 'vite';
-import * as http from 'node:http';
 import {fileURLToPath} from 'node:url';
 import {
+  fetch,
   createMiniOxygen,
   Request,
   Response,
-  defaultLogRequestLine,
   type RequestHook,
+  defaultLogRequestLine,
 } from '../worker/index.js';
 import type {OnlyBindings, OnlyServices} from '../worker/utils.js';
-import {getHmrUrl, toURL} from './utils.js';
+import {getHmrUrl, pipeFromWeb, toURL, toWeb} from './utils.js';
 
 import type {ViteEnv} from './worker-entry.js';
 import {type RequestHookInfo} from '../worker/handler.js';
@@ -173,7 +173,7 @@ export async function startMiniOxygenRuntime({
 
 export function setupOxygenMiddleware(
   viteDevServer: ViteDevServer,
-  getWorkerUrl: () => Promise<URL>,
+  dispatchFetch: (webRequest: Request) => Promise<Response>,
 ) {
   viteDevServer.middlewares.use(
     FETCH_MODULE_PATHNAME,
@@ -213,45 +213,10 @@ export function setupOxygenMiddleware(
     // find it in the project. Therefore, we assume this is a
     // request for a backend route, and we forward it to workerd.
 
-    getWorkerUrl()
-      .then(({hostname, port, protocol}) => {
-        // Use Node's HTTP client to forward the request between
-        // the browser and workerd. This way, we can keep
-        // encoding/compression intact and respect redirects.
-        // `fetch` would decompress the response and follow redirects.
-        const workerRequest = http.request(
-          {
-            port,
-            protocol,
-            hostname,
-            path: req.url, // Includes querystring
-            method: req.method,
-            // Headers already include 'host'
-            // pointing to the Vite server:
-            setHost: false,
-            headers: req.headers,
-          },
-          (workerResponse) => {
-            res.writeHead(
-              workerResponse.statusCode ?? 200,
-              workerResponse.statusMessage,
-              workerResponse.headers,
-            );
-
-            workerResponse.pipe(res);
-          },
-        );
-
-        workerRequest.on('error', (error) => {
-          console.error('Could not forward request to MiniOxygen', error);
-          res.writeHead(500);
-          res.end();
-        });
-
-        req.pipe(workerRequest);
-      })
+    dispatchFetch(toWeb(req))
+      .then((webResponse) => pipeFromWeb(webResponse, res))
       .catch((error) => {
-        console.error('Could not get MiniOxygen URL', error);
+        console.error('Error during evaluation:', error);
         res.writeHead(500);
         res.end();
       });

@@ -127,11 +127,9 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
         });
 
         return () => {
-          let miniOxygenUrl: URL;
-          setupOxygenMiddleware(viteDevServer, async () => {
+          setupOxygenMiddleware(viteDevServer, async (request) => {
             miniOxygen ??= await miniOxygenPromise;
-            miniOxygenUrl ??= (await miniOxygen.ready).workerUrl;
-            return miniOxygenUrl;
+            return miniOxygen.dispatchFetch(request);
           });
         };
       },
