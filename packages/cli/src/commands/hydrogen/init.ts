@@ -129,7 +129,7 @@ export async function runInit(
     options.path ||= './hydrogen-quickstart';
     options.routes ||= true;
     options.shortcut ||= true;
-    options.styling ||= 'tailwind';
+    // options.styling ||= 'tailwind';
   }
 
   const showUpgrade = await checkHydrogenVersion(
