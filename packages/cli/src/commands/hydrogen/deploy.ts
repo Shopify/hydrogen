@@ -44,7 +44,7 @@ import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
 import {OxygenDeploymentData} from '../../lib/graphql/admin/get-oxygen-data.js';
 import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
-import {runViteBuild} from './build-vite.js';
+import {runBuild} from './build.js';
 import {getViteConfig} from '../../lib/vite-config.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {hasRemixConfigFile} from '../../lib/remix-config.js';
@@ -582,7 +582,7 @@ Continue?`.value,
         outputContent`${colors.whiteBright('Building project...')}`.value,
       );
 
-      const build = isClassicCompiler ? runClassicCompilerBuild : runViteBuild;
+      const build = isClassicCompiler ? runClassicCompilerBuild : runBuild;
 
       await build({
         directory: root,
