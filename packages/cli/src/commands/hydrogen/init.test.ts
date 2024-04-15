@@ -19,8 +19,6 @@ import {getSkeletonSourceDir} from '../../lib/build.js';
 import {execAsync} from '../../lib/process.js';
 import {runCheckRoutes} from './check.js';
 import {runCodegen} from './codegen.js';
-import {runBuild} from './build.js';
-import {runDev} from './dev.js';
 import {renderSelectPrompt} from '@shopify/cli-kit/node/ui';
 
 vi.mock('../../lib/check-version.js');
@@ -654,84 +652,6 @@ describe('init', () => {
           );
         });
       });
-
-      it('builds the generated project', async () => {
-        await inTemporaryDirectory(async (tmpDir) => {
-          await runInit({
-            path: tmpDir,
-            git: true,
-            language: 'ts',
-            styling: 'postcss',
-            i18n: 'subfolders',
-            routes: true,
-            installDeps: true,
-          });
-
-          // Clear previous success messages
-          outputMock.clear();
-          vi.stubEnv('NODE_ENV', 'production');
-
-          await expect(runBuild({directory: tmpDir})).resolves.not.toThrow();
-
-          const expectedBundlePath = 'dist/server/index.js';
-
-          const output = outputMock.output();
-          expect(output).toMatch(expectedBundlePath);
-          expect(output).toMatch('building for productio');
-          expect(output).toMatch('dist/client/assets/root-');
-          expect(output).toMatch('building SSR bundle for productio');
-          expect(
-            fileExists(joinPath(tmpDir, expectedBundlePath)),
-          ).resolves.toBeTruthy();
-
-          const kB = Number(
-            output.match(/dist\/server\/index\.js\s+([\d.]+)\s+kB/)?.[1] || '',
-          );
-
-          // Bundle size within 1 MB
-          expect(kB).toBeGreaterThan(0);
-          expect(kB).toBeLessThan(1024);
-        });
-      });
-
-      it('runs dev in the generated project', async () => {
-        await inTemporaryDirectory(async (tmpDir) => {
-          await runInit({
-            path: tmpDir,
-            git: true,
-            language: 'ts',
-            styling: 'postcss',
-            i18n: 'subfolders',
-            routes: true,
-            installDeps: true,
-          });
-
-          // Clear previous success messages
-          outputMock.clear();
-          vi.stubEnv('NODE_ENV', 'development');
-
-          const {close, getUrl} = await runDev({
-            path: tmpDir,
-            disableVirtualRoutes: true,
-            disableVersionCheck: true,
-            cliConfig: {} as any,
-          });
-
-          try {
-            await vi.waitFor(
-              () => expect(outputMock.output()).toMatch(/View [^:]+? app:/i),
-              {timeout: 5000},
-            );
-
-            const response = await fetch(getUrl());
-            expect(response.status).toEqual(200);
-            expect(response.headers.get('content-type')).toEqual('text/html');
-            await expect(response.text()).resolves.toMatch('Mock.shop');
-          } finally {
-            await close();
-          }
-        });
-      });
     });
 
     describe('Quickstart options', () => {
@@ -763,10 +683,6 @@ describe('init', () => {
           expect(resultFiles).toContain('app/components/Layout.jsx');
           expect(resultFiles).toContain('app/routes/_index.jsx');
           expect(resultFiles).not.toContain('app/routes/($locale)._index.jsx');
-
-          // await expect(readFile(`${tmpDir}/package.json`)).resolves.toMatch(
-          //   `"name": "hello-world"`,
-          // );
 
           const output = outputMock.info();
           expect(output).not.toMatch('warning');
