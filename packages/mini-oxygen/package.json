@@ -52,7 +52,7 @@
     "body-parser": "1.20.2",
     "connect": "^3.7.0",
     "get-port": "^7.0.0",
-    "miniflare": "3.20240405.1",
+    "miniflare": "3.20240304.2",
     "mrmime": "1.0.1",
     "source-map": "^0.7.4",
     "source-map-support": "^0.5.21",
