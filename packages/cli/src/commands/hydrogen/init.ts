@@ -42,7 +42,6 @@ export default class Init extends Command {
     ...commonFlags.installDeps,
     'mock-shop': Flags.boolean({
       description: 'Use mock.shop as the data source for the storefront.',
-      default: false,
       env: 'SHOPIFY_HYDROGEN_FLAG_MOCK_DATA',
     }),
     ...commonFlags.styling,
@@ -118,18 +117,18 @@ export async function runInit(
 
   /**
    * Quickstart options. A set of sensible defaults to streamline documentation.
-   * Logical OR assignment means you can still override individual options by flag:
-   * $ h2 init --quickstart --language ts
+   * Nullish coalescing assignment means you can still override individual options by flag:
+   * $ h2 init --quickstart --language ts --no-install-deps
    */
   if (options.quickstart) {
-    options.i18n ||= 'none';
-    options.installDeps ||= true;
-    options.language ||= 'js';
-    options.mockShop ||= true;
-    options.path ||= './hydrogen-quickstart';
-    options.routes ||= true;
-    options.shortcut ||= true;
-    // options.styling ||= 'tailwind';
+    options.i18n ??= 'none';
+    options.installDeps ??= true;
+    options.language ??= 'js';
+    options.mockShop ??= true;
+    options.path ??= './hydrogen-quickstart';
+    options.routes ??= true;
+    options.shortcut ??= true;
+    // options.styling ??= 'tailwind';
   }
 
   const showUpgrade = await checkHydrogenVersion(

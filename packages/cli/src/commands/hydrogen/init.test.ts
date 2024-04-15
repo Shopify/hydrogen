@@ -59,7 +59,7 @@ describe('init', () => {
 
     expect(setupTemplate).toHaveBeenCalledWith({
       i18n: 'none',
-      installDeps: true,
+      installDeps: false,
       language: 'js',
       mockShop: true,
       path: './hydrogen-quickstart',
