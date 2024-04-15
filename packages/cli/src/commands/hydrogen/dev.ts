@@ -83,8 +83,20 @@ export default class Dev extends Command {
 
     // For the classic compiler:
     worker: deprecated('--worker', {isBoolean: true}),
-    ...commonFlags.legacyRuntime,
-    ...commonFlags.sourcemap,
+    ...overrideFlag(commonFlags.legacyRuntime, {
+      'legacy-runtime': {
+        description:
+          '[Classic Remix Compiler] ' +
+          commonFlags.legacyRuntime['legacy-runtime'].description,
+      },
+    }),
+    ...overrideFlag(commonFlags.sourcemap, {
+      sourcemap: {
+        description:
+          '[Classic Remix Compiler] ' +
+          commonFlags.sourcemap.sourcemap.description,
+      },
+    }),
   };
 
   async run(): Promise<void> {
