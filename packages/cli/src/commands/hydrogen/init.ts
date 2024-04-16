@@ -56,7 +56,6 @@ export default class Init extends Command {
     routes: Flags.boolean({
       description: 'Generate routes for all pages.',
       env: 'SHOPIFY_HYDROGEN_FLAG_ROUTES',
-      hidden: true,
       allowNo: true,
     }),
     git: Flags.boolean({
@@ -67,7 +66,7 @@ export default class Init extends Command {
     }),
     quickstart: Flags.boolean({
       description:
-        'Scaffolds a new Hydrogen project with a set of sensible defaults.',
+        'Scaffolds a new Hydrogen project with a set of sensible defaults. Equivalent to `shopify hydrogen init --path hydrogen-quickstart --mock-shop --language js --shortcut --routes --markets none`',
       env: 'SHOPIFY_HYDROGEN_FLAG_QUICKSTART',
       default: false,
     }),
