@@ -72,7 +72,7 @@ export const CartLineUpdate = (cartFragment: string): string => /* GraphQL */ `
 export const CartNoteUpdate = (cartFragment: string): string => /* GraphQL */ `
   mutation CartNoteUpdate(
     $cartId: ID!
-    $note: String
+    $note: String!
     $numCartLines: Int = 250
     $country: CountryCode = ZZ
     $language: LanguageCode
