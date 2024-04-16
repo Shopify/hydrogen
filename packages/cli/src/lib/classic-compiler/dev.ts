@@ -177,8 +177,7 @@ export async function runClassicCompilerDev({
   async function safeStartMiniOxygen() {
     if (miniOxygen) return;
 
-    const {allVariables, localVariables, logInjectedVariables} =
-      await envPromise;
+    const {allVariables, logInjectedVariables} = await envPromise;
 
     miniOxygen = await startMiniOxygen(
       {
@@ -226,7 +225,7 @@ export async function runClassicCompilerDev({
       displayDevUpgradeNotice({targetPath: appPath});
     }
 
-    if (customerAccountPushFlag && isMockShop(localVariables)) {
+    if (customerAccountPushFlag && isMockShop(allVariables)) {
       notifyIssueWithTunnelAndMockShop(cliCommand);
     }
   }

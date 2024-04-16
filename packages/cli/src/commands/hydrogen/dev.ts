@@ -324,7 +324,7 @@ export async function runDev({
     cliCommand,
   });
 
-  const {logInjectedVariables, localVariables} = await envPromise;
+  const {logInjectedVariables, allVariables} = await envPromise;
 
   logInjectedVariables();
   console.log('');
@@ -359,7 +359,7 @@ export async function runDev({
     displayDevUpgradeNotice({targetPath: root});
   }
 
-  if (customerAccountPushFlag && isMockShop(localVariables)) {
+  if (customerAccountPushFlag && isMockShop(allVariables)) {
     notifyIssueWithTunnelAndMockShop(cliCommand);
   }
 
