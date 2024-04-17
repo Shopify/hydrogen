@@ -5,7 +5,7 @@ import type {loader} from '~/root';
 /**
  * Access the result of the root loader from a React component.
  */
-export const useRootLoaderData = () => {
+export function useRootLoaderData() {
   const [root] = useMatches();
   return root?.data as SerializeFrom<typeof loader>;
-};
+}
