@@ -1,14 +1,13 @@
-import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 import {outputWarn} from '@shopify/cli-kit/node/output';
 
-import {linkStorefront} from '../commands/hydrogen/link.js';
 import {login} from './auth.js';
 import {getCliCommand} from './shell.js';
-import {renderMissingLink, renderMissingStorefront} from './render-errors.js';
+import {renderMissingStorefront} from './render-errors.js';
 import {
   getOxygenData,
   OxygenDeploymentData,
 } from './graphql/admin/get-oxygen-data.js';
+import {verifyLinkedStorefront} from './verify-linked-storefront.js';
 
 interface Arguments {
   root: string;
@@ -27,25 +26,16 @@ export async function getOxygenDeploymentData({
     getCliCommand(),
   ]);
 
-  if (!config.storefront?.id) {
-    renderMissingLink({session, cliCommand});
+  const linkedStorefront = await verifyLinkedStorefront({
+    root,
+    session,
+    config,
+    cliCommand,
+  });
 
-    const runLink = await renderConfirmationPrompt({
-      message: ['Run', {command: `${cliCommand} link`}],
-    });
+  if (!linkedStorefront) return;
 
-    if (!runLink) {
-      return;
-    }
-
-    config.storefront = await linkStorefront(root, session, config, {
-      cliCommand,
-    });
-  }
-
-  if (!config.storefront) {
-    return;
-  }
+  config.storefront = linkedStorefront;
 
   const {storefront} = await getOxygenData(session, config.storefront.id);
 

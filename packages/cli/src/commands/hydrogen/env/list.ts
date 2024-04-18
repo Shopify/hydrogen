@@ -1,23 +1,18 @@
 import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
-import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 import {pluralize} from '@shopify/cli-kit/common/string';
-import colors from '@shopify/cli-kit/node/colors';
 import {
   outputContent,
   outputInfo,
   outputNewline,
 } from '@shopify/cli-kit/node/output';
-import {linkStorefront} from '../link.js';
 import {commonFlags} from '../../../lib/flags.js';
 import {getStorefrontEnvironments} from '../../../lib/graphql/admin/list-environments.js';
 import {createEnvironmentCliChoiceLabel} from '../../../lib/common.js';
-import {
-  renderMissingLink,
-  renderMissingStorefront,
-} from '../../../lib/render-errors.js';
+import {renderMissingStorefront} from '../../../lib/render-errors.js';
 import {login} from '../../../lib/auth.js';
 import {getCliCommand} from '../../../lib/shell.js';
+import {verifyLinkedStorefront} from '../../../lib/verify-linked-storefront.js';
 
 export default class EnvList extends Command {
   static descriptionWithMarkdown =
@@ -46,35 +41,26 @@ export async function runEnvList({path: root = process.cwd()}: Flags) {
     getCliCommand(),
   ]);
 
-  let configStorefront = config.storefront;
+  const linkedStorefront = await verifyLinkedStorefront({
+    root,
+    session,
+    config,
+    cliCommand,
+  });
 
-  if (!configStorefront?.id) {
-    renderMissingLink({session, cliCommand});
+  if (!linkedStorefront) return;
 
-    const runLink = await renderConfirmationPrompt({
-      message: ['Run', {command: `${cliCommand} link`}, '?'],
-    });
-
-    if (!runLink) {
-      return;
-    }
-
-    configStorefront = await linkStorefront(root, session, config, {
-      cliCommand,
-    });
-  }
-
-  if (!configStorefront) return;
+  config.storefront = linkedStorefront;
 
   const storefront = await getStorefrontEnvironments(
     session,
-    configStorefront.id,
+    config.storefront.id,
   );
 
   if (!storefront) {
     renderMissingStorefront({
       session,
-      storefront: configStorefront,
+      storefront: config.storefront,
       cliCommand,
     });
 
@@ -95,7 +81,7 @@ export async function runEnvList({path: root = process.cwd()}: Flags) {
   outputInfo(
     pluralizedEnvironments({
       environments: storefront.environments,
-      storefrontTitle: configStorefront.title,
+      storefrontTitle: config.storefront.title,
     }).toString(),
   );
 
