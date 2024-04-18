@@ -1,4 +1,4 @@
-import {renderFatalError} from '@shopify/cli-kit/node/ui';
+import {renderFatalError, renderInfo} from '@shopify/cli-kit/node/ui';
 import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import type {AdminSession} from './auth.js';
 
@@ -36,20 +36,25 @@ export function renderMissingStorefront({
   });
 }
 
-interface MissingLink {
-  session: AdminSession;
-  cliCommand: string;
-}
+export function renderMissingLink({noStorefronts = false}) {
+  const headline = noStorefronts
+    ? "You don't have a Hydrogen storefront to link to"
+    : "You haven't linked your project to a storefront yet";
 
-export function renderMissingLink({session, cliCommand}: MissingLink) {
-  renderFatalError({
-    name: 'NoLinkedStorefrontError',
-    type: 0,
-    message: `No linked Hydrogen storefront on ${session.storeFqdn}`,
-    skipOclifErrorHandling: true,
-    tryMessage: [
-      'To pull environment variables or to deploy to Oxygen, link this project to a Hydrogen storefront. To select a storefront to link, run',
-      {command: `${cliCommand} link`},
+  renderInfo({
+    headline,
+    body: [
+      'Link your local environment to a Hydrogen storefront. Enable automatic environment variable injection and access to',
+      {command: 'env list'},
+      ',',
+      {command: 'env pull'},
+      ',',
+      {command: 'env push'},
+      ', and',
+      {command: 'deploy'},
+      'commands. Use',
+      {command: `unlink`},
+      'to disconnect from the storefront.',
     ],
   });
 }

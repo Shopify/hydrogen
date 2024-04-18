@@ -4,8 +4,9 @@ import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 import {getOxygenDeploymentData} from './get-oxygen-deployment-data.js';
 import {login} from './auth.js';
 import {getConfig} from './shopify-config.js';
-import {renderMissingLink, renderMissingStorefront} from './render-errors.js';
-import {linkStorefront} from '../commands/hydrogen/link.js';
+import {renderMissingStorefront} from './render-errors.js';
+import {verifyLinkedStorefront} from './verify-linked-storefront.js';
+
 import {
   getOxygenData,
   type OxygenDeploymentData,
@@ -25,6 +26,7 @@ vi.mock('./admin-session.js');
 vi.mock('./shopify-config.js');
 vi.mock('./render-errors.js');
 vi.mock('../commands/hydrogen/link.js');
+vi.mock('./verify-linked-storefront.js');
 vi.mock('./graphql/admin/get-oxygen-data.js');
 
 describe('getOxygenDeploymentData', () => {
@@ -45,6 +47,12 @@ describe('getOxygenDeploymentData', () => {
   ];
 
   beforeEach(() => {
+    vi.mocked(verifyLinkedStorefront).mockResolvedValue({
+      id: '1',
+      title: 'Showboards',
+      productionUrl: 'https://snowdevil.com',
+    });
+
     vi.mocked(login).mockResolvedValue({
       session: {
         token: '123',
@@ -83,26 +91,7 @@ describe('getOxygenDeploymentData', () => {
 
   describe('when there is no linked storefront', () => {
     beforeEach(() => {
-      vi.mocked(login).mockResolvedValue({
-        session: {
-          token: '123',
-          storeFqdn: 'www.snowdevil.com',
-        },
-        config: {
-          shop: 'snowdevil.myshopify.com',
-          shopName: 'Snowdevil',
-          email: 'merchant@shop.com',
-          storefront: undefined,
-        },
-      });
-    });
-
-    it('calls renderMissingLink and prompts the user to create a link', async () => {
-      vi.mocked(renderConfirmationPrompt).mockResolvedValue(true);
-      await getOxygenDeploymentData({root: 'test-root'});
-      expect(renderMissingLink).toHaveBeenCalled();
-      expect(renderConfirmationPrompt).toHaveBeenCalled();
-      expect(linkStorefront).toHaveBeenCalled();
+      vi.mocked(verifyLinkedStorefront).mockResolvedValue(undefined);
     });
 
     it('returns nothing if the user does not create a new link', async () => {

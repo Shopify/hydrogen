@@ -475,37 +475,19 @@ export async function runDeploy(
 
   if (
     !isCI &&
-    (userProvidedEnvironmentTag ||
-      userChosenEnvironmentTag ||
-      config.defaultEnvironment)
+    !config.defaultEnvironment &&
+    (userProvidedEnvironmentTag || userChosenEnvironmentTag)
   ) {
-    let chosenEnvironment: {
-      name: string;
-      branch: string | null;
-      handle: string;
-    } | null = null;
+    let chosenEnvironment = findEnvironmentByBranchOrThrow(
+      deploymentData!.environments!,
+      config.environmentTag!,
+    );
 
-    if (config.defaultEnvironment) {
-      chosenEnvironment = findEnvironmentOrThrow(
-        deploymentData!.environments!,
-        'preview',
-      );
-    } else if (config.environmentTag) {
-      chosenEnvironment = findEnvironmentByBranchOrThrow(
-        deploymentData!.environments!,
-        config.environmentTag,
-      );
-    }
-
-    let confirmationMessage = 'Creating a deployment';
-
-    if (chosenEnvironment) {
-      confirmationMessage += ` against ${createEnvironmentCliChoiceLabel(
-        chosenEnvironment.name,
-        chosenEnvironment.handle,
-        chosenEnvironment.branch,
-      )}`;
-    }
+    let confirmationMessage = `Creating a deployment against ${createEnvironmentCliChoiceLabel(
+      chosenEnvironment.name,
+      chosenEnvironment.handle,
+      chosenEnvironment.branch,
+    )}`;
 
     const confirmPush = await renderConfirmationPrompt({
       confirmationMessage: 'Yes, confirm deploy',

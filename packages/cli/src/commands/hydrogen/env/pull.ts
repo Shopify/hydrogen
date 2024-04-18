@@ -23,13 +23,10 @@ import {
   findEnvironmentByBranchOrThrow,
   findEnvironmentOrThrow,
 } from '../../../lib/common.js';
-import {
-  renderMissingLink,
-  renderMissingStorefront,
-} from '../../../lib/render-errors.js';
-import {linkStorefront} from '../link.js';
+import {renderMissingStorefront} from '../../../lib/render-errors.js';
 import {getStorefrontEnvironments} from '../../../lib/graphql/admin/list-environments.js';
 import {getStorefrontEnvVariables} from '../../../lib/graphql/admin/pull-variables.js';
+import {verifyLinkedStorefront} from '../../../lib/verify-linked-storefront.js';
 
 export default class EnvPull extends Command {
   static descriptionWithMarkdown =
@@ -68,23 +65,16 @@ export async function runEnvPull({
     getCliCommand(),
   ]);
 
-  if (!config.storefront?.id) {
-    renderMissingLink({session, cliCommand});
+  const linkedStorefront = await verifyLinkedStorefront({
+    root,
+    session,
+    config,
+    cliCommand,
+  });
 
-    const runLink = await renderConfirmationPrompt({
-      message: outputContent`Run ${outputToken.genericShellCommand(
-        `${cliCommand} link`,
-      )}?`.value,
-    });
+  if (!linkedStorefront) return;
 
-    if (!runLink) return;
-
-    config.storefront = await linkStorefront(root, session, config, {
-      cliCommand,
-    });
-  }
-
-  if (!config.storefront?.id) return;
+  config.storefront = linkedStorefront;
 
   if (envHandle || envBranch) {
     const environments =
