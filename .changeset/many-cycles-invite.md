@@ -2,4 +2,4 @@
 '@shopify/hydrogen': patch
 ---
 
-Fix names and URLs shown for MISS/STALE items in the Subrequest Profiler.
+Fix names and URLs shown for HIT/STALE items in the Subrequest Profiler.
