@@ -4,6 +4,7 @@ import Command from '@shopify/cli-kit/node/base-command';
 import {outputInfo, outputWarn} from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
 import {writeFile} from '@shopify/cli-kit/node/fs';
+import {AbortError} from '@shopify/cli-kit/node/error';
 import ansiEscapes from 'ansi-escapes';
 import {
   type RemixConfig,
@@ -11,6 +12,7 @@ import {
   getRemixConfig,
   handleRemixImportFail,
   type ServerMode,
+  hasRemixConfigFile,
 } from '../../../lib/remix-config.js';
 import {createRemixLogger, muteDevLogs} from '../../../lib/log.js';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
@@ -60,6 +62,12 @@ async function runDebugCpu({
   muteDevLogs({workerReload: false});
 
   const {root, buildPathWorkerFile} = getProjectPaths(appPath);
+
+  if (!(await hasRemixConfigFile(root))) {
+    throw new AbortError(
+      'No remix.config.js file found. This command is not supported in Vite projects.',
+    );
+  }
 
   outputInfo(
     '⏳️ Starting profiler for CPU startup... Profile will be written to:\n' +

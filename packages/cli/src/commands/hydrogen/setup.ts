@@ -29,7 +29,6 @@ export default class Setup extends Command {
   static flags = {
     ...commonFlags.path,
     ...commonFlags.force,
-    ...commonFlags.styling,
     ...commonFlags.markets,
     ...commonFlags.shortcut,
     ...overrideFlag(commonFlags.installDeps, {
@@ -51,7 +50,6 @@ export default class Setup extends Command {
 type RunSetupOptions = {
   directory: string;
   installDeps: boolean;
-  styling?: string;
   markets?: string;
   shortcut?: boolean;
 };

@@ -10,10 +10,6 @@ import {
   flagsToCamelObject,
 } from '../../lib/flags.js';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
-import {
-  STYLING_CHOICES,
-  type StylingChoice,
-} from './../../lib/setups/css/index.js';
 import {I18N_CHOICES, type I18nChoice} from '../../lib/setups/i18n/index.js';
 import {supressNodeExperimentalWarnings} from '../../lib/process.js';
 import {
@@ -47,10 +43,8 @@ export default class Init extends Command {
     ...commonFlags.installDeps,
     'mock-shop': Flags.boolean({
       description: 'Use mock.shop as the data source for the storefront.',
-      default: false,
       env: 'SHOPIFY_HYDROGEN_FLAG_MOCK_DATA',
     }),
-    ...commonFlags.styling,
     ...commonFlags.markets,
     ...commonFlags.shortcut,
     routes: Flags.boolean({
@@ -107,33 +101,21 @@ export async function runInit(
     );
   }
 
-  if (
-    options.styling &&
-    !STYLING_CHOICES.includes(options.styling as StylingChoice)
-  ) {
-    throw new AbortError(
-      `Invalid styling strategy: ${
-        options.styling
-      }. Must be one of ${STYLING_CHOICES.join(', ')}`,
-    );
-  }
-
   options.git ??= true;
 
   /**
    * Quickstart options. A set of sensible defaults to streamline documentation.
-   * Logical OR assignment means you can still override individual options by flag:
-   * $ h2 init --quickstart --language ts
+   * Nullish coalescing assignment means you can still override individual options by flag:
+   * $ h2 init --quickstart --language ts --no-install-deps
    */
   if (options.quickstart) {
-    options.i18n ||= 'none';
-    options.installDeps ||= true;
-    options.language ||= 'js';
-    options.mockShop ||= true;
-    options.path ||= './hydrogen-quickstart';
-    options.routes ||= true;
-    options.shortcut ||= true;
-    options.styling ||= 'tailwind';
+    options.i18n ??= 'none';
+    options.installDeps ??= true;
+    options.language ??= 'js';
+    options.mockShop ??= true;
+    options.path ??= './hydrogen-quickstart';
+    options.routes ??= true;
+    options.shortcut ??= true;
   }
 
   const showUpgrade = await checkHydrogenVersion(
