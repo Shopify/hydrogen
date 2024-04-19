@@ -5,11 +5,13 @@ type AllCacheOptions = Parameters<WithCache>[1];
 export function createRickAndMortyClient({
   cache,
   waitUntil,
+  request,
 }: {
   cache: Cache;
   waitUntil: ExecutionContext['waitUntil'];
+  request: Request;
 }) {
-  const withCache = createWithCache({cache, waitUntil});
+  const withCache = createWithCache({cache, waitUntil, request});
 
   async function query<T = any>(
     query: `#graphql:rickAndMorty${string}`,
