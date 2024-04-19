@@ -7,11 +7,11 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.blog.title ?? ''} blog`}];
 };
 
-export const loader = async ({
+export async function loader({
   request,
   params,
   context: {storefront},
-}: LoaderFunctionArgs) => {
+}: LoaderFunctionArgs) {
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 4,
   });
@@ -32,7 +32,7 @@ export const loader = async ({
   }
 
   return json({blog});
-};
+}
 
 export default function Blog() {
   const {blog} = useLoaderData<typeof loader>();
