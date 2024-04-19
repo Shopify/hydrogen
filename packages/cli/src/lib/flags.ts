@@ -5,7 +5,6 @@ import {renderInfo} from '@shopify/cli-kit/node/ui';
 import {normalizeStoreFqdn} from '@shopify/cli-kit/node/context/fqdn';
 import colors from '@shopify/cli-kit/node/colors';
 import type {CamelCasedProperties, PartialDeep} from 'type-fest';
-import {STYLING_CHOICES} from './setups/css/index.js';
 import {I18N_CHOICES} from './setups/i18n/index.js';
 
 export const DEFAULT_APP_PORT = 3000;
@@ -100,15 +99,6 @@ export const commonFlags = {
         'Specifies a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if this file exists.',
       required: false,
       dependsOn: ['codegen'],
-    }),
-  },
-  styling: {
-    styling: Flags.string({
-      description: `Sets the styling strategy to use. One of ${STYLING_CHOICES.map(
-        (item) => `\`${item}\``,
-      ).join(', ')}.`,
-      choices: STYLING_CHOICES,
-      env: 'SHOPIFY_HYDROGEN_FLAG_STYLING',
     }),
   },
   markets: {
