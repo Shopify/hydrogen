@@ -108,9 +108,9 @@ export async function runWithCache<T = unknown>(
     ...(typeof cacheKey === 'string' ? [cacheKey] : cacheKey),
   ]);
 
-  let debugData: DebugInfo;
+  let userDebugInfo: DebugInfo;
   const addDebugData = (info: AddDebugDataParam) => {
-    debugData = {
+    userDebugInfo = {
       displayName: info.displayName,
       url: info.response?.url,
       responseInit: {
@@ -137,7 +137,7 @@ export async function runWithCache<T = unknown>(
             startTime: overrideStartTime || startTime,
             cacheStatus,
             responsePayload: (result && result[0]) || result,
-            responseInit: (result && result[1]) || debugData?.responseInit,
+            responseInit: (result && result[1]) || userDebugInfo?.responseInit,
             cache: {
               status: cacheStatus,
               strategy: generateCacheControlHeader(strategy || {}),
@@ -145,8 +145,8 @@ export async function runWithCache<T = unknown>(
             },
             waitUntil,
             ...debugInfo,
-            url: debugData?.url || debugInfo?.url || getKeyUrl(key),
-            displayName: debugInfo?.displayName || debugData?.displayName,
+            url: userDebugInfo?.url || debugInfo?.url || getKeyUrl(key),
+            displayName: debugInfo?.displayName || userDebugInfo?.displayName,
           });
         }
       : undefined;
