@@ -329,12 +329,12 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       shouldCacheResponse: checkGraphQLErrors,
       waitUntil,
       debugInfo: {
-        url,
-        graphql: graphqlData,
         requestId: requestInit.headers[STOREFRONT_REQUEST_GROUP_ID_HEADER],
-        purpose: storefrontHeaders?.purpose,
-        stackInfo,
         displayName,
+        url,
+        stackInfo,
+        graphql: graphqlData,
+        purpose: storefrontHeaders?.purpose,
       },
     });
 

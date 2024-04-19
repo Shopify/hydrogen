@@ -35,10 +35,10 @@ export function generateSubRequestCacheControlHeader(
  * as the response itself so it can be checked for staleness.
  * @private
  */
-export async function getItemFromCache(
+export async function getItemFromCache<T = any>(
   cache: Cache,
   key: string,
-): Promise<undefined | [any, Response]> {
+): Promise<undefined | [T | string, Response]> {
   if (!cache) return;
   const url = getKeyUrl(key);
   const request = new Request(url);
