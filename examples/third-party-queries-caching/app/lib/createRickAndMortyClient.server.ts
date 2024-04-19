@@ -13,43 +13,47 @@ export function createRickAndMortyClient({
 }) {
   const withCache = createWithCache({cache, waitUntil, request});
 
-  async function query<T = any>(
-    query: `#graphql:rickAndMorty${string}`,
-    options: {
-      variables?: object;
-      cache: AllCacheOptions;
-    } = {variables: {}, cache: CacheLong()},
-  ) {
-    return withCache(
-      ['r&m', query, JSON.stringify(options.variables)],
-      options.cache,
-      async function () {
-        // call to the API
-        const response = await fetch('https://rickandmortyapi.com/graphql', {
-          method: 'POST',
-          headers: {
-            'Content-type': 'application/json',
-          },
-          body: JSON.stringify({
-            query: minifyQuery(query),
-            variables: options.variables,
-          }),
-        });
+  return {
+    async query<T = any>(
+      query: `#graphql:rickAndMorty${string}`,
+      options: {
+        variables?: object;
+        cache: AllCacheOptions;
+      } = {variables: {}, cache: CacheLong()},
+    ) {
+      query = minifyQuery(query);
 
-        if (!response.ok) {
-          throw new Error(
-            `Error fetching from rick and morty api: ${response.statusText}`,
-          );
-        }
+      return withCache(
+        ['r&m', query, JSON.stringify(options.variables)],
+        options.cache,
+        async ({addDebugData}) => {
+          // Call to the API
+          const response = await fetch('https://rickandmortyapi.com/graphql', {
+            method: 'POST',
+            headers: {'Content-type': 'application/json'},
+            body: JSON.stringify({query, variables: options.variables}),
+          });
 
-        const json = await response.json<{data: T; error: string}>();
+          // Improve information shown in the Hydrogen Subrequest Profiler
+          addDebugData({
+            displayName:
+              'Rick & Morty - ' + query.match(/^(query|mutation)\s\w+/)?.[0],
+            response,
+          });
 
-        return json.data;
-      },
-    );
-  }
+          if (!response.ok) {
+            throw new Error(
+              `Error fetching from rick and morty api: ${response.statusText}`,
+            );
+          }
 
-  return {query};
+          const json = await response.json<{data: T; error: string}>();
+
+          return json.data;
+        },
+      );
+    },
+  };
 }
 
 function minifyQuery<T extends string>(string: T) {
