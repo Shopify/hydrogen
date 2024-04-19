@@ -270,9 +270,14 @@ function AnalyticsProvider({
   customData = {},
   shop: shopProp = null,
 }: AnalyticsProviderProps): JSX.Element {
-  invariant(consent.checkoutDomain, '[h2:error:Analytics.Provider] - consent.checkoutDomain is required');
-  invariant(consent.storefrontAccessToken, '[h2:error:Analytics.Provider] - consent.storefrontAccessToken is required');
-
+  invariant(
+    consent.checkoutDomain,
+    '[h2:error:Analytics.Provider] - consent.checkoutDomain is required',
+  );
+  invariant(
+    consent.storefrontAccessToken,
+    '[h2:error:Analytics.Provider] - consent.storefrontAccessToken is required',
+  );
 
   const listenerSet = useRef(false);
   const {shop} = useShopAnalytics(shopProp);
@@ -317,11 +322,16 @@ function AnalyticsProvider({
       {shop && currentCart && (
         <CartAnalytics cart={currentCart} setCarts={setCarts} />
       )}
-      {shop && consent && <ShopifyAnalytics consent={consent} onReady={() => {
-        listenerSet.current = true;
-        setConsentLoaded(true);
-        setCanTrack(() => shopifyCanTrack);
-      }} />}
+      {shop && (
+        <ShopifyAnalytics
+          consent={consent}
+          onReady={() => {
+            listenerSet.current = true;
+            setConsentLoaded(true);
+            setCanTrack(() => shopifyCanTrack);
+          }}
+        />
+      )}
     </AnalyticsContext.Provider>
   );
 }

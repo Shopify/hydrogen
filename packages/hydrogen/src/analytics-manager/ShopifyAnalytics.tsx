@@ -66,20 +66,17 @@ export function ShopifyAnalytics({
   const analyticsReady = () => {
     customerPrivacyReady();
     onReady();
-  }
-  const {checkoutDomain, storefrontAccessToken} = consent;
+  };
 
-  checkoutDomain &&
-    storefrontAccessToken &&
-    useCustomerPrivacy({
-      ...consent,
-      onVisitorConsentCollected: analyticsReady,
-      onReady: () => {
-        if (!consent.withPrivacyBanner) {
-          analyticsReady();
-        }
+  useCustomerPrivacy({
+    ...consent,
+    onVisitorConsentCollected: analyticsReady,
+    onReady: () => {
+      if (!consent.withPrivacyBanner) {
+        analyticsReady();
       }
-    });
+    },
+  });
 
   useShopifyCookies({hasUserConsent: canTrack()});
 
