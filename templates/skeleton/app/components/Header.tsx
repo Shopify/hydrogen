@@ -2,7 +2,7 @@ import {Await, NavLink} from '@remix-run/react';
 import {Suspense} from 'react';
 import type {HeaderQuery} from 'storefrontapi.generated';
 import type {LayoutProps} from './Layout';
-import {useRootLoaderData} from '~/root';
+import {useRootLoaderData} from '~/lib/root-data';
 
 type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'>;
 

@@ -8,7 +8,7 @@ import type {
   CartLineUpdateInput,
 } from '@shopify/hydrogen/storefront-api-types';
 import {CartMain} from '~/components/Cart';
-import {useRootLoaderData} from '~/root';
+import {useRootLoaderData} from '~/lib/root-data';
 
 export const meta: MetaFunction = () => {
   return [{title: `Hydrogen | Cart`}];

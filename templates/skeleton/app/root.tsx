@@ -1,15 +1,10 @@
 import {useNonce} from '@shopify/hydrogen';
-import {
-  defer,
-  type SerializeFrom,
-  type LoaderFunctionArgs,
-} from '@shopify/remix-oxygen';
+import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {
   Links,
   Meta,
   Outlet,
   Scripts,
-  useMatches,
   useRouteError,
   useLoaderData,
   ScrollRestoration,
@@ -57,14 +52,6 @@ export function links() {
     {rel: 'icon', type: 'image/svg+xml', href: favicon},
   ];
 }
-
-/**
- * Access the result of the root loader from a React component.
- */
-export const useRootLoaderData = () => {
-  const [root] = useMatches();
-  return root?.data as SerializeFrom<typeof loader>;
-};
 
 export async function loader({context}: LoaderFunctionArgs) {
   const {storefront, customerAccount, cart} = context;
@@ -130,7 +117,7 @@ export default function App() {
 
 export function ErrorBoundary() {
   const error = useRouteError();
-  const rootData = useRootLoaderData();
+  const rootData = useLoaderData<typeof loader>();
   const nonce = useNonce();
   let errorMessage = 'Unknown error';
   let errorStatus = 500;

@@ -1,4 +1,5 @@
 import type {
+  FunctionDeclaration,
   FunctionLikeDeclaration,
   JSDocableNode,
   VariableStatement,
@@ -20,29 +21,56 @@ export function generateFunctionDocumentation(
 
   generateParameterDocumentation(functionNode, outputDocNode);
 
-  // Add type annotation to exported functions
-  // using the `export const foo: Foo = () => {}` syntax
-  const jsDocs = variableStatement?.getJsDocs()[0];
-  if (jsDocs?.getTags().length === 0) {
+  if (variableStatement) {
+    // Add type annotation to exported functions
+    // using the `export const foo: Foo = () => {}` syntax
     const declaration = variableStatement?.getDeclarations()[0];
-    const type = declaration?.getType().getText();
-    if (type && type !== 'any' && type !== 'unknown') {
-      const tagName = type.startsWith('() =>') ? 'return' : 'type';
+    const jsDocs = variableStatement?.getJsDocs()[0];
 
-      // Some generated docs try to import variables from the same file.
-      // E.g. `<typeof loader>` becomes `<typeof import("....").loader>`
-      const normalizedType = type
-        .replace(/^\(\)\s+=>\s+/, '')
-        .replace(/typeof import\("[^"]+"\)\./, 'typeof ');
+    if (jsDocs?.getTags().length === 0) {
+      const type = declaration?.getType().getText();
 
-      const text =
-        normalizedType === 'SerializeFrom<typeof loader>'
-          ? `{LoaderReturnData}` // Better alias
-          : `{${normalizedType}}`;
+      if (isAnnotableType(type)) {
+        jsDocs.addTag({
+          tagName: type.startsWith('() =>') ? 'return' : 'type',
+          text: normalizeType(type),
+        });
+      }
+    }
+  } else {
+    // Add return type annotation to plain functions
+    const declaration = functionNode as FunctionDeclaration;
+    const jsDocs = declaration.getJsDocs()[0];
 
-      jsDocs.addTag({tagName, text});
+    if (jsDocs?.getTags().length === 0) {
+      const returnType = declaration.getReturnType().getText();
+      if (isAnnotableType(returnType)) {
+        jsDocs.addTag({tagName: 'return', text: normalizeType(returnType)});
+      }
     }
   }
+}
+
+function isAnnotableType(type?: string): type is string {
+  return !!(
+    type &&
+    type !== 'any' &&
+    type !== 'unknown' &&
+    type !== '{}' &&
+    type !== 'boolean'
+  );
+}
+
+function normalizeType(type: string) {
+  // Some generated docs try to import variables from the same file.
+  // E.g. `<typeof loader>` becomes `<typeof import("....").loader>`
+  const normalizedType = type
+    .replace(/^\(\)\s+=>\s+/, '')
+    .replace(/typeof import\("[^"]+"\)\./, 'typeof ');
+
+  return normalizedType === 'SerializeFrom<any>'
+    ? `{SerializeFrom<loader>}` // Fix inference for loaders outisde of routes
+    : `{${normalizedType}}`;
 }
 
 /**
