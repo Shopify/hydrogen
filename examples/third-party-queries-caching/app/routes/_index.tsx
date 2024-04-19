@@ -33,7 +33,7 @@ export default function Homepage() {
 // 3. The Rick & Morty characters GraphQL query
 // NOTE: https://rickandmortyapi.com/documentation/#graphql
 const CHARACTERS_QUERY = `#graphql:rickAndMorty
-  query {
+  query Characters {
     characters(page: 1) {
       results {
         name
