@@ -12,9 +12,9 @@ const ProductForm = ({product}) => {
         <>
           <div>{option.name}</div>
           <div>
-            {option.values.map(({value, isAvailable, path, isActive}) => (
+            {option.values.map(({value, isAvailable, to, isActive}) => (
               <Link
-                to={path}
+                to={to}
                 prefetch="intent"
                 className={
                   isActive ? 'active' : isAvailable ? '' : 'opacity-80'
