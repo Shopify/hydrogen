@@ -95,14 +95,24 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
         hmrReady = !!hmrWs;
         hmrWs?.addEventListener('message', (message) => {
           if (onHmrRecieve) {
-            let data: HMRPayload = JSON.parse(message.data?.toString());
+            if (!message.data) return;
+            const data: HMRPayload = JSON.parse(message.data.toString());
 
-            if (data?.type === 'update') {
-              // TODO: handle partial updates
-              data = {type: 'full-reload', path: '*'};
+            if (!data) return;
+
+            if (data.type === 'update') {
+              // Invalidate cache synchronously without revalidating the
+              // module to avoid hanging promises in workerd
+              for (const update of data.updates) {
+                runtime.moduleCache.invalidateDepTree([update.path]);
+              }
+            } else if (data.type !== 'custom') {
+              // Custom events are only used in browser HMR, so ignore them.
+              // This type is wrong in ViteRuntime:
+              (onHmrRecieve(data) as unknown as Promise<unknown>)?.catch(
+                (error) => console.error('During SSR HMR:', error),
+              );
             }
-
-            onHmrRecieve(data);
           }
         });
       })
