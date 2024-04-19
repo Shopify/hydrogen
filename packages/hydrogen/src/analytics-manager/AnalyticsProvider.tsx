@@ -270,9 +270,8 @@ function AnalyticsProvider({
   customData = {},
   shop: shopProp = null,
 }: AnalyticsProviderProps): JSX.Element {
-
-  if (!consent.checkoutDomain) invariant('[h2:error:Analytics.Provider] - consent.checkoutDomain is required');
-  if (!consent.storefrontAccessToken) invariant('[h2:error:Analytics.Provider] - consent.storefrontAccessToken is required');
+  invariant(consent.checkoutDomain, '[h2:error:Analytics.Provider] - consent.checkoutDomain is required');
+  invariant(consent.storefrontAccessToken, '[h2:error:Analytics.Provider] - consent.storefrontAccessToken is required');
 
 
   const listenerSet = useRef(false);
@@ -284,18 +283,6 @@ function AnalyticsProvider({
   const [canTrack, setCanTrack] = useState<() => boolean>(
     customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
   );
-
-  // Force a re-render of the value when
-  useEffect(() => {
-    if (customCanTrack) return;
-    if (listenerSet.current) return;
-    listenerSet.current = true;
-
-    document.addEventListener('visitorConsentCollected', () => {
-      setConsentLoaded(true);
-      setCanTrack(() => shopifyCanTrack);
-    });
-  }, [setConsentLoaded, setCanTrack, customCanTrack]);
 
   const value = useMemo<AnalyticsContextValue>(() => {
     return {
@@ -330,7 +317,11 @@ function AnalyticsProvider({
       {shop && currentCart && (
         <CartAnalytics cart={currentCart} setCarts={setCarts} />
       )}
-      {shop && consent && <ShopifyAnalytics consent={consent} />}
+      {shop && consent && <ShopifyAnalytics consent={consent} onReady={() => {
+        listenerSet.current = true;
+        setConsentLoaded(true);
+        setCanTrack(() => shopifyCanTrack);
+      }} />}
     </AnalyticsContext.Provider>
   );
 }

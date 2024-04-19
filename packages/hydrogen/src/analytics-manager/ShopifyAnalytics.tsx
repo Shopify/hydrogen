@@ -53,24 +53,30 @@ function getCustomerPrivacyRequired() {
  */
 export function ShopifyAnalytics({
   consent,
+  onReady,
 }: {
   consent: AnalyticsProviderProps['consent'];
+  onReady: () => void;
 }) {
   const {subscribe, register, canTrack} = useAnalytics();
   const {ready: shopifyAnalyticsReady} = register('Internal_Shopify_Analytics');
   const {ready: customerPrivacyReady} = register(
     'Internal_Shopify_CustomerPrivacy',
   );
+  const analyticsReady = () => {
+    customerPrivacyReady();
+    onReady();
+  }
   const {checkoutDomain, storefrontAccessToken} = consent;
 
   checkoutDomain &&
     storefrontAccessToken &&
     useCustomerPrivacy({
       ...consent,
-      onVisitorConsentCollected: customerPrivacyReady,
+      onVisitorConsentCollected: analyticsReady,
       onReady: () => {
         if (!consent.withPrivacyBanner) {
-          customerPrivacyReady();
+          analyticsReady();
         }
       }
     });
