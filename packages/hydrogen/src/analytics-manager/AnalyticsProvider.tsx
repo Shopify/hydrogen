@@ -37,6 +37,7 @@ import {ShopifyAnalytics} from './ShopifyAnalytics';
 import {CartAnalytics} from './CartAnalytics';
 import type {CustomerPrivacyApiProps} from '../customer-privacy/ShopifyCustomerPrivacy';
 import type {Storefront} from '../storefront';
+import invariant from 'tiny-invariant';
 
 export type ShopAnalytics = {
   /** The shop ID. */
@@ -269,6 +270,11 @@ function AnalyticsProvider({
   customData = {},
   shop: shopProp = null,
 }: AnalyticsProviderProps): JSX.Element {
+
+  if (!consent.checkoutDomain) invariant('[h2:error:Analytics.Provider] - consent.checkoutDomain is required');
+  if (!consent.storefrontAccessToken) invariant('[h2:error:Analytics.Provider] - consent.storefrontAccessToken is required');
+
+
   const listenerSet = useRef(false);
   const {shop} = useShopAnalytics(shopProp);
   const [consentLoaded, setConsentLoaded] = useState(

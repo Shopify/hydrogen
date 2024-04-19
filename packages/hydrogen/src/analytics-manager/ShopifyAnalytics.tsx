@@ -62,11 +62,17 @@ export function ShopifyAnalytics({
     'Internal_Shopify_CustomerPrivacy',
   );
   const {checkoutDomain, storefrontAccessToken} = consent;
+
   checkoutDomain &&
     storefrontAccessToken &&
     useCustomerPrivacy({
       ...consent,
       onVisitorConsentCollected: customerPrivacyReady,
+      onReady: () => {
+        if (!consent.withPrivacyBanner) {
+          customerPrivacyReady();
+        }
+      }
     });
 
   useShopifyCookies({hasUserConsent: canTrack()});

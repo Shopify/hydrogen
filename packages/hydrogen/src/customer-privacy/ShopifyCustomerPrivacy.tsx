@@ -84,6 +84,8 @@ export type CustomerPrivacyApiProps = {
   withPrivacyBanner?: boolean;
   /** Callback to be called when visitor consent is collected. */
   onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;
+  /** Callback to be call when customer privacy api is ready. */
+  onReady?: () => void;
 };
 
 const CONSENT_API =
@@ -102,6 +104,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   const {
     withPrivacyBanner = true,
     onVisitorConsentCollected,
+    onReady,
     ...consentConfig
   } = props;
   const loadedEvent = useRef(false);
@@ -170,6 +173,10 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
           callback,
         );
       };
+    }
+
+    if (onReady && !withPrivacyBanner) {
+      onReady();
     }
   }, [scriptStatus, withPrivacyBanner, consentConfig]);
 
