@@ -108,7 +108,9 @@ export async function runWithCache<T = unknown>(
     ...(typeof cacheKey === 'string' ? [cacheKey] : cacheKey),
   ]);
 
-  let userDebugInfo: DebugInfo;
+  let cachedDebugInfo: DebugInfo | undefined;
+  let userDebugInfo: DebugInfo | undefined;
+
   const addDebugData = (info: AddDebugDataParam) => {
     userDebugInfo = {
       displayName: info.displayName,
@@ -120,6 +122,20 @@ export async function runWithCache<T = unknown>(
       },
     };
   };
+
+  const mergeDebugInfo = () => ({
+    ...cachedDebugInfo,
+    ...debugInfo,
+    url:
+      userDebugInfo?.url ||
+      debugInfo?.url ||
+      cachedDebugInfo?.url ||
+      getKeyUrl(key),
+    displayName:
+      debugInfo?.displayName ||
+      userDebugInfo?.displayName ||
+      cachedDebugInfo?.displayName,
+  });
 
   const logSubRequestEvent =
     process.env.NODE_ENV === 'development'
@@ -133,6 +149,7 @@ export async function runWithCache<T = unknown>(
           overrideStartTime?: number;
         }) => {
           globalThis.__H2O_LOG_EVENT?.({
+            ...mergeDebugInfo(),
             eventType: 'subrequest',
             startTime: overrideStartTime || startTime,
             cacheStatus,
@@ -144,9 +161,6 @@ export async function runWithCache<T = unknown>(
               key,
             },
             waitUntil,
-            ...debugInfo,
-            url: userDebugInfo?.url || debugInfo?.url || getKeyUrl(key),
-            displayName: debugInfo?.displayName || userDebugInfo?.displayName,
           });
         }
       : undefined;
@@ -158,11 +172,30 @@ export async function runWithCache<T = unknown>(
     return result;
   }
 
-  const cachedItem = await getItemFromCache(cacheInstance, key);
+  type CachedItem = {
+    value: Awaited<T>;
+    debugInfo?: DebugInfo;
+  };
+
+  const storeInCache = (value: CachedItem['value']) =>
+    setItemInCache(
+      cacheInstance,
+      key,
+      {
+        value,
+        debugInfo:
+          process.env.NODE_ENV === 'development' ? mergeDebugInfo() : undefined,
+      } satisfies CachedItem,
+      strategy,
+    );
+
+  const cachedItem = await getItemFromCache<CachedItem>(cacheInstance, key);
   // console.log('--- Cache', cachedItem ? 'HIT' : 'MISS');
 
-  if (cachedItem) {
-    const [cachedResult, cacheInfo] = cachedItem;
+  if (cachedItem && typeof cachedItem[0] !== 'string') {
+    const [{value: cachedResult, debugInfo}, cacheInfo] = cachedItem;
+    cachedDebugInfo = debugInfo;
+
     const cacheStatus = isStale(key, cacheInfo) ? 'STALE' : 'HIT';
 
     if (!swrLock.has(key) && cacheStatus === 'STALE') {
@@ -175,7 +208,7 @@ export async function runWithCache<T = unknown>(
           const result = await actionFn({addDebugData});
 
           if (shouldCacheResult(result)) {
-            await setItemInCache(cacheInstance, key, result, strategy);
+            await storeInCache(result);
 
             // Log PUT requests with the revalidate start time
             logSubRequestEvent?.({
@@ -220,9 +253,9 @@ export async function runWithCache<T = unknown>(
    * Important: Do this async
    */
   if (shouldCacheResult(result)) {
-    const setItemInCachePromise = Promise.resolve().then(async () => {
+    const cacheStoringPromise = Promise.resolve().then(async () => {
       const putStartTime = Date.now();
-      await setItemInCache(cacheInstance, key, result, strategy);
+      await storeInCache(result);
       logSubRequestEvent?.({
         result,
         cacheStatus: 'PUT',
@@ -230,7 +263,7 @@ export async function runWithCache<T = unknown>(
       });
     });
 
-    waitUntil?.(setItemInCachePromise);
+    waitUntil?.(cacheStoringPromise);
   }
 
   return result;
