@@ -152,6 +152,7 @@ export async function runWithCache<T = unknown>(
             ...mergeDebugInfo(),
             eventType: 'subrequest',
             startTime: overrideStartTime || startTime,
+            endTime: Date.now(),
             cacheStatus,
             responsePayload: (result && result[0]) || result,
             responseInit: (result && result[1]) || userDebugInfo?.responseInit,
