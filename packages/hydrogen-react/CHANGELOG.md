@@ -1,5 +1,11 @@
 # @shopify/hydrogen-react
 
+## 2024.4.1
+
+### Patch Changes
+
+- Fix noteUpdate scalar to be required ([#2008](https://github.com/Shopify/hydrogen/pull/2008)) by [@blittle](https://github.com/blittle)
+
 ## 2024.4.0
 
 ### Patch Changes

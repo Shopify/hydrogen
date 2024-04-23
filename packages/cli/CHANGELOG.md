@@ -1,5 +1,28 @@
 # @shopify/cli-hydrogen
 
+## 8.0.1
+
+### Patch Changes
+
+- Clean up messaging around unlinked storefronts when running CLI commands ([#1937](https://github.com/Shopify/hydrogen/pull/1937)) by [@aswamy](https://github.com/aswamy)
+
+  - When you run `env list`, `env pull`, or `deploy` against a storefront that isn't linked, it will show a warning message instead of an error message.
+  - If you don't have a storefront to link to on Admin, we will just ask you to create a storefront instead of displaying an option list of size 1.
+  - If you deleted a storefront on Admin, we will try to relink your storefront when running `env list`, `env pull`, or `deploy`.
+
+- Add `@return` JSDoc tag to functions in JavaScript projects. ([#2014](https://github.com/Shopify/hydrogen/pull/2014)) by [@frandiox](https://github.com/frandiox)
+
+- Fix `--quickstart` flag to support overwritting it with other flags. Example: `h2 init --quickstart --no-install-deps`. ([#2023](https://github.com/Shopify/hydrogen/pull/2023)) by [@frandiox](https://github.com/frandiox)
+
+  Show error in `h2 debug cpu` command for Vite projects until we support it.
+
+  Remove deprecated `--styling` flag from the `h2 init` command.
+
+- Fix a warning when combining mock.shop and customer-account-push ([#1992](https://github.com/Shopify/hydrogen/pull/1992)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`7e8cf055`](https://github.com/Shopify/hydrogen/commit/7e8cf0558248e3bfd0f8299994e3ed2b91ee3d3b), [`a335afc1`](https://github.com/Shopify/hydrogen/commit/a335afc1026164132a618e8bcbbbf5d0fe27ae4c)]:
+  - @shopify/mini-oxygen@3.0.1
+
 ## 8.0.0
 
 ### Major Changes

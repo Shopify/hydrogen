@@ -1,5 +1,13 @@
 # @shopify/mini-oxygen
 
+## 3.0.1
+
+### Patch Changes
+
+- Fixed compatibility with Node 21. ([#2003](https://github.com/Shopify/hydrogen/pull/2003)) by [@frandiox](https://github.com/frandiox)
+
+- Fix an SSR HMR issue related to hanging promises during development. ([#2019](https://github.com/Shopify/hydrogen/pull/2019)) by [@frandiox](https://github.com/frandiox)
+
 ## 3.0.0
 
 ### Major Changes
