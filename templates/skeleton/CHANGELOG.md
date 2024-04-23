@@ -1,5 +1,45 @@
 # skeleton
 
+## 1.0.8
+
+### Patch Changes
+
+- Stop inlining the favicon in base64 to avoid issues with the Content-Security-Policy. In `vite.config.js`: ([#2006](https://github.com/Shopify/hydrogen/pull/2006)) by [@frandiox](https://github.com/frandiox)
+
+  ```diff
+  export default defineConfig({
+    plugins: [
+      ...
+    ],
+  + build: {
+  +   assetsInlineLimit: 0,
+  + },
+  });
+  ```
+
+- To improve HMR in Vite, move the `useRootLoaderData` function from `app/root.tsx` to a separate file like `app/lib/root-data.ts`. This change avoids circular imports: ([#2014](https://github.com/Shopify/hydrogen/pull/2014)) by [@frandiox](https://github.com/frandiox)
+
+  ```tsx
+  // app/lib/root-data.ts
+  import {useMatches} from '@remix-run/react';
+  import type {SerializeFrom} from '@shopify/remix-oxygen';
+  import type {loader} from '~/root';
+
+  /**
+   * Access the result of the root loader from a React component.
+   */
+  export const useRootLoaderData = () => {
+    const [root] = useMatches();
+    return root?.data as SerializeFrom<typeof loader>;
+  };
+  ```
+
+  Import this hook from `~/lib/root-data` instead of `~/root` in your components.
+
+- Updated dependencies [[`b4dfda32`](https://github.com/Shopify/hydrogen/commit/b4dfda320ca52855b2d4493a4306d15a883ca843), [`ffa57bdb`](https://github.com/Shopify/hydrogen/commit/ffa57bdbcdf51e03d565736f9388b5bb4f46292c), [`ac4e1670`](https://github.com/Shopify/hydrogen/commit/ac4e1670f0361a2cd2c6827e4162bbbee0ca37f3), [`0af624d5`](https://github.com/Shopify/hydrogen/commit/0af624d51afc7250db889ba5e736c85a6070c8b2), [`9723eaf3`](https://github.com/Shopify/hydrogen/commit/9723eaf3e5a42c30e657d1cadb123ed775d620e4), [`e842f68c`](https://github.com/Shopify/hydrogen/commit/e842f68c8e879d4c54e0730f3cb55214a760d7f5)]:
+  - @shopify/cli-hydrogen@8.0.1
+  - @shopify/hydrogen@2024.4.1
+
 ## 1.0.7
 
 ### Patch Changes
