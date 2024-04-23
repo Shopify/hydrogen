@@ -36,7 +36,7 @@ export const CART_NOTE_UPDATE_MUTATION = (
 ) => `#graphql
   mutation cartNoteUpdate(
     $cartId: ID!
-    $note: String
+    $note: String!
     $language: LanguageCode
     $country: CountryCode
   ) @inContext(country: $country, language: $language) {
