@@ -1,5 +1,16 @@
 # @shopify/hydrogen
 
+## 2024.4.1
+
+### Patch Changes
+
+- Warn when using the deprecated Seo component ([#1983](https://github.com/Shopify/hydrogen/pull/1983)) by [@blittle](https://github.com/blittle)
+
+- Fix names and URLs shown for HIT/STALE items in the Subrequest Profiler. ([#2021](https://github.com/Shopify/hydrogen/pull/2021)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`0f5cab00`](https://github.com/Shopify/hydrogen/commit/0f5cab00d7fbac313c0f3e9affb915638db8d5d9)]:
+  - @shopify/hydrogen-react@2024.4.1
+
 ## 2024.4.0
 
 ### Minor Changes
