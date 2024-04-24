@@ -1,9 +1,9 @@
-import {defer} from '@shopify/remix-oxygen';
+import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import {B2BLocationSelector} from '../components/B2BLocationSelector';
 import {CUSTOMER_LOCATIONS_QUERY} from '~/graphql/customer-account/CustomerLocationsQuery';
 
-export async function loader({context}) {
+export async function loader({context}: LoaderFunctionArgs) {
   const {customerAccount} = context;
 
   const isLoggedIn = await customerAccount.isLoggedIn();

@@ -104,7 +104,11 @@ function HeaderCtas({
       {/**********   EXAMPLE UPDATE END   ************/
       /***********************************************/}
       <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
-        {isLoggedIn ? 'Account' : 'Sign in'}
+        <Suspense fallback="Sign in">
+          <Await resolve={isLoggedIn} errorElement="Sign in">
+            {(isLoggedIn) => (isLoggedIn ? 'Account' : 'Sign in')}
+          </Await>
+        </Suspense>
       </NavLink>
       <SearchToggle />
       <CartToggle cart={cart} />
@@ -145,11 +149,7 @@ function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
 /**********  EXAMPLE UPDATE STARTS  ************/
 function LocationDropdown() {
   const location = useLocation();
-  const b2bLocations = useB2BLocation();
-  const company = b2bLocations?.company;
-  const companyLocationId = b2bLocations?.companyLocationId;
-
-  console.log(companyLocationId);
+  const {company, companyLocationId} = useB2BLocation();
 
   const locations = company?.locations?.edges
     ? company.locations.edges.map(

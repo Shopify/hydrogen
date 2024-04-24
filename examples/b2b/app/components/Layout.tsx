@@ -23,7 +23,7 @@ export type LayoutProps = {
   children?: React.ReactNode;
   footer: Promise<FooterQuery>;
   header: HeaderQuery;
-  isLoggedIn: boolean;
+  isLoggedIn: Promise<boolean>;
 };
 
 export function Layout({
@@ -33,9 +33,7 @@ export function Layout({
   header,
   isLoggedIn,
 }: LayoutProps) {
-  const b2bLocations = useB2BLocation();
-  const company = b2bLocations?.company;
-  const companyLocationId = b2bLocations?.companyLocationId;
+  const {company, companyLocationId} = useB2BLocation();
 
   return (
     <>
