@@ -20,9 +20,13 @@ import favicon from './assets/favicon.svg';
 import resetStyles from './styles/reset.css?url';
 import appStyles from './styles/app.css?url';
 import {Layout} from '~/components/Layout';
-import {LocationSelector} from '~/components/LocationSelector';
-import {CUSTOMER_LOCATIONS_QUERY} from '~/graphql/customer-account/CustomerLocationsQuery';
-import type {Company, CompanyAddress, CompanyLocation, InputMaybe, Maybe} from '@shopify/hydrogen/customer-account-api-types';
+import {B2BLocationProvider} from '~/components/B2BLocationProvider';
+import type {
+  Company,
+  CompanyAddress,
+  CompanyLocation,
+  Maybe,
+} from '@shopify/hydrogen/customer-account-api-types';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -61,19 +65,25 @@ export function links() {
   ];
 }
 
-export type CustomerCompanyLocation = Pick<CompanyLocation, "name" | "id"> & {
-  shippingAddress?: Maybe<Pick<CompanyAddress, "countryCode" | "formattedAddress">> | undefined;
+export type CustomerCompanyLocation = Pick<CompanyLocation, 'name' | 'id'> & {
+  shippingAddress?:
+    | Maybe<Pick<CompanyAddress, 'countryCode' | 'formattedAddress'>>
+    | undefined;
 };
 
 export type CustomerCompanyLocationConnection = {
   node: CustomerCompanyLocation;
 };
 
-export type CustomerCompany = Maybe<Pick<Company, "name" | "id"> & {
-  locations: {
-      edges: CustomerCompanyLocationConnection[];
-  };
-}> | undefined;
+export type CustomerCompany =
+  | Maybe<
+      Pick<Company, 'name' | 'id'> & {
+        locations: {
+          edges: CustomerCompanyLocationConnection[];
+        };
+      }
+    >
+  | undefined;
 
 /**
  * Access the result of the root loader from a React component.
@@ -87,11 +97,7 @@ export async function loader({context}: LoaderFunctionArgs) {
   const {storefront, customerAccount, cart} = context;
   const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
 
-  /***********************************************/
-  /**********  EXAMPLE UPDATE STARTS  ************/
-  const isLoggedIn = await customerAccount.isLoggedIn();
-  /**********   EXAMPLE UPDATE END   ************/
-  /***********************************************/
+  const isLoggedInPromise = customerAccount.isLoggedIn();
   const cartPromise = cart.get();
 
   // defer the footer query (below the fold)
@@ -110,47 +116,13 @@ export async function loader({context}: LoaderFunctionArgs) {
     },
   });
 
-  /***********************************************/
-  /**********  EXAMPLE UPDATE STARTS  ************/
-  // B2B buyer context
-  let companyLocationId: InputMaybe<string> | undefined;
-  let company: CustomerCompany;
-
-  if (isLoggedIn) {
-    companyLocationId = (await customerAccount.UNSTABLE_getBuyer())
-      ?.companyLocationId;
-
-    const customer = await customerAccount.query(CUSTOMER_LOCATIONS_QUERY);
-    company =
-      customer?.data?.customer?.companyContacts?.edges?.[0]?.node?.company || null;
-  }
-
-  if (!companyLocationId && company?.locations?.edges?.length === 1) {
-    companyLocationId = company.locations.edges[0].node.id;
-
-    customerAccount.UNSTABLE_setBuyer({
-      companyLocationId,
-    });
-  }
-
-  const showLocationSelector = Boolean(company && !companyLocationId);
-  /**********   EXAMPLE UPDATE END   ************/
-  /***********************************************/
-
   return defer(
     {
       cart: cartPromise,
       footer: footerPromise,
       header: await headerPromise,
-      /***********************************************/
-      /**********  EXAMPLE UPDATE STARTS  ************/
-      isLoggedIn,
+      isLoggedIn: isLoggedInPromise,
       publicStoreDomain,
-      company,
-      companyLocationId,
-      showLocationSelector,
-      /**********   EXAMPLE UPDATE END   ************/
-      /***********************************************/
     },
     {
       headers: {
@@ -176,20 +148,16 @@ export default function App() {
         {
           /***********************************************/
           /**********  EXAMPLE UPDATE STARTS  ************/
-          data.showLocationSelector ? (
-            <main>
-              <LocationSelector company={data.company} />
-            </main>
-          ) : (
+          <B2BLocationProvider>
             <Layout {...data}>
               <Outlet />
             </Layout>
-          )
+            <ScrollRestoration nonce={nonce} />
+            <Scripts nonce={nonce} />
+          </B2BLocationProvider>
           /**********   EXAMPLE UPDATE END   ************/
           /***********************************************/
         }
-        <ScrollRestoration nonce={nonce} />
-        <Scripts nonce={nonce} />
       </body>
     </html>
   );

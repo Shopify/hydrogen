@@ -491,5 +491,32 @@ aside li {
   border: 0.5px darkgrey solid;
   font-weight: 400;
 }
+
+/*
+* --------------------------------------------------
+* Location Selector Modal
+* --------------------------------------------------
+*/
+.modal {
+  position: fixed; 
+  display: flex;
+  z-index: 1; 
+  left: 0;
+  top: 0;
+  width: 100%; 
+  height: 100%; 
+  background-color: rgba(0,0,0,0.4); 
+}
+
+.modal-content {
+  background-color: #fefefe;
+  overflow: auto;
+  margin: auto; 
+  border: 1px solid #888;
+  border-radius: 4px;
+  width: fit-content; 
+  max-height: 80%;
+  padding: 20px
+}
 /**********   EXAMPLE UPDATE END   ************/
 /***********************************************/

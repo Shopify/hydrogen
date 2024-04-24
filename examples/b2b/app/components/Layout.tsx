@@ -13,8 +13,10 @@ import {
   PredictiveSearchForm,
   PredictiveSearchResults,
 } from '~/components/Search';
+import {B2BLocationSelector} from '~/components/B2BLocationSelector';
 import type {InputMaybe} from '@shopify/hydrogen/customer-account-api-types';
 import type {CustomerCompany} from 'app/root';
+import {useB2BLocation} from './B2BLocationProvider';
 
 export type LayoutProps = {
   cart: Promise<CartApiQueryFragment | null>;
@@ -22,51 +24,34 @@ export type LayoutProps = {
   footer: Promise<FooterQuery>;
   header: HeaderQuery;
   isLoggedIn: boolean;
-  /***********************************************/
-  /**********  EXAMPLE UPDATE STARTS  ************/
-  company?: CustomerCompany;
-  companyLocationId?: InputMaybe<string> | undefined;
-  /**********   EXAMPLE UPDATE END   ************/
-  /***********************************************/
 };
 
-/***********************************************/
-/**********  EXAMPLE UPDATE STARTS  ************/
 export function Layout({
   cart,
   children = null,
   footer,
   header,
   isLoggedIn,
-  company,
-  companyLocationId,
 }: LayoutProps) {
-  /**********   EXAMPLE UPDATE END   ************/
-  /***********************************************/
+  const b2bLocations = useB2BLocation();
+  const company = b2bLocations?.company;
+  const companyLocationId = b2bLocations?.companyLocationId;
+
   return (
     <>
       <CartAside cart={cart} />
       <SearchAside />
       <MobileMenuAside menu={header?.menu} shop={header?.shop} />
-      {/***********************************************/
-      /**********  EXAMPLE UPDATE STARTS  ************/}
-      {header && (
-        <Header
-          header={header}
-          cart={cart}
-          isLoggedIn={isLoggedIn}
-          company={company}
-          companyLocationId={companyLocationId}
-        />
-      )}
-      {/**********   EXAMPLE UPDATE END   ************/
-      /***********************************************/}
+      {header && <Header header={header} cart={cart} isLoggedIn={isLoggedIn} />}
       <main>{children}</main>
       <Suspense>
         <Await resolve={footer}>
           {(footer) => <Footer menu={footer?.menu} shop={header?.shop} />}
         </Await>
       </Suspense>
+      {company && !companyLocationId ? (
+        <B2BLocationSelector company={company} />
+      ) : null}
     </>
   );
 }

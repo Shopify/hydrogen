@@ -5,11 +5,13 @@ import type {
   CustomerCompanyLocationConnection,
 } from '~/root';
 
-export function LocationSelector({company}: {company: CustomerCompany}) {
+export function B2BLocationSelector({company}: {company: CustomerCompany}) {
   const locations = company?.locations?.edges
-    ? company.locations.edges.map((location: CustomerCompanyLocationConnection) => {
-        return {...location.node};
-      })
+    ? company.locations.edges.map(
+        (location: CustomerCompanyLocationConnection) => {
+          return {...location.node};
+        },
+      )
     : [];
 
   function LocationItem({location}: {location: CustomerCompanyLocation}) {
@@ -35,26 +37,27 @@ export function LocationSelector({company}: {company: CustomerCompany}) {
     );
   }
 
-  if (!company) return <h2>Not logged in for B2B</h2>;
+  if (!company) return null;
 
   return (
-    <div>
-      <h1>Logged in for {company.name}</h1>
-      <CartForm route="/cart" action={CartForm.ACTIONS.BuyerIdentityUpdate}>
-        <fieldset>
-          <legend>Choose a location:</legend>
-          {locations.map((location: CustomerCompanyLocation) => {
-            return (
-              <div key={location.id}>
-                <LocationItem location={location} />
-                <br />
-                <br />
-              </div>
-            );
-          })}
-        </fieldset>
-        <button type="submit">Choose Location</button>
-      </CartForm>
+    <div className="modal">
+      <div className="modal-content">
+        <h2>Logged in for {company.name}</h2>
+        <CartForm route="/cart" action={CartForm.ACTIONS.BuyerIdentityUpdate}>
+          <fieldset>
+            <legend>Choose a location:</legend>
+            {locations.map((location: CustomerCompanyLocation) => {
+              return (
+                <div key={location.id}>
+                  <LocationItem location={location} />
+                  <br />
+                </div>
+              );
+            })}
+          </fieldset>
+          <button type="submit">Choose Location</button>
+        </CartForm>
+      </div>
     </div>
   );
 }

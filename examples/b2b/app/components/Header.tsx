@@ -6,31 +6,15 @@ import type {LayoutProps} from './Layout';
 import {
   type CustomerCompanyLocation,
   type CustomerCompanyLocationConnection,
-  useRootLoaderData
+  useRootLoaderData,
 } from '~/root';
+import {useB2BLocation} from './B2BLocationProvider';
 
-/***********************************************/
-/**********  EXAMPLE UPDATE STARTS  ************/
-type HeaderProps = Pick<
-  LayoutProps,
-  'header' | 'cart' | 'isLoggedIn' | 'company' | 'companyLocationId'
->;
-/**********   EXAMPLE UPDATE END   ************/
-/***********************************************/
+type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'>;
 
 type Viewport = 'desktop' | 'mobile';
 
-/***********************************************/
-/**********  EXAMPLE UPDATE STARTS  ************/
-export function Header({
-  header,
-  isLoggedIn,
-  cart,
-  company,
-  companyLocationId,
-}: HeaderProps) {
-  /**********   EXAMPLE UPDATE END   ************/
-  /***********************************************/
+export function Header({header, isLoggedIn, cart}: HeaderProps) {
   const {shop, menu} = header;
   return (
     <header className="header">
@@ -42,16 +26,7 @@ export function Header({
         viewport="desktop"
         primaryDomainUrl={header.shop.primaryDomain.url}
       />
-      {/***********************************************/
-      /**********  EXAMPLE UPDATE STARTS  ************/}
-      <HeaderCtas
-        isLoggedIn={isLoggedIn}
-        cart={cart}
-        company={company}
-        companyLocationId={companyLocationId}
-      />
-      {/**********   EXAMPLE UPDATE END   ************/
-      /***********************************************/}
+      <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
     </header>
   );
 }
@@ -116,21 +91,18 @@ export function HeaderMenu({
   );
 }
 
-/***********************************************/
-/**********  EXAMPLE UPDATE STARTS  ************/
 function HeaderCtas({
   isLoggedIn,
   cart,
-  company,
-  companyLocationId,
-}: Pick<HeaderProps, 'isLoggedIn' | 'cart' | 'company' | 'companyLocationId'>) {
+}: Pick<HeaderProps, 'isLoggedIn' | 'cart'>) {
   return (
     <nav className="header-ctas" role="navigation">
       <HeaderMenuMobileToggle />
-      <LocationDropdown
-        company={company}
-        companyLocationId={companyLocationId}
-      />
+      {/***********************************************/
+      /**********  EXAMPLE UPDATE STARTS  ************/}
+      <LocationDropdown />
+      {/**********   EXAMPLE UPDATE END   ************/
+      /***********************************************/}
       <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
         {isLoggedIn ? 'Account' : 'Sign in'}
       </NavLink>
@@ -139,8 +111,6 @@ function HeaderCtas({
     </nav>
   );
 }
-/**********   EXAMPLE UPDATE END   ************/
-/***********************************************/
 
 function HeaderMenuMobileToggle() {
   return (
@@ -173,20 +143,24 @@ function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
 
 /***********************************************/
 /**********  EXAMPLE UPDATE STARTS  ************/
-function LocationDropdown({
-  company,
-  companyLocationId,
-}: Pick<HeaderProps, 'company' | 'companyLocationId'>) {
+function LocationDropdown() {
   const location = useLocation();
+  const b2bLocations = useB2BLocation();
+  const company = b2bLocations?.company;
+  const companyLocationId = b2bLocations?.companyLocationId;
+
+  console.log(companyLocationId);
 
   const locations = company?.locations?.edges
-    ? company.locations.edges.map((location: CustomerCompanyLocationConnection) => {
-        return {...location.node};
-      })
+    ? company.locations.edges.map(
+        (location: CustomerCompanyLocationConnection) => {
+          return {...location.node};
+        },
+      )
     : [];
 
-  const [selectedLocation, setSelectedLocation] = useState(
-    companyLocationId ?? undefined,
+  const [selectedLocation, setSelectedLocation] = useState<string | undefined>(
+    undefined,
   );
 
   const setLocation = async (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -208,13 +182,13 @@ function LocationDropdown({
                 method: 'POST',
               });
             }}
-            value={selectedLocation}
+            value={selectedLocation || companyLocationId}
             style={{marginRight: '4px'}}
           >
             {locations.map((location: CustomerCompanyLocation) => {
               return (
                 <option
-                  defaultValue={selectedLocation}
+                  defaultValue={selectedLocation || companyLocationId}
                   value={location.id}
                   key={location.id}
                 >
@@ -231,7 +205,6 @@ function LocationDropdown({
             readOnly
             value={location.pathname}
           />
-          <button type="submit">Choose Location</button>
         </>
       )}
     </CartForm>
