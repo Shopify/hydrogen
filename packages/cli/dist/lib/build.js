@@ -21,7 +21,7 @@ function getAssetDir(feature) {
   }
   return fileURLToPath(
     new URL(
-      `../${GENERATOR_TEMPLATES_DIR}/${GENERATOR_SETUP_ASSETS_DIR}/${feature}`,
+      `./${GENERATOR_TEMPLATES_DIR}/${GENERATOR_SETUP_ASSETS_DIR}/${feature}`,
       import.meta.url
     )
   );
@@ -39,7 +39,7 @@ function getStarterDir() {
   }
   return fileURLToPath(
     new URL(
-      `../${GENERATOR_TEMPLATES_DIR}/${GENERATOR_STARTER_DIR}`,
+      `./${GENERATOR_TEMPLATES_DIR}/${GENERATOR_STARTER_DIR}`,
       import.meta.url
     )
   );

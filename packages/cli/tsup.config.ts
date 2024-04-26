@@ -58,7 +58,7 @@ export default defineConfig([
       console.log('\n', 'Copied bundle analyzer', '\n');
 
       console.log('\n', 'Generating Oclif manifest...');
-      await execAsync('node ./scripts/generate-manifest.mjs');
+      //await execAsync('node ./scripts/generate-manifest.mjs');
       console.log('', 'Oclif manifest generated.\n');
     },
   },
@@ -77,7 +77,7 @@ export default defineConfig([
       // so that we can use them in the `generate` command.
       await fs.copy(
         getSkeletonSourceDir(),
-        `${outDir}/${GENERATOR_TEMPLATES_DIR}/${GENERATOR_STARTER_DIR}`,
+        `${outDir}/lib/${GENERATOR_TEMPLATES_DIR}/${GENERATOR_STARTER_DIR}`,
         {filter: filterArtifacts},
       );
 
@@ -98,7 +98,7 @@ export default defineConfig([
 
       await fs.copy(
         'src/setup-assets',
-        `${outDir}/${GENERATOR_TEMPLATES_DIR}/${GENERATOR_SETUP_ASSETS_DIR}`,
+        `${outDir}/lib/${GENERATOR_TEMPLATES_DIR}/${GENERATOR_SETUP_ASSETS_DIR}`,
       );
 
       console.log('\n', 'Copied setup assets build directory', '\n');
