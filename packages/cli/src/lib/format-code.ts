@@ -1,6 +1,6 @@
 import type {Options as FormatOptions} from 'prettier';
 import {extname} from '@shopify/cli-kit/node/path';
-import {format, resolveConfig} from 'prettier'
+import prettier from 'prettier'
 
 export type {FormatOptions};
 
@@ -15,7 +15,7 @@ export async function getCodeFormatOptions(filePath = process.cwd()) {
   try {
     const prettier = await import('prettier');
     // Try to read a prettier config file from the project.
-    return (await resolveConfig(filePath)) || DEFAULT_PRETTIER_CONFIG;
+    return (await prettier.resolveConfig(filePath)) || DEFAULT_PRETTIER_CONFIG;
   } catch {
     return DEFAULT_PRETTIER_CONFIG;
   }
@@ -29,7 +29,7 @@ export async function formatCode(
   const ext = extname(filePath);
 
   // const prettier = await import('prettier');
-  return format(content, {
+  return prettier.format(content, {
     // Specify the TypeScript parser for ts/tsx files. Otherwise
     // we need to use the babel parser because the default parser
     // Otherwise prettier will print a warning.

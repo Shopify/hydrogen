@@ -58,7 +58,7 @@ export default defineConfig([
       console.log('\n', 'Copied bundle analyzer', '\n');
 
       console.log('\n', 'Generating Oclif manifest...');
-      //await execAsync('node ./scripts/generate-manifest.mjs');
+      await execAsync('node ./scripts/generate-manifest.mjs');
       console.log('', 'Oclif manifest generated.\n');
     },
   },
