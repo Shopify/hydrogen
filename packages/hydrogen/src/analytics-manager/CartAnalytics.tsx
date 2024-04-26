@@ -97,7 +97,9 @@ export function CartAnalytics({
       }),
     );
 
-    const previousCartLines = prevCart?.lines ? flattenConnection(prevCart?.lines) : [];
+    const previousCartLines = prevCart?.lines
+      ? flattenConnection(prevCart?.lines)
+      : [];
     const currentCartLines = cart.lines ? flattenConnection(cart.lines) : [];
 
     // Detect quantity changes and missing cart lines
