@@ -31,7 +31,7 @@ export default defineConfig([
     entry: ['src/**/*.ts', '!src/**/*.test.ts'],
     outDir,
     // Generate types only for the exposed entry points
-    dts: {entry: ['src/commands/hydrogen/init.ts']},
+    dts: {entry: ['src/index.ts', 'src/commands/hydrogen/init.ts']},
     async onSuccess() {
       // Copy TS templates
       const i18nTemplatesPath = 'lib/setups/i18n/templates';
