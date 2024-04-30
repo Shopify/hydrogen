@@ -270,13 +270,15 @@ function AnalyticsProvider({
   shop: shopProp = null,
 }: AnalyticsProviderProps): JSX.Element {
   // eslint-disable-next-line no-console
-  !consent.checkoutDomain ?? console.error(
-    '[h2:error:Analytics.Provider] - consent.checkoutDomain is required',
-  );
+  !consent.checkoutDomain ??
+    console.error(
+      '[h2:error:Analytics.Provider] - consent.checkoutDomain is required',
+    );
   // eslint-disable-next-line no-console
-  !consent.storefrontAccessToken ?? console.error(
-    '[h2:error:Analytics.Provider] - consent.storefrontAccessToken is required',
-  );
+  !consent.storefrontAccessToken ??
+    console.error(
+      '[h2:error:Analytics.Provider] - consent.storefrontAccessToken is required',
+    );
 
   const listenerSet = useRef(false);
   const {shop} = useShopAnalytics(shopProp);
