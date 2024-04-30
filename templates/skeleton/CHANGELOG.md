@@ -1,5 +1,14 @@
 # skeleton
 
+## 1.0.9
+
+### Patch Changes
+
+- Pin React dependency to 18.2.0 to avoid mismatches. ([#2051](https://github.com/Shopify/hydrogen/pull/2051)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`9c36c8a5`](https://github.com/Shopify/hydrogen/commit/9c36c8a566b1ae2ceac4846c4c9fe4f63f6f4ab3)]:
+  - @shopify/cli-hydrogen@8.0.2
+
 ## 1.0.8
 
 ### Patch Changes
