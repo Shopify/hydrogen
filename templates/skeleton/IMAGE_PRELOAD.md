@@ -1,17 +1,17 @@
-# Hydrogen Image and Fonts Preloading
+# Hydrogen Image Preloading
 
 Preloading above-the-fold content has a powerful effect on Largest Contentful Paint (LCP). Specially when it comes to fonts and images, as both images and text nodes can be LCP candidates. Hero images and large runs of text that are rendered using web fonts can benefit significantly from a well-placed preload hint, and should be used when there are opportunities to deliver these important bits of content to the user faster.
 
 ## Current situation
 
-Hydrogen currently does not offer a native abstraction, example or guide on how to effectively implement Preloading strategies. Although Remix offers all the right primitives to enable preloading, developers have to go out of their way to recognize the importance and implementation details of preloading different resoruces.
+Hydrogen currently does not offer a native abstraction, example or guide on how to effectively implement image preloading. Although Remix offers all the right primitives, developers have to go out of their way to recognize the importance and implementation details of preloading critical resources to improve performance.
 
 ## Proposal
 
 The follow driven-development doc, demonstrates a proposal to facilitate _images_ preloading.
 
 > [!NOTE]
-> A separate proposal will be made for handling web fonts
+> A separate proposal will be made for handling web fonts and other critical resources
 
 ### Requirements
 
@@ -97,6 +97,8 @@ in the `loader` return
 
 ```diff
 // app/routes/product.$handle.tsx
+
++ import {genPreloadImageLinkMeta} from '@shopify/hydrogen'
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   const metas = [
