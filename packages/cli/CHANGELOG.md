@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 8.0.2
+
+### Patch Changes
+
+- Pin React dependency to 18.2.0 to avoid mismatches. ([#2051](https://github.com/Shopify/hydrogen/pull/2051)) by [@frandiox](https://github.com/frandiox)
+
 ## 8.0.1
 
 ### Patch Changes
