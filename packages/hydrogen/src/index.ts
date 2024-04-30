@@ -127,6 +127,10 @@ export {
   useMoney,
   useShopifyCookies,
   Video,
+  generateImageWidths,
+  generateSizes,
+  generateSrcSet,
+  shopifyLoader
 } from '@shopify/hydrogen-react';
 
 export type {

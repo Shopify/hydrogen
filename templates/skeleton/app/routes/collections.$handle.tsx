@@ -1,5 +1,10 @@
 import {json, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {useLoaderData, Link, type MetaFunction} from '@remix-run/react';
+import {
+  useLoaderData,
+  Link,
+  type MetaFunction,
+  type MetaDescriptor,
+} from '@remix-run/react';
 import {
   Pagination,
   getPaginationVariables,
@@ -8,9 +13,23 @@ import {
 } from '@shopify/hydrogen';
 import type {ProductItemFragment} from 'storefrontapi.generated';
 import {useVariantUrl} from '~/lib/variants';
+import {genPreloadImageLinkMeta} from '~/lib/preload';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
-  return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
+  const metas = [
+    {title: `Hydrogen | ${data?.collection.title ?? 'Collection'}`},
+  ] as MetaDescriptor[];
+
+  if (data?.preload.images) {
+    for (const image of data.preload.images) {
+      if (!image) continue;
+      const preloadImageLink = genPreloadImageLinkMeta({
+        url: image.url,
+      });
+      metas.push(preloadImageLink);
+    }
+  }
+  return metas;
 };
 
 export async function loader({request, params, context}: LoaderFunctionArgs) {
@@ -33,7 +52,16 @@ export async function loader({request, params, context}: LoaderFunctionArgs) {
       status: 404,
     });
   }
-  return json({collection});
+
+  const isEmpty = collection.products.nodes.length === 0;
+  let preloadImages: ProductItemFragment['featuredImage'][] = [];
+  if (!isEmpty) {
+    preloadImages = collection.products.nodes.slice(0, 4).map((node) => {
+      return node.featuredImage;
+    });
+  }
+
+  return json({collection, preload: {images: preloadImages}});
 }
 
 export default function Collection() {

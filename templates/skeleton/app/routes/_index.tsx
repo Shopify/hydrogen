@@ -1,14 +1,37 @@
 import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {Await, useLoaderData, Link, type MetaFunction} from '@remix-run/react';
+import {
+  Await,
+  useLoaderData,
+  Link,
+  type MetaFunction,
+  type MetaDescriptor,
+} from '@remix-run/react';
 import {Suspense} from 'react';
 import {Image, Money} from '@shopify/hydrogen';
+import {genPreloadImageLinkMeta} from '~/lib/preload';
 import type {
   FeaturedCollectionFragment,
   RecommendedProductsQuery,
 } from 'storefrontapi.generated';
 
-export const meta: MetaFunction = () => {
-  return [{title: 'Hydrogen | Home'}];
+export const meta: MetaFunction<typeof loader> = ({data}) => {
+  const metas = [
+    {title: 'Hydrogen | Home'},
+    {name: 'description', content: 'Hydrogen is a demo store'},
+  ] as MetaDescriptor[];
+
+  // preload the image of the FeaturedCollection as it's above the fold
+  if (data && data.preload.image) {
+    const preloadImageLink = genPreloadImageLinkMeta({
+      url: data.preload.image.url,
+      width: '100%',
+      srcSet: {interval: 15, startingWidth: 200, incrementSize: 200},
+      sizes: {aspectRatio: '1/1', crop: 'center'},
+    });
+    metas.push(preloadImageLink);
+  }
+
+  return metas;
 };
 
 export async function loader({context}: LoaderFunctionArgs) {
@@ -17,7 +40,13 @@ export async function loader({context}: LoaderFunctionArgs) {
   const featuredCollection = collections.nodes[0];
   const recommendedProducts = storefront.query(RECOMMENDED_PRODUCTS_QUERY);
 
-  return defer({featuredCollection, recommendedProducts});
+  return defer({
+    featuredCollection,
+    recommendedProducts,
+    preload: {
+      image: featuredCollection?.image ?? null,
+    },
+  });
 }
 
 export default function Homepage() {

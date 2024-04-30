@@ -6,6 +6,7 @@ import {
   useLoaderData,
   type MetaFunction,
   type FetcherWithComponents,
+  type MetaDescriptor,
 } from '@remix-run/react';
 import type {
   ProductFragment,
@@ -25,9 +26,20 @@ import type {
   SelectedOption,
 } from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/lib/variants';
+import {genPreloadImageLinkMeta} from '~/lib/preload';
 
-export const meta: MetaFunction<typeof loader> = ({data, location}) => {
-  return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
+export const meta: MetaFunction<typeof loader> = ({data}) => {
+  const metas = [
+    {title: `Hydrogen | ${data?.product.title ?? ''}`},
+  ] as MetaDescriptor[];
+
+  if (data?.preload.image) {
+    const preloadImageLink = genPreloadImageLinkMeta({
+      url: data.preload.image.url,
+    });
+    metas.push(preloadImageLink);
+  }
+  return metas;
 };
 
 export async function loader({params, request, context}: LoaderFunctionArgs) {
@@ -86,7 +98,11 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
     variables: {handle},
   });
 
-  return defer({product, variants});
+  return defer({
+    product,
+    variants,
+    preload: {image: product.selectedVariant.image},
+  });
 }
 
 function redirectToFirstVariant({
