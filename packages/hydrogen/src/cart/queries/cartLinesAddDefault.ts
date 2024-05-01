@@ -6,10 +6,13 @@ import type {
   CartQueryDataReturn,
   CartQueryOptions,
 } from './cart-types';
-import type {CartLineInput} from '@shopify/hydrogen-react/storefront-api-types';
+import type {
+  CartLineInput,
+  ProductVariant,
+} from '@shopify/hydrogen-react/storefront-api-types';
 
 export type CartLinesAddFunction = (
-  lines: CartLineInput[],
+  lines: Array<CartLineInput & {selectedVariant?: ProductVariant}>,
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
