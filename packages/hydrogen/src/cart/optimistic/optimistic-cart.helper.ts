@@ -6,7 +6,7 @@ export function getOptimisticLineId() {
   return PENDING_PREFIX + optimisticLineId++;
 }
 
-export function isPendingId(lineId: string) {
+export function isOptimisticLineId(lineId: string) {
   return lineId.startsWith(PENDING_PREFIX);
 }
 

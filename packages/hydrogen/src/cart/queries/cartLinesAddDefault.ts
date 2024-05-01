@@ -12,7 +12,7 @@ import type {
 } from '@shopify/hydrogen-react/storefront-api-types';
 
 export type CartLinesAddFunction = (
-  lines: Array<CartLineInput & {selectedVariant?: ProductVariant}>,
+  lines: Array<CartLineInput & {selectedVariant?: unknown}>,
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 

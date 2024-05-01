@@ -1,37 +1,53 @@
-import {CartForm, Image, Money} from '@shopify/hydrogen';
+import {
+  CartForm,
+  Image,
+  Money,
+  useOptimisticCart,
+  type OptimisticCart,
+} from '@shopify/hydrogen';
 import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
 import {Link} from '@remix-run/react';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import {useVariantUrl} from '~/lib/variants';
 
-type CartLine = CartApiQueryFragment['lines']['nodes'][0];
+type CartLine = OptimisticCart<CartApiQueryFragment>['lines']['nodes'][0];
 
 type CartMainProps = {
-  cart: CartApiQueryFragment | null;
+  cart?: CartApiQueryFragment | null;
   layout: 'page' | 'aside';
 };
 
 export function CartMain({layout, cart}: CartMainProps) {
-  const linesCount = Boolean(cart?.lines?.nodes?.length || 0);
+  const optimisticCart = useOptimisticCart(cart);
+
+  const linesCount = Boolean(optimisticCart?.lines?.nodes?.length || 0);
   const withDiscount =
-    cart &&
-    Boolean(cart?.discountCodes?.filter((code) => code.applicable)?.length);
+    optimisticCart &&
+    Boolean(
+      optimisticCart?.discountCodes?.filter((code) => code.applicable)?.length,
+    );
   const className = `cart-main ${withDiscount ? 'with-discount' : ''}`;
 
   return (
     <div className={className}>
       <CartEmpty hidden={linesCount} layout={layout} />
-      <CartDetails cart={cart} layout={layout} />
+      <CartDetails cart={optimisticCart} layout={layout} />
     </div>
   );
 }
 
-function CartDetails({layout, cart}: CartMainProps) {
+function CartDetails({
+  layout,
+  cart,
+}: {
+  cart: OptimisticCart<CartApiQueryFragment | null>;
+  layout: 'page' | 'aside';
+}) {
   const cartHasItems = !!cart && cart.totalQuantity > 0;
 
   return (
     <div className="cart-details">
-      <CartLines lines={cart?.lines} layout={layout} />
+      <CartLines lines={cart?.lines.nodes} layout={layout} />
       {cartHasItems && (
         <CartSummary cost={cart.cost} layout={layout}>
           <CartDiscounts discountCodes={cart.discountCodes} />
@@ -47,14 +63,14 @@ function CartLines({
   layout,
 }: {
   layout: CartMainProps['layout'];
-  lines: CartApiQueryFragment['lines'] | undefined;
+  lines: CartLine[];
 }) {
   if (!lines) return null;
 
   return (
     <div aria-labelledby="cart-lines">
       <ul>
-        {lines.nodes.map((line) => (
+        {lines.map((line) => (
           <CartLineItem key={line.id} line={line} layout={layout} />
         ))}
       </ul>
@@ -174,7 +190,7 @@ function CartLineRemoveButton({lineIds}: {lineIds: string[]}) {
 
 function CartLineQuantity({line}: {line: CartLine}) {
   if (!line || typeof line?.quantity === 'undefined') return null;
-  const {id: lineId, quantity} = line;
+  const {id: lineId, quantity, isOptimistic} = line;
   const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
   const nextQuantity = Number((quantity + 1).toFixed(0));
 

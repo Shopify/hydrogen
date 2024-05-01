@@ -5,7 +5,10 @@ import type {
   CartLine,
   ProductVariant,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {getOptimisticLineId, isPendingId} from './optimistic-cart.helper';
+import {
+  getOptimisticLineId,
+  isOptimisticLineId,
+} from './optimistic-cart.helper';
 
 export type OptimisticCart<T> = T & {
   isOptimistic?: boolean;
@@ -63,7 +66,7 @@ export function useOptimisticCart<
           const index = cartLines.findIndex((line) => line.id === lineId);
 
           if (index !== -1) {
-            if (isPendingId(cartLines[index].id)) {
+            if (isOptimisticLineId(cartLines[index].id)) {
               console.error(
                 'Tried to remove an optimistic line that has not been added to the cart yet',
               );
@@ -85,7 +88,7 @@ export function useOptimisticCart<
           );
 
           if (index > -1) {
-            if (isPendingId(cartLines[index].id)) {
+            if (isOptimisticLineId(cartLines[index].id)) {
               console.error(
                 'Tried to update an optimistic line that has not been added to the cart yet',
               );
