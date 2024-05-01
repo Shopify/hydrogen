@@ -37,6 +37,7 @@ import {ShopifyAnalytics} from './ShopifyAnalytics';
 import {CartAnalytics} from './CartAnalytics';
 import type {CustomerPrivacyApiProps} from '../customer-privacy/ShopifyCustomerPrivacy';
 import type {Storefront} from '../storefront';
+import invariant from 'tiny-invariant';
 
 export type ShopAnalytics = {
   /** The shop ID. */
@@ -62,6 +63,8 @@ export type AnalyticsProviderProps = {
   shop: Promise<ShopAnalytics | null> | ShopAnalytics | null;
   /** The customer privacy consent configuration and options. */
   consent: CustomerPrivacyApiProps;
+  /** Disable throwing errors when required props are missing. */
+  disableThrowOnError?: boolean;
 };
 
 export type Carts = {
@@ -261,6 +264,10 @@ function shopifyCanTrack(): boolean {
   return false;
 }
 
+function messageOnError(field: string) {
+  return `[h2:error:Analytics.Provider] - ${field} is required`;
+}
+
 function AnalyticsProvider({
   canTrack: customCanTrack,
   cart: currentCart,
@@ -268,17 +275,27 @@ function AnalyticsProvider({
   consent,
   customData = {},
   shop: shopProp = null,
+  disableThrowOnError = false,
 }: AnalyticsProviderProps): JSX.Element {
-  // eslint-disable-next-line no-console
-  !consent.checkoutDomain ??
-    console.error(
-      '[h2:error:Analytics.Provider] - consent.checkoutDomain is required',
-    );
-  // eslint-disable-next-line no-console
-  !consent.storefrontAccessToken ??
-    console.error(
-      '[h2:error:Analytics.Provider] - consent.storefrontAccessToken is required',
-    );
+  if(!consent.checkoutDomain) {
+    const errorMsg = messageOnError('consent.checkoutDomain');
+    if (disableThrowOnError) {
+      // eslint-disable-next-line no-console
+      console.error(errorMsg);
+    } else {
+      invariant(false, errorMsg);
+    }
+  }
+
+  if(!consent.storefrontAccessToken) {
+    const errorMsg = messageOnError('consent.storefrontAccessToken');
+    if (disableThrowOnError) {
+      // eslint-disable-next-line no-console
+      console.error(errorMsg);
+    } else {
+      invariant(false, errorMsg);
+    }
+  }
 
   const listenerSet = useRef(false);
   const {shop} = useShopAnalytics(shopProp);
