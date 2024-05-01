@@ -1004,7 +1004,6 @@
         "routes": {
           "description": "Generate routes for all pages.",
           "env": "SHOPIFY_HYDROGEN_FLAG_ROUTES",
-          "hidden": true,
           "name": "routes",
           "allowNo": true,
           "type": "boolean"
@@ -1017,7 +1016,7 @@
           "type": "boolean"
         },
         "quickstart": {
-          "description": "Scaffolds a new Hydrogen project with a set of sensible defaults.",
+          "description": "Scaffolds a new Hydrogen project with a set of sensible defaults. Equivalent to `shopify hydrogen init --path hydrogen-quickstart --mock-shop --language js --shortcut --routes --markets none`",
           "env": "SHOPIFY_HYDROGEN_FLAG_QUICKSTART",
           "name": "quickstart",
           "allowNo": false,
@@ -1580,5 +1579,5 @@
       ]
     }
   },
-  "version": "8.0.0"
+  "version": "8.0.3"
 }

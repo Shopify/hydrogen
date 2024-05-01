@@ -708,6 +708,111 @@ describe('deploy', () => {
     }
   });
 
+  describe('user confirmation', () => {
+    beforeEach(() => {
+      vi.mocked(getOxygenDeploymentData).mockResolvedValue({
+        oxygenDeploymentToken: 'some-encoded-token',
+        environments: [
+          {
+            name: 'Production',
+            handle: 'production',
+            branch: 'main',
+            type: 'PRODUCTION',
+          },
+          {name: 'Preview', handle: 'preview', branch: null, type: 'PREVIEW'},
+          {
+            name: 'Staging',
+            handle: 'staging',
+            branch: 'stage-1',
+            type: 'CUSTOM',
+          },
+        ],
+      });
+    });
+
+    describe('user provides a non-preview environment', () => {
+      it('renders a user confirmation on deploy when production environment is selected', async () => {
+        vi.mocked(renderSelectPrompt).mockResolvedValue('main');
+
+        await runDeploy(deployParams);
+
+        expect(renderConfirmationPrompt).toHaveBeenCalledWith({
+          confirmationMessage: 'Yes, confirm deploy',
+          cancellationMessage: 'No, cancel deploy',
+          message: expect.any(String),
+        });
+      });
+
+      it('renders a user confirmation on deploy when production environment handle is provided', async () => {
+        await runDeploy({
+          ...deployParams,
+          env: 'production',
+        });
+
+        expect(renderConfirmationPrompt).toHaveBeenCalledWith({
+          confirmationMessage: 'Yes, confirm deploy',
+          cancellationMessage: 'No, cancel deploy',
+          message: expect.any(String),
+        });
+      });
+
+      it('renders a user confirmation on deploy when production environment branch is provided', async () => {
+        await runDeploy({
+          ...deployParams,
+          envBranch: 'main',
+        });
+
+        expect(renderConfirmationPrompt).toHaveBeenCalledWith({
+          confirmationMessage: 'Yes, confirm deploy',
+          cancellationMessage: 'No, cancel deploy',
+          message: expect.any(String),
+        });
+      });
+    });
+
+    describe('user provides a preview environment', () => {
+      it("doesn't render a user confirmation on deploy when preview environment is selected", async () => {
+        vi.mocked(renderSelectPrompt).mockResolvedValue(
+          'shopify-preview-environment.',
+        );
+
+        await runDeploy(deployParams);
+
+        expect(renderConfirmationPrompt).not.toHaveBeenCalledWith({
+          confirmationMessage: 'Yes, confirm deploy',
+          cancellationMessage: 'No, cancel deploy',
+          message: expect.any(String),
+        });
+      });
+
+      it("doesn't render a user confirmation on deploy when preview environment handle is provided", async () => {
+        await runDeploy({
+          ...deployParams,
+          env: 'preview',
+        });
+
+        expect(renderConfirmationPrompt).not.toHaveBeenCalledWith({
+          confirmationMessage: 'Yes, confirm deploy',
+          cancellationMessage: 'No, cancel deploy',
+          message: expect.any(String),
+        });
+      });
+
+      it("doesn't render a user confirmation on deploy when preview environment flag is provided", async () => {
+        await runDeploy({
+          ...deployParams,
+          defaultEnvironment: true,
+        });
+
+        expect(renderConfirmationPrompt).not.toHaveBeenCalledWith({
+          confirmationMessage: 'Yes, confirm deploy',
+          cancellationMessage: 'No, cancel deploy',
+          message: expect.any(String),
+        });
+      });
+    });
+  });
+
   describe('next steps', () => {
     it('renders a link to the deployment', async () => {
       vi.mocked(createDeploy).mockResolvedValue({

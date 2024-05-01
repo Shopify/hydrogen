@@ -1,5 +1,23 @@
 # @shopify/create-hydrogen
 
+## 4.3.8
+
+### Patch Changes
+
+- Update internal `@shopify/cli-kit` dependency to fix React version mismatches. ([#2059](https://github.com/Shopify/hydrogen/pull/2059)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`d2bc720b`](https://github.com/Shopify/hydrogen/commit/d2bc720bb5f7cfb5f42617f98ad2dfcd29891f4b)]:
+  - @shopify/cli-hydrogen@8.0.3
+
+## 4.3.7
+
+### Patch Changes
+
+- Pin React dependency to 18.2.0 to avoid mismatches. ([#2051](https://github.com/Shopify/hydrogen/pull/2051)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`9c36c8a5`](https://github.com/Shopify/hydrogen/commit/9c36c8a566b1ae2ceac4846c4c9fe4f63f6f4ab3)]:
+  - @shopify/cli-hydrogen@8.0.2
+
 ## 4.3.6
 
 ### Patch Changes

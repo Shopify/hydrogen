@@ -75,6 +75,7 @@ export default {
       const rickAndMorty = createRickAndMortyClient({
         cache,
         waitUntil,
+        request,
       });
 
       /*

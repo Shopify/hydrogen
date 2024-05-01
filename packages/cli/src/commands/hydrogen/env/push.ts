@@ -21,12 +21,10 @@ import {
   findEnvironmentOrThrow,
   orderEnvironmentsBySafety,
 } from '../../../lib/common.js';
-import {renderMissingLink} from '../../../lib/render-errors.js';
 import {
   Environment,
   getStorefrontEnvironments,
 } from '../../../lib/graphql/admin/list-environments.js';
-import {linkStorefront} from '../link.js';
 import {getStorefrontEnvVariables} from '../../../lib/graphql/admin/pull-variables.js';
 import {pushStorefrontEnvVariables} from '../../../lib/graphql/admin/push-variables.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
@@ -34,6 +32,7 @@ import {
   readAndParseDotEnv,
   createDotEnvFileLine,
 } from '@shopify/cli-kit/node/dot-env';
+import {verifyLinkedStorefront} from '../../../lib/verify-linked-storefront.js';
 
 export default class EnvPush extends Command {
   static description =
@@ -78,23 +77,16 @@ export async function runEnvPush({
     getCliCommand(),
   ]);
 
-  if (!config.storefront?.id) {
-    renderMissingLink({session, cliCommand});
+  const linkedStorefront = await verifyLinkedStorefront({
+    root: path,
+    session,
+    config,
+    cliCommand,
+  });
 
-    const runLink = await renderConfirmationPrompt({
-      message: outputContent`Run ${outputToken.genericShellCommand(
-        `${cliCommand} link`,
-      )}?`.value,
-    });
+  if (!linkedStorefront) return;
 
-    if (!runLink) return;
-
-    config.storefront = await linkStorefront(path, session, config, {
-      cliCommand,
-    });
-  }
-
-  if (!config.storefront?.id) return;
+  config.storefront = linkedStorefront;
 
   // Fetch environments
   const {environments: environmentsData} =
