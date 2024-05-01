@@ -1,5 +1,23 @@
 # skeleton
 
+## 1.0.10
+
+### Patch Changes
+
+- Update `@shopify/cli` dependency to avoid React version mismatches in your project: ([#2059](https://github.com/Shopify/hydrogen/pull/2059)) by [@frandiox](https://github.com/frandiox)
+
+  ```diff
+    "dependencies": {
+      ...
+  -   "@shopify/cli": "3.58.0",
+  +   "@shopify/cli": "3.59.2",
+      ...
+    }
+  ```
+
+- Updated dependencies [[`d2bc720b`](https://github.com/Shopify/hydrogen/commit/d2bc720bb5f7cfb5f42617f98ad2dfcd29891f4b)]:
+  - @shopify/cli-hydrogen@8.0.3
+
 ## 1.0.9
 
 ### Patch Changes

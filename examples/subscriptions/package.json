@@ -13,15 +13,15 @@
   "prettier": "@shopify/prettier-config",
   "dependencies": {
     "@remix-run/react": "^2.8.0",
-    "@shopify/cli": "3.58.0",
-    "@shopify/cli-hydrogen": "^8.0.2",
+    "@shopify/cli": "3.59.2",
+    "@shopify/cli-hydrogen": "^8.0.3",
     "@shopify/hydrogen": "2024.4.1",
     "@shopify/remix-oxygen": "^2.0.4",
     "graphql": "^16.6.0",
     "graphql-tag": "^2.12.6",
     "isbot": "^3.6.6",
-    "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@remix-run/dev": "^2.8.0",

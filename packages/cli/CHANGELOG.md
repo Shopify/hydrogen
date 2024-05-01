@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 8.0.3
+
+### Patch Changes
+
+- Update internal `@shopify/cli-kit` dependency to fix React version mismatches. ([#2059](https://github.com/Shopify/hydrogen/pull/2059)) by [@frandiox](https://github.com/frandiox)
+
 ## 8.0.2
 
 ### Patch Changes
