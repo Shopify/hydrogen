@@ -14,49 +14,56 @@ export function B2BLocationSelector({company}: {company: CustomerCompany}) {
       )
     : [];
 
-  function LocationItem({location}: {location: CustomerCompanyLocation}) {
-    const addressLines = location?.shippingAddress?.formattedAddress ?? [];
-    return (
-      <label>
-        <div style={{display: 'flex', alignItems: 'baseline'}}>
-          <input
-            type="radio"
-            id={location.id}
-            name="companyLocationId"
-            value={location.id}
-            style={{marginRight: '1rem'}}
-          />
-          <div>
-            <strong>{location.name}</strong>
-            {addressLines.map((line: string) => (
-              <p key={line}>{line}</p>
-            ))}
-          </div>
-        </div>
-      </label>
-    );
-  }
-
   if (!company) return null;
 
   return (
     <div className="modal">
       <div className="modal-content">
         <h2>Logged in for {company.name}</h2>
-        <CartForm route="/cart" action={CartForm.ACTIONS.BuyerIdentityUpdate}>
-          <fieldset>
-            <legend>Choose a location:</legend>
-            {locations.map((location: CustomerCompanyLocation) => {
-              return (
-                <div key={location.id}>
-                  <LocationItem location={location} />
-                  <br />
-                </div>
-              );
-            })}
-          </fieldset>
-          <button type="submit">Choose Location</button>
-        </CartForm>
+        <legend>Choose a location:</legend>
+        <div className="location-list">
+          {locations.map((location: CustomerCompanyLocation) => {
+            const addressLines =
+              location?.shippingAddress?.formattedAddress ?? [];
+            return (
+              <CartForm
+                key={location.id}
+                route="/cart"
+                action={CartForm.ACTIONS.BuyerIdentityUpdate}
+              >
+                {(fetcher) => (
+                  <label>
+                    <button
+                      onClick={(event) => {
+                        fetcher.submit(event.currentTarget.form, {
+                          method: 'POST',
+                        });
+                      }}
+                      className="location-item"
+                    >
+                      <input
+                        style={{display: 'none'}}
+                        type="text"
+                        id={location.id}
+                        name="companyLocationId"
+                        readOnly
+                        value={location.id}
+                      />
+                      <div>
+                        <p>
+                          <strong>{location.name}</strong>
+                        </p>
+                        {addressLines.map((line: string) => (
+                          <p key={line}>{line}</p>
+                        ))}
+                      </div>
+                    </button>
+                  </label>
+                )}
+              </CartForm>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

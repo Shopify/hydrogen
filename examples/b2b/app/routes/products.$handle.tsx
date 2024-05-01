@@ -157,6 +157,7 @@ function ProductMain({
   variants: Promise<ProductVariantsQuery>;
 }) {
   const {title, descriptionHtml} = product;
+
   return (
     <div className="product-main">
       <h1>{title}</h1>
@@ -204,7 +205,8 @@ function ProductMain({
       }
       <br />
       {
-        selectedVariant?.quantityPriceBreaks?.nodes && selectedVariant?.quantityPriceBreaks?.nodes?.length > 0 ? (
+        selectedVariant?.quantityPriceBreaks?.nodes &&
+        selectedVariant?.quantityPriceBreaks?.nodes?.length > 0 ? (
           <PriceBreaks
             priceBreaks={selectedVariant?.quantityPriceBreaks?.nodes}
           />
