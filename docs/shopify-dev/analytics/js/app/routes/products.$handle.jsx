@@ -7,6 +7,9 @@ import {
   VariantSelector,
   getSelectedProductOptions,
   CartForm,
+  // [START import]
+  UNSTABLE_Analytics as Analytics,
+  // [END import]
 } from '@shopify/hydrogen';
 import {getVariantUrl} from '~/lib/variants';
 
@@ -113,6 +116,23 @@ export default function Product() {
         product={product}
         variants={variants}
       />
+      {/* [START component] */}
+      <Analytics.ProductView
+        data={{
+          products: [
+            {
+              id: product.id,
+              title: product.title,
+              price: selectedVariant?.price.amount || '0',
+              vendor: product.vendor,
+              variantId: selectedVariant?.id || '',
+              variantTitle: selectedVariant?.title || '',
+              quantity: 1,
+            },
+          ],
+        }}
+      />
+      {/* [END component] */}
     </div>
   );
 }

@@ -1,7 +1,12 @@
 import {Await, type MetaFunction} from '@remix-run/react';
 import {Suspense} from 'react';
 import type {CartQueryDataReturn} from '@shopify/hydrogen';
-import {CartForm} from '@shopify/hydrogen';
+import {
+  CartForm,
+  // [START cart]
+  UNSTABLE_Analytics as Analytics,
+  // [END cart]
+} from '@shopify/hydrogen';
 import {json, type ActionFunctionArgs} from '@shopify/remix-oxygen';
 import {CartMain} from '~/components/Cart';
 import {useRootLoaderData} from '~/lib/root-data';
@@ -99,6 +104,9 @@ export default function Cart() {
           }}
         </Await>
       </Suspense>
+      {/* [START cart] */}
+      <Analytics.CartView />
+      {/* [END cart] */}
     </div>
   );
 }
