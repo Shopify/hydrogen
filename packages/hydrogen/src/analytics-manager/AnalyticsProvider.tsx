@@ -277,7 +277,7 @@ function AnalyticsProvider({
   shop: shopProp = null,
   disableThrowOnError = false,
 }: AnalyticsProviderProps): JSX.Element {
-  if(!consent.checkoutDomain) {
+  if (!consent.checkoutDomain) {
     const errorMsg = messageOnError('consent.checkoutDomain');
     if (disableThrowOnError) {
       // eslint-disable-next-line no-console
@@ -287,7 +287,7 @@ function AnalyticsProvider({
     }
   }
 
-  if(!consent.storefrontAccessToken) {
+  if (!consent.storefrontAccessToken) {
     const errorMsg = messageOnError('consent.storefrontAccessToken');
     if (disableThrowOnError) {
       // eslint-disable-next-line no-console
