@@ -117,7 +117,7 @@ export const IMAGE_FRAGMENT = `#graphql
 `;
 
 /**
- * Hydrgen’s Image component is a wrapper around the HTML image element.
+ * Hydrogen’s Image component is a wrapper around the HTML image element.
  * It supports the same props as the HTML `img` element, but automatically
  * generates the srcSet and sizes attributes for you. For most use cases,
  * you’ll want to set the `aspectRatio` prop to ensure the image is sized
