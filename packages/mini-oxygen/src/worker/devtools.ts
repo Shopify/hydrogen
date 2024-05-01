@@ -275,27 +275,28 @@ function proxyHttp(
   // Use `request` instead of `fetch` to avoid decompressing
   // the response body. We want to forward the raw response.
   // https://github.com/nodejs/undici/issues/1462
+  // Using raw `node:https` is problematic in Apple Silicon
+  // and throws "getaddrinfo ENOTFOUND" errors when performing
+  // many requests in parallel. Probably related to this:
+  // https://github.com/orgs/nodejs/discussions/49734
+  // Also, undici is faster and more efficient than `node:https`.
   return request(url, {responseHeader: 'raw', headers})
     .then((response) => {
-      nodeResponse.statusCode = response.statusCode;
-      if (nodeResponse.statusCode === 404) {
-        return nodeResponse.end('Not found');
-      }
+      nodeResponse.writeHead(response.statusCode, response.headers);
 
-      Object.entries(response.headers).forEach(([key, value]) => {
-        if (value) {
-          nodeResponse.setHeader(key, value);
-        }
-      });
+      if (nodeResponse.statusCode >= 300) {
+        nodeResponse.end();
+        return;
+      }
 
       if (contentReplacer) {
-        return response.body
-          ?.text()
+        response.body
+          .text()
           .then(contentReplacer)
           .then(nodeResponse.end.bind(nodeResponse));
+      } else {
+        response.body.pipe(nodeResponse);
       }
-
-      return response.body.pipe(nodeResponse);
     })
     .catch((err) => {
       console.error(err);
