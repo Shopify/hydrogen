@@ -6,20 +6,21 @@ import {CUSTOMER_LOCATIONS_QUERY} from '~/graphql/customer-account/CustomerLocat
 export async function loader({context}: LoaderFunctionArgs) {
   const {customerAccount} = context;
 
-  const isLoggedIn = await customerAccount.isLoggedIn();
+  const buyer = await customerAccount.UNSTABLE_getBuyer();
+  console.log(buyer);
 
-  let companyLocationId = null;
+  let companyLocationId = buyer?.companyLocationId || null;
   let company = null;
 
-  if (isLoggedIn) {
-    companyLocationId = (await customerAccount.UNSTABLE_getBuyer())
-      ?.companyLocationId;
-
+  // Check if logged in customer is a b2b customer
+  if (buyer) {
     const customer = await customerAccount.query(CUSTOMER_LOCATIONS_QUERY);
     company =
       customer?.data?.customer?.companyContacts?.edges?.[0]?.node?.company ||
       null;
   }
+
+  // If there is only 1 company location, set it in session
   if (!companyLocationId && company?.locations?.edges?.length === 1) {
     companyLocationId = company.locations.edges[0].node.id;
 
@@ -27,6 +28,7 @@ export async function loader({context}: LoaderFunctionArgs) {
       companyLocationId,
     });
   }
+
   return defer(
     {company, companyLocationId},
     {

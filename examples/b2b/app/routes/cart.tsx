@@ -80,17 +80,6 @@ export async function action({request, context}: ActionFunctionArgs) {
       throw new Error(`${action} cart action is not defined`);
   }
 
-  /***********************************************/
-  /**********  EXAMPLE UPDATE STARTS  ************/
-  if (!result.cart) {
-    return json({
-      cart: null,
-      errors: result.userErrors,
-    });
-  }
-  /**********   EXAMPLE UPDATE END   ************/
-  /***********************************************/
-
   const cartId = result.cart.id;
   const headers = cart.setCartId(result.cart.id);
   const {cart: cartResult, errors} = result;

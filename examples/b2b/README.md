@@ -31,7 +31,7 @@ npm create @shopify/hydrogen@latest -- --template b2b
 
 This folder contains the minimal set of files needed to showcase the implementation.
 Not all queries where contextualized for B2B. `app/routes/products.$handle.tsx` provides
-reference on how to contextualize storefront queries.Files that aren’t included by default 
+reference on how to contextualize storefront queries. Files that aren’t included by default 
 with Hydrogen and that you’ll need to create are labeled with 🆕.
 
 | File                                                 | Description                                                                                    |
