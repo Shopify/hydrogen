@@ -69,12 +69,6 @@ export default {
         storeDomain: env.PUBLIC_STORE_DOMAIN,
         storefrontId: env.PUBLIC_STOREFRONT_ID,
         storefrontHeaders: getStorefrontHeaders(request),
-        /***********************************************/
-        /**********  EXAMPLE UPDATE STARTS  ************/
-        unstableB2b: true,
-        unstableCustomerAccount: customerAccount,
-        /**********   EXAMPLE UPDATE END   ************/
-        /***********************************************/
       });
 
       /*

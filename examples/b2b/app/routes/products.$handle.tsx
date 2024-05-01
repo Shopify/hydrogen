@@ -35,7 +35,7 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
 
 export async function loader({params, request, context}: LoaderFunctionArgs) {
   const {handle} = params;
-  const {storefront} = context;
+  const {storefront, customerAccount} = context;
 
   const selectedOptions = getSelectedProductOptions(request).filter(
     (option) =>
@@ -53,9 +53,11 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
     throw new Error('Expected product handle to be defined');
   }
 
+  const buyer = await customerAccount.UNSTABLE_getBuyer();
+
   // await the query for the critical product data
   const {product} = await storefront.query(PRODUCT_QUERY, {
-    variables: {handle, selectedOptions},
+    variables: {handle, selectedOptions, buyer},
   });
 
   if (!product?.id) {
@@ -86,7 +88,7 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
   // where variant options might show as available when they're not, but after
   // this deffered query resolves, the UI will update.
   const variants = storefront.query(VARIANTS_QUERY, {
-    variables: {handle},
+    variables: {handle, buyer},
   });
 
   return defer({product, variants});
