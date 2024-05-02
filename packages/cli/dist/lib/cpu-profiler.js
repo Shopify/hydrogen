@@ -1,9 +1,12 @@
 import { readFile } from '@shopify/cli-kit/node/fs';
 import { Session } from 'node:inspector';
 import { handleMiniOxygenImportFail } from './mini-oxygen/common.js';
+import { createRequire } from 'node:module';
 
-async function createCpuStartupProfiler() {
-  const { createMiniOxygen } = await import('@shopify/mini-oxygen/node').catch(
+const require2 = createRequire(import.meta.url);
+async function createCpuStartupProfiler(root) {
+  const miniOxygenPath = require2.resolve("@shopify/mini-oxygen/node", { paths: [root] });
+  const { createMiniOxygen } = await import(miniOxygenPath).catch(
     handleMiniOxygenImportFail
   );
   const miniOxygen = createMiniOxygen({

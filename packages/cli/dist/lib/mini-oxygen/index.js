@@ -1,8 +1,11 @@
 import { handleMiniOxygenImportFail } from './common.js';
 export { DEFAULT_INSPECTOR_PORT } from './common.js';
+import { createRequire } from 'node:module';
 
-async function buildAssetsUrl(port) {
-  const { buildAssetsUrl: _buildAssetsUrl } = await import('@shopify/mini-oxygen').catch(handleMiniOxygenImportFail);
+const require2 = createRequire(import.meta.url);
+async function buildAssetsUrl(port, root) {
+  const miniOxygenPath = require2.resolve("@shopify/mini-oxygen", { paths: [root] });
+  const { buildAssetsUrl: _buildAssetsUrl } = await import(miniOxygenPath).catch(handleMiniOxygenImportFail);
   return _buildAssetsUrl(port);
 }
 async function startMiniOxygen(options, useNodeRuntime = false) {

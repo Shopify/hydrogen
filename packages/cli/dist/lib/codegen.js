@@ -133,7 +133,8 @@ async function generateDefaultConfig({
   rootDirectory,
   appDirectory = resolvePath(rootDirectory, "app")
 }, forceSfapiVersion) {
-  const { getSchema, preset, pluckConfig } = await import('@shopify/hydrogen-codegen').catch(() => {
+  const hydrogenPath = require2.resolve("@shopify/hydrogen-codegen", { paths: [rootDirectory] });
+  const { getSchema, preset, pluckConfig } = await import(hydrogenPath).catch(() => {
     throw new AbortError(
       "Could not load Hydrogen Codegen.",
       "Please make sure you have `@shopify/hydrogen-codegen` installed as a dev dependency."

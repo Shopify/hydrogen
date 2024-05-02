@@ -8,7 +8,9 @@ import { setConstructors, createLogRequestEvent, handleDebugNetworkRequest, H2O_
 import { findPort } from '../find-port.js';
 import { getUtilityBannerlines } from '../dev-shared.js';
 import { outputNewline } from '@shopify/cli-kit/node/output';
+import { createRequire } from 'node:module';
 
+const require2 = createRequire(import.meta.url);
 async function startNodeServer({
   appPort,
   watch = false,
@@ -16,9 +18,11 @@ async function startNodeServer({
   buildPathClient,
   env,
   debug = false,
-  inspectorPort
+  inspectorPort,
+  root
 }) {
-  const { startServer, Request, Response } = await import('@shopify/mini-oxygen/node').catch(handleMiniOxygenImportFail);
+  const miniOxygenPath = require2.resolve("@shopify/mini-oxygen/node", { paths: [root] });
+  const { startServer, Request, Response } = await import(miniOxygenPath).catch(handleMiniOxygenImportFail);
   setConstructors({ Response });
   const logRequestEvent = createLogRequestEvent();
   const asyncLocalStorage = new AsyncLocalStorage();

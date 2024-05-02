@@ -8,6 +8,7 @@ import { handleMiniOxygenImportFail, logRequestLine, SUBREQUEST_PROFILER_ENDPOIN
 import { TUNNEL_DOMAIN, getUtilityBannerlines, getDebugBannerLine } from '../dev-shared.js';
 import { setConstructors, handleDebugNetworkRequest, H2O_BINDING_NAME, createLogRequestEvent } from '../request-events.js';
 
+const require2 = createRequire(import.meta.url);
 async function startWorkerdServer({
   root,
   appPort,
@@ -19,10 +20,10 @@ async function startWorkerdServer({
   buildPathClient,
   env
 }) {
-  const { createMiniOxygen, Response } = await import('@shopify/mini-oxygen').catch(handleMiniOxygenImportFail);
+  const miniOxygenPath = require2.resolve("@shopify/mini-oxygen", { paths: [root] });
+  const { createMiniOxygen, Response } = await import(miniOxygenPath).catch(handleMiniOxygenImportFail);
   setConstructors({ Response });
   async function handleCustomerAccountSchema() {
-    const require2 = createRequire(import.meta.url);
     const filePath = require2.resolve(
       "@shopify/hydrogen/customer-account.schema.json"
     );
