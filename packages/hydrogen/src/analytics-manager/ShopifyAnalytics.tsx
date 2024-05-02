@@ -53,21 +53,30 @@ function getCustomerPrivacyRequired() {
  */
 export function ShopifyAnalytics({
   consent,
+  onReady,
 }: {
   consent: AnalyticsProviderProps['consent'];
+  onReady: () => void;
 }) {
   const {subscribe, register, canTrack} = useAnalytics();
   const {ready: shopifyAnalyticsReady} = register('Internal_Shopify_Analytics');
   const {ready: customerPrivacyReady} = register(
     'Internal_Shopify_CustomerPrivacy',
   );
-  const {checkoutDomain, storefrontAccessToken} = consent;
-  checkoutDomain &&
-    storefrontAccessToken &&
-    useCustomerPrivacy({
-      ...consent,
-      onVisitorConsentCollected: customerPrivacyReady,
-    });
+  const analyticsReady = () => {
+    customerPrivacyReady();
+    onReady();
+  };
+
+  useCustomerPrivacy({
+    ...consent,
+    onVisitorConsentCollected: analyticsReady,
+    onReady: () => {
+      if (!consent.withPrivacyBanner) {
+        analyticsReady();
+      }
+    },
+  });
 
   useShopifyCookies({hasUserConsent: canTrack()});
 
@@ -103,7 +112,7 @@ function prepareBasePageViewPayload(
     | CartUpdatePayload,
 ): ShopifyPageViewPayload | undefined {
   const customerPrivacy = getCustomerPrivacyRequired();
-  const hasUserConsent = customerPrivacy.userCanBeTracked();
+  const hasUserConsent = customerPrivacy.analyticsProcessingAllowed();
 
   if (!payload?.shop?.shopId) {
     logMissingConfig('shopId');

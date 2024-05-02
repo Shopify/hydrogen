@@ -37,6 +37,7 @@ import {ShopifyAnalytics} from './ShopifyAnalytics';
 import {CartAnalytics} from './CartAnalytics';
 import type {CustomerPrivacyApiProps} from '../customer-privacy/ShopifyCustomerPrivacy';
 import type {Storefront} from '../storefront';
+import invariant from 'tiny-invariant';
 
 export type ShopAnalytics = {
   /** The shop ID. */
@@ -54,7 +55,7 @@ export type AnalyticsProviderProps = {
   children?: ReactNode;
   /** The cart or cart promise to track for cart analytics. When there is a difference between the state of the cart, `AnalyticsProvider` will trigger a `cart_updated` event. It will also produce `product_added_to_cart` and `product_removed_from_cart` based on cart line quantity and cart line id changes. */
   cart: Promise<CartReturn | null> | CartReturn | null;
-  /** An optional function to set wether the user can be tracked. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.userCanBeTracked()`. */
+  /** An optional function to set wether the user can be tracked. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.analyticsProcessingAllowed()`. */
   canTrack?: () => boolean;
   /** An optional custom payload to pass to all events. e.g language/locale/currency. */
   customData?: Record<string, unknown>;
@@ -62,6 +63,8 @@ export type AnalyticsProviderProps = {
   shop: Promise<ShopAnalytics | null> | ShopAnalytics | null;
   /** The customer privacy consent configuration and options. */
   consent: CustomerPrivacyApiProps;
+  /** Disable throwing errors when required props are missing. */
+  disableThrowOnError?: boolean;
 };
 
 export type Carts = {
@@ -70,7 +73,7 @@ export type Carts = {
 };
 
 export type AnalyticsContextValue = {
-  /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.userCanBeTracked()`. */
+  /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.analyticsProcessingAllowed()`. */
   canTrack: NonNullable<AnalyticsProviderProps['canTrack']>;
   /** The current cart state. */
   cart: Awaited<AnalyticsProviderProps['cart']>;
@@ -250,15 +253,14 @@ function register(key: string) {
 // This functions attempts to automatically determine if the user can be tracked if the
 // customer privacy API is available. If not, it will default to false.
 function shopifyCanTrack(): boolean {
-  if (
-    typeof window !== 'undefined' &&
-    typeof window?.Shopify === 'object' &&
-    typeof window?.Shopify?.customerPrivacy === 'object' &&
-    typeof window?.Shopify?.customerPrivacy?.userCanBeTracked === 'function'
-  ) {
-    return window.Shopify.customerPrivacy.userCanBeTracked();
-  }
+  try {
+    return window.Shopify.customerPrivacy.analyticsProcessingAllowed();
+  } catch (e) {}
   return false;
+}
+
+function messageOnError(field: string) {
+  return `[h2:error:Analytics.Provider] - ${field} is required`;
 }
 
 function AnalyticsProvider({
@@ -268,7 +270,28 @@ function AnalyticsProvider({
   consent,
   customData = {},
   shop: shopProp = null,
+  disableThrowOnError = false,
 }: AnalyticsProviderProps): JSX.Element {
+  if (!consent.checkoutDomain) {
+    const errorMsg = messageOnError('consent.checkoutDomain');
+    if (disableThrowOnError) {
+      // eslint-disable-next-line no-console
+      console.error(errorMsg);
+    } else {
+      invariant(false, errorMsg);
+    }
+  }
+
+  if (!consent.storefrontAccessToken) {
+    const errorMsg = messageOnError('consent.storefrontAccessToken');
+    if (disableThrowOnError) {
+      // eslint-disable-next-line no-console
+      console.error(errorMsg);
+    } else {
+      invariant(false, errorMsg);
+    }
+  }
+
   const listenerSet = useRef(false);
   const {shop} = useShopAnalytics(shopProp);
   const [consentLoaded, setConsentLoaded] = useState(
@@ -278,18 +301,6 @@ function AnalyticsProvider({
   const [canTrack, setCanTrack] = useState<() => boolean>(
     customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
   );
-
-  // Force a re-render of the value when
-  useEffect(() => {
-    if (customCanTrack) return;
-    if (listenerSet.current) return;
-    listenerSet.current = true;
-
-    document.addEventListener('visitorConsentCollected', () => {
-      setConsentLoaded(true);
-      setCanTrack(() => shopifyCanTrack);
-    });
-  }, [setConsentLoaded, setCanTrack, customCanTrack]);
 
   const value = useMemo<AnalyticsContextValue>(() => {
     return {
@@ -320,11 +331,20 @@ function AnalyticsProvider({
   return (
     <AnalyticsContext.Provider value={value}>
       {children}
-      {shop && <AnalyticsPageView />}
-      {shop && currentCart && (
+      {!!shop && <AnalyticsPageView />}
+      {!!shop && !!currentCart && (
         <CartAnalytics cart={currentCart} setCarts={setCarts} />
       )}
-      {shop && consent && <ShopifyAnalytics consent={consent} />}
+      {!!shop && (
+        <ShopifyAnalytics
+          consent={consent}
+          onReady={() => {
+            listenerSet.current = true;
+            setConsentLoaded(true);
+            setCanTrack(() => shopifyCanTrack);
+          }}
+        />
+      )}
     </AnalyticsContext.Provider>
   );
 }
@@ -420,7 +440,7 @@ export const Analytics = {
 };
 
 export type AnalyticsContextValueForDoc = {
-  /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.userCanBeTracked()`. */
+  /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.analyticsProcessingAllowed()`. */
   canTrack?: () => boolean;
   /** The current cart state. */
   cart?: Promise<CartReturn | null> | CartReturn | null;

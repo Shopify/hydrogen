@@ -344,7 +344,7 @@
             "filePath": "/analytics-manager/AnalyticsProvider.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "AnalyticsProviderProps",
-            "value": "{\n  /** React children to render. */\n  children?: ReactNode;\n  /** The cart or cart promise to track for cart analytics. When there is a difference between the state of the cart, `AnalyticsProvider` will trigger a `cart_updated` event. It will also produce `product_added_to_cart` and `product_removed_from_cart` based on cart line quantity and cart line id changes. */\n  cart: Promise<CartReturn | null> | CartReturn | null;\n  /** An optional function to set wether the user can be tracked. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.userCanBeTracked()`. */\n  canTrack?: () => boolean;\n  /** An optional custom payload to pass to all events. e.g language/locale/currency. */\n  customData?: Record<string, unknown>;\n  /** The shop configuration required to publish analytics events to Shopify. Use [`getShopAnalytics`](/docs/api/hydrogen/2024-04/utilities/getshopanalytics). */\n  shop: Promise<ShopAnalytics | null> | ShopAnalytics | null;\n  /** The customer privacy consent configuration and options. */\n  consent: CustomerPrivacyApiProps;\n}",
+            "value": "{\n  /** React children to render. */\n  children?: ReactNode;\n  /** The cart or cart promise to track for cart analytics. When there is a difference between the state of the cart, `AnalyticsProvider` will trigger a `cart_updated` event. It will also produce `product_added_to_cart` and `product_removed_from_cart` based on cart line quantity and cart line id changes. */\n  cart: Promise<CartReturn | null> | CartReturn | null;\n  /** An optional function to set wether the user can be tracked. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.analyticsProcessingAllowed()`. */\n  canTrack?: () => boolean;\n  /** An optional custom payload to pass to all events. e.g language/locale/currency. */\n  customData?: Record<string, unknown>;\n  /** The shop configuration required to publish analytics events to Shopify. Use [`getShopAnalytics`](/docs/api/hydrogen/2024-04/utilities/getshopanalytics). */\n  shop: Promise<ShopAnalytics | null> | ShopAnalytics | null;\n  /** The customer privacy consent configuration and options. */\n  consent: CustomerPrivacyApiProps;\n  /** Disable throwing errors when required props are missing. */\n  disableThrowOnError?: boolean;\n}",
             "description": "",
             "members": [
               {
@@ -367,7 +367,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "canTrack",
                 "value": "() => boolean",
-                "description": "An optional function to set wether the user can be tracked. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.userCanBeTracked()`.",
+                "description": "An optional function to set wether the user can be tracked. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.analyticsProcessingAllowed()`.",
                 "isOptional": true
               },
               {
@@ -391,6 +391,14 @@
                 "name": "consent",
                 "value": "CustomerPrivacyApiProps",
                 "description": "The customer privacy consent configuration and options."
+              },
+              {
+                "filePath": "/analytics-manager/AnalyticsProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "disableThrowOnError",
+                "value": "boolean",
+                "description": "Disable throwing errors when required props are missing.",
+                "isOptional": true
               }
             ]
           },
@@ -456,7 +464,7 @@
             "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CustomerPrivacyApiProps",
-            "value": "{\n  /** The production shop checkout domain url.  */\n  checkoutDomain: string;\n  /** The storefront access token for the shop. */\n  storefrontAccessToken: string;\n  /** Whether to load the Shopify privacy banner as configured in Shopify admin. Defaults to true. */\n  withPrivacyBanner?: boolean;\n  /** Callback to be called when visitor consent is collected. */\n  onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;\n}",
+            "value": "{\n  /** The production shop checkout domain url.  */\n  checkoutDomain: string;\n  /** The storefront access token for the shop. */\n  storefrontAccessToken: string;\n  /** Whether to load the Shopify privacy banner as configured in Shopify admin. Defaults to true. */\n  withPrivacyBanner?: boolean;\n  /** Callback to be called when visitor consent is collected. */\n  onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;\n  /** Callback to be call when customer privacy api is ready. */\n  onReady?: () => void;\n}",
             "description": "",
             "members": [
               {
@@ -487,6 +495,14 @@
                 "name": "onVisitorConsentCollected",
                 "value": "(consent: VisitorConsentCollected) => void",
                 "description": "Callback to be called when visitor consent is collected.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "onReady",
+                "value": "() => void",
+                "description": "Callback to be call when customer privacy api is ready.",
                 "isOptional": true
               }
             ]
@@ -1284,7 +1300,7 @@
             "filePath": "/analytics-manager/AnalyticsProvider.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "AnalyticsContextValueForDoc",
-            "value": "{\n  /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.userCanBeTracked()`. */\n  canTrack?: () => boolean;\n  /** The current cart state. */\n  cart?: Promise<CartReturn | null> | CartReturn | null;\n  /** The custom data passed in from the `AnalyticsProvider`. */\n  customData?: Record<string, unknown>;\n  /** The previous cart state. */\n  prevCart?: Promise<CartReturn | null> | CartReturn | null;\n  /** A function to publish an analytics event. */\n  publish?: AnalyticsContextPublishForDoc;\n  /** A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/2024-04/hooks/unstable_useanalytics#example-unstable_useanalytics.register). */\n  register?: (key: string) => {ready: () => void};\n  /** The shop configuration required to publish events to Shopify. */\n  shop?: Promise<ShopAnalytics | null> | ShopAnalytics | null;\n  /** A function to subscribe to analytics events. */\n  subscribe?: AnalyticsContextSubscribeForDoc;\n}",
+            "value": "{\n  /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.analyticsProcessingAllowed()`. */\n  canTrack?: () => boolean;\n  /** The current cart state. */\n  cart?: Promise<CartReturn | null> | CartReturn | null;\n  /** The custom data passed in from the `AnalyticsProvider`. */\n  customData?: Record<string, unknown>;\n  /** The previous cart state. */\n  prevCart?: Promise<CartReturn | null> | CartReturn | null;\n  /** A function to publish an analytics event. */\n  publish?: AnalyticsContextPublishForDoc;\n  /** A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/2024-04/hooks/unstable_useanalytics#example-unstable_useanalytics.register). */\n  register?: (key: string) => {ready: () => void};\n  /** The shop configuration required to publish events to Shopify. */\n  shop?: Promise<ShopAnalytics | null> | ShopAnalytics | null;\n  /** A function to subscribe to analytics events. */\n  subscribe?: AnalyticsContextSubscribeForDoc;\n}",
             "description": "",
             "members": [
               {
@@ -1292,7 +1308,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "canTrack",
                 "value": "() => boolean",
-                "description": "A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.userCanBeTracked()`.",
+                "description": "A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.analyticsProcessingAllowed()`.",
                 "isOptional": true
               },
               {
@@ -3514,7 +3530,7 @@
             "filePath": "/cart/createCartHandler.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartHandlerOptionsForDocs",
-            "value": "{\n  /**\n   * A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`.\n   */\n  getCartId: () => string | undefined;\n  /**\n   * A function that sets the cart ID.\n   */\n  setCartId: (cartId: string) => Headers;\n  /**\n   * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/latest/utilities/createstorefrontclient).\n   */\n  storefront: Storefront;\n  /**\n   * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.\n   * See the [example usage](/docs/api/hydrogen/2024-04/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartMutateFragment?: string;\n  /**\n   * The cart query fragment used by `cart.get()`.\n   * See the [example usage](/docs/api/hydrogen/2024-04/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartQueryFragment?: string;\n  /**\n   * Define custom methods or override existing methods for your cart API instance.\n   * See the [example usage](/docs/api/hydrogen/2024-04/utilities/createcarthandler#example-custom-methods) in the documentation.\n   */\n  customMethods?: TCustomMethods;\n}",
+            "value": "{\n  /**\n   * A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`.\n   */\n  getCartId: () => string | undefined;\n  /**\n   * A function that sets the cart ID.\n   */\n  setCartId: (cartId: string) => Headers;\n  /**\n   * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/2024-04/utilities/createstorefrontclient).\n   */\n  storefront: Storefront;\n  /**\n   * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.\n   * See the [example usage](/docs/api/hydrogen/2024-04/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartMutateFragment?: string;\n  /**\n   * The cart query fragment used by `cart.get()`.\n   * See the [example usage](/docs/api/hydrogen/2024-04/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartQueryFragment?: string;\n  /**\n   * Define custom methods or override existing methods for your cart API instance.\n   * See the [example usage](/docs/api/hydrogen/2024-04/utilities/createcarthandler#example-custom-methods) in the documentation.\n   */\n  customMethods?: TCustomMethods;\n}",
             "description": "",
             "members": [
               {
@@ -3536,7 +3552,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "storefront",
                 "value": "Storefront",
-                "description": "The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/latest/utilities/createstorefrontclient)."
+                "description": "The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/2024-04/utilities/createstorefrontclient)."
               },
               {
                 "filePath": "/cart/createCartHandler.ts",
@@ -11949,13 +11965,13 @@
               "name": "",
               "value": ""
             },
-            "value": "export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {\n  const {\n    withPrivacyBanner = true,\n    onVisitorConsentCollected,\n    ...consentConfig\n  } = props;\n  const loadedEvent = useRef(false);\n  const scriptStatus = useLoadScript(\n    withPrivacyBanner ? CONSENT_API_WITH_BANNER : CONSENT_API,\n    {\n      attributes: {\n        id: 'customer-privacy-api',\n      },\n    },\n  );\n\n  if (!consentConfig.checkoutDomain) logMissingConfig('checkoutDomain');\n  if (!consentConfig.storefrontAccessToken)\n    logMissingConfig('storefrontAccessToken');\n\n  useEffect(() => {\n    const consentCollectedHandler = (\n      event: CustomEvent<VisitorConsentCollected>,\n    ) => {\n      if (onVisitorConsentCollected) {\n        onVisitorConsentCollected(event.detail);\n      }\n    };\n\n    document.addEventListener(\n      'visitorConsentCollected',\n      consentCollectedHandler,\n    );\n\n    return () => {\n      document.removeEventListener(\n        'visitorConsentCollected',\n        consentCollectedHandler,\n      );\n    };\n  }, [onVisitorConsentCollected]);\n\n  useEffect(() => {\n    if (scriptStatus !== 'done' || loadedEvent.current) return;\n\n    loadedEvent.current = true;\n\n    if (withPrivacyBanner && window?.privacyBanner) {\n      window?.privacyBanner?.loadBanner({\n        checkoutRootDomain: consentConfig.checkoutDomain,\n        storefrontAccessToken: consentConfig.storefrontAccessToken,\n      });\n    }\n\n    // Override the setTrackingConsent method to include the headless storefront configuration\n    if (window.Shopify?.customerPrivacy) {\n      const originalSetTrackingConsent =\n        window.Shopify.customerPrivacy.setTrackingConsent;\n      window.Shopify.customerPrivacy.setTrackingConsent = (\n        consent: VisitorConsent,\n        callback: () => void,\n      ) => {\n        originalSetTrackingConsent(\n          {\n            ...consent,\n            headlessStorefront: true,\n            checkoutRootDomain: consentConfig.checkoutDomain,\n            storefrontAccessToken: consentConfig.storefrontAccessToken,\n          },\n          callback,\n        );\n      };\n    }\n  }, [scriptStatus, withPrivacyBanner, consentConfig]);\n\n  return;\n}"
+            "value": "export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {\n  const {\n    withPrivacyBanner = true,\n    onVisitorConsentCollected,\n    onReady,\n    ...consentConfig\n  } = props;\n  const loadedEvent = useRef(false);\n  const scriptStatus = useLoadScript(\n    withPrivacyBanner ? CONSENT_API_WITH_BANNER : CONSENT_API,\n    {\n      attributes: {\n        id: 'customer-privacy-api',\n      },\n    },\n  );\n\n  if (!consentConfig.checkoutDomain) logMissingConfig('checkoutDomain');\n  if (!consentConfig.storefrontAccessToken)\n    logMissingConfig('storefrontAccessToken');\n\n  useEffect(() => {\n    const consentCollectedHandler = (\n      event: CustomEvent<VisitorConsentCollected>,\n    ) => {\n      if (onVisitorConsentCollected) {\n        onVisitorConsentCollected(event.detail);\n      }\n    };\n\n    document.addEventListener(\n      'visitorConsentCollected',\n      consentCollectedHandler,\n    );\n\n    return () => {\n      document.removeEventListener(\n        'visitorConsentCollected',\n        consentCollectedHandler,\n      );\n    };\n  }, [onVisitorConsentCollected]);\n\n  useEffect(() => {\n    if (scriptStatus !== 'done' || loadedEvent.current) return;\n\n    loadedEvent.current = true;\n\n    if (withPrivacyBanner && window?.privacyBanner) {\n      window?.privacyBanner?.loadBanner({\n        checkoutRootDomain: consentConfig.checkoutDomain,\n        storefrontAccessToken: consentConfig.storefrontAccessToken,\n      });\n    }\n\n    // Override the setTrackingConsent method to include the headless storefront configuration\n    if (window.Shopify?.customerPrivacy) {\n      const originalSetTrackingConsent =\n        window.Shopify.customerPrivacy.setTrackingConsent;\n      window.Shopify.customerPrivacy.setTrackingConsent = (\n        consent: VisitorConsent,\n        callback: () => void,\n      ) => {\n        originalSetTrackingConsent(\n          {\n            ...consent,\n            headlessStorefront: true,\n            checkoutRootDomain: consentConfig.checkoutDomain,\n            storefrontAccessToken: consentConfig.storefrontAccessToken,\n          },\n          callback,\n        );\n      };\n    }\n\n    if (onReady && !withPrivacyBanner) {\n      onReady();\n    }\n  }, [scriptStatus, withPrivacyBanner, consentConfig]);\n\n  return;\n}"
           },
           "CustomerPrivacyApiProps": {
             "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CustomerPrivacyApiProps",
-            "value": "{\n  /** The production shop checkout domain url.  */\n  checkoutDomain: string;\n  /** The storefront access token for the shop. */\n  storefrontAccessToken: string;\n  /** Whether to load the Shopify privacy banner as configured in Shopify admin. Defaults to true. */\n  withPrivacyBanner?: boolean;\n  /** Callback to be called when visitor consent is collected. */\n  onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;\n}",
+            "value": "{\n  /** The production shop checkout domain url.  */\n  checkoutDomain: string;\n  /** The storefront access token for the shop. */\n  storefrontAccessToken: string;\n  /** Whether to load the Shopify privacy banner as configured in Shopify admin. Defaults to true. */\n  withPrivacyBanner?: boolean;\n  /** Callback to be called when visitor consent is collected. */\n  onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;\n  /** Callback to be call when customer privacy api is ready. */\n  onReady?: () => void;\n}",
             "description": "",
             "members": [
               {
@@ -11986,6 +12002,14 @@
                 "name": "onVisitorConsentCollected",
                 "value": "(consent: VisitorConsentCollected) => void",
                 "description": "Callback to be called when visitor consent is collected.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/customer-privacy/ShopifyCustomerPrivacy.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "onReady",
+                "value": "() => void",
+                "description": "Callback to be call when customer privacy api is ready.",
                 "isOptional": true
               }
             ]
@@ -12806,7 +12830,7 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {VariantSelector} from '@shopify/hydrogen';\nimport {Link} from '@remix-run/react';\n\nconst ProductForm = ({product}) =&gt; {\n  return (\n    &lt;VariantSelector\n      handle={product.handle}\n      options={product.options}\n      variants={product.variants}\n    &gt;\n      {({option}) =&gt; (\n        &lt;&gt;\n          &lt;div&gt;{option.name}&lt;/div&gt;\n          &lt;div&gt;\n            {option.values.map(({value, isAvailable, path, isActive}) =&gt; (\n              &lt;Link\n                to={path}\n                prefetch=\"intent\"\n                className={\n                  isActive ? 'active' : isAvailable ? '' : 'opacity-80'\n                }\n              &gt;\n                {value}\n              &lt;/Link&gt;\n            ))}\n          &lt;/div&gt;\n        &lt;/&gt;\n      )}\n    &lt;/VariantSelector&gt;\n  );\n};\n",
+            "code": "import {VariantSelector} from '@shopify/hydrogen';\nimport {Link} from '@remix-run/react';\n\nconst ProductForm = ({product}) =&gt; {\n  return (\n    &lt;VariantSelector\n      handle={product.handle}\n      options={product.options}\n      variants={product.variants}\n    &gt;\n      {({option}) =&gt; (\n        &lt;&gt;\n          &lt;div&gt;{option.name}&lt;/div&gt;\n          &lt;div&gt;\n            {option.values.map(({value, isAvailable, to, isActive}) =&gt; (\n              &lt;Link\n                to={to}\n                prefetch=\"intent\"\n                className={\n                  isActive ? 'active' : isAvailable ? '' : 'opacity-80'\n                }\n              &gt;\n                {value}\n              &lt;/Link&gt;\n            ))}\n          &lt;/div&gt;\n        &lt;/&gt;\n      )}\n    &lt;/VariantSelector&gt;\n  );\n};\n",
             "language": "jsx"
           },
           {
