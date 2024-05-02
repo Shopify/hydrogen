@@ -55,7 +55,7 @@ describe('createContentSecurityPolicy', () => {
     );
   });
 
-  it('uses `frame-ancestors` directive as-is, when overriden', () => {
+  it(`if default directive is 'none', then don't merge custom directive with default`, () => {
     expect(
       createContentSecurityPolicy({
         frameAncestors: [`'self'`],

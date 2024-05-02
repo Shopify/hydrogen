@@ -133,12 +133,10 @@ function createCSPHeader(
   for (const key in defaultDirectives) {
     const directive = directives[key as keyof CreateContentSecurityPolicy];
     if (key && directive) {
-      combinedDirectives[key] =
-        // Since `frame-ancestors` defaults to `none`, don't 
-        // merge the override with the default value.
-        key === 'frameAncestors'
-          ? directive
-          : addCspDirective(directive, defaultDirectives[key]);
+      combinedDirectives[key] = addCspDirective(
+        directive,
+        defaultDirectives[key],
+      );
     }
   }
 
@@ -172,7 +170,11 @@ function addCspDirective(
     : [String(currentValue)];
 
   const newValue = Array.isArray(normalizedValue)
-    ? [...normalizedCurrentValue, ...normalizedValue]
+    ? // If the default directive is `none`, don't
+      // merge the override with the default value.
+      normalizedValue.every((a) => a === `'none'`)
+      ? normalizedCurrentValue
+      : [...normalizedCurrentValue, ...normalizedValue]
     : normalizedValue;
 
   return newValue;
