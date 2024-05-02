@@ -7,6 +7,7 @@ import {
   type MiniOxygenViteOptions,
   type MiniOxygen,
 } from './server-middleware.js';
+import {buildAssetsUrl} from '../worker/assets.js';
 
 // Note: Vite resolves extensions like .js or .ts automatically.
 const DEFAULT_SSR_ENTRY = './server';
@@ -51,6 +52,9 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
           appType: 'custom',
           resolve: {
             conditions: ['worker', 'workerd'],
+          },
+          server: {
+            origin: buildAssetsUrl().replace(/\/$/, ''),
           },
           ssr: {
             noExternal: true,

@@ -12,6 +12,7 @@ import {
 } from 'miniflare';
 import {createInspectorConnector} from './inspector.js';
 import {
+  DEFAULT_ASSETS_PORT,
   STATIC_ASSET_EXTENSIONS,
   buildAssetsUrl,
   createAssetsServer,
@@ -38,7 +39,6 @@ export {
 };
 
 const DEFAULT_PUBLIC_INSPECTOR_PORT = 9229;
-const DEFAULT_ASSETS_PORT = 9100;
 
 type AssetOptions =
   | {
@@ -50,7 +50,8 @@ type AssetOptions =
     }
   | {
       directory?: never;
-      port?: never;
+      /** Port to serve files from. Defaults to 9100. */
+      port?: number;
       /** Optional origin for an external asset server. */
       origin: string;
     };
@@ -142,9 +143,10 @@ export function createMiniOxygen({
     };
   });
 
-  const assetsServer = assets?.directory
-    ? createAssetsServer(assets.directory)
-    : undefined;
+  const assetsServer =
+    assets?.directory || assets?.origin
+      ? createAssetsServer(assets.directory ?? assets.origin)
+      : undefined;
 
   assetsServer?.listen(assets?.port ?? DEFAULT_ASSETS_PORT);
 
