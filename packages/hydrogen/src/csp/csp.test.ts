@@ -54,6 +54,14 @@ describe('createContentSecurityPolicy', () => {
       `"base-uri 'self'; default-src 'self' 'nonce-somenonce' https://cdn.shopify.com https://shopify.com; frame-ancestors 'none'; style-src 'self' 'unsafe-inline' https://cdn.shopify.com; connect-src 'self' https://monorail-edge.shopifysvc.com; script-src https://some-custom-css.cdn 'nonce-somenonce'"`,
     );
   });
+
+  it('uses `frame-ancestors` directive as-is, when overriden', () => {
+    expect(
+      createContentSecurityPolicy({
+        frameAncestors: [`'self'`],
+      }).header,
+    ).toContain(`frame-ancestors 'self';`);
+  });
 });
 
 describe('useNonce', () => {
