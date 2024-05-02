@@ -20,7 +20,7 @@ export function Cart({cart}) {
 
   return cart.lines.nodes.map((line) => (
     <div key={line.id}>
-      <Link to={`/products${line.merchandise.produce.handle}`}>
+      <Link to={`/products${line.merchandise.product.handle}`}>
         {line.merchandise.product.title}
       </Link>
     </div>

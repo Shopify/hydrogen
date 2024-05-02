@@ -2,6 +2,7 @@ import {useFetchers} from '@remix-run/react';
 import type {cartGetDefault} from '../queries/cartGetDefault';
 import {CartForm} from '../CartForm';
 import type {
+  Cart,
   CartLine,
   ProductVariant,
 } from '@shopify/hydrogen-react/storefront-api-types';
@@ -10,11 +11,16 @@ import {
   isOptimisticLineId,
 } from './optimistic-cart.helper';
 
-export type OptimisticCart<T> = T & {
+export type OptimisticCart<T = ReturnType<typeof cartGetDefault>> = T & {
   isOptimistic?: boolean;
   lines: {nodes: Array<CartLine & {isOptimistic?: boolean}>};
 };
 
+/**
+ * @param cart The cart object from `context.cart.get()` returned by a server loader.
+ *
+ * @returns A new cart object augmented with optimistic state. Each cart line item that is optimistically added includes an `isOptimistic` property. Also if the cart has _any_ optimistic state, a root property `isOptimistic` will be set to `true`.
+ */
 export function useOptimisticCart<
   DefaultCart = ReturnType<typeof cartGetDefault>,
 >(cart: DefaultCart): OptimisticCart<DefaultCart> {

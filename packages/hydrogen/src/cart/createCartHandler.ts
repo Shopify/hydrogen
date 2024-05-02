@@ -45,7 +45,6 @@ import {
   type CartMetafieldDeleteFunction,
   cartMetafieldDeleteDefault,
 } from './queries/cartMetafieldDeleteDefault';
-import {isOptimisticLineId} from './optimistic/optimistic-cart.helper';
 
 export type CartHandlerOptions = {
   storefront: Storefront;
