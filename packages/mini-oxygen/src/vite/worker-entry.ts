@@ -14,7 +14,6 @@ import {
 import type {HMRPayload} from 'vite';
 import type {Response} from 'miniflare';
 import {withRequestHook} from '../worker/handler.js';
-import {on} from 'node:events';
 
 export interface ViteEnv {
   __VITE_ROOT: string;
