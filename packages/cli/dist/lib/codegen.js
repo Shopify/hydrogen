@@ -4,7 +4,9 @@ import { getCodeFormatOptions, formatCode } from './format-code.js';
 import { renderWarning } from '@shopify/cli-kit/node/ui';
 import { relativePath, joinPath, resolvePath, basename } from '@shopify/cli-kit/node/path';
 import { AbortError } from '@shopify/cli-kit/node/error';
+import { createRequire } from 'module';
 
+const require2 = createRequire(import.meta.url);
 const nodePath = process.argv[1];
 const modulePath = fileURLToPath(import.meta.url);
 const isStandaloneProcess = nodePath === modulePath;
@@ -89,7 +91,8 @@ async function generateTypes({
   forceSfapiVersion,
   ...dirs
 }) {
-  const { generate, loadCodegenConfig, CodegenContext } = await import('@graphql-codegen/cli').catch(() => {
+  const codeGenCLI = require2.resolve("@graphql-codegen/cli", { paths: [dirs.rootDirectory] });
+  const { generate, loadCodegenConfig, CodegenContext } = await import(codeGenCLI).catch(() => {
     throw new AbortError(
       "Could not load GraphQL Codegen CLI.",
       "Please make sure you have `@graphql-codegen/cli` installed as a dev dependency."
