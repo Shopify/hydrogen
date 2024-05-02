@@ -104,7 +104,10 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
             // Invalidate cache synchronously without revalidating the
             // module to avoid hanging promises in workerd
             for (const update of data.updates) {
-              runtime.moduleCache.invalidateDepTree([update.path]);
+              runtime.moduleCache.invalidateDepTree([
+                update.path,
+                ...(update.ssrInvalidates ?? []),
+              ]);
             }
           } else if (data.type !== 'custom' && onHmrRecieve) {
             // Custom events are only used in browser HMR, so ignore them.
