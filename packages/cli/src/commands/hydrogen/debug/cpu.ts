@@ -74,7 +74,7 @@ async function runDebugCpu({
       colors.dim(output),
   );
 
-  const runProfiler = await createCpuStartupProfiler();
+  const runProfiler = await createCpuStartupProfiler(root);
 
   const [{watch}, {createFileWatchCache}] = await Promise.all([
     import('@remix-run/dev/dist/compiler/watch.js'),
