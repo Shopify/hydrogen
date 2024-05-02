@@ -14,6 +14,7 @@ import {
 import type {HMRPayload} from 'vite';
 import type {Response} from 'miniflare';
 import {withRequestHook} from '../worker/handler.js';
+import {on} from 'node:events';
 
 export interface ViteEnv {
   __VITE_ROOT: string;
@@ -94,25 +95,23 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
       .then((hmrWs) => {
         hmrReady = !!hmrWs;
         hmrWs?.addEventListener('message', (message) => {
-          if (onHmrRecieve) {
-            if (!message.data) return;
-            const data: HMRPayload = JSON.parse(message.data.toString());
+          if (!message.data) return;
+          const data: HMRPayload = JSON.parse(message.data.toString());
 
-            if (!data) return;
+          if (!data) return;
 
-            if (data.type === 'update') {
-              // Invalidate cache synchronously without revalidating the
-              // module to avoid hanging promises in workerd
-              for (const update of data.updates) {
-                runtime.moduleCache.invalidateDepTree([update.path]);
-              }
-            } else if (data.type !== 'custom') {
-              // Custom events are only used in browser HMR, so ignore them.
-              // This type is wrong in ViteRuntime:
-              (onHmrRecieve(data) as unknown as Promise<unknown>)?.catch(
-                (error) => console.error('During SSR HMR:', error),
-              );
+          if (data.type === 'update') {
+            // Invalidate cache synchronously without revalidating the
+            // module to avoid hanging promises in workerd
+            for (const update of data.updates) {
+              runtime.moduleCache.invalidateDepTree([update.path]);
             }
+          } else if (data.type !== 'custom' && onHmrRecieve) {
+            // Custom events are only used in browser HMR, so ignore them.
+            // This type is wrong in ViteRuntime:
+            (onHmrRecieve(data) as unknown as Promise<unknown>)?.catch(
+              (error) => console.error('During SSR HMR:', error),
+            );
           }
         });
       })
