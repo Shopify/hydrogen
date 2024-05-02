@@ -263,6 +263,8 @@ describe('init', () => {
           expect.objectContaining({
             ...templatePkgJson.dependencies,
             ...examplePkgJson.dependencies,
+            '@shopify/cli-hydrogen':
+              templatePkgJson.dependencies?.['@shopify/cli-hydrogen'],
           }),
         );
         expect(resultPkgJson.devDependencies).toEqual(
