@@ -254,20 +254,9 @@ function register(key: string) {
 // customer privacy API is available. If not, it will default to false.
 function shopifyCanTrack(): boolean {
   try {
-    // eslint-disable-next-line no-undef
-    if (
-      typeof window !== 'undefined' &&
-      typeof window?.Shopify === 'object' &&
-      typeof window?.Shopify?.customerPrivacy === 'object' &&
-      typeof window?.Shopify?.customerPrivacy?.analyticsProcessingAllowed ===
-        'function'
-    ) {
-      return window.Shopify.customerPrivacy.analyticsProcessingAllowed();
-    }
-    return false;
-  } catch (error) {
-    return false;
-  }
+    return window.Shopify.customerPrivacy.analyticsProcessingAllowed();
+  } catch(e) {}
+  return false;
 }
 
 function messageOnError(field: string) {
