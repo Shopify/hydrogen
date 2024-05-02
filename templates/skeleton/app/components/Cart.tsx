@@ -13,7 +13,7 @@ import {useVariantUrl} from '~/lib/variants';
 type CartLine = OptimisticCart<CartApiQueryFragment>['lines']['nodes'][0];
 
 type CartMainProps = {
-  cart?: CartApiQueryFragment | null;
+  cart: CartApiQueryFragment | null;
   layout: 'page' | 'aside';
 };
 
@@ -40,7 +40,7 @@ function CartDetails({
   layout,
   cart,
 }: {
-  cart: OptimisticCart<CartApiQueryFragment | null>;
+  cart: OptimisticCart<CartApiQueryFragment>;
   layout: 'page' | 'aside';
 }) {
   const cartHasItems = !!cart && cart.totalQuantity > 0;
