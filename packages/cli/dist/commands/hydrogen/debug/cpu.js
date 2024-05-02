@@ -10,7 +10,9 @@ import { getProjectPaths, hasRemixConfigFile, handleRemixImportFail, getRemixCon
 import { muteDevLogs, createRemixLogger } from '../../../lib/log.js';
 import { commonFlags, flagsToCamelObject } from '../../../lib/flags.js';
 import { createCpuStartupProfiler } from '../../../lib/cpu-profiler.js';
+import { createRequire } from 'module';
 
+const require2 = createRequire(import.meta.url);
 const DEFAULT_OUTPUT_PATH = "startup.cpuprofile";
 class DebugCpu extends Command {
   static descriptionWithMarkdown = `Builds the app and runs the resulting code to profile the server startup time, watching for changes. This command can be used to [debug slow app startup times](https://shopify.dev/docs/custom-storefronts/hydrogen/debugging/cpu-startup) that cause failed deployments in Oxygen.
@@ -53,9 +55,11 @@ async function runDebugCpu({
     "\u23F3\uFE0F Starting profiler for CPU startup... Profile will be written to:\n" + colors.dim(output)
   );
   const runProfiler = await createCpuStartupProfiler(root);
+  const remixRunWatch = require2.resolve("@remix-run/dev/dist/compiler/watch.js", { paths: [root] });
+  const remixRunWatchPath = require2.resolve("@remix-run/dev/dist/compiler/fileWatchCache.js", { paths: [root] });
   const [{ watch }, { createFileWatchCache }] = await Promise.all([
-    import('@remix-run/dev/dist/compiler/watch.js'),
-    import('@remix-run/dev/dist/compiler/fileWatchCache.js')
+    import(remixRunWatch),
+    import(remixRunWatchPath)
   ]).catch(handleRemixImportFail);
   let times = 0;
   const fileWatchCache = createFileWatchCache();

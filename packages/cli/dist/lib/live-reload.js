@@ -1,13 +1,19 @@
 import http from 'node:http';
 import { handleRemixImportFail } from './remix-config.js';
+import { createRequire } from 'module';
 
-async function setupLiveReload(devServerPort) {
+const require2 = createRequire(import.meta.url);
+async function setupLiveReload(devServerPort, root) {
   try {
+    const remixRunHmrPath = require2.resolve("@remix-run/dev/dist/devServer_unstable/hmr.js", { paths: [root] });
+    const remixRunSocketPath = require2.resolve("@remix-run/dev/dist/devServer_unstable/socket.js", { paths: [root] });
+    const remixRunHdrPath = require2.resolve("@remix-run/dev/dist/devServer_unstable/hdr.js", { paths: [root] });
+    const remixRunResultPath = require2.resolve("@remix-run/dev/dist/result.js", { paths: [root] });
     const [{ updates: hmrUpdates }, { serve }, { detectLoaderChanges }, { ok, err }] = await Promise.all([
-      import('@remix-run/dev/dist/devServer_unstable/hmr.js'),
-      import('@remix-run/dev/dist/devServer_unstable/socket.js'),
-      import('@remix-run/dev/dist/devServer_unstable/hdr.js'),
-      import('@remix-run/dev/dist/result.js')
+      import(remixRunHmrPath),
+      import(remixRunSocketPath),
+      import(remixRunHdrPath),
+      import(remixRunResultPath)
     ]).catch(handleRemixImportFail);
     const state = {};
     const server = http.createServer(function(req, res) {

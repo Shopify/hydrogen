@@ -3,7 +3,9 @@ import { BugError } from '@shopify/cli-kit/node/error';
 import { outputContent, outputToken } from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
 import { getGraphiQLUrl } from './graphiql-url.js';
+import { createRequire } from 'node:module';
 
+const require2 = createRequire(import.meta.url);
 const originalConsole = { ...console };
 const methodsReplaced = /* @__PURE__ */ new Set();
 const addedReplacers = /* @__PURE__ */ new Set();
@@ -353,9 +355,10 @@ function createRemixLogger() {
     }
   };
 }
-async function muteRemixLogs() {
+async function muteRemixLogs(root) {
   try {
-    const { logger } = await import('@remix-run/dev/dist/tux/logger.js');
+    const remixRunLogPath = require2.resolve("@remix-run/dev/dist/tux/logger.js", { paths: [root] });
+    const { logger } = await import(remixRunLogPath);
     logger.warn = logger.debug = logger.info = () => {
     };
   } catch {

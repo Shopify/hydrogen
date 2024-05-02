@@ -21,7 +21,9 @@ import { prepareDiffDirectory, copyShopifyConfig } from '../../lib/template-diff
 import { getDevConfigInBackground, startTunnelAndPushConfig, isMockShop, notifyIssueWithTunnelAndMockShop } from '../../lib/dev-shared.js';
 import { getCliCommand } from '../../lib/shell.js';
 import { hasViteConfig } from '../../lib/vite-config.js';
+import { createRequire } from 'module';
 
+const require2 = createRequire(import.meta.url);
 const LOG_REBUILDING = "\u{1F9F1} Rebuilding...";
 const LOG_REBUILT = "\u{1F680} Rebuilt";
 class Dev extends Command {
@@ -155,14 +157,16 @@ async function runDev({
       localVariables
     })
   );
+  const remixRunWatch = require2.resolve("@remix-run/dev/dist/compiler/watch.js", { paths: [root] });
+  const remixRunWatchPath = require2.resolve("@remix-run/dev/dist/compiler/fileWatchCache.js", { paths: [root] });
   const [{ watch }, { createFileWatchCache }] = await Promise.all([
-    import('@remix-run/dev/dist/compiler/watch.js'),
-    import('@remix-run/dev/dist/compiler/fileWatchCache.js')
+    import(remixRunWatch),
+    import(remixRunWatchPath)
   ]).catch(handleRemixImportFail);
   let isInitialBuild = true;
   let initialBuildDurationMs = 0;
   let initialBuildStartTimeMs = Date.now();
-  const liveReload = shouldLiveReload ? await setupLiveReload(remixConfig.dev?.port ?? 8002) : void 0;
+  const liveReload = shouldLiveReload ? await setupLiveReload(remixConfig.dev?.port ?? 8002, root) : void 0;
   let miniOxygen;
   let codegenProcess;
   async function safeStartMiniOxygen() {

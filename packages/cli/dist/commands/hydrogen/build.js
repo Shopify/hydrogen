@@ -15,7 +15,9 @@ import { buildBundleAnalysis, getBundleAnalysisSummary } from '../../lib/bundle/
 import { isCI } from '../../lib/is-ci.js';
 import { prepareDiffDirectory, copyDiffBuild } from '../../lib/template-diff.js';
 import { hasViteConfig } from '../../lib/vite-config.js';
+import { createRequire } from 'module';
 
+const require2 = createRequire(import.meta.url);
 const LOG_WORKER_BUILT = "\u{1F4E6} Worker built";
 const WORKER_BUILD_SIZE_LIMIT = 5;
 class Build extends Command {
@@ -78,16 +80,19 @@ async function runBuild({
   if (lockfileCheck) {
     await checkLockfileStatus(root, isCI());
   }
-  await muteRemixLogs();
+  await muteRemixLogs(root);
   console.time(LOG_WORKER_BUILT);
   outputInfo(`
 \u{1F3D7}\uFE0F  Building in ${process.env.NODE_ENV} mode...`);
+  const remixRunBuildPath = require2.resolve("@remix-run/dev/dist/compiler/build.js", { paths: [root] });
+  const remixRunLogPath = require2.resolve("@remix-run/dev/dist/compiler/utils/log.js", { paths: [root] });
+  const remixRunWatchPath = require2.resolve("@remix-run/dev/dist/compiler/fileWatchCache.js", { paths: [root] });
   const [remixConfig, [{ build }, { logThrown }, { createFileWatchCache }]] = await Promise.all([
     getRemixConfig(root),
     Promise.all([
-      import('@remix-run/dev/dist/compiler/build.js'),
-      import('@remix-run/dev/dist/compiler/utils/log.js'),
-      import('@remix-run/dev/dist/compiler/fileWatchCache.js')
+      import(remixRunBuildPath),
+      import(remixRunLogPath),
+      import(remixRunWatchPath)
     ]).catch(handleRemixImportFail),
     rmdir(buildPath, { force: true })
   ]);

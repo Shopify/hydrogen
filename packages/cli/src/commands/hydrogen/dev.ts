@@ -52,7 +52,9 @@ import {
 } from '../../lib/dev-shared.js';
 import {getCliCommand} from '../../lib/shell.js';
 import {hasViteConfig} from '../../lib/vite-config.js';
+import {createRequire} from 'module'
 
+const require = createRequire(import.meta.url)
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
 
@@ -249,9 +251,15 @@ export async function runDev({
     }),
   );
 
+  const remixRunWatch = require.resolve('@remix-run/dev/dist/compiler/watch.js', {paths: [root]});
+  type RemixWatch = typeof import('@remix-run/dev/dist/compiler/watch.js');
+
+  const remixRunWatchPath = require.resolve('@remix-run/dev/dist/compiler/fileWatchCache.js', {paths: [root]});
+  type RemixFileWatchCache = typeof import('@remix-run/dev/dist/compiler/fileWatchCache.js');
+
   const [{watch}, {createFileWatchCache}] = await Promise.all([
-    import('@remix-run/dev/dist/compiler/watch.js'),
-    import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
+    import(remixRunWatch) as Promise<RemixWatch>,
+    import(remixRunWatchPath) as Promise<RemixFileWatchCache>,
   ]).catch(handleRemixImportFail);
 
   let isInitialBuild = true;
@@ -259,7 +267,7 @@ export async function runDev({
   let initialBuildStartTimeMs = Date.now();
 
   const liveReload = shouldLiveReload
-    ? await setupLiveReload(remixConfig.dev?.port ?? 8002)
+    ? await setupLiveReload(remixConfig.dev?.port ?? 8002, root)
     : undefined;
 
   let miniOxygen: MiniOxygen;

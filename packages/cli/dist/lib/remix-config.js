@@ -10,6 +10,7 @@ import { getRequiredRemixVersion } from './remix-version-check.js';
 import { findFileWithExtension } from './file.js';
 import { getViteConfig } from './vite-config.js';
 
+const require2 = createRequire(import.meta.url);
 async function hasRemixConfigFile(root) {
   const result = await findFileWithExtension(root, "remix.config");
   return !!result.filepath;
@@ -50,8 +51,9 @@ async function getRemixConfig(root, mode = process.env.NODE_ENV) {
   if (!await hasRemixConfigFile(root)) {
     return (await getViteConfig(root)).remixConfig;
   }
-  await muteRemixLogs();
-  const { readConfig } = await import('@remix-run/dev/dist/config.js').catch(
+  await muteRemixLogs(root);
+  const remixConfigPath = await require2.resolve("@remix-run/dev/dist/config.js", { paths: [root] });
+  const { readConfig } = await import(remixConfigPath).catch(
     handleRemixImportFail
   );
   const config = await readConfig(root, mode);
