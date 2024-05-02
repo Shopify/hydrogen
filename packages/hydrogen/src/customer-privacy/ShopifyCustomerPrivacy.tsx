@@ -56,7 +56,7 @@ export type SetConsentHeadlessParams = VisitorConsent &
 **/
 export type CustomerPrivacy = {
   currentVisitorConsent: () => VisitorConsent;
-  userCanBeTracked: () => boolean;
+  preferencesProcessingAllowed: () => boolean;
   saleOfDataAllowed: () => boolean;
   marketingAllowed: () => boolean;
   analyticsProcessingAllowed: () => boolean;

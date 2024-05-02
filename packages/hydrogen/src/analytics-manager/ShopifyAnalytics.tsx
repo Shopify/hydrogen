@@ -112,7 +112,7 @@ function prepareBasePageViewPayload(
     | CartUpdatePayload,
 ): ShopifyPageViewPayload | undefined {
   const customerPrivacy = getCustomerPrivacyRequired();
-  const hasUserConsent = customerPrivacy.userCanBeTracked();
+  const hasUserConsent = customerPrivacy.analyticsProcessingAllowed();
 
   if (!payload?.shop?.shopId) {
     logMissingConfig('shopId');

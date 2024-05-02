@@ -55,7 +55,7 @@ export type AnalyticsProviderProps = {
   children?: ReactNode;
   /** The cart or cart promise to track for cart analytics. When there is a difference between the state of the cart, `AnalyticsProvider` will trigger a `cart_updated` event. It will also produce `product_added_to_cart` and `product_removed_from_cart` based on cart line quantity and cart line id changes. */
   cart: Promise<CartReturn | null> | CartReturn | null;
-  /** An optional function to set wether the user can be tracked. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.userCanBeTracked()`. */
+  /** An optional function to set wether the user can be tracked. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.analyticsProcessingAllowed()`. */
   canTrack?: () => boolean;
   /** An optional custom payload to pass to all events. e.g language/locale/currency. */
   customData?: Record<string, unknown>;
@@ -73,7 +73,7 @@ export type Carts = {
 };
 
 export type AnalyticsContextValue = {
-  /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.userCanBeTracked()`. */
+  /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.analyticsProcessingAllowed()`. */
   canTrack: NonNullable<AnalyticsProviderProps['canTrack']>;
   /** The current cart state. */
   cart: Awaited<AnalyticsProviderProps['cart']>;
@@ -253,15 +253,21 @@ function register(key: string) {
 // This functions attempts to automatically determine if the user can be tracked if the
 // customer privacy API is available. If not, it will default to false.
 function shopifyCanTrack(): boolean {
-  if (
-    typeof window !== 'undefined' &&
-    typeof window?.Shopify === 'object' &&
-    typeof window?.Shopify?.customerPrivacy === 'object' &&
-    typeof window?.Shopify?.customerPrivacy?.userCanBeTracked === 'function'
-  ) {
-    return window.Shopify.customerPrivacy.userCanBeTracked();
+  try {
+    // eslint-disable-next-line no-undef
+    if (
+      typeof window !== 'undefined' &&
+      typeof window?.Shopify === 'object' &&
+      typeof window?.Shopify?.customerPrivacy === 'object' &&
+      typeof window?.Shopify?.customerPrivacy?.analyticsProcessingAllowed ===
+        'function'
+    ) {
+      return window.Shopify.customerPrivacy.analyticsProcessingAllowed();
+    }
+    return false;
+  } catch (error) {
+    return false;
   }
-  return false;
 }
 
 function messageOnError(field: string) {
@@ -445,7 +451,7 @@ export const Analytics = {
 };
 
 export type AnalyticsContextValueForDoc = {
-  /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.userCanBeTracked()`. */
+  /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.analyticsProcessingAllowed()`. */
   canTrack?: () => boolean;
   /** The current cart state. */
   cart?: Promise<CartReturn | null> | CartReturn | null;
