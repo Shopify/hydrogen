@@ -193,8 +193,10 @@ async function generateDefaultConfig(
   }: ProjectDirs,
   forceSfapiVersion?: string,
 ): Promise<LoadCodegenConfigResult> {
-  const {getSchema, preset, pluckConfig} = await import(
-    '@shopify/hydrogen-codegen'
+  const hydrogenPath = require.resolve('@shopify/hydrogen-codegen', {paths: [rootDirectory]})
+  type HydrogenCodegen = typeof import('@shopify/hydrogen-codegen')
+  const {getSchema, preset, pluckConfig}: HydrogenCodegen = await import(
+    hydrogenPath
   ).catch(() => {
     throw new AbortError(
       'Could not load Hydrogen Codegen.',
