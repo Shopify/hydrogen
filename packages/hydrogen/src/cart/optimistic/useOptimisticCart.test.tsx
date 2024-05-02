@@ -3,7 +3,6 @@ import {useOptimisticCart} from './useOptimisticCart';
 import * as RemixReact from '@remix-run/react';
 import {type CartActionInput, CartForm} from '../CartForm';
 import {FormData} from 'formdata-polyfill/esm.min.js';
-import {resetOptimisticLineId} from './optimistic-cart.helper';
 
 let fetchers: {formData: FormData}[] = [];
 
@@ -31,7 +30,6 @@ function addPendingCartAction(action: CartActionInput) {
 describe('useOptimisticCart', () => {
   afterEach(() => {
     fetchers = [];
-    resetOptimisticLineId();
     consoleErrorSpy.mockReset();
     consoleWarnSpy.mockReset();
   });
@@ -72,7 +70,7 @@ describe('useOptimisticCart', () => {
 
       const optimisticCart = useOptimisticCart(EMPTY_CART);
       expect(optimisticCart.lines.nodes[0]).toStrictEqual({
-        id: '__h_pending_0',
+        id: '__h_pending_1',
         quantity: 1,
         isOptimistic: true,
         merchandise: {
@@ -127,7 +125,7 @@ describe('useOptimisticCart', () => {
 
       const optimisticCart = useOptimisticCart(EMPTY_CART);
       expect(optimisticCart.lines.nodes[0]).toStrictEqual({
-        id: '__h_pending_0',
+        id: '__h_pending_1',
         isOptimistic: true,
         quantity: 1,
         merchandise: {
@@ -135,7 +133,7 @@ describe('useOptimisticCart', () => {
         },
       });
       expect(optimisticCart.lines.nodes[1]).toStrictEqual({
-        id: '__h_pending_1',
+        id: '__h_pending_2',
         isOptimistic: true,
         quantity: 1,
         merchandise: {
@@ -177,7 +175,7 @@ describe('useOptimisticCart', () => {
 
       const optimisticCart = useOptimisticCart(EMPTY_CART);
       expect(optimisticCart.lines.nodes[0]).toStrictEqual({
-        id: '__h_pending_0',
+        id: '__h_pending_1',
         isOptimistic: true,
         quantity: 1,
         merchandise: {
@@ -185,7 +183,7 @@ describe('useOptimisticCart', () => {
         },
       });
       expect(optimisticCart.lines.nodes[1]).toStrictEqual({
-        id: '__h_pending_1',
+        id: '__h_pending_2',
         isOptimistic: true,
         quantity: 1,
         merchandise: {
@@ -326,9 +324,9 @@ describe('useOptimisticCart', () => {
       const optimisticCart = useOptimisticCart(CART_WITH_TWO_LINES);
 
       expect(optimisticCart.lines.nodes[0].quantity).toStrictEqual(2);
-      expect(optimisticCart.lines.nodes[0].isOptimistic).toBe(true);
+      expect(optimisticCart.lines.nodes[0].isOptimistic).toBeFalsy();
       expect(optimisticCart.lines.nodes[1].quantity).toStrictEqual(2);
-      expect(optimisticCart.lines.nodes[1].isOptimistic).toBe(true);
+      expect(optimisticCart.lines.nodes[1].isOptimistic).toBeFalsy();
     });
 
     test('updates the quantity of multiple lines in separate actions', async () => {
@@ -359,9 +357,9 @@ describe('useOptimisticCart', () => {
       const optimisticCart = useOptimisticCart(CART_WITH_TWO_LINES);
 
       expect(optimisticCart.lines.nodes[0].quantity).toStrictEqual(2);
-      expect(optimisticCart.lines.nodes[0].isOptimistic).toBe(true);
+      expect(optimisticCart.lines.nodes[0].isOptimistic).toBeFalsy();
       expect(optimisticCart.lines.nodes[1].quantity).toStrictEqual(2);
-      expect(optimisticCart.lines.nodes[1].isOptimistic).toBe(true);
+      expect(optimisticCart.lines.nodes[1].isOptimistic).toBeFalsy();
     });
 
     test("warns when updating a line that doesn't exist", async () => {
@@ -408,7 +406,7 @@ describe('useOptimisticCart', () => {
         inputs: {
           lines: [
             {
-              id: '__h_pending_0',
+              id: '__h_pending_1',
               quantity: 2,
             },
           ],
@@ -417,7 +415,7 @@ describe('useOptimisticCart', () => {
 
       const optimisticCart = useOptimisticCart(CART_WITH_LINE);
 
-      expect(optimisticCart.lines.nodes[1].id).toStrictEqual('__h_pending_0');
+      expect(optimisticCart.lines.nodes[1].id).toStrictEqual('__h_pending_1');
       expect(optimisticCart.lines.nodes[1].quantity).toStrictEqual(1);
       expect(optimisticCart.lines.nodes[1].isOptimistic).toBe(true);
       expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -444,12 +442,12 @@ describe('useOptimisticCart', () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesRemove,
         inputs: {
-          lineIds: ['__h_pending_0'],
+          lineIds: ['__h_pending_1'],
         },
       });
 
       const optimisticCart = useOptimisticCart(CART_WITH_LINE);
-      expect(optimisticCart.lines.nodes[1].id).toStrictEqual('__h_pending_0');
+      expect(optimisticCart.lines.nodes[1].id).toStrictEqual('__h_pending_1');
       expect(optimisticCart.lines.nodes[1].quantity).toStrictEqual(1);
       expect(optimisticCart.lines.nodes[1].isOptimistic).toBe(true);
       expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -496,7 +494,7 @@ describe('useOptimisticCart', () => {
 
       const optimisticCart = useOptimisticCart(CART_WITH_LINE);
       expect(optimisticCart.lines.nodes[0].quantity).toStrictEqual(10);
-      expect(optimisticCart.lines.nodes[0].isOptimistic).toBe(true);
+      expect(optimisticCart.lines.nodes[0].isOptimistic).toBeFalsy();
     });
 
     test('changes line quantity and remove line', async () => {

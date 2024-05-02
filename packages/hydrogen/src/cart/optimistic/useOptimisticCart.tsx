@@ -54,7 +54,7 @@ export function useOptimisticCart<
             existingLine.isOptimistic = true;
           } else {
             cartLines.push({
-              id: getOptimisticLineId(),
+              id: getOptimisticLineId((input.selectedVariant as any).id),
               merchandise: input.selectedVariant,
               isOptimistic: true,
               quantity: 1,
@@ -96,7 +96,6 @@ export function useOptimisticCart<
             }
 
             cartLines[index].quantity = line.quantity as number;
-            cartLines[index].isOptimistic = true;
 
             if (cartLines[index].quantity === 0) {
               cartLines.splice(index, 1);

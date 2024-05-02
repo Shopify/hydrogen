@@ -176,14 +176,22 @@ export function CartSummary({
   );
 }
 
-function CartLineRemoveButton({lineIds}: {lineIds: string[]}) {
+function CartLineRemoveButton({
+  lineIds,
+  disabled,
+}: {
+  lineIds: string[];
+  disabled: boolean;
+}) {
   return (
     <CartForm
       route="/cart"
       action={CartForm.ACTIONS.LinesRemove}
       inputs={{lineIds}}
     >
-      <button type="submit">Remove</button>
+      <button disabled={disabled} type="submit">
+        Remove
+      </button>
     </CartForm>
   );
 }
@@ -200,7 +208,7 @@ function CartLineQuantity({line}: {line: CartLine}) {
       <CartLineUpdateButton lines={[{id: lineId, quantity: prevQuantity}]}>
         <button
           aria-label="Decrease quantity"
-          disabled={quantity <= 1}
+          disabled={quantity <= 1 || !!isOptimistic}
           name="decrease-quantity"
           value={prevQuantity}
         >
@@ -213,12 +221,13 @@ function CartLineQuantity({line}: {line: CartLine}) {
           aria-label="Increase quantity"
           name="increase-quantity"
           value={nextQuantity}
+          disabled={!!isOptimistic}
         >
           <span>&#43;</span>
         </button>
       </CartLineUpdateButton>
       &nbsp;
-      <CartLineRemoveButton lineIds={[lineId]} />
+      <CartLineRemoveButton lineIds={[lineId]} disabled={!!isOptimistic} />
     </div>
   );
 }
