@@ -204,7 +204,10 @@ async function generateDefaultConfig(
     );
   });
 
-  const {loadConfig} = await import('graphql-config').catch(() => {
+
+  const graphqlConfigPath = require.resolve('graphql-config', {paths: [rootDirectory]})
+  type GraphQLConfigType = typeof import('graphql-config')
+  const {loadConfig}: GraphQLConfigType = await import(graphqlConfigPath).catch(() => {
     throw new AbortError(
       'Could not load GraphQL Config.',
       'Please make sure you have `graphql-config` installed as a dev dependency.',

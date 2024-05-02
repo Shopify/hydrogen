@@ -140,7 +140,8 @@ async function generateDefaultConfig({
       "Please make sure you have `@shopify/hydrogen-codegen` installed as a dev dependency."
     );
   });
-  const { loadConfig } = await import('graphql-config').catch(() => {
+  const graphqlConfigPath = require2.resolve("graphql-config", { paths: [rootDirectory] });
+  const { loadConfig } = await import(graphqlConfigPath).catch(() => {
     throw new AbortError(
       "Could not load GraphQL Config.",
       "Please make sure you have `graphql-config` installed as a dev dependency."
