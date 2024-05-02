@@ -10,6 +10,9 @@ import {codegen} from '../../lib/codegen.js';
 import {isCI} from '../../lib/is-ci.js';
 import {copyDiffBuild, prepareDiffDirectory} from '../../lib/template-diff.js';
 import {getViteConfig} from '../../lib/vite-config.js';
+import {createRequire} from 'module'
+
+const require = createRequire(import.meta.url)
 
 const WORKER_BUILD_SIZE_LIMIT = 5;
 
@@ -82,13 +85,17 @@ export async function runViteBuild({
     await checkLockfileStatus(root, isCI());
   }
 
+  const vitePath = require.resolve('vite', {paths: [root]});
+  const newPath = joinPath(vitePath, '..', 'dist', 'node', 'index.js')
+  type Vite = typeof import('vite');
+
   const [
     vite,
     {userViteConfig, remixConfig, clientOutDir, serverOutDir, serverOutFile},
-  ] = await Promise.all([
+  ]: [Vite, any] = await Promise.all([
     // Avoid static imports because this file is imported by `deploy` command,
     // which must have a hard dependency on 'vite'.
-    import('vite'),
+    import(newPath),
     getViteConfig(root, ssrEntry),
   ]);
 

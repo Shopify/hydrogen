@@ -34,8 +34,8 @@
   },
   "dependencies": {
     "@ast-grep/napi": "0.11.0",
-    "@oclif/core": "3.23.0",
-    "@shopify/cli-kit": "3.59.0",
+    "@oclif/core": "3.19.6",
+    "@shopify/cli-kit": "3.58.0",
     "@shopify/oxygen-cli": "~4.4.0",
     "@shopify/plugin-cloudflare": "3.58.0",
     "ansi-escapes": "^6.2.0",
@@ -51,16 +51,18 @@
     "tar-fs": "^2.1.1",
     "tempy": "3.0.0",
     "ts-morph": "20.0.0",
-    "use-resize-observer": "^9.1.0",
+    "use-resize-observer": "^9.1.0"
+  },
+  "optionalDependencies": {
+    "@parcel/watcher": "^2.3.0"
+  },
+  "peerDependencies": {
     "@graphql-codegen/cli": "^5.0.2",
     "@remix-run/dev": "^2.1.0",
     "@shopify/hydrogen-codegen": "^0.3.0",
     "@shopify/mini-oxygen": "^3.0.1",
     "graphql-config": "^5.0.3",
     "vite": "^5.1.0"
-  },
-  "optionalDependencies": {
-    "@parcel/watcher": "^2.3.0"
   },
   "peerDependenciesMeta": {
     "@graphql-codegen/cli": {
@@ -86,12 +88,8 @@
   "exports": {
     "./package.json": "./package.json",
     "./commands/hydrogen/init": {
-      "types": "./dist/commands/hydrogen/init.d.ts",
+      "types": "./dist/init.d.ts",
       "default": "./dist/commands/hydrogen/init.js"
-    },
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
     }
   },
   "files": [

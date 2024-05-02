@@ -17,7 +17,10 @@ import { getCliCommand } from '../../lib/shell.js';
 import { findPort } from '../../lib/find-port.js';
 import { logRequestLine } from '../../lib/mini-oxygen/common.js';
 import { findHydrogenPlugin, findOxygenPlugin } from '../../lib/vite-config.js';
+import { joinPath } from '@shopify/cli-kit/node/path';
+import { createRequire } from 'module';
 
+const require2 = createRequire(import.meta.url);
 class DevVite extends Command {
   static description = "Runs Hydrogen storefront in an Oxygen worker for development.";
   static flags = {
@@ -107,7 +110,9 @@ async function runViteDev({
   if (debug && !inspectorPort) {
     inspectorPort = await findPort(DEFAULT_INSPECTOR_PORT);
   }
-  const vite = await import('vite');
+  const vitePath = require2.resolve("vite", { paths: [root] });
+  const newPath = joinPath(vitePath, "..", "dist", "node", "index.js");
+  const vite = await import(newPath);
   const fs = isLocalDev ? { allow: [root, fileURLToPath(new URL("../../../../", import.meta.url))] } : void 0;
   const customLogger = vite.createLogger();
   if (process.env.SHOPIFY_UNIT_TEST) {

@@ -5,6 +5,9 @@ import {
   resolvePath,
 } from '@shopify/cli-kit/node/path';
 import {findFileWithExtension} from './file.js';
+import {createRequire} from 'module'
+
+const require = createRequire(import.meta.url)
 
 // Do not import JS from here, only types
 import type {HydrogenPlugin} from '~/hydrogen/vite/plugin.js';
@@ -16,7 +19,10 @@ export async function hasViteConfig(root: string) {
 }
 
 export async function getViteConfig(root: string, ssrEntryFlag?: string) {
-  const vite = await import('vite');
+  const vitePath = require.resolve('vite', {paths: [root]});
+  const newPath = joinPath(vitePath, '..', 'dist', 'node', 'index.js')
+  type Vite = typeof import('vite');
+  const vite: Vite = await import(newPath);
 
   const command = 'build';
   const mode = process.env.NODE_ENV || 'production';

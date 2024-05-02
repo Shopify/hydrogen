@@ -57,8 +57,8 @@ declare class Init extends Command {
 declare function runInit({ markets, ...options }?: InitOptions & {
     markets?: InitOptions['i18n'];
 }): Promise<{
-    language?: "js" | "ts" | undefined;
-    packageManager: "npm" | "yarn" | "pnpm" | "unknown" | "bun";
+    language?: "ts" | "js" | undefined;
+    packageManager: "unknown" | "yarn" | "npm" | "pnpm" | "bun";
     cssStrategy?: CssStrategy | undefined;
     cliCommand: "h2" | "yarn shopify hydrogen" | "pnpm shopify hydrogen" | "bun shopify hydrogen" | "npx shopify hydrogen";
     depsInstalled: boolean;

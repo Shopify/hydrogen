@@ -1,12 +1,16 @@
 import { joinPath, resolvePath, dirname, basename } from '@shopify/cli-kit/node/path';
 import { findFileWithExtension } from './file.js';
+import { createRequire } from 'module';
 
+const require2 = createRequire(import.meta.url);
 async function hasViteConfig(root) {
   const result = await findFileWithExtension(root, "vite.config");
   return !!result.filepath;
 }
 async function getViteConfig(root, ssrEntryFlag) {
-  const vite = await import('vite');
+  const vitePath = require2.resolve("vite", { paths: [root] });
+  const newPath = joinPath(vitePath, "..", "dist", "node", "index.js");
+  const vite = await import(newPath);
   const command = "build";
   const mode = process.env.NODE_ENV || "production";
   const maybeConfig = await vite.loadConfigFromFile(

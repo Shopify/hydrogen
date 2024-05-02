@@ -36,6 +36,10 @@ import {getCliCommand} from '../../lib/shell.js';
 import {findPort} from '../../lib/find-port.js';
 import {logRequestLine} from '../../lib/mini-oxygen/common.js';
 import {findHydrogenPlugin, findOxygenPlugin} from '../../lib/vite-config.js';
+import {joinPath} from '@shopify/cli-kit/node/path';
+import {createRequire} from 'module'
+
+const require = createRequire(import.meta.url)
 
 export default class DevVite extends Command {
   static description =
@@ -159,7 +163,10 @@ export async function runViteDev({
     inspectorPort = await findPort(DEFAULT_INSPECTOR_PORT);
   }
 
-  const vite = await import('vite');
+  const vitePath = require.resolve('vite', {paths: [root]});
+  const newPath = joinPath(vitePath, '..', 'dist', 'node', 'index.js')
+  type Vite = typeof import('vite');
+  const vite: Vite = await import(newPath);
 
   // Allow Vite to read files from the Hydrogen packages in local development.
   const fs = isLocalDev

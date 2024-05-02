@@ -10,7 +10,9 @@ import { codegen } from '../../lib/codegen.js';
 import { isCI } from '../../lib/is-ci.js';
 import { prepareDiffDirectory, copyDiffBuild } from '../../lib/template-diff.js';
 import { getViteConfig } from '../../lib/vite-config.js';
+import { createRequire } from 'module';
 
+const require2 = createRequire(import.meta.url);
 const WORKER_BUILD_SIZE_LIMIT = 5;
 class Build extends Command {
   static description = "Builds a Hydrogen storefront for production.";
@@ -58,13 +60,15 @@ async function runViteBuild({
   if (lockfileCheck) {
     await checkLockfileStatus(root, isCI());
   }
+  const vitePath = require2.resolve("vite", { paths: [root] });
+  const newPath = joinPath(vitePath, "..", "dist", "node", "index.js");
   const [
     vite,
     { userViteConfig, remixConfig, clientOutDir, serverOutDir, serverOutFile }
   ] = await Promise.all([
     // Avoid static imports because this file is imported by `deploy` command,
     // which must have a hard dependency on 'vite'.
-    import('vite'),
+    import(newPath),
     getViteConfig(root, ssrEntry)
   ]);
   const customLogger = vite.createLogger();
