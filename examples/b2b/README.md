@@ -36,9 +36,10 @@ with Hydrogen and that you’ll need to create are labeled with 🆕.
 
 | File                                                 | Description                                                                                    |
 | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| [`app/root.tsx`](app/root.tsx)                             | Includes a customer query to determine if the the logged in session is for a B2B buyer. Set `companyLocationId` in session if there is only one location available to buy for    |
+| [`app/routes/b2blocations.tsx`](app/routes/b2blocations.tsx)                      | Includes a customer query to get B2B data. Set `companyLocationId` in session if there is only one location available to buy for the customer  |
+| [`app/components/B2BLocationProvider.tsx`](app/components/B2BLocationProvider.tsx)     | Provides context on if the current logged in customer is a B2B customer.   |
 | 🆕 [`app/graphql/CustomerLocationsQuery.ts`](app/graphql/CustomerLocationsQuery.ts)  | Customer query to fetch company locations        |
-| 🆕 [`app/components/LocationSelector.tsx`](app/components/LocationSelector.tsx) | Component to choose a Company location to buy for. Rendered if there is no `companyLocationId` set in session    |
+| 🆕 [`app/components/B2BLocationSelector.tsx`](app/components/B2BLocationSelector.tsx) | Component to choose a Company location to buy for. Rendered if there is no `companyLocationId` set in session    |
 | [`app/routes/products.$handle.tsx`](app/routes/products.$handle.tsx)      | Added buyer context to the product and product varient queries. Includes logic and components to display quantity rules and quantity price breaks |
 | 🆕 [`app/components/PriceBreaks.tsx`](app/components/PriceBreaks.tsx)  | Component rendered on the product page to highlight quantity price breaks        |
 | 🆕 [`app/components/QuantityRules.tsx`](app/components/QuantityRules.tsx)  | Component rendered on the product page to highlight quantity rules        |
