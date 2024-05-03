@@ -18,13 +18,15 @@ export function cartBuyerIdentityUpdateDefault(
 ): CartBuyerIdentityUpdateFunction {
   return async (buyerIdentity, optionalParams) => {
     if (buyerIdentity.companyLocationId && options.customerAccount) {
-      options.customerAccount.UNSTABLE_setBuyer({companyLocationId: buyerIdentity.companyLocationId});
+      options.customerAccount.UNSTABLE_setBuyer({
+        companyLocationId: buyerIdentity.companyLocationId,
+      });
     }
 
     const buyer = options.customerAccount
       ? await options.customerAccount.UNSTABLE_getBuyer()
       : undefined;
-    console.log('buyer', buyer);
+
     const {cartBuyerIdentityUpdate, errors} = await options.storefront.mutate<{
       cartBuyerIdentityUpdate: CartQueryData;
       errors: StorefrontApiErrors;

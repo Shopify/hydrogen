@@ -53,7 +53,6 @@ import {
   withSyncStack,
   type StackInfo,
 } from './utils/callsites';
-import type {CustomerAccount} from './customer/types';
 
 export type I18nBase = {
   language: LanguageCode;

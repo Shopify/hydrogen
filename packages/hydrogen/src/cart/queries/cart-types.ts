@@ -9,7 +9,7 @@ import type {
   MetafieldDeleteUserError,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import type {StorefrontApiErrors, Storefront} from '../../storefront';
-import { CustomerAccount } from '../../customer/types';
+import {CustomerAccount} from '../../customer/types';
 
 export type CartOptionalInput = {
   /**
