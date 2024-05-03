@@ -95,14 +95,15 @@ export async function loader({context}: LoaderFunctionArgs) {
       isLoggedIn: isLoggedInPromise,
       publicStoreDomain,
       // [START getshop]
-      shop: getShopAnalytics(context),
+      shop: getShopAnalytics({
+        storefront,
+        publicStorefrontId: env.PUBLIC_STOREFRONT_ID
+      }),
       // [END getshop]
       // [START consent]
       consent: {
-        checkoutRootDomain: env.PUBLIC_CHECKOUT_DOMAIN,
-        shopDomain: env.PUBLIC_STORE_DOMAIN,
+        checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
         storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-        withPrivacyBanner: true,
       },
       // [END consent]
     },
