@@ -149,16 +149,6 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
         : await cartCreate({discountCodes}, optionalParams);
     },
     updateBuyerIdentity: async (buyerIdentity, optionalParams) => {
-      const companyLocationId = buyerIdentity.companyLocationId;
-
-      if (companyLocationId && customerAccount) {
-        customerAccount.UNSTABLE_setBuyer({companyLocationId});
-      }
-
-      const buyer = customerAccount
-        ? await customerAccount.UNSTABLE_getBuyer()
-        : undefined;
-
       return cartId || optionalParams?.cartId
         ? await cartBuyerIdentityUpdateDefault(mutateOptions)(
             buyerIdentity,
