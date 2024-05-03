@@ -9,6 +9,7 @@ import type {
   MetafieldDeleteUserError,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import type {StorefrontApiErrors, Storefront} from '../../storefront';
+import { CustomerAccount } from '../../customer/types';
 
 export type CartOptionalInput = {
   /**
@@ -43,6 +44,10 @@ export type CartQueryOptions = {
    * The cart fragment to override the one used in this query.
    */
   cartFragment?: string;
+  /**
+   * The customer account instance created by [`createCustomerAccount`](docs/api/hydrogen/latest/customer/createcustomeraccount).
+   */
+  customerAccount?: CustomerAccount;
 };
 
 export type CartReturn = Cart & {

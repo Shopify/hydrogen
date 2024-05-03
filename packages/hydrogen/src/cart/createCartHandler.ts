@@ -112,23 +112,13 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
     storefront,
     getCartId,
     cartFragment: cartMutateFragment,
+    customerAccount,
   };
 
   const _cartCreate = cartCreateDefault(mutateOptions);
 
   const cartCreate: CartCreateFunction = async function (...args) {
-    const buyer = customerAccount
-      ? await customerAccount.UNSTABLE_getBuyer()
-      : undefined;
-
-    const result = await _cartCreate(
-      {
-        ...args[0],
-        buyerIdentity: {...buyer, ...args[0]?.buyerIdentity},
-      },
-      args[1],
-    );
-
+    const result = await _cartCreate(...args);
     cartId = result?.cart?.id;
     return result;
   };
@@ -171,13 +161,10 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
 
       return cartId || optionalParams?.cartId
         ? await cartBuyerIdentityUpdateDefault(mutateOptions)(
-            {...buyer, ...buyerIdentity},
+            buyerIdentity,
             optionalParams,
           )
-        : await cartCreate(
-            {buyerIdentity: {...buyer, ...buyerIdentity}},
-            optionalParams,
-          );
+        : await cartCreate({buyerIdentity}, optionalParams);
     },
     updateNote: async (note, optionalParams) => {
       return cartId || optionalParams?.cartId
