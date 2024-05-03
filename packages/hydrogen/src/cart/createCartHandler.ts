@@ -174,7 +174,10 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
             {...buyer, ...buyerIdentity},
             optionalParams,
           )
-        : await cartCreate({buyerIdentity: {...buyer, ...buyerIdentity}}, optionalParams);
+        : await cartCreate(
+            {buyerIdentity: {...buyer, ...buyerIdentity}},
+            optionalParams,
+          );
     },
     updateNote: async (note, optionalParams) => {
       return cartId || optionalParams?.cartId

@@ -55,11 +55,22 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
 
   /***********************************************/
   /**********  EXAMPLE UPDATE STARTS  ************/
-  const buyer = await customerAccount.UNSTABLE_getBuyer();
+  const {companyLocationId, customerAccessToken} =
+    await customerAccount.UNSTABLE_getBuyer();
+
+  const buyerVariables =
+    companyLocationId && customerAccessToken
+      ? {
+          buyer: {
+            companyLocationId,
+            customerAccessToken,
+          },
+        }
+      : {};
 
   // await the query for the critical product data
   const {product} = await storefront.query(PRODUCT_QUERY, {
-    variables: {handle, selectedOptions, buyer},
+    variables: {handle, selectedOptions, ...buyerVariables},
   });
   /**********   EXAMPLE UPDATE END   *************/
   /***********************************************/
@@ -91,9 +102,13 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
   // into it's own separate query that is deferred. So there's a brief moment
   // where variant options might show as available when they're not, but after
   // this deffered query resolves, the UI will update.
+  /***********************************************/
+  /**********  EXAMPLE UPDATE STARTS  ************/
   const variants = storefront.query(VARIANTS_QUERY, {
-    variables: {handle, buyer},
+    variables: {handle, ...buyerVariables},
   });
+  /**********   EXAMPLE UPDATE END   *************/
+  /***********************************************/
 
   return defer({product, variants});
 }
