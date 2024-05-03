@@ -53,12 +53,16 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
     throw new Error('Expected product handle to be defined');
   }
 
+  /***********************************************/
+  /**********  EXAMPLE UPDATE STARTS  ************/
   const buyer = await customerAccount.UNSTABLE_getBuyer();
 
   // await the query for the critical product data
   const {product} = await storefront.query(PRODUCT_QUERY, {
     variables: {handle, selectedOptions, buyer},
   });
+  /**********   EXAMPLE UPDATE END   *************/
+  /***********************************************/
 
   if (!product?.id) {
     throw new Response(null, {status: 404});

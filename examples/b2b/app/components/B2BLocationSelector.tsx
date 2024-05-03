@@ -30,6 +30,9 @@ export function B2BLocationSelector({company}: {company: CustomerCompany}) {
                 key={location.id}
                 route="/cart"
                 action={CartForm.ACTIONS.BuyerIdentityUpdate}
+                inputs={{
+                  buyerIdentity: {companyLocationId: location.id},
+                }}
               >
                 {(fetcher) => (
                   <label>
@@ -41,14 +44,6 @@ export function B2BLocationSelector({company}: {company: CustomerCompany}) {
                       }}
                       className="location-item"
                     >
-                      <input
-                        style={{display: 'none'}}
-                        type="text"
-                        id={location.id}
-                        name="companyLocationId"
-                        readOnly
-                        value={location.id}
-                      />
                       <div>
                         <p>
                           <strong>{location.name}</strong>

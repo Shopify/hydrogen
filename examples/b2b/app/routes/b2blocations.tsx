@@ -1,4 +1,9 @@
-import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {
+  defer,
+  json,
+  type LoaderFunctionArgs,
+  type ActionFunctionArgs,
+} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import {B2BLocationSelector} from '../components/B2BLocationSelector';
 import {CUSTOMER_LOCATIONS_QUERY} from '~/graphql/customer-account/CustomerLocationsQuery';
@@ -7,7 +12,6 @@ export async function loader({context}: LoaderFunctionArgs) {
   const {customerAccount} = context;
 
   const buyer = await customerAccount.UNSTABLE_getBuyer();
-  console.log(buyer);
 
   let companyLocationId = buyer?.companyLocationId || null;
   let company = null;
@@ -29,8 +33,25 @@ export async function loader({context}: LoaderFunctionArgs) {
     });
   }
 
+  const modalOpen = Boolean(company) && !companyLocationId;
+
   return defer(
-    {company, companyLocationId},
+    {company, companyLocationId, modalOpen},
+    {
+      headers: {
+        'Set-Cookie': await context.session.commit(),
+      },
+    },
+  );
+}
+
+export async function action({context}: ActionFunctionArgs) {
+  context.customerAccount.UNSTABLE_setBuyer({
+    companyLocationId: null,
+  });
+
+  return json(
+    {},
     {
       headers: {
         'Set-Cookie': await context.session.commit(),

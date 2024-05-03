@@ -1,6 +1,5 @@
-import {Await, useLocation, NavLink} from '@remix-run/react';
-import {CartForm} from '@shopify/hydrogen';
-import {useState, Suspense} from 'react';
+import {Await, useFetcher, NavLink} from '@remix-run/react';
+import {Suspense} from 'react';
 import type {HeaderQuery} from 'storefrontapi.generated';
 import type {LayoutProps} from './Layout';
 import {
@@ -87,6 +86,11 @@ export function HeaderMenu({
           </NavLink>
         );
       })}
+      {/***********************************************/
+      /**********  EXAMPLE UPDATE STARTS  ************/}
+      <ChangeLocation />
+      {/**********   EXAMPLE UPDATE END   ************/
+      /***********************************************/}
     </nav>
   );
 }
@@ -98,11 +102,6 @@ function HeaderCtas({
   return (
     <nav className="header-ctas" role="navigation">
       <HeaderMenuMobileToggle />
-      {/***********************************************/
-      /**********  EXAMPLE UPDATE STARTS  ************/}
-      <LocationDropdown />
-      {/**********   EXAMPLE UPDATE END   ************/
-      /***********************************************/}
       <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
         <Suspense fallback="Sign in">
           <Await resolve={isLoggedIn} errorElement="Sign in">
@@ -147,9 +146,9 @@ function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
 
 /***********************************************/
 /**********  EXAMPLE UPDATE STARTS  ************/
-function LocationDropdown() {
-  const location = useLocation();
+function ChangeLocation() {
   const {company, companyLocationId} = useB2BLocation();
+  const fetcher = useFetcher();
 
   const locations = company?.locations?.edges
     ? company.locations.edges.map(
@@ -159,55 +158,16 @@ function LocationDropdown() {
       )
     : [];
 
-  const [selectedLocation, setSelectedLocation] = useState<string | undefined>(
-    undefined,
-  );
-
-  const setLocation = async (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const locationId = event.target.value;
-    setSelectedLocation(locationId);
-  };
-
-  if (locations.length === 1 || !company) return null;
+  if (locations.length <= 1 || !company) return null;
 
   return (
-    <CartForm route="/cart" action={CartForm.ACTIONS.BuyerIdentityUpdate}>
-      {(fetcher) => (
-        <>
-          <select
-            name="companyLocationId"
-            onChange={(event) => {
-              setLocation(event);
-              fetcher.submit(event.currentTarget.form, {
-                method: 'POST',
-              });
-            }}
-            value={selectedLocation || companyLocationId}
-            style={{marginRight: '4px'}}
-          >
-            {locations.map((location: CustomerCompanyLocation) => {
-              return (
-                <option
-                  defaultValue={selectedLocation || companyLocationId}
-                  value={location.id}
-                  key={location.id}
-                >
-                  {location.name}
-                </option>
-              );
-            })}
-          </select>
-          <input
-            style={{display: 'none'}}
-            type="text"
-            id="redirectTo"
-            name="redirectTo"
-            readOnly
-            value={location.pathname}
-          />
-        </>
-      )}
-    </CartForm>
+    <fetcher.Form action="/b2blocations" method="post">
+      <button>
+        {locations.find(
+          (companyLocation) => companyLocation.id == companyLocationId,
+        )?.name || 'Select Location'}
+      </button>
+    </fetcher.Form>
   );
 }
 /**********   EXAMPLE UPDATE END   ************/

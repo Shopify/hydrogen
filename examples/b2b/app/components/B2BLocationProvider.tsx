@@ -5,11 +5,13 @@ import {CustomerCompany} from '../root';
 export type B2BLocationContextValue = {
   company?: CustomerCompany;
   companyLocationId?: string;
+  modalOpen?: boolean;
 };
 
 const defaultB2BLocationContextValue = {
   company: undefined,
   companyLocationId: undefined,
+  modalOpen: undefined,
 };
 
 const B2BLocationContext = createContext<B2BLocationContextValue>(

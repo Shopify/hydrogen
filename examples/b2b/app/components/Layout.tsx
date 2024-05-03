@@ -33,7 +33,7 @@ export function Layout({
   header,
   isLoggedIn,
 }: LayoutProps) {
-  const {company, companyLocationId} = useB2BLocation();
+  const {company, modalOpen} = useB2BLocation();
 
   return (
     <>
@@ -47,9 +47,7 @@ export function Layout({
           {(footer) => <Footer menu={footer?.menu} shop={header?.shop} />}
         </Await>
       </Suspense>
-      {company && !companyLocationId ? (
-        <B2BLocationSelector company={company} />
-      ) : null}
+      {modalOpen ? <B2BLocationSelector company={company} /> : null}
     </>
   );
 }
