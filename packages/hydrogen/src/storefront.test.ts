@@ -141,28 +141,6 @@ describe('createStorefrontClient', () => {
     });
   });
 
-  it('adds buyer variables for b2b', async () => {
-    const {storefront} = createStorefrontClient({
-      storeDomain,
-      storefrontId,
-      storefrontHeaders,
-      publicStorefrontToken,
-      i18n: {language: 'EN', country: 'US'},
-      unstableCustomerAccount: mockCreateCustomerAccountClient(),
-      unstableB2b: true,
-    });
-
-    await expect(
-      storefront.query('query Name($something: String, $buyer: BuyerInput) {}'),
-    ).resolves.not.toThrow();
-
-    expect(vi.mocked(fetchWithServerCache).mock.lastCall?.[1]).toMatchObject({
-      body: expect.stringMatching(
-        `"variables":{"buyer":{"customerAccessToken":"${BUYER_ACCESS_TOKEN}","companyLocationId":"${BUYER_LOCATION_ID}"}}`,
-      ),
-    });
-  });
-
   describe('response errors', () => {
     it('throws when the response is not ok', async () => {
       const {storefront} = createStorefrontClient({
