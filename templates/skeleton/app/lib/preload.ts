@@ -82,14 +82,14 @@ export function genPreloadImageLinkMeta({
     incrementSize,
   );
   const imagesizes = generateSizes(widths, aspectRatio, crop);
-  const imagesrcset = generateSrcSet(url, imagesizes, activeLoader);
+  const imageSrcSet = generateSrcSet(url, imagesizes, activeLoader);
 
   return {
     as: 'image',
     href: url,
-    imagesrcset,
+    imageSrcSet,
     rel: 'preload',
-    imagesizes: width,
+    imageSizes: width,
     tagName: 'link',
   };
 }
