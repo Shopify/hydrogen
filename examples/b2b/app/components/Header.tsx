@@ -1,4 +1,4 @@
-import {Await, useFetcher, NavLink} from '@remix-run/react';
+import {Await, NavLink} from '@remix-run/react';
 import {Suspense} from 'react';
 import type {HeaderQuery} from 'storefrontapi.generated';
 import type {LayoutProps} from './Layout';
