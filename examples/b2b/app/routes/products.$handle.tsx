@@ -60,7 +60,10 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
   const buyerVariables =
     buyer?.companyLocationId && buyer?.customerAccessToken
       ? {
-          buyer,
+          buyer: {
+            companyLocationId: buyer.companyLocationId,
+            customerAccessToken: buyer.customerAccessToken,
+          },
         }
       : {};
 
