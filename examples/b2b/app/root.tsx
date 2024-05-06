@@ -21,6 +21,7 @@ import resetStyles from './styles/reset.css?url';
 import appStyles from './styles/app.css?url';
 import {Layout} from '~/components/Layout';
 import {B2BLocationProvider} from '~/components/B2BLocationProvider';
+import {B2BLocationSelector} from '~/components/B2BLocationSelector';
 import type {
   Company,
   CompanyAddress,
@@ -151,6 +152,7 @@ export default function App() {
           <B2BLocationProvider>
             <Layout {...data}>
               <Outlet />
+              <B2BLocationSelector />
             </Layout>
             <ScrollRestoration nonce={nonce} />
             <Scripts nonce={nonce} />

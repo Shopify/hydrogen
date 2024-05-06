@@ -15,20 +15,24 @@ export function PriceBreaks({priceBreaks}: PriceBreaksProps) {
     <>
       <h4>Volume Pricing</h4>
       <table className="rule-table">
-        <tr>
-          <th className="table-haeading">Minimum Quantity</th>
-          <th className="table-haeading">Unit Price</th>
-        </tr>
-        {priceBreaks.map((priceBreak, index) => {
-          return (
-            <tr key={index}>
-              <th className="table-item">{priceBreak.minimumQuantity}</th>
-              <th className="table-item">
-                <Money data={priceBreak.price} />
-              </th>
-            </tr>
-          );
-        })}
+        <thead>
+          <tr>
+            <th className="table-haeading">Minimum Quantity</th>
+            <th className="table-haeading">Unit Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          {priceBreaks.map((priceBreak, index) => {
+            return (
+              <tr key={index}>
+                <th className="table-item">{priceBreak.minimumQuantity}</th>
+                <th className="table-item">
+                  <Money data={priceBreak.price} />
+                </th>
+              </tr>
+            );
+          })}
+        </tbody>
       </table>
     </>
   );

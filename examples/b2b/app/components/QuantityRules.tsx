@@ -24,16 +24,20 @@ export function QuantityRules({
     <>
       <h4>Quantity Rules</h4>
       <table className="rule-table">
-        <tr>
-          <th className="table-haeading">Increment</th>
-          <th className="table-haeading">Minimum</th>
-          <th className="table-haeading">Maximum</th>
-        </tr>
-        <tr>
-          <th className="table-item">{increment}</th>
-          <th className="table-item">{minimum}</th>
-          <th className="table-item">{maximum}</th>
-        </tr>
+        <thead>
+          <tr>
+            <th className="table-haeading">Increment</th>
+            <th className="table-haeading">Minimum</th>
+            <th className="table-haeading">Maximum</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th className="table-item">{increment}</th>
+            <th className="table-item">{minimum}</th>
+            <th className="table-item">{maximum}</th>
+          </tr>
+        </tbody>
       </table>
     </>
   );

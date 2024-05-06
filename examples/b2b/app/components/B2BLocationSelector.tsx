@@ -1,11 +1,13 @@
 import {CartForm} from '@shopify/hydrogen';
 import type {
-  CustomerCompany,
   CustomerCompanyLocation,
   CustomerCompanyLocationConnection,
 } from '~/root';
+import {useB2BLocation} from './B2BLocationProvider';
 
-export function B2BLocationSelector({company}: {company: CustomerCompany}) {
+export function B2BLocationSelector() {
+  const {company, modalOpen, setModalOpen} = useB2BLocation();
+
   const locations = company?.locations?.edges
     ? company.locations.edges.map(
         (location: CustomerCompanyLocationConnection) => {
@@ -14,7 +16,7 @@ export function B2BLocationSelector({company}: {company: CustomerCompany}) {
       )
     : [];
 
-  if (!company) return null;
+  if (!company || !modalOpen) return null;
 
   return (
     <div className="modal">
@@ -38,6 +40,7 @@ export function B2BLocationSelector({company}: {company: CustomerCompany}) {
                   <label>
                     <button
                       onClick={(event) => {
+                        setModalOpen(false);
                         fetcher.submit(event.currentTarget.form, {
                           method: 'POST',
                         });

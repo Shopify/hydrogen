@@ -45,23 +45,8 @@ export async function loader({context}: LoaderFunctionArgs) {
   );
 }
 
-export async function action({context}: ActionFunctionArgs) {
-  context.customerAccount.UNSTABLE_setBuyer({
-    companyLocationId: null,
-  });
-
-  return json(
-    {},
-    {
-      headers: {
-        'Set-Cookie': await context.session.commit(),
-      },
-    },
-  );
-}
-
 export default function CartRoute() {
   const {company} = useLoaderData<typeof loader>();
 
-  return <B2BLocationSelector company={company} />;
+  return <B2BLocationSelector />;
 }

@@ -3,7 +3,6 @@ import {Suspense} from 'react';
 import type {HeaderQuery} from 'storefrontapi.generated';
 import type {LayoutProps} from './Layout';
 import {
-  type CustomerCompanyLocation,
   type CustomerCompanyLocationConnection,
   useRootLoaderData,
 } from '~/root';
@@ -147,8 +146,7 @@ function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
 /***********************************************/
 /**********  EXAMPLE UPDATE STARTS  ************/
 function ChangeLocation() {
-  const {company, companyLocationId} = useB2BLocation();
-  const fetcher = useFetcher();
+  const {company, companyLocationId, setModalOpen} = useB2BLocation();
 
   const locations = company?.locations?.edges
     ? company.locations.edges.map(
@@ -161,13 +159,11 @@ function ChangeLocation() {
   if (locations.length <= 1 || !company) return null;
 
   return (
-    <fetcher.Form action="/b2blocations" method="post">
-      <button>
-        {locations.find(
-          (companyLocation) => companyLocation.id == companyLocationId,
-        )?.name || 'Select Location'}
-      </button>
-    </fetcher.Form>
+    <button onClick={() => setModalOpen(true)}>
+      {locations.find(
+        (companyLocation) => companyLocation.id == companyLocationId,
+      )?.name || 'Select Location'}
+    </button>
   );
 }
 /**********   EXAMPLE UPDATE END   ************/

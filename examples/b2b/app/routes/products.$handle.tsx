@@ -55,16 +55,12 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
 
   /***********************************************/
   /**********  EXAMPLE UPDATE STARTS  ************/
-  const {companyLocationId, customerAccessToken} =
-    await customerAccount.UNSTABLE_getBuyer();
+  const buyer = await customerAccount.UNSTABLE_getBuyer();
 
   const buyerVariables =
-    companyLocationId && customerAccessToken
+    buyer?.companyLocationId && buyer?.customerAccessToken
       ? {
-          buyer: {
-            companyLocationId,
-            customerAccessToken,
-          },
+          buyer,
         }
       : {};
 
