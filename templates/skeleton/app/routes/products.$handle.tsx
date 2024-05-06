@@ -33,9 +33,10 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
     {title: `Hydrogen | ${data?.product.title ?? ''}`},
   ] as MetaDescriptor[];
 
-  if (data?.preload.image) {
+  if (data?.product?.selectedVariant?.image) {
     const preloadImageLink = genPreloadImageLinkMeta({
-      url: data.preload.image.url,
+      url: data?.product.selectedVariant.image.url,
+      width: '(min-width: 45em) 50vw, 100vw',
     });
     metas.push(preloadImageLink);
   }
@@ -98,11 +99,7 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
     variables: {handle},
   });
 
-  return defer({
-    product,
-    variants,
-    preload: {image: product.selectedVariant.image},
-  });
+  return defer({product, variants});
 }
 
 function redirectToFirstVariant({

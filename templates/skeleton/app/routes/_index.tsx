@@ -21,9 +21,9 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
   ] as MetaDescriptor[];
 
   // preload the image of the FeaturedCollection as it's above the fold
-  if (data && data.preload.image) {
+  if (data && data.featuredCollection.image) {
     const preloadImageLink = genPreloadImageLinkMeta({
-      url: data.preload.image.url,
+      url: data.featuredCollection.image.url,
       width: '100%',
       srcSet: {interval: 15, startingWidth: 200, incrementSize: 200},
       sizes: {aspectRatio: '1/1', crop: 'center'},
@@ -40,13 +40,7 @@ export async function loader({context}: LoaderFunctionArgs) {
   const featuredCollection = collections.nodes[0];
   const recommendedProducts = storefront.query(RECOMMENDED_PRODUCTS_QUERY);
 
-  return defer({
-    featuredCollection,
-    recommendedProducts,
-    preload: {
-      image: featuredCollection?.image ?? null,
-    },
-  });
+  return defer({featuredCollection, recommendedProducts});
 }
 
 export default function Homepage() {

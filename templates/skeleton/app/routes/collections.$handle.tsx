@@ -20,15 +20,19 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
     {title: `Hydrogen | ${data?.collection.title ?? 'Collection'}`},
   ] as MetaDescriptor[];
 
-  if (data?.preload.images) {
-    for (const image of data.preload.images) {
-      if (!image) continue;
+  const hasProducts = Number(data?.collection?.products?.nodes?.length) > 0;
+  if (hasProducts) {
+    // Preload the first 4 product images
+    for (const node of data?.collection?.products?.nodes.slice(0, 4) ?? []) {
+      if (!node.featuredImage) continue;
       const preloadImageLink = genPreloadImageLinkMeta({
-        url: image.url,
+        url: node.featuredImage.url,
+        width: '(min-width: 45em) 400px, 100vw',
       });
       metas.push(preloadImageLink);
     }
   }
+
   return metas;
 };
 
@@ -53,15 +57,7 @@ export async function loader({request, params, context}: LoaderFunctionArgs) {
     });
   }
 
-  const isEmpty = collection.products.nodes.length === 0;
-  let preloadImages: ProductItemFragment['featuredImage'][] = [];
-  if (!isEmpty) {
-    preloadImages = collection.products.nodes.slice(0, 4).map((node) => {
-      return node.featuredImage;
-    });
-  }
-
-  return json({collection, preload: {images: preloadImages}});
+  return json({collection});
 }
 
 export default function Collection() {
