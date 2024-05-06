@@ -26,12 +26,14 @@ export function useOptimisticCart<
 >(cart: DefaultCart): OptimisticCart<DefaultCart> {
   const fetchers = useFetchers();
 
-  if (!fetchers || !fetchers.length || !cart)
-    return cart as OptimisticCart<DefaultCart>;
+  if (!fetchers || !fetchers.length) return cart as OptimisticCart<DefaultCart>;
 
   let isOptimistic = false;
 
-  const optimisticCart = structuredClone(cart) as OptimisticCart<DefaultCart>;
+  const optimisticCart = cart
+    ? (structuredClone(cart) as OptimisticCart<DefaultCart>)
+    : ({lines: {nodes: []}} as OptimisticCart<DefaultCart>);
+
   const cartLines = optimisticCart.lines.nodes;
 
   for (const {formData} of fetchers) {
@@ -59,7 +61,7 @@ export function useOptimisticCart<
             existingLine.quantity = (existingLine.quantity || 1) + 1;
             existingLine.isOptimistic = true;
           } else {
-            cartLines.push({
+            cartLines.unshift({
               id: getOptimisticLineId((input.selectedVariant as any).id),
               merchandise: input.selectedVariant,
               isOptimistic: true,
@@ -68,7 +70,7 @@ export function useOptimisticCart<
           }
         }
       } else if (cartFormData.action === CartForm.ACTIONS.LinesRemove) {
-        cartFormData.inputs.lineIds.forEach((lineId) => {
+        for (const lineId of cartFormData.inputs.lineIds) {
           const index = cartLines.findIndex((line) => line.id === lineId);
 
           if (index !== -1) {
@@ -76,7 +78,7 @@ export function useOptimisticCart<
               console.error(
                 'Tried to remove an optimistic line that has not been added to the cart yet',
               );
-              return;
+              continue;
             }
 
             cartLines.splice(index, 1);
@@ -86,9 +88,9 @@ export function useOptimisticCart<
               `Tried to remove line '${lineId}' but it doesn't exist in the cart`,
             );
           }
-        });
+        }
       } else if (cartFormData.action === CartForm.ACTIONS.LinesUpdate) {
-        cartFormData.inputs.lines.forEach((line) => {
+        for (const line of cartFormData.inputs.lines) {
           const index = cartLines.findIndex(
             (optimisticLine) => line.id === optimisticLine.id,
           );
@@ -98,7 +100,7 @@ export function useOptimisticCart<
               console.error(
                 'Tried to update an optimistic line that has not been added to the cart yet',
               );
-              return;
+              continue;
             }
 
             cartLines[index].quantity = line.quantity as number;
@@ -113,7 +115,7 @@ export function useOptimisticCart<
               `Tried to update line '${line.id}' but it doesn't exist in the cart`,
             );
           }
-        });
+        }
       }
     }
   }

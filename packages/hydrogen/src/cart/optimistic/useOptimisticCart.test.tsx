@@ -52,6 +52,33 @@ describe('useOptimisticCart', () => {
       );
     });
 
+    test('adds an optimistic line even when the cart is null', async () => {
+      addPendingCartAction({
+        action: CartForm.ACTIONS.LinesAdd,
+        inputs: {
+          lines: [
+            {
+              merchandiseId: '1',
+              quantity: 1,
+              selectedVariant: {
+                id: '1',
+              },
+            },
+          ],
+        },
+      });
+
+      const optimisticCart = useOptimisticCart(null as any);
+      expect(optimisticCart.lines.nodes[0]).toStrictEqual({
+        id: '__h_pending_1',
+        quantity: 1,
+        isOptimistic: true,
+        merchandise: {
+          id: '1',
+        },
+      });
+    });
+
     test('adds an optimistic line to an empty cart', async () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesAdd,
@@ -124,7 +151,7 @@ describe('useOptimisticCart', () => {
       });
 
       const optimisticCart = useOptimisticCart(EMPTY_CART);
-      expect(optimisticCart.lines.nodes[0]).toStrictEqual({
+      expect(optimisticCart.lines.nodes[1]).toStrictEqual({
         id: '__h_pending_1',
         isOptimistic: true,
         quantity: 1,
@@ -132,7 +159,7 @@ describe('useOptimisticCart', () => {
           id: '1',
         },
       });
-      expect(optimisticCart.lines.nodes[1]).toStrictEqual({
+      expect(optimisticCart.lines.nodes[0]).toStrictEqual({
         id: '__h_pending_2',
         isOptimistic: true,
         quantity: 1,
@@ -174,7 +201,7 @@ describe('useOptimisticCart', () => {
       });
 
       const optimisticCart = useOptimisticCart(EMPTY_CART);
-      expect(optimisticCart.lines.nodes[0]).toStrictEqual({
+      expect(optimisticCart.lines.nodes[1]).toStrictEqual({
         id: '__h_pending_1',
         isOptimistic: true,
         quantity: 1,
@@ -182,7 +209,7 @@ describe('useOptimisticCart', () => {
           id: '1',
         },
       });
-      expect(optimisticCart.lines.nodes[1]).toStrictEqual({
+      expect(optimisticCart.lines.nodes[0]).toStrictEqual({
         id: '__h_pending_2',
         isOptimistic: true,
         quantity: 1,
@@ -415,9 +442,9 @@ describe('useOptimisticCart', () => {
 
       const optimisticCart = useOptimisticCart(CART_WITH_LINE);
 
-      expect(optimisticCart.lines.nodes[1].id).toStrictEqual('__h_pending_1');
-      expect(optimisticCart.lines.nodes[1].quantity).toStrictEqual(1);
-      expect(optimisticCart.lines.nodes[1].isOptimistic).toBe(true);
+      expect(optimisticCart.lines.nodes[0].id).toStrictEqual('__h_pending_1');
+      expect(optimisticCart.lines.nodes[0].quantity).toStrictEqual(1);
+      expect(optimisticCart.lines.nodes[0].isOptimistic).toBe(true);
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Tried to update an optimistic line that has not been added to the cart yet',
       );
@@ -447,9 +474,9 @@ describe('useOptimisticCart', () => {
       });
 
       const optimisticCart = useOptimisticCart(CART_WITH_LINE);
-      expect(optimisticCart.lines.nodes[1].id).toStrictEqual('__h_pending_1');
-      expect(optimisticCart.lines.nodes[1].quantity).toStrictEqual(1);
-      expect(optimisticCart.lines.nodes[1].isOptimistic).toBe(true);
+      expect(optimisticCart.lines.nodes[0].id).toStrictEqual('__h_pending_1');
+      expect(optimisticCart.lines.nodes[0].quantity).toStrictEqual(1);
+      expect(optimisticCart.lines.nodes[0].isOptimistic).toBe(true);
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Tried to remove an optimistic line that has not been added to the cart yet',
       );

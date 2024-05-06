@@ -17,21 +17,19 @@ type CartMainProps = {
   layout: 'page' | 'aside';
 };
 
-export function CartMain({layout, cart}: CartMainProps) {
-  const optimisticCart = useOptimisticCart(cart);
+export function CartMain({layout, cart: originalCart}: CartMainProps) {
+  const cart = useOptimisticCart(originalCart);
 
-  const linesCount = Boolean(optimisticCart?.lines?.nodes?.length || 0);
+  const linesCount = Boolean(cart?.lines?.nodes?.length || 0);
   const withDiscount =
-    optimisticCart &&
-    Boolean(
-      optimisticCart?.discountCodes?.filter((code) => code.applicable)?.length,
-    );
+    cart &&
+    Boolean(cart?.discountCodes?.filter((code) => code.applicable)?.length);
   const className = `cart-main ${withDiscount ? 'with-discount' : ''}`;
 
   return (
     <div className={className}>
       <CartEmpty hidden={linesCount} layout={layout} />
-      <CartDetails cart={optimisticCart} layout={layout} />
+      <CartDetails cart={cart} layout={layout} />
     </div>
   );
 }
@@ -47,7 +45,7 @@ function CartDetails({
 
   return (
     <div className="cart-details">
-      <CartLines lines={cart?.lines.nodes} layout={layout} />
+      <CartLines lines={cart?.lines?.nodes} layout={layout} />
       {cartHasItems && (
         <CartSummary cost={cart.cost} layout={layout}>
           <CartDiscounts discountCodes={cart.discountCodes} />
