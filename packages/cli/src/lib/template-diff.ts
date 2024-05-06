@@ -98,11 +98,12 @@ export async function applyTemplateDiff(
   diffDirectory: string,
   templateDir = getStarterDir(),
 ) {
-  const diffPkgJson: Record<string, any> = await readAndParsePackageJson(
-    joinPath(diffDirectory, 'package.json'),
-  );
+  const [diffPkgJson, templatePkgJson] = await Promise.all([
+    readAndParsePackageJson(joinPath(diffDirectory, 'package.json')),
+    readAndParsePackageJson(joinPath(templateDir, 'package.json')),
+  ]);
 
-  const diffOptions: DiffOptions = diffPkgJson['h2:diff'] ?? {};
+  const diffOptions: DiffOptions = (diffPkgJson as any)['h2:diff'] ?? {};
 
   const createFilter =
     (re: RegExp, skipFiles?: string[]) => (filepath: string) => {
@@ -125,6 +126,13 @@ export async function applyTemplateDiff(
   await mergePackageJson(diffDirectory, targetDirectory, {
     ignoredKeys: ['h2:diff'],
     onResult: (pkgJson) => {
+      if (pkgJson.dependencies && templatePkgJson.dependencies) {
+        // Restore the original version of this package,
+        // which is added as '*' to make --diff work with global CLI.
+        pkgJson.dependencies['@shopify/cli-hydrogen'] =
+          templatePkgJson.dependencies['@shopify/cli-hydrogen'] ?? '*';
+      }
+
       for (const key of ['build', 'dev']) {
         const scriptLine = pkgJson.scripts?.[key];
         if (pkgJson.scripts?.[key] && typeof scriptLine === 'string') {
