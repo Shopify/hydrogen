@@ -92,9 +92,8 @@
     ]
   },
   "overrides": {
-    "@oclif/core": "3.23.0",
-    "@oclif/plugin-commands": "3.2.0",
-    "@oclif/plugin-help": "6.0.18",
-    "@oclif/plugin-plugins": "4.3.6"
+    "@oclif/core": "3.26.5",
+    "@oclif/plugin-commands": "3.3.2",
+    "@oclif/plugin-plugins": "5.0.19"
   }
 }
