@@ -78,13 +78,32 @@ export async function runClassicCompilerBuild({
 
   outputInfo(`\n🏗️  Building in ${process.env.NODE_ENV} mode...`);
 
+  const remixBuildPath = require.resolve(
+    '@remix-run/dev/dist/compiler/build.js',
+    {paths: [root]},
+  );
+  type RemixBuild = typeof import('@remix-run/dev/dist/compiler/build.js');
+
+  const remixLogPath = require.resolve(
+    '@remix-run/dev/dist/compiler/utils/log.js',
+    {paths: [root]},
+  );
+  type RemixLog = typeof import('@remix-run/dev/dist/compiler/utils/log.js');
+
+  const remixFileWatchCachePath = require.resolve(
+    '@remix-run/dev/dist/compiler/fileWatchCache.js',
+    {paths: [root]},
+  );
+  type RemixFileWatchCache =
+    typeof import('@remix-run/dev/dist/compiler/fileWatchCache.js');
+
   const [remixConfig, [{build}, {logThrown}, {createFileWatchCache}]] =
     await Promise.all([
       getRemixConfig(root) as Promise<RemixConfig>,
       Promise.all([
-        import('@remix-run/dev/dist/compiler/build.js'),
-        import('@remix-run/dev/dist/compiler/utils/log.js'),
-        import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
+        import(remixBuildPath) as Promise<RemixBuild>,
+        import(remixLogPath) as Promise<RemixLog>,
+        import(remixFileWatchCachePath) as Promise<RemixFileWatchCache>,
       ]).catch(handleRemixImportFail),
       rmdir(buildPath, {force: true}),
     ]);
