@@ -2,7 +2,10 @@ import {CachingStrategy} from '../cache/strategies';
 import type {ExecutionArgs} from 'graphql';
 import {Storefront} from '../storefront';
 import {CacheNone} from '../cache/strategies';
+import {CustomerAccount} from '../customer/types';
 
+export const BUYER_ACCESS_TOKEN = 'sha123';
+export const BUYER_LOCATION_ID = 'gid://shopify/CompanyLocation/1';
 export const CART_ID = 'gid://shopify/Cart/c1-123';
 export const NEW_CART_ID = 'c1-new-cart-id';
 export const CHECKOUT_URL =
@@ -71,4 +74,18 @@ export function mockCreateStorefrontClient() {
     mutate: storefrontMutate,
     CacheNone: CacheNone,
   } as Storefront;
+}
+
+export function mockGetBuyer() {
+  return Promise.resolve({
+    customerAccessToken: BUYER_ACCESS_TOKEN,
+    companyLocationId: BUYER_LOCATION_ID,
+  });
+}
+
+export function mockCreateCustomerAccountClient() {
+  return {
+    UNSTABLE_getBuyer: mockGetBuyer,
+    isLoggedIn: () => Promise.resolve(true),
+  } as CustomerAccount;
 }

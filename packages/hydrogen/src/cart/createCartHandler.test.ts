@@ -4,7 +4,11 @@ import {
   HydrogenCartCustom,
   createCartHandler,
 } from './createCartHandler';
-import {mockCreateStorefrontClient, mockHeaders} from './cart-test-helper';
+import {
+  mockCreateCustomerAccountClient,
+  mockCreateStorefrontClient,
+  mockHeaders,
+} from './cart-test-helper';
 
 type MockCarthandler = {
   cartId?: string;
@@ -17,6 +21,7 @@ function getCartHandler(options: MockCarthandler = {}) {
   const {cartId, ...rest} = options;
   return createCartHandler({
     storefront: mockCreateStorefrontClient(),
+    customerAccount: mockCreateCustomerAccountClient(),
     getCartId: () =>
       options.cartId ? `gid://shopify/Cart/${options.cartId}` : undefined,
     setCartId: () => new Headers(),

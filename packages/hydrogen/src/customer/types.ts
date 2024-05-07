@@ -3,17 +3,20 @@ import type {
   ClientVariablesInRestParams,
 } from '@shopify/hydrogen-codegen';
 import {type GraphQLError} from '../utils/graphql';
-
 import type {CrossRuntimeRequest} from '../utils/request';
-
 import type {HydrogenSession} from '../hydrogen';
-import {LanguageCode} from '@shopify/hydrogen-react/storefront-api-types';
+import type {
+  LanguageCode,
+  BuyerInput,
+} from '@shopify/hydrogen-react/storefront-api-types';
 
 // Return type of unauthorizedHandler = Return type of loader/action function
 // This type is not exported https://github.com/remix-run/react-router/blob/main/packages/router/utils.ts#L167
 type DataFunctionValue = Response | NonNullable<unknown> | null;
 
 type JsonGraphQLError = ReturnType<GraphQLError['toJSON']>; // Equivalent to `Jsonify<GraphQLError>[]`
+
+export type Buyer = Partial<BuyerInput>;
 
 export type CustomerAPIResponse<ReturnType> = {
   data: ReturnType;
@@ -116,6 +119,10 @@ export type CustomerAccount = {
       'errors'
     > & {errors?: JsonGraphQLError[]}
   >;
+  /** UNSTABLE feature. Set buyer information into session.*/
+  UNSTABLE_setBuyer: (buyer: Buyer) => void;
+  /** UNSTABLE feature. Get buyer token and company location id from session.*/
+  UNSTABLE_getBuyer: () => Promise<Buyer>;
 };
 
 export type CustomerAccountOptions = {
@@ -137,6 +144,8 @@ export type CustomerAccountOptions = {
   customAuthStatusHandler?: () => DataFunctionValue;
   /** Whether it should print GraphQL errors automatically. Defaults to true */
   logErrors?: boolean | ((error?: Error) => boolean);
+  /** UNSTABLE feature, this will eventually goes away. If true then we will exchange customerAccessToken for storefrontCustomerAccessToken. */
+  unstableB2b?: boolean;
 };
 
 /** Below are types meant for documentation only. Ensure it stay in sync with the type above. */

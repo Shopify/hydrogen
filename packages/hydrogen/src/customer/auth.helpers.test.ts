@@ -1,6 +1,6 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import type {HydrogenSession} from '../hydrogen';
-import {CUSTOMER_ACCOUNT_SESSION_KEY} from './constants';
+import {CUSTOMER_ACCOUNT_SESSION_KEY} from '../constants';
 import {checkExpires, clearSession, refreshToken} from './auth.helpers';
 
 vi.mock('./BadRequest', () => {
@@ -36,6 +36,8 @@ function createFetchResponse<T>(data: T, options: {ok: boolean}) {
 
 let session: HydrogenSession;
 
+const exchangeForStorefrontCustomerAccessToken = vi.fn();
+
 describe('auth.helpers', () => {
   describe('refreshToken', () => {
     beforeEach(() => {
@@ -58,6 +60,7 @@ describe('auth.helpers', () => {
           customerAccountId: 'customerAccountId',
           customerAccountUrl: 'customerAccountUrl',
           httpsOrigin: 'https://localhost',
+          exchangeForStorefrontCustomerAccessToken,
         });
       }
 
@@ -77,6 +80,7 @@ describe('auth.helpers', () => {
           customerAccountId: 'customerAccountId',
           customerAccountUrl: 'customerAccountUrl',
           httpsOrigin: 'https://localhost',
+          exchangeForStorefrontCustomerAccessToken,
         });
       }
 
@@ -106,6 +110,7 @@ describe('auth.helpers', () => {
           customerAccountId: 'customerAccountId',
           customerAccountUrl: 'customerAccountUrl',
           httpsOrigin: 'https://localhost',
+          exchangeForStorefrontCustomerAccessToken,
         });
       }
 
@@ -136,6 +141,7 @@ describe('auth.helpers', () => {
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'customerAccountUrl',
         httpsOrigin: 'https://localhost',
+        exchangeForStorefrontCustomerAccessToken,
       });
 
       expect(session.set).toHaveBeenNthCalledWith(
@@ -194,6 +200,7 @@ describe('auth.helpers', () => {
           customerAccountId: 'customerAccountId',
           customerAccountUrl: 'customerAccountUrl',
           httpsOrigin: 'https://localhost',
+          exchangeForStorefrontCustomerAccessToken,
         });
       }
 
@@ -224,6 +231,7 @@ describe('auth.helpers', () => {
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'customerAccountUrl',
         httpsOrigin: 'https://localhost',
+        exchangeForStorefrontCustomerAccessToken,
       });
 
       expect(session.set).toHaveBeenNthCalledWith(
@@ -265,6 +273,7 @@ describe('auth.helpers', () => {
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'customerAccountUrl',
         httpsOrigin: 'https://localhost',
+        exchangeForStorefrontCustomerAccessToken,
       });
 
       expect(session.set).not.toHaveBeenNthCalledWith(1, 'customerAccount', {

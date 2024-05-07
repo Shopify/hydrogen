@@ -6,9 +6,14 @@ import {
   SHOPIFY_STOREFRONT_S_HEADER,
   SHOPIFY_STOREFRONT_Y_HEADER,
 } from '@shopify/hydrogen-react';
+import {
+  BUYER_ACCESS_TOKEN,
+  BUYER_LOCATION_ID,
+  mockCreateCustomerAccountClient,
+} from './cart/cart-test-helper';
 
 vi.mock('./cache/fetch.ts', async () => {
-  const original = await vi.importActual<typeof import('./cache/fetch.ts')>(
+  const original = await vi.importActual<typeof import('./cache/fetch')>(
     './cache/fetch.ts',
   );
 
