@@ -117,7 +117,7 @@ export default class Dev extends Command {
       cliConfig: this.config,
     };
 
-    const {close} = (await hasViteConfig(directory ?? process.cwd()))
+    const {close} = (await hasViteConfig(directory))
       ? await runDev(devParams)
       : await runClassicCompilerDev(devParams);
 

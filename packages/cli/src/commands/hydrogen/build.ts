@@ -9,6 +9,7 @@ import {copyDiffBuild, prepareDiffDirectory} from '../../lib/template-diff.js';
 import {hasViteConfig, getViteConfig} from '../../lib/vite-config.js';
 import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
+import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
 import {codegen} from '../../lib/codegen.js';
 import {isCI} from '../../lib/is-ci.js';
 
@@ -54,9 +55,6 @@ export default class Build extends Command {
     if (await hasViteConfig(directory)) {
       await runBuild(buildParams);
     } else {
-      const {runClassicCompilerBuild} = await import(
-        '../../lib/classic-compiler/build.js'
-      );
       await runClassicCompilerBuild(buildParams);
     }
 
