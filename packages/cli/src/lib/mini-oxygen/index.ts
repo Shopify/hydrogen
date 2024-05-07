@@ -6,10 +6,12 @@ export type MiniOxygen = MiniOxygenInstance;
 
 export {DEFAULT_INSPECTOR_PORT} from './common.js';
 
-const require = createRequire(import.meta.url)
+const require = createRequire(import.meta.url);
 
 export async function buildAssetsUrl(port: number, root: string) {
-  const miniOxygenPath = require.resolve('@shopify/mini-oxygen', {paths: [root]});
+  const miniOxygenPath = require.resolve('@shopify/mini-oxygen', {
+    paths: [root],
+  });
   type MiniOxygenType = typeof import('@shopify/mini-oxygen');
   const {buildAssetsUrl: _buildAssetsUrl}: MiniOxygenType = await import(
     miniOxygenPath

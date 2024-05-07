@@ -4,10 +4,12 @@ import type {SourceMapConsumer} from 'source-map';
 import {handleMiniOxygenImportFail} from './mini-oxygen/common.js';
 import {createRequire} from 'node:module';
 
-const require = createRequire(import.meta.url)
+const require = createRequire(import.meta.url);
 
 export async function createCpuStartupProfiler(root: string) {
-  const miniOxygenPath = require.resolve('@shopify/mini-oxygen/node', {paths: [root]});
+  const miniOxygenPath = require.resolve('@shopify/mini-oxygen/node', {
+    paths: [root],
+  });
   type MiniOxygenType = typeof import('@shopify/mini-oxygen/node');
   const {createMiniOxygen}: MiniOxygenType = await import(miniOxygenPath).catch(
     handleMiniOxygenImportFail,

@@ -11,9 +11,9 @@ import {
 import {AbortError} from '@shopify/cli-kit/node/error';
 import type {LoadCodegenConfigResult} from '@graphql-codegen/cli';
 import type {GraphQLConfig} from 'graphql-config';
-import {createRequire} from 'module'
+import {createRequire} from 'module';
 
-const require = createRequire(import.meta.url)
+const require = createRequire(import.meta.url);
 const nodePath = process.argv[1];
 const modulePath = fileURLToPath(import.meta.url);
 const isStandaloneProcess = nodePath === modulePath;
@@ -135,15 +135,18 @@ async function generateTypes({
   forceSfapiVersion,
   ...dirs
 }: CodegenOptions) {
-  const codeGenCLI = require.resolve('@graphql-codegen/cli', {paths: [dirs.rootDirectory]})
-  type CodegeType = typeof import('@graphql-codegen/cli')
-
-  const {generate, loadCodegenConfig, CodegenContext}: CodegeType = await import(codeGenCLI).catch(() => {
-    throw new AbortError(
-      'Could not load GraphQL Codegen CLI.',
-      'Please make sure you have `@graphql-codegen/cli` installed as a dev dependency.',
-    );
+  const codeGenCLI = require.resolve('@graphql-codegen/cli', {
+    paths: [dirs.rootDirectory],
   });
+  type CodegeType = typeof import('@graphql-codegen/cli');
+
+  const {generate, loadCodegenConfig, CodegenContext}: CodegeType =
+    await import(codeGenCLI).catch(() => {
+      throw new AbortError(
+        'Could not load GraphQL Codegen CLI.',
+        'Please make sure you have `@graphql-codegen/cli` installed as a dev dependency.',
+      );
+    });
 
   const {config: codegenConfig} =
     // Load <root>/codegen.ts if available
@@ -193,8 +196,10 @@ async function generateDefaultConfig(
   }: ProjectDirs,
   forceSfapiVersion?: string,
 ): Promise<LoadCodegenConfigResult> {
-  const hydrogenPath = require.resolve('@shopify/hydrogen-codegen', {paths: [rootDirectory]})
-  type HydrogenCodegen = typeof import('@shopify/hydrogen-codegen')
+  const hydrogenPath = require.resolve('@shopify/hydrogen-codegen', {
+    paths: [rootDirectory],
+  });
+  type HydrogenCodegen = typeof import('@shopify/hydrogen-codegen');
   const {getSchema, preset, pluckConfig}: HydrogenCodegen = await import(
     hydrogenPath
   ).catch(() => {
@@ -204,15 +209,18 @@ async function generateDefaultConfig(
     );
   });
 
-
-  const graphqlConfigPath = require.resolve('graphql-config', {paths: [rootDirectory]})
-  type GraphQLConfigType = typeof import('graphql-config')
-  const {loadConfig}: GraphQLConfigType = await import(graphqlConfigPath).catch(() => {
-    throw new AbortError(
-      'Could not load GraphQL Config.',
-      'Please make sure you have `graphql-config` installed as a dev dependency.',
-    );
+  const graphqlConfigPath = require.resolve('graphql-config', {
+    paths: [rootDirectory],
   });
+  type GraphQLConfigType = typeof import('graphql-config');
+  const {loadConfig}: GraphQLConfigType = await import(graphqlConfigPath).catch(
+    () => {
+      throw new AbortError(
+        'Could not load GraphQL Config.',
+        'Please make sure you have `graphql-config` installed as a dev dependency.',
+      );
+    },
+  );
 
   const gqlConfig = await loadConfig({
     rootDir: rootDirectory,

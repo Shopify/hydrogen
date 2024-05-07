@@ -16,7 +16,7 @@ type RawRemixConfig = AppConfig;
 
 export type {RemixConfig, ServerMode, RawRemixConfig};
 
-const require = createRequire(import.meta.url)
+const require = createRequire(import.meta.url);
 
 export async function hasRemixConfigFile(root: string) {
   const result = await findFileWithExtension(root, 'remix.config');
@@ -71,8 +71,10 @@ export async function getRemixConfig(
 
   await muteRemixLogs(root);
 
-
-  const remixConfigPath = await require.resolve('@remix-run/dev/dist/config.js', {paths: [root]})
+  const remixConfigPath = await require.resolve(
+    '@remix-run/dev/dist/config.js',
+    {paths: [root]},
+  );
   type RemixConfig = typeof import('@remix-run/dev/dist/config.js');
 
   const {readConfig}: RemixConfig = await import(remixConfigPath).catch(

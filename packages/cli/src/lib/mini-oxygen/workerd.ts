@@ -22,7 +22,7 @@ import {
   setConstructors,
 } from '../request-events.js';
 
-const require = createRequire(import.meta.url)
+const require = createRequire(import.meta.url);
 
 export async function startWorkerdServer({
   root,
@@ -35,7 +35,9 @@ export async function startWorkerdServer({
   buildPathClient,
   env,
 }: MiniOxygenOptions): Promise<MiniOxygenInstance> {
-  const miniOxygenPath = require.resolve('@shopify/mini-oxygen', {paths: [root]});
+  const miniOxygenPath = require.resolve('@shopify/mini-oxygen', {
+    paths: [root],
+  });
   type MiniOxygenType = typeof import('@shopify/mini-oxygen');
   const {createMiniOxygen, Response}: MiniOxygenType = await import(
     miniOxygenPath

@@ -21,7 +21,7 @@ import {getUtilityBannerlines} from '../dev-shared.js';
 import {outputNewline} from '@shopify/cli-kit/node/output';
 import {createRequire} from 'node:module';
 
-const require = createRequire(import.meta.url)
+const require = createRequire(import.meta.url);
 
 export async function startNodeServer({
   appPort,
@@ -31,9 +31,11 @@ export async function startNodeServer({
   env,
   debug = false,
   inspectorPort,
-  root
+  root,
 }: MiniOxygenOptions): Promise<MiniOxygenInstance> {
-  const miniOxygenPath = require.resolve('@shopify/mini-oxygen/node', {paths: [root]});
+  const miniOxygenPath = require.resolve('@shopify/mini-oxygen/node', {
+    paths: [root],
+  });
   type MiniOxygenType = typeof import('@shopify/mini-oxygen/node');
   const {startServer, Request, Response}: MiniOxygenType = await import(
     miniOxygenPath
