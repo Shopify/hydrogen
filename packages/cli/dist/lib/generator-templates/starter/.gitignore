@@ -1,9 +1,0 @@
-node_modules
-/.DS_Store
-/.cache
-/build
-/dist
-/public/build
-/.mf
-.env
-.shopify
