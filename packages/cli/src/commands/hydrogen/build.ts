@@ -103,13 +103,17 @@ export async function runBuild({
     await checkLockfileStatus(root, isCI());
   }
 
+  const vitePath = require.resolve('vite', {paths: [root]});
+  const viteNodePath = joinPath(vitePath, '..', 'dist', 'node', 'index.js');
+  type Vite = typeof import('vite');
+
   const [
     vite,
     {userViteConfig, remixConfig, clientOutDir, serverOutDir, serverOutFile},
   ] = await Promise.all([
     // Avoid static imports because this file is imported by `deploy` command,
     // which must have a hard dependency on 'vite'.
-    import('vite'),
+    import(viteNodePath) as Promise<Vite>,
     getViteConfig(root, ssrEntry),
   ]);
 

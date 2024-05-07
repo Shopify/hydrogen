@@ -73,8 +73,9 @@ export async function getRemixConfig(
 
   const remixConfigPath = await require.resolve(
     '@remix-run/dev/dist/config.js',
-    {paths: [root]},
+    process.env.SHOPIFY_UNIT_TEST ? {} : {paths: [root]},
   );
+
   type RemixConfig = typeof import('@remix-run/dev/dist/config.js');
 
   const {readConfig}: RemixConfig = await import(remixConfigPath).catch(
