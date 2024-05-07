@@ -125,7 +125,10 @@ export async function runClassicCompilerDev({
   const assetsPort = legacyRuntime ? 0 : await findPort(appPort + 100);
   if (assetsPort) {
     // Note: Set this env before loading Remix config!
-    process.env.HYDROGEN_ASSET_BASE_URL = await buildAssetsUrl(assetsPort, root);
+    process.env.HYDROGEN_ASSET_BASE_URL = await buildAssetsUrl(
+      assetsPort,
+      root,
+    );
   }
 
   const backgroundPromise = getDevConfigInBackground(
