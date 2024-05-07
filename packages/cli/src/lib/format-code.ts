@@ -1,6 +1,5 @@
 import type {Options as FormatOptions} from 'prettier';
 import {extname} from '@shopify/cli-kit/node/path';
-import prettier from 'prettier'
 
 export type {FormatOptions};
 
@@ -28,7 +27,7 @@ export async function formatCode(
 ) {
   const ext = extname(filePath);
 
-  // const prettier = await import('prettier');
+  const prettier = await import('prettier');
   return prettier.format(content, {
     // Specify the TypeScript parser for ts/tsx files. Otherwise
     // we need to use the babel parser because the default parser

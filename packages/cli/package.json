@@ -51,8 +51,10 @@
     "tar-fs": "^2.1.1",
     "tempy": "3.0.0",
     "ts-morph": "20.0.0",
-    "use-resize-observer": "^9.1.0",
-    "@remix-run/dev": "^2.1.0"
+    "use-resize-observer": "^9.1.0"
+  },
+  "optionalDependencies": {
+    "@parcel/watcher": "^2.3.0"
   },
   "peerDependencies": {
     "@graphql-codegen/cli": "^5.0.2",
@@ -61,9 +63,6 @@
     "@shopify/mini-oxygen": "^3.0.1",
     "graphql-config": "^5.0.3",
     "vite": "^5.1.0"
-  },
-  "optionalDependencies": {
-    "@parcel/watcher": "^2.3.0"
   },
   "peerDependenciesMeta": {
     "@graphql-codegen/cli": {
