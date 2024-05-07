@@ -162,9 +162,14 @@ export async function runClassicCompilerDev({
     }),
   );
 
+  const remixWatchPath = require.resolve('@remix-run/dev/dist/compiler/watch.js', { paths: [root] });
+  type RemixWatch = typeof import('@remix-run/dev/dist/compiler/watch.js');
+  const remixFileWatchCachePath = require.resolve('@remix-run/dev/dist/compiler/fileWatchCache.js', { paths: [root] });
+  type RemixFileWatchCache = typeof import('@remix-run/dev/dist/compiler/fileWatchCache.js');
+
   const [{watch}, {createFileWatchCache}] = await Promise.all([
-    import('@remix-run/dev/dist/compiler/watch.js'),
-    import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
+    import(remixWatchPath) as Promise<RemixWatch>,
+    import(remixFileWatchCachePath) as Promise<RemixFileWatchCache>,
   ]).catch(handleRemixImportFail);
 
   let isInitialBuild = true;
