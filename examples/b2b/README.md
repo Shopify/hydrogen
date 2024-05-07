@@ -1,7 +1,7 @@
 # Hydrogen example: B2B
 
 > [!NOTE]
-> This example is currently Unstable
+> This example is currently Unstable. There is a known issue where setting too many [Customer Account API callback URIs](https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#update-the-application-setup) will cause the hydrogen session to exceed the browsers maximum cookie length. This is because our current implementation relies on encoding redirect URIs in the token. We are aware of this issue and are actively working towards a future where this is not a problem. As a workaround you can remove unneeded callback URIs or use a different storefront.
 
 This is an example implementation of a B2B storefront using Hydrogen. It includes the following high level changes.
 
