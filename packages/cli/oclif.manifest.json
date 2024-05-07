@@ -13,89 +13,6 @@
           "multiple": false,
           "type": "option"
         },
-        "sourcemap": {
-          "description": "Controls whether sourcemaps are generated. Default to `true`. Deactivate `--no-sourcemaps`.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_SOURCEMAP",
-          "name": "sourcemap",
-          "allowNo": true,
-          "type": "boolean"
-        },
-        "bundle-stats": {
-          "description": "Show a bundle size summary after building. Defaults to true, use `--no-bundle-stats` to disable.",
-          "name": "bundle-stats",
-          "allowNo": true,
-          "type": "boolean"
-        },
-        "lockfile-check": {
-          "description": "Checks that there is exactly one valid lockfile in the project. Defaults to `true`. Deactivate with `--no-lockfile-check`.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK",
-          "name": "lockfile-check",
-          "allowNo": true,
-          "type": "boolean"
-        },
-        "disable-route-warning": {
-          "description": "Disables any warnings about missing standard routes.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING",
-          "name": "disable-route-warning",
-          "allowNo": false,
-          "type": "boolean"
-        },
-        "codegen": {
-          "description": "Automatically generates GraphQL types for your project’s Storefront API queries.",
-          "name": "codegen",
-          "required": false,
-          "allowNo": false,
-          "type": "boolean"
-        },
-        "codegen-config-path": {
-          "dependsOn": [
-            "codegen"
-          ],
-          "description": "Specifies a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if this file exists.",
-          "name": "codegen-config-path",
-          "required": false,
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "diff": {
-          "description": "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
-          "hidden": true,
-          "name": "diff",
-          "required": false,
-          "allowNo": false,
-          "type": "boolean"
-        }
-      },
-      "hasDynamicHelp": false,
-      "hiddenAliases": [],
-      "id": "hydrogen:build",
-      "pluginAlias": "@shopify/cli-hydrogen",
-      "pluginName": "@shopify/cli-hydrogen",
-      "pluginType": "core",
-      "strict": true,
-      "descriptionWithMarkdown": "Builds a Hydrogen storefront for production. The client and app worker files are compiled to a `/dist` folder in your Hydrogen project directory.",
-      "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "hydrogen",
-        "build.js"
-      ]
-    },
-    "hydrogen:build-vite": {
-      "aliases": [],
-      "args": {},
-      "description": "Builds a Hydrogen storefront for production.",
-      "flags": {
-        "path": {
-          "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
-          "name": "path",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
         "entry": {
           "description": "Entry file for the worker. Defaults to `./server`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_ENTRY",
@@ -150,22 +67,28 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "bundle-stats": {
+          "description": "[Classic Remix Compiler] Show a bundle size summary after building. Defaults to true, use `--no-bundle-stats` to disable.",
+          "name": "bundle-stats",
+          "allowNo": true,
+          "type": "boolean"
         }
       },
       "hasDynamicHelp": false,
-      "hidden": true,
       "hiddenAliases": [],
-      "id": "hydrogen:build-vite",
+      "id": "hydrogen:build",
       "pluginAlias": "@shopify/cli-hydrogen",
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
+      "descriptionWithMarkdown": "Builds a Hydrogen storefront for production. The client and app worker files are compiled to a `/dist` folder in your Hydrogen project directory.",
       "isESM": true,
       "relativePath": [
         "dist",
         "commands",
         "hydrogen",
-        "build-vite.js"
+        "build.js"
       ]
     },
     "hydrogen:check": {
@@ -555,157 +478,6 @@
           "multiple": false,
           "type": "option"
         },
-        "port": {
-          "description": "The port to run the server on. Defaults to 3000.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_PORT",
-          "name": "port",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "worker": {
-          "hidden": true,
-          "name": "worker",
-          "type": "boolean"
-        },
-        "legacy-runtime": {
-          "description": "Runs the app in a Node.js sandbox instead of an Oxygen worker.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_WORKER",
-          "name": "legacy-runtime",
-          "allowNo": false,
-          "type": "boolean"
-        },
-        "codegen": {
-          "description": "Automatically generates GraphQL types for your project’s Storefront API queries.",
-          "name": "codegen",
-          "required": false,
-          "allowNo": false,
-          "type": "boolean"
-        },
-        "codegen-config-path": {
-          "dependsOn": [
-            "codegen"
-          ],
-          "description": "Specifies a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if this file exists.",
-          "name": "codegen-config-path",
-          "required": false,
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "sourcemap": {
-          "description": "Controls whether sourcemaps are generated. Default to `true`. Deactivate `--no-sourcemaps`.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_SOURCEMAP",
-          "name": "sourcemap",
-          "allowNo": true,
-          "type": "boolean"
-        },
-        "disable-virtual-routes": {
-          "description": "Disable rendering fallback routes when a route file doesn't exist.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_DISABLE_VIRTUAL_ROUTES",
-          "name": "disable-virtual-routes",
-          "allowNo": false,
-          "type": "boolean"
-        },
-        "debug": {
-          "description": "Enables inspector connections to the server with a debugger such as Visual Studio Code or Chrome DevTools.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_DEBUG",
-          "name": "debug",
-          "allowNo": false,
-          "type": "boolean"
-        },
-        "inspector-port": {
-          "description": "The port where the inspector is available. Defaults to 9229.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_INSPECTOR_PORT",
-          "name": "inspector-port",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "env": {
-          "description": "Specifies the environment to perform the operation using its handle. Fetch the handle using the `env list` command.",
-          "exclusive": [
-            "env-branch"
-          ],
-          "name": "env",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "env-branch": {
-          "deprecated": {
-            "to": "env",
-            "message": "--env-branch is deprecated. Use --env instead."
-          },
-          "description": "Specifies the environment to perform the operation using its Git branch name.",
-          "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH",
-          "name": "env-branch",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "disable-version-check": {
-          "description": "Skip the version check when running `hydrogen dev`",
-          "name": "disable-version-check",
-          "required": false,
-          "allowNo": false,
-          "type": "boolean"
-        },
-        "diff": {
-          "description": "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
-          "hidden": true,
-          "name": "diff",
-          "required": false,
-          "allowNo": false,
-          "type": "boolean"
-        },
-        "customer-account-push__unstable": {
-          "description": "Use tunneling for local development and push the tunneling domain to admin. Required to use Customer Account API's Oauth flow",
-          "env": "SHOPIFY_HYDROGEN_FLAG_CUSTOMER_ACCOUNT_PUSH",
-          "hidden": true,
-          "name": "customer-account-push__unstable",
-          "required": false,
-          "allowNo": false,
-          "type": "boolean"
-        },
-        "verbose": {
-          "description": "Outputs more information about the command's execution.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_VERBOSE",
-          "name": "verbose",
-          "required": false,
-          "allowNo": false,
-          "type": "boolean"
-        }
-      },
-      "hasDynamicHelp": false,
-      "hiddenAliases": [],
-      "id": "hydrogen:dev",
-      "pluginAlias": "@shopify/cli-hydrogen",
-      "pluginName": "@shopify/cli-hydrogen",
-      "pluginType": "core",
-      "strict": true,
-      "descriptionWithMarkdown": "Runs a Hydrogen storefront in a local runtime that emulates an Oxygen worker for development.\n\n  If your project is [linked](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-link) to a Hydrogen storefront, then its environment variables will be loaded with the runtime.",
-      "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "hydrogen",
-        "dev.js"
-      ]
-    },
-    "hydrogen:dev-vite": {
-      "aliases": [],
-      "args": {},
-      "description": "Runs Hydrogen storefront in an Oxygen worker for development.",
-      "flags": {
-        "path": {
-          "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
-          "name": "path",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
         "entry": {
           "description": "Entry file for the worker. Defaults to `./server`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_ENTRY",
@@ -763,13 +535,6 @@
           "multiple": false,
           "type": "option"
         },
-        "host": {
-          "description": "Expose the server to the network",
-          "name": "host",
-          "required": false,
-          "allowNo": false,
-          "type": "boolean"
-        },
         "env": {
           "description": "Specifies the environment to perform the operation using its handle. Fetch the handle using the `env list` command.",
           "exclusive": [
@@ -823,22 +588,48 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "host": {
+          "description": "Expose the server to the local network",
+          "name": "host",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "worker": {
+          "hidden": true,
+          "name": "worker",
+          "type": "boolean"
+        },
+        "legacy-runtime": {
+          "description": "[Classic Remix Compiler] Runs the app in a Node.js sandbox instead of an Oxygen worker.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_LEGACY_RUNTIME",
+          "name": "legacy-runtime",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "sourcemap": {
+          "description": "[Classic Remix Compiler] Controls whether sourcemaps are generated. Default to `true`. Deactivate `--no-sourcemaps`.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_SOURCEMAP",
+          "name": "sourcemap",
+          "allowNo": true,
+          "type": "boolean"
         }
       },
       "hasDynamicHelp": false,
-      "hidden": true,
       "hiddenAliases": [],
-      "id": "hydrogen:dev-vite",
+      "id": "hydrogen:dev",
       "pluginAlias": "@shopify/cli-hydrogen",
       "pluginName": "@shopify/cli-hydrogen",
       "pluginType": "core",
       "strict": true,
+      "descriptionWithMarkdown": "Runs a Hydrogen storefront in a local runtime that emulates an Oxygen worker for development.\n\n  If your project is [linked](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-link) to a Hydrogen storefront, then its environment variables will be loaded with the runtime.",
       "isESM": true,
       "relativePath": [
         "dist",
         "commands",
         "hydrogen",
-        "dev-vite.js"
+        "dev.js"
       ]
     },
     "hydrogen:env:list": {
@@ -1435,7 +1226,7 @@
         },
         "legacy-runtime": {
           "description": "Runs the app in a Node.js sandbox instead of an Oxygen worker.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_WORKER",
+          "env": "SHOPIFY_HYDROGEN_FLAG_LEGACY_RUNTIME",
           "name": "legacy-runtime",
           "allowNo": false,
           "type": "boolean"
