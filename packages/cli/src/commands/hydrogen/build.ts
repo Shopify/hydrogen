@@ -1,49 +1,17 @@
 import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
-import {
-  outputInfo,
-  outputWarn,
-  outputContent,
-  outputToken,
-} from '@shopify/cli-kit/node/output';
-import {
-  fileSize,
-  copyFile,
-  rmdir,
-  glob,
-  fileExists,
-  readFile,
-  writeFile,
-} from '@shopify/cli-kit/node/fs';
-import {resolvePath, relativePath, joinPath} from '@shopify/cli-kit/node/path';
+import {resolvePath, joinPath} from '@shopify/cli-kit/node/path';
+import {outputWarn, collectLog} from '@shopify/cli-kit/node/output';
+import {fileSize, removeFile} from '@shopify/cli-kit/node/fs';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
-import colors from '@shopify/cli-kit/node/colors';
-import {
-  type RemixConfig,
-  assertOxygenChecks,
-  getProjectPaths,
-  getRemixConfig,
-  handleRemixImportFail,
-  type ServerMode,
-} from '../../lib/remix-config.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
+import {copyDiffBuild, prepareDiffDirectory} from '../../lib/template-diff.js';
+import {hasViteConfig, getViteConfig} from '../../lib/vite-config.js';
 import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
-import {createRemixLogger, muteRemixLogs} from '../../lib/log.js';
+import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
 import {codegen} from '../../lib/codegen.js';
-import {
-  buildBundleAnalysis,
-  getBundleAnalysisSummary,
-} from '../../lib/bundle/analyzer.js';
 import {isCI} from '../../lib/is-ci.js';
-import {copyDiffBuild, prepareDiffDirectory} from '../../lib/template-diff.js';
-import {hasViteConfig} from '../../lib/vite-config.js';
-import {createRequire} from 'module'
-
-const require = createRequire(import.meta.url)
-
-const LOG_WORKER_BUILT = '📦 Worker built';
-const WORKER_BUILD_SIZE_LIMIT = 5;
 
 export default class Build extends Command {
   static descriptionWithMarkdown = `Builds a Hydrogen storefront for production. The client and app worker files are compiled to a \`/dist\` folder in your Hydrogen project directory.`;
@@ -51,17 +19,20 @@ export default class Build extends Command {
   static description = 'Builds a Hydrogen storefront for production.';
   static flags = {
     ...commonFlags.path,
+    ...commonFlags.entry,
     ...commonFlags.sourcemap,
-    'bundle-stats': Flags.boolean({
-      description:
-        'Show a bundle size summary after building. Defaults to true, use `--no-bundle-stats` to disable.',
-      default: true,
-      allowNo: true,
-    }),
     ...commonFlags.lockfileCheck,
     ...commonFlags.disableRouteWarning,
     ...commonFlags.codegen,
     ...commonFlags.diff,
+
+    // For the classic compiler:
+    'bundle-stats': Flags.boolean({
+      description:
+        '[Classic Remix Compiler] Show a bundle size summary after building. Defaults to true, use `--no-bundle-stats` to disable.',
+      default: true,
+      allowNo: true,
+    }),
   };
 
   async run(): Promise<void> {
@@ -81,11 +52,10 @@ export default class Build extends Command {
       directory,
     };
 
-    if (await hasViteConfig(directory ?? process.cwd())) {
-      const {runViteBuild} = await import('./build-vite.js');
-      await runViteBuild(buildParams);
-    } else {
+    if (await hasViteConfig(directory)) {
       await runBuild(buildParams);
+    } else {
+      await runClassicCompilerBuild(buildParams);
     }
 
     if (flags.diff) {
@@ -99,7 +69,10 @@ export default class Build extends Command {
   }
 }
 
+const WORKER_BUILD_SIZE_LIMIT = 5;
+
 type RunBuildOptions = {
+  entry?: string;
   directory?: string;
   useCodegen?: boolean;
   codegenConfigPath?: string;
@@ -111,113 +84,99 @@ type RunBuildOptions = {
 };
 
 export async function runBuild({
+  entry: ssrEntry,
   directory,
   useCodegen = false,
   codegenConfigPath,
   sourcemap = false,
   disableRouteWarning = false,
-  bundleStats = true,
   lockfileCheck = true,
-  assetPath,
+  assetPath = '/',
 }: RunBuildOptions) {
   if (!process.env.NODE_ENV) {
     process.env.NODE_ENV = 'production';
   }
-  if (assetPath) {
-    process.env.HYDROGEN_ASSET_BASE_URL = assetPath;
-  }
 
-  const {root, buildPath, buildPathClient, buildPathWorkerFile, publicPath} =
-    getProjectPaths(directory);
+  const root = directory ?? process.cwd();
 
   if (lockfileCheck) {
     await checkLockfileStatus(root, isCI());
   }
 
-  await muteRemixLogs(root);
-
-  console.time(LOG_WORKER_BUILT);
-
-  outputInfo(`\n🏗️  Building in ${process.env.NODE_ENV} mode...`);
-
-  const remixRunBuildPath = require.resolve('@remix-run/dev/dist/compiler/build.js', {paths: [root]});
-  type RemixBuild = typeof import('@remix-run/dev/dist/compiler/build.js');
-
-  const remixRunLogPath = require.resolve('@remix-run/dev/dist/compiler/utils/log.js', {paths: [root]});
-  type RemixLog = typeof import('@remix-run/dev/dist/compiler/utils/log.js');
-
-  const remixRunWatchPath = require.resolve('@remix-run/dev/dist/compiler/fileWatchCache.js', {paths: [root]});
-  type RemixFileWatchCache = typeof import('@remix-run/dev/dist/compiler/fileWatchCache.js');
-
-  const [remixConfig, [{build}, {logThrown}, {createFileWatchCache}]] =
-    await Promise.all([
-      getRemixConfig(root) as Promise<RemixConfig>,
-      Promise.all([
-        import(remixRunBuildPath) as Promise<RemixBuild>,
-        import(remixRunLogPath) as Promise<RemixLog>,
-        import(remixRunWatchPath) as Promise<RemixFileWatchCache>,
-      ]).catch(handleRemixImportFail),
-      rmdir(buildPath, {force: true}),
-    ]);
-
-  assertOxygenChecks(remixConfig);
-
-  await Promise.all([
-    copyPublicFiles(publicPath, buildPathClient),
-    build({
-      config: remixConfig,
-      options: {
-        mode: process.env.NODE_ENV as ServerMode,
-        sourcemap,
-      },
-      logger: createRemixLogger(),
-      fileWatchCache: createFileWatchCache(),
-    }).catch((thrown) => {
-      logThrown(thrown);
-      if (process.env.SHOPIFY_UNIT_TEST) {
-        throw thrown;
-      } else {
-        process.exit(1);
-      }
-    }),
-    useCodegen && codegen({...remixConfig, configFilePath: codegenConfigPath}),
+  const [
+    vite,
+    {userViteConfig, remixConfig, clientOutDir, serverOutDir, serverOutFile},
+  ] = await Promise.all([
+    // Avoid static imports because this file is imported by `deploy` command,
+    // which must have a hard dependency on 'vite'.
+    import('vite'),
+    getViteConfig(root, ssrEntry),
   ]);
 
+  const customLogger = vite.createLogger();
+  if (process.env.SHOPIFY_UNIT_TEST) {
+    // Make logs from Vite visible in tests
+    customLogger.info = (msg) => collectLog('info', msg);
+    customLogger.warn = (msg) => collectLog('warn', msg);
+    customLogger.error = (msg) => collectLog('error', msg);
+  }
+
+  const serverMinify = userViteConfig.build?.minify ?? true;
+  const commonConfig = {
+    root,
+    mode: process.env.NODE_ENV,
+    base: assetPath,
+    customLogger,
+  };
+
+  // Client build first
+  await vite.build({
+    ...commonConfig,
+    build: {
+      emptyOutDir: true,
+      copyPublicDir: true,
+      // Disable client sourcemaps in production
+      sourcemap: process.env.NODE_ENV !== 'production' && sourcemap,
+    },
+  });
+
+  console.log('');
+
+  // Server/SSR build
+  await vite.build({
+    ...commonConfig,
+    build: {
+      sourcemap,
+      ssr: ssrEntry ?? true,
+      emptyOutDir: false,
+      copyPublicDir: false,
+      minify: serverMinify,
+    },
+  });
+
+  await Promise.all([
+    removeFile(joinPath(clientOutDir, '.vite')),
+    removeFile(joinPath(serverOutDir, '.vite')),
+    removeFile(joinPath(serverOutDir, 'assets')),
+  ]);
+
+  if (useCodegen) {
+    await codegen({
+      rootDirectory: root,
+      appDirectory: remixConfig.appDirectory,
+      configFilePath: codegenConfigPath,
+    });
+  }
+
   if (process.env.NODE_ENV !== 'development') {
-    console.timeEnd(LOG_WORKER_BUILT);
-
-    const bundleAnalysisPath = await buildBundleAnalysis(buildPath);
-
-    const sizeMB = (await fileSize(buildPathWorkerFile)) / (1024 * 1024);
-    const formattedSize = colors.yellow(sizeMB.toFixed(2) + ' MB');
-
-    outputInfo(
-      outputContent`   ${colors.dim(
-        relativePath(root, buildPathWorkerFile),
-      )}  ${
-        bundleAnalysisPath
-          ? outputToken.link(formattedSize, bundleAnalysisPath)
-          : formattedSize
-      }\n`,
-    );
-
-    if (bundleStats && bundleAnalysisPath) {
-      outputInfo(
-        outputContent`${
-          (await getBundleAnalysisSummary(buildPathWorkerFile)) || '\n'
-        }\n    │\n    └─── ${outputToken.link(
-          'Complete analysis: ' + bundleAnalysisPath,
-          bundleAnalysisPath,
-        )}\n\n`,
-      );
-    }
+    const sizeMB = (await fileSize(serverOutFile)) / (1024 * 1024);
 
     if (sizeMB >= WORKER_BUILD_SIZE_LIMIT) {
       outputWarn(
         `🚨 Smaller worker bundles are faster to deploy and run.${
-          remixConfig.serverMinify
+          serverMinify
             ? ''
-            : '\n   Minify your bundle by adding `serverMinify: true` to remix.config.js.'
+            : '\n   Minify your bundle by adding `build.minify: true` to vite.config.js.'
         }\n   Learn more about optimizing your worker bundle file: https://h2o.fyi/debugging/bundle-size\n`,
       );
     }
@@ -238,33 +197,4 @@ export async function runBuild({
       );
     }
   }
-
-  if (process.env.NODE_ENV !== 'development') {
-    await cleanClientSourcemaps(buildPathClient);
-  }
-}
-
-async function cleanClientSourcemaps(buildPathClient: string) {
-  const bundleFiles = await glob(joinPath(buildPathClient, '**/*.js'));
-
-  await Promise.all(
-    bundleFiles.map(async (filePath) => {
-      const file = await readFile(filePath);
-      return await writeFile(
-        filePath,
-        file.replace(/\/\/# sourceMappingURL=.+\.js\.map$/gm, ''),
-      );
-    }),
-  );
-}
-
-export async function copyPublicFiles(
-  publicPath: string,
-  buildPathClient: string,
-) {
-  if (!(await fileExists(publicPath))) {
-    return;
-  }
-
-  return copyFile(publicPath, buildPathClient);
 }

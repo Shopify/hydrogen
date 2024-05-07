@@ -51,7 +51,8 @@ export function ShopifyProvider({
 
   const finalConfig = useMemo<ShopifyContextValue>(() => {
     function getShopifyDomain(overrideProps?: {storeDomain?: string}): string {
-      return overrideProps?.storeDomain ?? shopifyConfig.storeDomain;
+      const domain = overrideProps?.storeDomain ?? shopifyConfig.storeDomain;
+      return domain.includes('://') ? domain : `https://${domain}`;
     }
 
     return {
