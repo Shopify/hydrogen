@@ -70,6 +70,7 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
   // await the query for the critical product data
   const {product} = await storefront.query(PRODUCT_QUERY, {
     variables: {handle, selectedOptions, ...buyerVariables},
+    cache: storefront.CacheNone(),
   });
   /**********   EXAMPLE UPDATE END   *************/
   /***********************************************/
@@ -105,6 +106,7 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
   /**********  EXAMPLE UPDATE STARTS  ************/
   const variants = storefront.query(VARIANTS_QUERY, {
     variables: {handle, ...buyerVariables},
+    cache: storefront.CacheNone(),
   });
   /**********   EXAMPLE UPDATE END   *************/
   /***********************************************/

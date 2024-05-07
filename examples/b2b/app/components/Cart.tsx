@@ -177,9 +177,12 @@ function CartLineQuantity({line}: {line: CartLine}) {
   const {id: lineId, quantity} = line;
   /***********************************************/
   /**********  EXAMPLE UPDATE STARTS  ************/
-  const {increment, minimum} = line.merchandise.quantityRule;
-  const prevQuantity = Number(Math.max(0, quantity - increment).toFixed(0));
-  const nextQuantity = Number((quantity + increment).toFixed(0));
+  const {increment, minimum, maximum} = line.merchandise.quantityRule;
+  const nextIncrement = increment - (quantity % increment);
+  const prevIncrement =
+    quantity % increment === 0 ? increment : quantity % increment;
+  const prevQuantity = Number(Math.max(0, quantity - prevIncrement).toFixed(0));
+  const nextQuantity = Number((quantity + nextIncrement).toFixed(0));
   /**********   EXAMPLE UPDATE END   ************/
   /***********************************************/
 
@@ -191,7 +194,7 @@ function CartLineQuantity({line}: {line: CartLine}) {
           aria-label="Decrease quantity"
           /***********************************************/
           /**********  EXAMPLE UPDATE STARTS  ************/
-          disabled={quantity <= minimum}
+          disabled={prevQuantity < minimum}
           /**********   EXAMPLE UPDATE END   ************/
           /***********************************************/
           name="decrease-quantity"
@@ -205,6 +208,11 @@ function CartLineQuantity({line}: {line: CartLine}) {
         <button
           aria-label="Increase quantity"
           name="increase-quantity"
+          /***********************************************/
+          /**********  EXAMPLE UPDATE STARTS  ************/
+          disabled={Boolean(maximum && nextQuantity > maximum)}
+          /**********   EXAMPLE UPDATE END   ************/
+          /***********************************************/
           value={nextQuantity}
         >
           <span>&#43;</span>
