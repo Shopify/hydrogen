@@ -112,6 +112,7 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
     storefront,
     getCartId,
     cartFragment: cartMutateFragment,
+    customerAccount,
   };
 
   const _cartCreate = cartCreateDefault(mutateOptions);

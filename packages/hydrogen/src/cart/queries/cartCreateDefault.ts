@@ -17,13 +17,23 @@ export function cartCreateDefault(
   options: CartQueryOptions,
 ): CartCreateFunction {
   return async (input, optionalParams) => {
+    const buyer = options.customerAccount
+      ? await options.customerAccount.UNSTABLE_getBuyer()
+      : undefined;
     const {cartId, ...restOfOptionalParams} = optionalParams || {};
+    const {buyerIdentity, ...restOfInput} = input;
     const {cartCreate, errors} = await options.storefront.mutate<{
       cartCreate: CartQueryData;
       errors: StorefrontApiErrors;
     }>(CART_CREATE_MUTATION(options.cartFragment), {
       variables: {
-        input,
+        input: {
+          ...restOfInput,
+          buyerIdentity: {
+            ...buyer,
+            ...buyerIdentity,
+          },
+        },
         ...restOfOptionalParams,
       },
     });
