@@ -25,6 +25,7 @@ import type {
   SelectedOption,
 } from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/lib/variants';
+import {useCartAside} from '~/components/CartAsideProvider';
 
 export const meta: MetaFunction<typeof loader> = ({data, location}) => {
   return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
@@ -227,6 +228,7 @@ function ProductForm({
   selectedVariant: ProductFragment['selectedVariant'];
   variants: Array<ProductVariantFragment>;
 }) {
+  const {showCart} = useCartAside();
   return (
     <div className="product-form">
       <VariantSelector
@@ -240,7 +242,7 @@ function ProductForm({
       <AddToCartButton
         disabled={!selectedVariant || !selectedVariant.availableForSale}
         onClick={() => {
-          window.location.href = window.location.href + '#cart-aside';
+          showCart(true);
         }}
         lines={
           selectedVariant

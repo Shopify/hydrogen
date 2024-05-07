@@ -112,14 +112,30 @@ aside li {
   width: 100%;
 }
 
-.overlay:target {
+.overlay.expanded {
   opacity: 1;
   pointer-events: auto;
   visibility: visible;
 }
 /* reveal aside */
-.overlay:target aside {
+.overlay.expanded aside {
   transform: translateX(calc(var(--aside-width) * -1));
+}
+
+button.reset {
+  border: 0;
+  background: inherit;
+  font-size: inherit;
+}
+
+button.reset:not(:has(> *)) {
+  height: 1.5rem;
+  line-height: 1.5rem;
+}
+
+button.reset:hover:not(:has(> *)) {
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 /*
@@ -298,8 +314,6 @@ aside li {
   align-items: center;
   gap: 1rem;
 }
-
-
 
 /*
 * --------------------------------------------------
