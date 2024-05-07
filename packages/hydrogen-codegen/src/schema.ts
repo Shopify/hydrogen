@@ -23,7 +23,7 @@ export function getSchema(api: Api, options?: Options<boolean>) {
   }
 
   try {
-    return require.resolve(`@shopify/hydrogen-react/${api}.schema.json`);
+    return require.resolve(`@shopify/hydrogen/${api}.schema.json`);
   } catch {
     if (options?.throwIfMissing !== false) {
       throw new Error(
