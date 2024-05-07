@@ -72,7 +72,7 @@ export async function runClassicCompilerBuild({
     await checkLockfileStatus(root, isCI());
   }
 
-  await muteRemixLogs();
+  await muteRemixLogs(root);
 
   console.time(LOG_WORKER_BUILT);
 

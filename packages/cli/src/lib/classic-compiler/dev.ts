@@ -125,7 +125,7 @@ export async function runClassicCompilerDev({
   const assetsPort = legacyRuntime ? 0 : await findPort(appPort + 100);
   if (assetsPort) {
     // Note: Set this env before loading Remix config!
-    process.env.HYDROGEN_ASSET_BASE_URL = await buildAssetsUrl(assetsPort);
+    process.env.HYDROGEN_ASSET_BASE_URL = await buildAssetsUrl(assetsPort, root);
   }
 
   const backgroundPromise = getDevConfigInBackground(
@@ -169,7 +169,7 @@ export async function runClassicCompilerDev({
   let initialBuildStartTimeMs = Date.now();
 
   const liveReload = shouldLiveReload
-    ? await setupLiveReload(remixConfig.dev?.port ?? 8002)
+    ? await setupLiveReload(remixConfig.dev?.port ?? 8002, root)
     : undefined;
 
   let miniOxygen: MiniOxygen;
