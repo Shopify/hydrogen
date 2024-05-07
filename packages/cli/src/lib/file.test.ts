@@ -49,29 +49,29 @@ describe('File utils', () => {
         await mkdir(resolvePath(tmpDir, 'fifth'));
         await writeFile(resolvePath(tmpDir, 'fifth', 'index.ts'), 'content');
 
-        expect(findFileWithExtension(tmpDir, 'first')).resolves.toEqual({
+        await expect(findFileWithExtension(tmpDir, 'first')).resolves.toEqual({
           filepath: expect.stringMatching(/first\.js$/),
           extension: 'js',
           astType: 'js',
         });
 
-        expect(findFileWithExtension(tmpDir, 'second')).resolves.toEqual({
+        await expect(findFileWithExtension(tmpDir, 'second')).resolves.toEqual({
           filepath: expect.stringMatching(/second\.tsx$/),
           extension: 'tsx',
           astType: 'tsx',
         });
 
-        expect(findFileWithExtension(tmpDir, 'third')).resolves.toEqual({
+        await expect(findFileWithExtension(tmpDir, 'third')).resolves.toEqual({
           filepath: expect.stringMatching(/third\.mjs$/),
           extension: 'mjs',
           astType: 'js',
         });
 
-        expect(findFileWithExtension(tmpDir, 'fourth')).resolves.toEqual({
+        await expect(findFileWithExtension(tmpDir, 'fourth')).resolves.toEqual({
           filepath: expect.stringMatching(/fourth$/),
         });
 
-        expect(findFileWithExtension(tmpDir, 'fifth')).resolves.toEqual({
+        await expect(findFileWithExtension(tmpDir, 'fifth')).resolves.toEqual({
           filepath: expect.stringMatching(/fifth\/index\.ts$/),
           extension: 'ts',
           astType: 'ts',
