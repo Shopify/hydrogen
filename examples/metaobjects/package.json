@@ -11,6 +11,7 @@
     "codegen": "shopify hydrogen codegen"
   },
   "dependencies": {
+    "@shopify/cli-hydrogen": "*",
     "slate": "^0.101.4",
     "slate-react": "^0.101.3"
   }

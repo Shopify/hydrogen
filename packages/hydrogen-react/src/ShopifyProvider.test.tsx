@@ -153,6 +153,20 @@ describe('<ShopifyProvider/>', () => {
         }),
       ).toBe('https://test.myshopify.com');
     });
+
+    it(`automatically adds protocol if missing`, () => {
+      const {result} = renderHook(() => useShop(), {
+        wrapper: ({children}) => (
+          <ShopifyProvider {...SHOPIFY_CONFIG} storeDomain="test.myshopify.com">
+            {children}
+          </ShopifyProvider>
+        ),
+      });
+
+      expect(result.current.getShopifyDomain()).toBe(
+        'https://test.myshopify.com',
+      );
+    });
   });
 
   describe(`getStorefrontApiUrl`, () => {

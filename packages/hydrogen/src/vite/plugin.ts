@@ -63,8 +63,6 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
                 // Remix deps:
                 'set-cookie-parser',
                 'cookie',
-                // Hydrogen deps:
-                'content-security-policy-builder',
               ],
             },
           },
