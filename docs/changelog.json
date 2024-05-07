@@ -1,10 +1,10 @@
 {
   "url": "https://github.com/Shopify/hydrogen/pulls?q=is%3Apr+is%3Aclosed+%5Bci%5D+release+in%3Atitle+is%3Amerged",
-  "version": "2024.4.2",
+  "version": "2024.4.1",
   "releases": [
     {
       "title": "Dependencies update to avoid React version mismatches",
-      "version": "2024.4.2",
+      "version": "2024.4.1",
       "hash": "0131d8d0abe471fec458a1211a1ba8eda01f2403",
       "pr": "https://github.com/Shopify/hydrogen/pull/2060",
       "commit": "https://github.com/Shopify/hydrogen/pull/2060/commits/0131d8d0abe471fec458a1211a1ba8eda01f2403",
