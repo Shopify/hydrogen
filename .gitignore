@@ -140,3 +140,6 @@ admin.schema.json
 business-platform.schema.json
 
 examples/**/*.generated.d.ts
+
+# Add this folder just for testing purposes
+!/packages/cli/dist
