@@ -1,5 +1,5 @@
 import {Await} from '@remix-run/react';
-import {Suspense} from 'react';
+import {Suspense, useState} from 'react';
 import type {
   CartApiQueryFragment,
   FooterQuery,
@@ -13,6 +13,7 @@ import {
   PredictiveSearchForm,
   PredictiveSearchResults,
 } from '~/components/Search';
+import {CartAsideProvider, useCartAside} from '~/components/CartAsideProvider';
 
 export type LayoutProps = {
   cart: Promise<CartApiQueryFragment | null>;
@@ -29,25 +30,49 @@ export function Layout({
   header,
   isLoggedIn,
 }: LayoutProps) {
+  const [searchExpanded, setSearchExpanded] = useState(false);
+  const [mobileMenuExpanded, setMobileMenuExpanded] = useState(false);
+
   return (
-    <>
+    <CartAsideProvider>
       <CartAside cart={cart} />
-      <SearchAside />
-      <MobileMenuAside menu={header?.menu} shop={header?.shop} />
-      {header && <Header header={header} cart={cart} isLoggedIn={isLoggedIn} />}
+      <SearchAside expanded={searchExpanded} setExpanded={setSearchExpanded} />
+      <MobileMenuAside
+        menu={header?.menu}
+        shop={header?.shop}
+        expanded={mobileMenuExpanded}
+        setExpanded={setMobileMenuExpanded}
+      />
+      {header && (
+        <Header
+          header={header}
+          cart={cart}
+          isLoggedIn={isLoggedIn}
+          mobileAside={{
+            expanded: mobileMenuExpanded,
+            setExpanded: setMobileMenuExpanded,
+          }}
+          searchAside={{
+            expanded: searchExpanded,
+            setExpanded: setSearchExpanded,
+          }}
+        />
+      )}
       <main>{children}</main>
       <Suspense>
         <Await resolve={footer}>
           {(footer) => <Footer menu={footer?.menu} shop={header?.shop} />}
         </Await>
       </Suspense>
-    </>
+    </CartAsideProvider>
   );
 }
 
 function CartAside({cart}: {cart: LayoutProps['cart']}) {
+  const {cartVisible, showCart} = useCartAside();
+
   return (
-    <Aside id="cart-aside" heading="CART">
+    <Aside expanded={cartVisible} setExpanded={showCart} heading="CART">
       <Suspense fallback={<p>Loading cart ...</p>}>
         <Await resolve={cart}>
           {(cart) => {
@@ -59,9 +84,15 @@ function CartAside({cart}: {cart: LayoutProps['cart']}) {
   );
 }
 
-function SearchAside() {
+function SearchAside({
+  expanded,
+  setExpanded,
+}: {
+  expanded: boolean;
+  setExpanded: (expanded: boolean) => void;
+}) {
   return (
-    <Aside id="search-aside" heading="SEARCH">
+    <Aside expanded={expanded} setExpanded={setExpanded} heading="SEARCH">
       <div className="predictive-search">
         <br />
         <PredictiveSearchForm>
@@ -76,7 +107,15 @@ function SearchAside() {
                 type="search"
               />
               &nbsp;
-              <button type="submit">Search</button>
+              <button
+                onClick={() => {
+                  window.location.href = inputRef?.current?.value
+                    ? `/search?q=${inputRef.current.value}`
+                    : `/search`;
+                }}
+              >
+                Search
+              </button>
             </div>
           )}
         </PredictiveSearchForm>
@@ -89,14 +128,18 @@ function SearchAside() {
 function MobileMenuAside({
   menu,
   shop,
+  expanded,
+  setExpanded,
 }: {
   menu: HeaderQuery['menu'];
   shop: HeaderQuery['shop'];
+  expanded: boolean;
+  setExpanded: (expanded: boolean) => void;
 }) {
   return (
     menu &&
     shop?.primaryDomain?.url && (
-      <Aside id="mobile-menu-aside" heading="MENU">
+      <Aside expanded={expanded} setExpanded={setExpanded} heading="MENU">
         <HeaderMenu
           menu={menu}
           viewport="mobile"

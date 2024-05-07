@@ -1,14 +1,29 @@
 import {Await, NavLink} from '@remix-run/react';
 import {Suspense} from 'react';
 import type {HeaderQuery} from 'storefrontapi.generated';
-import type {LayoutProps} from './Layout';
+import type {LayoutProps} from '~/components/Layout';
 import {useRootLoaderData} from '~/lib/root-data';
+import {useCartAside} from '~/components/CartAsideProvider';
 
-type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'>;
+type Aside = {
+  expanded: boolean;
+  setExpanded: (expanded: boolean) => void;
+};
+
+type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'> & {
+  searchAside: Aside;
+  mobileAside: Aside;
+};
 
 type Viewport = 'desktop' | 'mobile';
 
-export function Header({header, isLoggedIn, cart}: HeaderProps) {
+export function Header({
+  header,
+  isLoggedIn,
+  cart,
+  searchAside,
+  mobileAside,
+}: HeaderProps) {
   const {shop, menu} = header;
   return (
     <header className="header">
@@ -20,7 +35,12 @@ export function Header({header, isLoggedIn, cart}: HeaderProps) {
         viewport="desktop"
         primaryDomainUrl={header.shop.primaryDomain.url}
       />
-      <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
+      <HeaderCtas
+        isLoggedIn={isLoggedIn}
+        cart={cart}
+        searchAside={searchAside}
+        mobileAside={mobileAside}
+      />
     </header>
   );
 }
@@ -88,33 +108,63 @@ export function HeaderMenu({
 function HeaderCtas({
   isLoggedIn,
   cart,
-}: Pick<HeaderProps, 'isLoggedIn' | 'cart'>) {
+  searchAside,
+  mobileAside,
+}: Pick<HeaderProps, 'isLoggedIn' | 'cart'> & {
+  searchAside: Aside;
+  mobileAside: Aside;
+}) {
   return (
     <nav className="header-ctas" role="navigation">
-      <HeaderMenuMobileToggle />
+      <HeaderMenuMobileToggle
+        expanded={mobileAside.expanded}
+        setExpanded={mobileAside.setExpanded}
+      />
       <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
         {isLoggedIn ? 'Account' : 'Sign in'}
       </NavLink>
-      <SearchToggle />
+      <SearchToggle
+        setExpanded={searchAside.setExpanded}
+        expanded={searchAside.expanded}
+      />
       <CartToggle cart={cart} />
     </nav>
   );
 }
 
-function HeaderMenuMobileToggle() {
+function HeaderMenuMobileToggle({expanded, setExpanded}: Aside) {
   return (
-    <a className="header-menu-mobile-toggle" href="#mobile-menu-aside">
+    <button
+      className="header-menu-mobile-toggle reset"
+      onClick={() => setExpanded(!expanded)}
+    >
       <h3>☰</h3>
-    </a>
+    </button>
   );
 }
 
-function SearchToggle() {
-  return <a href="#search-aside">Search</a>;
+function SearchToggle({setExpanded}: Aside) {
+  return (
+    <button className="reset" onClick={() => setExpanded(true)}>
+      Search
+    </button>
+  );
 }
 
 function CartBadge({count}: {count: number}) {
-  return <a href="#cart-aside">Cart {count}</a>;
+  const cart = useCartAside();
+
+  return (
+    <a
+      href="/cart"
+      onClick={(e) => {
+        e.preventDefault();
+        cart.showCart(true);
+      }}
+    >
+      Cart {count}
+    </a>
+  );
 }
 
 function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {

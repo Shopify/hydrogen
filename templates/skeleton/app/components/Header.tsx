@@ -127,7 +127,10 @@ function HeaderCtas({
           </Await>
         </Suspense>
       </NavLink>
-      <SearchToggle setExpanded={searchAside.setExpanded} />
+      <SearchToggle
+        setExpanded={searchAside.setExpanded}
+        expanded={searchAside.expanded}
+      />
       <CartToggle cart={cart} />
     </nav>
   );
