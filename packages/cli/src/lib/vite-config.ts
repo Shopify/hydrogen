@@ -20,9 +20,9 @@ export async function hasViteConfig(root: string) {
 
 export async function getViteConfig(root: string, ssrEntryFlag?: string) {
   const vitePath = require.resolve('vite', {paths: [root]});
-  const newPath = joinPath(vitePath, '..', 'dist', 'node', 'index.js');
+  const viewNodePath = joinPath(vitePath, '..', 'dist', 'node', 'index.js');
   type Vite = typeof import('vite');
-  const vite: Vite = await import(newPath);
+  const vite: Vite = await import(viewNodePath);
 
   const command = 'build';
   const mode = process.env.NODE_ENV || 'production';

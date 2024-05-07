@@ -215,9 +215,9 @@ export async function runDev({
   }
 
   const vitePath = require.resolve('vite', {paths: [root]});
-  const newPath = joinPath(vitePath, '..', 'dist', 'node', 'index.js');
+  const viewNodePath = joinPath(vitePath, '..', 'dist', 'node', 'index.js');
   type Vite = typeof import('vite');
-  const vite: Vite = await import(newPath);
+  const vite: Vite = await import(viewNodePath);
 
   // Allow Vite to read files from the Hydrogen packages in local development.
   const fs = isLocalDev
