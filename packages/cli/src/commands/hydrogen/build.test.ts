@@ -1,0 +1,48 @@
+import '../../lib/onboarding/setup-template.mocks.js';
+import {fileExists, inTemporaryDirectory} from '@shopify/cli-kit/node/fs';
+import {describe, it, expect, vi} from 'vitest';
+import {joinPath} from '@shopify/cli-kit/node/path';
+import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
+import {runBuild} from './build.js';
+import {setupTemplate} from '../../lib/onboarding/index.js';
+
+describe('build', () => {
+  const outputMock = mockAndCaptureOutput();
+
+  it('builds a Vite project', async () => {
+    await inTemporaryDirectory(async (tmpDir) => {
+      await setupTemplate({
+        path: tmpDir,
+        git: true,
+        language: 'ts',
+        i18n: 'subfolders',
+        routes: true,
+        installDeps: true,
+      });
+
+      outputMock.clear();
+      vi.stubEnv('NODE_ENV', 'production');
+
+      await expect(runBuild({directory: tmpDir})).resolves.not.toThrow();
+
+      const expectedBundlePath = 'dist/server/index.js';
+
+      const output = outputMock.output();
+      expect(output).toMatch(expectedBundlePath);
+      expect(output).toMatch('building for productio');
+      expect(output).toMatch('dist/client/assets/root-');
+      expect(output).toMatch('building SSR bundle for productio');
+      expect(
+        fileExists(joinPath(tmpDir, expectedBundlePath)),
+      ).resolves.toBeTruthy();
+
+      const kB = Number(
+        output.match(/dist\/server\/index\.js\s+([\d.]+)\s+kB/)?.[1] || '',
+      );
+
+      // Bundle size within 1 MB
+      expect(kB).toBeGreaterThan(0);
+      expect(kB).toBeLessThan(1024);
+    });
+  });
+});
