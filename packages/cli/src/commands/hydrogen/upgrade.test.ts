@@ -142,6 +142,22 @@ async function inTemporaryHydrogenRepo(
   });
 }
 
+function increasePatchVersion(depName: string, deps: Record<string, string>) {
+  const depVersion = deps[depName];
+  if (!depVersion) {
+    throw new Error(
+      `No dependency "${depName}" found in: ${Object.keys(deps || {})}`,
+    );
+  }
+
+  return {
+    [depName]: depVersion.replace(
+      /\.(\d+)$/,
+      (_, patchVersion) => `.${Number(patchVersion) + 1}`,
+    ),
+  };
+}
+
 describe('upgrade', async () => {
   // Create an outdated skeleton package.json for all tests
   const OUTDATED_HYDROGEN_PACKAGE_JSON = createOutdatedSkeletonPackageJson();
@@ -295,12 +311,82 @@ describe('upgrade', async () => {
           cleanGitRepo: true,
           packageJson: {
             dependencies: {
-              // @ts-ignore
-              '@shopify/hydrogen': releases[2].version,
+              '@shopify/hydrogen': releases[2]!.version,
             },
           },
         },
       );
+    });
+
+    it('it finds outdated dependencies', async () => {
+      const {releases} = await getChangelog();
+      const latestRelease = releases[0]!;
+
+      expect(
+        getAvailableUpgrades({
+          currentVersion: latestRelease.version,
+          currentDependencies: {},
+          releases,
+        }).availableUpgrades,
+      ).toHaveLength(0);
+
+      const depName = Object.keys(latestRelease.dependencies)[0]!;
+      const devDepName = Object.keys(latestRelease.devDependencies)[0]!;
+
+      // Copy of latest release, no changes
+      expect(
+        getAvailableUpgrades({
+          currentVersion: latestRelease.version,
+          currentDependencies: {
+            [depName]: latestRelease.dependencies[depName]!,
+            [devDepName]: latestRelease.devDependencies[devDepName]!,
+          },
+          releases: [{...latestRelease}, ...releases],
+        }).availableUpgrades,
+      ).toHaveLength(0);
+
+      // Copy of latest release but with increased patch version of a dependency
+      expect(
+        getAvailableUpgrades({
+          currentVersion: latestRelease.version,
+          currentDependencies: {
+            [depName]: latestRelease.dependencies[depName]!,
+          },
+          releases: [
+            {
+              ...latestRelease,
+              dependencies: {
+                ...latestRelease.dependencies,
+                ...increasePatchVersion(depName, latestRelease.dependencies),
+              },
+            },
+            ...releases,
+          ],
+        }).availableUpgrades,
+      ).toHaveLength(1);
+
+      // Copy of latest release but with increased patch version of a dev-dependency
+      expect(
+        getAvailableUpgrades({
+          currentVersion: latestRelease.version,
+          currentDependencies: {
+            [devDepName]: latestRelease.devDependencies[devDepName]!,
+          },
+          releases: [
+            {
+              ...latestRelease,
+              devDependencies: {
+                ...latestRelease.devDependencies,
+                ...increasePatchVersion(
+                  devDepName,
+                  latestRelease.devDependencies,
+                ),
+              },
+            },
+            ...releases,
+          ],
+        }).availableUpgrades,
+      ).toHaveLength(1);
     });
   });
 

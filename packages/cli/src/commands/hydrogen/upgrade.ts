@@ -327,14 +327,17 @@ export async function getChangelog(): Promise<ChangeLog> {
   );
 }
 
-export function hasOutdatedDependencies({
+function hasOutdatedDependencies({
   release,
   currentDependencies,
 }: {
   release: Release;
   currentDependencies: Dependencies;
 }) {
-  return Object.entries(release.dependencies).some(([name, version]) => {
+  return Object.entries({
+    ...release.dependencies,
+    ...release.devDependencies,
+  }).some(([name, version]) => {
     const currentDependencyVersion = currentDependencies?.[name];
     if (!currentDependencyVersion) return false;
     const isDependencyOutdated = semver.gt(
