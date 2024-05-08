@@ -3,7 +3,7 @@
   "version": "2024.4.1",
   "releases": [
     {
-      "title": "Dependencies update to avoid React version mismatches",
+      "title": "Dependencies update to avoid React version mismatches. Fixes HIT/STALE items display in Subrequest Profiler, noteUpdate scalar type change, Vite improvements",
       "version": "2024.4.1",
       "hash": "0131d8d0abe471fec458a1211a1ba8eda01f2403",
       "pr": "https://github.com/Shopify/hydrogen/pull/2060",
@@ -52,56 +52,7 @@
           "title": "Update @shopify/cli dependency to avoid React version mismatches in your project",
           "pr": "https://github.com/Shopify/hydrogen/pull/2059",
           "id": "2059"
-        }
-      ],
-      "features": []
-    },
-    {
-      "title": "Fixes HIT/STALE items display in Subrequest Profiler, noteUpdate scalar type change, Vite improvements",
-      "version": "2024.4.1",
-      "hash": "9f8ca0443674f1e372aca16da2cded633c7e3f67",
-      "pr": "https://github.com/Shopify/hydrogen/pull/1994",
-      "commit": "https://github.com/Shopify/hydrogen/pull/1994/commits/9f8ca0443674f1e372aca16da2cded633c7e3f67",
-      "dependencies": {
-        "@remix-run/react": "^2.8.0",
-        "@shopify/cli-hydrogen": "8.0.1",
-        "@shopify/hydrogen": "2024.4.1",
-        "@shopify/remix-oxygen": "2.0.4"
-      },
-      "devDependencies": {
-        "@remix-run/dev": "^2.8.0",
-        "@remix-run/server-runtime": "^2.8.0",
-        "@shopify/cli": "3.58.0",
-        "@shopify/oxygen-workers-types": "4.0.0",
-        "typescript": "^5.2.2",
-        "@graphql-codegen/cli": "5.0.2",
-        "@shopify/mini-oxygen": "3.0.1",
-        "@shopify/hydrogen-codegen": "0.3.0"
-      },
-      "dependenciesMeta": {
-        "typescript": {
-          "required": true
         },
-        "@shopify/oxygen-workers-types": {
-          "required": true
-        },
-        "@shopify/cli": {
-          "required": true
-        },
-        "@remix-run/server-runtime": {
-          "required": true
-        },
-        "@graphql-codegen/cli": {
-          "required": true
-        },
-        "@shopify/mini-oxygen": {
-          "required": true
-        },
-        "@shopify/hydrogen-codegen": {
-          "required": true
-        }
-      },
-      "fixes": [
         {
           "title": "Warn when using the deprecated Seo component",
           "pr": "https://github.com/Shopify/hydrogen/pull/1983",
