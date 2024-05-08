@@ -1,7 +1,7 @@
 /* eslint-disable eslint-comments/disable-enable-pair */
 /* eslint-disable eslint-comments/no-unlimited-disable */
 /* eslint-disable */
-import * as CustomerAccountAPI from '@shopify/hydrogen/customer-account-api-types';
+import type * as CustomerAccountAPI from '@shopify/hydrogen/customer-account-api-types';
 
 export type CustomerAddressUpdateMutationVariables = CustomerAccountAPI.Exact<{
   address: CustomerAccountAPI.CustomerAddressInput;
