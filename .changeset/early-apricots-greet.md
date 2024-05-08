@@ -2,4 +2,4 @@
 '@shopify/mini-oxygen': patch
 ---
 
-Add missing `undici` dependency instead of relying on Miniflare to add it.
+Fix issue where `undici` dependency couldn't be found in some situations.
