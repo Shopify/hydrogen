@@ -1,5 +1,22 @@
 # @shopify/hydrogen
 
+## 2024.4.2
+
+### Patch Changes
+
+- Add JSdoc to `getSelectedProductOptions` utility and cleanup the skeleton implementation ([#2089](https://github.com/Shopify/hydrogen/pull/2089)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Adding support for B2B to the customer account client and cart handler to store and manage [buyer context](https://shopify.dev/docs/api/storefront/2024-04/input-objects/BuyerInput). Currently Unstable. ([#1886](https://github.com/Shopify/hydrogen/pull/1886)) by [@dustinfirman](https://github.com/dustinfirman)
+
+- When extending the content security policy, if the default directive is 'none' then the default won't be merged into the final directive. ([#2076](https://github.com/Shopify/hydrogen/pull/2076)) by [@nkgentile](https://github.com/nkgentile)
+
+- Update `content-security-policy-builder` subdependency to ESM version to avoid preprocessing in Vite. ([#2057](https://github.com/Shopify/hydrogen/pull/2057)) by [@frandiox](https://github.com/frandiox)
+
+- Fix Analytics. Provider for error checking and working without privacy banner. ([#2025](https://github.com/Shopify/hydrogen/pull/2025)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Updated dependencies [[`081e1498`](https://github.com/Shopify/hydrogen/commit/081e1498bba752e1bd4642b140104e46ce689a67)]:
+  - @shopify/hydrogen-react@2024.4.2
+
 ## 2024.4.1
 
 ### Patch Changes

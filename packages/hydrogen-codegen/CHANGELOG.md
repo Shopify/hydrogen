@@ -1,5 +1,13 @@
 # @shopify/hydrogen-codegen
 
+## 0.3.1
+
+### Patch Changes
+
+- Use type imports in generated file (`import type` instead of `import`). ([#2094](https://github.com/Shopify/hydrogen/pull/2094)) by [@frandiox](https://github.com/frandiox)
+
+- Import schemas from `@shopify/hydrogen` instead of `@shopify/hydrogen-react` to avoid dependency issues in some situations. ([#2086](https://github.com/Shopify/hydrogen/pull/2086)) by [@frandiox](https://github.com/frandiox)
+
 ## 0.3.0
 
 ### Minor Changes
