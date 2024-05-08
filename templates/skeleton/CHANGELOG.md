@@ -1,5 +1,15 @@
 # skeleton
 
+## 2024.4.4
+
+### Patch Changes
+
+- Add JSdoc to `getSelectedProductOptions` utility and cleanup the skeleton implementation ([#2089](https://github.com/Shopify/hydrogen/pull/2089)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies [[`286589ee`](https://github.com/Shopify/hydrogen/commit/286589ee281c161ad323e3d45a8b9b859aa5b11f), [`6f5061d9`](https://github.com/Shopify/hydrogen/commit/6f5061d9432f749fde7902548894e98c0d3f899c), [`ae262b61`](https://github.com/Shopify/hydrogen/commit/ae262b616127a7173d23a1a38a6e658af3105ce8), [`2c11ca3b`](https://github.com/Shopify/hydrogen/commit/2c11ca3b7a00ccca2b621dbc29abd319f9598cc8), [`b70f9c2c`](https://github.com/Shopify/hydrogen/commit/b70f9c2c3db8e863c65509097454b9ad7c81cd52), [`17528db1`](https://github.com/Shopify/hydrogen/commit/17528db1eb3d1baa001bafe0684b4bce28d2e271), [`58ea9bb0`](https://github.com/Shopify/hydrogen/commit/58ea9bb0f0eee83ff89e34e2f1f6ac3c4999e213)]:
+  - @shopify/cli-hydrogen@8.0.4
+  - @shopify/hydrogen@2024.4.2
+
 ## 1.0.10
 
 ### Patch Changes

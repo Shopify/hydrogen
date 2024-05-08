@@ -1,5 +1,17 @@
 # @shopify/cli-hydrogen
 
+## 8.0.4
+
+### Patch Changes
+
+- Fix `h2 upgrade` command to detect outdated devDependencies. ([#2093](https://github.com/Shopify/hydrogen/pull/2093)) by [@frandiox](https://github.com/frandiox)
+
+- Avoid unhandled promise rejections when showing the upgrade notification. ([#2092](https://github.com/Shopify/hydrogen/pull/2092)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`72e6794e`](https://github.com/Shopify/hydrogen/commit/72e6794eb8c63d533b2a047b52111ff46f4fa641), [`1cd83113`](https://github.com/Shopify/hydrogen/commit/1cd83113550f798bc11aa1202b1e720489c9f49f), [`e9ea1891`](https://github.com/Shopify/hydrogen/commit/e9ea1891b4f9973150b5e174c3e429310d376903), [`ddc7196f`](https://github.com/Shopify/hydrogen/commit/ddc7196f3ffb44e2c5ee31a89ba95d7f6814fb89)]:
+  - @shopify/mini-oxygen@3.0.2
+  - @shopify/hydrogen-codegen@0.3.1
+
 ## 8.0.3
 
 ### Patch Changes
