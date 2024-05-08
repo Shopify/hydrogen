@@ -1,7 +1,87 @@
 {
   "url": "https://github.com/Shopify/hydrogen/pulls?q=is%3Apr+is%3Aclosed+%5Bci%5D+release+in%3Atitle+is%3Amerged",
-  "version": "2024.4.1",
+  "version": "2024.4.2",
   "releases": [
+    {
+      "title": "B2B example, Analytics improvements, Fixes to upgrade command, CSP rules",
+      "version": "2024.4.2",
+      "hash": "6f809a8137650608dbc580387c5aaf9aed4abab9",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2070",
+      "commit": "https://github.com/Shopify/hydrogen/pull/2070/commits/6f809a8137650608dbc580387c5aaf9aed4abab9",
+      "dependencies": {
+        "@remix-run/react": "^2.8.0",
+        "@shopify/cli-hydrogen": "^8.0.4",
+        "@shopify/hydrogen": "2024.4.2",
+        "@shopify/remix-oxygen": "2.0.4"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.8.0",
+        "@remix-run/server-runtime": "^2.8.0",
+        "@shopify/cli": "3.59.2",
+        "@shopify/oxygen-workers-types": "4.0.0",
+        "typescript": "^5.2.2",
+        "@graphql-codegen/cli": "5.0.2",
+        "@shopify/mini-oxygen": "^3.0.2",
+        "@shopify/hydrogen-codegen": "^0.3.1"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        },
+        "@graphql-codegen/cli": {
+          "required": true
+        },
+        "@shopify/mini-oxygen": {
+          "required": true
+        },
+        "@shopify/hydrogen-codegen": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Fix Analytics. Provider for error checking and working without privacy banner.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2025",
+          "id": "2025"
+        },
+        {
+          "title": "Update content-security-policy-builder subdependency to ESM version to avoid preprocessing in Vite.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2057",
+          "id": "2057"
+        },
+        {
+          "title": "When extending the content security policy, if the default directive is 'none' then the default won't be merged into the final directive.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2076",
+          "id": "2076"
+        },
+        {
+          "title": "Fix schema issue where @shopify/hydrogen-react is not being use but require in dependencies",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2086",
+          "id": "2086"
+        },
+        {
+          "title": "Ensure the getShopifyDomain method from the useShop hook always includes the HTTPS protocol.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2079",
+          "id": "2079"
+        }
+      ],
+      "features": [
+        {
+          "title": "Adding support for B2B to the customer account client and cart handler to store and manage buyer context. Currently Unstable.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/20591886",
+          "id": "2059"
+        }
+      ]
+    },
     {
       "title": "Dependencies update to avoid React version mismatches. Fixes HIT/STALE items display in Subrequest Profiler, noteUpdate scalar type change, Vite improvements",
       "version": "2024.4.1",
