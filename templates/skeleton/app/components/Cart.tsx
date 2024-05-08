@@ -239,7 +239,8 @@ function CartLinePrice({
   priceType?: 'regular' | 'compareAt';
   [key: string]: any;
 }) {
-  if (!line?.cost?.amountPerQuantity || !line?.cost?.totalAmount) return null;
+  if (!line?.cost?.amountPerQuantity || !line?.cost?.totalAmount)
+    return <div style={{visibility: 'hidden'}}>&nbsp;</div>;
 
   const moneyV2 =
     priceType === 'regular'
@@ -247,7 +248,7 @@ function CartLinePrice({
       : line.cost.compareAtAmountPerQuantity;
 
   if (moneyV2 == null) {
-    return null;
+    return <div style={{visibility: 'hidden'}}>&nbsp;</div>;
   }
 
   return (
