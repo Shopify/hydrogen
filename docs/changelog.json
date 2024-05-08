@@ -1,13 +1,92 @@
 {
   "url": "https://github.com/Shopify/hydrogen/pulls?q=is%3Apr+is%3Aclosed+%5Bci%5D+release+in%3Atitle+is%3Amerged",
-  "version": "2024.4.0",
+  "version": "2024.4.1",
   "releases": [
+    {
+      "title": "Dependencies update to avoid React version mismatches. Fixes HIT/STALE items display in Subrequest Profiler, noteUpdate scalar type change, Vite improvements",
+      "version": "2024.4.1",
+      "hash": "0131d8d0abe471fec458a1211a1ba8eda01f2403",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2060",
+      "commit": "https://github.com/Shopify/hydrogen/pull/2060/commits/0131d8d0abe471fec458a1211a1ba8eda01f2403",
+      "dependencies": {
+        "@remix-run/react": "^2.8.0",
+        "@shopify/cli-hydrogen": "8.0.3",
+        "@shopify/hydrogen": "2024.4.1",
+        "@shopify/remix-oxygen": "2.0.4"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.8.0",
+        "@remix-run/server-runtime": "^2.8.0",
+        "@shopify/cli": "3.58.0",
+        "@shopify/oxygen-workers-types": "4.0.0",
+        "typescript": "^5.2.2",
+        "@graphql-codegen/cli": "5.0.2",
+        "@shopify/mini-oxygen": "3.0.1",
+        "@shopify/hydrogen-codegen": "0.3.0"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        },
+        "@graphql-codegen/cli": {
+          "required": true
+        },
+        "@shopify/mini-oxygen": {
+          "required": true
+        },
+        "@shopify/hydrogen-codegen": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Update @shopify/cli dependency to avoid React version mismatches in your project",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2059",
+          "id": "2059"
+        },
+        {
+          "title": "Warn when using the deprecated Seo component",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1983",
+          "id": "1983"
+        },
+        {
+          "title": "Fix names and URLs shown for HIT/STALE items in the Subrequest Profiler",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2021",
+          "id": "2021"
+        },
+        {
+          "title": "Fix noteUpdate scalar to be required",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2008",
+          "id": "2008"
+        },
+        {
+          "title": "Stop inlining favicon to avoid CSP issue",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2006",
+          "id": "2006"
+        },
+        {
+          "title": "HMR improvement by avoiding circular imports",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2014",
+          "id": "2014"
+        }
+      ],
+      "features": []
+    },
     {
       "title": "SFAPI 2024.4, Vite, Analytics (unstable), Remix 2.8.0, CLI improvements",
       "version": "2024.4.0",
-      "hash": "4c80d7cd61e70c6efea931c3e14d28131850f439",
+      "hash": "e93ba60ce7dd2ab017d72c0fd600efea04ade76b",
       "pr": "https://github.com/Shopify/hydrogen/pull/1855",
-      "commit": "https://github.com/Shopify/hydrogen/pull/1855/commits/4fa33fdaab06ff5258b7c7cec4f5f24492bd7349",
+      "commit": "https://github.com/Shopify/hydrogen/pull/1855/commits/e93ba60ce7dd2ab017d72c0fd600efea04ade76b",
       "dependencies": {
         "@remix-run/react": "^2.8.0",
         "@shopify/cli-hydrogen": "8.0.0",
@@ -207,10 +286,10 @@
           "pr": "https://github.com/Shopify/hydrogen/pull/1867",
           "id": "1867",
           "steps": [
-             {
-               "title": "The following examples are equivalent",
-               "code": "YGBgYmFzaApucG0gY3JlYXRlIEBzaG9waWZ5L2h5ZHJvZ2VuIC0tIC0tdGVtcGxhdGUgc2hvcGlmeS9oeWRyb2dlbi1kZW1vLXN0b3JlCm5wbSBjcmVhdGUgQHNob3BpZnkvaHlkcm9nZW4gLS0gLS10ZW1wbGF0ZSBnaXRodWIuY29tL3Nob3BpZnkvaHlkcm9nZW4tZGVtby1zdG9yZQpucG0gY3JlYXRlIEBzaG9waWZ5L2h5ZHJvZ2VuIC0tIC0tdGVtcGxhdGUgaHR0cHM6Ly9naXRodWIuY29tL3Nob3BpZnkvaHlkcm9nZW4tZGVtby1zdG9yZQpgYGA="
-             }
+            {
+              "title": "The following examples are equivalent",
+              "code": "YGBgYmFzaApucG0gY3JlYXRlIEBzaG9waWZ5L2h5ZHJvZ2VuIC0tIC0tdGVtcGxhdGUgc2hvcGlmeS9oeWRyb2dlbi1kZW1vLXN0b3JlCm5wbSBjcmVhdGUgQHNob3BpZnkvaHlkcm9nZW4gLS0gLS10ZW1wbGF0ZSBnaXRodWIuY29tL3Nob3BpZnkvaHlkcm9nZW4tZGVtby1zdG9yZQpucG0gY3JlYXRlIEBzaG9waWZ5L2h5ZHJvZ2VuIC0tIC0tdGVtcGxhdGUgaHR0cHM6Ly9naXRodWIuY29tL3Nob3BpZnkvaHlkcm9nZW4tZGVtby1zdG9yZQpgYGA="
+            }
           ]
         },
         {
@@ -236,7 +315,7 @@
           "id": "1842"
         },
         {
-          "title": "Expose `cartReady` state from the cart context inb hydrogen-react" ,
+          "title": "Expose `cartReady` state from the cart context inb hydrogen-react",
           "pr": "https://github.com/Shopify/hydrogen/pull/1885",
           "id": "1885"
         },
