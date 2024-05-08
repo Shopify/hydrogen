@@ -43,6 +43,6 @@
     "vitest": "^1.0.4"
   },
   "dependencies": {
-    "@shopify/graphql-codegen": "^0.0.1"
+    "@shopify/graphql-codegen": "^0.0.2"
   }
 }
