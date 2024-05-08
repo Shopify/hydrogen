@@ -133,10 +133,15 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
     getCartId,
     setCartId,
     create: cartCreate,
-    addLines: async (lines, optionalParams) => {
-      for (const line of lines) {
-        delete line.selectedVariant;
-      }
+    addLines: async (linesWithOptimisticData, optionalParams) => {
+      const lines = linesWithOptimisticData.map((line) => {
+        return {
+          attributes: line.attributes,
+          quantity: line.quantity,
+          merchandiseId: line.merchandiseId,
+          sellingPlanId: line.sellingPlanId,
+        };
+      });
 
       return cartId || optionalParams?.cartId
         ? await cartLinesAddDefault(mutateOptions)(lines, optionalParams)

@@ -3,6 +3,7 @@ import {useOptimisticCart} from './useOptimisticCart';
 import * as RemixReact from '@remix-run/react';
 import {type CartActionInput, CartForm} from '../CartForm';
 import {FormData} from 'formdata-polyfill/esm.min.js';
+import {CartReturn} from '../queries/cart-types';
 
 let fetchers: {formData: FormData}[] = [];
 
@@ -48,7 +49,7 @@ describe('useOptimisticCart', () => {
 
       // Make sure the error is logged
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'No selected variant was passed in the cart action. Make sure to pass the selected variant if you want to use an optimistic cart',
+        '[h2:error:useOptimisticCart] No selected variant was passed in the cart action. Make sure to pass the selected variant if you want to use an optimistic cart',
       );
     });
 
@@ -69,6 +70,33 @@ describe('useOptimisticCart', () => {
       });
 
       const optimisticCart = useOptimisticCart(null as any);
+      expect(optimisticCart.lines.nodes[0]).toStrictEqual({
+        id: '__h_pending_1',
+        quantity: 1,
+        isOptimistic: true,
+        merchandise: {
+          id: '1',
+        },
+      });
+    });
+
+    test('adds an optimistic line even when the cart has null lines', async () => {
+      addPendingCartAction({
+        action: CartForm.ACTIONS.LinesAdd,
+        inputs: {
+          lines: [
+            {
+              merchandiseId: '1',
+              quantity: 1,
+              selectedVariant: {
+                id: '1',
+              },
+            },
+          ],
+        },
+      });
+
+      const optimisticCart = useOptimisticCart({} as any);
       expect(optimisticCart.lines.nodes[0]).toStrictEqual({
         id: '__h_pending_1',
         quantity: 1,
@@ -124,6 +152,54 @@ describe('useOptimisticCart', () => {
 
       const optimisticCart = useOptimisticCart(CART_WITH_LINE);
       expect(optimisticCart.lines.nodes[0].quantity).toBe(2);
+      expect(optimisticCart.lines.nodes[0].isOptimistic).toBe(true);
+    });
+
+    test('adds an optimistic line with more than 1 quantity to an empty cart', async () => {
+      addPendingCartAction({
+        action: CartForm.ACTIONS.LinesAdd,
+        inputs: {
+          lines: [
+            {
+              merchandiseId: '1',
+              quantity: 2,
+              selectedVariant: {
+                id: '1',
+              },
+            },
+          ],
+        },
+      });
+
+      const optimisticCart = useOptimisticCart(EMPTY_CART);
+      expect(optimisticCart.lines.nodes[0]).toStrictEqual({
+        id: '__h_pending_1',
+        quantity: 2,
+        isOptimistic: true,
+        merchandise: {
+          id: '1',
+        },
+      });
+    });
+
+    test('adds an optimistic line with more than 1 quantity to a cart with existing items', async () => {
+      addPendingCartAction({
+        action: CartForm.ACTIONS.LinesAdd,
+        inputs: {
+          lines: [
+            {
+              merchandiseId: 'gid://shopify/ProductVariant/41007290744888',
+              quantity: 2,
+              selectedVariant: {
+                id: 'gid://shopify/ProductVariant/41007290744888',
+              },
+            },
+          ],
+        },
+      });
+
+      const optimisticCart = useOptimisticCart(CART_WITH_LINE);
+      expect(optimisticCart.lines.nodes[0].quantity).toBe(3);
       expect(optimisticCart.lines.nodes[0].isOptimistic).toBe(true);
     });
 
@@ -289,7 +365,7 @@ describe('useOptimisticCart', () => {
       const optimisticCart = useOptimisticCart(EMPTY_CART);
       expect(optimisticCart).toStrictEqual(EMPTY_CART);
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        "Tried to remove line 'gid://shopify/CartLine/53b449e1-6f6d-47ca-94e4-748a055b45e8?cart=Z2NwLXVzLWNlbnRyYWwxOjAxSFdOR0hESkVBUEtQVkoyMFJFMUhTRDFU' but it doesn't exist in the cart",
+        "[h2:warn:useOptimisticCart] Tried to remove line 'gid://shopify/CartLine/53b449e1-6f6d-47ca-94e4-748a055b45e8?cart=Z2NwLXVzLWNlbnRyYWwxOjAxSFdOR0hESkVBUEtQVkoyMFJFMUhTRDFU' but it doesn't exist in the cart",
       );
     });
   });
@@ -406,7 +482,7 @@ describe('useOptimisticCart', () => {
 
       expect(optimisticCart).toStrictEqual(EMPTY_CART);
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        "Tried to update line 'someId' but it doesn't exist in the cart",
+        "[h2:warn:useOptimisticCart] Tried to update line 'someId' but it doesn't exist in the cart",
       );
     });
   });
@@ -446,7 +522,7 @@ describe('useOptimisticCart', () => {
       expect(optimisticCart.lines.nodes[0].quantity).toStrictEqual(1);
       expect(optimisticCart.lines.nodes[0].isOptimistic).toBe(true);
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Tried to update an optimistic line that has not been added to the cart yet',
+        '[h2:error:useOptimisticCart] Tried to update an optimistic line that has not been added to the cart yet',
       );
     });
 
@@ -478,7 +554,7 @@ describe('useOptimisticCart', () => {
       expect(optimisticCart.lines.nodes[0].quantity).toStrictEqual(1);
       expect(optimisticCart.lines.nodes[0].isOptimistic).toBe(true);
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Tried to remove an optimistic line that has not been added to the cart yet',
+        '[h2:error:useOptimisticCart] Tried to remove an optimistic line that has not been added to the cart yet',
       );
     });
 
