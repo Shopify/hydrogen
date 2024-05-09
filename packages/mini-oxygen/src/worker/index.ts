@@ -40,21 +40,23 @@ export {
 
 const DEFAULT_PUBLIC_INSPECTOR_PORT = 9229;
 
-type AssetOptions =
+type AssetOptions = {
+  /** Port to serve files from. Defaults to 9100. */
+  port?: number;
+  /** Wether the pathname of the request must match exactly the Shopify CDN pathname */
+  strictPath?: boolean;
+} & (
   | {
       /** Directory to serve files. If omitted, no asset server is created. */
       directory: string;
-      /** Port to serve files from. Defaults to 9100. */
-      port?: number;
       origin?: never;
     }
   | {
       directory?: never;
       /** Port to serve files from. Defaults to 9100. */
-      port?: number;
-      /** Optional origin for an external asset server. */
       origin: string;
-    };
+    }
+);
 
 type InputMiniflareOptions = Omit<SharedOptions, 'cf'> & {
   // Miniflare supports other type of options for D1, DO, KV, etc.
@@ -145,7 +147,10 @@ export function createMiniOxygen({
 
   const assetsServer =
     assets?.directory || assets?.origin
-      ? createAssetsServer(assets.directory ?? assets.origin)
+      ? createAssetsServer({
+          resource: assets.directory ?? assets.origin,
+          strictPath: assets.strictPath,
+        })
       : undefined;
 
   assetsServer?.listen(assets?.port ?? DEFAULT_ASSETS_PORT);

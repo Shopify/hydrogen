@@ -88,7 +88,10 @@ export async function startMiniOxygenRuntime({
     inspectorPort,
     requestHook: null,
     // TODO get vite url earlier
-    assets: {origin: getViteUrl(viteDevServer) ?? 'http://localhost:3000'},
+    assets: {
+      origin: getViteUrl(viteDevServer) ?? 'http://localhost:3000',
+      strictPath: false,
+    },
     workers: [
       {
         name: 'vite-env',

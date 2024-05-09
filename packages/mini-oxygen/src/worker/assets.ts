@@ -22,11 +22,19 @@ export function buildAssetsUrl(assetsPort = DEFAULT_ASSETS_PORT) {
   return `http://localhost:${assetsPort}/${artificialAssetPrefix}/`;
 }
 
+type AssetsServerOptions = {
+  resource: string;
+  strictPath?: boolean;
+};
+
 /**
  * Creates a server that serves static assets from the build directory.
  * Mimics Shopify CDN URLs for Oxygen v2.
  */
-export function createAssetsServer(resource: string) {
+export function createAssetsServer({
+  resource,
+  strictPath = true,
+}: AssetsServerOptions) {
   const handler: (
     req: IncomingMessage,
     res: ServerResponse<IncomingMessage>,
@@ -81,7 +89,7 @@ export function createAssetsServer(resource: string) {
 
     const pathname = req.url?.split('?')[0] || '';
     const isValidAssetPath =
-      pathname.startsWith(`/${artificialAssetPrefix}/`) &&
+      (!strictPath || pathname.startsWith(`/${artificialAssetPrefix}/`)) &&
       !pathname.includes('..'); // Ensure it doesn't leave the build directory
 
     const relativeAssetPath = isValidAssetPath
