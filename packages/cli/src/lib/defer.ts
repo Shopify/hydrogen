@@ -2,13 +2,24 @@
  * Creates a promise that can be resolved or rejected from the outter scope.
  */
 export function deferPromise() {
-  let resolve = (value?: unknown) => {};
-  let reject = resolve;
+  const deferred = {state: 'pending'} as {
+    promise: Promise<unknown>;
+    resolve: (value?: unknown) => void;
+    reject: (reason?: any) => void;
+    state: 'pending' | 'resolved' | 'rejected';
+  };
 
-  const promise = new Promise((_resolve, _reject) => {
-    resolve = _resolve;
-    reject = _reject;
+  deferred.promise = new Promise((resolve, reject) => {
+    deferred.resolve = (value) => {
+      if (deferred.state === 'pending') deferred.state = 'resolved';
+      return resolve(value);
+    };
+
+    deferred.reject = (reason) => {
+      if (deferred.state === 'pending') deferred.state = 'rejected';
+      return reject(reason);
+    };
   });
 
-  return {promise, resolve, reject};
+  return deferred;
 }
