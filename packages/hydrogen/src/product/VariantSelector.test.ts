@@ -522,7 +522,7 @@ describe('<VariantSelector>', () => {
                 },
                 value,
                 createElement('br', null),
-                `SKU: ${variant?.sku}`
+                variant && `SKU: ${variant?.sku}`
               ),
             ),
           ),
