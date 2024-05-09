@@ -12,7 +12,7 @@ const ProductForm = ({product}) => {
         <>
           <div>{option.name}</div>
           <div>
-            {option.values.map(({value, isAvailable, to, isActive}) => (
+            {option.values.map(({value, isAvailable, to, isActive, variant}) => (
               <Link
                 to={to}
                 prefetch="intent"
@@ -21,6 +21,8 @@ const ProductForm = ({product}) => {
                 }
               >
                 {value}
+                <br />
+                {variant && `SKU: ${variant.sku}`}
               </Link>
             ))}
           </div>
