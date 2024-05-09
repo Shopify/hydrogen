@@ -10,7 +10,7 @@ import {hasViteConfig, getViteConfig} from '../../lib/vite-config.js';
 import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
 import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
-import {codegen} from '../../lib/codegen.js';
+import {codegen, spawnCodegenProcess} from '../../lib/codegen.js';
 import {isCI} from '../../lib/is-ci.js';
 import {deferPromise} from '../../lib/defer.js';
 
@@ -204,11 +204,17 @@ export async function runBuild({
   }
 
   if (useCodegen) {
-    await codegen({
+    const codegenOptions = {
       rootDirectory: root,
       appDirectory: remixConfig.appDirectory,
       configFilePath: codegenConfigPath,
-    });
+    };
+
+    if (watch) {
+      spawnCodegenProcess(codegenOptions);
+    } else {
+      await codegen(codegenOptions);
+    }
   }
 
   if (!watch && process.env.NODE_ENV !== 'development') {
