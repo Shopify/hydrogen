@@ -498,12 +498,12 @@ describe('<VariantSelector>', () => {
           nodes: [
             {
               availableForSale: true,
-              sku: "ABC-01234",
+              sku: 'ABC-01234',
               selectedOptions: [{name: 'Size', value: 'S'}],
             } as ProductVariant,
             {
               availableForSale: true,
-              sku: "XYZ-56789",
+              sku: 'XYZ-56789',
               selectedOptions: [{name: 'Size', value: 'M'}],
             } as ProductVariant,
           ],
@@ -522,7 +522,7 @@ describe('<VariantSelector>', () => {
                 },
                 value,
                 createElement('br', null),
-                variant && `SKU: ${variant?.sku}`
+                variant && `SKU: ${variant?.sku}`,
               ),
             ),
           ),
