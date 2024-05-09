@@ -12,6 +12,7 @@ import {findMissingRoutes} from '../../lib/missing-routes.js';
 import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
 import {codegen} from '../../lib/codegen.js';
 import {isCI} from '../../lib/is-ci.js';
+import {deferPromise} from '../../lib/defer.js';
 
 export default class Build extends Command {
   static descriptionWithMarkdown = `Builds a Hydrogen storefront for production. The client and app worker files are compiled to a \`/dist\` folder in your Hydrogen project directory.`;
@@ -25,6 +26,11 @@ export default class Build extends Command {
     ...commonFlags.disableRouteWarning,
     ...commonFlags.codegen,
     ...commonFlags.diff,
+    watch: Flags.boolean({
+      description:
+        'Watches for changes and rebuilds the project writing output to disk.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_WATCH',
+    }),
 
     // For the classic compiler:
     'bundle-stats': Flags.boolean({
@@ -62,10 +68,12 @@ export default class Build extends Command {
       await copyDiffBuild(directory, originalDirectory);
     }
 
-    // The Remix compiler hangs due to a bug in ESBuild:
-    // https://github.com/evanw/esbuild/issues/2727
-    // The actual build has already finished so we can kill the process.
-    process.exit(0);
+    if (!buildParams.watch) {
+      // The Remix compiler hangs due to a bug in ESBuild:
+      // https://github.com/evanw/esbuild/issues/2727
+      // The actual build has already finished so we can kill the process.
+      process.exit(0);
+    }
   }
 }
 
@@ -81,6 +89,7 @@ type RunBuildOptions = {
   assetPath?: string;
   bundleStats?: boolean;
   lockfileCheck?: boolean;
+  watch?: boolean;
 };
 
 export async function runBuild({
@@ -92,6 +101,7 @@ export async function runBuild({
   disableRouteWarning = false,
   lockfileCheck = true,
   assetPath = '/',
+  watch = false,
 }: RunBuildOptions) {
   if (!process.env.NODE_ENV) {
     process.env.NODE_ENV = 'production';
@@ -113,7 +123,7 @@ export async function runBuild({
     getViteConfig(root, ssrEntry),
   ]);
 
-  const customLogger = vite.createLogger();
+  const customLogger = vite.createLogger(watch ? 'warn' : undefined);
   if (process.env.SHOPIFY_UNIT_TEST) {
     // Make logs from Vite visible in tests
     customLogger.info = (msg) => collectLog('info', msg);
@@ -129,6 +139,8 @@ export async function runBuild({
     customLogger,
   };
 
+  let clientBuild: ReturnType<typeof deferPromise>;
+
   // Client build first
   await vite.build({
     ...commonConfig,
@@ -137,7 +149,23 @@ export async function runBuild({
       copyPublicDir: true,
       // Disable client sourcemaps in production
       sourcemap: process.env.NODE_ENV !== 'production' && sourcemap,
+      watch: watch ? {} : null,
     },
+    plugins: [
+      {
+        name: 'hydrogen:cli:client',
+        buildStart() {
+          clientBuild?.resolve();
+          clientBuild = deferPromise();
+        },
+        buildEnd(error) {
+          if (error) clientBuild.reject(error);
+        },
+        writeBundle() {
+          clientBuild.resolve();
+        },
+      },
+    ],
   });
 
   console.log('');
@@ -151,14 +179,29 @@ export async function runBuild({
       emptyOutDir: false,
       copyPublicDir: false,
       minify: serverMinify,
+      // Ensure the server rebuild start after the client one
+      watch: watch ? {buildDelay: 100} : null,
     },
+    plugins: [
+      {
+        name: 'hydrogen:cli:server',
+        async buildStart() {
+          // Wait for the client build to finish in watch mode
+          // before starting the server build to access the
+          // Remix manifest from file disk.
+          await clientBuild.promise;
+        },
+      },
+    ],
   });
 
-  await Promise.all([
-    removeFile(joinPath(clientOutDir, '.vite')),
-    removeFile(joinPath(serverOutDir, '.vite')),
-    removeFile(joinPath(serverOutDir, 'assets')),
-  ]);
+  if (!watch) {
+    await Promise.all([
+      removeFile(joinPath(clientOutDir, '.vite')),
+      removeFile(joinPath(serverOutDir, '.vite')),
+      removeFile(joinPath(serverOutDir, 'assets')),
+    ]);
+  }
 
   if (useCodegen) {
     await codegen({
@@ -168,7 +211,7 @@ export async function runBuild({
     });
   }
 
-  if (process.env.NODE_ENV !== 'development') {
+  if (!watch && process.env.NODE_ENV !== 'development') {
     const sizeMB = (await fileSize(serverOutFile)) / (1024 * 1024);
 
     if (sizeMB >= WORKER_BUILD_SIZE_LIMIT) {
@@ -182,7 +225,7 @@ export async function runBuild({
     }
   }
 
-  if (!disableRouteWarning) {
+  if (!watch && !disableRouteWarning) {
     const missingRoutes = findMissingRoutes(remixConfig);
     if (missingRoutes.length) {
       const packageManager = await getPackageManager(root);

@@ -68,6 +68,13 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "watch": {
+          "description": "Watches for changes and rebuilds the project writing output to disk.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_WATCH",
+          "name": "watch",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "bundle-stats": {
           "description": "[Classic Remix Compiler] Show a bundle size summary after building. Defaults to true, use `--no-bundle-stats` to disable.",
           "name": "bundle-stats",
