@@ -1,0 +1,8 @@
+projects:
+  default:
+    schema: 'node_modules/@shopify/hydrogen/storefront.schema.json'
+    documents:
+      - '!*.d.ts'
+      - '*.{ts,tsx,js,jsx}'
+      - 'app/**/*.{ts,tsx,js,jsx}'
+      - '!app/graphql/**/*.{ts,tsx,js,jsx}'
