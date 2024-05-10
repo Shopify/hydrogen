@@ -1,7 +1,7 @@
 import {useLoadScript} from '@shopify/hydrogen-react';
 import {useEffect, useRef} from 'react';
 
-export type ConsentStatus = 'true' | 'false' | '';
+export type ConsentStatus = boolean | undefined;
 
 export type VisitorConsent = {
   marketing: ConsentStatus;
@@ -93,14 +93,21 @@ const CONSENT_API =
 const CONSENT_API_WITH_BANNER =
   'https://cdn.shopify.com/shopifycloud/privacy-banner/storefront-banner.js';
 
-function logMissingConfig(fieldName: string) {
+function logInvalidConfig(fieldName: string) {
   // eslint-disable-next-line no-console
   console.error(
-    `[h2:error:useCustomerPrivacy] Unable to setup Customer Privacy API: Missing consent.${fieldName} consent configuration.`,
+    `[h2:error:useCustomerPrivacy] Unable to setup Customer Privacy API: Invalid consent.${fieldName} configuration.`,
   );
 }
 
-export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
+function logMissingConfig(fieldName: string) {
+  // eslint-disable-next-line no-console
+  console.error(
+    `[h2:error:useCustomerPrivacy] Unable to setup Customer Privacy API: Missing consent.${fieldName} configuration.`,
+  );
+}
+
+export function useCustomerPrivacy(props: CustomerPrivacyApiProps)  {
   const {
     withPrivacyBanner = true,
     onVisitorConsentCollected,
@@ -116,10 +123,6 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
       },
     },
   );
-
-  if (!consentConfig.checkoutDomain) logMissingConfig('checkoutDomain');
-  if (!consentConfig.storefrontAccessToken)
-    logMissingConfig('storefrontAccessToken');
 
   useEffect(() => {
     const consentCollectedHandler = (
@@ -145,8 +148,18 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
 
   useEffect(() => {
     if (scriptStatus !== 'done' || loadedEvent.current) return;
-
     loadedEvent.current = true;
+
+    if (!consentConfig.checkoutDomain) logMissingConfig('checkoutDomain');
+    if (!consentConfig.storefrontAccessToken)
+      logMissingConfig('storefrontAccessToken');
+
+    // validate that the storefront access token is not a server API token
+    if (
+      consentConfig.storefrontAccessToken.startsWith('shpat_') ||
+      consentConfig.storefrontAccessToken.length !== 32) {
+      logInvalidConfig('storefrontAccessToken');
+    }
 
     if (withPrivacyBanner && window?.privacyBanner) {
       window?.privacyBanner?.loadBanner({
@@ -155,25 +168,28 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
       });
     }
 
+    if (!window.Shopify?.customerPrivacy) return;
+
     // Override the setTrackingConsent method to include the headless storefront configuration
-    if (window.Shopify?.customerPrivacy) {
-      const originalSetTrackingConsent =
-        window.Shopify.customerPrivacy.setTrackingConsent;
-      window.Shopify.customerPrivacy.setTrackingConsent = (
-        consent: VisitorConsent,
-        callback: () => void,
-      ) => {
-        originalSetTrackingConsent(
-          {
-            ...consent,
-            headlessStorefront: true,
-            checkoutRootDomain: consentConfig.checkoutDomain,
-            storefrontAccessToken: consentConfig.storefrontAccessToken,
-          },
-          callback,
-        );
-      };
-    }
+    const originalSetTrackingConsent =
+      window.Shopify.customerPrivacy.setTrackingConsent;
+
+    function overrideSetTrackingConsent(
+      consent: VisitorConsent,
+      callback: (data: {error: string} | undefined) => void
+    ){
+      originalSetTrackingConsent(
+        {
+          ...consent,
+          headlessStorefront: true,
+          checkoutRootDomain: consentConfig.checkoutDomain,
+          storefrontAccessToken: consentConfig.storefrontAccessToken,
+        },
+        callback,
+      );
+    };
+
+    window.Shopify.customerPrivacy.setTrackingConsent = overrideSetTrackingConsent;
 
     if (onReady && !withPrivacyBanner) {
       onReady();
@@ -183,7 +199,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   return;
 }
 
-export function getCustomerPrivacy() {
+export function getCustomerPrivacy(): CustomerPrivacy | null {
   try {
     return window.Shopify && window.Shopify.customerPrivacy
       ? window.Shopify?.customerPrivacy
