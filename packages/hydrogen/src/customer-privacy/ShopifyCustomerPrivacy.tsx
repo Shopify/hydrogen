@@ -107,7 +107,7 @@ function logMissingConfig(fieldName: string) {
   );
 }
 
-export function useCustomerPrivacy(props: CustomerPrivacyApiProps)  {
+export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   const {
     withPrivacyBanner = true,
     onVisitorConsentCollected,
@@ -157,7 +157,8 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps)  {
     // validate that the storefront access token is not a server API token
     if (
       consentConfig.storefrontAccessToken.startsWith('shpat_') ||
-      consentConfig.storefrontAccessToken.length !== 32) {
+      consentConfig.storefrontAccessToken.length !== 32
+    ) {
       logInvalidConfig('storefrontAccessToken');
     }
 
@@ -176,8 +177,8 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps)  {
 
     function overrideSetTrackingConsent(
       consent: VisitorConsent,
-      callback: (data: {error: string} | undefined) => void
-    ){
+      callback: (data: {error: string} | undefined) => void,
+    ) {
       originalSetTrackingConsent(
         {
           ...consent,
@@ -187,9 +188,10 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps)  {
         },
         callback,
       );
-    };
+    }
 
-    window.Shopify.customerPrivacy.setTrackingConsent = overrideSetTrackingConsent;
+    window.Shopify.customerPrivacy.setTrackingConsent =
+      overrideSetTrackingConsent;
 
     if (onReady && !withPrivacyBanner) {
       onReady();
