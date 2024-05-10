@@ -488,4 +488,68 @@ describe('<VariantSelector>', () => {
       </DocumentFragment>
     `);
   });
+
+  it('returns variant in option values', () => {
+    const {asFragment} = render(
+      createElement(VariantSelector, {
+        handle: 'snowboard',
+        options: [{name: 'Size', values: ['S', 'M']}],
+        variants: {
+          nodes: [
+            {
+              availableForSale: true,
+              sku: 'ABC-01234',
+              selectedOptions: [{name: 'Size', value: 'S'}],
+            } as ProductVariant,
+            {
+              availableForSale: true,
+              sku: 'XYZ-56789',
+              selectedOptions: [{name: 'Size', value: 'M'}],
+            } as ProductVariant,
+          ],
+        },
+        children: ({option}) =>
+          createElement(
+            'div',
+            null,
+            option.values.map(({value, to, isAvailable, variant}) =>
+              createElement(
+                'a',
+                {
+                  key: option.name + value,
+                  href: to,
+                  className: isAvailable ? 'available' : 'unavailable',
+                },
+                value,
+                createElement('br', null),
+                variant && `SKU: ${variant?.sku}`,
+              ),
+            ),
+          ),
+      }),
+    );
+
+    expect(asFragment()).toMatchInlineSnapshot(`
+      <DocumentFragment>
+        <div>
+          <a
+            class="available"
+            href="/products/snowboard?Size=S"
+          >
+            S
+            <br />
+            SKU: ABC-01234
+          </a>
+          <a
+            class="available"
+            href="/products/snowboard?Size=M"
+          >
+            M
+            <br />
+            SKU: XYZ-56789
+          </a>
+        </div>
+      </DocumentFragment>
+    `);
+  });
 });
