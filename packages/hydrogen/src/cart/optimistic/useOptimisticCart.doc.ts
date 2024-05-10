@@ -11,7 +11,7 @@ const data: ReferenceEntityTemplateSchema = {
       url: '/docs/api/hydrogen/2024-04/components/cartform',
     },
   ],
-  description: `The \`useOptimisticCart\` takes an existing cart object, and processed all pending cart actions, locally mutating the cart with optimistic state. An optimistic cart makes cart actions immediately render in the browser while the action syncs to the server. This increases the perceived performance of the application.`,
+  description: `The \`useOptimisticCart\` takes an existing cart object, processes all pending cart actions, and locally mutates the cart with optimistic state. An optimistic cart makes cart actions immediately render in the browser while actions sync to the server. This increases the perceived performance of the application.`,
   type: 'utility',
   defaultExample: {
     description: 'I am the default example',
