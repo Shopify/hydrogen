@@ -81,36 +81,39 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
           };
         },
       },
-      configureServer(viteDevServer) {
-        const entry =
-          apiOptions.entry ?? pluginOptions.entry ?? DEFAULT_SSR_ENTRY;
+      configureServer: {
+        order: 'pre',
+        handler: (viteDevServer) => {
+          const entry =
+            apiOptions.entry ?? pluginOptions.entry ?? DEFAULT_SSR_ENTRY;
 
-        // For transform hook:
-        resolvedConfig = viteDevServer.config;
-        absoluteWorkerEntryFile = path.isAbsolute(entry)
-          ? entry
-          : path.resolve(resolvedConfig.root, entry);
+          // For transform hook:
+          resolvedConfig = viteDevServer.config;
+          absoluteWorkerEntryFile = path.isAbsolute(entry)
+            ? entry
+            : path.resolve(resolvedConfig.root, entry);
 
-        return () => {
-          setupOxygenMiddleware(viteDevServer, async () => {
-            const remoteEnv = await Promise.resolve(apiOptions.envPromise);
+          return () => {
+            setupOxygenMiddleware(viteDevServer, async () => {
+              const remoteEnv = await Promise.resolve(apiOptions.envPromise);
 
-            return {
-              entry,
-              viteDevServer,
-              crossBoundarySetup: apiOptions.crossBoundarySetup,
-              env: {...remoteEnv, ...apiOptions.env, ...pluginOptions.env},
-              debug: apiOptions.debug ?? pluginOptions.debug ?? false,
-              inspectorPort:
-                apiOptions.inspectorPort ?? pluginOptions.inspectorPort,
-              requestHook: apiOptions.requestHook,
-              logRequestLine:
-                // Give priority to the plugin option over the CLI option here,
-                // since the CLI one is just a default, not a user-provided flag.
-                pluginOptions?.logRequestLine ?? apiOptions.logRequestLine,
-            };
-          });
-        };
+              return {
+                entry,
+                viteDevServer,
+                crossBoundarySetup: apiOptions.crossBoundarySetup,
+                env: {...remoteEnv, ...apiOptions.env, ...pluginOptions.env},
+                debug: apiOptions.debug ?? pluginOptions.debug ?? false,
+                inspectorPort:
+                  apiOptions.inspectorPort ?? pluginOptions.inspectorPort,
+                requestHook: apiOptions.requestHook,
+                logRequestLine:
+                  // Give priority to the plugin option over the CLI option here,
+                  // since the CLI one is just a default, not a user-provided flag.
+                  pluginOptions?.logRequestLine ?? apiOptions.logRequestLine,
+              };
+            });
+          };
+        },
       },
       transform(code, id, options) {
         if (

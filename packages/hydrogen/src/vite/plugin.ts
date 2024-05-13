@@ -154,13 +154,16 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
           ],
         });
       },
-      configureServer(viteDevServer) {
-        return () => {
-          setupHydrogenMiddleware(
-            viteDevServer,
-            mergeOptions(pluginOptions, middlewareOptions),
-          );
-        };
+      configureServer: {
+        order: 'pre',
+        handler: (viteDevServer) => {
+          return () => {
+            setupHydrogenMiddleware(
+              viteDevServer,
+              mergeOptions(pluginOptions, middlewareOptions),
+            );
+          };
+        },
       },
     } satisfies HydrogenPlugin,
   ];
