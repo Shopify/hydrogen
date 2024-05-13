@@ -71,8 +71,8 @@
     "use-resize-observer": "^9.1.0"
   },
   "devDependencies": {
-    "@remix-run/react": "^2.8.0",
-    "@remix-run/server-runtime": "^2.8.0",
+    "@remix-run/react": "^2.9.2",
+    "@remix-run/server-runtime": "^2.9.2",
     "@shopify/generate-docs": "0.11.1",
     "@shopify/hydrogen-codegen": "*",
     "@testing-library/jest-dom": "^5.17.0",
@@ -85,8 +85,8 @@
     "vitest": "^1.0.4"
   },
   "peerDependencies": {
-    "@remix-run/react": "^2.1.0",
-    "@remix-run/server-runtime": "^2.1.0",
+    "@remix-run/react": "^2.9.2",
+    "@remix-run/server-runtime": "^2.9.2",
     "react": "^18.2.0",
     "vite": "^5.1.0"
   },

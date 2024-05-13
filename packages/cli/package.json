@@ -16,7 +16,7 @@
     "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest --test-timeout=20000"
   },
   "devDependencies": {
-    "@remix-run/dev": "^2.8.0",
+    "@remix-run/dev": "^2.9.2",
     "@types/diff": "^5.0.2",
     "@types/fs-extra": "^11.0.1",
     "@types/gunzip-maybe": "^1.4.0",
@@ -58,7 +58,7 @@
   },
   "peerDependencies": {
     "@graphql-codegen/cli": "^5.0.2",
-    "@remix-run/dev": "^2.1.0",
+    "@remix-run/dev": "^2.9.2",
     "@shopify/hydrogen-codegen": "^0.3.1",
     "@shopify/mini-oxygen": "^3.0.2",
     "graphql-config": "^5.0.3",
