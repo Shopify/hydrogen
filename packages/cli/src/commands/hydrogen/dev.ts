@@ -332,27 +332,13 @@ export async function runDev({
   viteServer.bindCLIShortcuts({print: true});
   console.log('\n');
 
-  const customSections: AlertCustomSection[] = [];
-
-  if (!h2PluginOptions?.disableVirtualRoutes) {
-    customSections.push({body: getUtilityBannerlines(finalHost)});
-  }
-
-  if (debug && inspectorPort) {
-    customSections.push({
-      body: {warn: getDebugBannerLine(inspectorPort)},
-    });
-  }
-
-  const {storefrontTitle} = await backgroundPromise;
-  renderSuccess({
-    body: [
-      `View ${
-        storefrontTitle ? colors.cyan(storefrontTitle) : 'Hydrogen'
-      } app:`,
-      {link: {url: finalHost}},
-    ],
-    customSections,
+  const storefrontTitle = (await backgroundPromise).storefrontTitle;
+  showSuccessBanner({
+    disableVirtualRoutes,
+    debug,
+    inspectorPort,
+    finalHost,
+    storefrontTitle,
   });
 
   if (!disableVersionCheck) {
@@ -371,4 +357,37 @@ export async function runDev({
       await Promise.allSettled([viteServer.close(), tunnel?.cleanup?.()]);
     },
   };
+}
+
+function showSuccessBanner({
+  disableVirtualRoutes,
+  debug,
+  inspectorPort,
+  finalHost,
+  storefrontTitle,
+}: Pick<DevOptions, 'disableVirtualRoutes' | 'debug' | 'inspectorPort'> & {
+  finalHost: string;
+  storefrontTitle?: string;
+}) {
+  const customSections: AlertCustomSection[] = [];
+
+  if (!disableVirtualRoutes) {
+    customSections.push({body: getUtilityBannerlines(finalHost)});
+  }
+
+  if (debug && inspectorPort) {
+    customSections.push({
+      body: {warn: getDebugBannerLine(inspectorPort)},
+    });
+  }
+
+  renderSuccess({
+    body: [
+      `View ${
+        storefrontTitle ? colors.cyan(storefrontTitle) : 'Hydrogen'
+      } app:`,
+      {link: {url: finalHost}},
+    ],
+    customSections,
+  });
 }
