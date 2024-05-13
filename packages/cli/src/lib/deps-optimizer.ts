@@ -1,54 +1,78 @@
-import type {ViteDevServer} from 'vite';
-import {AbortError} from '@shopify/cli-kit/node/error';
-import {readFile} from '@shopify/cli-kit/node/fs';
+import {AbortError, BugError} from '@shopify/cli-kit/node/error';
 import {extname} from '@shopify/cli-kit/node/path';
-import {getCodeFormatOptions, type FormatOptions} from './format-code.js';
+import {renderFatalError} from '@shopify/cli-kit/node/ui';
+import colors from '@shopify/cli-kit/node/colors';
+import {type FormatOptions} from './format-code.js';
 import {importLangAstGrep} from './ast.js';
 import {replaceFileContent} from './file.js';
-import {addMessageReplacers} from './log.js';
+import {outputInfo} from '@shopify/cli-kit/node/output';
 
-export async function setupDepsOptimizer(
-  viteServer: ViteDevServer,
-  onSuccess?: (addedDependency: string) => void,
-) {
-  const formatOptions = await getCodeFormatOptions(viteServer.config.root);
-  const re = /ReferenceError: \w+ is not defined/i;
+let showBannerUrlTimeout: NodeJS.Timeout | undefined;
 
-  addMessageReplacers('vite-optimize-deps', [
-    ([first]) => {
-      const item = first?.stack ?? first;
-      return (
-        typeof item === 'string' &&
-        re.test(item) &&
-        // Only for errors in dependencies
-        !!item.split('\n')[1]?.includes('node_modules')
-      );
-    },
-    ([item]) => {
-      const stack = (item.stack ?? item).replace(
-        /^\s+at\s[^\n]+?\/mini-oxygen\/[^\n]+\n/gm,
-        '',
-      );
+export function createEntryPointErrorHandler({
+  disableDepsOptimizer,
+  showSuccessBanner,
+  configFile,
+  formatOptionsPromise,
+}: {
+  showSuccessBanner: () => void;
+  disableDepsOptimizer?: boolean;
+  configFile?: string;
+  formatOptionsPromise: Promise<FormatOptions>;
+}) {
+  return async function entryPointErrorHandler({
+    optimizableDependency,
+    stack,
+  }: {
+    optimizableDependency?: string;
+    stack: string;
+  }) {
+    const message = stack.split('\n')[0] ?? stack;
+    const cleanStack = stack
+      .split('\n')
+      .filter((line) => !line.includes('virtual:remix'))
+      .join('\n');
 
-      // Examples:
-      //  at /Users/.../node_modules/my-dep/index.js:15:1
-      //  at eval (/Users/.../node_modules/my-dep/index.js?v=75108676:17:1)
-      const filepath = stack
-        .match(/^\s+at\s([^:\?]+)(\?|:\d)/m)?.[1]
-        ?.replace(/^.*?\(/, '')
-        .replace(/\?.+$/, '');
+    const headline = 'MiniOxygen errored while running your entrypoint';
 
-      tryToOptimizeDep(filepath, viteServer, formatOptions)
-        .then((dep) => {
-          if (dep && onSuccess) onSuccess(dep);
-        })
-        .catch((warning) => {
-          process.stderr.write(stack);
-          if (warning instanceof AbortError) throw warning;
-          else process.stdout.write('\n' + warning.stack);
-        });
-    },
-  ]);
+    if (optimizableDependency) {
+      if (disableDepsOptimizer || !configFile) {
+        const depError = new BugError(
+          `${headline}: ${colors.dim(message.replace('ReferenceError: ', ''))}`,
+          `Try adding '${colors.yellow(
+            optimizableDependency,
+          )}' to your Vite config\'s ssr.optimizeDeps.include`,
+        );
+        depError.stack = cleanStack;
+        renderFatalError(depError);
+      } else {
+        addToViteOptimizeDeps(
+          optimizableDependency,
+          configFile,
+          await formatOptionsPromise,
+        )
+          .then(() => {
+            setTimeout(() => {
+              outputInfo(
+                `\nAdded '${colors.yellow(
+                  optimizableDependency,
+                )}' to your Vite config's ssr.optimizeDeps.include\n`,
+              );
+            }, 200);
+
+            clearTimeout(showBannerUrlTimeout);
+            showBannerUrlTimeout = setTimeout(showSuccessBanner, 2000);
+          })
+          .catch((error) => {
+            renderFatalError(error);
+          });
+      }
+    } else {
+      const unknownError = new BugError(headline + ': ' + colors.dim(message));
+      unknownError.stack = cleanStack;
+      renderFatalError(unknownError);
+    }
+  };
 }
 
 // AST-Grep rule for finding`ssr.optimizeDeps.include: []` in Vite config
@@ -85,44 +109,11 @@ const ssrOptimizeDepsIncludeRule = {
   },
 };
 
-async function tryToOptimizeDep(
-  filepath: string,
-  viteServer: ViteDevServer,
+export async function addToViteOptimizeDeps(
+  dependency: string,
+  configFile: string,
   formatOptions: FormatOptions,
 ) {
-  const mods = viteServer.moduleGraph.getModulesByFile(filepath);
-  const modImporters = new Set<string>();
-
-  mods?.forEach((mod) => {
-    mod.importers.forEach((importer) => {
-      if (importer.file) modImporters.add(importer.file);
-    });
-  });
-
-  const importersSet = new Set<string>();
-  for (const mod of modImporters) {
-    const code = await readFile(mod).catch(() => '');
-    const matches =
-      code.matchAll(/import\s[^'"]+\sfrom\s+['"]((@|\w)[^'"]+)['"]/g) ?? [];
-
-    for (const match of matches) {
-      importersSet.add(match[1]!);
-    }
-  }
-
-  const importers = Array.from(importersSet).sort(
-    (a, b) => b.length - a.length,
-  );
-  const nodeModulesPath = filepath.split(/node_modules[\\\/]/)[1]!;
-
-  const match = importers.find((importer) =>
-    nodeModulesPath.startsWith(importer),
-  );
-
-  const {configFile} = viteServer.config;
-
-  if (!configFile || !match) return;
-
   const ext = extname(configFile).replace(/^\.m?/, '') as 'ts' | 'js';
   const astGrep = await importLangAstGrep(ext);
 
@@ -132,15 +123,15 @@ async function tryToOptimizeDep(
 
     if (!node) {
       throw new AbortError(
-        `The dependcy "${match}" needs to be optimized but couldn't be added to the Vite config.`,
-        `Add the following code manually to your Vite config:\n\nssr: {optimizeDeps: {include: ['${match}']}}`,
+        `The dependcy "${dependency}" needs to be optimized but couldn't be added to the Vite config.`,
+        `Add the following code manually to your Vite config:\n\nssr: {optimizeDeps: {include: ['${dependency}']}}`,
       );
     }
 
     const isAlreadyAdded = !!node.find({
       rule: {
         kind: 'string_fragment',
-        regex: `^${match}$`,
+        regex: `^${dependency}$`,
       },
     });
 
@@ -150,10 +141,8 @@ async function tryToOptimizeDep(
 
     return (
       content.slice(0, start.index + 1) +
-      `'${match}',` +
+      `'${dependency}',` +
       content.slice(start.index + 1)
     );
   });
-
-  return match;
 }

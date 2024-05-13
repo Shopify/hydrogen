@@ -16,7 +16,7 @@ import {
 import Command from '@shopify/cli-kit/node/base-command';
 import colors from '@shopify/cli-kit/node/colors';
 import {resolvePath} from '@shopify/cli-kit/node/path';
-import {collectLog, outputInfo} from '@shopify/cli-kit/node/output';
+import {collectLog} from '@shopify/cli-kit/node/output';
 import {type AlertCustomSection, renderSuccess} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {Flags, Config} from '@oclif/core';
@@ -42,7 +42,8 @@ import {logRequestLine} from '../../lib/mini-oxygen/common.js';
 import {findHydrogenPlugin, findOxygenPlugin} from '../../lib/vite-config.js';
 import {hasViteConfig} from '../../lib/vite-config.js';
 import {runClassicCompilerDev} from '../../lib/classic-compiler/dev.js';
-import {setupDepsOptimizer} from '../../lib/deps-optimizer.js';
+import {createEntryPointErrorHandler} from '../../lib/deps-optimizer.js';
+import {getCodeFormatOptions} from '../../lib/format-code.js';
 
 export default class Dev extends Command {
   static descriptionWithMarkdown = `Runs a Hydrogen storefront in a local runtime that emulates an Oxygen worker for development.
@@ -234,6 +235,10 @@ export async function runDev({
     customLogger.error = (msg) => collectLog('error', msg);
   }
 
+  const formatOptionsPromise = Promise.resolve().then(() =>
+    getCodeFormatOptions(root),
+  );
+
   const viteServer = await vite.createServer({
     root,
     customLogger,
@@ -253,6 +258,19 @@ export async function runDev({
             envPromise: envPromise.then(({allVariables}) => allVariables),
             inspectorPort,
             logRequestLine,
+            entryPointErrorHandler: createEntryPointErrorHandler({
+              disableDepsOptimizer,
+              configFile: config.configFile,
+              formatOptionsPromise,
+              showSuccessBanner: () =>
+                showSuccessBanner({
+                  disableVirtualRoutes,
+                  debug,
+                  inspectorPort,
+                  finalHost,
+                  storefrontTitle,
+                }),
+            }),
           });
         },
         configureServer: (viteDevServer) => {
@@ -285,32 +303,6 @@ export async function runDev({
   }
 
   const h2PluginOptions = h2Plugin.api?.getPluginOptions?.();
-
-  if (!disableDepsOptimizer) {
-    let showBannerUrlTimeout: NodeJS.Timeout | undefined;
-
-    setupDepsOptimizer(viteServer, (addedDependency) => {
-      setTimeout(() => {
-        outputInfo(
-          `\nAdded '${addedDependency}' to your Vite config's ssr.optimizeDeps.include\n`,
-        );
-      }, 200);
-
-      clearTimeout(showBannerUrlTimeout);
-
-      showBannerUrlTimeout = setTimeout(
-        () =>
-          showSuccessBanner({
-            debug,
-            disableVirtualRoutes,
-            inspectorPort,
-            finalHost,
-            storefrontTitle,
-          }),
-        2000,
-      );
-    });
-  }
 
   const codegenProcess = useCodegen
     ? spawnCodegenProcess({
