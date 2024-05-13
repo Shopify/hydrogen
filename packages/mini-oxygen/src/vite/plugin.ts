@@ -2,16 +2,12 @@ import path from 'node:path';
 import type {Plugin, ResolvedConfig} from 'vite';
 import {
   setupOxygenMiddleware,
-  startMiniOxygenRuntime,
   type InternalMiniOxygenOptions,
   type MiniOxygenViteOptions,
-  type MiniOxygen,
 } from './server-middleware.js';
 
 // Note: Vite resolves extensions like .js or .ts automatically.
 const DEFAULT_SSR_ENTRY = './server';
-
-let miniOxygen: MiniOxygen;
 
 export type OxygenPluginOptions = Partial<
   Pick<
@@ -23,7 +19,6 @@ export type OxygenPluginOptions = Partial<
 type OxygenApiOptions = OxygenPluginOptions &
   InternalMiniOxygenOptions & {
     envPromise?: Promise<Record<string, any>>;
-    shouldStartRuntime?: () => boolean;
   };
 
 /**
@@ -87,22 +82,20 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
         },
       },
       configureServer(viteDevServer) {
-        // For transform hook:
-        resolvedConfig = viteDevServer.config;
-
-        if (miniOxygen) return;
-        if (apiOptions.shouldStartRuntime?.() !== true) return;
-
         const entry =
           apiOptions.entry ?? pluginOptions.entry ?? DEFAULT_SSR_ENTRY;
 
+        // For transform hook:
+        resolvedConfig = viteDevServer.config;
         absoluteWorkerEntryFile = path.isAbsolute(entry)
           ? entry
           : path.resolve(resolvedConfig.root, entry);
 
-        const miniOxygenPromise = Promise.resolve(apiOptions.envPromise).then(
-          (remoteEnv) =>
-            startMiniOxygenRuntime({
+        return () => {
+          setupOxygenMiddleware(viteDevServer, async () => {
+            const remoteEnv = await Promise.resolve(apiOptions.envPromise);
+
+            return {
               entry,
               viteDevServer,
               crossBoundarySetup: apiOptions.crossBoundarySetup,
@@ -115,21 +108,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
                 // Give priority to the plugin option over the CLI option here,
                 // since the CLI one is just a default, not a user-provided flag.
                 pluginOptions?.logRequestLine ?? apiOptions.logRequestLine,
-            }),
-        );
-
-        process.once('SIGTERM', async () => {
-          try {
-            await miniOxygen?.dispose();
-          } finally {
-            process.exit();
-          }
-        });
-
-        return () => {
-          setupOxygenMiddleware(viteDevServer, async (request) => {
-            miniOxygen ??= await miniOxygenPromise;
-            return miniOxygen.dispatchFetch(request);
+            };
           });
         };
       },
