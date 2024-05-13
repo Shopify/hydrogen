@@ -44,6 +44,10 @@ export default {
     // Fetch the app's entry module and cache it. E.g. `<root>/server.ts`
     const module = await fetchEntryModule(url, env);
 
+    if ('errorResponse' in module) {
+      return module.errorResponse;
+    }
+
     // Return early for warmup requests after loading the entry module.
     if (url.pathname === env.__VITE_WARMUP_PATHNAME) {
       return new globalThis.Response(null);
@@ -186,9 +190,21 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
     );
   }
 
-  return runtime.executeEntrypoint(env.__VITE_RUNTIME_EXECUTE_URL) as Promise<{
-    default: {fetch: ExportedHandlerFetchHandler};
-  }>;
+  return (
+    runtime.executeEntrypoint(env.__VITE_RUNTIME_EXECUTE_URL) as Promise<{
+      default: {fetch: ExportedHandlerFetchHandler};
+    }>
+  ).catch((error: Error) => {
+    return {
+      errorResponse: new globalThis.Response(
+        error?.stack ?? error?.message ?? 'Internal error',
+        {
+          status: 503,
+          statusText: 'executeEntrypoint error',
+        },
+      ),
+    };
+  });
 }
 
 /**

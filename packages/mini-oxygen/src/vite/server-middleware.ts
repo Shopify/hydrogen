@@ -9,9 +9,10 @@ import {
 } from '../worker/index.js';
 import type {OnlyBindings, OnlyServices} from '../worker/utils.js';
 import {getHmrUrl, pipeFromWeb, toURL, toWeb} from './utils.js';
+import {isEntrypointError, handleEntrypointError} from './deps-optimizer.js';
 
 import type {ViteEnv} from './worker-entry.js';
-import {type RequestHookInfo} from '../worker/handler.js';
+import type {RequestHookInfo} from '../worker/handler.js';
 const scriptPath = fileURLToPath(new URL('./worker-entry.js', import.meta.url));
 
 const FETCH_MODULE_PATHNAME = '/__vite_fetch_module';
@@ -210,9 +211,15 @@ export function setupOxygenMiddleware(
     ready.then(() =>
       miniOxygen
         .dispatchFetch(toWeb(req))
-        .then((webResponse) => pipeFromWeb(webResponse, res))
+        .then(async (webResponse) => {
+          if (isEntrypointError(webResponse)) {
+            handleEntrypointError(viteDevServer, webResponse, res);
+          } else {
+            pipeFromWeb(webResponse, res);
+          }
+        })
         .catch((error) => {
-          console.error('Error during evaluation:', error);
+          console.error('MiniOxygen: Error during evaluation:', error);
           res.writeHead(500);
           res.end();
         }),
