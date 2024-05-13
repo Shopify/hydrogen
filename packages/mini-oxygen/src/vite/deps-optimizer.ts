@@ -24,6 +24,7 @@ export async function handleEntrypointError(
   viteDevServer: ViteDevServer,
   webResponse: Response,
   res: ServerResponse,
+  entryPointErrorHandler?: CustomEntryPointErrorHandler,
 ) {
   const stack = (await webResponse.text())
     .split('\n')
@@ -40,19 +41,27 @@ export async function handleEntrypointError(
     ? `Try adding <code>${optimizableDependency}</code> to the <code>ssr.optimizeDeps.include</code> array in your Vite config.`
     : '';
 
-  console.warn(
-    '\nWarning: ' + header + '\n' + message.replace(/<\/?code>/g, '"'),
+  if (!entryPointErrorHandler) {
+    console.warn(
+      '\nWarning: ' + header + '\n' + message.replace(/<\/?code>/g, '"'),
+    );
+  }
+
+  const result = await entryPointErrorHandler?.({optimizableDependency, stack});
+
+  res.writeHead(
+    result?.status ?? 503,
+    result?.headers ?? {'Content-Type': 'text/html; charset=utf-8'},
   );
 
-  res.writeHead(503, {'Content-Type': 'text/html; charset=utf-8'});
-
   res.end(
-    getErrorPage({
-      title: 'Entry point error',
-      header: `MiniOxygen could not load the app's entry point.`,
-      message,
-      code: stack,
-    }),
+    result?.body ??
+      getErrorPage({
+        title: 'Entry point error',
+        header: `MiniOxygen could not load the app's entry point.`,
+        message,
+        code: stack,
+      }),
   );
 
   return true;

@@ -9,7 +9,11 @@ import {
 } from '../worker/index.js';
 import type {OnlyBindings, OnlyServices} from '../worker/utils.js';
 import {getHmrUrl, pipeFromWeb, toURL, toWeb} from './utils.js';
-import {isEntrypointError, handleEntrypointError} from './deps-optimizer.js';
+import {
+  isEntrypointError,
+  handleEntrypointError,
+  type CustomEntryPointErrorHandler,
+} from './deps-optimizer.js';
 
 import type {ViteEnv} from './worker-entry.js';
 import type {RequestHookInfo} from '../worker/handler.js';
@@ -49,6 +53,10 @@ export type InternalMiniOxygenOptions = {
         binding: (...args: unknown[]) => unknown | Promise<unknown> | void;
       }
   >;
+  /**
+   * Callback that runs when detecting a dependency that can be optimized in Vite.
+   */
+  entryPointErrorHandler?: CustomEntryPointErrorHandler;
 };
 
 export type MiniOxygenViteOptions = InternalMiniOxygenOptions & {
@@ -194,6 +202,7 @@ export function setupOxygenMiddleware(
   );
 
   let miniOxygen: MiniOxygen;
+  let miniOxygenOptions: MiniOxygenViteOptions;
 
   viteDevServer.middlewares.use(function o2HandleWorkerRequest(req, res) {
     // This request comes from the browser. At this point, Vite
@@ -205,6 +214,7 @@ export function setupOxygenMiddleware(
       miniOxygen && !miniOxygen.isDisposed
         ? Promise.resolve()
         : getMiniOxygenOptions().then((options) => {
+            miniOxygenOptions = options;
             miniOxygen = startMiniOxygenRuntime(options);
           });
 
@@ -213,7 +223,12 @@ export function setupOxygenMiddleware(
         .dispatchFetch(toWeb(req))
         .then(async (webResponse) => {
           if (isEntrypointError(webResponse)) {
-            handleEntrypointError(viteDevServer, webResponse, res);
+            handleEntrypointError(
+              viteDevServer,
+              webResponse,
+              res,
+              miniOxygenOptions.entryPointErrorHandler,
+            );
           } else {
             pipeFromWeb(webResponse, res);
           }
