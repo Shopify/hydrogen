@@ -1,5 +1,5 @@
-import {json, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {useLoaderData, Link, type MetaFunction} from '@remix-run/react';
+import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {useLoaderData, Link, type MetaArgs_SingleFetch} from '@remix-run/react';
 import {
   Pagination,
   getPaginationVariables,
@@ -9,11 +9,16 @@ import {
 import type {ProductItemFragment} from 'storefrontapi.generated';
 import {useVariantUrl} from '~/lib/variants';
 
-export const meta: MetaFunction<typeof loader> = ({data}) => {
+export function meta({data}: MetaArgs_SingleFetch<typeof loader>) {
   return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
-};
+}
 
-export async function loader({request, params, context}: LoaderFunctionArgs) {
+export async function loader({
+  request,
+  params,
+  context,
+  response,
+}: LoaderFunctionArgs) {
   const {handle} = params;
   const {storefront} = context;
   const paginationVariables = getPaginationVariables(request, {
@@ -21,7 +26,9 @@ export async function loader({request, params, context}: LoaderFunctionArgs) {
   });
 
   if (!handle) {
-    return redirect('/collections');
+    response!.status = 302;
+    response!.headers.set('Location', '/collections');
+    throw response;
   }
 
   const {collection} = await storefront.query(COLLECTION_QUERY, {
@@ -29,11 +36,10 @@ export async function loader({request, params, context}: LoaderFunctionArgs) {
   });
 
   if (!collection) {
-    throw new Response(`Collection ${handle} not found`, {
-      status: 404,
-    });
+    response!.status = 404;
+    throw new Error(`Collection ${handle} not found`);
   }
-  return json({collection});
+  return {collection};
 }
 
 export default function Collection() {

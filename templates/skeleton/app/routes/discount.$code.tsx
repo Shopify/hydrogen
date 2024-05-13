@@ -1,4 +1,4 @@
-import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 
 /**
  * Automatically applies a discount found on the url
@@ -11,7 +11,12 @@ import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
  *
  * ```
  */
-export async function loader({request, context, params}: LoaderFunctionArgs) {
+export async function loader({
+  request,
+  context,
+  params,
+  response,
+}: LoaderFunctionArgs) {
   const {cart} = context;
   const {code} = params;
 
@@ -31,7 +36,9 @@ export async function loader({request, context, params}: LoaderFunctionArgs) {
   const redirectUrl = `${redirectParam}?${searchParams}`;
 
   if (!code) {
-    return redirect(redirectUrl);
+    response!.status = 302;
+    response!.headers.set('Location', redirectUrl);
+    throw response;
   }
 
   const result = await cart.updateDiscountCodes([code]);
@@ -40,8 +47,7 @@ export async function loader({request, context, params}: LoaderFunctionArgs) {
   // Using set-cookie on a 303 redirect will not work if the domain origin have port number (:3000)
   // If there is no cart id and a new cart id is created in the progress, it will not be set in the cookie
   // on localhost:3000
-  return redirect(redirectUrl, {
-    status: 303,
-    headers,
-  });
+  response!.status = 303;
+  response!.headers.set('Location', redirectUrl);
+  throw response;
 }

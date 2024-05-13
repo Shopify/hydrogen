@@ -14,13 +14,14 @@ import {
   PredictiveSearchResults,
 } from '~/components/Search';
 
-export type LayoutProps = {
+interface LayoutProps {
   cart: Promise<CartApiQueryFragment | null>;
-  children?: React.ReactNode;
   footer: Promise<FooterQuery>;
   header: HeaderQuery;
   isLoggedIn: Promise<boolean>;
-};
+  publicStoreDomain: string;
+  children?: React.ReactNode;
+}
 
 export function Layout({
   cart,
@@ -28,19 +29,27 @@ export function Layout({
   footer,
   header,
   isLoggedIn,
+  publicStoreDomain,
 }: LayoutProps) {
   return (
     <Aside.Provider>
       <CartAside cart={cart} />
       <SearchAside />
-      <MobileMenuAside menu={header?.menu} shop={header?.shop} />
-      {header && <Header header={header} cart={cart} isLoggedIn={isLoggedIn} />}
+      <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
+      {header && (
+        <Header
+          header={header}
+          cart={cart}
+          isLoggedIn={isLoggedIn}
+          publicStoreDomain={publicStoreDomain}
+        />
+      )}
       <main>{children}</main>
-      <Suspense>
-        <Await resolve={footer}>
-          {(footer) => <Footer menu={footer?.menu} shop={header?.shop} />}
-        </Await>
-      </Suspense>
+      <Footer
+        footer={footer}
+        header={header}
+        publicStoreDomain={publicStoreDomain}
+      />
     </Aside.Provider>
   );
 }
@@ -95,20 +104,21 @@ function SearchAside() {
 }
 
 function MobileMenuAside({
-  menu,
-  shop,
+  header,
+  publicStoreDomain,
 }: {
-  menu: HeaderQuery['menu'];
-  shop: HeaderQuery['shop'];
+  header: LayoutProps['header'];
+  publicStoreDomain: LayoutProps['publicStoreDomain'];
 }) {
   return (
-    menu &&
-    shop?.primaryDomain?.url && (
+    header.menu &&
+    header.shop.primaryDomain?.url && (
       <Aside type="mobile" heading="MENU">
         <HeaderMenu
-          menu={menu}
+          menu={header.menu}
           viewport="mobile"
-          primaryDomainUrl={shop.primaryDomain.url}
+          primaryDomainUrl={header.shop.primaryDomain.url}
+          publicStoreDomain={publicStoreDomain}
         />
       </Aside>
     )

@@ -1,4 +1,4 @@
-import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 
 /**
  * Automatically creates a new cart based on the URL and redirects straight to checkout.
@@ -18,10 +18,19 @@ import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
  *
  * ```
  */
-export async function loader({request, context, params}: LoaderFunctionArgs) {
+export async function loader({
+  request,
+  context,
+  params,
+  response,
+}: LoaderFunctionArgs) {
   const {cart} = context;
   const {lines} = params;
-  if (!lines) return redirect('/cart');
+  if (!lines) {
+    response!.status = 302;
+    response!.headers.set('Location', '/cart');
+    throw response;
+  }
   const linesMap = lines.split(',').map((line) => {
     const lineDetails = line.split(':');
     const variantId = lineDetails[0];
@@ -48,17 +57,21 @@ export async function loader({request, context, params}: LoaderFunctionArgs) {
   const cartResult = result.cart;
 
   if (result.errors?.length || !cartResult) {
-    throw new Response('Link may be expired. Try checking the URL.', {
-      status: 410,
-    });
+    response!.status = 410;
+    throw new Error('Link may be expired. Try checking the URL.');
   }
 
   // Update cart id in cookie
   const headers = cart.setCartId(cartResult.id);
+  headers.forEach((value, key) => {
+    response!.headers.set(key, value);
+  });
 
   // redirect to checkout
   if (cartResult.checkoutUrl) {
-    return redirect(cartResult.checkoutUrl, {headers});
+    response!.status = 302;
+    response!.headers.set('Location', cartResult.checkoutUrl);
+    throw response;
   } else {
     throw new Error('No checkout URL found');
   }

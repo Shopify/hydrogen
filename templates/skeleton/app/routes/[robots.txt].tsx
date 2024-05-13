@@ -1,8 +1,7 @@
 import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {useRouteError, isRouteErrorResponse} from '@remix-run/react';
 import {parseGid} from '@shopify/hydrogen';
 
-export async function loader({request, context}: LoaderFunctionArgs) {
+export async function loader({request, context, response}: LoaderFunctionArgs) {
   const url = new URL(request.url);
 
   const {shop} = await context.storefront.query(ROBOTS_QUERY);
@@ -10,14 +9,9 @@ export async function loader({request, context}: LoaderFunctionArgs) {
   const shopId = parseGid(shop.id).id;
   const body = robotsTxtData({url: url.origin, shopId});
 
-  return new Response(body, {
-    status: 200,
-    headers: {
-      'Content-Type': 'text/plain',
-
-      'Cache-Control': `max-age=${60 * 60 * 24}`,
-    },
-  });
+  response!.headers.set('Content-Type', 'text/plain');
+  response!.headers.set('Cache-Control', `max-age=${60 * 60 * 24}`);
+  return body;
 }
 
 function robotsTxtData({url, shopId}: {shopId?: string; url?: string}) {

@@ -1,16 +1,20 @@
-import {Await, type MetaFunction} from '@remix-run/react';
+import {Await, type MetaFunction, useRouteLoaderData} from '@remix-run/react';
 import {Suspense} from 'react';
 import type {CartQueryDataReturn} from '@shopify/hydrogen';
 import {CartForm} from '@shopify/hydrogen';
-import {json, type ActionFunctionArgs} from '@shopify/remix-oxygen';
+import {unstable_defineAction as defineAction} from '@shopify/remix-oxygen';
 import {CartMain} from '~/components/Cart';
-import {useRootLoaderData} from '~/lib/root-data';
+import type {RootLoader} from '~/root';
 
 export const meta: MetaFunction = () => {
   return [{title: `Hydrogen | Cart`}];
 };
 
-export async function action({request, context}: ActionFunctionArgs) {
+export const action = defineAction(async function action({
+  request,
+  context,
+  response,
+}) {
   const {cart} = context;
 
   const formData = await request.formData();
@@ -21,9 +25,7 @@ export async function action({request, context}: ActionFunctionArgs) {
     throw new Error('No action provided');
   }
 
-  let status = 200;
   let result: CartQueryDataReturn;
-
   switch (action) {
     case CartForm.ACTIONS.LinesAdd:
       result = await cart.addLines(inputs.lines);
@@ -60,36 +62,37 @@ export async function action({request, context}: ActionFunctionArgs) {
 
   const cartId = result?.cart?.id;
   const headers = cartId ? cart.setCartId(result.cart.id) : new Headers();
+
   const {cart: cartResult, errors} = result;
 
   const redirectTo = formData.get('redirectTo') ?? null;
   if (typeof redirectTo === 'string') {
-    status = 303;
-    headers.set('Location', redirectTo);
+    response.status = 303;
+    response.headers.set('Location', redirectTo);
   }
 
-  return json(
-    {
-      cart: cartResult,
-      errors,
-      analytics: {
-        cartId,
-      },
+  headers.forEach((value, key) => {
+    response.headers.set(key, value);
+  });
+
+  return {
+    cart: cartResult,
+    errors,
+    analytics: {
+      cartId,
     },
-    {status, headers},
-  );
-}
+  };
+});
 
 export default function Cart() {
-  const rootData = useRootLoaderData();
-  const cartPromise = rootData.cart;
+  const rootData = useRouteLoaderData<RootLoader>('root');
 
-  return (
+  return rootData ? (
     <div className="cart">
       <h1>Cart</h1>
       <Suspense fallback={<p>Loading cart ...</p>}>
         <Await
-          resolve={cartPromise}
+          resolve={rootData.cart}
           errorElement={<div>An error occurred</div>}
         >
           {(cart) => {
@@ -98,5 +101,5 @@ export default function Cart() {
         </Await>
       </Suspense>
     </div>
-  );
+  ) : null;
 }

@@ -60,7 +60,9 @@ function defaultAuthStatusHandler(request: CrossRuntimeRequest) {
 
   const redirectTo =
     DEFAULT_LOGIN_URL +
-    `?${new URLSearchParams({return_to: pathname}).toString()}`;
+    `?${new URLSearchParams({
+      return_to: pathname.replace(/\.data$/, ''), // for single fetch
+    }).toString()}`;
 
   return redirect(redirectTo);
 }
