@@ -156,7 +156,6 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
       console.error(
         `[h2:error:useCustomerPrivacy] It looks like you passed a private access token, make sure to use the public token`,
       );
-      console;
     }
 
     if (withPrivacyBanner && window?.privacyBanner) {
