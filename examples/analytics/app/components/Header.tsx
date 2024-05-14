@@ -4,6 +4,7 @@ import type {HeaderQuery} from 'storefrontapi.generated';
 import type {LayoutProps} from '~/components/Layout';
 import {useRootLoaderData} from '~/lib/root-data';
 import {unstable_useAnalytics as useAnalytics} from '@shopify/hydrogen';
+import {useAside} from '~/components/Aside';
 
 type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'>;
 
@@ -107,20 +108,38 @@ function HeaderCtas({
 }
 
 function HeaderMenuMobileToggle() {
+  const {open} = useAside();
   return (
-    <a className="header-menu-mobile-toggle" href="#mobile-menu-aside">
+    <button
+      className="header-menu-mobile-toggle reset"
+      onClick={() => open('mobile')}
+    >
       <h3>☰</h3>
-    </a>
+    </button>
   );
 }
 
 function SearchToggle() {
-  return <a href="#search-aside">Search</a>;
+  const {open} = useAside();
+  return (
+    <button className="reset" onClick={() => open('search')}>
+      Search
+    </button>
+  );
 }
 
-function CartBadge({count, onClick}: {count: number; onClick?: () => void}) {
+function CartBadge({count, onClick}: {count: number; onClick: () => void}) {
+  const {open} = useAside();
+
   return (
-    <a href="#cart-aside" onClick={onClick}>
+    <a
+      href="/cart"
+      onClick={(e) => {
+        e.preventDefault();
+        open('cart');
+        onClick();
+      }}
+    >
       Cart {count}
     </a>
   );
@@ -128,10 +147,12 @@ function CartBadge({count, onClick}: {count: number; onClick?: () => void}) {
 
 function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
   const {publish, cart: analyticsCart} = useAnalytics();
+
   // Example: publishing a custom event when the side cart is toggled
   function publishSideCartViewed() {
     publish('custom_sidecart_viewed', {cart: analyticsCart});
   }
+
   return (
     <Suspense
       fallback={<CartBadge count={0} onClick={publishSideCartViewed} />}
