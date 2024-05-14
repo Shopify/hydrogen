@@ -8,7 +8,7 @@ import {
 type GenerateImageWidthsParams = Parameters<typeof generateImageWidths>;
 type GenerateSizesParams = Parameters<typeof generateSizes>;
 
-type GenPreloadImageLinkMetaProps = {
+type GetPreloadImageMetaProps = {
   /* The URL of the image to generate the srcset for */
   url: string;
   /* The width of the image to generate the srcset for */
@@ -38,12 +38,12 @@ const defaultProps = {
 
 /**
  * Generates a link meta tag for preloading an image with a srcset
- * @param {GenPreloadImageLinkMetaProps} props - The props to generate the preload link meta tag
+ * @param {GetPreloadImageMetaProps} props - The props to generate the preload link meta tag
  * @returns {object} - The link meta tag object
  * @example
  * Basic usage with default <Image /> component props:
  * ```
- * const heroImageLink = genPreloadImageLinkMeta({
+ * const heroImageLink = getPreloadImageMeta({
  *  url: 'https://cdn.shopify.com/s/files/1/0000/0000/0000/files/hero.jpg',
  * });
  * ```
@@ -51,19 +51,19 @@ const defaultProps = {
  * @example
  * Usage with custom `width` set in the <Image /> component props:
  * ```
- * const heroImageLink = genPreloadImageLinkMeta({
+ * const heroImageLink = getPreloadImageMeta({
  *  url: 'https://cdn.shopify.com/s/files/1/0000/0000/0000/files/hero.jpg',
  *  width: '(min-width: 45em) 50vw, 100vw',
  * });
  * ```
  */
-export function genPreloadImageLinkMeta({
+export function getPreloadImageMeta({
   url,
   width = defaultProps.width,
   srcSet = defaultProps.srcSet,
   sizes = defaultProps.sizes,
   loader = shopifyLoader,
-}: GenPreloadImageLinkMetaProps) {
+}: GetPreloadImageMetaProps) {
   // Assign default values if not provided
   const interval = srcSet?.interval ?? defaultProps?.srcSet?.interval ?? 15;
   const startingWidth =

@@ -33,6 +33,7 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
     {title: `Hydrogen | ${data?.product.title ?? ''}`},
   ] as MetaDescriptor[];
 
+  // preload the featured product image
   if (data?.product?.selectedVariant?.image) {
     const preloadImageLink = genPreloadImageLinkMeta({
       url: data?.product.selectedVariant.image.url,

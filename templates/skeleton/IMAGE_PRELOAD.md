@@ -24,49 +24,76 @@ Export hydrogen-react `Image` component inner utilities within `@shopify/hydroge
 | `generateSrcSet`       | Generates a `srcSet` for Shopify images based on an array of sizes  |
 | `shopifyLoader`        | Appends a width, height and crop url query params to a given Shopify CDN url |
 
-Export the `genPreloadImageLinkMeta` from hydrogen which internally uses this utilities
+Export the `getPreloadImageMeta` from hydrogen which internally uses this utilities
 
 ```ts
-// src/genPreloadImageLinkMeta.ts in hydrogen-react
+// src/libs/getPreloadImageMeta.ts in hydrogen-react
 import {
   generateImageWidths,
   generateSizes,
   generateSrcSet,
   shopifyLoader,
-} from './src/Image.ts';
+} from '@shopify/hydrogen';
 
 type GenerateImageWidthsParams = Parameters<typeof generateImageWidths>;
-
 type GenerateSizesParams = Parameters<typeof generateSizes>;
 
-type GenPreloadImageLinkMetaProps = {
+type GetPreloadImageMetaProps = {
+  /* The URL of the image to generate the srcset for */
   url: string;
+  /* The width of the image to generate the srcset for */
   width?: GenerateImageWidthsParams[0];
+  // The step parameters to use for generating the image widths array
   srcSet?: {
     interval: GenerateImageWidthsParams[1];
     startingWidth: GenerateImageWidthsParams[2];
     incrementSize: GenerateImageWidthsParams[3];
   };
+  // The aspect ratio and crop to use for the image sizes
   sizes?: {
     aspectRatio: GenerateSizesParams[1];
     crop: GenerateSizesParams[2];
   };
+  /** An optional loader function to use for generating the image URLs based on a given CDN */
+  loader?: typeof shopifyLoader;
 };
 
-// Default props match those of the Image component
 const defaultProps = {
   url: '',
   width: '100%',
   srcSet: {interval: 15, startingWidth: 200, incrementSize: 200},
   sizes: {aspectRatio: '1/1', crop: 'center'},
+  loader: shopifyLoader,
 } as const;
 
-export function genPreloadImageLinkMeta({
+/**
+ * Generates a link meta tag for preloading an image with a srcset
+ * @param {GetPreloadImageMetaProps} props - The props to generate the preload link meta tag
+ * @returns {object} - The link meta tag object
+ * @example
+ * Basic usage with default <Image /> component props:
+ * ```
+ * const heroImageLink = getPreloadImageMeta({
+ *  url: 'https://cdn.shopify.com/s/files/1/0000/0000/0000/files/hero.jpg',
+ * });
+ * ```
+ *
+ * @example
+ * Usage with custom `width` set in the <Image /> component props:
+ * ```
+ * const heroImageLink = getPreloadImageMeta({
+ *  url: 'https://cdn.shopify.com/s/files/1/0000/0000/0000/files/hero.jpg',
+ *  width: '(min-width: 45em) 50vw, 100vw',
+ * });
+ * ```
+ */
+export function getPreloadImageMeta({
   url,
   width = defaultProps.width,
   srcSet = defaultProps.srcSet,
   sizes = defaultProps.sizes,
-}: GenPreloadImageLinkMetaProps) {
+  loader = shopifyLoader,
+}: GetPreloadImageMetaProps) {
   // Assign default values if not provided
   const interval = srcSet?.interval ?? defaultProps?.srcSet?.interval ?? 15;
   const startingWidth =
@@ -76,6 +103,7 @@ export function genPreloadImageLinkMeta({
   const aspectRatio =
     sizes?.aspectRatio ?? defaultProps.sizes.aspectRatio ?? '1/1';
   const crop = sizes?.crop ?? defaultProps.sizes.crop ?? 'center';
+  const activeLoader = loader ?? defaultProps.loader;
 
   const widths = generateImageWidths(
     width,
@@ -84,47 +112,157 @@ export function genPreloadImageLinkMeta({
     incrementSize,
   );
   const imagesizes = generateSizes(widths, aspectRatio, crop);
-  const imagesrcset = generateSrcSet(url, imagesizes, shopifyLoader);
+  const imageSrcSet = generateSrcSet(url, imagesizes, activeLoader);
 
-  return {tagName: 'link', rel: 'preload', as: 'image', imagesrcset, href: url};
+  return {
+    as: 'image',
+    href: url,
+    imageSrcSet,
+    rel: 'preload',
+    imageSizes: width,
+    tagName: 'link',
+  };
 }
 ```
 
 ### Implementation
 
-On each applicable route, import the `genPreloadImageLinkMeta` utility and call it if a `preload` prop is present
-in the `loader` return
+On any applicable route, import the `getPreloadImageMeta` utility and call it the `meta` when the loader returns an image that will be rendered above the fold.
+
+#### Product route example
+
+Preload the product featuredImage as it's always rendered above the fold.
 
 ```diff
 // app/routes/product.$handle.tsx
 
-+ import {genPreloadImageLinkMeta} from '@shopify/hydrogen'
++ import {getPreloadImageMeta} from '@shopify/hydrogen'
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   const metas = [
     {title: `Hydrogen | ${data?.product.title ?? ''}`},
   ] as MetaDescriptor[];
 
-+ if (data?.preload.image) {
-+   const preloadImageLink = genPreloadImageLinkMeta({
+  const featuredImage = data?.product?.featuredImage;
+
++ if (featuredImage) {
++   const preloadImageLink = getPreloadImageMeta({
 +     url: data.preload.image.url,
 +   });
 +   metas.push(preloadImageLink);
 + }
+
   return metas;
 };
 
-export async function loader({params, request, context}: LoaderFunctionArgs) {
+export async function loader({params, request, context}) {
   // ...other code
-  return defer({
-    product,
-    variants,
-+   preload: {image: product.selectedVariant.image},
-  });
+  return defer({ product, variants });
 }
 ```
 
-> [!NOTE] Repeat for any other routes requiring it such as index (main Hero), collection (first 4 products)
+#### Collection route example
+
+Preload the first 4 product images in the collection as they are assumed to be above or near the top of the fold.
+
+```diff
+// app/routes/collections.$handle.tsx
+
+export const meta: MetaFunction<typeof loader> = ({data}) => {
+  const metas = [
+    {title: `Hydrogen | ${data?.collection.title ?? 'Collection'}`},
+  ] as MetaDescriptor[];
+
+  const hasProducts = Number(data?.collection?.products?.nodes?.length) > 0;
+
++ if (hasProducts) {
++   // Preload the first 4 product images in the collection
++   for (const node of data?.collection?.products?.nodes.slice(0, 4) ?? []) {
++     if (!node.featuredImage) continue;
++     const preloadImageLink = getPreloadImageMeta({
++       url: node.featuredImage.url,
++       width: '(min-width: 45em) 400px, 100vw',
++     });
++     metas.push(preloadImageLink);
++   }
++ }
+
+  return metas;
+};
+
+```
+
+> [!NOTE]
+> Repeat for any other routes whose layout renders an image at the top of the page.
+
+
+## Composition
+
+In this section, we explore how the `getPreloadImageMeta` utility would  compose with other existing and future Hydrogen `meta` utilities.
+
+### Composing with the `genSeoMeta` utility
+
+```diff
+// app/routes/product.$handle.tsx
+
+export function meta({data, matches}) {
+  const metas = [];
+  const featuredImage = data?.product?.featuredImage;
+  const seo = data?.seo;
+
+  // Add collection seo meta
++ if (seo) {
++   const seoMeta = getSeoMeta(data.seo)
++   metas.push(seoMeta)
++ }
+
+  // Add preload product image link tag
++ if (featuredImage) {
++   const preloadImageLink = getPreloadImageMeta({
++     url: data.preload.image.url,
++   });
++   metas.push(preloadImageLink);
++ }
+
+  return metas;
+};
+```
+
+### Composing with a future `genPreloadFontMeta` utility
+
+In this example, we look at how these utilities would compose with a potential future utility that helps preload web-fonts
+
+```diff
+// app/routes/product.$handle.tsx
+
+export function meta({data, matches}) {
+  const metas = [];
+  const heroImage = data?.featuredCollection?.image;
+  const seo = data?.seo;
+
+  // Add home seo meta
++ if (seo) {
++   const seoMeta = getSeoMeta(data.seo)
++   metas.push(seoMeta)
++ }
+
+  // Add preload home Hero image link tag
++ if (featuredImage) {
++   const preloadImageLink = getPreloadImageMeta({
++     url: featuredImage.url,
++   });
++   metas.push(preloadImageLink);
++ }
+
+  // Add preload font link tag
++   const preloadFontLink = getPreloadFontMeta({
++     url: `https://fonts.googleapis.com/css2?family=Fira+Code&family=Montserrat:wght@400;500;800`
++   });
++   metas.push(preloadFontLink);
+
+  return metas;
+};
+```
 
 ## Additional Reading
 

@@ -8,7 +8,7 @@ import {
 } from '@remix-run/react';
 import {Suspense} from 'react';
 import {Image, Money} from '@shopify/hydrogen';
-import {genPreloadImageLinkMeta} from '~/lib/preload';
+import {getPreloadImageMeta} from '~/lib/preload';
 import type {
   FeaturedCollectionFragment,
   RecommendedProductsQuery,
@@ -20,9 +20,9 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
     {name: 'description', content: 'Hydrogen is a demo store'},
   ] as MetaDescriptor[];
 
-  // preload the image of the FeaturedCollection as it's above the fold
+  // preload the image of the FeaturedCollection (above the fold)
   if (data && data.featuredCollection.image) {
-    const preloadImageLink = genPreloadImageLinkMeta({
+    const preloadImageLink = getPreloadImageMeta({
       url: data.featuredCollection.image.url,
       width: '100%',
       srcSet: {interval: 15, startingWidth: 200, incrementSize: 200},

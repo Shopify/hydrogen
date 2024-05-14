@@ -13,7 +13,7 @@ import {
 } from '@shopify/hydrogen';
 import type {ProductItemFragment} from 'storefrontapi.generated';
 import {useVariantUrl} from '~/lib/variants';
-import {genPreloadImageLinkMeta} from '~/lib/preload';
+import {getPreloadImageMeta} from '~/lib/preload';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   const metas = [
@@ -21,11 +21,12 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
   ] as MetaDescriptor[];
 
   const hasProducts = Number(data?.collection?.products?.nodes?.length) > 0;
+
   if (hasProducts) {
-    // Preload the first 4 product images
+    // Preload the first 4 product images in the collection
     for (const node of data?.collection?.products?.nodes.slice(0, 4) ?? []) {
       if (!node.featuredImage) continue;
-      const preloadImageLink = genPreloadImageLinkMeta({
+      const preloadImageLink = getPreloadImageMeta({
         url: node.featuredImage.url,
         width: '(min-width: 45em) 400px, 100vw',
       });
