@@ -2,11 +2,10 @@ import {Await, NavLink} from '@remix-run/react';
 import {Suspense} from 'react';
 import type {HeaderQuery} from 'storefrontapi.generated';
 import type {LayoutProps} from '~/components/Layout';
-import {
-  type CustomerCompanyLocationConnection,
-  useRootLoaderData,
-} from '~/root';
+import {type CustomerCompanyLocationConnection} from '~/root';
+import {useRootLoaderData} from '~/lib/root-data';
 import {useB2BLocation} from './B2BLocationProvider';
+import {useAside} from '~/components/Aside';
 
 type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'>;
 
@@ -85,6 +84,7 @@ export function HeaderMenu({
           </NavLink>
         );
       })}
+
       {/***********************************************/
       /**********  EXAMPLE UPDATE STARTS  ************/}
       <ChangeLocation />
@@ -115,19 +115,40 @@ function HeaderCtas({
 }
 
 function HeaderMenuMobileToggle() {
+  const {open} = useAside();
   return (
-    <a className="header-menu-mobile-toggle" href="#mobile-menu-aside">
+    <button
+      className="header-menu-mobile-toggle reset"
+      onClick={() => open('mobile')}
+    >
       <h3>☰</h3>
-    </a>
+    </button>
   );
 }
 
 function SearchToggle() {
-  return <a href="#search-aside">Search</a>;
+  const {open} = useAside();
+  return (
+    <button className="reset" onClick={() => open('search')}>
+      Search
+    </button>
+  );
 }
 
 function CartBadge({count}: {count: number}) {
-  return <a href="#cart-aside">Cart {count}</a>;
+  const {open} = useAside();
+
+  return (
+    <a
+      href="/cart"
+      onClick={(e) => {
+        e.preventDefault();
+        open('cart');
+      }}
+    >
+      Cart {count}
+    </a>
+  );
 }
 
 function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {

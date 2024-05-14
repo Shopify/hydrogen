@@ -22,6 +22,7 @@ import appStyles from './styles/app.css?url';
 import {Layout} from '~/components/Layout';
 import {B2BLocationProvider} from '~/components/B2BLocationProvider';
 import {B2BLocationSelector} from '~/components/B2BLocationSelector';
+import {useRootLoaderData} from '~/lib/root-data';
 import type {
   Company,
   CompanyAddress,
@@ -85,14 +86,6 @@ export type CustomerCompany =
       }
     >
   | undefined;
-
-/**
- * Access the result of the root loader from a React component.
- */
-export const useRootLoaderData = () => {
-  const [root] = useMatches();
-  return root?.data as SerializeFrom<typeof loader>;
-};
 
 export async function loader({context}: LoaderFunctionArgs) {
   const {storefront, customerAccount, cart} = context;

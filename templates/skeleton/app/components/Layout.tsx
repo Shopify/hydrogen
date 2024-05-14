@@ -30,7 +30,7 @@ export function Layout({
   isLoggedIn,
 }: LayoutProps) {
   return (
-    <>
+    <Aside.Provider>
       <CartAside cart={cart} />
       <SearchAside />
       <MobileMenuAside menu={header?.menu} shop={header?.shop} />
@@ -41,13 +41,13 @@ export function Layout({
           {(footer) => <Footer menu={footer?.menu} shop={header?.shop} />}
         </Await>
       </Suspense>
-    </>
+    </Aside.Provider>
   );
 }
 
 function CartAside({cart}: {cart: LayoutProps['cart']}) {
   return (
-    <Aside id="cart-aside" heading="CART">
+    <Aside type="cart" heading="CART">
       <Suspense fallback={<p>Loading cart ...</p>}>
         <Await resolve={cart}>
           {(cart) => {
@@ -61,7 +61,7 @@ function CartAside({cart}: {cart: LayoutProps['cart']}) {
 
 function SearchAside() {
   return (
-    <Aside id="search-aside" heading="SEARCH">
+    <Aside type="search" heading="SEARCH">
       <div className="predictive-search">
         <br />
         <PredictiveSearchForm>
@@ -104,7 +104,7 @@ function MobileMenuAside({
   return (
     menu &&
     shop?.primaryDomain?.url && (
-      <Aside id="mobile-menu-aside" heading="MENU">
+      <Aside type="mobile" heading="MENU">
         <HeaderMenu
           menu={menu}
           viewport="mobile"
