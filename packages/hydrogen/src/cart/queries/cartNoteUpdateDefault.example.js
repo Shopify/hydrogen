@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {cartNoteUpdateDefault} from '@shopify/hydrogen';
 
 const cartNote = cartNoteUpdateDefault({

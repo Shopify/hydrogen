@@ -1,5 +1,5 @@
 import {fileURLToPath} from 'node:url';
-import {describe, it, expect, afterEach, beforeEach, afterAll} from 'vitest';
+import {describe, it, expect, beforeEach, afterAll} from 'vitest';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {resetAllLogs, enhanceH2Logs} from './log.js';
 

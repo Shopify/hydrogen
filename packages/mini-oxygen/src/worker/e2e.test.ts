@@ -31,13 +31,13 @@ describe('MiniOxygen Worker Runtime', () => {
   it('reloads script', async () => {
     await withFixtures(
       async ({writeHandler}) => {
-        await writeHandler((req, env) => new Response('foo'));
+        await writeHandler(() => new Response('foo'));
       },
       async ({fetch, writeHandler, reloadMiniOxygen}) => {
         let response = await fetch('/');
         await expect(response.text()).resolves.toEqual('foo');
 
-        await writeHandler((req, env) => new Response('bar'));
+        await writeHandler(() => new Response('bar'));
         await reloadMiniOxygen();
 
         response = await fetch('/');
@@ -135,7 +135,7 @@ describe('MiniOxygen Worker Runtime', () => {
         );
       },
       async ({fetch, reloadMiniOxygen, miniOxygenOptions}) => {
-        const spy = vi.spyOn(console, 'error').mockImplementation((error) => {
+        const spy = vi.spyOn(console, 'error').mockImplementation(() => {
           // Hide logs
           // console.debug(error.stack);
         });

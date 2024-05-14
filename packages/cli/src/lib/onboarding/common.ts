@@ -582,7 +582,6 @@ export async function renderProjectReady(
     packageManager,
     depsInstalled,
     cssStrategy,
-    cliCommand,
     routes,
     i18n,
     depsError,

@@ -117,10 +117,7 @@ export async function downloadMonorepoTemplates({
   }
 }
 
-export async function downloadExternalRepo(
-  appTemplate: string,
-  signal: AbortSignal,
-) {
+export async function downloadExternalRepo(appTemplate: string) {
   const parsed = parseGitHubRepositoryURL(appTemplate);
   if (parsed.isErr()) {
     throw new AbortError(parsed.error.message);

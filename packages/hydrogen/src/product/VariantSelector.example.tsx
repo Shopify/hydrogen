@@ -2,7 +2,7 @@ import {VariantSelector} from '@shopify/hydrogen';
 import type {Product} from '@shopify/hydrogen/storefront-api-types';
 import {Link} from '@remix-run/react';
 
-const ProductForm = ({product}: {product: Product}) => {
+export const ProductForm = ({product}: {product: Product}) => {
   return (
     <VariantSelector
       handle={product.handle}

@@ -1,4 +1,3 @@
-import type {Organization, Product, Thing} from 'schema-dts';
 import {afterAll, describe, expect, it, vi} from 'vitest';
 import {generateSeoTags, type SeoConfig} from './generate-seo-tags';
 

@@ -124,7 +124,7 @@ export type EventPayloads =
 
 export type EventTypes = (typeof AnalyticsEvent)[keyof typeof AnalyticsEvent];
 
-type BaseViewProps = {
+export type BaseViewProps = {
   customData?: OtherData;
 };
 

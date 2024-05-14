@@ -34,7 +34,7 @@ export function logSeoTags(headTags: CustomHeadTagObject[]) {
           console.log(`↳ ${tag.children}`);
         } else {
           try {
-            Object.entries(JSON.parse(tag.children)).map(([key, val]) =>
+            Object.entries(JSON.parse(tag.children)).map(([_key, val]) =>
               console.log(`↳ ${val}`),
             );
           } catch {

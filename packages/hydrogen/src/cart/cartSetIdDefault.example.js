@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {json} from '@remix-run/server-runtime';
 import {cartGetIdDefault, cartSetIdDefault} from '@shopify/hydrogen';
 

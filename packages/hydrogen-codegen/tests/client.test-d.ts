@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {describe, it, expectTypeOf} from 'vitest';
 import type {
   ClientReturn,
@@ -41,6 +42,7 @@ describe('Client types', async () => {
       OverrideReturnType extends any = never,
       RawGqlString extends string = string,
     >(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       query: RawGqlString,
     ) =>
       Promise.resolve() as Promise<
@@ -84,9 +86,11 @@ describe('Client types', async () => {
   describe('ClientVariablesInRestParams', () => {
     describe('when there are not extra params', () => {
       const clientQuery = <
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         OverrideReturnType extends any = never,
         RawGqlString extends string = string,
       >(
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         query: RawGqlString,
         ...options: ClientVariablesInRestParams<
           GeneratedQueryTypes,

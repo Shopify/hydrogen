@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {cartDiscountCodesUpdateDefault} from '@shopify/hydrogen';
 
 const cartDiscount = cartDiscountCodesUpdateDefault({

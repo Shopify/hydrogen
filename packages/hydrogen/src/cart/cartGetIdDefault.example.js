@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {cartGetIdDefault, cartSetIdDefault} from '@shopify/hydrogen';
 
 // server.js

@@ -1,4 +1,4 @@
-import {useState, useRef, useEffect} from 'react';
+import {useState, useRef} from 'react';
 import {type ServerEvents} from '../lib/useDebugNetworkServer.js';
 import {Link} from '@remix-run/react';
 import {IconClose} from './IconClose.jsx';

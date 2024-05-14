@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 type CacheMatch = {
   body: Uint8Array;
   timestamp: number;

@@ -20,6 +20,7 @@ export function cartCreateDefault(
     const buyer = options.customerAccount
       ? await options.customerAccount.UNSTABLE_getBuyer()
       : undefined;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const {cartId, ...restOfOptionalParams} = optionalParams || {};
     const {buyerIdentity, ...restOfInput} = input;
     const {cartCreate, errors} = await options.storefront.mutate<{

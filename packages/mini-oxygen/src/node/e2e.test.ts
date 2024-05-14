@@ -1,4 +1,4 @@
-import {join, resolve} from 'node:path';
+import {join} from 'node:path';
 import http, {type IncomingMessage} from 'node:http';
 
 import {writeFile, ensureDir, remove} from 'fs-extra';
@@ -79,6 +79,7 @@ describe('start()', () => {
     });
 
     let receivedData;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let mimeType;
     await sendRequest(testPort, '/star.svg').then(async (response: any) => {
       receivedData = response.data;

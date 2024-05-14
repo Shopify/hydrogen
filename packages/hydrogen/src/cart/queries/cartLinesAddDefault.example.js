@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {cartLinesAddDefault} from '@shopify/hydrogen';
 
 const cartAdd = cartLinesAddDefault({

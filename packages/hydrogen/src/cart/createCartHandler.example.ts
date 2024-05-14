@@ -5,17 +5,10 @@ import {
   cartSetIdDefault,
 } from '@shopify/hydrogen';
 import * as remixBuild from '@remix-run/dev/server-build';
-import {
-  createRequestHandler,
-  getStorefrontHeaders,
-} from '@shopify/remix-oxygen';
+import {createRequestHandler} from '@shopify/remix-oxygen';
 
 export default {
-  async fetch(
-    request: Request,
-    env: Record<string, string>,
-    executionContext: ExecutionContext,
-  ): Promise<Response> {
+  async fetch(request: Request): Promise<Response> {
     const {storefront} = createStorefrontClient({
       /* client parameters */
     });

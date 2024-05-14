@@ -1,7 +1,7 @@
 import {spawn} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {formatCode, getCodeFormatOptions} from './format-code.js';
-import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
+import {renderWarning} from '@shopify/cli-kit/node/ui';
 import {
   joinPath,
   relativePath,

@@ -33,7 +33,7 @@ describe('init', () => {
   });
 
   it('checks Hydrogen version', async () => {
-    const showUpgradeMock = vi.fn((param?: string) => ({
+    const showUpgradeMock = vi.fn(() => ({
       currentVersion: '1.0.0',
       newVersion: '1.0.1',
     }));

@@ -1,30 +1,6 @@
 import type {CachingStrategy} from './strategies';
 import {CacheDefault, generateCacheControlHeader} from './strategies';
 
-function logCacheApiStatus(
-  status: string | null,
-  request: Request,
-  response?: Response,
-) {
-  // const url = request.url;
-  // if (!/Product\(/.test(url)) return;
-  // // eslint-disable-next-line no-console
-  // console.log(status, 'cacheKey', url.substring(0, 50));
-  // if (response) {
-  //   let headersJson: Record<string, string> = {};
-  //   response.headers.forEach((value, key) => {
-  //     headersJson[key] = value;
-  //   });
-  //   const responseDate = response.headers.get('cache-put-date');
-  //   if (responseDate) {
-  //     const [age] = calculateAge(response, responseDate);
-  //     headersJson['age'] = age.toString();
-  //   }
-  //   // eslint-disable-next-line no-console
-  //   console.log(`${status} response headers: `, headersJson);
-  // }
-}
-
 function getCacheControlSetting(
   userCacheOptions?: CachingStrategy,
   options?: CachingStrategy,

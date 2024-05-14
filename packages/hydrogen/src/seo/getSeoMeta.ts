@@ -10,11 +10,6 @@ import {MetaFunction} from '@remix-run/react';
 
 export type GetSeoMetaReturn = ReturnType<MetaFunction>;
 
-type GetSeoMetaTypeForDocs = {
-  /** `getSeoMeta` takes an arbitrary number of configuration object parameters. Values in each object are overwritten based on the object order. \`jsonLd\` properties are preserved between each configuration object. */
-  seoInputs: SeoConfig[];
-};
-
 type SeoKey = keyof SeoConfig;
 
 type Optional<T> = T | null | undefined;
@@ -184,7 +179,6 @@ export function getSeoMeta(
 
       case 'jsonLd': {
         const jsonLdBlocks = ensureArray(dedupedSeoInput.jsonLd);
-        let index = 0;
         for (const block of jsonLdBlocks) {
           if (typeof block !== 'object' || Object.keys(block).length === 0) {
             continue;

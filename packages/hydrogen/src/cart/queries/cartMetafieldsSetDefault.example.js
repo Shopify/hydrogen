@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {cartMetafieldsSetDefault} from '@shopify/hydrogen';
 
 const cartSetMetafields = cartMetafieldsSetDefault({

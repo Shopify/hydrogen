@@ -732,6 +732,7 @@ async function promptUpgradeOptions(
 
     // TODO: add group sorting function to cli-kit select prompt
     // so that we can group by major version
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const majorVersion = `${semver.major(version)}.${semver.minor(version)}`;
 
     return {

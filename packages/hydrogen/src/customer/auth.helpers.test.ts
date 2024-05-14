@@ -18,7 +18,7 @@ vi.stubGlobal(
   'Response',
   class Response {
     message;
-    constructor(body: any, options: any) {
+    constructor(body: any) {
       this.message = body;
     }
   },

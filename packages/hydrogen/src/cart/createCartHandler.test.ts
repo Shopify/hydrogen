@@ -7,7 +7,6 @@ import {
 import {
   mockCreateCustomerAccountClient,
   mockCreateStorefrontClient,
-  mockHeaders,
 } from './cart-test-helper';
 
 type MockCarthandler = {
@@ -18,6 +17,7 @@ type MockCarthandler = {
 };
 
 function getCartHandler(options: MockCarthandler = {}) {
+  /* eslint-disable @typescript-eslint/no-unused-vars */
   const {cartId, ...rest} = options;
   return createCartHandler({
     storefront: mockCreateStorefrontClient(),

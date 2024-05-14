@@ -1,7 +1,7 @@
 import {VariantSelector} from '@shopify/hydrogen';
 import {Link} from '@remix-run/react';
 
-const ProductForm = ({product}) => {
+export const ProductForm = ({product}) => {
   return (
     <VariantSelector
       handle={product.handle}

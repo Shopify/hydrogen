@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {cartLinesRemoveDefault} from '@shopify/hydrogen';
 
 const cartRemove = cartLinesRemoveDefault({

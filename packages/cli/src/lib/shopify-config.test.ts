@@ -207,6 +207,7 @@ describe('unsetStorefront()', () => {
         storefront: undefined,
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const {storefront, ...actualConfig} = existingConfig;
       expect(JSON.parse(await readFile(filePath))).toStrictEqual(actualConfig);
     });

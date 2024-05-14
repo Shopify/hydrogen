@@ -51,7 +51,7 @@ describe('<CartForm />', () => {
         action={CartForm.ACTIONS.LinesAdd}
         inputs={{lines: [], test: 'test'}}
       >
-        {(fetcher) => <button>Submit</button>}
+        {() => <button>Submit</button>}
       </CartForm>,
     );
 
