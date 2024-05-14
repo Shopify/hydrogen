@@ -97,7 +97,6 @@ describe('auth.helpers', () => {
           {
             access_token: '',
             expires_in: '',
-            id_token: '',
             refresh_token: '',
           },
           {ok: true},
@@ -129,7 +128,6 @@ describe('auth.helpers', () => {
           {
             access_token: 'access_token',
             expires_in: '',
-            id_token: 'id_token',
             refresh_token: 'refresh_token',
           },
           {ok: true},
@@ -151,7 +149,6 @@ describe('auth.helpers', () => {
           accessToken: 'access_token',
           expiresAt: expect.any(String),
           refreshToken: 'refresh_token',
-          idToken: 'id_token',
         },
       );
     });
@@ -217,7 +214,6 @@ describe('auth.helpers', () => {
           {
             access_token: 'access_token',
             expires_in: '',
-            id_token: 'id_token',
             refresh_token: 'refresh_token',
           },
           {ok: true},
@@ -241,7 +237,6 @@ describe('auth.helpers', () => {
           accessToken: 'access_token',
           expiresAt: expect.any(String),
           refreshToken: 'refresh_token',
-          idToken: 'id_token',
         },
       );
     });
@@ -256,7 +251,6 @@ describe('auth.helpers', () => {
           {
             access_token: 'access_token',
             expires_in: '',
-            id_token: 'id_token',
             refresh_token: 'refresh_token',
           },
           {ok: true},
@@ -280,7 +274,6 @@ describe('auth.helpers', () => {
         accessToken: 'access_token',
         expiresAt: expect.any(String),
         refreshToken: 'refresh_token',
-        idToken: 'id_token',
       });
     });
   });
