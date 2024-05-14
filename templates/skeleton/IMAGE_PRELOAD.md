@@ -192,13 +192,13 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
 
 ```
 
-> [!NOTE]
+> [!IMPORTANT]
 > Repeat for any other routes whose layout renders an image at the top of the page.
 
 
 ## Composition
 
-In this section, we explore how the `getPreloadImageMeta` utility would  compose with other existing and future Hydrogen `meta` utilities.
+In this section, we explore how the `getPreloadImageMeta` utility would compose with other existing and future Hydrogen `meta` utilities.
 
 ### Composing with the `genSeoMeta` utility
 
@@ -228,9 +228,9 @@ export function meta({data, matches}) {
 };
 ```
 
-### Composing with a future `genPreloadFontMeta` utility
+### Composing with a "future" `genPreloadFontMeta` utility
 
-In this example, we look at how these utilities would compose with a potential future utility that helps preload web-fonts
+In this example, we look at how these would further compose with other potential future utilities
 
 ```diff
 // app/routes/product.$handle.tsx
@@ -264,7 +264,40 @@ export function meta({data, matches}) {
 };
 ```
 
+## One single utility to rule them all?
+
+Perhaps we may want to consider a single unified `genHydrogenMeta` utility that encapsulates all into a "simpler" interface.
+
+```diff
+// app/routes/product.$handle.tsx
+
+export function meta({data, matches}) {
+  const metas = [];
+
++  return getHydrogenMeta({
++    seo: [data.seo, ...],
++    fonts: [{url: `https://fonts.googleapis.com/css2?family=Fira+Code&family=Montserrat:wght@400;500;800`}],
++    images: [{url: data.product.featuredImage.url, widths?: ....}],
++.   preconnects: [],
++    // ....
++  })
+};
+```
+
+### My concerns
+ - It could make this function very complex internally because of the differnt types each of the meta group would expect.
+ - It could be harder to respect and visualize tags hirerchy/merging across parent layouts and routes for each different type
+ - Could be perhaps more easily misused/misconfigured. Some tags such as `fonts` and `preconnects` should only be loaded at a global level (root.tsx). Sme others tags such as `seo`, should be loaded in multiple places (layout and/or routes) – specially due to ld+Json. And finally some others tags such as `images` are very specific to the route they are instanciated at and are fully dependent on the data from that specific loader.
+
+## My Recommendation
+
+For now, I think we should move forward with just adding the `getPreloadImageMeta`. This utility will certainly enhance core web vitals on first page load and should provide minimal gains on sub-navigations by allowing the browser to fetch images a little earlier and in parallel.
+
+
+
+
 ## Additional Reading
 
 - [Preloading responsive images](https://web.dev/articles/preload-responsive-images)
 - [Preload critical assets to improve loading speed](https://web.dev/articles/preload-critical-assets)
+
