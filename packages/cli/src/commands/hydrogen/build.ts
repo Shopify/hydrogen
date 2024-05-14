@@ -13,6 +13,7 @@ import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
 import {codegen, spawnCodegenProcess} from '../../lib/codegen.js';
 import {isCI} from '../../lib/is-ci.js';
 import {deferPromise} from '../../lib/defer.js';
+import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 
 export default class Build extends Command {
   static descriptionWithMarkdown = `Builds a Hydrogen storefront for production. The client and app worker files are compiled to a \`/dist\` folder in your Hydrogen project directory.`;
@@ -58,17 +59,25 @@ export default class Build extends Command {
       directory,
     };
 
-    if (await hasViteConfig(directory)) {
-      await runBuild(buildParams);
+    const result = (await hasViteConfig(directory))
+      ? await runBuild(buildParams)
+      : await runClassicCompilerBuild(buildParams);
+
+    if (buildParams.watch) {
+      if (flags.diff || result?.close) {
+        setupResourceCleanup(async () => {
+          await result?.close();
+
+          if (flags.diff) {
+            await copyDiffBuild(directory, originalDirectory);
+          }
+        });
+      }
     } else {
-      await runClassicCompilerBuild(buildParams);
-    }
+      if (flags.diff) {
+        await copyDiffBuild(directory, originalDirectory);
+      }
 
-    if (flags.diff) {
-      await copyDiffBuild(directory, originalDirectory);
-    }
-
-    if (!buildParams.watch) {
       // The Remix compiler hangs due to a bug in ESBuild:
       // https://github.com/evanw/esbuild/issues/2727
       // The actual build has already finished so we can kill the process.
@@ -139,10 +148,10 @@ export async function runBuild({
     customLogger,
   };
 
-  let clientBuild: ReturnType<typeof deferPromise>;
+  let clientBuildStatus: ReturnType<typeof deferPromise>;
 
   // Client build first
-  await vite.build({
+  const clientBuild = await vite.build({
     ...commonConfig,
     build: {
       emptyOutDir: true,
@@ -155,14 +164,14 @@ export async function runBuild({
       {
         name: 'hydrogen:cli:client',
         buildStart() {
-          clientBuild?.resolve();
-          clientBuild = deferPromise();
+          clientBuildStatus?.resolve();
+          clientBuildStatus = deferPromise();
         },
         buildEnd(error) {
-          if (error) clientBuild.reject(error);
+          if (error) clientBuildStatus.reject(error);
         },
         writeBundle() {
-          clientBuild.resolve();
+          clientBuildStatus.resolve();
         },
       },
     ],
@@ -171,7 +180,7 @@ export async function runBuild({
   console.log('');
 
   // Server/SSR build
-  await vite.build({
+  const serverBuild = await vite.build({
     ...commonConfig,
     build: {
       sourcemap,
@@ -189,7 +198,7 @@ export async function runBuild({
           // Wait for the client build to finish in watch mode
           // before starting the server build to access the
           // Remix manifest from file disk.
-          await clientBuild.promise;
+          await clientBuildStatus.promise;
         },
       },
     ],
@@ -203,19 +212,17 @@ export async function runBuild({
     ]);
   }
 
-  if (useCodegen) {
-    const codegenOptions = {
-      rootDirectory: root,
-      appDirectory: remixConfig.appDirectory,
-      configFilePath: codegenConfigPath,
-    };
+  const codegenOptions = {
+    rootDirectory: root,
+    appDirectory: remixConfig.appDirectory,
+    configFilePath: codegenConfigPath,
+  };
 
-    if (watch) {
-      spawnCodegenProcess(codegenOptions);
-    } else {
-      await codegen(codegenOptions);
-    }
-  }
+  const codegenProcess = useCodegen
+    ? watch
+      ? spawnCodegenProcess(codegenOptions)
+      : await codegen(codegenOptions).then(() => undefined)
+    : undefined;
 
   if (!watch && process.env.NODE_ENV !== 'development') {
     const sizeMB = (await fileSize(serverOutFile)) / (1024 * 1024);
@@ -246,4 +253,16 @@ export async function runBuild({
       );
     }
   }
+
+  return {
+    async close() {
+      codegenProcess?.removeAllListeners('close');
+      codegenProcess?.kill('SIGINT');
+
+      const promises: Array<Promise<void>> = [];
+      if ('close' in clientBuild) promises.push(clientBuild.close());
+      if ('close' in serverBuild) promises.push(serverBuild.close());
+      await Promise.allSettled(promises);
+    },
+  };
 }
