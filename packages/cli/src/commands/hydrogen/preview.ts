@@ -9,13 +9,15 @@ import {
   flagsToCamelObject,
   overrideFlag,
 } from '../../lib/flags.js';
-import {startMiniOxygen} from '../../lib/mini-oxygen/index.js';
+import {startMiniOxygen, type MiniOxygen} from '../../lib/mini-oxygen/index.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
 import {findPort} from '../../lib/find-port.js';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {getViteConfig} from '../../lib/vite-config.js';
 import {runBuild} from './build.js';
+import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
+import {deferPromise} from '../../lib/defer.js';
 
 export default class Preview extends Command {
   static descriptionWithMarkdown =
@@ -39,6 +41,10 @@ export default class Preview extends Command {
     build: Flags.boolean({
       description: 'Builds the app before starting the preview server.',
     }),
+    watch: Flags.boolean({
+      description: 'Watches for changes and rebuilds the project.',
+      dependsOn: ['build'],
+    }),
     ...overrideFlag(commonFlags.entry, {
       entry: {dependsOn: ['build']},
     }),
@@ -50,7 +56,9 @@ export default class Preview extends Command {
   async run(): Promise<void> {
     const {flags} = await this.parse(Preview);
 
-    await runPreview(flagsToCamelObject(flags));
+    const {close} = await runPreview(flagsToCamelObject(flags));
+
+    setupResourceCleanup(close);
   }
 }
 
@@ -64,6 +72,7 @@ type PreviewOptions = {
   debug: boolean;
   verbose?: boolean;
   build?: boolean;
+  watch?: boolean;
   entry?: string;
   codegen?: boolean;
   codegenConfigPath?: string;
@@ -79,11 +88,13 @@ export async function runPreview({
   debug,
   verbose,
   build: shouldBuild = false,
+  watch = false,
   codegen: useCodegen = false,
   codegenConfigPath,
   entry,
 }: PreviewOptions) {
-  if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production';
+  if (!process.env.NODE_ENV)
+    process.env.NODE_ENV = watch ? 'development' : 'production';
 
   if (verbose) setH2OVerbose();
   if (!isH2Verbose()) muteDevLogs();
@@ -91,17 +102,25 @@ export async function runPreview({
   let {root, buildPath, buildPathWorkerFile, buildPathClient} =
     getProjectPaths(appPath);
 
-  if (shouldBuild) {
-    await runBuild({
-      directory: appPath,
-      entry,
-      disableRouteWarning: false,
-      lockfileCheck: false,
-      sourcemap: true,
-      useCodegen,
-      codegenConfigPath,
-    });
-  }
+  let miniOxygen: MiniOxygen;
+  const projectBuild = deferPromise();
+
+  const buildProcess = shouldBuild
+    ? await runBuild({
+        directory: appPath,
+        entry,
+        watch,
+        disableRouteWarning: false,
+        lockfileCheck: false,
+        sourcemap: true,
+        useCodegen,
+        codegenConfigPath,
+        async onRebuild() {
+          projectBuild.resolve();
+          await miniOxygen?.reload();
+        },
+      })
+    : projectBuild.resolve();
 
   if (!(await hasRemixConfigFile(root))) {
     const maybeResult = await getViteConfig(root).catch(() => null);
@@ -130,9 +149,11 @@ export async function runPreview({
   // we don't control the build at this point. However, the assets server
   // still need to be started to serve redirections from the worker runtime.
 
+  await projectBuild.promise;
+
   logInjectedVariables();
 
-  const miniOxygen = await startMiniOxygen(
+  miniOxygen = await startMiniOxygen(
     {
       root,
       appPort,
@@ -142,9 +163,19 @@ export async function runPreview({
       buildPathWorkerFile,
       inspectorPort,
       debug,
+      watch,
     },
     legacyRuntime,
   );
 
-  miniOxygen.showBanner({mode: 'preview'});
+  miniOxygen.showBanner({
+    mode: 'preview',
+    headlinePrefix: watch ? 'Watching for changes. ' : '',
+  });
+
+  return {
+    async close() {
+      await Promise.allSettled([miniOxygen.close(), buildProcess?.close()]);
+    },
+  };
 }

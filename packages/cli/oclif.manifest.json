@@ -1289,6 +1289,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "watch": {
+          "dependsOn": [
+            "build"
+          ],
+          "description": "Watches for changes and rebuilds the project.",
+          "name": "watch",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "entry": {
           "dependsOn": [
             "build"
