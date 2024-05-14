@@ -39,7 +39,7 @@ export function createEntryPointErrorHandler({
     if (optimizableDependency) {
       if (disableDepsOptimizer || !configFile) {
         const depError = new BugError(
-          `${headline}: ${colors.dim(message.replace('ReferenceError: ', ''))}`,
+          `${headline}:\n\n${colors.dim(message)}`,
           `Try adding '${colors.yellow(
             optimizableDependency,
           )}' to your Vite config\'s ssr.optimizeDeps.include`,
@@ -79,7 +79,9 @@ export function createEntryPointErrorHandler({
           });
       }
     } else {
-      const unknownError = new BugError(headline + ': ' + colors.dim(message));
+      const unknownError = new BugError(
+        headline + ':\n\n' + colors.dim(message),
+      );
       unknownError.stack = cleanStack;
       renderFatalError(unknownError);
     }
@@ -135,8 +137,11 @@ export async function addToViteOptimizeDeps(
 
     if (!node) {
       throw new AbortError(
-        `The dependency "${dependency}" needs to be optimized but couldn't be added to the Vite config.`,
-        `Add the following code manually to your Vite config:\n\nssr: {optimizeDeps: {include: ['${dependency}']}}`,
+        `The dependency '${colors.yellow(
+          dependency,
+        )}' needs to be optimized but couldn't be added to the Vite config.`,
+        `Add the following code manually to your Vite config:\n\n` +
+          colors.yellow(`ssr: {optimizeDeps: {include: ['${dependency}']}}`),
       );
     }
 
@@ -153,11 +158,13 @@ export async function addToViteOptimizeDeps(
       // what we added to optimizeDeps is wrong so we should
       // print the error stack to the user for manual fixing:
       const error = new BugError(
-        `A dependency related to "${dependency}" might need to be optimized by Vite` +
+        `A dependency related to '${colors.yellow(
+          dependency,
+        )}' might need to be optimized by Vite` +
           ` but we could not figure it out automatically:\n\n${colors.dim(
             errorStack.split('\n')[0],
           )}`,
-        `If your app doesn't load, please check the following error stack and fix it manually by adding your dependency to Vite's \`ssr.optimizeDeps.include\` array.`,
+        `If your app doesn't load, please check the following error stack and fix it manually by adding the dependency that is importing it to Vite's \`ssr.optimizeDeps.include\` array.`,
       );
       error.stack = errorStack;
       throw error;
