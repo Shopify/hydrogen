@@ -42,6 +42,7 @@ import {logRequestLine} from '../../lib/mini-oxygen/common.js';
 import {findHydrogenPlugin, findOxygenPlugin} from '../../lib/vite-config.js';
 import {hasViteConfig} from '../../lib/vite-config.js';
 import {runClassicCompilerDev} from '../../lib/classic-compiler/dev.js';
+import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 
 export default class Dev extends Command {
   static descriptionWithMarkdown = `Runs a Hydrogen storefront in a local runtime that emulates an Oxygen worker for development.
@@ -121,20 +122,7 @@ export default class Dev extends Command {
       ? await runDev(devParams)
       : await runClassicCompilerDev(devParams);
 
-    // Note: Shopify CLI is hooking into process events and calling process.exit.
-    // This means we are unable to hook into 'beforeExit' or 'SIGINT" events
-    // to cleanup resources. In addition, Miniflare uses `exit-hook` dependency
-    // to do the same thing. This is a workaround to ensure we cleanup resources:
-    let closingPromise: Promise<void>;
-    const processExit = process.exit;
-    // @ts-expect-error - Async function
-    process.exit = async (code?: number | undefined) => {
-      // This function will be called multiple times,
-      // but we only want to cleanup resources once.
-      closingPromise ??= close();
-      await closingPromise;
-      return processExit(code);
-    };
+    setupResourceCleanup(close);
 
     if (flags.diff) {
       await copyShopifyConfig(directory, originalDirectory);
