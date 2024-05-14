@@ -26,6 +26,7 @@ import type {
   SelectedOption,
 } from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/lib/variants';
+import {useAside} from '~/components/Aside';
 import {QuantityRules, hasQuantityRules} from '~/components/QuantityRules';
 import {PriceBreaks} from '~/components/PriceBreaks';
 
@@ -287,6 +288,7 @@ function ProductForm({
 }) {
   /**********   EXAMPLE UPDATE END   ************/
   /***********************************************/
+  const {open} = useAside();
   return (
     <div className="product-form">
       <VariantSelector
@@ -300,7 +302,7 @@ function ProductForm({
       <AddToCartButton
         disabled={!selectedVariant || !selectedVariant.availableForSale}
         onClick={() => {
-          window.location.href = window.location.href + '#cart-aside';
+          open('cart');
         }}
         lines={
           selectedVariant

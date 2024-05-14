@@ -1,9 +1,10 @@
 import {createContext, type ReactNode, useContext, useState} from 'react';
 
-type Mode = 'search' | 'cart' | 'mobile' | 'closed';
+type AsideType = 'search' | 'cart' | 'mobile' | 'closed';
 type AsideContextValue = {
-  mode: Mode;
-  setMode: (mode: Mode) => void;
+  type: AsideType;
+  open: (mode: AsideType) => void;
+  close: () => void;
 };
 
 /**
@@ -19,14 +20,14 @@ type AsideContextValue = {
 export function Aside({
   children,
   heading,
-  mode,
+  type,
 }: {
   children?: React.ReactNode;
-  mode: Mode;
+  type: AsideType;
   heading: React.ReactNode;
 }) {
-  const {mode: activeMode, setMode} = useAside();
-  const expanded = mode === activeMode;
+  const {type: activeType, close} = useAside();
+  const expanded = type === activeType;
 
   return (
     <div
@@ -34,11 +35,11 @@ export function Aside({
       className={`overlay ${expanded ? 'expanded' : ''}`}
       role="dialog"
     >
-      <button className="close-outside" onClick={() => setMode('closed')} />
+      <button className="close-outside" onClick={close} />
       <aside>
         <header>
           <h3>{heading}</h3>
-          <button className="close reset" onClick={() => setMode('closed')}>
+          <button className="close reset" onClick={close}>
             &times;
           </button>
         </header>
@@ -50,20 +51,21 @@ export function Aside({
 
 const AsideContext = createContext<AsideContextValue | null>(null);
 
-export function AsideProvider({children}: {children: ReactNode}) {
-  const [mode, setMode] = useState<Mode>('closed');
+Aside.Provider = function AsideProvider({children}: {children: ReactNode}) {
+  const [type, setType] = useState<AsideType>('closed');
 
   return (
     <AsideContext.Provider
       value={{
-        mode,
-        setMode,
+        type,
+        open: setType,
+        close: () => setType('closed'),
       }}
     >
       {children}
     </AsideContext.Provider>
   );
-}
+};
 
 export function useAside() {
   const aside = useContext(AsideContext);

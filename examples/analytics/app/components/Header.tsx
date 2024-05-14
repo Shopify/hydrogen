@@ -108,11 +108,11 @@ function HeaderCtas({
 }
 
 function HeaderMenuMobileToggle() {
-  const {setMode} = useAside();
+  const {open} = useAside();
   return (
     <button
       className="header-menu-mobile-toggle reset"
-      onClick={() => setMode('mobile')}
+      onClick={() => open('mobile')}
     >
       <h3>☰</h3>
     </button>
@@ -120,23 +120,23 @@ function HeaderMenuMobileToggle() {
 }
 
 function SearchToggle() {
-  const {setMode} = useAside();
+  const {open} = useAside();
   return (
-    <button className="reset" onClick={() => setMode('search')}>
+    <button className="reset" onClick={() => open('search')}>
       Search
     </button>
   );
 }
 
 function CartBadge({count, onClick}: {count: number; onClick: () => void}) {
-  const {setMode} = useAside();
+  const {open} = useAside();
 
   return (
     <a
       href="/cart"
       onClick={(e) => {
         e.preventDefault();
-        setMode('cart');
+        open('cart');
         onClick();
       }}
     >

@@ -228,7 +228,7 @@ function ProductForm({
   selectedVariant: ProductFragment['selectedVariant'];
   variants: Array<ProductVariantFragment>;
 }) {
-  const {setMode} = useAside();
+  const {open} = useAside();
   return (
     <div className="product-form">
       <VariantSelector
@@ -242,7 +242,7 @@ function ProductForm({
       <AddToCartButton
         disabled={!selectedVariant || !selectedVariant.availableForSale}
         onClick={() => {
-          setMode('cart');
+          open('cart');
         }}
         lines={
           selectedVariant
