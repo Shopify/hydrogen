@@ -1,3 +1,4 @@
+import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
 import {isH2Verbose, muteDevLogs, setH2OVerbose} from '../../lib/log.js';
 import {getProjectPaths, hasRemixConfigFile} from '../../lib/remix-config.js';
@@ -6,6 +7,7 @@ import {
   commonFlags,
   deprecated,
   flagsToCamelObject,
+  overrideFlag,
 } from '../../lib/flags.js';
 import {startMiniOxygen} from '../../lib/mini-oxygen/index.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
@@ -13,6 +15,7 @@ import {getConfig} from '../../lib/shopify-config.js';
 import {findPort} from '../../lib/find-port.js';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {getViteConfig} from '../../lib/vite-config.js';
+import {runBuild} from './build.js';
 
 export default class Preview extends Command {
   static descriptionWithMarkdown =
@@ -31,14 +34,23 @@ export default class Preview extends Command {
     ...commonFlags.inspectorPort,
     ...commonFlags.debug,
     ...commonFlags.verbose,
+
+    // For building the app:
+    build: Flags.boolean({
+      description: 'Builds the app before starting the preview server.',
+    }),
+    ...overrideFlag(commonFlags.entry, {
+      entry: {dependsOn: ['build']},
+    }),
+    ...overrideFlag(commonFlags.codegen, {
+      codegen: {dependsOn: ['build']},
+    }),
   };
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Preview);
 
-    await runPreview({
-      ...flagsToCamelObject(flags),
-    });
+    await runPreview(flagsToCamelObject(flags));
   }
 }
 
@@ -51,6 +63,9 @@ type PreviewOptions = {
   inspectorPort?: number;
   debug: boolean;
   verbose?: boolean;
+  build?: boolean;
+  codegen?: boolean;
+  codegenConfigPath?: string;
 };
 
 export async function runPreview({
@@ -62,6 +77,9 @@ export async function runPreview({
   inspectorPort,
   debug,
   verbose,
+  build: shouldBuild = false,
+  codegen: useCodegen = false,
+  codegenConfigPath,
 }: PreviewOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production';
 
@@ -70,6 +88,17 @@ export async function runPreview({
 
   let {root, buildPath, buildPathWorkerFile, buildPathClient} =
     getProjectPaths(appPath);
+
+  if (shouldBuild) {
+    await runBuild({
+      directory: appPath,
+      disableRouteWarning: false,
+      lockfileCheck: false,
+      sourcemap: true,
+      useCodegen,
+      codegenConfigPath,
+    });
+  }
 
   if (!(await hasRemixConfigFile(root))) {
     const maybeResult = await getViteConfig(root).catch(() => null);
