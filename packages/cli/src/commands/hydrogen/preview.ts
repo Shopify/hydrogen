@@ -64,6 +64,7 @@ type PreviewOptions = {
   debug: boolean;
   verbose?: boolean;
   build?: boolean;
+  entry?: string;
   codegen?: boolean;
   codegenConfigPath?: string;
 };
@@ -80,6 +81,7 @@ export async function runPreview({
   build: shouldBuild = false,
   codegen: useCodegen = false,
   codegenConfigPath,
+  entry,
 }: PreviewOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production';
 
@@ -92,6 +94,7 @@ export async function runPreview({
   if (shouldBuild) {
     await runBuild({
       directory: appPath,
+      entry,
       disableRouteWarning: false,
       lockfileCheck: false,
       sourcemap: true,
