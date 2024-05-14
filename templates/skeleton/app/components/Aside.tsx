@@ -1,10 +1,16 @@
 import {createContext, type ReactNode, useContext, useState} from 'react';
 
+type Mode = 'search' | 'cart' | 'mobile' | 'closed';
+type AsideContextValue = {
+  mode: Mode;
+  setMode: (mode: Mode) => void;
+};
+
 /**
  * A side bar component with Overlay
  * @example
  * ```jsx
- * <Aside heading="SEARCH">
+ * <Aside mode="search" heading="SEARCH">
  *  <input type="search" />
  *  ...
  * </Aside>
@@ -41,12 +47,6 @@ export function Aside({
     </div>
   );
 }
-
-type Mode = 'search' | 'cart' | 'mobile' | 'closed';
-type AsideContextValue = {
-  mode: Mode;
-  setMode: (mode: Mode) => void;
-};
 
 const AsideContext = createContext<AsideContextValue | null>(null);
 
