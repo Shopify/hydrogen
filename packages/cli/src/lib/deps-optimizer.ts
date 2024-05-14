@@ -7,7 +7,8 @@ import {importLangAstGrep} from './ast.js';
 import {replaceFileContent} from './file.js';
 import {outputInfo} from '@shopify/cli-kit/node/output';
 
-let showBannerUrlTimeout: NodeJS.Timeout | undefined;
+const throttledOptimizableDeps = new Set<string>();
+let debouncedBannerTimeout: NodeJS.Timeout | undefined;
 
 export function createEntryPointErrorHandler({
   disableDepsOptimizer,
@@ -45,7 +46,15 @@ export function createEntryPointErrorHandler({
         );
         depError.stack = cleanStack;
         renderFatalError(depError);
-      } else {
+      } else if (!throttledOptimizableDeps.has(optimizableDependency)) {
+        // When multiple requests hit the same error, we only want to
+        // to log and add the dependency to the Vite config once.
+        throttledOptimizableDeps.add(optimizableDependency);
+        setTimeout(
+          () => throttledOptimizableDeps.delete(optimizableDependency),
+          2000,
+        );
+
         addToViteOptimizeDeps(
           optimizableDependency,
           configFile,
@@ -61,11 +70,11 @@ export function createEntryPointErrorHandler({
               );
             }, 200);
 
-            clearTimeout(showBannerUrlTimeout);
-            showBannerUrlTimeout = setTimeout(showSuccessBanner, 2000);
+            clearTimeout(debouncedBannerTimeout);
+            debouncedBannerTimeout = setTimeout(showSuccessBanner, 2000);
           })
           .catch((error) => {
-            clearTimeout(showBannerUrlTimeout);
+            clearTimeout(debouncedBannerTimeout);
             renderFatalError(error);
           });
       }
@@ -144,11 +153,11 @@ export async function addToViteOptimizeDeps(
       // what we added to optimizeDeps is wrong so we should
       // print the error stack to the user for manual fixing:
       const error = new BugError(
-        `A dependency related to "${dependency}" needs to be optimized by Vite` +
+        `A dependency related to "${dependency}" might need to be optimized by Vite` +
           ` but we could not figure it out automatically:\n\n${colors.dim(
             errorStack.split('\n')[0],
           )}`,
-        `Please check the following error stack and fix it manually by adding your dependency to Vite's \`ssr.optimizeDeps.include\` array.`,
+        `If your app doesn't load, please check the following error stack and fix it manually by adding your dependency to Vite's \`ssr.optimizeDeps.include\` array.`,
       );
       error.stack = errorStack;
       throw error;
