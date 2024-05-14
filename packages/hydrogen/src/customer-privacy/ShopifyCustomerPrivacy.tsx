@@ -154,9 +154,9 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     ) {
       // eslint-disable-next-line no-console
       console.error(
-        `[h2:error:useCustomerPrivacy] It looks like you passed a private access token, make sure to use the public token`
+        `[h2:error:useCustomerPrivacy] It looks like you passed a private access token, make sure to use the public token`,
       );
-      console
+      console;
     }
 
     if (withPrivacyBanner && window?.privacyBanner) {
