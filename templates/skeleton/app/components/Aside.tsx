@@ -1,3 +1,5 @@
+import {createContext, type ReactNode, useContext, useState} from 'react';
+
 /**
  * A side bar component with Overlay
  * @example
@@ -11,25 +13,28 @@
 export function Aside({
   children,
   heading,
-  expanded,
-  setExpanded,
+  mode,
 }: {
   children?: React.ReactNode;
-  expanded: boolean;
-  setExpanded: (expanded: boolean) => void;
+  mode: Mode;
   heading: React.ReactNode;
 }) {
+  const {mode: activeMode, setMode} = useAside();
+  const expanded = mode === activeMode;
+
   return (
     <div
       aria-modal
       className={`overlay ${expanded ? 'expanded' : ''}`}
       role="dialog"
     >
-      <button className="close-outside" onClick={() => setExpanded(false)} />
+      <button className="close-outside" onClick={() => setMode('closed')} />
       <aside>
         <header>
           <h3>{heading}</h3>
-          <CloseAside setExpanded={setExpanded} />
+          <button className="close reset" onClick={() => setMode('closed')}>
+            &times;
+          </button>
         </header>
         <main>{children}</main>
       </aside>
@@ -37,10 +42,33 @@ export function Aside({
   );
 }
 
-function CloseAside({setExpanded}: {setExpanded: (expanded: boolean) => void}) {
+type Mode = 'search' | 'cart' | 'mobile' | 'closed';
+type AsideContextValue = {
+  mode: Mode;
+  setMode: (mode: Mode) => void;
+};
+
+const AsideContext = createContext<AsideContextValue | null>(null);
+
+export function AsideProvider({children}: {children: ReactNode}) {
+  const [mode, setMode] = useState<Mode>('closed');
+
   return (
-    <button className="close reset" onClick={() => setExpanded(false)}>
-      &times;
-    </button>
+    <AsideContext.Provider
+      value={{
+        mode,
+        setMode,
+      }}
+    >
+      {children}
+    </AsideContext.Provider>
   );
+}
+
+export function useAside() {
+  const aside = useContext(AsideContext);
+  if (!aside) {
+    throw new Error('useAside must be used within an AsideProvider');
+  }
+  return aside;
 }
