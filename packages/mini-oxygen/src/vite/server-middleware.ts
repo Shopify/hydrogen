@@ -13,7 +13,7 @@ import {
   isEntrypointError,
   handleEntrypointError,
   type CustomEntryPointErrorHandler,
-} from './deps-optimizer.js';
+} from './entry-error.js';
 
 import type {ViteEnv} from './worker-entry.js';
 import type {RequestHookInfo} from '../worker/handler.js';
