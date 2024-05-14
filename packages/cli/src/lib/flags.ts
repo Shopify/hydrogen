@@ -92,7 +92,6 @@ export const commonFlags = {
       description:
         'Automatically generates GraphQL types for your project’s Storefront API queries.',
       required: false,
-      default: false,
     }),
     'codegen-config-path': Flags.string({
       description:
