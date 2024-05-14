@@ -21,6 +21,7 @@ export type VariantOptionValue = {
   to: string;
   search: string;
   isActive: boolean;
+  variant?: PartialDeep<ProductVariant>;
 };
 
 type VariantSelectorProps = {
@@ -115,6 +116,7 @@ export function VariantSelector({
                 to: path + searchString,
                 search: searchString,
                 isActive: calculatedActiveValue,
+                variant,
               });
             }
 
