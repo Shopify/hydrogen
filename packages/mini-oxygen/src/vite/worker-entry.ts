@@ -116,7 +116,11 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
             // Custom events are only used in browser HMR, so ignore them.
             // This type is wrong in ViteRuntime:
             (onHmrRecieve(data) as unknown as Promise<unknown>)?.catch(
-              (error) => console.error('During SSR HMR:', error),
+              (error: Error) => {
+                if (!/ReferenceError/.test(error?.message ?? '')) {
+                  console.error('During SSR HMR:', error);
+                }
+              },
             );
           }
         });
