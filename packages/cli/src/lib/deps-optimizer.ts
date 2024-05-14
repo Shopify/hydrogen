@@ -50,6 +50,7 @@ export function createEntryPointErrorHandler({
           optimizableDependency,
           configFile,
           await formatOptionsPromise,
+          cleanStack,
         )
           .then(() => {
             setTimeout(() => {
@@ -64,6 +65,7 @@ export function createEntryPointErrorHandler({
             showBannerUrlTimeout = setTimeout(showSuccessBanner, 2000);
           })
           .catch((error) => {
+            clearTimeout(showBannerUrlTimeout);
             renderFatalError(error);
           });
       }
@@ -113,6 +115,7 @@ export async function addToViteOptimizeDeps(
   dependency: string,
   configFile: string,
   formatOptions: FormatOptions,
+  errorStack: string,
 ) {
   const ext = extname(configFile).replace(/^\.m?/, '') as 'ts' | 'js';
   const astGrep = await importLangAstGrep(ext);
@@ -123,7 +126,7 @@ export async function addToViteOptimizeDeps(
 
     if (!node) {
       throw new AbortError(
-        `The dependcy "${dependency}" needs to be optimized but couldn't be added to the Vite config.`,
+        `The dependency "${dependency}" needs to be optimized but couldn't be added to the Vite config.`,
         `Add the following code manually to your Vite config:\n\nssr: {optimizeDeps: {include: ['${dependency}']}}`,
       );
     }
@@ -135,7 +138,21 @@ export async function addToViteOptimizeDeps(
       },
     });
 
-    if (isAlreadyAdded) return null; // Skip write
+    if (isAlreadyAdded) {
+      // The dependency is already included in the Vite config
+      // but we still get the error. This probably means that
+      // what we added to optimizeDeps is wrong so we should
+      // print the error stack to the user for manual fixing:
+      const error = new BugError(
+        `A dependency related to "${dependency}" needs to be optimized by Vite` +
+          ` but we could not figure it out automatically:\n\n${colors.dim(
+            errorStack.split('\n')[0],
+          )}`,
+        `Please check the following error stack and fix it manually by adding your dependency to Vite's \`ssr.optimizeDeps.include\` array.`,
+      );
+      error.stack = errorStack;
+      throw error;
+    }
 
     const {start} = node.range();
 
