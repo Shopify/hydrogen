@@ -26,6 +26,7 @@ type DirectiveValues = string[] | string | boolean;
 type CreateContentSecurityPolicy = {
   defaultSrc?: DirectiveValues;
   scriptSrc?: DirectiveValues;
+  scriptSrcElem?: DirectiveValues;
   styleSrc?: DirectiveValues;
   imgSrc?: DirectiveValues;
   connectSrc?: DirectiveValues;
