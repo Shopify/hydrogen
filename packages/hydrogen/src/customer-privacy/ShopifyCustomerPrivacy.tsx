@@ -93,13 +93,6 @@ const CONSENT_API =
 const CONSENT_API_WITH_BANNER =
   'https://cdn.shopify.com/shopifycloud/privacy-banner/storefront-banner.js';
 
-function logInvalidConfig(fieldName: string) {
-  // eslint-disable-next-line no-console
-  console.error(
-    `[h2:error:useCustomerPrivacy] Unable to setup Customer Privacy API: Invalid consent.${fieldName} configuration.`,
-  );
-}
-
 function logMissingConfig(fieldName: string) {
   // eslint-disable-next-line no-console
   console.error(
@@ -159,7 +152,11 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
       consentConfig.storefrontAccessToken.startsWith('shpat_') ||
       consentConfig.storefrontAccessToken.length !== 32
     ) {
-      logInvalidConfig('storefrontAccessToken');
+      // eslint-disable-next-line no-console
+      console.error(
+        `[h2:error:useCustomerPrivacy] It looks like you passed a private access token, make sure to use the public token`
+      );
+      console
     }
 
     if (withPrivacyBanner && window?.privacyBanner) {
