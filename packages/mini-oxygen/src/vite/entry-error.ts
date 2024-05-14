@@ -104,7 +104,7 @@ async function findOptimizableDependency(
       code.matchAll(/import\s[^'"]+\sfrom\s+['"]((@|\w)[^'"]+)['"]/g) ?? [];
 
     for (const [, match] of matches) {
-      importersSet.add(match);
+      if (match) importersSet.add(match);
     }
 
     const importers = Array.from(importersSet).sort(
