@@ -4,28 +4,14 @@ import type {HeaderQuery} from 'storefrontapi.generated';
 import type {LayoutProps} from '~/components/Layout';
 import {type CustomerCompanyLocationConnection} from '~/root';
 import {useRootLoaderData} from '~/lib/root-data';
-import {useCartAside} from '~/components/CartAsideProvider';
 import {useB2BLocation} from './B2BLocationProvider';
+import {useAside} from '~/components/Aside';
 
-type Aside = {
-  expanded: boolean;
-  setExpanded: (expanded: boolean) => void;
-};
-
-type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'> & {
-  searchAside: Aside;
-  mobileAside: Aside;
-};
+type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'>;
 
 type Viewport = 'desktop' | 'mobile';
 
-export function Header({
-  header,
-  isLoggedIn,
-  cart,
-  searchAside,
-  mobileAside,
-}: HeaderProps) {
+export function Header({header, isLoggedIn, cart}: HeaderProps) {
   const {shop, menu} = header;
   return (
     <header className="header">
@@ -37,12 +23,7 @@ export function Header({
         viewport="desktop"
         primaryDomainUrl={header.shop.primaryDomain.url}
       />
-      <HeaderCtas
-        isLoggedIn={isLoggedIn}
-        cart={cart}
-        searchAside={searchAside}
-        mobileAside={mobileAside}
-      />
+      <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
     </header>
   );
 }
@@ -116,18 +97,10 @@ export function HeaderMenu({
 function HeaderCtas({
   isLoggedIn,
   cart,
-  searchAside,
-  mobileAside,
-}: Pick<HeaderProps, 'isLoggedIn' | 'cart'> & {
-  searchAside: Aside;
-  mobileAside: Aside;
-}) {
+}: Pick<HeaderProps, 'isLoggedIn' | 'cart'>) {
   return (
     <nav className="header-ctas" role="navigation">
-      <HeaderMenuMobileToggle
-        expanded={mobileAside.expanded}
-        setExpanded={mobileAside.setExpanded}
-      />
+      <HeaderMenuMobileToggle />
       <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
         <Suspense fallback="Sign in">
           <Await resolve={isLoggedIn} errorElement="Sign in">
@@ -135,12 +108,59 @@ function HeaderCtas({
           </Await>
         </Suspense>
       </NavLink>
-      <SearchToggle
-        setExpanded={searchAside.setExpanded}
-        expanded={searchAside.expanded}
-      />
+      <SearchToggle />
       <CartToggle cart={cart} />
     </nav>
+  );
+}
+
+function HeaderMenuMobileToggle() {
+  const {setMode} = useAside();
+  return (
+    <button
+      className="header-menu-mobile-toggle reset"
+      onClick={() => setMode('mobile')}
+    >
+      <h3>☰</h3>
+    </button>
+  );
+}
+
+function SearchToggle() {
+  const {setMode} = useAside();
+  return (
+    <button className="reset" onClick={() => setMode('search')}>
+      Search
+    </button>
+  );
+}
+
+function CartBadge({count}: {count: number}) {
+  const {setMode} = useAside();
+
+  return (
+    <a
+      href="/cart"
+      onClick={(e) => {
+        e.preventDefault();
+        setMode('cart');
+      }}
+    >
+      Cart {count}
+    </a>
+  );
+}
+
+function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
+  return (
+    <Suspense fallback={<CartBadge count={0} />}>
+      <Await resolve={cart}>
+        {(cart) => {
+          if (!cart) return <CartBadge count={0} />;
+          return <CartBadge count={cart.totalQuantity || 0} />;
+        }}
+      </Await>
+    </Suspense>
   );
 }
 
@@ -169,54 +189,6 @@ function ChangeLocation() {
 }
 /**********   EXAMPLE UPDATE END   ************/
 /***********************************************/
-
-function HeaderMenuMobileToggle({expanded, setExpanded}: Aside) {
-  return (
-    <button
-      className="header-menu-mobile-toggle reset"
-      onClick={() => setExpanded(!expanded)}
-    >
-      <h3>☰</h3>
-    </button>
-  );
-}
-
-function SearchToggle({setExpanded}: Aside) {
-  return (
-    <button className="reset" onClick={() => setExpanded(true)}>
-      Search
-    </button>
-  );
-}
-
-function CartBadge({count}: {count: number}) {
-  const cart = useCartAside();
-
-  return (
-    <a
-      href="/cart"
-      onClick={(e) => {
-        e.preventDefault();
-        cart.showCart(true);
-      }}
-    >
-      Cart {count}
-    </a>
-  );
-}
-
-function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
-  return (
-    <Suspense fallback={<CartBadge count={0} />}>
-      <Await resolve={cart}>
-        {(cart) => {
-          if (!cart) return <CartBadge count={0} />;
-          return <CartBadge count={cart.totalQuantity || 0} />;
-        }}
-      </Await>
-    </Suspense>
-  );
-}
 
 const FALLBACK_HEADER_MENU = {
   id: 'gid://shopify/Menu/199655587896',
