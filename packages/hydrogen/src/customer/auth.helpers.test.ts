@@ -121,6 +121,7 @@ describe('auth.helpers', () => {
     it('Refreshes the token', async () => {
       (session.get as any).mockReturnValueOnce({
         refreshToken: 'old_refresh_token',
+        idToken: 'old_id_token',
       });
 
       fetch.mockResolvedValue(
@@ -149,6 +150,7 @@ describe('auth.helpers', () => {
           accessToken: 'access_token',
           expiresAt: expect.any(String),
           refreshToken: 'refresh_token',
+          idToken: 'old_id_token',
         },
       );
     });
@@ -207,6 +209,7 @@ describe('auth.helpers', () => {
     it('Refreshes the token', async () => {
       (session.get as any).mockReturnValueOnce({
         refreshToken: 'old_refresh_token',
+        idToken: 'old_id_token',
       });
 
       fetch.mockResolvedValue(
@@ -237,6 +240,7 @@ describe('auth.helpers', () => {
           accessToken: 'access_token',
           expiresAt: expect.any(String),
           refreshToken: 'refresh_token',
+          idToken: 'old_id_token',
         },
       );
     });
