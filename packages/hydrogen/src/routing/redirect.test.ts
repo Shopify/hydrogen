@@ -1,4 +1,4 @@
-import {describe, it, expect, vi} from 'vitest';
+import {describe, it, expect, vi, afterEach} from 'vitest';
 import type {Storefront} from '../storefront';
 import {storefrontRedirect} from './redirect';
 
@@ -9,6 +9,10 @@ describe('storefrontRedirect', () => {
     getShopifyDomain: () => shopifyDomain,
     query: queryMock,
   } as unknown as Storefront;
+
+  afterEach(() => {
+    queryMock.mockReset();
+  });
 
   it('redirects to Shopify admin ', async () => {
     await expect(
@@ -41,6 +45,27 @@ describe('storefrontRedirect', () => {
       }),
     );
 
+    expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
+      variables: {query: 'path:/some-page'},
+    });
+  });
+
+  it('strips trailing slashes on the redirect query', async () => {
+    queryMock.mockResolvedValueOnce({
+      urlRedirects: {edges: [{node: {target: shopifyDomain + '/some-page'}}]},
+    });
+
+    await expect(
+      storefrontRedirect({
+        storefront: storefrontMock,
+        request: new Request('https://domain.com/some-page/'),
+      }),
+    ).resolves.toEqual(
+      new Response(null, {
+        status: 301,
+        headers: {location: shopifyDomain + '/some-page'},
+      }),
+    );
     expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
       variables: {query: 'path:/some-page'},
     });
