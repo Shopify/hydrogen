@@ -1,4 +1,5 @@
 import {StorefrontApiErrors, formatAPIResult} from '../../storefront';
+import {throwIfLinesAreOptimistic} from '../optimistic/optimistic-cart.helper';
 import {MINIMAL_CART_FRAGMENT, USER_ERROR_FRAGMENT} from './cart-fragments';
 import type {
   CartOptionalInput,
@@ -17,6 +18,8 @@ export function cartLinesUpdateDefault(
   options: CartQueryOptions,
 ): CartLinesUpdateFunction {
   return async (lines, optionalParams) => {
+    throwIfLinesAreOptimistic('updateLines', lines);
+
     const {cartLinesUpdate, errors} = await options.storefront.mutate<{
       cartLinesUpdate: CartQueryData;
       errors: StorefrontApiErrors;
