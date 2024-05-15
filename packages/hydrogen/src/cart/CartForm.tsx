@@ -1,7 +1,7 @@
 import {type FetcherWithComponents, useFetcher} from '@remix-run/react';
 import {type MetafieldWithoutOwnerId} from './queries/cart-types';
 import type {ReactNode} from 'react';
-import {
+import type {
   AttributeInput,
   CartBuyerIdentityInput,
   CartInput,
@@ -67,16 +67,21 @@ type CartDiscountCodesUpdateRequire = {
   } & OtherFormData;
 };
 
+export type OptimisticCartLine = CartLineInput & {
+  selectedVariant?: unknown;
+};
+
 type CartLinesAddProps = {
   action: 'LinesAdd';
   inputs?: {
-    lines: CartLineInput[];
+    lines: Array<OptimisticCartLine>;
   } & OtherFormData;
 };
+
 type CartLinesAddRequire = {
   action: 'LinesAdd';
   inputs: {
-    lines: CartLineInput[];
+    lines: Array<OptimisticCartLine>;
   } & OtherFormData;
 };
 

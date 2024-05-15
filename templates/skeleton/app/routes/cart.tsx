@@ -58,8 +58,8 @@ export async function action({request, context}: ActionFunctionArgs) {
       throw new Error(`${action} cart action is not defined`);
   }
 
-  const cartId = result.cart.id;
-  const headers = cart.setCartId(result.cart.id);
+  const cartId = result?.cart?.id;
+  const headers = cartId ? cart.setCartId(result.cart.id) : new Headers();
   const {cart: cartResult, errors} = result;
 
   const redirectTo = formData.get('redirectTo') ?? null;

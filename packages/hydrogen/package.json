@@ -78,6 +78,7 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^14.0.0",
     "@types/source-map-support": "^0.5.10",
+    "formdata-polyfill": "^4.0.10",
     "happy-dom": "^8.9.0",
     "react": "^18.2.0",
     "schema-dts": "^1.1.0",

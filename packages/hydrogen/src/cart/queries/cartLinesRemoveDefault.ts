@@ -1,4 +1,5 @@
 import {StorefrontApiErrors, formatAPIResult} from '../../storefront';
+import {throwIfLinesAreOptimistic} from '../optimistic/optimistic-cart.helper';
 import {MINIMAL_CART_FRAGMENT, USER_ERROR_FRAGMENT} from './cart-fragments';
 import type {
   CartOptionalInput,
@@ -16,6 +17,8 @@ export function cartLinesRemoveDefault(
   options: CartQueryOptions,
 ): CartLinesRemoveFunction {
   return async (lineIds, optionalParams) => {
+    throwIfLinesAreOptimistic('removeLines', lineIds);
+
     const {cartLinesRemove, errors} = await options.storefront.mutate<{
       cartLinesRemove: CartQueryData;
       errors: StorefrontApiErrors;

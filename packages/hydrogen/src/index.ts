@@ -27,7 +27,11 @@ export type {
 } from './customer/types';
 export {changelogHandler} from './changelogHandler';
 
-export {CartForm, type CartActionInput} from './cart/CartForm';
+export {
+  CartForm,
+  type CartActionInput,
+  type OptimisticCartLine,
+} from './cart/CartForm';
 export {cartCreateDefault} from './cart/queries/cartCreateDefault';
 export {cartGetDefault} from './cart/queries/cartGetDefault';
 export {cartLinesAddDefault} from './cart/queries/cartLinesAddDefault';
@@ -54,6 +58,11 @@ export type {
   CartQueryOptions,
   CartQueryReturn,
 } from './cart/queries/cart-types';
+
+export {
+  useOptimisticCart,
+  type OptimisticCart,
+} from './cart/optimistic/useOptimisticCart';
 
 export {
   VariantSelector,
