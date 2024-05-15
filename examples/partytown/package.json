@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npm run partytown && shopify hydrogen build",
     "dev": "shopify hydrogen dev --codegen",
-    "preview": "npm run build && shopify hydrogen preview",
+    "preview": "nshopify hydrogen preview --build",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "typecheck": "tsc --noEmit",
     "codegen": "shopify hydrogen codegen",
