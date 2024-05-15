@@ -12,7 +12,7 @@ export default async function handleRequest(
   remixContext: EntryContext,
   // [START context]
   context: AppLoadContext,
-  // [START context]
+  // [END context]
 ) {
   // [START csp]
   const {nonce, header, NonceProvider} = createContentSecurityPolicy({
@@ -21,7 +21,7 @@ export default async function handleRequest(
       storeDomain: context.env.PUBLIC_STORE_DOMAIN,
     }
   });
-  // [START csp]
+  // [END csp]
 
   const body = await renderToReadableStream(
     <NonceProvider>
