@@ -58,7 +58,7 @@ export async function handleEntrypointError(
     result?.body ??
       getErrorPage({
         title: 'Entry point error',
-        header: `MiniOxygen could not load the app's entry point.`,
+        header,
         message,
         code: stack,
       }),
