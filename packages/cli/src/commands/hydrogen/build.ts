@@ -99,6 +99,7 @@ type RunBuildOptions = {
   bundleStats?: boolean;
   lockfileCheck?: boolean;
   watch?: boolean;
+  onServerBuildStart?: () => void | Promise<void>;
   onServerBuildFinish?: () => void | Promise<void>;
 };
 
@@ -112,6 +113,7 @@ export async function runBuild({
   lockfileCheck = true,
   assetPath = '/',
   watch = false,
+  onServerBuildStart,
   onServerBuildFinish,
 }: RunBuildOptions) {
   if (!process.env.NODE_ENV) {
@@ -201,6 +203,7 @@ export async function runBuild({
           // before starting the server build to access the
           // Remix manifest from file disk.
           await clientBuildStatus.promise;
+          await onServerBuildStart?.();
         },
         async writeBundle() {
           await onServerBuildFinish?.();

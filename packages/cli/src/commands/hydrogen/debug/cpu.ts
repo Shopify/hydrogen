@@ -15,6 +15,8 @@ import {prepareDiffDirectory} from '../../../lib/template-diff.js';
 import {runClassicCompilerDebugCpu} from '../../../lib/classic-compiler/debug-cpu.js';
 import {setupResourceCleanup} from '../../../lib/resource-cleanup.js';
 import {createCpuStartupProfiler} from '../../../lib/cpu-profiler.js';
+import {runBuild} from '../build.js';
+import {getViteConfig} from '../../../lib/vite-config.js';
 
 const DEFAULT_OUTPUT_PATH = 'startup.cpuprofile';
 
@@ -27,6 +29,7 @@ export default class DebugCpu extends Command {
   static flags = {
     ...commonFlags.path,
     ...commonFlags.diff,
+    ...commonFlags.entry,
     output: Flags.string({
       description: `Specify a path to generate the profile file. Defaults to "${DEFAULT_OUTPUT_PATH}".`,
       default: DEFAULT_OUTPUT_PATH,
@@ -56,14 +59,15 @@ export default class DebugCpu extends Command {
 type RunDebugCpuOptions = {
   directory: string;
   output: string;
+  entry?: string;
 };
 
-async function runDebugCpu({directory, output}: RunDebugCpuOptions) {
+async function runDebugCpu({directory, entry, output}: RunDebugCpuOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production';
 
   muteDevLogs({workerReload: false});
 
-  const {buildPathWorkerFile} = getProjectPaths(directory);
+  let {buildPath, buildPathWorkerFile} = getProjectPaths(directory);
 
   const isClassicProject = await hasRemixConfigFile(directory);
 
@@ -107,9 +111,30 @@ async function runDebugCpu({directory, output}: RunDebugCpuOptions) {
       buildPathWorkerFile,
       hooks,
     });
-  } else {
-    throw new AbortError(
-      'This command is only available for classic projects.',
-    );
   }
+
+  const maybeViteConfig = await getViteConfig(directory).catch(() => null);
+  buildPathWorkerFile =
+    maybeViteConfig?.serverOutFile ?? joinPath(buildPath, 'server', 'index.js');
+
+  const buildProcess = await runBuild({
+    entry,
+    directory,
+    watch: true,
+    disableRouteWarning: true,
+    lockfileCheck: false,
+    ...hooks,
+    onServerBuildStart() {
+      if (times === 0) {
+        process.stdout.write(ansiEscapes.eraseLines(1));
+      }
+      return hooks.onServerBuildStart();
+    },
+  });
+
+  return {
+    async close() {
+      await Promise.allSettled([buildProcess.close(), profiler.close()]);
+    },
+  };
 }
