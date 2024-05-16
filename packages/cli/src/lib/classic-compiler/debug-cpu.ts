@@ -12,17 +12,17 @@ import {
 } from '../remix-config.js';
 
 type DebugOptions = {
-  root: string;
+  directory: string;
   output: string;
   buildPathWorkerFile: string;
 };
 
 export async function runClassicCompilerDebugCpu({
-  root,
+  directory,
   output,
   buildPathWorkerFile,
 }: DebugOptions) {
-  const runProfiler = await createCpuStartupProfiler();
+  const profiler = await createCpuStartupProfiler();
 
   const [{watch}, {createFileWatchCache}] = await Promise.all([
     import('@remix-run/dev/dist/compiler/watch.js'),
@@ -32,9 +32,9 @@ export async function runClassicCompilerDebugCpu({
   let times = 0;
   const fileWatchCache = createFileWatchCache();
 
-  await watch(
+  const closeWatcher = await watch(
     {
-      config: (await getRemixConfig(root)) as RemixConfig,
+      config: (await getRemixConfig(directory)) as RemixConfig,
       options: {
         mode: process.env.NODE_ENV as ServerMode,
         sourcemap: true,
@@ -52,7 +52,7 @@ export async function runClassicCompilerDebugCpu({
       },
       async onBuildFinish(context, duration, succeeded) {
         if (succeeded) {
-          const {profile, totalScriptTimeMs} = await runProfiler(
+          const {profile, totalScriptTimeMs} = await profiler.run(
             buildPathWorkerFile,
           );
 
@@ -77,4 +77,10 @@ export async function runClassicCompilerDebugCpu({
       },
     },
   );
+
+  return {
+    async close() {
+      await Promise.allSettled([profiler.close(), closeWatcher()]);
+    },
+  };
 }

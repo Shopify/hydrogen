@@ -12,6 +12,7 @@ import {muteDevLogs} from '../../../lib/log.js';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import {prepareDiffDirectory} from '../../../lib/template-diff.js';
 import {runClassicCompilerDebugCpu} from '../../../lib/classic-compiler/debug-cpu.js';
+import {setupResourceCleanup} from '../../../lib/resource-cleanup.js';
 
 const DEFAULT_OUTPUT_PATH = 'startup.cpuprofile';
 
@@ -40,28 +41,29 @@ export default class DebugCpu extends Command {
       directory = await prepareDiffDirectory(directory, true);
     }
 
-    await runDebugCpu({
+    const {close} = await runDebugCpu({
       ...flagsToCamelObject(flags),
-      path: directory,
+      directory,
       output,
     });
+
+    setupResourceCleanup(close);
   }
 }
 
-async function runDebugCpu({
-  path: appPath,
-  output = DEFAULT_OUTPUT_PATH,
-}: {
-  path?: string;
-  output?: string;
-}) {
+type RunDebugCpuOptions = {
+  directory: string;
+  output: string;
+};
+
+async function runDebugCpu({directory, output}: RunDebugCpuOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production';
 
   muteDevLogs({workerReload: false});
 
-  const {root, buildPathWorkerFile} = getProjectPaths(appPath);
+  const {buildPathWorkerFile} = getProjectPaths(directory);
 
-  const isClassicProject = await hasRemixConfigFile(root);
+  const isClassicProject = await hasRemixConfigFile(directory);
 
   outputInfo(
     '⏳️ Starting profiler for CPU startup... Profile will be written to:\n' +
@@ -69,7 +71,11 @@ async function runDebugCpu({
   );
 
   if (isClassicProject) {
-    await runClassicCompilerDebugCpu({root, output, buildPathWorkerFile});
+    return runClassicCompilerDebugCpu({
+      directory,
+      output,
+      buildPathWorkerFile,
+    });
   } else {
     throw new AbortError(
       'This command is only available for classic projects.',

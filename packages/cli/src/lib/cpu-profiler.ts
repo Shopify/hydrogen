@@ -14,16 +14,22 @@ export async function createCpuStartupProfiler() {
     log: () => {},
   });
 
-  await miniOxygen.ready();
+  return {
+    async run(scriptPath: string) {
+      const [script] = await Promise.all([
+        readFile(scriptPath),
+        miniOxygen.ready(),
+      ]);
 
-  return async (scriptPath: string) => {
-    const script = await readFile(scriptPath);
+      const stopProfiler = await startProfiler();
+      await miniOxygen.reload({script});
+      const rawProfile = await stopProfiler();
 
-    const stopProfiler = await startProfiler();
-    await miniOxygen.reload({script});
-    const rawProfile = await stopProfiler();
-
-    return enhanceProfileNodes(rawProfile, scriptPath + '.map');
+      return enhanceProfileNodes(rawProfile, scriptPath + '.map');
+    },
+    async close() {
+      await miniOxygen.dispose();
+    },
   };
 }
 
