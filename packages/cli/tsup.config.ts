@@ -66,7 +66,7 @@ export default defineConfig([
     ...commonConfig,
     // TODO remove virtual routes copy when deprecating classic compiler
     entry: ['../hydrogen/src/vite/virtual-routes/**/*.tsx'],
-    outDir: `${outDir}/virtual-routes`,
+    outDir: `${outDir}/lib/virtual-routes`,
     outExtension: () => ({js: '.jsx'}),
     dts: false,
     async onSuccess() {
@@ -91,7 +91,7 @@ export default defineConfig([
       // so ensure here that asset files are copied:
       await fs.copy(
         '../hydrogen/src/vite/virtual-routes/assets',
-        `${outDir}/virtual-routes/assets`,
+        `${outDir}/lib/virtual-routes/assets`,
       );
 
       console.log('\n', 'Copied virtual route assets to build directory', '\n');
