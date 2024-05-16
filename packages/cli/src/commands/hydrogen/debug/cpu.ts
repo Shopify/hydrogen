@@ -1,23 +1,17 @@
 import {Flags} from '@oclif/core';
-import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
+import {resolvePath} from '@shopify/cli-kit/node/path';
 import Command from '@shopify/cli-kit/node/base-command';
-import {outputInfo, outputWarn} from '@shopify/cli-kit/node/output';
+import {outputInfo} from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
-import {writeFile} from '@shopify/cli-kit/node/fs';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import ansiEscapes from 'ansi-escapes';
 import {
-  type RemixConfig,
   getProjectPaths,
-  getRemixConfig,
-  handleRemixImportFail,
-  type ServerMode,
   hasRemixConfigFile,
 } from '../../../lib/remix-config.js';
-import {createRemixLogger, muteDevLogs} from '../../../lib/log.js';
+import {muteDevLogs} from '../../../lib/log.js';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
-import {createCpuStartupProfiler} from '../../../lib/cpu-profiler.js';
 import {prepareDiffDirectory} from '../../../lib/template-diff.js';
+import {runClassicCompilerDebugCpu} from '../../../lib/classic-compiler/debug-cpu.js';
 
 const DEFAULT_OUTPUT_PATH = 'startup.cpuprofile';
 
@@ -67,70 +61,18 @@ async function runDebugCpu({
 
   const {root, buildPathWorkerFile} = getProjectPaths(appPath);
 
-  if (!(await hasRemixConfigFile(root))) {
-    throw new AbortError(
-      'No remix.config.js file found. This command is not supported in Vite projects.',
-    );
-  }
+  const isClassicProject = await hasRemixConfigFile(root);
 
   outputInfo(
     '⏳️ Starting profiler for CPU startup... Profile will be written to:\n' +
       colors.dim(output),
   );
 
-  const runProfiler = await createCpuStartupProfiler();
-
-  const [{watch}, {createFileWatchCache}] = await Promise.all([
-    import('@remix-run/dev/dist/compiler/watch.js'),
-    import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
-  ]).catch(handleRemixImportFail);
-
-  let times = 0;
-  const fileWatchCache = createFileWatchCache();
-
-  await watch(
-    {
-      config: (await getRemixConfig(root)) as RemixConfig,
-      options: {
-        mode: process.env.NODE_ENV as ServerMode,
-        sourcemap: true,
-      },
-      fileWatchCache,
-      logger: createRemixLogger(),
-    },
-    {
-      onBuildStart() {
-        if (times > 0) {
-          process.stdout.write(ansiEscapes.eraseLines(4));
-        }
-
-        outputInfo(`\n#${++times} Building and profiling...`);
-      },
-      async onBuildFinish(context, duration, succeeded) {
-        if (succeeded) {
-          const {profile, totalScriptTimeMs} = await runProfiler(
-            buildPathWorkerFile,
-          );
-
-          process.stdout.write(ansiEscapes.eraseLines(2));
-          outputInfo(
-            `#${times} Total time: ${totalScriptTimeMs.toLocaleString()} ms` +
-              `\n${colors.dim(output)}`,
-          );
-
-          await writeFile(output, JSON.stringify(profile, null, 2));
-
-          outputInfo(`\nWaiting for changes...`);
-        } else {
-          outputWarn('\nBuild failed, waiting for changes to restart...');
-        }
-      },
-      async onFileChanged(file) {
-        fileWatchCache.invalidateFile(file);
-      },
-      async onFileDeleted(file) {
-        fileWatchCache.invalidateFile(file);
-      },
-    },
-  );
+  if (isClassicProject) {
+    await runClassicCompilerDebugCpu({root, output, buildPathWorkerFile});
+  } else {
+    throw new AbortError(
+      'This command is only available for classic projects.',
+    );
+  }
 }
