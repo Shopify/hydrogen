@@ -99,7 +99,7 @@ type RunBuildOptions = {
   bundleStats?: boolean;
   lockfileCheck?: boolean;
   watch?: boolean;
-  onRebuild?: () => void | Promise<void>;
+  onServerBuildFinish?: () => void | Promise<void>;
 };
 
 export async function runBuild({
@@ -112,7 +112,7 @@ export async function runBuild({
   lockfileCheck = true,
   assetPath = '/',
   watch = false,
-  onRebuild,
+  onServerBuildFinish,
 }: RunBuildOptions) {
   if (!process.env.NODE_ENV) {
     process.env.NODE_ENV = 'production';
@@ -203,7 +203,7 @@ export async function runBuild({
           await clientBuildStatus.promise;
         },
         async writeBundle() {
-          await onRebuild?.();
+          await onServerBuildFinish?.();
         },
       },
     ],

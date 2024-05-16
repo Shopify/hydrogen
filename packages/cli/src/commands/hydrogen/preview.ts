@@ -156,7 +156,7 @@ export async function runPreview({
       : await runBuild({
           ...buildOptions,
           watch,
-          async onRebuild() {
+          async onServerBuildFinish() {
             if (projectBuild.state === 'pending') {
               projectBuild.resolve();
             } else {
