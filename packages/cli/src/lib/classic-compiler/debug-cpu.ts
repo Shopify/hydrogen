@@ -1,8 +1,4 @@
-import ansiEscapes from 'ansi-escapes';
-import {outputInfo, outputWarn} from '@shopify/cli-kit/node/output';
-import {writeFile} from '@shopify/cli-kit/node/fs';
-import colors from '@shopify/cli-kit/node/colors';
-import {createCpuStartupProfiler} from '../cpu-profiler.js';
+import {outputWarn} from '@shopify/cli-kit/node/output';
 import {createRemixLogger} from '../log.js';
 import {
   getRemixConfig,
@@ -15,21 +11,21 @@ type DebugOptions = {
   directory: string;
   output: string;
   buildPathWorkerFile: string;
+  hooks: {
+    onServerBuildStart: () => void | Promise<void>;
+    onServerBuildFinish: () => void | Promise<void>;
+  };
 };
 
 export async function runClassicCompilerDebugCpu({
   directory,
-  output,
-  buildPathWorkerFile,
+  hooks,
 }: DebugOptions) {
-  const profiler = await createCpuStartupProfiler();
-
   const [{watch}, {createFileWatchCache}] = await Promise.all([
     import('@remix-run/dev/dist/compiler/watch.js'),
     import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
   ]).catch(handleRemixImportFail);
 
-  let times = 0;
   const fileWatchCache = createFileWatchCache();
 
   const closeWatcher = await watch(
@@ -43,28 +39,10 @@ export async function runClassicCompilerDebugCpu({
       logger: createRemixLogger(),
     },
     {
-      onBuildStart() {
-        if (times > 0) {
-          process.stdout.write(ansiEscapes.eraseLines(4));
-        }
-
-        outputInfo(`\n#${++times} Building and profiling...`);
-      },
+      onBuildStart: hooks.onServerBuildStart,
       async onBuildFinish(context, duration, succeeded) {
         if (succeeded) {
-          const {profile, totalScriptTimeMs} = await profiler.run(
-            buildPathWorkerFile,
-          );
-
-          process.stdout.write(ansiEscapes.eraseLines(2));
-          outputInfo(
-            `#${times} Total time: ${totalScriptTimeMs.toLocaleString()} ms` +
-              `\n${colors.dim(output)}`,
-          );
-
-          await writeFile(output, JSON.stringify(profile, null, 2));
-
-          outputInfo(`\nWaiting for changes...`);
+          await hooks.onServerBuildFinish();
         } else {
           outputWarn('\nBuild failed, waiting for changes to restart...');
         }
@@ -80,7 +58,7 @@ export async function runClassicCompilerDebugCpu({
 
   return {
     async close() {
-      await Promise.allSettled([profiler.close(), closeWatcher()]);
+      await closeWatcher();
     },
   };
 }

@@ -1,9 +1,10 @@
 import {Flags} from '@oclif/core';
-import {resolvePath} from '@shopify/cli-kit/node/path';
+import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
 import Command from '@shopify/cli-kit/node/base-command';
 import {outputInfo} from '@shopify/cli-kit/node/output';
+import {writeFile} from '@shopify/cli-kit/node/fs';
 import colors from '@shopify/cli-kit/node/colors';
-import {AbortError} from '@shopify/cli-kit/node/error';
+import ansiEscapes from 'ansi-escapes';
 import {
   getProjectPaths,
   hasRemixConfigFile,
@@ -13,6 +14,7 @@ import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import {prepareDiffDirectory} from '../../../lib/template-diff.js';
 import {runClassicCompilerDebugCpu} from '../../../lib/classic-compiler/debug-cpu.js';
 import {setupResourceCleanup} from '../../../lib/resource-cleanup.js';
+import {createCpuStartupProfiler} from '../../../lib/cpu-profiler.js';
 
 const DEFAULT_OUTPUT_PATH = 'startup.cpuprofile';
 
@@ -70,11 +72,40 @@ async function runDebugCpu({directory, output}: RunDebugCpuOptions) {
       colors.dim(output),
   );
 
+  let times = 0;
+  const profiler = await createCpuStartupProfiler();
+
+  const hooks = {
+    onServerBuildStart() {
+      if (times > 0) {
+        process.stdout.write(ansiEscapes.eraseLines(4));
+      }
+
+      outputInfo(`\n#${++times} Building and profiling...`);
+    },
+    async onServerBuildFinish() {
+      const {profile, totalScriptTimeMs} = await profiler.run(
+        buildPathWorkerFile,
+      );
+
+      process.stdout.write(ansiEscapes.eraseLines(2));
+      outputInfo(
+        `#${times} Total time: ${totalScriptTimeMs.toLocaleString()} ms` +
+          `\n${colors.dim(output)}`,
+      );
+
+      await writeFile(output, JSON.stringify(profile, null, 2));
+
+      outputInfo(`\nWaiting for changes...`);
+    },
+  };
+
   if (isClassicProject) {
     return runClassicCompilerDebugCpu({
       directory,
       output,
       buildPathWorkerFile,
+      hooks,
     });
   } else {
     throw new AbortError(
