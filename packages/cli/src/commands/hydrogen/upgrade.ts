@@ -1070,7 +1070,10 @@ export async function displayDevUpgradeNotice({
 
     renderInfo({
       headline,
-      body: [`Current: ${currentVersion} | Latest: ${pinnedLatestVersion}`],
+      body: [
+        `Current: ${currentVersion} | Latest: ${pinnedLatestVersion}` +
+          (isLatestHydrogenPackage ? ' with updated dependencies' : ''),
+      ],
       customSections: [
         ...(nextReleases.length > 0
           ? [

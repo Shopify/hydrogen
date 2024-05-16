@@ -599,6 +599,9 @@ describe('upgrade', async () => {
             /new @shopify\/hydrogen versions? available/i,
           );
           expect(outputMock.info()).toMatch(
+            /Current: [\d.] | Latest: [\d.]+\s{2,}/i,
+          );
+          expect(outputMock.info()).toMatch(
             /The next \d+ version\(s\) include/i,
           );
           expect(outputMock.info()).toMatch('Run `h2 upgrade`');
@@ -614,9 +617,11 @@ describe('upgrade', async () => {
             displayDevUpgradeNotice({targetPath}),
           ).resolves.not.toThrow();
 
-          console.debug(outputMock.info());
           expect(outputMock.info()).toMatch(
             /new @shopify\/hydrogen versions? available/i,
+          );
+          expect(outputMock.info()).toMatch(
+            /Current: [\d.] | Latest: [\d.]+ with updated dependencies\s{1,}/i,
           );
           expect(outputMock.info()).toMatch(/The next 1 version\(s\) include/i);
           expect(outputMock.info()).toMatch('Run `h2 upgrade`');
