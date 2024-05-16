@@ -1026,10 +1026,20 @@ export async function displayDevUpgradeNotice({
       availableUpgrades[0].version,
     );
     const pinnedCurrentVersion = getAbsoluteVersion(currentVersion);
-    const currentReleaseIndex = changelog.releases.findIndex((release) => {
-      const pinnedReleaseVersion = getAbsoluteVersion(release.version);
-      return pinnedReleaseVersion === pinnedCurrentVersion;
-    });
+
+    // If we are on the latest Hydrogen package version and we are still running
+    // this code, it means there's an outdated dependency. Use the first
+    // outdated version as the current release index to show the upgrade info:
+    const currentReleaseIndex =
+      pinnedCurrentVersion === pinnedLatestVersion
+        ? changelog.releases.findIndex(
+            (release) =>
+              getAbsoluteVersion(release.version) !== pinnedCurrentVersion,
+          )
+        : changelog.releases.findIndex(
+            (release) =>
+              getAbsoluteVersion(release.version) === pinnedCurrentVersion,
+          );
 
     const uniqueNextReleases = changelog.releases
       .slice(0, currentReleaseIndex)

@@ -606,6 +606,33 @@ describe('upgrade', async () => {
         {cleanGitRepo: false, packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON},
       );
     });
+
+    it('shows up a notice if there are related dependencies to upgrade', async () => {
+      await inTemporaryHydrogenRepo(
+        async (targetPath) => {
+          await expect(
+            displayDevUpgradeNotice({targetPath}),
+          ).resolves.not.toThrow();
+
+          console.debug(outputMock.info());
+          expect(outputMock.info()).toMatch(
+            /new @shopify\/hydrogen versions? available/i,
+          );
+          expect(outputMock.info()).toMatch(/The next 1 version\(s\) include/i);
+          expect(outputMock.info()).toMatch('Run `h2 upgrade`');
+        },
+        {
+          cleanGitRepo: false,
+          packageJson: {
+            ...OUTDATED_HYDROGEN_PACKAGE_JSON,
+            dependencies: {
+              ...OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies,
+              '@shopify/hydrogen': '2024.4.2',
+            },
+          },
+        },
+      );
+    });
   });
 
   describe('upgradeNodeModules', () => {
