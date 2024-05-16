@@ -588,7 +588,7 @@ describe('upgrade', async () => {
   });
 
   describe('displayDevUpgradeNotice', () => {
-    it('shows up a notice if there are dependencies to upgrade', async () => {
+    it('shows up a notice if Hydrogen is outdated', async () => {
       await inTemporaryHydrogenRepo(
         async (targetPath) => {
           await expect(
@@ -596,7 +596,10 @@ describe('upgrade', async () => {
           ).resolves.not.toThrow();
 
           expect(outputMock.info()).toMatch(
-            'new @shopify/hydrogen versions available',
+            /new @shopify\/hydrogen versions? available/i,
+          );
+          expect(outputMock.info()).toMatch(
+            /The next \d+ version\(s\) include/i,
           );
           expect(outputMock.info()).toMatch('Run `h2 upgrade`');
         },
