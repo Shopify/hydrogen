@@ -1,5 +1,8 @@
 import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
+import {AbortError} from '@shopify/cli-kit/node/error';
+import {outputInfo} from '@shopify/cli-kit/node/output';
+import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
 import {isH2Verbose, muteDevLogs, setH2OVerbose} from '../../lib/log.js';
 import {getProjectPaths, hasRemixConfigFile} from '../../lib/remix-config.js';
 import {
@@ -13,14 +16,12 @@ import {startMiniOxygen, type MiniOxygen} from '../../lib/mini-oxygen/index.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
 import {findPort} from '../../lib/find-port.js';
-import {joinPath} from '@shopify/cli-kit/node/path';
 import {getViteConfig} from '../../lib/vite-config.js';
 import {runBuild} from './build.js';
 import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 import {deferPromise} from '../../lib/defer.js';
-import {AbortError} from '@shopify/cli-kit/node/error';
-import {outputInfo} from '@shopify/cli-kit/node/output';
+import {copyDiffBuild, prepareDiffDirectory} from '../../lib/template-diff.js';
 
 export default class Preview extends Command {
   static descriptionWithMarkdown =
@@ -54,20 +55,39 @@ export default class Preview extends Command {
     ...overrideFlag(commonFlags.codegen, {
       codegen: {dependsOn: ['build']},
     }),
+    ...overrideFlag(commonFlags.diff, {
+      diff: {dependsOn: ['build']},
+    }),
   };
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Preview);
+    const originalDirectory = flags.path
+      ? resolvePath(flags.path)
+      : process.cwd();
+    let directory = originalDirectory;
 
-    const {close} = await runPreview(flagsToCamelObject(flags));
+    if (flags.build && flags.diff) {
+      directory = await prepareDiffDirectory(originalDirectory, false);
+    }
 
-    setupResourceCleanup(close);
+    const {close} = await runPreview({
+      ...flagsToCamelObject(flags),
+      directory,
+    });
+
+    setupResourceCleanup(async () => {
+      await close();
+      if (flags.diff) {
+        await copyDiffBuild(directory, originalDirectory);
+      }
+    });
   }
 }
 
 type PreviewOptions = {
   port?: number;
-  path?: string;
+  directory?: string;
   legacyRuntime?: boolean;
   env?: string;
   envBranch?: string;
@@ -83,7 +103,7 @@ type PreviewOptions = {
 
 export async function runPreview({
   port: appPort,
-  path: appPath,
+  directory,
   legacyRuntime = false,
   env: envHandle,
   envBranch,
@@ -103,7 +123,7 @@ export async function runPreview({
   if (!isH2Verbose()) muteDevLogs();
 
   let {root, buildPath, buildPathWorkerFile, buildPathClient} =
-    getProjectPaths(appPath);
+    getProjectPaths(directory);
 
   const isClassicProject = await hasRemixConfigFile(root);
 
@@ -120,7 +140,6 @@ export async function runPreview({
   const buildOptions = {
     directory: root,
     entry,
-    watch,
     disableRouteWarning: false,
     lockfileCheck: false,
     sourcemap: true,
@@ -130,9 +149,13 @@ export async function runPreview({
 
   const buildProcess = shouldBuild
     ? isClassicProject
-      ? await runClassicCompilerBuild(buildOptions)
+      ? await runClassicCompilerBuild({
+          ...buildOptions,
+          bundleStats: false,
+        }).then(projectBuild.resolve)
       : await runBuild({
           ...buildOptions,
+          watch,
           async onRebuild() {
             if (projectBuild.state === 'pending') {
               projectBuild.resolve();

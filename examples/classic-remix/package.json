@@ -6,7 +6,7 @@
   "scripts": {
     "build": "shopify hydrogen build --diff",
     "dev": "shopify hydrogen dev --codegen --diff",
-    "preview": "nshopify hydrogen preview --build",
+    "preview": "nshopify hydrogen preview --build --diff",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "typecheck": "tsc --noEmit",
     "codegen": "shopify hydrogen codegen"
