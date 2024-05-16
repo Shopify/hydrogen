@@ -1060,40 +1060,41 @@ export async function displayDevUpgradeNotice({
     renderInfo({
       headline,
       body: [`Current: ${currentVersion} | Latest: ${pinnedLatestVersion}`],
-      //@ts-ignore will always be an array
-      customSections: nextReleases.length
-        ? [
-            {
-              title: `The next ${nextReleases.length} version(s) include`,
-              body: [
-                {
-                  list: {
-                    items: [
-                      ...nextReleases,
-                      availableUpgrades.length > 5 && `...more`,
-                    ]
-                      .flat()
-                      .filter(Boolean),
+      customSections: [
+        ...(nextReleases.length > 0
+          ? [
+              {
+                title: `The next ${nextReleases.length} version(s) include`,
+                body: [
+                  {
+                    list: {
+                      items: [
+                        ...nextReleases,
+                        availableUpgrades.length > 5 ? `...more` : '',
+                      ]
+                        .flat()
+                        .filter(Boolean),
+                    },
                   },
-                },
-              ].filter(Boolean),
-            },
+                ].filter(Boolean),
+              },
+            ]
+          : []),
+        {
+          title: 'Next steps',
+          body: [
             {
-              title: 'Next steps',
-              body: [
-                {
-                  list: {
-                    items: [
-                      `Run \`${cliCommand} upgrade\` or \`${cliCommand} upgrade --version XXXX.X.XX\``,
-                      ,
-                      `Read release notes at https://hydrogen.shopify.dev/releases`,
-                    ],
-                  },
-                },
-              ],
+              list: {
+                items: [
+                  `Run \`${cliCommand} upgrade\` or \`${cliCommand} upgrade --version XXXX.X.XX\``,
+                  '',
+                  `Read release notes at https://hydrogen.shopify.dev/releases`,
+                ],
+              },
             },
-          ]
-        : [],
+          ],
+        },
+      ],
     });
   } catch (error) {
     const abortError = error as AbortError;
