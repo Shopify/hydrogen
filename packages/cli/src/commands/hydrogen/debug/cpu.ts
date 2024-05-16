@@ -17,6 +17,7 @@ import {
 import {createRemixLogger, muteDevLogs} from '../../../lib/log.js';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import {createCpuStartupProfiler} from '../../../lib/cpu-profiler.js';
+import {prepareDiffDirectory} from '../../../lib/template-diff.js';
 
 const DEFAULT_OUTPUT_PATH = 'startup.cpuprofile';
 
@@ -28,6 +29,7 @@ export default class DebugCpu extends Command {
   static description = 'Builds and profiles the server startup time the app.';
   static flags = {
     ...commonFlags.path,
+    ...commonFlags.diff,
     output: Flags.string({
       description: `Specify a path to generate the profile file. Defaults to "${DEFAULT_OUTPUT_PATH}".`,
       default: DEFAULT_OUTPUT_PATH,
@@ -37,10 +39,14 @@ export default class DebugCpu extends Command {
 
   async run(): Promise<void> {
     const {flags} = await this.parse(DebugCpu);
-    const directory = flags.path ? resolvePath(flags.path) : process.cwd();
+    let directory = flags.path ? resolvePath(flags.path) : process.cwd();
     const output = flags.output
       ? resolvePath(flags.output)
       : joinPath(process.cwd(), flags.output);
+
+    if (flags.diff) {
+      directory = await prepareDiffDirectory(directory, true);
+    }
 
     await runDebugCpu({
       ...flagsToCamelObject(flags),

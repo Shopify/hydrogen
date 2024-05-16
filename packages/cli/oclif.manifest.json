@@ -262,6 +262,14 @@
           "multiple": false,
           "type": "option"
         },
+        "diff": {
+          "description": "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
+          "hidden": true,
+          "name": "diff",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
         "output": {
           "description": "Specify a path to generate the profile file. Defaults to \"startup.cpuprofile\".",
           "name": "output",
