@@ -26,15 +26,15 @@ export default defineConfig({
   ssr: {
     optimizeDeps: {
       /**
-       * Add here the dependencies that throw CJS<>ESM errors
-       * in Vite with MiniOxygen. Example:
-       *
-       * > ReferenceError: module is not defined
-       * >   at /Users/.../node_modules/my-dep/index.js:1:1
-       * >   ...
-       *
-       * Then add 'my-dep' to the list below.
-       */
+        * Include dependencies here if they throw CJS<>ESM errors.
+        * For example, for the following error:
+        * 
+        * > ReferenceError: module is not defined
+        * >   at /Users/.../node_modules/example-dep/index.js:1:1
+        * 
+        * Include 'example-dep' in the array below.
+        * @see https://vitejs.dev/config/dep-optimization-options
+        */
       include: [],
     },
   },

@@ -34,7 +34,7 @@ export function createEntryPointErrorHandler({
       .filter((line) => !line.includes('virtual:remix'))
       .join('\n');
 
-    const headline = 'MiniOxygen errored while running your entrypoint';
+    const headline = 'MiniOxygen encountered an error while running your app's entry point';
 
     if (optimizableDependency) {
       if (disableDepsOptimizer || !configFile) {
@@ -139,7 +139,7 @@ export async function addToViteOptimizeDeps(
       throw new AbortError(
         `The dependency '${colors.yellow(
           dependency,
-        )}' needs to be optimized but couldn't be added to the Vite config.`,
+        )}' needs to be optimized by Vite, but couldn't be added to the Vite config.`,
         `Add the following code manually to your Vite config:\n\n` +
           colors.yellow(`ssr: {optimizeDeps: {include: ['${dependency}']}}`),
       );
@@ -161,10 +161,10 @@ export async function addToViteOptimizeDeps(
         `A dependency related to '${colors.yellow(
           dependency,
         )}' might need to be optimized by Vite` +
-          ` but we could not figure it out automatically:\n\n${colors.dim(
+          ` but couldn't be configured automatically:\n\n${colors.dim(
             errorStack.split('\n')[0],
           )}`,
-        `If your app doesn't load, please check the following error stack and fix it manually by adding the dependency that is importing it to Vite's \`ssr.optimizeDeps.include\` array.`,
+        `If your app doesn't load, check the following stack trace and try fixing the problem by adding the imported dependency to the \`ssr.optimizeDeps.include\` array in your Vite config file.`,
       );
       error.stack = errorStack;
       throw error;

@@ -36,7 +36,7 @@ export async function handleEntrypointError(
     stack,
   );
 
-  const header = `MiniOxygen could not load the app's entry point.`;
+  const header = `MiniOxygen couldn't load your app's entry point.`;
   const message = optimizableDependency
     ? `Try adding <code>${optimizableDependency}</code> to the <code>ssr.optimizeDeps.include</code> array in your Vite config.`
     : '';
