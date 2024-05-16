@@ -223,7 +223,7 @@ export function setupOxygenMiddleware(
         .dispatchFetch(toWeb(req))
         .then(async (webResponse) => {
           if (isEntrypointError(webResponse)) {
-            handleEntrypointError(
+            await handleEntrypointError(
               viteDevServer,
               webResponse,
               res,

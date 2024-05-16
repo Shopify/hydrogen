@@ -34,7 +34,7 @@ export async function handleEntrypointError(
   const optimizableDependency = await findOptimizableDependency(
     viteDevServer,
     stack,
-  );
+  ).catch(() => undefined);
 
   const header = `MiniOxygen couldn't load your app's entry point.`;
   const message = optimizableDependency
@@ -47,7 +47,10 @@ export async function handleEntrypointError(
     );
   }
 
-  const result = await entryPointErrorHandler?.({optimizableDependency, stack});
+  const result = await entryPointErrorHandler?.({
+    optimizableDependency,
+    stack,
+  })?.catch(() => undefined);
 
   res.writeHead(
     result?.status ?? 503,
