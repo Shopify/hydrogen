@@ -1,5 +1,13 @@
 # @shopify/mini-oxygen
 
+## 3.0.2
+
+### Patch Changes
+
+- Fix issue where `undici` dependency couldn't be found in some situations. ([#2065](https://github.com/Shopify/hydrogen/pull/2065)) by [@frandiox](https://github.com/frandiox)
+
+- Fix HMR when changing files imported into routes. ([#2077](https://github.com/Shopify/hydrogen/pull/2077)) by [@frandiox](https://github.com/frandiox)
+
 ## 3.0.1
 
 ### Patch Changes

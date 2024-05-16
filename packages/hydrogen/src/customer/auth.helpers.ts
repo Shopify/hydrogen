@@ -4,7 +4,8 @@ import {
   USER_AGENT,
   CUSTOMER_API_CLIENT_ID,
   CUSTOMER_ACCOUNT_SESSION_KEY,
-} from './constants';
+  BUYER_SESSION_KEY,
+} from '../constants';
 
 type H2OEvent = Parameters<NonNullable<typeof __H2O_LOG_EVENT>>[0];
 
@@ -72,17 +73,20 @@ export async function refreshToken({
   customerAccountUrl,
   httpsOrigin,
   debugInfo,
+  exchangeForStorefrontCustomerAccessToken,
 }: {
   session: HydrogenSession;
   customerAccountId: string;
   customerAccountUrl: string;
   httpsOrigin: string;
   debugInfo?: Partial<H2OEvent>;
+  exchangeForStorefrontCustomerAccessToken: () => Promise<void>;
 }) {
   const newBody = new URLSearchParams();
 
   const customerAccount = session.get(CUSTOMER_ACCOUNT_SESSION_KEY);
   const refreshToken = customerAccount?.refreshToken;
+  const idToken = customerAccount?.idToken;
 
   if (!refreshToken)
     throw new BadRequest(
@@ -126,8 +130,9 @@ export async function refreshToken({
     });
   }
 
-  const {access_token, expires_in, id_token, refresh_token} =
-    await response.json<AccessTokenResponse>();
+  const {access_token, expires_in, refresh_token} = await response.json<
+    Omit<AccessTokenResponse, 'id_token'>
+  >();
 
   const accessToken = await exchangeAccessToken(
     access_token,
@@ -143,12 +148,15 @@ export async function refreshToken({
     expiresAt:
       new Date(new Date().getTime() + (expires_in - 120) * 1000).getTime() + '',
     refreshToken: refresh_token,
-    idToken: id_token,
+    idToken,
   });
+
+  await exchangeForStorefrontCustomerAccessToken();
 }
 
 export function clearSession(session: HydrogenSession): void {
   session.unset(CUSTOMER_ACCOUNT_SESSION_KEY);
+  session.unset(BUYER_SESSION_KEY);
 }
 
 export async function checkExpires({
@@ -159,6 +167,7 @@ export async function checkExpires({
   customerAccountUrl,
   httpsOrigin,
   debugInfo,
+  exchangeForStorefrontCustomerAccessToken,
 }: {
   locks: Locks;
   expiresAt: string;
@@ -167,6 +176,7 @@ export async function checkExpires({
   customerAccountUrl: string;
   httpsOrigin: string;
   debugInfo?: Partial<H2OEvent>;
+  exchangeForStorefrontCustomerAccessToken: () => Promise<void>;
 }) {
   if (parseInt(expiresAt, 10) - 1000 < new Date().getTime()) {
     try {
@@ -178,6 +188,7 @@ export async function checkExpires({
           customerAccountUrl,
           httpsOrigin,
           debugInfo,
+          exchangeForStorefrontCustomerAccessToken,
         });
 
       await locks.refresh;

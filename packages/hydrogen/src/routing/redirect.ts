@@ -59,7 +59,9 @@ export async function storefrontRedirect(
     const {urlRedirects} = await storefront.query<{
       urlRedirects: UrlRedirectConnection;
     }>(REDIRECT_QUERY, {
-      variables: {query: 'path:' + redirectFrom},
+      // The admin doesn't allow redirects to have a
+      // trailing slash, so strip them all off
+      variables: {query: 'path:' + redirectFrom.replace(/\/+$/, '')},
     });
 
     const location = urlRedirects?.edges?.[0]?.node?.target;
