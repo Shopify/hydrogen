@@ -40,9 +40,7 @@ export default class DebugCpu extends Command {
   async run(): Promise<void> {
     const {flags} = await this.parse(DebugCpu);
     let directory = flags.path ? resolvePath(flags.path) : process.cwd();
-    const output = flags.output
-      ? resolvePath(flags.output)
-      : joinPath(process.cwd(), flags.output);
+    const output = resolvePath(directory, flags.output);
 
     if (flags.diff) {
       directory = await prepareDiffDirectory(directory, true);
