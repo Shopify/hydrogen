@@ -2,11 +2,8 @@ import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
 import {resolvePath, joinPath, dirname} from '@shopify/cli-kit/node/path';
 import {outputWarn, collectLog} from '@shopify/cli-kit/node/output';
-import {fileSize, findPathUp, removeFile} from '@shopify/cli-kit/node/fs';
-import {
-  findUpAndReadPackageJson,
-  getPackageManager,
-} from '@shopify/cli-kit/node/node-package-manager';
+import {fileSize, removeFile} from '@shopify/cli-kit/node/fs';
+import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {copyDiffBuild, prepareDiffDirectory} from '../../lib/template-diff.js';
 import {hasViteConfig, getViteConfig} from '../../lib/vite-config.js';

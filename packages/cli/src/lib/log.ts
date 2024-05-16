@@ -9,10 +9,7 @@ import {BugError} from '@shopify/cli-kit/node/error';
 import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
 import {getGraphiQLUrl} from './graphiql-url.js';
-import {createRequire} from 'node:module';
 import {importLocal} from './import-utils.js';
-
-const require = createRequire(import.meta.url);
 
 type ConsoleMethod = 'log' | 'warn' | 'error' | 'debug' | 'info';
 const originalConsole = {...console};

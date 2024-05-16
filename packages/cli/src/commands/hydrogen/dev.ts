@@ -42,7 +42,6 @@ import {logRequestLine} from '../../lib/mini-oxygen/common.js';
 import {findHydrogenPlugin, findOxygenPlugin} from '../../lib/vite-config.js';
 import {hasViteConfig} from '../../lib/vite-config.js';
 import {runClassicCompilerDev} from '../../lib/classic-compiler/dev.js';
-import {joinPath} from '@shopify/cli-kit/node/path';
 import {importVite} from '../../lib/import-utils.js';
 
 export default class Dev extends Command {
