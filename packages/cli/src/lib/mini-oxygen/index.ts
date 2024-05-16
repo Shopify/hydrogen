@@ -1,20 +1,15 @@
+import { importLocal } from '../import-utils.js';
 import {handleMiniOxygenImportFail} from './common.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
-import {createRequire} from 'node:module';
 
 export type MiniOxygen = MiniOxygenInstance;
 
 export {DEFAULT_INSPECTOR_PORT} from './common.js';
 
-const require = createRequire(import.meta.url);
-
 export async function buildAssetsUrl(port: number, root: string) {
-  const miniOxygenPath = require.resolve('@shopify/mini-oxygen', {
-    paths: [root],
-  });
   type MiniOxygenType = typeof import('@shopify/mini-oxygen');
-  const {buildAssetsUrl: _buildAssetsUrl}: MiniOxygenType = await import(
-    miniOxygenPath
+  const {buildAssetsUrl: _buildAssetsUrl} = await importLocal<MiniOxygenType>(
+    '@shopify/mini-oxygen', root
   ).catch(handleMiniOxygenImportFail);
 
   return _buildAssetsUrl(port);

@@ -21,8 +21,7 @@ import {
   createLogRequestEvent,
   setConstructors,
 } from '../request-events.js';
-
-const require = createRequire(import.meta.url);
+import { importLocal } from '../import-utils.js';
 
 export async function startWorkerdServer({
   root,
@@ -35,12 +34,9 @@ export async function startWorkerdServer({
   buildPathClient,
   env,
 }: MiniOxygenOptions): Promise<MiniOxygenInstance> {
-  const miniOxygenPath = require.resolve('@shopify/mini-oxygen', {
-    paths: [root],
-  });
   type MiniOxygenType = typeof import('@shopify/mini-oxygen');
-  const {createMiniOxygen, Response}: MiniOxygenType = await import(
-    miniOxygenPath
+  const {createMiniOxygen, Response} = await importLocal<MiniOxygenType>(
+    '@shopify/mini-oxygen', root
   ).catch(handleMiniOxygenImportFail);
 
   setConstructors({Response});
@@ -48,6 +44,7 @@ export async function startWorkerdServer({
   // TODO: Remove this workaround when CAA is fixed
   async function handleCustomerAccountSchema() {
     // Request coming from /graphiql
+    const require = createRequire(import.meta.url);
     const filePath = require.resolve(
       '@shopify/hydrogen/customer-account.schema.json',
     );

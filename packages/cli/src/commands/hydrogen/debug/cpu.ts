@@ -17,9 +17,7 @@ import {
 import {createRemixLogger, muteDevLogs} from '../../../lib/log.js';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import {createCpuStartupProfiler} from '../../../lib/cpu-profiler.js';
-import {createRequire} from 'module';
-
-const require = createRequire(import.meta.url);
+import { importLocal } from '../../../lib/import-utils.js';
 
 const DEFAULT_OUTPUT_PATH = 'startup.cpuprofile';
 
@@ -79,22 +77,12 @@ async function runDebugCpu({
 
   const runProfiler = await createCpuStartupProfiler(root);
 
-  const remixRunWatch = require.resolve(
-    '@remix-run/dev/dist/compiler/watch.js',
-    {paths: [root]},
-  );
   type RemixWatch = typeof import('@remix-run/dev/dist/compiler/watch.js');
-
-  const remixRunWatchPath = require.resolve(
-    '@remix-run/dev/dist/compiler/fileWatchCache.js',
-    {paths: [root]},
-  );
-  type RemixFileWatchCache =
-    typeof import('@remix-run/dev/dist/compiler/fileWatchCache.js');
+  type RemixFileWatchCache = typeof import('@remix-run/dev/dist/compiler/fileWatchCache.js');
 
   const [{watch}, {createFileWatchCache}] = await Promise.all([
-    import(remixRunWatch) as Promise<RemixWatch>,
-    import(remixRunWatchPath) as Promise<RemixFileWatchCache>,
+    importLocal<RemixWatch>('@remix-run/dev/dist/compiler/watch.js', root),
+    importLocal<RemixFileWatchCache>('@remix-run/dev/dist/compiler/fileWatchCache.js', root),
   ]).catch(handleRemixImportFail);
 
   let times = 0;

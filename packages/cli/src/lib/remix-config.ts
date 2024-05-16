@@ -11,12 +11,11 @@ import {muteRemixLogs} from './log.js';
 import {getRequiredRemixVersion} from './remix-version-check.js';
 import {findFileWithExtension} from './file.js';
 import {getViteConfig} from './vite-config.js';
+import { importLocal } from './import-utils.js';
 
 type RawRemixConfig = AppConfig;
 
 export type {RemixConfig, ServerMode, RawRemixConfig};
-
-const require = createRequire(import.meta.url);
 
 export async function hasRemixConfigFile(root: string) {
   const result = await findFileWithExtension(root, 'remix.config');
@@ -71,14 +70,9 @@ export async function getRemixConfig(
 
   await muteRemixLogs(root);
 
-  const remixConfigPath = await require.resolve(
-    '@remix-run/dev/dist/config.js',
-    process.env.SHOPIFY_UNIT_TEST ? {} : {paths: [root]},
-  );
-
   type RemixConfig = typeof import('@remix-run/dev/dist/config.js');
 
-  const {readConfig}: RemixConfig = await import(remixConfigPath).catch(
+  const {readConfig} = await importLocal<RemixConfig>('@remix-run/dev/dist/config.js', root).catch(
     handleRemixImportFail,
   );
   const config = await readConfig(root, mode);

@@ -10,6 +10,7 @@ import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
 import {getGraphiQLUrl} from './graphiql-url.js';
 import {createRequire} from 'node:module';
+import { importLocal } from './import-utils.js';
 
 const require = createRequire(import.meta.url);
 
@@ -501,13 +502,9 @@ export async function muteRemixLogs(root: string) {
   // Remix 1.19.1 warns about `serverNodeBuiltinsPolyfill` being deprecated
   // using a global logger that cannot be modified. Mute it here.
   try {
-    const remixRunLogPath = require.resolve(
-      '@remix-run/dev/dist/tux/logger.js',
-      {paths: [root]},
-    );
     type RemixLog = typeof import('@remix-run/dev/dist/tux/logger.js');
 
-    const {logger}: RemixLog = await import(remixRunLogPath);
+    const {logger} = await importLocal<RemixLog>( '@remix-run/dev/dist/tux/logger.js', root);
     logger.warn = logger.debug = logger.info = () => {};
   } catch {
     // --
