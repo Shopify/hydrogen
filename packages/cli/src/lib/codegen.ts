@@ -11,7 +11,7 @@ import {
 import {AbortError} from '@shopify/cli-kit/node/error';
 import type {LoadCodegenConfigResult} from '@graphql-codegen/cli';
 import type {GraphQLConfig} from 'graphql-config';
-import { importLocal } from './import-utils.js';
+import {importLocal} from './import-utils.js';
 
 const nodePath = process.argv[1];
 const modulePath = fileURLToPath(import.meta.url);
@@ -137,7 +137,10 @@ async function generateTypes({
   type CodegeType = typeof import('@graphql-codegen/cli');
 
   const {generate, loadCodegenConfig, CodegenContext} =
-    await importLocal<CodegeType>('@graphql-codegen/cli', dirs.rootDirectory).catch(() => {
+    await importLocal<CodegeType>(
+      '@graphql-codegen/cli',
+      dirs.rootDirectory,
+    ).catch(() => {
       throw new AbortError(
         'Could not load GraphQL Codegen CLI.',
         'Please make sure you have `@graphql-codegen/cli` installed as a dev dependency.',
@@ -194,7 +197,8 @@ async function generateDefaultConfig(
 ): Promise<LoadCodegenConfigResult> {
   type HydrogenCodegen = typeof import('@shopify/hydrogen-codegen');
   const {getSchema, preset, pluckConfig} = await importLocal<HydrogenCodegen>(
-    '@shopify/hydrogen-codegen', rootDirectory
+    '@shopify/hydrogen-codegen',
+    rootDirectory,
   ).catch(() => {
     throw new AbortError(
       'Could not load Hydrogen Codegen.',
@@ -203,14 +207,15 @@ async function generateDefaultConfig(
   });
 
   type GraphQLConfigType = typeof import('graphql-config');
-  const {loadConfig} = await importLocal<GraphQLConfigType>('graphql-config', rootDirectory).catch(
-    () => {
-      throw new AbortError(
-        'Could not load GraphQL Config.',
-        'Please make sure you have `graphql-config` installed as a dev dependency.',
-      );
-    },
-  );
+  const {loadConfig} = await importLocal<GraphQLConfigType>(
+    'graphql-config',
+    rootDirectory,
+  ).catch(() => {
+    throw new AbortError(
+      'Could not load GraphQL Config.',
+      'Please make sure you have `graphql-config` installed as a dev dependency.',
+    );
+  });
 
   const gqlConfig = await loadConfig({
     rootDir: rootDirectory,

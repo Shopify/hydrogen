@@ -9,7 +9,7 @@ import {findFileWithExtension} from './file.js';
 // Do not import JS from here, only types
 import type {HydrogenPlugin} from '~/hydrogen/vite/plugin.js';
 import type {OxygenPlugin} from '~/mini-oxygen/vite/plugin.js';
-import { importVite } from './import-utils.js';
+import {importVite} from './import-utils.js';
 
 export async function hasViteConfig(root: string) {
   const result = await findFileWithExtension(root, 'vite.config');

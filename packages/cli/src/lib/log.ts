@@ -10,7 +10,7 @@ import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
 import {getGraphiQLUrl} from './graphiql-url.js';
 import {createRequire} from 'node:module';
-import { importLocal } from './import-utils.js';
+import {importLocal} from './import-utils.js';
 
 const require = createRequire(import.meta.url);
 
@@ -504,7 +504,10 @@ export async function muteRemixLogs(root: string) {
   try {
     type RemixLog = typeof import('@remix-run/dev/dist/tux/logger.js');
 
-    const {logger} = await importLocal<RemixLog>( '@remix-run/dev/dist/tux/logger.js', root);
+    const {logger} = await importLocal<RemixLog>(
+      '@remix-run/dev/dist/tux/logger.js',
+      root,
+    );
     logger.warn = logger.debug = logger.info = () => {};
   } catch {
     // --

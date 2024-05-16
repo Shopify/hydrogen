@@ -3,7 +3,10 @@ import Command from '@shopify/cli-kit/node/base-command';
 import {resolvePath, joinPath, dirname} from '@shopify/cli-kit/node/path';
 import {outputWarn, collectLog} from '@shopify/cli-kit/node/output';
 import {fileSize, findPathUp, removeFile} from '@shopify/cli-kit/node/fs';
-import {findUpAndReadPackageJson, getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
+import {
+  findUpAndReadPackageJson,
+  getPackageManager,
+} from '@shopify/cli-kit/node/node-package-manager';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {copyDiffBuild, prepareDiffDirectory} from '../../lib/template-diff.js';
 import {hasViteConfig, getViteConfig} from '../../lib/vite-config.js';
@@ -12,7 +15,7 @@ import {findMissingRoutes} from '../../lib/missing-routes.js';
 import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
 import {codegen} from '../../lib/codegen.js';
 import {isCI} from '../../lib/is-ci.js';
-import { importVite } from '../../lib/import-utils.js';
+import {importVite} from '../../lib/import-utils.js';
 
 export default class Build extends Command {
   static descriptionWithMarkdown = `Builds a Hydrogen storefront for production. The client and app worker files are compiled to a \`/dist\` folder in your Hydrogen project directory.`;

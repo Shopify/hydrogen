@@ -43,7 +43,7 @@ import {findHydrogenPlugin, findOxygenPlugin} from '../../lib/vite-config.js';
 import {hasViteConfig} from '../../lib/vite-config.js';
 import {runClassicCompilerDev} from '../../lib/classic-compiler/dev.js';
 import {joinPath} from '@shopify/cli-kit/node/path';
-import { importVite } from '../../lib/import-utils.js';
+import {importVite} from '../../lib/import-utils.js';
 
 export default class Dev extends Command {
   static descriptionWithMarkdown = `Runs a Hydrogen storefront in a local runtime that emulates an Oxygen worker for development.
@@ -212,7 +212,7 @@ export async function runDev({
     inspectorPort = await findPort(DEFAULT_INSPECTOR_PORT);
   }
 
-  const vite = await importVite(root)
+  const vite = await importVite(root);
 
   // Allow Vite to read files from the Hydrogen packages in local development.
   const fs = isLocalDev

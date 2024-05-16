@@ -41,7 +41,7 @@ import {
   notifyIssueWithTunnelAndMockShop,
 } from '../dev-shared.js';
 import {getCliCommand} from '../shell.js';
-import { importLocal } from '../import-utils.js';
+import {importLocal} from '../import-utils.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -169,7 +169,10 @@ export async function runClassicCompilerDev({
 
   const [{watch}, {createFileWatchCache}] = await Promise.all([
     importLocal<RemixWatch>('@remix-run/dev/dist/compiler/watch.js', root),
-    importLocal<RemixFileWatchCache>('@remix-run/dev/dist/compiler/fileWatchCache.js', root),
+    importLocal<RemixFileWatchCache>(
+      '@remix-run/dev/dist/compiler/fileWatchCache.js',
+      root,
+    ),
   ]).catch(handleRemixImportFail);
 
   let isInitialBuild = true;

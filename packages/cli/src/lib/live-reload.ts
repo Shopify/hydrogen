@@ -6,7 +6,7 @@ import type {AssetsManifest} from '@remix-run/dev';
 import type {Result as RemixBuildResult} from '@remix-run/dev/dist/result.js';
 import type {Context as RemixContext} from '@remix-run/dev/dist/compiler/context.js';
 import {handleRemixImportFail} from './remix-config.js';
-import { importLocal } from './import-utils.js';
+import {importLocal} from './import-utils.js';
 
 type LiveReloadState = {
   manifest?: AssetsManifest;
@@ -27,10 +27,19 @@ export async function setupLiveReload(devServerPort: number, root: string) {
 
     const [{updates: hmrUpdates}, {serve}, {detectLoaderChanges}, {ok, err}] =
       await Promise.all([
-        importLocal<RemixHmr>('@remix-run/dev/dist/devServer_unstable/hmr.js', root),
-        importLocal<RemixSocket>('@remix-run/dev/dist/devServer_unstable/socket.js', root),
-        importLocal<RemixHdr>('@remix-run/dev/dist/devServer_unstable/hdr.js', root),
-        importLocal<RemixResult>( '@remix-run/dev/dist/result.js', root),
+        importLocal<RemixHmr>(
+          '@remix-run/dev/dist/devServer_unstable/hmr.js',
+          root,
+        ),
+        importLocal<RemixSocket>(
+          '@remix-run/dev/dist/devServer_unstable/socket.js',
+          root,
+        ),
+        importLocal<RemixHdr>(
+          '@remix-run/dev/dist/devServer_unstable/hdr.js',
+          root,
+        ),
+        importLocal<RemixResult>('@remix-run/dev/dist/result.js', root),
       ]).catch(handleRemixImportFail);
 
     const state: LiveReloadState = {};
