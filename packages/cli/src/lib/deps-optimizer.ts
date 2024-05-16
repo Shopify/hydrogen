@@ -34,7 +34,8 @@ export function createEntryPointErrorHandler({
       .filter((line) => !line.includes('virtual:remix'))
       .join('\n');
 
-    const headline = 'MiniOxygen encountered an error while running your app's entry point';
+    const headline =
+      "MiniOxygen encountered an error while running your app's entry point";
 
     if (optimizableDependency) {
       if (disableDepsOptimizer || !configFile) {
