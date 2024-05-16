@@ -16,8 +16,11 @@ import {findPort} from '../../lib/find-port.js';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {getViteConfig} from '../../lib/vite-config.js';
 import {runBuild} from './build.js';
+import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 import {deferPromise} from '../../lib/defer.js';
+import {AbortError} from '@shopify/cli-kit/node/error';
+import {outputInfo} from '@shopify/cli-kit/node/output';
 
 export default class Preview extends Command {
   static descriptionWithMarkdown =
@@ -102,27 +105,47 @@ export async function runPreview({
   let {root, buildPath, buildPathWorkerFile, buildPathClient} =
     getProjectPaths(appPath);
 
+  const isClassicProject = await hasRemixConfigFile(root);
+
+  if (watch && isClassicProject) {
+    throw new AbortError(
+      'Preview in watch mode is not supported for classic Remix projects.',
+      'Please use the dev command instead, which is the equivalent for classic projects.',
+    );
+  }
+
   let miniOxygen: MiniOxygen;
   const projectBuild = deferPromise();
 
+  const buildOptions = {
+    directory: root,
+    entry,
+    watch,
+    disableRouteWarning: false,
+    lockfileCheck: false,
+    sourcemap: true,
+    useCodegen,
+    codegenConfigPath,
+  };
+
   const buildProcess = shouldBuild
-    ? await runBuild({
-        directory: appPath,
-        entry,
-        watch,
-        disableRouteWarning: false,
-        lockfileCheck: false,
-        sourcemap: true,
-        useCodegen,
-        codegenConfigPath,
-        async onRebuild() {
-          projectBuild.resolve();
-          await miniOxygen?.reload();
-        },
-      })
+    ? isClassicProject
+      ? await runClassicCompilerBuild(buildOptions)
+      : await runBuild({
+          ...buildOptions,
+          async onRebuild() {
+            if (projectBuild.state === 'pending') {
+              projectBuild.resolve();
+            } else {
+              outputInfo('🏗️  Project rebuilt. Reloading server...');
+            }
+
+            await miniOxygen?.reload();
+          },
+        })
     : projectBuild.resolve();
 
-  if (!(await hasRemixConfigFile(root))) {
+  if (!isClassicProject) {
     const maybeResult = await getViteConfig(root).catch(() => null);
     buildPathWorkerFile =
       maybeResult?.serverOutFile ?? joinPath(buildPath, 'server', 'index.js');
