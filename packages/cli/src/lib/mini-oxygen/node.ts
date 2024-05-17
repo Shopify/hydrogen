@@ -2,6 +2,7 @@ import {AsyncLocalStorage} from 'node:async_hooks';
 import {readFile} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
+import {AbortError} from '@shopify/cli-kit/node/error';
 import type {MiniOxygenOptions as InternalMiniOxygenOptions} from '@shopify/mini-oxygen/node';
 import {DEFAULT_INSPECTOR_PORT} from '../flags.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
@@ -56,6 +57,14 @@ export async function startNodeServer({
     if (!inspectorPort) inspectorPort = await findPort(DEFAULT_INSPECTOR_PORT);
     (await import('node:inspector')).open(inspectorPort);
   }
+
+  const readWorkerFile = () =>
+    readFile(buildPathWorkerFile).catch((error) => {
+      throw new AbortError(
+        `Could not read worker file.\n\n` + error.stack,
+        'Did you build the project?',
+      );
+    });
 
   const miniOxygen = await startServer({
     script: await readFile(buildPathWorkerFile),
@@ -126,7 +135,7 @@ export async function startNodeServer({
         };
       }
 
-      nextOptions.script = await readFile(buildPathWorkerFile);
+      nextOptions.script = await readWorkerFile();
 
       await miniOxygen.reload(nextOptions);
     },
