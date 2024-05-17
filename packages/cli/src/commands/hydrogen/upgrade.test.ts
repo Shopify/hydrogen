@@ -36,11 +36,13 @@ import {
   type Release,
   upgradeNodeModules,
   getChangelog,
+  displayDevUpgradeNotice,
 } from './upgrade.js';
 import {type PackageJson} from 'type-fest';
 
-vi.mock('../../lib/shell.js');
 vi.mock('@shopify/cli-kit/node/session');
+
+vi.mock('../../lib/shell.js', () => ({getCliCommand: vi.fn(() => 'h2')}));
 
 vi.mock('@shopify/cli-kit/node/ui', async () => {
   const original = await vi.importActual<
@@ -581,6 +583,24 @@ describe('upgrade', async () => {
           cleanGitRepo: true,
           packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON,
         },
+      );
+    });
+  });
+
+  describe('displayDevUpgradeNotice', () => {
+    it('shows up a notice if there are dependencies to upgrade', async () => {
+      await inTemporaryHydrogenRepo(
+        async (targetPath) => {
+          await expect(
+            displayDevUpgradeNotice({targetPath}),
+          ).resolves.not.toThrow();
+
+          expect(outputMock.info()).toMatch(
+            'new @shopify/hydrogen versions available',
+          );
+          expect(outputMock.info()).toMatch('Run `h2 upgrade`');
+        },
+        {cleanGitRepo: false, packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON},
       );
     });
   });
