@@ -55,6 +55,10 @@ export default class Preview extends Command {
     ...overrideFlag(commonFlags.codegen, {
       codegen: {dependsOn: ['build']},
     }),
+    // Diff in preview only makes sense when combined with --build.
+    // Without the build flag, preview only needs access to the existing
+    // `dist` directory in the project, so there's no need to merge the
+    // project with the skeleton template in a temporary directory.
     ...overrideFlag(commonFlags.diff, {
       diff: {dependsOn: ['build']},
     }),
