@@ -68,7 +68,7 @@ export default class Preview extends Command {
     let directory = originalDirectory;
 
     if (flags.build && flags.diff) {
-      directory = await prepareDiffDirectory(originalDirectory, false);
+      directory = await prepareDiffDirectory(originalDirectory, flags.watch);
     }
 
     const {close} = await runPreview({

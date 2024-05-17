@@ -50,7 +50,7 @@ export default class Build extends Command {
     let directory = originalDirectory;
 
     if (flags.diff) {
-      directory = await prepareDiffDirectory(originalDirectory, false);
+      directory = await prepareDiffDirectory(originalDirectory, flags.watch);
     }
 
     const buildParams = {
