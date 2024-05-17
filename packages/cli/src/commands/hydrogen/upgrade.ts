@@ -349,17 +349,15 @@ function hasOutdatedDependencies({
   });
 }
 
-export function isUpgradeableRelease({
+function isUpgradeableRelease({
   currentDependencies,
   currentPinnedVersion,
   release,
 }: {
-  currentDependencies?: Dependencies;
+  currentDependencies: Dependencies;
   currentPinnedVersion: string;
   release: Release;
 }) {
-  if (!currentDependencies) return false;
-
   const isHydrogenOutdated = semver.gt(release.version, currentPinnedVersion);
 
   if (isHydrogenOutdated) return true;
@@ -383,7 +381,7 @@ export function getAvailableUpgrades({
 }: {
   releases: ChangeLog['releases'];
   currentVersion: string;
-  currentDependencies?: Dependencies;
+  currentDependencies: Dependencies;
 }) {
   const currentPinnedVersion = getAbsoluteVersion(currentVersion);
   let currentMajorVersion = '';
@@ -1000,7 +998,9 @@ export async function displayDevUpgradeNotice({
 }) {
   try {
     const appPath = targetPath ? path.resolve(targetPath) : process.cwd();
-    const {currentVersion} = await getHydrogenVersion({appPath});
+    const {currentVersion, currentDependencies} = await getHydrogenVersion({
+      appPath,
+    });
 
     const isPrerelease = semver.prerelease(currentVersion);
 
@@ -1014,6 +1014,7 @@ export async function displayDevUpgradeNotice({
     const {availableUpgrades, uniqueAvailableUpgrades} = getAvailableUpgrades({
       releases: changelog.releases,
       currentVersion,
+      currentDependencies,
     });
 
     if (availableUpgrades.length === 0 || !availableUpgrades[0]?.version) {
