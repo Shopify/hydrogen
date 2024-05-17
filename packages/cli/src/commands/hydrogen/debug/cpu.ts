@@ -77,6 +77,7 @@ async function runDebugCpu({directory, entry, output}: RunDebugCpuOptions) {
   );
 
   let times = 0;
+  let sourceEntrypoint: string;
   const profiler = await createCpuStartupProfiler();
 
   const hooks = {
@@ -90,6 +91,7 @@ async function runDebugCpu({directory, entry, output}: RunDebugCpuOptions) {
     async onServerBuildFinish() {
       const {profile, totalScriptTimeMs} = await profiler.run(
         buildPathWorkerFile,
+        sourceEntrypoint,
       );
 
       process.stdout.write(ansiEscapes.eraseLines(2));
@@ -116,6 +118,8 @@ async function runDebugCpu({directory, entry, output}: RunDebugCpuOptions) {
   const maybeViteConfig = await getViteConfig(directory).catch(() => null);
   buildPathWorkerFile =
     maybeViteConfig?.serverOutFile ?? joinPath(buildPath, 'server', 'index.js');
+
+  sourceEntrypoint = maybeViteConfig?.remixConfig.serverEntryPoint ?? '';
 
   const buildProcess = await runBuild({
     entry,
