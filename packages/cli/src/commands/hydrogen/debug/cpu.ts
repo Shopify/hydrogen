@@ -121,6 +121,7 @@ async function runDebugCpu({directory, entry, output}: RunDebugCpuOptions) {
     entry,
     directory,
     watch: true,
+    sourcemap: true,
     disableRouteWarning: true,
     lockfileCheck: false,
     ...hooks,

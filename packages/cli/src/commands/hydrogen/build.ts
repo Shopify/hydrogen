@@ -108,7 +108,7 @@ export async function runBuild({
   directory,
   useCodegen = false,
   codegenConfigPath,
-  sourcemap = false,
+  sourcemap = true,
   disableRouteWarning = false,
   lockfileCheck = true,
   assetPath = '/',
