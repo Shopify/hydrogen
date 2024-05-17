@@ -611,6 +611,7 @@ describe('upgrade', async () => {
     });
 
     it('shows up a notice if there are related dependencies to upgrade', async () => {
+      const hydrogenVersion = '2024.4.2';
       await inTemporaryHydrogenRepo(
         async (targetPath) => {
           await expect(
@@ -624,7 +625,9 @@ describe('upgrade', async () => {
             /Current: [\d.] | Latest: [\d.]+ with updated dependencies\s{1,}/i,
           );
           expect(outputMock.info()).toMatch(/The next 1 version\(s\) include/i);
-          expect(outputMock.info()).toMatch('Run `h2 upgrade`');
+          expect(outputMock.info()).toMatch(
+            `or \`h2 upgrade --version ${hydrogenVersion}\``,
+          );
         },
         {
           cleanGitRepo: false,
@@ -632,7 +635,7 @@ describe('upgrade', async () => {
             ...OUTDATED_HYDROGEN_PACKAGE_JSON,
             dependencies: {
               ...OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies,
-              '@shopify/hydrogen': '2024.4.2',
+              '@shopify/hydrogen': hydrogenVersion,
             },
           },
         },
