@@ -1042,22 +1042,17 @@ export async function displayDevUpgradeNotice({
             getAbsoluteVersion(release.version) === pinnedCurrentVersion,
         );
 
-    const uniqueNextReleases = changelog.releases
-      .slice(0, currentReleaseIndex)
-      .reverse()
-      .reduce((acc, release) => {
-        if (acc[release.version]) return acc;
-        acc[release.version] = release;
-        return acc;
-      }, {} as Record<string, Release>);
+    const relevantReleases = changelog.releases.slice(0, currentReleaseIndex);
 
-    const nextReleases = Object.keys(uniqueNextReleases).length
-      ? Object.entries(uniqueNextReleases)
-          .map(([version, release]) => {
-            return `${version} - ${release.title}`;
-          })
-          .slice(0, 5)
-      : [];
+    // By reversing the releases array, we give priority to older releases
+    // for the same version. Older releases (the first one of a version) probably
+    // have more information than a newer release that only changes dependencies.
+    const nextReleases = Object.values(
+      [...relevantReleases].reverse().reduce((acc, release) => {
+        acc[release.version] ??= `${release.version} - ${release.title}`;
+        return acc;
+      }, {} as Record<string, string>),
+    ).slice(0, 5);
 
     let headline =
       Object.keys(uniqueAvailableUpgrades).length > 1
