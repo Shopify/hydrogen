@@ -11,13 +11,36 @@ export const meta: MetaFunction = () => {
   return [{title: 'Hydrogen | Home'}];
 };
 
-export async function loader({context}: LoaderFunctionArgs) {
-  const {storefront} = context;
-  const {collections} = await storefront.query(FEATURED_COLLECTION_QUERY);
-  const featuredCollection = collections.nodes[0];
-  const recommendedProducts = storefront.query(RECOMMENDED_PRODUCTS_QUERY);
+export async function loader(args: LoaderFunctionArgs) {
+  return defer({
+    ...(await primaryData(args)),
+    ...secondaryData(args),
+  });
+}
 
-  return defer({featuredCollection, recommendedProducts});
+/**
+ * Load data necessary for rendering content above the fold. This is the primary data
+ * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
+ */
+async function primaryData({context}: LoaderFunctionArgs) {
+  const [{collections}] = await Promise.all([
+    context.storefront.query(FEATURED_COLLECTION_QUERY),
+    // Add other queries here, so that they are loaded in parallel
+  ]);
+
+  return {
+    featuredCollection: collections.nodes[0],
+  };
+}
+
+/**
+ * Load data for rendering content below the fold. This data is deferred and will be
+ * fetched after the initial page load. If it's unavailable, the page should still 200.
+ */
+function secondaryData({context}: LoaderFunctionArgs) {
+  return {
+    recommendedProducts: context.storefront.query(RECOMMENDED_PRODUCTS_QUERY),
+  };
 }
 
 export default function Homepage() {

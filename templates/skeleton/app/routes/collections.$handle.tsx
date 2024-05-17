@@ -1,4 +1,4 @@
-import {json, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, Link, type MetaFunction} from '@remix-run/react';
 import {
   Pagination,
@@ -14,7 +14,18 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
 };
 
-export async function loader({request, params, context}: LoaderFunctionArgs) {
+export async function loader(args: LoaderFunctionArgs) {
+  return defer({
+    ...(await primaryData(args)),
+    ...secondaryData(args),
+  });
+}
+
+/**
+ * Load data necessary for rendering content above the fold. This is the primary data
+ * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
+ */
+async function primaryData({context, request, params}: LoaderFunctionArgs) {
   const {handle} = params;
   const {storefront} = context;
   const paginationVariables = getPaginationVariables(request, {
@@ -22,19 +33,33 @@ export async function loader({request, params, context}: LoaderFunctionArgs) {
   });
 
   if (!handle) {
-    return redirect('/collections');
+    throw redirect('/collections');
   }
 
-  const {collection} = await storefront.query(COLLECTION_QUERY, {
-    variables: {handle, ...paginationVariables},
-  });
+  const [{collection}] = await Promise.all([
+    storefront.query(COLLECTION_QUERY, {
+      variables: {handle, ...paginationVariables},
+      // Add other queries here, so that they are loaded in parallel
+    }),
+  ]);
 
   if (!collection) {
     throw new Response(`Collection ${handle} not found`, {
       status: 404,
     });
   }
-  return json({collection});
+
+  return {
+    collection,
+  };
+}
+
+/**
+ * Load data for rendering content below the fold. This data is deferred and will be
+ * fetched after the initial page load. If it's unavailable, the page should still 200.
+ */
+function secondaryData({context}: LoaderFunctionArgs) {
+  return {};
 }
 
 export default function Collection() {

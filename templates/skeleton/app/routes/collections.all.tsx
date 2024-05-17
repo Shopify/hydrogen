@@ -1,4 +1,4 @@
-import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, Link, type MetaFunction} from '@remix-run/react';
 import {
   Pagination,
@@ -13,17 +13,38 @@ export const meta: MetaFunction<typeof loader> = () => {
   return [{title: `Hydrogen | Products`}];
 };
 
-export async function loader({request, context}: LoaderFunctionArgs) {
+export async function loader(args: LoaderFunctionArgs) {
+  return defer({
+    ...(await primaryData(args)),
+    ...secondaryData(args),
+  });
+}
+
+/**
+ * Load data necessary for rendering content above the fold. This is the primary data
+ * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
+ */
+async function primaryData({context, request}: LoaderFunctionArgs) {
   const {storefront} = context;
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 8,
   });
 
-  const {products} = await storefront.query(CATALOG_QUERY, {
-    variables: {...paginationVariables},
-  });
+  const [{products}] = await Promise.all([
+    storefront.query(CATALOG_QUERY, {
+      variables: {...paginationVariables},
+    }),
+    // Add other queries here, so that they are loaded in parallel
+  ]);
+  return {products};
+}
 
-  return json({products});
+/**
+ * Load data for rendering content below the fold. This data is deferred and will be
+ * fetched after the initial page load. If it's unavailable, the page should still 200.
+ */
+function secondaryData({context}: LoaderFunctionArgs) {
+  return {};
 }
 
 export default function Collection() {
