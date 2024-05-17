@@ -1095,7 +1095,9 @@ export async function displayDevUpgradeNotice({
             {
               list: {
                 items: [
-                  `Run \`${cliCommand} upgrade\` or \`${cliCommand} upgrade --version XXXX.X.XX\``,
+                  `Run \`${cliCommand} upgrade\` or \`${cliCommand} upgrade --version ${
+                    relevantReleases[0]?.version ?? '<version>'
+                  }\``,
                   `Read release notes at https://hydrogen.shopify.dev/releases`,
                 ],
               },
