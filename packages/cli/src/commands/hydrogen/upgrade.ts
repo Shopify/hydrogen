@@ -1026,27 +1026,33 @@ export async function displayDevUpgradeNotice({
       availableUpgrades[0].version,
     );
     const pinnedCurrentVersion = getAbsoluteVersion(currentVersion);
-    const currentReleaseIndex = changelog.releases.findIndex((release) => {
-      const pinnedReleaseVersion = getAbsoluteVersion(release.version);
-      return pinnedReleaseVersion === pinnedCurrentVersion;
-    });
 
-    const uniqueNextReleases = changelog.releases
-      .slice(0, currentReleaseIndex)
-      .reverse()
-      .reduce((acc, release) => {
-        if (acc[release.version]) return acc;
-        acc[release.version] = release;
+    // If we are on the latest Hydrogen package version and we are still running
+    // this code, it means there's an outdated dependency. Use the first
+    // outdated version as the current release index to show the upgrade info:
+    const isLatestHydrogenPackage =
+      pinnedCurrentVersion === pinnedLatestVersion;
+    const currentReleaseIndex = isLatestHydrogenPackage
+      ? changelog.releases.findIndex(
+          (release) =>
+            getAbsoluteVersion(release.version) !== pinnedCurrentVersion,
+        )
+      : changelog.releases.findIndex(
+          (release) =>
+            getAbsoluteVersion(release.version) === pinnedCurrentVersion,
+        );
+
+    const relevantReleases = changelog.releases.slice(0, currentReleaseIndex);
+
+    // By reversing the releases array, we give priority to older releases
+    // for the same version. Older releases (the first one of a version) probably
+    // have more information than a newer release that only changes dependencies.
+    const nextReleases = Object.values(
+      [...relevantReleases].reverse().reduce((acc, release) => {
+        acc[release.version] ??= `${release.version} - ${release.title}`;
         return acc;
-      }, {} as Record<string, Release>);
-
-    const nextReleases = Object.keys(uniqueNextReleases).length
-      ? Object.entries(uniqueNextReleases)
-          .map(([version, release]) => {
-            return `${version} - ${release.title}`;
-          })
-          .slice(0, 5)
-      : [];
+      }, {} as Record<string, string>),
+    ).slice(0, 5);
 
     let headline =
       Object.keys(uniqueAvailableUpgrades).length > 1
@@ -1059,41 +1065,46 @@ export async function displayDevUpgradeNotice({
 
     renderInfo({
       headline,
-      body: [`Current: ${currentVersion} | Latest: ${pinnedLatestVersion}`],
-      //@ts-ignore will always be an array
-      customSections: nextReleases.length
-        ? [
-            {
-              title: `The next ${nextReleases.length} version(s) include`,
-              body: [
-                {
-                  list: {
-                    items: [
-                      ...nextReleases,
-                      availableUpgrades.length > 5 && `...more`,
-                    ]
-                      .flat()
-                      .filter(Boolean),
+      body: [
+        `Current: ${currentVersion} | Latest: ${pinnedLatestVersion}` +
+          (isLatestHydrogenPackage ? ' with updated dependencies' : ''),
+      ],
+      customSections: [
+        ...(nextReleases.length > 0
+          ? [
+              {
+                title: `The next ${nextReleases.length} version(s) include`,
+                body: [
+                  {
+                    list: {
+                      items: [
+                        ...nextReleases,
+                        availableUpgrades.length > 5 ? `...more` : '',
+                      ]
+                        .flat()
+                        .filter(Boolean),
+                    },
                   },
-                },
-              ].filter(Boolean),
-            },
+                ].filter(Boolean),
+              },
+            ]
+          : []),
+        {
+          title: 'Next steps',
+          body: [
             {
-              title: 'Next steps',
-              body: [
-                {
-                  list: {
-                    items: [
-                      `Run \`${cliCommand} upgrade\` or \`${cliCommand} upgrade --version XXXX.X.XX\``,
-                      ,
-                      `Read release notes at https://hydrogen.shopify.dev/releases`,
-                    ],
-                  },
-                },
-              ],
+              list: {
+                items: [
+                  `Run \`${cliCommand} upgrade\` or \`${cliCommand} upgrade --version ${
+                    relevantReleases[0]?.version ?? '<version>'
+                  }\``,
+                  `Read release notes at https://hydrogen.shopify.dev/releases`,
+                ],
+              },
             },
-          ]
-        : [],
+          ],
+        },
+      ],
     });
   } catch (error) {
     const abortError = error as AbortError;
