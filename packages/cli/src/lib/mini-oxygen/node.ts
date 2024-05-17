@@ -67,7 +67,7 @@ export async function startNodeServer({
     });
 
   const miniOxygen = await startServer({
-    script: await readFile(buildPathWorkerFile),
+    script: await readWorkerFile(),
     workerFile: buildPathWorkerFile,
     assetsDir: buildPathClient,
     publicPath: '',
