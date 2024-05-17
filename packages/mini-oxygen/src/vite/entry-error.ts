@@ -97,7 +97,7 @@ async function findOptimizableDependency(
 
     const code = await readFile(mod, 'utf-8').catch(() => '');
     const matches =
-      code.matchAll(/import\s[^'"]+\sfrom\s+['"]((@|\w)[^'"]+)['"]/g) ?? [];
+      code.matchAll(/import\s[^'"]*?['"]((@|\w)[^'"]+)['"]/g) ?? [];
 
     for (const [, match] of matches) {
       if (match) importersSet.add(match);
