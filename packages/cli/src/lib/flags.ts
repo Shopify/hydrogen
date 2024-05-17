@@ -122,7 +122,6 @@ export const commonFlags = {
       description:
         'Enables inspector connections to the server with a debugger such as Visual Studio Code or Chrome DevTools.',
       env: 'SHOPIFY_HYDROGEN_FLAG_DEBUG',
-      default: false,
     }),
   },
   inspectorPort: {
@@ -135,7 +134,6 @@ export const commonFlags = {
     diff: Flags.boolean({
       description:
         "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
-      default: false,
       required: false,
       hidden: true,
     }),
@@ -167,7 +165,6 @@ export const commonFlags = {
       description:
         "Use tunneling for local development and push the tunneling domain to admin. Required to use Customer Account API's Oauth flow",
       required: false,
-      default: false,
       env: 'SHOPIFY_HYDROGEN_FLAG_CUSTOMER_ACCOUNT_PUSH',
     }),
   },
@@ -175,7 +172,6 @@ export const commonFlags = {
     verbose: Flags.boolean({
       description: "Outputs more information about the command's execution.",
       required: false,
-      default: false,
       env: 'SHOPIFY_HYDROGEN_FLAG_VERBOSE',
     }),
   },
