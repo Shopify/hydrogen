@@ -29,7 +29,12 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
 };
 
-export async function loader({params, request, context}: LoaderFunctionArgs) {
+export async function loader({
+  params,
+  request,
+  context,
+  response,
+}: LoaderFunctionArgs) {
   const {handle} = params;
   const {storefront} = context;
 
@@ -43,7 +48,9 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
   });
 
   if (!product?.id) {
-    throw new Response(null, {status: 404});
+    response!.body = null;
+    response!.status = 404;
+    throw response;
   }
 
   const firstVariant = product.variants.nodes[0];
@@ -73,7 +80,7 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
     variables: {handle},
   });
 
-  return defer({product, variants});
+  return {product, variants};
 }
 
 function redirectToFirstVariant({

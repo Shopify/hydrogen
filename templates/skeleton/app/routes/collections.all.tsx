@@ -23,7 +23,7 @@ export async function loader({request, context}: LoaderFunctionArgs) {
     variables: {...paginationVariables},
   });
 
-  return json({products});
+  return {products};
 }
 
 export default function Collection() {

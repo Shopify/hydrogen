@@ -11,13 +11,16 @@ export async function loader({
   request,
   params,
   context: {storefront},
+  response,
 }: LoaderFunctionArgs) {
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 4,
   });
 
   if (!params.blogHandle) {
-    throw new Response(`blog not found`, {status: 404});
+    response!.body = `blog not found`;
+    response!.status = 404;
+    throw response;
   }
 
   const {blog} = await storefront.query(BLOGS_QUERY, {
@@ -28,10 +31,12 @@ export async function loader({
   });
 
   if (!blog?.articles) {
-    throw new Response('Not found', {status: 404});
+    response!.body = 'Not found';
+    response!.status = 404;
+    throw response;
   }
 
-  return json({blog});
+  return {blog};
 }
 
 export default function Blog() {

@@ -11,9 +11,11 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.policy.title ?? ''}`}];
 };
 
-export async function loader({params, context}: LoaderFunctionArgs) {
+export async function loader({params, context, response}: LoaderFunctionArgs) {
   if (!params.handle) {
-    throw new Response('No handle was passed in', {status: 404});
+    response!.body = 'No handle was passed in';
+    response!.status = 404;
+    throw response;
   }
 
   const policyName = params.handle.replace(
@@ -35,10 +37,12 @@ export async function loader({params, context}: LoaderFunctionArgs) {
   const policy = data.shop?.[policyName];
 
   if (!policy) {
-    throw new Response('Could not find the policy', {status: 404});
+    response!.body = 'Could not find the policy';
+    response!.status = 404;
+    throw response;
   }
 
-  return json({policy});
+  return {policy};
 }
 
 export default function Policy() {

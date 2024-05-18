@@ -70,16 +70,13 @@ export async function action({request, context}: ActionFunctionArgs) {
 
   headers.append('Set-Cookie', await context.session.commit());
 
-  return json(
-    {
-      cart: cartResult,
-      errors,
-      analytics: {
-        cartId,
-      },
+  return {
+    cart: cartResult,
+    errors,
+    analytics: {
+      cartId,
     },
-    {status, headers},
-  );
+  };
 }
 
 export default function Cart() {

@@ -18,10 +18,15 @@ import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
  *
  * ```
  */
-export async function loader({request, context, params}: LoaderFunctionArgs) {
+export async function loader({
+  request,
+  context,
+  params,
+  response,
+}: LoaderFunctionArgs) {
   const {cart} = context;
   const {lines} = params;
-  if (!lines) return redirect('/cart');
+  if (!lines) return response;
   const linesMap = lines.split(',').map((line) => {
     const lineDetails = line.split(':');
     const variantId = lineDetails[0];
@@ -48,17 +53,22 @@ export async function loader({request, context, params}: LoaderFunctionArgs) {
   const cartResult = result.cart;
 
   if (result.errors?.length || !cartResult) {
-    throw new Response('Link may be expired. Try checking the URL.', {
-      status: 410,
-    });
+    response!.body = 'Link may be expired. Try checking the URL.';
+    response!.status = 410;
+    throw response;
   }
 
   // Update cart id in cookie
   const headers = cart.setCartId(cartResult.id);
 
   // redirect to checkout
+  response!.status = 302;
+  response!.headers.set('Location', '/cart');
   if (cartResult.checkoutUrl) {
-    return redirect(cartResult.checkoutUrl, {headers});
+    response!.status = 302;
+    response!.headers.set('Location', cartResult.checkoutUrl);
+    /* TODO: response!.headers = undefined */
+    return response;
   } else {
     throw new Error('No checkout URL found');
   }

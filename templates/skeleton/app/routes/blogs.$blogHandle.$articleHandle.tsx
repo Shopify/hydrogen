@@ -6,11 +6,13 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.article.title ?? ''} article`}];
 };
 
-export async function loader({params, context}: LoaderFunctionArgs) {
+export async function loader({params, context, response}: LoaderFunctionArgs) {
   const {blogHandle, articleHandle} = params;
 
   if (!articleHandle || !blogHandle) {
-    throw new Response('Not found', {status: 404});
+    response!.body = 'Not found';
+    response!.status = 404;
+    throw response;
   }
 
   const {blog} = await context.storefront.query(ARTICLE_QUERY, {
@@ -18,12 +20,14 @@ export async function loader({params, context}: LoaderFunctionArgs) {
   });
 
   if (!blog?.articleByHandle) {
-    throw new Response(null, {status: 404});
+    response!.body = null;
+    response!.status = 404;
+    throw response;
   }
 
   const article = blog.articleByHandle;
 
-  return json({article});
+  return {article};
 }
 
 export default function Article() {

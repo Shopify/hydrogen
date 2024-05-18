@@ -5,7 +5,7 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.page.title ?? ''}`}];
 };
 
-export async function loader({params, context}: LoaderFunctionArgs) {
+export async function loader({params, context, response}: LoaderFunctionArgs) {
   if (!params.handle) {
     throw new Error('Missing page handle');
   }
@@ -17,10 +17,12 @@ export async function loader({params, context}: LoaderFunctionArgs) {
   });
 
   if (!page) {
-    throw new Response('Not Found', {status: 404});
+    response!.body = 'Not Found';
+    response!.status = 404;
+    throw response;
   }
 
-  return json({page});
+  return {page};
 }
 
 export default function Page() {

@@ -17,7 +17,7 @@ export async function loader({context}: LoaderFunctionArgs) {
   const featuredCollection = collections.nodes[0];
   const recommendedProducts = storefront.query(RECOMMENDED_PRODUCTS_QUERY);
 
-  return defer({featuredCollection, recommendedProducts});
+  return {featuredCollection, recommendedProducts};
 }
 
 export default function Homepage() {

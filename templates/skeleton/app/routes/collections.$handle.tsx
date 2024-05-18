@@ -13,7 +13,12 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
 };
 
-export async function loader({request, params, context}: LoaderFunctionArgs) {
+export async function loader({
+  request,
+  params,
+  context,
+  response,
+}: LoaderFunctionArgs) {
   const {handle} = params;
   const {storefront} = context;
   const paginationVariables = getPaginationVariables(request, {
@@ -21,7 +26,9 @@ export async function loader({request, params, context}: LoaderFunctionArgs) {
   });
 
   if (!handle) {
-    return redirect('/collections');
+    response!.status = 302;
+    response!.headers.set('Location', '/collections');
+    return response;
   }
 
   const {collection} = await storefront.query(COLLECTION_QUERY, {
@@ -29,11 +36,11 @@ export async function loader({request, params, context}: LoaderFunctionArgs) {
   });
 
   if (!collection) {
-    throw new Response(`Collection ${handle} not found`, {
-      status: 404,
-    });
+    response!.body = `Collection ${handle} not found`;
+    response!.status = 404;
+    throw response;
   }
-  return json({collection});
+  return {collection};
 }
 
 export default function Collection() {

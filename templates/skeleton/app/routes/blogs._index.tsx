@@ -20,7 +20,7 @@ export const loader = async ({
     },
   });
 
-  return json({blogs});
+  return {blogs};
 };
 
 export default function Blogs() {

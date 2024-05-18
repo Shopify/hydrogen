@@ -16,7 +16,7 @@ export const meta: MetaFunction = () => {
   return [{title: 'Orders'}];
 };
 
-export async function loader({request, context}: LoaderFunctionArgs) {
+export async function loader({request, context, response}: LoaderFunctionArgs) {
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 20,
   });
@@ -33,15 +33,9 @@ export async function loader({request, context}: LoaderFunctionArgs) {
   if (errors?.length || !data?.customer) {
     throw Error('Customer orders not found');
   }
+  response!.headers.set('Set-Cookie', await context.session.commit());
 
-  return json(
-    {customer: data.customer},
-    {
-      headers: {
-        'Set-Cookie': await context.session.commit(),
-      },
-    },
-  );
+  return {customer: data.customer};
 }
 
 export default function Orders() {

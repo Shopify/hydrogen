@@ -35,20 +35,14 @@ export const meta: MetaFunction = () => {
   return [{title: 'Addresses'}];
 };
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader({context, response}: LoaderFunctionArgs) {
   await context.customerAccount.handleAuthStatus();
+  response!.headers.set('Set-Cookie', await context.session.commit());
 
-  return json(
-    {},
-    {
-      headers: {
-        'Set-Cookie': await context.session.commit(),
-      },
-    },
-  );
+  return {};
 }
 
-export async function action({request, context}: ActionFunctionArgs) {
+export async function action({request, context, response}: ActionFunctionArgs) {
   const {customerAccount} = context;
 
   try {
@@ -64,15 +58,9 @@ export async function action({request, context}: ActionFunctionArgs) {
     // this will ensure redirecting to login never happen for mutatation
     const isLoggedIn = await customerAccount.isLoggedIn();
     if (!isLoggedIn) {
-      return json(
-        {error: {[addressId]: 'Unauthorized'}},
-        {
-          status: 401,
-          headers: {
-            'Set-Cookie': await context.session.commit(),
-          },
-        },
-      );
+      response!.status = 401;
+      response!.headers.set('Set-Cookie', await context.session.commit());
+      return {error: {[addressId]: 'Unauthorized'}};
     }
 
     const defaultAddress = form.has('defaultAddress')
@@ -121,40 +109,22 @@ export async function action({request, context}: ActionFunctionArgs) {
           if (!data?.customerAddressCreate?.customerAddress) {
             throw new Error('Customer address create failed.');
           }
+          response!.headers.set('Set-Cookie', await context.session.commit());
 
-          return json(
-            {
-              error: null,
-              createdAddress: data?.customerAddressCreate?.customerAddress,
-              defaultAddress,
-            },
-            {
-              headers: {
-                'Set-Cookie': await context.session.commit(),
-              },
-            },
-          );
+          return {
+            error: null,
+            createdAddress: data?.customerAddressCreate?.customerAddress,
+            defaultAddress,
+          };
         } catch (error: unknown) {
           if (error instanceof Error) {
-            return json(
-              {error: {[addressId]: error.message}},
-              {
-                status: 400,
-                headers: {
-                  'Set-Cookie': await context.session.commit(),
-                },
-              },
-            );
+            response!.status = 400;
+            response!.headers.set('Set-Cookie', await context.session.commit());
+            return {error: {[addressId]: error.message}};
           }
-          return json(
-            {error: {[addressId]: error}},
-            {
-              status: 400,
-              headers: {
-                'Set-Cookie': await context.session.commit(),
-              },
-            },
-          );
+          response!.status = 400;
+          response!.headers.set('Set-Cookie', await context.session.commit());
+          return {error: {[addressId]: error}};
         }
       }
 
@@ -183,40 +153,22 @@ export async function action({request, context}: ActionFunctionArgs) {
           if (!data?.customerAddressUpdate?.customerAddress) {
             throw new Error('Customer address update failed.');
           }
+          response!.headers.set('Set-Cookie', await context.session.commit());
 
-          return json(
-            {
-              error: null,
-              updatedAddress: address,
-              defaultAddress,
-            },
-            {
-              headers: {
-                'Set-Cookie': await context.session.commit(),
-              },
-            },
-          );
+          return {
+            error: null,
+            updatedAddress: address,
+            defaultAddress,
+          };
         } catch (error: unknown) {
           if (error instanceof Error) {
-            return json(
-              {error: {[addressId]: error.message}},
-              {
-                status: 400,
-                headers: {
-                  'Set-Cookie': await context.session.commit(),
-                },
-              },
-            );
+            response!.status = 400;
+            response!.headers.set('Set-Cookie', await context.session.commit());
+            return {error: {[addressId]: error.message}};
           }
-          return json(
-            {error: {[addressId]: error}},
-            {
-              status: 400,
-              headers: {
-                'Set-Cookie': await context.session.commit(),
-              },
-            },
-          );
+          response!.status = 400;
+          response!.headers.set('Set-Cookie', await context.session.commit());
+          return {error: {[addressId]: error}};
         }
       }
 
@@ -241,72 +193,36 @@ export async function action({request, context}: ActionFunctionArgs) {
           if (!data?.customerAddressDelete?.deletedAddressId) {
             throw new Error('Customer address delete failed.');
           }
+          response!.headers.set('Set-Cookie', await context.session.commit());
 
-          return json(
-            {error: null, deletedAddress: addressId},
-            {
-              headers: {
-                'Set-Cookie': await context.session.commit(),
-              },
-            },
-          );
+          return {error: null, deletedAddress: addressId};
         } catch (error: unknown) {
           if (error instanceof Error) {
-            return json(
-              {error: {[addressId]: error.message}},
-              {
-                status: 400,
-                headers: {
-                  'Set-Cookie': await context.session.commit(),
-                },
-              },
-            );
+            response!.status = 400;
+            response!.headers.set('Set-Cookie', await context.session.commit());
+            return {error: {[addressId]: error.message}};
           }
-          return json(
-            {error: {[addressId]: error}},
-            {
-              status: 400,
-              headers: {
-                'Set-Cookie': await context.session.commit(),
-              },
-            },
-          );
+          response!.status = 400;
+          response!.headers.set('Set-Cookie', await context.session.commit());
+          return {error: {[addressId]: error}};
         }
       }
 
       default: {
-        return json(
-          {error: {[addressId]: 'Method not allowed'}},
-          {
-            status: 405,
-            headers: {
-              'Set-Cookie': await context.session.commit(),
-            },
-          },
-        );
+        response!.status = 405;
+        response!.headers.set('Set-Cookie', await context.session.commit());
+        return {error: {[addressId]: 'Method not allowed'}};
       }
     }
   } catch (error: unknown) {
     if (error instanceof Error) {
-      return json(
-        {error: error.message},
-        {
-          status: 400,
-          headers: {
-            'Set-Cookie': await context.session.commit(),
-          },
-        },
-      );
+      response!.status = 400;
+      response!.headers.set('Set-Cookie', await context.session.commit());
+      return {error: error.message};
     }
-    return json(
-      {error},
-      {
-        status: 400,
-        headers: {
-          'Set-Cookie': await context.session.commit(),
-        },
-      },
-    );
+    response!.status = 400;
+    response!.headers.set('Set-Cookie', await context.session.commit());
+    return {error};
   }
 }
 

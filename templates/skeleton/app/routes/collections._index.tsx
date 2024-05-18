@@ -12,7 +12,7 @@ export async function loader({context, request}: LoaderFunctionArgs) {
     variables: paginationVariables,
   });
 
-  return json({collections});
+  return {collections};
 }
 
 export default function Collections() {

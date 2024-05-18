@@ -8,9 +8,16 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Order ${data?.order?.name}`}];
 };
 
-export async function loader({params, context, request}: LoaderFunctionArgs) {
+export async function loader({
+  params,
+  context,
+  request,
+  response,
+}: LoaderFunctionArgs) {
   if (!params.id) {
-    return redirect('/account/orders');
+    response!.status = 302;
+    response!.headers.set('Location', '/account/orders');
+    return response;
   }
 
   const orderId = atob(params.id);
@@ -39,21 +46,15 @@ export async function loader({params, context, request}: LoaderFunctionArgs) {
   const discountPercentage =
     firstDiscount?.__typename === 'PricingPercentageValue' &&
     firstDiscount?.percentage;
+  response!.headers.set('Set-Cookie', await context.session.commit());
 
-  return json(
-    {
-      order,
-      lineItems,
-      discountValue,
-      discountPercentage,
-      fulfillmentStatus,
-    },
-    {
-      headers: {
-        'Set-Cookie': await context.session.commit(),
-      },
-    },
-  );
+  return {
+    order,
+    lineItems,
+    discountValue,
+    discountPercentage,
+    fulfillmentStatus,
+  };
 }
 
 export default function OrderRoute() {

@@ -24,24 +24,19 @@ export const meta: MetaFunction = () => {
   return [{title: 'Profile'}];
 };
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader({context, response}: LoaderFunctionArgs) {
   await context.customerAccount.handleAuthStatus();
+  response!.headers.set('Set-Cookie', await context.session.commit());
 
-  return json(
-    {},
-    {
-      headers: {
-        'Set-Cookie': await context.session.commit(),
-      },
-    },
-  );
+  return {};
 }
 
-export async function action({request, context}: ActionFunctionArgs) {
+export async function action({request, context, response}: ActionFunctionArgs) {
   const {customerAccount} = context;
 
   if (request.method !== 'PUT') {
-    return json({error: 'Method not allowed'}, {status: 405});
+    response!.status = 405;
+    return {error: 'Method not allowed'};
   }
 
   const form = await request.formData();
@@ -71,32 +66,20 @@ export async function action({request, context}: ActionFunctionArgs) {
     if (errors?.length) {
       throw new Error(errors[0].message);
     }
+    response!.headers.set('Set-Cookie', await context.session.commit());
 
     if (!data?.customerUpdate?.customer) {
       throw new Error('Customer profile update failed.');
     }
 
-    return json(
-      {
-        error: null,
-        customer: data?.customerUpdate?.customer,
-      },
-      {
-        headers: {
-          'Set-Cookie': await context.session.commit(),
-        },
-      },
-    );
+    return {
+      error: null,
+      customer: data?.customerUpdate?.customer,
+    };
   } catch (error: any) {
-    return json(
-      {error: error.message, customer: null},
-      {
-        status: 400,
-        headers: {
-          'Set-Cookie': await context.session.commit(),
-        },
-      },
-    );
+    response!.status = 400;
+    response!.headers.set('Set-Cookie', await context.session.commit());
+    return {error: error.message, customer: null};
   }
 }
 

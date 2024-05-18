@@ -6,7 +6,7 @@ export function shouldRevalidate() {
   return true;
 }
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader({context, response}: LoaderFunctionArgs) {
   const {data, errors} = await context.customerAccount.query(
     CUSTOMER_DETAILS_QUERY,
   );
@@ -14,16 +14,10 @@ export async function loader({context}: LoaderFunctionArgs) {
   if (errors?.length || !data?.customer) {
     throw new Error('Customer not found');
   }
+  response!.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  response!.headers.set('Set-Cookie', await context.session.commit());
 
-  return json(
-    {customer: data.customer},
-    {
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Set-Cookie': await context.session.commit(),
-      },
-    },
-  );
+  return {customer: data.customer};
 }
 
 export default function AccountLayout() {

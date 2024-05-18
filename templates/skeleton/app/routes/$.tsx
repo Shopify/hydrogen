@@ -1,9 +1,9 @@
 import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
 
-export async function loader({request}: LoaderFunctionArgs) {
-  throw new Response(`${new URL(request.url).pathname} not found`, {
-    status: 404,
-  });
+export async function loader({request, response}: LoaderFunctionArgs) {
+  response!.body = `${new URL(request.url).pathname} not found`;
+  response!.status = 404;
+  throw response;
 }
 
 export default function CatchAllPage() {
