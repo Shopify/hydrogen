@@ -238,6 +238,26 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
       (params) => params,
     ],
   );
+
+  // TODO: Remove this when this warning is fixed in @shopify/cli
+  // This is printed using the `debug` package, which prints to stderr.
+  const processStderrWrite = process.stderr.write;
+  const timeout = setTimeout(() => {
+    process.stderr.write = processStderrWrite;
+  }, 5000);
+  process.stderr.write = (...args) => {
+    if (
+      typeof args[0] === 'string' &&
+      args[0].includes('Could not find ts-node')
+    ) {
+      clearTimeout(timeout);
+      process.stderr.write = processStderrWrite;
+      return false;
+    }
+
+    // @ts-ignore
+    return processStderrWrite.apply(process.stderr, args);
+  };
 }
 
 const originalWrite = process.stdout.write;

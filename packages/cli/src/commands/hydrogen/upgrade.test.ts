@@ -36,11 +36,13 @@ import {
   type Release,
   upgradeNodeModules,
   getChangelog,
+  displayDevUpgradeNotice,
 } from './upgrade.js';
 import {type PackageJson} from 'type-fest';
 
-vi.mock('../../lib/shell.js');
 vi.mock('@shopify/cli-kit/node/session');
+
+vi.mock('../../lib/shell.js', () => ({getCliCommand: vi.fn(() => 'h2')}));
 
 vi.mock('@shopify/cli-kit/node/ui', async () => {
   const original = await vi.importActual<
@@ -580,6 +582,62 @@ describe('upgrade', async () => {
         {
           cleanGitRepo: true,
           packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON,
+        },
+      );
+    });
+  });
+
+  describe('displayDevUpgradeNotice', () => {
+    it('shows up a notice if Hydrogen is outdated', async () => {
+      await inTemporaryHydrogenRepo(
+        async (targetPath) => {
+          await expect(
+            displayDevUpgradeNotice({targetPath}),
+          ).resolves.not.toThrow();
+
+          expect(outputMock.info()).toMatch(
+            /new @shopify\/hydrogen versions? available/i,
+          );
+          expect(outputMock.info()).toMatch(
+            /Current: [\d.] | Latest: [\d.]+\s{2,}/i,
+          );
+          expect(outputMock.info()).toMatch(
+            /The next \d+ version\(s\) include/i,
+          );
+          expect(outputMock.info()).toMatch('Run `h2 upgrade`');
+        },
+        {cleanGitRepo: false, packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON},
+      );
+    });
+
+    it('shows up a notice if there are related dependencies to upgrade', async () => {
+      const hydrogenVersion = '2024.4.2';
+      await inTemporaryHydrogenRepo(
+        async (targetPath) => {
+          await expect(
+            displayDevUpgradeNotice({targetPath}),
+          ).resolves.not.toThrow();
+
+          expect(outputMock.info()).toMatch(
+            /new @shopify\/hydrogen versions? available/i,
+          );
+          expect(outputMock.info()).toMatch(
+            /Current: [\d.] | Latest: [\d.]+ with updated dependencies\s{1,}/i,
+          );
+          expect(outputMock.info()).toMatch(/The next 1 version\(s\) include/i);
+          expect(outputMock.info()).toMatch(
+            `or \`h2 upgrade --version ${hydrogenVersion}\``,
+          );
+        },
+        {
+          cleanGitRepo: false,
+          packageJson: {
+            ...OUTDATED_HYDROGEN_PACKAGE_JSON,
+            dependencies: {
+              ...OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies,
+              '@shopify/hydrogen': hydrogenVersion,
+            },
+          },
         },
       );
     });
