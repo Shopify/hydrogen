@@ -21,9 +21,9 @@ export type OptimisticCart<T = ReturnType<typeof cartGetDefault>> = T & {
  *
  * @returns A new cart object augmented with optimistic state. Each cart line item that is optimistically added includes an `isOptimistic` property. Also if the cart has _any_ optimistic state, a root property `isOptimistic` will be set to `true`.
  */
-export function useOptimisticCart<DefaultCart = CartReturn>(
-  cart: DefaultCart,
-): OptimisticCart<DefaultCart> {
+export function useOptimisticCart<
+  DefaultCart = ReturnType<typeof cartGetDefault>,
+>(cart: DefaultCart): OptimisticCart<DefaultCart> {
   const fetchers = useFetchers();
 
   if (!fetchers || !fetchers.length) return cart as OptimisticCart<DefaultCart>;
