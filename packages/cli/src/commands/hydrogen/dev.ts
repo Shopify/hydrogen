@@ -321,13 +321,6 @@ export async function runDev({
   const publicPort =
     appPort ?? viteServer.config.server.port ?? DEFAULT_APP_PORT;
 
-  // TODO -- Need to change Remix' <Scripts/> component
-  // const assetsPort = await findPort(publicPort + 100);
-  // if (assetsPort) {
-  //   // Note: Set this env before loading Remix config!
-  //   process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
-  // }
-
   const [tunnel, cliCommand] = await Promise.all([
     backgroundPromise.then(({customerAccountPush, storefrontId}) =>
       customerAccountPush
