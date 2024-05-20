@@ -5,7 +5,8 @@ import {
   type InternalMiniOxygenOptions,
   type MiniOxygenViteOptions,
 } from './server-middleware.js';
-import {buildAssetsUrl} from '../worker/assets.js';
+import {DEFAULT_ASSETS_PORT, buildAssetsUrl} from '../worker/assets.js';
+import {findPort} from '../common/find-port.js';
 
 // Note: Vite resolves extensions like .js or .ts automatically.
 const DEFAULT_SSR_ENTRY = './server';
@@ -14,7 +15,24 @@ export type OxygenPluginOptions = Partial<
   Pick<
     MiniOxygenViteOptions,
     'entry' | 'env' | 'inspectorPort' | 'logRequestLine' | 'debug'
-  >
+  > & {
+    /**
+     * Options for assets served from MiniOxygen.
+     */
+    assets?: {
+      /**
+       * Wether assets should be served from a different origin server
+       * during local development to mimic production Shopify CDN.
+       * @default true
+       */
+      devCDN?: boolean;
+      /**
+       * Port to serve files from.
+       * @default 9100
+       */
+      port?: number;
+    };
+  }
 >;
 
 type OxygenApiOptions = OxygenPluginOptions &
@@ -38,19 +56,26 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
   let resolvedConfig: ResolvedConfig;
   let absoluteWorkerEntryFile: string;
   let apiOptions: OxygenApiOptions = {};
+  let assetsPort = pluginOptions.assets?.port;
 
   return [
     {
       name: 'oxygen:main',
-      config(config, env) {
+      async config(config, env) {
         return {
           appType: 'custom',
           resolve: {
             conditions: ['worker', 'workerd'],
           },
-          server: {
-            origin: buildAssetsUrl().replace(/\/$/, ''),
-          },
+          server:
+            pluginOptions.assets?.devCDN === false
+              ? undefined
+              : {
+                  origin: buildAssetsUrl(
+                    (assetsPort ??= await findPort(DEFAULT_ASSETS_PORT)),
+                    {trailingSlash: false},
+                  ),
+                },
           ssr: {
             noExternal: true,
             target: 'webworker',

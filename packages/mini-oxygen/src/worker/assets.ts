@@ -17,8 +17,13 @@ const artificialAssetPrefix = 'mini-oxygen/00000/11111/22222/33333';
 /**
  * Returns a URL to the static assets server.
  */
-export function buildAssetsUrl(assetsPort = DEFAULT_ASSETS_PORT) {
-  return `http://localhost:${assetsPort}/${artificialAssetPrefix}/`;
+export function buildAssetsUrl(
+  assetsPort = DEFAULT_ASSETS_PORT,
+  options?: {trailingSlash: boolean},
+) {
+  return `http://localhost:${assetsPort}/${artificialAssetPrefix}${
+    options?.trailingSlash === false ? '' : '/'
+  }`;
 }
 
 type AssetsServerOptions = {

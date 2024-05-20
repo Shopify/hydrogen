@@ -91,14 +91,21 @@ function startMiniOxygenRuntime({
         }
       : null;
 
+  const assetsPort = Number(
+    new URL(viteDevServer.config.server.origin ?? 'http://e:0').port,
+  );
+
   const miniOxygen = createMiniOxygen({
     debug,
     inspectorPort,
     requestHook: null,
-    assets: {
-      origin: getViteUrl(viteDevServer) ?? '',
-      strictPath: false,
-    },
+    assets: assetsPort
+      ? {
+          origin: getViteUrl(viteDevServer) ?? '',
+          strictPath: false,
+          port: Number(assetsPort),
+        }
+      : undefined,
     workers: [
       {
         name: 'vite-env',
