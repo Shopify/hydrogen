@@ -26,20 +26,22 @@ type AssetsServerOptions = {
   strictPath?: boolean;
 };
 
+type AssetHandler = (
+  req: IncomingMessage,
+  res: ServerResponse<IncomingMessage>,
+  relativeAssetPath: string,
+) => Promise<void>;
+
 /**
- * Creates a server that serves static assets from the build directory.
- * Mimics Shopify CDN URLs for Oxygen v2.
+ * Creates a server that serves static assets from the build directory
+ * or another origin server. It mimics Shopify CDN URLs for Oxygen v2.
  */
 export function createAssetsServer({
   resource,
   strictPath = true,
 }: AssetsServerOptions) {
-  const handler: (
-    req: IncomingMessage,
-    res: ServerResponse<IncomingMessage>,
-    relativeAssetPath: string,
-  ) => Promise<void> = resource.includes('://')
-    ? async (req, res, relativeAssetPath) => {
+  const handleAsset: AssetHandler = resource.includes('://')
+    ? async function serveFromProxy(req, res, relativeAssetPath) {
         const url = new URL(relativeAssetPath, resource);
 
         const {body, headers, statusCode} = await request(url, {
@@ -50,7 +52,7 @@ export function createAssetsServer({
         res.writeHead(statusCode, headers);
         body.pipe(res);
       }
-    : async (req, res, relativeAssetPath) => {
+    : async function serveFromDisk(req, res, relativeAssetPath) {
         const filePath = path.join(resource, relativeAssetPath);
 
         // Ignore errors and just return 404
@@ -59,7 +61,6 @@ export function createAssetsServer({
 
         if (file && stat?.isFile()) {
           res.setHeader('Content-Length', stat.size);
-
           res.setHeader(
             'Content-Type',
             lookupMimeType(filePath) || 'application/octet-stream',
@@ -96,7 +97,7 @@ export function createAssetsServer({
       : pathname;
 
     if (isValidAssetPath) {
-      handler(req, res, relativeAssetPath);
+      handleAsset(req, res, relativeAssetPath);
       return;
     }
 
