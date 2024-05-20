@@ -95,9 +95,8 @@ function startMiniOxygenRuntime({
     debug,
     inspectorPort,
     requestHook: null,
-    // TODO get vite url earlier
     assets: {
-      origin: getViteUrl(viteDevServer) ?? 'http://localhost:3000',
+      origin: getViteUrl(viteDevServer) ?? '',
       strictPath: false,
     },
     workers: [
