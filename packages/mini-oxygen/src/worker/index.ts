@@ -234,7 +234,10 @@ function buildMiniflareOptions(
     throw new Error('You must provide at least 1 named worker.');
   }
 
-  const handleAssets = assetsOptions && createAssetHandler(assetsOptions);
+  // Enable asset redirect only if an assets directory is provided
+  // to avoid infinite redirects when serving from an origin server.
+  const handleAssets =
+    assetsOptions?.directory && createAssetHandler(assetsOptions);
   const staticAssetExtensions = handleAssets
     ? STATIC_ASSET_EXTENSIONS.slice()
     : null;
