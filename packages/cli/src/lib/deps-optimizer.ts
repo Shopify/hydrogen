@@ -43,7 +43,7 @@ export function createEntryPointErrorHandler({
           `${headline}:\n\n${colors.dim(message)}`,
           `Try adding '${colors.yellow(
             optimizableDependency,
-          )}' to your Vite config\'s ssr.optimizeDeps.include`,
+          )}' to your Vite config in ssr.optimizeDeps.include`,
         );
         depError.stack = cleanStack;
         renderFatalError(depError);
@@ -67,7 +67,7 @@ export function createEntryPointErrorHandler({
               outputInfo(
                 `\nAdded '${colors.yellow(
                   optimizableDependency,
-                )}' to your Vite config's ssr.optimizeDeps.include\n`,
+                )}' to your Vite config in ssr.optimizeDeps.include\n`,
               );
             }, 200);
 
