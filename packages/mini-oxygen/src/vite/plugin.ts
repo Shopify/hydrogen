@@ -2,16 +2,12 @@ import path from 'node:path';
 import type {Plugin, ResolvedConfig} from 'vite';
 import {
   setupOxygenMiddleware,
-  startMiniOxygenRuntime,
   type InternalMiniOxygenOptions,
   type MiniOxygenViteOptions,
-  type MiniOxygen,
 } from './server-middleware.js';
 
 // Note: Vite resolves extensions like .js or .ts automatically.
 const DEFAULT_SSR_ENTRY = './server';
-
-let miniOxygen: MiniOxygen;
 
 export type OxygenPluginOptions = Partial<
   Pick<
@@ -23,7 +19,6 @@ export type OxygenPluginOptions = Partial<
 type OxygenApiOptions = OxygenPluginOptions &
   InternalMiniOxygenOptions & {
     envPromise?: Promise<Record<string, any>>;
-    shouldStartRuntime?: () => boolean;
   };
 
 /**
@@ -86,52 +81,40 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
           };
         },
       },
-      configureServer(viteDevServer) {
-        // For transform hook:
-        resolvedConfig = viteDevServer.config;
+      configureServer: {
+        order: 'pre',
+        handler: (viteDevServer) => {
+          const entry =
+            apiOptions.entry ?? pluginOptions.entry ?? DEFAULT_SSR_ENTRY;
 
-        if (miniOxygen) return;
-        if (apiOptions.shouldStartRuntime?.() !== true) return;
+          // For transform hook:
+          resolvedConfig = viteDevServer.config;
+          absoluteWorkerEntryFile = path.isAbsolute(entry)
+            ? entry
+            : path.resolve(resolvedConfig.root, entry);
 
-        const entry =
-          apiOptions.entry ?? pluginOptions.entry ?? DEFAULT_SSR_ENTRY;
+          return () => {
+            setupOxygenMiddleware(viteDevServer, async () => {
+              const remoteEnv = await Promise.resolve(apiOptions.envPromise);
 
-        absoluteWorkerEntryFile = path.isAbsolute(entry)
-          ? entry
-          : path.resolve(resolvedConfig.root, entry);
-
-        const miniOxygenPromise = Promise.resolve(apiOptions.envPromise).then(
-          (remoteEnv) =>
-            startMiniOxygenRuntime({
-              entry,
-              viteDevServer,
-              crossBoundarySetup: apiOptions.crossBoundarySetup,
-              env: {...remoteEnv, ...apiOptions.env, ...pluginOptions.env},
-              debug: apiOptions.debug ?? pluginOptions.debug ?? false,
-              inspectorPort:
-                apiOptions.inspectorPort ?? pluginOptions.inspectorPort,
-              requestHook: apiOptions.requestHook,
-              logRequestLine:
-                // Give priority to the plugin option over the CLI option here,
-                // since the CLI one is just a default, not a user-provided flag.
-                pluginOptions?.logRequestLine ?? apiOptions.logRequestLine,
-            }),
-        );
-
-        process.once('SIGTERM', async () => {
-          try {
-            await miniOxygen?.dispose();
-          } finally {
-            process.exit();
-          }
-        });
-
-        return () => {
-          setupOxygenMiddleware(viteDevServer, async (request) => {
-            miniOxygen ??= await miniOxygenPromise;
-            return miniOxygen.dispatchFetch(request);
-          });
-        };
+              return {
+                entry,
+                viteDevServer,
+                crossBoundarySetup: apiOptions.crossBoundarySetup,
+                env: {...remoteEnv, ...apiOptions.env, ...pluginOptions.env},
+                debug: apiOptions.debug ?? pluginOptions.debug ?? false,
+                inspectorPort:
+                  apiOptions.inspectorPort ?? pluginOptions.inspectorPort,
+                requestHook: apiOptions.requestHook,
+                entryPointErrorHandler: apiOptions.entryPointErrorHandler,
+                logRequestLine:
+                  // Give priority to the plugin option over the CLI option here,
+                  // since the CLI one is just a default, not a user-provided flag.
+                  pluginOptions?.logRequestLine ?? apiOptions.logRequestLine,
+              };
+            });
+          };
+        },
       },
       transform(code, id, options) {
         if (

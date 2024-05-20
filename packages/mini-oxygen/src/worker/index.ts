@@ -148,6 +148,8 @@ export function createMiniOxygen({
 
   assetsServer?.listen(assets?.port ?? DEFAULT_ASSETS_PORT);
 
+  let isDisposed = false;
+
   return {
     ready,
     dispatchFetch: mf.dispatchFetch,
@@ -173,6 +175,10 @@ export function createMiniOxygen({
       assetsServer?.closeAllConnections();
       assetsServer?.close();
       await mf.dispose();
+      isDisposed = true;
+    },
+    get isDisposed() {
+      return isDisposed;
     },
   };
 }
