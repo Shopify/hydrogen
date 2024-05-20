@@ -596,6 +596,13 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "disable-deps-optimizer": {
+          "description": "Disable adding dependencies to Vite's `ssr.optimizeDeps.include` automatically",
+          "env": "SHOPIFY_HYDROGEN_FLAG_DISABLE_DEPS_OPTIMIZER",
+          "name": "disable-deps-optimizer",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "worker": {
           "hidden": true,
           "name": "worker",
