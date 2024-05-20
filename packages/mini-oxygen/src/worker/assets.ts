@@ -35,7 +35,7 @@ type AssetHandler = (
   req: IncomingMessage,
   res: ServerResponse<IncomingMessage>,
   relativeAssetPath: string,
-) => Promise<void>;
+) => Promise<boolean>;
 
 /**
  * Creates a server that serves static assets from the build directory
@@ -46,7 +46,7 @@ export function createAssetsServer({
   strictPath = true,
 }: AssetsServerOptions) {
   const handleAsset: AssetHandler = resource.includes('://')
-    ? async function serveFromProxy(req, res, relativeAssetPath) {
+    ? async function serveFromOrigin(req, res, relativeAssetPath) {
         const url = new URL(relativeAssetPath, resource);
 
         const {body, headers, statusCode} = await request(url, {
@@ -54,8 +54,11 @@ export function createAssetsServer({
           headers: req.headers,
         });
 
+        if (statusCode === 404) return false;
+
         res.writeHead(statusCode, headers);
         body.pipe(res);
+        return true;
       }
     : async function serveFromDisk(req, res, relativeAssetPath) {
         const filePath = path.join(resource, relativeAssetPath);
@@ -64,15 +67,16 @@ export function createAssetsServer({
         const file = await fs.open(filePath).catch(() => {});
         const stat = await file?.stat().catch(() => {});
 
-        if (file && stat?.isFile()) {
-          res.setHeader('Content-Length', stat.size);
-          res.setHeader(
-            'Content-Type',
-            lookupMimeType(filePath) || 'application/octet-stream',
-          );
+        if (!file || !stat?.isFile()) return false;
 
-          file.createReadStream().pipe(res);
-        }
+        res.setHeader('Content-Length', stat.size);
+        res.setHeader(
+          'Content-Type',
+          lookupMimeType(filePath) || 'application/octet-stream',
+        );
+
+        file.createReadStream().pipe(res);
+        return true;
       };
 
   return createServer(async (req: IncomingMessage, res: ServerResponse) => {
@@ -101,26 +105,24 @@ export function createAssetsServer({
       ? pathname.replace(`/${artificialAssetPrefix}`, '')
       : pathname;
 
-    if (isValidAssetPath) {
-      handleAsset(req, res, relativeAssetPath);
-      return;
+    const isAssetFound = isValidAssetPath
+      ? await handleAsset(req, res, relativeAssetPath)
+      : false;
+
+    if (!isAssetFound) {
+      // Mimic what Shopify CDN returns for 404s
+      res.writeHead(404, {'Content-Type': 'text/html; charset=utf-8'});
+      res.end(
+        getErrorPage({
+          title: '404: Page not found',
+          header: '404 NOT FOUND',
+          message: isValidAssetPath
+            ? 'The following file was not found in your project directory:'
+            : 'The following URL pathname is not valid:',
+          code: relativeAssetPath,
+        }),
+      );
     }
-
-    // -- File was not found:
-
-    res.writeHead(404, {'Content-Type': 'text/html; charset=utf-8'});
-
-    // Mimic what Shopify CDN returns for 404s
-    res.end(
-      getErrorPage({
-        title: '404: Page not found',
-        header: '404 NOT FOUND',
-        message: isValidAssetPath
-          ? 'This file was not found in the build output directory:'
-          : 'The following URL pathname is not valid:',
-        code: relativeAssetPath,
-      }),
-    );
   });
 }
 

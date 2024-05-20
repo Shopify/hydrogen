@@ -103,7 +103,7 @@ function startMiniOxygenRuntime({
       ? {
           origin: getViteUrl(viteDevServer) ?? '',
           strictPath: false,
-          port: Number(assetsPort),
+          port: assetsPort,
         }
       : undefined,
     workers: [
