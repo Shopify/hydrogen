@@ -1,5 +1,11 @@
 # @shopify/hydrogen-react
 
+## 2024.4.2
+
+### Patch Changes
+
+- Ensure the `getShopifyDomain` method from the [`useShop` hook](https://shopify.dev/docs/api/hydrogen-react/2024-01/hooks/useshop#:~:text=%2D%20storefrontToken-,getShopifyDomain,-%28props%3F%3A) always includes the HTTPS protocol. ([#2079](https://github.com/Shopify/hydrogen/pull/2079)) by [@michenly](https://github.com/michenly)
+
 ## 2024.4.1
 
 ### Patch Changes

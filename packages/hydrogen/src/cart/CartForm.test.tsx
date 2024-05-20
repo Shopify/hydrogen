@@ -1,6 +1,6 @@
 import {describe, expect, expectTypeOf, it, vi} from 'vitest';
 import {render} from '@testing-library/react';
-import {CartForm} from './CartForm';
+import {CartForm, OptimisticCartLine} from './CartForm';
 import {CartLineInput} from '@shopify/hydrogen-react/storefront-api-types';
 
 function MockForm({
@@ -246,6 +246,6 @@ describe('getFormInput', () => {
       throw new Error('Wrong action');
     }
 
-    expectTypeOf(result.inputs.lines).toEqualTypeOf<CartLineInput[]>;
+    expectTypeOf(result.inputs.lines).toEqualTypeOf<OptimisticCartLine[]>;
   });
 });

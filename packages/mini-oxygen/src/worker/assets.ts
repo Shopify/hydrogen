@@ -7,10 +7,9 @@ import {
 } from 'node:http';
 import {lookup as lookupMimeType} from 'mrmime';
 import {request} from 'undici';
+import {getErrorPage} from '../common/error-page.js';
 
 export const DEFAULT_ASSETS_PORT = 9100;
-
-const html = String.raw;
 
 // Mimics path in Shopify CDN for Oxygen v2
 const artificialAssetPrefix = 'mini-oxygen/00000/11111/22222/33333';
@@ -103,27 +102,18 @@ export function createAssetsServer({
 
     // -- File was not found:
 
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.writeHead(404);
+    res.writeHead(404, {'Content-Type': 'text/html; charset=utf-8'});
 
     // Mimic what Shopify CDN returns for 404s
     res.end(
-      html`<html>
-        <head>
-          <title>404: Page not found</title>
-        </head>
-        <body
-          style="display: flex; flex-direction: column; align-items: center; padding-top: 20px; font-family: Arial"
-        >
-          <h2>404 NOT FOUND</h2>
-          <p>
-            ${isValidAssetPath
-              ? 'This file was not found in the build output directory:'
-              : 'The following URL pathname is not valid:'}
-          </p>
-          <pre>${relativeAssetPath}</pre>
-        </body>
-      </html>`,
+      getErrorPage({
+        title: '404: Page not found',
+        header: '404 NOT FOUND',
+        message: isValidAssetPath
+          ? 'This file was not found in the build output directory:'
+          : 'The following URL pathname is not valid:',
+        code: relativeAssetPath,
+      }),
     );
   });
 }

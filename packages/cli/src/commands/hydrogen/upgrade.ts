@@ -12,6 +12,7 @@ import {
   renderSelectPrompt,
   renderSuccess,
   renderTasks,
+  renderWarning,
 } from '@shopify/cli-kit/node/ui';
 import {
   fileExists,
@@ -322,19 +323,22 @@ export async function getChangelog(): Promise<ChangeLog> {
   } catch {}
 
   throw new AbortError(
-    'Failed to fetch changelog',
+    'Failed to fetch Hydrogen changelog',
     'Ensure you have internet connection and try again',
   );
 }
 
-export function hasOutdatedDependencies({
+function hasOutdatedDependencies({
   release,
   currentDependencies,
 }: {
   release: Release;
   currentDependencies: Dependencies;
 }) {
-  return Object.entries(release.dependencies).some(([name, version]) => {
+  return Object.entries({
+    ...release.dependencies,
+    ...release.devDependencies,
+  }).some(([name, version]) => {
     const currentDependencyVersion = currentDependencies?.[name];
     if (!currentDependencyVersion) return false;
     const isDependencyOutdated = semver.gt(
@@ -345,17 +349,15 @@ export function hasOutdatedDependencies({
   });
 }
 
-export function isUpgradeableRelease({
+function isUpgradeableRelease({
   currentDependencies,
   currentPinnedVersion,
   release,
 }: {
-  currentDependencies?: Dependencies;
+  currentDependencies: Dependencies;
   currentPinnedVersion: string;
   release: Release;
 }) {
-  if (!currentDependencies) return false;
-
   const isHydrogenOutdated = semver.gt(release.version, currentPinnedVersion);
 
   if (isHydrogenOutdated) return true;
@@ -379,7 +381,7 @@ export function getAvailableUpgrades({
 }: {
   releases: ChangeLog['releases'];
   currentVersion: string;
-  currentDependencies?: Dependencies;
+  currentDependencies: Dependencies;
 }) {
   const currentPinnedVersion = getAbsoluteVersion(currentVersion);
   let currentMajorVersion = '';
@@ -994,97 +996,121 @@ export async function displayDevUpgradeNotice({
 }: {
   targetPath?: string;
 }) {
-  const appPath = targetPath ? path.resolve(targetPath) : process.cwd();
-  const {currentVersion} = await getHydrogenVersion({appPath});
+  try {
+    const appPath = targetPath ? path.resolve(targetPath) : process.cwd();
+    const {currentVersion, currentDependencies} = await getHydrogenVersion({
+      appPath,
+    });
 
-  const isPrerelease = semver.prerelease(currentVersion);
+    const isPrerelease = semver.prerelease(currentVersion);
 
-  if (isPrerelease || /^[a-z]+$/i.test(currentVersion)) {
-    // Skip prereleases or versions like 'next' or 'latest'
-    return;
-  }
+    if (isPrerelease || /^[a-z]+$/i.test(currentVersion)) {
+      // Skip prereleases or versions like 'next' or 'latest'
+      return;
+    }
 
-  const changelog = await getChangelog();
+    const changelog = await getChangelog();
 
-  const {availableUpgrades, uniqueAvailableUpgrades} = getAvailableUpgrades({
-    releases: changelog.releases,
-    currentVersion,
-  });
+    const {availableUpgrades, uniqueAvailableUpgrades} = getAvailableUpgrades({
+      releases: changelog.releases,
+      currentVersion,
+      currentDependencies,
+    });
 
-  if (availableUpgrades.length === 0 || !availableUpgrades[0]?.version) {
-    // Using latest version already or changelog fetch errored
-    return;
-  }
+    if (availableUpgrades.length === 0 || !availableUpgrades[0]?.version) {
+      // Using latest version already or changelog fetch errored
+      return;
+    }
 
-  const pinnedLatestVersion = getAbsoluteVersion(availableUpgrades[0].version);
-  const pinnedCurrentVersion = getAbsoluteVersion(currentVersion);
-  const currentReleaseIndex = changelog.releases.findIndex((release) => {
-    const pinnedReleaseVersion = getAbsoluteVersion(release.version);
-    return pinnedReleaseVersion === pinnedCurrentVersion;
-  });
+    const pinnedLatestVersion = getAbsoluteVersion(
+      availableUpgrades[0].version,
+    );
+    const pinnedCurrentVersion = getAbsoluteVersion(currentVersion);
 
-  const uniqueNextReleases = changelog.releases
-    .slice(0, currentReleaseIndex)
-    .reverse()
-    .reduce((acc, release) => {
-      if (acc[release.version]) return acc;
-      acc[release.version] = release;
-      return acc;
-    }, {} as Record<string, Release>);
+    // If we are on the latest Hydrogen package version and we are still running
+    // this code, it means there's an outdated dependency. Use the first
+    // outdated version as the current release index to show the upgrade info:
+    const isLatestHydrogenPackage =
+      pinnedCurrentVersion === pinnedLatestVersion;
+    const currentReleaseIndex = isLatestHydrogenPackage
+      ? changelog.releases.findIndex(
+          (release) =>
+            getAbsoluteVersion(release.version) !== pinnedCurrentVersion,
+        )
+      : changelog.releases.findIndex(
+          (release) =>
+            getAbsoluteVersion(release.version) === pinnedCurrentVersion,
+        );
 
-  const nextReleases = Object.keys(uniqueNextReleases).length
-    ? Object.entries(uniqueNextReleases)
-        .map(([version, release]) => {
-          return `${version} - ${release.title}`;
-        })
-        .slice(0, 5)
-    : [];
+    const relevantReleases = changelog.releases.slice(0, currentReleaseIndex);
 
-  let headline =
-    Object.keys(uniqueAvailableUpgrades).length > 1
-      ? `There are ${
-          Object.keys(uniqueAvailableUpgrades).length
-        } new @shopify/hydrogen versions available.`
-      : `There's a new @shopify/hydrogen version available.`;
+    // By reversing the releases array, we give priority to older releases
+    // for the same version. Older releases (the first one of a version) probably
+    // have more information than a newer release that only changes dependencies.
+    const nextReleases = Object.values(
+      [...relevantReleases].reverse().reduce((acc, release) => {
+        acc[release.version] ??= `${release.version} - ${release.title}`;
+        return acc;
+      }, {} as Record<string, string>),
+    ).slice(0, 5);
 
-  const cliCommand = await getCliCommand();
+    let headline =
+      Object.keys(uniqueAvailableUpgrades).length > 1
+        ? `There are ${
+            Object.keys(uniqueAvailableUpgrades).length
+          } new @shopify/hydrogen versions available.`
+        : `There's a new @shopify/hydrogen version available.`;
 
-  renderInfo({
-    headline,
-    body: [`Current: ${currentVersion} | Latest: ${pinnedLatestVersion}`],
-    //@ts-ignore will always be an array
-    customSections: nextReleases.length
-      ? [
-          {
-            title: `The next ${nextReleases.length} version(s) include`,
-            body: [
+    const cliCommand = await getCliCommand();
+
+    renderInfo({
+      headline,
+      body: [
+        `Current: ${currentVersion} | Latest: ${pinnedLatestVersion}` +
+          (isLatestHydrogenPackage ? ' with updated dependencies' : ''),
+      ],
+      customSections: [
+        ...(nextReleases.length > 0
+          ? [
               {
-                list: {
-                  items: [
-                    ...nextReleases,
-                    availableUpgrades.length > 5 && `...more`,
-                  ]
-                    .flat()
-                    .filter(Boolean),
-                },
+                title: `The next ${nextReleases.length} version(s) include`,
+                body: [
+                  {
+                    list: {
+                      items: [
+                        ...nextReleases,
+                        availableUpgrades.length > 5 ? `...more` : '',
+                      ]
+                        .flat()
+                        .filter(Boolean),
+                    },
+                  },
+                ].filter(Boolean),
               },
-            ].filter(Boolean),
-          },
-          {
-            title: 'Next steps',
-            body: [
-              {
-                list: {
-                  items: [
-                    `Run \`${cliCommand} upgrade\` or \`${cliCommand} upgrade --version XXXX.X.XX\``,
-                    ,
-                    `Read release notes at https://hydrogen.shopify.dev/releases`,
-                  ],
-                },
+            ]
+          : []),
+        {
+          title: 'Next steps',
+          body: [
+            {
+              list: {
+                items: [
+                  `Run \`${cliCommand} upgrade\` or \`${cliCommand} upgrade --version ${
+                    relevantReleases[0]?.version ?? '<version>'
+                  }\``,
+                  `Read release notes at https://hydrogen.shopify.dev/releases`,
+                ],
               },
-            ],
-          },
-        ]
-      : [],
-  });
+            },
+          ],
+        },
+      ],
+    });
+  } catch (error) {
+    const abortError = error as AbortError;
+    renderWarning({
+      headline: abortError.message,
+      body: abortError.tryMessage ?? undefined,
+    });
+  }
 }

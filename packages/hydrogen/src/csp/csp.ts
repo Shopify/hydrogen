@@ -26,6 +26,7 @@ type DirectiveValues = string[] | string | boolean;
 type CreateContentSecurityPolicy = {
   defaultSrc?: DirectiveValues;
   scriptSrc?: DirectiveValues;
+  scriptSrcElem?: DirectiveValues;
   styleSrc?: DirectiveValues;
   imgSrc?: DirectiveValues;
   connectSrc?: DirectiveValues;
@@ -170,7 +171,11 @@ function addCspDirective(
     : [String(currentValue)];
 
   const newValue = Array.isArray(normalizedValue)
-    ? [...normalizedCurrentValue, ...normalizedValue]
+    ? // If the default directive is `none`, don't
+      // merge the override with the default value.
+      normalizedValue.every((a) => a === `'none'`)
+      ? normalizedCurrentValue
+      : [...normalizedCurrentValue, ...normalizedValue]
     : normalizedValue;
 
   return newValue;

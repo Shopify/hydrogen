@@ -36,11 +36,13 @@ import {
   type Release,
   upgradeNodeModules,
   getChangelog,
+  displayDevUpgradeNotice,
 } from './upgrade.js';
 import {type PackageJson} from 'type-fest';
 
-vi.mock('../../lib/shell.js');
 vi.mock('@shopify/cli-kit/node/session');
+
+vi.mock('../../lib/shell.js', () => ({getCliCommand: vi.fn(() => 'h2')}));
 
 vi.mock('@shopify/cli-kit/node/ui', async () => {
   const original = await vi.importActual<
@@ -140,6 +142,22 @@ async function inTemporaryHydrogenRepo(
 
     await cb(tmpDir);
   });
+}
+
+function increasePatchVersion(depName: string, deps: Record<string, string>) {
+  const depVersion = deps[depName];
+  if (!depVersion) {
+    throw new Error(
+      `No dependency "${depName}" found in: ${Object.keys(deps || {})}`,
+    );
+  }
+
+  return {
+    [depName]: depVersion.replace(
+      /\.(\d+)$/,
+      (_, patchVersion) => `.${Number(patchVersion) + 1}`,
+    ),
+  };
 }
 
 describe('upgrade', async () => {
@@ -295,12 +313,82 @@ describe('upgrade', async () => {
           cleanGitRepo: true,
           packageJson: {
             dependencies: {
-              // @ts-ignore
-              '@shopify/hydrogen': releases[2].version,
+              '@shopify/hydrogen': releases[2]!.version,
             },
           },
         },
       );
+    });
+
+    it('it finds outdated dependencies', async () => {
+      const {releases} = await getChangelog();
+      const latestRelease = releases[0]!;
+
+      expect(
+        getAvailableUpgrades({
+          currentVersion: latestRelease.version,
+          currentDependencies: {},
+          releases,
+        }).availableUpgrades,
+      ).toHaveLength(0);
+
+      const depName = Object.keys(latestRelease.dependencies)[0]!;
+      const devDepName = Object.keys(latestRelease.devDependencies)[0]!;
+
+      // Copy of latest release, no changes
+      expect(
+        getAvailableUpgrades({
+          currentVersion: latestRelease.version,
+          currentDependencies: {
+            [depName]: latestRelease.dependencies[depName]!,
+            [devDepName]: latestRelease.devDependencies[devDepName]!,
+          },
+          releases: [{...latestRelease}, ...releases],
+        }).availableUpgrades,
+      ).toHaveLength(0);
+
+      // Copy of latest release but with increased patch version of a dependency
+      expect(
+        getAvailableUpgrades({
+          currentVersion: latestRelease.version,
+          currentDependencies: {
+            [depName]: latestRelease.dependencies[depName]!,
+          },
+          releases: [
+            {
+              ...latestRelease,
+              dependencies: {
+                ...latestRelease.dependencies,
+                ...increasePatchVersion(depName, latestRelease.dependencies),
+              },
+            },
+            ...releases,
+          ],
+        }).availableUpgrades,
+      ).toHaveLength(1);
+
+      // Copy of latest release but with increased patch version of a dev-dependency
+      expect(
+        getAvailableUpgrades({
+          currentVersion: latestRelease.version,
+          currentDependencies: {
+            [devDepName]: latestRelease.devDependencies[devDepName]!,
+          },
+          releases: [
+            {
+              ...latestRelease,
+              devDependencies: {
+                ...latestRelease.devDependencies,
+                ...increasePatchVersion(
+                  devDepName,
+                  latestRelease.devDependencies,
+                ),
+              },
+            },
+            ...releases,
+          ],
+        }).availableUpgrades,
+      ).toHaveLength(1);
     });
   });
 
@@ -494,6 +582,62 @@ describe('upgrade', async () => {
         {
           cleanGitRepo: true,
           packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON,
+        },
+      );
+    });
+  });
+
+  describe('displayDevUpgradeNotice', () => {
+    it('shows up a notice if Hydrogen is outdated', async () => {
+      await inTemporaryHydrogenRepo(
+        async (targetPath) => {
+          await expect(
+            displayDevUpgradeNotice({targetPath}),
+          ).resolves.not.toThrow();
+
+          expect(outputMock.info()).toMatch(
+            /new @shopify\/hydrogen versions? available/i,
+          );
+          expect(outputMock.info()).toMatch(
+            /Current: [\d.] | Latest: [\d.]+\s{2,}/i,
+          );
+          expect(outputMock.info()).toMatch(
+            /The next \d+ version\(s\) include/i,
+          );
+          expect(outputMock.info()).toMatch('Run `h2 upgrade`');
+        },
+        {cleanGitRepo: false, packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON},
+      );
+    });
+
+    it('shows up a notice if there are related dependencies to upgrade', async () => {
+      const hydrogenVersion = '2024.4.2';
+      await inTemporaryHydrogenRepo(
+        async (targetPath) => {
+          await expect(
+            displayDevUpgradeNotice({targetPath}),
+          ).resolves.not.toThrow();
+
+          expect(outputMock.info()).toMatch(
+            /new @shopify\/hydrogen versions? available/i,
+          );
+          expect(outputMock.info()).toMatch(
+            /Current: [\d.] | Latest: [\d.]+ with updated dependencies\s{1,}/i,
+          );
+          expect(outputMock.info()).toMatch(/The next 1 version\(s\) include/i);
+          expect(outputMock.info()).toMatch(
+            `or \`h2 upgrade --version ${hydrogenVersion}\``,
+          );
+        },
+        {
+          cleanGitRepo: false,
+          packageJson: {
+            ...OUTDATED_HYDROGEN_PACKAGE_JSON,
+            dependencies: {
+              ...OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies,
+              '@shopify/hydrogen': hydrogenVersion,
+            },
+          },
         },
       );
     });

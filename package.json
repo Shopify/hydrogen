@@ -31,6 +31,7 @@
   },
   "workspaces": [
     "docs/preview",
+    "examples/b2b",
     "examples/classic-remix",
     "examples/custom-cart-method",
     "examples/express",
@@ -54,6 +55,9 @@
     "templates/skeleton"
   ],
   "prettier": "@shopify/prettier-config",
+  "dependencies": {
+    "@shopify/cli-hydrogen": "*"
+  },
   "devDependencies": {
     "@changesets/changelog-github": "^0.4.8",
     "@changesets/cli": "^2.26.0",

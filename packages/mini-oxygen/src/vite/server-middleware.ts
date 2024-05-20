@@ -1,7 +1,6 @@
 import {fetchModule, type ViteDevServer} from 'vite';
 import {fileURLToPath} from 'node:url';
 import {
-  fetch,
   createMiniOxygen,
   Request,
   Response,
@@ -10,9 +9,14 @@ import {
 } from '../worker/index.js';
 import type {OnlyBindings, OnlyServices} from '../worker/utils.js';
 import {getHmrUrl, pipeFromWeb, toURL, toWeb} from './utils.js';
+import {
+  isEntrypointError,
+  handleEntrypointError,
+  type CustomEntryPointErrorHandler,
+} from './entry-error.js';
 
 import type {ViteEnv} from './worker-entry.js';
-import {type RequestHookInfo} from '../worker/handler.js';
+import type {RequestHookInfo} from '../worker/handler.js';
 const scriptPath = fileURLToPath(new URL('./worker-entry.js', import.meta.url));
 
 const FETCH_MODULE_PATHNAME = '/__vite_fetch_module';
@@ -49,6 +53,10 @@ export type InternalMiniOxygenOptions = {
         binding: (...args: unknown[]) => unknown | Promise<unknown> | void;
       }
   >;
+  /**
+   * Callback that runs when detecting a dependency that can be optimized in Vite.
+   */
+  entryPointErrorHandler?: CustomEntryPointErrorHandler;
 };
 
 export type MiniOxygenViteOptions = InternalMiniOxygenOptions & {
@@ -60,9 +68,9 @@ export type MiniOxygenViteOptions = InternalMiniOxygenOptions & {
   logRequestLine?: null | RequestHook;
 };
 
-export type MiniOxygen = Awaited<ReturnType<typeof startMiniOxygenRuntime>>;
+type MiniOxygen = ReturnType<typeof startMiniOxygenRuntime>;
 
-export async function startMiniOxygenRuntime({
+function startMiniOxygenRuntime({
   viteDevServer,
   env,
   debug = false,
@@ -153,20 +161,6 @@ export async function startMiniOxygenRuntime({
     ],
   });
 
-  const warmupWorkerdCache = () => {
-    const viteUrl = getViteUrl(viteDevServer);
-
-    if (viteUrl) {
-      miniOxygen
-        .dispatchFetch(new URL(WARMUP_PATHNAME, viteUrl))
-        .catch(() => {});
-    }
-  };
-
-  viteDevServer.httpServer?.listening
-    ? warmupWorkerdCache()
-    : viteDevServer.httpServer?.once('listening', warmupWorkerdCache);
-
   // Ensure MiniOxygen is disposed when Vite is closed
   const viteClose = viteDevServer.close;
   viteDevServer.close = async () => {
@@ -178,7 +172,7 @@ export async function startMiniOxygenRuntime({
 
 export function setupOxygenMiddleware(
   viteDevServer: ViteDevServer,
-  dispatchFetch: (webRequest: Request) => Promise<Response>,
+  getMiniOxygenOptions: () => Promise<MiniOxygenViteOptions>,
 ) {
   viteDevServer.middlewares.use(
     FETCH_MODULE_PATHNAME,
@@ -212,20 +206,59 @@ export function setupOxygenMiddleware(
     },
   );
 
+  let miniOxygen: MiniOxygen;
+  let miniOxygenOptions: MiniOxygenViteOptions;
+
   viteDevServer.middlewares.use(function o2HandleWorkerRequest(req, res) {
     // This request comes from the browser. At this point, Vite
     // tried to serve the request as a static file, but it didn't
     // find it in the project. Therefore, we assume this is a
     // request for a backend route, and we forward it to workerd.
 
-    dispatchFetch(toWeb(req))
-      .then((webResponse) => pipeFromWeb(webResponse, res))
-      .catch((error) => {
-        console.error('Error during evaluation:', error);
-        res.writeHead(500);
-        res.end();
-      });
+    const ready =
+      miniOxygen && !miniOxygen.isDisposed
+        ? Promise.resolve()
+        : getMiniOxygenOptions().then((options) => {
+            miniOxygenOptions = options;
+            miniOxygen = startMiniOxygenRuntime(options);
+          });
+
+    ready.then(() =>
+      miniOxygen
+        .dispatchFetch(toWeb(req))
+        .then(async (webResponse) => {
+          if (isEntrypointError(webResponse)) {
+            await handleEntrypointError(
+              viteDevServer,
+              webResponse,
+              res,
+              miniOxygenOptions.entryPointErrorHandler,
+            );
+          } else {
+            pipeFromWeb(webResponse, res);
+          }
+        })
+        .catch((error) => {
+          console.error('MiniOxygen: Error during evaluation:', error);
+          res.writeHead(500);
+          res.end();
+        }),
+    );
   });
+
+  const warmupWorkerdCache = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    const viteUrl = getViteUrl(viteDevServer);
+
+    if (viteUrl) {
+      fetch(new URL(WARMUP_PATHNAME, viteUrl)).catch(() => {});
+    }
+  };
+
+  viteDevServer.httpServer?.listening
+    ? warmupWorkerdCache()
+    : viteDevServer.httpServer?.once('listening', warmupWorkerdCache);
 }
 
 function getViteUrl(viteDevServer: ViteDevServer) {

@@ -4,7 +4,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "type": "module",
   "main": "dist/cjs/index.cjs",
@@ -43,6 +43,6 @@
     "vitest": "^1.0.4"
   },
   "dependencies": {
-    "@shopify/graphql-codegen": "^0.0.1"
+    "@shopify/graphql-codegen": "^0.0.2"
   }
 }

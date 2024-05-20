@@ -1,6 +1,6 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import type {HydrogenSession} from '../hydrogen';
-import {CUSTOMER_ACCOUNT_SESSION_KEY} from './constants';
+import {CUSTOMER_ACCOUNT_SESSION_KEY} from '../constants';
 import {checkExpires, clearSession, refreshToken} from './auth.helpers';
 
 vi.mock('./BadRequest', () => {
@@ -36,6 +36,8 @@ function createFetchResponse<T>(data: T, options: {ok: boolean}) {
 
 let session: HydrogenSession;
 
+const exchangeForStorefrontCustomerAccessToken = vi.fn();
+
 describe('auth.helpers', () => {
   describe('refreshToken', () => {
     beforeEach(() => {
@@ -58,6 +60,7 @@ describe('auth.helpers', () => {
           customerAccountId: 'customerAccountId',
           customerAccountUrl: 'customerAccountUrl',
           httpsOrigin: 'https://localhost',
+          exchangeForStorefrontCustomerAccessToken,
         });
       }
 
@@ -77,6 +80,7 @@ describe('auth.helpers', () => {
           customerAccountId: 'customerAccountId',
           customerAccountUrl: 'customerAccountUrl',
           httpsOrigin: 'https://localhost',
+          exchangeForStorefrontCustomerAccessToken,
         });
       }
 
@@ -93,7 +97,6 @@ describe('auth.helpers', () => {
           {
             access_token: '',
             expires_in: '',
-            id_token: '',
             refresh_token: '',
           },
           {ok: true},
@@ -106,6 +109,7 @@ describe('auth.helpers', () => {
           customerAccountId: 'customerAccountId',
           customerAccountUrl: 'customerAccountUrl',
           httpsOrigin: 'https://localhost',
+          exchangeForStorefrontCustomerAccessToken,
         });
       }
 
@@ -117,6 +121,7 @@ describe('auth.helpers', () => {
     it('Refreshes the token', async () => {
       (session.get as any).mockReturnValueOnce({
         refreshToken: 'old_refresh_token',
+        idToken: 'old_id_token',
       });
 
       fetch.mockResolvedValue(
@@ -124,7 +129,6 @@ describe('auth.helpers', () => {
           {
             access_token: 'access_token',
             expires_in: '',
-            id_token: 'id_token',
             refresh_token: 'refresh_token',
           },
           {ok: true},
@@ -136,6 +140,7 @@ describe('auth.helpers', () => {
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'customerAccountUrl',
         httpsOrigin: 'https://localhost',
+        exchangeForStorefrontCustomerAccessToken,
       });
 
       expect(session.set).toHaveBeenNthCalledWith(
@@ -145,7 +150,7 @@ describe('auth.helpers', () => {
           accessToken: 'access_token',
           expiresAt: expect.any(String),
           refreshToken: 'refresh_token',
-          idToken: 'id_token',
+          idToken: 'old_id_token',
         },
       );
     });
@@ -194,6 +199,7 @@ describe('auth.helpers', () => {
           customerAccountId: 'customerAccountId',
           customerAccountUrl: 'customerAccountUrl',
           httpsOrigin: 'https://localhost',
+          exchangeForStorefrontCustomerAccessToken,
         });
       }
 
@@ -203,6 +209,7 @@ describe('auth.helpers', () => {
     it('Refreshes the token', async () => {
       (session.get as any).mockReturnValueOnce({
         refreshToken: 'old_refresh_token',
+        idToken: 'old_id_token',
       });
 
       fetch.mockResolvedValue(
@@ -210,7 +217,6 @@ describe('auth.helpers', () => {
           {
             access_token: 'access_token',
             expires_in: '',
-            id_token: 'id_token',
             refresh_token: 'refresh_token',
           },
           {ok: true},
@@ -224,6 +230,7 @@ describe('auth.helpers', () => {
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'customerAccountUrl',
         httpsOrigin: 'https://localhost',
+        exchangeForStorefrontCustomerAccessToken,
       });
 
       expect(session.set).toHaveBeenNthCalledWith(
@@ -233,7 +240,7 @@ describe('auth.helpers', () => {
           accessToken: 'access_token',
           expiresAt: expect.any(String),
           refreshToken: 'refresh_token',
-          idToken: 'id_token',
+          idToken: 'old_id_token',
         },
       );
     });
@@ -248,7 +255,6 @@ describe('auth.helpers', () => {
           {
             access_token: 'access_token',
             expires_in: '',
-            id_token: 'id_token',
             refresh_token: 'refresh_token',
           },
           {ok: true},
@@ -265,13 +271,13 @@ describe('auth.helpers', () => {
         customerAccountId: 'customerAccountId',
         customerAccountUrl: 'customerAccountUrl',
         httpsOrigin: 'https://localhost',
+        exchangeForStorefrontCustomerAccessToken,
       });
 
       expect(session.set).not.toHaveBeenNthCalledWith(1, 'customerAccount', {
         accessToken: 'access_token',
         expiresAt: expect.any(String),
         refreshToken: 'refresh_token',
-        idToken: 'id_token',
       });
     });
   });
