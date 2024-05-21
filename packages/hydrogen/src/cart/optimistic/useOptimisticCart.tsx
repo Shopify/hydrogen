@@ -12,7 +12,7 @@ import type {CartReturn} from '../queries/cart-types';
 
 export type OptimisticCartLine<T = CartLine> = T & {isOptimistic?: boolean};
 
-export type OptimisticCart<T = CartReturn> = T & {
+export type OptimisticCart<T = CartReturn> = Omit<T, 'lines'> & {
   isOptimistic?: boolean;
   lines: {
     nodes: Array<OptimisticCartLine>;
@@ -25,7 +25,7 @@ export type OptimisticCart<T = CartReturn> = T & {
  * @returns A new cart object augmented with optimistic state. Each cart line item that is optimistically added includes an `isOptimistic` property. Also if the cart has _any_ optimistic state, a root property `isOptimistic` will be set to `true`.
  */
 export function useOptimisticCart<DefaultCart = CartReturn>(
-  cart: DefaultCart,
+  cart?: DefaultCart,
 ): OptimisticCart<DefaultCart> {
   const fetchers = useFetchers();
 
@@ -33,7 +33,7 @@ export function useOptimisticCart<DefaultCart = CartReturn>(
 
   const optimisticCart = (cart as CartReturn)?.lines
     ? (structuredClone(cart) as OptimisticCart<DefaultCart>)
-    : ({lines: {nodes: []}} as OptimisticCart<DefaultCart>);
+    : ({lines: {nodes: []}} as unknown as OptimisticCart<DefaultCart>);
 
   const cartLines = optimisticCart.lines.nodes;
 

@@ -8,7 +8,7 @@ import {CartSummary} from './CartSummary';
 export type CartLayout = 'page' | 'aside';
 
 export type CartMainProps = {
-  cart: CartApiQueryFragment | null;
+  cart: CartApiQueryFragment;
   layout: CartLayout;
 };
 

@@ -1,12 +1,7 @@
 import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {Link} from '@remix-run/react';
-import {
-  CartForm,
-  useOptimisticCart,
-  type OptimisticCart,
-  type OptimisticCartLine,
-} from '@shopify/hydrogen';
-import type {Cart} from '@shopify/hydrogen-react/storefront-api-types';
+import {CartForm, useOptimisticCart} from '@shopify/hydrogen';
+import type {Cart} from '@shopify/hydrogen/storefront-api-types';
 
 // Root loader returns the cart data
 export async function loader({context}: LoaderFunctionArgs) {
@@ -16,14 +11,13 @@ export async function loader({context}: LoaderFunctionArgs) {
 }
 
 // The cart component renders each line item in the cart.
-export function Cart({cart}: {cart: OptimisticCart}) {
+export function Cart({cart}: {cart: Cart}) {
   // `useOptimisticCart` adds optimistic line items to the cart.
   // These line items are displayed in the cart until the server responds.
   const optimisticCart = useOptimisticCart(cart);
-
   if (!optimisticCart?.lines?.nodes?.length) return <p>Nothing in cart</p>;
 
-  return optimisticCart.lines.nodes.map((line: OptimisticCartLine) => (
+  return optimisticCart.lines.nodes.map((line) => (
     <div key={line.id}>
       <Link to={`/products${line.merchandise.product.handle}`}>
         {line.merchandise.product.title}
