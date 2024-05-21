@@ -94,14 +94,7 @@ export async function action({request, context}: ActionFunctionArgs) {
       );
     }
 
-    return json(
-      {error: null, customer: updated.customerUpdate?.customer},
-      {
-        headers: {
-          'Set-Cookie': await session.commit(),
-        },
-      },
-    );
+    return json({error: null, customer: updated.customerUpdate?.customer});
   } catch (error: any) {
     return json({error: error.message, customer: null}, {status: 400});
   }

@@ -89,25 +89,18 @@ export async function loader({context}: LoaderFunctionArgs) {
     },
   });
 
-  return defer(
-    {
-      cart: cartPromise,
-      footer: footerPromise,
-      header: await headerPromise,
-      isLoggedIn: isLoggedInPromise,
-      publicStoreDomain,
-      /***********************************************/
-      /**********  EXAMPLE UPDATE STARTS  ************/
-      publictoreSubdomain: context.env.PUBLIC_SHOPIFY_STORE_DOMAIN,
-      /**********   EXAMPLE UPDATE END   ************/
-      /***********************************************/
-    },
-    {
-      headers: {
-        'Set-Cookie': await context.session.commit(),
-      },
-    },
-  );
+  return defer({
+    cart: cartPromise,
+    footer: footerPromise,
+    header: await headerPromise,
+    isLoggedIn: isLoggedInPromise,
+    publicStoreDomain,
+    /***********************************************/
+    /**********  EXAMPLE UPDATE STARTS  ************/
+    publictoreSubdomain: context.env.PUBLIC_SHOPIFY_STORE_DOMAIN,
+    /**********   EXAMPLE UPDATE END   ************/
+    /***********************************************/
+  });
 }
 
 export default function App() {

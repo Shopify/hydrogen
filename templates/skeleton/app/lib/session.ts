@@ -13,6 +13,7 @@ import {
 export class AppSession implements HydrogenSession {
   #sessionStorage;
   #session;
+  #dirty = false;
 
   constructor(sessionStorage: SessionStorage, session: Session) {
     this.#sessionStorage = sessionStorage;
@@ -50,11 +51,17 @@ export class AppSession implements HydrogenSession {
   }
 
   get unset() {
+    this.#dirty = true;
     return this.#session.unset;
   }
 
   get set() {
+    this.#dirty = true;
     return this.#session.set;
+  }
+
+  get dirty() {
+    return this.#dirty;
   }
 
   destroy() {
@@ -62,6 +69,7 @@ export class AppSession implements HydrogenSession {
   }
 
   commit() {
+    this.#dirty = false;
     return this.#sessionStorage.commitSession(this.#session);
   }
 }

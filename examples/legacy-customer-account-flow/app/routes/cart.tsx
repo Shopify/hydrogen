@@ -72,8 +72,6 @@ export async function action({request, context}: ActionFunctionArgs) {
     headers.set('Location', redirectTo);
   }
 
-  headers.append('Set-Cookie', await context.session.commit());
-
   return json(
     {
       cart: cartResult,

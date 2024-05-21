@@ -89,10 +89,6 @@ export async function action({request, context}: ActionFunctionArgs) {
       {error: null, newCustomer},
       {
         status: 302,
-        headers: {
-          'Set-Cookie': await session.commit(),
-          Location: '/account',
-        },
       },
     );
   } catch (error: unknown) {

@@ -24,14 +24,7 @@ export async function loader({context}) {
     `,
   );
 
-  return json(
-    {customer: data.customer},
-    {
-      headers: {
-        'Set-Cookie': await context.session.commit(),
-      },
-    },
-  );
+  return json({customer: data.customer});
 }
 
 export function ErrorBoundary() {
