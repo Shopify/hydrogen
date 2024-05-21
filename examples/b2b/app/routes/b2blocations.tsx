@@ -30,14 +30,7 @@ export async function loader({context}: LoaderFunctionArgs) {
 
   const modalOpen = Boolean(company) && !companyLocationId;
 
-  return defer(
-    {company, companyLocationId, modalOpen},
-    {
-      headers: {
-        'Set-Cookie': await context.session.commit(),
-      },
-    },
-  );
+  return defer({company, companyLocationId, modalOpen});
 }
 
 export default function CartRoute() {

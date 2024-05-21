@@ -70,11 +70,7 @@ export async function action({request, context, params}: ActionFunctionArgs) {
     }
     session.set('customerAccessToken', customerAccessToken);
 
-    return redirect('/account', {
-      headers: {
-        'Set-Cookie': await session.commit(),
-      },
-    });
+    return redirect('/account');
   } catch (error: unknown) {
     if (error instanceof Error) {
       return json({error: error.message}, {status: 400});

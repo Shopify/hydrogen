@@ -98,7 +98,6 @@ describe('customer', () => {
       );
 
       expect(response.status).toBe(302);
-      expect(response.headers.get('Set-Cookie')).toBe('cookie');
       const url = new URL(response.headers.get('location')!);
 
       expect(url.origin).toBe('https://customer-api');
@@ -185,7 +184,6 @@ describe('customer', () => {
         const response = await customer.logout();
 
         expect(response.status).toBe(302);
-        expect(response.headers.get('Set-Cookie')).toBe('cookie');
         const url = new URL(response.headers.get('location')!);
 
         expect(url.origin).toBe('https://customer-api');
@@ -515,9 +513,6 @@ describe('customer', () => {
 
       expect(response.status).toBe(302);
       expect(response.headers.get('location')).toBe('/account');
-      expect(response.headers.get('Set-Cookie')).toStrictEqual(
-        expect.any(String),
-      );
 
       expect(session.set).toHaveBeenCalledWith(
         CUSTOMER_ACCOUNT_SESSION_KEY,
@@ -565,9 +560,6 @@ describe('customer', () => {
 
       expect(response.status).toBe(302);
       expect(response.headers.get('location')).toBe(redirectPath);
-      expect(response.headers.get('Set-Cookie')).toStrictEqual(
-        expect.any(String),
-      );
 
       expect(session.set).toHaveBeenCalledWith(
         CUSTOMER_ACCOUNT_SESSION_KEY,

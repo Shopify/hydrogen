@@ -1,10 +1,7 @@
 import {Await, type MetaFunction} from '@remix-run/react';
 import {Suspense} from 'react';
 import type {CartQueryDataReturn} from '@shopify/hydrogen';
-import {
-  CartForm,
-  Analytics,
-} from '@shopify/hydrogen';
+import {CartForm, Analytics} from '@shopify/hydrogen';
 import {json, type ActionFunctionArgs} from '@shopify/remix-oxygen';
 import {CartMain} from '~/components/Cart';
 import {useRootLoaderData} from '~/lib/root-data';
@@ -70,8 +67,6 @@ export async function action({request, context}: ActionFunctionArgs) {
     status = 303;
     headers.set('Location', redirectTo);
   }
-
-  headers.append('Set-Cookie', await context.session.commit());
 
   return json(
     {
