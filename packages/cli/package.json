@@ -58,7 +58,7 @@
   },
   "peerDependencies": {
     "@graphql-codegen/cli": "^5.0.2",
-    "@remix-run/dev": "^2.9.2",
+    "@remix-run/dev": "^2.1.0",
     "@shopify/hydrogen-codegen": "^0.3.1",
     "@shopify/mini-oxygen": "^3.0.2",
     "graphql-config": "^5.0.3",

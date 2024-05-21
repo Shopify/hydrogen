@@ -85,8 +85,8 @@
     "vitest": "^1.0.4"
   },
   "peerDependencies": {
-    "@remix-run/react": "^2.9.2",
-    "@remix-run/server-runtime": "^2.9.2",
+    "@remix-run/react": "^2.1.0",
+    "@remix-run/server-runtime": "^2.1.0",
     "react": "^18.2.0",
     "vite": "^5.1.0"
   },
