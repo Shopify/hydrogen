@@ -30,7 +30,7 @@ export {changelogHandler} from './changelogHandler';
 export {
   CartForm,
   type CartActionInput,
-  type OptimisticCartLine,
+  type OptimisticCartLineInput,
 } from './cart/CartForm';
 export {cartCreateDefault} from './cart/queries/cartCreateDefault';
 export {cartGetDefault} from './cart/queries/cartGetDefault';
@@ -62,6 +62,7 @@ export type {
 export {
   useOptimisticCart,
   type OptimisticCart,
+  type OptimisticCartLine,
 } from './cart/optimistic/useOptimisticCart';
 
 export {

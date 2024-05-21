@@ -1,5 +1,5 @@
 import {type FetcherWithComponents} from '@remix-run/react';
-import {CartForm, type OptimisticCartLine} from '@shopify/hydrogen';
+import {CartForm, type OptimisticCartLineInput} from '@shopify/hydrogen';
 
 export function AddToCartButton({
   analytics,
@@ -11,7 +11,7 @@ export function AddToCartButton({
   analytics?: unknown;
   children: React.ReactNode;
   disabled?: boolean;
-  lines: Array<OptimisticCartLine>;
+  lines: Array<OptimisticCartLineInput>;
   onClick?: () => void;
 }) {
   return (

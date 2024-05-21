@@ -1,14 +1,10 @@
 import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
 import type {CartLayout} from '~/components/CartMain';
-import {CartForm, Image, type OptimisticCart} from '@shopify/hydrogen';
+import {CartForm, Image, type OptimisticCartLine} from '@shopify/hydrogen';
 import {useVariantUrl} from '~/lib/variants';
 import {Link} from '@remix-run/react';
 import {ProductPrice} from './ProductPrice';
-import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import {useAside} from './Aside';
-
-export type OptimisticCartLine =
-  OptimisticCart<CartApiQueryFragment>['lines']['nodes'][number];
 
 /**
  * A single line item in the cart. It displays the product image, title, price.
