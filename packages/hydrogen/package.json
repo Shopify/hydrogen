@@ -71,8 +71,9 @@
     "use-resize-observer": "^9.1.0"
   },
   "devDependencies": {
-    "@remix-run/react": "^2.8.0",
-    "@remix-run/server-runtime": "^2.8.0",
+    "@remix-run/dev": "^2.9.2",
+    "@remix-run/react": "^2.9.2",
+    "@remix-run/server-runtime": "^2.9.2",
     "@shopify/generate-docs": "0.11.1",
     "@shopify/hydrogen-codegen": "*",
     "@testing-library/jest-dom": "^5.17.0",
