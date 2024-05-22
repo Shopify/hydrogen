@@ -89,6 +89,9 @@ export async function action({request, context}: ActionFunctionArgs) {
       {error: null, newCustomer},
       {
         status: 302,
+        headers: {
+          Location: '/account',
+        },
       },
     );
   } catch (error: unknown) {
