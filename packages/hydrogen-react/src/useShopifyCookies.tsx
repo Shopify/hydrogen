@@ -24,11 +24,24 @@ export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {
   useEffect(() => {
     const cookies = getShopifyCookies(document.cookie);
 
+    /**
+     * Setting cookie with domain
+     *
+     * If no domain is provided, the cookie will be set for the current host.
+     * For Shopify, we need to ensure this domain is set with a leading dot.
+     */
+
+    // Use override domain or current host
+    let currentDomain = domain || window.document.location.host;
+
+    // Reset domain if localhost
+    if (/^localhost/.test(currentDomain)) currentDomain = '';
+
     // Shopify checkout only consumes cookies set with leading dot domain
-    const domainWithLeadingDot = domain
-      ? /^\./.test(domain)
-        ? domain
-        : `.${domain}`
+    const domainWithLeadingDot = currentDomain
+      ? /^\./.test(currentDomain)
+        ? currentDomain
+        : `.${currentDomain}`
       : '';
 
     /**
