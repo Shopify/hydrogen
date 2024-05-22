@@ -24,6 +24,9 @@ export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {
   useEffect(() => {
     const cookies = getShopifyCookies(document.cookie);
 
+    // Shopify checkout only consumes cookies set with leading dot domain
+    const domainWithLeadingDot = domain ? (/^\./.test(domain) ? domain : `.${domain}`) : '';
+
     /**
      * Set user and session cookies and refresh the expiry time
      */
@@ -32,17 +35,17 @@ export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {
         SHOPIFY_Y,
         cookies[SHOPIFY_Y] || buildUUID(),
         longTermLength,
-        domain,
+        domainWithLeadingDot,
       );
       setCookie(
         SHOPIFY_S,
         cookies[SHOPIFY_S] || buildUUID(),
         shortTermLength,
-        domain,
+        domainWithLeadingDot,
       );
     } else {
-      setCookie(SHOPIFY_Y, '', 0, domain);
-      setCookie(SHOPIFY_S, '', 0, domain);
+      setCookie(SHOPIFY_Y, '', 0, domainWithLeadingDot);
+      setCookie(SHOPIFY_S, '', 0, domainWithLeadingDot);
     }
   }, [options, hasUserConsent, domain]);
 }
