@@ -21,23 +21,17 @@ describe('<RichText />', () => {
 
   it('renders <RichText /> with a heading 1 data', () => {
     render(<RichText data={RICH_TEXT_HEADING_1} />);
-
-    const parent = screen.getByText('Heading 1').parentElement as HTMLElement;
-    expect(parent.tagName).toBe('H1');
+    expect(screen.getByText('Heading 1').tagName).toBe('H1');
   });
 
   it('renders <RichText /> with a heading 2 data', () => {
     render(<RichText data={RICH_TEXT_HEADING_2} />);
-
-    const parent = screen.getByText('Heading 2').parentElement as HTMLElement;
-    expect(parent.tagName).toBe('H2');
+    expect(screen.getByText('Heading 2').tagName).toBe('H2');
   });
 
   it('renders <RichText /> with a paragraph data', () => {
     render(<RichText data={RICH_TEXT_PARAGRAPH} />);
-
-    const parent = screen.getByText('Paragraph').parentElement as HTMLElement;
-    expect(parent.tagName).toBe('P');
+    expect(screen.getByText('Paragraph').tagName).toBe('P');
   });
 
   it('renders <RichText /> with a complex paragraph data', () => {
@@ -45,25 +39,23 @@ describe('<RichText />', () => {
     const textItalic = screen.getByText('This');
     const textBold = screen.getByText('text');
     const externalLink = screen.getByText('external link');
-    const externalLinkParent = externalLink.parentElement as HTMLElement;
     const internalLink = screen.getByText('link');
-    const internalLinkParent = internalLink.parentElement as HTMLElement;
 
-    expect(textItalic).toHaveStyle('font-style: italic');
-    expect(textBold).toHaveStyle('font-weight: bold');
-    expect(externalLinkParent.tagName).toBe('A');
-    expect(externalLinkParent).toHaveAttribute('href', 'https://shopify.com');
-    expect(externalLinkParent).toHaveAttribute('target', '_blank');
-    expect(internalLinkParent.tagName).toBe('A');
-    expect(internalLinkParent).toHaveAttribute('href', '/products/foo');
-    expect(internalLinkParent).toHaveAttribute('target', '_blank');
+    expect(textItalic.tagName).toBe('EM');
+    expect(textBold.tagName).toBe('STRONG');
+    expect(externalLink.tagName).toBe('A');
+    expect(externalLink).toHaveAttribute('href', 'https://shopify.com');
+    expect(externalLink).toHaveAttribute('target', '_blank');
+    expect(internalLink.tagName).toBe('A');
+    expect(internalLink).toHaveAttribute('href', '/products/foo');
+    expect(internalLink).toHaveAttribute('target', '_blank');
   });
 
   it('renders <RichText /> with an ordered list data', () => {
     render(<RichText data={RICH_TEXT_ORDERED_LIST} />);
 
-    const listItemOne = screen.getByText('One').parentElement as HTMLElement;
-    const listItemTwo = screen.getByText('Two').parentElement as HTMLElement;
+    const listItemOne = screen.getByText('One');
+    const listItemTwo = screen.getByText('Two');
     const listParent = listItemOne.parentElement as HTMLElement;
 
     expect(listItemOne.tagName).toBe('LI');
@@ -74,8 +66,8 @@ describe('<RichText />', () => {
   it('renders <RichText /> with an unordered list data', () => {
     render(<RichText data={RICH_TEXT_UNORDERED_LIST} />);
 
-    const listItemOne = screen.getByText('One').parentElement as HTMLElement;
-    const listItemTwo = screen.getByText('Two').parentElement as HTMLElement;
+    const listItemOne = screen.getByText('One');
+    const listItemTwo = screen.getByText('Two');
     const listParent = listItemOne.parentElement as HTMLElement;
 
     expect(listItemOne.tagName).toBe('LI');
@@ -102,5 +94,34 @@ describe('<RichText />', () => {
     );
     const firstChild = container.firstChild as HTMLElement;
     expect(firstChild).toHaveClass('content');
+  });
+
+  describe('Custom components', () => {
+    it('renders <RichText /> with a heading 1 data', () => {
+      render(
+        <RichText
+          data={RICH_TEXT_HEADING_1}
+          components={{
+            heading: ({node, next}) => <thead>{node.children.map(next)}</thead>,
+          }}
+        />,
+      );
+      console.log(screen.debug());
+      expect(screen.getByText('Heading 1').tagName).toBe('THEAD');
+    });
+
+    it('renders <RichText /> with a paragraph data', () => {
+      render(
+        <RichText
+          data={RICH_TEXT_PARAGRAPH}
+          components={{
+            paragraph: ({node, next}) => (
+              <table>{node.children.map(next)}</table>
+            ),
+          }}
+        />,
+      );
+      expect(screen.getByText('Paragraph').tagName).toBe('TABLE');
+    });
   });
 });
