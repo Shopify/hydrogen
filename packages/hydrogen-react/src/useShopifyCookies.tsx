@@ -25,7 +25,11 @@ export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {
     const cookies = getShopifyCookies(document.cookie);
 
     // Shopify checkout only consumes cookies set with leading dot domain
-    const domainWithLeadingDot = domain ? (/^\./.test(domain) ? domain : `.${domain}`) : '';
+    const domainWithLeadingDot = domain
+      ? /^\./.test(domain)
+        ? domain
+        : `.${domain}`
+      : '';
 
     /**
      * Set user and session cookies and refresh the expiry time
