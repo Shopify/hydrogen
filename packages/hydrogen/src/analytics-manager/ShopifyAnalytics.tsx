@@ -23,7 +23,7 @@ import type {
   CartLineUpdatePayload,
   SearchViewPayload,
 } from './AnalyticsView';
-import {useEffect} from 'react';
+import {useEffect, useState} from 'react';
 import {
   CartLine,
   ComponentizableCartLine,
@@ -59,22 +59,28 @@ export function ShopifyAnalytics({
   onReady: () => void;
 }) {
   const {subscribe, register, canTrack} = useAnalytics();
+  const [shopifyReady, setShopifyReady] = useState(false);
+  const [privacyReady, setPrivacyReady] = useState(false);
   const {ready: shopifyAnalyticsReady} = register('Internal_Shopify_Analytics');
   const {ready: customerPrivacyReady} = register(
     'Internal_Shopify_CustomerPrivacy',
   );
   const analyticsReady = () => {
+    shopifyReady && privacyReady && onReady();
+  };
+
+  const setCustomerPrivacyReady = () => {
+    setPrivacyReady(true);
     customerPrivacyReady();
-    onReady();
+    analyticsReady();
   };
 
   useCustomerPrivacy({
     ...consent,
-    onVisitorConsentCollected: analyticsReady,
+    onVisitorConsentCollected: setCustomerPrivacyReady,
     onReady: () => {
-      if (!consent.withPrivacyBanner) {
-        analyticsReady();
-      }
+      // Set customer privacy ready 3 seconds after load
+      setTimeout(setCustomerPrivacyReady, 3000);
     },
   });
 
@@ -91,6 +97,8 @@ export function ShopifyAnalytics({
     subscribe(AnalyticsEvent.PRODUCT_ADD_TO_CART, productAddedToCartHandler);
 
     shopifyAnalyticsReady();
+    setShopifyReady(true);
+    analyticsReady();
   }, [subscribe, shopifyAnalyticsReady]);
 
   return null;

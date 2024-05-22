@@ -20,6 +20,7 @@ import {
   getSelectedProductOptions,
   CartForm,
   type OptimisticCartLine,
+  Analytics,
 } from '@shopify/hydrogen';
 import type {SelectedOption} from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/lib/variants';
@@ -109,6 +110,21 @@ export default function Product() {
         selectedVariant={selectedVariant}
         product={product}
         variants={variants}
+      />
+      <Analytics.ProductView
+        data={{
+          products: [
+            {
+              id: product.id,
+              title: product.title,
+              price: selectedVariant?.price.amount || '0',
+              vendor: product.vendor,
+              variantId: selectedVariant?.id || '',
+              variantTitle: selectedVariant?.title || '',
+              quantity: 1,
+            },
+          ],
+        }}
       />
     </div>
   );

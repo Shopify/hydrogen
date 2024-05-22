@@ -1,7 +1,7 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'UNSTABLE_Analytics.Provider',
+  name: 'Analytics.Provider',
   category: 'components',
   subCategory: 'analytics',
   isVisualComponent: false,

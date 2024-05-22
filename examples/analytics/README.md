@@ -62,12 +62,12 @@ In the Shopify admin, head over to / Settings / Customer Privacy / Cookie Banner
 #### 3.1 Import the required hydrogen `Analytics` component and `getShopAnalytics` utility
 
 > [!TIP]
-> Importing `UNSTABLE_Analytics as Analytics` makes it easier to upgrade to the stable component later, since you’ll only need to update your import statements.
+> Importing `Analytics` makes it easier to upgrade to the stable component later, since you’ll only need to update your import statements.
 
 ```diff
 import {
   useNonce,
-+ UNSTABLE_Analytics as Analytics,
++ Analytics,
 + getShopAnalytics
 } from '@shopify/hydrogen';
 ```
@@ -189,7 +189,7 @@ Add the `Analytics.ProductView` component to the product details page route, `/a
 ```diff
 import {
   //...other code
-+ UNSTABLE_Analytics as Analytics,
++ Analytics,
 } from '@shopify/hydrogen';
 
 export default function Product() {
@@ -228,7 +228,7 @@ Add the `Analytics.CollectionView` component to the collection route, `/app/rout
 ```diff
 import {
   //...other code
-+ UNSTABLE_Analytics as Analytics,
++ Analytics,
 } from '@shopify/hydrogen';
 
 export default function Collection() {
@@ -270,7 +270,7 @@ Add the `Analytics.CartView` component to the cart route `/app/routes/cart.tsx`
 ```diff
 import {
   //...other code
-+ UNSTABLE_Analytics as Analytics,
++ Analytics,
 } from '@shopify/hydrogen';
 
 export default function Cart() {
@@ -303,7 +303,7 @@ Add the `Analytics.SearchView` component to the search route `/app/routes/search
 ```diff
 import {
   //...other code
-+ UNSTABLE_Analytics as Analytics,
++ Analytics,
 } from '@shopify/hydrogen';
 
 

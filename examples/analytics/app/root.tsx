@@ -1,5 +1,5 @@
 import {
-  UNSTABLE_Analytics as Analytics,
+  Analytics,
   useNonce,
   getShopAnalytics,
 } from '@shopify/hydrogen';
