@@ -117,7 +117,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-      <Analytics.Provider
+        <Analytics.Provider
           cart={data.cart}
           shop={data.shop}
           consent={data.consent}

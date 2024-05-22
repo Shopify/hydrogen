@@ -54,9 +54,11 @@ function getCustomerPrivacyRequired() {
 export function ShopifyAnalytics({
   consent,
   onReady,
+  domain,
 }: {
   consent: AnalyticsProviderProps['consent'];
   onReady: () => void;
+  domain?: string;
 }) {
   const {subscribe, register, canTrack} = useAnalytics();
   const [shopifyReady, setShopifyReady] = useState(false);
@@ -84,7 +86,12 @@ export function ShopifyAnalytics({
     },
   });
 
-  useShopifyCookies({hasUserConsent: canTrack()});
+  console.log('Shopify analytics:', domain)
+
+  useShopifyCookies({
+    hasUserConsent: canTrack(),
+    domain,
+  });
 
   useEffect(() => {
     // Views

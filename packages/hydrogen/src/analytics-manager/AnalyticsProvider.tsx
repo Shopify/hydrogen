@@ -65,6 +65,8 @@ export type AnalyticsProviderProps = {
   consent: CustomerPrivacyApiProps;
   /** Disable throwing errors when required props are missing. */
   disableThrowOnError?: boolean;
+  /** The domain scope of the cookie set with `useShopifyCookies`. **/
+  cookieDomain?: string;
 };
 
 export type Carts = {
@@ -271,6 +273,7 @@ function AnalyticsProvider({
   customData = {},
   shop: shopProp = null,
   disableThrowOnError = false,
+  cookieDomain,
 }: AnalyticsProviderProps): JSX.Element {
   if (!consent.checkoutDomain) {
     const errorMsg = messageOnError('consent.checkoutDomain');
@@ -343,6 +346,7 @@ function AnalyticsProvider({
             setConsentLoaded(true);
             setCanTrack(() => shopifyCanTrack);
           }}
+          domain={cookieDomain}
         />
       )}
     </AnalyticsContext.Provider>
