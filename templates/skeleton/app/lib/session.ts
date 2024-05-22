@@ -11,9 +11,10 @@ import {
  * swap out the cookie-based implementation with something else!
  */
 export class AppSession implements HydrogenSession {
+  public isPending = false;
+
   #sessionStorage;
   #session;
-  #dirty = false;
 
   constructor(sessionStorage: SessionStorage, session: Session) {
     this.#sessionStorage = sessionStorage;
@@ -51,17 +52,13 @@ export class AppSession implements HydrogenSession {
   }
 
   get unset() {
-    this.#dirty = true;
+    this.isPending = true;
     return this.#session.unset;
   }
 
   get set() {
-    this.#dirty = true;
+    this.isPending = true;
     return this.#session.set;
-  }
-
-  get dirty() {
-    return this.#dirty;
   }
 
   destroy() {
@@ -69,7 +66,7 @@ export class AppSession implements HydrogenSession {
   }
 
   commit() {
-    this.#dirty = false;
+    this.isPending = false;
     return this.#sessionStorage.commitSession(this.#session);
   }
 }

@@ -5,7 +5,6 @@ import {
   type ServerBuild,
 } from '@remix-run/server-runtime';
 import {createEventLogger} from './event-logger';
-import type {HydrogenSession} from '@shopify/hydrogen';
 
 const originalErrorToString = Error.prototype.toString;
 Error.prototype.toString = function () {
@@ -43,13 +42,6 @@ export function createRequestHandler<Context = unknown>({
 
     if (poweredByHeader) {
       response.headers.append('powered-by', 'Shopify, Hydrogen');
-    }
-
-    if ((context?.session as HydrogenSession)?.dirty) {
-      response.headers.set(
-        'Set-Cookie',
-        await (context?.session as HydrogenSession).commit(),
-      );
     }
 
     if (process.env.NODE_ENV === 'development') {

@@ -33,7 +33,7 @@ export interface HydrogenSession<
   commit: () => ReturnType<
     SessionStorage<HydrogenSessionData & Data, FlashData>['commitSession']
   >;
-  dirty: boolean;
+  isPending?: boolean;
 }
 
 declare global {
