@@ -36,11 +36,19 @@ export default {
       getLoadContext: () => ({customerAccount}),
     });
 
-    return handleRequest(request);
+    const response = await handleRequest(request);
+
+    if (session.isPending) {
+      response.headers.set('Set-Cookie', await session.commit());
+    }
+
+    return response;
   },
 };
 
 class AppSession {
+  isPending = false;
+
   static async init(request, secrets) {
     const storage = createCookieSessionStorage({
       cookie: {
@@ -70,14 +78,17 @@ class AppSession {
   }
 
   unset(key) {
+    this.isPending = true;
     this.session.unset(key);
   }
 
   set(key, value) {
+    this.isPending = true;
     this.session.set(key, value);
   }
 
   commit() {
+    this.isPending = false;
     return this.sessionStorage.commitSession(this.session);
   }
 }
