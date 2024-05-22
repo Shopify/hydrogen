@@ -1,14 +1,13 @@
-// @ts-ignore
 // Virtual entry point for the app
-import * as remixBuild from 'virtual:remix/server-build';
-import {
-  cartGetIdDefault,
-  cartSetIdDefault,
-  createCartHandler,
-  createStorefrontClient,
-  storefrontRedirect,
-  createCustomerAccountClient,
-} from '@shopify/hydrogen';
+// import * as remixBuild from '@remix-run/dev/server-build';
+// import {
+//   cartGetIdDefault,
+//   cartSetIdDefault,
+//   createCartHandler,
+//   createStorefrontClient,
+//   storefrontRedirect,
+//   createCustomerAccountClient,
+// } from '@shopify/hydrogen';
 import {
   createRequestHandler,
   getStorefrontHeaders,
@@ -39,6 +38,8 @@ export default {
         caches.open('hydrogen'),
         AppSession.init(request, [env.SESSION_SECRET]),
       ]);
+
+      return {waitUntil, cache, session};
 
       /**
        * Create Hydrogen's Storefront client.
