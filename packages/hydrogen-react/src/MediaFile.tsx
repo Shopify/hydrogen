@@ -57,6 +57,7 @@ export function MediaFile({
           {...passthroughProps}
           {...mediaOptions?.image}
           data={data.image}
+          presentation={data.presentation}
         />
       );
     }
