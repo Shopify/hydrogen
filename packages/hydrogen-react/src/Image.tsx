@@ -3,11 +3,7 @@
 /* eslint-disable hydrogen/prefer-image-component */
 import * as React from 'react';
 import type {PartialDeep} from 'type-fest';
-import type {
-  Image as ImageType,
-  MediaPresentation,
-  Maybe,
-} from './storefront-api-types.js';
+import type {Image as ImageType} from './storefront-api-types.js';
 
 /*
  * An optional prop you can use to change the
@@ -113,7 +109,7 @@ type HydrogenImageBaseProps = {
    * Optional `{x,y}` focal point values (between 0 and 1). This can be set from the shop admin when editing media image
    * files and exposed via the Storefront API for MediaImages. A focal point is a position in an image that the merchant
    * wants to remain in view as the image is cropped and adjusted by the theme. When this prop is set,
-   * `object-fit: none` and `object-position`: `x y` styles will be applied to the image.
+   * `object-fit: none` and `object-position`: `x% y%` styles will be applied to the image.
    * {@link https://shopify.dev/docs/api/storefront/2024-04/objects/MediaPresentation}
    */
   focalPoint?: FocalPoint;
