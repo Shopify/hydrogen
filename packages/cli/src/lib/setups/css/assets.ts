@@ -15,7 +15,7 @@ export function copyAssets(
   feature: AssetDir,
   assets: Record<string, string>,
   rootDirectory: string,
-  replacer = (content: string, filename: string) => content,
+  replacer = (content: string, _filename: string) => content,
 ) {
   const setupAssetsPath = getAssetDir(feature);
 

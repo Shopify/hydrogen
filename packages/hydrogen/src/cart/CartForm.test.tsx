@@ -1,7 +1,6 @@
 import {describe, expect, expectTypeOf, it, vi} from 'vitest';
 import {render} from '@testing-library/react';
 import {CartForm, OptimisticCartLine} from './CartForm';
-import {CartLineInput} from '@shopify/hydrogen-react/storefront-api-types';
 
 function MockForm({
   children,

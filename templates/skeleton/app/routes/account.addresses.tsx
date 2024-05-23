@@ -61,7 +61,7 @@ export async function action({request, context}: ActionFunctionArgs) {
       throw new Error('You must provide an address id.');
     }
 
-    // this will ensure redirecting to login never happen for mutatation
+    // this will ensure redirecting to login never happen for mutation
     const isLoggedIn = await customerAccount.isLoggedIn();
     if (!isLoggedIn) {
       return json(

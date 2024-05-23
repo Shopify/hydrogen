@@ -2,9 +2,9 @@ import type {CachingStrategy} from './strategies';
 import {CacheDefault, generateCacheControlHeader} from './strategies';
 
 function logCacheApiStatus(
-  status: string | null,
-  request: Request,
-  response?: Response,
+  _status: string | null,
+  _request: Request,
+  _response?: Response,
 ) {
   // const url = request.url;
   // if (!/Product\(/.test(url)) return;

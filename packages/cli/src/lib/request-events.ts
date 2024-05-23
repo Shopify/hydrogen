@@ -103,7 +103,7 @@ function createResponse<R extends RequestKind>(
   return new ResponseConstructor(main, init) as InferredResponse<R>;
 }
 
-function clearHistory<R extends RequestKind>(request: R): InferredResponse<R> {
+function clearHistory<R extends RequestKind>(_request: R): InferredResponse<R> {
   eventHistory.length = 0;
   return createResponse<R>();
 }

@@ -1,6 +1,6 @@
 import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
-import {resolvePath, joinPath, dirname} from '@shopify/cli-kit/node/path';
+import {resolvePath, joinPath} from '@shopify/cli-kit/node/path';
 import {outputWarn, collectLog} from '@shopify/cli-kit/node/output';
 import {fileSize, removeFile} from '@shopify/cli-kit/node/fs';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
