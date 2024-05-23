@@ -255,7 +255,7 @@ function register(key: string) {
 function shopifyCanTrack(): boolean {
   try {
     return window.Shopify.customerPrivacy.analyticsProcessingAllowed();
-  } catch (e) {}
+  } catch {}
   return false;
 }
 

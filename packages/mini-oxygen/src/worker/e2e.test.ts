@@ -49,7 +49,7 @@ describe('MiniOxygen Worker Runtime', () => {
   it('reloads environment variables', async () => {
     await withFixtures(
       async ({writeHandler}) => {
-        await writeHandler((req, env) => new Response(env.TEST));
+        await writeHandler((_req, env) => new Response(env.TEST));
         return {bindings: {TEST: 'foo'}};
       },
       async ({fetch, reloadMiniOxygen}) => {

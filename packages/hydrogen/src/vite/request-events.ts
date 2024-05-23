@@ -149,7 +149,7 @@ export function emitRequestEvent(payload: RequestEventPayload, root: string) {
 }
 
 export function clearHistory(
-  req: IncomingMessage,
+  _req: IncomingMessage,
   res: ServerResponse<IncomingMessage>,
 ) {
   eventHistory.length = 0;

@@ -265,7 +265,7 @@ export async function runClassicCompilerDev({
         liveReload?.onBuildStart(ctx);
       },
       onBuildManifest: liveReload?.onBuildManifest,
-      async onBuildFinish(context, duration, succeeded) {
+      async onBuildFinish(context, _duration, succeeded) {
         if (isInitialBuild) {
           await copyFilesPromise;
           initialBuildDurationMs = Date.now() - initialBuildStartTimeMs;

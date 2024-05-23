@@ -276,7 +276,7 @@ export async function runDev({
         },
         configureServer: (viteDevServer) => {
           if (customerAccountPushFlag) {
-            viteDevServer.middlewares.use((req, res, next) => {
+            viteDevServer.middlewares.use((req, _res, next) => {
               const host = req.headers.host;
 
               if (host?.includes(TUNNEL_DOMAIN.ORIGINAL)) {

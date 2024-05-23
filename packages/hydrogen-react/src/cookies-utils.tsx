@@ -22,7 +22,7 @@ export function buildUUID(): string {
         return v.toString(16);
       })
       .toUpperCase();
-  } catch (err) {
+  } catch {
     // crypto not available, generate weak UUID
     hash = tokenHash
       .replace(/[x]/g, (c: string): string => {
@@ -46,7 +46,7 @@ export function hexTime(): string {
 
   try {
     perfNumber = performance.now() >>> 0;
-  } catch (err) {
+  } catch {
     perfNumber = 0;
   }
 

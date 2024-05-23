@@ -503,7 +503,7 @@ export function generateSeoTags(seoInput: SeoConfig): CustomHeadTagObject[] {
             'script',
             {
               type: 'application/ld+json',
-              children: JSON.stringify(block, (k, value) => {
+              children: JSON.stringify(block, (_k, value) => {
                 return typeof value === 'string' ? escapeHtml(value) : value;
               }),
             },

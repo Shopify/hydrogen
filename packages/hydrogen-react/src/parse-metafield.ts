@@ -80,7 +80,7 @@ export function parseMetafield<ReturnGeneric>(
       let parsedValue = null;
       try {
         parsedValue = parseJSON(metafield.value ?? '');
-      } catch (err) {
+      } catch {
         const parseError = `parseMetafield(): attempted to JSON.parse the 'metafield.value' property, but failed.`;
         if (__HYDROGEN_DEV__) {
           throw new Error(parseError);

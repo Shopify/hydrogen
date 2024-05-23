@@ -80,7 +80,7 @@ export function setupHydrogenMiddleware(
 
   viteDevServer.middlewares.use(
     '/graphiql/customer-account.schema.json',
-    function h2HandleGraphiQLCustomerSchema(req, res) {
+    function h2HandleGraphiQLCustomerSchema(_req, res) {
       // This request comes from Hydrogen's GraphiQL.
       // Currently, the CAAPI schema is not available in the public API,
       // so we serve it from here.

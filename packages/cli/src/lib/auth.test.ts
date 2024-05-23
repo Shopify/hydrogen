@@ -37,7 +37,7 @@ describe('auth', () => {
   };
 
   beforeEach(() => {
-    vi.mocked(setUserAccount).mockImplementation((root, account) =>
+    vi.mocked(setUserAccount).mockImplementation((_root, account) =>
       Promise.resolve(account),
     );
     vi.mocked(ensureAuthenticatedAdmin).mockImplementation((shop) =>

@@ -61,7 +61,7 @@ export function CartAnalytics({
       cartLastUpdatedAt = JSON.parse(
         localStorage.getItem('cartLastUpdatedAt') || '',
       );
-    } catch (e) {
+    } catch {
       cartLastUpdatedAt = null;
     }
 

@@ -202,7 +202,7 @@ export function getCustomerPrivacy(): CustomerPrivacy | null {
     return window.Shopify && window.Shopify.customerPrivacy
       ? window.Shopify?.customerPrivacy
       : null;
-  } catch (e) {
+  } catch {
     return null;
   }
 }

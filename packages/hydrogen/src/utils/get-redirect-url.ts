@@ -28,7 +28,7 @@ function isLocalPath(requestUrl: string, redirectUrl: string) {
     return (
       new URL(requestUrl).origin === new URL(redirectUrl, requestUrl).origin
     );
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -77,7 +77,7 @@ function isAbsoluteUrl(url: string) {
   try {
     new URL(url);
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 }

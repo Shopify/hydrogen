@@ -120,7 +120,7 @@ function sendToShopify(
           throw new Error(ERROR_MESSAGE);
         }
       });
-  } catch (error) {
+  } catch {
     // Do nothing
     return Promise.resolve();
   }
@@ -176,7 +176,7 @@ function getNavigationTypeExperimental(): string | undefined {
 
       return navType;
     }
-  } catch (err) {
+  } catch {
     // Do nothing
   }
   return undefined;
@@ -205,7 +205,7 @@ function getNavigationTypeLegacy(): string | undefined {
           return `unknown: ${rawType}`;
       }
     }
-  } catch (err) {
+  } catch {
     // do nothing
   }
   return undefined;
@@ -224,7 +224,7 @@ function getNavigationType(): [string, string] {
     } else {
       return ['unknown', 'unknown'];
     }
-  } catch (err) {
+  } catch {
     // do nothing
   }
   return ['error', 'error'];

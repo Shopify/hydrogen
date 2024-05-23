@@ -110,7 +110,7 @@ async function runDebugCpu({
 
         outputInfo(`\n#${++times} Building and profiling...`);
       },
-      async onBuildFinish(context, duration, succeeded) {
+      async onBuildFinish(_context, _duration, succeeded) {
         if (succeeded) {
           const {profile, totalScriptTimeMs} = await runProfiler(
             buildPathWorkerFile,

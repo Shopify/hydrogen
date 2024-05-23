@@ -7,7 +7,7 @@ import {createRequestHandler} from '@shopify/remix-oxygen';
 export default {
   async fetch(
     request: Request,
-    env: Record<string, string>,
+    _env: Record<string, string>,
     executionContext: ExecutionContext,
   ) {
     const cache = await caches.open('my-cms');

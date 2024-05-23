@@ -299,7 +299,7 @@ export async function runDeploy(
     gitCommit = await getLatestGitCommit(root);
     branch = (/HEAD -> ([^,]*)/.exec(gitCommit.refs) || [])[1];
     commitHash = gitCommit.hash;
-  } catch (error) {
+  } catch {
     outputWarn('Could not retrieve Git history.');
     branch = undefined;
   }

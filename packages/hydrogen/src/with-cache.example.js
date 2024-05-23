@@ -5,7 +5,7 @@ import {createWithCache, CacheLong} from '@shopify/hydrogen';
 import {createRequestHandler} from '@shopify/remix-oxygen';
 
 export default {
-  async fetch(request, env, executionContext) {
+  async fetch(request, _env, executionContext) {
     const cache = await caches.open('my-cms');
     const withCache = createWithCache({
       cache,

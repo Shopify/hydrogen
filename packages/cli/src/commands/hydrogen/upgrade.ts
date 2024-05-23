@@ -963,7 +963,7 @@ async function generateUpgradeInstructionsFile({
 
   try {
     await isDirectory(instructionsFolderPath);
-  } catch (error) {
+  } catch {
     await mkdir(instructionsFolderPath);
   }
 

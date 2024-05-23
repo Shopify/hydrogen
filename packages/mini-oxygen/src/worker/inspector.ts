@@ -370,7 +370,7 @@ function connectToInspector({inspectorUrl, sourceMapPath}: InspectorOptions) {
         try {
           ws.removeAllListeners();
           ws.close();
-        } catch (err) {
+        } catch {
           // Closing before the websocket is ready will throw an error.
         }
       }

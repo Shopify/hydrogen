@@ -45,7 +45,7 @@ export async function setupLiveReload(devServerPort: number, root: string) {
     const state: LiveReloadState = {};
 
     const server = http
-      .createServer(function (req, res) {
+      .createServer(function (_req, res) {
         res.writeHead(200);
         res.end();
       })

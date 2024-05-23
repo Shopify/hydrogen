@@ -25,7 +25,7 @@ function resolveFromHome(filepath: string) {
 function homeFileExists(filepath: string) {
   try {
     return fileExists(resolveFromHome(filepath));
-  } catch (error) {
+  } catch {
     return false;
   }
 }
