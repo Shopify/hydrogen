@@ -18,7 +18,7 @@ import type {
 } from './storefront-api-types.js';
 import {faker} from '@faker-js/faker';
 import {RICH_TEXT_CONTENT} from './RichText.test.helpers.js';
-import {type RichTextASTNode} from './RichText.js';
+import {type RichTextASTNode} from './RichText.types.js';
 
 /**
  * The tests in this file are written in the format `parsed.parsedValue? === ''` instead of `(parsed.parsedValue).toEqual()`
@@ -149,6 +149,7 @@ describe(`parseMetafield`, () => {
         type: 'rich_text_field',
         value: JSON.stringify(RICH_TEXT_CONTENT),
       });
+
       expect(parsed.parsedValue?.type === 'root').toBe(true);
       expect(parsed.parsedValue?.children?.length === 6).toBe(true);
       expectType<null | RichTextASTNode>(parsed?.parsedValue);

@@ -1,4 +1,4 @@
-import {type RichTextASTNode} from './RichText.js';
+import {type RichTextASTNode} from './RichText.types.js';
 
 export const RICH_TEXT_HEADING_1: RichTextASTNode = {
   type: 'heading',

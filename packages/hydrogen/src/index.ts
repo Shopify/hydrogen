@@ -136,6 +136,7 @@ export {
   useMoney,
   useShopifyCookies,
   Video,
+  RichText,
 } from '@shopify/hydrogen-react';
 
 export type {

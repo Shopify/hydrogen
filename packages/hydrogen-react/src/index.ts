@@ -53,7 +53,7 @@ export {Money} from './Money.js';
 export {type ParsedMetafields, parseMetafield} from './parse-metafield.js';
 export {ProductPrice} from './ProductPrice.js';
 export {ProductProvider, useProduct} from './ProductProvider.js';
-export {RichText, richTextToString} from './RichText.js';
+export {RichText} from './RichText.js';
 export {ShopifyProvider, useShop} from './ShopifyProvider.js';
 export {ShopPayButton} from './ShopPayButton.js';
 export type {

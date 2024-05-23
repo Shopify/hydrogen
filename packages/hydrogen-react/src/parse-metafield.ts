@@ -9,7 +9,7 @@ import type {
 } from './storefront-api-types.js';
 import type {PartialDeep, Simplify} from 'type-fest';
 import {flattenConnection} from './flatten-connection.js';
-import {type RichTextASTNode} from './RichText.js';
+import {RootASTNode as RichTextRootASTNode} from './RichText.types.js';
 
 /**
  * A function that uses `metafield.type` to parse the Metafield's `value` or `reference` or `references` (depending on the `metafield.type`) and places the result in `metafield.parsedValue`
@@ -366,7 +366,7 @@ type RatingParsedMetafield = MetafieldBaseType & {
 
 type RichTextParsedMetafield = MetafieldBaseType & {
   type: 'rich_text_field';
-  parsedValue: RichTextASTNode | null;
+  parsedValue: RichTextRootASTNode | null;
 };
 
 type VariantParsedRefMetafield = MetafieldBaseType & {

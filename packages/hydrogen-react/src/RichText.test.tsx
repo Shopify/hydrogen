@@ -24,6 +24,11 @@ describe('<RichText />', () => {
     expect(screen.getByText('Heading 1').tagName).toBe('H1');
   });
 
+  it('renders <RichText /> a custom root node', () => {
+    render(<RichText as="span" data={RICH_TEXT_HEADING_1} />);
+    expect(screen.getByText('Heading 1').parentElement?.tagName).toBe('SPAN');
+  });
+
   it('renders <RichText /> with a heading 2 data', () => {
     render(<RichText data={RICH_TEXT_HEADING_2} />);
     expect(screen.getByText('Heading 2').tagName).toBe('H2');
@@ -97,7 +102,7 @@ describe('<RichText />', () => {
   });
 
   describe('Custom components', () => {
-    it('renders <RichText /> with a heading 1 data', () => {
+    it('renders a custom heading component', () => {
       render(
         <RichText
           data={RICH_TEXT_HEADING_1}
@@ -110,7 +115,7 @@ describe('<RichText />', () => {
       expect(screen.getByText('Heading 1').tagName).toBe('THEAD');
     });
 
-    it('renders <RichText /> with a paragraph data', () => {
+    it('renders a custom paragraph component', () => {
       render(
         <RichText
           data={RICH_TEXT_PARAGRAPH}
@@ -122,6 +127,22 @@ describe('<RichText />', () => {
         />,
       );
       expect(screen.getByText('Paragraph').tagName).toBe('TABLE');
+    });
+  });
+
+  describe('Plain text', () => {
+    it('renders plain text paragraph', () => {
+      render(<RichText data={RICH_TEXT_PARAGRAPH} plain />);
+      console.log(screen.debug());
+      expect(screen.getByText('Paragraph').tagName).toBe('DIV');
+    });
+
+    it('renders plain text complex paragraph', () => {
+      render(<RichText data={RICH_TEXT_COMPLEX_PARAGRAPH} plain />);
+      const plain = screen.getByText(
+        'This is a text and a link and an external link',
+      );
+      expect(plain.tagName).toBe('DIV');
     });
   });
 });
