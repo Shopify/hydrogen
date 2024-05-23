@@ -1,6 +1,6 @@
 import type {Options as FormatOptions} from 'prettier';
 import {extname} from '@shopify/cli-kit/node/path';
-import * as prettier from "prettier";
+import * as prettier from 'prettier';
 
 export type {FormatOptions};
 
