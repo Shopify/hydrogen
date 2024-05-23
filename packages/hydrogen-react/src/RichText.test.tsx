@@ -14,7 +14,7 @@ import {render, screen} from '@testing-library/react';
 
 describe('<RichText />', () => {
   it('renders <RichText /> with an empty node', () => {
-    render(<RichText data={{type: 'root'}} as="main" />);
+    render(<RichText data={{type: 'root', children: []}} as="main" />);
 
     expect(screen.getByRole('main')).toBeInTheDocument();
   });

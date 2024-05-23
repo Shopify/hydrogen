@@ -88,7 +88,7 @@ export const RICH_TEXT_COMPLEX_PARAGRAPH: RichTextASTNode = {
   ],
 };
 
-export const RICH_TEXT_ORDERED_LIST = {
+export const RICH_TEXT_ORDERED_LIST: RichTextASTNode = {
   listType: 'ordered',
   type: 'list',
   children: [
@@ -113,7 +113,7 @@ export const RICH_TEXT_ORDERED_LIST = {
   ],
 };
 
-export const RICH_TEXT_UNORDERED_LIST = {
+export const RICH_TEXT_UNORDERED_LIST: RichTextASTNode = {
   listType: 'unordered',
   type: 'list',
   children: [
