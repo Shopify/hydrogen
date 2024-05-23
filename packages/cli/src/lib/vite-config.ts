@@ -5,11 +5,11 @@ import {
   resolvePath,
 } from '@shopify/cli-kit/node/path';
 import {findFileWithExtension} from './file.js';
+import {importVite} from './import-utils.js';
 
 // Do not import JS from here, only types
 import type {HydrogenPlugin} from '~/hydrogen/vite/plugin.js';
 import type {OxygenPlugin} from '~/mini-oxygen/vite/plugin.js';
-import {importVite} from './import-utils.js';
 
 export async function hasViteConfig(root: string) {
   const result = await findFileWithExtension(root, 'vite.config');
