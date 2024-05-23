@@ -110,10 +110,10 @@ type HydrogenImageBaseProps = {
    */
   loader?: Loader;
   /**
-   * Optional `{x,y}` focal point. This can be set from the shop admin when editing media image files and exposed via
-   * the Storefront API for MediaImages. A focal point is a position in an image that the merchant wants to remain in
-   * view as the image is cropped and adjusted by the theme. When this prop is set, `object-fit: none` and
-   * `object-position`: `x y` styles will be applied to the image.
+   * Optional `{x,y}` focal point values (between 0 and 1). This can be set from the shop admin when editing media image
+   * files and exposed via the Storefront API for MediaImages. A focal point is a position in an image that the merchant
+   * wants to remain in view as the image is cropped and adjusted by the theme. When this prop is set,
+   * `object-fit: none` and `object-position`: `x y` styles will be applied to the image.
    * {@link https://shopify.dev/docs/api/storefront/2024-04/objects/MediaPresentation}
    */
   focalPoint?: FocalPoint;

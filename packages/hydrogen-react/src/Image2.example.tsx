@@ -25,7 +25,7 @@ export default function ProductImage({product}: {product: Product}) {
     <Image
       data={product.featuredImage}
       sizes="(min-width: 45em) 50vw, 100vw"
-      aspectRatio="4/5"
+      aspectRatio="2/3"
       focalPoint={{x: '0.5', y: '0.5'}} // Center focal point
     />
   );
