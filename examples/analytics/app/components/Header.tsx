@@ -3,7 +3,7 @@ import {Suspense} from 'react';
 import type {HeaderQuery} from 'storefrontapi.generated';
 import type {LayoutProps} from '~/components/Layout';
 import {useRootLoaderData} from '~/lib/root-data';
-import {unstable_useAnalytics as useAnalytics} from '@shopify/hydrogen';
+import {useAnalytics} from '@shopify/hydrogen';
 import {useAside} from '~/components/Aside';
 
 type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'>;

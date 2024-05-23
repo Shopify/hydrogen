@@ -94,7 +94,7 @@ export type CollectionViewPayload = CollectionPayload &
   UrlPayload &
   BasePayload;
 export type ProductViewPayload = ProductsPayload & UrlPayload & BasePayload;
-export type CartViewPayload = UrlPayload & BasePayload;
+export type CartViewPayload = CartPayload & UrlPayload & BasePayload;
 export type PageViewPayload = UrlPayload & BasePayload;
 export type SearchViewPayload = SearchPayload & UrlPayload & BasePayload;
 

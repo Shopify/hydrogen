@@ -86,7 +86,7 @@ export {ShopPayButton} from './shop/ShopPayButton';
 
 export {
   Analytics,
-  useAnalytics as unstable_useAnalytics,
+  useAnalytics,
   getShopAnalytics,
 } from './analytics-manager/AnalyticsProvider';
 export {AnalyticsEvent} from './analytics-manager/events';

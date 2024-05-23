@@ -37,6 +37,7 @@ import {ShopifyAnalytics} from './ShopifyAnalytics';
 import {CartAnalytics} from './CartAnalytics';
 import type {CustomerPrivacyApiProps} from '../customer-privacy/ShopifyCustomerPrivacy';
 import type {Storefront} from '../storefront';
+import data from '../createStorefrontClient.doc';
 
 export type ShopAnalytics = {
   /** The shop ID. */
@@ -432,7 +433,7 @@ export type AnalyticsContextValueForDoc = {
   prevCart?: Promise<CartReturn | null> | CartReturn | null;
   /** A function to publish an analytics event. */
   publish?: AnalyticsContextPublishForDoc;
-  /** A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/2024-04/hooks/unstable_useanalytics#example-unstable_useanalytics.register). */
+  /** A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/2024-04/hooks/useanalytics#example-useanalytics.register). */
   register?: (key: string) => {ready: () => void};
   /** The shop configuration required to publish events to Shopify. */
   shop?: Promise<ShopAnalytics | null> | ShopAnalytics | null;

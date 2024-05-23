@@ -1,7 +1,7 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'unstable_useAnalytics',
+  name: 'useAnalytics',
   category: 'hooks',
   isVisualComponent: false,
   related: [],
@@ -34,10 +34,10 @@ const data: ReferenceEntityTemplateSchema = {
     },
   ],
   examples: {
-    description: 'Example usage with `unstable_useAnalytics`:',
+    description: 'Example usage with `useAnalytics`:',
     exampleGroups: [
       {
-        title: 'unstable_useAnalytics.register',
+        title: 'useAnalytics.register',
         examples: [
           {
             description:

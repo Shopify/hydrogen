@@ -245,6 +245,7 @@ function ProductForm({
   variants: Array<ProductVariantFragment>;
 }) {
   const {open} = useAside();
+
   return (
     <div className="product-form">
       <VariantSelector
