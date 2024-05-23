@@ -37,7 +37,6 @@ import {ShopifyAnalytics} from './ShopifyAnalytics';
 import {CartAnalytics} from './CartAnalytics';
 import type {CustomerPrivacyApiProps} from '../customer-privacy/ShopifyCustomerPrivacy';
 import type {Storefront} from '../storefront';
-import invariant from 'tiny-invariant';
 
 export type ShopAnalytics = {
   /** The shop ID. */
@@ -261,10 +260,6 @@ function shopifyCanTrack(): boolean {
   return false;
 }
 
-function messageOnError(field: string) {
-  return `[h2:error:Analytics.Provider] - ${field} is required`;
-}
-
 function AnalyticsProvider({
   canTrack: customCanTrack,
   cart: currentCart,
@@ -275,25 +270,6 @@ function AnalyticsProvider({
   disableThrowOnError = false,
   cookieDomain,
 }: AnalyticsProviderProps): JSX.Element {
-  if (!consent.checkoutDomain) {
-    const errorMsg = messageOnError('consent.checkoutDomain');
-    if (disableThrowOnError) {
-      // eslint-disable-next-line no-console
-      console.error(errorMsg);
-    } else {
-      invariant(false, errorMsg);
-    }
-  }
-
-  if (!consent.storefrontAccessToken) {
-    const errorMsg = messageOnError('consent.storefrontAccessToken');
-    if (disableThrowOnError) {
-      // eslint-disable-next-line no-console
-      console.error(errorMsg);
-    } else {
-      invariant(false, errorMsg);
-    }
-  }
 
   const listenerSet = useRef(false);
   const {shop} = useShopAnalytics(shopProp);
@@ -347,6 +323,8 @@ function AnalyticsProvider({
             setCanTrack(() => shopifyCanTrack);
           }}
           domain={cookieDomain}
+          disableThrowOnError={disableThrowOnError}
+          isMockShop={/\/68817551382$/.test(shop.shopId)}
         />
       )}
     </AnalyticsContext.Provider>
