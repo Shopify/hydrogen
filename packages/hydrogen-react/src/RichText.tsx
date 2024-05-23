@@ -12,7 +12,7 @@ export interface RichTextPropsBase<ComponentGeneric extends React.ElementType> {
   data: RichTextASTNode;
   /** Customize how Rich Text components are rendered */
   components?: CustomComponents;
-  /** Remove rich text formatting as plain text */
+  /** Remove rich text formatting and render plain text */
   plain?: boolean;
 }
 

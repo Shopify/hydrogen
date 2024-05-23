@@ -5,8 +5,7 @@ const data: ReferenceEntityTemplateSchema = {
   category: 'components',
   isVisualComponent: false,
   related: [],
-  description: `The \`RichText\` component renders a metafield of type \`rich_text_field\`.
-  `,
+  description: `The \`RichText\` component renders a metafield of type \`rich_text_field\`. By default the rendered output uses semantic HTML tags. Customize how nodes are rendered with the \`components\` prop.`,
   type: 'component',
   defaultExample: {
     description: 'I am the default example',
