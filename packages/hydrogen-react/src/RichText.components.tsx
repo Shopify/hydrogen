@@ -11,19 +11,19 @@ import type {
 } from './RichText.types.js';
 
 export type CustomComponents = {
-  /** The root node of the rich text. Defaults to `<div>` */
+  /** The root node of the rich text. Make sure to map over the children calling `next` on each. Defaults to `<div>` */
   root?: typeof Root;
-  /** Headings, level 1-6. Defaults to `<h1>` to `<h6>` */
+  /** Customize the headings. Each heading has a `level` property from 1-6. Make sure to map over the children calling `next` on each. Defaults to `<h1>` to `<h6>` */
   heading?: typeof Heading;
-  /** Paragraph, defaults to `<p>` */
+  /** Customize paragraphs. Make sure to map over the children calling `next` on each. Defaults to `<p>` */
   paragraph?: typeof Paragraph;
-  /** Text node that can be either bold or italic. Defaults to `<em>`, `<strong>` or text. */
+  /** Customize how text nodes. They can either be bold or italic. Defaults to `<em>`, `<strong>` or text. */
   text?: typeof Text;
-  /** Paragraph, defaults to `<a>` */
+  /** Customize links. Make sure to map over the children calling `next` on each. Defaults to `<a>` */
   link?: typeof RichTextLink;
-  /** List, either ordered or unordered. Defaults to `<ol>` or `<ul>` */
+  /** Customize lists. They can be either ordered or unordered. Make sure to map over the children calling `next` on each. Defaults to `<ol>` or `<ul>` */
   list?: typeof List;
-  /** List items. Defaults to `<li>`. */
+  /** Customize list items. Make sure to map over the children calling `next` on each. Defaults to `<li>`. */
   listItem?: typeof ListItem;
 };
 
