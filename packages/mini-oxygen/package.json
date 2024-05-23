@@ -57,7 +57,7 @@
     "source-map": "^0.7.4",
     "source-map-support": "^0.5.21",
     "stack-trace": "^1.0.0-pre2",
-    "undici": "^5.28.2",
+    "undici": "^5.28.4",
     "ws": "^8.16.0"
   },
   "devDependencies": {
