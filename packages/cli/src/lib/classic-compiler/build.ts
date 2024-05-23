@@ -33,6 +33,7 @@ import {
   getBundleAnalysisSummary,
 } from '../bundle/analyzer.js';
 import {isCI} from '../is-ci.js';
+import {importLocal} from '../import-utils.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
 const WORKER_BUILD_SIZE_LIMIT = 5;
@@ -72,19 +73,30 @@ export async function runClassicCompilerBuild({
     await checkLockfileStatus(root, isCI());
   }
 
-  await muteRemixLogs();
+  await muteRemixLogs(root);
 
   console.time(LOG_WORKER_BUILT);
 
   outputInfo(`\n🏗️  Building in ${process.env.NODE_ENV} mode...`);
 
+  type RemixBuild = typeof import('@remix-run/dev/dist/compiler/build.js');
+  type RemixLog = typeof import('@remix-run/dev/dist/compiler/utils/log.js');
+  type RemixFileWatchCache =
+    typeof import('@remix-run/dev/dist/compiler/fileWatchCache.js');
+
   const [remixConfig, [{build}, {logThrown}, {createFileWatchCache}]] =
     await Promise.all([
       getRemixConfig(root) as Promise<RemixConfig>,
       Promise.all([
-        import('@remix-run/dev/dist/compiler/build.js'),
-        import('@remix-run/dev/dist/compiler/utils/log.js'),
-        import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
+        importLocal<RemixBuild>('@remix-run/dev/dist/compiler/build.js', root),
+        importLocal<RemixLog>(
+          '@remix-run/dev/dist/compiler/utils/log.js',
+          root,
+        ),
+        importLocal<RemixFileWatchCache>(
+          '@remix-run/dev/dist/compiler/fileWatchCache.js',
+          root,
+        ),
       ]).catch(handleRemixImportFail),
       rmdir(buildPath, {force: true}),
     ]);

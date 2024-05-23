@@ -1,4 +1,5 @@
 import {StorefrontApiErrors, formatAPIResult} from '../../storefront';
+import {OptimisticCartLine} from '../CartForm';
 import {MINIMAL_CART_FRAGMENT, USER_ERROR_FRAGMENT} from './cart-fragments';
 import type {
   CartOptionalInput,
@@ -6,10 +7,9 @@ import type {
   CartQueryDataReturn,
   CartQueryOptions,
 } from './cart-types';
-import type {CartLineInput} from '@shopify/hydrogen-react/storefront-api-types';
 
 export type CartLinesAddFunction = (
-  lines: CartLineInput[],
+  lines: Array<OptimisticCartLine>,
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 

@@ -153,9 +153,39 @@ describe(`useShopifyCookies`, () => {
     expect(cookieJar['_shopify_y'].maxage).toBe(31104000);
   });
 
-  it('sets domain when provided', () => {
+  it('sets domain with leading period when provided without a leading period', () => {
     const cookieJar: MockCookieJar = mockCookie();
     const domain = 'myshop.com';
+
+    renderHook(() => useShopifyCookies({hasUserConsent: true, domain}));
+
+    const cookies = getShopifyCookies(document.cookie);
+
+    expect(cookies).toEqual({
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      _shopify_s: expect.any(String),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      _shopify_y: expect.any(String),
+    });
+    expect(cookies['_shopify_s']).not.toBe('');
+    expect(cookies['_shopify_y']).not.toBe('');
+
+    expect(cookieJar['_shopify_s'].value).not.toBe(
+      cookieJar['_shopify_y'].value,
+    );
+    expect(cookieJar['_shopify_s']).toMatchObject({
+      domain: `.${domain}`,
+      maxage: 1800,
+    });
+    expect(cookieJar['_shopify_y']).toMatchObject({
+      domain: `.${domain}`,
+      maxage: 31104000,
+    });
+  });
+
+  it('sets domain as is when provided with a leading period', () => {
+    const cookieJar: MockCookieJar = mockCookie();
+    const domain = '.myshop.com';
 
     renderHook(() => useShopifyCookies({hasUserConsent: true, domain}));
 

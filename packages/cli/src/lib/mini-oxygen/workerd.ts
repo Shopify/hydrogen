@@ -22,6 +22,7 @@ import {
   createLogRequestEvent,
   setConstructors,
 } from '../request-events.js';
+import {importLocal} from '../import-utils.js';
 
 export async function startWorkerdServer({
   root,
@@ -34,8 +35,10 @@ export async function startWorkerdServer({
   buildPathClient,
   env,
 }: MiniOxygenOptions): Promise<MiniOxygenInstance> {
-  const {createMiniOxygen, Response} = await import(
-    '@shopify/mini-oxygen'
+  type MiniOxygenType = typeof import('@shopify/mini-oxygen');
+  const {createMiniOxygen, Response} = await importLocal<MiniOxygenType>(
+    '@shopify/mini-oxygen',
+    root,
   ).catch(handleMiniOxygenImportFail);
 
   setConstructors({Response});

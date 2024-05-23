@@ -97,7 +97,6 @@ describe('auth.helpers', () => {
           {
             access_token: '',
             expires_in: '',
-            id_token: '',
             refresh_token: '',
           },
           {ok: true},
@@ -122,6 +121,7 @@ describe('auth.helpers', () => {
     it('Refreshes the token', async () => {
       (session.get as any).mockReturnValueOnce({
         refreshToken: 'old_refresh_token',
+        idToken: 'old_id_token',
       });
 
       fetch.mockResolvedValue(
@@ -129,7 +129,6 @@ describe('auth.helpers', () => {
           {
             access_token: 'access_token',
             expires_in: '',
-            id_token: 'id_token',
             refresh_token: 'refresh_token',
           },
           {ok: true},
@@ -151,7 +150,7 @@ describe('auth.helpers', () => {
           accessToken: 'access_token',
           expiresAt: expect.any(String),
           refreshToken: 'refresh_token',
-          idToken: 'id_token',
+          idToken: 'old_id_token',
         },
       );
     });
@@ -210,6 +209,7 @@ describe('auth.helpers', () => {
     it('Refreshes the token', async () => {
       (session.get as any).mockReturnValueOnce({
         refreshToken: 'old_refresh_token',
+        idToken: 'old_id_token',
       });
 
       fetch.mockResolvedValue(
@@ -217,7 +217,6 @@ describe('auth.helpers', () => {
           {
             access_token: 'access_token',
             expires_in: '',
-            id_token: 'id_token',
             refresh_token: 'refresh_token',
           },
           {ok: true},
@@ -241,7 +240,7 @@ describe('auth.helpers', () => {
           accessToken: 'access_token',
           expiresAt: expect.any(String),
           refreshToken: 'refresh_token',
-          idToken: 'id_token',
+          idToken: 'old_id_token',
         },
       );
     });
@@ -256,7 +255,6 @@ describe('auth.helpers', () => {
           {
             access_token: 'access_token',
             expires_in: '',
-            id_token: 'id_token',
             refresh_token: 'refresh_token',
           },
           {ok: true},
@@ -280,7 +278,6 @@ describe('auth.helpers', () => {
         accessToken: 'access_token',
         expiresAt: expect.any(String),
         refreshToken: 'refresh_token',
-        idToken: 'id_token',
       });
     });
   });

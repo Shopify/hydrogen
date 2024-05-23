@@ -86,6 +86,7 @@ export async function refreshToken({
 
   const customerAccount = session.get(CUSTOMER_ACCOUNT_SESSION_KEY);
   const refreshToken = customerAccount?.refreshToken;
+  const idToken = customerAccount?.idToken;
 
   if (!refreshToken)
     throw new BadRequest(
@@ -129,8 +130,9 @@ export async function refreshToken({
     });
   }
 
-  const {access_token, expires_in, id_token, refresh_token} =
-    await response.json<AccessTokenResponse>();
+  const {access_token, expires_in, refresh_token} = await response.json<
+    Omit<AccessTokenResponse, 'id_token'>
+  >();
 
   const accessToken = await exchangeAccessToken(
     access_token,
@@ -146,7 +148,7 @@ export async function refreshToken({
     expiresAt:
       new Date(new Date().getTime() + (expires_in - 120) * 1000).getTime() + '',
     refreshToken: refresh_token,
-    idToken: id_token,
+    idToken,
   });
 
   await exchangeForStorefrontCustomerAccessToken();
