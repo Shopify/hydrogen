@@ -48,7 +48,6 @@ function messageOnError(field: string) {
   return `[h2:error:Analytics.Provider] - ${field} is required`;
 }
 
-
 /**
  * This component is responsible for sending analytics events to Shopify.
  * It emits the following events:
@@ -63,7 +62,7 @@ export function ShopifyAnalytics({
   onReady,
   domain,
   disableThrowOnError,
-  isMockShop
+  isMockShop,
 }: {
   consent: AnalyticsProviderProps['consent'];
   onReady: () => void;
@@ -71,10 +70,11 @@ export function ShopifyAnalytics({
   disableThrowOnError: boolean;
   isMockShop: boolean;
 }) {
-
   // If mock shop is used, log error instead of throwing
   if (isMockShop) {
-    warnOnce('[h2:error:Analytics.Provider] - Mock shop is used. Analytics will not work properly.')
+    warnOnce(
+      '[h2:error:Analytics.Provider] - Mock shop is used. Analytics will not work properly.',
+    );
   } else {
     if (!consent.checkoutDomain) {
       const errorMsg = messageOnError('consent.checkoutDomain');
@@ -118,7 +118,9 @@ export function ShopifyAnalytics({
 
   useCustomerPrivacy({
     checkoutDomain: isMockShop ? 'mock.shop' : checkoutDomain,
-    storefrontAccessToken: isMockShop ? 'abcdefghijklmnopqrstuvwxyz123456' : storefrontAccessToken,
+    storefrontAccessToken: isMockShop
+      ? 'abcdefghijklmnopqrstuvwxyz123456'
+      : storefrontAccessToken,
     withPrivacyBanner: isMockShop ? false : withPrivacyBanner,
     onVisitorConsentCollected: setCustomerPrivacyReady,
     onReady: () => {
