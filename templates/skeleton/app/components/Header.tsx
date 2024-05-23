@@ -4,7 +4,7 @@ import type {HeaderQuery} from 'storefrontapi.generated';
 import type {LayoutProps} from '~/components/Layout';
 import {useRootLoaderData} from '~/lib/root-data';
 import {useAside} from '~/components/Aside';
-import {type CartViewPayload, useAnalytics, useAnalyticsEvent} from '@shopify/hydrogen';
+import {type CartViewPayload, useAnalytics} from '@shopify/hydrogen';
 
 type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'>;
 
