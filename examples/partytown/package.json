@@ -16,7 +16,7 @@
   "dependencies": {
     "@builder.io/partytown": "^0.8.1",
     "@remix-run/react": "^2.9.2",
-    "@shopify/cli": "3.59.2",
+    "@shopify/cli": "3.60.0",
     "@shopify/cli-hydrogen": "^8.0.4",
     "@shopify/hydrogen": "2024.4.2",
     "@shopify/remix-oxygen": "^2.0.4",

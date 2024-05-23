@@ -11,6 +11,7 @@ import {
 import {AbortError} from '@shopify/cli-kit/node/error';
 import type {LoadCodegenConfigResult} from '@graphql-codegen/cli';
 import type {GraphQLConfig} from 'graphql-config';
+import {importLocal} from './import-utils.js';
 
 const nodePath = process.argv[1];
 const modulePath = fileURLToPath(import.meta.url);
@@ -133,14 +134,18 @@ async function generateTypes({
   forceSfapiVersion,
   ...dirs
 }: CodegenOptions) {
-  const {generate, loadCodegenConfig, CodegenContext} = await import(
-    '@graphql-codegen/cli'
-  ).catch(() => {
-    throw new AbortError(
-      'Could not load GraphQL Codegen CLI.',
-      'Please make sure you have `@graphql-codegen/cli` installed as a dev dependency.',
-    );
-  });
+  type CodegeType = typeof import('@graphql-codegen/cli');
+
+  const {generate, loadCodegenConfig, CodegenContext} =
+    await importLocal<CodegeType>(
+      '@graphql-codegen/cli',
+      dirs.rootDirectory,
+    ).catch(() => {
+      throw new AbortError(
+        'Could not load GraphQL Codegen CLI.',
+        'Please make sure you have `@graphql-codegen/cli` installed as a dev dependency.',
+      );
+    });
 
   const {config: codegenConfig} =
     // Load <root>/codegen.ts if available
@@ -190,8 +195,10 @@ async function generateDefaultConfig(
   }: ProjectDirs,
   forceSfapiVersion?: string,
 ): Promise<LoadCodegenConfigResult> {
-  const {getSchema, preset, pluckConfig} = await import(
-    '@shopify/hydrogen-codegen'
+  type HydrogenCodegen = typeof import('@shopify/hydrogen-codegen');
+  const {getSchema, preset, pluckConfig} = await importLocal<HydrogenCodegen>(
+    '@shopify/hydrogen-codegen',
+    rootDirectory,
   ).catch(() => {
     throw new AbortError(
       'Could not load Hydrogen Codegen.',
@@ -199,7 +206,11 @@ async function generateDefaultConfig(
     );
   });
 
-  const {loadConfig} = await import('graphql-config').catch(() => {
+  type GraphQLConfigType = typeof import('graphql-config');
+  const {loadConfig} = await importLocal<GraphQLConfigType>(
+    'graphql-config',
+    rootDirectory,
+  ).catch(() => {
     throw new AbortError(
       'Could not load GraphQL Config.',
       'Please make sure you have `graphql-config` installed as a dev dependency.',

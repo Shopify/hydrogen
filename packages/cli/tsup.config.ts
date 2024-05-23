@@ -31,7 +31,7 @@ export default defineConfig([
     entry: ['src/**/*.ts', '!src/**/*.test.ts'],
     outDir,
     // Generate types only for the exposed entry points
-    dts: {entry: ['src/commands/hydrogen/init.ts']},
+    dts: {entry: ['src/index.ts', 'src/commands/hydrogen/init.ts']},
     async onSuccess() {
       // Copy TS templates
       const i18nTemplatesPath = 'lib/setups/i18n/templates';
@@ -66,7 +66,7 @@ export default defineConfig([
     ...commonConfig,
     // TODO remove virtual routes copy when deprecating classic compiler
     entry: ['../hydrogen/src/vite/virtual-routes/**/*.tsx'],
-    outDir: `${outDir}/virtual-routes`,
+    outDir: `${outDir}/lib/virtual-routes`,
     outExtension: () => ({js: '.jsx'}),
     dts: false,
     async onSuccess() {
@@ -77,7 +77,7 @@ export default defineConfig([
       // so that we can use them in the `generate` command.
       await fs.copy(
         getSkeletonSourceDir(),
-        `${outDir}/${GENERATOR_TEMPLATES_DIR}/${GENERATOR_STARTER_DIR}`,
+        `${outDir}/lib/${GENERATOR_TEMPLATES_DIR}/${GENERATOR_STARTER_DIR}`,
         {filter: filterArtifacts},
       );
 
@@ -91,14 +91,14 @@ export default defineConfig([
       // so ensure here that asset files are copied:
       await fs.copy(
         '../hydrogen/src/vite/virtual-routes/assets',
-        `${outDir}/virtual-routes/assets`,
+        `${outDir}/lib/virtual-routes/assets`,
       );
 
       console.log('\n', 'Copied virtual route assets to build directory', '\n');
 
       await fs.copy(
         'src/setup-assets',
-        `${outDir}/${GENERATOR_TEMPLATES_DIR}/${GENERATOR_SETUP_ASSETS_DIR}`,
+        `${outDir}/lib/${GENERATOR_TEMPLATES_DIR}/${GENERATOR_SETUP_ASSETS_DIR}`,
       );
 
       console.log('\n', 'Copied setup assets build directory', '\n');
