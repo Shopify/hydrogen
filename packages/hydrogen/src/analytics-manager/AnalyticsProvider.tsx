@@ -61,7 +61,7 @@ export type AnalyticsProviderProps = {
   /** The shop configuration required to publish analytics events to Shopify. Use [`getShopAnalytics`](/docs/api/hydrogen/2024-04/utilities/getshopanalytics). */
   shop: Promise<ShopAnalytics | null> | ShopAnalytics | null;
   /** The customer privacy consent configuration and options. */
-  consent: CustomerPrivacyApiProps;
+  consent: Pick<CustomerPrivacyApiProps, 'checkoutDomain' | 'storefrontAccessToken' | 'withPrivacyBanner'>;
   /** Disable throwing errors when required props are missing. */
   disableThrowOnError?: boolean;
   /** The domain scope of the cookie set with `useShopifyCookies`. **/

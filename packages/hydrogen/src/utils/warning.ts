@@ -5,11 +5,3 @@ export const warnOnce = (string: string) => {
     warnings.add(string);
   }
 };
-
-const errors = new Set<string>();
-export const errorOnce = (string: string) => {
-  if (!errors.has(string)) {
-    console.error(string);
-    errors.add(string);
-  }
-};

@@ -30,7 +30,7 @@ import {
   Maybe,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
-import {errorOnce} from '../utils/warning';
+import {warnOnce} from '../utils/warning';
 
 function getCustomerPrivacyRequired() {
   const customerPrivacy = getCustomerPrivacy();
@@ -74,7 +74,7 @@ export function ShopifyAnalytics({
 
   // If mock shop is used, log error instead of throwing
   if (isMockShop) {
-    errorOnce('[h2:error:Analytics.Provider] - Mock shop is used. Analytics will not work properly.')
+    warnOnce('[h2:error:Analytics.Provider] - Mock shop is used. Analytics will not work properly.')
   } else {
     if (!consent.checkoutDomain) {
       const errorMsg = messageOnError('consent.checkoutDomain');
@@ -114,9 +114,12 @@ export function ShopifyAnalytics({
     analyticsReady();
   };
 
+  const {checkoutDomain, storefrontAccessToken, withPrivacyBanner} = consent;
+
   useCustomerPrivacy({
-    checkoutDomain: isMockShop ? 'mock.shop' : consent.checkoutDomain,
-    storefrontAccessToken: isMockShop ? 'abcdefghijklmnopqrstuvwxyz123456' :consent.storefrontAccessToken,
+    checkoutDomain: isMockShop ? 'mock.shop' : checkoutDomain,
+    storefrontAccessToken: isMockShop ? 'abcdefghijklmnopqrstuvwxyz123456' : storefrontAccessToken,
+    withPrivacyBanner: isMockShop ? false : withPrivacyBanner,
     onVisitorConsentCollected: setCustomerPrivacyReady,
     onReady: () => {
       // Set customer privacy ready 3 seconds after load
