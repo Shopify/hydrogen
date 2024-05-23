@@ -12,7 +12,7 @@ import {findMissingRoutes} from '../../lib/missing-routes.js';
 import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
 import {codegen, spawnCodegenProcess} from '../../lib/codegen.js';
 import {isCI} from '../../lib/is-ci.js';
-import {deferPromise} from '../../lib/defer.js';
+import {deferPromise, type DeferredPromise} from '../../lib/defer.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 
 export default class Build extends Command {
@@ -150,7 +150,7 @@ export async function runBuild({
     customLogger,
   };
 
-  let clientBuildStatus: ReturnType<typeof deferPromise>;
+  let clientBuildStatus: DeferredPromise;
 
   // Client build first
   const clientBuild = await vite.build({
@@ -175,11 +175,17 @@ export async function runBuild({
         writeBundle() {
           clientBuildStatus.resolve();
         },
+        closeWatcher() {
+          // End build process if watcher is closed
+          this.error(new Error('Process exited before client build finished.'));
+        },
       },
     ],
   });
 
   console.log('');
+
+  let serverBuildStatus: DeferredPromise;
 
   // Server/SSR build
   const serverBuild = await vite.build({
@@ -201,9 +207,23 @@ export async function runBuild({
           // before starting the server build to access the
           // Remix manifest from file disk.
           await clientBuildStatus.promise;
+
+          // Keep track of server builds to wait for them to finish
+          // before cleaning up resources in watch mode. Otherwise,
+          // it might complain about missing files and loop infinitely.
+          serverBuildStatus?.resolve();
+          serverBuildStatus = deferPromise();
         },
         async writeBundle() {
-          await onRebuild?.();
+          if (serverBuildStatus?.state !== 'rejected') {
+            await onRebuild?.();
+          }
+
+          serverBuildStatus.resolve();
+        },
+        closeWatcher() {
+          // End build process if watcher is closed
+          this.error(new Error('Process exited before server build finished.'));
         },
       },
     ],
@@ -267,7 +287,21 @@ export async function runBuild({
       const promises: Array<Promise<void>> = [];
       if ('close' in clientBuild) promises.push(clientBuild.close());
       if ('close' in serverBuild) promises.push(serverBuild.close());
+
       await Promise.allSettled(promises);
+
+      if (
+        clientBuildStatus?.state === 'pending' ||
+        serverBuildStatus?.state === 'pending'
+      ) {
+        clientBuildStatus?.promise.catch(() => {});
+        clientBuildStatus?.reject();
+        serverBuildStatus?.promise.catch(() => {});
+        serverBuildStatus?.reject();
+
+        // Give time for Rollup to stop builds before removing files
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
     },
   };
 }
