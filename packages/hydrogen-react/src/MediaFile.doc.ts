@@ -47,6 +47,30 @@ const data: ReferenceEntityTemplateSchema = {
       title: 'Example code',
     },
   },
+  examples: {
+    description: '',
+    examples: [
+      {
+        description:
+          'Render MediaImage with a focal point by supplying [presentaiton](https://shopify.dev/api/storefront/reference/objects/MediaPresentation) data.',
+        codeblock: {
+          tabs: [
+            {
+              title: 'JavaScript',
+              code: './Image2.example.jsx',
+              language: 'jsx',
+            },
+            {
+              title: 'TypeScript',
+              code: './Image2.example.tsx',
+              language: 'tsx',
+            },
+          ],
+          title: 'MediaImage with focal point',
+        },
+      },
+    ],
+  },
   definitions: [
     {
       title: 'Props',

@@ -32,6 +32,29 @@ const data: ReferenceEntityTemplateSchema = {
       title: 'Example code',
     },
   },
+  examples: {
+    description: '',
+    examples: [
+      {
+        description: 'Manually set a focal point.',
+        codeblock: {
+          tabs: [
+            {
+              title: 'JavaScript',
+              code: './Image2.example.jsx',
+              language: 'jsx',
+            },
+            {
+              title: 'TypeScript',
+              code: './Image2.example.tsx',
+              language: 'tsx',
+            },
+          ],
+          title: '<Image> with focal point',
+        },
+      },
+    ],
+  },
   definitions: [
     {
       title: 'Props',

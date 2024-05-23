@@ -45,7 +45,7 @@ export type LoaderParams = {
 
 export type Loader = (params: LoaderParams) => string;
 
-type FocalPoint = {
+export type FocalPoint = {
   x: string;
   y: string;
 };
@@ -110,10 +110,13 @@ type HydrogenImageBaseProps = {
    */
   loader?: Loader;
   /**
-   * Optional focal point of the image which can be set from the shop admin when editing your image files.
+   * Optional `{x,y}` focal point. This can be set from the shop admin when editing media image files and exposed via
+   * the Storefront API for MediaImages. A focal point is a position in an image that the merchant wants to remain in
+   * view as the image is cropped and adjusted by the theme. When this prop is set, `object-fit: none` and
+   * `object-position`: `x y` styles will be applied to the image.
    * {@link https://shopify.dev/docs/api/storefront/2024-04/objects/MediaPresentation}
    */
-  presentation?: Maybe<Pick<MediaPresentation, 'asJson'>>;
+  focalPoint?: FocalPoint;
   /** An optional prop you can use to change the default srcSet generation behaviour */
   srcSetOptions?: SrcSetOptions;
 };
@@ -184,7 +187,7 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
         placeholderWidth: 100,
       },
       width = '100%',
-      presentation,
+      focalPoint,
       style: styleProp,
       ...passthroughProps
     },
@@ -300,25 +303,26 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
      * https://shopify.dev/changelog/access-image-focal-point-from-the-storefront-api
      */
 
-    const style = {...styleProp};
-    const {focalPoint} =
-      (presentation?.asJson as {focalPoint?: FocalPoint}) ?? {};
+    const style = React.useMemo(() => {
+      const style = {...styleProp};
 
-    if (focalPoint) {
-      const {x, y} = focalPoint;
-      if (!(Number(x) >= 0 && Number(y) >= 0)) {
-        if (__HYDROGEN_DEV__) {
-          console.warn(
-            '[h2:warn:Image] Focal point values must be between 0 and 1.',
-          );
+      if (focalPoint) {
+        const {x, y} = focalPoint;
+        if (!(Number(x) >= 0 && Number(y) >= 0)) {
+          if (__HYDROGEN_DEV__) {
+            console.warn(
+              '[h2:warn:Image] Focal point values must be between 0 and 1.',
+            );
+          }
+        } else {
+          style.objectFit ??= 'none';
+          style.objectPosition ??= `${(Number(x) * 100).toFixed(4)}% ${(
+            Number(y) * 100
+          ).toFixed(4)}%`;
         }
-      } else {
-        style.objectFit ??= 'none';
-        style.objectPosition ??= `${(Number(x) * 100).toFixed(4)}% ${(
-          Number(y) * 100
-        ).toFixed(4)}%`;
       }
-    }
+      return style;
+    }, [styleProp, focalPoint]);
 
     /*
      * We check to see whether the image is fixed width or not,
