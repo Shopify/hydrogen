@@ -9,6 +9,7 @@ import {BugError} from '@shopify/cli-kit/node/error';
 import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
 import {getGraphiQLUrl} from './graphiql-url.js';
+import {importLocal} from './import-utils.js';
 
 type ConsoleMethod = 'log' | 'warn' | 'error' | 'debug' | 'info';
 const originalConsole = {...console};
@@ -514,11 +515,16 @@ export function createRemixLogger() {
   };
 }
 
-export async function muteRemixLogs() {
+export async function muteRemixLogs(root: string) {
   // Remix 1.19.1 warns about `serverNodeBuiltinsPolyfill` being deprecated
   // using a global logger that cannot be modified. Mute it here.
   try {
-    const {logger} = await import('@remix-run/dev/dist/tux/logger.js');
+    type RemixLog = typeof import('@remix-run/dev/dist/tux/logger.js');
+
+    const {logger} = await importLocal<RemixLog>(
+      '@remix-run/dev/dist/tux/logger.js',
+      root,
+    );
     logger.warn = logger.debug = logger.info = () => {};
   } catch {
     // --

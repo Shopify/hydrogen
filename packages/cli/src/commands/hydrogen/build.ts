@@ -1,6 +1,6 @@
 import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
-import {resolvePath, joinPath} from '@shopify/cli-kit/node/path';
+import {resolvePath, joinPath, dirname} from '@shopify/cli-kit/node/path';
 import {outputWarn, collectLog} from '@shopify/cli-kit/node/output';
 import {fileSize, removeFile} from '@shopify/cli-kit/node/fs';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
@@ -12,6 +12,7 @@ import {findMissingRoutes} from '../../lib/missing-routes.js';
 import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
 import {codegen} from '../../lib/codegen.js';
 import {isCI} from '../../lib/is-ci.js';
+import {importVite} from '../../lib/import-utils.js';
 
 export default class Build extends Command {
   static descriptionWithMarkdown = `Builds a Hydrogen storefront for production. The client and app worker files are compiled to a \`/dist\` folder in your Hydrogen project directory.`;
@@ -109,7 +110,7 @@ export async function runBuild({
   ] = await Promise.all([
     // Avoid static imports because this file is imported by `deploy` command,
     // which must have a hard dependency on 'vite'.
-    import('vite'),
+    importVite(root),
     getViteConfig(root, ssrEntry),
   ]);
 
