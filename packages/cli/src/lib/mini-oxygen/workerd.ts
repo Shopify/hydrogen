@@ -3,6 +3,7 @@ import {dirname, resolvePath} from '@shopify/cli-kit/node/path';
 import {readFile, createFileReadStream} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {outputNewline} from '@shopify/cli-kit/node/output';
+import {AbortError} from '@shopify/cli-kit/node/error';
 import colors from '@shopify/cli-kit/node/colors';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
 import {
@@ -21,6 +22,7 @@ import {
   createLogRequestEvent,
   setConstructors,
 } from '../request-events.js';
+import {importLocal} from '../import-utils.js';
 
 export async function startWorkerdServer({
   root,
@@ -33,8 +35,10 @@ export async function startWorkerdServer({
   buildPathClient,
   env,
 }: MiniOxygenOptions): Promise<MiniOxygenInstance> {
-  const {createMiniOxygen, Response} = await import(
-    '@shopify/mini-oxygen'
+  type MiniOxygenType = typeof import('@shopify/mini-oxygen');
+  const {createMiniOxygen, Response} = await importLocal<MiniOxygenType>(
+    '@shopify/mini-oxygen',
+    root,
   ).catch(handleMiniOxygenImportFail);
 
   setConstructors({Response});
@@ -52,8 +56,15 @@ export async function startWorkerdServer({
     });
   }
 
-  const absoluteBundlePath = resolvePath(root, buildPathWorkerFile);
   const mainWorkerName = 'hydrogen';
+  const absoluteBundlePath = resolvePath(root, buildPathWorkerFile);
+  const readWorkerFile = () =>
+    readFile(absoluteBundlePath).catch((error) => {
+      throw new AbortError(
+        `Could not read worker file.\n\n` + error.stack,
+        'Did you build the project?',
+      );
+    });
 
   const miniOxygen = createMiniOxygen({
     debug,
@@ -97,7 +108,7 @@ export async function startWorkerdServer({
           {
             type: 'ESModule',
             path: absoluteBundlePath,
-            contents: await readFile(absoluteBundlePath),
+            contents: await readWorkerFile(),
           },
         ],
         bindings: {...env},
@@ -120,7 +131,7 @@ export async function startWorkerdServer({
         const mainWorker = workers.find(({name}) => name === mainWorkerName)!;
 
         if (Array.isArray(mainWorker.modules) && mainWorker.modules[0]) {
-          mainWorker.modules[0].contents = await readFile(absoluteBundlePath);
+          mainWorker.modules[0].contents = await readWorkerFile();
         }
 
         if (nextOptions) {

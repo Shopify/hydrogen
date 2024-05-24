@@ -11,6 +11,7 @@ import {muteRemixLogs} from './log.js';
 import {getRequiredRemixVersion} from './remix-version-check.js';
 import {findFileWithExtension} from './file.js';
 import {getViteConfig} from './vite-config.js';
+import {importLocal} from './import-utils.js';
 
 type RawRemixConfig = AppConfig;
 
@@ -67,10 +68,14 @@ export async function getRemixConfig(
     return (await getViteConfig(root)).remixConfig;
   }
 
-  await muteRemixLogs();
-  const {readConfig} = await import('@remix-run/dev/dist/config.js').catch(
-    handleRemixImportFail,
-  );
+  await muteRemixLogs(root);
+
+  type RemixConfig = typeof import('@remix-run/dev/dist/config.js');
+
+  const {readConfig} = await importLocal<RemixConfig>(
+    '@remix-run/dev/dist/config.js',
+    root,
+  ).catch(handleRemixImportFail);
   const config = await readConfig(root, mode);
 
   if (process.env.LOCAL_DEV) {

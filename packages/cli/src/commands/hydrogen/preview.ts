@@ -1,4 +1,8 @@
+import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
+import {AbortError} from '@shopify/cli-kit/node/error';
+import {outputInfo} from '@shopify/cli-kit/node/output';
+import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
 import {isH2Verbose, muteDevLogs, setH2OVerbose} from '../../lib/log.js';
 import {getProjectPaths, hasRemixConfigFile} from '../../lib/remix-config.js';
 import {
@@ -6,13 +10,18 @@ import {
   commonFlags,
   deprecated,
   flagsToCamelObject,
+  overrideFlag,
 } from '../../lib/flags.js';
-import {startMiniOxygen} from '../../lib/mini-oxygen/index.js';
+import {startMiniOxygen, type MiniOxygen} from '../../lib/mini-oxygen/index.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
 import {findPort} from '../../lib/find-port.js';
-import {joinPath} from '@shopify/cli-kit/node/path';
 import {getViteConfig} from '../../lib/vite-config.js';
+import {runBuild} from './build.js';
+import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
+import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
+import {deferPromise} from '../../lib/defer.js';
+import {copyDiffBuild, prepareDiffDirectory} from '../../lib/template-diff.js';
 
 export default class Preview extends Command {
   static descriptionWithMarkdown =
@@ -31,47 +40,139 @@ export default class Preview extends Command {
     ...commonFlags.inspectorPort,
     ...commonFlags.debug,
     ...commonFlags.verbose,
+
+    // For building the app:
+    build: Flags.boolean({
+      description: 'Builds the app before starting the preview server.',
+    }),
+    watch: Flags.boolean({
+      description: 'Watches for changes and rebuilds the project.',
+      dependsOn: ['build'],
+    }),
+    ...overrideFlag(commonFlags.entry, {
+      entry: {dependsOn: ['build']},
+    }),
+    ...overrideFlag(commonFlags.codegen, {
+      codegen: {dependsOn: ['build']},
+    }),
+    // Diff in preview only makes sense when combined with --build.
+    // Without the build flag, preview only needs access to the existing
+    // `dist` directory in the project, so there's no need to merge the
+    // project with the skeleton template in a temporary directory.
+    ...overrideFlag(commonFlags.diff, {
+      diff: {dependsOn: ['build']},
+    }),
   };
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Preview);
+    const originalDirectory = flags.path
+      ? resolvePath(flags.path)
+      : process.cwd();
+    let directory = originalDirectory;
 
-    await runPreview({
+    if (flags.build && flags.diff) {
+      directory = await prepareDiffDirectory(originalDirectory, flags.watch);
+    }
+
+    const {close} = await runPreview({
       ...flagsToCamelObject(flags),
+      directory,
+    });
+
+    setupResourceCleanup(async () => {
+      await close();
+      if (flags.diff) {
+        await copyDiffBuild(directory, originalDirectory);
+      }
     });
   }
 }
 
 type PreviewOptions = {
   port?: number;
-  path?: string;
+  directory?: string;
   legacyRuntime?: boolean;
   env?: string;
   envBranch?: string;
   inspectorPort?: number;
   debug: boolean;
   verbose?: boolean;
+  build?: boolean;
+  watch?: boolean;
+  entry?: string;
+  codegen?: boolean;
+  codegenConfigPath?: string;
 };
 
 export async function runPreview({
   port: appPort,
-  path: appPath,
+  directory,
   legacyRuntime = false,
   env: envHandle,
   envBranch,
   inspectorPort,
   debug,
   verbose,
+  build: shouldBuild = false,
+  watch = false,
+  codegen: useCodegen = false,
+  codegenConfigPath,
+  entry,
 }: PreviewOptions) {
-  if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production';
+  if (!process.env.NODE_ENV)
+    process.env.NODE_ENV = watch ? 'development' : 'production';
 
   if (verbose) setH2OVerbose();
   if (!isH2Verbose()) muteDevLogs();
 
   let {root, buildPath, buildPathWorkerFile, buildPathClient} =
-    getProjectPaths(appPath);
+    getProjectPaths(directory);
 
-  if (!(await hasRemixConfigFile(root))) {
+  const isClassicProject = await hasRemixConfigFile(root);
+
+  if (watch && isClassicProject) {
+    throw new AbortError(
+      'Preview in watch mode is not supported for classic Remix projects.',
+      'Please use the dev command instead, which is the equivalent for classic projects.',
+    );
+  }
+
+  let miniOxygen: MiniOxygen;
+  const projectBuild = deferPromise();
+
+  const buildOptions = {
+    directory: root,
+    entry,
+    disableRouteWarning: false,
+    lockfileCheck: false,
+    sourcemap: true,
+    useCodegen,
+    codegenConfigPath,
+  };
+
+  const buildProcess = shouldBuild
+    ? isClassicProject
+      ? await runClassicCompilerBuild({
+          ...buildOptions,
+          bundleStats: false,
+        }).then(projectBuild.resolve)
+      : await runBuild({
+          ...buildOptions,
+          watch,
+          async onServerBuildFinish() {
+            if (projectBuild.state === 'pending') {
+              projectBuild.resolve();
+            } else {
+              outputInfo('🏗️  Project rebuilt. Reloading server...');
+            }
+
+            await miniOxygen?.reload();
+          },
+        })
+    : projectBuild.resolve();
+
+  if (!isClassicProject) {
     const maybeResult = await getViteConfig(root).catch(() => null);
     buildPathWorkerFile =
       maybeResult?.serverOutFile ?? joinPath(buildPath, 'server', 'index.js');
@@ -98,9 +199,11 @@ export async function runPreview({
   // we don't control the build at this point. However, the assets server
   // still need to be started to serve redirections from the worker runtime.
 
+  await projectBuild.promise;
+
   logInjectedVariables();
 
-  const miniOxygen = await startMiniOxygen(
+  miniOxygen = await startMiniOxygen(
     {
       root,
       appPort,
@@ -110,9 +213,19 @@ export async function runPreview({
       buildPathWorkerFile,
       inspectorPort,
       debug,
+      watch,
     },
     legacyRuntime,
   );
 
-  miniOxygen.showBanner({mode: 'preview'});
+  miniOxygen.showBanner({
+    mode: 'preview',
+    headlinePrefix: watch ? 'Watching for changes. ' : '',
+  });
+
+  return {
+    async close() {
+      await Promise.allSettled([miniOxygen.close(), buildProcess?.close()]);
+    },
+  };
 }
