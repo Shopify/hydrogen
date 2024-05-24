@@ -144,33 +144,6 @@ function serializeRichTextASTNode(
         },
       );
   }
-
-  // if (node.type in RichTextComponents) {
-  //   const Component =
-  //     components[node.type === 'list-item' ? 'listItem' : node.type] as FunctionComponent<{
-
-  //     }>;
-
-  //   return createElement(
-  //     (components[
-  //       node.type === 'list-item' ? 'listItem' : node.type
-  //     ] as FunctionComponent<{
-  //       node: RichTextASTNode;
-  //       children: ReactNode[];
-  //     }>) ??
-  //       (RichTextComponents[node.type] as FunctionComponent<{
-  //         node: RichTextASTNode;
-  //         children: ReactNode[];
-  //       }>),
-  //     {
-  //       key: index,
-  //       node,
-  //       children,
-  //     },
-  //   );
-  // }
-
-  return null;
 }
 
 function richTextToString(
