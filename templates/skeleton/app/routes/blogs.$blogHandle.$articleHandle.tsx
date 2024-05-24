@@ -40,9 +40,9 @@ export default function Article() {
     <div className="article">
       <h1>
         {title}
-        <span>
+        <div>
           {publishedDate} &middot; {author?.name}
-        </span>
+        </div>
       </h1>
 
       {image && <Image data={image} sizes="90vw" loading="eager" />}
