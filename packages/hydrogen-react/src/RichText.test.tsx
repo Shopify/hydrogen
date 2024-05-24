@@ -107,11 +107,10 @@ describe('<RichText />', () => {
         <RichText
           data={RICH_TEXT_HEADING_1}
           components={{
-            heading: ({node, next}) => <thead>{node.children.map(next)}</thead>,
+            heading: ({node}) => <thead>{node.children}</thead>,
           }}
         />,
       );
-      console.log(screen.debug());
       expect(screen.getByText('Heading 1').tagName).toBe('THEAD');
     });
 
@@ -120,9 +119,7 @@ describe('<RichText />', () => {
         <RichText
           data={RICH_TEXT_PARAGRAPH}
           components={{
-            paragraph: ({node, next}) => (
-              <table>{node.children.map(next)}</table>
-            ),
+            paragraph: ({node}) => <table>{node.children}</table>,
           }}
         />,
       );
@@ -133,7 +130,6 @@ describe('<RichText />', () => {
   describe('Plain text', () => {
     it('renders plain text paragraph', () => {
       render(<RichText data={RICH_TEXT_PARAGRAPH} plain />);
-      console.log(screen.debug());
       expect(screen.getByText('Paragraph').tagName).toBe('DIV');
     });
 

@@ -1,5 +1,5 @@
-import {createElement, FunctionComponent, type ReactNode} from 'react';
-import type {Next, RichTextASTNode} from './RichText.types.js';
+import {createElement, type ReactNode} from 'react';
+import type {RichTextASTNode} from './RichText.types.js';
 import {
   type CustomComponents,
   RichTextComponents,
@@ -10,7 +10,7 @@ export interface RichTextPropsBase<ComponentGeneric extends React.ElementType> {
   as?: ComponentGeneric;
   /** An object with fields that correspond to the Storefront API's [RichText format](https://shopify.dev/docs/apps/custom-data/metafields/types#rich-text-formatting). */
   data: RichTextASTNode;
-  /** Customize how Rich Text components are rendered */
+  /** Customize how rich text components are rendered */
   components?: CustomComponents;
   /** Remove rich text formatting and render plain text */
   plain?: boolean;
@@ -47,27 +47,128 @@ function serializeRichTextASTNode(
   node: RichTextASTNode,
   index = 0,
 ): ReactNode {
-  const next = serializeRichTextASTNode.bind(null, components);
-
-  if (node.type in RichTextComponents) {
-    return createElement(
-      (components[
-        node.type === 'list-item' ? 'listItem' : node.type
-      ] as FunctionComponent<{
-        node: RichTextASTNode;
-        next: Next;
-      }>) ??
-        (RichTextComponents[node.type] as FunctionComponent<{
-          node: RichTextASTNode;
-          next: Next;
-        }>),
-      {
-        key: index,
-        node,
-        next,
-      },
+  let children;
+  if ('children' in node) {
+    children = node.children.map((child) =>
+      serializeRichTextASTNode(components, child, index),
     );
   }
+
+  const Component =
+    components[node.type === 'list-item' ? 'listItem' : node.type] ??
+    RichTextComponents[node.type];
+
+  switch (node.type) {
+    case 'root':
+      return createElement(
+        Component as Exclude<CustomComponents['root'], undefined>,
+        {
+          key: index,
+          node: {
+            type: 'root',
+            children,
+          },
+        },
+      );
+    case 'heading':
+      return createElement(
+        Component as Exclude<CustomComponents['heading'], undefined>,
+        {
+          key: index,
+          node: {
+            type: 'heading',
+            level: node.level,
+            children,
+          },
+        },
+      );
+    case 'paragraph':
+      return createElement(
+        Component as Exclude<CustomComponents['paragraph'], undefined>,
+        {
+          key: index,
+          node: {
+            type: 'paragraph',
+            children,
+          },
+        },
+      );
+    case 'text':
+      return createElement(
+        Component as Exclude<CustomComponents['text'], undefined>,
+        {
+          key: index,
+          node: {
+            type: 'text',
+            italic: node.italic,
+            bold: node.bold,
+            value: node.value,
+          },
+        },
+      );
+    case 'link':
+      return createElement(
+        Component as Exclude<CustomComponents['link'], undefined>,
+        {
+          key: index,
+          node: {
+            type: 'link',
+            url: node.url,
+            title: node.title,
+            target: node.target,
+            children,
+          },
+        },
+      );
+    case 'list':
+      return createElement(
+        Component as Exclude<CustomComponents['list'], undefined>,
+        {
+          key: index,
+          node: {
+            type: 'list',
+            listType: node.listType,
+            children,
+          },
+        },
+      );
+    case 'list-item':
+      return createElement(
+        Component as Exclude<CustomComponents['listItem'], undefined>,
+        {
+          key: index,
+          node: {
+            type: 'list-item',
+            children,
+          },
+        },
+      );
+  }
+
+  // if (node.type in RichTextComponents) {
+  //   const Component =
+  //     components[node.type === 'list-item' ? 'listItem' : node.type] as FunctionComponent<{
+
+  //     }>;
+
+  //   return createElement(
+  //     (components[
+  //       node.type === 'list-item' ? 'listItem' : node.type
+  //     ] as FunctionComponent<{
+  //       node: RichTextASTNode;
+  //       children: ReactNode[];
+  //     }>) ??
+  //       (RichTextComponents[node.type] as FunctionComponent<{
+  //         node: RichTextASTNode;
+  //         children: ReactNode[];
+  //       }>),
+  //     {
+  //       key: index,
+  //       node,
+  //       children,
+  //     },
+  //   );
+  // }
 
   return null;
 }

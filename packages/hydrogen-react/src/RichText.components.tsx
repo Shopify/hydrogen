@@ -1,29 +1,19 @@
 import {createElement, type ReactNode} from 'react';
-import type {
-  HeadingASTNode,
-  LinkASTNode,
-  ListASTNode,
-  ListItemASTNode,
-  Next,
-  ParagraphASTNode,
-  RootASTNode,
-  TextASTNode,
-} from './RichText.types.js';
 
 export type CustomComponents = {
-  /** The root node of the rich text. Make sure to map over the children calling `next` on each. Defaults to `<div>` */
+  /** The root node of the rich text. Defaults to `<div>` */
   root?: typeof Root;
-  /** Customize the headings. Each heading has a `level` property from 1-6. Make sure to map over the children calling `next` on each. Defaults to `<h1>` to `<h6>` */
+  /** Customize the headings. Each heading has a `level` property from 1-6. Defaults to `<h1>` to `<h6>` */
   heading?: typeof Heading;
-  /** Customize paragraphs. Make sure to map over the children calling `next` on each. Defaults to `<p>` */
+  /** Customize paragraphs. Defaults to `<p>` */
   paragraph?: typeof Paragraph;
   /** Customize how text nodes. They can either be bold or italic. Defaults to `<em>`, `<strong>` or text. */
   text?: typeof Text;
-  /** Customize links. Make sure to map over the children calling `next` on each. Defaults to `<a>` */
+  /** Customize links. Defaults to a React Router `<Link>` component in Hydrogen and a `<a>` in Hydrogen React. */
   link?: typeof RichTextLink;
-  /** Customize lists. They can be either ordered or unordered. Make sure to map over the children calling `next` on each. Defaults to `<ol>` or `<ul>` */
+  /** Customize lists. They can be either ordered or unordered. Defaults to `<ol>` or `<ul>` */
   list?: typeof List;
-  /** Customize list items. Make sure to map over the children calling `next` on each. Defaults to `<li>`. */
+  /** Customize list items. Defaults to `<li>`. */
   listItem?: typeof ListItem;
 };
 
@@ -37,25 +27,50 @@ export const RichTextComponents = {
   'list-item': ListItem,
 };
 
-function Root({node, next}: {node: RootASTNode; next: Next}): ReactNode {
-  return <div>{node.children?.map(next)}</div>;
+function Root({
+  node,
+}: {
+  node: {
+    type: 'root';
+    children?: ReactNode[];
+  };
+}): ReactNode {
+  return <div>{node.children}</div>;
 }
 
-function Heading({node, next}: {node: HeadingASTNode; next: Next}): ReactNode {
-  return createElement(`h${node.level ?? '1'}`, null, node.children?.map(next));
+function Heading({
+  node,
+}: {
+  node: {
+    type: 'heading';
+    level: number;
+    children?: ReactNode[];
+  };
+}): ReactNode {
+  return createElement(`h${node.level ?? '1'}`, null, node.children);
 }
 
 function Paragraph({
   node,
-  next,
 }: {
-  node: ParagraphASTNode;
-  next: Next;
+  node: {
+    type: 'paragraph';
+    children?: ReactNode[];
+  };
 }): ReactNode {
-  return <p>{node.children?.map(next)}</p>;
+  return <p>{node.children}</p>;
 }
 
-function Text({node}: {node: TextASTNode; next: Next}): ReactNode {
+function Text({
+  node,
+}: {
+  node: {
+    type: 'text';
+    italic?: boolean;
+    bold?: boolean;
+    value?: string;
+  };
+}): ReactNode {
   if (node.bold && node.italic)
     return (
       <em>
@@ -71,29 +86,42 @@ function Text({node}: {node: TextASTNode; next: Next}): ReactNode {
 
 function RichTextLink({
   node,
-  next,
 }: {
-  node: LinkASTNode;
-  next: Next;
+  node: {
+    type: 'link';
+    url: string;
+    title?: string;
+    target?: string;
+    children?: ReactNode[];
+  };
 }): ReactNode {
   return (
     <a href={node.url} title={node.title} target={node.target}>
-      {node.children?.map(next)}
+      {node.children}
     </a>
   );
 }
 
-function List({node, next}: {node: ListASTNode; next: Next}): ReactNode {
+function List({
+  node,
+}: {
+  node: {
+    type: 'list';
+    listType: 'unordered' | 'ordered';
+    children?: ReactNode[];
+  };
+}): ReactNode {
   const List = node.listType === 'unordered' ? 'ul' : 'ol';
-  return <List>{node.children?.map(next)}</List>;
+  return <List>{node.children}</List>;
 }
 
 function ListItem({
   node,
-  next,
 }: {
-  node: ListItemASTNode;
-  next: Next;
+  node: {
+    type: 'list-item';
+    children?: ReactNode[];
+  };
 }): ReactNode {
-  return <li>{node.children?.map(next)}</li>;
+  return <li>{node.children}</li>;
 }
