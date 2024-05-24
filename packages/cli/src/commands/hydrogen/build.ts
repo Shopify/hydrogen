@@ -100,7 +100,8 @@ type RunBuildOptions = {
   bundleStats?: boolean;
   lockfileCheck?: boolean;
   watch?: boolean;
-  onRebuild?: () => void | Promise<void>;
+  onServerBuildStart?: () => void | Promise<void>;
+  onServerBuildFinish?: () => void | Promise<void>;
 };
 
 export async function runBuild({
@@ -108,12 +109,13 @@ export async function runBuild({
   directory,
   useCodegen = false,
   codegenConfigPath,
-  sourcemap = false,
+  sourcemap = true,
   disableRouteWarning = false,
   lockfileCheck = true,
   assetPath = '/',
   watch = false,
-  onRebuild,
+  onServerBuildStart,
+  onServerBuildFinish,
 }: RunBuildOptions) {
   if (!process.env.NODE_ENV) {
     process.env.NODE_ENV = 'production';
@@ -214,10 +216,11 @@ export async function runBuild({
           // it might complain about missing files and loop infinitely.
           serverBuildStatus?.resolve();
           serverBuildStatus = deferPromise();
+          await onServerBuildStart?.();
         },
         async writeBundle() {
           if (serverBuildStatus?.state !== 'rejected') {
-            await onRebuild?.();
+            await onServerBuildFinish?.();
           }
 
           serverBuildStatus.resolve();
