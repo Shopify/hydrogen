@@ -212,6 +212,12 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
       () => {},
     ],
     [
+      // This log must come from Rollup and does not go through Vite's customLogger
+      ([first]) =>
+        typeof first === 'string' && /^Generated an empty chunk:/i.test(first),
+      () => {},
+    ],
+    [
       // Log new lines between Request logs and other logs
       ([first], existingMatches) => {
         // If this log is not going to be filtered by other replacers:
