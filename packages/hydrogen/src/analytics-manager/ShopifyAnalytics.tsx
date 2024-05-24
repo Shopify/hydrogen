@@ -117,10 +117,12 @@ export function ShopifyAnalytics({
   const {checkoutDomain, storefrontAccessToken, withPrivacyBanner} = consent;
 
   useCustomerPrivacy({
-    checkoutDomain: isMockShop || !checkoutDomain ? 'mock.shop' : checkoutDomain,
-    storefrontAccessToken: isMockShop || !storefrontAccessToken
-      ? 'abcdefghijklmnopqrstuvwxyz123456'
-      : storefrontAccessToken,
+    checkoutDomain:
+      isMockShop || !checkoutDomain ? 'mock.shop' : checkoutDomain,
+    storefrontAccessToken:
+      isMockShop || !storefrontAccessToken
+        ? 'abcdefghijklmnopqrstuvwxyz123456'
+        : storefrontAccessToken,
     withPrivacyBanner: isMockShop ? false : withPrivacyBanner,
     onVisitorConsentCollected: setCustomerPrivacyReady,
     onReady: () => {
