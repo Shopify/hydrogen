@@ -1,9 +1,9 @@
 import {RichText} from '@shopify/hydrogen-react';
 
-export function MainRichText({text}) {
+export function MainRichText({metaFieldData}) {
   return (
     <RichText
-      data={JSON.parse(text)}
+      data={metaFieldData}
       components={{
         paragraph({node}) {
           return <p className="customClass">{node.children}</p>;

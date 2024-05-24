@@ -12,5 +12,5 @@ const Template: Story<RichTextProps> = (props: RichTextProps) => {
 export const Default = Template.bind({});
 Default.args = {
   as: 'div',
-  data: RICH_TEXT_CONTENT,
+  data: JSON.stringify(RICH_TEXT_CONTENT),
 };

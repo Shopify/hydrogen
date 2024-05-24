@@ -8,8 +8,8 @@ import {
 export interface RichTextPropsBase<ComponentGeneric extends React.ElementType> {
   /** An HTML tag or React Component to be rendered as the base element wrapper. The default is `div`. */
   as?: ComponentGeneric;
-  /** An object with fields that correspond to the Storefront API's [RichText format](https://shopify.dev/docs/apps/custom-data/metafields/types#rich-text-formatting). */
-  data: RichTextASTNode;
+  /** The JSON string that correspond to the Storefront API's [RichText format](https://shopify.dev/docs/apps/custom-data/metafields/types#rich-text-formatting). */
+  data: string;
   /** Customize how rich text components are rendered */
   components?: CustomComponents;
   /** Remove rich text formatting and render plain text */
@@ -25,11 +25,24 @@ export function RichText<ComponentGeneric extends React.ElementType = 'div'>({
 }: RichTextProps<ComponentGeneric>): JSX.Element {
   const Wrapper = as ?? 'div';
 
+  let parsedData;
+
+  try {
+    parsedData = JSON.parse(data) as RichTextASTNode;
+  } catch (e) {
+    throw new Error(
+      'Parsing error. Make sure to pass a JSON string of rich text metafield',
+      {
+        cause: e,
+      },
+    );
+  }
+
   return (
     <Wrapper {...passthroughProps}>
       {plain
-        ? richTextToString(data)
-        : serializeRichTextASTNode(components, data)}
+        ? richTextToString(parsedData)
+        : serializeRichTextASTNode(components, parsedData)}
     </Wrapper>
   );
 }

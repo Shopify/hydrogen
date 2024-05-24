@@ -7,10 +7,10 @@ Add a RichText component to easily render \`rich_text_field\` metafields. Thank 
 ```tsx
 import {RichText} from '@shopify/hydrogen-react';
 
-export function MainRichText({text}: {text: string}) {
+export function MainRichText({metaFieldData}: {metaFieldData: string}) {
   return (
     <RichText
-      data={JSON.parse(text)}
+      data={metaFieldData}
       components={{
         paragraph({node}) {
           return <p className="customClass">{node.children}</p>;
