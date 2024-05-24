@@ -16,6 +16,8 @@ import type {
   SearchQuery,
 } from 'storefrontapi.generated';
 
+import type {PredictiveSearchAPILoader} from '../routes/api.predictive-search';
+
 type PredicticeSearchResultItemImage =
   | PredictiveCollectionFragment['image']
   | PredictiveArticleFragment['image']
@@ -257,7 +259,7 @@ export function NoSearchResults() {
 
 type ChildrenRenderProps = {
   fetchResults: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  fetcher: ReturnType<typeof useFetcher<NormalizedPredictiveSearchResults>>;
+  fetcher: ReturnType<typeof useFetcher<PredictiveSearchAPILoader>>;
   inputRef: React.MutableRefObject<HTMLInputElement | null>;
 };
 
@@ -278,7 +280,7 @@ export function PredictiveSearchForm({
   ...props
 }: SearchFromProps) {
   const params = useParams();
-  const fetcher = useFetcher<NormalizedPredictiveSearchResults>({
+  const fetcher = useFetcher<PredictiveSearchAPILoader>({
     key: 'search',
   });
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -456,7 +458,7 @@ function SearchResultItem({goToSearchResult, item}: SearchResultItemProps) {
 type UseSearchReturn = NormalizedPredictiveSearch & {
   searchInputRef: React.MutableRefObject<HTMLInputElement | null>;
   searchTerm: React.MutableRefObject<string>;
-  state: ReturnType<typeof useFetcher>['state'];
+  state: ReturnType<typeof useFetcher<PredictiveSearchAPILoader>>['state'];
 };
 
 function usePredictiveSearch(): UseSearchReturn {
