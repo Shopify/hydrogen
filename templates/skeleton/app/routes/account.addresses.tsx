@@ -5,7 +5,6 @@ import type {
 } from 'customer-accountapi.generated';
 import {
   json,
-  redirect,
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
 } from '@shopify/remix-oxygen';

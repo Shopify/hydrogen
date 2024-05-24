@@ -407,7 +407,6 @@ export function createCustomerAccountClient({
       clearSession(session);
 
       return redirect(logoutUrl, {
-        status: 302,
         headers: {
           'Set-Cookie': await session.commit(),
         },

@@ -30,6 +30,8 @@ const DEFAULT_SEARCH_TYPES: PredictiveSearchTypes[] = [
   'QUERY',
 ];
 
+export type PredictiveSearchAPILoader = typeof loader;
+
 /**
  * Fetches the search results from the predictive search API
  * requested by the SearchForm component

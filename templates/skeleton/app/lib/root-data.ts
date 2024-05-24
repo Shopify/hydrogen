@@ -1,5 +1,5 @@
 import {useMatches} from '@remix-run/react';
-import type {SerializeFrom} from '@shopify/remix-oxygen';
+import type {UIMatch} from '@remix-run/react';
 import type {loader} from '~/root';
 
 /**
@@ -7,5 +7,5 @@ import type {loader} from '~/root';
  */
 export function useRootLoaderData() {
   const [root] = useMatches();
-  return root?.data as SerializeFrom<typeof loader>;
+  return (root as UIMatch<typeof loader>)?.data;
 }

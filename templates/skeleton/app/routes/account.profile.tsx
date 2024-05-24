@@ -3,7 +3,6 @@ import type {CustomerUpdateInput} from '@shopify/hydrogen/customer-account-api-t
 import {CUSTOMER_UPDATE_MUTATION} from '~/graphql/customer-account/CustomerUpdateMutation';
 import {
   json,
-  redirect,
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
 } from '@shopify/remix-oxygen';
