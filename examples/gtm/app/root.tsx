@@ -24,7 +24,7 @@ import favicon from './assets/favicon.svg';
 import resetStyles from './styles/reset.css?url';
 import appStyles from './styles/app.css?url';
 import {Layout} from '~/components/Layout';
-import {CustomAnalytics} from '~/components/CustomAnalytics';
+import {GoogleTagManager} from '~/components/GoogleTagManager';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -129,18 +129,35 @@ export default function App() {
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <Meta />
         <Links />
+        <script nonce={nonce} dangerouslySetInnerHTML={{
+          __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+            })(window,document,'script','dataLayer','GTM-WLTS4QF');`,
+        }}></script>
       </head>
       <body>
+        <noscript>
+          <iframe
+            src="https://www.googletagmanager.com/ns.html?id=GTM-WLTS4QF"
+            height="0"
+            width="0"
+            style={{
+              display: 'none',
+              visibility: 'hidden'
+            }}
+          ></iframe>
+        </noscript>
         <Analytics.Provider
           cart={data.cart}
           shop={data.shop}
           consent={data.consent}
-          customData={{foo: 'bar'}}
         >
           <Layout {...data}>
             <Outlet />
           </Layout>
-          <CustomAnalytics />
+          <GoogleTagManager />
         </Analytics.Provider>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
