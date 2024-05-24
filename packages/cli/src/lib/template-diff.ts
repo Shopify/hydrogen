@@ -129,8 +129,12 @@ export async function applyTemplateDiff(
       if (pkgJson.dependencies && templatePkgJson.dependencies) {
         // Restore the original version of this package,
         // which is added as '*' to make --diff work with global CLI.
-        pkgJson.dependencies['@shopify/cli-hydrogen'] =
-          templatePkgJson.dependencies['@shopify/cli-hydrogen'] ?? '*';
+        const key = '@shopify/cli-hydrogen';
+        if (templatePkgJson.dependencies[key]) {
+          pkgJson.dependencies[key] = templatePkgJson.dependencies[key];
+        } else {
+          delete pkgJson.dependencies[key];
+        }
       }
 
       for (const key of ['build', 'dev']) {
