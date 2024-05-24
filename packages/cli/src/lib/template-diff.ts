@@ -133,7 +133,7 @@ export async function applyTemplateDiff(
           templatePkgJson.dependencies['@shopify/cli-hydrogen'] ?? '*';
       }
 
-      for (const key of ['build', 'dev']) {
+      for (const key of ['build', 'dev', 'preview']) {
         const scriptLine = pkgJson.scripts?.[key];
         if (pkgJson.scripts?.[key] && typeof scriptLine === 'string') {
           pkgJson.scripts[key] = scriptLine.replace(/\s+--diff/, '');

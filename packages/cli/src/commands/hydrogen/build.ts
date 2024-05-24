@@ -10,9 +10,11 @@ import {hasViteConfig, getViteConfig} from '../../lib/vite-config.js';
 import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
 import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
-import {codegen} from '../../lib/codegen.js';
+import {codegen, spawnCodegenProcess} from '../../lib/codegen.js';
 import {isCI} from '../../lib/is-ci.js';
 import {importVite} from '../../lib/import-utils.js';
+import {deferPromise, type DeferredPromise} from '../../lib/defer.js';
+import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 
 export default class Build extends Command {
   static descriptionWithMarkdown = `Builds a Hydrogen storefront for production. The client and app worker files are compiled to a \`/dist\` folder in your Hydrogen project directory.`;
@@ -26,6 +28,11 @@ export default class Build extends Command {
     ...commonFlags.disableRouteWarning,
     ...commonFlags.codegen,
     ...commonFlags.diff,
+    watch: Flags.boolean({
+      description:
+        'Watches for changes and rebuilds the project writing output to disk.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_WATCH',
+    }),
 
     // For the classic compiler:
     'bundle-stats': Flags.boolean({
@@ -44,7 +51,7 @@ export default class Build extends Command {
     let directory = originalDirectory;
 
     if (flags.diff) {
-      directory = await prepareDiffDirectory(originalDirectory, false);
+      directory = await prepareDiffDirectory(originalDirectory, flags.watch);
     }
 
     const buildParams = {
@@ -53,20 +60,30 @@ export default class Build extends Command {
       directory,
     };
 
-    if (await hasViteConfig(directory)) {
-      await runBuild(buildParams);
+    const result = (await hasViteConfig(directory))
+      ? await runBuild(buildParams)
+      : await runClassicCompilerBuild(buildParams);
+
+    if (buildParams.watch) {
+      if (flags.diff || result?.close) {
+        setupResourceCleanup(async () => {
+          await result?.close();
+
+          if (flags.diff) {
+            await copyDiffBuild(directory, originalDirectory);
+          }
+        });
+      }
     } else {
-      await runClassicCompilerBuild(buildParams);
-    }
+      if (flags.diff) {
+        await copyDiffBuild(directory, originalDirectory);
+      }
 
-    if (flags.diff) {
-      await copyDiffBuild(directory, originalDirectory);
+      // The Remix compiler hangs due to a bug in ESBuild:
+      // https://github.com/evanw/esbuild/issues/2727
+      // The actual build has already finished so we can kill the process.
+      process.exit(0);
     }
-
-    // The Remix compiler hangs due to a bug in ESBuild:
-    // https://github.com/evanw/esbuild/issues/2727
-    // The actual build has already finished so we can kill the process.
-    process.exit(0);
   }
 }
 
@@ -82,6 +99,8 @@ type RunBuildOptions = {
   assetPath?: string;
   bundleStats?: boolean;
   lockfileCheck?: boolean;
+  watch?: boolean;
+  onRebuild?: () => void | Promise<void>;
 };
 
 export async function runBuild({
@@ -93,6 +112,8 @@ export async function runBuild({
   disableRouteWarning = false,
   lockfileCheck = true,
   assetPath = '/',
+  watch = false,
+  onRebuild,
 }: RunBuildOptions) {
   if (!process.env.NODE_ENV) {
     process.env.NODE_ENV = 'production';
@@ -114,7 +135,7 @@ export async function runBuild({
     getViteConfig(root, ssrEntry),
   ]);
 
-  const customLogger = vite.createLogger();
+  const customLogger = vite.createLogger(watch ? 'warn' : undefined);
   if (process.env.SHOPIFY_UNIT_TEST) {
     // Make logs from Vite visible in tests
     customLogger.info = (msg) => collectLog('info', msg);
@@ -130,21 +151,45 @@ export async function runBuild({
     customLogger,
   };
 
+  let clientBuildStatus: DeferredPromise;
+
   // Client build first
-  await vite.build({
+  const clientBuild = await vite.build({
     ...commonConfig,
     build: {
       emptyOutDir: true,
       copyPublicDir: true,
       // Disable client sourcemaps in production
       sourcemap: process.env.NODE_ENV !== 'production' && sourcemap,
+      watch: watch ? {} : null,
     },
+    plugins: [
+      {
+        name: 'hydrogen:cli:client',
+        buildStart() {
+          clientBuildStatus?.resolve();
+          clientBuildStatus = deferPromise();
+        },
+        buildEnd(error) {
+          if (error) clientBuildStatus.reject(error);
+        },
+        writeBundle() {
+          clientBuildStatus.resolve();
+        },
+        closeWatcher() {
+          // End build process if watcher is closed
+          this.error(new Error('Process exited before client build finished.'));
+        },
+      },
+    ],
   });
 
   console.log('');
 
+  let serverBuildStatus: DeferredPromise;
+
   // Server/SSR build
-  await vite.build({
+  const serverBuild = await vite.build({
     ...commonConfig,
     build: {
       sourcemap,
@@ -152,24 +197,60 @@ export async function runBuild({
       emptyOutDir: false,
       copyPublicDir: false,
       minify: serverMinify,
+      // Ensure the server rebuild start after the client one
+      watch: watch ? {buildDelay: 100} : null,
     },
+    plugins: [
+      {
+        name: 'hydrogen:cli:server',
+        async buildStart() {
+          // Wait for the client build to finish in watch mode
+          // before starting the server build to access the
+          // Remix manifest from file disk.
+          await clientBuildStatus.promise;
+
+          // Keep track of server builds to wait for them to finish
+          // before cleaning up resources in watch mode. Otherwise,
+          // it might complain about missing files and loop infinitely.
+          serverBuildStatus?.resolve();
+          serverBuildStatus = deferPromise();
+        },
+        async writeBundle() {
+          if (serverBuildStatus?.state !== 'rejected') {
+            await onRebuild?.();
+          }
+
+          serverBuildStatus.resolve();
+        },
+        closeWatcher() {
+          // End build process if watcher is closed
+          this.error(new Error('Process exited before server build finished.'));
+        },
+      },
+    ],
   });
 
-  await Promise.all([
-    removeFile(joinPath(clientOutDir, '.vite')),
-    removeFile(joinPath(serverOutDir, '.vite')),
-    removeFile(joinPath(serverOutDir, 'assets')),
-  ]);
-
-  if (useCodegen) {
-    await codegen({
-      rootDirectory: root,
-      appDirectory: remixConfig.appDirectory,
-      configFilePath: codegenConfigPath,
-    });
+  if (!watch) {
+    await Promise.all([
+      removeFile(joinPath(clientOutDir, '.vite')),
+      removeFile(joinPath(serverOutDir, '.vite')),
+      removeFile(joinPath(serverOutDir, 'assets')),
+    ]);
   }
 
-  if (process.env.NODE_ENV !== 'development') {
+  const codegenOptions = {
+    rootDirectory: root,
+    appDirectory: remixConfig.appDirectory,
+    configFilePath: codegenConfigPath,
+  };
+
+  const codegenProcess = useCodegen
+    ? watch
+      ? spawnCodegenProcess(codegenOptions)
+      : await codegen(codegenOptions).then(() => undefined)
+    : undefined;
+
+  if (!watch && process.env.NODE_ENV !== 'development') {
     const sizeMB = (await fileSize(serverOutFile)) / (1024 * 1024);
 
     if (sizeMB >= WORKER_BUILD_SIZE_LIMIT) {
@@ -183,7 +264,7 @@ export async function runBuild({
     }
   }
 
-  if (!disableRouteWarning) {
+  if (!watch && !disableRouteWarning) {
     const missingRoutes = findMissingRoutes(remixConfig);
     if (missingRoutes.length) {
       const packageManager = await getPackageManager(root);
@@ -198,4 +279,30 @@ export async function runBuild({
       );
     }
   }
+
+  return {
+    async close() {
+      codegenProcess?.removeAllListeners('close');
+      codegenProcess?.kill('SIGINT');
+
+      const promises: Array<Promise<void>> = [];
+      if ('close' in clientBuild) promises.push(clientBuild.close());
+      if ('close' in serverBuild) promises.push(serverBuild.close());
+
+      await Promise.allSettled(promises);
+
+      if (
+        clientBuildStatus?.state === 'pending' ||
+        serverBuildStatus?.state === 'pending'
+      ) {
+        clientBuildStatus?.promise.catch(() => {});
+        clientBuildStatus?.reject();
+        serverBuildStatus?.promise.catch(() => {});
+        serverBuildStatus?.reject();
+
+        // Give time for Rollup to stop builds before removing files
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+    },
+  };
 }
