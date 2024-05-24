@@ -6,6 +6,7 @@ import {it, vi, describe, expect} from 'vitest';
 import {transformWithEsbuild} from 'vite';
 import {buildAssetsUrl} from './assets.js';
 import {createMiniOxygen, type MiniOxygenOptions} from './index.js';
+import {findPort} from '../common/find-port.js';
 
 describe('MiniOxygen Worker Runtime', () => {
   it('receives HTML from test worker', async () => {
@@ -283,7 +284,7 @@ function withFixtures(
     const miniOxygenOptions = {
       assets: {
         directory: path.join(tmpDir, relativeDistClient),
-        port: 1347,
+        port: await findPort(1347),
       },
       workers: [
         {

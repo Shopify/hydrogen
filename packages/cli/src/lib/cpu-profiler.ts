@@ -17,16 +17,26 @@ export async function createCpuStartupProfiler(root: string) {
     log: () => {},
   });
 
-  await miniOxygen.ready();
+  return {
+    async run(scriptPath: string, sourceEntrypoint?: string) {
+      const [script] = await Promise.all([
+        readFile(scriptPath),
+        miniOxygen.ready(),
+      ]);
 
-  return async (scriptPath: string) => {
-    const script = await readFile(scriptPath);
+      const stopProfiler = await startProfiler();
+      await miniOxygen.reload({script});
+      const rawProfile = await stopProfiler();
 
-    const stopProfiler = await startProfiler();
-    await miniOxygen.reload({script});
-    const rawProfile = await stopProfiler();
-
-    return enhanceProfileNodes(rawProfile, scriptPath + '.map');
+      return enhanceProfileNodes(
+        rawProfile,
+        scriptPath + '.map',
+        sourceEntrypoint,
+      );
+    },
+    async close() {
+      await miniOxygen.dispose();
+    },
   };
 }
 
@@ -60,6 +70,7 @@ function startProfiler(): Promise<
 async function enhanceProfileNodes(
   profile: Profiler.Profile,
   sourceMapPath: string,
+  sourceEntrypoint?: string,
 ) {
   const {SourceMapConsumer} = await import('source-map');
   const sourceMap = JSON.parse(await readFile(sourceMapPath));
@@ -81,6 +92,18 @@ async function enhanceProfileNodes(
     if (scriptDescendants.has(node.id)) {
       // Enhance paths with sourcemaps of known files.
       augmentNode(node, smc);
+
+      if (
+        node.callFrame.url === '<script>' &&
+        !node.callFrame.functionName &&
+        !node.callFrame.lineNumber &&
+        !node.callFrame.columnNumber
+      ) {
+        // If the node wasn't augmented, it's likely a top-level script
+        // in one of the app files. We'll give it a more descriptive name.
+        node.callFrame.url = sourceEntrypoint ?? '';
+        node.callFrame.functionName = '(top-level app code)';
+      }
 
       // Accrue total time spent by the script (app + deps).
       totalScriptTimeMicrosec +=
