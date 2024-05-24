@@ -37,7 +37,6 @@ import {ShopifyAnalytics} from './ShopifyAnalytics';
 import {CartAnalytics} from './CartAnalytics';
 import type {CustomerPrivacyApiProps} from '../customer-privacy/ShopifyCustomerPrivacy';
 import type {Storefront} from '../storefront';
-import data from '../createStorefrontClient.doc';
 
 export type ShopAnalytics = {
   /** The shop ID. */
