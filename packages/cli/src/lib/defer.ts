@@ -1,10 +1,10 @@
 /**
  * Creates a promise that can be resolved or rejected from the outter scope.
  */
-export function deferPromise() {
+export function deferPromise<T = unknown>() {
   const deferred = {state: 'pending'} as {
     promise: Promise<unknown>;
-    resolve: (value?: unknown) => void;
+    resolve: (value?: T) => void;
     reject: (reason?: any) => void;
     state: 'pending' | 'resolved' | 'rejected';
   };
@@ -23,3 +23,5 @@ export function deferPromise() {
 
   return deferred;
 }
+
+export type DeferredPromise<T = unknown> = ReturnType<typeof deferPromise<T>>;

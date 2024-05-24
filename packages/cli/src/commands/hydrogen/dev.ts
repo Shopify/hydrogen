@@ -42,6 +42,9 @@ import {logRequestLine} from '../../lib/mini-oxygen/common.js';
 import {findHydrogenPlugin, findOxygenPlugin} from '../../lib/vite-config.js';
 import {hasViteConfig} from '../../lib/vite-config.js';
 import {runClassicCompilerDev} from '../../lib/classic-compiler/dev.js';
+import {importVite} from '../../lib/import-utils.js';
+import {createEntryPointErrorHandler} from '../../lib/deps-optimizer.js';
+import {getCodeFormatOptions} from '../../lib/format-code.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 
 export default class Dev extends Command {
@@ -80,6 +83,12 @@ export default class Dev extends Command {
       description: 'Expose the server to the local network',
       default: false,
       required: false,
+    }),
+    'disable-deps-optimizer': Flags.boolean({
+      description:
+        "Disable adding dependencies to Vite's `ssr.optimizeDeps.include` automatically",
+      env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_DEPS_OPTIMIZER',
+      default: false,
     }),
 
     // For the classic compiler:
@@ -139,6 +148,7 @@ type DevOptions = {
   codegenConfigPath?: string;
   disableVirtualRoutes?: boolean;
   disableVersionCheck?: boolean;
+  disableDepsOptimizer?: boolean;
   envBranch?: string;
   env?: string;
   debug?: boolean;
@@ -158,6 +168,7 @@ export async function runDev({
   codegen: useCodegen = false,
   codegenConfigPath,
   disableVirtualRoutes,
+  disableDepsOptimizer = false,
   envBranch,
   env: envHandle,
   debug = false,
@@ -198,7 +209,7 @@ export async function runDev({
     inspectorPort = await findPort(DEFAULT_INSPECTOR_PORT);
   }
 
-  const vite = await import('vite');
+  const vite = await importVite(root);
 
   // Allow Vite to read files from the Hydrogen packages in local development.
   const fs = isLocalDev
@@ -212,6 +223,10 @@ export async function runDev({
     customLogger.warn = (msg) => collectLog('warn', msg);
     customLogger.error = (msg) => collectLog('error', msg);
   }
+
+  const formatOptionsPromise = Promise.resolve().then(() =>
+    getCodeFormatOptions(root),
+  );
 
   const viteServer = await vite.createServer({
     root,
@@ -232,6 +247,19 @@ export async function runDev({
             envPromise: envPromise.then(({allVariables}) => allVariables),
             inspectorPort,
             logRequestLine,
+            entryPointErrorHandler: createEntryPointErrorHandler({
+              disableDepsOptimizer,
+              configFile: config.configFile,
+              formatOptionsPromise,
+              showSuccessBanner: () =>
+                showSuccessBanner({
+                  disableVirtualRoutes,
+                  debug,
+                  inspectorPort,
+                  finalHost,
+                  storefrontTitle,
+                }),
+            }),
           });
         },
         configureServer: (viteDevServer) => {
@@ -320,27 +348,13 @@ export async function runDev({
   viteServer.bindCLIShortcuts({print: true});
   console.log('\n');
 
-  const customSections: AlertCustomSection[] = [];
-
-  if (!h2PluginOptions?.disableVirtualRoutes) {
-    customSections.push({body: getUtilityBannerlines(finalHost)});
-  }
-
-  if (debug && inspectorPort) {
-    customSections.push({
-      body: {warn: getDebugBannerLine(inspectorPort)},
-    });
-  }
-
-  const {storefrontTitle} = await backgroundPromise;
-  renderSuccess({
-    body: [
-      `View ${
-        storefrontTitle ? colors.cyan(storefrontTitle) : 'Hydrogen'
-      } app:`,
-      {link: {url: finalHost}},
-    ],
-    customSections,
+  const storefrontTitle = (await backgroundPromise).storefrontTitle;
+  showSuccessBanner({
+    disableVirtualRoutes,
+    debug,
+    inspectorPort,
+    finalHost,
+    storefrontTitle,
   });
 
   if (!disableVersionCheck) {
@@ -359,4 +373,37 @@ export async function runDev({
       await Promise.allSettled([viteServer.close(), tunnel?.cleanup?.()]);
     },
   };
+}
+
+function showSuccessBanner({
+  disableVirtualRoutes,
+  debug,
+  inspectorPort,
+  finalHost,
+  storefrontTitle,
+}: Pick<DevOptions, 'disableVirtualRoutes' | 'debug' | 'inspectorPort'> & {
+  finalHost: string;
+  storefrontTitle?: string;
+}) {
+  const customSections: AlertCustomSection[] = [];
+
+  if (!disableVirtualRoutes) {
+    customSections.push({body: getUtilityBannerlines(finalHost)});
+  }
+
+  if (debug && inspectorPort) {
+    customSections.push({
+      body: {warn: getDebugBannerLine(inspectorPort)},
+    });
+  }
+
+  renderSuccess({
+    body: [
+      `View ${
+        storefrontTitle ? colors.cyan(storefrontTitle) : 'Hydrogen'
+      } app:`,
+      {link: {url: finalHost}},
+    ],
+    customSections,
+  });
 }

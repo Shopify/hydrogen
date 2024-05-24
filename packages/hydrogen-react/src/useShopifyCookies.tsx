@@ -25,6 +25,26 @@ export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {
     const cookies = getShopifyCookies(document.cookie);
 
     /**
+     * Setting cookie with domain
+     *
+     * If no domain is provided, the cookie will be set for the current host.
+     * For Shopify, we need to ensure this domain is set with a leading dot.
+     */
+
+    // Use override domain or current host
+    let currentDomain = domain || window.document.location.host;
+
+    // Reset domain if localhost
+    if (/^localhost/.test(currentDomain)) currentDomain = '';
+
+    // Shopify checkout only consumes cookies set with leading dot domain
+    const domainWithLeadingDot = currentDomain
+      ? /^\./.test(currentDomain)
+        ? currentDomain
+        : `.${currentDomain}`
+      : '';
+
+    /**
      * Set user and session cookies and refresh the expiry time
      */
     if (hasUserConsent) {
@@ -32,17 +52,17 @@ export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {
         SHOPIFY_Y,
         cookies[SHOPIFY_Y] || buildUUID(),
         longTermLength,
-        domain,
+        domainWithLeadingDot,
       );
       setCookie(
         SHOPIFY_S,
         cookies[SHOPIFY_S] || buildUUID(),
         shortTermLength,
-        domain,
+        domainWithLeadingDot,
       );
     } else {
-      setCookie(SHOPIFY_Y, '', 0, domain);
-      setCookie(SHOPIFY_S, '', 0, domain);
+      setCookie(SHOPIFY_Y, '', 0, domainWithLeadingDot);
+      setCookie(SHOPIFY_S, '', 0, domainWithLeadingDot);
     }
   }, [options, hasUserConsent, domain]);
 }

@@ -78,7 +78,7 @@ async function runDebugCpu({directory, entry, output}: RunDebugCpuOptions) {
 
   let times = 0;
   let sourceEntrypoint: string;
-  const profiler = await createCpuStartupProfiler();
+  const profiler = await createCpuStartupProfiler(directory);
 
   const hooks = {
     onServerBuildStart() {

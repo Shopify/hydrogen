@@ -14,7 +14,13 @@ export function setupResourceCleanup(cleanup: () => Promise<void>) {
     // This function will be called multiple times,
     // but we only want to cleanup resources once.
     closingPromise ??= cleanup();
+
+    // If the cleanup function hangs, we want to ensure the process exits.
+    const timeout = setTimeout(() => processExit(code), 5000);
+
     await closingPromise;
+
+    clearTimeout(timeout);
     return processExit(code);
   };
 }

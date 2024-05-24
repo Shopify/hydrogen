@@ -1,6 +1,6 @@
 import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
-import {resolvePath, joinPath} from '@shopify/cli-kit/node/path';
+import {resolvePath, joinPath, dirname} from '@shopify/cli-kit/node/path';
 import {outputWarn, collectLog} from '@shopify/cli-kit/node/output';
 import {fileSize, removeFile} from '@shopify/cli-kit/node/fs';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
@@ -12,7 +12,8 @@ import {findMissingRoutes} from '../../lib/missing-routes.js';
 import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
 import {codegen, spawnCodegenProcess} from '../../lib/codegen.js';
 import {isCI} from '../../lib/is-ci.js';
-import {deferPromise} from '../../lib/defer.js';
+import {importVite} from '../../lib/import-utils.js';
+import {deferPromise, type DeferredPromise} from '../../lib/defer.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 
 export default class Build extends Command {
@@ -50,7 +51,7 @@ export default class Build extends Command {
     let directory = originalDirectory;
 
     if (flags.diff) {
-      directory = await prepareDiffDirectory(originalDirectory, false);
+      directory = await prepareDiffDirectory(originalDirectory, flags.watch);
     }
 
     const buildParams = {
@@ -132,7 +133,7 @@ export async function runBuild({
   ] = await Promise.all([
     // Avoid static imports because this file is imported by `deploy` command,
     // which must have a hard dependency on 'vite'.
-    import('vite'),
+    importVite(root),
     getViteConfig(root, ssrEntry),
   ]);
 
@@ -152,7 +153,7 @@ export async function runBuild({
     customLogger,
   };
 
-  let clientBuildStatus: ReturnType<typeof deferPromise>;
+  let clientBuildStatus: DeferredPromise;
 
   // Client build first
   const clientBuild = await vite.build({
@@ -177,11 +178,17 @@ export async function runBuild({
         writeBundle() {
           clientBuildStatus.resolve();
         },
+        closeWatcher() {
+          // End build process if watcher is closed
+          this.error(new Error('Process exited before client build finished.'));
+        },
       },
     ],
   });
 
   console.log('');
+
+  let serverBuildStatus: DeferredPromise;
 
   // Server/SSR build
   const serverBuild = await vite.build({
@@ -203,10 +210,24 @@ export async function runBuild({
           // before starting the server build to access the
           // Remix manifest from file disk.
           await clientBuildStatus.promise;
+
+          // Keep track of server builds to wait for them to finish
+          // before cleaning up resources in watch mode. Otherwise,
+          // it might complain about missing files and loop infinitely.
+          serverBuildStatus?.resolve();
+          serverBuildStatus = deferPromise();
           await onServerBuildStart?.();
         },
         async writeBundle() {
-          await onServerBuildFinish?.();
+          if (serverBuildStatus?.state !== 'rejected') {
+            await onServerBuildFinish?.();
+          }
+
+          serverBuildStatus.resolve();
+        },
+        closeWatcher() {
+          // End build process if watcher is closed
+          this.error(new Error('Process exited before server build finished.'));
         },
       },
     ],
@@ -270,7 +291,21 @@ export async function runBuild({
       const promises: Array<Promise<void>> = [];
       if ('close' in clientBuild) promises.push(clientBuild.close());
       if ('close' in serverBuild) promises.push(serverBuild.close());
+
       await Promise.allSettled(promises);
+
+      if (
+        clientBuildStatus?.state === 'pending' ||
+        serverBuildStatus?.state === 'pending'
+      ) {
+        clientBuildStatus?.promise.catch(() => {});
+        clientBuildStatus?.reject();
+        serverBuildStatus?.promise.catch(() => {});
+        serverBuildStatus?.reject();
+
+        // Give time for Rollup to stop builds before removing files
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
     },
   };
 }

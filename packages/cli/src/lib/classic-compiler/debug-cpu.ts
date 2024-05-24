@@ -1,5 +1,6 @@
 import {outputWarn} from '@shopify/cli-kit/node/output';
 import {createRemixLogger} from '../log.js';
+import {importLocal} from '../import-utils.js';
 import {
   getRemixConfig,
   handleRemixImportFail,
@@ -21,9 +22,16 @@ export async function runClassicCompilerDebugCpu({
   directory,
   hooks,
 }: DebugOptions) {
+  type RemixWatch = typeof import('@remix-run/dev/dist/compiler/watch.js');
+  type RemixFileWatchCache =
+    typeof import('@remix-run/dev/dist/compiler/fileWatchCache.js');
+
   const [{watch}, {createFileWatchCache}] = await Promise.all([
-    import('@remix-run/dev/dist/compiler/watch.js'),
-    import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
+    importLocal<RemixWatch>('@remix-run/dev/dist/compiler/watch.js', directory),
+    importLocal<RemixFileWatchCache>(
+      '@remix-run/dev/dist/compiler/fileWatchCache.js',
+      directory,
+    ),
   ]).catch(handleRemixImportFail);
 
   const fileWatchCache = createFileWatchCache();
