@@ -10,6 +10,7 @@ import {
   getPaginationVariables,
   Image,
   Money,
+  Analytics,
 } from '@shopify/hydrogen';
 import type {ProductItemFragment} from 'storefrontapi.generated';
 import {useEffect} from 'react';
@@ -81,6 +82,14 @@ export default function Collection() {
           </>
         )}
       </Pagination>
+      <Analytics.CollectionView
+        data={{
+          collection: {
+            id: collection.id,
+            handle: collection.handle,
+          },
+        }}
+      />
     </div>
   );
 }

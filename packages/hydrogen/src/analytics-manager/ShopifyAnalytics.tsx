@@ -117,8 +117,8 @@ export function ShopifyAnalytics({
   const {checkoutDomain, storefrontAccessToken, withPrivacyBanner} = consent;
 
   useCustomerPrivacy({
-    checkoutDomain: isMockShop ? 'mock.shop' : checkoutDomain,
-    storefrontAccessToken: isMockShop
+    checkoutDomain: isMockShop || !checkoutDomain ? 'mock.shop' : checkoutDomain,
+    storefrontAccessToken: isMockShop || !storefrontAccessToken
       ? 'abcdefghijklmnopqrstuvwxyz123456'
       : storefrontAccessToken,
     withPrivacyBanner: isMockShop ? false : withPrivacyBanner,
