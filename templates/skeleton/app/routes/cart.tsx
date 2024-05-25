@@ -1,10 +1,10 @@
-import {Await, type MetaFunction} from '@remix-run/react';
+import {Await, type MetaFunction, useRouteLoaderData} from '@remix-run/react';
 import {Suspense} from 'react';
 import type {CartQueryDataReturn} from '@shopify/hydrogen';
 import {CartForm} from '@shopify/hydrogen';
 import {json, type ActionFunctionArgs} from '@shopify/remix-oxygen';
 import {CartMain} from '~/components/Cart';
-import {useRootLoaderData} from '~/lib/root-data';
+import type {RootLoader} from '~/root';
 
 export const meta: MetaFunction = () => {
   return [{title: `Hydrogen | Cart`}];
@@ -81,15 +81,14 @@ export async function action({request, context}: ActionFunctionArgs) {
 }
 
 export default function Cart() {
-  const rootData = useRootLoaderData();
-  const cartPromise = rootData.cart;
+  const rootData = useRouteLoaderData<RootLoader>('root');
 
-  return (
+  return rootData ? (
     <div className="cart">
       <h1>Cart</h1>
       <Suspense fallback={<p>Loading cart ...</p>}>
         <Await
-          resolve={cartPromise}
+          resolve={rootData.cart}
           errorElement={<div>An error occurred</div>}
         >
           {(cart) => {
@@ -98,5 +97,5 @@ export default function Cart() {
         </Await>
       </Suspense>
     </div>
-  );
+  ) : null;
 }

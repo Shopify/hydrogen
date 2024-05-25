@@ -1,15 +1,23 @@
 import {Await, NavLink} from '@remix-run/react';
 import {Suspense} from 'react';
-import type {HeaderQuery} from 'storefrontapi.generated';
-import type {LayoutProps} from '~/components/Layout';
-import {useRootLoaderData} from '~/lib/root-data';
+import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
 import {useAside} from '~/components/Aside';
 
-type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'>;
+interface HeaderProps {
+  header: HeaderQuery;
+  cart: Promise<CartApiQueryFragment | null>;
+  isLoggedIn: Promise<boolean>;
+  publicStoreDomain: string;
+}
 
 type Viewport = 'desktop' | 'mobile';
 
-export function Header({header, isLoggedIn, cart}: HeaderProps) {
+export function Header({
+  header,
+  isLoggedIn,
+  cart,
+  publicStoreDomain,
+}: HeaderProps) {
   const {shop, menu} = header;
   return (
     <header className="header">
@@ -20,6 +28,7 @@ export function Header({header, isLoggedIn, cart}: HeaderProps) {
         menu={menu}
         viewport="desktop"
         primaryDomainUrl={header.shop.primaryDomain.url}
+        publicStoreDomain={publicStoreDomain}
       />
       <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
     </header>
@@ -30,12 +39,13 @@ export function HeaderMenu({
   menu,
   primaryDomainUrl,
   viewport,
+  publicStoreDomain,
 }: {
   menu: HeaderProps['header']['menu'];
-  primaryDomainUrl: HeaderQuery['shop']['primaryDomain']['url'];
+  primaryDomainUrl: HeaderProps['header']['shop']['primaryDomain']['url'];
   viewport: Viewport;
+  publicStoreDomain: HeaderProps['publicStoreDomain'];
 }) {
-  const {publicStoreDomain} = useRootLoaderData();
   const className = `header-menu-${viewport}`;
 
   function closeAside(event: React.MouseEvent<HTMLAnchorElement>) {

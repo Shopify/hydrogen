@@ -6,15 +6,18 @@ import {
   Outlet,
   Scripts,
   useRouteError,
-  useLoaderData,
+  useRouteLoaderData,
   ScrollRestoration,
   isRouteErrorResponse,
   type ShouldRevalidateFunction,
 } from '@remix-run/react';
+import type {FooterQuery, HeaderQuery} from 'storefrontapi.generated';
 import favicon from './assets/favicon.svg';
 import resetStyles from './styles/reset.css?url';
 import appStyles from './styles/app.css?url';
-import {Layout} from '~/components/Layout';
+import {Layout as PageLayout} from '~/components/Layout';
+
+export type RootLoader = typeof loader;
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -76,18 +79,25 @@ export async function loader({context}: LoaderFunctionArgs) {
     },
   });
 
-  return defer({
-    cart: cartPromise,
-    footer: footerPromise,
-    header: await headerPromise,
-    isLoggedIn: isLoggedInPromise,
-    publicStoreDomain,
-  });
+  return defer(
+    {
+      cart: cartPromise,
+      footer: footerPromise,
+      header: await headerPromise,
+      isLoggedIn: isLoggedInPromise,
+      publicStoreDomain,
+    },
+    {
+      headers: {
+        'Set-Cookie': await context.session.commit(),
+      },
+    },
+  );
 }
 
-export default function App() {
+export function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
-  const data = useLoaderData<typeof loader>();
+  const data = useRouteLoaderData<RootLoader>('root');
 
   return (
     <html lang="en">
@@ -98,9 +108,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout {...data}>
-          <Outlet />
-        </Layout>
+        {data ? <PageLayout {...data}>{children}</PageLayout> : children}
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>
@@ -108,10 +116,12 @@ export default function App() {
   );
 }
 
+export default function App() {
+  return <Outlet />;
+}
+
 export function ErrorBoundary() {
   const error = useRouteError();
-  const rootData = useLoaderData<typeof loader>();
-  const nonce = useNonce();
   let errorMessage = 'Unknown error';
   let errorStatus = 500;
 
@@ -123,29 +133,15 @@ export function ErrorBoundary() {
   }
 
   return (
-    <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <Meta />
-        <Links />
-      </head>
-      <body>
-        <Layout {...rootData}>
-          <div className="route-error">
-            <h1>Oops</h1>
-            <h2>{errorStatus}</h2>
-            {errorMessage && (
-              <fieldset>
-                <pre>{errorMessage}</pre>
-              </fieldset>
-            )}
-          </div>
-        </Layout>
-        <ScrollRestoration nonce={nonce} />
-        <Scripts nonce={nonce} />
-      </body>
-    </html>
+    <div className="route-error">
+      <h1>Oops</h1>
+      <h2>{errorStatus}</h2>
+      {errorMessage && (
+        <fieldset>
+          <pre>{errorMessage}</pre>
+        </fieldset>
+      )}
+    </div>
   );
 }
 
