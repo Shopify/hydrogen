@@ -3,6 +3,7 @@
  */
 module.exports = {
   parser: '@typescript-eslint/parser',
+  plugins: ['react-compiler'],
   rules: {
     '@typescript-eslint/ban-ts-comment': 'off',
     '@typescript-eslint/naming-convention': 'off',
@@ -10,5 +11,12 @@ module.exports = {
     'no-useless-escape': 'off',
     'no-case-declarations': 'off',
   },
-  overrides: [],
+  overrides: [
+    {
+      files: '*.tsx',
+      rules: {
+        'react-compiler/react-compiler': 'error',
+      },
+    },
+  ],
 };
