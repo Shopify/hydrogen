@@ -3,7 +3,11 @@ import Command from '@shopify/cli-kit/node/base-command';
 import colors from '@shopify/cli-kit/node/colors';
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {collectLog} from '@shopify/cli-kit/node/output';
-import {type AlertCustomSection, renderSuccess} from '@shopify/cli-kit/node/ui';
+import {
+  type AlertCustomSection,
+  renderSuccess,
+  renderInfo,
+} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {Flags, Config} from '@oclif/core';
 import {
@@ -295,18 +299,18 @@ export async function runDev({
   const h2PluginOptions = h2Plugin.api?.getPluginOptions?.();
 
   let codegenProcess: ReturnType<typeof spawnCodegenProcess> | undefined;
-  const setupCodegen = () => {
-    codegenProcess?.kill(0);
-    if (useCodegen) {
-      codegenProcess = spawnCodegenProcess({
-        rootDirectory: root,
-        configFilePath: codegenConfigPath,
-        appDirectory: h2PluginOptions?.remixConfig?.appDirectory,
-      });
-    }
-  };
+  const setupCodegen = useCodegen
+    ? () => {
+        codegenProcess?.kill(0);
+        codegenProcess = spawnCodegenProcess({
+          rootDirectory: root,
+          configFilePath: codegenConfigPath,
+          appDirectory: h2PluginOptions?.remixConfig?.appDirectory,
+        });
+      }
+    : undefined;
 
-  setupCodegen();
+  setupCodegen?.();
 
   if (isHydrogenMonorepo) {
     setupMonorepoReload(viteServer, monorepoPackages, setupCodegen);
@@ -410,25 +414,14 @@ function showSuccessBanner({
 function setupMonorepoReload(
   viteServer: ViteDevServer,
   monorepoPath: string,
-  setupCodegen: () => void,
+  setupCodegen?: () => void,
 ) {
   // Note: app code is already tracked by Vite in monorepos
   // so there is no need to watch it and do manual work here.
   // We need to track, however, code that is not imported in
-  // the app
+  // the app and manually reload things here.
 
   viteServer.httpServer?.once('listening', () => {
-    viteServer.watcher.on('change', async (file) => {
-      if (file.includes(monorepoPath)) {
-        if (file.includes('hydrogen-codegen')) {
-          setupCodegen?.();
-        } else {
-          // Restart Vite server, which also restarts MiniOxygen
-          await viteServer.restart(true);
-        }
-      }
-    });
-
     // Watch the Hydrogen plugin for changes and restart Vite server.
     // Virtual routes are already tracked by Vite because they are in-app code.
     viteServer.watcher.add(monorepoPath + 'hydrogen/dist/vite/plugin.js');
@@ -445,5 +438,37 @@ function setupMonorepoReload(
 
     // Watch any file in hydrogen-codegen to restart the codegen process.
     viteServer.watcher.add(monorepoPath + 'hydrogen-codegen/dist/esm/index.js');
+
+    // Watch the dev command file to print a warning when it changes.
+    viteServer.watcher.add(monorepoPath + 'cli/dist/commands/hydrogen/dev.js');
+
+    viteServer.watcher.on('change', async (file) => {
+      if (file.includes(monorepoPath)) {
+        if (file.includes('/packages/hydrogen-codegen/')) {
+          if (setupCodegen) {
+            setupCodegen();
+            renderInfo({
+              headline: 'The Hydrogen Codegen source has been modified.',
+              body: 'The codegen process has been restarted.',
+            });
+          }
+        } else if (file.includes('/packages/cli/')) {
+          // We can't restart the terminal process from here
+          // so we just print a warning to the user.
+          renderInfo({
+            headline: 'The Hydrogen CLI source has been modified.',
+            body: 'Please restart the `h2 dev` command to see the changes.',
+          });
+        } else {
+          // Restart Vite server, which also restarts MiniOxygen
+          await viteServer.restart(true);
+          console.log('');
+          renderInfo({
+            headline: 'The H2O Vite plugins have been modified.',
+            body: 'The Vite server has been restarted to reflect the changes.',
+          });
+        }
+      }
+    });
   });
 }
