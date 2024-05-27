@@ -1,3 +1,4 @@
+import type {ViteDevServer} from 'vite';
 import Command from '@shopify/cli-kit/node/base-command';
 import colors from '@shopify/cli-kit/node/colors';
 import {resolvePath} from '@shopify/cli-kit/node/path';
@@ -291,6 +292,10 @@ export async function runDev({
 
   const h2PluginOptions = h2Plugin.api?.getPluginOptions?.();
 
+  if (isHydrogenMonorepo) {
+    setupMonorepoReload(viteServer, monorepoPackages);
+  }
+
   const codegenProcess = useCodegen
     ? spawnCodegenProcess({
         rootDirectory: root,
@@ -403,5 +408,30 @@ function showSuccessBanner({
       {link: {url: finalHost}},
     ],
     customSections,
+  });
+}
+
+function setupMonorepoReload(viteServer: ViteDevServer, monorepoPath: string) {
+  viteServer.httpServer?.once('listening', () => {
+    viteServer.watcher.on('change', async (file) => {
+      if (file.includes(monorepoPath)) {
+        // Restart Vite server, which also restarts MiniOxygen
+        await viteServer.restart(true);
+      }
+    });
+
+    // Any change in MiniOxygen will overwrite every file in `dist`.
+    // We watch the plugin file for example and restart Vite server,
+    // which also restarts the MiniOxygen worker.
+    // The only exception is worker-entry because it follows a separate
+    // build in TSUP.
+    viteServer.watcher.add(monorepoPath + 'mini-oxygen/dist/vite/plugin.js');
+    viteServer.watcher.add(
+      monorepoPath + 'mini-oxygen/dist/vite/worker-entry.js',
+    );
+
+    // Watch the Hydrogen plugin for changes and restart Vite server.
+    // Virtual routes are already tracked by Vite because they are in-app code.
+    viteServer.watcher.add(monorepoPath + 'hydrogen/dist/vite/plugin.js');
   });
 }
