@@ -212,9 +212,6 @@ export async function runDev({
   const monorepoPackages = new URL('../../../..', import.meta.url).pathname;
   const isHydrogenMonorepo = monorepoPackages.endsWith('/hydrogen/packages/');
 
-  // Allow Vite to read files from the Hydrogen packages in local development.
-  const fs = isHydrogenMonorepo ? {allow: [root, monorepoPackages]} : undefined;
-
   const customLogger = vite.createLogger();
   if (process.env.SHOPIFY_UNIT_TEST) {
     // Make logs from Vite visible in tests
@@ -231,7 +228,12 @@ export async function runDev({
     root,
     customLogger,
     clearScreen: false,
-    server: {fs, host: host ? true : undefined},
+    server: {
+      host: host ? true : undefined,
+      // Allow Vite to read files from the Hydrogen packages in local development.
+      fs: isHydrogenMonorepo ? {allow: [root, monorepoPackages]} : undefined,
+    },
+    optimizeDeps: isHydrogenMonorepo ? {force: true} : undefined,
     plugins: [
       {
         name: 'hydrogen:cli',
