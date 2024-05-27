@@ -1,4 +1,10 @@
-import {fileURLToPath} from 'node:url';
+import Command from '@shopify/cli-kit/node/base-command';
+import colors from '@shopify/cli-kit/node/colors';
+import {resolvePath} from '@shopify/cli-kit/node/path';
+import {collectLog} from '@shopify/cli-kit/node/output';
+import {type AlertCustomSection, renderSuccess} from '@shopify/cli-kit/node/ui';
+import {AbortError} from '@shopify/cli-kit/node/error';
+import {Flags, Config} from '@oclif/core';
 import {
   enhanceH2Logs,
   isH2Verbose,
@@ -13,13 +19,6 @@ import {
   flagsToCamelObject,
   overrideFlag,
 } from '../../lib/flags.js';
-import Command from '@shopify/cli-kit/node/base-command';
-import colors from '@shopify/cli-kit/node/colors';
-import {resolvePath} from '@shopify/cli-kit/node/path';
-import {collectLog} from '@shopify/cli-kit/node/output';
-import {type AlertCustomSection, renderSuccess} from '@shopify/cli-kit/node/ui';
-import {AbortError} from '@shopify/cli-kit/node/error';
-import {Flags, Config} from '@oclif/core';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
@@ -154,7 +153,6 @@ type DevOptions = {
   debug?: boolean;
   sourcemap?: boolean;
   inspectorPort?: number;
-  isLocalDev?: boolean;
   customerAccountPush?: boolean;
   cliConfig: Config;
   verbose?: boolean;
@@ -174,7 +172,6 @@ export async function runDev({
   debug = false,
   disableVersionCheck = false,
   inspectorPort,
-  isLocalDev = false,
   customerAccountPush: customerAccountPushFlag = false,
   cliConfig,
   verbose,
@@ -211,10 +208,11 @@ export async function runDev({
 
   const vite = await importVite(root);
 
+  const monorepoPackages = new URL('../../../..', import.meta.url).pathname;
+  const isHydrogenMonorepo = monorepoPackages.endsWith('/hydrogen/packages/');
+
   // Allow Vite to read files from the Hydrogen packages in local development.
-  const fs = isLocalDev
-    ? {allow: [root, fileURLToPath(new URL('../../../../', import.meta.url))]}
-    : undefined;
+  const fs = isHydrogenMonorepo ? {allow: [root, monorepoPackages]} : undefined;
 
   const customLogger = vite.createLogger();
   if (process.env.SHOPIFY_UNIT_TEST) {
