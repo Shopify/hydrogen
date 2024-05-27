@@ -1,7 +1,7 @@
 import type {ViteDevServer} from 'vite';
 import Command from '@shopify/cli-kit/node/base-command';
 import colors from '@shopify/cli-kit/node/colors';
-import {resolvePath} from '@shopify/cli-kit/node/path';
+import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
 import {collectLog} from '@shopify/cli-kit/node/output';
 import {
   type AlertCustomSection,
@@ -50,6 +50,7 @@ import {importVite} from '../../lib/import-utils.js';
 import {createEntryPointErrorHandler} from '../../lib/deps-optimizer.js';
 import {getCodeFormatOptions} from '../../lib/format-code.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
+import {removeFile} from '@shopify/cli-kit/node/fs';
 
 export default class Dev extends Command {
   static descriptionWithMarkdown = `Runs a Hydrogen storefront in a local runtime that emulates an Oxygen worker for development.
@@ -216,6 +217,11 @@ export async function runDev({
   const monorepoPackages = new URL('../../../..', import.meta.url).pathname;
   const isHydrogenMonorepo = monorepoPackages.endsWith('/hydrogen/packages/');
 
+  if (isHydrogenMonorepo) {
+    // Force reoptimizing deps without printing the message
+    await removeFile(joinPath(root, 'node_modules/.vite'));
+  }
+
   const customLogger = vite.createLogger();
   if (process.env.SHOPIFY_UNIT_TEST) {
     // Make logs from Vite visible in tests
@@ -237,7 +243,6 @@ export async function runDev({
       // Allow Vite to read files from the Hydrogen packages in local development.
       fs: isHydrogenMonorepo ? {allow: [root, monorepoPackages]} : undefined,
     },
-    optimizeDeps: isHydrogenMonorepo ? {force: true} : undefined,
     plugins: [
       {
         name: 'hydrogen:cli',
