@@ -294,17 +294,23 @@ export async function runDev({
 
   const h2PluginOptions = h2Plugin.api?.getPluginOptions?.();
 
-  if (isHydrogenMonorepo) {
-    setupMonorepoReload(viteServer, monorepoPackages);
-  }
-
-  const codegenProcess = useCodegen
-    ? spawnCodegenProcess({
+  let codegenProcess: ReturnType<typeof spawnCodegenProcess> | undefined;
+  const setupCodegen = () => {
+    codegenProcess?.kill(0);
+    if (useCodegen) {
+      codegenProcess = spawnCodegenProcess({
         rootDirectory: root,
         configFilePath: codegenConfigPath,
         appDirectory: h2PluginOptions?.remixConfig?.appDirectory,
-      })
-    : undefined;
+      });
+    }
+  };
+
+  setupCodegen();
+
+  if (isHydrogenMonorepo) {
+    setupMonorepoReload(viteServer, monorepoPackages, setupCodegen);
+  }
 
   // Store the port passed by the user in the config.
   const publicPort =
@@ -401,14 +407,31 @@ function showSuccessBanner({
   });
 }
 
-function setupMonorepoReload(viteServer: ViteDevServer, monorepoPath: string) {
+function setupMonorepoReload(
+  viteServer: ViteDevServer,
+  monorepoPath: string,
+  setupCodegen: () => void,
+) {
+  // Note: app code is already tracked by Vite in monorepos
+  // so there is no need to watch it and do manual work here.
+  // We need to track, however, code that is not imported in
+  // the app
+
   viteServer.httpServer?.once('listening', () => {
     viteServer.watcher.on('change', async (file) => {
       if (file.includes(monorepoPath)) {
-        // Restart Vite server, which also restarts MiniOxygen
-        await viteServer.restart(true);
+        if (file.includes('hydrogen-codegen')) {
+          setupCodegen?.();
+        } else {
+          // Restart Vite server, which also restarts MiniOxygen
+          await viteServer.restart(true);
+        }
       }
     });
+
+    // Watch the Hydrogen plugin for changes and restart Vite server.
+    // Virtual routes are already tracked by Vite because they are in-app code.
+    viteServer.watcher.add(monorepoPath + 'hydrogen/dist/vite/plugin.js');
 
     // Any change in MiniOxygen will overwrite every file in `dist`.
     // We watch the plugin file for example and restart Vite server,
@@ -420,8 +443,7 @@ function setupMonorepoReload(viteServer: ViteDevServer, monorepoPath: string) {
       monorepoPath + 'mini-oxygen/dist/vite/worker-entry.js',
     );
 
-    // Watch the Hydrogen plugin for changes and restart Vite server.
-    // Virtual routes are already tracked by Vite because they are in-app code.
-    viteServer.watcher.add(monorepoPath + 'hydrogen/dist/vite/plugin.js');
+    // Watch any file in hydrogen-codegen to restart the codegen process.
+    viteServer.watcher.add(monorepoPath + 'hydrogen-codegen/dist/esm/index.js');
   });
 }
