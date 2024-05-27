@@ -304,21 +304,9 @@ export async function runDev({
       })
     : undefined;
 
-  // handle unhandledRejection so that the process won't exit
-  process.on('unhandledRejection', (err) => {
-    console.log('Unhandled Rejection: ', err);
-  });
-
   // Store the port passed by the user in the config.
   const publicPort =
     appPort ?? viteServer.config.server.port ?? DEFAULT_APP_PORT;
-
-  // TODO -- Need to change Remix' <Scripts/> component
-  // const assetsPort = await findPort(publicPort + 100);
-  // if (assetsPort) {
-  //   // Note: Set this env before loading Remix config!
-  //   process.env.HYDROGEN_ASSET_BASE_URL = buildAssetsUrl(assetsPort);
-  // }
 
   const [tunnel, cliCommand] = await Promise.all([
     backgroundPromise.then(({customerAccountPush, storefrontId}) =>
