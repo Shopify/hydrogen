@@ -2,10 +2,13 @@ import path from 'node:path';
 import {createRequire} from 'node:module';
 import {checkForNewVersion} from '@shopify/cli-kit/node/node-package-manager';
 import {renderInfo} from '@shopify/cli-kit/node/ui';
+import { CLI_KIT_VERSION } from '@shopify/cli-kit/common/version';
+
 
 const PACKAGE_NAMES = {
   main: '@shopify/hydrogen',
-  cli: '@shopify/cli-hydrogen',
+  cliHydrogen: '@shopify/cli-hydrogen',
+  cli: '@shopify/cli',
 } as const;
 
 /**
@@ -21,18 +24,12 @@ export async function checkHydrogenVersion(
   if (process.env.LOCAL_DEV) return;
   const pkgName = PACKAGE_NAMES[pkgKey];
 
-  const require = createRequire(import.meta.url);
-  const pkgJsonPath = resolveFrom.endsWith('package.json')
-    ? locateDependency(require, resolveFrom)
-    : locateDependency(
-        require,
-        path.join(pkgName, 'package.json'),
-        resolveFrom,
-      );
-
-  if (!pkgJsonPath) return;
-
-  const currentVersion = require(pkgJsonPath).version as string;
+  let currentVersion: string | undefined
+  if (pkgName === PACKAGE_NAMES.cli) {
+    currentVersion = CLI_KIT_VERSION
+  } else {
+    currentVersion = getCurrentVersionFromPackageJson(pkgName, resolveFrom)
+  }
 
   if (!currentVersion || currentVersion.includes('next')) return;
 
@@ -60,6 +57,25 @@ export async function checkHydrogenVersion(
 
     return {currentVersion, newVersion: newVersionAvailable};
   };
+}
+
+function getCurrentVersionFromPackageJson(
+  pkgName: string,
+  resolveFrom: string,
+) {
+  const require = createRequire(import.meta.url);
+  const pkgJsonPath = resolveFrom.endsWith('package.json')
+    ? locateDependency(require, resolveFrom)
+    : locateDependency(
+        require,
+        path.join(pkgName, 'package.json'),
+        resolveFrom,
+      );
+
+  if (!pkgJsonPath) return;
+
+  const currentVersion = require(pkgJsonPath).version as string;
+  return currentVersion
 }
 
 function locateDependency(
