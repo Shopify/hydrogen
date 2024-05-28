@@ -62,8 +62,8 @@ function serializeRichTextASTNode(
 ): ReactNode {
   let children;
   if ('children' in node) {
-    children = node.children.map((child) =>
-      serializeRichTextASTNode(components, child, index),
+    children = node.children.map((child, childIndex) =>
+      serializeRichTextASTNode(components, child, childIndex),
     );
   }
 
