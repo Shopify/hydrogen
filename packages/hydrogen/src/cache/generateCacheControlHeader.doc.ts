@@ -3,6 +3,7 @@ import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 const data: ReferenceEntityTemplateSchema = {
   name: 'generateCacheControlHeader',
   category: 'utilities',
+  subCategory: 'caching',
   isVisualComponent: false,
   related: [],
   description: `This utility function accepts a \`CachingStrategy\` object and returns a string with the corresponding \`cache-control\` header.
