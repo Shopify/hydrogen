@@ -137,6 +137,7 @@ export {
   useShopifyCookies,
   Video,
 } from '@shopify/hydrogen-react';
+export {RichText} from './RichText';
 
 export type {
   ClientBrowserParameters,
