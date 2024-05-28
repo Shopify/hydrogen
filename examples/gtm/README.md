@@ -138,6 +138,15 @@ export function GoogleTagManager() {
 Make sure that `GTM-<YOUR_GTM_ID>` is updated to your GTM tag id.
 
 ```diff
+import {
+  Analytics,
+  useNonce,
+  getShopAnalytics,
++  Script,
+} from '@shopify/hydrogen';
+
+...
+
 export default function App() {
   const nonce = useNonce();
   const data = useLoaderData<typeof loader>();
@@ -149,13 +158,13 @@ export default function App() {
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <Meta />
         <Links />
-+        <script nonce={nonce} dangerouslySetInnerHTML={{
++        <Script dangerouslySetInnerHTML={{
 +          __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 +            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 +            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 +            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 +            })(window,document,'script','dataLayer','GTM-<YOUR_GTM_ID>');`,
-+        }}></script>
++        }}></Script>
       <body>
 +        <noscript>
 +          <iframe
