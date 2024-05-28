@@ -2,8 +2,7 @@ import path from 'node:path';
 import {createRequire} from 'node:module';
 import {checkForNewVersion} from '@shopify/cli-kit/node/node-package-manager';
 import {renderInfo} from '@shopify/cli-kit/node/ui';
-import { CLI_KIT_VERSION } from '@shopify/cli-kit/common/version';
-
+import {CLI_KIT_VERSION} from '@shopify/cli-kit/common/version';
 
 const PACKAGE_NAMES = {
   main: '@shopify/hydrogen',
@@ -24,11 +23,11 @@ export async function checkHydrogenVersion(
   if (process.env.LOCAL_DEV) return;
   const pkgName = PACKAGE_NAMES[pkgKey];
 
-  let currentVersion: string | undefined
+  let currentVersion: string | undefined;
   if (pkgName === PACKAGE_NAMES.cli) {
-    currentVersion = CLI_KIT_VERSION
+    currentVersion = CLI_KIT_VERSION;
   } else {
-    currentVersion = getCurrentVersionFromPackageJson(pkgName, resolveFrom)
+    currentVersion = getCurrentVersionFromPackageJson(pkgName, resolveFrom);
   }
 
   if (!currentVersion || currentVersion.includes('next')) return;
@@ -75,7 +74,7 @@ function getCurrentVersionFromPackageJson(
   if (!pkgJsonPath) return;
 
   const currentVersion = require(pkgJsonPath).version as string;
-  return currentVersion
+  return currentVersion;
 }
 
 function locateDependency(
