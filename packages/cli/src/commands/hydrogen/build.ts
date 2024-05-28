@@ -48,11 +48,12 @@ export default class Build extends Command {
     const originalDirectory = flags.path
       ? resolvePath(flags.path)
       : process.cwd();
-    let directory = originalDirectory;
 
-    if (flags.diff) {
-      directory = await prepareDiffDirectory(originalDirectory, flags.watch);
-    }
+    const diff = flags.diff
+      ? await prepareDiffDirectory(originalDirectory, flags.watch)
+      : undefined;
+
+    const directory = diff?.targetDirectory ?? originalDirectory;
 
     const buildParams = {
       ...flagsToCamelObject(flags),
@@ -69,14 +70,16 @@ export default class Build extends Command {
         setupResourceCleanup(async () => {
           await result?.close();
 
-          if (flags.diff) {
+          if (diff) {
             await copyDiffBuild(directory, originalDirectory);
+            await diff.cleanup();
           }
         });
       }
     } else {
-      if (flags.diff) {
+      if (diff) {
         await copyDiffBuild(directory, originalDirectory);
+        await diff.cleanup();
       }
 
       // The Remix compiler hangs due to a bug in ESBuild:

@@ -69,11 +69,13 @@ export default class Preview extends Command {
     const originalDirectory = flags.path
       ? resolvePath(flags.path)
       : process.cwd();
-    let directory = originalDirectory;
 
-    if (flags.build && flags.diff) {
-      directory = await prepareDiffDirectory(originalDirectory, flags.watch);
-    }
+    const diff =
+      flags.build && flags.diff
+        ? await prepareDiffDirectory(originalDirectory, flags.watch)
+        : undefined;
+
+    const directory = diff?.targetDirectory ?? originalDirectory;
 
     const {close} = await runPreview({
       ...flagsToCamelObject(flags),
@@ -82,8 +84,9 @@ export default class Preview extends Command {
 
     setupResourceCleanup(async () => {
       await close();
-      if (flags.diff) {
+      if (diff) {
         await copyDiffBuild(directory, originalDirectory);
+        await diff.cleanup();
       }
     });
   }

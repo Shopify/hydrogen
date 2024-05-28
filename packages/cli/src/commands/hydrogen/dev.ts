@@ -120,11 +120,12 @@ export default class Dev extends Command {
     const originalDirectory = flags.path
       ? resolvePath(flags.path)
       : process.cwd();
-    let directory = originalDirectory;
 
-    if (flags.diff) {
-      directory = await prepareDiffDirectory(directory, true);
-    }
+    const diff = flags.diff
+      ? await prepareDiffDirectory(originalDirectory, true)
+      : undefined;
+
+    const directory = diff?.targetDirectory ?? originalDirectory;
 
     const devParams = {
       ...flagsToCamelObject(flags),
@@ -137,11 +138,14 @@ export default class Dev extends Command {
       ? await runDev(devParams)
       : await runClassicCompilerDev(devParams);
 
-    setupResourceCleanup(close);
+    setupResourceCleanup(async () => {
+      await close();
 
-    if (flags.diff) {
-      await copyShopifyConfig(directory, originalDirectory);
-    }
+      if (diff) {
+        await copyShopifyConfig(directory, originalDirectory);
+        await diff.cleanup();
+      }
+    });
   }
 }
 

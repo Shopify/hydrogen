@@ -1,4 +1,3 @@
-import {rmdirSync} from 'node:fs';
 import {temporaryDirectory} from 'tempy';
 import {createSymlink, copy as copyDirectory} from 'fs-extra/esm';
 import {
@@ -23,7 +22,6 @@ export async function prepareDiffDirectory(
   watch: boolean,
 ) {
   const targetDirectory = temporaryDirectory({prefix: 'tmp-hydrogen-diff-'});
-  process.on('exit', () => rmdirSync(targetDirectory, {recursive: true}));
 
   console.info(
     `\n-- Applying diff to starter template in\n${colors.dim(
@@ -38,11 +36,13 @@ export async function prepareDiffDirectory(
     joinPath(targetDirectory, 'node_modules'),
   );
 
-  if (watch) {
-    const pw = await import('@parcel/watcher').catch((error) => {
-      console.log('Could not watch for file changes.', error);
-    });
+  const pw = watch
+    ? await import('@parcel/watcher').catch((error) => {
+        console.log('Could not watch for file changes.', error);
+      })
+    : undefined;
 
+  const subscriptions = await Promise.all([
     pw?.subscribe(
       targetDirectory,
       (error, events) => {
@@ -59,7 +59,7 @@ export async function prepareDiffDirectory(
         });
       },
       {ignore: ['!*.generated.d.ts']},
-    );
+    ),
 
     pw?.subscribe(
       diffDirectory,
@@ -81,10 +81,16 @@ export async function prepareDiffDirectory(
         });
       },
       {ignore: ['*.generated.d.ts', 'package.json', 'tsconfig.json']},
-    );
-  }
+    ),
+  ]);
 
-  return targetDirectory;
+  return {
+    targetDirectory,
+    cleanup: async () => {
+      await Promise.all(subscriptions.map((sub) => sub?.unsubscribe()));
+      await remove(targetDirectory);
+    },
+  };
 }
 
 type DiffOptions = {
