@@ -1,5 +1,5 @@
 import {Suspense} from 'react';
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {
   Await,
   Link,
@@ -24,18 +24,12 @@ import {
 import type {SelectedOption} from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/lib/variants';
 import {useAside} from '~/components/Aside';
-import {ResponseStub} from '@remix-run/server-runtime/dist/single-fetch';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
 };
 
-export async function loader({
-  params,
-  request,
-  context,
-  response,
-}: LoaderFunctionArgs) {
+export async function loader({params, request, context}: LoaderFunctionArgs) {
   const {handle} = params;
   const {storefront} = context;
 
@@ -49,8 +43,7 @@ export async function loader({
   });
 
   if (!product?.id) {
-    response!.status = 404;
-    throw response;
+    throw new Response(null, {status: 404});
   }
 
   const firstVariant = product.variants.nodes[0];
@@ -67,7 +60,7 @@ export async function loader({
     // if no selected variant was returned from the selected options,
     // we redirect to the first variant's url with it's selected options applied
     if (!product.selectedVariant) {
-      throw redirectToFirstVariant({product, request, response: response!});
+      throw redirectToFirstVariant({product, request});
     }
   }
 
@@ -80,32 +73,30 @@ export async function loader({
     variables: {handle},
   });
 
-  return {product, variants};
+  return defer({product, variants});
 }
 
 function redirectToFirstVariant({
   product,
   request,
-  response,
 }: {
   product: ProductFragment;
   request: Request;
-  response: ResponseStub;
 }) {
   const url = new URL(request.url);
   const firstVariant = product.variants.nodes[0];
 
-  response!.status = 302;
-  response!.headers.set(
-    'Location',
+  return redirect(
     getVariantUrl({
       pathname: url.pathname,
       handle: product.handle,
       selectedOptions: firstVariant.selectedOptions,
       searchParams: new URLSearchParams(url.search),
     }),
+    {
+      status: 302,
+    },
   );
-  return response;
 }
 
 export default function Product() {

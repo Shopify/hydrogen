@@ -1,16 +1,15 @@
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, Link} from '@remix-run/react';
 
-export async function loader({context, response}: LoaderFunctionArgs) {
+export async function loader({context}: LoaderFunctionArgs) {
   const data = await context.storefront.query(POLICIES_QUERY);
   const policies = Object.values(data.shop || {});
 
   if (!policies.length) {
-    response!.status = 404;
-    throw new Error('No policies found');
+    throw new Response('No policies found', {status: 404});
   }
 
-  return {policies};
+  return json({policies});
 }
 
 export default function Policies() {

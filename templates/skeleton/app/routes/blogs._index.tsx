@@ -1,4 +1,4 @@
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {Link, useLoaderData, type MetaFunction} from '@remix-run/react';
 import {Pagination, getPaginationVariables} from '@shopify/hydrogen';
 
@@ -20,7 +20,7 @@ export const loader = async ({
     },
   });
 
-  return {blogs};
+  return json({blogs});
 };
 
 export default function Blogs() {

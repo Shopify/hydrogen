@@ -1,4 +1,4 @@
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import type {
   NormalizedPredictiveSearch,
   NormalizedPredictiveSearchResults,
@@ -36,24 +36,16 @@ export type PredictiveSearchAPILoader = typeof loader;
  * Fetches the search results from the predictive search API
  * requested by the SearchForm component
  */
-export async function loader({
-  request,
-  params,
-  context,
-  response,
-}: LoaderFunctionArgs) {
+export async function loader({request, params, context}: LoaderFunctionArgs) {
   const search = await fetchPredictiveSearchResults({
     params,
     request,
     context,
   });
 
-  response!.headers.append(
-    'Cache-Control',
-    `max-age=${search.searchTerm ? 60 : 3600}`,
-  );
-
-  return search;
+  return json(search, {
+    headers: {'Cache-Control': `max-age=${search.searchTerm ? 60 : 3600}`},
+  });
 }
 
 async function fetchPredictiveSearchResults({

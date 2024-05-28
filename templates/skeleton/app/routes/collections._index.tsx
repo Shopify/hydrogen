@@ -1,5 +1,5 @@
 import {useLoaderData, Link} from '@remix-run/react';
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {Pagination, getPaginationVariables, Image} from '@shopify/hydrogen';
 import type {CollectionFragment} from 'storefrontapi.generated';
 
@@ -12,7 +12,7 @@ export async function loader({context, request}: LoaderFunctionArgs) {
     variables: paginationVariables,
   });
 
-  return {collections};
+  return json({collections});
 }
 
 export default function Collections() {

@@ -1,4 +1,4 @@
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, Link, type MetaFunction} from '@remix-run/react';
 import {
   Pagination,
@@ -23,7 +23,7 @@ export async function loader({request, context}: LoaderFunctionArgs) {
     variables: {...paginationVariables},
   });
 
-  return {products};
+  return json({products});
 }
 
 export default function Collection() {

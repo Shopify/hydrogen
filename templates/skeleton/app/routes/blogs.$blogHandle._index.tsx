@@ -1,4 +1,4 @@
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {Link, useLoaderData, type MetaFunction} from '@remix-run/react';
 import {Image, Pagination, getPaginationVariables} from '@shopify/hydrogen';
 import type {ArticleItemFragment} from 'storefrontapi.generated';
@@ -11,15 +11,13 @@ export async function loader({
   request,
   params,
   context: {storefront},
-  response,
 }: LoaderFunctionArgs) {
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 4,
   });
 
   if (!params.blogHandle) {
-    response!.status = 404;
-    throw new Error('Blog not found');
+    throw new Response(`blog not found`, {status: 404});
   }
 
   const {blog} = await storefront.query(BLOGS_QUERY, {
@@ -30,11 +28,10 @@ export async function loader({
   });
 
   if (!blog?.articles) {
-    response!.status = 404;
-    throw new Error('Not found');
+    throw new Response('Not found', {status: 404});
   }
 
-  return {blog};
+  return json({blog});
 }
 
 export default function Blog() {

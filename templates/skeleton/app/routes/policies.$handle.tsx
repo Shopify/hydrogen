@@ -1,4 +1,4 @@
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {Link, useLoaderData, type MetaFunction} from '@remix-run/react';
 import {type Shop} from '@shopify/hydrogen/storefront-api-types';
 
@@ -11,10 +11,9 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.policy.title ?? ''}`}];
 };
 
-export async function loader({params, context, response}: LoaderFunctionArgs) {
+export async function loader({params, context}: LoaderFunctionArgs) {
   if (!params.handle) {
-    response!.status = 404;
-    throw new Error('No handle was passed in');
+    throw new Response('No handle was passed in', {status: 404});
   }
 
   const policyName = params.handle.replace(
@@ -36,11 +35,10 @@ export async function loader({params, context, response}: LoaderFunctionArgs) {
   const policy = data.shop?.[policyName];
 
   if (!policy) {
-    response!.status = 404;
-    throw new Error('Could not find the policy');
+    throw new Response('Could not find the policy', {status: 404});
   }
 
-  return {policy};
+  return json({policy});
 }
 
 export default function Policy() {

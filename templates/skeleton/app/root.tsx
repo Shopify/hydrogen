@@ -1,23 +1,20 @@
 import {useNonce} from '@shopify/hydrogen';
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {
   Links,
   Meta,
   Outlet,
   Scripts,
   useRouteError,
-  useRouteLoaderData,
+  useLoaderData,
   ScrollRestoration,
   isRouteErrorResponse,
   type ShouldRevalidateFunction,
 } from '@remix-run/react';
-import type {FooterQuery, HeaderQuery} from 'storefrontapi.generated';
 import favicon from './assets/favicon.svg';
 import resetStyles from './styles/reset.css?url';
 import appStyles from './styles/app.css?url';
-import {Layout as PageLayout} from '~/components/Layout';
-
-export type RootLoader = typeof loader;
+import {Layout} from '~/components/Layout';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -79,18 +76,18 @@ export async function loader({context}: LoaderFunctionArgs) {
     },
   });
 
-  return {
-    cart: cartPromise as ReturnType<typeof cart.get>,
-    footer: footerPromise as Promise<FooterQuery>,
-    header: (await headerPromise) as HeaderQuery,
-    isLoggedIn: isLoggedInPromise as Promise<boolean>,
+  return defer({
+    cart: cartPromise,
+    footer: footerPromise,
+    header: await headerPromise,
+    isLoggedIn: isLoggedInPromise,
     publicStoreDomain,
-  };
+  });
 }
 
-export function Layout({children}: {children?: React.ReactNode}) {
+export default function App() {
   const nonce = useNonce();
-  const data = useRouteLoaderData<RootLoader>('root');
+  const data = useLoaderData<typeof loader>();
 
   return (
     <html lang="en">
@@ -101,7 +98,9 @@ export function Layout({children}: {children?: React.ReactNode}) {
         <Links />
       </head>
       <body>
-        {data ? <PageLayout {...data}>{children}</PageLayout> : children}
+        <Layout {...data}>
+          <Outlet />
+        </Layout>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>
@@ -109,12 +108,10 @@ export function Layout({children}: {children?: React.ReactNode}) {
   );
 }
 
-export default function App() {
-  return <Outlet />;
-}
-
 export function ErrorBoundary() {
   const error = useRouteError();
+  const rootData = useLoaderData<typeof loader>();
+  const nonce = useNonce();
   let errorMessage = 'Unknown error';
   let errorStatus = 500;
 
@@ -126,15 +123,29 @@ export function ErrorBoundary() {
   }
 
   return (
-    <div className="route-error">
-      <h1>Oops</h1>
-      <h2>{errorStatus}</h2>
-      {errorMessage && (
-        <fieldset>
-          <pre>{errorMessage}</pre>
-        </fieldset>
-      )}
-    </div>
+    <html lang="en">
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        <Layout {...rootData}>
+          <div className="route-error">
+            <h1>Oops</h1>
+            <h2>{errorStatus}</h2>
+            {errorMessage && (
+              <fieldset>
+                <pre>{errorMessage}</pre>
+              </fieldset>
+            )}
+          </div>
+        </Layout>
+        <ScrollRestoration nonce={nonce} />
+        <Scripts nonce={nonce} />
+      </body>
+    </html>
   );
 }
 

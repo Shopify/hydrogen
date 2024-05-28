@@ -4,6 +4,7 @@ import type {
   CustomerFragment,
 } from 'customer-accountapi.generated';
 import {
+  json,
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
 } from '@shopify/remix-oxygen';
@@ -35,10 +36,11 @@ export const meta: MetaFunction = () => {
 
 export async function loader({context}: LoaderFunctionArgs) {
   await context.customerAccount.handleAuthStatus();
-  return {};
+
+  return json({});
 }
 
-export async function action({request, context, response}: ActionFunctionArgs) {
+export async function action({request, context}: ActionFunctionArgs) {
   const {customerAccount} = context;
 
   try {
@@ -54,8 +56,12 @@ export async function action({request, context, response}: ActionFunctionArgs) {
     // this will ensure redirecting to login never happen for mutatation
     const isLoggedIn = await customerAccount.isLoggedIn();
     if (!isLoggedIn) {
-      response!.status = 401;
-      return {};
+      return json(
+        {error: {[addressId]: 'Unauthorized'}},
+        {
+          status: 401,
+        },
+      );
     }
 
     const defaultAddress = form.has('defaultAddress')
@@ -105,16 +111,26 @@ export async function action({request, context, response}: ActionFunctionArgs) {
             throw new Error('Customer address create failed.');
           }
 
-          return {
+          return json({
             error: null,
             createdAddress: data?.customerAddressCreate?.customerAddress,
             defaultAddress,
-          };
+          });
         } catch (error: unknown) {
-          response!.status = 400;
-          return error instanceof Error
-            ? {error: {[addressId]: error.message}}
-            : {error: {[addressId]: error}};
+          if (error instanceof Error) {
+            return json(
+              {error: {[addressId]: error.message}},
+              {
+                status: 400,
+              },
+            );
+          }
+          return json(
+            {error: {[addressId]: error}},
+            {
+              status: 400,
+            },
+          );
         }
       }
 
@@ -144,16 +160,26 @@ export async function action({request, context, response}: ActionFunctionArgs) {
             throw new Error('Customer address update failed.');
           }
 
-          return {
+          return json({
             error: null,
             updatedAddress: address,
             defaultAddress,
-          };
+          });
         } catch (error: unknown) {
-          response!.status = 400;
-          return error instanceof Error
-            ? {error: {[addressId]: error.message}}
-            : {error: {[addressId]: error}};
+          if (error instanceof Error) {
+            return json(
+              {error: {[addressId]: error.message}},
+              {
+                status: 400,
+              },
+            );
+          }
+          return json(
+            {error: {[addressId]: error}},
+            {
+              status: 400,
+            },
+          );
         }
       }
 
@@ -179,23 +205,49 @@ export async function action({request, context, response}: ActionFunctionArgs) {
             throw new Error('Customer address delete failed.');
           }
 
-          return {error: null, deletedAddress: addressId};
+          return json({error: null, deletedAddress: addressId});
         } catch (error: unknown) {
-          response!.status = 400;
-          return error instanceof Error
-            ? {error: {[addressId]: error.message}}
-            : {error: {[addressId]: error}};
+          if (error instanceof Error) {
+            return json(
+              {error: {[addressId]: error.message}},
+              {
+                status: 400,
+              },
+            );
+          }
+          return json(
+            {error: {[addressId]: error}},
+            {
+              status: 400,
+            },
+          );
         }
       }
 
       default: {
-        response!.status = 405;
-        return {error: {[addressId]: 'Method not allowed'}};
+        return json(
+          {error: {[addressId]: 'Method not allowed'}},
+          {
+            status: 405,
+          },
+        );
       }
     }
   } catch (error: unknown) {
-    response!.status = 400;
-    return error instanceof Error ? {error: error.message} : {error};
+    if (error instanceof Error) {
+      return json(
+        {error: error.message},
+        {
+          status: 400,
+        },
+      );
+    }
+    return json(
+      {error},
+      {
+        status: 400,
+      },
+    );
   }
 }
 

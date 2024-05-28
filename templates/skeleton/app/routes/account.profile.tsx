@@ -2,6 +2,7 @@ import type {CustomerFragment} from 'customer-accountapi.generated';
 import type {CustomerUpdateInput} from '@shopify/hydrogen/customer-account-api-types';
 import {CUSTOMER_UPDATE_MUTATION} from '~/graphql/customer-account/CustomerUpdateMutation';
 import {
+  json,
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
 } from '@shopify/remix-oxygen';
@@ -24,15 +25,15 @@ export const meta: MetaFunction = () => {
 
 export async function loader({context}: LoaderFunctionArgs) {
   await context.customerAccount.handleAuthStatus();
-  return {};
+
+  return json({});
 }
 
-export async function action({request, context, response}: ActionFunctionArgs) {
+export async function action({request, context}: ActionFunctionArgs) {
   const {customerAccount} = context;
 
   if (request.method !== 'PUT') {
-    response!.status = 405;
-    return {error: 'Method not allowed'};
+    return json({error: 'Method not allowed'}, {status: 405});
   }
 
   const form = await request.formData();
@@ -67,13 +68,17 @@ export async function action({request, context, response}: ActionFunctionArgs) {
       throw new Error('Customer profile update failed.');
     }
 
-    return {
+    return json({
       error: null,
       customer: data?.customerUpdate?.customer,
-    };
+    });
   } catch (error: any) {
-    response!.status = 400;
-    return {error: error.message, customer: null};
+    return json(
+      {error: error.message, customer: null},
+      {
+        status: 400,
+      },
+    );
   }
 }
 

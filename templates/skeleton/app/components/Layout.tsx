@@ -14,14 +14,13 @@ import {
   PredictiveSearchResults,
 } from '~/components/Search';
 
-interface LayoutProps {
+export type LayoutProps = {
   cart: Promise<CartApiQueryFragment | null>;
+  children?: React.ReactNode;
   footer: Promise<FooterQuery>;
   header: HeaderQuery;
   isLoggedIn: Promise<boolean>;
-  publicStoreDomain: string;
-  children?: React.ReactNode;
-}
+};
 
 export function Layout({
   cart,
@@ -29,27 +28,19 @@ export function Layout({
   footer,
   header,
   isLoggedIn,
-  publicStoreDomain,
 }: LayoutProps) {
   return (
     <Aside.Provider>
       <CartAside cart={cart} />
       <SearchAside />
-      <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
-      {header && (
-        <Header
-          header={header}
-          cart={cart}
-          isLoggedIn={isLoggedIn}
-          publicStoreDomain={publicStoreDomain}
-        />
-      )}
+      <MobileMenuAside menu={header?.menu} shop={header?.shop} />
+      {header && <Header header={header} cart={cart} isLoggedIn={isLoggedIn} />}
       <main>{children}</main>
-      <Footer
-        footer={footer}
-        header={header}
-        publicStoreDomain={publicStoreDomain}
-      />
+      <Suspense>
+        <Await resolve={footer}>
+          {(footer) => <Footer menu={footer?.menu} shop={header?.shop} />}
+        </Await>
+      </Suspense>
     </Aside.Provider>
   );
 }
@@ -104,21 +95,20 @@ function SearchAside() {
 }
 
 function MobileMenuAside({
-  header,
-  publicStoreDomain,
+  menu,
+  shop,
 }: {
-  header: LayoutProps['header'];
-  publicStoreDomain: LayoutProps['publicStoreDomain'];
+  menu: HeaderQuery['menu'];
+  shop: HeaderQuery['shop'];
 }) {
   return (
-    header.menu &&
-    header.shop.primaryDomain?.url && (
+    menu &&
+    shop?.primaryDomain?.url && (
       <Aside type="mobile" heading="MENU">
         <HeaderMenu
-          menu={header.menu}
+          menu={menu}
           viewport="mobile"
-          primaryDomainUrl={header.shop.primaryDomain.url}
-          publicStoreDomain={publicStoreDomain}
+          primaryDomainUrl={shop.primaryDomain.url}
         />
       </Aside>
     )

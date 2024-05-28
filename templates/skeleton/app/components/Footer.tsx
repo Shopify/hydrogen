@@ -1,46 +1,29 @@
-import {Await, NavLink} from '@remix-run/react';
-import {Suspense} from 'react';
+import {NavLink} from '@remix-run/react';
 import type {FooterQuery, HeaderQuery} from 'storefrontapi.generated';
-
-interface FooterProps {
-  footer: Promise<FooterQuery>;
-  header: HeaderQuery;
-  publicStoreDomain: string;
-}
+import {useRootLoaderData} from '~/lib/root-data';
 
 export function Footer({
-  footer: footerPromise,
-  header,
-  publicStoreDomain,
-}: FooterProps) {
+  menu,
+  shop,
+}: FooterQuery & {shop: HeaderQuery['shop']}) {
   return (
-    <Suspense>
-      <Await resolve={footerPromise}>
-        {(footer) => (
-          <footer className="footer">
-            {footer.menu && header.shop.primaryDomain?.url && (
-              <FooterMenu
-                menu={footer.menu}
-                primaryDomainUrl={header.shop.primaryDomain.url}
-                publicStoreDomain={publicStoreDomain}
-              />
-            )}
-          </footer>
-        )}
-      </Await>
-    </Suspense>
+    <footer className="footer">
+      {menu && shop?.primaryDomain?.url && (
+        <FooterMenu menu={menu} primaryDomainUrl={shop.primaryDomain.url} />
+      )}
+    </footer>
   );
 }
 
 function FooterMenu({
   menu,
   primaryDomainUrl,
-  publicStoreDomain,
 }: {
-  menu: Awaited<FooterProps['footer']>['menu'];
-  primaryDomainUrl: FooterProps['header']['shop']['primaryDomain']['url'];
-  publicStoreDomain: string;
+  menu: FooterQuery['menu'];
+  primaryDomainUrl: HeaderQuery['shop']['primaryDomain']['url'];
 }) {
+  const {publicStoreDomain} = useRootLoaderData();
+
   return (
     <nav className="footer-menu" role="navigation">
       {(menu || FALLBACK_FOOTER_MENU).items.map((item) => {
