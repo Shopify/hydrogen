@@ -41,6 +41,7 @@
     "examples/multipass",
     "examples/optimistic-cart-ui",
     "examples/partytown",
+    "examples/single-fetch",
     "examples/subscriptions",
     "examples/third-party-queries-caching",
     "examples/analytics",

@@ -14,7 +14,11 @@ export default async function handleRequest(
 
   const body = await renderToReadableStream(
     <NonceProvider>
-      <RemixServer context={remixContext} url={request.url} />
+      {/***********************************************/
+      /**********  EXAMPLE UPDATE STARTS  ************/}
+      <RemixServer context={remixContext} url={request.url} nonce={nonce} />
+      {/**********   EXAMPLE UPDATE END   ************/
+      /***********************************************/}
     </NonceProvider>,
     {
       nonce,
