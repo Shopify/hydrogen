@@ -6,7 +6,7 @@ Hydrogen includes built in support for the [Customer Privacy API](https://shopif
 
 ## Requirements
 
-- [Configure customer privacy settings](https://help.shopify.com/en/manual/privacy-and-security/privacy/customer-privacy-settings/privacy-settings?shpxid=9f9c768e-AC66-497C-98D0-701334C8173E) - You can configure and manage customer privacy settings within your Shopify admin to help comply with privacy and data protection laws.
+- [Configure customer privacy settings](https://help.shopify.com/en/manual/privacy-and-security/privacy/customer-privacy-settings/privacy-settings?shpxid=9f9c768e-AC66-497C-98D0-701334C8173E) - Configure and manage customer privacy settings within your Shopify admin to help comply with privacy and data protection laws.
 - [Add a cookie banner](https://help.shopify.com/en/manual/privacy-and-security/privacy/customer-privacy-settings/privacy-settings#add-a-cookie-banner) - A cookie banner is a notification displayed on a website that informs visitors about the use of cookies and asks for their consent for data collection and tracking activities.
 
 ## Install
