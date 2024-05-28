@@ -10,6 +10,7 @@ import {readAndParsePackageJson} from '@shopify/cli-kit/node/node-package-manage
 import colors from '@shopify/cli-kit/node/colors';
 import {getRepoNodeModules, getStarterDir} from './build.js';
 import {mergePackageJson} from './file.js';
+import {getRepoMeta} from './dev-shared.js';
 
 /**
  * Creates a new temporary project directory with the starter template and diff applied.
@@ -29,7 +30,16 @@ export async function prepareDiffDirectory(
     )}\n`,
   );
 
-  await applyTemplateDiff(targetDirectory, diffDirectory);
+  await applyTemplateDiff(
+    targetDirectory,
+    diffDirectory,
+    // Intuitively, we think the files are coming from the skeleton
+    // template in the monorepo instead of the CLI package so we forget
+    // forget to start the dev process for the CLI when tinkering with
+    // diff examples. Let's use the skeleton source files from the
+    // monorepo directly if available to avoid this situation.
+    getStarterDir(getRepoMeta().isHydrogenMonorepo),
+  );
 
   await createSymlink(
     await getRepoNodeModules(),
@@ -80,7 +90,14 @@ export async function prepareDiffDirectory(
             : copyFile(event.path, targetFile);
         });
       },
-      {ignore: ['*.generated.d.ts', 'package.json', 'tsconfig.json']},
+      {
+        ignore: [
+          '*.generated.d.ts',
+          'package.json',
+          'tsconfig.json',
+          '.shopify',
+        ],
+      },
     ),
   ]);
 
@@ -155,7 +172,8 @@ export async function applyTemplateDiff(
 
   await copyDirectory(templateDir, targetDirectory, {
     filter: createFilter(
-      /(^|\/|\\)(dist|node_modules|\.cache|.turbo|CHANGELOG\.md)(\/|\\|$)/i,
+      // Do not copy .shopify from skeleton to avoid linking in examples inadvertedly
+      /(^|\/|\\)(dist|node_modules|\.cache|\.turbo|\.shopify|CHANGELOG\.md)(\/|\\|$)/i,
       diffOptions.skipFiles || [],
     ),
   });

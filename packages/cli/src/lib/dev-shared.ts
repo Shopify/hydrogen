@@ -138,6 +138,7 @@ export function getRepoMeta() {
   );
 
   return {
+    isHydrogenMonorepo,
     hydrogenPackagesPath: isHydrogenMonorepo ? monorepoPackagesPath : undefined,
   };
 }
