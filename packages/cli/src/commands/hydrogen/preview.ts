@@ -21,7 +21,7 @@ import {runBuild} from './build.js';
 import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 import {deferPromise} from '../../lib/defer.js';
-import {copyDiffBuild, prepareDiffDirectory} from '../../lib/template-diff.js';
+import {prepareDiffDirectory} from '../../lib/template-diff.js';
 
 export default class Preview extends Command {
   static descriptionWithMarkdown =
@@ -85,7 +85,7 @@ export default class Preview extends Command {
     setupResourceCleanup(async () => {
       await close();
       if (diff) {
-        await copyDiffBuild(directory, originalDirectory);
+        await diff.copyDiffBuild();
         await diff.cleanup();
       }
     });

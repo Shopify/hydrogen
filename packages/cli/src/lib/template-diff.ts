@@ -85,10 +85,46 @@ export async function prepareDiffDirectory(
   ]);
 
   return {
+    /**
+     * The temporary directory with the starter template and diff applied.
+     */
     targetDirectory,
+    /**
+     * Removes the temporary directory and stops the file watchers.
+     */
     cleanup: async () => {
       await Promise.all(subscriptions.map((sub) => sub?.unsubscribe()));
       await remove(targetDirectory);
+    },
+    /**
+     * Brings the `.shopify` directory back to the original project.
+     * This is important to keep a reference of the tunnel configuration
+     * so that it can be removed in the next run.
+     */
+    async copyShopifyConfig() {
+      const source = joinPath(targetDirectory, '.shopify');
+      if (!(await fileExists(source))) return;
+
+      const target = joinPath(diffDirectory, '.shopify');
+      await remove(target);
+      await copyDirectory(source, target, {overwrite: true});
+    },
+    /**
+     * Brings the `dist` directory back to the original project.
+     * This is used to run `h2 preview` with the resulting build.
+     */
+    async copyDiffBuild() {
+      const target = joinPath(diffDirectory, 'dist');
+      await remove(target);
+      await Promise.all([
+        copyDirectory(joinPath(targetDirectory, 'dist'), target, {
+          overwrite: true,
+        }),
+        copyFile(
+          joinPath(targetDirectory, '.env'),
+          joinPath(diffDirectory, '.env'),
+        ),
+      ]);
     },
   };
 }
@@ -160,45 +196,5 @@ export async function applyTemplateDiff(
 
       return pkgJson;
     },
-  });
-}
-
-/**
- * Brings the `dist` directory back to the original project.
- * This is used to run `h2 preview` with the resulting build.
- */
-export async function copyDiffBuild(
-  generatedDirectory: string,
-  diffDirectory: string,
-) {
-  const target = joinPath(diffDirectory, 'dist');
-  await remove(target);
-  await Promise.all([
-    copyDirectory(joinPath(generatedDirectory, 'dist'), target, {
-      overwrite: true,
-    }),
-    copyFile(
-      joinPath(generatedDirectory, '.env'),
-      joinPath(diffDirectory, '.env'),
-    ),
-  ]);
-}
-
-/**
- * Brings the `.shopify` directory back to the original project.
- * This is important to keep a reference of the tunnel configuration
- * so that it can be removed in the next run.
- */
-export async function copyShopifyConfig(
-  generatedDirectory: string,
-  diffDirectory: string,
-) {
-  const source = joinPath(generatedDirectory, '.shopify');
-  if (!(await fileExists(source))) return;
-
-  const target = joinPath(diffDirectory, '.shopify');
-  await remove(target);
-  await copyDirectory(joinPath(generatedDirectory, '.shopify'), target, {
-    overwrite: true,
   });
 }
