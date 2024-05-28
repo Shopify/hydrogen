@@ -4,4 +4,4 @@
 '@shopify/cli-hydrogen': patch
 ---
 
-Stable `<Analytics>` and `useAnalytics`
+`<Analytics>` and `useAnalytics` are now stable.
