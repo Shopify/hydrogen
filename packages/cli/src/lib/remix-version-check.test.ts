@@ -1,7 +1,7 @@
 import {describe, it, expect, vi} from 'vitest';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {checkRemixVersions} from './remix-version-check.js';
-import { cwd } from '@shopify/cli-kit/node/path';
+import {cwd} from '@shopify/cli-kit/node/path';
 
 const requireMock = vi.fn();
 vi.mock('node:module', async () => {
