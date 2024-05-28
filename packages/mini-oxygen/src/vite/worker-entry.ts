@@ -108,7 +108,8 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
             // module to avoid hanging promises in workerd
             for (const update of data.updates) {
               runtime.moduleCache.invalidateDepTree([
-                update.path,
+                // Module IDs are absolute from root
+                update.path.replace(/^\.\//, '/'),
                 ...(update.ssrInvalidates ?? []),
               ]);
             }
