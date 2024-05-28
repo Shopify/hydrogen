@@ -7,6 +7,7 @@ import {
 } from '@shopify/cli-kit/node/fs';
 import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
 import {readAndParsePackageJson} from '@shopify/cli-kit/node/node-package-manager';
+import {outputInfo} from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
 import {getRepoNodeModules, getStarterDir} from './build.js';
 import {mergePackageJson} from './file.js';
@@ -24,22 +25,21 @@ export async function prepareDiffDirectory(
 ) {
   const targetDirectory = temporaryDirectory({prefix: 'tmp-hydrogen-diff-'});
 
-  console.info(
+  // Do not use a banner here to avoid breaking the targetDirectory filepath
+  // to keep it clickable in the terminal.
+  outputInfo(
     `\n-- Applying diff to starter template in\n${colors.dim(
       targetDirectory,
     )}\n`,
   );
 
-  await applyTemplateDiff(
-    targetDirectory,
-    diffDirectory,
-    // Intuitively, we think the files are coming from the skeleton
-    // template in the monorepo instead of the CLI package so we forget
-    // forget to start the dev process for the CLI when tinkering with
-    // diff examples. Let's use the skeleton source files from the
-    // monorepo directly if available to avoid this situation.
-    getStarterDir(getRepoMeta().isHydrogenMonorepo),
-  );
+  // Intuitively, we think the files are coming from the skeleton
+  // template in the monorepo instead of the CLI package so we forget
+  // forget to start the dev process for the CLI when tinkering with
+  // diff examples. Let's use the skeleton source files from the
+  // monorepo directly if available to avoid this situation.
+  const templateDirectory = getStarterDir(getRepoMeta().isHydrogenMonorepo);
+  await applyTemplateDiff(targetDirectory, diffDirectory, templateDirectory);
 
   await createSymlink(
     await getRepoNodeModules(),
@@ -53,6 +53,8 @@ export async function prepareDiffDirectory(
     : undefined;
 
   const subscriptions = await Promise.all([
+    // Copy back the changes in generated d.ts from the
+    // temporary directory to the original diff directory.
     pw?.subscribe(
       targetDirectory,
       (error, events) => {
@@ -71,6 +73,8 @@ export async function prepareDiffDirectory(
       {ignore: ['!*.generated.d.ts']},
     ),
 
+    // Copy new changes in the original diff directory to
+    // the temporary directory.
     pw?.subscribe(
       diffDirectory,
       async (error, events) => {
@@ -83,6 +87,59 @@ export async function prepareDiffDirectory(
           const targetFile = joinPath(
             targetDirectory,
             relativePath(diffDirectory, event.path),
+          );
+
+          const fileInTemplate = event.path.replace(
+            diffDirectory,
+            templateDirectory,
+          );
+
+          return event.type === 'delete'
+            ? fileExists(fileInTemplate)
+                .then((exists) =>
+                  exists
+                    ? // Replace it with original file from the starter template.
+                      copyFile(fileInTemplate, targetFile)
+                    : // Remove the file otherwise.
+                      remove(targetFile),
+                )
+                .catch(() => {})
+            : copyFile(event.path, targetFile);
+        });
+      },
+      {
+        ignore: [
+          '*.generated.d.ts',
+          'package.json',
+          'tsconfig.json',
+          '.shopify',
+        ],
+      },
+    ),
+
+    // Copy new changes in the starter template to the temporary
+    // directory only if they don't overwrite the files in the
+    // original diff directory, which have higher priority.
+    pw?.subscribe(
+      templateDirectory,
+      async (error, events) => {
+        if (error) {
+          console.error(error);
+          return;
+        }
+
+        await events.map(async (event) => {
+          const fileInDiff = event.path.replace(
+            templateDirectory,
+            diffDirectory,
+          );
+
+          // File in diff directory has higher priority.
+          if (await fileExists(fileInDiff)) return;
+
+          const targetFile = joinPath(
+            targetDirectory,
+            relativePath(templateDirectory, event.path),
           );
 
           return event.type === 'delete'
