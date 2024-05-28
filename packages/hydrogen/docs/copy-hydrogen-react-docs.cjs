@@ -8,6 +8,7 @@ const docsToCopy = [
   'Money',
   'ModelViewer',
   'ShopPayButton',
+  'RichText',
   'Video',
   'useMoney',
   'useLoadScript',
