@@ -12,7 +12,7 @@ export function getRequiredRemixVersion(
   return hydrogenPkgJson.peerDependencies['@remix-run/dev'] as string;
 }
 
-export function checkRemixVersions() {
+export function checkRemixVersions(projectPath: string) {
   const require = createRequire(import.meta.url);
   const requiredVersionInHydrogen = getRequiredRemixVersion(require);
 
@@ -29,7 +29,7 @@ export function checkRemixVersions() {
     'node',
     'express',
     'eslint-config',
-  ].map((name) => getRemixPackageVersion(require, name));
+  ].map((name) => getRemixPackageVersion(require, name, projectPath));
 
   const outOfSyncPkgs = pkgs.filter(
     (pkg) =>
@@ -55,12 +55,19 @@ export function checkRemixVersions() {
   });
 }
 
-function getRemixPackageVersion(require: NodeRequire, name: string) {
+// When using the global CLI, remix packages are loaded from the project root.
+function getRemixPackageVersion(
+  require: NodeRequire,
+  name: string,
+  root: string,
+) {
   const pkgName = '@remix-run/' + name;
   const result = {name: pkgName, version: ''};
 
   try {
-    const pkgJsonPath = require.resolve(`${pkgName}/package.json`);
+    const pkgJsonPath = require.resolve(`${pkgName}/package.json`, {
+      paths: [root],
+    });
     const pkgJson = require(pkgJsonPath);
     result.version = pkgJson.version as string;
   } catch {
