@@ -133,13 +133,16 @@ describe('remote templates', () => {
         expect.objectContaining(templatePkgJson.scripts),
       );
 
+      const expectedDeps = {
+        ...templatePkgJson.dependencies,
+        ...examplePkgJson.dependencies,
+      };
+
+      // Removed to avoid conflicts with the global bundled CLI
+      delete expectedDeps['@shopify/cli-hydrogen'];
+
       expect(resultPkgJson.dependencies).toEqual(
-        expect.objectContaining({
-          ...templatePkgJson.dependencies,
-          ...examplePkgJson.dependencies,
-          '@shopify/cli-hydrogen':
-            templatePkgJson.dependencies?.['@shopify/cli-hydrogen'],
-        }),
+        expect.objectContaining(expectedDeps),
       );
       expect(resultPkgJson.devDependencies).toEqual(
         expect.objectContaining({
