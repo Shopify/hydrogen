@@ -1,13 +1,13 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'UNSTABLE_Analytics.ProductView',
+  name: 'Analytics.ProductView',
   category: 'components',
   subCategory: 'analytics',
   isVisualComponent: false,
   related: [],
   description:
-    'Publishes a `product_viewed` event to the `UNSTABLE_Analytics.Provider` component.',
+    'Publishes a `product_viewed` event to the `Analytics.Provider` component.',
   type: 'component',
   defaultExample: {
     description: 'This is the default example',

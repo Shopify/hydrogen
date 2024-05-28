@@ -10,7 +10,7 @@ import type {
   ProductVariantFragment,
   SellingPlanFragment,
 } from 'storefrontapi.generated';
-import {Image, Money, CartForm} from '@shopify/hydrogen';
+import {Image, Money, CartForm, Analytics} from '@shopify/hydrogen';
 import type {
   CartLineInput,
   CurrencyCode,
@@ -80,6 +80,21 @@ export default function Product() {
         selectedVariant={selectedVariant}
         selectedSellingPlan={selectedSellingPlan}
         product={product}
+      />
+      <Analytics.ProductView
+        data={{
+          products: [
+            {
+              id: product.id,
+              title: product.title,
+              price: selectedVariant?.price.amount || '0',
+              vendor: product.vendor,
+              variantId: selectedVariant?.id || '',
+              variantTitle: selectedVariant?.title || '',
+              quantity: 1,
+            },
+          ],
+        }}
       />
     </div>
   );

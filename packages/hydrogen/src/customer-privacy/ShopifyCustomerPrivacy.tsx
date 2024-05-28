@@ -189,9 +189,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     window.Shopify.customerPrivacy.setTrackingConsent =
       overrideSetTrackingConsent;
 
-    if (onReady && !withPrivacyBanner) {
-      onReady();
-    }
+    onReady && onReady();
   }, [scriptStatus, withPrivacyBanner, consentConfig]);
 
   return;

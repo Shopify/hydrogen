@@ -4,6 +4,7 @@ import type {HeaderQuery} from 'storefrontapi.generated';
 import type {LayoutProps} from '~/components/Layout';
 import {useRootLoaderData} from '~/lib/root-data';
 import {useAside} from '~/components/Aside';
+import {type CartViewPayload, useAnalytics} from '@shopify/hydrogen';
 
 type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'>;
 
@@ -125,6 +126,7 @@ function SearchToggle() {
 
 function CartBadge({count}: {count: number}) {
   const {open} = useAside();
+  const {publish, shop, cart, prevCart} = useAnalytics();
 
   return (
     <a
@@ -132,6 +134,12 @@ function CartBadge({count}: {count: number}) {
       onClick={(e) => {
         e.preventDefault();
         open('cart');
+        publish('cart_viewed', {
+          cart,
+          prevCart,
+          shop,
+          url: window.location.href || '',
+        } as CartViewPayload);
       }}
     >
       Cart {count}

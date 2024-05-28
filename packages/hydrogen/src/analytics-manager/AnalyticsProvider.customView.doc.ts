@@ -1,13 +1,13 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'UNSTABLE_Analytics.CustomView',
+  name: 'Analytics.CustomView',
   category: 'components',
   subCategory: 'analytics',
   isVisualComponent: false,
   related: [],
   description:
-    'Publishes a custom page view event to the `UNSTABLE_Analytics.Provider` component. The `type` prop must be preceded by `custom_`.',
+    'Publishes a custom page view event to the `Analytics.Provider` component. The `type` prop must be preceded by `custom_`.',
   type: 'component',
   defaultExample: {
     description: 'This is the default example',

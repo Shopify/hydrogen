@@ -43,7 +43,7 @@
     "examples/partytown",
     "examples/subscriptions",
     "examples/third-party-queries-caching",
-    "examples/analytics",
+    "examples/gtm",
     "packages/cli",
     "packages/create-hydrogen",
     "packages/hydrogen",

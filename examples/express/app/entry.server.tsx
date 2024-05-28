@@ -28,6 +28,7 @@ export default function handleRequest(
         responseStatusCode,
         responseHeaders,
         remixContext,
+        loadContext
       )
     : handleBrowserRequest(
         request,
@@ -42,9 +43,15 @@ function handleBotRequest(
   responseStatusCode: number,
   responseHeaders: Headers,
   remixContext: EntryContext,
+  context: AppLoadContext,
 ) {
   return new Promise((resolve, reject) => {
-    const {nonce, header, NonceProvider} = createContentSecurityPolicy();
+    const {nonce, header, NonceProvider} = createContentSecurityPolicy({
+      shop: {
+        checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
+        storeDomain: context.env.PUBLIC_STORE_DOMAIN,
+      }
+    });
 
     const {pipe, abort} = renderToPipeableStream(
       <NonceProvider>

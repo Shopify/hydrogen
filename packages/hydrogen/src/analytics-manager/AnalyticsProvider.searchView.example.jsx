@@ -1,4 +1,4 @@
-import {UNSTABLE_Analytics} from '@shopify/hydrogen';
+import {Analytics} from '@shopify/hydrogen';
 import {json} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 
@@ -17,7 +17,7 @@ export default function SearchPage() {
   return (
     <div className="search">
       <h1>Search</h1>
-      <UNSTABLE_Analytics.SearchView data={{searchTerm}} />
+      <Analytics.SearchView data={{searchTerm}} />
     </div>
   );
 }

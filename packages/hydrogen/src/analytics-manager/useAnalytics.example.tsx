@@ -6,12 +6,12 @@ import {
   type CartUpdatePayload,
   type CartLineUpdatePayload,
   type SearchViewPayload,
-  unstable_useAnalytics,
+  useAnalytics,
 } from '@shopify/hydrogen';
 import {useEffect} from 'react';
 
 export function CustomAnalytics() {
-  const {subscribe, register} = unstable_useAnalytics();
+  const {subscribe, register} = useAnalytics();
   const {ready} = register('CustomAnalytics'); // unique string identifier
 
   useEffect(() => {

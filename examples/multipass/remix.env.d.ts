@@ -26,6 +26,7 @@ declare global {
     PUBLIC_STOREFRONT_ID: string;
     PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET: string;
     PRIVATE_SHOPIFY_CHECKOUT_DOMAIN: string;
+    PUBLIC_CHECKOUT_DOMAIN: string;
   }
 }
 

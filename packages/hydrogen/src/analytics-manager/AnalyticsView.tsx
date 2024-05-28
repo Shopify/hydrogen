@@ -94,7 +94,7 @@ export type CollectionViewPayload = CollectionPayload &
   UrlPayload &
   BasePayload;
 export type ProductViewPayload = ProductsPayload & UrlPayload & BasePayload;
-export type CartViewPayload = UrlPayload & BasePayload;
+export type CartViewPayload = CartPayload & UrlPayload & BasePayload;
 export type PageViewPayload = UrlPayload & BasePayload;
 export type SearchViewPayload = SearchPayload & UrlPayload & BasePayload;
 
@@ -150,22 +150,26 @@ function AnalyticsView(props: any) {
   const {publish, cart, prevCart, shop} = useAnalytics();
   const url = location.pathname + location.search;
 
+  let viewPayload: ViewPayload = {
+    ...data,
+    customData,
+    cart,
+    prevCart,
+    shop,
+  };
+
   // Publish page_viewed events when the URL changes
   useEffect(() => {
     // don't publish the event until we have the shop
-    if (!shop) return;
+    if (!shop?.shopId) return;
 
-    const viewPayload: ViewPayload = {
-      ...data,
-      customData,
+    viewPayload = {
+      ...viewPayload,
       url: window.location.href,
-      cart,
-      prevCart,
-      shop,
     };
 
     publish(type, viewPayload);
-  }, [publish, url, cart, prevCart, shop]);
+  }, [publish, url, shop?.shopId]);
 
   return null;
 }
