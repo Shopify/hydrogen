@@ -4,6 +4,7 @@ import {AbortError} from '@shopify/cli-kit/node/error';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {execAsync} from './process.js';
 
+// Avoid using fileURLToPath here to prevent backslashes nightmare on Windows
 const monorepoPackagesPath = new URL('../../..', import.meta.url).pathname;
 export const isHydrogenMonorepo = monorepoPackagesPath.endsWith(
   '/hydrogen/packages/',
@@ -14,19 +15,16 @@ export const hydrogenPackagesPath = isHydrogenMonorepo
 
 export const ASSETS_DIR_PREFIX = 'assets/hydrogen';
 export const ASSETS_STARTER_DIR = 'starter';
-export const GENERATOR_APP_DIR = 'app';
-export const GENERATOR_ROUTE_DIR = 'routes';
-export const GENERATOR_SETUP_ASSETS_SUB_DIRS = [
-  'tailwind',
-  'css-modules',
-  'vanilla-extract',
-  'postcss',
-  'vite',
-  'i18n',
-  'routes',
-] as const;
+export const ASSETS_ROUTES_DIR = 'routes';
 
-export type AssetsSetupDir = (typeof GENERATOR_SETUP_ASSETS_SUB_DIRS)[number];
+export type AssetsSetupDir =
+  | 'tailwind'
+  | 'css-modules'
+  | 'vanilla-extract'
+  | 'postcss'
+  | 'vite'
+  | 'i18n'
+  | 'routes';
 
 let pkgJsonPath: string | undefined;
 export async function getAssetsDir(...subpaths: string[]) {
@@ -62,7 +60,7 @@ export async function getTemplateAppFile(filepath: string, root?: string) {
   root ??= await getStarterDir();
 
   const url = new URL(
-    `${root}/${GENERATOR_APP_DIR}${filepath ? `/${filepath}` : ''}`,
+    `${root}/app${filepath ? `/${filepath}` : ''}`,
     import.meta.url,
   );
   return url.protocol === 'file:' ? fileURLToPath(url) : url.toString();

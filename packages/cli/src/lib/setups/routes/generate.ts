@@ -25,7 +25,7 @@ import {
   getCodeFormatOptions,
 } from '../../../lib/format-code.js';
 import {
-  GENERATOR_ROUTE_DIR,
+  ASSETS_ROUTES_DIR,
   getSetupAssetDir,
   getStarterDir,
   getTemplateAppFile,
@@ -58,7 +58,7 @@ export async function getResolvedRoutes(
 ) {
   if (allRouteTemplateFiles.length === 0) {
     allRouteTemplateFiles = (
-      await readdir(await getTemplateAppFile(GENERATOR_ROUTE_DIR))
+      await readdir(await getTemplateAppFile(ASSETS_ROUTES_DIR))
     ).map((item) => item.replace(/\.tsx?$/, ''));
   }
 
@@ -125,11 +125,11 @@ export async function generateRoutes(
     remixConfig || (await getRemixConfig(options.directory));
 
   const routesArray = resolvedRouteFiles.flatMap(
-    (item) => GENERATOR_ROUTE_DIR + '/' + item,
+    (item) => ASSETS_ROUTES_DIR + '/' + item,
   );
 
   const formatOptions = await getCodeFormatOptions(rootDirectory);
-  const routesDirectory = joinPath(appDirectory, GENERATOR_ROUTE_DIR);
+  const routesDirectory = joinPath(appDirectory, ASSETS_ROUTES_DIR);
   const localePrefix = await getLocalePrefix(routesDirectory, options);
   const typescript = !!(
     options.typescript ??
@@ -269,7 +269,7 @@ export async function generateProjectFile(
   }
 
   for (const filePath of allFilesToGenerate) {
-    const isRoute = filePath.startsWith(GENERATOR_ROUTE_DIR + '/');
+    const isRoute = filePath.startsWith(ASSETS_ROUTES_DIR + '/');
     const destinationPath = isRoute
       ? routeDestinationPath
       : joinPath(
@@ -337,7 +337,7 @@ function getDestinationRoute(
   localePrefix: string | undefined,
   options: {v1RouteConvention?: boolean},
 ) {
-  const routePath = routeFrom.replace(GENERATOR_ROUTE_DIR + '/', '');
+  const routePath = routeFrom.replace(ASSETS_ROUTES_DIR + '/', '');
   const filePrefix =
     localePrefix &&
     !NO_LOCALE_PATTERNS.some((pattern) => pattern.test(routePath))
@@ -345,7 +345,7 @@ function getDestinationRoute(
       : '';
 
   return (
-    GENERATOR_ROUTE_DIR +
+    ASSETS_ROUTES_DIR +
     '/' +
     filePrefix +
     // The template file uses the v2 route convention, so we need to convert
@@ -395,7 +395,7 @@ async function findRouteDependencies(
 
       // Skip imports from other routes because these files
       // will be copied over directly by the generator
-      if (!absoluteFilepath.includes(`/${GENERATOR_ROUTE_DIR}/`)) {
+      if (!absoluteFilepath.includes(`/${ASSETS_ROUTES_DIR}/`)) {
         fileDependencies.add(relativePath(appDirectory, absoluteFilepath));
         if (/\.[jt]sx?$/.test(absoluteFilepath)) {
           // Check for dependencies in the imported file if it's a TS/JS file

@@ -3,7 +3,11 @@ import {joinPath} from '@shopify/cli-kit/node/path';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 import {type AssetsSetupDir, getSetupAssetDir} from '../../build.js';
 
-export type CssStrategy = Exclude<AssetsSetupDir, 'vite'>;
+export type CssStrategy = Extract<
+  AssetsSetupDir,
+  'tailwind' | 'css-modules' | 'vanilla-extract' | 'postcss'
+>;
+
 export const SETUP_CSS_STRATEGIES: CssStrategy[] = [
   'tailwind',
   'css-modules',
