@@ -32,7 +32,25 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
 };
 
-export async function loader({params, request, context}: LoaderFunctionArgs) {
+export async function loader(args: LoaderFunctionArgs) {
+  // Start fetching non-critical data without blocking time to first byte
+  const deferredData = loadDeferredData(args);
+
+  // Await the critical data required to render initial state of the page
+  const criticalData = await loadCriticalData(args);
+
+  return defer({...criticalData, ...deferredData});
+}
+
+/**
+ * Load data necessary for rendering content above the fold. This is the critical data
+ * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
+ */
+async function loadCriticalData({
+  context,
+  params,
+  request,
+}: LoaderFunctionArgs) {
   const {handle} = params;
   const {storefront} = context;
 
@@ -53,9 +71,12 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
   }
 
   // await the query for the critical product data
-  const {product} = await storefront.query(PRODUCT_QUERY, {
-    variables: {handle, selectedOptions},
-  });
+  const [{product}] = await Promise.all([
+    storefront.query(PRODUCT_QUERY, {
+      variables: {handle, selectedOptions},
+    }),
+    // Add other queries here, so that they are loaded in parallel
+  ]);
 
   if (!product?.id) {
     throw new Response(null, {status: 404});
@@ -79,16 +100,27 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
     }
   }
 
+  return {product};
+}
+
+/**
+ * Load data for rendering content below the fold. This data is deferred and will be
+ * fetched after the initial page load. If it's unavailable, the page should still 200.
+ */
+function loadDeferredData({context, params}: LoaderFunctionArgs) {
+  if (!params.handle) {
+    throw new Error('Expected product handle to be defined');
+  }
+
   // In order to show which variants are available in the UI, we need to query
   // all of them. But there might be a *lot*, so instead separate the variants
   // into it's own separate query that is deferred. So there's a brief moment
   // where variant options might show as available when they're not, but after
   // this deffered query resolves, the UI will update.
-  const variants = storefront.query(VARIANTS_QUERY, {
-    variables: {handle},
+  const variants = context.storefront.query(VARIANTS_QUERY, {
+    variables: {handle: params.handle},
   });
-
-  return defer({product, variants});
+  return {variants};
 }
 
 function redirectToFirstVariant({
