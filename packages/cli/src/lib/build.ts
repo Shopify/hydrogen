@@ -40,13 +40,11 @@ export async function getAssetsDir() {
     );
   }
 
-  return fileURLToPath(
-    new URL(
-      process.env.SHOPIFY_UNIT_TEST
-        ? `./assets` // Use source for unit tests
-        : `./dist/${ASSETS_DIR_PREFIX}`,
-      pkgJsonPath,
-    ),
+  return joinPath(
+    pkgJsonPath.replace(/\/package\.json$/, ''),
+    process.env.SHOPIFY_UNIT_TEST
+      ? `assets` // Use source for unit tests
+      : `dist/${ASSETS_DIR_PREFIX}`,
   );
 }
 
