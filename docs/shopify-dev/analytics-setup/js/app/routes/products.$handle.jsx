@@ -8,7 +8,7 @@ import {
   getSelectedProductOptions,
   CartForm,
   // [START import]
-  UNSTABLE_Analytics as Analytics,
+  Analytics,
   // [END import]
 } from '@shopify/hydrogen';
 import {getVariantUrl} from '~/lib/variants';

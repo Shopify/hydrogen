@@ -3,7 +3,7 @@ import {Suspense} from 'react';
 import {
   CartForm,
   // [START cart]
-  UNSTABLE_Analytics as Analytics,
+  Analytics,
   // [END cart]
 } from '@shopify/hydrogen';
 import {json} from '@shopify/remix-oxygen';

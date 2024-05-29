@@ -1,5 +1,5 @@
 // [START import]
-import {unstable_useAnalytics as useAnalytics} from '@shopify/hydrogen';
+import {useAnalytics} from '@shopify/hydrogen';
 // [END export]
 import {useEffect} from 'react';
 

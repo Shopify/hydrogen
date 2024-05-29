@@ -4,7 +4,7 @@ import type {CartQueryDataReturn} from '@shopify/hydrogen';
 import {
   CartForm,
   // [START cart]
-  UNSTABLE_Analytics as Analytics,
+  Analytics,
   // [END cart]
 } from '@shopify/hydrogen';
 import {json, type ActionFunctionArgs} from '@shopify/remix-oxygen';

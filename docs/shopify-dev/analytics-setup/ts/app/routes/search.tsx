@@ -3,7 +3,7 @@ import {useLoaderData, type MetaFunction} from '@remix-run/react';
 import {
   getPaginationVariables,
   // [START search]
-  UNSTABLE_Analytics as Analytics,
+  Analytics,
   // [END search]
 } from '@shopify/hydrogen';
 

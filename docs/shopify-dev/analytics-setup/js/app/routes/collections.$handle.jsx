@@ -6,7 +6,7 @@ import {
   Image,
   Money,
   // [START collections]
-  UNSTABLE_Analytics as Analytics,
+  Analytics,
   // [END collections]
 } from '@shopify/hydrogen';
 import {useVariantUrl} from '~/lib/variants';

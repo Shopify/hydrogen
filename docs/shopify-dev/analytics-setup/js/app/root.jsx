@@ -2,7 +2,7 @@ import {
   useNonce,
   // [START import]
   getShopAnalytics,
-  UNSTABLE_Analytics as Analytics,
+  Analytics,
   // [END import]
 } from '@shopify/hydrogen';
 import {defer} from '@shopify/remix-oxygen';
