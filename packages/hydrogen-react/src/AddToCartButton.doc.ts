@@ -3,6 +3,7 @@ import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 const data: ReferenceEntityTemplateSchema = {
   name: 'AddToCartButton',
   category: 'components',
+  subCategory: 'cart',
   isVisualComponent: false,
   related: [],
   description: `The \`AddToCartButton\` component renders a button that adds an item to the cart when pressed.\n\nIt must be a descendent of the \`CartProvider\` component.`,

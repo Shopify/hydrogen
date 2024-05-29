@@ -3,6 +3,7 @@ import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 const data: ReferenceEntityTemplateSchema = {
   name: 'createCartHandler',
   category: 'utilities',
+  subCategory: 'cart',
   isVisualComponent: false,
   related: [],
   description: 'Creates an API that can be used to interact with the cart.',

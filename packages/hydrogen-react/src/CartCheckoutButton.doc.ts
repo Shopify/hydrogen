@@ -3,6 +3,7 @@ import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 const data: ReferenceEntityTemplateSchema = {
   name: 'CartCheckoutButton',
   category: 'components',
+  subCategory: 'cart',
   isVisualComponent: false,
   related: [],
   description: `The \`CartCheckoutButton\` component renders a button that redirects to the checkout URL for the cart.\n\nMust be a descendent of a \`CartProvider\` component.

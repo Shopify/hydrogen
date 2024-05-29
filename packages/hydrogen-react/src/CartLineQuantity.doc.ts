@@ -3,6 +3,7 @@ import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 const data: ReferenceEntityTemplateSchema = {
   name: 'CartLineQuantity',
   category: 'components',
+  subCategory: 'cart',
   isVisualComponent: false,
   related: [
     {

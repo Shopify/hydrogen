@@ -3,6 +3,7 @@ import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 const data: ReferenceEntityTemplateSchema = {
   name: 'ExternalVideo',
   category: 'components',
+  subCategory: 'media',
   isVisualComponent: false,
   // put a name in for 'image', and it will look in the docs/screenshots/ folder automatically.
   // image: "",
