@@ -1,4 +1,4 @@
-import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, type MetaFunction} from '@remix-run/react';
 import {Image} from '@shopify/hydrogen';
 
@@ -43,7 +43,7 @@ async function loadCriticalData({context, params}: LoaderFunctionArgs) {
 
   const article = blog.articleByHandle;
 
-  return json({article});
+  return {article};
 }
 
 /**
