@@ -16,7 +16,7 @@ export const GENERATOR_SETUP_ASSETS_SUB_DIRS = [
 
 export type AssetDir = (typeof GENERATOR_SETUP_ASSETS_SUB_DIRS)[number];
 
-export function getAssetDir(feature: AssetDir) {
+export function getSetupAssetDir(feature: AssetDir) {
   if (process.env.NODE_ENV === 'test') {
     return fileURLToPath(
       new URL(`../setup-assets/${feature}`, import.meta.url),

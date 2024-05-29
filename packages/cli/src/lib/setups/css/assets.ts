@@ -1,7 +1,7 @@
 import {fileExists, readFile, writeFile} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
-import {type AssetDir, getAssetDir} from '../../build.js';
+import {type AssetDir, getSetupAssetDir} from '../../build.js';
 
 export type CssStrategy = Exclude<AssetDir, 'vite'>;
 export const SETUP_CSS_STRATEGIES: CssStrategy[] = [
@@ -17,7 +17,7 @@ export function copyAssets(
   rootDirectory: string,
   replacer = (content: string, filename: string) => content,
 ) {
-  const setupAssetsPath = getAssetDir(feature);
+  const setupAssetsPath = getSetupAssetDir(feature);
 
   return Promise.all(
     Object.entries(assets).map(async ([source, destination]) => {
