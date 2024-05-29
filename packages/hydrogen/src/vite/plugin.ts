@@ -67,7 +67,11 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
           // Vite performs an initial reload after optimizing these dependencies.
           // Do it early to avoid the initial reload:
           optimizeDeps: {
-            include: ['@shopify/hydrogen'],
+            include: [
+              'content-security-policy-builder',
+              'tiny-invariant',
+              'worktop/cookie',
+            ],
           },
         };
       },
