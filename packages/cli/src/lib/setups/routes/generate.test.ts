@@ -363,7 +363,7 @@ async function createHydrogenFixture(
 
   for (const item of templates) {
     const [filePath, fileContent] = item;
-    const fullFilePath = getTemplateAppFile(filePath, directory);
+    const fullFilePath = await getTemplateAppFile(filePath, directory);
     await mkdir(dirname(fullFilePath));
     await writeFile(fullFilePath, fileContent);
   }

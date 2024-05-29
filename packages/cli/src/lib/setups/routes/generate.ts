@@ -57,7 +57,7 @@ export async function getResolvedRoutes(
 ) {
   if (allRouteTemplateFiles.length === 0) {
     allRouteTemplateFiles = (
-      await readdir(getTemplateAppFile(GENERATOR_ROUTE_DIR))
+      await readdir(await getTemplateAppFile(GENERATOR_ROUTE_DIR))
     ).map((item) => item.replace(/\.tsx?$/, ''));
   }
 
@@ -215,7 +215,7 @@ export async function generateProjectFile(
     typescript,
     force,
     adapter,
-    templatesRoot = getStarterDir(),
+    templatesRoot,
     formatOptions,
     localePrefix,
     v1RouteConvention = false,
@@ -227,16 +227,18 @@ export async function generateProjectFile(
     v1RouteConvention?: boolean;
   },
 ): Promise<GenerateRoutesResult> {
+  templatesRoot ??= await getStarterDir();
+
   const extension = (routeFrom.match(/(\.[jt]sx?)$/) ?? [])[1] ?? '.tsx';
   routeFrom = routeFrom.replace(extension, '');
 
-  const routeTemplatePath = getTemplateAppFile(
+  const routeTemplatePath = await getTemplateAppFile(
     routeFrom + extension,
     templatesRoot,
   );
   const allFilesToGenerate = await findRouteDependencies(
     routeTemplatePath,
-    getTemplateAppFile('', templatesRoot),
+    await getTemplateAppFile('', templatesRoot),
   );
 
   const routeDestinationPath = joinPath(
@@ -279,7 +281,10 @@ export async function generateProjectFile(
       await mkdir(dirname(destinationPath));
     }
 
-    const templateAppFilePath = getTemplateAppFile(filePath, templatesRoot);
+    const templateAppFilePath = await getTemplateAppFile(
+      filePath,
+      templatesRoot,
+    );
 
     if (!/\.[jt]sx?$/.test(filePath)) {
       // Nothing to transform for non-JS files.

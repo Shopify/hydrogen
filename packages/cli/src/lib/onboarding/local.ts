@@ -86,7 +86,7 @@ export async function setupLocalStarterTemplate(
       })
       .catch(abort);
 
-  const templateDir = getStarterDir();
+  const templateDir = await getStarterDir();
   let backgroundWorkPromise: Promise<any> = copyWithFilter(
     templateDir,
     project.directory,

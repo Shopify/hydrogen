@@ -3,8 +3,8 @@ import {defineConfig} from 'tsup';
 import fs from 'fs-extra';
 import {execAsync} from './src/lib/process';
 import {
-  GENERATOR_TEMPLATES_DIR,
-  GENERATOR_STARTER_DIR,
+  ASSETS_DIR_PREFIX,
+  ASSETS_STARTER_DIR,
   getSkeletonSourceDir,
 } from './src/lib/build';
 
@@ -18,7 +18,6 @@ const commonConfig = defineConfig({
   splitting: true,
   treeshake: true,
   sourcemap: false,
-  publicDir: 'templates',
   clean: false, // Avoid deleting the assets folder
 });
 
@@ -33,7 +32,29 @@ export default defineConfig([
     dts: {entry: ['src/index.ts', 'src/commands/hydrogen/init.ts']},
     async onSuccess() {
       // Copy assets templates
-      await fs.copy(path.resolve('assets'), path.join(outDir, 'assets'));
+      await fs.copy(
+        path.resolve('assets'),
+        path.join(outDir, ASSETS_DIR_PREFIX),
+      );
+
+      // These files need to be packaged/distributed with the CLI
+      // so that we can use them in the `generate` command.
+      await fs.copy(
+        getSkeletonSourceDir(),
+        `${outDir}/${ASSETS_DIR_PREFIX}/${ASSETS_STARTER_DIR}`,
+        {
+          filter: (filepath: string) =>
+            !/node_modules|\.shopify|\.cache|\.turbo|build|dist/gi.test(
+              filepath,
+            ),
+        },
+      );
+
+      console.log(
+        '\n',
+        'Copied skeleton template files to build directory',
+        '\n',
+      );
 
       // Copy TS templates
       const i18nTemplatesPath = 'lib/setups/i18n/templates';
@@ -72,23 +93,6 @@ export default defineConfig([
     outExtension: () => ({js: '.jsx'}),
     dts: false,
     async onSuccess() {
-      const filterArtifacts = (filepath: string) =>
-        !/node_modules|\.shopify|\.cache|\.turbo|build|dist/gi.test(filepath);
-
-      // These files need to be packaged/distributed with the CLI
-      // so that we can use them in the `generate` command.
-      await fs.copy(
-        getSkeletonSourceDir(),
-        `${outDir}/lib/${GENERATOR_TEMPLATES_DIR}/${GENERATOR_STARTER_DIR}`,
-        {filter: filterArtifacts},
-      );
-
-      console.log(
-        '\n',
-        'Copied skeleton template files to build directory',
-        '\n',
-      );
-
       // For some reason, it seems that publicDir => outDir might be skipped on CI,
       // so ensure here that asset files are copied:
       await fs.copy(

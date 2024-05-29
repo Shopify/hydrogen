@@ -41,7 +41,7 @@ export async function prepareDiffDirectory(
   // forget to start the dev process for the CLI when tinkering with
   // diff examples. Let's use the skeleton source files from the
   // monorepo directly if available to avoid this situation.
-  const templateDirectory = getStarterDir(isHydrogenMonorepo);
+  const templateDirectory = await getStarterDir(isHydrogenMonorepo);
   await applyTemplateDiff(targetDirectory, diffDirectory, templateDirectory);
 
   await createSymlink(
@@ -215,8 +215,10 @@ type DiffOptions = {
 export async function applyTemplateDiff(
   targetDirectory: string,
   diffDirectory: string,
-  templateDir = getStarterDir(),
+  templateDir?: string,
 ) {
+  templateDir ??= await getStarterDir();
+
   const [diffPkgJson, templatePkgJson] = await Promise.all([
     readAndParsePackageJson(joinPath(diffDirectory, 'package.json')),
     readAndParsePackageJson(joinPath(templateDir, 'package.json')),

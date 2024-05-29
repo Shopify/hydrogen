@@ -12,8 +12,8 @@ export const hydrogenPackagesPath = isHydrogenMonorepo
   ? monorepoPackagesPath
   : undefined;
 
-export const GENERATOR_TEMPLATES_DIR = 'generator-templates';
-export const GENERATOR_STARTER_DIR = 'starter';
+export const ASSETS_DIR_PREFIX = 'assets/hydrogen';
+export const ASSETS_STARTER_DIR = 'starter';
 export const GENERATOR_APP_DIR = 'app';
 export const GENERATOR_ROUTE_DIR = 'routes';
 export const GENERATOR_SETUP_ASSETS_SUB_DIRS = [
@@ -42,7 +42,9 @@ export async function getAssetsDir() {
 
   return fileURLToPath(
     new URL(
-      `./${process.env.SHOPIFY_UNIT_TEST ? '/' : 'dist/'}assets/hydrogen`,
+      process.env.SHOPIFY_UNIT_TEST
+        ? `./assets` // Use source for unit tests
+        : `./dist/${ASSETS_DIR_PREFIX}`,
       pkgJsonPath,
     ),
   );
@@ -53,7 +55,9 @@ export async function getSetupAssetDir(feature: AssetDir) {
   return joinPath(assetDir, 'setup', feature);
 }
 
-export function getTemplateAppFile(filepath: string, root = getStarterDir()) {
+export async function getTemplateAppFile(filepath: string, root?: string) {
+  root ??= await getStarterDir();
+
   const url = new URL(
     `${root}/${GENERATOR_APP_DIR}${filepath ? `/${filepath}` : ''}`,
     import.meta.url,
@@ -61,15 +65,13 @@ export function getTemplateAppFile(filepath: string, root = getStarterDir()) {
   return url.protocol === 'file:' ? fileURLToPath(url) : url.toString();
 }
 
-export function getStarterDir(useSource = !!process.env.SHOPIFY_UNIT_TEST) {
+export async function getStarterDir(
+  useSource = !!process.env.SHOPIFY_UNIT_TEST,
+) {
   if (useSource) return getSkeletonSourceDir();
 
-  return fileURLToPath(
-    new URL(
-      `./${GENERATOR_TEMPLATES_DIR}/${GENERATOR_STARTER_DIR}`,
-      import.meta.url,
-    ),
-  );
+  const assetDir = await getAssetsDir();
+  return joinPath(assetDir, ASSETS_STARTER_DIR);
 }
 
 export function getSkeletonSourceDir() {
