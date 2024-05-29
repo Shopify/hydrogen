@@ -26,6 +26,7 @@ import {
 } from '../../../lib/format-code.js';
 import {
   GENERATOR_ROUTE_DIR,
+  getSetupAssetDir,
   getStarterDir,
   getTemplateAppFile,
 } from '../../../lib/build.js';
@@ -454,9 +455,7 @@ async function copyRouteTemplate({
   const routePath = joinPath(routesDirectory, routeName);
   if (await fileExists(routePath)) return;
 
-  const templatePath = fileURLToPath(
-    new URL(`./templates/${templateName}`, import.meta.url),
-  );
+  const templatePath = await getSetupAssetDir('routes', templateName);
 
   if (!(await fileExists(templatePath))) {
     throw new Error('Unknown strategy');

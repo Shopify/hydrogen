@@ -1,4 +1,4 @@
-import type {LanguageCode, CountryCode} from '../mock-i18n-types.js';
+import type {LanguageCode, CountryCode} from './mock-i18n-types.js';
 
 export type I18nLocale = {
   language: LanguageCode;

@@ -4,6 +4,7 @@ import {fileExists, readFile} from '@shopify/cli-kit/node/fs';
 import {AbortSignal} from '@shopify/cli-kit/node/abort';
 import {getCodeFormatOptions} from '../../format-code.js';
 import {replaceRemixEnv, replaceServerI18n} from './replacers.js';
+import {getSetupAssetDir} from '../../build.js';
 
 export const SETUP_I18N_STRATEGIES = [
   'subfolders',
@@ -31,11 +32,7 @@ export async function setupI18nStrategy(
   strategy: I18nStrategy,
   options: I18nSetupConfig,
 ) {
-  const isJs = options.serverEntryPoint?.endsWith('.js') ?? false;
-
-  const templatePath = fileURLToPath(
-    new URL(`./templates/${strategy}.ts`, import.meta.url),
-  );
+  const templatePath = await getSetupAssetDir('i18n', `${strategy}.ts`);
 
   if (!(await fileExists(templatePath))) {
     throw new Error('Unknown strategy');
@@ -44,6 +41,7 @@ export async function setupI18nStrategy(
   const template = await readFile(templatePath);
   const formatConfig = await getCodeFormatOptions(options.rootDirectory);
 
+  const isJs = options.serverEntryPoint?.endsWith('.js') ?? false;
   await replaceServerI18n(options, formatConfig, template, isJs);
   await replaceRemixEnv(options, formatConfig, template);
 }

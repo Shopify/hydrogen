@@ -56,22 +56,6 @@ export default defineConfig([
         '\n',
       );
 
-      // Copy TS templates
-      const i18nTemplatesPath = 'lib/setups/i18n/templates';
-      await fs.copy(
-        path.join('src', i18nTemplatesPath),
-        path.join(outDir, i18nTemplatesPath),
-      );
-      console.log('\n', 'Copied i18n template files to build directory', '\n');
-
-      // Copy Route Templates
-      const routeTemplatesPath = 'lib/setups/routes/templates';
-      await fs.copy(
-        path.join('src', routeTemplatesPath),
-        path.join(outDir, routeTemplatesPath),
-      );
-      console.log('\n', 'Copied route template files to build directory', '\n');
-
       console.log('\n', 'Generating Oclif manifest...');
       await execAsync('node ./scripts/generate-manifest.mjs');
       console.log('', 'Oclif manifest generated.\n');

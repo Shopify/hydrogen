@@ -1,9 +1,9 @@
 import {fileExists, readFile, writeFile} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
-import {type AssetDir, getSetupAssetDir} from '../../build.js';
+import {type AssetsSetupDir, getSetupAssetDir} from '../../build.js';
 
-export type CssStrategy = Exclude<AssetDir, 'vite'>;
+export type CssStrategy = Exclude<AssetsSetupDir, 'vite'>;
 export const SETUP_CSS_STRATEGIES: CssStrategy[] = [
   'tailwind',
   'css-modules',
@@ -12,7 +12,7 @@ export const SETUP_CSS_STRATEGIES: CssStrategy[] = [
 ];
 
 export async function copyAssets(
-  feature: AssetDir,
+  feature: AssetsSetupDir,
   assets: Record<string, string>,
   rootDirectory: string,
   replacer = (content: string, filename: string) => content,

@@ -22,9 +22,11 @@ export const GENERATOR_SETUP_ASSETS_SUB_DIRS = [
   'vanilla-extract',
   'postcss',
   'vite',
+  'i18n',
+  'routes',
 ] as const;
 
-export type AssetDir = (typeof GENERATOR_SETUP_ASSETS_SUB_DIRS)[number];
+export type AssetsSetupDir = (typeof GENERATOR_SETUP_ASSETS_SUB_DIRS)[number];
 
 let pkgJsonPath: string | undefined;
 export async function getAssetsDir(...subpaths: string[]) {
@@ -49,8 +51,11 @@ export async function getAssetsDir(...subpaths: string[]) {
   );
 }
 
-export function getSetupAssetDir(feature: AssetDir) {
-  return getAssetsDir('setup', feature);
+export function getSetupAssetDir(
+  feature: AssetsSetupDir,
+  ...subpaths: string[]
+) {
+  return getAssetsDir('setup', feature, ...subpaths);
 }
 
 export async function getTemplateAppFile(filepath: string, root?: string) {
