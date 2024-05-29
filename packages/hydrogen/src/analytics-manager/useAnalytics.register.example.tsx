@@ -1,12 +1,12 @@
 import {
   type PageViewPayload,
-  unstable_useAnalytics,
+  useAnalytics,
   useLoadScript,
 } from '@shopify/hydrogen';
 import {useEffect} from 'react';
 
 export function MyAnalytics() {
-  const {subscribe, register} = unstable_useAnalytics();
+  const {subscribe, register} = useAnalytics();
 
   // Load the 3p analytics script
   const scriptStatus = useLoadScript(

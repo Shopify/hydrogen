@@ -209,7 +209,7 @@ export function normalizePredictiveSearchResults(
             id: article.id,
             image: article.image,
             title: article.title,
-            url: `${localePrefix}/blog/${article.handle}${trackingParams}`,
+            url: `${localePrefix}/blogs/${article.blog.handle}/${article.handle}/${trackingParams}`,
           };
         },
       ),
@@ -225,6 +225,9 @@ const PREDICTIVE_SEARCH_QUERY = `#graphql
     id
     title
     handle
+    blog {
+      handle
+    }
     image {
       url
       altText

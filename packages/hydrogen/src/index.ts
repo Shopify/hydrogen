@@ -85,8 +85,8 @@ export {
 export {ShopPayButton} from './shop/ShopPayButton';
 
 export {
-  Analytics as UNSTABLE_Analytics,
-  useAnalytics as unstable_useAnalytics,
+  Analytics,
+  useAnalytics,
   getShopAnalytics,
 } from './analytics-manager/AnalyticsProvider';
 export {AnalyticsEvent} from './analytics-manager/events';
@@ -137,6 +137,7 @@ export {
   useShopifyCookies,
   Video,
 } from '@shopify/hydrogen-react';
+export {RichText} from './RichText';
 
 export type {
   ClientBrowserParameters,

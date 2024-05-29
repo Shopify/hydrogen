@@ -1,5 +1,5 @@
 {
-  "name": "example-analytics",
+  "name": "example-gtm",
   "private": true,
   "type": "module",
   "prettier": "@shopify/prettier-config",

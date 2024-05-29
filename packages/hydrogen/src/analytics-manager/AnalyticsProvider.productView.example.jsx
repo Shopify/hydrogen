@@ -1,6 +1,6 @@
 import {useLoaderData} from '@remix-run/react';
 import {json} from '@shopify/remix-oxygen';
-import {UNSTABLE_Analytics} from '@shopify/hydrogen';
+import {Analytics} from '@shopify/hydrogen';
 
 export async function loader() {
   return json({
@@ -26,7 +26,7 @@ export default function Product() {
   return (
     <div className="product">
       <h1>{product.title}</h1>
-      <UNSTABLE_Analytics.ProductView
+      <Analytics.ProductView
         data={{
           products: [
             {
