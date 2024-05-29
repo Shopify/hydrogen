@@ -1,4 +1,4 @@
-import type {Plugin, ResolvedConfig, ConfigEnv} from 'vite';
+import type {Plugin, ConfigEnv} from 'vite';
 import type {Preset as RemixPreset} from '@remix-run/dev';
 import {
   setupHydrogenMiddleware,
@@ -39,8 +39,6 @@ export type HydrogenPlugin = Plugin<{
  */
 export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
   let middlewareOptions: HydrogenMiddlewareOptions = {};
-  const isRemixChildCompiler = (config: ResolvedConfig) =>
-    !config.plugins?.some((plugin) => plugin.name === 'remix');
 
   return [
     {
@@ -63,15 +61,17 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
                 // Remix deps:
                 'set-cookie-parser',
                 'cookie',
-                // Hydrogen deps:
-                'content-security-policy-builder',
               ],
             },
           },
           // Vite performs an initial reload after optimizing these dependencies.
           // Do it early to avoid the initial reload:
           optimizeDeps: {
-            include: ['@shopify/hydrogen'],
+            include: [
+              'content-security-policy-builder',
+              'tiny-invariant',
+              'worktop/cookie',
+            ],
           },
         };
       },
@@ -96,7 +96,6 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
         middlewareOptions.isOxygen = !!oxygenPlugin;
 
         oxygenPlugin?.api?.registerPluginOptions?.({
-          shouldStartRuntime: () => !isRemixChildCompiler(resolvedConfig),
           requestHook: ({request, response, meta}) => {
             // Emit events for requests
             emitRequestEvent(
@@ -159,15 +158,16 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
           ],
         });
       },
-      configureServer(viteDevServer) {
-        if (isRemixChildCompiler(viteDevServer.config)) return;
-
-        return () => {
-          setupHydrogenMiddleware(
-            viteDevServer,
-            mergeOptions(pluginOptions, middlewareOptions),
-          );
-        };
+      configureServer: {
+        order: 'pre',
+        handler: (viteDevServer) => {
+          return () => {
+            setupHydrogenMiddleware(
+              viteDevServer,
+              mergeOptions(pluginOptions, middlewareOptions),
+            );
+          };
+        },
       },
     } satisfies HydrogenPlugin,
   ];

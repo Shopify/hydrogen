@@ -5,6 +5,7 @@ import {
   type Carts,
 } from './AnalyticsProvider';
 import {type CartUpdatePayload} from './AnalyticsView';
+import {flattenConnection} from '@shopify/hydrogen-react';
 
 function logMissingField(fieldName: string) {
   // eslint-disable-next-line no-console
@@ -96,9 +97,14 @@ export function CartAnalytics({
       }),
     );
 
+    const previousCartLines = prevCart?.lines
+      ? flattenConnection(prevCart?.lines)
+      : [];
+    const currentCartLines = cart.lines ? flattenConnection(cart.lines) : [];
+
     // Detect quantity changes and missing cart lines
-    prevCart?.lines?.nodes?.forEach((prevLine) => {
-      const matchedLineId = cart?.lines.nodes.filter(
+    previousCartLines?.forEach((prevLine) => {
+      const matchedLineId = currentCartLines.filter(
         (line) => prevLine.id === line.id,
       );
       if (matchedLineId?.length === 1) {
@@ -125,8 +131,8 @@ export function CartAnalytics({
     });
 
     // Detect added to cart
-    cart?.lines?.nodes?.forEach((line) => {
-      const matchedLineId = prevCart?.lines.nodes.filter(
+    currentCartLines?.forEach((line) => {
+      const matchedLineId = previousCartLines.filter(
         (previousLine) => line.id === previousLine.id,
       );
       if (!matchedLineId || matchedLineId.length === 0) {

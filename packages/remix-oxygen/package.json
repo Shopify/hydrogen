@@ -40,7 +40,7 @@
     "dist"
   ],
   "devDependencies": {
-    "@remix-run/server-runtime": "^2.8.0",
+    "@remix-run/server-runtime": "^2.9.2",
     "@shopify/oxygen-workers-types": "^4.0.0"
   },
   "peerDependencies": {

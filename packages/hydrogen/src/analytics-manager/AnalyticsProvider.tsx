@@ -54,14 +54,23 @@ export type AnalyticsProviderProps = {
   children?: ReactNode;
   /** The cart or cart promise to track for cart analytics. When there is a difference between the state of the cart, `AnalyticsProvider` will trigger a `cart_updated` event. It will also produce `product_added_to_cart` and `product_removed_from_cart` based on cart line quantity and cart line id changes. */
   cart: Promise<CartReturn | null> | CartReturn | null;
-  /** An optional function to set wether the user can be tracked. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.userCanBeTracked()`. */
+  /** An optional function to set wether the user can be tracked. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.analyticsProcessingAllowed()`. */
   canTrack?: () => boolean;
   /** An optional custom payload to pass to all events. e.g language/locale/currency. */
   customData?: Record<string, unknown>;
   /** The shop configuration required to publish analytics events to Shopify. Use [`getShopAnalytics`](/docs/api/hydrogen/2024-04/utilities/getshopanalytics). */
   shop: Promise<ShopAnalytics | null> | ShopAnalytics | null;
   /** The customer privacy consent configuration and options. */
-  consent: CustomerPrivacyApiProps;
+  consent: Partial<
+    Pick<
+      CustomerPrivacyApiProps,
+      'checkoutDomain' | 'storefrontAccessToken' | 'withPrivacyBanner'
+    >
+  >;
+  /** Disable throwing errors when required props are missing. */
+  disableThrowOnError?: boolean;
+  /** The domain scope of the cookie set with `useShopifyCookies`. **/
+  cookieDomain?: string;
 };
 
 export type Carts = {
@@ -70,7 +79,7 @@ export type Carts = {
 };
 
 export type AnalyticsContextValue = {
-  /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.userCanBeTracked()`. */
+  /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.analyticsProcessingAllowed()`. */
   canTrack: NonNullable<AnalyticsProviderProps['canTrack']>;
   /** The current cart state. */
   cart: Awaited<AnalyticsProviderProps['cart']>;
@@ -250,14 +259,9 @@ function register(key: string) {
 // This functions attempts to automatically determine if the user can be tracked if the
 // customer privacy API is available. If not, it will default to false.
 function shopifyCanTrack(): boolean {
-  if (
-    typeof window !== 'undefined' &&
-    typeof window?.Shopify === 'object' &&
-    typeof window?.Shopify?.customerPrivacy === 'object' &&
-    typeof window?.Shopify?.customerPrivacy?.userCanBeTracked === 'function'
-  ) {
-    return window.Shopify.customerPrivacy.userCanBeTracked();
-  }
+  try {
+    return window.Shopify.customerPrivacy.analyticsProcessingAllowed();
+  } catch (e) {}
   return false;
 }
 
@@ -268,6 +272,8 @@ function AnalyticsProvider({
   consent,
   customData = {},
   shop: shopProp = null,
+  disableThrowOnError = false,
+  cookieDomain,
 }: AnalyticsProviderProps): JSX.Element {
   const listenerSet = useRef(false);
   const {shop} = useShopAnalytics(shopProp);
@@ -278,18 +284,6 @@ function AnalyticsProvider({
   const [canTrack, setCanTrack] = useState<() => boolean>(
     customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
   );
-
-  // Force a re-render of the value when
-  useEffect(() => {
-    if (customCanTrack) return;
-    if (listenerSet.current) return;
-    listenerSet.current = true;
-
-    document.addEventListener('visitorConsentCollected', () => {
-      setConsentLoaded(true);
-      setCanTrack(() => shopifyCanTrack);
-    });
-  }, [setConsentLoaded, setCanTrack, customCanTrack]);
 
   const value = useMemo<AnalyticsContextValue>(() => {
     return {
@@ -320,11 +314,23 @@ function AnalyticsProvider({
   return (
     <AnalyticsContext.Provider value={value}>
       {children}
-      {shop && <AnalyticsPageView />}
-      {shop && currentCart && (
+      {!!shop && <AnalyticsPageView />}
+      {!!shop && !!currentCart && (
         <CartAnalytics cart={currentCart} setCarts={setCarts} />
       )}
-      {shop && consent && <ShopifyAnalytics consent={consent} />}
+      {!!shop && (
+        <ShopifyAnalytics
+          consent={consent}
+          onReady={() => {
+            listenerSet.current = true;
+            setConsentLoaded(true);
+            setCanTrack(() => shopifyCanTrack);
+          }}
+          domain={cookieDomain}
+          disableThrowOnError={disableThrowOnError}
+          isMockShop={/\/68817551382$/.test(shop.shopId)}
+        />
+      )}
     </AnalyticsContext.Provider>
   );
 }
@@ -420,7 +426,7 @@ export const Analytics = {
 };
 
 export type AnalyticsContextValueForDoc = {
-  /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.userCanBeTracked()`. */
+  /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.analyticsProcessingAllowed()`. */
   canTrack?: () => boolean;
   /** The current cart state. */
   cart?: Promise<CartReturn | null> | CartReturn | null;
@@ -430,7 +436,7 @@ export type AnalyticsContextValueForDoc = {
   prevCart?: Promise<CartReturn | null> | CartReturn | null;
   /** A function to publish an analytics event. */
   publish?: AnalyticsContextPublishForDoc;
-  /** A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/2024-04/hooks/unstable_useanalytics#example-unstable_useanalytics.register). */
+  /** A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/2024-04/hooks/useanalytics#example-useanalytics.register). */
   register?: (key: string) => {ready: () => void};
   /** The shop configuration required to publish events to Shopify. */
   shop?: Promise<ShopAnalytics | null> | ShopAnalytics | null;

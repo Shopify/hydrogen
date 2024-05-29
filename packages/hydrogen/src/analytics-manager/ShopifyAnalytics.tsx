@@ -23,12 +23,14 @@ import type {
   CartLineUpdatePayload,
   SearchViewPayload,
 } from './AnalyticsView';
-import {useEffect} from 'react';
+import {useEffect, useState} from 'react';
 import {
   CartLine,
   ComponentizableCartLine,
   Maybe,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import invariant from 'tiny-invariant';
+import {warnOnce} from '../utils/warning';
 
 function getCustomerPrivacyRequired() {
   const customerPrivacy = getCustomerPrivacy();
@@ -42,6 +44,10 @@ function getCustomerPrivacyRequired() {
   return customerPrivacy;
 }
 
+function messageOnError(field: string) {
+  return `[h2:error:Analytics.Provider] - ${field} is required`;
+}
+
 /**
  * This component is responsible for sending analytics events to Shopify.
  * It emits the following events:
@@ -53,23 +59,82 @@ function getCustomerPrivacyRequired() {
  */
 export function ShopifyAnalytics({
   consent,
+  onReady,
+  domain,
+  disableThrowOnError,
+  isMockShop,
 }: {
   consent: AnalyticsProviderProps['consent'];
+  onReady: () => void;
+  domain?: string;
+  disableThrowOnError: boolean;
+  isMockShop: boolean;
 }) {
+  // If mock shop is used, log error instead of throwing
+  if (isMockShop) {
+    warnOnce(
+      '[h2:error:Analytics.Provider] - Mock shop is used. Analytics will not work properly.',
+    );
+  } else {
+    if (!consent.checkoutDomain) {
+      const errorMsg = messageOnError('consent.checkoutDomain');
+      if (disableThrowOnError) {
+        // eslint-disable-next-line no-console
+        console.error(errorMsg);
+      } else {
+        invariant(false, errorMsg);
+      }
+    }
+
+    if (!consent.storefrontAccessToken) {
+      const errorMsg = messageOnError('consent.storefrontAccessToken');
+      if (disableThrowOnError) {
+        // eslint-disable-next-line no-console
+        console.error(errorMsg);
+      } else {
+        invariant(false, errorMsg);
+      }
+    }
+  }
+
   const {subscribe, register, canTrack} = useAnalytics();
+  const [shopifyReady, setShopifyReady] = useState(false);
+  const [privacyReady, setPrivacyReady] = useState(false);
   const {ready: shopifyAnalyticsReady} = register('Internal_Shopify_Analytics');
   const {ready: customerPrivacyReady} = register(
     'Internal_Shopify_CustomerPrivacy',
   );
-  const {checkoutDomain, storefrontAccessToken} = consent;
-  checkoutDomain &&
-    storefrontAccessToken &&
-    useCustomerPrivacy({
-      ...consent,
-      onVisitorConsentCollected: customerPrivacyReady,
-    });
+  const analyticsReady = () => {
+    shopifyReady && privacyReady && onReady();
+  };
 
-  useShopifyCookies({hasUserConsent: canTrack()});
+  const setCustomerPrivacyReady = () => {
+    setPrivacyReady(true);
+    customerPrivacyReady();
+    analyticsReady();
+  };
+
+  const {checkoutDomain, storefrontAccessToken, withPrivacyBanner} = consent;
+
+  useCustomerPrivacy({
+    checkoutDomain:
+      isMockShop || !checkoutDomain ? 'mock.shop' : checkoutDomain,
+    storefrontAccessToken:
+      isMockShop || !storefrontAccessToken
+        ? 'abcdefghijklmnopqrstuvwxyz123456'
+        : storefrontAccessToken,
+    withPrivacyBanner: isMockShop ? false : withPrivacyBanner,
+    onVisitorConsentCollected: setCustomerPrivacyReady,
+    onReady: () => {
+      // Set customer privacy ready 3 seconds after load
+      setTimeout(setCustomerPrivacyReady, 3000);
+    },
+  });
+
+  useShopifyCookies({
+    hasUserConsent: canTrack(),
+    domain,
+  });
 
   useEffect(() => {
     // Views
@@ -82,6 +147,8 @@ export function ShopifyAnalytics({
     subscribe(AnalyticsEvent.PRODUCT_ADD_TO_CART, productAddedToCartHandler);
 
     shopifyAnalyticsReady();
+    setShopifyReady(true);
+    analyticsReady();
   }, [subscribe, shopifyAnalyticsReady]);
 
   return null;
@@ -103,7 +170,7 @@ function prepareBasePageViewPayload(
     | CartUpdatePayload,
 ): ShopifyPageViewPayload | undefined {
   const customerPrivacy = getCustomerPrivacyRequired();
-  const hasUserConsent = customerPrivacy.userCanBeTracked();
+  const hasUserConsent = customerPrivacy.analyticsProcessingAllowed();
 
   if (!payload?.shop?.shopId) {
     logMissingConfig('shopId');

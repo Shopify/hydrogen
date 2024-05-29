@@ -112,6 +112,7 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
     storefront,
     getCartId,
     cartFragment: cartMutateFragment,
+    customerAccount,
   };
 
   const _cartCreate = cartCreateDefault(mutateOptions);
@@ -132,7 +133,16 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
     getCartId,
     setCartId,
     create: cartCreate,
-    addLines: async (lines, optionalParams) => {
+    addLines: async (linesWithOptimisticData, optionalParams) => {
+      const lines = linesWithOptimisticData.map((line) => {
+        return {
+          attributes: line.attributes,
+          quantity: line.quantity,
+          merchandiseId: line.merchandiseId,
+          sellingPlanId: line.sellingPlanId,
+        };
+      });
+
       return cartId || optionalParams?.cartId
         ? await cartLinesAddDefault(mutateOptions)(lines, optionalParams)
         : await cartCreate({lines}, optionalParams);

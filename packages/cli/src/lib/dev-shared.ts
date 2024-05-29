@@ -130,3 +130,15 @@ export function getUtilityBannerlines(host: string) {
     subdued: `${index === 0 ? '' : '\n\n'}${value}`,
   }));
 }
+
+export function getRepoMeta() {
+  const monorepoPackagesPath = new URL('../../..', import.meta.url).pathname;
+  const isHydrogenMonorepo = monorepoPackagesPath.endsWith(
+    '/hydrogen/packages/',
+  );
+
+  return {
+    isHydrogenMonorepo,
+    hydrogenPackagesPath: isHydrogenMonorepo ? monorepoPackagesPath : undefined,
+  };
+}

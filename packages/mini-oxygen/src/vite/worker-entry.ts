@@ -44,6 +44,10 @@ export default {
     // Fetch the app's entry module and cache it. E.g. `<root>/server.ts`
     const module = await fetchEntryModule(url, env);
 
+    if ('errorResponse' in module) {
+      return module.errorResponse;
+    }
+
     // Return early for warmup requests after loading the entry module.
     if (url.pathname === env.__VITE_WARMUP_PATHNAME) {
       return new globalThis.Response(null);
@@ -94,25 +98,31 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
       .then((hmrWs) => {
         hmrReady = !!hmrWs;
         hmrWs?.addEventListener('message', (message) => {
-          if (onHmrRecieve) {
-            if (!message.data) return;
-            const data: HMRPayload = JSON.parse(message.data.toString());
+          if (!message.data) return;
+          const data: HMRPayload = JSON.parse(message.data.toString());
 
-            if (!data) return;
+          if (!data) return;
 
-            if (data.type === 'update') {
-              // Invalidate cache synchronously without revalidating the
-              // module to avoid hanging promises in workerd
-              for (const update of data.updates) {
-                runtime.moduleCache.invalidateDepTree([update.path]);
-              }
-            } else if (data.type !== 'custom') {
-              // Custom events are only used in browser HMR, so ignore them.
-              // This type is wrong in ViteRuntime:
-              (onHmrRecieve(data) as unknown as Promise<unknown>)?.catch(
-                (error) => console.error('During SSR HMR:', error),
-              );
+          if (data.type === 'update') {
+            // Invalidate cache synchronously without revalidating the
+            // module to avoid hanging promises in workerd
+            for (const update of data.updates) {
+              runtime.moduleCache.invalidateDepTree([
+                // Module IDs are absolute from root
+                update.path.replace(/^\.\//, '/'),
+                ...(update.ssrInvalidates ?? []),
+              ]);
             }
+          } else if (data.type !== 'custom' && onHmrRecieve) {
+            // Custom events are only used in browser HMR, so ignore them.
+            // This type is wrong in ViteRuntime:
+            (onHmrRecieve(data) as unknown as Promise<unknown>)?.catch(
+              (error: Error) => {
+                if (!/ReferenceError/.test(error?.message ?? '')) {
+                  console.error('During SSR HMR:', error);
+                }
+              },
+            );
           }
         });
       })
@@ -185,9 +195,21 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
     );
   }
 
-  return runtime.executeEntrypoint(env.__VITE_RUNTIME_EXECUTE_URL) as Promise<{
-    default: {fetch: ExportedHandlerFetchHandler};
-  }>;
+  return (
+    runtime.executeEntrypoint(env.__VITE_RUNTIME_EXECUTE_URL) as Promise<{
+      default: {fetch: ExportedHandlerFetchHandler};
+    }>
+  ).catch((error: Error) => {
+    return {
+      errorResponse: new globalThis.Response(
+        error?.stack ?? error?.message ?? 'Internal error',
+        {
+          status: 503,
+          statusText: 'executeEntrypoint error',
+        },
+      ),
+    };
+  });
 }
 
 /**

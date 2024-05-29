@@ -6,17 +6,17 @@
   "scripts": {
     "build": "shopify hydrogen build",
     "dev": "shopify hydrogen dev",
-    "preview": "npm run build && shopify hydrogen preview",
+    "preview": "shopify hydrogen preview --build",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "typecheck": "tsc --noEmit"
   },
   "prettier": "@shopify/prettier-config",
   "dependencies": {
-    "@remix-run/react": "^2.8.0",
-    "@remix-run/server-runtime": "^2.8.0",
-    "@shopify/cli": "3.59.2",
-    "@shopify/cli-hydrogen": "^8.0.3",
-    "@shopify/hydrogen": "2024.4.1",
+    "@remix-run/react": "^2.9.2",
+    "@remix-run/server-runtime": "^2.9.2",
+    "@shopify/cli": "3.60.0",
+    "@shopify/cli-hydrogen": "^8.0.4",
+    "@shopify/hydrogen": "2024.4.2",
     "@shopify/remix-oxygen": "^2.0.4",
     "@total-typescript/ts-reset": "^0.4.2",
     "graphql": "^16.6.0",
@@ -26,8 +26,8 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@remix-run/dev": "^2.8.0",
-    "@shopify/mini-oxygen": "^3.0.1",
+    "@remix-run/dev": "^2.9.2",
+    "@shopify/mini-oxygen": "^3.0.2",
     "@shopify/oxygen-workers-types": "^4.0.0",
     "@shopify/prettier-config": "^1.1.2",
     "@types/eslint": "^8.4.10",

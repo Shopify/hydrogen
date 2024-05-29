@@ -9,6 +9,7 @@ import type {
 } from './storefront-api-types.js';
 import type {PartialDeep, Simplify} from 'type-fest';
 import {flattenConnection} from './flatten-connection.js';
+import {RootASTNode as RichTextRootASTNode} from './RichText.types.js';
 
 /**
  * A function that uses `metafield.type` to parse the Metafield's `value` or `reference` or `references` (depending on the `metafield.type`) and places the result in `metafield.parsedValue`
@@ -68,6 +69,7 @@ export function parseMetafield<ReturnGeneric>(
     case 'rating':
     case 'volume':
     case 'weight':
+    case 'rich_text_field':
     case 'list.color':
     case 'list.dimension':
     case 'list.number_integer':
@@ -168,6 +170,7 @@ export const allMetafieldTypesArray = [
   'file_reference',
   'json',
   'money',
+  'rich_text_field',
   'multi_line_text_field',
   'number_decimal',
   'number_integer',
@@ -247,6 +250,8 @@ export type ParsedMetafields<ExtraTypeGeneric = void> = {
   product_reference: Simplify<ProductParsedRefMetafield>;
   /** A Metafield that's been parsed, with a `parsedValue` of type `Rating` */
   rating: Simplify<RatingParsedMetafield>;
+  /** A Metafield that's been parsed, with a `parsedValue` of type `Rating` */
+  rich_text_field: Simplify<RichTextParsedMetafield>;
   /** A Metafield that's been parsed, with a `parsedValue` of type `string` */
   single_line_text_field: Simplify<TextParsedMetafield>;
   /** A Metafield that's been parsed, with a `parsedValue` of type `string` */
@@ -357,6 +362,11 @@ type ProductParsedRefMetafield = MetafieldBaseType & {
 type RatingParsedMetafield = MetafieldBaseType & {
   type: 'rating';
   parsedValue: Rating | null;
+};
+
+type RichTextParsedMetafield = MetafieldBaseType & {
+  type: 'rich_text_field';
+  parsedValue: RichTextRootASTNode | null;
 };
 
 type VariantParsedRefMetafield = MetafieldBaseType & {

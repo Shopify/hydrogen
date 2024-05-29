@@ -3,6 +3,7 @@ import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 const data: ReferenceEntityTemplateSchema = {
   name: 'Video',
   category: 'components',
+  subCategory: 'media',
   isVisualComponent: false,
   related: [
     {

@@ -43,12 +43,13 @@ import {execAsync} from '../../lib/process.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
 import {OxygenDeploymentData} from '../../lib/graphql/admin/get-oxygen-data.js';
+import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
 import {runBuild} from './build.js';
-import {runViteBuild} from './build-vite.js';
 import {getViteConfig} from '../../lib/vite-config.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {hasRemixConfigFile} from '../../lib/remix-config.js';
 import {packageManagers} from '../../lib/package-managers.js';
+import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 
 const DEPLOY_OUTPUT_FILE_HANDLE = 'h2_deploy_log.json';
 
@@ -150,10 +151,9 @@ export default class Deploy extends Command {
     const deploymentOptions = this.flagsToOxygenDeploymentOptions(flags);
 
     if (flags.diff) {
-      deploymentOptions.path = await prepareDiffDirectory(
-        deploymentOptions.path,
-        false,
-      );
+      const diff = await prepareDiffDirectory(deploymentOptions.path, false);
+      deploymentOptions.path = diff.targetDirectory;
+      setupResourceCleanup(diff.cleanup);
     }
 
     await runDeploy(deploymentOptions);
@@ -564,7 +564,7 @@ Continue?`.value,
         outputContent`${colors.whiteBright('Building project...')}`.value,
       );
 
-      const build = isClassicCompiler ? runBuild : runViteBuild;
+      const build = isClassicCompiler ? runClassicCompilerBuild : runBuild;
 
       await build({
         directory: root,

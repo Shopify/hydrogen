@@ -31,6 +31,7 @@
   },
   "workspaces": [
     "docs/preview",
+    "examples/b2b",
     "examples/classic-remix",
     "examples/custom-cart-method",
     "examples/express",
@@ -42,7 +43,7 @@
     "examples/partytown",
     "examples/subscriptions",
     "examples/third-party-queries-caching",
-    "examples/analytics",
+    "examples/gtm",
     "packages/cli",
     "packages/create-hydrogen",
     "packages/hydrogen",
@@ -54,6 +55,9 @@
     "templates/skeleton"
   ],
   "prettier": "@shopify/prettier-config",
+  "dependencies": {
+    "@shopify/cli-hydrogen": "*"
+  },
   "devDependencies": {
     "@changesets/changelog-github": "^0.4.8",
     "@changesets/cli": "^2.26.0",
@@ -92,9 +96,6 @@
     ]
   },
   "overrides": {
-    "@oclif/core": "3.23.0",
-    "@oclif/plugin-commands": "3.2.0",
-    "@oclif/plugin-help": "6.0.18",
-    "@oclif/plugin-plugins": "4.3.6"
+    "@oclif/core": "3.26.5"
   }
 }

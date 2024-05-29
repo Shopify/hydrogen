@@ -1,60 +1,54 @@
-import fs from 'node:fs/promises';
-import type {ChildProcess} from 'node:child_process';
-import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
-import {fileExists} from '@shopify/cli-kit/node/fs';
-import {renderFatalError} from '@shopify/cli-kit/node/ui';
-import {relativePath, resolvePath} from '@shopify/cli-kit/node/path';
-import {copyPublicFiles} from './build.js';
+import type {ViteDevServer} from 'vite';
+import Command from '@shopify/cli-kit/node/base-command';
+import colors from '@shopify/cli-kit/node/colors';
+import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
+import {collectLog} from '@shopify/cli-kit/node/output';
 import {
-  type RemixConfig,
-  assertOxygenChecks,
-  getProjectPaths,
-  getRemixConfig,
-  handleRemixImportFail,
-  type ServerMode,
-} from '../../lib/remix-config.js';
+  type AlertCustomSection,
+  renderSuccess,
+  renderInfo,
+} from '@shopify/cli-kit/node/ui';
+import {AbortError} from '@shopify/cli-kit/node/error';
+import {Flags, Config} from '@oclif/core';
 import {
-  createRemixLogger,
   enhanceH2Logs,
-  muteDevLogs,
   isH2Verbose,
+  muteDevLogs,
   setH2OVerbose,
 } from '../../lib/log.js';
 import {
   DEFAULT_APP_PORT,
+  DEFAULT_INSPECTOR_PORT,
   commonFlags,
   deprecated,
   flagsToCamelObject,
+  overrideFlag,
 } from '../../lib/flags.js';
-import Command from '@shopify/cli-kit/node/base-command';
-import {Flags, Config} from '@oclif/core';
-import {
-  type MiniOxygen,
-  startMiniOxygen,
-  buildAssetsUrl,
-} from '../../lib/mini-oxygen/index.js';
-import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
-import {setupLiveReload} from '../../lib/live-reload.js';
-import {checkRemixVersions} from '../../lib/remix-version-check.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
-import {findPort} from '../../lib/find-port.js';
+import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {
-  copyShopifyConfig,
-  prepareDiffDirectory,
-} from '../../lib/template-diff.js';
-import {
+  getDebugBannerLine,
   startTunnelAndPushConfig,
-  getDevConfigInBackground,
   isMockShop,
   notifyIssueWithTunnelAndMockShop,
+  getDevConfigInBackground,
+  getUtilityBannerlines,
+  TUNNEL_DOMAIN,
+  getRepoMeta,
 } from '../../lib/dev-shared.js';
 import {getCliCommand} from '../../lib/shell.js';
+import {findPort} from '../../lib/find-port.js';
+import {logRequestLine} from '../../lib/mini-oxygen/common.js';
+import {findHydrogenPlugin, findOxygenPlugin} from '../../lib/vite-config.js';
 import {hasViteConfig} from '../../lib/vite-config.js';
-
-const LOG_REBUILDING = '🧱 Rebuilding...';
-const LOG_REBUILT = '🚀 Rebuilt';
+import {runClassicCompilerDev} from '../../lib/classic-compiler/dev.js';
+import {importVite} from '../../lib/import-utils.js';
+import {createEntryPointErrorHandler} from '../../lib/deps-optimizer.js';
+import {getCodeFormatOptions} from '../../lib/format-code.js';
+import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
+import {removeFile} from '@shopify/cli-kit/node/fs';
 
 export default class Dev extends Command {
   static descriptionWithMarkdown = `Runs a Hydrogen storefront in a local runtime that emulates an Oxygen worker for development.
@@ -65,11 +59,11 @@ export default class Dev extends Command {
     'Runs Hydrogen storefront in an Oxygen worker for development.';
   static flags = {
     ...commonFlags.path,
-    ...commonFlags.port,
-    worker: deprecated('--worker', {isBoolean: true}),
-    ...commonFlags.legacyRuntime,
+    ...commonFlags.entry,
+    ...overrideFlag(commonFlags.port, {
+      port: {default: undefined, required: false},
+    }),
     ...commonFlags.codegen,
-    ...commonFlags.sourcemap,
     'disable-virtual-routes': Flags.boolean({
       description:
         "Disable rendering fallback routes when a route file doesn't exist.",
@@ -88,6 +82,34 @@ export default class Dev extends Command {
     ...commonFlags.diff,
     ...commonFlags.customerAccountPush,
     ...commonFlags.verbose,
+    host: Flags.boolean({
+      description: 'Expose the server to the local network',
+      default: false,
+      required: false,
+    }),
+    'disable-deps-optimizer': Flags.boolean({
+      description:
+        "Disable adding dependencies to Vite's `ssr.optimizeDeps.include` automatically",
+      env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_DEPS_OPTIMIZER',
+      default: false,
+    }),
+
+    // For the classic compiler:
+    worker: deprecated('--worker', {isBoolean: true}),
+    ...overrideFlag(commonFlags.legacyRuntime, {
+      'legacy-runtime': {
+        description:
+          '[Classic Remix Compiler] ' +
+          commonFlags.legacyRuntime['legacy-runtime'].description,
+      },
+    }),
+    ...overrideFlag(commonFlags.sourcemap, {
+      sourcemap: {
+        description:
+          '[Classic Remix Compiler] ' +
+          commonFlags.sourcemap.sourcemap.description,
+      },
+    }),
   };
 
   async run(): Promise<void> {
@@ -95,11 +117,12 @@ export default class Dev extends Command {
     const originalDirectory = flags.path
       ? resolvePath(flags.path)
       : process.cwd();
-    let directory = originalDirectory;
 
-    if (flags.diff) {
-      directory = await prepareDiffDirectory(directory, true);
-    }
+    const diff = flags.diff
+      ? await prepareDiffDirectory(originalDirectory, true)
+      : undefined;
+
+    const directory = diff?.targetDirectory ?? originalDirectory;
 
     const devParams = {
       ...flagsToCamelObject(flags),
@@ -108,67 +131,56 @@ export default class Dev extends Command {
       cliConfig: this.config,
     };
 
-    const {close} = (await hasViteConfig(directory ?? process.cwd()))
-      ? await import('./dev-vite.js').then(({runViteDev}) =>
-          runViteDev(devParams),
-        )
-      : await runDev(devParams);
+    const {close} = (await hasViteConfig(directory))
+      ? await runDev(devParams)
+      : await runClassicCompilerDev(devParams);
 
-    // Note: Shopify CLI is hooking into process events and calling process.exit.
-    // This means we are unable to hook into 'beforeExit' or 'SIGINT" events
-    // to cleanup resources. In addition, Miniflare uses `exit-hook` dependency
-    // to do the same thing. This is a workaround to ensure we cleanup resources:
-    let closingPromise: Promise<void>;
-    const processExit = process.exit;
-    // @ts-expect-error - Async function
-    process.exit = async (code?: number | undefined) => {
-      // This function will be called multiple times,
-      // but we only want to cleanup resources once.
-      closingPromise ??= close();
-      await closingPromise;
-      return processExit(code);
-    };
+    setupResourceCleanup(async () => {
+      await close();
 
-    if (flags.diff) {
-      await copyShopifyConfig(directory, originalDirectory);
-    }
+      if (diff) {
+        await diff.copyShopifyConfig();
+        await diff.cleanup();
+      }
+    });
   }
 }
 
 type DevOptions = {
+  entry?: string;
   port?: number;
   path?: string;
   codegen?: boolean;
-  legacyRuntime?: boolean;
+  host?: boolean;
   codegenConfigPath?: string;
   disableVirtualRoutes?: boolean;
   disableVersionCheck?: boolean;
-  env?: string;
+  disableDepsOptimizer?: boolean;
   envBranch?: string;
+  env?: string;
   debug?: boolean;
   sourcemap?: boolean;
   inspectorPort?: number;
   customerAccountPush?: boolean;
   cliConfig: Config;
-  shouldLiveReload?: boolean;
   verbose?: boolean;
 };
 
 export async function runDev({
+  entry: ssrEntry,
   port: appPort,
   path: appPath,
+  host,
   codegen: useCodegen = false,
-  legacyRuntime = false,
   codegenConfigPath,
   disableVirtualRoutes,
-  env: envHandle,
+  disableDepsOptimizer = false,
   envBranch,
+  env: envHandle,
   debug = false,
-  sourcemap = true,
   disableVersionCheck = false,
   inspectorPort,
   customerAccountPush: customerAccountPushFlag = false,
-  shouldLiveReload = true,
   cliConfig,
   verbose,
 }: DevOptions) {
@@ -177,271 +189,290 @@ export async function runDev({
   if (verbose) setH2OVerbose();
   if (!isH2Verbose()) muteDevLogs();
 
-  const {root, publicPath, buildPathClient, buildPathWorkerFile} =
-    getProjectPaths(appPath);
+  const root = appPath ?? process.cwd();
 
-  const copyFilesPromise = copyPublicFiles(publicPath, buildPathClient);
   const cliCommandPromise = getCliCommand(root);
-
-  const reloadConfig = async () => {
-    const config = (await getRemixConfig(root)) as RemixConfig;
-
-    return disableVirtualRoutes
-      ? config
-      : addVirtualRoutes(config).catch((error) => {
-          // Seen this fail when somehow NPM doesn't publish
-          // the full 'virtual-routes' directory.
-          // E.g. https://unpkg.com/browse/@shopify/cli-hydrogen@0.0.0-next-aa15969-20230703072007/dist/virtual-routes/
-          outputDebug(
-            'Could not add virtual routes: ' +
-              (error?.stack ?? error?.message ?? error),
-          );
-
-          return config;
-        });
-  };
-
-  const getFilePaths = (file: string) => {
-    const fileRelative = relativePath(root, file);
-    return [fileRelative, resolvePath(root, fileRelative)] as const;
-  };
-
-  const serverBundleExists = () => fileExists(buildPathWorkerFile);
-
-  if (!appPort) {
-    appPort = await findPort(DEFAULT_APP_PORT);
-  }
-
-  const assetsPort = legacyRuntime ? 0 : await findPort(appPort + 100);
-  if (assetsPort) {
-    // Note: Set this env before loading Remix config!
-    process.env.HYDROGEN_ASSET_BASE_URL = await buildAssetsUrl(assetsPort);
-  }
-
   const backgroundPromise = getDevConfigInBackground(
     root,
     customerAccountPushFlag,
   );
 
-  const tunnelPromise =
-    cliConfig &&
-    backgroundPromise.then(({customerAccountPush, storefrontId}) => {
-      if (customerAccountPush) {
-        return startTunnelAndPushConfig(
-          root,
-          cliConfig,
-          appPort!,
-          storefrontId,
-        );
-      }
-    });
-
-  const remixConfig = await reloadConfig();
-  assertOxygenChecks(remixConfig);
-
   const envPromise = backgroundPromise.then(({fetchRemote, localVariables}) =>
     getAllEnvironmentVariables({
       root,
-      fetchRemote,
       envBranch,
       envHandle,
+      fetchRemote,
       localVariables,
     }),
   );
 
-  const [{watch}, {createFileWatchCache}] = await Promise.all([
-    import('@remix-run/dev/dist/compiler/watch.js'),
-    import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
-  ]).catch(handleRemixImportFail);
-
-  let isInitialBuild = true;
-  let initialBuildDurationMs = 0;
-  let initialBuildStartTimeMs = Date.now();
-
-  const liveReload = shouldLiveReload
-    ? await setupLiveReload(remixConfig.dev?.port ?? 8002)
-    : undefined;
-
-  let miniOxygen: MiniOxygen;
-  let codegenProcess: ChildProcess;
-  async function safeStartMiniOxygen() {
-    if (miniOxygen) return;
-
-    const {allVariables, logInjectedVariables} = await envPromise;
-
-    miniOxygen = await startMiniOxygen(
-      {
-        root,
-        debug,
-        appPort,
-        assetsPort,
-        inspectorPort,
-        watch: !liveReload,
-        buildPathWorkerFile,
-        buildPathClient,
-        env: allVariables,
-      },
-      legacyRuntime,
-    );
-
-    logInjectedVariables();
-
-    const host = (await tunnelPromise)?.host ?? miniOxygen.listeningAt;
-
-    const cliCommand = await cliCommandPromise;
-    enhanceH2Logs({host, cliCommand, ...remixConfig});
-
-    const {storefrontTitle} = await backgroundPromise;
-
-    miniOxygen.showBanner({
-      appName: storefrontTitle,
-      headlinePrefix:
-        initialBuildDurationMs > 0
-          ? `Initial build: ${initialBuildDurationMs}ms\n`
-          : '',
-      host,
-    });
-
-    if (useCodegen) {
-      codegenProcess = spawnCodegenProcess({
-        ...remixConfig,
-        configFilePath: codegenConfigPath,
-      });
-    }
-
-    checkRemixVersions();
-
-    if (!disableVersionCheck) {
-      displayDevUpgradeNotice({targetPath: appPath});
-    }
-
-    if (customerAccountPushFlag && isMockShop(allVariables)) {
-      notifyIssueWithTunnelAndMockShop(cliCommand);
-    }
+  if (debug && !inspectorPort) {
+    // The Vite plugin can find and return a port for the inspector
+    // but we need to print the URLs before the runtime is ready,
+    // so we find a port early here.
+    inspectorPort = await findPort(DEFAULT_INSPECTOR_PORT);
   }
 
-  const fileWatchCache = createFileWatchCache();
-  let skipRebuildLogs = false;
+  const vite = await importVite(root);
 
-  const closeWatcher = await watch(
-    {
-      config: remixConfig,
-      options: {
-        mode: process.env.NODE_ENV as ServerMode,
-        sourcemap,
-      },
-      fileWatchCache,
-      logger: createRemixLogger(),
-    },
-    {
-      reloadConfig,
-      onBuildStart(ctx) {
-        if (!isInitialBuild && !skipRebuildLogs) {
-          outputInfo(LOG_REBUILDING);
-          console.time(LOG_REBUILT);
-        }
+  const {hydrogenPackagesPath} = getRepoMeta();
 
-        liveReload?.onBuildStart(ctx);
-      },
-      onBuildManifest: liveReload?.onBuildManifest,
-      async onBuildFinish(context, duration, succeeded) {
-        if (isInitialBuild) {
-          await copyFilesPromise;
-          initialBuildDurationMs = Date.now() - initialBuildStartTimeMs;
-          isInitialBuild = false;
-        } else if (!skipRebuildLogs) {
-          skipRebuildLogs = false;
-          console.timeEnd(LOG_REBUILT);
-          if (!miniOxygen) console.log(''); // New line
-        }
+  if (hydrogenPackagesPath) {
+    // Force reoptimizing deps without printing the message
+    await removeFile(joinPath(root, 'node_modules/.vite'));
+  }
 
-        if (!miniOxygen && !(await serverBundleExists())) {
-          return renderFatalError({
-            name: 'BuildError',
-            type: 0,
-            message:
-              'MiniOxygen cannot start because the server bundle has not been generated.',
-            skipOclifErrorHandling: true,
-            tryMessage:
-              'This is likely due to an error in your app and Remix is unable to compile. Try fixing the app and MiniOxygen will start.',
-          });
-        }
+  const customLogger = vite.createLogger();
+  if (process.env.SHOPIFY_UNIT_TEST) {
+    // Make logs from Vite visible in tests
+    customLogger.info = (msg) => collectLog('info', msg);
+    customLogger.warn = (msg) => collectLog('warn', msg);
+    customLogger.error = (msg) => collectLog('error', msg);
+  }
 
-        if (succeeded) {
-          if (!miniOxygen) {
-            await safeStartMiniOxygen();
-          } else if (liveReload) {
-            await miniOxygen.reload();
-          }
-
-          liveReload?.onAppReady(context);
-        }
-      },
-      async onFileCreated(file: string) {
-        const [relative, absolute] = getFilePaths(file);
-        outputInfo(`\n📄 File created: ${relative}`);
-
-        if (absolute.startsWith(publicPath)) {
-          await copyPublicFiles(
-            absolute,
-            absolute.replace(publicPath, buildPathClient),
-          );
-        }
-      },
-      async onFileChanged(file: string) {
-        fileWatchCache.invalidateFile(file);
-
-        const [relative, absolute] = getFilePaths(file);
-        outputInfo(`\n📄 File changed: ${relative}`);
-
-        if (relative.endsWith('.env')) {
-          skipRebuildLogs = true;
-          const {fetchRemote} = await backgroundPromise;
-          const {allVariables, logInjectedVariables} =
-            await getAllEnvironmentVariables({
-              root,
-              fetchRemote,
-              envBranch,
-              envHandle,
-            });
-
-          logInjectedVariables();
-
-          await miniOxygen.reload({
-            env: allVariables,
-          });
-        }
-
-        if (absolute.startsWith(publicPath)) {
-          await copyPublicFiles(
-            absolute,
-            absolute.replace(publicPath, buildPathClient),
-          );
-        }
-      },
-      async onFileDeleted(file: string) {
-        fileWatchCache.invalidateFile(file);
-
-        const [relative, absolute] = getFilePaths(file);
-        outputInfo(`\n📄 File deleted: ${relative}`);
-
-        if (absolute.startsWith(publicPath)) {
-          await fs.unlink(absolute.replace(publicPath, buildPathClient));
-        }
-      },
-    },
+  const formatOptionsPromise = Promise.resolve().then(() =>
+    getCodeFormatOptions(root),
   );
 
+  const viteServer = await vite.createServer({
+    root,
+    customLogger,
+    clearScreen: false,
+    server: {
+      host: host ? true : undefined,
+      // Allow Vite to read files from the Hydrogen packages in local development.
+      fs: hydrogenPackagesPath
+        ? {allow: [root, hydrogenPackagesPath]}
+        : undefined,
+    },
+    plugins: [
+      {
+        name: 'hydrogen:cli',
+        configResolved(config) {
+          findHydrogenPlugin(config)?.api?.registerPluginOptions({
+            disableVirtualRoutes,
+          });
+
+          findOxygenPlugin(config)?.api?.registerPluginOptions({
+            debug,
+            entry: ssrEntry,
+            envPromise: envPromise.then(({allVariables}) => allVariables),
+            inspectorPort,
+            logRequestLine,
+            entryPointErrorHandler: createEntryPointErrorHandler({
+              disableDepsOptimizer,
+              configFile: config.configFile,
+              formatOptionsPromise,
+              showSuccessBanner: () =>
+                showSuccessBanner({
+                  disableVirtualRoutes,
+                  debug,
+                  inspectorPort,
+                  finalHost,
+                  storefrontTitle,
+                }),
+            }),
+          });
+        },
+        configureServer: (viteDevServer) => {
+          if (customerAccountPushFlag) {
+            viteDevServer.middlewares.use((req, res, next) => {
+              const host = req.headers.host;
+
+              if (host?.includes(TUNNEL_DOMAIN.ORIGINAL)) {
+                req.headers.host = host.replace(
+                  TUNNEL_DOMAIN.ORIGINAL,
+                  TUNNEL_DOMAIN.REBRANDED,
+                );
+              }
+
+              next();
+            });
+          }
+        },
+      },
+    ],
+  });
+
+  const h2Plugin = findHydrogenPlugin(viteServer.config);
+  if (!h2Plugin) {
+    await viteServer.close();
+    throw new AbortError(
+      'Hydrogen plugin not found.',
+      'Add `hydrogen()` plugin to your Vite config.',
+    );
+  }
+
+  const h2PluginOptions = h2Plugin.api?.getPluginOptions?.();
+
+  let codegenProcess: ReturnType<typeof spawnCodegenProcess> | undefined;
+  const setupCodegen = useCodegen
+    ? () => {
+        codegenProcess?.kill(0);
+        codegenProcess = spawnCodegenProcess({
+          rootDirectory: root,
+          configFilePath: codegenConfigPath,
+          appDirectory: h2PluginOptions?.remixConfig?.appDirectory,
+        });
+      }
+    : undefined;
+
+  setupCodegen?.();
+
+  if (hydrogenPackagesPath) {
+    setupMonorepoReload(viteServer, hydrogenPackagesPath, setupCodegen);
+  }
+
+  // Store the port passed by the user in the config.
+  const publicPort =
+    appPort ?? viteServer.config.server.port ?? DEFAULT_APP_PORT;
+
+  const [tunnel, cliCommand] = await Promise.all([
+    backgroundPromise.then(({customerAccountPush, storefrontId}) =>
+      customerAccountPush
+        ? startTunnelAndPushConfig(root, cliConfig, publicPort, storefrontId)
+        : undefined,
+    ),
+    cliCommandPromise,
+    viteServer.listen(publicPort),
+  ]);
+
+  const publicUrl = new URL(
+    viteServer.resolvedUrls!.local[0] ?? viteServer.resolvedUrls!.network[0]!,
+  );
+
+  const finalHost = tunnel?.host || publicUrl.toString() || publicUrl.origin;
+
+  // Start the public facing server with the port passed by the user.
+  enhanceH2Logs({
+    rootDirectory: root,
+    host: finalHost,
+    cliCommand,
+  });
+
+  const {logInjectedVariables, allVariables} = await envPromise;
+
+  logInjectedVariables();
+  console.log('');
+  viteServer.printUrls();
+  viteServer.bindCLIShortcuts({print: true});
+  console.log('\n');
+
+  const storefrontTitle = (await backgroundPromise).storefrontTitle;
+  showSuccessBanner({
+    disableVirtualRoutes,
+    debug,
+    inspectorPort,
+    finalHost,
+    storefrontTitle,
+  });
+
+  if (!disableVersionCheck) {
+    displayDevUpgradeNotice({targetPath: root});
+  }
+
+  if (customerAccountPushFlag && isMockShop(allVariables)) {
+    notifyIssueWithTunnelAndMockShop(cliCommand);
+  }
+
   return {
-    getUrl: () => miniOxygen.listeningAt,
+    getUrl: () => finalHost,
     async close() {
       codegenProcess?.removeAllListeners('close');
       codegenProcess?.kill('SIGINT');
-      await Promise.allSettled([
-        closeWatcher(),
-        miniOxygen?.close(),
-        Promise.resolve(tunnelPromise).then((tunnel) => tunnel?.cleanup?.()),
-      ]);
+      await Promise.allSettled([viteServer.close(), tunnel?.cleanup?.()]);
     },
   };
+}
+
+function showSuccessBanner({
+  disableVirtualRoutes,
+  debug,
+  inspectorPort,
+  finalHost,
+  storefrontTitle,
+}: Pick<DevOptions, 'disableVirtualRoutes' | 'debug' | 'inspectorPort'> & {
+  finalHost: string;
+  storefrontTitle?: string;
+}) {
+  const customSections: AlertCustomSection[] = [];
+
+  if (!disableVirtualRoutes) {
+    customSections.push({body: getUtilityBannerlines(finalHost)});
+  }
+
+  if (debug && inspectorPort) {
+    customSections.push({
+      body: {warn: getDebugBannerLine(inspectorPort)},
+    });
+  }
+
+  renderSuccess({
+    body: [
+      `View ${
+        storefrontTitle ? colors.cyan(storefrontTitle) : 'Hydrogen'
+      } app:`,
+      {link: {url: finalHost}},
+    ],
+    customSections,
+  });
+}
+
+function setupMonorepoReload(
+  viteServer: ViteDevServer,
+  monorepoPackagesPath: string,
+  setupCodegen?: () => void,
+) {
+  // Note: app code is already tracked by Vite in monorepos
+  // so there is no need to watch it and do manual work here.
+  // We need to track, however, code that is not imported in
+  // the app and manually reload things here.
+
+  viteServer.httpServer?.once('listening', () => {
+    // Watch the Hydrogen plugin for changes and restart Vite server.
+    // Virtual routes are already tracked by Vite because they are in-app code.
+    viteServer.watcher.add(
+      monorepoPackagesPath + 'hydrogen/dist/vite/plugin.js',
+    );
+
+    // Any change in MiniOxygen will overwrite every file in `dist`.
+    // We watch the plugin file for example and restart Vite server,
+    // which also restarts the MiniOxygen worker.
+    // The only exception is worker-entry because it follows a separate
+    // build in TSUP.
+    viteServer.watcher.add(
+      monorepoPackagesPath + 'mini-oxygen/dist/vite/plugin.js',
+    );
+    viteServer.watcher.add(
+      monorepoPackagesPath + 'mini-oxygen/dist/vite/worker-entry.js',
+    );
+
+    // Watch any file in hydrogen-codegen to restart the codegen process.
+    viteServer.watcher.add(
+      monorepoPackagesPath + 'hydrogen-codegen/dist/esm/index.js',
+    );
+
+    viteServer.watcher.on('change', async (file) => {
+      if (file.includes(monorepoPackagesPath)) {
+        if (file.includes('/packages/hydrogen-codegen/')) {
+          if (setupCodegen) {
+            setupCodegen();
+            renderInfo({
+              headline: 'The Hydrogen Codegen source has been modified.',
+              body: 'The codegen process has been restarted.',
+            });
+          }
+        } else {
+          // Restart Vite server, which also restarts MiniOxygen
+          await viteServer.restart(true);
+          console.log('');
+          renderInfo({
+            headline: 'The H2O Vite plugins have been modified.',
+            body: 'The Vite server has been restarted to reflect the changes.',
+          });
+        }
+      }
+    });
+  });
 }

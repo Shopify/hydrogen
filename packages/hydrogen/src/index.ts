@@ -27,7 +27,11 @@ export type {
 } from './customer/types';
 export {changelogHandler} from './changelogHandler';
 
-export {CartForm, type CartActionInput} from './cart/CartForm';
+export {
+  CartForm,
+  type CartActionInput,
+  type OptimisticCartLine,
+} from './cart/CartForm';
 export {cartCreateDefault} from './cart/queries/cartCreateDefault';
 export {cartGetDefault} from './cart/queries/cartGetDefault';
 export {cartLinesAddDefault} from './cart/queries/cartLinesAddDefault';
@@ -56,6 +60,11 @@ export type {
 } from './cart/queries/cart-types';
 
 export {
+  useOptimisticCart,
+  type OptimisticCart,
+} from './cart/optimistic/useOptimisticCart';
+
+export {
   VariantSelector,
   getSelectedProductOptions,
 } from './product/VariantSelector';
@@ -76,8 +85,8 @@ export {
 export {ShopPayButton} from './shop/ShopPayButton';
 
 export {
-  Analytics as UNSTABLE_Analytics,
-  useAnalytics as unstable_useAnalytics,
+  Analytics,
+  useAnalytics,
   getShopAnalytics,
 } from './analytics-manager/AnalyticsProvider';
 export {AnalyticsEvent} from './analytics-manager/events';
@@ -128,6 +137,7 @@ export {
   useShopifyCookies,
   Video,
 } from '@shopify/hydrogen-react';
+export {RichText} from './RichText';
 
 export type {
   ClientBrowserParameters,

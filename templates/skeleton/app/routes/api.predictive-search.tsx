@@ -30,6 +30,8 @@ const DEFAULT_SEARCH_TYPES: PredictiveSearchTypes[] = [
   'QUERY',
 ];
 
+export type PredictiveSearchAPILoader = typeof loader;
+
 /**
  * Fetches the search results from the predictive search API
  * requested by the SearchForm component
@@ -207,7 +209,7 @@ export function normalizePredictiveSearchResults(
             id: article.id,
             image: article.image,
             title: article.title,
-            url: `${localePrefix}/blog/${article.handle}${trackingParams}`,
+            url: `${localePrefix}/blogs/${article.blog.handle}/${article.handle}/${trackingParams}`,
           };
         },
       ),
@@ -223,6 +225,9 @@ const PREDICTIVE_SEARCH_QUERY = `#graphql
     id
     title
     handle
+    blog {
+      handle
+    }
     image {
       url
       altText

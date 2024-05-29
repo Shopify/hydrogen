@@ -1,8 +1,10 @@
 import {Await, NavLink} from '@remix-run/react';
 import {Suspense} from 'react';
 import type {HeaderQuery} from 'storefrontapi.generated';
-import type {LayoutProps} from './Layout';
+import type {LayoutProps} from '~/components/Layout';
 import {useRootLoaderData} from '~/lib/root-data';
+import {useAside} from '~/components/Aside';
+import {type CartViewPayload, useAnalytics} from '@shopify/hydrogen';
 
 type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'>;
 
@@ -106,19 +108,47 @@ function HeaderCtas({
 }
 
 function HeaderMenuMobileToggle() {
+  const {open} = useAside();
   return (
-    <a className="header-menu-mobile-toggle" href="#mobile-menu-aside">
+    <button
+      className="header-menu-mobile-toggle reset"
+      onClick={() => open('mobile')}
+    >
       <h3>☰</h3>
-    </a>
+    </button>
   );
 }
 
 function SearchToggle() {
-  return <a href="#search-aside">Search</a>;
+  const {open} = useAside();
+  return (
+    <button className="reset" onClick={() => open('search')}>
+      Search
+    </button>
+  );
 }
 
 function CartBadge({count}: {count: number}) {
-  return <a href="#cart-aside">Cart {count}</a>;
+  const {open} = useAside();
+  const {publish, shop, cart, prevCart} = useAnalytics();
+
+  return (
+    <a
+      href="/cart"
+      onClick={(e) => {
+        e.preventDefault();
+        open('cart');
+        publish('cart_viewed', {
+          cart,
+          prevCart,
+          shop,
+          url: window.location.href || '',
+        } as CartViewPayload);
+      }}
+    >
+      Cart {count}
+    </a>
+  );
 }
 
 function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {

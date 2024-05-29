@@ -9,6 +9,7 @@ import {BugError} from '@shopify/cli-kit/node/error';
 import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
 import {getGraphiQLUrl} from './graphiql-url.js';
+import {importLocal} from './import-utils.js';
 
 type ConsoleMethod = 'log' | 'warn' | 'error' | 'debug' | 'info';
 const originalConsole = {...console};
@@ -211,6 +212,12 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
       () => {},
     ],
     [
+      // This log must come from Rollup and does not go through Vite's customLogger
+      ([first]) =>
+        typeof first === 'string' && /^Generated an empty chunk:/i.test(first),
+      () => {},
+    ],
+    [
       // Log new lines between Request logs and other logs
       ([first], existingMatches) => {
         // If this log is not going to be filtered by other replacers:
@@ -238,6 +245,26 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
       (params) => params,
     ],
   );
+
+  // TODO: Remove this when this warning is fixed in @shopify/cli
+  // This is printed using the `debug` package, which prints to stderr.
+  const processStderrWrite = process.stderr.write;
+  const timeout = setTimeout(() => {
+    process.stderr.write = processStderrWrite;
+  }, 5000);
+  process.stderr.write = (...args) => {
+    if (
+      typeof args[0] === 'string' &&
+      args[0].includes('Could not find ts-node')
+    ) {
+      clearTimeout(timeout);
+      process.stderr.write = processStderrWrite;
+      return false;
+    }
+
+    // @ts-ignore
+    return processStderrWrite.apply(process.stderr, args);
+  };
 }
 
 const originalWrite = process.stdout.write;
@@ -494,11 +521,16 @@ export function createRemixLogger() {
   };
 }
 
-export async function muteRemixLogs() {
+export async function muteRemixLogs(root: string) {
   // Remix 1.19.1 warns about `serverNodeBuiltinsPolyfill` being deprecated
   // using a global logger that cannot be modified. Mute it here.
   try {
-    const {logger} = await import('@remix-run/dev/dist/tux/logger.js');
+    type RemixLog = typeof import('@remix-run/dev/dist/tux/logger.js');
+
+    const {logger} = await importLocal<RemixLog>(
+      '@remix-run/dev/dist/tux/logger.js',
+      root,
+    );
     logger.warn = logger.debug = logger.info = () => {};
   } catch {
     // --

@@ -34,7 +34,7 @@ const data: ReferenceEntityTemplateSchema = {
     },
   ],
   examples: {
-    description: 'Example usage with `unstable_useAnalytics`:',
+    description: 'Example usage with `useAnalytics`:',
     exampleGroups: [
       {
         title: 'getCustomerPrivacy',

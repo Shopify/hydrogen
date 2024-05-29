@@ -25,7 +25,7 @@ export function getAssetDir(feature: AssetDir) {
 
   return fileURLToPath(
     new URL(
-      `../${GENERATOR_TEMPLATES_DIR}/${GENERATOR_SETUP_ASSETS_DIR}/${feature}`,
+      `./${GENERATOR_TEMPLATES_DIR}/${GENERATOR_SETUP_ASSETS_DIR}/${feature}`,
       import.meta.url,
     ),
   );
@@ -39,14 +39,14 @@ export function getTemplateAppFile(filepath: string, root = getStarterDir()) {
   return url.protocol === 'file:' ? fileURLToPath(url) : url.toString();
 }
 
-export function getStarterDir() {
-  if (process.env.NODE_ENV === 'test') {
+export function getStarterDir(useSource = !!process.env.SHOPIFY_UNIT_TEST) {
+  if (useSource) {
     return getSkeletonSourceDir();
   }
 
   return fileURLToPath(
     new URL(
-      `../${GENERATOR_TEMPLATES_DIR}/${GENERATOR_STARTER_DIR}`,
+      `./${GENERATOR_TEMPLATES_DIR}/${GENERATOR_STARTER_DIR}`,
       import.meta.url,
     ),
   );
