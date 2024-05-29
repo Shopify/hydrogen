@@ -94,6 +94,11 @@ export function HeaderMenu({
           </NavLink>
         );
       })}
+      {/***********************************************/
+      /**********  EXAMPLE UPDATE STARTS  ************/}
+      <ChangeLocation />
+      {/**********   EXAMPLE UPDATE END   ************/
+      /***********************************************/}
     </nav>
   );
 }
