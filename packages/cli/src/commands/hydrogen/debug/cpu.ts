@@ -39,20 +39,25 @@ export default class DebugCpu extends Command {
 
   async run(): Promise<void> {
     const {flags} = await this.parse(DebugCpu);
-    let directory = flags.path ? resolvePath(flags.path) : process.cwd();
-    const output = resolvePath(directory, flags.output);
+    const originalDirectory = flags.path
+      ? resolvePath(flags.path)
+      : process.cwd();
 
-    if (flags.diff) {
-      directory = await prepareDiffDirectory(directory, true);
-    }
+    const diff =
+      flags.build && flags.diff
+        ? await prepareDiffDirectory(originalDirectory, true)
+        : undefined;
 
     const {close} = await runDebugCpu({
       ...flagsToCamelObject(flags),
-      directory,
-      output,
+      directory: diff?.targetDirectory ?? originalDirectory,
+      output: resolvePath(originalDirectory, flags.output),
     });
 
-    setupResourceCleanup(close);
+    setupResourceCleanup(async () => {
+      await close();
+      await diff?.cleanup();
+    });
   }
 }
 

@@ -5,7 +5,7 @@ import {outputWarn, collectLog} from '@shopify/cli-kit/node/output';
 import {fileSize, removeFile} from '@shopify/cli-kit/node/fs';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
-import {copyDiffBuild, prepareDiffDirectory} from '../../lib/template-diff.js';
+import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {hasViteConfig, getViteConfig} from '../../lib/vite-config.js';
 import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
@@ -48,11 +48,12 @@ export default class Build extends Command {
     const originalDirectory = flags.path
       ? resolvePath(flags.path)
       : process.cwd();
-    let directory = originalDirectory;
 
-    if (flags.diff) {
-      directory = await prepareDiffDirectory(originalDirectory, flags.watch);
-    }
+    const diff = flags.diff
+      ? await prepareDiffDirectory(originalDirectory, flags.watch)
+      : undefined;
+
+    const directory = diff?.targetDirectory ?? originalDirectory;
 
     const buildParams = {
       ...flagsToCamelObject(flags),
@@ -65,18 +66,20 @@ export default class Build extends Command {
       : await runClassicCompilerBuild(buildParams);
 
     if (buildParams.watch) {
-      if (flags.diff || result?.close) {
+      if (diff || result?.close) {
         setupResourceCleanup(async () => {
           await result?.close();
 
-          if (flags.diff) {
-            await copyDiffBuild(directory, originalDirectory);
+          if (diff) {
+            await diff.copyDiffBuild();
+            await diff.cleanup();
           }
         });
       }
     } else {
-      if (flags.diff) {
-        await copyDiffBuild(directory, originalDirectory);
+      if (diff) {
+        await diff.copyDiffBuild();
+        await diff.cleanup();
       }
 
       // The Remix compiler hangs due to a bug in ESBuild:

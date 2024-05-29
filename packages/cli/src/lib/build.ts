@@ -39,8 +39,8 @@ export function getTemplateAppFile(filepath: string, root = getStarterDir()) {
   return url.protocol === 'file:' ? fileURLToPath(url) : url.toString();
 }
 
-export function getStarterDir() {
-  if (process.env.NODE_ENV === 'test') {
+export function getStarterDir(useSource = !!process.env.SHOPIFY_UNIT_TEST) {
+  if (useSource) {
     return getSkeletonSourceDir();
   }
 

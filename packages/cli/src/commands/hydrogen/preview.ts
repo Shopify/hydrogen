@@ -21,7 +21,7 @@ import {runBuild} from './build.js';
 import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 import {deferPromise} from '../../lib/defer.js';
-import {copyDiffBuild, prepareDiffDirectory} from '../../lib/template-diff.js';
+import {prepareDiffDirectory} from '../../lib/template-diff.js';
 
 export default class Preview extends Command {
   static descriptionWithMarkdown =
@@ -69,11 +69,13 @@ export default class Preview extends Command {
     const originalDirectory = flags.path
       ? resolvePath(flags.path)
       : process.cwd();
-    let directory = originalDirectory;
 
-    if (flags.build && flags.diff) {
-      directory = await prepareDiffDirectory(originalDirectory, flags.watch);
-    }
+    const diff =
+      flags.build && flags.diff
+        ? await prepareDiffDirectory(originalDirectory, flags.watch)
+        : undefined;
+
+    const directory = diff?.targetDirectory ?? originalDirectory;
 
     const {close} = await runPreview({
       ...flagsToCamelObject(flags),
@@ -82,8 +84,9 @@ export default class Preview extends Command {
 
     setupResourceCleanup(async () => {
       await close();
-      if (flags.diff) {
-        await copyDiffBuild(directory, originalDirectory);
+      if (diff) {
+        await diff.copyDiffBuild();
+        await diff.cleanup();
       }
     });
   }
