@@ -2,6 +2,7 @@
   {
     "name": "AddToCartButton",
     "category": "components",
+    "subCategory": "cart",
     "isVisualComponent": false,
     "related": [],
     "description": "The `AddToCartButton` component renders a button that adds an item to the cart when pressed.\n\nIt must be a descendent of the `CartProvider` component.",
@@ -229,6 +230,7 @@
   {
     "name": "CartCheckoutButton",
     "category": "components",
+    "subCategory": "cart",
     "isVisualComponent": false,
     "related": [],
     "description": "The `CartCheckoutButton` component renders a button that redirects to the checkout URL for the cart.\n\nMust be a descendent of a `CartProvider` component.\n  ",
@@ -303,6 +305,7 @@
   {
     "name": "CartCost",
     "category": "components",
+    "subCategory": "cart",
     "isVisualComponent": false,
     "related": [],
     "description": "\n    The `CartCost` component renders a `Money` component with the cost associated with the `amountType` prop.\n\nIf no `amountType` prop is specified, then it defaults to `totalAmount`.\n\nDepends on `useCart()` and must be a child of `<CartProvider/>`\n  ",
@@ -402,6 +405,7 @@
   {
     "name": "CartLineProvider",
     "category": "components",
+    "subCategory": "cart",
     "isVisualComponent": false,
     "related": [
       {
@@ -473,6 +477,7 @@
   {
     "name": "CartLineQuantity",
     "category": "components",
+    "subCategory": "cart",
     "isVisualComponent": false,
     "related": [
       {
@@ -535,6 +540,7 @@
   {
     "name": "CartLineQuantityAdjustButton",
     "category": "components",
+    "subCategory": "cart",
     "isVisualComponent": false,
     "related": [
       {
@@ -597,6 +603,7 @@
   {
     "name": "CartProvider",
     "category": "components",
+    "subCategory": "cart",
     "isVisualComponent": false,
     "related": [
       {
@@ -835,6 +842,7 @@
   {
     "name": "ExternalVideo",
     "category": "components",
+    "subCategory": "media",
     "isVisualComponent": false,
     "related": [
       {
@@ -1234,6 +1242,7 @@
   {
     "name": "Image",
     "category": "components",
+    "subCategory": "media",
     "isVisualComponent": false,
     "related": [
       {
@@ -1458,6 +1467,7 @@
   {
     "name": "MediaFile",
     "category": "components",
+    "subCategory": "media",
     "isVisualComponent": false,
     "related": [
       {
@@ -3900,6 +3910,7 @@
   {
     "name": "ModelViewer",
     "category": "components",
+    "subCategory": "media",
     "isVisualComponent": false,
     "related": [
       {
@@ -4629,6 +4640,7 @@
   {
     "name": "Video",
     "category": "components",
+    "subCategory": "media",
     "isVisualComponent": false,
     "related": [
       {
@@ -7660,7 +7672,7 @@
               "name": "void",
               "value": "void"
             },
-            "value": "export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {\n  const {hasUserConsent = false, domain = ''} = options || {};\n  useEffect(() => {\n    const cookies = getShopifyCookies(document.cookie);\n\n    /**\n     * Set user and session cookies and refresh the expiry time\n     */\n    if (hasUserConsent) {\n      setCookie(\n        SHOPIFY_Y,\n        cookies[SHOPIFY_Y] || buildUUID(),\n        longTermLength,\n        domain,\n      );\n      setCookie(\n        SHOPIFY_S,\n        cookies[SHOPIFY_S] || buildUUID(),\n        shortTermLength,\n        domain,\n      );\n    } else {\n      setCookie(SHOPIFY_Y, '', 0, domain);\n      setCookie(SHOPIFY_S, '', 0, domain);\n    }\n  }, [options, hasUserConsent, domain]);\n}"
+            "value": "export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {\n  const {hasUserConsent = false, domain = ''} = options || {};\n  useEffect(() => {\n    const cookies = getShopifyCookies(document.cookie);\n\n    /**\n     * Setting cookie with domain\n     *\n     * If no domain is provided, the cookie will be set for the current host.\n     * For Shopify, we need to ensure this domain is set with a leading dot.\n     */\n\n    // Use override domain or current host\n    let currentDomain = domain || window.document.location.host;\n\n    // Reset domain if localhost\n    if (/^localhost/.test(currentDomain)) currentDomain = '';\n\n    // Shopify checkout only consumes cookies set with leading dot domain\n    const domainWithLeadingDot = currentDomain\n      ? /^\\./.test(currentDomain)\n        ? currentDomain\n        : `.${currentDomain}`\n      : '';\n\n    /**\n     * Set user and session cookies and refresh the expiry time\n     */\n    if (hasUserConsent) {\n      setCookie(\n        SHOPIFY_Y,\n        cookies[SHOPIFY_Y] || buildUUID(),\n        longTermLength,\n        domainWithLeadingDot,\n      );\n      setCookie(\n        SHOPIFY_S,\n        cookies[SHOPIFY_S] || buildUUID(),\n        shortTermLength,\n        domainWithLeadingDot,\n      );\n    } else {\n      setCookie(SHOPIFY_Y, '', 0, domainWithLeadingDot);\n      setCookie(SHOPIFY_S, '', 0, domainWithLeadingDot);\n    }\n  }, [options, hasUserConsent, domain]);\n}"
           },
           "UseShopifyCookiesOptions": {
             "filePath": "/useShopifyCookies.tsx",
