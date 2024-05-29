@@ -1,4 +1,3 @@
-import {rmdirSync} from 'node:fs';
 import {temporaryDirectory} from 'tempy';
 import {createSymlink, copy as copyDirectory} from 'fs-extra/esm';
 import {
@@ -8,9 +7,11 @@ import {
 } from '@shopify/cli-kit/node/fs';
 import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
 import {readAndParsePackageJson} from '@shopify/cli-kit/node/node-package-manager';
+import {outputInfo} from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
 import {getRepoNodeModules, getStarterDir} from './build.js';
 import {mergePackageJson} from './file.js';
+import {getRepoMeta} from './dev-shared.js';
 
 /**
  * Creates a new temporary project directory with the starter template and diff applied.
@@ -23,26 +24,37 @@ export async function prepareDiffDirectory(
   watch: boolean,
 ) {
   const targetDirectory = temporaryDirectory({prefix: 'tmp-hydrogen-diff-'});
-  process.on('exit', () => rmdirSync(targetDirectory, {recursive: true}));
 
-  console.info(
+  // Do not use a banner here to avoid breaking the targetDirectory filepath
+  // to keep it clickable in the terminal.
+  outputInfo(
     `\n-- Applying diff to starter template in\n${colors.dim(
       targetDirectory,
     )}\n`,
   );
 
-  await applyTemplateDiff(targetDirectory, diffDirectory);
+  // Intuitively, we think the files are coming from the skeleton
+  // template in the monorepo instead of the CLI package so we forget
+  // forget to start the dev process for the CLI when tinkering with
+  // diff examples. Let's use the skeleton source files from the
+  // monorepo directly if available to avoid this situation.
+  const templateDirectory = getStarterDir(getRepoMeta().isHydrogenMonorepo);
+  await applyTemplateDiff(targetDirectory, diffDirectory, templateDirectory);
 
   await createSymlink(
     await getRepoNodeModules(),
     joinPath(targetDirectory, 'node_modules'),
   );
 
-  if (watch) {
-    const pw = await import('@parcel/watcher').catch((error) => {
-      console.log('Could not watch for file changes.', error);
-    });
+  const pw = watch
+    ? await import('@parcel/watcher').catch((error) => {
+        console.log('Could not watch for file changes.', error);
+      })
+    : undefined;
 
+  const subscriptions = await Promise.all([
+    // Copy back the changes in generated d.ts from the
+    // temporary directory to the original diff directory.
     pw?.subscribe(
       targetDirectory,
       (error, events) => {
@@ -59,8 +71,10 @@ export async function prepareDiffDirectory(
         });
       },
       {ignore: ['!*.generated.d.ts']},
-    );
+    ),
 
+    // Copy new changes in the original diff directory to
+    // the temporary directory.
     pw?.subscribe(
       diffDirectory,
       async (error, events) => {
@@ -75,16 +89,118 @@ export async function prepareDiffDirectory(
             relativePath(diffDirectory, event.path),
           );
 
+          const fileInTemplate = event.path.replace(
+            diffDirectory,
+            templateDirectory,
+          );
+
+          return event.type === 'delete'
+            ? fileExists(fileInTemplate)
+                .then((exists) =>
+                  exists
+                    ? // Replace it with original file from the starter template.
+                      copyFile(fileInTemplate, targetFile)
+                    : // Remove the file otherwise.
+                      remove(targetFile),
+                )
+                .catch(() => {})
+            : copyFile(event.path, targetFile);
+        });
+      },
+      {
+        ignore: [
+          '*.generated.d.ts',
+          'package.json',
+          'tsconfig.json',
+          '.shopify',
+        ],
+      },
+    ),
+
+    // Copy new changes in the starter template to the temporary
+    // directory only if they don't overwrite the files in the
+    // original diff directory, which have higher priority.
+    pw?.subscribe(
+      templateDirectory,
+      async (error, events) => {
+        if (error) {
+          console.error(error);
+          return;
+        }
+
+        await events.map(async (event) => {
+          const fileInDiff = event.path.replace(
+            templateDirectory,
+            diffDirectory,
+          );
+
+          // File in diff directory has higher priority.
+          if (await fileExists(fileInDiff)) return;
+
+          const targetFile = joinPath(
+            targetDirectory,
+            relativePath(templateDirectory, event.path),
+          );
+
           return event.type === 'delete'
             ? remove(targetFile).catch(() => {})
             : copyFile(event.path, targetFile);
         });
       },
-      {ignore: ['*.generated.d.ts', 'package.json', 'tsconfig.json']},
-    );
-  }
+      {
+        ignore: [
+          '*.generated.d.ts',
+          'package.json',
+          'tsconfig.json',
+          '.shopify',
+        ],
+      },
+    ),
+  ]);
 
-  return targetDirectory;
+  return {
+    /**
+     * The temporary directory with the starter template and diff applied.
+     */
+    targetDirectory,
+    /**
+     * Removes the temporary directory and stops the file watchers.
+     */
+    cleanup: async () => {
+      await Promise.all(subscriptions.map((sub) => sub?.unsubscribe()));
+      await remove(targetDirectory);
+    },
+    /**
+     * Brings the `.shopify` directory back to the original project.
+     * This is important to keep a reference of the tunnel configuration
+     * so that it can be removed in the next run.
+     */
+    async copyShopifyConfig() {
+      const source = joinPath(targetDirectory, '.shopify');
+      if (!(await fileExists(source))) return;
+
+      const target = joinPath(diffDirectory, '.shopify');
+      await remove(target);
+      await copyDirectory(source, target, {overwrite: true});
+    },
+    /**
+     * Brings the `dist` directory back to the original project.
+     * This is used to run `h2 preview` with the resulting build.
+     */
+    async copyDiffBuild() {
+      const target = joinPath(diffDirectory, 'dist');
+      await remove(target);
+      await Promise.all([
+        copyDirectory(joinPath(targetDirectory, 'dist'), target, {
+          overwrite: true,
+        }),
+        copyFile(
+          joinPath(targetDirectory, '.env'),
+          joinPath(diffDirectory, '.env'),
+        ),
+      ]);
+    },
+  };
 }
 
 type DiffOptions = {
@@ -113,7 +229,8 @@ export async function applyTemplateDiff(
 
   await copyDirectory(templateDir, targetDirectory, {
     filter: createFilter(
-      /(^|\/|\\)(dist|node_modules|\.cache|.turbo|CHANGELOG\.md)(\/|\\|$)/i,
+      // Do not copy .shopify from skeleton to avoid linking in examples inadvertedly
+      /(^|\/|\\)(dist|node_modules|\.cache|\.turbo|\.shopify|CHANGELOG\.md)(\/|\\|$)/i,
       diffOptions.skipFiles || [],
     ),
   });
@@ -154,45 +271,5 @@ export async function applyTemplateDiff(
 
       return pkgJson;
     },
-  });
-}
-
-/**
- * Brings the `dist` directory back to the original project.
- * This is used to run `h2 preview` with the resulting build.
- */
-export async function copyDiffBuild(
-  generatedDirectory: string,
-  diffDirectory: string,
-) {
-  const target = joinPath(diffDirectory, 'dist');
-  await remove(target);
-  await Promise.all([
-    copyDirectory(joinPath(generatedDirectory, 'dist'), target, {
-      overwrite: true,
-    }),
-    copyFile(
-      joinPath(generatedDirectory, '.env'),
-      joinPath(diffDirectory, '.env'),
-    ),
-  ]);
-}
-
-/**
- * Brings the `.shopify` directory back to the original project.
- * This is important to keep a reference of the tunnel configuration
- * so that it can be removed in the next run.
- */
-export async function copyShopifyConfig(
-  generatedDirectory: string,
-  diffDirectory: string,
-) {
-  const source = joinPath(generatedDirectory, '.shopify');
-  if (!(await fileExists(source))) return;
-
-  const target = joinPath(diffDirectory, '.shopify');
-  await remove(target);
-  await copyDirectory(joinPath(generatedDirectory, '.shopify'), target, {
-    overwrite: true,
   });
 }
