@@ -9,7 +9,7 @@ export async function setupVanillaExtract({
   appDirectory,
 }: CssSetupConfig): Promise<undefined | CssSetupResult> {
   const workPromise = Promise.all([
-    mergePackageJson(getSetupAssetDir('vanilla-extract'), rootDirectory),
+    mergePackageJson(await getSetupAssetDir('vanilla-extract'), rootDirectory),
     getCodeFormatOptions(rootDirectory).then((formatConfig) =>
       injectCssBundlingLink(appDirectory, formatConfig),
     ),

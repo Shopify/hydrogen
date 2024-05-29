@@ -4,7 +4,6 @@ import fs from 'fs-extra';
 import {execAsync} from './src/lib/process';
 import {
   GENERATOR_TEMPLATES_DIR,
-  GENERATOR_SETUP_ASSETS_DIR,
   GENERATOR_STARTER_DIR,
   getSkeletonSourceDir,
 } from './src/lib/build';
@@ -33,6 +32,9 @@ export default defineConfig([
     // Generate types only for the exposed entry points
     dts: {entry: ['src/index.ts', 'src/commands/hydrogen/init.ts']},
     async onSuccess() {
+      // Copy assets templates
+      await fs.copy(path.resolve('assets'), path.join(outDir, 'assets'));
+
       // Copy TS templates
       const i18nTemplatesPath = 'lib/setups/i18n/templates';
       await fs.copy(
@@ -95,13 +97,6 @@ export default defineConfig([
       );
 
       console.log('\n', 'Copied virtual route assets to build directory', '\n');
-
-      await fs.copy(
-        'src/setup-assets',
-        `${outDir}/lib/${GENERATOR_TEMPLATES_DIR}/${GENERATOR_SETUP_ASSETS_DIR}`,
-      );
-
-      console.log('\n', 'Copied setup assets build directory', '\n');
     },
   },
 ]);

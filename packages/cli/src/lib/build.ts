@@ -1,11 +1,13 @@
 import {fileURLToPath} from 'node:url';
 import {execAsync} from './process.js';
+import {findPathUp} from '@shopify/cli-kit/node/fs';
+import {AbortError} from '@shopify/cli-kit/node/error';
+import {joinPath} from '@shopify/cli-kit/node/path';
 
 export const GENERATOR_TEMPLATES_DIR = 'generator-templates';
 export const GENERATOR_STARTER_DIR = 'starter';
 export const GENERATOR_APP_DIR = 'app';
 export const GENERATOR_ROUTE_DIR = 'routes';
-export const GENERATOR_SETUP_ASSETS_DIR = 'assets';
 export const GENERATOR_SETUP_ASSETS_SUB_DIRS = [
   'tailwind',
   'css-modules',
@@ -16,19 +18,31 @@ export const GENERATOR_SETUP_ASSETS_SUB_DIRS = [
 
 export type AssetDir = (typeof GENERATOR_SETUP_ASSETS_SUB_DIRS)[number];
 
-export function getSetupAssetDir(feature: AssetDir) {
-  if (process.env.NODE_ENV === 'test') {
-    return fileURLToPath(
-      new URL(`../setup-assets/${feature}`, import.meta.url),
+let pkgJsonPath: string | undefined;
+export async function getAssetsDir() {
+  pkgJsonPath ??= await findPathUp('package.json', {
+    cwd: fileURLToPath(import.meta.url),
+    type: 'file',
+  });
+
+  if (!pkgJsonPath) {
+    throw new AbortError(
+      'Could not find assets directory',
+      'Please report this error.',
     );
   }
 
   return fileURLToPath(
     new URL(
-      `./${GENERATOR_TEMPLATES_DIR}/${GENERATOR_SETUP_ASSETS_DIR}/${feature}`,
-      import.meta.url,
+      `./${process.env.SHOPIFY_UNIT_TEST ? '/' : 'dist/'}assets/hydrogen`,
+      pkgJsonPath,
     ),
   );
+}
+
+export async function getSetupAssetDir(feature: AssetDir) {
+  const assetDir = await getAssetsDir();
+  return joinPath(assetDir, 'setup', feature);
 }
 
 export function getTemplateAppFile(filepath: string, root = getStarterDir()) {

@@ -9,7 +9,7 @@ export async function setupCssModules({
   appDirectory,
 }: CssSetupConfig): Promise<undefined | CssSetupResult> {
   const workPromise = Promise.all([
-    mergePackageJson(getSetupAssetDir('css-modules'), rootDirectory),
+    mergePackageJson(await getSetupAssetDir('css-modules'), rootDirectory),
     getCodeFormatOptions(rootDirectory).then((formatConfig) =>
       injectCssBundlingLink(appDirectory, formatConfig),
     ),

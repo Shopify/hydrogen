@@ -26,7 +26,7 @@ export async function setupPostCss(
   }
 
   const workPromise = Promise.all([
-    mergePackageJson(getSetupAssetDir('postcss'), rootDirectory),
+    mergePackageJson(await getSetupAssetDir('postcss'), rootDirectory),
     copyAssets('postcss', assetMap, rootDirectory),
   ]);
 

@@ -11,13 +11,13 @@ export const SETUP_CSS_STRATEGIES: CssStrategy[] = [
   'postcss',
 ];
 
-export function copyAssets(
+export async function copyAssets(
   feature: AssetDir,
   assets: Record<string, string>,
   rootDirectory: string,
   replacer = (content: string, filename: string) => content,
 ) {
-  const setupAssetsPath = getSetupAssetDir(feature);
+  const setupAssetsPath = await getSetupAssetDir(feature);
 
   return Promise.all(
     Object.entries(assets).map(async ([source, destination]) => {

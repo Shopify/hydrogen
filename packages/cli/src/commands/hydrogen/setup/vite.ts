@@ -64,7 +64,7 @@ export async function runSetupVite({directory}: {directory: string}) {
   const serverEntry = rawRemixConfig.server || 'server.js';
   const isTS = serverEntry.endsWith('.ts');
   const fileExt = isTS ? 'tsx' : 'jsx';
-  const viteAssets = getSetupAssetDir('vite');
+  const viteAssets = await getSetupAssetDir('vite');
   const usesTailwind = !!rawRemixConfig.tailwind;
   const postCssConfigPath = resolvePath(directory, 'postcss.config.js');
 

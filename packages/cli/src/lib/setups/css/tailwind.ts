@@ -35,7 +35,7 @@ export async function setupTailwind(
   }
 
   const workPromise = Promise.all([
-    mergePackageJson(getSetupAssetDir('tailwind'), rootDirectory),
+    mergePackageJson(await getSetupAssetDir('tailwind'), rootDirectory),
     copyAssets('tailwind', assetMap, rootDirectory, (content, filepath) =>
       filepath === 'tailwind.config.js'
         ? content.replace('{src-dir}', relativeAppDirectory)
