@@ -1,8 +1,8 @@
 import {fileURLToPath} from 'node:url';
-import {execAsync} from './process.js';
 import {findPathUp} from '@shopify/cli-kit/node/fs';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {joinPath} from '@shopify/cli-kit/node/path';
+import {execAsync} from './process.js';
 
 const monorepoPackagesPath = new URL('../../..', import.meta.url).pathname;
 export const isHydrogenMonorepo = monorepoPackagesPath.endsWith(
@@ -82,15 +82,19 @@ export function getSkeletonSourceDir() {
     );
   }
 
-  return fileURLToPath(
-    new URL(`../../../../templates/skeleton`, import.meta.url),
-  );
+  return monorepoPackagesPath.replace(/\/packages\/$/, '/templates/skeleton/');
 }
 
 export async function getRepoNodeModules() {
   const {stdout} = await execAsync('npm root');
-  return (
-    stdout.trim() ||
-    fileURLToPath(new URL(`../../../../node_modules`, import.meta.url))
-  );
+  let nodeModulesPath = stdout.trim();
+
+  if (!nodeModulesPath && isHydrogenMonorepo) {
+    nodeModulesPath = monorepoPackagesPath.replace(
+      /\/packages\/$/,
+      '/node_modules/',
+    );
+  }
+
+  return nodeModulesPath;
 }
