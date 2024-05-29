@@ -19,17 +19,20 @@ import {
   type VariantOption,
   getSelectedProductOptions,
   CartForm,
+  type OptimisticCartLine,
   // [START import]
   Analytics,
   // [END import]
+  // [START cartview-import]
+  type CartViewPayload,
+  useAnalytics,
+  // [END cartview-import]
 } from '@shopify/hydrogen';
-import type {
-  CartLineInput,
-  SelectedOption,
-} from '@shopify/hydrogen/storefront-api-types';
+import type {SelectedOption} from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/lib/variants';
+import {useAside} from '~/components/Aside';
 
-export const meta: MetaFunction<typeof loader> = ({data, location}) => {
+export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
 };
 
@@ -37,25 +40,13 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
   const {handle} = params;
   const {storefront} = context;
 
-  const selectedOptions = getSelectedProductOptions(request).filter(
-    (option) =>
-      // Filter out Shopify predictive search query params
-      !option.name.startsWith('_sid') &&
-      !option.name.startsWith('_pos') &&
-      !option.name.startsWith('_psq') &&
-      !option.name.startsWith('_ss') &&
-      !option.name.startsWith('_v') &&
-      // Filter out third party tracking params
-      !option.name.startsWith('fbclid'),
-  );
-
   if (!handle) {
     throw new Error('Expected product handle to be defined');
   }
 
   // await the query for the critical product data
   const {product} = await storefront.query(PRODUCT_QUERY, {
-    variables: {handle, selectedOptions},
+    variables: {handle, selectedOptions: getSelectedProductOptions(request)},
   });
 
   if (!product?.id) {
@@ -247,6 +238,10 @@ function ProductForm({
   selectedVariant: ProductFragment['selectedVariant'];
   variants: Array<ProductVariantFragment>;
 }) {
+  const {open} = useAside();
+  {/* [START cartview] */}
+  const {publish, shop, cart, prevCart} = useAnalytics();
+  {/* [END cartview] */}
   return (
     <div className="product-form">
       <VariantSelector
@@ -260,7 +255,15 @@ function ProductForm({
       <AddToCartButton
         disabled={!selectedVariant || !selectedVariant.availableForSale}
         onClick={() => {
-          window.location.href = window.location.href + '#cart-aside';
+          open('cart');
+          {/* [START cartview] */}
+          publish('cart_viewed', {
+            cart,
+            prevCart,
+            shop,
+            url: window.location.href || '',
+          } as CartViewPayload);
+          {/* [END cartview] */}
         }}
         lines={
           selectedVariant
@@ -268,6 +271,7 @@ function ProductForm({
                 {
                   merchandiseId: selectedVariant.id,
                   quantity: 1,
+                  selectedVariant,
                 },
               ]
             : []
@@ -318,7 +322,7 @@ function AddToCartButton({
   analytics?: unknown;
   children: React.ReactNode;
   disabled?: boolean;
-  lines: CartLineInput[];
+  lines: Array<OptimisticCartLine>;
   onClick?: () => void;
 }) {
   return (

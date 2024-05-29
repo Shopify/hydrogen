@@ -10,13 +10,17 @@ import {
   // [START import]
   Analytics,
   // [END import]
+  // [START cartview-import]
+  useAnalytics,
+  // [END cartview-import]
 } from '@shopify/hydrogen';
 import {getVariantUrl} from '~/lib/variants';
+import {useAside} from '~/components/Aside';
 
 /**
  * @type {MetaFunction<typeof loader>}
  */
-export const meta = ({data, location}) => {
+export const meta = ({data}) => {
   return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
 };
 
@@ -27,25 +31,13 @@ export async function loader({params, request, context}) {
   const {handle} = params;
   const {storefront} = context;
 
-  const selectedOptions = getSelectedProductOptions(request).filter(
-    (option) =>
-      // Filter out Shopify predictive search query params
-      !option.name.startsWith('_sid') &&
-      !option.name.startsWith('_pos') &&
-      !option.name.startsWith('_psq') &&
-      !option.name.startsWith('_ss') &&
-      !option.name.startsWith('_v') &&
-      // Filter out third party tracking params
-      !option.name.startsWith('fbclid'),
-  );
-
   if (!handle) {
     throw new Error('Expected product handle to be defined');
   }
 
   // await the query for the critical product data
   const {product} = await storefront.query(PRODUCT_QUERY, {
-    variables: {handle, selectedOptions},
+    variables: {handle, selectedOptions: getSelectedProductOptions(request)},
   });
 
   if (!product?.id) {
@@ -116,8 +108,8 @@ export default function Product() {
         product={product}
         variants={variants}
       />
-      {/* [START component] */}
-      <Analytics.ProductView
+     {/* [START component] */}
+     <Analytics.ProductView
         data={{
           products: [
             {
@@ -239,6 +231,10 @@ function ProductPrice({selectedVariant}) {
  * }}
  */
 function ProductForm({product, selectedVariant, variants}) {
+  const {open} = useAside();
+    {/* [START cartview] */}
+    const {publish, shop, cart, prevCart} = useAnalytics();
+    {/* [END cartview] */}
   return (
     <div className="product-form">
       <VariantSelector
@@ -252,7 +248,15 @@ function ProductForm({product, selectedVariant, variants}) {
       <AddToCartButton
         disabled={!selectedVariant || !selectedVariant.availableForSale}
         onClick={() => {
-          window.location.href = window.location.href + '#cart-aside';
+          open('cart');
+          {/* [START cartview] */}
+          publish('cart_viewed', {
+            cart,
+            prevCart,
+            shop,
+            url: window.location.href || '',
+          });
+          {/* [END cartview] */}
         }}
         lines={
           selectedVariant
@@ -260,6 +264,7 @@ function ProductForm({product, selectedVariant, variants}) {
                 {
                   merchandiseId: selectedVariant.id,
                   quantity: 1,
+                  selectedVariant,
                 },
               ]
             : []
@@ -308,7 +313,7 @@ function ProductOptions({option}) {
  *   analytics?: unknown;
  *   children: React.ReactNode;
  *   disabled?: boolean;
- *   lines: CartLineInput[];
+ *   lines: Array<OptimisticCartLine>;
  *   onClick?: () => void;
  * }}
  */
@@ -445,6 +450,7 @@ const VARIANTS_QUERY = `#graphql
 /** @typedef {import('storefrontapi.generated').ProductVariantsQuery} ProductVariantsQuery */
 /** @typedef {import('storefrontapi.generated').ProductVariantFragment} ProductVariantFragment */
 /** @typedef {import('@shopify/hydrogen').VariantOption} VariantOption */
-/** @typedef {import('@shopify/hydrogen/storefront-api-types').CartLineInput} CartLineInput */
+/** @typedef {import('@shopify/hydrogen').OptimisticCartLine} OptimisticCartLine */
+/** @typedef {import('@shopify/hydrogen').CartViewPayload} CartViewPayload */
 /** @typedef {import('@shopify/hydrogen/storefront-api-types').SelectedOption} SelectedOption */
 /** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof loader>} LoaderReturnData */
