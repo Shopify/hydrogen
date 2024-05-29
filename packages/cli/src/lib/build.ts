@@ -27,7 +27,7 @@ export const GENERATOR_SETUP_ASSETS_SUB_DIRS = [
 export type AssetDir = (typeof GENERATOR_SETUP_ASSETS_SUB_DIRS)[number];
 
 let pkgJsonPath: string | undefined;
-export async function getAssetsDir() {
+export async function getAssetsDir(...subpaths: string[]) {
   pkgJsonPath ??= await findPathUp('package.json', {
     cwd: fileURLToPath(import.meta.url),
     type: 'file',
@@ -45,12 +45,12 @@ export async function getAssetsDir() {
     process.env.SHOPIFY_UNIT_TEST
       ? `assets` // Use source for unit tests
       : `dist/${ASSETS_DIR_PREFIX}`,
+    ...subpaths,
   );
 }
 
-export async function getSetupAssetDir(feature: AssetDir) {
-  const assetDir = await getAssetsDir();
-  return joinPath(assetDir, 'setup', feature);
+export function getSetupAssetDir(feature: AssetDir) {
+  return getAssetsDir('setup', feature);
 }
 
 export async function getTemplateAppFile(filepath: string, root?: string) {
@@ -63,13 +63,10 @@ export async function getTemplateAppFile(filepath: string, root?: string) {
   return url.protocol === 'file:' ? fileURLToPath(url) : url.toString();
 }
 
-export async function getStarterDir(
-  useSource = !!process.env.SHOPIFY_UNIT_TEST,
-) {
+export function getStarterDir(useSource = !!process.env.SHOPIFY_UNIT_TEST) {
   if (useSource) return getSkeletonSourceDir();
 
-  const assetDir = await getAssetsDir();
-  return joinPath(assetDir, ASSETS_STARTER_DIR);
+  return getAssetsDir(ASSETS_STARTER_DIR);
 }
 
 export function getSkeletonSourceDir() {
