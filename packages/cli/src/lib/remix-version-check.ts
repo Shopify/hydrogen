@@ -3,7 +3,7 @@ import {fileURLToPath} from 'node:url';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
 
 export function getRequiredRemixVersion() {
-  return "^2.1.0"
+  return '^2.1.0';
 }
 
 export function checkRemixVersions(projectPath: string) {
