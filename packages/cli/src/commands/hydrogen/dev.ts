@@ -453,11 +453,6 @@ function setupMonorepoReload(
       monorepoPackagesPath + 'hydrogen-codegen/dist/esm/index.js',
     );
 
-    // Watch the dev command file to print a warning when it changes.
-    viteServer.watcher.add(
-      monorepoPackagesPath + 'cli/dist/commands/hydrogen/dev.js',
-    );
-
     viteServer.watcher.on('change', async (file) => {
       if (file.includes(monorepoPackagesPath)) {
         if (file.includes('/packages/hydrogen-codegen/')) {
@@ -468,13 +463,6 @@ function setupMonorepoReload(
               body: 'The codegen process has been restarted.',
             });
           }
-        } else if (file.includes('/packages/cli/')) {
-          // We can't restart the terminal process from here
-          // so we just print a warning to the user.
-          renderInfo({
-            headline: 'The Hydrogen CLI source has been modified.',
-            body: 'Please restart the `h2 dev` command to see the changes.',
-          });
         } else {
           // Restart Vite server, which also restarts MiniOxygen
           await viteServer.restart(true);
