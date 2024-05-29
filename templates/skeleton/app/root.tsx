@@ -57,27 +57,17 @@ export function links() {
 }
 
 export async function loader(args: LoaderFunctionArgs) {
-  // Immediately start loading deferred data because it's not critical and isn't awaited
+  // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
 
-  // Only await critical data
+  // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
 
-  return defer(
-    {
-      ...criticalData,
-      ...deferredData,
-    },
-    {
-      headers: {
-        'Set-Cookie': await args.context.session.commit(),
-      },
-    },
-  );
+  return defer({...criticalData, ...deferredData});
 }
 
 /**
- * Load data necessary for rendering content above the fold. This is the primary data
+ * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
 async function loadCriticalData({context}: LoaderFunctionArgs) {

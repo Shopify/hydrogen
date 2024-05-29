@@ -7,16 +7,13 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
 };
 
 export async function loader(args: LoaderFunctionArgs) {
-  // Immediately start loading deferred data because it's not critical and isn't awaited
+  // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
 
-  // Only await critical data
+  // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
 
-  return defer({
-    ...criticalData,
-    ...deferredData,
-  });
+  return defer({...criticalData, ...deferredData});
 }
 
 /**
