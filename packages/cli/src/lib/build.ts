@@ -4,6 +4,14 @@ import {findPathUp} from '@shopify/cli-kit/node/fs';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {joinPath} from '@shopify/cli-kit/node/path';
 
+const monorepoPackagesPath = new URL('../../..', import.meta.url).pathname;
+export const isHydrogenMonorepo = monorepoPackagesPath.endsWith(
+  '/hydrogen/packages/',
+);
+export const hydrogenPackagesPath = isHydrogenMonorepo
+  ? monorepoPackagesPath
+  : undefined;
+
 export const GENERATOR_TEMPLATES_DIR = 'generator-templates';
 export const GENERATOR_STARTER_DIR = 'starter';
 export const GENERATOR_APP_DIR = 'app';
