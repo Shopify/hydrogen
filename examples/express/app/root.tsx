@@ -15,7 +15,11 @@ import {
 import type {Cart, Shop} from '@shopify/hydrogen/storefront-api-types';
 import {Layout} from '~/components/Layout';
 import styles from './styles/app.css';
-import {useNonce} from '@shopify/hydrogen';
+import {
+  useNonce,
+  getShopAnalytics,
+  Analytics,
+} from '@shopify/hydrogen';
 
 export const links: LinksFunction = () => {
   return [
@@ -63,6 +67,14 @@ export async function loader({context}: LoaderFunctionArgs) {
     isLoggedIn: Boolean(customerAccessToken),
     cart,
     layout,
+    shop: getShopAnalytics({
+      storefront: context.storefront,
+      publicStorefrontId: context.env.PUBLIC_STOREFRONT_ID
+    }),
+    consent: {
+      checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
+      storefrontAccessToken: context.env.PUBLIC_STOREFRONT_API_TOKEN,
+    },
   });
 }
 
@@ -81,9 +93,15 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout description={description} title={name}>
-          <Outlet />
-        </Layout>
+        <Analytics.Provider
+          cart={data.cart}
+          shop={data.shop}
+          consent={data.consent}
+        >
+          <Layout description={description} title={name}>
+            <Outlet />
+          </Layout>
+        </Analytics.Provider>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
         <LiveReload nonce={nonce} />

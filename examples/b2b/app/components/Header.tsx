@@ -6,6 +6,7 @@ import {type CustomerCompanyLocationConnection} from '~/root';
 import {useRootLoaderData} from '~/lib/root-data';
 import {useB2BLocation} from './B2BLocationProvider';
 import {useAside} from '~/components/Aside';
+import {type CartViewPayload, useAnalytics} from '@shopify/hydrogen';
 
 type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'>;
 
@@ -128,6 +129,7 @@ function HeaderMenuMobileToggle() {
 
 function SearchToggle() {
   const {open} = useAside();
+  const {publish, shop, cart, prevCart} = useAnalytics()
   return (
     <button className="reset" onClick={() => open('search')}>
       Search
@@ -137,6 +139,7 @@ function SearchToggle() {
 
 function CartBadge({count}: {count: number}) {
   const {open} = useAside();
+  const {publish, shop, cart, prevCart} = useAnalytics();
 
   return (
     <a
@@ -144,6 +147,12 @@ function CartBadge({count}: {count: number}) {
       onClick={(e) => {
         e.preventDefault();
         open('cart');
+        publish('cart_viewed', {
+          cart,
+          prevCart,
+          shop,
+          url: window.location.href || '',
+        } as CartViewPayload);
       }}
     >
       Cart {count}
