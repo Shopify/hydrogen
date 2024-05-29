@@ -31,13 +31,9 @@ describe('remix-version-check', () => {
 
   it('warns when versions are out of sync', () => {
     const expectedVersion = '42.0.0-test';
-    vi.mocked(requireMock).mockReturnValueOnce({
-      // Hydrogen expected version
-      peerDependencies: {'@remix-run/dev': expectedVersion},
-    });
 
     const outputMock = mockAndCaptureOutput();
-    checkRemixVersions(cwd());
+    checkRemixVersions(cwd(), expectedVersion);
 
     const output = outputMock.warn();
     expect(output).toMatch(`Hydrogen requires Remix @${expectedVersion}`);

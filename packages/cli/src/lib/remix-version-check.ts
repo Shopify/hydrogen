@@ -2,13 +2,13 @@ import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
 
-export function getRequiredRemixVersion() {
-  return '^2.1.0';
-}
+const REQUIRED_REMIX_VERSION = '^2.1.0';
 
-export function checkRemixVersions(projectPath: string) {
+export function checkRemixVersions(
+  projectPath: string,
+  requiredVersionInHydrogen = REQUIRED_REMIX_VERSION,
+) {
   const require = createRequire(import.meta.url);
-  const requiredVersionInHydrogen = getRequiredRemixVersion();
 
   // Require this after requiring the hydrogen
   // package version to avoid breaking test mocks.
