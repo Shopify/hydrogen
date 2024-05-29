@@ -8,7 +8,7 @@ import {
 } from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {ts} from 'ts-morph';
-import {getSetupAssetDir, getSkeletonSourceDir} from '../../build.js';
+import {getAssetsDir, getSkeletonSourceDir} from '../../build.js';
 import {replaceRemixEnv, replaceServerI18n} from './replacers.js';
 import {DEFAULT_COMPILER_OPTIONS} from '../../transpile/morph/index.js';
 
@@ -40,7 +40,7 @@ describe('i18n replacers', () => {
       await replaceRemixEnv(
         {rootDirectory: tmpDir},
         {},
-        await readFile(await getSetupAssetDir('i18n', 'domains.ts')),
+        await readFile(await getAssetsDir('i18n', 'domains.ts')),
       );
 
       const newContent = await readFile(joinPath(tmpDir, envDts));
@@ -130,7 +130,7 @@ describe('i18n replacers', () => {
       await replaceServerI18n(
         {rootDirectory: tmpDir, serverEntryPoint: serverTs},
         {},
-        await readFile(await getSetupAssetDir('i18n', 'domains.ts')),
+        await readFile(await getAssetsDir('i18n', 'domains.ts')),
         false,
       );
 

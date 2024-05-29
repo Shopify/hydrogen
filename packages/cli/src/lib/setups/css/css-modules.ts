@@ -2,14 +2,14 @@ import {mergePackageJson} from '../../file.js';
 import {getCodeFormatOptions} from '../../format-code.js';
 import type {CssSetupConfig, CssSetupResult} from './common.js';
 import {injectCssBundlingLink} from './replacers.js';
-import {getSetupAssetDir} from '../../build.js';
+import {getAssetsDir} from '../../build.js';
 
 export async function setupCssModules({
   rootDirectory,
   appDirectory,
 }: CssSetupConfig): Promise<undefined | CssSetupResult> {
   const workPromise = Promise.all([
-    mergePackageJson(await getSetupAssetDir('css-modules'), rootDirectory),
+    mergePackageJson(await getAssetsDir('css-modules'), rootDirectory),
     getCodeFormatOptions(rootDirectory).then((formatConfig) =>
       injectCssBundlingLink(appDirectory, formatConfig),
     ),

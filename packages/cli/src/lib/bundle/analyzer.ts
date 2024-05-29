@@ -58,7 +58,7 @@ async function writeBundleAnalyzerFile(
   const metafile64 = Buffer.from(metafile, 'utf-8').toString('base64');
 
   const analysisTemplate = await readFile(
-    await getAssetsDir('bundle-analyzer.html'),
+    await getAssetsDir('bundle', 'analyzer.html'),
   );
 
   const templateWithMetafile = analysisTemplate.replace(

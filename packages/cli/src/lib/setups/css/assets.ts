@@ -1,10 +1,10 @@
 import {fileExists, readFile, writeFile} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
-import {type AssetsSetupDir, getSetupAssetDir} from '../../build.js';
+import {type AssetsDir, getAssetsDir} from '../../build.js';
 
 export type CssStrategy = Extract<
-  AssetsSetupDir,
+  AssetsDir,
   'tailwind' | 'css-modules' | 'vanilla-extract' | 'postcss'
 >;
 
@@ -16,12 +16,12 @@ export const SETUP_CSS_STRATEGIES: CssStrategy[] = [
 ];
 
 export async function copyAssets(
-  feature: AssetsSetupDir,
+  feature: AssetsDir,
   assets: Record<string, string>,
   rootDirectory: string,
   replacer = (content: string, filename: string) => content,
 ) {
-  const setupAssetsPath = await getSetupAssetDir(feature);
+  const setupAssetsPath = await getAssetsDir(feature);
 
   return Promise.all(
     Object.entries(assets).map(async ([source, destination]) => {

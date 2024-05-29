@@ -1,7 +1,7 @@
 import {describe, it, expect} from 'vitest';
 import {readFile} from '@shopify/cli-kit/node/fs';
-import {getSetupAssetDir} from '../../build.js';
-import {getLocaleFromRequest} from '../../../../assets/setup/i18n/domains.js';
+import {getAssetsDir} from '../../build.js';
+import {getLocaleFromRequest} from '../../../../assets/i18n/domains.js';
 
 describe('Setup i18n with domains', () => {
   it('extracts the locale from the domain', () => {
@@ -26,9 +26,7 @@ describe('Setup i18n with domains', () => {
   });
 
   it('does not access imported types directly', async () => {
-    const template = await readFile(
-      await getSetupAssetDir('i18n', 'domains.ts'),
-    );
+    const template = await readFile(await getAssetsDir('i18n', 'domains.ts'));
 
     const typeImports = (template.match(/import\s+type\s+{([^}]+)}/)?.[1] || '')
       .trim()

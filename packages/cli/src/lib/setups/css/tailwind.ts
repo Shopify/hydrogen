@@ -4,7 +4,7 @@ import {mergePackageJson} from '../../file.js';
 import {canWriteFiles, copyAssets} from './assets.js';
 import {getCodeFormatOptions} from '../../format-code.js';
 import {replaceRootLinks} from './replacers.js';
-import {getSetupAssetDir} from '../../build.js';
+import {getAssetsDir} from '../../build.js';
 import type {CssSetupConfig, CssSetupResult} from './common.js';
 
 const tailwindCssPath = 'styles/tailwind.css';
@@ -35,7 +35,7 @@ export async function setupTailwind(
   }
 
   const workPromise = Promise.all([
-    mergePackageJson(await getSetupAssetDir('tailwind'), rootDirectory),
+    mergePackageJson(await getAssetsDir('tailwind'), rootDirectory),
     copyAssets('tailwind', assetMap, rootDirectory, (content, filepath) =>
       filepath === 'tailwind.config.js'
         ? content.replace('{src-dir}', relativeAppDirectory)

@@ -13,21 +13,28 @@ export const hydrogenPackagesPath = isHydrogenMonorepo
   ? monorepoPackagesPath
   : undefined;
 
+// The global CLI will merge our assets with other
+// plugins so we must namespace the directory:
 export const ASSETS_DIR_PREFIX = 'assets/hydrogen';
-export const ASSETS_STARTER_DIR = 'starter';
-export const ASSETS_ROUTES_DIR = 'routes';
 
-export type AssetsSetupDir =
+export const ASSETS_STARTER_DIR = 'starter';
+export const ASSETS_STARTER_DIR_ROUTES = 'routes';
+
+export type AssetsDir =
   | 'tailwind'
   | 'css-modules'
   | 'vanilla-extract'
   | 'postcss'
   | 'vite'
   | 'i18n'
-  | 'routes';
+  | 'routes'
+  | 'bundle'
+  // These are created at build time:
+  | 'virtual-routes'
+  | typeof ASSETS_STARTER_DIR;
 
 let pkgJsonPath: string | undefined;
-export async function getAssetsDir(...subpaths: string[]) {
+export async function getAssetsDir(feature?: AssetsDir, ...subpaths: string[]) {
   pkgJsonPath ??= await findPathUp('package.json', {
     cwd: fileURLToPath(import.meta.url),
     type: 'file',
@@ -45,15 +52,9 @@ export async function getAssetsDir(...subpaths: string[]) {
     process.env.SHOPIFY_UNIT_TEST
       ? `assets` // Use source for unit tests
       : `dist/${ASSETS_DIR_PREFIX}`,
+    feature ?? '',
     ...subpaths,
   );
-}
-
-export function getSetupAssetDir(
-  feature: AssetsSetupDir,
-  ...subpaths: string[]
-) {
-  return getAssetsDir('setup', feature, ...subpaths);
 }
 
 export async function getTemplateAppFile(filepath: string, root?: string) {
