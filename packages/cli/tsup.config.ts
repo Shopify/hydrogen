@@ -72,14 +72,6 @@ export default defineConfig([
       );
       console.log('\n', 'Copied route template files to build directory', '\n');
 
-      // Copy Bundle Analyzer
-      const bundleAnalyzer = 'lib/bundle/bundle-analyzer.html';
-      await fs.copy(
-        path.join('src', bundleAnalyzer),
-        path.join(outDir, bundleAnalyzer),
-      );
-      console.log('\n', 'Copied bundle analyzer', '\n');
-
       console.log('\n', 'Generating Oclif manifest...');
       await execAsync('node ./scripts/generate-manifest.mjs');
       console.log('', 'Oclif manifest generated.\n');
