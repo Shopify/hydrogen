@@ -13,7 +13,7 @@ import {
 } from '../../lib/flags.js';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {I18N_CHOICES, type I18nChoice} from '../../lib/setups/i18n/index.js';
-import {supressNodeExperimentalWarnings} from '../../lib/process.js';
+import {execAsync, supressNodeExperimentalWarnings} from '../../lib/process.js';
 import {setupTemplate, type InitOptions} from '../../lib/onboarding/index.js';
 import {LANGUAGES} from '../../lib/onboarding/common.js';
 import {
@@ -120,8 +120,14 @@ export async function runInit(
     options.shortcut ??= true;
   }
 
+  // Check if we are running the command using the h2 alias
+  const npmPrefix = (await execAsync('npm prefix -s')).stdout.trim();
+  const isH2 = process.argv[1]?.startsWith(npmPrefix)
+
   // If the current process is global (shopify hydrogen init) we need to check for @shopify/cli version
-  const isGlobal = currentProcessIsGlobal();
+  // The process could report to be global when using the h2 alias, so we need to check for that
+  const isGlobal = currentProcessIsGlobal() && !isH2;
+
   const showUpgrade = await checkHydrogenVersion(
     // Resolving the CLI package from a local directory might fail because
     // this code could be run from a global dependency (e.g. on `npm create`).
@@ -131,10 +137,10 @@ export async function runInit(
   );
 
   if (showUpgrade) {
-    const packageManager =
-      options.packageManager ??
-      packageManagerFromUserAgent() ??
-      inferPackageManagerForGlobalCLI();
+    let packageManager = options.packageManager ?? packageManagerFromUserAgent()
+    if (packageManager === 'unknown' || !packageManager) {
+      packageManager = inferPackageManagerForGlobalCLI();
+    }
     const globalInstallCommand =
       packageManager === 'yarn'
         ? `yarn global add @shopify/cli`

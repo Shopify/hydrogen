@@ -36,6 +36,24 @@ export async function checkHydrogenVersion(
 
   if (!newVersionAvailable) return;
 
+  const references = [
+    {
+      link: {
+        label: 'Hydrogen releases',
+        url: 'https://github.com/Shopify/hydrogen/releases',
+      },
+    },
+  ];
+
+  if (pkgName === PACKAGE_NAMES.cli) {
+    references.push({
+      link: {
+        label: 'Global CLI reference',
+        url: 'https://shopify.dev/docs/api/shopify-cli/',
+      },
+    });
+  }
+
   return (extraMessage = '') => {
     renderInfo({
       headline: 'Upgrade available',
@@ -44,14 +62,7 @@ export async function checkHydrogenVersion(
         `You are currently running v${currentVersion}.` +
         (extraMessage ? '\n\n' : '') +
         extraMessage,
-      reference: [
-        {
-          link: {
-            label: 'Hydrogen releases',
-            url: 'https://github.com/Shopify/hydrogen/releases',
-          },
-        },
-      ],
+      reference: references,
     });
 
     return {currentVersion, newVersion: newVersionAvailable};
