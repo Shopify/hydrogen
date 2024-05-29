@@ -62,9 +62,7 @@ export function getTemplateAppFile(filepath: string, root = getStarterDir()) {
 }
 
 export function getStarterDir(useSource = !!process.env.SHOPIFY_UNIT_TEST) {
-  if (useSource) {
-    return getSkeletonSourceDir();
-  }
+  if (useSource) return getSkeletonSourceDir();
 
   return fileURLToPath(
     new URL(
@@ -75,6 +73,13 @@ export function getStarterDir(useSource = !!process.env.SHOPIFY_UNIT_TEST) {
 }
 
 export function getSkeletonSourceDir() {
+  if (!isHydrogenMonorepo) {
+    throw new AbortError(
+      'Trying to use skeleton source dir outside of Hydrogen monorepo.',
+      'Please report this error.',
+    );
+  }
+
   return fileURLToPath(
     new URL(`../../../../templates/skeleton`, import.meta.url),
   );
