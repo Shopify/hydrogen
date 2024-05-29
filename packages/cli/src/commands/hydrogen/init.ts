@@ -122,7 +122,7 @@ export async function runInit(
 
   // Check if we are running the command using the h2 alias
   const npmPrefix = (await execAsync('npm prefix -s')).stdout.trim();
-  const isH2 = process.argv[1]?.startsWith(npmPrefix)
+  const isH2 = process.argv[1]?.startsWith(npmPrefix);
 
   // If the current process is global (shopify hydrogen init) we need to check for @shopify/cli version
   // The process could report to be global when using the h2 alias, so we need to check for that
@@ -137,7 +137,8 @@ export async function runInit(
   );
 
   if (showUpgrade) {
-    let packageManager = options.packageManager ?? packageManagerFromUserAgent()
+    let packageManager =
+      options.packageManager ?? packageManagerFromUserAgent();
     if (packageManager === 'unknown' || !packageManager) {
       packageManager = inferPackageManagerForGlobalCLI();
     }
