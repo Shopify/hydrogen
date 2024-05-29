@@ -14,38 +14,47 @@ import {
   PredictiveSearchResults,
 } from '~/components/Search';
 
-export type LayoutProps = {
+interface PageLayoutProps {
   cart: Promise<CartApiQueryFragment | null>;
-  children?: React.ReactNode;
   footer: Promise<FooterQuery>;
   header: HeaderQuery;
   isLoggedIn: Promise<boolean>;
-};
+  publicStoreDomain: string;
+  children?: React.ReactNode;
+}
 
-export function Layout({
+export function PageLayout({
   cart,
   children = null,
   footer,
   header,
   isLoggedIn,
-}: LayoutProps) {
+  publicStoreDomain,
+}: PageLayoutProps) {
   return (
     <Aside.Provider>
       <CartAside cart={cart} />
       <SearchAside />
-      <MobileMenuAside menu={header?.menu} shop={header?.shop} />
-      {header && <Header header={header} cart={cart} isLoggedIn={isLoggedIn} />}
+      <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
+      {header && (
+        <Header
+          header={header}
+          cart={cart}
+          isLoggedIn={isLoggedIn}
+          publicStoreDomain={publicStoreDomain}
+        />
+      )}
       <main>{children}</main>
-      <Suspense>
-        <Await resolve={footer}>
-          {(footer) => <Footer menu={footer?.menu} shop={header?.shop} />}
-        </Await>
-      </Suspense>
+      <Footer
+        footer={footer}
+        header={header}
+        publicStoreDomain={publicStoreDomain}
+      />
     </Aside.Provider>
   );
 }
 
-function CartAside({cart}: {cart: LayoutProps['cart']}) {
+function CartAside({cart}: {cart: PageLayoutProps['cart']}) {
   return (
     <Aside type="cart" heading="CART">
       <Suspense fallback={<p>Loading cart ...</p>}>
@@ -95,20 +104,21 @@ function SearchAside() {
 }
 
 function MobileMenuAside({
-  menu,
-  shop,
+  header,
+  publicStoreDomain,
 }: {
-  menu: HeaderQuery['menu'];
-  shop: HeaderQuery['shop'];
+  header: PageLayoutProps['header'];
+  publicStoreDomain: PageLayoutProps['publicStoreDomain'];
 }) {
   return (
-    menu &&
-    shop?.primaryDomain?.url && (
+    header.menu &&
+    header.shop.primaryDomain?.url && (
       <Aside type="mobile" heading="MENU">
         <HeaderMenu
-          menu={menu}
+          menu={header.menu}
           viewport="mobile"
-          primaryDomainUrl={shop.primaryDomain.url}
+          primaryDomainUrl={header.shop.primaryDomain.url}
+          publicStoreDomain={publicStoreDomain}
         />
       </Aside>
     )

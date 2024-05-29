@@ -9,7 +9,7 @@ import {
   Scripts,
   LiveReload,
   ScrollRestoration,
-  useLoaderData,
+  useRouteLoaderData,
   type ShouldRevalidateFunction,
 } from '@remix-run/react';
 import type {Shop} from '@shopify/hydrogen/storefront-api-types';
@@ -56,11 +56,11 @@ export async function loader({context}: LoaderFunctionArgs) {
   return {layout};
 }
 
-export default function App() {
+export function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
-  const data = useLoaderData<typeof loader>();
+  const data = useRouteLoaderData<typeof loader>('root');
 
-  const {name} = data.layout.shop;
+  const name = data?.layout.shop.name;
 
   return (
     <html lang="en">
@@ -71,15 +71,25 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <h1>Hello, {name}</h1>
-        <p>This is a custom storefront powered by Hydrogen</p>
-        <Outlet />
+        {data ? (
+          <>
+            <h1>Hello, {name}</h1>
+            <p>This is a custom storefront powered by Hydrogen</p>
+            {children}
+          </>
+        ) : (
+          children
+        )}
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
         <LiveReload nonce={nonce} />
       </body>
     </html>
   );
+}
+
+export default function App() {
+  return <Outlet />;
 }
 
 const LAYOUT_QUERY = `#graphql

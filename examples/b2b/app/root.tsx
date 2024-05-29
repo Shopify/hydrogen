@@ -1,36 +1,31 @@
-import {
-  useNonce,
-  getShopAnalytics,
-  Analytics,
-} from '@shopify/hydrogen';
-import {
-  defer,
-  type LoaderFunctionArgs,
-} from '@shopify/remix-oxygen';
+import {useNonce, getShopAnalytics, Analytics} from '@shopify/hydrogen';
+import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {
   Links,
   Meta,
   Outlet,
   Scripts,
   useRouteError,
-  useLoaderData,
+  useRouteLoaderData,
   ScrollRestoration,
   isRouteErrorResponse,
   type ShouldRevalidateFunction,
 } from '@remix-run/react';
-import favicon from './assets/favicon.svg';
-import resetStyles from './styles/reset.css?url';
-import appStyles from './styles/app.css?url';
-import {Layout} from '~/components/Layout';
+import favicon from '~/assets/favicon.svg';
+import resetStyles from '~/styles/reset.css?url';
+import appStyles from '~/styles/app.css?url';
+import {PageLayout} from '~/components/PageLayout';
+import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
 import {B2BLocationProvider} from '~/components/B2BLocationProvider';
 import {B2BLocationSelector} from '~/components/B2BLocationSelector';
-import {useRootLoaderData} from '~/lib/root-data';
 import type {
   Company,
   CompanyAddress,
   CompanyLocation,
   Maybe,
 } from '@shopify/hydrogen/customer-account-api-types';
+
+export type RootLoader = typeof loader;
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -69,6 +64,8 @@ export function links() {
   ];
 }
 
+/***********************************************/
+/**********  EXAMPLE UPDATE STARTS  ************/
 export type CustomerCompanyLocation = Pick<CompanyLocation, 'name' | 'id'> & {
   shippingAddress?:
     | Maybe<Pick<CompanyAddress, 'countryCode' | 'formattedAddress'>>
@@ -88,10 +85,12 @@ export type CustomerCompany =
       }
     >
   | undefined;
+/**********   EXAMPLE UPDATE END   ************/
+/***********************************************/
 
 export async function loader({context}: LoaderFunctionArgs) {
   const {storefront, customerAccount, cart, env} = context;
-  const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
+  const publicStoreDomain = env.PUBLIC_STORE_DOMAIN;
 
   const isLoggedInPromise = customerAccount.isLoggedIn();
   const cartPromise = cart.get();
@@ -121,7 +120,7 @@ export async function loader({context}: LoaderFunctionArgs) {
       publicStoreDomain,
       shop: getShopAnalytics({
         storefront,
-        publicStorefrontId: env.PUBLIC_STOREFRONT_ID
+        publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
       }),
       consent: {
         checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
@@ -136,9 +135,9 @@ export async function loader({context}: LoaderFunctionArgs) {
   );
 }
 
-export default function App() {
+export function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
-  const data = useLoaderData<typeof loader>();
+  const data = useRouteLoaderData<RootLoader>('root');
 
   return (
     <html lang="en">
@@ -149,35 +148,51 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Analytics.Provider
-          cart={data.cart}
-          shop={data.shop}
-          consent={data.consent}
-        >
-          {
-            /***********************************************/
-            /**********  EXAMPLE UPDATE STARTS  ************/
+        {data ? (
+          <Analytics.Provider
+            cart={data.cart}
+            shop={data.shop}
+            consent={data.consent}
+          >
             <B2BLocationProvider>
-              <Layout {...data}>
-                <Outlet />
-                <B2BLocationSelector />
-              </Layout>
-              <ScrollRestoration nonce={nonce} />
-              <Scripts nonce={nonce} />
+              <PageLayout {...data}>{children}</PageLayout>
             </B2BLocationProvider>
-            /**********   EXAMPLE UPDATE END   ************/
-            /***********************************************/
-          }
-        </Analytics.Provider>
+          </Analytics.Provider>
+        ) : (
+          children
+        )}
+        {data ? (
+          <Analytics.Provider
+            cart={data.cart}
+            shop={data.shop}
+            consent={data.consent}
+          >
+            {/***********************************************/
+            /**********  EXAMPLE UPDATE STARTS  ************/}
+            <B2BLocationProvider>
+              <PageLayout {...data}>{children}</PageLayout>
+            </B2BLocationProvider>
+            {/**********   EXAMPLE UPDATE END   ************/
+            /***********************************************/}
+          </Analytics.Provider>
+        ) : (
+          children
+        )}
+        <ScrollRestoration nonce={nonce} />
+        <Scripts nonce={nonce} />
+        <ScrollRestoration nonce={nonce} />
+        <Scripts nonce={nonce} />
       </body>
     </html>
   );
 }
 
+export default function App() {
+  return <Outlet />;
+}
+
 export function ErrorBoundary() {
   const error = useRouteError();
-  const rootData = useRootLoaderData();
-  const nonce = useNonce();
   let errorMessage = 'Unknown error';
   let errorStatus = 500;
 
@@ -189,98 +204,14 @@ export function ErrorBoundary() {
   }
 
   return (
-    <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <Meta />
-        <Links />
-      </head>
-      <body>
-        <Layout {...rootData}>
-          <div className="route-error">
-            <h1>Oops</h1>
-            <h2>{errorStatus}</h2>
-            {errorMessage && (
-              <fieldset>
-                <pre>{errorMessage}</pre>
-              </fieldset>
-            )}
-          </div>
-        </Layout>
-        <ScrollRestoration nonce={nonce} />
-        <Scripts nonce={nonce} />
-      </body>
-    </html>
+    <div className="route-error">
+      <h1>Oops</h1>
+      <h2>{errorStatus}</h2>
+      {errorMessage && (
+        <fieldset>
+          <pre>{errorMessage}</pre>
+        </fieldset>
+      )}
+    </div>
   );
 }
-
-const MENU_FRAGMENT = `#graphql
-  fragment MenuItem on MenuItem {
-    id
-    resourceId
-    tags
-    title
-    type
-    url
-  }
-  fragment ChildMenuItem on MenuItem {
-    ...MenuItem
-  }
-  fragment ParentMenuItem on MenuItem {
-    ...MenuItem
-    items {
-      ...ChildMenuItem
-    }
-  }
-  fragment Menu on Menu {
-    id
-    items {
-      ...ParentMenuItem
-    }
-  }
-` as const;
-
-const HEADER_QUERY = `#graphql
-  fragment Shop on Shop {
-    id
-    name
-    description
-    primaryDomain {
-      url
-    }
-    brand {
-      logo {
-        image {
-          url
-        }
-      }
-    }
-  }
-  query Header(
-    $country: CountryCode
-    $headerMenuHandle: String!
-    $language: LanguageCode
-  ) @inContext(language: $language, country: $country) {
-    shop {
-      ...Shop
-    }
-    menu(handle: $headerMenuHandle) {
-      ...Menu
-    }
-  }
-  ${MENU_FRAGMENT}
-` as const;
-
-const FOOTER_QUERY = `#graphql
-  query Footer(
-    $country: CountryCode
-    $footerMenuHandle: String!
-    $language: LanguageCode
-  ) @inContext(language: $language, country: $country) {
-    menu(handle: $footerMenuHandle) {
-      ...Menu
-    }
-  }
-  ${MENU_FRAGMENT}
-` as const;

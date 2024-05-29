@@ -10,16 +10,11 @@ import {
   Scripts,
   LiveReload,
   ScrollRestoration,
-  useLoaderData,
+  useRouteLoaderData,
 } from '@remix-run/react';
 import type {Cart, Shop} from '@shopify/hydrogen/storefront-api-types';
-import {Layout} from '~/components/Layout';
 import styles from './styles/app.css';
-import {
-  useNonce,
-  getShopAnalytics,
-  Analytics,
-} from '@shopify/hydrogen';
+import {useNonce} from '@shopify/hydrogen';
 
 export const links: LinksFunction = () => {
   return [
@@ -67,22 +62,14 @@ export async function loader({context}: LoaderFunctionArgs) {
     isLoggedIn: Boolean(customerAccessToken),
     cart,
     layout,
-    shop: getShopAnalytics({
-      storefront: context.storefront,
-      publicStorefrontId: context.env.PUBLIC_STOREFRONT_ID
-    }),
-    consent: {
-      checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
-      storefrontAccessToken: context.env.PUBLIC_STOREFRONT_API_TOKEN,
-    },
   });
 }
 
-export default function App() {
-  const data = useLoaderData<typeof loader>();
+export function Layout({children}: {children?: React.ReactNode}) {
+  const data = useRouteLoaderData<typeof loader>('root');
   const nonce = useNonce();
 
-  const {name, description} = data.layout.shop;
+  const shop = data?.layout.shop;
 
   return (
     <html lang="en">
@@ -93,21 +80,25 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Analytics.Provider
-          cart={data.cart}
-          shop={data.shop}
-          consent={data.consent}
-        >
-          <Layout description={description} title={name}>
-            <Outlet />
-          </Layout>
-        </Analytics.Provider>
+        {data ? (
+          <div className="PageLayout">
+            <h1>{shop?.name} (skeleton)</h1>
+            <h2>{shop?.description}</h2>
+            {children}
+          </div>
+        ) : (
+          children
+        )}
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
         <LiveReload nonce={nonce} />
       </body>
     </html>
   );
+}
+
+export default function App() {
+  return <Outlet />;
 }
 
 const CART_QUERY = `#graphql
