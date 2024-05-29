@@ -57,10 +57,16 @@ export function links() {
 }
 
 export async function loader(args: LoaderFunctionArgs) {
+  // Immediately start loading deferred data because it's not critical and isn't awaited
+  const deferredData = loadDeferredData(args);
+
+  // Only await critical data
+  const criticalData = await loadCriticalData(args);
+
   return defer(
     {
-      ...(await primaryData(args)),
-      ...secondaryData(args),
+      ...criticalData,
+      ...deferredData,
     },
     {
       headers: {
@@ -74,7 +80,7 @@ export async function loader(args: LoaderFunctionArgs) {
  * Load data necessary for rendering content above the fold. This is the primary data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function primaryData({context}: LoaderFunctionArgs) {
+async function loadCriticalData({context}: LoaderFunctionArgs) {
   const {storefront, env} = context;
 
   const [header] = await Promise.all([
@@ -105,7 +111,7 @@ async function primaryData({context}: LoaderFunctionArgs) {
  * Load data for rendering content below the fold. This data is deferred and will be
  * fetched after the initial page load. If it's unavailable, the page should still 200.
  */
-function secondaryData({context}: LoaderFunctionArgs) {
+function loadDeferredData({context}: LoaderFunctionArgs) {
   const {storefront, customerAccount, cart} = context;
 
   // defer the footer query (below the fold)

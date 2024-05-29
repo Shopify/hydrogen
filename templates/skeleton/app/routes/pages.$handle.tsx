@@ -1,26 +1,56 @@
-import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, type MetaFunction} from '@remix-run/react';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.page.title ?? ''}`}];
 };
 
-export async function loader({params, context}: LoaderFunctionArgs) {
+export async function loader(args: LoaderFunctionArgs) {
+  // Immediately start loading deferred data because it's not critical and isn't awaited
+  const deferredData = loadDeferredData(args);
+
+  // Only await critical data
+  const criticalData = await loadCriticalData(args);
+
+  return defer({
+    ...criticalData,
+    ...deferredData,
+  });
+}
+
+/**
+ * Load data necessary for rendering content above the fold. This is the critical data
+ * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
+ */
+async function loadCriticalData({context, params}: LoaderFunctionArgs) {
   if (!params.handle) {
     throw new Error('Missing page handle');
   }
 
-  const {page} = await context.storefront.query(PAGE_QUERY, {
-    variables: {
-      handle: params.handle,
-    },
-  });
+  const [{page}] = await Promise.all([
+    context.storefront.query(PAGE_QUERY, {
+      variables: {
+        handle: params.handle,
+      },
+    }),
+    // Add other queries here, so that they are loaded in parallel
+  ]);
 
   if (!page) {
     throw new Response('Not Found', {status: 404});
   }
 
-  return json({page});
+  return {
+    page,
+  };
+}
+
+/**
+ * Load data for rendering content below the fold. This data is deferred and will be
+ * fetched after the initial page load. If it's unavailable, the page should still 200.
+ */
+function loadDeferredData({context}: LoaderFunctionArgs) {
+  return {};
 }
 
 export default function Page() {

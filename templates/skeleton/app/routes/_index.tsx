@@ -12,17 +12,23 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader(args: LoaderFunctionArgs) {
+  // Immediately start loading deferred data because it's not critical and isn't awaited
+  const deferredData = loadDeferredData(args);
+
+  // Only await critical data
+  const criticalData = await loadCriticalData(args);
+
   return defer({
-    ...(await primaryData(args)),
-    ...secondaryData(args),
+    ...criticalData,
+    ...deferredData,
   });
 }
 
 /**
- * Load data necessary for rendering content above the fold. This is the primary data
+ * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function primaryData({context}: LoaderFunctionArgs) {
+async function loadCriticalData({context}: LoaderFunctionArgs) {
   const [{collections}] = await Promise.all([
     context.storefront.query(FEATURED_COLLECTION_QUERY),
     // Add other queries here, so that they are loaded in parallel
@@ -37,7 +43,7 @@ async function primaryData({context}: LoaderFunctionArgs) {
  * Load data for rendering content below the fold. This data is deferred and will be
  * fetched after the initial page load. If it's unavailable, the page should still 200.
  */
-function secondaryData({context}: LoaderFunctionArgs) {
+function loadDeferredData({context}: LoaderFunctionArgs) {
   return {
     recommendedProducts: context.storefront.query(RECOMMENDED_PRODUCTS_QUERY),
   };

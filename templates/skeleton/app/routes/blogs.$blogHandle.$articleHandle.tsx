@@ -6,16 +6,36 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.article.title ?? ''} article`}];
 };
 
-export async function loader({params, context}: LoaderFunctionArgs) {
+export async function loader(args: LoaderFunctionArgs) {
+  // Immediately start loading deferred data because it's not critical and isn't awaited
+  const deferredData = loadDeferredData(args);
+
+  // Only await critical data
+  const criticalData = await loadCriticalData(args);
+
+  return defer({
+    ...criticalData,
+    ...deferredData,
+  });
+}
+
+/**
+ * Load data necessary for rendering content above the fold. This is the critical data
+ * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
+ */
+async function loadCriticalData({context, params}: LoaderFunctionArgs) {
   const {blogHandle, articleHandle} = params;
 
   if (!articleHandle || !blogHandle) {
     throw new Response('Not found', {status: 404});
   }
 
-  const {blog} = await context.storefront.query(ARTICLE_QUERY, {
-    variables: {blogHandle, articleHandle},
-  });
+  const [{blog}] = await Promise.all([
+    context.storefront.query(ARTICLE_QUERY, {
+      variables: {blogHandle, articleHandle},
+    }),
+    // Add other queries here, so that they are loaded in parallel
+  ]);
 
   if (!blog?.articleByHandle) {
     throw new Response(null, {status: 404});
@@ -24,6 +44,14 @@ export async function loader({params, context}: LoaderFunctionArgs) {
   const article = blog.articleByHandle;
 
   return json({article});
+}
+
+/**
+ * Load data for rendering content below the fold. This data is deferred and will be
+ * fetched after the initial page load. If it's unavailable, the page should still 200.
+ */
+function loadDeferredData({context}: LoaderFunctionArgs) {
+  return {};
 }
 
 export default function Article() {

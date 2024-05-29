@@ -33,17 +33,27 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
 };
 
 export async function loader(args: LoaderFunctionArgs) {
+  // Immediately start loading deferred data because it's not critical and isn't awaited
+  const deferredData = loadDeferredData(args);
+
+  // Only await critical data
+  const criticalData = await loadCriticalData(args);
+
   return defer({
-    ...(await primaryData(args)),
-    ...secondaryData(args),
+    ...criticalData,
+    ...deferredData,
   });
 }
 
 /**
- * Load data necessary for rendering content above the fold. This is the primary data
+ * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function primaryData({context, params, request}: LoaderFunctionArgs) {
+async function loadCriticalData({
+  context,
+  params,
+  request,
+}: LoaderFunctionArgs) {
   const {handle} = params;
   const {storefront} = context;
 
@@ -89,7 +99,7 @@ async function primaryData({context, params, request}: LoaderFunctionArgs) {
  * Load data for rendering content below the fold. This data is deferred and will be
  * fetched after the initial page load. If it's unavailable, the page should still 200.
  */
-function secondaryData({context, params}: LoaderFunctionArgs) {
+function loadDeferredData({context, params}: LoaderFunctionArgs) {
   // In order to show which variants are available in the UI, we need to query
   // all of them. But there might be a *lot*, so instead separate the variants
   // into it's own separate query that is deferred. So there's a brief moment
