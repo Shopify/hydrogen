@@ -8,7 +8,7 @@ import {AbortError} from '@shopify/cli-kit/node/error';
 import {outputWarn} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {muteRemixLogs} from './log.js';
-import {getRequiredRemixVersion} from './remix-version-check.js';
+import {REQUIRED_REMIX_VERSION} from './remix-version-check.js';
 import {findFileWithExtension} from './file.js';
 import {getViteConfig} from './vite-config.js';
 import {importLocal} from './import-utils.js';
@@ -45,7 +45,7 @@ export function getProjectPaths(appPath?: string) {
 }
 
 export function handleRemixImportFail(): never {
-  const remixVersion = getRequiredRemixVersion();
+  const remixVersion = REQUIRED_REMIX_VERSION;
   throw new AbortError(
     'Could not load Remix packages.',
     `Please make sure you have \`@remix-run/dev@${remixVersion}\` installed` +
