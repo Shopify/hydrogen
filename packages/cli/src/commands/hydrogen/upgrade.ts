@@ -27,50 +27,27 @@ import {
   getDependencies,
   installNodeModules,
   getPackageManager,
+  type PackageJson,
 } from '@shopify/cli-kit/node/node-package-manager';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {PackageJson} from 'type-fest';
 import {getCliCommand} from '../../lib/shell.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {getProjectPaths} from '../../lib/remix-config.js';
 
-export type Dependencies = Record<string, string>;
-
-export type Choice<T> = {
-  label: string;
-  value: T;
-  key?: string;
-  group?: string;
-  helperText?: string;
-};
-
-export type SupportedPackage =
-  | '@shopify/hydrogen'
-  | '@shopify/cli-hydrogen'
-  | '@shopify/remix-oxygen';
-
-export type PackageToUpgrade = {
-  version: string;
-  name: SupportedPackage;
-  type: 'dependency' | 'devDependency';
-};
-
-type Step = {
-  code: string;
-  file?: string;
-  info?: string;
-  reel?: string;
-  title: string;
-};
-
-export type ReleaseItem = {
+type ReleaseItem = {
   breaking?: boolean;
   docs?: string;
   id: string | null;
   info?: string;
   pr: `https://${string}` | null;
-  steps?: Array<Step>;
   title: string;
+  steps?: Array<{
+    code: string;
+    file?: string;
+    info?: string;
+    reel?: string;
+    title: string;
+  }>;
 };
 
 export type Release = {
@@ -87,7 +64,7 @@ export type Release = {
   version: string;
 };
 
-export type ChangeLog = {
+type ChangeLog = {
   url: string;
   releases: Array<Release>;
   version: string;
@@ -265,7 +242,7 @@ export async function getHydrogenVersion({appPath}: {appPath: string}) {
   let packageJson: PackageJson | undefined;
 
   try {
-    packageJson = JSON.parse(await readFile(packageJsonPath)) as PackageJson;
+    packageJson = JSON.parse(await readFile(packageJsonPath));
   } catch {
     throw new AbortError(
       'Could not find a valid package.json',
@@ -274,9 +251,9 @@ export async function getHydrogenVersion({appPath}: {appPath: string}) {
   }
 
   const currentDependencies = {
-    ...(packageJson.dependencies ?? {}),
-    ...(packageJson.devDependencies ?? {}),
-  } as Dependencies;
+    ...packageJson?.dependencies,
+    ...packageJson?.devDependencies,
+  };
 
   const currentVersion = currentDependencies['@shopify/hydrogen'];
 
@@ -333,7 +310,7 @@ function hasOutdatedDependencies({
   currentDependencies,
 }: {
   release: Release;
-  currentDependencies: Dependencies;
+  currentDependencies: Record<string, string>;
 }) {
   return Object.entries({
     ...release.dependencies,
@@ -354,7 +331,7 @@ function isUpgradeableRelease({
   currentPinnedVersion,
   release,
 }: {
-  currentDependencies: Dependencies;
+  currentDependencies: Record<string, string>;
   currentPinnedVersion: string;
   release: Release;
 }) {
@@ -381,7 +358,7 @@ export function getAvailableUpgrades({
 }: {
   releases: ChangeLog['releases'];
   currentVersion: string;
-  currentDependencies: Dependencies;
+  currentDependencies: Record<string, string>;
 }) {
   const currentPinnedVersion = getAbsoluteVersion(currentVersion);
   let currentMajorVersion = '';
@@ -449,7 +426,7 @@ export function getCummulativeRelease({
   availableUpgrades: Array<Release>;
   selectedRelease: Release;
   currentVersion: string;
-  currentDependencies?: Dependencies;
+  currentDependencies?: Record<string, string>;
 }): CumulativeRelease {
   const currentPinnedVersion = getAbsoluteVersion(currentVersion);
 
@@ -547,7 +524,7 @@ function maybeIncludeDependency({
   selectedRelease,
 }: {
   dependency: [string, string];
-  currentDependencies: Dependencies;
+  currentDependencies: Record<string, string>;
   selectedRelease: Release;
 }) {
   const existingDependencyVersion = currentDependencies[name];
@@ -593,7 +570,7 @@ export function buildUpgradeCommandArgs({
   currentDependencies,
 }: {
   selectedRelease: Release;
-  currentDependencies: Dependencies;
+  currentDependencies: Record<string, string>;
 }) {
   const args: string[] = [];
 
@@ -652,7 +629,7 @@ export async function upgradeNodeModules({
 }: {
   appPath: string;
   selectedRelease: Release;
-  currentDependencies: Dependencies;
+  currentDependencies: Record<string, string>;
 }) {
   await renderTasks(
     [
@@ -681,7 +658,7 @@ function appendRemixDependencies({
   currentDependencies,
   selectedRemix,
 }: {
-  currentDependencies: Dependencies;
+  currentDependencies: Record<string, string>;
   selectedRemix: [string, string];
 }) {
   const command: string[] = [];
@@ -738,7 +715,7 @@ async function promptUpgradeOptions(
       // group: majorVersion,
       label: `${version} ${tag} - ${cliTruncate(title, 54)}`,
       value: release,
-    } as Choice<Release>;
+    };
   });
 
   return renderSelectPrompt({
