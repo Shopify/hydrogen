@@ -20,7 +20,7 @@ export async function loader(args: LoaderFunctionArgs) {
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
 
-  return defer({...criticalData, ...deferredData});
+  return defer({...deferredData, ...criticalData});
 }
 
 /**
@@ -45,6 +45,7 @@ async function loadCriticalData({context, request}: LoaderFunctionArgs) {
 /**
  * Load data for rendering content below the fold. This data is deferred and will be
  * fetched after the initial page load. If it's unavailable, the page should still 200.
+ * Make sure to not throw any errors here, as it will cause the page to 500.
  */
 function loadDeferredData({context}: LoaderFunctionArgs) {
   return {};
