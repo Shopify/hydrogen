@@ -24,6 +24,7 @@ import SetupVite from './commands/hydrogen/setup/vite.js';
 import Shortcut from './commands/hydrogen/shortcut.js';
 import Unlink from './commands/hydrogen/unlink.js';
 import Upgrade from './commands/hydrogen/upgrade.js';
+import hook from './hooks/init.js';
 
 const COMMANDS = {
   'hydrogen:dev': Dev,
@@ -53,5 +54,7 @@ const COMMANDS = {
   'hydrogen:setup:markets': SetupMarkets,
   'hydrogen:setup:vite': SetupVite,
 };
+
+export const HydrogenInitHook = hook;
 
 export default COMMANDS;
