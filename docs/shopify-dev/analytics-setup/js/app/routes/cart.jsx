@@ -2,9 +2,7 @@ import {Await} from '@remix-run/react';
 import {Suspense} from 'react';
 import {
   CartForm,
-  // [START cart]
   Analytics,
-  // [END cart]
 } from '@shopify/hydrogen';
 import {json} from '@shopify/remix-oxygen';
 import {CartMain} from '~/components/Cart';

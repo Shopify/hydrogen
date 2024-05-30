@@ -5,9 +5,7 @@ import {
   getPaginationVariables,
   Image,
   Money,
-  // [START collections]
   Analytics,
-  // [END collections]
 } from '@shopify/hydrogen';
 import {useVariantUrl} from '~/lib/variants';
 

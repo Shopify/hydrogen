@@ -5,9 +5,7 @@ import {
   getPaginationVariables,
   Image,
   Money,
-  // [START collections]
   Analytics,
-  // [END collections]
 } from '@shopify/hydrogen';
 import type {ProductItemFragment} from 'storefrontapi.generated';
 import {useVariantUrl} from '~/lib/variants';

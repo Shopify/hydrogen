@@ -23,10 +23,8 @@ import {
   // [START import]
   Analytics,
   // [END import]
-  // [START cartview-import]
   type CartViewPayload,
   useAnalytics,
-  // [END cartview-import]
 } from '@shopify/hydrogen';
 import type {SelectedOption} from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/lib/variants';

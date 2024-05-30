@@ -1,5 +1,5 @@
 import {
-  useNonce,
+  useNonce
   // [START import]
   getShopAnalytics,
   Analytics,
@@ -21,7 +21,7 @@ import resetStyles from './styles/reset.css?url';
 import appStyles from './styles/app.css?url';
 import {Layout} from '~/components/Layout';
 // [START import-custom]
-import {CustomAnalytics} from '~/components/CustomAnalytics';
+import {ThirdPartyAnalyticsIntegration} from '~/components/CustomAnalytics';
 // [END import-custom]
 
 /**
@@ -128,9 +128,23 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout {...data}>
-          <Outlet />
-        </Layout>
+        {/* [START provider] */}
+        <Analytics.Provider
+          cart={data.cart}
+          shop={data.shop}
+          consent={data.consent}
+          customData={{foo: 'bar'}}
+        >
+        {/* [END provider] */}
+          <Layout {...data}>
+            <Outlet />
+          </Layout>
+          {/* [START custom-component] */}
+          <ThirdPartyAnalyticsIntegration />
+          {/* [END custom-component] */}
+        {/* [START provider] */}
+        </Analytics.Provider>
+        {/* [END provider] */}
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>
@@ -162,23 +176,17 @@ export function ErrorBoundary() {
         <Links />
       </head>
       <body>
-        {/* [START provider] */}
-        <Analytics.Provider
-          cart={data.cart}
-          shop={data.shop}
-          consent={data.consent}
-          customData={{foo: 'bar'}}
-        >
-        {/* [END provider] */}
-          <Layout {...data}>
-            <Outlet />
-          </Layout>
-          {/* [START custom-component] */}
-          <CustomAnalytics />
-          {/* [END custom-component] */}
-        {/* [START provider] */}
-        </Analytics.Provider>
-        {/* [END provider] */}
+        <Layout {...rootData}>
+          <div className="route-error">
+            <h1>Oops</h1>
+            <h2>{errorStatus}</h2>
+            {errorMessage && (
+              <fieldset>
+                <pre>{errorMessage}</pre>
+              </fieldset>
+            )}
+          </div>
+        </Layout>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>
