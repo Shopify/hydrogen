@@ -26,7 +26,7 @@ import Unlink from './commands/hydrogen/unlink.js';
 import Upgrade from './commands/hydrogen/upgrade.js';
 import hook from './hooks/init.js';
 
-const COMMANDS = {
+export const COMMANDS = {
   'hydrogen:dev': Dev,
   'hydrogen:build': Build,
   'hydrogen:check': Check,
@@ -55,6 +55,6 @@ const COMMANDS = {
   'hydrogen:setup:vite': SetupVite,
 };
 
-export const HydrogenInitHook = hook;
-
-export default COMMANDS;
+export const HOOKS = {
+  init: hook,
+};
