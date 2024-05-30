@@ -22,7 +22,7 @@ import resetStyles from './styles/reset.css?url';
 import appStyles from './styles/app.css?url';
 import {Layout} from '~/components/Layout';
 // [START import-custom]
-import {ThirdPartyAnalyticsIntegration} from '~/components/CustomAnalytics';
+import {ThirdPartyAnalyticsIntegration} from '~/components/ThirdPartyAnalyticsIntegration';
 // [END import-custom]
 
 /**
