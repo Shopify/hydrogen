@@ -2,6 +2,7 @@ import {checkHydrogenVersion} from './check-version.js';
 import {afterEach, beforeEach, describe, it, expect, vi} from 'vitest';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {checkForNewVersion} from '@shopify/cli-kit/node/node-package-manager';
+import {CLI_KIT_VERSION} from '@shopify/cli-kit/common/version';
 
 vi.mock('@shopify/cli-kit/node/node-package-manager', () => {
   return {
@@ -90,6 +91,17 @@ describe('checkHydrogenVersion()', () => {
           ),
         );
       });
+    });
+  });
+
+  describe('when checking the global cli version', () => {
+    it('uses the CLI_KIT_VERSION', async () => {
+      await checkHydrogenVersion('dir', 'cli');
+
+      expect(checkForNewVersion).toHaveBeenCalledWith(
+        '@shopify/cli',
+        CLI_KIT_VERSION,
+      );
     });
   });
 
