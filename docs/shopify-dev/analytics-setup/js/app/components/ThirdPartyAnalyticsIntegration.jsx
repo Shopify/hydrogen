@@ -6,7 +6,7 @@ import {useEffect} from 'react';
 // [START export]
 export function ThirdPartyAnalyticsIntegration() {
   // [START use]
-  const {subscribe, register} = useAnalytics();
+  const {subscribe} = useAnalytics();
   // [END use]
   // [START register]
   // Register this analytics integration - this will prevent any analytics events

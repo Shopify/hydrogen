@@ -10,9 +10,7 @@ import {
   // [START import]
   Analytics,
   // [END import]
-  // [START cartview-import]
   useAnalytics,
-  // [END cartview-import]
 } from '@shopify/hydrogen';
 import {getVariantUrl} from '~/lib/variants';
 import {useAside} from '~/components/Aside';
