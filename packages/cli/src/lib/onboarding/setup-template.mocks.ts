@@ -1,9 +1,8 @@
-import {fileURLToPath} from 'node:url';
 import {vi} from 'vitest';
 import {createSymlink, remove as rmdir} from 'fs-extra/esm';
 import {writeFile} from '@shopify/cli-kit/node/fs';
-import {joinPath} from '@shopify/cli-kit/node/path';
-import {getRepoNodeModules} from '../build.js';
+import {dirname, joinPath} from '@shopify/cli-kit/node/path';
+import {getRepoNodeModules, getSkeletonSourceDir} from '../build.js';
 
 const {renderTasksHook} = vi.hoisted(() => ({renderTasksHook: vi.fn()}));
 
@@ -11,18 +10,15 @@ vi.mock('../template-downloader.js', async () => ({
   downloadMonorepoTemplates: () =>
     Promise.resolve({
       version: '',
-      templatesDir: fileURLToPath(
-        new URL('../../../../../templates', import.meta.url),
-      ),
-      examplesDir: fileURLToPath(
-        new URL('../../../../../examples', import.meta.url),
+      templatesDir: dirname(getSkeletonSourceDir()),
+      examplesDir: dirname(getSkeletonSourceDir()).replace(
+        'templates',
+        'examples',
       ),
     }),
   downloadExternalRepo: () =>
     Promise.resolve({
-      templateDir: fileURLToPath(
-        new URL('../../../../../templates/skeleton', import.meta.url),
-      ),
+      templateDir: getSkeletonSourceDir(),
     }),
 }));
 

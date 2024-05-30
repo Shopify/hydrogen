@@ -31,10 +31,12 @@ export type AssetsDir =
   | 'bundle'
   // These are created at build time:
   | 'virtual-routes'
+  | 'internal-templates'
+  | 'external-templates'
   | typeof ASSETS_STARTER_DIR;
 
 let pkgJsonPath: string | undefined;
-export async function getAssetsDir(feature?: AssetsDir, ...subpaths: string[]) {
+export async function getPkgJsonPath() {
   pkgJsonPath ??= await findPathUp('package.json', {
     cwd: fileURLToPath(import.meta.url),
     type: 'file',
@@ -47,8 +49,12 @@ export async function getAssetsDir(feature?: AssetsDir, ...subpaths: string[]) {
     );
   }
 
+  return pkgJsonPath;
+}
+
+export async function getAssetsDir(feature?: AssetsDir, ...subpaths: string[]) {
   return joinPath(
-    dirname(pkgJsonPath),
+    dirname(await getPkgJsonPath()),
     process.env.SHOPIFY_UNIT_TEST
       ? `assets` // Use source for unit tests
       : `dist/${ASSETS_DIR_PREFIX}`,

@@ -12,6 +12,7 @@ import {REQUIRED_REMIX_VERSION} from './remix-version-check.js';
 import {findFileWithExtension} from './file.js';
 import {getViteConfig} from './vite-config.js';
 import {importLocal} from './import-utils.js';
+import {hydrogenPackagesPath, isHydrogenMonorepo} from './build.js';
 
 type RawRemixConfig = AppConfig;
 
@@ -78,9 +79,9 @@ export async function getRemixConfig(
   ).catch(handleRemixImportFail);
   const config = await readConfig(root, mode);
 
-  if (process.env.LOCAL_DEV) {
+  if (isHydrogenMonorepo && hydrogenPackagesPath) {
     // Watch local packages when developing in Hydrogen repo
-    const packagesPath = fileURLToPath(new URL('../../..', import.meta.url));
+    const packagesPath = hydrogenPackagesPath;
     config.watchPaths ??= [];
 
     config.watchPaths.push(
