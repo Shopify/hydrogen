@@ -64,16 +64,39 @@ export function spawnCodegenProcess({
   appDirectory,
   configFilePath,
 }: CodegenOptions) {
-  const child = spawn(
-    'node',
-    [
+  let command: string;
+  let args: string[];
+
+  const hydrogenArgvIndex = process.argv.findIndex((a) => a === 'hydrogen');
+
+  if (hydrogenArgvIndex >= 1) {
+    // Call the `h2 codegen --watch` command in a separate process.
+    command = process.argv[0]!;
+    args = [
+      ...process.argv.slice(1, hydrogenArgvIndex + 1),
+      'codegen',
+      '--watch',
+      '--path',
+      rootDirectory,
+    ];
+
+    if (configFilePath) {
+      args.push('--codegen-config-path', configFilePath);
+    }
+  } else {
+    // Legacy: in case this command wasn't run using our CLI
+    // (is this even possible?) just do what we used to do
+    // before CLI bundling:
+    command = 'node';
+    args = [
       fileURLToPath(import.meta.url),
       rootDirectory,
       appDirectory ?? resolvePath('app'),
       configFilePath ?? '',
-    ],
-    {stdio: ['inherit', 'ignore', 'pipe']},
-  );
+    ];
+  }
+
+  const child = spawn(command, args, {stdio: ['inherit', 'ignore', 'pipe']});
 
   child.stderr.on('data', (data) => {
     const dataString: string =
