@@ -87,7 +87,7 @@ export function getSkeletonSourceDir() {
     );
   }
 
-  return monorepoPackagesPath.replace(/\/packages\/$/, '/templates/skeleton/');
+  return joinPath(dirname(monorepoPackagesPath), 'templates', 'skeleton');
 }
 
 export async function getRepoNodeModules() {
@@ -95,10 +95,7 @@ export async function getRepoNodeModules() {
   let nodeModulesPath = stdout.trim();
 
   if (!nodeModulesPath && isHydrogenMonorepo) {
-    nodeModulesPath = monorepoPackagesPath.replace(
-      /\/packages\/$/,
-      '/node_modules/',
-    );
+    nodeModulesPath = joinPath(dirname(monorepoPackagesPath), 'node_modules');
   }
 
   return nodeModulesPath;
