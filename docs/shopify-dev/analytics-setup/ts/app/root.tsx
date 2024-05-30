@@ -22,7 +22,7 @@ import resetStyles from './styles/reset.css?url';
 import appStyles from './styles/app.css?url';
 import {Layout} from '~/components/Layout';
 // [START import-custom]
-import {CustomAnalytics} from '~/components/CustomAnalytics';
+import {ThirdPartyAnalyticsIntegration} from '~/components/CustomAnalytics';
 // [END import-custom]
 
 /**
@@ -140,7 +140,7 @@ export default function App() {
             <Outlet />
           </Layout>
           {/* [START custom-component] */}
-          <CustomAnalytics />
+          <ThirdPartyAnalyticsIntegration />
           {/* [END custom-component] */}
         {/* [START provider] */}
         </Analytics.Provider>
