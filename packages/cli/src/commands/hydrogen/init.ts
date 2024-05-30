@@ -20,6 +20,7 @@ import {
   currentProcessIsGlobal,
   inferPackageManagerForGlobalCLI,
 } from '@shopify/cli-kit/node/is-global';
+import {getPkgJsonPath} from '../../lib/build.js';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 
@@ -132,7 +133,7 @@ export async function runInit(
     // Resolving the CLI package from a local directory might fail because
     // this code could be run from a global dependency (e.g. on `npm create`).
     // Therefore, pass the known path to the package.json directly from here:
-    fileURLToPath(new URL('../../../package.json', import.meta.url)),
+    await getPkgJsonPath(),
     isGlobal ? 'cli' : 'cliHydrogen',
   );
 

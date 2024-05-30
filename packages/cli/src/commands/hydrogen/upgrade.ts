@@ -1,5 +1,3 @@
-import path from 'node:path';
-import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
 import semver from 'semver';
 import cliTruncate from 'cli-truncate';
@@ -27,50 +25,29 @@ import {
   getDependencies,
   installNodeModules,
   getPackageManager,
+  type PackageJson,
 } from '@shopify/cli-kit/node/node-package-manager';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {PackageJson} from 'type-fest';
+import {dirname, joinPath, resolvePath} from '@shopify/cli-kit/node/path';
 import {getCliCommand} from '../../lib/shell.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {getProjectPaths} from '../../lib/remix-config.js';
+import {hydrogenPackagesPath, isHydrogenMonorepo} from '../../lib/build.js';
 
-export type Dependencies = Record<string, string>;
-
-export type Choice<T> = {
-  label: string;
-  value: T;
-  key?: string;
-  group?: string;
-  helperText?: string;
-};
-
-export type SupportedPackage =
-  | '@shopify/hydrogen'
-  | '@shopify/cli-hydrogen'
-  | '@shopify/remix-oxygen';
-
-export type PackageToUpgrade = {
-  version: string;
-  name: SupportedPackage;
-  type: 'dependency' | 'devDependency';
-};
-
-type Step = {
-  code: string;
-  file?: string;
-  info?: string;
-  reel?: string;
-  title: string;
-};
-
-export type ReleaseItem = {
+type ReleaseItem = {
   breaking?: boolean;
   docs?: string;
   id: string | null;
   info?: string;
   pr: `https://${string}` | null;
-  steps?: Array<Step>;
   title: string;
+  steps?: Array<{
+    code: string;
+    file?: string;
+    info?: string;
+    reel?: string;
+    title: string;
+  }>;
 };
 
 export type Release = {
@@ -87,7 +64,7 @@ export type Release = {
   version: string;
 };
 
-export type ChangeLog = {
+type ChangeLog = {
   url: string;
   releases: Array<Release>;
   version: string;
@@ -126,7 +103,7 @@ export default class Upgrade extends Command {
 
     await runUpgrade({
       ...flagsToCamelObject(flags),
-      appPath: flags.path ? path.resolve(flags.path) : process.cwd(),
+      appPath: flags.path ? resolvePath(flags.path) : process.cwd(),
     });
   }
 }
@@ -260,12 +237,12 @@ async function checkDirtyGitBranch(appPath: string) {
  */
 export async function getHydrogenVersion({appPath}: {appPath: string}) {
   const {root} = getProjectPaths(appPath);
-  const packageJsonPath = path.join(root, 'package.json');
+  const packageJsonPath = joinPath(root, 'package.json');
 
   let packageJson: PackageJson | undefined;
 
   try {
-    packageJson = JSON.parse(await readFile(packageJsonPath)) as PackageJson;
+    packageJson = JSON.parse(await readFile(packageJsonPath));
   } catch {
     throw new AbortError(
       'Could not find a valid package.json',
@@ -274,9 +251,9 @@ export async function getHydrogenVersion({appPath}: {appPath: string}) {
   }
 
   const currentDependencies = {
-    ...(packageJson.dependencies ?? {}),
-    ...(packageJson.devDependencies ?? {}),
-  } as Dependencies;
+    ...packageJson?.dependencies,
+    ...packageJson?.devDependencies,
+  };
 
   const currentVersion = currentDependencies['@shopify/hydrogen'];
 
@@ -298,12 +275,15 @@ export async function getChangelog(): Promise<ChangeLog> {
 
   // For local testing
   if (
-    process.env.FORCE_CHANGELOG_SOURCE === 'local' ||
-    (process.env.FORCE_CHANGELOG_SOURCE !== 'remote' && !!process.env.LOCAL_DEV)
+    isHydrogenMonorepo &&
+    hydrogenPackagesPath &&
+    process.env.FORCE_CHANGELOG_SOURCE !== 'remote'
   ) {
     const require = createRequire(import.meta.url);
-    return require(fileURLToPath(
-      new URL('../../../../../docs/changelog.json', import.meta.url),
+    return require(joinPath(
+      dirname(hydrogenPackagesPath),
+      'docs',
+      'changelog.json',
     )) as ChangeLog;
   }
 
@@ -333,7 +313,7 @@ function hasOutdatedDependencies({
   currentDependencies,
 }: {
   release: Release;
-  currentDependencies: Dependencies;
+  currentDependencies: Record<string, string>;
 }) {
   return Object.entries({
     ...release.dependencies,
@@ -354,7 +334,7 @@ function isUpgradeableRelease({
   currentPinnedVersion,
   release,
 }: {
-  currentDependencies: Dependencies;
+  currentDependencies: Record<string, string>;
   currentPinnedVersion: string;
   release: Release;
 }) {
@@ -381,7 +361,7 @@ export function getAvailableUpgrades({
 }: {
   releases: ChangeLog['releases'];
   currentVersion: string;
-  currentDependencies: Dependencies;
+  currentDependencies: Record<string, string>;
 }) {
   const currentPinnedVersion = getAbsoluteVersion(currentVersion);
   let currentMajorVersion = '';
@@ -449,7 +429,7 @@ export function getCummulativeRelease({
   availableUpgrades: Array<Release>;
   selectedRelease: Release;
   currentVersion: string;
-  currentDependencies?: Dependencies;
+  currentDependencies?: Record<string, string>;
 }): CumulativeRelease {
   const currentPinnedVersion = getAbsoluteVersion(currentVersion);
 
@@ -547,7 +527,7 @@ function maybeIncludeDependency({
   selectedRelease,
 }: {
   dependency: [string, string];
-  currentDependencies: Dependencies;
+  currentDependencies: Record<string, string>;
   selectedRelease: Release;
 }) {
   const existingDependencyVersion = currentDependencies[name];
@@ -593,7 +573,7 @@ export function buildUpgradeCommandArgs({
   currentDependencies,
 }: {
   selectedRelease: Release;
-  currentDependencies: Dependencies;
+  currentDependencies: Record<string, string>;
 }) {
   const args: string[] = [];
 
@@ -652,7 +632,7 @@ export async function upgradeNodeModules({
 }: {
   appPath: string;
   selectedRelease: Release;
-  currentDependencies: Dependencies;
+  currentDependencies: Record<string, string>;
 }) {
   await renderTasks(
     [
@@ -681,7 +661,7 @@ function appendRemixDependencies({
   currentDependencies,
   selectedRemix,
 }: {
-  currentDependencies: Dependencies;
+  currentDependencies: Record<string, string>;
   selectedRemix: [string, string];
 }) {
   const command: string[] = [];
@@ -738,7 +718,7 @@ async function promptUpgradeOptions(
       // group: majorVersion,
       label: `${version} ${tag} - ${cliTruncate(title, 54)}`,
       value: release,
-    } as Choice<Release>;
+    };
   });
 
   return renderSelectPrompt({
@@ -847,9 +827,7 @@ async function validateUpgrade({
   appPath: string;
   selectedRelease: Release;
 }) {
-  const dependencies = await getDependencies(
-    path.join(appPath, 'package.json'),
-  );
+  const dependencies = await getDependencies(joinPath(appPath, 'package.json'));
 
   const updatedVersion = dependencies['@shopify/hydrogen'];
 
@@ -938,7 +916,7 @@ async function generateUpgradeInstructionsFile({
   const absoluteTo = getAbsoluteVersion(selectedRelease.version);
   filename = `upgrade-${absoluteFrom}-to-${absoluteTo}.md`;
 
-  const instructionsFolderPath = path.join(appPath, INSTRUCTIONS_FOLDER);
+  const instructionsFolderPath = joinPath(appPath, INSTRUCTIONS_FOLDER);
 
   const h1 = `# Hydrogen upgrade guide: ${absoluteFrom} to ${absoluteTo}`;
 
@@ -958,7 +936,7 @@ async function generateUpgradeInstructionsFile({
     )}`;
   }
 
-  const filePath = path.join(instructionsFolderPath, filename);
+  const filePath = joinPath(instructionsFolderPath, filename);
 
   try {
     await isDirectory(instructionsFolderPath);
@@ -997,7 +975,7 @@ export async function displayDevUpgradeNotice({
   targetPath?: string;
 }) {
   try {
-    const appPath = targetPath ? path.resolve(targetPath) : process.cwd();
+    const appPath = targetPath ? resolvePath(targetPath) : process.cwd();
     const {currentVersion, currentDependencies} = await getHydrogenVersion({
       appPath,
     });

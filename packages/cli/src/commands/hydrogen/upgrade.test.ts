@@ -22,6 +22,7 @@ import {
   renderTasks,
 } from '@shopify/cli-kit/node/ui';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
+import {type PackageJson} from '@shopify/cli-kit/node/node-package-manager';
 import {
   buildUpgradeCommandArgs,
   displayConfirmation,
@@ -32,13 +33,12 @@ import {
   getSelectedRelease,
   runUpgrade,
   type CumulativeRelease,
-  type Dependencies,
   type Release,
   upgradeNodeModules,
   getChangelog,
   displayDevUpgradeNotice,
 } from './upgrade.js';
-import {type PackageJson} from 'type-fest';
+import {getSkeletonSourceDir} from '../../lib/build.js';
 
 vi.mock('@shopify/cli-kit/node/session');
 
@@ -66,19 +66,12 @@ beforeEach(() => {
   outputMock.clear();
 });
 
-beforeAll(() => {
-  process.env.FORCE_CHANGELOG_SOURCE = 'local';
-});
-
-afterAll(() => {
-  delete process.env.FORCE_CHANGELOG_SOURCE;
-});
-
-function createOutdatedSkeletonPackageJson() {
+async function createOutdatedSkeletonPackageJson() {
   const require = createRequire(import.meta.url);
-  const packageJson = require(fileURLToPath(
-    new URL('../../../../../templates/skeleton/package.json', import.meta.url),
-  )) as PackageJson;
+  const packageJson: PackageJson = require(joinPath(
+    getSkeletonSourceDir(),
+    'package.json',
+  ));
 
   if (!packageJson) throw new Error('Could not parse package.json');
   if (!packageJson?.dependencies)
@@ -107,11 +100,8 @@ async function inTemporaryHydrogenRepo(
     packageJson,
   }: {
     cleanGitRepo?: boolean;
-    packageJson?: null | Record<string, unknown>;
-  } = {
-    cleanGitRepo: true,
-    packageJson: null,
-  },
+    packageJson?: PackageJson;
+  } = {cleanGitRepo: true},
 ) {
   return inTemporaryDirectory(async (tmpDir) => {
     // init the git repo
@@ -162,7 +152,8 @@ function increasePatchVersion(depName: string, deps: Record<string, string>) {
 
 describe('upgrade', async () => {
   // Create an outdated skeleton package.json for all tests
-  const OUTDATED_HYDROGEN_PACKAGE_JSON = createOutdatedSkeletonPackageJson();
+  const OUTDATED_HYDROGEN_PACKAGE_JSON =
+    await createOutdatedSkeletonPackageJson();
 
   describe('checkIsGitRepo', () => {
     it('renders an error message when not in a git repo', async () => {
@@ -193,7 +184,7 @@ describe('upgrade', async () => {
             'valid package.json',
           );
         },
-        {packageJson: null},
+        {packageJson: undefined},
       );
     });
 
@@ -656,7 +647,7 @@ describe('upgrade', async () => {
           const currentDependencies = {
             ...OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies,
             ...OUTDATED_HYDROGEN_PACKAGE_JSON.devDependencies,
-          } as Dependencies;
+          };
 
           await upgradeNodeModules({
             appPath,
@@ -683,7 +674,7 @@ describe('upgrade', async () => {
       const currentDependencies = {
         ...OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies,
         ...OUTDATED_HYDROGEN_PACKAGE_JSON.devDependencies,
-      } as Dependencies;
+      };
 
       const result: string[] = [
         '@shopify/hydrogen@2023.10.0',
@@ -715,7 +706,7 @@ describe('upgrade', async () => {
         ...OUTDATED_HYDROGEN_PACKAGE_JSON.devDependencies,
         '@remix-run/dev': '1.2.0',
         '@remix-run/css-bundle': '1.7.0',
-      } as Dependencies;
+      };
 
       const result: string[] = [
         '@shopify/cli-hydrogen@6.0.0',
@@ -750,7 +741,7 @@ describe('upgrade', async () => {
         ...OUTDATED_HYDROGEN_PACKAGE_JSON.devDependencies,
         '@remix-run/dev': '1.8.0',
         '@remix-run/css-bundle': '1.8.0',
-      } as Dependencies;
+      };
 
       const result: string[] = [
         '@shopify/cli-hydrogen@6.0.0',
@@ -784,7 +775,7 @@ describe('upgrade', async () => {
         '@remix-run/react': '2.2.0',
         ...OUTDATED_HYDROGEN_PACKAGE_JSON.devDependencies,
         '@remix-run/dev': '2.2.0',
-      } as Dependencies;
+      };
 
       const result: string[] = [
         '@shopify/cli-hydrogen@6.0.0',
@@ -821,10 +812,9 @@ describe('upgrade', async () => {
         '@remix-run/react': '2.1.0',
         ...OUTDATED_HYDROGEN_PACKAGE_JSON.devDependencies,
         '@remix-run/dev': '2.1.0',
-      } as Dependencies;
-
-      // simulate a missing required dependency
-      delete currentDependencies['typescript'];
+        // simulate a missing required dependency
+        typescript: '',
+      };
 
       const result: string[] = [
         '@shopify/cli-hydrogen@6.0.0',
@@ -853,10 +843,9 @@ describe('upgrade', async () => {
         '@remix-run/react': '2.1.0',
         ...OUTDATED_HYDROGEN_PACKAGE_JSON.devDependencies,
         '@remix-run/dev': '2.1.0',
-      } as Dependencies;
-
-      // simulate a missing required dependency
-      delete currentDependencies['typescript'];
+        // simulate a missing required dependency
+        typescript: '',
+      };
 
       const result: string[] = [
         '@shopify/cli-hydrogen@6.0.0',
@@ -889,7 +878,7 @@ describe('upgrade', async () => {
         ...OUTDATED_HYDROGEN_PACKAGE_JSON.devDependencies,
         '@remix-run/dev': '2.1.0',
         typescript: '5.3.0', // more up-to-date than that of 2023.10.0
-      } as Dependencies;
+      };
 
       const result: string[] = [
         '@shopify/cli-hydrogen@6.0.0',
@@ -918,7 +907,7 @@ describe('upgrade', async () => {
         ...OUTDATED_HYDROGEN_PACKAGE_JSON.devDependencies,
         '@remix-run/dev': '2.1.0',
         '@shopify/hydrogen': 'next',
-      } as Dependencies;
+      };
 
       const result: string[] = [
         '@shopify/cli-hydrogen@6.0.0',
