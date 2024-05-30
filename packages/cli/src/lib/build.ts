@@ -1,7 +1,7 @@
 import {fileURLToPath} from 'node:url';
 import {findPathUp} from '@shopify/cli-kit/node/fs';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {joinPath} from '@shopify/cli-kit/node/path';
+import {dirname, joinPath} from '@shopify/cli-kit/node/path';
 import {execAsync} from './process.js';
 
 // Avoid using fileURLToPath here to prevent backslashes nightmare on Windows
@@ -48,7 +48,7 @@ export async function getAssetsDir(feature?: AssetsDir, ...subpaths: string[]) {
   }
 
   return joinPath(
-    pkgJsonPath.replace(/\/package\.json$/, ''),
+    dirname(pkgJsonPath),
     process.env.SHOPIFY_UNIT_TEST
       ? `assets` // Use source for unit tests
       : `dist/${ASSETS_DIR_PREFIX}`,
