@@ -9,9 +9,12 @@ import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
 import {readAndParsePackageJson} from '@shopify/cli-kit/node/node-package-manager';
 import {outputInfo} from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
-import {getRepoNodeModules, getStarterDir} from './build.js';
+import {
+  getRepoNodeModules,
+  getStarterDir,
+  isHydrogenMonorepo,
+} from './build.js';
 import {mergePackageJson} from './file.js';
-import {getRepoMeta} from './dev-shared.js';
 
 /**
  * Creates a new temporary project directory with the starter template and diff applied.
@@ -38,7 +41,7 @@ export async function prepareDiffDirectory(
   // forget to start the dev process for the CLI when tinkering with
   // diff examples. Let's use the skeleton source files from the
   // monorepo directly if available to avoid this situation.
-  const templateDirectory = getStarterDir(getRepoMeta().isHydrogenMonorepo);
+  const templateDirectory = await getStarterDir(isHydrogenMonorepo);
   await applyTemplateDiff(targetDirectory, diffDirectory, templateDirectory);
 
   await createSymlink(
@@ -212,8 +215,10 @@ type DiffOptions = {
 export async function applyTemplateDiff(
   targetDirectory: string,
   diffDirectory: string,
-  templateDir = getStarterDir(),
+  templateDir?: string,
 ) {
+  templateDir ??= await getStarterDir();
+
   const [diffPkgJson, templatePkgJson] = await Promise.all([
     readAndParsePackageJson(joinPath(diffDirectory, 'package.json')),
     readAndParsePackageJson(joinPath(templateDir, 'package.json')),

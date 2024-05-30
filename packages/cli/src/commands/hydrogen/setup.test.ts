@@ -1,4 +1,3 @@
-import {fileURLToPath} from 'node:url';
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {copy as copyWithFilter, createSymlink} from 'fs-extra/esm';
 import {
@@ -10,7 +9,7 @@ import {joinPath} from '@shopify/cli-kit/node/path';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {runSetup} from './setup.js';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
-import {getRepoNodeModules} from '../../lib/build.js';
+import {getRepoNodeModules, getSkeletonSourceDir} from '../../lib/build.js';
 
 vi.mock('../../lib/shell.js');
 
@@ -42,9 +41,7 @@ describe('setup', () => {
   it('sets up an i18n strategy and generates routes', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       await copyWithFilter(
-        fileURLToPath(
-          new URL('../../../../../templates/hello-world', import.meta.url),
-        ),
+        getSkeletonSourceDir().replace('skeleton', 'hello-world'),
         tmpDir,
         {filter: (src) => !src.includes('node_modules')},
       );

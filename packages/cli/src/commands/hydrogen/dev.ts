@@ -1,4 +1,5 @@
 import type {ViteDevServer} from 'vite';
+import {Flags, Config} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
 import colors from '@shopify/cli-kit/node/colors';
 import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
@@ -9,7 +10,7 @@ import {
   renderInfo,
 } from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {Flags, Config} from '@oclif/core';
+import {removeFile} from '@shopify/cli-kit/node/fs';
 import {
   enhanceH2Logs,
   isH2Verbose,
@@ -36,7 +37,6 @@ import {
   getDevConfigInBackground,
   getUtilityBannerlines,
   TUNNEL_DOMAIN,
-  getRepoMeta,
 } from '../../lib/dev-shared.js';
 import {getCliCommand} from '../../lib/shell.js';
 import {findPort} from '../../lib/find-port.js';
@@ -48,7 +48,7 @@ import {importVite} from '../../lib/import-utils.js';
 import {createEntryPointErrorHandler} from '../../lib/deps-optimizer.js';
 import {getCodeFormatOptions} from '../../lib/format-code.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
-import {removeFile} from '@shopify/cli-kit/node/fs';
+import {hydrogenPackagesPath} from '../../lib/build.js';
 
 export default class Dev extends Command {
   static descriptionWithMarkdown = `Runs a Hydrogen storefront in a local runtime that emulates an Oxygen worker for development.
@@ -215,8 +215,6 @@ export async function runDev({
   }
 
   const vite = await importVite(root);
-
-  const {hydrogenPackagesPath} = getRepoMeta();
 
   if (hydrogenPackagesPath) {
     // Force reoptimizing deps without printing the message

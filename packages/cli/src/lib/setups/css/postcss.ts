@@ -1,7 +1,7 @@
 import {outputInfo} from '@shopify/cli-kit/node/output';
 import {mergePackageJson} from '../../file.js';
 import {canWriteFiles, copyAssets} from './assets.js';
-import {getAssetDir} from '../../build.js';
+import {getAssetsDir} from '../../build.js';
 import type {CssSetupConfig, CssSetupResult} from './common.js';
 
 export async function setupPostCss(
@@ -26,7 +26,7 @@ export async function setupPostCss(
   }
 
   const workPromise = Promise.all([
-    mergePackageJson(getAssetDir('postcss'), rootDirectory),
+    mergePackageJson(await getAssetsDir('postcss'), rootDirectory),
     copyAssets('postcss', assetMap, rootDirectory),
   ]);
 
