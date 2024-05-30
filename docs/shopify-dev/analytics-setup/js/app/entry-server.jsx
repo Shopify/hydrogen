@@ -8,9 +8,9 @@ export default async function handleRequest(
   responseStatusCode,
   responseHeaders,
   remixContext,
-  // [START context]
+  // [START csp]
   context,
-  // [END context]
+  // [END csp]
 ) {
   // [START csp]
   const {nonce, header, NonceProvider} = createContentSecurityPolicy({

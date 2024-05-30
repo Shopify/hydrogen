@@ -3,16 +3,18 @@ import {RemixServer} from '@remix-run/react';
 import isbot from 'isbot';
 import {renderToReadableStream} from 'react-dom/server';
 import {createContentSecurityPolicy} from '@shopify/hydrogen';
+// [START csp]
 import type {AppLoadContext} from '@remix-run/server-runtime';
+// [END csp]
 
 export default async function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
   remixContext: EntryContext,
-  // [START context]
+  // [START csp]
   context: AppLoadContext,
-  // [END context]
+  // [END csp]
 ) {
   // [START csp]
   const {nonce, header, NonceProvider} = createContentSecurityPolicy({
