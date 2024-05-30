@@ -1,5 +1,3 @@
-import path from 'node:path';
-import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
 import semver from 'semver';
 import cliTruncate from 'cli-truncate';
@@ -30,9 +28,11 @@ import {
   type PackageJson,
 } from '@shopify/cli-kit/node/node-package-manager';
 import {AbortError} from '@shopify/cli-kit/node/error';
+import {dirname, joinPath, resolvePath} from '@shopify/cli-kit/node/path';
 import {getCliCommand} from '../../lib/shell.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {getProjectPaths} from '../../lib/remix-config.js';
+import {hydrogenPackagesPath, isHydrogenMonorepo} from '../../lib/build.js';
 
 type ReleaseItem = {
   breaking?: boolean;
@@ -103,7 +103,7 @@ export default class Upgrade extends Command {
 
     await runUpgrade({
       ...flagsToCamelObject(flags),
-      appPath: flags.path ? path.resolve(flags.path) : process.cwd(),
+      appPath: flags.path ? resolvePath(flags.path) : process.cwd(),
     });
   }
 }
@@ -237,7 +237,7 @@ async function checkDirtyGitBranch(appPath: string) {
  */
 export async function getHydrogenVersion({appPath}: {appPath: string}) {
   const {root} = getProjectPaths(appPath);
-  const packageJsonPath = path.join(root, 'package.json');
+  const packageJsonPath = joinPath(root, 'package.json');
 
   let packageJson: PackageJson | undefined;
 
@@ -275,12 +275,15 @@ export async function getChangelog(): Promise<ChangeLog> {
 
   // For local testing
   if (
-    process.env.FORCE_CHANGELOG_SOURCE === 'local' ||
-    (process.env.FORCE_CHANGELOG_SOURCE !== 'remote' && !!process.env.LOCAL_DEV)
+    isHydrogenMonorepo &&
+    hydrogenPackagesPath &&
+    process.env.FORCE_CHANGELOG_SOURCE !== 'remote'
   ) {
     const require = createRequire(import.meta.url);
-    return require(fileURLToPath(
-      new URL('../../../../../docs/changelog.json', import.meta.url),
+    return require(joinPath(
+      dirname(hydrogenPackagesPath),
+      'docs',
+      'changelog.json',
     )) as ChangeLog;
   }
 
@@ -824,9 +827,7 @@ async function validateUpgrade({
   appPath: string;
   selectedRelease: Release;
 }) {
-  const dependencies = await getDependencies(
-    path.join(appPath, 'package.json'),
-  );
+  const dependencies = await getDependencies(joinPath(appPath, 'package.json'));
 
   const updatedVersion = dependencies['@shopify/hydrogen'];
 
@@ -915,7 +916,7 @@ async function generateUpgradeInstructionsFile({
   const absoluteTo = getAbsoluteVersion(selectedRelease.version);
   filename = `upgrade-${absoluteFrom}-to-${absoluteTo}.md`;
 
-  const instructionsFolderPath = path.join(appPath, INSTRUCTIONS_FOLDER);
+  const instructionsFolderPath = joinPath(appPath, INSTRUCTIONS_FOLDER);
 
   const h1 = `# Hydrogen upgrade guide: ${absoluteFrom} to ${absoluteTo}`;
 
@@ -935,7 +936,7 @@ async function generateUpgradeInstructionsFile({
     )}`;
   }
 
-  const filePath = path.join(instructionsFolderPath, filename);
+  const filePath = joinPath(instructionsFolderPath, filename);
 
   try {
     await isDirectory(instructionsFolderPath);
@@ -974,7 +975,7 @@ export async function displayDevUpgradeNotice({
   targetPath?: string;
 }) {
   try {
-    const appPath = targetPath ? path.resolve(targetPath) : process.cwd();
+    const appPath = targetPath ? resolvePath(targetPath) : process.cwd();
     const {currentVersion, currentDependencies} = await getHydrogenVersion({
       appPath,
     });

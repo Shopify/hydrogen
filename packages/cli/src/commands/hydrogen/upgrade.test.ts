@@ -66,19 +66,12 @@ beforeEach(() => {
   outputMock.clear();
 });
 
-beforeAll(() => {
-  process.env.FORCE_CHANGELOG_SOURCE = 'local';
-});
-
-afterAll(() => {
-  delete process.env.FORCE_CHANGELOG_SOURCE;
-});
-
-function createOutdatedSkeletonPackageJson() {
+async function createOutdatedSkeletonPackageJson() {
   const require = createRequire(import.meta.url);
-  const packageJson = require(fileURLToPath(
-    new URL('../../../../../templates/skeleton/package.json', import.meta.url),
-  )) as PackageJson;
+  const packageJson: PackageJson = require(joinPath(
+    getSkeletonSourceDir(),
+    'package.json',
+  ));
 
   if (!packageJson) throw new Error('Could not parse package.json');
   if (!packageJson?.dependencies)
@@ -159,7 +152,8 @@ function increasePatchVersion(depName: string, deps: Record<string, string>) {
 
 describe('upgrade', async () => {
   // Create an outdated skeleton package.json for all tests
-  const OUTDATED_HYDROGEN_PACKAGE_JSON = createOutdatedSkeletonPackageJson();
+  const OUTDATED_HYDROGEN_PACKAGE_JSON =
+    await createOutdatedSkeletonPackageJson();
 
   describe('checkIsGitRepo', () => {
     it('renders an error message when not in a git repo', async () => {
