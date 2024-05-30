@@ -63,7 +63,3 @@ export async function loader({request, context, params}: LoaderFunctionArgs) {
     throw new Error('No checkout URL found');
   }
 }
-
-export default function Component() {
-  return null;
-}
