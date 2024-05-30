@@ -2,19 +2,13 @@ import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
 
-export function getRequiredRemixVersion(
-  require = createRequire(import.meta.url),
+export const REQUIRED_REMIX_VERSION = '^2.1.0';
+
+export function checkRemixVersions(
+  projectPath: string,
+  requiredVersionInHydrogen = REQUIRED_REMIX_VERSION,
 ) {
-  const hydrogenPkgJson = require(fileURLToPath(
-    new URL('../../package.json', import.meta.url),
-  ));
-
-  return hydrogenPkgJson.peerDependencies['@remix-run/dev'] as string;
-}
-
-export function checkRemixVersions() {
   const require = createRequire(import.meta.url);
-  const requiredVersionInHydrogen = getRequiredRemixVersion(require);
 
   // Require this after requiring the hydrogen
   // package version to avoid breaking test mocks.
@@ -29,7 +23,7 @@ export function checkRemixVersions() {
     'node',
     'express',
     'eslint-config',
-  ].map((name) => getRemixPackageVersion(require, name));
+  ].map((name) => getRemixPackageVersion(require, name, projectPath));
 
   const outOfSyncPkgs = pkgs.filter(
     (pkg) =>
@@ -55,12 +49,19 @@ export function checkRemixVersions() {
   });
 }
 
-function getRemixPackageVersion(require: NodeRequire, name: string) {
+// When using the global CLI, remix packages are loaded from the project root.
+function getRemixPackageVersion(
+  require: NodeRequire,
+  name: string,
+  root: string,
+) {
   const pkgName = '@remix-run/' + name;
   const result = {name: pkgName, version: ''};
 
   try {
-    const pkgJsonPath = require.resolve(`${pkgName}/package.json`);
+    const pkgJsonPath = require.resolve(`${pkgName}/package.json`, {
+      paths: [root],
+    });
     const pkgJson = require(pkgJsonPath);
     result.version = pkgJson.version as string;
   } catch {

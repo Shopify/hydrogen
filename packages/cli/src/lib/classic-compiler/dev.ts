@@ -230,7 +230,7 @@ export async function runClassicCompilerDev({
       });
     }
 
-    checkRemixVersions();
+    checkRemixVersions(root);
 
     if (!disableVersionCheck) {
       displayDevUpgradeNotice({targetPath: appPath});
