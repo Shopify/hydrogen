@@ -1,6 +1,7 @@
 import {describe, it, expect, vi} from 'vitest';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {checkRemixVersions} from './remix-version-check.js';
+import {cwd} from '@shopify/cli-kit/node/path';
 
 const requireMock = vi.fn();
 vi.mock('node:module', async () => {
@@ -23,20 +24,16 @@ vi.mock('node:module', async () => {
 describe('remix-version-check', () => {
   it('does nothing when versions are in sync', () => {
     const outputMock = mockAndCaptureOutput();
-    checkRemixVersions();
+    checkRemixVersions(cwd());
 
     expect(outputMock.warn()).toBe('');
   });
 
   it('warns when versions are out of sync', () => {
     const expectedVersion = '42.0.0-test';
-    vi.mocked(requireMock).mockReturnValueOnce({
-      // Hydrogen expected version
-      peerDependencies: {'@remix-run/dev': expectedVersion},
-    });
 
     const outputMock = mockAndCaptureOutput();
-    checkRemixVersions();
+    checkRemixVersions(cwd(), expectedVersion);
 
     const output = outputMock.warn();
     expect(output).toMatch(`Hydrogen requires Remix @${expectedVersion}`);

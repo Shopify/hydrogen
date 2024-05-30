@@ -3,6 +3,7 @@ import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 const data: ReferenceEntityTemplateSchema = {
   name: 'CacheCustom',
   category: 'utilities',
+  subCategory: 'caching',
   isVisualComponent: false,
   related: [
     {
