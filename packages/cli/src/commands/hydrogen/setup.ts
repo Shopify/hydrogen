@@ -91,7 +91,7 @@ export async function runSetup(options: RunSetupOptions) {
   let routes: Record<string, string[]> | undefined;
 
   if (needsRouteGeneration) {
-    const templateRoot = getTemplateAppFile('..');
+    const templateRoot = await getTemplateAppFile('..');
     const [typescript, dtsFiles] = await Promise.all([
       fileExists(joinPath(rootDirectory, 'tsconfig.json')),
       glob('*.d.ts', {cwd: templateRoot}),

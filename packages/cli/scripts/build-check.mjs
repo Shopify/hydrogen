@@ -2,11 +2,14 @@
 
 import {glob} from '@shopify/cli-kit/node/fs';
 
-const virtualRoutesGlob = '/virtual-routes/**/*';
-const cwd = new URL('..', import.meta.url).pathname;
+const virtualRoutesGlob = 'virtual-routes/**/*';
 
-const srcEntries = await glob('src' + virtualRoutesGlob, {cwd});
-const distEntries = await glob('dist' + virtualRoutesGlob, {cwd});
+const srcEntries = await glob(virtualRoutesGlob, {
+  cwd: new URL('../../hydrogen/src/vite', import.meta.url).pathname,
+});
+const distEntries = await glob(virtualRoutesGlob, {
+  cwd: new URL('../dist/assets/hydrogen', import.meta.url).pathname,
+});
 
 for (const srcEntry of srcEntries) {
   // skip .DS_Store files

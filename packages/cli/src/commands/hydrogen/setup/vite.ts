@@ -17,7 +17,7 @@ import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import {getRawRemixConfig} from '../../../lib/remix-config.js';
 import {mergePackageJson, replaceFileContent} from '../../../lib/file.js';
 import {importLangAstGrep} from '../../../lib/ast.js';
-import {getAssetDir} from '../../../lib/build.js';
+import {getAssetsDir} from '../../../lib/build.js';
 import {formatCode, getCodeFormatOptions} from '../../../lib/format-code.js';
 import {hasViteConfig} from '../../../lib/vite-config.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
@@ -64,7 +64,7 @@ export async function runSetupVite({directory}: {directory: string}) {
   const serverEntry = rawRemixConfig.server || 'server.js';
   const isTS = serverEntry.endsWith('.ts');
   const fileExt = isTS ? 'tsx' : 'jsx';
-  const viteAssets = getAssetDir('vite');
+  const viteAssets = await getAssetsDir('vite');
   const usesTailwind = !!rawRemixConfig.tailwind;
   const postCssConfigPath = resolvePath(directory, 'postcss.config.js');
 
