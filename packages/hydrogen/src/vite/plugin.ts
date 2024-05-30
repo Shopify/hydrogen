@@ -46,6 +46,11 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
       config(_, env) {
         sharedOptions.command = env.command;
 
+        const isHydrogenMonorepo = new URL(
+          '../../..',
+          import.meta.url,
+        ).pathname.endsWith('/hydrogen/packages/');
+
         return {
           ssr: {
             optimizeDeps: {
@@ -58,20 +63,22 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
                 'react/jsx-dev-runtime',
                 'react-dom',
                 'react-dom/server',
-                // Remix deps:
-                'set-cookie-parser',
-                'cookie',
+                '@remix-run/server-runtime',
               ],
             },
           },
           // Vite performs an initial reload after optimizing these dependencies.
           // Do it early to avoid the initial reload:
           optimizeDeps: {
-            include: [
-              'content-security-policy-builder',
-              'tiny-invariant',
-              'worktop/cookie',
-            ],
+            // Avoid optimizing Hydrogen itself in the monorepo
+            // to prevent caching source code changes:
+            include: isHydrogenMonorepo
+              ? [
+                  'content-security-policy-builder',
+                  'tiny-invariant',
+                  'worktop/cookie',
+                ]
+              : ['@shopify/hydrogen'],
           },
         };
       },
