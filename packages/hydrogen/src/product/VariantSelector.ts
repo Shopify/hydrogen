@@ -1,4 +1,4 @@
-import {useLocation} from '@remix-run/react';
+import {useLocation, useNavigation} from '@remix-run/react';
 import {flattenConnection} from '@shopify/hydrogen-react';
 import type {
   ProductOption,
@@ -169,6 +169,7 @@ export const getSelectedProductOptions: GetSelectedProductOptions = (
 
 function useVariantPath(handle: string, productPath: string) {
   const {pathname, search} = useLocation();
+  const navigation = useNavigation();
 
   return useMemo(() => {
     const match = /(\/[a-zA-Z]{2}-[a-zA-Z]{2}\/)/g.exec(pathname);
@@ -181,7 +182,9 @@ function useVariantPath(handle: string, productPath: string) {
       ? `${match![0]}${productPath}/${handle}`
       : `/${productPath}/${handle}`;
 
-    const searchParams = new URLSearchParams(search);
+    const searchParams = new URLSearchParams(
+      navigation.state === 'loading' ? navigation.location.search : search,
+    );
 
     return {
       searchParams,
@@ -191,5 +194,5 @@ function useVariantPath(handle: string, productPath: string) {
       alreadyOnProductPage: path === pathname,
       path,
     };
-  }, [pathname, search, handle, productPath]);
+  }, [pathname, search, handle, productPath, navigation]);
 }
