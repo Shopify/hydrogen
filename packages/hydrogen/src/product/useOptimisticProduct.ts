@@ -24,18 +24,12 @@ type OptimisticProductVariants =
   | ProductWithVariants
   | Promise<ProductWithVariants>;
 
-type b = {a: 1};
-type c = Promise<b>;
-type d = NonNullable<Awaited<c>>;
-
-const a: d = {a: 1};
-
 export function useOptimisticProduct<
   ProductWithSelectedVariant = OptimisticProductInput,
   ProductVariants = OptimisticProductVariants,
 >(
   product: ProductWithSelectedVariant,
-  variants?: ProductVariants,
+  variants: ProductVariants,
 ): OptimisticProduct<ProductWithSelectedVariant> {
   const navigation = useNavigation();
   const [resolvedVariants, setResolvedVariants] = useState<
