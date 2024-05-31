@@ -51,7 +51,7 @@ export function createStorefrontClient({
   if (storefrontApiVersion !== SFAPI_VERSION) {
     warnOnce(
       `The Storefront API version that you're using is different than the version this build of Hydrogen React is targeting.` +
-        `\nYou may run into unexpected errors if these versions don't match. Received verion: "${storefrontApiVersion}"; expected version "${SFAPI_VERSION}"`,
+        `\nYou may run into unexpected errors if these versions don't match. Received version: "${storefrontApiVersion}"; expected version "${SFAPI_VERSION}"`,
     );
   }
 

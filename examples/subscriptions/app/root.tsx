@@ -1,4 +1,8 @@
-import {useNonce} from '@shopify/hydrogen';
+import {
+  useNonce,
+  getShopAnalytics,
+  Analytics,
+} from '@shopify/hydrogen';
 import {
   defer,
   type SerializeFrom,
@@ -67,7 +71,7 @@ export const useRootLoaderData = () => {
 };
 
 export async function loader({context}: LoaderFunctionArgs) {
-  const {storefront, cart} = context;
+  const {storefront, cart, env} = context;
 
   // defer the cart query by not awaiting it
   const cartPromise = cart.get();
@@ -80,6 +84,14 @@ export async function loader({context}: LoaderFunctionArgs) {
   return defer({
     cart: cartPromise,
     header: await headerPromise,
+    shop: getShopAnalytics({
+      storefront,
+      publicStorefrontId: env.PUBLIC_STOREFRONT_ID
+    }),
+    consent: {
+      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
+      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+    },
   });
 }
 
@@ -96,9 +108,15 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout {...data}>
-          <Outlet />
-        </Layout>
+        <Analytics.Provider
+          cart={data.cart}
+          shop={data.shop}
+          consent={data.consent}
+        >
+          <Layout {...data}>
+            <Outlet />
+          </Layout>
+        </Analytics.Provider>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
         <LiveReload nonce={nonce} />

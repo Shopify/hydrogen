@@ -8,10 +8,11 @@ import {AbortError} from '@shopify/cli-kit/node/error';
 import {outputWarn} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {muteRemixLogs} from './log.js';
-import {getRequiredRemixVersion} from './remix-version-check.js';
+import {REQUIRED_REMIX_VERSION} from './remix-version-check.js';
 import {findFileWithExtension} from './file.js';
 import {getViteConfig} from './vite-config.js';
 import {importLocal} from './import-utils.js';
+import {hydrogenPackagesPath, isHydrogenMonorepo} from './build.js';
 
 type RawRemixConfig = AppConfig;
 
@@ -45,7 +46,7 @@ export function getProjectPaths(appPath?: string) {
 }
 
 export function handleRemixImportFail(): never {
-  const remixVersion = getRequiredRemixVersion();
+  const remixVersion = REQUIRED_REMIX_VERSION;
   throw new AbortError(
     'Could not load Remix packages.',
     `Please make sure you have \`@remix-run/dev@${remixVersion}\` installed` +
@@ -78,9 +79,9 @@ export async function getRemixConfig(
   ).catch(handleRemixImportFail);
   const config = await readConfig(root, mode);
 
-  if (process.env.LOCAL_DEV) {
+  if (isHydrogenMonorepo && hydrogenPackagesPath) {
     // Watch local packages when developing in Hydrogen repo
-    const packagesPath = fileURLToPath(new URL('../../..', import.meta.url));
+    const packagesPath = hydrogenPackagesPath;
     config.watchPaths ??= [];
 
     config.watchPaths.push(

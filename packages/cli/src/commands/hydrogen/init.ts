@@ -1,6 +1,9 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {fileURLToPath} from 'node:url';
-import {packageManagerFromUserAgent} from '@shopify/cli-kit/node/node-package-manager';
+import {
+  packageManager,
+  packageManagerFromUserAgent,
+} from '@shopify/cli-kit/node/node-package-manager';
 import {Flags} from '@oclif/core';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {
@@ -10,9 +13,14 @@ import {
 } from '../../lib/flags.js';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {I18N_CHOICES, type I18nChoice} from '../../lib/setups/i18n/index.js';
-import {supressNodeExperimentalWarnings} from '../../lib/process.js';
+import {execAsync, supressNodeExperimentalWarnings} from '../../lib/process.js';
 import {setupTemplate, type InitOptions} from '../../lib/onboarding/index.js';
 import {LANGUAGES} from '../../lib/onboarding/common.js';
+import {
+  currentProcessIsGlobal,
+  inferPackageManagerForGlobalCLI,
+} from '@shopify/cli-kit/node/is-global';
+import {getPkgJsonPath} from '../../lib/build.js';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 
@@ -113,22 +121,36 @@ export async function runInit(
     options.shortcut ??= true;
   }
 
+  // Check if we are running the command using the h2 alias
+  const npmPrefix = (await execAsync('npm prefix -s')).stdout.trim();
+  const isH2 = process.argv[1]?.startsWith(npmPrefix);
+
+  // If the current process is global (shopify hydrogen init) we need to check for @shopify/cli version
+  // The process could report to be global when using the h2 alias, so we need to check for that
+  const isGlobal = currentProcessIsGlobal() && !isH2;
+
   const showUpgrade = await checkHydrogenVersion(
     // Resolving the CLI package from a local directory might fail because
     // this code could be run from a global dependency (e.g. on `npm create`).
     // Therefore, pass the known path to the package.json directly from here:
-    fileURLToPath(new URL('../../../package.json', import.meta.url)),
-    'cli',
+    await getPkgJsonPath(),
+    isGlobal ? 'cli' : 'cliHydrogen',
   );
 
   if (showUpgrade) {
-    const packageManager =
+    let packageManager =
       options.packageManager ?? packageManagerFromUserAgent();
-    showUpgrade(
-      packageManager === 'unknown'
-        ? ''
-        : `Please use the latest version with \`${packageManager} create @shopify/hydrogen@latest\``,
-    );
+    if (packageManager === 'unknown' || !packageManager) {
+      packageManager = inferPackageManagerForGlobalCLI();
+    }
+    const globalInstallCommand =
+      packageManager === 'yarn'
+        ? `yarn global add @shopify/cli`
+        : `${packageManager} install -g @shopify/cli`;
+    const globalMessage = `Please install the latest Shopify CLI version with \`${globalInstallCommand}\` and try again.`;
+    const localMessage = `Please use the latest version with \`${packageManager} create @shopify/hydrogen@latest\``;
+    const message = isGlobal ? globalMessage : localMessage;
+    showUpgrade(message);
   }
 
   return setupTemplate(options);

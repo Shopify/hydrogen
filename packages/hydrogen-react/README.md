@@ -4,7 +4,7 @@
 
 Hydrogen React is an unopinionated and performant library of Shopify-specific commerce components, hooks, and utilities. Bring the best parts of Hydrogen to more React frameworks, like Next.js and Gatsby, and accelerate headless development using Shopify’s pre-built React components including Cart, Shop Pay, and Shopify Analytics.
 
-📚 [Overview](https://shopify.dev/custom-storefronts/hydrogen-react) | 🛠️ [Docs](https://shopify.dev/docs/api/hydrogen-react) | 🛍️ [Custom Storefronts at Shopify](https://shopify.dev/custom-storefronts) | 🗣 [Discord](https://discord.gg/Hefq6w5c5d) | 📝 [Changelog](https://github.com/Shopify/hydrogen/blob/main/packages/hydrogen-react/CHANGELOG.md)
+📚 [Overview](https://shopify.dev/custom-storefronts/hydrogen-react) | 🛠️ [Docs](https://shopify.dev/docs/api/hydrogen-react) | 🛍️ [Custom Storefronts at Shopify](https://shopify.dev/custom-storefronts) | 🗣 [Discussions](https://github.com/Shopify/hydrogen/discussions) | 📝 [Changelog](https://github.com/Shopify/hydrogen/blob/main/packages/hydrogen-react/CHANGELOG.md)
 
 **IMPORTANT:** Refer to how this package is [versioned](../../README.md#versioning).
 
@@ -78,6 +78,6 @@ For example, in VSCode do the following:
 
 ## Contributing
 
-We love contributions! Contributing works best when you first confirm that something needs to be changed or fixed; please open an issue, start a discussion, or talk to us in Discord!
+We love contributions! Contributing works best when you first confirm that something needs to be changed or fixed; please open an issue or start a discussion!
 
 PRs are welcome! Be sure to read the [CONTRIBUTING.md](../../CONTRIBUTING.md) for an overview and guidelines to help your PR succeed.

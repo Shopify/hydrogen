@@ -1,67 +1,102 @@
 import {fileURLToPath} from 'node:url';
+import {findPathUp} from '@shopify/cli-kit/node/fs';
+import {AbortError} from '@shopify/cli-kit/node/error';
+import {dirname, joinPath} from '@shopify/cli-kit/node/path';
 import {execAsync} from './process.js';
 
-export const GENERATOR_TEMPLATES_DIR = 'generator-templates';
-export const GENERATOR_STARTER_DIR = 'starter';
-export const GENERATOR_APP_DIR = 'app';
-export const GENERATOR_ROUTE_DIR = 'routes';
-export const GENERATOR_SETUP_ASSETS_DIR = 'assets';
-export const GENERATOR_SETUP_ASSETS_SUB_DIRS = [
-  'tailwind',
-  'css-modules',
-  'vanilla-extract',
-  'postcss',
-  'vite',
-] as const;
+// Avoid using fileURLToPath here to prevent backslashes nightmare on Windows
+const monorepoPackagesPath = new URL('../../..', import.meta.url).pathname;
+export const isHydrogenMonorepo = monorepoPackagesPath.endsWith(
+  '/hydrogen/packages/',
+);
+export const hydrogenPackagesPath = isHydrogenMonorepo
+  ? monorepoPackagesPath
+  : undefined;
 
-export type AssetDir = (typeof GENERATOR_SETUP_ASSETS_SUB_DIRS)[number];
+// The global CLI will merge our assets with other
+// plugins so we must namespace the directory:
+export const ASSETS_DIR_PREFIX = 'assets/hydrogen';
 
-export function getAssetDir(feature: AssetDir) {
-  if (process.env.NODE_ENV === 'test') {
-    return fileURLToPath(
-      new URL(`../setup-assets/${feature}`, import.meta.url),
+export const ASSETS_STARTER_DIR = 'starter';
+export const ASSETS_STARTER_DIR_ROUTES = 'routes';
+
+export type AssetsDir =
+  | 'tailwind'
+  | 'css-modules'
+  | 'vanilla-extract'
+  | 'postcss'
+  | 'vite'
+  | 'i18n'
+  | 'routes'
+  | 'bundle'
+  // These are created at build time:
+  | 'virtual-routes'
+  | 'internal-templates'
+  | 'external-templates'
+  | typeof ASSETS_STARTER_DIR;
+
+let pkgJsonPath: string | undefined;
+export async function getPkgJsonPath() {
+  pkgJsonPath ??= await findPathUp('package.json', {
+    cwd: fileURLToPath(import.meta.url),
+    type: 'file',
+  });
+
+  if (!pkgJsonPath) {
+    throw new AbortError(
+      'Could not find assets directory',
+      'Please report this error.',
     );
   }
 
-  return fileURLToPath(
-    new URL(
-      `./${GENERATOR_TEMPLATES_DIR}/${GENERATOR_SETUP_ASSETS_DIR}/${feature}`,
-      import.meta.url,
-    ),
+  return pkgJsonPath;
+}
+
+export async function getAssetsDir(feature?: AssetsDir, ...subpaths: string[]) {
+  return joinPath(
+    dirname(await getPkgJsonPath()),
+    process.env.SHOPIFY_UNIT_TEST
+      ? `assets` // Use source for unit tests
+      : `dist/${ASSETS_DIR_PREFIX}`,
+    feature ?? '',
+    ...subpaths,
   );
 }
 
-export function getTemplateAppFile(filepath: string, root = getStarterDir()) {
+export async function getTemplateAppFile(filepath: string, root?: string) {
+  root ??= await getStarterDir();
+
   const url = new URL(
-    `${root}/${GENERATOR_APP_DIR}${filepath ? `/${filepath}` : ''}`,
+    `${root}/app${filepath ? `/${filepath}` : ''}`,
     import.meta.url,
   );
   return url.protocol === 'file:' ? fileURLToPath(url) : url.toString();
 }
 
-export function getStarterDir() {
-  if (process.env.NODE_ENV === 'test') {
-    return getSkeletonSourceDir();
-  }
+export function getStarterDir(useSource = !!process.env.SHOPIFY_UNIT_TEST) {
+  if (useSource) return getSkeletonSourceDir();
 
-  return fileURLToPath(
-    new URL(
-      `./${GENERATOR_TEMPLATES_DIR}/${GENERATOR_STARTER_DIR}`,
-      import.meta.url,
-    ),
-  );
+  return getAssetsDir(ASSETS_STARTER_DIR);
 }
 
 export function getSkeletonSourceDir() {
-  return fileURLToPath(
-    new URL(`../../../../templates/skeleton`, import.meta.url),
-  );
+  if (!isHydrogenMonorepo) {
+    throw new AbortError(
+      'Trying to use skeleton source dir outside of Hydrogen monorepo.',
+      'Please report this error.',
+    );
+  }
+
+  return joinPath(dirname(monorepoPackagesPath), 'templates', 'skeleton');
 }
 
 export async function getRepoNodeModules() {
   const {stdout} = await execAsync('npm root');
-  return (
-    stdout.trim() ||
-    fileURLToPath(new URL(`../../../../node_modules`, import.meta.url))
-  );
+  let nodeModulesPath = stdout.trim();
+
+  if (!nodeModulesPath && isHydrogenMonorepo) {
+    nodeModulesPath = joinPath(dirname(monorepoPackagesPath), 'node_modules');
+  }
+
+  return nodeModulesPath;
 }

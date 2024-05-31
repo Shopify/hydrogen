@@ -20,6 +20,9 @@ import {
   getSelectedProductOptions,
   CartForm,
   type OptimisticCartLine,
+  Analytics,
+  type CartViewPayload,
+  useAnalytics,
 } from '@shopify/hydrogen';
 import type {SelectedOption} from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/lib/variants';
@@ -109,6 +112,21 @@ export default function Product() {
         selectedVariant={selectedVariant}
         product={product}
         variants={variants}
+      />
+      <Analytics.ProductView
+        data={{
+          products: [
+            {
+              id: product.id,
+              title: product.title,
+              price: selectedVariant?.price.amount || '0',
+              vendor: product.vendor,
+              variantId: selectedVariant?.id || '',
+              variantTitle: selectedVariant?.title || '',
+              quantity: 1,
+            },
+          ],
+        }}
       />
     </div>
   );
@@ -215,6 +233,7 @@ function ProductForm({
   variants: Array<ProductVariantFragment>;
 }) {
   const {open} = useAside();
+  const {publish, shop, cart, prevCart} = useAnalytics();
   return (
     <div className="product-form">
       <VariantSelector
@@ -229,6 +248,12 @@ function ProductForm({
         disabled={!selectedVariant || !selectedVariant.availableForSale}
         onClick={() => {
           open('cart');
+          publish('cart_viewed', {
+            cart,
+            prevCart,
+            shop,
+            url: window.location.href || '',
+          } as CartViewPayload);
         }}
         lines={
           selectedVariant

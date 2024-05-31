@@ -45,7 +45,7 @@ describe('local templates', () => {
       expect(resultFiles).toContain('app/root.tsx');
       expect(resultFiles).toContain('app/entry.client.tsx');
       expect(resultFiles).toContain('app/entry.server.tsx');
-      expect(resultFiles).toContain('app/components/Layout.tsx');
+      expect(resultFiles).toContain('app/components/PageLayout.tsx');
 
       // Skip routes:
       expect(resultFiles).not.toContain('app/routes/_index.tsx');

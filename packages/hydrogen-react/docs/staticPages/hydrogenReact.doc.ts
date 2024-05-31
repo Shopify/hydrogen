@@ -176,13 +176,6 @@ const data: LandingTemplateSchema = {
           type: 'custom-storefronts',
         },
         {
-          name: 'Hydrogen on Discord',
-          subtitle:
-            'Chat with the growing community of commerce developers building with Hydrogen.',
-          url: 'https://discord.gg/shopifydevs',
-          type: 'discord',
-        },
-        {
           name: 'Hydrogen on GitHub',
           subtitle:
             'Follow the Hydrogen project, file bugs and feature requests, preview upcoming features, and more.',

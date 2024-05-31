@@ -6,7 +6,7 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description:
-    'A function that queries for shop required analytics data to be used in the [`UNSTABLE_Analytics.Provider`](/docs/api/hydrogen/2024-04/components/unstable_analytics-provider) component.',
+    'A function that queries for shop required analytics data to be used in the [`Analytics.Provider`](/docs/api/hydrogen/2024-04/components/Analytics-provider) component.',
   type: 'utility',
   defaultExample: {
     description: 'This is the default example',

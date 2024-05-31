@@ -1,12 +1,12 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'unstable_useAnalytics',
+  name: 'useAnalytics',
   category: 'hooks',
   isVisualComponent: false,
   related: [],
   description:
-    'A hook that provides access to the analytics provider context. Must be a descendent of [`UNSTABLE_Analytics.Provider`](/docs/api/hydrogen/2024-04/components/unstable_analytics-provider).',
+    'A hook that provides access to the analytics provider context. Must be a descendent of [`Analytics.Provider`](/docs/api/hydrogen/2024-04/components/Analytics-provider).',
   type: 'hook',
   defaultExample: {
     description: 'This is the default example',
@@ -34,10 +34,10 @@ const data: ReferenceEntityTemplateSchema = {
     },
   ],
   examples: {
-    description: 'Example usage with `unstable_useAnalytics`:',
+    description: 'Example usage with `useAnalytics`:',
     exampleGroups: [
       {
-        title: 'unstable_useAnalytics.register',
+        title: 'useAnalytics.register',
         examples: [
           {
             description:

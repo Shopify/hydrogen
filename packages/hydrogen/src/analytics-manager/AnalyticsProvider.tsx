@@ -37,7 +37,6 @@ import {ShopifyAnalytics} from './ShopifyAnalytics';
 import {CartAnalytics} from './CartAnalytics';
 import type {CustomerPrivacyApiProps} from '../customer-privacy/ShopifyCustomerPrivacy';
 import type {Storefront} from '../storefront';
-import invariant from 'tiny-invariant';
 
 export type ShopAnalytics = {
   /** The shop ID. */
@@ -62,9 +61,16 @@ export type AnalyticsProviderProps = {
   /** The shop configuration required to publish analytics events to Shopify. Use [`getShopAnalytics`](/docs/api/hydrogen/2024-04/utilities/getshopanalytics). */
   shop: Promise<ShopAnalytics | null> | ShopAnalytics | null;
   /** The customer privacy consent configuration and options. */
-  consent: CustomerPrivacyApiProps;
+  consent: Partial<
+    Pick<
+      CustomerPrivacyApiProps,
+      'checkoutDomain' | 'storefrontAccessToken' | 'withPrivacyBanner'
+    >
+  >;
   /** Disable throwing errors when required props are missing. */
   disableThrowOnError?: boolean;
+  /** The domain scope of the cookie set with `useShopifyCookies`. **/
+  cookieDomain?: string;
 };
 
 export type Carts = {
@@ -259,10 +265,6 @@ function shopifyCanTrack(): boolean {
   return false;
 }
 
-function messageOnError(field: string) {
-  return `[h2:error:Analytics.Provider] - ${field} is required`;
-}
-
 function AnalyticsProvider({
   canTrack: customCanTrack,
   cart: currentCart,
@@ -271,27 +273,8 @@ function AnalyticsProvider({
   customData = {},
   shop: shopProp = null,
   disableThrowOnError = false,
+  cookieDomain,
 }: AnalyticsProviderProps): JSX.Element {
-  if (!consent.checkoutDomain) {
-    const errorMsg = messageOnError('consent.checkoutDomain');
-    if (disableThrowOnError) {
-      // eslint-disable-next-line no-console
-      console.error(errorMsg);
-    } else {
-      invariant(false, errorMsg);
-    }
-  }
-
-  if (!consent.storefrontAccessToken) {
-    const errorMsg = messageOnError('consent.storefrontAccessToken');
-    if (disableThrowOnError) {
-      // eslint-disable-next-line no-console
-      console.error(errorMsg);
-    } else {
-      invariant(false, errorMsg);
-    }
-  }
-
   const listenerSet = useRef(false);
   const {shop} = useShopAnalytics(shopProp);
   const [consentLoaded, setConsentLoaded] = useState(
@@ -343,6 +326,9 @@ function AnalyticsProvider({
             setConsentLoaded(true);
             setCanTrack(() => shopifyCanTrack);
           }}
+          domain={cookieDomain}
+          disableThrowOnError={disableThrowOnError}
+          isMockShop={/\/68817551382$/.test(shop.shopId)}
         />
       )}
     </AnalyticsContext.Provider>
@@ -450,7 +436,7 @@ export type AnalyticsContextValueForDoc = {
   prevCart?: Promise<CartReturn | null> | CartReturn | null;
   /** A function to publish an analytics event. */
   publish?: AnalyticsContextPublishForDoc;
-  /** A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/2024-04/hooks/unstable_useanalytics#example-unstable_useanalytics.register). */
+  /** A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/2024-04/hooks/useanalytics#example-useanalytics.register). */
   register?: (key: string) => {ready: () => void};
   /** The shop configuration required to publish events to Shopify. */
   shop?: Promise<ShopAnalytics | null> | ShopAnalytics | null;
