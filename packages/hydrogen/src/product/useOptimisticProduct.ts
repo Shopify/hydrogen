@@ -33,9 +33,10 @@ type OptimisticProductVariants =
  */
 export function useOptimisticProduct<
   ProductWithSelectedVariant = OptimisticProductInput,
+  Variants = OptimisticProductVariants,
 >(
   product: ProductWithSelectedVariant,
-  variants: OptimisticProductVariants,
+  variants: Variants,
 ): OptimisticProduct<ProductWithSelectedVariant> {
   const navigation = useNavigation();
   const [resolvedVariants, setResolvedVariants] = useState<
