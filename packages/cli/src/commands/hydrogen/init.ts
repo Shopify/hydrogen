@@ -21,6 +21,7 @@ import {
   inferPackageManagerForGlobalCLI,
 } from '@shopify/cli-kit/node/is-global';
 import {getPkgJsonPath} from '../../lib/build.js';
+import {basename} from '@shopify/cli-kit/node/path';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 
@@ -128,13 +129,15 @@ export async function runInit(
   // If the current process is global (shopify hydrogen init) we need to check for @shopify/cli version
   // The process could report to be global when using the h2 alias, so we need to check for that
   const isGlobal = currentProcessIsGlobal() && !isH2;
+  const isCreateApp =
+    !isGlobal && basename(fileURLToPath(import.meta.url)) === 'create-app.mjs';
 
   const showUpgrade = await checkHydrogenVersion(
     // Resolving the CLI package from a local directory might fail because
     // this code could be run from a global dependency (e.g. on `npm create`).
     // Therefore, pass the known path to the package.json directly from here:
     await getPkgJsonPath(),
-    isGlobal ? 'cli' : 'cliHydrogen',
+    isGlobal ? 'cli' : isCreateApp ? 'createApp' : 'cliHydrogen',
   );
 
   if (showUpgrade) {

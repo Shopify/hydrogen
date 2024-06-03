@@ -8,6 +8,7 @@ const PACKAGE_NAMES = {
   main: '@shopify/hydrogen',
   cliHydrogen: '@shopify/cli-hydrogen',
   cli: '@shopify/cli',
+  createApp: '@shopify/create-hydrogen',
 } as const;
 
 /**
