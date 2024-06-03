@@ -18,7 +18,7 @@
   "devDependencies": {
     "@shopify/cli-hydrogen": "^8.0.4"
   },
-  "bin": "dist/create-app.mjs",
+  "bin": "dist/create-app.js",
   "files": [
     "dist"
   ]
