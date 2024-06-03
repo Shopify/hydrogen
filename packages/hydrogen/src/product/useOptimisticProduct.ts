@@ -16,20 +16,26 @@ type OptimisticProductInput = Product & {
 
 type ProductWithVariants = {
   product: {
-    variants: {nodes: Array<ProductVariant>};
+    variants: {nodes: Array<PartialDeep<ProductVariant>>};
   };
 };
 
 type OptimisticProductVariants =
+  | Array<PartialDeep<ProductVariant>>
+  | Promise<Array<PartialDeep<ProductVariant>>>
   | ProductWithVariants
   | Promise<ProductWithVariants>;
 
+/**
+ * @param product The product object from `context.storefront.query()` returned by a server loader.
+ * @param variants The available product variants for the product. This can be an array of variants, a promise that resolves to an array of variants, or an object with a `product` key that contains the variants.
+ * @returns A new product object where the `selectedVariant` property is set to the variant that matches the current URL search params. If no variant is found, the original product object is returned. The `isOptimistic` property is set to `true` if the `selectedVariant` has been optimistically changed.
+ */
 export function useOptimisticProduct<
   ProductWithSelectedVariant = OptimisticProductInput,
-  ProductVariants = OptimisticProductVariants,
 >(
   product: ProductWithSelectedVariant,
-  variants: ProductVariants,
+  variants: OptimisticProductVariants,
 ): OptimisticProduct<ProductWithSelectedVariant> {
   const navigation = useNavigation();
   const [resolvedVariants, setResolvedVariants] = useState<
@@ -41,8 +47,10 @@ export function useOptimisticProduct<
       .then((productWithVariants) => {
         if (productWithVariants) {
           setResolvedVariants(
-            (productWithVariants as unknown as ProductWithVariants).product
-              .variants.nodes || [],
+            productWithVariants instanceof Array
+              ? productWithVariants
+              : (productWithVariants as unknown as ProductWithVariants).product
+                  .variants.nodes || [],
           );
         }
       })
@@ -56,7 +64,6 @@ export function useOptimisticProduct<
 
   if (navigation.state === 'loading') {
     const queryParams = new URLSearchParams(navigation.location.search);
-    console.log('queryParams', queryParams.get('Color'));
 
     // Convert the search params to a key-value object
     const params: Record<string, string> = {};

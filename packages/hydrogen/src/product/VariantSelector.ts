@@ -35,6 +35,8 @@ type VariantSelectorProps = {
     | Array<PartialDeep<ProductVariant>>;
   /** By default all products are under /products. Use this prop to provide a custom path. */
   productPath?: string;
+  /** Should the VariantSelector optimistically switch selected options */
+  optimistic?: boolean;
   children: ({option}: {option: VariantOption}) => ReactNode;
 };
 
@@ -43,6 +45,7 @@ export function VariantSelector({
   options = [],
   variants: _variants = [],
   productPath = 'products',
+  optimistic = false,
   children,
 }: VariantSelectorProps) {
   const variants =
@@ -51,6 +54,7 @@ export function VariantSelector({
   const {searchParams, path, alreadyOnProductPage} = useVariantPath(
     handle,
     productPath,
+    optimistic,
   );
 
   // If an option only has one value, it doesn't need a UI to select it
@@ -167,7 +171,11 @@ export const getSelectedProductOptions: GetSelectedProductOptions = (
   return selectedOptions;
 };
 
-function useVariantPath(handle: string, productPath: string) {
+function useVariantPath(
+  handle: string,
+  productPath: string,
+  optimistic: boolean,
+) {
   const {pathname, search} = useLocation();
   const navigation = useNavigation();
 
@@ -183,7 +191,9 @@ function useVariantPath(handle: string, productPath: string) {
       : `/${productPath}/${handle}`;
 
     const searchParams = new URLSearchParams(
-      navigation.state === 'loading' ? navigation.location.search : search,
+      optimistic && navigation.state === 'loading'
+        ? navigation.location.search
+        : search,
     );
 
     return {
