@@ -542,7 +542,7 @@ export async function createInitialCommit(directory: string) {
   } catch (error: any) {
     // Ignore errors
     outputDebug(
-      'Failed to initialize Git.\n' + error?.stack ?? error?.message ?? error,
+      'Failed to initialize Git.\n' + (error?.stack ?? error?.message ?? error),
     );
   }
 }
@@ -554,7 +554,7 @@ export async function commitAll(directory: string, message: string) {
   } catch (error: any) {
     // Ignore errors
     outputDebug(
-      'Failed to commit code.\n' + error?.stack ?? error?.message ?? error,
+      'Failed to commit code.\n' + (error?.stack ?? error?.message ?? error),
     );
   }
 }
@@ -730,7 +730,7 @@ export function createAbortHandler(
 
     renderFatalError(
       new AbortError(
-        'Failed to initialize project: ' + error?.message ?? '',
+        'Failed to initialize project: ' + (error?.message ?? ''),
         error?.tryMessage ?? error?.stack,
       ),
     );
