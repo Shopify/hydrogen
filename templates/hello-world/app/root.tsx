@@ -7,13 +7,12 @@ import {
   Meta,
   Outlet,
   Scripts,
-  LiveReload,
   ScrollRestoration,
   useRouteLoaderData,
   type ShouldRevalidateFunction,
 } from '@remix-run/react';
 import type {Shop} from '@shopify/hydrogen/storefront-api-types';
-import appStyles from './styles/app.css';
+import appStyles from './styles/app.css?url';
 import favicon from '../public/favicon.svg';
 import {useNonce} from '@shopify/hydrogen';
 
@@ -82,7 +81,6 @@ export function Layout({children}: {children?: React.ReactNode}) {
         )}
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
-        <LiveReload nonce={nonce} />
       </body>
     </html>
   );
