@@ -1,4 +1,4 @@
-/// <reference types="@remix-run/dev" />
+/// <reference types="vite/client" />
 /// <reference types="@shopify/remix-oxygen" />
 /// <reference types="@shopify/oxygen-workers-types" />
 
