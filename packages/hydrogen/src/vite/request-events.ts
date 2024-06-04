@@ -3,10 +3,11 @@ import {EventEmitter} from 'node:events';
 import type {IncomingMessage, ServerResponse} from 'node:http';
 import {mapSourcePosition} from 'source-map-support';
 
-const DEV_ROUTES = new Set([
+const IGNORED_ROUTES = new Set([
   '/graphiql',
   '/subrequest-profiler',
   '/debug-network-server',
+  '/favicon.ico',
 ]);
 
 type RequestEvent = {
@@ -82,7 +83,7 @@ export function emitRequestEvent(payload: RequestEventPayload, root: string) {
   delete payload.__fromVite;
 
   const {pathname} = new URL(payload.url, 'http://localhost');
-  if (DEV_ROUTES.has(pathname)) return;
+  if (IGNORED_ROUTES.has(pathname)) return;
 
   const {
     url: descriptionUrl,
