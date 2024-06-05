@@ -59,6 +59,7 @@ import {
 } from '../setups/routes/generate.js';
 import {execAsync} from '../process.js';
 import {getStorefronts} from '../graphql/admin/link-storefront.js';
+import {currentProcessIsGlobal} from '@shopify/cli-kit/node/is-global';
 
 export type InitOptions = {
   path?: string;
@@ -699,7 +700,9 @@ export async function renderProjectReady(
                         ? undefined
                         : `cd ${project.location.replace(/^\.\//, '')}`,
                       depsInstalled ? undefined : `${packageManager} install`,
-                      formatPackageManagerCommand(packageManager, 'dev'),
+                      currentProcessIsGlobal()
+                        ? 'shopify hydrogen dev'
+                        : formatPackageManagerCommand(packageManager, 'dev'),
                     ]
                       .filter(Boolean)
                       .join(' && '),
