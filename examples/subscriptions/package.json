@@ -14,8 +14,8 @@
   "dependencies": {
     "@remix-run/react": "^2.9.2",
     "@shopify/cli": "3.60.0",
-    "@shopify/cli-hydrogen": "^8.0.4",
-    "@shopify/hydrogen": "2024.4.2",
+    "@shopify/cli-hydrogen": "^8.1.0",
+    "@shopify/hydrogen": "2024.4.3",
     "@shopify/remix-oxygen": "^2.0.4",
     "graphql": "^16.6.0",
     "graphql-tag": "^2.12.6",
@@ -26,7 +26,7 @@
   "devDependencies": {
     "@remix-run/dev": "^2.9.2",
     "@remix-run/eslint-config": "^2.9.2",
-    "@shopify/mini-oxygen": "^3.0.2",
+    "@shopify/mini-oxygen": "^3.0.3",
     "@shopify/oxygen-workers-types": "^4.0.0",
     "@shopify/prettier-config": "^1.1.2",
     "@tailwindcss/forms": "^0.5.3",
