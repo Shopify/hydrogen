@@ -3,12 +3,18 @@ import type {FooterQuery, HeaderQuery} from 'storefrontapi.generated';
 import {useRootLoaderData} from '~/root';
 
 export function Footer({
-  menu,
+  footer,
   shop,
-}: FooterQuery & {shop: HeaderQuery['shop']}) {
+}: {
+  footer: FooterQuery | null;
+  shop: HeaderQuery['shop'];
+}) {
   return (
     <footer className="footer">
-      <FooterMenu menu={menu} primaryDomainUrl={shop.primaryDomain.url} />
+      <FooterMenu
+        menu={footer?.menu}
+        primaryDomainUrl={shop.primaryDomain.url}
+      />
     </footer>
   );
 }
