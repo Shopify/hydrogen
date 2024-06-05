@@ -1,4 +1,9 @@
-import {Plugin, defineConfig, type ResolvedConfig} from 'vite';
+import {
+  Plugin,
+  defineConfig,
+  type ResolvedConfig,
+  transformWithEsbuild,
+} from 'vite';
 import {hydrogen} from '@shopify/hydrogen/vite';
 import {oxygen} from '@shopify/mini-oxygen/vite';
 import {vitePlugin as remix} from '@remix-run/dev';
@@ -54,6 +59,8 @@ function hydrogenBundleAnalyzer() {
     async generateBundle(options, bundle) {
       if (!config.build.ssr) return;
 
+      const {root} = config;
+
       const workerFile = Object.values(bundle).find(
         (chunk) => chunk.type === 'chunk',
       );
@@ -77,37 +84,85 @@ function hydrogenBundleAnalyzer() {
       for (const modId of toAnalyzeMods) {
         const mod = this.getModuleInfo(modId);
         if (!mod?.id) continue;
-        const modBundleInfo = workerFile.modules[mod.id];
 
-        // TODO find minified code size?
-        renderedSizes.set(
-          path.relative(config.root, modId),
-          modBundleInfo?.renderedLength ??
-            modBundleInfo?.originalLength ??
-            mod.code?.length ??
-            0,
+        const modBundleInfo = workerFile.modules[mod.id];
+        const originalCodeBytes =
+          modBundleInfo?.originalLength ?? mod.code?.length ?? 0;
+
+        let resultingCodeBytes = modBundleInfo?.renderedLength ?? 0;
+
+        if (modBundleInfo?.code) {
+          const result = await transformWithEsbuild(
+            modBundleInfo.code,
+            mod.id,
+            {
+              minify: true,
+              minifyWhitespace: true,
+              minifySyntax: true,
+              minifyIdentifiers: true,
+              sourcemap: false,
+              treeShaking: false,
+              legalComments: 'none',
+              target: 'esnext',
+            },
+          );
+
+          if (result) resultingCodeBytes = result.code.length;
+        }
+
+        renderedSizes.set(path.relative(root, modId), resultingCodeBytes);
+
+        const resolveImportString = (importString: string) =>
+          this.resolve(importString, mod.id);
+
+        let isESM =
+          !mod.code ||
+          /(^\s*export\s+[\w\{]|^\s*import\s+[\w\{]|\bimport\()/ms.test(
+            mod.code,
+          );
+
+        const staticImportsMeta = createImportsMeta(
+          mod.importedIds,
+          'import-statement',
+          root,
+          resolveImportString,
+          mod.code,
         );
 
-        modsMeta.set(path.relative(config.root, modId), {
-          bytes: modBundleInfo?.originalLength ?? mod.code?.length ?? 0,
-          // TODO check for cjs
-          format: 'esm',
-          imports: await Promise.all(
-            // TODO consider dynamic imports
-            // eslint-disable-next-line no-loop-func
-            mod.importedIds.map(async (id: string) => {
-              toAnalyzeMods.add(id);
-              return {
-                path: path.relative(config.root, id),
-                kind: 'import-statement',
-                original: mod.code
-                  ? (await findOriginalImportName(id, mod.code, (id) =>
-                      this.resolve(id, mod.id),
-                    )) ?? id
-                  : id,
-              };
-            }),
-          ),
+        const dynamicImportsMeta = createImportsMeta(
+          mod.dynamicallyImportedIds,
+          'dynamic-import',
+          root,
+          resolveImportString,
+          mod.code,
+        );
+
+        const importsMeta = (
+          await Promise.all([...staticImportsMeta, ...dynamicImportsMeta])
+        ).reduce((acc, {importedId, ...meta}) => {
+          const isCjshelper =
+            importedId.endsWith('commonjsHelpers.js') ||
+            importedId.includes('?commonjs');
+
+          if (isCjshelper) {
+            isESM = false;
+            // const cjsHelperMod = this.getModuleInfo(importedId);
+            // const cjsHelperMod = workerFile.modules[importedId];
+            // if (cjsHelperMod) {
+            //   cjsHelperMod.renderedLength;
+            // }
+          } else {
+            toAnalyzeMods.add(importedId);
+            acc.push(meta);
+          }
+
+          return acc;
+        }, [] as Array<{path: string; kind: string; original: string}>);
+
+        modsMeta.set(path.relative(root, modId), {
+          bytes: originalCodeBytes,
+          format: isESM ? 'esm' : 'cjs',
+          imports: importsMeta,
         });
       }
 
@@ -146,7 +201,7 @@ function hydrogenBundleAnalyzer() {
       // );
 
       const analysisTemplate = await fs.readFile(
-        '../../packages/cli/src/lib/bundle/bundle-analyzer.html',
+        '../../packages/cli/assets/bundle/analyzer.html',
         'utf-8',
       );
 
@@ -196,4 +251,25 @@ async function findOriginalImportName(
       return match;
     }
   }
+
+  return filepath;
+}
+
+function createImportsMeta(
+  ids: readonly string[],
+  kind: string,
+  root: string,
+  resolveImportString: (id: string) => Promise<{id: string} | null>,
+  code: string | null,
+) {
+  return ids.map(async (importedId: string) => {
+    return {
+      importedId,
+      path: path.relative(root, importedId),
+      kind,
+      original: code
+        ? await findOriginalImportName(importedId, code, resolveImportString)
+        : importedId,
+    };
+  });
 }
