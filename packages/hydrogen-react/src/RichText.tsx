@@ -1,4 +1,4 @@
-import {createElement, Fragment, type ReactNode} from 'react';
+import {createElement, Fragment, type ReactNode, useMemo} from 'react';
 import type {RichTextASTNode} from './RichText.types.js';
 import {
   type CustomComponents,
@@ -23,12 +23,20 @@ export function RichText<ComponentGeneric extends React.ElementType = 'div'>({
   components,
   ...passthroughProps
 }: RichTextProps<ComponentGeneric>): JSX.Element {
-  const Wrapper = as ?? 'div';
-
-  let parsedData;
-
   try {
-    parsedData = JSON.parse(data) as RichTextASTNode;
+    const Wrapper = as ?? 'div';
+    const parsedData = useMemo(
+      () => JSON.parse(data) as RichTextASTNode,
+      [data],
+    );
+
+    return (
+      <Wrapper {...passthroughProps}>
+        {plain
+          ? richTextToString(parsedData)
+          : serializeRichTextASTNode(components, parsedData)}
+      </Wrapper>
+    );
   } catch (e) {
     throw new Error(
       'Parsing error. Make sure to pass a JSON string of rich text metafield',
@@ -37,14 +45,6 @@ export function RichText<ComponentGeneric extends React.ElementType = 'div'>({
       },
     );
   }
-
-  return (
-    <Wrapper {...passthroughProps}>
-      {plain
-        ? richTextToString(parsedData)
-        : serializeRichTextASTNode(components, parsedData)}
-    </Wrapper>
-  );
 }
 
 // This article helps understand the typing here https://www.benmvp.com/blog/polymorphic-react-components-typescript/ Ben is the best :)
