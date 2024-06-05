@@ -1,15 +1,6 @@
 import {createRequire} from 'node:module';
-import {fileURLToPath} from 'node:url';
 import {execa} from 'execa';
-import {
-  describe,
-  it,
-  expect,
-  vi,
-  beforeEach,
-  beforeAll,
-  afterAll,
-} from 'vitest';
+import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {
   inTemporaryDirectory,
   writeFile,
@@ -602,7 +593,7 @@ describe('upgrade', async () => {
     });
 
     it('shows up a notice if there are related dependencies to upgrade', async () => {
-      const hydrogenVersion = '2024.4.2';
+      const hydrogenVersion = '2024.4.3';
       await inTemporaryHydrogenRepo(
         async (targetPath) => {
           await expect(
