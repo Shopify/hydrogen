@@ -109,8 +109,8 @@ function serializeRichTextASTNode(
     case 'text': {
       const elements = (node.value ?? '')
         .split('\n')
-        .flatMap((value, subindex, allSubstrings) => {
-          const key = `${index}-${value + String(subindex)}`;
+        .flatMap((value, subindex) => {
+          const key = `${index}-${value}-${subindex}`;
           const textElement = createElement(
             Component as Exclude<CustomComponents['text'], undefined>,
             {
@@ -124,10 +124,10 @@ function serializeRichTextASTNode(
             },
           );
 
-          // Add a new line `<br>` for each substring except the last one
-          return subindex === allSubstrings.length - 1
+          // Add a `<br>` before each substring except the first one
+          return subindex === 0
             ? textElement
-            : [textElement, createElement('br', {key: `${key}-br`})];
+            : [createElement('br', {key: `${key}-br`}), textElement];
         });
 
       return elements.length > 1
