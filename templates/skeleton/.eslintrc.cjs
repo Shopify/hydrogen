@@ -14,5 +14,6 @@ module.exports = {
     'no-useless-escape': 'off',
     '@typescript-eslint/no-non-null-asserted-optional-chain': 'off',
     'no-case-declarations': 'off',
+    'no-console': ['warn', {allow: ['warn', 'error']}],
   },
 };
