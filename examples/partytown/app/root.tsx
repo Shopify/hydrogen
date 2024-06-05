@@ -52,7 +52,10 @@ export async function loader(args: LoaderFunctionArgs) {
       gtmContainerId: env.GTM_CONTAINER_ID,
     },
     {
-      headers: partytownAtomicHeaders(),
+      headers: {
+        ...partytownAtomicHeaders(),
+        'Set-Cookie': await args.context.session.commit(),
+      },
     },
   );
 }
