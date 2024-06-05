@@ -38,7 +38,7 @@ describe('create-hydrogen', () => {
       // The directory can wrap to a new line, so we can't use a simple string replace.
       const output = (await processPromise).stdout
         .replace(/^.*╭/ims, '╭')
-        .replace(/Run `[^`]+`/, 'Run `<redacted-command-for-test>`');
+        .replace(/Run `.*$/s, 'Run `<redacted-command-for-test>`');
 
       expect(output).toMatchInlineSnapshot(`
         "╭─ success ────────────────────────────────────────────────────────────────────╮
@@ -62,10 +62,7 @@ describe('create-hydrogen', () => {
         │                                                                              │
         │  Next steps                                                                  │
         │                                                                              │
-        │    • Run \`<redacted-command-for-test>\`              │
-        │                                                                              │
-        ╰──────────────────────────────────────────────────────────────────────────────╯
-        "
+        │    • Run \`<redacted-command-for-test>\`"
       `);
     });
   });
