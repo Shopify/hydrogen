@@ -1,5 +1,13 @@
 # @shopify/mini-oxygen
 
+## 3.0.3
+
+### Patch Changes
+
+- Update server in development when entry point (`<root>/server.js`) changes. ([#2153](https://github.com/Shopify/hydrogen/pull/2153)) by [@frandiox](https://github.com/frandiox)
+
+- Improve errors when a CJS dependency needs to be added to Vite's ssr.optimizeDeps.include. ([#2106](https://github.com/Shopify/hydrogen/pull/2106)) by [@frandiox](https://github.com/frandiox)
+
 ## 3.0.2
 
 ### Patch Changes

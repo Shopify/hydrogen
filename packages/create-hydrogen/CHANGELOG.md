@@ -1,5 +1,14 @@
 # @shopify/create-hydrogen
 
+## 4.3.10
+
+### Patch Changes
+
+- Update remix to v2.9.2 ([#2135](https://github.com/Shopify/hydrogen/pull/2135)) by [@michenly](https://github.com/michenly)
+
+- Updated dependencies [[`32d4c33e`](https://github.com/Shopify/hydrogen/commit/32d4c33e4421a9c56f62a8c392f5417edddd0402), [`27e51abf`](https://github.com/Shopify/hydrogen/commit/27e51abfc1f5444afa952c503886bfa12fc55c7e), [`7b838beb`](https://github.com/Shopify/hydrogen/commit/7b838beb7c43380ffc9c32c2bb9f34291912fa42), [`ca4cf045`](https://github.com/Shopify/hydrogen/commit/ca4cf045f7fb72ad98b62af7bd172ff8cf553de2), [`5a554b2e`](https://github.com/Shopify/hydrogen/commit/5a554b2e9d91894c2db8032f0c29666dce1ea3f2), [`5d6465b3`](https://github.com/Shopify/hydrogen/commit/5d6465b32d90052e5580fcb81d98427bcb8ad528), [`608389d6`](https://github.com/Shopify/hydrogen/commit/608389d6d69c6a9801935d528507c165d1dd4ccf), [`65239c76`](https://github.com/Shopify/hydrogen/commit/65239c76ca1d0b294b59b1ad53624485859c4da5)]:
+  - @shopify/cli-hydrogen@8.1.0
+
 ## 4.3.9
 
 ### Patch Changes

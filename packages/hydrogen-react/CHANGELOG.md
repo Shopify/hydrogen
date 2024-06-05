@@ -1,5 +1,30 @@
 # @shopify/hydrogen-react
 
+## 2024.4.3
+
+### Patch Changes
+
+- Fix shopify cookie domain setting ([#2142](https://github.com/Shopify/hydrogen/pull/2142)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Add a RichText component to easily render \`rich_text_field\` metafields. Thank you @bastienrobert for the original implementation. Example usage: ([#2144](https://github.com/Shopify/hydrogen/pull/2144)) by [@blittle](https://github.com/blittle)
+
+  ```tsx
+  import {RichText} from '@shopify/hydrogen-react';
+
+  export function MainRichText({metaFieldData}: {metaFieldData: string}) {
+    return (
+      <RichText
+        data={metaFieldData}
+        components={{
+          paragraph({node}) {
+            return <p className="customClass">{node.children}</p>;
+          },
+        }}
+      />
+    );
+  }
+  ```
+
 ## 2024.4.2
 
 ### Patch Changes

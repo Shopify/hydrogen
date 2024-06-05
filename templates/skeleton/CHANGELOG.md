@@ -1,5 +1,19 @@
 # skeleton
 
+## 2024.4.5
+
+### Patch Changes
+
+- Update remix to v2.9.2 ([#2135](https://github.com/Shopify/hydrogen/pull/2135)) by [@michenly](https://github.com/michenly)
+
+- `<Analytics>` and `useAnalytics` are now stable. ([#2141](https://github.com/Shopify/hydrogen/pull/2141)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Update the skeleton template to use React state in the aside dialogs ([#2088](https://github.com/Shopify/hydrogen/pull/2088)) by [@blittle](https://github.com/blittle)
+
+- Updated dependencies [[`fe82119f`](https://github.com/Shopify/hydrogen/commit/fe82119f5e75df5a0f727bab6a2186e679abc73d), [`32d4c33e`](https://github.com/Shopify/hydrogen/commit/32d4c33e4421a9c56f62a8c392f5417edddd0402), [`8eea75ec`](https://github.com/Shopify/hydrogen/commit/8eea75ec5ead4de98d7d1b2baedce8511029bcae), [`27e51abf`](https://github.com/Shopify/hydrogen/commit/27e51abfc1f5444afa952c503886bfa12fc55c7e), [`f29c9085`](https://github.com/Shopify/hydrogen/commit/f29c9085eb1adbde9e01226484eba8a85b5074ed), [`7b838beb`](https://github.com/Shopify/hydrogen/commit/7b838beb7c43380ffc9c32c2bb9f34291912fa42), [`d702aec2`](https://github.com/Shopify/hydrogen/commit/d702aec2214646a78cdafc2c25d510489db73f6d), [`ca4cf045`](https://github.com/Shopify/hydrogen/commit/ca4cf045f7fb72ad98b62af7bd172ff8cf553de2), [`5a554b2e`](https://github.com/Shopify/hydrogen/commit/5a554b2e9d91894c2db8032f0c29666dce1ea3f2), [`27e51abf`](https://github.com/Shopify/hydrogen/commit/27e51abfc1f5444afa952c503886bfa12fc55c7e), [`5d6465b3`](https://github.com/Shopify/hydrogen/commit/5d6465b32d90052e5580fcb81d98427bcb8ad528), [`608389d6`](https://github.com/Shopify/hydrogen/commit/608389d6d69c6a9801935d528507c165d1dd4ccf), [`9dfd1cfe`](https://github.com/Shopify/hydrogen/commit/9dfd1cfeb3e96c6d3426427a4b5d97ef475dab6d), [`7def3e9f`](https://github.com/Shopify/hydrogen/commit/7def3e9fa6e28f4fde7af43e2f346aa32267c38e), [`65239c76`](https://github.com/Shopify/hydrogen/commit/65239c76ca1d0b294b59b1ad53624485859c4da5), [`ca7f2888`](https://github.com/Shopify/hydrogen/commit/ca7f28887367a4882e57a67c4e248b0f0bba1c9b)]:
+  - @shopify/hydrogen@2024.4.3
+  - @shopify/cli-hydrogen@8.1.0
+
 ## 2024.4.4
 
 ### Patch Changes
