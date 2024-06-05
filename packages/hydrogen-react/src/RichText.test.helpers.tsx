@@ -32,6 +32,16 @@ export const RICH_TEXT_PARAGRAPH: RichTextASTNode = {
   ],
 };
 
+export const RICH_TEXT_NEW_LINES: RichTextASTNode = {
+  type: 'paragraph',
+  children: [
+    {
+      type: 'text',
+      value: 'Paragraph\nwith\nlots\nof\nnew\nlines',
+    },
+  ],
+};
+
 export const RICH_TEXT_COMPLEX_PARAGRAPH: RichTextASTNode = {
   type: 'paragraph',
   children: [
