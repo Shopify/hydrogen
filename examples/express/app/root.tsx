@@ -65,7 +65,7 @@ export async function loader({context}: LoaderFunctionArgs) {
   });
 }
 
-export function Layout({children}: {children?: React.ReactNode}) {
+function Layout({children}: {children?: React.ReactNode}) {
   const data = useRouteLoaderData<typeof loader>('root');
   const nonce = useNonce();
 
@@ -98,7 +98,11 @@ export function Layout({children}: {children?: React.ReactNode}) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <Layout>
+      <Outlet />
+    </Layout>
+  );
 }
 
 const CART_QUERY = `#graphql
