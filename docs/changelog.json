@@ -1,7 +1,102 @@
 {
   "url": "https://github.com/Shopify/hydrogen/pulls?q=is%3Apr+is%3Aclosed+%5Bci%5D+release+in%3Atitle+is%3Amerged",
-  "version": "2024.4.2",
+  "version": "2024.4.3",
   "releases": [
+    {
+      "title": "Optimistic cart, RichText component, stable analytics",
+      "version": "2024.4.3",
+      "hash": "60534dc36d58e718d1e420c719aadf4602bf72d7",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2104",
+      "commit": "https://github.com/Shopify/hydrogen/pull/2104/commits/60534dc36d58e718d1e420c719aadf4602bf72d7",
+      "dependencies": {
+        "@remix-run/react": "^2.9.2",
+        "@shopify/cli-hydrogen": "^8.1.0",
+        "@shopify/hydrogen": "2024.4.3",
+        "@shopify/remix-oxygen": "2.0.4"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.9.2",
+        "@remix-run/server-runtime": "^2.9.2",
+        "@shopify/cli": "3.60.0",
+        "@shopify/oxygen-workers-types": "4.0.0",
+        "typescript": "^5.2.2",
+        "@graphql-codegen/cli": "5.0.2",
+        "@shopify/mini-oxygen": "^3.0.3",
+        "@shopify/hydrogen-codegen": "^0.3.1"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        },
+        "@graphql-codegen/cli": {
+          "required": true
+        },
+        "@shopify/mini-oxygen": {
+          "required": true
+        },
+        "@shopify/hydrogen-codegen": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Update Remix to 2.9.2",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2135",
+          "id": "2135"
+        },
+        {
+          "title": "Auto-optimize dependencies in development",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2106",
+          "id": "2106"
+        },
+        {
+          "title": "Support Vite projects with the debug cpu command",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2124",
+          "id": "2124"
+        },
+        {
+          "title": "Fix storefrontRedirect to strip trailing slashes when querying for redirects",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2110",
+          "id": "2110"
+        },
+        {
+          "title": "Improve VariantSelector to return variant object in option values",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2099",
+          "id": "2099"
+        },
+        {
+          "title": "Fix shopify cookie with leading dot domain",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2142",
+          "id": "2142"
+        }
+      ],
+      "features": [
+        {
+          "title": "Optimistic Cart",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2069",
+          "id": "2069"
+        },
+        {
+          "title": "Rich Text Component",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2144",
+          "id": "2144"
+        },
+        {
+          "title": "Stable Analytics",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2141",
+          "id": "2141"
+        }
+      ]
+    },
     {
       "title": "B2B example, Analytics improvements, Fixes to upgrade command, CSP rules",
       "version": "2024.4.2",
@@ -77,7 +172,7 @@
       "features": [
         {
           "title": "Adding support for B2B to the customer account client and cart handler to store and manage buyer context. Currently Unstable.",
-          "pr": "https://github.com/Shopify/hydrogen/pull/20591886",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2059",
           "id": "2059"
         }
       ]
