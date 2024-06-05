@@ -1,5 +1,5 @@
 ---
-'@shopify/hydrogen-react': minor
+'@shopify/hydrogen-react': patch
 ---
 
 Add a RichText component to easily render \`rich_text_field\` metafields. Thank you @bastienrobert for the original implementation. Example usage:
