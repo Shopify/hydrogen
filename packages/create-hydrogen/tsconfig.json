@@ -8,6 +8,11 @@
     "moduleResolution": "NodeNext",
     "rootDir": "src",
     "noUncheckedIndexedAccess": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "paths": {
+      // Ensure we use the source code of the CLI,
+      // not the compiled version from `dist`.
+      "@shopify/cli-hydrogen/*": ["../cli/src/*"]
+    }
   }
 }

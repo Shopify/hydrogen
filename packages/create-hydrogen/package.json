@@ -9,7 +9,7 @@
   "type": "module",
   "scripts": {
     "build": "tsup --clean",
-    "dev": "tsup --watch",
+    "dev": "tsup --watch src --watch ../cli/src",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

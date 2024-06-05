@@ -19,7 +19,6 @@ export default defineConfig({
     '@parcel/watcher', // Not used but but needs to resolve it
     'react-devtools-core', // Not used but breaks the build otherwise
   ],
-  noExternal: ['@shopify/cli-hydrogen'],
   // Needed for some CJS dependencies:
   shims: true,
   banner: {
