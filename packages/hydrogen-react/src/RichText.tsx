@@ -1,4 +1,4 @@
-import {createElement, type ReactNode} from 'react';
+import {createElement, Fragment, type ReactNode, useMemo} from 'react';
 import type {RichTextASTNode} from './RichText.types.js';
 import {
   type CustomComponents,
@@ -23,28 +23,28 @@ export function RichText<ComponentGeneric extends React.ElementType = 'div'>({
   components,
   ...passthroughProps
 }: RichTextProps<ComponentGeneric>): JSX.Element {
-  const Wrapper = as ?? 'div';
-
-  let parsedData;
-
   try {
-    parsedData = JSON.parse(data) as RichTextASTNode;
+    const Wrapper = as ?? 'div';
+    const parsedData = useMemo(
+      () => JSON.parse(data) as RichTextASTNode,
+      [data],
+    );
+
+    return (
+      <Wrapper {...passthroughProps}>
+        {plain
+          ? richTextToString(parsedData)
+          : serializeRichTextASTNode(components, parsedData)}
+      </Wrapper>
+    );
   } catch (e) {
     throw new Error(
-      'Parsing error. Make sure to pass a JSON string of rich text metafield',
+      '[h2:error:RichText] Parsing error. Make sure to pass a JSON string of rich text metafield',
       {
         cause: e,
       },
     );
   }
-
-  return (
-    <Wrapper {...passthroughProps}>
-      {plain
-        ? richTextToString(parsedData)
-        : serializeRichTextASTNode(components, parsedData)}
-    </Wrapper>
-  );
 }
 
 // This article helps understand the typing here https://www.benmvp.com/blog/polymorphic-react-components-typescript/ Ben is the best :)
@@ -106,19 +106,34 @@ function serializeRichTextASTNode(
           },
         },
       );
-    case 'text':
-      return createElement(
-        Component as Exclude<CustomComponents['text'], undefined>,
-        {
-          key: index,
-          node: {
-            type: 'text',
-            italic: node.italic,
-            bold: node.bold,
-            value: node.value,
-          },
-        },
-      );
+    case 'text': {
+      const elements = (node.value ?? '')
+        .split('\n')
+        .flatMap((value, subindex) => {
+          const key = `${index}-${value}-${subindex}`;
+          const textElement = createElement(
+            Component as Exclude<CustomComponents['text'], undefined>,
+            {
+              key,
+              node: {
+                type: 'text',
+                italic: node.italic,
+                bold: node.bold,
+                value,
+              },
+            },
+          );
+
+          // Add a `<br>` before each substring except the first one
+          return subindex === 0
+            ? textElement
+            : [createElement('br', {key: `${key}-br`}), textElement];
+        });
+
+      return elements.length > 1
+        ? createElement(Fragment, {key: index}, elements)
+        : elements[0];
+    }
     case 'link':
       return createElement(
         Component as Exclude<CustomComponents['link'], undefined>,
