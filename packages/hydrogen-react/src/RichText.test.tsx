@@ -8,6 +8,7 @@ import {
   RICH_TEXT_ORDERED_LIST,
   RICH_TEXT_UNORDERED_LIST,
   RICH_TEXT_CONTENT,
+  RICH_TEXT_NEW_LINES,
 } from './RichText.test.helpers.js';
 import {RichText} from './RichText.js';
 import {render, screen} from '@testing-library/react';
@@ -42,6 +43,16 @@ describe('<RichText />', () => {
   it('renders <RichText /> with a paragraph data', () => {
     render(<RichText data={JSON.stringify(RICH_TEXT_PARAGRAPH)} />);
     expect(screen.getByText('Paragraph').tagName).toBe('P');
+  });
+
+  it('renders <RichText /> with a newlines', async () => {
+    const {container} = render(
+      <RichText data={JSON.stringify(RICH_TEXT_NEW_LINES)} />,
+    );
+
+    expect(container.querySelector('p')?.innerHTML).toMatchInlineSnapshot(
+      `"Paragraph<br>with<br>lots<br>of<br>new<br>lines"`,
+    );
   });
 
   it('renders <RichText /> with a complex paragraph data', () => {
