@@ -1,32 +1,24 @@
-import {describe, it, beforeAll, expect} from 'vitest';
+import path from 'node:path';
+import fs from 'node:fs/promises';
+import {createRequire} from 'node:module';
 import {execa} from 'execa';
-import {fileExists, inTemporaryDirectory} from '@shopify/cli-kit/node/fs';
-import {dirname, resolvePath} from '@shopify/cli-kit/node/path';
-import {findUpAndReadPackageJson} from '@shopify/cli-kit/node/node-package-manager';
+import {temporaryDirectoryTask} from 'tempy';
+import {describe, it, expect} from 'vitest';
 
-describe('create-hydrogen', async () => {
+describe('create-hydrogen', () => {
   it('creates a quickstart project using the compiled files', async () => {
-    const packageJson = await findUpAndReadPackageJson('.').catch(() => null);
-
-    expect(
-      packageJson?.content,
-      'Package.json for create-hydrogen not found',
-    ).toBeTruthy();
-
-    const bin = resolvePath(
-      dirname(packageJson?.path ?? ''),
-      (packageJson?.content as any)?.bin,
-    );
+    const packageJson = createRequire(import.meta.url)('./package.json');
+    const bin = path.resolve(packageJson.bin);
 
     expect(bin).toMatch(/\bdist\/.*\.m?js$/);
 
     await expect(
-      fileExists(bin),
+      fs.stat(bin).catch(() => false),
       `It looks like there are no compiled files for create-hydrogen in ${bin}.` +
         `Please build the project before running the tests`,
-    ).resolves.toBe(true);
+    ).resolves.toBeTruthy();
 
-    await inTemporaryDirectory(async (tmpDir) => {
+    await temporaryDirectoryTask(async (tmpDir) => {
       const processPromise = execa('node', [
         bin,
         '--quickstart',
@@ -38,8 +30,8 @@ describe('create-hydrogen', async () => {
       await expect(processPromise, 'create-app process').resolves.toBeTruthy();
 
       await expect(
-        fileExists(resolvePath(tmpDir, 'package.json')),
-      ).resolves.toBe(true);
+        fs.stat(path.resolve(tmpDir, 'package.json')).catch(() => false),
+      ).resolves.toBeTruthy();
 
       // Replace the temporary directory with a placeholder to avoid snapshot noise.
       // The directory can wrap to a new line, so we can't use a simple string replace.
