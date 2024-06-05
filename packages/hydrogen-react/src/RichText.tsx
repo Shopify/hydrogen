@@ -39,7 +39,7 @@ export function RichText<ComponentGeneric extends React.ElementType = 'div'>({
     );
   } catch (e) {
     throw new Error(
-      'Parsing error. Make sure to pass a JSON string of rich text metafield',
+      '[h2:error:RichText] Parsing error. Make sure to pass a JSON string of rich text metafield',
       {
         cause: e,
       },
