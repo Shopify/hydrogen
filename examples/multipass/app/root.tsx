@@ -135,12 +135,18 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
   const cart = context.cart.get();
 
   // defer the footer query (below the fold)
-  const footer = context.storefront.query(FOOTER_QUERY, {
-    cache: context.storefront.CacheLong(),
-    variables: {
-      footerMenuHandle: 'footer', // Adjust to your footer menu handle
-    },
-  });
+  const footer = context.storefront
+    .query(FOOTER_QUERY, {
+      cache: context.storefront.CacheLong(),
+      variables: {
+        footerMenuHandle: 'footer', // Adjust to your footer menu handle
+      },
+    })
+    .catch((error) => {
+      // Log query errors, but don't throw them so the page can still render
+      console.error(error);
+      return null;
+    });
   return {cart, footer};
 }
 

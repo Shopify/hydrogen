@@ -103,9 +103,16 @@ function loadDeferredData({context, params}: LoaderFunctionArgs) {
   // into it's own separate query that is deferred. So there's a brief moment
   // where variant options might show as available when they're not, but after
   // this deffered query resolves, the UI will update.
-  const variants = context.storefront.query(VARIANTS_QUERY, {
-    variables: {handle: params.handle!},
-  });
+  const variants = context.storefront
+    .query(VARIANTS_QUERY, {
+      variables: {handle: params.handle!},
+    })
+    .catch((error) => {
+      // Log query errors, but don't throw them so the page can still render
+      console.error(error);
+      return null;
+    });
+
   return {
     variants,
   };
