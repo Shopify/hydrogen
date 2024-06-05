@@ -1,14 +1,14 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src"],
+  "include": ["src", "*.test.ts"],
   "exclude": ["dist", "__tests__", "node_modules", ".turbo"],
   "compilerOptions": {
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "rootDir": "src",
     "noUncheckedIndexedAccess": true,
     "outDir": "dist",
+    "types": ["node"],
     "paths": {
       // Ensure we use the source code of the CLI,
       // not the compiled version from `dist`.

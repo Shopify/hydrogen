@@ -10,6 +10,7 @@
   "scripts": {
     "build": "tsup --clean",
     "dev": "tsup --watch src --watch ../cli/src",
+    "test": "vitest run --test-timeout=20000",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
