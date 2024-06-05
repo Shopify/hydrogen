@@ -86,16 +86,16 @@ function FeaturedCollection({
 function RecommendedProducts({
   products,
 }: {
-  products: Promise<RecommendedProductsQuery>;
+  products: Promise<RecommendedProductsQuery | null>;
 }) {
   return (
     <div className="recommended-products">
       <h2>Recommended Products</h2>
       <Suspense fallback={<div>Loading...</div>}>
         <Await resolve={products}>
-          {({products}) => (
+          {(response) => (
             <div className="recommended-products-grid">
-              {products.nodes.map((product) => (
+              {response?.products.nodes.map((product) => (
                 <Link
                   key={product.id}
                   className="recommended-product"

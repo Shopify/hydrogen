@@ -195,7 +195,7 @@ function ProductMain({
 }: {
   product: ProductFragment;
   selectedVariant: ProductFragment['selectedVariant'];
-  variants: Promise<ProductVariantsQuery>;
+  variants: Promise<ProductVariantsQuery | null>;
 }) {
   const {title, descriptionHtml} = product;
   return (
@@ -220,7 +220,7 @@ function ProductMain({
             <ProductForm
               product={product}
               selectedVariant={selectedVariant}
-              variants={data.product?.variants.nodes || []}
+              variants={data?.product?.variants.nodes || []}
             />
           )}
         </Await>

@@ -207,7 +207,7 @@ function ProductMain({
 }: {
   product: ProductFragment;
   selectedVariant: ProductFragment['selectedVariant'];
-  variants: Promise<ProductVariantsQuery>;
+  variants: Promise<ProductVariantsQuery | null>;
 }) {
   const {title, descriptionHtml} = product;
   return (
@@ -232,7 +232,7 @@ function ProductMain({
             <ProductForm
               product={product}
               selectedVariant={selectedVariant}
-              variants={data.product?.variants.nodes || []}
+              variants={data?.product?.variants.nodes || []}
             />
           )}
         </Await>
@@ -281,14 +281,14 @@ function ProductForm({
 }: {
   product: ProductFragment;
   selectedVariant: ProductFragment['selectedVariant'];
-  variants: Array<ProductVariantFragment>;
+  variants: Array<ProductVariantFragment> | null;
 }) {
   return (
     <div className="product-form">
       <VariantSelector
         handle={product.handle}
         options={product.options}
-        variants={variants}
+        variants={variants ?? []}
       >
         {({option}) => <ProductOptions key={option.name} option={option} />}
       </VariantSelector>
