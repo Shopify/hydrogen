@@ -45,7 +45,7 @@ describe('<RichText />', () => {
     expect(screen.getByText('Paragraph').tagName).toBe('P');
   });
 
-  it('renders <RichText /> with a newlines', async () => {
+  it('renders <RichText /> with a newlines', () => {
     const {container} = render(
       <RichText data={JSON.stringify(RICH_TEXT_NEW_LINES)} />,
     );
