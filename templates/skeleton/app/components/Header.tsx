@@ -1,12 +1,16 @@
 import {Suspense} from 'react';
 import {Await, NavLink} from '@remix-run/react';
-import {type CartViewPayload, useAnalytics} from '@shopify/hydrogen';
+import {
+  type CartReturn,
+  type CartViewPayload,
+  useAnalytics,
+} from '@shopify/hydrogen';
 import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
 import {useAside} from '~/components/Aside';
 
 interface HeaderProps {
   header: HeaderQuery;
-  cart: Promise<CartApiQueryFragment | null>;
+  cart: CartReturn | null;
   isLoggedIn: Promise<boolean>;
   publicStoreDomain: string;
 }

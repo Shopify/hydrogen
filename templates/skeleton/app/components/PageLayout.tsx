@@ -1,10 +1,4 @@
-import {Await} from '@remix-run/react';
-import {Suspense} from 'react';
-import type {
-  CartApiQueryFragment,
-  FooterQuery,
-  HeaderQuery,
-} from 'storefrontapi.generated';
+import type {FooterQuery, HeaderQuery} from 'storefrontapi.generated';
 import {Aside} from '~/components/Aside';
 import {Footer} from '~/components/Footer';
 import {Header, HeaderMenu} from '~/components/Header';
@@ -13,9 +7,10 @@ import {
   PredictiveSearchForm,
   PredictiveSearchResults,
 } from '~/components/Search';
+import type {CartReturn} from '@shopify/hydrogen';
 
 interface PageLayoutProps {
-  cart: Promise<CartApiQueryFragment | null>;
+  cart: CartReturn | null;
   footer: Promise<FooterQuery | null>;
   header: HeaderQuery;
   isLoggedIn: Promise<boolean>;
@@ -57,13 +52,11 @@ export function PageLayout({
 function CartAside({cart}: {cart: PageLayoutProps['cart']}) {
   return (
     <Aside type="cart" heading="CART">
-      <Suspense fallback={<p>Loading cart ...</p>}>
-        <Await resolve={cart}>
-          {(cart) => {
-            return <CartMain cart={cart!} layout="aside" />;
-          }}
-        </Await>
-      </Suspense>
+      {cart ? (
+        <CartMain cart={cart!} layout="aside" />
+      ) : (
+        <p>Loading cart ...</p>
+      )}
     </Aside>
   );
 }
