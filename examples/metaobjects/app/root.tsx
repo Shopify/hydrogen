@@ -79,33 +79,26 @@ export async function loader({context}: LoaderFunctionArgs) {
     },
   });
 
-  return defer(
-    {
-      cart: cartPromise,
-      footer: footerPromise,
-      header: await headerPromise,
-      isLoggedIn: isLoggedInPromise,
-      publicStoreDomain,
-      shop: getShopAnalytics({
-        storefront,
-        publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
-      }),
-      consent: {
-        checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
-        storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-      },
-      /***********************************************/
-      /**********  EXAMPLE UPDATE STARTS  ************/
-      publictoreSubdomain: context.env.PUBLIC_SHOPIFY_STORE_DOMAIN,
-      /**********   EXAMPLE UPDATE END   ************/
-      /***********************************************/
+  return defer({
+    cart: cartPromise,
+    footer: footerPromise,
+    header: await headerPromise,
+    isLoggedIn: isLoggedInPromise,
+    publicStoreDomain,
+    shop: getShopAnalytics({
+      storefront,
+      publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
+    }),
+    consent: {
+      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
+      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
     },
-    {
-      headers: {
-        'Set-Cookie': await context.session.commit(),
-      },
-    },
-  );
+    /***********************************************/
+    /**********  EXAMPLE UPDATE STARTS  ************/
+    publictoreSubdomain: context.env.PUBLIC_SHOPIFY_STORE_DOMAIN,
+    /**********   EXAMPLE UPDATE END   ************/
+    /***********************************************/
+  });
 }
 
 function Layout({children}: {children?: React.ReactNode}) {

@@ -166,9 +166,6 @@ export function createCustomerAccountClient({
         clearSession(session);
 
         const authFailResponse = authStatusHandler();
-        if (authFailResponse instanceof Response) {
-          authFailResponse.headers.set('Set-Cookie', await session.commit());
-        }
         throw authFailResponse;
       }
 
@@ -378,11 +375,7 @@ export function createCustomerAccountClient({
       loginUrl.searchParams.append('code_challenge', challenge);
       loginUrl.searchParams.append('code_challenge_method', 'S256');
 
-      return redirect(loginUrl.toString(), {
-        headers: {
-          'Set-Cookie': await session.commit(),
-        },
-      });
+      return redirect(loginUrl.toString());
     },
 
     logout: async (options?: LogoutOptions) => {
@@ -406,11 +399,7 @@ export function createCustomerAccountClient({
 
       clearSession(session);
 
-      return redirect(logoutUrl, {
-        headers: {
-          'Set-Cookie': await session.commit(),
-        },
-      });
+      return redirect(logoutUrl);
     },
     isLoggedIn,
     handleAuthStatus,
@@ -430,9 +419,6 @@ export function createCustomerAccountClient({
         throw new BadRequest(
           'Unauthorized',
           'No code or state parameter found in the redirect URL.',
-          {
-            'Set-Cookie': await session.commit(),
-          },
         );
       }
 
@@ -442,9 +428,6 @@ export function createCustomerAccountClient({
         throw new BadRequest(
           'Unauthorized',
           'The session state does not match the state parameter. Make sure that the session is configured correctly and passed to `createCustomerAccountClient`.',
-          {
-            'Set-Cookie': await session.commit(),
-          },
         );
       }
 
@@ -543,11 +526,7 @@ export function createCustomerAccountClient({
 
       await exchangeForStorefrontCustomerAccessToken();
 
-      return redirect(redirectPath || DEFAULT_REDIRECT_PATH, {
-        headers: {
-          'Set-Cookie': await session.commit(),
-        },
-      });
+      return redirect(redirectPath || DEFAULT_REDIRECT_PATH);
     },
     UNSTABLE_setBuyer: setBuyer,
     UNSTABLE_getBuyer: getBuyer,

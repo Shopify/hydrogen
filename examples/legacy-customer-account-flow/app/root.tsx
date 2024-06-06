@@ -215,7 +215,6 @@ async function validateCustomerAccessToken(
 
   if (customerAccessTokenExpired) {
     session.unset('customerAccessToken');
-    headers.append('Set-Cookie', await session.commit());
   } else {
     isLoggedIn = true;
   }

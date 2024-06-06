@@ -111,28 +111,21 @@ export async function loader({context}: LoaderFunctionArgs) {
     },
   });
 
-  return defer(
-    {
-      cart: cartPromise,
-      footer: footerPromise,
-      header: await headerPromise,
-      isLoggedIn: isLoggedInPromise,
-      publicStoreDomain,
-      shop: getShopAnalytics({
-        storefront,
-        publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
-      }),
-      consent: {
-        checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
-        storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-      },
+  return defer({
+    cart: cartPromise,
+    footer: footerPromise,
+    header: await headerPromise,
+    isLoggedIn: isLoggedInPromise,
+    publicStoreDomain,
+    shop: getShopAnalytics({
+      storefront,
+      publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
+    }),
+    consent: {
+      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
+      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
     },
-    {
-      headers: {
-        'Set-Cookie': await context.session.commit(),
-      },
-    },
-  );
+  });
 }
 
 function Layout({children}: {children?: React.ReactNode}) {
