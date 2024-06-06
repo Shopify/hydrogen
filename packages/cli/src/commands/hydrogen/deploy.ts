@@ -98,6 +98,14 @@ export default class Deploy extends Command {
         'Generate an authentication bypass token, which can be used to perform end-to-end tests against the deployment.',
       required: false,
       default: false,
+      env: 'AUTH_BYPASS_TOKEN',
+    }),
+    'auth-bypass-token-duration': Flags.string({
+      description:
+        'Specify the duration (in hours) up to 12 hours for the authentication bypass token. Defaults to `2`',
+      required: false,
+      env: 'AUTH_BYPASS_TOKEN_DURATION',
+      dependsOn: ['auth-bypass-token'],
     }),
     'build-command': Flags.string({
       description:
@@ -178,6 +186,7 @@ export default class Deploy extends Command {
 }
 
 interface OxygenDeploymentOptions {
+  authBypassTokenDuration?: string;
   authBypassToken: boolean;
   buildCommand?: string;
   defaultEnvironment: boolean;
@@ -226,6 +235,7 @@ export async function runDeploy(
   options: OxygenDeploymentOptions,
 ): Promise<void> {
   const {
+    authBypassTokenDuration,
     authBypassToken: generateAuthBypassToken,
     buildCommand,
     defaultEnvironment,
@@ -458,6 +468,7 @@ export async function runDeploy(
       userChosenEnvironmentTag ||
       fallbackEnvironmentTag,
     generateAuthBypassToken,
+    authBypassTokenDuration,
     verificationMaxDuration: 180,
     metadata: {
       ...(metadataDescription ? {description: metadataDescription} : {}),
