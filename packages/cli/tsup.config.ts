@@ -7,6 +7,7 @@ import {
   ASSETS_STARTER_DIR,
   getSkeletonSourceDir,
 } from './src/lib/build';
+import {replaceFileContent} from './src/lib/file';
 
 // Cleanup dist folder before buid/dev.
 fs.removeSync('./dist');
@@ -39,15 +40,22 @@ export default defineConfig([
 
       // These files need to be packaged/distributed with the CLI
       // so that we can use them in the `generate` command.
-      await fs.copy(
-        getSkeletonSourceDir(),
-        `${outDir}/${ASSETS_DIR_PREFIX}/${ASSETS_STARTER_DIR}`,
-        {
-          filter: (filepath: string) =>
-            !/node_modules|\.shopify|\.cache|\.turbo|build|dist/gi.test(
-              filepath,
-            ),
-        },
+      const starterOutDir = path.join(
+        outDir,
+        ASSETS_DIR_PREFIX,
+        ASSETS_STARTER_DIR,
+      );
+
+      await fs.copy(getSkeletonSourceDir(), starterOutDir, {
+        filter: (filepath: string) =>
+          !/node_modules|\.shopify|\.cache|\.turbo|build|dist/gi.test(filepath),
+      });
+
+      await replaceFileContent(
+        path.join(starterOutDir, 'package.json'),
+        false,
+        (content) =>
+          content.replace(/^\s*"@shopify\/cli-hydrogen": "[^"]+",?\n/m, ''),
       );
 
       console.log(
