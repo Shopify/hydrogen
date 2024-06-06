@@ -77,6 +77,13 @@ export function generateTypeDefs(sourceFile: SourceFile, code: string) {
   if (filepath.includes('routes') || filepath.includes('root.')) {
     const source = sourceFile.getText();
 
+    if (/RootLoader/.test(source)) {
+      code = code.replace(
+        /^\s+?const\s+([\w\d]+|\{[\w\d\s,.]+\})\s+?=\s+?useRouteLoaderData\(['"]root['"]\)/gms,
+        '/** @type {RootLoader} */\n$&',
+      );
+    }
+
     if (/(function loader\(|const loader =)/.test(source)) {
       typedefs.push(
         `/** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof loader>} LoaderReturnData */`,
@@ -86,6 +93,22 @@ export function generateTypeDefs(sourceFile: SourceFile, code: string) {
         /^\s+?const\s+([\w\d]+|\{[\w\d\s,.]+\})\s+?=\s+?useLoaderData\(\)/gms,
         '/** @type {LoaderReturnData} */\n$&',
       );
+
+      if (
+        /(function Layout\(|const Layout =)/.test(source) &&
+        filepath.includes('root.')
+      ) {
+        const rootLoaderTypeDef = `/** @typedef {LoaderReturnData} RootLoader */`;
+        const existingRootLoaderIndex = typedefs.findIndex((t) =>
+          /RootLoader/.test(t),
+        );
+
+        if (existingRootLoaderIndex >= 0) {
+          typedefs.splice(existingRootLoaderIndex, 1, rootLoaderTypeDef);
+        } else {
+          typedefs.push(rootLoaderTypeDef);
+        }
+      }
     }
 
     if (/(function action\(|const action =)/.test(source)) {

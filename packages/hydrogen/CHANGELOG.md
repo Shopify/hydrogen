@@ -1,5 +1,129 @@
 # @shopify/hydrogen
 
+## 2024.4.3
+
+### Patch Changes
+
+- Add the `useOptimisticCart()` hook. This hook takes the cart object as a parameter, and processes all pending cart actions, locally mutating the cart with optimistic state. An optimistic cart makes cart actions immediately render in the browser while the action syncs to the server. This increases the perceived performance of the application. ([#2069](https://github.com/Shopify/hydrogen/pull/2069)) by [@blittle](https://github.com/blittle)
+
+  Example usage:
+
+  ```tsx
+  // Root loader returns the cart data
+  export async function loader({context}: LoaderFunctionArgs) {
+    return defer({
+      cart: context.cart.get(),
+    });
+  }
+
+  // The cart component renders each line item in the cart.
+  export function Cart({cart}) {
+    if (!cart?.lines?.nodes?.length) return <p>Nothing in cart</p>;
+
+    return cart.lines.nodes.map((line) => (
+      <div key={line.id}>
+        <Link to={`/products${line.merchandise.product.handle}`}>
+          {line.merchandise.product.title}
+        </Link>
+      </div>
+    ));
+  }
+  ```
+
+  The problem with this code is that it can feel slow. If a new item is added to the cart, it won't render until the server action completes and the client revalidates the root loader with the new cart data.
+
+  If we update the cart implementation with a new `useOptimisticCart()` hook, Hydrogen can take the pending add to cart action, and apply it locally with the existing cart data:
+
+  ```tsx
+  export function Cart({cart}) {
+    const optimisticCart = useOptimisticCart(cart);
+
+    if (!optimisticCart?.lines?.nodes?.length) return <p>Nothing in cart</p>;
+
+    return optimisticCart.lines.nodes.map((line) => (
+      <div key={line.id}>
+        <Link to={`/products${line.merchandise.product.handle}`}>
+          {line.merchandise.product.title}
+        </Link>
+      </div>
+    ));
+  }
+  ```
+
+  This works automatically with the `CartForm.ACTIONS.LinesUpdate` and `CartForm.ACTIONS.LinesRemove`. To make it work with `CartForm.Actions.LinesAdd`, update the `CartForm` to include the `selectedVariant`:
+
+  ```tsx
+  export function ProductCard({product}) {
+    return (
+      <div>
+        <h2>{product.title}</h2>
+        <CartForm
+          route="/cart"
+          action={CartForm.ACTIONS.LinesAdd}
+          inputs={{
+            lines: [
+              {
+                merchandiseId: product.selectedVariant.id,
+                quantity: 1,
+                // The whole selected variant is not needed on the server, used in
+                // the client to render the product until the server action resolves
+                selectedVariant: product.selectedVariant,
+              },
+            ],
+          }}
+        >
+          <button type="submit">Add to cart</button>
+        </CartForm>
+      </div>
+    );
+  }
+  ```
+
+  Sometimes line items need to render differently when they have yet to process on the server. A new isOptimistic flag is added to each line item:
+
+  ```tsx
+  export function Cart({cart}) {
+    const optimisticCart = useOptimisticCart(cart);
+
+    if (!cart?.lines?.nodes?.length) return <p>Nothing in cart</p>;
+
+    return optimisticCart.lines.nodes.map((line) => (
+      <div key={line.id} style={{opacity: line.isOptimistic ? 0.8 : 1}}>
+        <Link to={`/products${line.merchandise.product.handle}`}>
+          {line.merchandise.product.title}
+        </Link>
+        <CartForm
+          route="/cart"
+          action={CartForm.ACTIONS.LinesRemove}
+          inputs={{lineIds}}
+          disabled={line.isOptimistic}
+        >
+          <button type="submit">Remove</button>
+        </CartForm>
+      </div>
+    ));
+  }
+  ```
+
+- Adds type support for the script-src-elem directive for CSPs ([#2105](https://github.com/Shopify/hydrogen/pull/2105)) by [@altonchaney](https://github.com/altonchaney)
+
+- Fix `storefrontRedirect` to strip trailing slashes when querying for redirects. Resolves [#2090](https://github.com/Shopify/hydrogen/issues/2090) ([#2110](https://github.com/Shopify/hydrogen/pull/2110)) by [@blittle](https://github.com/blittle)
+
+- Ignore `/favicon.ico` route in Subrequest Profiler. ([#2180](https://github.com/Shopify/hydrogen/pull/2180)) by [@frandiox](https://github.com/frandiox)
+
+- Improve errors when a CJS dependency needs to be added to Vite's ssr.optimizeDeps.include. ([#2106](https://github.com/Shopify/hydrogen/pull/2106)) by [@frandiox](https://github.com/frandiox)
+
+- `<Analytics>` and `useAnalytics` are now stable. ([#2141](https://github.com/Shopify/hydrogen/pull/2141)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Improve VariantSelector to return variant object in option values. Thank you @NabeelAhmed1721 by [@blittle](https://github.com/blittle)
+
+- Fix: Use exiting `id_token` during Customer Account API token refresh because it does not get return in the API. ([#2103](https://github.com/Shopify/hydrogen/pull/2103)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Fix optimizing deps when using PNPM. ([#2172](https://github.com/Shopify/hydrogen/pull/2172)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`73716c88`](https://github.com/Shopify/hydrogen/commit/73716c885c75b394265b50318baefaee8518c22f), [`30d18bdb`](https://github.com/Shopify/hydrogen/commit/30d18bdb2d48020a0fb416d4661fa6794600f2ba)]:
+  - @shopify/hydrogen-react@2024.4.3
+
 ## 2024.4.2
 
 ### Patch Changes

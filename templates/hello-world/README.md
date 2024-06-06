@@ -10,6 +10,7 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
 - Remix
 - Hydrogen
 - Oxygen
+- Vite
 - Shopify CLI
 - ESLint
 - Prettier
@@ -21,7 +22,7 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
 
 **Requirements:**
 
-- Node.js version 16.14.0 or higher
+- Node.js version 18.0.0 or higher
 
 ```bash
 npm create @shopify/hydrogen@latest -- --template hello-world

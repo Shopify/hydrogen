@@ -17,7 +17,7 @@ import {
 export type LayoutProps = {
   cart: Promise<CartApiQueryFragment | null>;
   children?: React.ReactNode;
-  footer: Promise<FooterQuery>;
+  footer: Promise<FooterQuery | null>;
   header: HeaderQuery;
   isLoggedIn: boolean;
 };
@@ -38,7 +38,7 @@ export function Layout({
       <main>{children}</main>
       <Suspense>
         <Await resolve={footer}>
-          {(footer) => <Footer menu={footer.menu} shop={header.shop} />}
+          {(footer) => <Footer footer={footer} shop={header.shop} />}
         </Await>
       </Suspense>
     </>
