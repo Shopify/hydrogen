@@ -20,7 +20,6 @@ export async function loader({context}: LoaderFunctionArgs) {
     {
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Set-Cookie': await context.session.commit(),
       },
     },
   );

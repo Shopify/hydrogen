@@ -45,19 +45,11 @@ export async function loader(args: LoaderFunctionArgs) {
 
   const {env} = args.context;
 
-  return defer(
-    {
-      ...deferredData,
-      ...criticalData,
-      gtmContainerId: env.GTM_CONTAINER_ID,
-    },
-    {
-      headers: {
-        ...partytownAtomicHeaders(),
-        'Set-Cookie': await args.context.session.commit(),
-      },
-    },
-  );
+  return defer({
+    ...deferredData,
+    ...criticalData,
+    gtmContainerId: env.GTM_CONTAINER_ID,
+  });
 }
 
 /**

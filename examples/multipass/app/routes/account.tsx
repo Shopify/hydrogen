@@ -20,11 +20,7 @@ export async function loader({request, context}: LoaderFunctionArgs) {
   if (!isLoggedIn) {
     if (isPrivateRoute || isAccountHome) {
       session.unset('customerAccessToken');
-      return redirect('/account/login', {
-        headers: {
-          'Set-Cookie': await session.commit(),
-        },
-      });
+      return redirect('/account/login');
     } else {
       // public subroute such as /account/login...
       return json({
@@ -67,11 +63,7 @@ export async function loader({request, context}: LoaderFunctionArgs) {
     // eslint-disable-next-line no-console
     console.error('There was a problem loading account', error);
     session.unset('customerAccessToken');
-    return redirect('/account/login', {
-      headers: {
-        'Set-Cookie': await session.commit(),
-      },
-    });
+    return redirect('/account/login');
   }
 }
 

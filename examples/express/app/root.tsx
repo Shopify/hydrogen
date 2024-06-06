@@ -58,18 +58,11 @@ export async function loader({context}: LoaderFunctionArgs) {
     await context.storefront.query<{shop: Shop}>(LAYOUT_QUERY),
   ]);
 
-  return defer(
-    {
-      isLoggedIn: Boolean(customerAccessToken),
-      cart,
-      layout,
-    },
-    {
-      headers: {
-        'Set-Cookie': await context.session.commit(),
-      },
-    },
-  );
+  return defer({
+    isLoggedIn: Boolean(customerAccessToken),
+    cart,
+    layout,
+  });
 }
 
 function Layout({children}: {children?: React.ReactNode}) {

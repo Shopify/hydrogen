@@ -42,14 +42,22 @@ export default {
       build: remixBuild,
       mode: process.env.NODE_ENV,
       /* Inject the customer account client in the Remix context */
-      getLoadContext: () => ({customerAccount}),
+      getLoadContext: () => ({session, customerAccount}),
     });
 
-    return handleRequest(request);
+    const response = await handleRequest(request);
+
+    if (session.isPending) {
+      response.headers.set('Set-Cookie', await session.commit());
+    }
+
+    return response;
   },
 };
 
 class AppSession implements HydrogenSession {
+  public isPending = false;
+
   constructor(
     private sessionStorage: SessionStorage,
     private session: Session,
@@ -84,16 +92,36 @@ class AppSession implements HydrogenSession {
   }
 
   unset(key: string) {
+    this.isPending = true;
     this.session.unset(key);
   }
 
   set(key: string, value: any) {
+    this.isPending = true;
     this.session.set(key, value);
   }
 
   commit() {
+    this.isPending = false;
     return this.sessionStorage.commitSession(this.session);
   }
+}
+
+// In env.d.ts
+import type {CustomerAccount, HydrogenSessionData} from '@shopify/hydrogen';
+declare module '@shopify/remix-oxygen' {
+  /**
+   * Declare local additions to the Remix loader context.
+   */
+  interface AppLoadContext {
+    customerAccount: CustomerAccount;
+    session: AppSession;
+  }
+
+  /**
+   * Declare local additions to the Remix session data.
+   */
+  interface SessionData extends HydrogenSessionData {}
 }
 
 /////////////////////////////////
@@ -118,14 +146,7 @@ export async function loader({context}: LoaderFunctionArgs) {
     }
     `);
 
-  return json(
-    {customer: data.customer},
-    {
-      headers: {
-        'Set-Cookie': await context.session.commit(),
-      },
-    },
-  );
+  return json({customer: data.customer});
 }
 
 export function ErrorBoundary() {

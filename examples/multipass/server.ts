@@ -76,6 +76,10 @@ export default {
 
       const response = await handleRequest(request);
 
+      if (session.isPending) {
+        response.headers.set('Set-Cookie', await session.commit());
+      }
+
       if (response.status === 404) {
         /**
          * Check for redirects only when there's a 404 from the app.
@@ -100,6 +104,8 @@ export default {
  * swap out the cookie-based implementation with something else!
  */
 export class AppSession implements HydrogenSession {
+  public isPending = false;
+
   #sessionStorage;
   #session;
 
@@ -139,10 +145,12 @@ export class AppSession implements HydrogenSession {
   }
 
   get unset() {
+    this.isPending = true;
     return this.#session.unset;
   }
 
   get set() {
+    this.isPending = true;
     return this.#session.set;
   }
 
@@ -151,6 +159,7 @@ export class AppSession implements HydrogenSession {
   }
 
   commit() {
+    this.isPending = false;
     return this.#sessionStorage.commitSession(this.#session);
   }
 }

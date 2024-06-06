@@ -37,11 +37,19 @@ export default {
       getLoadContext: () => ({customerAccount}),
     });
 
-    return handleRequest(request);
+    const response = await handleRequest(request);
+
+    if (session.isPending) {
+      response.headers.set('Set-Cookie', await session.commit());
+    }
+
+    return response;
   },
 };
 
 class AppSession implements HydrogenSession {
+  public isPending = false;
+
   constructor(
     private sessionStorage: SessionStorage,
     private session: Session,
@@ -76,14 +84,17 @@ class AppSession implements HydrogenSession {
   }
 
   unset(key: string) {
+    this.isPending = true;
     this.session.unset(key);
   }
 
   set(key: string, value: any) {
+    this.isPending = true;
     this.session.set(key, value);
   }
 
   commit() {
+    this.isPending = false;
     return this.sessionStorage.commitSession(this.session);
   }
 }
