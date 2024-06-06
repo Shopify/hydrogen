@@ -701,7 +701,7 @@ export async function renderProjectReady(
                         : `cd ${project.location.replace(/^\.\//, '')}`,
                       depsInstalled ? undefined : `${packageManager} install`,
                       currentProcessIsGlobal()
-                        ? 'shopify hydrogen dev'
+                        ? 'npm run dev'
                         : formatPackageManagerCommand(packageManager, 'dev'),
                     ]
                       .filter(Boolean)
