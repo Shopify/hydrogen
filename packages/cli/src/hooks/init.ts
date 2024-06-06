@@ -1,17 +1,6 @@
-import {spawnSync} from 'child_process';
+import {spawnSync} from 'node:child_process';
 import {outputDebug} from '@shopify/cli-kit/node/output';
 import type {Hook} from '@oclif/core';
-
-const EXPERIMENTAL_VM_MODULES_FLAG = '--experimental-vm-modules';
-
-function commandNeedsVM(id = '', argv: string[] = []) {
-  // All the commands that rely on MiniOxygen's Node sandbox:
-  return (
-    id === 'hydrogen:debug:cpu' ||
-    (['hydrogen:dev', 'hydrogen:preview'].includes(id) &&
-      argv.includes('--legacy-runtime'))
-  );
-}
 
 const hook: Hook<'init'> = async function (options) {
   if (
@@ -32,5 +21,16 @@ const hook: Hook<'init'> = async function (options) {
     process.exit(result.status ?? 1);
   }
 };
+
+const EXPERIMENTAL_VM_MODULES_FLAG = '--experimental-vm-modules';
+
+function commandNeedsVM(id = '', argv: string[] = []) {
+  // All the commands that rely on MiniOxygen's Node sandbox:
+  return (
+    id === 'hydrogen:debug:cpu' ||
+    (['hydrogen:dev', 'hydrogen:preview'].includes(id) &&
+      argv.includes('--legacy-runtime'))
+  );
+}
 
 export default hook;
