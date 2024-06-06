@@ -4366,6 +4366,146 @@
     ]
   },
   {
+    "name": "RichText",
+    "category": "components",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "The `RichText` component renders a metafield of type `rich_text_field`. By default the rendered output uses semantic HTML tags. Customize how nodes are rendered with the `components` prop.",
+    "type": "component",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {RichText} from '@shopify/hydrogen-react';\n\nexport function MainRichText({metaFieldData}) {\n  return (\n    &lt;RichText\n      data={metaFieldData}\n      components={{\n        paragraph({node}) {\n          return &lt;p className=\"customClass\"&gt;{node.children}&lt;/p&gt;;\n        },\n      }}\n    /&gt;\n  );\n}\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {RichText} from '@shopify/hydrogen-react';\n\nexport function MainRichText({metaFieldData}: {metaFieldData: string}) {\n  return (\n    &lt;RichText\n      data={metaFieldData}\n      components={{\n        paragraph({node}) {\n          return &lt;p className=\"customClass\"&gt;{node.children}&lt;/p&gt;;\n        },\n      }}\n    /&gt;\n  );\n}\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "RichTextPropsForDocs",
+        "typeDefinitions": {
+          "RichTextPropsForDocs": {
+            "filePath": "/RichText.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "RichTextPropsForDocs",
+            "value": "RichTextPropsBase<AsType>",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/RichText.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "as",
+                "value": "ComponentGeneric",
+                "description": "An HTML tag or React Component to be rendered as the base element wrapper. The default is `div`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/RichText.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "data",
+                "value": "string",
+                "description": "The JSON string that correspond to the Storefront API's [RichText format](https://shopify.dev/docs/apps/custom-data/metafields/types#rich-text-formatting)."
+              },
+              {
+                "filePath": "/RichText.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "components",
+                "value": "CustomComponents",
+                "description": "Customize how rich text components are rendered",
+                "isOptional": true
+              },
+              {
+                "filePath": "/RichText.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "plain",
+                "value": "boolean",
+                "description": "Remove rich text formatting and render plain text",
+                "isOptional": true
+              }
+            ]
+          },
+          "CustomComponents": {
+            "filePath": "/RichText.components.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CustomComponents",
+            "value": "{\n  /** The root node of the rich text. Defaults to `<div>` */\n  root?: typeof Root;\n  /** Customize the headings. Each heading has a `level` property from 1-6. Defaults to `<h1>` to `<h6>` */\n  heading?: typeof Heading;\n  /** Customize paragraphs. Defaults to `<p>` */\n  paragraph?: typeof Paragraph;\n  /** Customize how text nodes. They can either be bold or italic. Defaults to `<em>`, `<strong>` or text. */\n  text?: typeof Text;\n  /** Customize links. Defaults to a React Router `<Link>` component in Hydrogen and a `<a>` in Hydrogen React. */\n  link?: typeof RichTextLink;\n  /** Customize lists. They can be either ordered or unordered. Defaults to `<ol>` or `<ul>` */\n  list?: typeof List;\n  /** Customize list items. Defaults to `<li>`. */\n  listItem?: typeof ListItem;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/RichText.components.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "root",
+                "value": "({ node, }: { node: { type: \"root\"; children?: ReactNode[]; }; }) => ReactNode",
+                "description": "The root node of the rich text. Defaults to `<div>`",
+                "isOptional": true
+              },
+              {
+                "filePath": "/RichText.components.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "heading",
+                "value": "({ node, }: { node: { type: \"heading\"; level: number; children?: ReactNode[]; }; }) => ReactNode",
+                "description": "Customize the headings. Each heading has a `level` property from 1-6. Defaults to `<h1>` to `<h6>`",
+                "isOptional": true
+              },
+              {
+                "filePath": "/RichText.components.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "paragraph",
+                "value": "({ node, }: { node: { type: \"paragraph\"; children?: ReactNode[]; }; }) => ReactNode",
+                "description": "Customize paragraphs. Defaults to `<p>`",
+                "isOptional": true
+              },
+              {
+                "filePath": "/RichText.components.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "text",
+                "value": "({ node, }: { node: { type: \"text\"; italic?: boolean; bold?: boolean; value?: string; }; }) => ReactNode",
+                "description": "Customize how text nodes. They can either be bold or italic. Defaults to `<em>`, `<strong>` or text.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/RichText.components.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "link",
+                "value": "({ node, }: { node: { type: \"link\"; url: string; title?: string; target?: string; children?: ReactNode[]; }; }) => ReactNode",
+                "description": "Customize links. Defaults to a React Router `<Link>` component in Hydrogen and a `<a>` in Hydrogen React.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/RichText.components.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "list",
+                "value": "({ node, }: { node: { type: \"list\"; listType: \"unordered\" | \"ordered\"; children?: ReactNode[]; }; }) => ReactNode",
+                "description": "Customize lists. They can be either ordered or unordered. Defaults to `<ol>` or `<ul>`",
+                "isOptional": true
+              },
+              {
+                "filePath": "/RichText.components.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "listItem",
+                "value": "({ node, }: { node: { type: \"list-item\"; children?: ReactNode[]; }; }) => ReactNode",
+                "description": "Customize list items. Defaults to `<li>`.",
+                "isOptional": true
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
     "name": "ShopPayButton",
     "category": "components",
     "isVisualComponent": false,
@@ -6422,7 +6562,7 @@
               "name": "ReturnGeneric",
               "value": "ReturnGeneric"
             },
-            "value": "export function parseMetafield<ReturnGeneric>(\n  metafield: PartialDeep<MetafieldBaseType, {recurseIntoArrays: true}>,\n): ReturnGeneric {\n  if (!metafield.type) {\n    const noTypeError = `parseMetafield(): The 'type' field is required in order to parse the Metafield.`;\n    if (__HYDROGEN_DEV__) {\n      throw new Error(noTypeError);\n    } else {\n      console.error(`${noTypeError} Returning 'parsedValue' of 'null'`);\n      return {\n        ...metafield,\n        parsedValue: null,\n      } as ReturnGeneric;\n    }\n  }\n\n  switch (metafield.type) {\n    case 'boolean':\n      return {\n        ...metafield,\n        parsedValue: metafield.value === 'true',\n      } as ReturnGeneric;\n\n    case 'collection_reference':\n    case 'file_reference':\n    case 'page_reference':\n    case 'product_reference':\n    case 'variant_reference':\n      return {\n        ...metafield,\n        parsedValue: metafield.reference,\n      } as ReturnGeneric;\n\n    case 'color':\n    case 'multi_line_text_field':\n    case 'single_line_text_field':\n    case 'url':\n      return {\n        ...metafield,\n        parsedValue: metafield.value,\n      } as ReturnGeneric;\n\n    // TODO: 'money' should probably be parsed even further to like `useMoney()`, but that logic needs to be extracted first so it's not a hook\n    case 'dimension':\n    case 'money':\n    case 'json':\n    case 'rating':\n    case 'volume':\n    case 'weight':\n    case 'list.color':\n    case 'list.dimension':\n    case 'list.number_integer':\n    case 'list.number_decimal':\n    case 'list.rating':\n    case 'list.single_line_text_field':\n    case 'list.url':\n    case 'list.volume':\n    case 'list.weight': {\n      let parsedValue = null;\n      try {\n        parsedValue = parseJSON(metafield.value ?? '');\n      } catch (err) {\n        const parseError = `parseMetafield(): attempted to JSON.parse the 'metafield.value' property, but failed.`;\n        if (__HYDROGEN_DEV__) {\n          throw new Error(parseError);\n        } else {\n          console.error(`${parseError} Returning 'null' for 'parsedValue'`);\n        }\n        parsedValue = null;\n      }\n      return {\n        ...metafield,\n        parsedValue,\n      } as ReturnGeneric;\n    }\n\n    case 'date':\n    case 'date_time':\n      return {\n        ...metafield,\n        parsedValue: new Date(metafield.value ?? ''),\n      } as ReturnGeneric;\n\n    case 'list.date':\n    case 'list.date_time': {\n      const jsonParseValue = parseJSON(metafield?.value ?? '') as string[];\n      return {\n        ...metafield,\n        parsedValue: jsonParseValue.map((dateString) => new Date(dateString)),\n      } as ReturnGeneric;\n    }\n\n    case 'number_decimal':\n    case 'number_integer':\n      return {\n        ...metafield,\n        parsedValue: Number(metafield.value),\n      } as ReturnGeneric;\n\n    case 'list.collection_reference':\n    case 'list.file_reference':\n    case 'list.page_reference':\n    case 'list.product_reference':\n    case 'list.variant_reference':\n      return {\n        ...metafield,\n        parsedValue: flattenConnection(metafield.references ?? undefined),\n      } as ReturnGeneric;\n\n    default: {\n      const typeNotFoundError = `parseMetafield(): the 'metafield.type' you passed in is not supported. Your type: \"${metafield.type}\". If you believe this is an error, please open an issue on GitHub.`;\n      if (__HYDROGEN_DEV__) {\n        throw new Error(typeNotFoundError);\n      } else {\n        console.error(\n          `${typeNotFoundError}  Returning 'parsedValue' of 'null'`,\n        );\n        return {\n          ...metafield,\n          parsedValue: null,\n        } as ReturnGeneric;\n      }\n    }\n  }\n}"
+            "value": "export function parseMetafield<ReturnGeneric>(\n  metafield: PartialDeep<MetafieldBaseType, {recurseIntoArrays: true}>,\n): ReturnGeneric {\n  if (!metafield.type) {\n    const noTypeError = `parseMetafield(): The 'type' field is required in order to parse the Metafield.`;\n    if (__HYDROGEN_DEV__) {\n      throw new Error(noTypeError);\n    } else {\n      console.error(`${noTypeError} Returning 'parsedValue' of 'null'`);\n      return {\n        ...metafield,\n        parsedValue: null,\n      } as ReturnGeneric;\n    }\n  }\n\n  switch (metafield.type) {\n    case 'boolean':\n      return {\n        ...metafield,\n        parsedValue: metafield.value === 'true',\n      } as ReturnGeneric;\n\n    case 'collection_reference':\n    case 'file_reference':\n    case 'page_reference':\n    case 'product_reference':\n    case 'variant_reference':\n      return {\n        ...metafield,\n        parsedValue: metafield.reference,\n      } as ReturnGeneric;\n\n    case 'color':\n    case 'multi_line_text_field':\n    case 'single_line_text_field':\n    case 'url':\n      return {\n        ...metafield,\n        parsedValue: metafield.value,\n      } as ReturnGeneric;\n\n    // TODO: 'money' should probably be parsed even further to like `useMoney()`, but that logic needs to be extracted first so it's not a hook\n    case 'dimension':\n    case 'money':\n    case 'json':\n    case 'rating':\n    case 'volume':\n    case 'weight':\n    case 'rich_text_field':\n    case 'list.color':\n    case 'list.dimension':\n    case 'list.number_integer':\n    case 'list.number_decimal':\n    case 'list.rating':\n    case 'list.single_line_text_field':\n    case 'list.url':\n    case 'list.volume':\n    case 'list.weight': {\n      let parsedValue = null;\n      try {\n        parsedValue = parseJSON(metafield.value ?? '');\n      } catch (err) {\n        const parseError = `parseMetafield(): attempted to JSON.parse the 'metafield.value' property, but failed.`;\n        if (__HYDROGEN_DEV__) {\n          throw new Error(parseError);\n        } else {\n          console.error(`${parseError} Returning 'null' for 'parsedValue'`);\n        }\n        parsedValue = null;\n      }\n      return {\n        ...metafield,\n        parsedValue,\n      } as ReturnGeneric;\n    }\n\n    case 'date':\n    case 'date_time':\n      return {\n        ...metafield,\n        parsedValue: new Date(metafield.value ?? ''),\n      } as ReturnGeneric;\n\n    case 'list.date':\n    case 'list.date_time': {\n      const jsonParseValue = parseJSON(metafield?.value ?? '') as string[];\n      return {\n        ...metafield,\n        parsedValue: jsonParseValue.map((dateString) => new Date(dateString)),\n      } as ReturnGeneric;\n    }\n\n    case 'number_decimal':\n    case 'number_integer':\n      return {\n        ...metafield,\n        parsedValue: Number(metafield.value),\n      } as ReturnGeneric;\n\n    case 'list.collection_reference':\n    case 'list.file_reference':\n    case 'list.page_reference':\n    case 'list.product_reference':\n    case 'list.variant_reference':\n      return {\n        ...metafield,\n        parsedValue: flattenConnection(metafield.references ?? undefined),\n      } as ReturnGeneric;\n\n    default: {\n      const typeNotFoundError = `parseMetafield(): the 'metafield.type' you passed in is not supported. Your type: \"${metafield.type}\". If you believe this is an error, please open an issue on GitHub.`;\n      if (__HYDROGEN_DEV__) {\n        throw new Error(typeNotFoundError);\n      } else {\n        console.error(\n          `${typeNotFoundError}  Returning 'parsedValue' of 'null'`,\n        );\n        return {\n          ...metafield,\n          parsedValue: null,\n        } as ReturnGeneric;\n      }\n    }\n  }\n}"
           }
         }
       }
@@ -6511,7 +6651,7 @@
               "name": "StorefrontClientReturn",
               "value": "StorefrontClientReturn"
             },
-            "value": "export function createStorefrontClient({\n  storeDomain,\n  privateStorefrontToken,\n  publicStorefrontToken,\n  storefrontApiVersion = SFAPI_VERSION,\n  contentType,\n}: StorefrontClientProps): StorefrontClientReturn {\n  if (!storeDomain) {\n    if (__HYDROGEN_DEV__) {\n      storeDomain = MOCK_SHOP_DOMAIN;\n      warnOnce(\n        `storeDomain missing, defaulting to ${MOCK_SHOP_DOMAIN}`,\n        'info',\n      );\n    } else {\n      throw new Error(\n        H2_PREFIX_ERROR +\n          `\\`storeDomain\\` is required when creating a new Storefront client in production.`,\n      );\n    }\n  }\n\n  if (storefrontApiVersion !== SFAPI_VERSION) {\n    warnOnce(\n      `The Storefront API version that you're using is different than the version this build of Hydrogen React is targeting.` +\n        `\\nYou may run into unexpected errors if these versions don't match. Received verion: \"${storefrontApiVersion}\"; expected version \"${SFAPI_VERSION}\"`,\n    );\n  }\n\n  // only warn if not in a browser environment\n  if (\n    __HYDROGEN_DEV__ &&\n    !privateStorefrontToken &&\n    !globalThis.document &&\n    !isMockShop(storeDomain)\n  ) {\n    warnOnce(\n      `Using a private storefront token is recommended for server environments.` +\n        `\\nRefer to the authentication https://shopify.dev/api/storefront#authentication documentation for more details.`,\n    );\n  }\n\n  // only warn if in a browser environment and you're using the privateStorefrontToken\n  if (__HYDROGEN_DEV__ && privateStorefrontToken && globalThis.document) {\n    warnOnce(\n      'You are attempting to use a private token in an environment where it can be easily accessed by anyone.' +\n        '\\nThis is a security risk; please use the public token and the `publicStorefrontToken` prop',\n    );\n  }\n\n  const getShopifyDomain: StorefrontClientReturn['getShopifyDomain'] = (\n    overrideProps,\n  ) => {\n    const domain = overrideProps?.storeDomain ?? storeDomain;\n    return domain.includes('://') ? domain : `https://${domain}`;\n  };\n\n  return {\n    getShopifyDomain,\n    getStorefrontApiUrl(overrideProps): string {\n      const domain = getShopifyDomain(overrideProps);\n      const apiUrl = domain + (domain.endsWith('/') ? 'api' : '/api');\n\n      if (isMockShop(domain)) return apiUrl;\n\n      return `${apiUrl}/${\n        overrideProps?.storefrontApiVersion ?? storefrontApiVersion\n      }/graphql.json`;\n    },\n    getPrivateTokenHeaders(overrideProps): Record<string, string> {\n      if (\n        !privateStorefrontToken &&\n        !overrideProps?.privateStorefrontToken &&\n        !isMockShop(storeDomain)\n      ) {\n        throw new Error(\n          H2_PREFIX_ERROR +\n            'You did not pass in a `privateStorefrontToken` while using `createStorefrontClient()` or `getPrivateTokenHeaders()`',\n        );\n      }\n\n      if (__HYDROGEN_DEV__ && !overrideProps?.buyerIp) {\n        warnOnce(\n          'It is recommended to pass in the `buyerIp` property which improves analytics and data in the admin.',\n        );\n      }\n\n      const finalContentType = overrideProps?.contentType ?? contentType;\n\n      return {\n        // default to json\n        'content-type':\n          finalContentType === 'graphql'\n            ? 'application/graphql'\n            : 'application/json',\n        'X-SDK-Variant': 'hydrogen-react',\n        'X-SDK-Variant-Source': 'react',\n        'X-SDK-Version': storefrontApiVersion,\n        'Shopify-Storefront-Private-Token':\n          overrideProps?.privateStorefrontToken ?? privateStorefrontToken ?? '',\n        ...(overrideProps?.buyerIp\n          ? {'Shopify-Storefront-Buyer-IP': overrideProps.buyerIp}\n          : {}),\n      };\n    },\n    getPublicTokenHeaders(overrideProps): Record<string, string> {\n      if (\n        !publicStorefrontToken &&\n        !overrideProps?.publicStorefrontToken &&\n        !isMockShop(storeDomain)\n      ) {\n        throw new Error(\n          H2_PREFIX_ERROR +\n            'You did not pass in a `publicStorefrontToken` while using `createStorefrontClient()` or `getPublicTokenHeaders()`',\n        );\n      }\n\n      const finalContentType =\n        overrideProps?.contentType ?? contentType ?? 'json';\n\n      return getPublicTokenHeadersRaw(\n        finalContentType,\n        storefrontApiVersion,\n        overrideProps?.publicStorefrontToken ?? publicStorefrontToken ?? '',\n      );\n    },\n  };\n}"
+            "value": "export function createStorefrontClient({\n  storeDomain,\n  privateStorefrontToken,\n  publicStorefrontToken,\n  storefrontApiVersion = SFAPI_VERSION,\n  contentType,\n}: StorefrontClientProps): StorefrontClientReturn {\n  if (!storeDomain) {\n    if (__HYDROGEN_DEV__) {\n      storeDomain = MOCK_SHOP_DOMAIN;\n      warnOnce(\n        `storeDomain missing, defaulting to ${MOCK_SHOP_DOMAIN}`,\n        'info',\n      );\n    } else {\n      throw new Error(\n        H2_PREFIX_ERROR +\n          `\\`storeDomain\\` is required when creating a new Storefront client in production.`,\n      );\n    }\n  }\n\n  if (storefrontApiVersion !== SFAPI_VERSION) {\n    warnOnce(\n      `The Storefront API version that you're using is different than the version this build of Hydrogen React is targeting.` +\n        `\\nYou may run into unexpected errors if these versions don't match. Received version: \"${storefrontApiVersion}\"; expected version \"${SFAPI_VERSION}\"`,\n    );\n  }\n\n  // only warn if not in a browser environment\n  if (\n    __HYDROGEN_DEV__ &&\n    !privateStorefrontToken &&\n    !globalThis.document &&\n    !isMockShop(storeDomain)\n  ) {\n    warnOnce(\n      `Using a private storefront token is recommended for server environments.` +\n        `\\nRefer to the authentication https://shopify.dev/api/storefront#authentication documentation for more details.`,\n    );\n  }\n\n  // only warn if in a browser environment and you're using the privateStorefrontToken\n  if (__HYDROGEN_DEV__ && privateStorefrontToken && globalThis.document) {\n    warnOnce(\n      'You are attempting to use a private token in an environment where it can be easily accessed by anyone.' +\n        '\\nThis is a security risk; please use the public token and the `publicStorefrontToken` prop',\n    );\n  }\n\n  const getShopifyDomain: StorefrontClientReturn['getShopifyDomain'] = (\n    overrideProps,\n  ) => {\n    const domain = overrideProps?.storeDomain ?? storeDomain;\n    return domain.includes('://') ? domain : `https://${domain}`;\n  };\n\n  return {\n    getShopifyDomain,\n    getStorefrontApiUrl(overrideProps): string {\n      const domain = getShopifyDomain(overrideProps);\n      const apiUrl = domain + (domain.endsWith('/') ? 'api' : '/api');\n\n      if (isMockShop(domain)) return apiUrl;\n\n      return `${apiUrl}/${\n        overrideProps?.storefrontApiVersion ?? storefrontApiVersion\n      }/graphql.json`;\n    },\n    getPrivateTokenHeaders(overrideProps): Record<string, string> {\n      if (\n        !privateStorefrontToken &&\n        !overrideProps?.privateStorefrontToken &&\n        !isMockShop(storeDomain)\n      ) {\n        throw new Error(\n          H2_PREFIX_ERROR +\n            'You did not pass in a `privateStorefrontToken` while using `createStorefrontClient()` or `getPrivateTokenHeaders()`',\n        );\n      }\n\n      if (__HYDROGEN_DEV__ && !overrideProps?.buyerIp) {\n        warnOnce(\n          'It is recommended to pass in the `buyerIp` property which improves analytics and data in the admin.',\n        );\n      }\n\n      const finalContentType = overrideProps?.contentType ?? contentType;\n\n      return {\n        // default to json\n        'content-type':\n          finalContentType === 'graphql'\n            ? 'application/graphql'\n            : 'application/json',\n        'X-SDK-Variant': 'hydrogen-react',\n        'X-SDK-Variant-Source': 'react',\n        'X-SDK-Version': storefrontApiVersion,\n        'Shopify-Storefront-Private-Token':\n          overrideProps?.privateStorefrontToken ?? privateStorefrontToken ?? '',\n        ...(overrideProps?.buyerIp\n          ? {'Shopify-Storefront-Buyer-IP': overrideProps.buyerIp}\n          : {}),\n      };\n    },\n    getPublicTokenHeaders(overrideProps): Record<string, string> {\n      if (\n        !publicStorefrontToken &&\n        !overrideProps?.publicStorefrontToken &&\n        !isMockShop(storeDomain)\n      ) {\n        throw new Error(\n          H2_PREFIX_ERROR +\n            'You did not pass in a `publicStorefrontToken` while using `createStorefrontClient()` or `getPublicTokenHeaders()`',\n        );\n      }\n\n      const finalContentType =\n        overrideProps?.contentType ?? contentType ?? 'json';\n\n      return getPublicTokenHeadersRaw(\n        finalContentType,\n        storefrontApiVersion,\n        overrideProps?.publicStorefrontToken ?? publicStorefrontToken ?? '',\n      );\n    },\n  };\n}"
           },
           "StorefrontClientProps": {
             "filePath": "/storefront-client.ts",
