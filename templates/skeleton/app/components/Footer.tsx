@@ -3,7 +3,7 @@ import {Await, NavLink} from '@remix-run/react';
 import type {FooterQuery, HeaderQuery} from 'storefrontapi.generated';
 
 interface FooterProps {
-  footer: Promise<FooterQuery>;
+  footer: Promise<FooterQuery | null>;
   header: HeaderQuery;
   publicStoreDomain: string;
 }
@@ -18,7 +18,7 @@ export function Footer({
       <Await resolve={footerPromise}>
         {(footer) => (
           <footer className="footer">
-            {footer.menu && header.shop.primaryDomain?.url && (
+            {footer?.menu && header.shop.primaryDomain?.url && (
               <FooterMenu
                 menu={footer.menu}
                 primaryDomainUrl={header.shop.primaryDomain.url}
@@ -37,7 +37,7 @@ function FooterMenu({
   primaryDomainUrl,
   publicStoreDomain,
 }: {
-  menu: Awaited<FooterProps['footer']>['menu'];
+  menu: FooterQuery['menu'];
   primaryDomainUrl: FooterProps['header']['shop']['primaryDomain']['url'];
   publicStoreDomain: string;
 }) {

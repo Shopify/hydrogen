@@ -1,5 +1,30 @@
 # @shopify/cli-hydrogen
 
+## 8.1.0
+
+### Minor Changes
+
+- Support Vite projects in `h2 debug cpu` command. ([#2124](https://github.com/Shopify/hydrogen/pull/2124)) by [@frandiox](https://github.com/frandiox)
+
+- The `h2 preview` command now supports `--build` and `--watch` flags to preview the project using the build process instead of Vite's dev process. ([#2100](https://github.com/Shopify/hydrogen/pull/2100)) by [@frandiox](https://github.com/frandiox)
+
+### Patch Changes
+
+- Update remix to v2.9.2 ([#2135](https://github.com/Shopify/hydrogen/pull/2135)) by [@michenly](https://github.com/michenly)
+
+- The CLI now tries to add optimizable dependencies to Vite's ssr.optimizeDeps.include automatically. ([#2106](https://github.com/Shopify/hydrogen/pull/2106)) by [@frandiox](https://github.com/frandiox)
+
+- Fix Hydrogen upgrade notification when running the dev command. ([#2120](https://github.com/Shopify/hydrogen/pull/2120)) by [@frandiox](https://github.com/frandiox)
+
+- Hide non actionable warning about ts-node. ([#2123](https://github.com/Shopify/hydrogen/pull/2123)) by [@frandiox](https://github.com/frandiox)
+
+- `<Analytics>` and `useAnalytics` are now stable. ([#2141](https://github.com/Shopify/hydrogen/pull/2141)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Updated internal CLI dependencies to `3.60.0`. ([#2087](https://github.com/Shopify/hydrogen/pull/2087)) by [@isaacroldan](https://github.com/isaacroldan)
+
+- Updated dependencies [[`cd888ec5`](https://github.com/Shopify/hydrogen/commit/cd888ec5ae5a0677aff7cd41962f5a44f155184e), [`27e51abf`](https://github.com/Shopify/hydrogen/commit/27e51abfc1f5444afa952c503886bfa12fc55c7e)]:
+  - @shopify/mini-oxygen@3.0.3
+
 ## 8.0.4
 
 ### Patch Changes

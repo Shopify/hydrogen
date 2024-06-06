@@ -1,8 +1,4 @@
-import {
-  useNonce,
-  getShopAnalytics,
-  Analytics,
-} from '@shopify/hydrogen';
+import {useNonce, getShopAnalytics, Analytics} from '@shopify/hydrogen';
 import {
   defer,
   type SerializeFrom,
@@ -69,10 +65,14 @@ export const useRootLoaderData = () => {
   return root?.data as SerializeFrom<typeof loader>;
 };
 
-export async function loader({context}: LoaderFunctionArgs) {
-  const {storefront, session, cart, env} = context;
+export async function loader(args: LoaderFunctionArgs) {
+  const {storefront, session, env} = args.context;
+
+  // Start fetching non-critical data without blocking time to first byte
+  const deferredData = loadDeferredData(args);
+
   const customerAccessToken = session.get('customerAccessToken');
-  const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
+  const publicStoreDomain = env.PUBLIC_STORE_DOMAIN;
 
   // validate the customer access token is valid
   const {isLoggedIn, headers} = await validateCustomerAccessToken(
@@ -80,35 +80,18 @@ export async function loader({context}: LoaderFunctionArgs) {
     customerAccessToken,
   );
 
-  // defer the cart query by not awaiting it
-  const cartPromise = cart.get();
-
-  // defer the footer query (below the fold)
-  const footerPromise = storefront.query(FOOTER_QUERY, {
-    cache: storefront.CacheLong(),
-    variables: {
-      footerMenuHandle: 'footer', // Adjust to your footer menu handle
-    },
-  });
-
-  // await the header query (above the fold)
-  const headerPromise = storefront.query(HEADER_QUERY, {
-    cache: storefront.CacheLong(),
-    variables: {
-      headerMenuHandle: 'main-menu', // Adjust to your header menu handle
-    },
-  });
+  // Await the critical data required to render initial state of the page
+  const criticalData = await loadCriticalData(args);
 
   return defer(
     {
-      cart: cartPromise,
-      footer: footerPromise,
-      header: await headerPromise,
+      ...deferredData,
+      ...criticalData,
       isLoggedIn,
       publicStoreDomain,
       shop: getShopAnalytics({
         storefront,
-        publicStorefrontId: env.PUBLIC_STOREFRONT_ID
+        publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
       }),
       consent: {
         checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
@@ -117,6 +100,54 @@ export async function loader({context}: LoaderFunctionArgs) {
     },
     {headers},
   );
+}
+
+/**
+ * Load data necessary for rendering content above the fold. This is the critical data
+ * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
+ */
+async function loadCriticalData({context}: LoaderFunctionArgs) {
+  const {storefront} = context;
+
+  // await the header query (above the fold)
+  const [header] = await Promise.all([
+    storefront.query(HEADER_QUERY, {
+      cache: storefront.CacheLong(),
+      variables: {
+        headerMenuHandle: 'main-menu', // Adjust to your header menu handle
+      },
+    }),
+    // Add other queries here, so that they are loaded in parallel
+  ]);
+
+  return {
+    header,
+  };
+}
+
+/**
+ * Load data for rendering content below the fold. This data is deferred and will be
+ * fetched after the initial page load. If it's unavailable, the page should still 200.
+ * Make sure to not throw any errors here, as it will cause the page to 500.
+ */
+function loadDeferredData({context}: LoaderFunctionArgs) {
+  // defer the cart query by not awaiting it
+  const cart = context.cart.get();
+
+  // defer the footer query (below the fold)
+  const footer = context.storefront
+    .query(FOOTER_QUERY, {
+      cache: context.storefront.CacheLong(),
+      variables: {
+        footerMenuHandle: 'footer', // Adjust to your footer menu handle
+      },
+    })
+    .catch((error) => {
+      // Log query errors, but don't throw them so the page can still render
+      console.error(error);
+      return null;
+    });
+  return {cart, footer};
 }
 
 export default function App() {
