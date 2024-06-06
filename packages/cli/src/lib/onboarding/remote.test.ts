@@ -69,9 +69,13 @@ describe('remote templates', () => {
       // Skip routes:
       expect(resultFiles).not.toContain('app/routes/_index.tsx');
 
-      await expect(readFile(`${tmpDir}/package.json`)).resolves.toMatch(
-        `"name": "hello-world"`,
-      );
+      const pkgJsonPromise = readFile(`${tmpDir}/package.json`);
+      await expect(pkgJsonPromise).resolves.not.toThrow();
+      const pkgJsonString = await pkgJsonPromise;
+
+      expect(() => JSON.parse(pkgJsonString)).not.toThrow();
+      expect(pkgJsonString).toMatch(`"name": "hello-world"`);
+      expect(pkgJsonString).not.toMatch(`"@shopify/cli-hydrogen"`);
 
       const output = outputMock.info();
       expect(output).toMatch('success');
