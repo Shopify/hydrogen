@@ -6,7 +6,11 @@ import {cwd, joinPath, resolvePath} from '@shopify/cli-kit/node/path';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
 
 const hook: Hook<'init'> = async function (options) {
-  if (options.id === 'hydrogen:init') return;
+  // Check if this is a Hydrogen command to avoid running this
+  // hook for commands in other plugins such as themes or apps.
+  if (!options.id?.startsWith('hydrogen:') || options.id === 'hydrogen:init') {
+    return;
+  }
 
   let projectPath = cwd();
   const pathFlagRE = /^--path($|=)/;
