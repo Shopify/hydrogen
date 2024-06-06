@@ -31,11 +31,11 @@ export default class EnvList extends Command {
   }
 }
 
-interface Flags {
+interface EnvListOptions {
   path?: string;
 }
 
-export async function runEnvList({path: root = process.cwd()}: Flags) {
+export async function runEnvList({path: root = process.cwd()}: EnvListOptions) {
   const [{session, config}, cliCommand] = await Promise.all([
     login(root),
     getCliCommand(),

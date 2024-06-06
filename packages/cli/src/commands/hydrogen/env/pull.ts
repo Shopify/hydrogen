@@ -47,7 +47,7 @@ export default class EnvPull extends Command {
   }
 }
 
-interface Flags {
+interface EnvPullOptions {
   env?: string;
   envBranch?: string;
   force?: boolean;
@@ -59,7 +59,7 @@ export async function runEnvPull({
   envBranch,
   path: root = process.cwd(),
   force,
-}: Flags) {
+}: EnvPullOptions) {
   const [{session, config}, cliCommand] = await Promise.all([
     login(root),
     getCliCommand(),

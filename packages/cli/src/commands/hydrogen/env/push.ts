@@ -54,7 +54,7 @@ Defaults to the '.env' located in your project path `--path`.",
   }
 }
 
-interface Flags {
+interface EnvPushOptions {
   env?: string;
   envFile?: string;
   path?: string;
@@ -64,7 +64,7 @@ export async function runEnvPush({
   env: envHandle,
   envFile,
   path = process.cwd(),
-}: Flags) {
+}: EnvPushOptions) {
   let validatedEnvironment: Environment;
 
   // Ensure local .env file
