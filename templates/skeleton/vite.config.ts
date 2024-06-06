@@ -105,7 +105,7 @@ function hydrogenBundleAnalyzer() {
               legalComments: 'none',
               target: 'esnext',
             },
-          );
+          ).catch(() => null);
 
           if (result) resultingCodeBytes = result.code.length;
         }
@@ -146,11 +146,6 @@ function hydrogenBundleAnalyzer() {
 
           if (isCjshelper) {
             isESM = false;
-            // const cjsHelperMod = this.getModuleInfo(importedId);
-            // const cjsHelperMod = workerFile.modules[importedId];
-            // if (cjsHelperMod) {
-            //   cjsHelperMod.renderedLength;
-            // }
           } else {
             toAnalyzeMods.add(importedId);
             acc.push(meta);
@@ -185,23 +180,8 @@ function hydrogenBundleAnalyzer() {
         },
       };
 
-      // console.dir(
-      //   // {
-      //   //   // entryMod,
-      //   //   // importedIds: entryMod?.importedIds,
-      //   //   // importedidResolutions: entryMod?.importedIdResolutions,
-      //   //   // imporetrs: entryMod?.importers,
-      //   //   // remixOxygen: this.getModuleInfo(
-      //   //   //   '/Users/frandiox/src/github.com/Shopify/hydrogen/packages/remix-oxygen/dist/production/index.js',
-      //   //   // )?.importers,
-      //   // },
-      //   // Object.fromEntries(modsMeta.entries()),
-      //   metafile,
-      //   {depth: 5},
-      // );
-
       const analysisTemplate = await fs.readFile(
-        '../../packages/cli/assets/bundle/analyzer.html',
+        '../../packages/cli/src/lib/bundle/bundle-analyzer.html',
         'utf-8',
       );
 
