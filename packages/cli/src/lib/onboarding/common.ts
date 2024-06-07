@@ -59,6 +59,7 @@ import {
 } from '../setups/routes/generate.js';
 import {execAsync} from '../process.js';
 import {getStorefronts} from '../graphql/admin/link-storefront.js';
+import {currentProcessIsGlobal} from '@shopify/cli-kit/node/is-global';
 
 export type InitOptions = {
   path?: string;
@@ -542,7 +543,7 @@ export async function createInitialCommit(directory: string) {
   } catch (error: any) {
     // Ignore errors
     outputDebug(
-      'Failed to initialize Git.\n' + error?.stack ?? error?.message ?? error,
+      'Failed to initialize Git.\n' + (error?.stack ?? error?.message ?? error),
     );
   }
 }
@@ -554,7 +555,7 @@ export async function commitAll(directory: string, message: string) {
   } catch (error: any) {
     // Ignore errors
     outputDebug(
-      'Failed to commit code.\n' + error?.stack ?? error?.message ?? error,
+      'Failed to commit code.\n' + (error?.stack ?? error?.message ?? error),
     );
   }
 }
@@ -699,7 +700,9 @@ export async function renderProjectReady(
                         ? undefined
                         : `cd ${project.location.replace(/^\.\//, '')}`,
                       depsInstalled ? undefined : `${packageManager} install`,
-                      formatPackageManagerCommand(packageManager, 'dev'),
+                      currentProcessIsGlobal()
+                        ? 'npm run dev'
+                        : formatPackageManagerCommand(packageManager, 'dev'),
                     ]
                       .filter(Boolean)
                       .join(' && '),
@@ -730,7 +733,7 @@ export function createAbortHandler(
 
     renderFatalError(
       new AbortError(
-        'Failed to initialize project: ' + error?.message ?? '',
+        'Failed to initialize project: ' + (error?.message ?? ''),
         error?.tryMessage ?? error?.stack,
       ),
     );

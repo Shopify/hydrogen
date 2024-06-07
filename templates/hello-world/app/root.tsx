@@ -7,13 +7,12 @@ import {
   Meta,
   Outlet,
   Scripts,
-  LiveReload,
   ScrollRestoration,
   useRouteLoaderData,
   type ShouldRevalidateFunction,
 } from '@remix-run/react';
 import type {Shop} from '@shopify/hydrogen/storefront-api-types';
-import appStyles from './styles/app.css';
+import appStyles from './styles/app.css?url';
 import favicon from '../public/favicon.svg';
 import {useNonce} from '@shopify/hydrogen';
 
@@ -56,7 +55,7 @@ export async function loader({context}: LoaderFunctionArgs) {
   return {layout};
 }
 
-export function Layout({children}: {children?: React.ReactNode}) {
+function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
   const data = useRouteLoaderData<typeof loader>('root');
 
@@ -82,14 +81,17 @@ export function Layout({children}: {children?: React.ReactNode}) {
         )}
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
-        <LiveReload nonce={nonce} />
       </body>
     </html>
   );
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <Layout>
+      <Outlet />
+    </Layout>
+  );
 }
 
 const LAYOUT_QUERY = `#graphql

@@ -90,7 +90,6 @@ export async function action({request, context}: ActionFunctionArgs) {
       {
         status: 302,
         headers: {
-          'Set-Cookie': await session.commit(),
           Location: '/account',
         },
       },

@@ -106,12 +106,7 @@ export async function loader({context}: LoaderFunctionArgs) {
         storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
       },
       // [END consent]
-    },
-    {
-      headers: {
-        'Set-Cookie': await context.session.commit(),
-      },
-    },
+    }
   );
 }
 

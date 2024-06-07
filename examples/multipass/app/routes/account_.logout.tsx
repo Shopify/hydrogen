@@ -17,11 +17,7 @@ export async function action({request, context}: ActionFunctionArgs) {
     return json({error: 'Method not allowed'}, {status: 405});
   }
 
-  return redirect('/', {
-    headers: {
-      'Set-Cookie': await session.commit(),
-    },
-  });
+  return redirect('/');
 }
 
 export default function Logout() {
