@@ -220,6 +220,26 @@ describe('deploy', () => {
     });
   });
 
+  it('supports valid authBypassTokenDuration when generateAuthBypassToken is true', async () => {
+    const params = {
+      ...deployParams,
+      generateAuthBypassToken: true,
+      authBypassTokenDuration: '2',
+    };
+
+    await expect(runDeploy(params)).resolves.not.toThrow();
+
+    expect(vi.mocked(createDeploy)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        config: expect.objectContaining({
+          generateAuthBypassToken: true,
+          authBypassTokenDuration: '2',
+        }),
+      }),
+    );
+    expect(vi.mocked(renderSuccess)).toHaveBeenCalled();
+  });
+
   it('calls createDeploy against a environment selected by env', async () => {
     vi.mocked(getOxygenDeploymentData).mockResolvedValue({
       oxygenDeploymentToken: 'some-encoded-token',
