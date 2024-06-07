@@ -14,12 +14,12 @@ const data: ReferenceEntityTemplateSchema = {
       tabs: [
         {
           title: 'JavaScript',
-          code: './with-cache.example.js',
+          code: './create-with-cache.example.js',
           language: 'js',
         },
         {
           title: 'TypeScript',
-          code: './with-cache.example.ts',
+          code: './create-with-cache.example.ts',
           language: 'ts',
         },
       ],

@@ -1,11 +1,11 @@
+import {type CachingStrategy} from './strategies';
+import {type CrossRuntimeRequest, getDebugHeaders} from '../utils/request';
+import {getCallerStackLine} from '../utils/callsites';
 import {
-  type CacheKey,
+  CacheActionFunctionParam,
+  CacheKey,
   runWithCache,
-  type CacheActionFunctionParam,
-} from './cache/fetch';
-import type {CachingStrategy} from './cache/strategies';
-import {type CrossRuntimeRequest, getDebugHeaders} from './utils/request';
-import {getCallerStackLine} from './utils/callsites';
+} from './run-with-cache';
 
 type CreateWithCacheOptions = {
   /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */

@@ -1,5 +1,6 @@
 export * from './storefront';
-export * from './with-cache';
+export {type CacheKey} from './cache/run-with-cache';
+export {createWithCache, type WithCache} from './cache/create-with-cache';
 export {
   CacheCustom,
   CacheLong,
@@ -10,7 +11,6 @@ export {
   type NoStoreStrategy,
 } from './cache/strategies';
 export {InMemoryCache} from './cache/in-memory';
-export {type CacheKey} from './cache/run-with-cache';
 
 export {storefrontRedirect} from './routing/redirect';
 export {graphiqlLoader} from './routing/graphiql';
