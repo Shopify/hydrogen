@@ -7,9 +7,9 @@ import {
   SHOPIFY_STOREFRONT_Y_HEADER,
 } from '@shopify/hydrogen-react';
 
-vi.mock('./cache/fetch.ts', async () => {
+vi.mock('./cache/server-fetch.ts', async () => {
   const original = await vi.importActual<typeof import('./cache/server-fetch')>(
-    './cache/fetch.ts',
+    './cache/server-fetch.ts',
   );
 
   return {
