@@ -39,7 +39,7 @@ type CachedDebugInfo = {
 
 export type AddDebugDataParam = {
   displayName?: string;
-  response?: Response;
+  response?: Pick<Response, 'url' | 'status' | 'statusText' | 'headers'>;
 };
 
 export type CacheActionFunctionParam = {
