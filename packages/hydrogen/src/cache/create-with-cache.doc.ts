@@ -6,7 +6,7 @@ const data: ReferenceEntityTemplateSchema = {
   subCategory: 'caching',
   isVisualComponent: false,
   related: [],
-  description: `Creates a utility function that executes an asynchronous operation \n like \`fetch\` and caches the result according to the strategy provided.\nUse this to call any third-party APIs from loaders or actions.\nBy default, it uses the \`CacheShort\` strategy.`,
+  description: `Creates a utility function that executes an asynchronous operation \n like \`fetch\` and caches the result according to the strategy provided.\nUse this to call any third-party APIs from loaders or actions.`,
   type: 'utility',
   defaultExample: {
     description: 'I am the default example',

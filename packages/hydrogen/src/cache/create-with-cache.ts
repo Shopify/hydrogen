@@ -20,7 +20,6 @@ type CreateWithCacheOptions = {
  * Creates a utility function that executes an asynchronous operation
  * like `fetch` and caches the result according to the strategy provided.
  * Use this to call any third-party APIs from loaders or actions.
- * By default, it uses the `CacheShort` strategy.
  *
  */
 export function createWithCache<T = unknown>({
