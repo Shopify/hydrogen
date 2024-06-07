@@ -10,7 +10,7 @@ export {
   type NoStoreStrategy,
 } from './cache/strategies';
 export {InMemoryCache} from './cache/in-memory';
-export {type CacheKey} from './cache/fetch';
+export {type CacheKey} from './cache/run-with-cache';
 
 export {storefrontRedirect} from './routing/redirect';
 export {graphiqlLoader} from './routing/graphiql';

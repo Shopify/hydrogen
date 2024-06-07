@@ -1,24 +1,24 @@
-import {hashKey} from '../utils/hash.js';
 import {
-  CacheShort,
-  CachingStrategy,
   NO_STORE,
+  CacheShort,
   generateCacheControlHeader,
+  type CachingStrategy,
 } from './strategies';
-import type {StackInfo} from '../utils/callsites.js';
 import {
   getItemFromCache,
-  setItemInCache,
-  isStale,
   getKeyUrl,
+  isStale,
+  setItemInCache,
 } from './sub-request';
+import {type StackInfo} from '../utils/callsites';
+import {hashKey} from '../utils/hash';
 
 /**
  * The cache key is used to uniquely identify a value in the cache.
  */
 export type CacheKey = string | readonly unknown[];
 
-export type FetchDebugInfo = {
+export type DebugOptions = {
   url?: string;
   requestId?: string | null;
   graphql?: string | null;
@@ -27,7 +27,7 @@ export type FetchDebugInfo = {
   displayName?: string;
 };
 
-export type DebugInfo = {
+type CachedDebugInfo = {
   displayName?: string;
   url?: string;
   responseInit?: {
@@ -37,7 +37,7 @@ export type DebugInfo = {
   };
 };
 
-type AddDebugDataParam = {
+export type AddDebugDataParam = {
   displayName?: string;
   response?: Response;
 };
@@ -46,43 +46,13 @@ export type CacheActionFunctionParam = {
   addDebugData: (info: AddDebugDataParam) => void;
 };
 
-export type WithCacheOptions<T = unknown> = {
+type WithCacheOptions<T = unknown> = {
   strategy?: CachingStrategy | null;
   cacheInstance?: Cache;
   shouldCacheResult?: (value: T) => boolean;
   waitUntil?: ExecutionContext['waitUntil'];
-  debugInfo?: FetchDebugInfo;
+  debugInfo?: DebugOptions;
 };
-
-export type FetchCacheOptions = {
-  cache?: CachingStrategy;
-  cacheInstance?: Cache;
-  cacheKey?: CacheKey;
-  shouldCacheResponse?: (body: any, response: Response) => boolean;
-  waitUntil?: ExecutionContext['waitUntil'];
-  returnType?: 'json' | 'text' | 'arrayBuffer' | 'blob';
-  debugInfo?: FetchDebugInfo;
-};
-
-function toSerializableResponse(body: any, response: Response) {
-  return [
-    body,
-    {
-      status: response.status,
-      statusText: response.statusText,
-      headers: Array.from(response.headers.entries()),
-    },
-  ] satisfies [any, ResponseInit];
-}
-
-function fromSerializableResponse([body, init]: [any, ResponseInit]) {
-  return [body, new Response(body, init)] as const;
-}
-
-// Check if the response body has GraphQL errors
-// https://spec.graphql.org/June2018/#sec-Response-Format
-export const checkGraphQLErrors = (body: any, response: Response) =>
-  !body?.errors && response.status < 400;
 
 // Lock to prevent revalidating the same sub-request
 // in the same isolate. Note that different isolates
@@ -91,6 +61,10 @@ export const checkGraphQLErrors = (body: any, response: Response) =>
 // https://github.com/Shopify/oxygen-platform/issues/625
 const swrLock = new Set<string>();
 
+/**
+ * Implementation of withCache.
+ * @private
+ */
 export async function runWithCache<T = unknown>(
   cacheKey: CacheKey,
   actionFn: ({addDebugData}: CacheActionFunctionParam) => T | Promise<T>,
@@ -108,8 +82,8 @@ export async function runWithCache<T = unknown>(
     ...(typeof cacheKey === 'string' ? [cacheKey] : cacheKey),
   ]);
 
-  let cachedDebugInfo: DebugInfo | undefined;
-  let userDebugInfo: DebugInfo | undefined;
+  let cachedDebugInfo: CachedDebugInfo | undefined;
+  let userDebugInfo: CachedDebugInfo | undefined;
 
   const addDebugData = (info: AddDebugDataParam) => {
     userDebugInfo = {
@@ -175,7 +149,7 @@ export async function runWithCache<T = unknown>(
 
   type CachedItem = {
     value: Awaited<T>;
-    debugInfo?: DebugInfo;
+    debugInfo?: CachedDebugInfo;
   };
 
   const storeInCache = (value: CachedItem['value']) =>
@@ -268,56 +242,4 @@ export async function runWithCache<T = unknown>(
   }
 
   return result;
-}
-
-/**
- * `fetch` equivalent that stores responses in cache.
- * Useful for calling third-party APIs that need to be cached.
- * @private
- */
-export async function fetchWithServerCache(
-  url: string,
-  requestInit: Request | RequestInit,
-  {
-    cacheInstance,
-    cache: cacheOptions,
-    cacheKey = [url, requestInit],
-    shouldCacheResponse = () => true,
-    waitUntil,
-    returnType = 'json',
-    debugInfo,
-  }: FetchCacheOptions = {},
-): Promise<readonly [any, Response]> {
-  if (!cacheOptions && (!requestInit.method || requestInit.method === 'GET')) {
-    cacheOptions = CacheShort();
-  }
-
-  return runWithCache(
-    cacheKey,
-    async () => {
-      const response = await fetch(url, requestInit);
-      let data;
-
-      try {
-        data = await response[returnType]();
-      } catch {
-        try {
-          data = await response.text();
-        } catch {
-          // Getting a response without a valid body
-          return toSerializableResponse('', response);
-        }
-      }
-
-      return toSerializableResponse(data, response);
-    },
-    {
-      cacheInstance,
-      waitUntil,
-      strategy: cacheOptions ?? null,
-      debugInfo,
-      shouldCacheResult: (result) =>
-        shouldCacheResponse(...fromSerializableResponse(result)),
-    },
-  ).then(fromSerializableResponse);
 }
