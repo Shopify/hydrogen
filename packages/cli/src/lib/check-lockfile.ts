@@ -4,6 +4,7 @@ import {checkIfIgnoredInGitRepository} from '@shopify/cli-kit/node/git';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {packageManagers, type PackageManager} from './package-managers.js';
+import {isHydrogenMonorepo} from './build.js';
 
 function missingLockfileWarning(shouldExit: boolean) {
   const headline = 'No lockfile found';
@@ -73,7 +74,7 @@ export async function checkLockfileStatus(
   directory: string,
   shouldExit = false,
 ) {
-  if (process.env.LOCAL_DEV) return;
+  if (isHydrogenMonorepo && !process.env.SHOPIFY_UNIT_TEST) return;
 
   const foundPackageManagers: PackageManager[] = [];
   for (const packageManager of packageManagers) {
