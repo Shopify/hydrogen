@@ -9,11 +9,16 @@
   "type": "module",
   "scripts": {
     "build": "tsup --clean",
-    "dev": "tsup --watch",
+    "dev": "tsup --watch src --watch ../cli/src",
+    "test": "vitest run --test-timeout=60000",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@shopify/cli-hydrogen": "^8.1.0"
+    "@ast-grep/napi": "0.11.0"
+  },
+  "devDependencies": {
+    "@shopify/cli-hydrogen": "^8.1.0",
+    "tempy": "3.0.0"
   },
   "bin": "dist/create-app.js",
   "files": [

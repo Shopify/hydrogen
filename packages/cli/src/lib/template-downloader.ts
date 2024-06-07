@@ -8,7 +8,11 @@ import {parseGitHubRepositoryURL} from '@shopify/cli-kit/node/github';
 import {mkdir, fileExists, rmdir} from '@shopify/cli-kit/node/fs';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortSignal} from '@shopify/cli-kit/node/abort';
-import {getAssetsDir, getSkeletonSourceDir} from './build.js';
+import {
+  getAssetsDir,
+  getSkeletonSourceDir,
+  isHydrogenMonorepo,
+} from './build.js';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {downloadGitRepository} from '@shopify/cli-kit/node/git';
 
@@ -78,7 +82,7 @@ async function downloadMonorepoTarball(
 export async function downloadMonorepoTemplates({
   signal,
 }: {signal?: AbortSignal} = {}) {
-  if (process.env.LOCAL_DEV) {
+  if (isHydrogenMonorepo && process.env.FORCE_TEMPLATES_SOURCE !== 'remote') {
     const templatesDir = path.dirname(getSkeletonSourceDir());
     return {
       version: 'local',

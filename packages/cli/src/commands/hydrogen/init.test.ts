@@ -5,12 +5,12 @@ import {exec} from '@shopify/cli-kit/node/system';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {fileExists, readFile, removeFile} from '@shopify/cli-kit/node/fs';
 import {temporaryDirectory} from 'tempy';
-import {checkHydrogenVersion} from '../../lib/check-version.js';
+import {checkCurrentCLIVersion} from '../../lib/check-cli-version.js';
 import {runCheckRoutes} from './check.js';
 import {runCodegen} from './codegen.js';
 import {setupTemplate} from '../../lib/onboarding/index.js';
 
-vi.mock('../../lib/check-version.js');
+vi.mock('../../lib/check-cli-version.js');
 
 vi.mock('../../lib/onboarding/index.js', async () => {
   const original = await vi.importActual<
@@ -32,21 +32,19 @@ describe('init', () => {
     outputMock.clear();
   });
 
-  it('checks Hydrogen version', async () => {
+  it('checks Hydrogen CLI version', async () => {
     const showUpgradeMock = vi.fn((param?: string) => ({
       currentVersion: '1.0.0',
       newVersion: '1.0.1',
     }));
-    vi.mocked(checkHydrogenVersion).mockResolvedValueOnce(showUpgradeMock);
+    vi.mocked(checkCurrentCLIVersion).mockResolvedValueOnce(showUpgradeMock);
     vi.mocked(setupTemplate).mockResolvedValueOnce(undefined);
 
-    const project = await runInit();
+    const project = await runInit({packageManager: 'pnpm'});
 
     expect(project).toBeFalsy();
-    expect(checkHydrogenVersion).toHaveBeenCalledOnce();
-    expect(showUpgradeMock).toHaveBeenCalledWith(
-      expect.stringContaining('npm create @shopify/hydrogen@latest'),
-    );
+    expect(checkCurrentCLIVersion).toHaveBeenCalledOnce();
+    expect(showUpgradeMock).toHaveBeenCalledWith('pnpm');
   });
 
   it('scaffolds Quickstart project with expected values', async () => {

@@ -39,6 +39,9 @@
     "@shopify/create-hydrogen#build": {
       "dependsOn": ["@shopify/cli-hydrogen#build"]
     },
+    "@shopify/create-hydrogen#test": {
+      "dependsOn": ["@shopify/create-hydrogen#build"]
+    },
     "@shopify/remix-oxygen#build": {
       "dependsOn": ["@shopify/hydrogen#build"]
     },
