@@ -1,17 +1,28 @@
-const path = require('path');
+import path from 'path';
 
-const {createRequestHandler} = require('@remix-run/express');
-const {installGlobals, createCookieSessionStorage} = require('@remix-run/node');
-const compression = require('compression');
-const express = require('express');
-const morgan = require('morgan');
-const {createStorefrontClient, InMemoryCache} = require('@shopify/hydrogen');
+import {createRequestHandler} from '@remix-run/express';
+import {installGlobals, createCookieSessionStorage} from '@remix-run/node';
+import compression from 'compression';
+import express from 'express';
+import morgan from 'morgan';
+import {createStorefrontClient, InMemoryCache} from '@shopify/hydrogen';
 
 installGlobals();
 
 const env = process.env;
 
-const BUILD_DIR = path.join(process.cwd(), 'build');
+const BUILD_DIR = path.join(process.cwd(), 'build', 'index.js');
+
+const vite =
+  process.env.NODE_ENV === 'production'
+    ? undefined
+    : await import('vite').then(({createServer}) =>
+        createServer({
+          server: {
+            middlewareMode: true,
+          },
+        }),
+      );
 
 const app = express();
 
@@ -30,7 +41,11 @@ app.use(
 // more aggressive with this caching.
 app.use(express.static('public', {maxAge: '1h'}));
 
-app.use(morgan('tiny'));
+if (vite) {
+  app.use(vite.middlewares);
+} else {
+  app.use(morgan('tiny'));
+}
 
 app.all(
   '*',
@@ -41,7 +56,9 @@ app.all(
         purgeRequireCache();
 
         return createRequestHandler({
-          build: require(BUILD_DIR),
+          build: vite
+            ? () => vite.ssrLoadModule('virtual:remix/server-build')
+            : await import('./build/server/index.js'),
           mode: process.env.NODE_ENV,
           getLoadContext: () => context,
         })(req, res, next);
@@ -50,7 +67,9 @@ app.all(
         const context = await getContext(req);
 
         return createRequestHandler({
-          build: require(BUILD_DIR),
+          build: vite
+            ? () => vite.ssrLoadModule('virtual:remix/server-build')
+            : await import('./build/server/index.js'),
           mode: process.env.NODE_ENV,
           getLoadContext: () => context,
         });
@@ -68,9 +87,9 @@ function purgeRequireCache() {
   // alternatively you can set up nodemon/pm2-dev to restart the server on
   // file changes, but then you'll have to reconnect to databases/etc on each
   // change. We prefer the DX of this, so we've included it for you by default
-  for (const key in require.cache) {
+  for (const key in import.meta.cache) {
     if (key.startsWith(BUILD_DIR)) {
-      delete require.cache[key];
+      delete import.meta.cache[key];
     }
   }
 }
