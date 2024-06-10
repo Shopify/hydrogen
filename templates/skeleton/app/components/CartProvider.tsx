@@ -8,10 +8,8 @@ export function CartProvider({children}: {children: ReactNode}) {
   const fetcher = useFetcher<CartReturn | null>();
 
   useEffect(() => {
-    if (fetcher.data || fetcher.state === 'loading') return;
-
     fetcher.load('/cart');
-  }, [fetcher]);
+  }, []);
 
   return (
     <CartContext.Provider value={fetcher.data ?? null}>

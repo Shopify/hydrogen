@@ -52,11 +52,7 @@ export function PageLayout({
 function CartAside({cart}: {cart: PageLayoutProps['cart']}) {
   return (
     <Aside type="cart" heading="CART">
-      {cart ? (
-        <CartMain cart={cart!} layout="aside" />
-      ) : (
-        <p>Loading cart ...</p>
-      )}
+      <CartMain cart={cart} layout="aside" />
     </Aside>
   );
 }
