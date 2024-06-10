@@ -92,6 +92,7 @@ function hydrogenBundleAnalyzer() {
         let resultingCodeBytes = modBundleInfo?.renderedLength ?? 0;
 
         if (modBundleInfo?.code) {
+          // TODO: check if we need to minify the sizes or not
           const result = await transformWithEsbuild(
             modBundleInfo.code,
             mod.id,
@@ -117,9 +118,10 @@ function hydrogenBundleAnalyzer() {
 
         let isESM =
           !mod.code ||
-          /(^\s*export\s+[\w\{]|^\s*import\s+[\w\{]|\bimport\()/ms.test(
+          /(^\s*export\s+[\w\{]|^\s*import\s+[\w\{]|\bimport\()|\bcreateRequire\(/ms.test(
             mod.code,
-          );
+          ) ||
+          !/((^|\b)exports\b|\brequire\()/.test(mod.code);
 
         const staticImportsMeta = createImportsMeta(
           mod.importedIds,
