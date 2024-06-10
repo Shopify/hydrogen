@@ -10,6 +10,7 @@ import {hasViteConfig, getViteConfig} from '../../lib/vite-config.js';
 import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
 import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
+import {hydrogenBundleAnalyzer} from '../../lib/bundle/vite-plugin.js';
 import {codegen} from '../../lib/codegen.js';
 import {isCI} from '../../lib/is-ci.js';
 
@@ -29,7 +30,7 @@ export default class Build extends Command {
     // For the classic compiler:
     'bundle-stats': Flags.boolean({
       description:
-        '[Classic Remix Compiler] Show a bundle size summary after building. Defaults to true, use `--no-bundle-stats` to disable.',
+        'Show a bundle size summary after building. Defaults to true, use `--no-bundle-stats` to disable.',
       default: true,
       allowNo: true,
     }),
@@ -92,6 +93,7 @@ export async function runBuild({
   disableRouteWarning = false,
   lockfileCheck = true,
   assetPath = '/',
+  bundleStats = true,
 }: RunBuildOptions) {
   if (!process.env.NODE_ENV) {
     process.env.NODE_ENV = 'production';
@@ -152,6 +154,7 @@ export async function runBuild({
       copyPublicDir: false,
       minify: serverMinify,
     },
+    plugins: bundleStats ? [hydrogenBundleAnalyzer()] : undefined,
   });
 
   await Promise.all([
