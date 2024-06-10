@@ -37,6 +37,7 @@ import {ShopifyAnalytics} from './ShopifyAnalytics';
 import {CartAnalytics} from './CartAnalytics';
 import type {CustomerPrivacyApiProps} from '../customer-privacy/ShopifyCustomerPrivacy';
 import type {Storefront} from '../storefront';
+import { PerfKit } from './PerfKit';
 
 export type ShopAnalytics = {
   /** The shop ID. */
@@ -331,6 +332,7 @@ function AnalyticsProvider({
           isMockShop={/\/68817551382$/.test(shop.shopId)}
         />
       )}
+      {!!shop && <PerfKit shop={shop} />}
     </AnalyticsContext.Provider>
   );
 }
