@@ -69,9 +69,13 @@ describe('remote templates', () => {
       // Skip routes:
       expect(resultFiles).not.toContain('app/routes/_index.tsx');
 
-      await expect(readFile(`${tmpDir}/package.json`)).resolves.toMatch(
-        `"name": "hello-world"`,
-      );
+      const pkgJsonPromise = readFile(`${tmpDir}/package.json`);
+      await expect(pkgJsonPromise).resolves.not.toThrow();
+      const pkgJsonString = await pkgJsonPromise;
+
+      expect(() => JSON.parse(pkgJsonString)).not.toThrow();
+      expect(pkgJsonString).toMatch(`"name": "hello-world"`);
+      expect(pkgJsonString).not.toMatch(`"@shopify/cli-hydrogen"`);
 
       const output = outputMock.info();
       expect(output).toMatch('success');
@@ -133,13 +137,16 @@ describe('remote templates', () => {
         expect.objectContaining(templatePkgJson.scripts),
       );
 
+      const expectedDeps = {
+        ...templatePkgJson.dependencies,
+        ...examplePkgJson.dependencies,
+      };
+
+      // Removed to avoid conflicts with the global bundled CLI
+      delete expectedDeps['@shopify/cli-hydrogen'];
+
       expect(resultPkgJson.dependencies).toEqual(
-        expect.objectContaining({
-          ...templatePkgJson.dependencies,
-          ...examplePkgJson.dependencies,
-          '@shopify/cli-hydrogen':
-            templatePkgJson.dependencies?.['@shopify/cli-hydrogen'],
-        }),
+        expect.objectContaining(expectedDeps),
       );
       expect(resultPkgJson.devDependencies).toEqual(
         expect.objectContaining({

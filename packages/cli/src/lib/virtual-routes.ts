@@ -4,10 +4,10 @@
  * @deprecated
  */
 
-import {fileURLToPath} from 'node:url';
 import {glob} from '@shopify/cli-kit/node/fs';
 import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
 import type {RemixConfig} from './remix-config.js';
+import {getAssetsDir, hydrogenPackagesPath} from './build.js';
 
 export const VIRTUAL_ROUTES_DIR = 'virtual-routes/routes';
 export const VIRTUAL_ROOT = 'virtual-routes/virtual-root';
@@ -20,9 +20,10 @@ type MinimalRemixConfig = {
 export async function addVirtualRoutes<T extends MinimalRemixConfig>(
   config: T,
 ): Promise<T> {
-  const distPath = process.env.SHOPIFY_UNIT_TEST
-    ? fileURLToPath(new URL('../../../hydrogen/src/vite', import.meta.url))
-    : fileURLToPath(new URL('..', import.meta.url));
+  const distPath =
+    process.env.SHOPIFY_UNIT_TEST && hydrogenPackagesPath
+      ? joinPath(hydrogenPackagesPath, 'hydrogen', 'src', 'vite')
+      : await getAssetsDir();
 
   const userRouteList = Object.values(config.routes);
   const virtualRoutesPath = joinPath(distPath, VIRTUAL_ROUTES_DIR);

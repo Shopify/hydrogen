@@ -86,7 +86,7 @@ export async function setupLocalStarterTemplate(
       })
       .catch(abort);
 
-  const templateDir = getStarterDir();
+  const templateDir = await getStarterDir();
   let backgroundWorkPromise: Promise<any> = copyWithFilter(
     templateDir,
     project.directory,
@@ -177,10 +177,7 @@ export async function setupLocalStarterTemplate(
           joinPath(project.directory, '.env'),
           envLeadingComment +
             '\n' +
-            [
-              ['SESSION_SECRET', 'foobar'],
-              ['PUBLIC_STORE_DOMAIN', 'mock.shop'],
-            ]
+            [['SESSION_SECRET', 'foobar']]
               .map(([key, value]) => `${key}="${value}"`)
               .join('\n') +
             '\n',

@@ -49,6 +49,7 @@ import {getViteConfig} from '../../lib/vite-config.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {hasRemixConfigFile} from '../../lib/remix-config.js';
 import {packageManagers} from '../../lib/package-managers.js';
+import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 
 const DEPLOY_OUTPUT_FILE_HANDLE = 'h2_deploy_log.json';
 
@@ -97,6 +98,14 @@ export default class Deploy extends Command {
         'Generate an authentication bypass token, which can be used to perform end-to-end tests against the deployment.',
       required: false,
       default: false,
+      env: 'AUTH_BYPASS_TOKEN',
+    }),
+    'auth-bypass-token-duration': Flags.string({
+      description:
+        'Specify the duration (in hours) up to 12 hours for the authentication bypass token. Defaults to `2`',
+      required: false,
+      env: 'AUTH_BYPASS_TOKEN_DURATION',
+      dependsOn: ['auth-bypass-token'],
     }),
     'build-command': Flags.string({
       description:
@@ -150,10 +159,9 @@ export default class Deploy extends Command {
     const deploymentOptions = this.flagsToOxygenDeploymentOptions(flags);
 
     if (flags.diff) {
-      deploymentOptions.path = await prepareDiffDirectory(
-        deploymentOptions.path,
-        false,
-      );
+      const diff = await prepareDiffDirectory(deploymentOptions.path, false);
+      deploymentOptions.path = diff.targetDirectory;
+      setupResourceCleanup(diff.cleanup);
     }
 
     await runDeploy(deploymentOptions);
@@ -178,6 +186,7 @@ export default class Deploy extends Command {
 }
 
 interface OxygenDeploymentOptions {
+  authBypassTokenDuration?: string;
   authBypassToken: boolean;
   buildCommand?: string;
   defaultEnvironment: boolean;
@@ -226,6 +235,7 @@ export async function runDeploy(
   options: OxygenDeploymentOptions,
 ): Promise<void> {
   const {
+    authBypassTokenDuration,
     authBypassToken: generateAuthBypassToken,
     buildCommand,
     defaultEnvironment,
@@ -458,6 +468,7 @@ export async function runDeploy(
       userChosenEnvironmentTag ||
       fallbackEnvironmentTag,
     generateAuthBypassToken,
+    authBypassTokenDuration,
     verificationMaxDuration: 180,
     metadata: {
       ...(metadataDescription ? {description: metadataDescription} : {}),

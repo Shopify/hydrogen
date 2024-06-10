@@ -10,10 +10,9 @@ import {
   Scripts,
   LiveReload,
   ScrollRestoration,
-  useLoaderData,
+  useRouteLoaderData,
 } from '@remix-run/react';
 import type {Cart, Shop} from '@shopify/hydrogen/storefront-api-types';
-import {Layout} from '~/components/Layout';
 import styles from './styles/app.css';
 import {useNonce} from '@shopify/hydrogen';
 
@@ -66,11 +65,11 @@ export async function loader({context}: LoaderFunctionArgs) {
   });
 }
 
-export default function App() {
-  const data = useLoaderData<typeof loader>();
+function Layout({children}: {children?: React.ReactNode}) {
+  const data = useRouteLoaderData<typeof loader>('root');
   const nonce = useNonce();
 
-  const {name, description} = data.layout.shop;
+  const shop = data?.layout.shop;
 
   return (
     <html lang="en">
@@ -81,14 +80,28 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout description={description} title={name}>
-          <Outlet />
-        </Layout>
+        {data ? (
+          <div className="PageLayout">
+            <h1>{shop?.name} (skeleton)</h1>
+            <h2>{shop?.description}</h2>
+            {children}
+          </div>
+        ) : (
+          children
+        )}
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
         <LiveReload nonce={nonce} />
       </body>
     </html>
+  );
+}
+
+export default function App() {
+  return (
+    <Layout>
+      <Outlet />
+    </Layout>
   );
 }
 

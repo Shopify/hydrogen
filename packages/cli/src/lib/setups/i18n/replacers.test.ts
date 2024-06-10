@@ -8,7 +8,7 @@ import {
 } from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {ts} from 'ts-morph';
-import {getSkeletonSourceDir} from '../../build.js';
+import {getAssetsDir, getSkeletonSourceDir} from '../../build.js';
 import {replaceRemixEnv, replaceServerI18n} from './replacers.js';
 import {DEFAULT_COMPILER_OPTIONS} from '../../transpile/morph/index.js';
 
@@ -40,9 +40,7 @@ describe('i18n replacers', () => {
       await replaceRemixEnv(
         {rootDirectory: tmpDir},
         {},
-        await readFile(
-          fileURLToPath(new URL('./templates/domains.ts', import.meta.url)),
-        ),
+        await readFile(await getAssetsDir('i18n', 'domains.ts')),
       );
 
       const newContent = await readFile(joinPath(tmpDir, envDts));
@@ -85,6 +83,7 @@ describe('i18n replacers', () => {
             PUBLIC_STOREFRONT_ID: string;
             PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID: string;
             PUBLIC_CUSTOMER_ACCOUNT_API_URL: string;
+            PUBLIC_CHECKOUT_DOMAIN: string;
           }
 
           /**
@@ -131,9 +130,7 @@ describe('i18n replacers', () => {
       await replaceServerI18n(
         {rootDirectory: tmpDir, serverEntryPoint: serverTs},
         {},
-        await readFile(
-          fileURLToPath(new URL('./templates/domains.ts', import.meta.url)),
-        ),
+        await readFile(await getAssetsDir('i18n', 'domains.ts')),
         false,
       );
 
@@ -238,6 +235,10 @@ describe('i18n replacers', () => {
               });
 
               const response = await handleRequest(request);
+
+              if (session.isPending) {
+                response.headers.set("Set-Cookie", await session.commit());
+              }
 
               if (response.status === 404) {
                 /**

@@ -1,8 +1,7 @@
-import {fileURLToPath} from 'node:url';
 import {describe, it, expect, vi, beforeEach} from 'vitest';
+import {copy as copyWithFilter, createSymlink} from 'fs-extra/esm';
 import {
   inTemporaryDirectory,
-  copyFile,
   fileExists,
   readFile,
 } from '@shopify/cli-kit/node/fs';
@@ -10,6 +9,7 @@ import {joinPath} from '@shopify/cli-kit/node/path';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {runSetup} from './setup.js';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
+import {getRepoNodeModules, getSkeletonSourceDir} from '../../lib/build.js';
 
 vi.mock('../../lib/shell.js');
 
@@ -40,16 +40,20 @@ describe('setup', () => {
 
   it('sets up an i18n strategy and generates routes', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
-      await copyFile(
-        fileURLToPath(
-          new URL('../../../../../templates/hello-world', import.meta.url),
-        ),
+      await copyWithFilter(
+        getSkeletonSourceDir().replace('skeleton', 'hello-world'),
         tmpDir,
+        {filter: (src) => !src.includes('node_modules')},
       );
 
       await expect(
         fileExists(joinPath(tmpDir, 'app/routes/_index.tsx')),
       ).resolves.toBeFalsy();
+
+      await createSymlink(
+        await getRepoNodeModules(),
+        joinPath(tmpDir, 'node_modules'),
+      );
 
       // For generating routes
       vi.mocked(renderConfirmationPrompt).mockResolvedValueOnce(true);

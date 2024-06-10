@@ -8,7 +8,11 @@ import {parseGitHubRepositoryURL} from '@shopify/cli-kit/node/github';
 import {mkdir, fileExists, rmdir} from '@shopify/cli-kit/node/fs';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortSignal} from '@shopify/cli-kit/node/abort';
-import {getSkeletonSourceDir} from './build.js';
+import {
+  getAssetsDir,
+  getSkeletonSourceDir,
+  isHydrogenMonorepo,
+} from './build.js';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {downloadGitRepository} from '@shopify/cli-kit/node/git';
 
@@ -78,7 +82,7 @@ async function downloadMonorepoTarball(
 export async function downloadMonorepoTemplates({
   signal,
 }: {signal?: AbortSignal} = {}) {
-  if (process.env.LOCAL_DEV) {
+  if (isHydrogenMonorepo && process.env.FORCE_TEMPLATES_SOURCE !== 'remote') {
     const templatesDir = path.dirname(getSkeletonSourceDir());
     return {
       version: 'local',
@@ -89,9 +93,7 @@ export async function downloadMonorepoTemplates({
 
   try {
     const {version, url} = await getLatestReleaseDownloadUrl(signal);
-    const templateStoragePath = fileURLToPath(
-      new URL('../starter-templates', import.meta.url),
-    );
+    const templateStoragePath = await getAssetsDir('internal-templates');
 
     if (!(await fileExists(templateStoragePath))) {
       await mkdir(templateStoragePath);
@@ -126,16 +128,14 @@ export async function downloadExternalRepo(
     throw new AbortError(parsed.error.message);
   }
 
-  const externalTemplates = fileURLToPath(
-    new URL('../external-templates', import.meta.url),
-  );
-  if (!(await fileExists(externalTemplates))) {
-    await mkdir(externalTemplates);
+  const templateStoragePath = await getAssetsDir('external-templates');
+  if (!(await fileExists(templateStoragePath))) {
+    await mkdir(templateStoragePath);
   }
 
   const result = parsed.value;
   const templateDir = joinPath(
-    externalTemplates,
+    templateStoragePath,
     result.full.replace(/^https?:\/\//, '').replace(/[^\w]+/, '_'),
   );
 

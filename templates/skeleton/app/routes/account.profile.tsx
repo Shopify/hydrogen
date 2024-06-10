@@ -3,7 +3,6 @@ import type {CustomerUpdateInput} from '@shopify/hydrogen/customer-account-api-t
 import {CUSTOMER_UPDATE_MUTATION} from '~/graphql/customer-account/CustomerUpdateMutation';
 import {
   json,
-  redirect,
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
 } from '@shopify/remix-oxygen';
@@ -27,14 +26,7 @@ export const meta: MetaFunction = () => {
 export async function loader({context}: LoaderFunctionArgs) {
   await context.customerAccount.handleAuthStatus();
 
-  return json(
-    {},
-    {
-      headers: {
-        'Set-Cookie': await context.session.commit(),
-      },
-    },
-  );
+  return json({});
 }
 
 export async function action({request, context}: ActionFunctionArgs) {
@@ -76,25 +68,15 @@ export async function action({request, context}: ActionFunctionArgs) {
       throw new Error('Customer profile update failed.');
     }
 
-    return json(
-      {
-        error: null,
-        customer: data?.customerUpdate?.customer,
-      },
-      {
-        headers: {
-          'Set-Cookie': await context.session.commit(),
-        },
-      },
-    );
+    return json({
+      error: null,
+      customer: data?.customerUpdate?.customer,
+    });
   } catch (error: any) {
     return json(
       {error: error.message, customer: null},
       {
         status: 400,
-        headers: {
-          'Set-Cookie': await context.session.commit(),
-        },
       },
     );
   }

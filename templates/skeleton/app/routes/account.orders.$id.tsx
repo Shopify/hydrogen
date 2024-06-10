@@ -1,5 +1,5 @@
 import {json, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {Link, useLoaderData, type MetaFunction} from '@remix-run/react';
+import {useLoaderData, type MetaFunction} from '@remix-run/react';
 import {Money, Image, flattenConnection} from '@shopify/hydrogen';
 import type {OrderLineItemFullFragment} from 'customer-accountapi.generated';
 import {CUSTOMER_ORDER_QUERY} from '~/graphql/customer-account/CustomerOrderQuery';
@@ -8,7 +8,7 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Order ${data?.order?.name}`}];
 };
 
-export async function loader({params, context, request}: LoaderFunctionArgs) {
+export async function loader({params, context}: LoaderFunctionArgs) {
   if (!params.id) {
     return redirect('/account/orders');
   }
@@ -40,20 +40,13 @@ export async function loader({params, context, request}: LoaderFunctionArgs) {
     firstDiscount?.__typename === 'PricingPercentageValue' &&
     firstDiscount?.percentage;
 
-  return json(
-    {
-      order,
-      lineItems,
-      discountValue,
-      discountPercentage,
-      fulfillmentStatus,
-    },
-    {
-      headers: {
-        'Set-Cookie': await context.session.commit(),
-      },
-    },
-  );
+  return json({
+    order,
+    lineItems,
+    discountValue,
+    discountPercentage,
+    fulfillmentStatus,
+  });
 }
 
 export default function OrderRoute() {

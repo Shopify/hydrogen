@@ -41,6 +41,7 @@ import {
   notifyIssueWithTunnelAndMockShop,
 } from '../dev-shared.js';
 import {getCliCommand} from '../shell.js';
+import {importLocal} from '../import-utils.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -125,7 +126,10 @@ export async function runClassicCompilerDev({
   const assetsPort = legacyRuntime ? 0 : await findPort(appPort + 100);
   if (assetsPort) {
     // Note: Set this env before loading Remix config!
-    process.env.HYDROGEN_ASSET_BASE_URL = await buildAssetsUrl(assetsPort);
+    process.env.HYDROGEN_ASSET_BASE_URL = await buildAssetsUrl(
+      assetsPort,
+      root,
+    );
   }
 
   const backgroundPromise = getDevConfigInBackground(
@@ -159,9 +163,16 @@ export async function runClassicCompilerDev({
     }),
   );
 
+  type RemixWatch = typeof import('@remix-run/dev/dist/compiler/watch.js');
+  type RemixFileWatchCache =
+    typeof import('@remix-run/dev/dist/compiler/fileWatchCache.js');
+
   const [{watch}, {createFileWatchCache}] = await Promise.all([
-    import('@remix-run/dev/dist/compiler/watch.js'),
-    import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
+    importLocal<RemixWatch>('@remix-run/dev/dist/compiler/watch.js', root),
+    importLocal<RemixFileWatchCache>(
+      '@remix-run/dev/dist/compiler/fileWatchCache.js',
+      root,
+    ),
   ]).catch(handleRemixImportFail);
 
   let isInitialBuild = true;
@@ -169,7 +180,7 @@ export async function runClassicCompilerDev({
   let initialBuildStartTimeMs = Date.now();
 
   const liveReload = shouldLiveReload
-    ? await setupLiveReload(remixConfig.dev?.port ?? 8002)
+    ? await setupLiveReload(remixConfig.dev?.port ?? 8002, root)
     : undefined;
 
   let miniOxygen: MiniOxygen;
@@ -219,7 +230,7 @@ export async function runClassicCompilerDev({
       });
     }
 
-    checkRemixVersions();
+    checkRemixVersions(root);
 
     if (!disableVersionCheck) {
       displayDevUpgradeNotice({targetPath: appPath});

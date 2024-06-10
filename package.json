@@ -10,8 +10,8 @@
     "build:all": "npm run build:pkg && npm run build:templates && npm run build:examples",
     "ci:checks": "turbo run lint test format:check typecheck",
     "dev": "npm run dev:pkg",
-    "dev:pkg": "cross-env LOCAL_DEV=true turbo dev --parallel --filter=./packages/*",
-    "dev:app": "cd templates/skeleton && cross-env LOCAL_DEV=true npm run dev --",
+    "dev:pkg": "turbo dev --parallel --filter=./packages/*",
+    "dev:app": "cd templates/skeleton && npm run dev --",
     "docs:build": "turbo run build-docs",
     "docs:preview": "turbo run preview-docs",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx ./packages",
@@ -43,7 +43,7 @@
     "examples/partytown",
     "examples/subscriptions",
     "examples/third-party-queries-caching",
-    "examples/analytics",
+    "examples/gtm",
     "packages/cli",
     "packages/create-hydrogen",
     "packages/hydrogen",
@@ -68,11 +68,11 @@
     "lint-staged": "^10.5.4",
     "prettier": "^2.8.4",
     "rimraf": "^3.0.2",
-    "tsup": "7.2.0",
+    "tiny-invariant": "^1.3.1",
+    "tsup": "8.1.0",
     "turbo": "1.12.0",
     "typescript": "^5.2.2",
-    "yorkie": "^2.0.0",
-    "tiny-invariant": "^1.3.1"
+    "yorkie": "^2.0.0"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -96,9 +96,7 @@
     ]
   },
   "overrides": {
-    "@oclif/core": "3.23.0",
-    "@oclif/plugin-commands": "3.2.0",
-    "@oclif/plugin-help": "6.0.18",
-    "@oclif/plugin-plugins": "4.3.6"
+    "@oclif/core": "3.26.5",
+    "@shopify/cli-kit": "3.61.0"
   }
 }

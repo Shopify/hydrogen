@@ -1,6 +1,4 @@
 import Command from '@shopify/cli-kit/node/base-command';
-import {fileURLToPath} from 'node:url';
-import {packageManagerFromUserAgent} from '@shopify/cli-kit/node/node-package-manager';
 import {Flags} from '@oclif/core';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {
@@ -8,7 +6,7 @@ import {
   parseProcessFlags,
   flagsToCamelObject,
 } from '../../lib/flags.js';
-import {checkHydrogenVersion} from '../../lib/check-version.js';
+import {checkCurrentCLIVersion} from '../../lib/check-cli-version.js';
 import {I18N_CHOICES, type I18nChoice} from '../../lib/setups/i18n/index.js';
 import {supressNodeExperimentalWarnings} from '../../lib/process.js';
 import {setupTemplate, type InitOptions} from '../../lib/onboarding/index.js';
@@ -113,22 +111,9 @@ export async function runInit(
     options.shortcut ??= true;
   }
 
-  const showUpgrade = await checkHydrogenVersion(
-    // Resolving the CLI package from a local directory might fail because
-    // this code could be run from a global dependency (e.g. on `npm create`).
-    // Therefore, pass the known path to the package.json directly from here:
-    fileURLToPath(new URL('../../../package.json', import.meta.url)),
-    'cli',
-  );
-
+  const showUpgrade = await checkCurrentCLIVersion();
   if (showUpgrade) {
-    const packageManager =
-      options.packageManager ?? packageManagerFromUserAgent();
-    showUpgrade(
-      packageManager === 'unknown'
-        ? ''
-        : `Please use the latest version with \`${packageManager} create @shopify/hydrogen@latest\``,
-    );
+    showUpgrade(options.packageManager);
   }
 
   return setupTemplate(options);

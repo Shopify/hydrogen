@@ -1,29 +1,63 @@
-import type {CustomerAccount} from '@shopify/hydrogen';
-import {type HydrogenSession} from '@shopify/hydrogen';
 import {
+  createCustomerAccountClient,
+  type HydrogenSession,
+} from '@shopify/hydrogen';
+import * as remixBuild from '@remix-run/dev/server-build';
+import {
+  createRequestHandler,
   createCookieSessionStorage,
   type SessionStorage,
   type Session,
 } from '@shopify/remix-oxygen';
-import {
-  useLoaderData,
-  useRouteError,
-  isRouteErrorResponse,
-  useLocation,
-} from '@remix-run/react';
-import {type LoaderFunctionArgs, json} from '@shopify/remix-oxygen';
 
-declare module '@shopify/remix-oxygen' {
-  /**
-   * Declare local additions to the Remix loader context.
-   */
-  export interface AppLoadContext {
-    customerAccount: CustomerAccount;
-    session: AppSession;
-  }
-}
+// In server.ts
+export default {
+  async fetch(
+    request: Request,
+    env: Record<string, string>,
+    executionContext: ExecutionContext,
+  ) {
+    const session = await AppSession.init(request, [env.SESSION_SECRET]);
+
+    function customAuthStatusHandler() {
+      return new Response('Customer is not login', {
+        status: 401,
+      });
+    }
+
+    /* Create a Customer API client with your credentials and options */
+    const customerAccount = createCustomerAccountClient({
+      /* Runtime utility in serverless environments */
+      waitUntil: (p) => executionContext.waitUntil(p),
+      /* Public Customer Account API client ID for your store */
+      customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_ID,
+      /* Public account URL for your store */
+      customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_URL,
+      request,
+      session,
+      customAuthStatusHandler,
+    });
+
+    const handleRequest = createRequestHandler({
+      build: remixBuild,
+      mode: process.env.NODE_ENV,
+      /* Inject the customer account client in the Remix context */
+      getLoadContext: () => ({customerAccount}),
+    });
+
+    const response = await handleRequest(request);
+
+    if (session.isPending) {
+      response.headers.set('Set-Cookie', await session.commit());
+    }
+
+    return response;
+  },
+};
 
 class AppSession implements HydrogenSession {
+  public isPending = false;
+
   constructor(
     private sessionStorage: SessionStorage,
     private session: Session,
@@ -58,17 +92,30 @@ class AppSession implements HydrogenSession {
   }
 
   unset(key: string) {
+    this.isPending = true;
     this.session.unset(key);
   }
 
   set(key: string, value: any) {
+    this.isPending = true;
     this.session.set(key, value);
   }
 
   commit() {
+    this.isPending = false;
     return this.sessionStorage.commitSession(this.session);
   }
 }
+
+/////////////////////////////////
+// In a route
+import {
+  useLoaderData,
+  useRouteError,
+  isRouteErrorResponse,
+  useLocation,
+} from '@remix-run/react';
+import {type LoaderFunctionArgs, json} from '@shopify/remix-oxygen';
 
 export async function loader({context}: LoaderFunctionArgs) {
   if (!(await context.customerAccount.isLoggedIn())) {
@@ -77,25 +124,18 @@ export async function loader({context}: LoaderFunctionArgs) {
     });
   }
 
-  const {data} = await context.customerAccount.query<{
-    customer: {firstName: string; lastName: string};
-  }>(`#graphql
+  const {data} = await context.customerAccount.query(
+    `#graphql
     query getCustomer {
       customer {
         firstName
         lastName
       }
     }
-    `);
-
-  return json(
-    {customer: data.customer},
-    {
-      headers: {
-        'Set-Cookie': await context.session.commit(),
-      },
-    },
+    `,
   );
+
+  return json({customer: data.customer});
 }
 
 export function ErrorBoundary() {
@@ -117,7 +157,8 @@ export function ErrorBoundary() {
   }
 }
 
-export default function () {
+// this should be an default export
+export function Route() {
   const {customer} = useLoaderData<typeof loader>();
 
   return (

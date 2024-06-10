@@ -4,19 +4,19 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "8.0.4",
+  "version": "8.1.0",
   "license": "MIT",
   "type": "module",
   "scripts": {
     "build": "tsup && node scripts/build-check.mjs",
-    "dev": "tsup --watch ./src",
+    "dev": "tsup --watch ./src --watch ../../templates/skeleton",
     "typecheck": "tsc --noEmit",
     "generate:manifest": "node scripts/generate-manifest.mjs",
     "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run --test-timeout=20000",
     "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest --test-timeout=20000"
   },
   "devDependencies": {
-    "@remix-run/dev": "^2.8.0",
+    "@remix-run/dev": "^2.9.2",
     "@types/diff": "^5.0.2",
     "@types/fs-extra": "^11.0.1",
     "@types/gunzip-maybe": "^1.4.0",
@@ -34,10 +34,10 @@
   },
   "dependencies": {
     "@ast-grep/napi": "0.11.0",
-    "@oclif/core": "3.23.0",
-    "@shopify/cli-kit": "3.59.2",
-    "@shopify/oxygen-cli": "~4.4.0",
-    "@shopify/plugin-cloudflare": "3.59.2",
+    "@oclif/core": "3.26.5",
+    "@shopify/cli-kit": "3.61.0",
+    "@shopify/oxygen-cli": "4.4.9",
+    "@shopify/plugin-cloudflare": "3.61.0",
     "ansi-escapes": "^6.2.0",
     "cli-truncate": "^4.0.0",
     "diff": "^5.1.0",
@@ -60,7 +60,7 @@
     "@graphql-codegen/cli": "^5.0.2",
     "@remix-run/dev": "^2.1.0",
     "@shopify/hydrogen-codegen": "^0.3.1",
-    "@shopify/mini-oxygen": "^3.0.2",
+    "@shopify/mini-oxygen": "^3.0.3",
     "graphql-config": "^5.0.3",
     "vite": "^5.1.0"
   },
@@ -88,8 +88,12 @@
   "exports": {
     "./package.json": "./package.json",
     "./commands/hydrogen/init": {
-      "types": "./dist/init.d.ts",
+      "types": "./dist/commands/hydrogen/init.d.ts",
       "default": "./dist/commands/hydrogen/init.js"
+    },
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
   "files": [

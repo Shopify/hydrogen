@@ -5,7 +5,7 @@ import type {
   FlashSessionData,
 } from '@remix-run/server-runtime';
 import type {RequestEventPayload} from './vite/request-events';
-import {CUSTOMER_ACCOUNT_SESSION_KEY} from './constants';
+import {CUSTOMER_ACCOUNT_SESSION_KEY, BUYER_SESSION_KEY} from './constants';
 import type {BuyerInput} from '@shopify/hydrogen-react/storefront-api-types';
 
 export interface HydrogenSessionData {
@@ -33,6 +33,7 @@ export interface HydrogenSession<
   commit: () => ReturnType<
     SessionStorage<HydrogenSessionData & Data, FlashData>['commitSession']
   >;
+  isPending?: boolean;
 }
 
 declare global {

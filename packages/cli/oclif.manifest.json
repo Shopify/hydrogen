@@ -68,6 +68,13 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "watch": {
+          "description": "Watches for changes and rebuilds the project writing output to disk.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_WATCH",
+          "name": "watch",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "bundle-stats": {
           "description": "Show a bundle size summary after building. Defaults to true, use `--no-bundle-stats` to disable.",
           "name": "bundle-stats",
@@ -255,6 +262,22 @@
           "multiple": false,
           "type": "option"
         },
+        "diff": {
+          "description": "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
+          "hidden": true,
+          "name": "diff",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "entry": {
+          "description": "Entry file for the worker. Defaults to `./server`.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_ENTRY",
+          "name": "entry",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "output": {
           "description": "Specify a path to generate the profile file. Defaults to \"startup.cpuprofile\".",
           "name": "output",
@@ -350,10 +373,23 @@
         },
         "auth-bypass-token": {
           "description": "Generate an authentication bypass token, which can be used to perform end-to-end tests against the deployment.",
+          "env": "AUTH_BYPASS_TOKEN",
           "name": "auth-bypass-token",
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "auth-bypass-token-duration": {
+          "dependsOn": [
+            "auth-bypass-token"
+          ],
+          "description": "Specify the duration (in hours) up to 12 hours for the authentication bypass token. Defaults to `2`",
+          "env": "AUTH_BYPASS_TOKEN_DURATION",
+          "name": "auth-bypass-token-duration",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "build-command": {
           "description": "Specify a build command to run before deploying. If not specified, `shopify hydrogen build` will be used.",
@@ -1282,6 +1318,64 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "build": {
+          "description": "Builds the app before starting the preview server.",
+          "name": "build",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "watch": {
+          "dependsOn": [
+            "build"
+          ],
+          "description": "Watches for changes and rebuilds the project.",
+          "name": "watch",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "entry": {
+          "dependsOn": [
+            "build"
+          ],
+          "description": "Entry file for the worker. Defaults to `./server`.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_ENTRY",
+          "name": "entry",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "codegen": {
+          "dependsOn": [
+            "build"
+          ],
+          "description": "Automatically generates GraphQL types for your project’s Storefront API queries.",
+          "name": "codegen",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "codegen-config-path": {
+          "dependsOn": [
+            "codegen"
+          ],
+          "description": "Specifies a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if this file exists.",
+          "name": "codegen-config-path",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "diff": {
+          "dependsOn": [
+            "build"
+          ],
+          "description": "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
+          "hidden": true,
+          "name": "diff",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
         }
       },
       "hasDynamicHelp": false,
@@ -1586,5 +1680,5 @@
       ]
     }
   },
-  "version": "8.0.4"
+  "version": "8.1.0"
 }

@@ -3,6 +3,7 @@ import {fileURLToPath} from 'node:url';
 import {writeFile, readFile, fileExists} from '@shopify/cli-kit/node/fs';
 import colors from '@shopify/cli-kit/node/colors';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
+import {getAssetsDir} from '../build.js';
 
 export const BUNDLE_ANALYZER_JSON_FILE = 'metafile.server.json';
 export const BUNDLE_ANALYZER_HTML_FILE = 'server-bundle-analyzer.html';
@@ -70,9 +71,7 @@ async function classicWriteBundleAnalyzerFile(
   });
 
   const analysisTemplate = await readFile(
-    fileURLToPath(
-      new URL(`../../lib/bundle/bundle-analyzer.html`, import.meta.url),
-    ),
+    await getAssetsDir('bundle', 'analyzer.html'),
   );
 
   await writeFile(

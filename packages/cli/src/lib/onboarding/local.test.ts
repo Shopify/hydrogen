@@ -45,7 +45,7 @@ describe('local templates', () => {
       expect(resultFiles).toContain('app/root.tsx');
       expect(resultFiles).toContain('app/entry.client.tsx');
       expect(resultFiles).toContain('app/entry.server.tsx');
-      expect(resultFiles).toContain('app/components/Layout.tsx');
+      expect(resultFiles).toContain('app/components/PageLayout.tsx');
 
       // Skip routes:
       expect(resultFiles).not.toContain('app/routes/_index.tsx');
@@ -60,9 +60,9 @@ describe('local templates', () => {
         `"name": "${basename(tmpDir)}"`,
       );
 
-      // Creates .env
-      await expect(readFile(`${tmpDir}/.env`)).resolves.toMatch(
-        `PUBLIC_STORE_DOMAIN="mock.shop"`,
+      // Creates .env without mock.shop
+      await expect(readFile(`${tmpDir}/.env`)).resolves.not.toMatch(
+        `mock.shop`,
       );
 
       const output = outputMock.info();
