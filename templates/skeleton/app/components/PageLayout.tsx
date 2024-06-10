@@ -13,7 +13,6 @@ interface PageLayoutProps {
   cart: CartReturn | null;
   footer: Promise<FooterQuery | null>;
   header: HeaderQuery;
-  isLoggedIn: Promise<boolean>;
   publicStoreDomain: string;
   children?: React.ReactNode;
 }
@@ -23,7 +22,6 @@ export function PageLayout({
   children = null,
   footer,
   header,
-  isLoggedIn,
   publicStoreDomain,
 }: PageLayoutProps) {
   return (
@@ -35,7 +33,6 @@ export function PageLayout({
         <Header
           header={header}
           cart={cart}
-          isLoggedIn={isLoggedIn}
           publicStoreDomain={publicStoreDomain}
         />
       )}

@@ -1,8 +1,8 @@
 import {
   Await,
   type MetaFunction,
+  type ShouldRevalidateFunction,
   useLoaderData,
-  useRouteLoaderData,
 } from '@remix-run/react';
 import {Suspense} from 'react';
 import type {CartQueryDataReturn} from '@shopify/hydrogen';
@@ -16,6 +16,10 @@ import {CartMain} from '~/components/Cart';
 
 export const meta: MetaFunction = () => {
   return [{title: `Hydrogen | Cart`}];
+};
+
+export const shouldRevalidate: ShouldRevalidateFunction = ({formAction}) => {
+  return formAction === '/cart';
 };
 
 export async function loader({context}: LoaderFunctionArgs) {

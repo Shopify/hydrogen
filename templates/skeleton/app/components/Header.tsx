@@ -1,5 +1,5 @@
-import {Suspense} from 'react';
-import {Await, NavLink} from '@remix-run/react';
+import {useEffect} from 'react';
+import {NavLink, useFetcher} from '@remix-run/react';
 import {
   type CartReturn,
   type CartViewPayload,
@@ -11,19 +11,14 @@ import {useAside} from '~/components/Aside';
 interface HeaderProps {
   header: HeaderQuery;
   cart: CartReturn | null;
-  isLoggedIn: Promise<boolean>;
   publicStoreDomain: string;
 }
 
 type Viewport = 'desktop' | 'mobile';
 
-export function Header({
-  header,
-  isLoggedIn,
-  cart,
-  publicStoreDomain,
-}: HeaderProps) {
+export function Header({header, cart, publicStoreDomain}: HeaderProps) {
   const {shop, menu} = header;
+
   return (
     <header className="header">
       <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
@@ -35,7 +30,7 @@ export function Header({
         primaryDomainUrl={header.shop.primaryDomain.url}
         publicStoreDomain={publicStoreDomain}
       />
-      <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
+      <HeaderCtas cart={cart} />
     </header>
   );
 }
@@ -101,19 +96,18 @@ export function HeaderMenu({
   );
 }
 
-function HeaderCtas({
-  isLoggedIn,
-  cart,
-}: Pick<HeaderProps, 'isLoggedIn' | 'cart'>) {
+function HeaderCtas({cart}: Pick<HeaderProps, 'cart'>) {
+  const fetcher = useFetcher<{isLoggedIn: boolean}>();
+
+  useEffect(() => {
+    fetcher.load('/account/status');
+  }, []);
+
   return (
     <nav className="header-ctas" role="navigation">
       <HeaderMenuMobileToggle />
       <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
-        <Suspense fallback="Sign in">
-          <Await resolve={isLoggedIn} errorElement="Sign in">
-            {(isLoggedIn) => (isLoggedIn ? 'Account' : 'Sign in')}
-          </Await>
-        </Suspense>
+        {fetcher.data?.isLoggedIn ? 'Account' : 'Sign in'}
       </NavLink>
       <SearchToggle />
       <CartBadge count={cart?.totalQuantity || 0} />

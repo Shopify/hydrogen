@@ -125,7 +125,6 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
       return null;
     });
   return {
-    isLoggedIn: customerAccount.isLoggedIn(),
     footer,
   };
 }
