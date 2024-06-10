@@ -48,11 +48,16 @@ export default defineConfig({
   },
 });
 
-// Known Vite's CommonJS and other helpers that we can ignore in the bundle analysis
-function isViteHelper(id: string) {
+// Known Vite's CommonJS helpers that we can ignore in the bundle analysis
+function isViteCjsHelper(id: string) {
   // Every CommonJS module adds an extra helper file.
+  return /(commonjsHelpers\.js$|\?commonjs\-)/.test(id);
+}
+
+// Known Vite's transform helpers that we can ignore in the bundle analysis
+function isViteTransformHelper(id: string) {
   // Every CSS style adds a transform-only file.
-  return /(commonjsHelpers\.js$|\?commonjs\-|\?transform-only)/.test(id);
+  return id.endsWith('?transform-only');
 }
 
 function hydrogenBundleAnalyzer() {
@@ -66,19 +71,13 @@ function hydrogenBundleAnalyzer() {
     async generateBundle(options, bundle) {
       if (!config.build.ssr) return;
 
-      const t1 = Date.now();
-
       const {root} = config;
 
       const workerFile = Object.values(bundle).find(
         (chunk) => chunk.type === 'chunk',
       );
 
-      if (
-        !workerFile ||
-        workerFile.type !== 'chunk' ||
-        !workerFile.facadeModuleId
-      ) {
+      if (!workerFile || workerFile.type !== 'chunk') {
         return;
       }
 
@@ -87,7 +86,9 @@ function hydrogenBundleAnalyzer() {
 
       await Promise.all(
         Object.keys(workerFile.modules).map(async (modId) => {
-          if (isViteHelper(modId)) return;
+          if (isViteCjsHelper(modId) || isViteTransformHelper(modId)) {
+            return;
+          }
 
           const mod = this.getModuleInfo(modId);
           if (!mod?.id) return;
@@ -124,7 +125,7 @@ function hydrogenBundleAnalyzer() {
 
           let isESM =
             !mod.code ||
-            /(^\s*export\s+[\w\{]|^\s*import\s+[\w\{]|\bimport\()|\bcreateRequire\(/ms.test(
+            /(^\s*export\s+[\w\{]|^\s*import\s+[\w\{'"]|\bimport\()|\bcreateRequire\(/ms.test(
               mod.code,
             ) ||
             !/((^|\b)exports\b|\brequire\()/.test(mod.code);
@@ -148,10 +149,10 @@ function hydrogenBundleAnalyzer() {
           const importsMeta = (
             await Promise.all([...staticImportsMeta, ...dynamicImportsMeta])
           ).reduce((acc, {importedId, ...meta}) => {
-            if (isViteHelper(importedId)) {
+            if (isViteCjsHelper(importedId)) {
               // Helpers are CJS
               isESM = false;
-            } else {
+            } else if (!isViteTransformHelper(importedId)) {
               acc.push(meta);
             }
 
