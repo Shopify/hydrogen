@@ -29,8 +29,8 @@ import {findMissingRoutes} from '../missing-routes.js';
 import {createRemixLogger, muteRemixLogs} from '../log.js';
 import {codegen} from '../codegen.js';
 import {
-  buildBundleAnalysis,
-  getBundleAnalysisSummary,
+  classicBuildBundleAnalysis,
+  classicGetBundleAnalysisSummary,
 } from '../bundle/analyzer.js';
 import {isCI} from '../is-ci.js';
 
@@ -115,7 +115,7 @@ export async function runClassicCompilerBuild({
   if (process.env.NODE_ENV !== 'development') {
     console.timeEnd(LOG_WORKER_BUILT);
 
-    const bundleAnalysisPath = await buildBundleAnalysis(buildPath);
+    const bundleAnalysisPath = await classicBuildBundleAnalysis(buildPath);
 
     const sizeMB = (await fileSize(buildPathWorkerFile)) / (1024 * 1024);
     const formattedSize = colors.yellow(sizeMB.toFixed(2) + ' MB');
@@ -133,7 +133,7 @@ export async function runClassicCompilerBuild({
     if (bundleStats && bundleAnalysisPath) {
       outputInfo(
         outputContent`${
-          (await getBundleAnalysisSummary(buildPathWorkerFile)) || '\n'
+          (await classicGetBundleAnalysisSummary(buildPathWorkerFile)) || '\n'
         }\n    │\n    └─── ${outputToken.link(
           'Complete analysis: ' + bundleAnalysisPath,
           bundleAnalysisPath,

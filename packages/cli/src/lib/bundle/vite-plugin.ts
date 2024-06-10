@@ -2,6 +2,11 @@ import type {Plugin, ResolvedConfig} from 'vite';
 import {fileURLToPath} from 'node:url';
 import {relativePath, joinPath, dirname} from '@shopify/cli-kit/node/path';
 import {readFile} from '@shopify/cli-kit/node/fs';
+import {
+  BUNDLE_ANALYZER_HTML_FILE,
+  BUNDLE_ANALYZER_JSON_FILE,
+  injectAnalyzerTemplateData,
+} from './analyzer.js';
 
 export function hydrogenBundleAnalyzer() {
   let config: ResolvedConfig;
@@ -143,28 +148,23 @@ export function hydrogenBundleAnalyzer() {
         },
       };
 
-      const templateWithMetafile = analysisTemplate.replace(
-        `globalThis.METAFILE = '';`,
-        `globalThis.METAFILE = '${Buffer.from(
-          JSON.stringify(metafile),
-          'utf-8',
-        ).toString('base64')}';`,
-      );
-
-      bundle['metafile.test.json'] = {
+      bundle[BUNDLE_ANALYZER_JSON_FILE] = {
         type: 'asset',
-        fileName: 'metafile.test.json',
-        name: 'metafile.json',
+        fileName: BUNDLE_ANALYZER_JSON_FILE,
+        name: BUNDLE_ANALYZER_JSON_FILE,
         needsCodeReference: false,
         source: JSON.stringify(metafile, null, 2),
       };
 
-      bundle['metafile.test.html'] = {
+      bundle[BUNDLE_ANALYZER_HTML_FILE] = {
         type: 'asset',
-        fileName: 'metafile.test.html',
-        name: 'metafile.html',
+        fileName: BUNDLE_ANALYZER_HTML_FILE,
+        name: BUNDLE_ANALYZER_HTML_FILE,
         needsCodeReference: false,
-        source: templateWithMetafile,
+        source: injectAnalyzerTemplateData(
+          analysisTemplate,
+          JSON.stringify(metafile),
+        ),
       };
 
       return undefined;

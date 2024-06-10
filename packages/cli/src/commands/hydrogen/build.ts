@@ -1,7 +1,13 @@
 import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
 import {resolvePath, joinPath} from '@shopify/cli-kit/node/path';
-import {outputWarn, collectLog} from '@shopify/cli-kit/node/output';
+import {
+  outputWarn,
+  collectLog,
+  outputInfo,
+  outputContent,
+  outputToken,
+} from '@shopify/cli-kit/node/output';
 import {fileSize, removeFile} from '@shopify/cli-kit/node/fs';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
@@ -11,6 +17,10 @@ import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
 import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
 import {hydrogenBundleAnalyzer} from '../../lib/bundle/vite-plugin.js';
+import {
+  BUNDLE_ANALYZER_HTML_FILE,
+  getBundleAnalysisSummary,
+} from '../../lib/bundle/analyzer.js';
 import {codegen} from '../../lib/codegen.js';
 import {isCI} from '../../lib/is-ci.js';
 
@@ -172,6 +182,20 @@ export async function runBuild({
   }
 
   if (process.env.NODE_ENV !== 'development') {
+    if (bundleStats) {
+      const bundleAnalysisPath =
+        'file://' + joinPath(serverOutDir, BUNDLE_ANALYZER_HTML_FILE);
+
+      outputInfo(
+        outputContent`${
+          (await getBundleAnalysisSummary(serverOutDir)) || '\n'
+        }\n    │\n    └─── ${outputToken.link(
+          'Complete analysis: ' + bundleAnalysisPath,
+          bundleAnalysisPath,
+        )}\n\n`,
+      );
+    }
+
     const sizeMB = (await fileSize(serverOutFile)) / (1024 * 1024);
 
     if (sizeMB >= WORKER_BUILD_SIZE_LIMIT) {
