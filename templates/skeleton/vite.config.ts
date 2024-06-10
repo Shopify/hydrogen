@@ -48,6 +48,13 @@ export default defineConfig({
   },
 });
 
+// Known Vite's CommonJS and other helpers that we can ignore in the bundle analysis
+function isViteHelper(id: string) {
+  // Every CommonJS module adds an extra helper file.
+  // Every CSS style adds a transform-only file.
+  return /(commonjsHelpers\.js$|\?commonjs\-|\?transform-only)/.test(id);
+}
+
 function hydrogenBundleAnalyzer() {
   let config: ResolvedConfig;
 
@@ -73,15 +80,15 @@ function hydrogenBundleAnalyzer() {
         return;
       }
 
-      // server.ts file
-      const entryMod = this.getModuleInfo(workerFile.facadeModuleId);
-      if (!entryMod) return;
-
       const renderedSizes = new Map<string, number>();
-      const toAnalyzeMods = new Set<string>([workerFile.facadeModuleId]);
+      const toAnalyzeMods = new Set(Object.keys(workerFile.modules));
       const modsMeta = new Map<string, any>();
 
       for (const modId of toAnalyzeMods) {
+        if (isViteHelper(modId)) {
+          continue;
+        }
+
         const mod = this.getModuleInfo(modId);
         if (!mod?.id) continue;
 
@@ -101,7 +108,7 @@ function hydrogenBundleAnalyzer() {
               minifySyntax: true,
               minifyIdentifiers: true,
               sourcemap: false,
-              treeShaking: false,
+              treeShaking: false, // Tree-shaking would drop most exports in routes
               legalComments: 'none',
               target: 'esnext',
             },
@@ -141,15 +148,14 @@ function hydrogenBundleAnalyzer() {
         const importsMeta = (
           await Promise.all([...staticImportsMeta, ...dynamicImportsMeta])
         ).reduce((acc, {importedId, ...meta}) => {
-          // Known Vite's CommonJS helpers
-          const isCjshelper =
-            importedId.endsWith('commonjsHelpers.js') ||
-            importedId.includes('?commonjs');
-
-          if (isCjshelper) {
+          if (isViteHelper(importedId)) {
+            // Helpers are CJS
             isESM = false;
           } else {
-            toAnalyzeMods.add(importedId);
+            // Uncomment this to include modules with 0 bytes in the output (tree-shaked)
+            // if (!toAnalyzeMods.has(importedId)) {
+            //   toAnalyzeMods.add(importedId);
+            // }
             acc.push(meta);
           }
 
