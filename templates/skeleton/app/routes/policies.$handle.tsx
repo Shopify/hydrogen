@@ -11,10 +11,7 @@ type SelectedPolicies = keyof Pick<
   'privacyPolicy' | 'shippingPolicy' | 'termsOfService' | 'refundPolicy'
 >;
 
-export const headers: HeadersFunction = () => ({
-  'Oxygen-Cache-Control': 'public, max-age=3600, s-maxage=7200',
-  Vary: 'Accept-Encoding, Accept-Language',
-});
+export const headers: HeadersFunction = ({loaderHeaders}) => loaderHeaders;
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.policy.title ?? ''}`}];
@@ -47,7 +44,15 @@ export async function loader({params, context}: LoaderFunctionArgs) {
     throw new Response('Could not find the policy', {status: 404});
   }
 
-  return json({policy});
+  return json(
+    {policy},
+    {
+      headers: {
+        'Oxygen-Cache-Control': 'public, max-age=3600, s-maxage=7200',
+        Vary: 'Accept-Encoding, Accept-Language',
+      },
+    },
+  );
 }
 
 export default function Policy() {
