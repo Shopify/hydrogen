@@ -91,8 +91,7 @@ function hydrogenBundleAnalyzer() {
 
         let resultingCodeBytes = modBundleInfo?.renderedLength ?? 0;
 
-        if (modBundleInfo?.code) {
-          // TODO: check if we need to minify the sizes or not
+        if (config?.build.minify && modBundleInfo?.code) {
           const result = await transformWithEsbuild(
             modBundleInfo.code,
             mod.id,
@@ -142,6 +141,7 @@ function hydrogenBundleAnalyzer() {
         const importsMeta = (
           await Promise.all([...staticImportsMeta, ...dynamicImportsMeta])
         ).reduce((acc, {importedId, ...meta}) => {
+          // Known Vite's CommonJS helpers
           const isCjshelper =
             importedId.endsWith('commonjsHelpers.js') ||
             importedId.includes('?commonjs');
