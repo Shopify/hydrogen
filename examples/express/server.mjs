@@ -1,17 +1,25 @@
-const path = require('path');
-
-const {createRequestHandler} = require('@remix-run/express');
-const {installGlobals, createCookieSessionStorage} = require('@remix-run/node');
-const compression = require('compression');
-const express = require('express');
-const morgan = require('morgan');
-const {createStorefrontClient, InMemoryCache} = require('@shopify/hydrogen');
+import {createRequestHandler} from '@remix-run/express';
+import {installGlobals, createCookieSessionStorage} from '@remix-run/node';
+import compression from 'compression';
+import express from 'express';
+import morgan from 'morgan';
+import {createStorefrontClient, InMemoryCache} from '@shopify/hydrogen';
+import crypto from 'node:crypto';
 
 installGlobals();
 
 const env = process.env;
 
-const BUILD_DIR = path.join(process.cwd(), 'build');
+const vite =
+  process.env.NODE_ENV === 'production'
+    ? undefined
+    : await import('vite').then(({createServer}) =>
+        createServer({
+          server: {
+            middlewareMode: true,
+          },
+        }),
+      );
 
 const app = express();
 
@@ -20,17 +28,19 @@ app.use(compression());
 // http://expressjs.com/en/advanced/best-practice-security.html#at-a-minimum-disable-x-powered-by-header
 app.disable('x-powered-by');
 
-// Remix fingerprints its assets so we can cache forever.
-app.use(
-  '/build',
-  express.static('public/build', {immutable: true, maxAge: '1y'}),
-);
-
-// Everything else (like favicon.ico) is cached for an hour. You may want to be
-// more aggressive with this caching.
-app.use(express.static('public', {maxAge: '1h'}));
-
-app.use(morgan('tiny'));
+// handle asset requests
+if (vite) {
+  app.use(vite.middlewares);
+} else {
+  // add morgan here for production only
+  // dev uses morgan plugin, otherwise it spams the console with HMR requests
+  app.use(morgan('tiny'));
+  app.use(
+    '/assets',
+    express.static('build/client/assets', {immutable: true, maxAge: '1y'}),
+  );
+}
+app.use(express.static('build/client', {maxAge: '1h'}));
 
 app.all(
   '*',
@@ -38,10 +48,10 @@ app.all(
     ? async (req, res, next) => {
         const context = await getContext(req);
 
-        purgeRequireCache();
-
         return createRequestHandler({
-          build: require(BUILD_DIR),
+          build: vite
+            ? () => vite.ssrLoadModule('virtual:remix/server-build')
+            : await import('./build/server/index.js'),
           mode: process.env.NODE_ENV,
           getLoadContext: () => context,
         })(req, res, next);
@@ -50,7 +60,9 @@ app.all(
         const context = await getContext(req);
 
         return createRequestHandler({
-          build: require(BUILD_DIR),
+          build: vite
+            ? () => vite.ssrLoadModule('virtual:remix/server-build')
+            : await import('./build/server/index.js'),
           mode: process.env.NODE_ENV,
           getLoadContext: () => context,
         });
@@ -61,19 +73,6 @@ const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Express server listening on port ${port}`);
 });
-
-function purgeRequireCache() {
-  // purge require cache on requests for "server side HMR" this won't let
-  // you have in-memory objects between requests in development,
-  // alternatively you can set up nodemon/pm2-dev to restart the server on
-  // file changes, but then you'll have to reconnect to databases/etc on each
-  // change. We prefer the DX of this, so we've included it for you by default
-  for (const key in require.cache) {
-    if (key.startsWith(BUILD_DIR)) {
-      delete require.cache[key];
-    }
-  }
-}
 
 async function getContext(req) {
   const session = await AppSession.init(req, [env.SESSION_SECRET]);
@@ -90,8 +89,10 @@ async function getContext(req) {
     storeDomain: env.PUBLIC_STORE_DOMAIN,
     storefrontId: env.PUBLIC_STOREFRONT_ID,
     storefrontHeaders: {
-      requestGroupId: req.get('request-id'),
-      buyerIp: req.get('oxygen-buyer-ip'),
+      requestGroupId: crypto.randomUUID(),
+      buyerIp: (req.headers['x-forwarded-for'] || req.connection.remoteAddress)
+        .split(':')
+        .pop(),
       cookie: req.get('cookie'),
     },
   });
