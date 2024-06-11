@@ -245,7 +245,27 @@ export async function runBuild({
           this.error(new Error('Process exited before server build finished.'));
         },
       },
-      ...(bundleStats ? [hydrogenBundleAnalyzer()] : []),
+      ...(bundleStats
+        ? [
+            hydrogenBundleAnalyzer({
+              minify: serverMinify
+                ? (code, filepath) =>
+                    vite
+                      .transformWithEsbuild(code, filepath, {
+                        minify: true,
+                        minifyWhitespace: true,
+                        minifySyntax: true,
+                        minifyIdentifiers: true,
+                        sourcemap: false,
+                        treeShaking: false, // Tree-shaking would drop most exports in routes
+                        legalComments: 'none',
+                        target: 'esnext',
+                      })
+                      .then((result) => result.code)
+                : undefined,
+            }),
+          ]
+        : []),
     ],
   });
 

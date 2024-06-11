@@ -1,7 +1,5 @@
 import type {Plugin, ResolvedConfig} from 'vite';
-import {fileURLToPath} from 'node:url';
-import {relativePath, joinPath, dirname} from '@shopify/cli-kit/node/path';
-import {readFile} from '@shopify/cli-kit/node/fs';
+import {relativePath, joinPath} from '@shopify/cli-kit/node/path';
 import {
   BUNDLE_ANALYZER_HTML_FILE,
   BUNDLE_ANALYZER_JSON_FILE,
@@ -9,7 +7,11 @@ import {
   injectAnalyzerTemplateData,
 } from './analyzer.js';
 
-export function hydrogenBundleAnalyzer() {
+type BundleAnalyzerOptions = {
+  minify?: (code: string, filepath: string) => Promise<string>;
+};
+
+export function hydrogenBundleAnalyzer(pluginOptions?: BundleAnalyzerOptions) {
   let config: ResolvedConfig;
 
   return {
@@ -26,7 +28,12 @@ export function hydrogenBundleAnalyzer() {
         (chunk) => chunk.type === 'chunk',
       );
 
-      if (!workerFile || workerFile.type !== 'chunk') {
+      if (
+        !workerFile ||
+        workerFile.type !== 'chunk' ||
+        !workerFile.facadeModuleId ||
+        !options.dir
+      ) {
         return;
       }
 
@@ -40,9 +47,7 @@ export function hydrogenBundleAnalyzer() {
       const renderedSizes = new Map<string, number>();
       const modsMeta = new Map<string, any>();
 
-      const vite = await import('vite').catch(() => null);
-
-      const success = await Promise.all(
+      const resultError = await Promise.all(
         Object.keys(workerFile.modules).map(async (modId) => {
           if (isViteCjsHelper(modId) || isViteTransformHelper(modId)) {
             return;
@@ -57,21 +62,12 @@ export function hydrogenBundleAnalyzer() {
 
           let resultingCodeBytes = modBundleInfo?.renderedLength ?? 0;
 
-          if (vite && config?.build.minify && modBundleInfo?.code) {
-            const result = await vite
-              .transformWithEsbuild(modBundleInfo.code, mod.id, {
-                minify: true,
-                minifyWhitespace: true,
-                minifySyntax: true,
-                minifyIdentifiers: true,
-                sourcemap: false,
-                treeShaking: false, // Tree-shaking would drop most exports in routes
-                legalComments: 'none',
-                target: 'esnext',
-              })
+          if (pluginOptions?.minify && modBundleInfo?.code) {
+            const minifiedCode = await pluginOptions
+              .minify(modBundleInfo.code, mod.id)
               .catch(() => null);
 
-            if (result) resultingCodeBytes = result.code.length;
+            if (minifiedCode) resultingCodeBytes = minifiedCode.length;
           }
 
           renderedSizes.set(relativePath(root, modId), resultingCodeBytes);
@@ -121,25 +117,34 @@ export function hydrogenBundleAnalyzer() {
             imports: importsMeta,
           });
         }),
-      ).catch(() => false);
+      )
+        .then(() => null)
+        .catch((error) => error as Error);
 
-      if (success === false) return;
+      if (resultError) {
+        console.warn(
+          'Bundle analyzer failed to analyze the bundle:',
+          resultError,
+        );
+
+        return;
+      }
 
       const inputs = Object.fromEntries(modsMeta.entries());
       const metafile = {
         inputs,
         outputs: {
-          'dist/server/index.js': {
-            imports: [],
-            exports: ['default'],
-            entryPoint: 'server.ts',
+          [relativePath(root, joinPath(options.dir, workerFile.fileName))]: {
+            imports: workerFile.imports,
+            exports: workerFile.exports,
+            entryPoint: relativePath(root, workerFile.facadeModuleId),
+            bytes: workerFile.code.length ?? 0,
             inputs: Object.entries(inputs).reduce((acc, [key, item]) => {
               acc[key] = {
                 bytesInOutput: renderedSizes.get(key) ?? item.bytes ?? 0,
               };
               return acc;
             }, {} as Record<string, {bytesInOutput: number}>),
-            bytes: workerFile.code.length ?? 0,
           },
         },
       };
@@ -178,19 +183,21 @@ function isViteTransformHelper(id: string) {
   return id.endsWith('?transform-only');
 }
 
+type ModuleResolver = (id: string) => Promise<{id: string} | null>;
+/**
+ * Check the source code for the original import name that,
+ * once resolved to a file, matches the given filepath.
+ */
 async function findOriginalImportName(
   filepath: string,
   importerCode: string,
-  resolve: (id: string) => any,
+  resolve: ModuleResolver,
 ) {
-  const importersSet = new Set<string>();
-
   const matches =
     importerCode.matchAll(/import\s[^'"]*?['"]([^'"]+)['"]/g) ?? [];
 
   for (const [, match] of matches) {
     if (match) {
-      importersSet.add(match);
       const resolvedMod = await resolve(match);
       if (resolvedMod?.id === filepath) {
         return match;
@@ -205,7 +212,7 @@ function createImportsMeta(
   ids: readonly string[],
   kind: string,
   root: string,
-  resolveImportString: (id: string) => Promise<{id: string} | null>,
+  resolveImportString: ModuleResolver,
   code: string | null,
 ) {
   return ids.map(async (importedId: string) => {
