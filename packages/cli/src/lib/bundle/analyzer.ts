@@ -49,6 +49,10 @@ export async function classicBuildBundleAnalysis(buildPath: string) {
   }
 }
 
+export async function getAnalyzerTemplate() {
+  return readFile(await getAssetsDir('bundle', 'analyzer.html'));
+}
+
 export function injectAnalyzerTemplateData(
   analysisTemplate: string,
   metafile: string,
@@ -70,13 +74,9 @@ async function classicWriteBundleAnalyzerFile(
     encoding: 'utf8',
   });
 
-  const analysisTemplate = await readFile(
-    await getAssetsDir('bundle', 'analyzer.html'),
-  );
-
   await writeFile(
     joinPath(workerBuildPath, outputFile),
-    injectAnalyzerTemplateData(analysisTemplate, metafile),
+    injectAnalyzerTemplateData(await getAnalyzerTemplate(), metafile),
   );
 }
 

@@ -5,6 +5,7 @@ import {readFile} from '@shopify/cli-kit/node/fs';
 import {
   BUNDLE_ANALYZER_HTML_FILE,
   BUNDLE_ANALYZER_JSON_FILE,
+  getAnalyzerTemplate,
   injectAnalyzerTemplateData,
 } from './analyzer.js';
 
@@ -29,12 +30,7 @@ export function hydrogenBundleAnalyzer() {
         return;
       }
 
-      const analysisTemplate = await readFile(
-        joinPath(
-          dirname(fileURLToPath(import.meta.url)),
-          'bundle-analyzer.html',
-        ),
-      ).catch(() => null);
+      const analysisTemplate = await getAnalyzerTemplate().catch(() => null);
 
       if (!analysisTemplate) {
         console.warn('Bundle analyzer template not found');
@@ -44,9 +40,9 @@ export function hydrogenBundleAnalyzer() {
       const renderedSizes = new Map<string, number>();
       const modsMeta = new Map<string, any>();
 
-      const {transformWithEsbuild} = await import('vite');
+      const vite = await import('vite').catch(() => null);
 
-      await Promise.all(
+      const success = await Promise.all(
         Object.keys(workerFile.modules).map(async (modId) => {
           if (isViteCjsHelper(modId) || isViteTransformHelper(modId)) {
             return;
@@ -61,11 +57,9 @@ export function hydrogenBundleAnalyzer() {
 
           let resultingCodeBytes = modBundleInfo?.renderedLength ?? 0;
 
-          if (config?.build.minify && modBundleInfo?.code) {
-            const result = await transformWithEsbuild(
-              modBundleInfo.code,
-              mod.id,
-              {
+          if (vite && config?.build.minify && modBundleInfo?.code) {
+            const result = await vite
+              .transformWithEsbuild(modBundleInfo.code, mod.id, {
                 minify: true,
                 minifyWhitespace: true,
                 minifySyntax: true,
@@ -74,8 +68,8 @@ export function hydrogenBundleAnalyzer() {
                 treeShaking: false, // Tree-shaking would drop most exports in routes
                 legalComments: 'none',
                 target: 'esnext',
-              },
-            ).catch(() => null);
+              })
+              .catch(() => null);
 
             if (result) resultingCodeBytes = result.code.length;
           }
@@ -127,7 +121,9 @@ export function hydrogenBundleAnalyzer() {
             imports: importsMeta,
           });
         }),
-      );
+      ).catch(() => false);
+
+      if (success === false) return;
 
       const inputs = Object.fromEntries(modsMeta.entries());
       const metafile = {
@@ -166,8 +162,6 @@ export function hydrogenBundleAnalyzer() {
           JSON.stringify(metafile),
         ),
       };
-
-      return undefined;
     },
   } satisfies Plugin;
 }
