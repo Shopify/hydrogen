@@ -48,14 +48,6 @@
     "@shopify/hydrogen#build": {
       "dependsOn": ["@shopify/hydrogen-react#build"]
     },
-    "hello-world#build": {
-      "dependsOn": [
-        "@shopify/hydrogen#build",
-        "@shopify/cli-hydrogen#build",
-        "@shopify/remix-oxygen#build"
-      ],
-      "outputs": ["dist/**"]
-    },
     "skeleton#build": {
       "dependsOn": [
         "@shopify/hydrogen#build",
