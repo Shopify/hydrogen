@@ -42,8 +42,6 @@ function getCustomerPrivacyRequired() {
   return customerPrivacy;
 }
 
-
-
 /**
  * This component is responsible for sending analytics events to Shopify.
  * It emits the following events:
@@ -84,8 +82,8 @@ export function ShopifyAnalytics({
   useCustomerPrivacy({
     checkoutDomain: !checkoutDomain ? 'mock.shop' : checkoutDomain,
     storefrontAccessToken: !storefrontAccessToken
-        ? 'abcdefghijklmnopqrstuvwxyz123456'
-        : storefrontAccessToken,
+      ? 'abcdefghijklmnopqrstuvwxyz123456'
+      : storefrontAccessToken,
     withPrivacyBanner,
     onVisitorConsentCollected: setCustomerPrivacyReady,
     onReady: () => {

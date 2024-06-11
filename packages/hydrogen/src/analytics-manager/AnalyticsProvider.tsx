@@ -298,12 +298,18 @@ function AnalyticsProvider({
       );
     } else {
       if (!consent.checkoutDomain) {
-        const errorMsg = messageOnError('consent.checkoutDomain', 'PUBLIC_CHECKOUT_DOMAIN');
+        const errorMsg = messageOnError(
+          'consent.checkoutDomain',
+          'PUBLIC_CHECKOUT_DOMAIN',
+        );
         errorOnce(errorMsg);
       }
 
       if (!consent.storefrontAccessToken) {
-        const errorMsg = messageOnError('consent.storefrontAccessToken', 'PUBLIC_STOREFRONT_API_TOKEN');
+        const errorMsg = messageOnError(
+          'consent.storefrontAccessToken',
+          'PUBLIC_STOREFRONT_API_TOKEN',
+        );
         errorOnce(errorMsg);
       }
     }
