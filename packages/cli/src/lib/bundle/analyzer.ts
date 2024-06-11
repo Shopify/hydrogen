@@ -1,5 +1,4 @@
 import {joinPath, dirname} from '@shopify/cli-kit/node/path';
-import {fileURLToPath} from 'node:url';
 import {writeFile, readFile, fileExists} from '@shopify/cli-kit/node/fs';
 import colors from '@shopify/cli-kit/node/colors';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
@@ -82,6 +81,7 @@ async function classicWriteBundleAnalyzerFile(
 
 export async function getBundleAnalysisSummary(distPath: string) {
   try {
+    // This dependency is added globally by the CLI, and locally by Vite.
     const esbuild = await import('esbuild');
 
     const metafileAnalysis = await esbuild.analyzeMetafile(

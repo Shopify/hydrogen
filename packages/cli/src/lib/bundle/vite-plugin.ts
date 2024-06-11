@@ -7,6 +7,14 @@ import {
   injectAnalyzerTemplateData,
 } from './analyzer.js';
 
+// Minimal module info type
+type ModuleInfo = {
+  id: string;
+  code: string | null;
+  importedIds: readonly string[];
+  dynamicallyImportedIds: readonly string[];
+};
+
 type BundleAnalyzerOptions = {
   minify?: (code: string, filepath: string) => Promise<string>;
 };
@@ -44,18 +52,40 @@ export function hydrogenBundleAnalyzer(pluginOptions?: BundleAnalyzerOptions) {
         return;
       }
 
-      const renderedSizes = new Map<string, number>();
+      const allModIds = new Set<string>(Object.keys(workerFile.modules));
+      const modsToAnalyze: ModuleInfo[] = [];
+
+      // Synchrounously collect all modules to analyze. Rollup doesn't provide
+      // tree-shaked modules in `workerFile.modules` so we need to traverse
+      // every module's imported ids to find all modules.
+      // Do this before starting async operations so that we can run those in parallel.
+      for (const modId of allModIds) {
+        if (isViteCjsHelper(modId) || isViteTransformHelper(modId)) continue;
+
+        const mod = this.getModuleInfo(modId);
+        if (!mod?.id) continue;
+
+        modsToAnalyze.push(mod);
+
+        for (const importedId of [
+          ...mod.importedIds,
+          ...mod.dynamicallyImportedIds,
+        ]) {
+          if (
+            !isViteCjsHelper(importedId) &&
+            !isViteTransformHelper(importedId)
+          ) {
+            allModIds.add(importedId);
+          }
+        }
+      }
+
       const modsMeta = new Map<string, any>();
+      const renderedSizes = new Map<string, number>();
 
       const resultError = await Promise.all(
-        Object.keys(workerFile.modules).map(async (modId) => {
-          if (isViteCjsHelper(modId) || isViteTransformHelper(modId)) {
-            return;
-          }
-
-          const mod = this.getModuleInfo(modId);
-          if (!mod?.id) return;
-
+        modsToAnalyze.map(async (mod) => {
+          const relativeModId = relativePath(root, mod.id);
           const modBundleInfo = workerFile.modules[mod.id];
           const originalCodeBytes =
             modBundleInfo?.originalLength ?? mod.code?.length ?? 0;
@@ -70,7 +100,7 @@ export function hydrogenBundleAnalyzer(pluginOptions?: BundleAnalyzerOptions) {
             if (minifiedCode) resultingCodeBytes = minifiedCode.length;
           }
 
-          renderedSizes.set(relativePath(root, modId), resultingCodeBytes);
+          renderedSizes.set(relativeModId, resultingCodeBytes);
 
           const resolveImportString = (importString: string) =>
             this.resolve(importString, mod.id);
@@ -111,7 +141,7 @@ export function hydrogenBundleAnalyzer(pluginOptions?: BundleAnalyzerOptions) {
             return acc;
           }, [] as Array<{path: string; kind: string; original: string}>);
 
-          modsMeta.set(relativePath(root, modId), {
+          modsMeta.set(relativeModId, {
             bytes: originalCodeBytes,
             format: isESM ? 'esm' : 'cjs',
             imports: importsMeta,
