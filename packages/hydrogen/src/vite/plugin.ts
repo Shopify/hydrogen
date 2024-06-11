@@ -75,7 +75,6 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
             include: isHydrogenMonorepo
               ? [
                   'content-security-policy-builder',
-                  'tiny-invariant',
                   'worktop/cookie',
                 ]
               : ['@shopify/hydrogen'],

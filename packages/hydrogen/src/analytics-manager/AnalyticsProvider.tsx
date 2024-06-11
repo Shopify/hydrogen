@@ -37,6 +37,7 @@ import {ShopifyAnalytics} from './ShopifyAnalytics';
 import {CartAnalytics} from './CartAnalytics';
 import type {CustomerPrivacyApiProps} from '../customer-privacy/ShopifyCustomerPrivacy';
 import type {Storefront} from '../storefront';
+import {errorOnce, warnOnce} from '../utils/warning';
 
 export type ShopAnalytics = {
   /** The shop ID. */
@@ -67,7 +68,7 @@ export type AnalyticsProviderProps = {
       'checkoutDomain' | 'storefrontAccessToken' | 'withPrivacyBanner'
     >
   >;
-  /** Disable throwing errors when required props are missing. */
+  /** @deprecated Disable throwing errors when required props are missing. */
   disableThrowOnError?: boolean;
   /** The domain scope of the cookie set with `useShopifyCookies`. **/
   cookieDomain?: string;
@@ -265,6 +266,10 @@ function shopifyCanTrack(): boolean {
   return false;
 }
 
+function messageOnError(field: string, envVar: string) {
+  return `[h2:error:Analytics.Provider] - ${field} is required. Make sure ${envVar} is defined in your environment variables. See https://shopify.dev/docs/storefronts/headless/hydrogen/analytics/consent to learn how to setup environment variables in the Shopify admin.`;
+}
+
 function AnalyticsProvider({
   canTrack: customCanTrack,
   cart: currentCart,
@@ -284,6 +289,25 @@ function AnalyticsProvider({
   const [canTrack, setCanTrack] = useState<() => boolean>(
     customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
   );
+
+  if (!!shop) {
+    // If mock shop is used, log error instead of throwing
+    if (/\/68817551382$/.test(shop.shopId)) {
+      warnOnce(
+        '[h2:error:Analytics.Provider] - Mock shop is used. Analytics will not work properly.',
+      );
+    } else {
+      if (!consent.checkoutDomain) {
+        const errorMsg = messageOnError('consent.checkoutDomain', 'PUBLIC_CHECKOUT_DOMAIN');
+        errorOnce(errorMsg);
+      }
+
+      if (!consent.storefrontAccessToken) {
+        const errorMsg = messageOnError('consent.storefrontAccessToken', 'PUBLIC_STOREFRONT_API_TOKEN');
+        errorOnce(errorMsg);
+      }
+    }
+  }
 
   const value = useMemo<AnalyticsContextValue>(() => {
     return {
@@ -318,7 +342,7 @@ function AnalyticsProvider({
       {!!shop && !!currentCart && (
         <CartAnalytics cart={currentCart} setCarts={setCarts} />
       )}
-      {!!shop && (
+      {!!shop && consent.checkoutDomain && (
         <ShopifyAnalytics
           consent={consent}
           onReady={() => {
@@ -327,8 +351,6 @@ function AnalyticsProvider({
             setCanTrack(() => shopifyCanTrack);
           }}
           domain={cookieDomain}
-          disableThrowOnError={disableThrowOnError}
-          isMockShop={/\/68817551382$/.test(shop.shopId)}
         />
       )}
     </AnalyticsContext.Provider>

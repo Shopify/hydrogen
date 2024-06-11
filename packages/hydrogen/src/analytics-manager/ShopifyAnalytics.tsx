@@ -29,8 +29,6 @@ import {
   ComponentizableCartLine,
   Maybe,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import invariant from 'tiny-invariant';
-import {warnOnce} from '../utils/warning';
 
 function getCustomerPrivacyRequired() {
   const customerPrivacy = getCustomerPrivacy();
@@ -44,9 +42,7 @@ function getCustomerPrivacyRequired() {
   return customerPrivacy;
 }
 
-function messageOnError(field: string) {
-  return `[h2:error:Analytics.Provider] - ${field} is required`;
-}
+
 
 /**
  * This component is responsible for sending analytics events to Shopify.
@@ -61,42 +57,11 @@ export function ShopifyAnalytics({
   consent,
   onReady,
   domain,
-  disableThrowOnError,
-  isMockShop,
 }: {
   consent: AnalyticsProviderProps['consent'];
   onReady: () => void;
   domain?: string;
-  disableThrowOnError: boolean;
-  isMockShop: boolean;
 }) {
-  // If mock shop is used, log error instead of throwing
-  if (isMockShop) {
-    warnOnce(
-      '[h2:error:Analytics.Provider] - Mock shop is used. Analytics will not work properly.',
-    );
-  } else {
-    if (!consent.checkoutDomain) {
-      const errorMsg = messageOnError('consent.checkoutDomain');
-      if (disableThrowOnError) {
-        // eslint-disable-next-line no-console
-        console.error(errorMsg);
-      } else {
-        invariant(false, errorMsg);
-      }
-    }
-
-    if (!consent.storefrontAccessToken) {
-      const errorMsg = messageOnError('consent.storefrontAccessToken');
-      if (disableThrowOnError) {
-        // eslint-disable-next-line no-console
-        console.error(errorMsg);
-      } else {
-        invariant(false, errorMsg);
-      }
-    }
-  }
-
   const {subscribe, register, canTrack} = useAnalytics();
   const [shopifyReady, setShopifyReady] = useState(false);
   const [privacyReady, setPrivacyReady] = useState(false);
@@ -117,13 +82,11 @@ export function ShopifyAnalytics({
   const {checkoutDomain, storefrontAccessToken, withPrivacyBanner} = consent;
 
   useCustomerPrivacy({
-    checkoutDomain:
-      isMockShop || !checkoutDomain ? 'mock.shop' : checkoutDomain,
-    storefrontAccessToken:
-      isMockShop || !storefrontAccessToken
+    checkoutDomain: !checkoutDomain ? 'mock.shop' : checkoutDomain,
+    storefrontAccessToken: !storefrontAccessToken
         ? 'abcdefghijklmnopqrstuvwxyz123456'
         : storefrontAccessToken,
-    withPrivacyBanner: isMockShop ? false : withPrivacyBanner,
+    withPrivacyBanner,
     onVisitorConsentCollected: setCustomerPrivacyReady,
     onReady: () => {
       // Set customer privacy ready 3 seconds after load
