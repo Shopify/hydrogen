@@ -12,6 +12,7 @@ import {
   type PackageJson as _PackageJson,
 } from '@shopify/cli-kit/node/node-package-manager';
 import {formatCode, type FormatOptions} from './format-code.js';
+import ts from 'typescript';
 
 export async function replaceFileContent(
   filepath: string,
@@ -156,4 +157,20 @@ export async function mergePackageJson(
     targetDir,
     options?.onResult?.(targetPkgJson) ?? targetPkgJson,
   );
+}
+
+export function mergeTsConfig(sourceDir: string, targetDir: string) {
+  const sourceConfig = ts.readConfigFile(
+    joinPath(sourceDir, 'tsconfig.json'),
+    ts.sys.readFile,
+  ).config;
+
+  if (sourceConfig?.compilerOptions?.types) {
+    replaceFileContent(joinPath(targetDir, 'tsconfig.json'), false, (content) =>
+      content.replace(
+        /"types":\s*\[[^\]]*\]/,
+        `"types": ${JSON.stringify(sourceConfig.compilerOptions.types)}`,
+      ),
+    );
+  }
 }
