@@ -5,7 +5,7 @@ node_modules
 .vscode
 .turbo
 .cache
-.shopify
+**/.shopify
 /test-results/
 /playwright-report/
 /playwright/.cache/
