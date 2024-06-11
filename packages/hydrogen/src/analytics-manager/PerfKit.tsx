@@ -3,6 +3,15 @@ import { ShopAnalytics, useAnalytics } from "./AnalyticsProvider";
 import { AnalyticsEvent } from "./events";
 import { useEffect, useRef } from "react";
 
+declare global {
+  interface Window {
+    PerfKit: {
+      navigate: () => void;
+      setPageType: (pageType: string) => void;
+    };
+  }
+}
+
 const PERF_KIT_UNSTABLE =
   'https://cdn.shopify.com/shopifycloud/perf-kit/shopify-perf-kit-unstable.min.js';
 const PERF_KIT_LOCAL = 'http://localhost:3001/shopify-perf-kit.min.js';
@@ -13,6 +22,7 @@ export function PerfKit({
   shop: ShopAnalytics,
 }) {
   const loadedEvent = useRef(false);
+  const firstPageLoad = useRef(true);
   const {subscribe, register} = useAnalytics();
   const {ready} = register('Internal_Shopify_Perf_Kit');
 
@@ -25,6 +35,8 @@ export function PerfKit({
         'data-shop-id': parseGid(shop.shopId).id.toString(),
         'data-storefront-id': shop.hydrogenSubchannelId,
         'data-monorail-region': 'global',
+        'data-spa-mode': 'true',
+        'data-resource-timing-sampling-rate': '100',
       },
     },
   );
@@ -33,21 +45,21 @@ export function PerfKit({
     if (scriptStatus !== 'done' || loadedEvent.current) return;
     loadedEvent.current = true;
 
-    subscribe(AnalyticsEvent.PAGE_VIEWED, (data) => {
-      console.log('PerfKit - Page viewed', data);
+    subscribe(AnalyticsEvent.PAGE_VIEWED, () => {
+      console.log('PerfKit: navigate');
+      window.PerfKit.navigate();
     });
-    subscribe(AnalyticsEvent.PRODUCT_VIEWED, (data) => {
-      console.log('PerfKit - Product viewed', data);
-      // call perfkit to set page type
+    subscribe(AnalyticsEvent.PRODUCT_VIEWED, () => {
+      window.PerfKit.setPageType('product');
     });
-    subscribe(AnalyticsEvent.COLLECTION_VIEWED, (data) => {
-      console.log('PerfKit - Collection viewed', data);
+    subscribe(AnalyticsEvent.COLLECTION_VIEWED, () => {
+      window.PerfKit.setPageType('collection');
     });
-    subscribe(AnalyticsEvent.SEARCH_VIEWED, (data) => {
-      console.log('PerfKit - search viewed', data);
+    subscribe(AnalyticsEvent.SEARCH_VIEWED, () => {
+      window.PerfKit.setPageType('search');
     });
-    subscribe(AnalyticsEvent.CART_VIEWED, (data) => {
-      console.log('PerfKit - cart viewed', data);
+    subscribe(AnalyticsEvent.CART_VIEWED, () => {
+      window.PerfKit.setPageType('cart');
     });
 
     ready();
