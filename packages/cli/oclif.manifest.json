@@ -373,10 +373,23 @@
         },
         "auth-bypass-token": {
           "description": "Generate an authentication bypass token, which can be used to perform end-to-end tests against the deployment.",
+          "env": "AUTH_BYPASS_TOKEN",
           "name": "auth-bypass-token",
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "auth-bypass-token-duration": {
+          "dependsOn": [
+            "auth-bypass-token"
+          ],
+          "description": "Specify the duration (in hours) up to 12 hours for the authentication bypass token. Defaults to `2`",
+          "env": "AUTH_BYPASS_TOKEN_DURATION",
+          "name": "auth-bypass-token-duration",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "build-command": {
           "description": "Specify a build command to run before deploying. If not specified, `shopify hydrogen build` will be used.",
