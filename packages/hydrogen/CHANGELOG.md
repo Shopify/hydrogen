@@ -1,5 +1,11 @@
 # @shopify/hydrogen
 
+## 2024.4.4
+
+### Patch Changes
+
+- Fix infinite loop when checkoutDomain isn't supplied ([#2235](https://github.com/Shopify/hydrogen/pull/2235)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 2024.4.3
 
 ### Patch Changes
