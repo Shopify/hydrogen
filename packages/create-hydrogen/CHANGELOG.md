@@ -1,5 +1,11 @@
 # @shopify/create-hydrogen
 
+## 4.3.11
+
+### Patch Changes
+
+- Pump create script to included infinite loop fix in default scaffolding by [@michenly](https://github.com/michenly)
+
 ## 4.3.10
 
 ### Patch Changes
