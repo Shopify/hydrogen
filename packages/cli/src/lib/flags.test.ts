@@ -19,14 +19,14 @@ describe('CLI flag utils', () => {
   it('parses flags from process.argv', async () => {
     expect(
       parseProcessFlags(
-        'node ./bin --force --install-deps --template hello-world --path test --language ts'.split(
+        'node ./bin --force --install-deps --template demo-store --path test --language ts'.split(
           ' ',
         ),
       ),
     ).toMatchObject({
       force: true,
       installDeps: true,
-      template: 'hello-world',
+      template: 'demo-store',
       path: 'test',
       language: 'ts',
     });

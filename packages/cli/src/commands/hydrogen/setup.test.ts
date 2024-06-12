@@ -40,11 +40,10 @@ describe('setup', () => {
 
   it('sets up an i18n strategy and generates routes', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
-      await copyWithFilter(
-        getSkeletonSourceDir().replace('skeleton', 'hello-world'),
-        tmpDir,
-        {filter: (src) => !src.includes('node_modules')},
-      );
+      await copyWithFilter(getSkeletonSourceDir(), tmpDir, {
+        filter: (src) =>
+          !src.includes('node_modules') && !src.includes('routes'),
+      });
 
       await expect(
         fileExists(joinPath(tmpDir, 'app/routes/_index.tsx')),

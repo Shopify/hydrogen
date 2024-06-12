@@ -47,34 +47,23 @@ describe('remote templates', () => {
         path: tmpDir,
         git: false,
         language: 'ts',
-        template: 'hello-world',
+        template: 'infinite-scroll',
       });
 
-      const templateFiles = await glob('**/*', {
-        cwd: getSkeletonSourceDir().replace('skeleton', 'hello-world'),
-        ignore: ['**/node_modules/**', '**/dist/**'],
-      });
       const resultFiles = await glob('**/*', {cwd: tmpDir});
-      const nonAppFiles = templateFiles.filter(
-        (item) => !item.startsWith('app/'),
-      );
-
-      expect(resultFiles).toEqual(expect.arrayContaining(nonAppFiles));
 
       expect(resultFiles).toContain('app/root.tsx');
       expect(resultFiles).toContain('app/entry.client.tsx');
       expect(resultFiles).toContain('app/entry.server.tsx');
-      expect(resultFiles).not.toContain('app/components/Layout.tsx');
-
-      // Skip routes:
-      expect(resultFiles).not.toContain('app/routes/_index.tsx');
+      expect(resultFiles).toContain('app/components/PageLayout.tsx');
+      expect(resultFiles).toContain('app/routes/_index.tsx');
 
       const pkgJsonPromise = readFile(`${tmpDir}/package.json`);
       await expect(pkgJsonPromise).resolves.not.toThrow();
       const pkgJsonString = await pkgJsonPromise;
 
       expect(() => JSON.parse(pkgJsonString)).not.toThrow();
-      expect(pkgJsonString).toMatch(`"name": "hello-world"`);
+      expect(pkgJsonString).toMatch(`"name": "example-infinite-scroll"`);
       expect(pkgJsonString).not.toMatch(`"@shopify/cli-hydrogen"`);
 
       const output = outputMock.info();
@@ -174,24 +163,26 @@ describe('remote templates', () => {
         path: tmpDir,
         git: false,
         language: 'js',
-        template: 'hello-world',
+        template: 'infinite-scroll',
       });
 
+      const templatePath = getSkeletonSourceDir();
+
       const templateFiles = await glob('**/*', {
-        cwd: getSkeletonSourceDir().replace('skeleton', 'hello-world'),
-        ignore: ['**/node_modules/**', '**/dist/**'],
+        cwd: templatePath,
+        ignore: ['**/node_modules/**', '**/dist/**', 'CHANGELOG.md'],
       });
       const resultFiles = await glob('**/*', {cwd: tmpDir});
 
       expect(resultFiles).toEqual(
         expect.arrayContaining(
-          templateFiles
-            .filter((item) => !item.endsWith('.d.ts'))
-            .map((item) =>
-              item
-                .replace(/\.ts(x)?$/, '.js$1')
-                .replace(/tsconfig\.json$/, 'jsconfig.json'),
-            ),
+          templateFiles.map((item) =>
+            item.endsWith('.d.ts')
+              ? item
+              : item
+                  .replace(/\.ts(x)?$/, '.js$1')
+                  .replace(/tsconfig\.json$/, 'jsconfig.json'),
+          ),
         ),
       );
 
