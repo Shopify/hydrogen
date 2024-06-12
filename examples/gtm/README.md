@@ -1,4 +1,4 @@
-# Hydrogen example: Shopify Analytics & Consent (unstable)
+# Hydrogen example: Shopify Analytics & Consent
 
 This folder contains an end-to-end example of how to implement Google Tag Manager for Hydrogen. Hydrogen supports both Shopify analytics, as well as third-party services.
 
