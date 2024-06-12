@@ -70,12 +70,6 @@ export function useOptimisticProduct<
   if (navigation.state === 'loading') {
     const queryParams = new URLSearchParams(navigation.location.search);
 
-    // Convert the search params to a key-value object
-    const params: Record<string, string> = {};
-    queryParams.forEach((value, key) => {
-      params[key] = value;
-    });
-
     // Find matching variant
     const selectedVariant =
       resolvedVariants.find((variant) => {
@@ -89,7 +83,7 @@ export function useOptimisticProduct<
         }
 
         return variant.selectedOptions.every((option) => {
-          return params[option.name] && params[option.name] === option.value;
+          return queryParams.get(option.name) === option.value;
         });
       }) || (product as OptimisticProductInput).selectedVariant;
 
