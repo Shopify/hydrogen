@@ -104,6 +104,7 @@ function createCSPHeader(
     'https://cdn.shopify.com',
     // Used for the Customer Account API
     'https://shopify.com',
+    'https://shop-promise-pdp.shop-promise-pdp-1v5x.rafael-cortesmazzillo.us.spin.dev',
   ];
 
   const defaultDirectives: Record<string, string[] | string | boolean> = {

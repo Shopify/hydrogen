@@ -1,6 +1,7 @@
 import {defaultShopifyContext, useShop} from './ShopifyProvider.js';
 import {useLoadScript} from './load-script.js';
 import {parseGid} from './analytics-utils.js';
+import { useEffect } from 'react';
 
 // By using 'never' in the "or" cases below, it makes these props "exclusive" and means that you cannot pass both of them; you must pass either one OR the other.
 type ShopPayButtonProps = ShopPayButtonStyleProps &
@@ -51,12 +52,36 @@ declare global {
         variants: string;
         'store-url': string;
       };
+      'delivery-promise-wc': {
+        'variant-id'?: string;
+      };
+      'shop-swirl': {};
+      'shopify-payment-terms': {
+        'variant-id': string;
+        'shopify-meta'?: string;
+      };
     }
+  }
+
+  interface Window {
+    ShopPay: {
+      PaymentRequest: {
+        configure: (config: {shopId: number; clientId: string}) => void;
+        createButton: () => {
+          render: (selector: string) => void;
+        };
+      };
+    };
   }
 }
 
 const SHOPJS_URL =
   'https://cdn.shopify.com/shopifycloud/shop-js/v1.0/client.js';
+const SHOP_PROMISE_URL =
+  // 'https://cdn.shopify.com/cdn/shopifycloud/shop-promise-pdp/shop_promise_pdp.js';
+  'https://shop-promise-pdp.shop-promise-pdp-1v5x.rafael-cortesmazzillo.us.spin.dev/shop_promise_pdp.js';
+const CCS_URL =
+  'https://cdn.shopify.com/shopifycloud/shop-js/shop-pay-payment-request.js';
 
 function isChannel(
   channel: string,
@@ -80,6 +105,8 @@ export function ShopPayButton({
   const shop = useShop();
   const storeDomain = _storeDomain || shop?.storeDomain;
   const shopPayLoadedStatus = useLoadScript(SHOPJS_URL);
+  const shopPromiseLoadedStatus = useLoadScript(SHOP_PROMISE_URL);
+  const ccsLoadedStatus = useLoadScript(CCS_URL);
 
   let ids: string[] = [];
   let channelAttribution: string | undefined;
@@ -134,14 +161,78 @@ export function ShopPayButton({
       } as React.CSSProperties)
     : undefined;
 
+  const shopifyMeta = {
+    type: 'product',
+    variants: [
+      {
+        id: 11,
+        price_per_term: '$25.00',
+        eligible: true,
+        full_price: '$100.00',
+        available: true,
+      },
+    ],
+    min_price: '$50',
+    max_price: '$17500',
+    number_of_payment_terms: 4,
+    installments_buyer_prequalification_enabled: true,
+    financing_plans: [
+      {
+        min_price: '$50',
+        max_price: '$149.99',
+        terms: [
+          {
+            installments_count: 4,
+            apr: 0,
+            loan_type: 'split_pay',
+          },
+        ],
+      },
+    ],
+  };
+
+  useEffect(() => {
+    if (ccsLoadedStatus === 'done') {
+      window.ShopPay.PaymentRequest.configure({
+        shopId: Number(shop.storefrontId) || 1,
+        clientId: 'shop-pay-ccs',
+      });
+      window.ShopPay.PaymentRequest.createButton().render(
+        '#shop-pay-button-container',
+      );
+    }
+  }, [ccsLoadedStatus, shop.storefrontId]);
+
   return (
     <div className={className} style={style}>
       {shopPayLoadedStatus === 'done' && (
-        <shop-pay-button
-          {...(channelAttribution ? {channel: channelAttribution} : {})}
-          store-url={storeDomain}
-          variants={ids.join(',')}
-        />
+        <>
+          <shop-pay-button
+            {...(channelAttribution ? {channel: channelAttribution} : {})}
+            store-url={storeDomain}
+            variants={ids.join(',')}
+          />
+          <shop-swirl />
+          <shopify-payment-terms
+            variant-id="11"
+            shopify-meta={JSON.stringify(shopifyMeta)}
+          />
+        </>
+      )}
+
+      {ccsLoadedStatus === 'done' && (
+        <>
+          <div id="shop-pay-button-container"></div>
+          <div id="shop-pay-login-container">
+            <input type="email" id="email-input" />
+          </div>
+        </>
+      )}
+
+      {shopPromiseLoadedStatus === 'done' && (
+        <>
+          <delivery-promise-wc variant-id={ids[0]} />
+        </>
       )}
     </div>
   );

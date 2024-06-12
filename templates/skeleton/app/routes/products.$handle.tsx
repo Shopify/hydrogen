@@ -20,6 +20,7 @@ import {
   getSelectedProductOptions,
   CartForm,
   type OptimisticCartLine,
+  ShopPayButton,
 } from '@shopify/hydrogen';
 import type {SelectedOption} from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/lib/variants';
@@ -215,6 +216,8 @@ function ProductForm({
   variants: Array<ProductVariantFragment>;
 }) {
   const {open} = useAside();
+  const selectVariantGid =
+    selectedVariant && `gid://shopify/ProductVariant/${selectedVariant.id}`;
   return (
     <div className="product-form">
       <VariantSelector
@@ -225,6 +228,12 @@ function ProductForm({
         {({option}) => <ProductOptions key={option.name} option={option} />}
       </VariantSelector>
       <br />
+      {selectVariantGid && (
+        <ShopPayButton
+          variantIds={[selectVariantGid]}
+          storeDomain="http://demostore.mock.shop"
+        />
+      )}
       <AddToCartButton
         disabled={!selectedVariant || !selectedVariant.availableForSale}
         onClick={() => {
