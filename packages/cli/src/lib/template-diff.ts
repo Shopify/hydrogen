@@ -275,5 +275,5 @@ export async function applyTemplateDiff(
     },
   });
 
-  mergeTsConfig(diffDirectory, targetDirectory);
+  await mergeTsConfig(diffDirectory, targetDirectory);
 }
