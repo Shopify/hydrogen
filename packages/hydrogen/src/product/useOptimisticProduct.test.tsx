@@ -1,14 +1,10 @@
 import {expect, test, describe, beforeEach, afterEach, vi} from 'vitest';
 import {useOptimisticProduct} from './useOptimisticProduct';
-import * as RemixReact from '@remix-run/react';
 import {renderHook, waitFor, act} from '@testing-library/react';
 
 let navigation = {state: 'idle', location: {search: ''}};
 
-const consoleErrorSpy = vi.spyOn(console, 'error');
-const consoleWarnSpy = vi.spyOn(console, 'warn');
-
-vi.spyOn(RemixReact, 'useNavigation');
+vi.stubGlobal('reportError', vi.fn());
 vi.mock('@remix-run/react', async (importOrigninal) => {
   return {
     ...(await importOrigninal<typeof import('@remix-run/react')>()),
@@ -23,8 +19,7 @@ describe('useOptimisticProduct', () => {
     navigation = {state: 'idle', location: {search: ''}};
   });
   afterEach(() => {
-    consoleErrorSpy.mockReset();
-    consoleWarnSpy.mockReset();
+    vi.clearAllMocks();
   });
   test('returns the original product if no fetchers are present', () => {
     const product = {title: 'Product'};
@@ -177,7 +172,7 @@ describe('useOptimisticProduct', () => {
     });
   });
 
-  test('warns when selectedOptions is not included in variants', async () => {
+  test('errors when selectedOptions is not included in variants', async () => {
     navigation = {
       state: 'loading',
       location: {
@@ -187,7 +182,7 @@ describe('useOptimisticProduct', () => {
       },
     };
     const product = {title: 'Product'};
-    const {result} = renderHook(() =>
+    renderHook(() =>
       useOptimisticProduct(product, {
         product: {
           variants: {
@@ -203,8 +198,10 @@ describe('useOptimisticProduct', () => {
     );
 
     await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        '[h2:error:useOptimisticProduct] The optimistic product hook requires your product query to include variants with the selectedOptions field.',
+      expect(globalThis.reportError).toHaveBeenCalledWith(
+        new Error(
+          '[h2:error:useOptimisticProduct] The optimistic product hook requires your product query to include variants with the selectedOptions field.',
+        ),
       );
     });
   });

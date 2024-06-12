@@ -56,9 +56,13 @@ export function useOptimisticProduct<
         }
       })
       .catch((error) => {
-        console.error(
-          '[h2:error:useOptimisticProduct] An error occurred while resolving the variants for the optimistic product hook.',
-          error,
+        reportError(
+          new Error(
+            '[h2:error:useOptimisticProduct] An error occurred while resolving the variants for the optimistic product hook.',
+            {
+              cause: error,
+            },
+          ),
         );
       });
   }, [variants]);
@@ -76,8 +80,10 @@ export function useOptimisticProduct<
     const selectedVariant =
       resolvedVariants.find((variant) => {
         if (!variant.selectedOptions) {
-          console.error(
-            '[h2:error:useOptimisticProduct] The optimistic product hook requires your product query to include variants with the selectedOptions field.',
+          reportError(
+            new Error(
+              '[h2:error:useOptimisticProduct] The optimistic product hook requires your product query to include variants with the selectedOptions field.',
+            ),
           );
           return false;
         }

@@ -191,6 +191,8 @@ function useVariantPath(
       : `/${productPath}/${handle}`;
 
     const searchParams = new URLSearchParams(
+      // Remix doesn't update the location until pending loaders complete but
+      // for optimistic updates, we need to know the destination search params
       optimistic && navigation.state === 'loading'
         ? navigation.location.search
         : search,
@@ -204,5 +206,5 @@ function useVariantPath(
       alreadyOnProductPage: path === pathname,
       path,
     };
-  }, [pathname, search, handle, productPath, navigation]);
+  }, [pathname, search, optimistic, handle, productPath, navigation]);
 }
