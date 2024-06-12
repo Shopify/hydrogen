@@ -51,7 +51,6 @@
     "packages/hydrogen-react",
     "packages/mini-oxygen",
     "packages/remix-oxygen",
-    "templates/hello-world",
     "templates/skeleton"
   ],
   "prettier": "@shopify/prettier-config",

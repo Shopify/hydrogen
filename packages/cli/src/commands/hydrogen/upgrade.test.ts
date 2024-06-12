@@ -189,7 +189,7 @@ describe('upgrade', async () => {
         {
           cleanGitRepo: true,
           packageJson: {
-            name: 'hello-world',
+            name: 'some-name',
             dependencies: {},
           },
         },
