@@ -69,16 +69,20 @@ export function useOptimisticProduct<
 
   if (navigation.state === 'loading') {
     const queryParams = new URLSearchParams(navigation.location.search);
+    let reportedError = false;
 
     // Find matching variant
     const selectedVariant =
       resolvedVariants.find((variant) => {
         if (!variant.selectedOptions) {
-          reportError(
-            new Error(
-              '[h2:error:useOptimisticProduct] The optimistic product hook requires your product query to include variants with the selectedOptions field.',
-            ),
-          );
+          if (!reportedError) {
+            reportedError = true;
+            reportError(
+              new Error(
+                '[h2:error:useOptimisticProduct] The optimistic product hook requires your product query to include variants with the selectedOptions field.',
+              ),
+            );
+          }
           return false;
         }
 
