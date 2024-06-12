@@ -147,12 +147,21 @@ function AnalyticsView(props: CustomViewProps): null;
 function AnalyticsView(props: any) {
   const {type, data = {}, customData} = props;
   const location = useLocation();
-  const {publish, cart, prevCart, shop} = useAnalytics();
+  const {
+    publish,
+    cart,
+    prevCart,
+    shop,
+    customData: analyticProviderCustomData,
+  } = useAnalytics();
   const url = location.pathname + location.search;
 
   let viewPayload: ViewPayload = {
     ...data,
-    customData,
+    customData: {
+      ...analyticProviderCustomData,
+      ...customData,
+    },
     cart,
     prevCart,
     shop,
