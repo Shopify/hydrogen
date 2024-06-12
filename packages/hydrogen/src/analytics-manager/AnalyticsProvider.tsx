@@ -267,7 +267,7 @@ function shopifyCanTrack(): boolean {
 }
 
 function messageOnError(field: string, envVar: string) {
-  return `[h2:error:Analytics.Provider] - ${field} is required. Make sure ${envVar} is defined in your environment variables. See https://shopify.dev/docs/storefronts/headless/hydrogen/analytics/consent to learn how to setup environment variables in the Shopify admin.`;
+  return `[h2:error:Analytics.Provider] - ${field} is required. Make sure ${envVar} is defined in your environment variables. See https://h2o.fyi/analytics/consent to learn how to setup environment variables in the Shopify admin.`;
 }
 
 function AnalyticsProvider({
