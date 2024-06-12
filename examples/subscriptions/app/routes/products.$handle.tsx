@@ -46,6 +46,12 @@ import {
   SellingPlanSelector,
   type SellingPlanGroup,
 } from '~/components/SellingPlanSelector';
+import sellingPanStyle from '~/styles/selling-plan.css?url';
+import type {LinksFunction} from '@remix-run/node';
+
+export const links: LinksFunction = () => [
+  {rel: 'stylesheet', href: sellingPanStyle},
+];
 /**********   EXAMPLE UPDATE END   ************/
 /***********************************************/
 
@@ -396,7 +402,7 @@ function SellingPlanPrice({
           return {
             amount:
               acc.amount *
-              (1 - adjustment.adjustmentValue.adjustmentPercentage),
+              (1 - adjustment.adjustmentValue.adjustmentPercentage / 100),
             currencyCode: acc.currencyCode,
           };
         default:
@@ -435,12 +441,9 @@ function SellingPlanGroup({
             key={sellingPlan.id}
             prefetch="intent"
             to={sellingPlan.url}
-            className={`border inline-block p-4 mr-2 leading-none py-1 border-b-[1.5px] hover:no-underline cursor-pointer transition-all duration-200
-                  ${
-                    sellingPlan.isSelected
-                      ? 'border-gray-500'
-                      : 'border-neutral-50'
-                  }`}
+            className={`selling-plan ${
+              sellingPlan.isSelected ? 'selected' : 'unselected'
+            }`}
             preventScrollReset
             replace
           >
