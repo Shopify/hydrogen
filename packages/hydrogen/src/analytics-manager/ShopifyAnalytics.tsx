@@ -60,7 +60,6 @@ export function ShopifyAnalytics({
   onReady: () => void;
   domain?: string;
 }) {
-
   const {subscribe, register, canTrack} = useAnalytics();
   const [shopifyReady, setShopifyReady] = useState(false);
   const [privacyReady, setPrivacyReady] = useState(false);
