@@ -1,5 +1,11 @@
 # @shopify/hydrogen
 
+## 2024.4.4
+
+### Patch Changes
+
+- `customerAccount` no longer commit session automatically in any situation. ([#2137](https://github.com/Shopify/hydrogen/pull/2137)) by [@michenly](https://github.com/michenly)
+
 ## 2024.4.3
 
 ### Patch Changes

@@ -1,5 +1,17 @@
 # @shopify/cli-hydrogen
 
+## 8.1.1
+
+### Patch Changes
+
+- Fix CLI upgrade notification when running from a globla process. ([#2184](https://github.com/Shopify/hydrogen/pull/2184)) by [@frandiox](https://github.com/frandiox)
+
+- skeleton template was updated to do session commit in server call instead of routes ([#2137](https://github.com/Shopify/hydrogen/pull/2137)) by [@michenly](https://github.com/michenly)
+
+- Remove `PUBLIC_STORE_DOMAIN` environment variable from `.env` when creating new projects with mock.shop. ([#2221](https://github.com/Shopify/hydrogen/pull/2221)) by [@frandiox](https://github.com/frandiox)
+
+- Added an `--auth-bypass-token-duration` flag to the `deploy` command to allow for specified token duration between 1 to 12 hours. ([#2182](https://github.com/Shopify/hydrogen/pull/2182)) by [@NelsonLee-Code](https://github.com/NelsonLee-Code)
+
 ## 8.1.0
 
 ### Minor Changes
