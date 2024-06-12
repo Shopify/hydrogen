@@ -64,71 +64,66 @@ export function VariantSelector({
     Fragment,
     null,
     ...useMemo(() => {
-      return (
-        options
-          // Only show options with more than one value
-          .filter((option) => option?.values?.length! > 1)
-          .map((option) => {
-            let activeValue;
-            let availableValues: VariantOptionValue[] = [];
+      return options.map((option) => {
+        let activeValue;
+        let availableValues: VariantOptionValue[] = [];
 
-            for (let value of option.values!) {
-              // The clone the search params for each value, so we can calculate
-              // a new URL for each option value pair
-              const clonedSearchParams = new URLSearchParams(
-                alreadyOnProductPage ? searchParams : undefined,
-              );
-              clonedSearchParams.set(option.name!, value!);
+        for (let value of option.values!) {
+          // The clone the search params for each value, so we can calculate
+          // a new URL for each option value pair
+          const clonedSearchParams = new URLSearchParams(
+            alreadyOnProductPage ? searchParams : undefined,
+          );
+          clonedSearchParams.set(option.name!, value!);
 
-              // Because we hide options with only one value, they aren't selectable,
-              // but they still need to get into the URL
-              optionsWithOnlyOneValue.forEach((option) => {
-                clonedSearchParams.set(option.name!, option.values![0]!);
-              });
+          // Because we hide options with only one value, they aren't selectable,
+          // but they still need to get into the URL
+          optionsWithOnlyOneValue.forEach((option) => {
+            clonedSearchParams.set(option.name!, option.values![0]!);
+          });
 
-              // Find a variant that matches all selected options.
-              const variant = variants.find((variant) =>
-                variant?.selectedOptions?.every(
-                  (selectedOption) =>
-                    clonedSearchParams.get(selectedOption?.name!) ===
-                    selectedOption?.value,
-                ),
-              );
+          // Find a variant that matches all selected options.
+          const variant = variants.find((variant) =>
+            variant?.selectedOptions?.every(
+              (selectedOption) =>
+                clonedSearchParams.get(selectedOption?.name!) ===
+                selectedOption?.value,
+            ),
+          );
 
-              const currentParam = searchParams.get(option.name!);
+          const currentParam = searchParams.get(option.name!);
 
-              const calculatedActiveValue = currentParam
-                ? // If a URL parameter exists for the current option, check if it equals the current value
-                  currentParam === value!
-                : false;
+          const calculatedActiveValue = currentParam
+            ? // If a URL parameter exists for the current option, check if it equals the current value
+              currentParam === value!
+            : false;
 
-              if (calculatedActiveValue) {
-                // Save out the current value if it's active. This should only ever happen once.
-                // Should we throw if it happens a second time?
-                activeValue = value;
-              }
+          if (calculatedActiveValue) {
+            // Save out the current value if it's active. This should only ever happen once.
+            // Should we throw if it happens a second time?
+            activeValue = value;
+          }
 
-              const searchString = '?' + clonedSearchParams.toString();
+          const searchString = '?' + clonedSearchParams.toString();
 
-              availableValues.push({
-                value: value!,
-                isAvailable: variant ? variant.availableForSale! : true,
-                to: path + searchString,
-                search: searchString,
-                isActive: calculatedActiveValue,
-                variant,
-              });
-            }
+          availableValues.push({
+            value: value!,
+            isAvailable: variant ? variant.availableForSale! : true,
+            to: path + searchString,
+            search: searchString,
+            isActive: calculatedActiveValue,
+            variant,
+          });
+        }
 
-            return children({
-              option: {
-                name: option.name!,
-                value: activeValue,
-                values: availableValues,
-              },
-            });
-          })
-      );
+        return children({
+          option: {
+            name: option.name!,
+            value: activeValue,
+            values: availableValues,
+          },
+        });
+      });
     }, [options, variants, children]),
   );
 }
