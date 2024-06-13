@@ -1,7 +1,6 @@
 import {json, type LinksFunction} from '@remix-run/node';
 import {
   Links,
-  LiveReload,
   Meta,
   NavLink,
   Outlet,
@@ -10,7 +9,7 @@ import {
   useLoaderData,
   useParams,
 } from '@remix-run/react';
-import stylesheet from '~/tailwind.css';
+import stylesheet from '~/tailwind.css?url';
 import {Fragment, useCallback, useState} from 'react';
 import he from 'he';
 
@@ -69,7 +68,6 @@ export default function App() {
         </div>
         <ScrollRestoration />
         <Scripts />
-        <LiveReload />
       </body>
     </html>
   );
