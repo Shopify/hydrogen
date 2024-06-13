@@ -3,7 +3,7 @@ import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
 import {mergePackageJson} from '../../file.js';
 import {canWriteFiles, copyAssets} from './assets.js';
 import {getCodeFormatOptions} from '../../format-code.js';
-import {replaceRootLinks} from './replacers.js';
+import {injectVitePlugin, replaceRootLinks} from './replacers.js';
 import {getAssetsDir} from '../../build.js';
 import type {CssSetupConfig, CssSetupResult} from './common.js';
 
@@ -16,8 +16,6 @@ export async function setupTailwind(
   const relativeAppDirectory = relativePath(rootDirectory, appDirectory);
 
   const assetMap = {
-    'tailwind.config.js': 'tailwind.config.js',
-    'postcss.config.js': 'postcss.config.js',
     'tailwind.css': joinPath(relativeAppDirectory, tailwindCssPath),
   } as const;
 
@@ -31,17 +29,20 @@ export async function setupTailwind(
 
   const workPromise = Promise.all([
     mergePackageJson(await getAssetsDir('tailwind'), rootDirectory),
-    copyAssets('tailwind', assetMap, rootDirectory, (content, filepath) =>
-      filepath === 'tailwind.config.js'
-        ? content.replace('{src-dir}', relativeAppDirectory)
-        : content,
-    ),
+    copyAssets('tailwind', assetMap, rootDirectory),
     getCodeFormatOptions(rootDirectory).then((formatConfig) =>
-      replaceRootLinks(appDirectory, formatConfig, {
-        name: 'tailwindCss',
-        path: tailwindCssPath,
-        isDefault: true,
-      }),
+      Promise.all([
+        replaceRootLinks(appDirectory, formatConfig, {
+          name: 'tailwindCss',
+          path: `${tailwindCssPath}?url`,
+          isDefault: true,
+        }),
+        injectVitePlugin(rootDirectory, formatConfig, {
+          name: 'tailwindcss',
+          path: '@tailwindcss/vite',
+          isDefault: true,
+        }),
+      ]),
     ),
   ]);
 
