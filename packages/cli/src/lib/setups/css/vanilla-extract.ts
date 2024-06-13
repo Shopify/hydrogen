@@ -6,12 +6,11 @@ import type {CssSetupConfig, CssSetupResult} from './common.js';
 
 export async function setupVanillaExtract({
   rootDirectory,
-  appDirectory,
 }: CssSetupConfig): Promise<undefined | CssSetupResult> {
   const workPromise = Promise.all([
     mergePackageJson(await getAssetsDir('vanilla-extract'), rootDirectory),
     getCodeFormatOptions(rootDirectory).then((formatConfig) =>
-      injectVitePlugin(appDirectory, formatConfig, {
+      injectVitePlugin(rootDirectory, formatConfig, {
         path: '@vanilla-extract/vite-plugin',
         name: 'vanillaExtractPlugin',
         isDefault: false,

@@ -3,10 +3,11 @@ import {joinPath} from '@shopify/cli-kit/node/path';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 import {type AssetsDir, getAssetsDir} from '../../build.js';
 
-export type CssStrategy = Extract<
-  AssetsDir,
-  'tailwind' | 'css-modules' | 'vanilla-extract' | 'postcss'
->;
+export type CssStrategy =
+  | 'tailwind'
+  | 'css-modules'
+  | 'vanilla-extract'
+  | 'postcss';
 
 export const SETUP_CSS_STRATEGIES: CssStrategy[] = [
   'tailwind',

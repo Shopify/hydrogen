@@ -65,6 +65,7 @@ describe('init', () => {
       shortcut: true,
       quickstart: true,
       git: true,
+      styling: 'tailwind',
     });
   });
 

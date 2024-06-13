@@ -1,4 +1,7 @@
 {
+  "dependencies": {
+    "@vanilla-extract/css": "^1.15.2"
+  },
   "devDependencies": {
     "@vanilla-extract/vite-plugin": "^4.0.10"
   }
