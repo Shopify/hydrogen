@@ -1,14 +1,28 @@
-import {Await, NavLink} from '@remix-run/react';
 import {Suspense} from 'react';
-import type {HeaderQuery} from 'storefrontapi.generated';
-import type {LayoutProps} from './Layout';
-import {useRootLoaderData} from '~/root';
+import {Await, NavLink} from '@remix-run/react';
+import {type CartViewPayload, useAnalytics} from '@shopify/hydrogen';
+import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
+import {useAside} from '~/components/Aside';
 
-type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'>;
+interface HeaderProps {
+  header: HeaderQuery;
+  cart: Promise<CartApiQueryFragment | null>;
+  /***********************************************/
+  /**********  EXAMPLE UPDATE STARTS  ************/
+  isLoggedIn: boolean;
+  /**********   EXAMPLE UPDATE END   ************/
+  /***********************************************/
+  publicStoreDomain: string;
+}
 
 type Viewport = 'desktop' | 'mobile';
 
-export function Header({header, isLoggedIn, cart}: HeaderProps) {
+export function Header({
+  header,
+  isLoggedIn,
+  cart,
+  publicStoreDomain,
+}: HeaderProps) {
   const {shop, menu} = header;
   return (
     <header className="header">
@@ -19,6 +33,7 @@ export function Header({header, isLoggedIn, cart}: HeaderProps) {
         menu={menu}
         viewport="desktop"
         primaryDomainUrl={header.shop.primaryDomain.url}
+        publicStoreDomain={publicStoreDomain}
       />
       <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
     </header>
@@ -29,12 +44,13 @@ export function HeaderMenu({
   menu,
   primaryDomainUrl,
   viewport,
+  publicStoreDomain,
 }: {
   menu: HeaderProps['header']['menu'];
-  primaryDomainUrl: HeaderQuery['shop']['primaryDomain']['url'];
+  primaryDomainUrl: HeaderProps['header']['shop']['primaryDomain']['url'];
   viewport: Viewport;
+  publicStoreDomain: HeaderProps['publicStoreDomain'];
 }) {
-  const {publicStoreDomain} = useRootLoaderData();
   const className = `header-menu-${viewport}`;
 
   function closeAside(event: React.MouseEvent<HTMLAnchorElement>) {
@@ -93,7 +109,11 @@ function HeaderCtas({
     <nav className="header-ctas" role="navigation">
       <HeaderMenuMobileToggle />
       <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
+        {/***********************************************/
+        /**********  EXAMPLE UPDATE STARTS  ************/}
         {isLoggedIn ? 'Account' : 'Sign in'}
+        {/**********   EXAMPLE UPDATE END   ************/
+        /***********************************************/}
       </NavLink>
       <SearchToggle />
       <CartToggle cart={cart} />
@@ -102,19 +122,47 @@ function HeaderCtas({
 }
 
 function HeaderMenuMobileToggle() {
+  const {open} = useAside();
   return (
-    <a className="header-menu-mobile-toggle" href="#mobile-menu-aside">
+    <button
+      className="header-menu-mobile-toggle reset"
+      onClick={() => open('mobile')}
+    >
       <h3>☰</h3>
-    </a>
+    </button>
   );
 }
 
 function SearchToggle() {
-  return <a href="#search-aside">Search</a>;
+  const {open} = useAside();
+  return (
+    <button className="reset" onClick={() => open('search')}>
+      Search
+    </button>
+  );
 }
 
 function CartBadge({count}: {count: number}) {
-  return <a href="#cart-aside">Cart {count}</a>;
+  const {open} = useAside();
+  const {publish, shop, cart, prevCart} = useAnalytics();
+
+  return (
+    <a
+      href="/cart"
+      onClick={(e) => {
+        e.preventDefault();
+        open('cart');
+        publish('cart_viewed', {
+          cart,
+          prevCart,
+          shop,
+          url: window.location.href || '',
+        } as CartViewPayload);
+      }}
+    >
+      Cart {count}
+    </a>
+  );
 }
 
 function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
