@@ -14,7 +14,7 @@ import {
   getStarterDir,
   isHydrogenMonorepo,
 } from './build.js';
-import {mergePackageJson} from './file.js';
+import {mergePackageJson, mergeTsConfig} from './file.js';
 
 /**
  * Creates a new temporary project directory with the starter template and diff applied.
@@ -274,4 +274,6 @@ export async function applyTemplateDiff(
       return pkgJson;
     },
   });
+
+  await mergeTsConfig(diffDirectory, targetDirectory);
 }
