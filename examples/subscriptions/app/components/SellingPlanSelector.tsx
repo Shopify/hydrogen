@@ -43,9 +43,7 @@ export function SellingPlanSelector({
   sellingPlanGroups: ProductFragment['sellingPlanGroups'];
   selectedSellingPlan: SellingPlanFragment | null;
   paramKey?: string;
-  children: ({
-    sellingPlanGroup,
-  }: {
+  children: (params: {
     sellingPlanGroup: SellingPlanGroup;
     selectedSellingPlan: SellingPlanFragment | null;
   }) => React.ReactNode;
@@ -71,9 +69,9 @@ export function SellingPlanSelector({
             params.set(paramKey, sellingPlan.id);
             sellingPlan.isSelected = selectedSellingPlan?.id === sellingPlan.id;
             sellingPlan.url = `${pathname}?${params.toString()}`;
-            return sellingPlan as SellingPlan;
+            return sellingPlan;
           })
-          .filter(Boolean);
+          .filter(Boolean) as SellingPlan[];
         sellingPlanGroup.sellingPlans.nodes = sellingPlans;
         return children({sellingPlanGroup, selectedSellingPlan});
       }),

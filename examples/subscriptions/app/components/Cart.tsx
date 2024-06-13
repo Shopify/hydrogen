@@ -1,17 +1,25 @@
-import {CartForm, Image, Money} from '@shopify/hydrogen';
+import {
+  CartForm,
+  Image,
+  Money,
+  useOptimisticCart,
+  type OptimisticCart,
+} from '@shopify/hydrogen';
 import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
 import {Link} from '@remix-run/react';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
-import {useVariantUrl} from '~/utils';
+import {useVariantUrl} from '~/lib/variants';
 
-type CartLine = CartApiQueryFragment['lines']['nodes'][0];
+type CartLine = OptimisticCart<CartApiQueryFragment>['lines']['nodes'][0];
 
 type CartMainProps = {
   cart: CartApiQueryFragment | null;
   layout: 'page' | 'aside';
 };
 
-export function CartMain({layout, cart}: CartMainProps) {
+export function CartMain({layout, cart: originalCart}: CartMainProps) {
+  const cart = useOptimisticCart(originalCart);
+
   const linesCount = Boolean(cart?.lines?.nodes?.length || 0);
   const withDiscount =
     cart &&
@@ -26,12 +34,18 @@ export function CartMain({layout, cart}: CartMainProps) {
   );
 }
 
-function CartDetails({layout, cart}: CartMainProps) {
+function CartDetails({
+  layout,
+  cart,
+}: {
+  cart: OptimisticCart<CartApiQueryFragment>;
+  layout: 'page' | 'aside';
+}) {
   const cartHasItems = !!cart && cart.totalQuantity > 0;
 
   return (
     <div className="cart-details">
-      <CartLines lines={cart?.lines} layout={layout} />
+      <CartLines lines={cart?.lines?.nodes} layout={layout} />
       {cartHasItems && (
         <CartSummary cost={cart.cost} layout={layout}>
           <CartDiscounts discountCodes={cart.discountCodes} />
@@ -47,14 +61,14 @@ function CartLines({
   layout,
 }: {
   layout: CartMainProps['layout'];
-  lines: CartApiQueryFragment['lines'] | undefined;
+  lines: CartLine[];
 }) {
   if (!lines) return null;
 
   return (
     <div aria-labelledby="cart-lines">
       <ul>
-        {lines.nodes.map((line) => (
+        {lines.map((line) => (
           <CartLineItem key={line.id} line={line} layout={layout} />
         ))}
       </ul>
@@ -69,7 +83,12 @@ function CartLineItem({
   layout: CartMainProps['layout'];
   line: CartLine;
 }) {
+  /***********************************************/
+  /**********  EXAMPLE UPDATE STARTS  ************/
   const {id, merchandise, sellingPlanAllocation} = line;
+  /**********   EXAMPLE UPDATE END   ************/
+  /***********************************************/
+
   const {product, title, image, selectedOptions} = merchandise;
   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
 
@@ -99,27 +118,27 @@ function CartLineItem({
         >
           <p>
             <strong>{product.title}</strong>
-            <br />
           </p>
         </Link>
         <CartLinePrice line={line} as="span" />
         <ul>
+          {/***********************************************/
+          /**********  EXAMPLE UPDATE STARTS  ************/}
           {/* Optionally render the selling plan name if available */}
           {sellingPlanAllocation && (
             <li key={sellingPlanAllocation.sellingPlan.name}>
               <small>{sellingPlanAllocation.sellingPlan.name}</small>
             </li>
           )}
-          {selectedOptions.map(
-            (option) =>
-              option.value !== 'Default Title' && (
-                <li key={option.name}>
-                  <small>
-                    {option.name}: {option.value}
-                  </small>
-                </li>
-              ),
-          )}
+          {/**********   EXAMPLE UPDATE END   ************/
+          /***********************************************/}
+          {selectedOptions.map((option) => (
+            <li key={option.name}>
+              <small>
+                {option.name}: {option.value}
+              </small>
+            </li>
+          ))}
         </ul>
         <CartLineQuantity line={line} />
       </div>
@@ -170,15 +189,21 @@ export function CartSummary({
   );
 }
 
-function CartLineRemoveButton({lineIds}: {lineIds: string[]}) {
+function CartLineRemoveButton({
+  lineIds,
+  disabled,
+}: {
+  lineIds: string[];
+  disabled: boolean;
+}) {
   return (
     <CartForm
       route="/cart"
       action={CartForm.ACTIONS.LinesRemove}
       inputs={{lineIds}}
     >
-      <button type="submit">
-        <small>Remove</small>
+      <button disabled={disabled} type="submit">
+        Remove
       </button>
     </CartForm>
   );
@@ -186,7 +211,7 @@ function CartLineRemoveButton({lineIds}: {lineIds: string[]}) {
 
 function CartLineQuantity({line}: {line: CartLine}) {
   if (!line || typeof line?.quantity === 'undefined') return null;
-  const {id: lineId, quantity} = line;
+  const {id: lineId, quantity, isOptimistic} = line;
   const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
   const nextQuantity = Number((quantity + 1).toFixed(0));
 
@@ -196,7 +221,7 @@ function CartLineQuantity({line}: {line: CartLine}) {
       <CartLineUpdateButton lines={[{id: lineId, quantity: prevQuantity}]}>
         <button
           aria-label="Decrease quantity"
-          disabled={quantity <= 1}
+          disabled={quantity <= 1 || !!isOptimistic}
           name="decrease-quantity"
           value={prevQuantity}
         >
@@ -209,12 +234,13 @@ function CartLineQuantity({line}: {line: CartLine}) {
           aria-label="Increase quantity"
           name="increase-quantity"
           value={nextQuantity}
+          disabled={!!isOptimistic}
         >
           <span>&#43;</span>
         </button>
       </CartLineUpdateButton>
       &nbsp;
-      <CartLineRemoveButton lineIds={[lineId]} />
+      <CartLineRemoveButton lineIds={[lineId]} disabled={!!isOptimistic} />
     </div>
   );
 }
@@ -228,7 +254,8 @@ function CartLinePrice({
   priceType?: 'regular' | 'compareAt';
   [key: string]: any;
 }) {
-  if (!line?.cost?.amountPerQuantity || !line?.cost?.totalAmount) return null;
+  if (!line?.cost?.amountPerQuantity || !line?.cost?.totalAmount)
+    return <div style={{visibility: 'hidden'}}>&nbsp;</div>;
 
   const moneyV2 =
     priceType === 'regular'
@@ -236,7 +263,7 @@ function CartLinePrice({
       : line.cost.compareAtAmountPerQuantity;
 
   if (moneyV2 == null) {
-    return null;
+    return <div style={{visibility: 'hidden'}}>&nbsp;</div>;
   }
 
   return (
@@ -295,9 +322,7 @@ function CartDiscounts({
             <div className="cart-discount">
               <code>{codes?.join(', ')}</code>
               &nbsp;
-              <button>
-                <small>Remove</small>
-              </button>
+              <button>Remove</button>
             </div>
           </UpdateDiscountForm>
         </div>
