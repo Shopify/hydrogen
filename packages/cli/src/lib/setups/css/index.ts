@@ -3,9 +3,8 @@ import {AbortSignal} from '@shopify/cli-kit/node/abort';
 import type {CssSetupConfig} from './common.js';
 import {type CssStrategy, SETUP_CSS_STRATEGIES} from './assets.js';
 import {setupTailwind} from './tailwind.js';
-import {setupPostCss} from './postcss.js';
-import {setupCssModules} from './css-modules.js';
 import {setupVanillaExtract} from './vanilla-extract.js';
+import {CSS_HELP_URLS} from '../../onboarding/common.js';
 
 export {type CssStrategy, SETUP_CSS_STRATEGIES};
 
@@ -27,12 +26,15 @@ export function setupCssStrategy(
   switch (strategy) {
     case 'tailwind':
       return setupTailwind(options, force);
-    case 'postcss':
-      return setupPostCss(options, force);
-    case 'css-modules':
-      return setupCssModules(options);
     case 'vanilla-extract':
       return setupVanillaExtract(options);
+    case 'postcss':
+    case 'css-modules':
+      return {
+        workPromise: Promise.resolve(),
+        helpUrl: CSS_HELP_URLS[strategy],
+        generatedAssets: [],
+      };
     default:
       throw new Error('Unknown strategy');
   }
