@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 8.1.1
+
+### Patch Changes
+
+- Fix paths on Windows. ([#2243](https://github.com/Shopify/hydrogen/pull/2243)) by [@michenly](https://github.com/michenly)
+
 ## 8.1.0
 
 ### Minor Changes

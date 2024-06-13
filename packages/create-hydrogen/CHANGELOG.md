@@ -1,5 +1,14 @@
 # @shopify/create-hydrogen
 
+## 4.3.12
+
+### Patch Changes
+
+- Fix paths on Windows. ([#2243](https://github.com/Shopify/hydrogen/pull/2243)) by [@michenly](https://github.com/michenly)
+
+- Updated dependencies [[`31452380`](https://github.com/Shopify/hydrogen/commit/31452380340e079cd4ec1f8c10cdab5e5313e921)]:
+  - @shopify/cli-hydrogen@8.1.1
+
 ## 4.3.11
 
 ### Patch Changes
