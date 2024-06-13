@@ -1,5 +1,11 @@
 # @shopify/hydrogen
 
+## 2024.4.5
+
+### Patch Changes
+
+- Fix paths on Windows. ([#2243](https://github.com/Shopify/hydrogen/pull/2243)) by [@michenly](https://github.com/michenly)
+
 ## 2024.4.4
 
 ### Patch Changes

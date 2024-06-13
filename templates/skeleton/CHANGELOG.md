@@ -1,5 +1,15 @@
 # skeleton
 
+## 2024.4.7
+
+### Patch Changes
+
+- Fix paths on Windows. ([#2243](https://github.com/Shopify/hydrogen/pull/2243)) by [@michenly](https://github.com/michenly)
+
+- Updated dependencies [[`31452380`](https://github.com/Shopify/hydrogen/commit/31452380340e079cd4ec1f8c10cdab5e5313e921)]:
+  - @shopify/hydrogen@2024.4.5
+  - @shopify/cli-hydrogen@8.1.1
+
 ## 2024.4.6
 
 ### Patch Changes

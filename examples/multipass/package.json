@@ -14,8 +14,8 @@
   "dependencies": {
     "@remix-run/react": "^2.9.2",
     "@shopify/cli": "3.60.0",
-    "@shopify/cli-hydrogen": "^8.1.0",
-    "@shopify/hydrogen": "2024.4.4",
+    "@shopify/cli-hydrogen": "^8.1.1",
+    "@shopify/hydrogen": "2024.4.5",
     "@shopify/remix-oxygen": "^2.0.4",
     "crypto-js": "^4.2.0",
     "graphql": "^16.6.0",
