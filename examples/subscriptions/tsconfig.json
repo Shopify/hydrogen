@@ -1,23 +1,16 @@
 {
-  "include": ["./**/*.d.ts", "./**/*.ts", "./**/*.tsx"],
+  "extends": "../../templates/skeleton/tsconfig.json",
+  "include": [
+    "./**/*.d.ts",
+    "./**/*.ts",
+    "./**/*.tsx",
+    "../../templates/skeleton/*.d.ts"
+  ],
   "compilerOptions": {
-    "lib": ["DOM", "DOM.Iterable", "ES2022"],
-    "isolatedModules": true,
-    "esModuleInterop": true,
-    "jsx": "react-jsx",
-    "moduleResolution": "Bundler",
-    "resolveJsonModule": true,
-    "module": "ES2022",
-    "target": "ES2022",
-    "strict": true,
-    "allowJs": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
     "baseUrl": ".",
-    "types": ["@shopify/oxygen-workers-types"],
     "paths": {
-      "~/*": ["app/*"]
-    },
-    "noEmit": true
+      "*": ["./*", "../../templates/skeleton/*"],
+      "~/*": ["app/*", "../../templates/skeleton/app/*"]
+    }
   }
 }
