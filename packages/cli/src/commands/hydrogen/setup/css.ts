@@ -11,7 +11,6 @@ import {
   installNodeModules,
 } from '@shopify/cli-kit/node/node-package-manager';
 import {Args} from '@oclif/core';
-import {getRemixConfig, hasRemixConfigFile} from '../../../lib/remix-config.js';
 import {
   setupCssStrategy,
   SETUP_CSS_STRATEGIES,
@@ -19,6 +18,8 @@ import {
   type CssStrategy,
   renderCssPrompt,
 } from '../../../lib/setups/css/index.js';
+import {CSS_HELP_URLS} from '../../../lib/onboarding/common.js';
+import {getViteConfig} from '../../../lib/vite-config.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
 
 export default class SetupCSS extends Command {
@@ -64,21 +65,30 @@ export async function runSetupCSS({
   force?: boolean;
   installDeps: boolean;
 }) {
-  if (!(await hasRemixConfigFile(directory))) {
+  const viteConfig = await getViteConfig(directory).catch(() => null);
+  if (!viteConfig) {
     throw new AbortError(
-      'No remix.config.js file found. This command is not supported in Vite projects.',
+      'No Vite config found. This command is only supported in Vite projects.',
     );
   }
 
-  const remixConfigPromise = getRemixConfig(directory);
+  const {remixConfig} = viteConfig;
+
   const strategy = flagStrategy ? flagStrategy : await renderCssPrompt();
 
-  const remixConfig = await remixConfigPromise;
+  if (strategy === 'css-modules' || strategy === 'postcss') {
+    renderSuccess({
+      headline: `Vite works out of the box with ${CSS_STRATEGY_NAME_MAP[strategy]}.`,
+      body: `See the Vite documentation for more information:\n${CSS_HELP_URLS[strategy]}`,
+    });
+
+    return;
+  }
 
   const setupOutput = await setupCssStrategy(strategy, remixConfig, force);
   if (!setupOutput) return;
 
-  const {workPromise, generatedAssets, helpUrl} = setupOutput;
+  const {workPromise, generatedAssets} = setupOutput;
 
   const tasks = [
     {
@@ -116,6 +126,7 @@ export async function runSetupCSS({
         ? 'You can now modify CSS configuration in the following files:\n' +
           generatedAssets.map((file) => `  - ${file}`).join('\n') +
           '\n'
-        : '') + `\nFor more information, visit ${helpUrl}.`,
+        : '') +
+      `\nFor more information, visit ${CSS_STRATEGY_NAME_MAP[strategy]}.`,
   });
 }

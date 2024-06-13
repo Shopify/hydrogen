@@ -7,6 +7,4 @@ export type CssSetupResult = {
 export type CssSetupConfig = {
   rootDirectory: string;
   appDirectory: string;
-  tailwind?: boolean;
-  postcss?: boolean;
 };

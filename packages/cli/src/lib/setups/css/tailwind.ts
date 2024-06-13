@@ -10,7 +10,7 @@ import type {CssSetupConfig, CssSetupResult} from './common.js';
 const tailwindCssPath = 'styles/tailwind.css';
 
 export async function setupTailwind(
-  {rootDirectory, appDirectory, ...futureOptions}: CssSetupConfig,
+  {rootDirectory, appDirectory}: CssSetupConfig,
   force = false,
 ): Promise<undefined | CssSetupResult> {
   const relativeAppDirectory = relativePath(rootDirectory, appDirectory);
@@ -20,11 +20,6 @@ export async function setupTailwind(
     'postcss.config.js': 'postcss.config.js',
     'tailwind.css': joinPath(relativeAppDirectory, tailwindCssPath),
   } as const;
-
-  if (futureOptions.tailwind && futureOptions.postcss) {
-    outputInfo(`Tailwind and PostCSS are already setup in ${rootDirectory}.`);
-    return;
-  }
 
   if (!(await canWriteFiles(assetMap, appDirectory, force))) {
     outputInfo(
