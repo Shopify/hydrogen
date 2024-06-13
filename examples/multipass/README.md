@@ -6,7 +6,7 @@ the user session from a Hydrogen storefront through to checkout.
 ## Requirements
 
 - Multipass is available on [Shopify Plus](https://www.shopify.com/plus) plans.
-- A Shopify Multipass secret token. Go to [**Settings > Customer accounts**](https://www.shopify.com/admin/settings/customer_accounts) to create one.
+- A Shopify Multipass secret token. Go to [**Settings > Customer accounts**](https://www.shopify.com/admin/settings/customer_accounts) to create one. Ensure you have the `Classic customer account` options selected to use Multipass
 
 ## Install
 
