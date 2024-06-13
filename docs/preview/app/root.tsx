@@ -18,8 +18,7 @@ export const links: LinksFunction = () => [
 ];
 
 export async function loader() {
-  delete require.cache[process.env.DOCS_META_FILE!];
-  const data = require(process.env.DOCS_META_FILE!);
+  const {default: data} = await import('virtual:docs.json');
 
   for (const doc of data) {
     for (const tab of doc.defaultExample.codeblock.tabs) {
