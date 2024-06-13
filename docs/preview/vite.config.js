@@ -4,6 +4,17 @@ import {vitePlugin as remix} from '@remix-run/dev';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import tailwindcss from '@tailwindcss/vite';
 
+const {INIT_CWD, GEN_DOCS_PATH} = process.env;
+
+if (!GEN_DOCS_PATH && INIT_CWD === process.env.PWD) {
+  const message =
+    '\n\nRun this utility from a directory that contains a generated docs folder,\n' +
+    'or set the `GEN_DOCS_PATH` environment variable to the path of the generated docs folder.\n\n';
+  const error = new Error(message);
+  error.stack = '';
+  throw error;
+}
+
 export default defineConfig({
   plugins: [
     remix({
@@ -21,11 +32,9 @@ export default defineConfig({
       resolveId(id) {
         if (id.startsWith('virtual:docs.json')) {
           return {
-            id: path.join(
-              process.env.INIT_CWD,
-              process.env.GEN_DOCS_PATH ??
-                'docs/generated/generated_docs_data.json',
-            ),
+            id:
+              GEN_DOCS_PATH ??
+              path.join(INIT_CWD, 'docs/generated/generated_docs_data.json'),
           };
         }
       },
