@@ -410,13 +410,6 @@ export async function handleLanguage(
   };
 }
 
-export const CSS_HELP_URLS = {
-  postcss: 'https://vitejs.dev/guide/features.html#postcss',
-  'css-modules': 'https://vitejs.dev/guide/features.html#css-modules',
-  'vanilla-extract': 'https://vanilla-extract.style/documentation/styling/',
-  tailwind: 'https://tailwindcss.com/docs/configuration',
-};
-
 /**
  * Prompts the user to select a CSS strategy.
  * @returns The chosen strategy name and a function that sets up the CSS strategy.
@@ -437,7 +430,6 @@ export async function handleCssStrategy(
 
   return {
     cssStrategy,
-    cssHelpUrl: cssStrategy ? CSS_HELP_URLS[cssStrategy] : undefined,
     async setupCss() {
       if (cssStrategy) {
         if (cssStrategy === 'postcss' || cssStrategy === 'css-modules') {

@@ -4,7 +4,6 @@ import type {CssSetupConfig} from './common.js';
 import {type CssStrategy, SETUP_CSS_STRATEGIES} from './assets.js';
 import {setupTailwind} from './tailwind.js';
 import {setupVanillaExtract} from './vanilla-extract.js';
-import {CSS_HELP_URLS} from '../../onboarding/common.js';
 
 export {type CssStrategy, SETUP_CSS_STRATEGIES};
 
@@ -12,10 +11,17 @@ export const STYLING_CHOICES = [...SETUP_CSS_STRATEGIES, 'none'] as const;
 export type StylingChoice = (typeof STYLING_CHOICES)[number];
 
 export const CSS_STRATEGY_NAME_MAP: Record<CssStrategy, string> = {
-  tailwind: 'Tailwind',
-  'css-modules': 'CSS Modules',
+  tailwind: 'Tailwind (v4 alpha)',
   'vanilla-extract': 'Vanilla Extract',
-  postcss: 'CSS',
+  'css-modules': 'CSS Modules',
+  postcss: 'PostCSS',
+};
+
+export const CSS_STRATEGY_HELP_URL_MAP = {
+  postcss: 'https://vitejs.dev/guide/features.html#postcss',
+  'css-modules': 'https://vitejs.dev/guide/features.html#css-modules',
+  'vanilla-extract': 'https://vanilla-extract.style/documentation/styling/',
+  tailwind: 'https://tailwindcss.com/docs/configuration',
 };
 
 export function setupCssStrategy(
@@ -32,7 +38,6 @@ export function setupCssStrategy(
     case 'css-modules':
       return {
         workPromise: Promise.resolve(),
-        helpUrl: CSS_HELP_URLS[strategy],
         generatedAssets: [],
       };
     default:

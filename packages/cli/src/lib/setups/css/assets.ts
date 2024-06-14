@@ -11,8 +11,8 @@ export type CssStrategy =
 
 export const SETUP_CSS_STRATEGIES: CssStrategy[] = [
   'tailwind',
-  'css-modules',
   'vanilla-extract',
+  'css-modules',
   'postcss',
 ];
 

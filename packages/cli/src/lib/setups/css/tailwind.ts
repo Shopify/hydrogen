@@ -49,6 +49,5 @@ export async function setupTailwind(
   return {
     workPromise,
     generatedAssets: Object.values(assetMap),
-    helpUrl: 'https://tailwindcss.com/docs/configuration',
   };
 }

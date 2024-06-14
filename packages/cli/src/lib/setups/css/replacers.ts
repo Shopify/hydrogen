@@ -7,7 +7,7 @@ import {importLangAstGrep, type SgNode} from '../../ast.js';
  * Adds a new CSS file import to the root file and returns it from the `links` export.
  * @param appDirectory Remix app directory
  * @param formatConfig Prettier formatting options
- * @param importer Tuple of import name and import path
+ * @param importer Object describing the import statement and its usage
  */
 export async function replaceRootLinks(
   appDirectory: string,
@@ -38,9 +38,10 @@ export async function replaceRootLinks(
     const astGrep = await importLangAstGrep(astType);
     const root = astGrep.parse(content).root();
 
-    const lastImportNode = root
-      .findAll({rule: {kind: 'import_statement'}})
-      .pop();
+    const importNodes = root.findAll({rule: {kind: 'import_statement'}});
+    const lastImportNode =
+      importNodes.findLast((node) => node.text().includes('.css')) ||
+      importNodes.pop();
 
     const linksReturnNode = root.find({
       utils: {
@@ -95,19 +96,6 @@ export async function replaceRootLinks(
   });
 }
 
-export function injectCssBundlingLink(
-  appDirectory: string,
-  formatConfig: FormatOptions,
-) {
-  return replaceRootLinks(appDirectory, formatConfig, {
-    name: 'cssBundleHref',
-    path: '@remix-run/css-bundle',
-    isDefault: false,
-    isConditional: true,
-    isAbsolute: true,
-  });
-}
-
 /**
  * Adds a new CSS file import to the root file and returns it from the `links` export.
  * @param rootDirectory Root directory
@@ -147,10 +135,9 @@ export async function injectVitePlugin(
     const astGrep = await importLangAstGrep(astType);
     const root = astGrep.parse(content).root();
 
-    const importNodes = root.findAll({rule: {kind: 'import_statement'}});
-    const lastImportNode =
-      importNodes.findLast((node) => node.text().includes('.css')) ||
-      importNodes.pop();
+    const lastImportNode = root
+      .findAll({rule: {kind: 'import_statement'}})
+      .pop();
 
     const vitePluginListNode = root.find(vitePluginListRule);
 

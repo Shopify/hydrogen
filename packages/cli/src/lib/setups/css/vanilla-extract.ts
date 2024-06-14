@@ -21,6 +21,5 @@ export async function setupVanillaExtract({
   return {
     workPromise,
     generatedAssets: [],
-    helpUrl: 'https://vanilla-extract.style/documentation/styling/',
   };
 }

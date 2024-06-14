@@ -15,10 +15,10 @@ import {
   setupCssStrategy,
   SETUP_CSS_STRATEGIES,
   CSS_STRATEGY_NAME_MAP,
+  CSS_STRATEGY_HELP_URL_MAP,
   type CssStrategy,
   renderCssPrompt,
 } from '../../../lib/setups/css/index.js';
-import {CSS_HELP_URLS} from '../../../lib/onboarding/common.js';
 import {getViteConfig} from '../../../lib/vite-config.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
 
@@ -79,7 +79,7 @@ export async function runSetupCSS({
   if (strategy === 'css-modules' || strategy === 'postcss') {
     renderSuccess({
       headline: `Vite works out of the box with ${CSS_STRATEGY_NAME_MAP[strategy]}.`,
-      body: `See the Vite documentation for more information:\n${CSS_HELP_URLS[strategy]}`,
+      body: `See the Vite documentation for more information:\n${CSS_STRATEGY_HELP_URL_MAP[strategy]}`,
     });
 
     return;
@@ -127,6 +127,6 @@ export async function runSetupCSS({
           generatedAssets.map((file) => `  - ${file}`).join('\n') +
           '\n'
         : '') +
-      `\nFor more information, visit ${CSS_STRATEGY_NAME_MAP[strategy]}.`,
+      `\nFor more information, visit ${CSS_STRATEGY_HELP_URL_MAP[strategy]}`,
   });
 }
