@@ -1,5 +1,14 @@
 # @shopify/hydrogen
 
+## 2024.4.6
+
+### Patch Changes
+
+- Fix shopify cookie creation and add auto top-level domain detection ([#2249](https://github.com/Shopify/hydrogen/pull/2249)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Updated dependencies [[`593dd30e`](https://github.com/Shopify/hydrogen/commit/593dd30e87bd64f9b8b9b42bfc631482039a480a)]:
+  - @shopify/hydrogen-react@2024.4.4
+
 ## 2024.4.5
 
 ### Patch Changes
