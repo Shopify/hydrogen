@@ -10,7 +10,7 @@ This example is connected to the `hydrogen-preview` storefront which contains on
 
 To run this example on your own store, you'll need to:
 
-- Install a [subscription app](https://apps.shopify.com/categories/selling-products-purchase-options-subscriptions).
+- Install a [subscription app](https://apps.shopify.com/shopify-subscriptions).
 - Use the subscription app to create a selling plan for a product.
 
 ## Install
