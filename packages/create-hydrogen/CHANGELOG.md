@@ -1,5 +1,11 @@
 # @shopify/create-hydrogen
 
+## 4.3.13
+
+### Patch Changes
+
+- Fix shopify cookie creation and add auto top-level domain detection ([#2249](https://github.com/Shopify/hydrogen/pull/2249)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 4.3.12
 
 ### Patch Changes
