@@ -1,7 +1,49 @@
 {
   "url": "https://github.com/Shopify/hydrogen/pulls?q=is%3Apr+is%3Aclosed+%5Bci%5D+release+in%3Atitle+is%3Amerged",
-  "version": "2024.4.3",
+  "version": "2024.4.6",
   "releases": [
+    {
+      "title": "Fix shopify cookie creation and add auto top-level domain detection",
+      "version": "2024.4.6",
+      "hash": "af573bce7af2e51045dab6a2eaa27f33bfc59900",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2250",
+      "commit": "https://github.com/Shopify/hydrogen/commit/af573bce7af2e51045dab6a2eaa27f33bfc59900",
+      "dependencies": {
+        "@remix-run/react": "^2.9.2",
+        "@shopify/cli-hydrogen": "^8.1.0",
+        "@shopify/hydrogen": "^2024.4.6",
+        "@shopify/remix-oxygen": "^2.0.4"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.9.2",
+        "typescript": "^5.2.2",
+        "@shopify/cli": "3.61.2",
+        "@shopify/oxygen-workers-types": "^4.0.0",
+        "@remix-run/server-runtime": "^2.9.2"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Fix analytics bugs",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2249",
+          "id": "2249"
+        }
+      ],
+      "features": []
+    },
     {
       "title": "Optimistic cart, RichText component, stable analytics",
       "version": "2024.4.3",
