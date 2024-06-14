@@ -238,4 +238,101 @@ describe(`useShopifyCookies`, () => {
 
     expect(Object.keys(cookieJar).length).toBe(0);
   });
+
+  it('sets domain to top level domain when checkoutDomain is supplied', () => {
+    const cookieJar: MockCookieJar = mockCookie();
+    const domain = 'myshop.com';
+    const checkoutDomain = 'checkout.myshop.com';
+
+    renderHook(() =>
+      useShopifyCookies({hasUserConsent: true, domain, checkoutDomain}),
+    );
+
+    const cookies = getShopifyCookies(document.cookie);
+
+    expect(cookies).toEqual({
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      _shopify_s: expect.any(String),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      _shopify_y: expect.any(String),
+    });
+    expect(cookies['_shopify_s']).not.toBe('');
+    expect(cookies['_shopify_y']).not.toBe('');
+
+    expect(cookieJar['_shopify_s'].value).not.toBe(
+      cookieJar['_shopify_y'].value,
+    );
+    expect(cookieJar['_shopify_s']).toMatchObject({
+      domain: `.myshop.com`,
+      maxage: 1800,
+    });
+    expect(cookieJar['_shopify_y']).toMatchObject({
+      domain: `.myshop.com`,
+      maxage: 31104000,
+    });
+  });
+
+  it('sets domain to top level domain when domain and checkoutDomain are both subdomains', () => {
+    const cookieJar: MockCookieJar = mockCookie();
+    const domain = 'ca.myshop.com';
+    const checkoutDomain = 'checkout.myshop.com';
+
+    renderHook(() =>
+      useShopifyCookies({hasUserConsent: true, domain, checkoutDomain}),
+    );
+
+    const cookies = getShopifyCookies(document.cookie);
+
+    expect(cookies).toEqual({
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      _shopify_s: expect.any(String),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      _shopify_y: expect.any(String),
+    });
+    expect(cookies['_shopify_s']).not.toBe('');
+    expect(cookies['_shopify_y']).not.toBe('');
+
+    expect(cookieJar['_shopify_s'].value).not.toBe(
+      cookieJar['_shopify_y'].value,
+    );
+    expect(cookieJar['_shopify_s']).toMatchObject({
+      domain: `.myshop.com`,
+      maxage: 1800,
+    });
+    expect(cookieJar['_shopify_y']).toMatchObject({
+      domain: `.myshop.com`,
+      maxage: 31104000,
+    });
+  });
+
+  it('does not set domain on localhost if checkoutDomain is supplied', () => {
+    const cookieJar: MockCookieJar = mockCookie();
+    const domain = 'localhost:3000';
+    const checkoutDomain = 'checkout.myshop.com';
+
+    renderHook(() =>
+      useShopifyCookies({hasUserConsent: true, domain, checkoutDomain}),
+    );
+
+    const cookies = getShopifyCookies(document.cookie);
+
+    expect(cookies).toEqual({
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      _shopify_s: expect.any(String),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      _shopify_y: expect.any(String),
+    });
+    expect(cookies['_shopify_s']).not.toBe('');
+    expect(cookies['_shopify_y']).not.toBe('');
+
+    expect(cookieJar['_shopify_s'].value).not.toBe(
+      cookieJar['_shopify_y'].value,
+    );
+    expect(cookieJar['_shopify_s']).toMatchObject({
+      maxage: 1800,
+    });
+    expect(cookieJar['_shopify_y']).toMatchObject({
+      maxage: 31104000,
+    });
+  });
 });

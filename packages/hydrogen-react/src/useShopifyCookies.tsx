@@ -17,10 +17,18 @@ type UseShopifyCookiesOptions = {
    * The domain scope of the cookie. Defaults to empty string.
    **/
   domain?: string;
+  /**
+   * The checkout domain of the shop. Defaults to empty string. If set, the cookie domain will check if it can be set with the checkout domain.
+   */
+  checkoutDomain?: string;
 };
 
 export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {
-  const {hasUserConsent = false, domain = ''} = options || {};
+  const {
+    hasUserConsent = false,
+    domain = '',
+    checkoutDomain = '',
+  } = options || {};
   useEffect(() => {
     const cookies = getShopifyCookies(document.cookie);
 
@@ -33,6 +41,19 @@ export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {
 
     // Use override domain or current host
     let currentDomain = domain || window.document.location.host;
+
+    if (checkoutDomain) {
+      const checkoutDomainParts = checkoutDomain.split('.').reverse();
+      const currentDomainParts = currentDomain.split('.').reverse();
+      const sameDomainParts: Array<string> = [];
+      checkoutDomainParts.forEach((part, index) => {
+        if (part === currentDomainParts[index]) {
+          sameDomainParts.push(part);
+        }
+      });
+
+      currentDomain = sameDomainParts.reverse().join('.');
+    }
 
     // Reset domain if localhost
     if (/^localhost/.test(currentDomain)) currentDomain = '';
@@ -64,7 +85,7 @@ export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {
       setCookie(SHOPIFY_Y, '', 0, domainWithLeadingDot);
       setCookie(SHOPIFY_S, '', 0, domainWithLeadingDot);
     }
-  }, [options, hasUserConsent, domain]);
+  }, [options, hasUserConsent, domain, checkoutDomain]);
 }
 
 function setCookie(

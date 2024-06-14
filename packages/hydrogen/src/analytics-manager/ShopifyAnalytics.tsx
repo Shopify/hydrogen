@@ -93,8 +93,9 @@ export function ShopifyAnalytics({
   });
 
   useShopifyCookies({
-    hasUserConsent: canTrack(),
+    hasUserConsent: shopifyReady && privacyReady ? canTrack() : true,
     domain,
+    checkoutDomain,
   });
 
   useEffect(() => {
