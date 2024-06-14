@@ -80,6 +80,7 @@ describe('init', () => {
           path: tmpDir,
           quickstart: true,
           language: 'ts',
+          styling: 'none',
         }),
       ).resolves.not.toThrow();
 
