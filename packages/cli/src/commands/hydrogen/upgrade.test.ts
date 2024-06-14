@@ -593,7 +593,10 @@ describe('upgrade', async () => {
     });
 
     it('shows up a notice if there are related dependencies to upgrade', async () => {
-      const hydrogenVersion = '2024.4.3';
+      const latestHydrogenVersion = (await (
+        await getChangelog()
+      ).releases[0]?.version) as string;
+
       await inTemporaryHydrogenRepo(
         async (targetPath) => {
           await expect(
@@ -608,7 +611,7 @@ describe('upgrade', async () => {
           );
           expect(outputMock.info()).toMatch(/The next 1 version\(s\) include/i);
           expect(outputMock.info()).toMatch(
-            `or \`h2 upgrade --version ${hydrogenVersion}\``,
+            `or \`h2 upgrade --version ${latestHydrogenVersion}\``,
           );
         },
         {
@@ -617,7 +620,7 @@ describe('upgrade', async () => {
             ...OUTDATED_HYDROGEN_PACKAGE_JSON,
             dependencies: {
               ...OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies,
-              '@shopify/hydrogen': hydrogenVersion,
+              '@shopify/hydrogen': latestHydrogenVersion,
             },
           },
         },
