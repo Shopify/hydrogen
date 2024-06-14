@@ -44,7 +44,10 @@ jobs:
         uses: changesets/action@v1
         with:
           version: npm run version
-          publish: npm run changeset -- publish --tag ${{ github.ref_name }}
+          # Use this command to publish back-fix release onto specific major version npm tag
+          # publish: npm run changeset -- publish --tag ${{ github.ref_name }}
+          # Use this command to publish back-fix release onto latest npm tag if the next major release is not ready yet
+          publish: npm run changeset -- publish
           commit: '[ci] back-fix release ${{ github.ref_name }}'
           title: '[ci] back-fix release ${{ github.ref_name }}'
         env:
