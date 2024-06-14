@@ -85,7 +85,7 @@ export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {
       setCookie(SHOPIFY_Y, '', 0, domainWithLeadingDot);
       setCookie(SHOPIFY_S, '', 0, domainWithLeadingDot);
     }
-  }, [options, hasUserConsent, domain]);
+  }, [options, hasUserConsent, domain, checkoutDomain]);
 }
 
 function setCookie(
