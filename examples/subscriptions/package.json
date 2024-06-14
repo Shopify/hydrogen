@@ -1,16 +1,15 @@
 {
   "name": "example-subscriptions",
   "private": true,
-  "sideEffects": false,
+  "prettier": "@shopify/prettier-config",
   "scripts": {
-    "build": "shopify hydrogen build",
-    "dev": "shopify hydrogen dev --codegen",
-    "preview": "shopify hydrogen preview --build",
+    "build": "shopify hydrogen build --diff",
+    "dev": "shopify hydrogen dev --codegen --diff",
+    "preview": "shopify hydrogen preview --build --diff",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "typecheck": "tsc --noEmit",
     "codegen": "shopify hydrogen codegen"
   },
-  "prettier": "@shopify/prettier-config",
   "dependencies": {
     "@remix-run/react": "^2.9.2",
     "@shopify/cli": "3.61.2",

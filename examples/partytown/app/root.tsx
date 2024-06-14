@@ -1,29 +1,57 @@
-import {
-  defer,
-  type LinksFunction,
-  type LoaderFunctionArgs,
-} from '@shopify/remix-oxygen';
+import {Script, useNonce, getShopAnalytics, Analytics} from '@shopify/hydrogen';
+import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {
   Links,
   Meta,
   Outlet,
   Scripts,
+  useRouteError,
+  useRouteLoaderData,
   ScrollRestoration,
-  useLoaderData,
+  isRouteErrorResponse,
+  type ShouldRevalidateFunction,
 } from '@remix-run/react';
-import type {Shop} from '@shopify/hydrogen/storefront-api-types';
-import styles from './styles/app.css';
-import favicon from './assets/favicon.svg';
-import {Script, useNonce} from '@shopify/hydrogen';
-
+import favicon from '~/assets/favicon.svg';
+import resetStyles from '~/styles/reset.css?url';
+import appStyles from '~/styles/app.css?url';
+import {PageLayout} from '~/components/PageLayout';
+import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
+/***********************************************/
+/**********  EXAMPLE UPDATE STARTS  ************/
 import {PartytownGoogleTagManager} from '~/components/PartytownGoogleTagManager';
 import {Partytown} from '@builder.io/partytown/react';
 import {maybeProxyRequest} from '~/utils/partytown/maybeProxyRequest';
 import {partytownAtomicHeaders} from '~/utils/partytown/partytownAtomicHeaders';
+/**********   EXAMPLE UPDATE END   ************/
+/***********************************************/
 
-export const links: LinksFunction = () => {
+export type RootLoader = typeof loader;
+
+/**
+ * This is important to avoid re-fetching root queries on sub-navigations
+ */
+export const shouldRevalidate: ShouldRevalidateFunction = ({
+  formMethod,
+  currentUrl,
+  nextUrl,
+}) => {
+  // revalidate when a mutation is performed e.g add to cart, login...
+  if (formMethod && formMethod !== 'GET') {
+    return true;
+  }
+
+  // revalidate when manually revalidating via useRevalidator
+  if (currentUrl.toString() === nextUrl.toString()) {
+    return true;
+  }
+
+  return false;
+};
+
+export function links() {
   return [
-    {rel: 'stylesheet', href: styles},
+    {rel: 'stylesheet', href: resetStyles},
+    {rel: 'stylesheet', href: appStyles},
     {
       rel: 'preconnect',
       href: 'https://cdn.shopify.com',
@@ -34,7 +62,7 @@ export const links: LinksFunction = () => {
     },
     {rel: 'icon', type: 'image/svg+xml', href: favicon},
   ];
-};
+}
 
 export async function loader(args: LoaderFunctionArgs) {
   // Start fetching non-critical data without blocking time to first byte
@@ -43,12 +71,25 @@ export async function loader(args: LoaderFunctionArgs) {
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
 
-  const {env} = args.context;
+  const {storefront, env} = args.context;
 
   return defer({
     ...deferredData,
     ...criticalData,
-    gtmContainerId: env.GTM_CONTAINER_ID,
+    publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
+    shop: getShopAnalytics({
+      storefront,
+      publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
+    }),
+    consent: {
+      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
+      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+    },
+    /***********************************************/
+    /**********  EXAMPLE UPDATE STARTS  ************/
+    gtmContainerId: args.context.env.GTM_CONTAINER_ID,
+    /**********   EXAMPLE UPDATE END   ************/
+    /***********************************************/
   });
 }
 
@@ -57,12 +98,20 @@ export async function loader(args: LoaderFunctionArgs) {
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
 async function loadCriticalData({context}: LoaderFunctionArgs) {
-  const [layout] = await Promise.all([
-    context.storefront.query<{shop: Shop}>(LAYOUT_QUERY),
+  const {storefront} = context;
+
+  const [header] = await Promise.all([
+    storefront.query(HEADER_QUERY, {
+      cache: storefront.CacheLong(),
+      variables: {
+        headerMenuHandle: 'main-menu', // Adjust to your header menu handle
+      },
+    }),
     // Add other queries here, so that they are loaded in parallel
   ]);
+
   return {
-    layout,
+    header,
   };
 }
 
@@ -72,26 +121,54 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
 function loadDeferredData({context}: LoaderFunctionArgs) {
-  return {};
+  const {storefront, customerAccount, cart} = context;
+
+  // defer the footer query (below the fold)
+  const footer = storefront
+    .query(FOOTER_QUERY, {
+      cache: storefront.CacheLong(),
+      variables: {
+        footerMenuHandle: 'footer', // Adjust to your footer menu handle
+      },
+    })
+    .catch((error) => {
+      // Log query errors, but don't throw them so the page can still render
+      console.error(error);
+      return null;
+    });
+  return {
+    cart: cart.get(),
+    isLoggedIn: customerAccount.isLoggedIn(),
+    footer,
+  };
 }
 
-export default function App() {
-  const {gtmContainerId} = useLoaderData<typeof loader>();
+function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
+  const data = useRouteLoaderData<RootLoader>('root');
 
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
         <Meta />
         <Links />
       </head>
-
       <body>
-        {/* init GTM dataLayer container */}
-        <Script
-          type="text/partytown"
-          dangerouslySetInnerHTML={{
-            __html: `
+        {data ? (
+          <Analytics.Provider
+            cart={data.cart}
+            shop={data.shop}
+            consent={data.consent}
+          >
+            <PageLayout {...data}>
+              {/***********************************************/
+              /**********  EXAMPLE UPDATE STARTS  ************/}
+              <Script
+                type="text/partytown"
+                dangerouslySetInnerHTML={{
+                  __html: `
               dataLayer = window.dataLayer || [];
 
               window.gtag = function () {
@@ -99,20 +176,26 @@ export default function App() {
               };
 
               window.gtag('js', new Date());
-              window.gtag('config', "${gtmContainerId}");
+              window.gtag('config', "${data.gtmContainerId}");
             `,
-          }}
-        />
+                }}
+              />
 
-        <PartytownGoogleTagManager gtmContainerId={gtmContainerId} />
+              <PartytownGoogleTagManager gtmContainerId={data.gtmContainerId} />
 
-        <Partytown
-          nonce={nonce}
-          forward={['dataLayer.push', 'gtag']}
-          resolveUrl={maybeProxyRequest}
-        />
-
-        <Outlet />
+              <Partytown
+                nonce={nonce}
+                forward={['dataLayer.push', 'gtag']}
+                resolveUrl={maybeProxyRequest}
+              />
+              {/**********   EXAMPLE UPDATE END   ************/
+              /***********************************************/}
+              {children}
+            </PageLayout>
+          </Analytics.Provider>
+        ) : (
+          children
+        )}
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>
@@ -120,11 +203,37 @@ export default function App() {
   );
 }
 
-const LAYOUT_QUERY = `#graphql
-  query layout {
-    shop {
-      name
-      description
-    }
+export default function App() {
+  return (
+    <Layout>
+      <Outlet />
+    </Layout>
+  );
+}
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+  let errorMessage = 'Unknown error';
+  let errorStatus = 500;
+
+  if (isRouteErrorResponse(error)) {
+    errorMessage = error?.data?.message ?? error.data;
+    errorStatus = error.status;
+  } else if (error instanceof Error) {
+    errorMessage = error.message;
   }
-`;
+
+  return (
+    <Layout>
+      <div className="route-error">
+        <h1>Oops</h1>
+        <h2>{errorStatus}</h2>
+        {errorMessage && (
+          <fieldset>
+            <pre>{errorMessage}</pre>
+          </fieldset>
+        )}
+      </div>
+    </Layout>
+  );
+}

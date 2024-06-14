@@ -157,3 +157,14 @@ export async function mergePackageJson(
     options?.onResult?.(targetPkgJson) ?? targetPkgJson,
   );
 }
+
+export async function mergeTsConfig(sourceDir: string, targetDir: string) {
+  const sourceTsConfig = await readFile(joinPath(sourceDir, 'tsconfig.json'));
+  const sourceTsTypes = sourceTsConfig.match(/"types": \[(.*?)\]/)?.[1];
+
+  if (sourceTsTypes) {
+    replaceFileContent(joinPath(targetDir, 'tsconfig.json'), false, (content) =>
+      content.replace(/"types":\s*\[[^\]]*\]/, `"types": [${sourceTsTypes}]`),
+    );
+  }
+}
