@@ -10,7 +10,7 @@ import {flattenConnection} from '@shopify/hydrogen-react';
 function logMissingField(fieldName: string) {
   // eslint-disable-next-line no-console
   console.error(
-    `[h2:error:CartAnalytics] Can't set up cart analytics events because the \`cart.${fieldName}\` value is missing from your GraphQL cart query. In standard Hydrogen projects, the cart query is contained in \`app/lib/fragments.js\`. Make sure it includes \`${fieldName}\`. Check the Hydrogen Skeleton template for reference: {link to GitHub file}.`,
+    `[h2:error:CartAnalytics] Can't set up cart analytics events because the \`cart.${fieldName}\` value is missing from your GraphQL cart query. In standard Hydrogen projects, the cart query is contained in \`app/lib/fragments.js\`. Make sure it includes \`cart.${fieldName}\`. Check the Hydrogen Skeleton template for reference: https://github.com/Shopify/hydrogen/blob/main/templates/skeleton/app/lib/fragments.ts#L59.`,
   );
 }
 
@@ -35,11 +35,11 @@ export function CartAnalytics({
     Promise.resolve(currentCart).then((updatedCart) => {
       if (updatedCart && updatedCart.lines) {
         if (!updatedCart.id) {
-          logMissingField('cart.id');
+          logMissingField('id');
           return;
         }
         if (!updatedCart.updatedAt) {
-          logMissingField('cart.updatedAt');
+          logMissingField('updatedAt');
           return;
         }
       }
