@@ -108,11 +108,7 @@ async function setItem(
    *
    * Store the following information in the response header:
    *
-   *   cache-put-date   - UTC time string of when this request is PUT into cache
-   *
-   * Note on `cache-put-date`: The `response.headers.get('date')` isn't static. I am
-   * not positive what date this is returning but it is never over 500 ms
-   * after subtracting from the current timestamp.
+   *   cache-put-date   - Timestamp string of when this request is PUT into cache
    *
    * `isStale` function will use the above information to test for stale-ness of a cached response
    */
@@ -135,7 +131,7 @@ async function setItem(
   // cache-control is still necessary for mini-oxygen
   response.headers.set('cache-control', paddedCacheControlString);
   response.headers.set('real-cache-control', cacheControlString);
-  response.headers.set('cache-put-date', new Date().toUTCString());
+  response.headers.set('cache-put-date', String(Date.now()));
 
   logCacheApiStatus('PUT', request, response);
   await cache.put(request, response);
@@ -159,8 +155,7 @@ function calculateAge(response: Response, responseDate: string) {
     }
   }
 
-  const ageInMs =
-    new Date().valueOf() - new Date(responseDate as string).valueOf();
+  const ageInMs = Date.now() - Number(responseDate as string);
   return [ageInMs / 1000, responseMaxAge];
 }
 

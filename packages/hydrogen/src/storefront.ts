@@ -9,7 +9,7 @@ import {
   type StorefrontClientProps,
 } from '@shopify/hydrogen-react';
 import type {WritableDeep} from 'type-fest';
-import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
+import {fetchWithServerCache, checkGraphQLErrors} from './cache/server-fetch';
 import {
   SDK_VARIANT_HEADER,
   SDK_VARIANT_SOURCE_HEADER,
