@@ -5,6 +5,7 @@
   "compilerOptions": {
     "moduleResolution": "node",
     "rootDir": ".",
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": ["node"]
   }
 }

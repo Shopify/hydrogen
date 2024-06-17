@@ -1,5 +1,4 @@
 ---
-'@shopify/hydrogen-codegen': minor
 '@shopify/remix-oxygen': minor
 '@shopify/mini-oxygen': minor
 'skeleton': patch
