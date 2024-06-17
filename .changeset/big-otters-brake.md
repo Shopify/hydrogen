@@ -1,8 +1,6 @@
 ---
-'@shopify/remix-oxygen': minor
-'@shopify/mini-oxygen': minor
+'@shopify/remix-oxygen': patch
 'skeleton': patch
-'@shopify/hydrogen': patch
 ---
 
 Update `@shopify/oxygen-workers-types` to v4.1.1
