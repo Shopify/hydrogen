@@ -2,6 +2,7 @@ import path from 'node:path';
 import {EventEmitter} from 'node:events';
 import type {IncomingMessage, ServerResponse} from 'node:http';
 import {mapSourcePosition} from 'source-map-support';
+import type {WaitUntil} from '../types';
 
 const IGNORED_ROUTES = new Set([
   '/graphiql',
@@ -29,7 +30,7 @@ export type RequestEventPayload = {
   startTime: number;
   endTime?: number;
   cacheStatus?: 'MISS' | 'HIT' | 'STALE' | 'PUT';
-  waitUntil?: ExecutionContext['waitUntil'];
+  waitUntil?: WaitUntil;
   graphql?: string | null;
   stackInfo?: {
     file?: string;

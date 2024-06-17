@@ -53,6 +53,7 @@ import {
   withSyncStack,
   type StackInfo,
 } from './utils/callsites';
+import type {WaitUntil} from './types';
 
 export type I18nBase = {
   language: LanguageCode;
@@ -168,7 +169,7 @@ type HydrogenClientProps<TI18n> = {
   /** The globally unique identifier for the Shop */
   storefrontId?: string;
   /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
-  waitUntil?: ExecutionContext['waitUntil'];
+  waitUntil?: WaitUntil;
   /** An object containing a country code and language code */
   i18n?: TI18n;
   /** Whether it should print GraphQL errors automatically. Defaults to true */
