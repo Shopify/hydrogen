@@ -145,8 +145,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
 
     const {checkoutDomain, storefrontAccessToken} = consentConfig;
     if (!checkoutDomain) logMissingConfig('checkoutDomain');
-    if (!storefrontAccessToken)
-      logMissingConfig('storefrontAccessToken');
+    if (!storefrontAccessToken) logMissingConfig('storefrontAccessToken');
 
     // validate that the storefront access token is not a server API token
     if (
@@ -162,7 +161,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     const config: CustomerPrivacyConsentConfig = {
       checkoutRootDomain: checkoutDomain,
       storefrontAccessToken,
-    }
+    };
 
     if (checkoutDomain) {
       let storefrontRootDomain = window.document.location.host;
