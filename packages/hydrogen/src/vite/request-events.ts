@@ -2,7 +2,7 @@ import path from 'node:path';
 import {EventEmitter} from 'node:events';
 import type {IncomingMessage, ServerResponse} from 'node:http';
 import {mapSourcePosition} from 'source-map-support';
-import type {WaitUntil} from '../types';
+import type {WaitUntil} from '../types.js';
 
 const IGNORED_ROUTES = new Set([
   '/graphiql',
