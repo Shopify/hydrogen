@@ -15,7 +15,7 @@ import {
   type CustomEntryPointErrorHandler,
 } from './entry-error.js';
 
-import type {ViteEnv} from './worker-entry.js';
+import type {ViteEnv} from './types.js';
 import type {RequestHookInfo} from '../worker/handler.js';
 const scriptPath = fileURLToPath(new URL('./worker-entry.js', import.meta.url));
 
