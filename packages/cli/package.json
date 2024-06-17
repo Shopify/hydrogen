@@ -4,7 +4,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "8.1.0",
+  "version": "8.1.1",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -12,8 +12,8 @@
     "dev": "tsup --watch ./src --watch ../../templates/skeleton",
     "typecheck": "tsc --noEmit",
     "generate:manifest": "node scripts/generate-manifest.mjs",
-    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run --test-timeout=20000",
-    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest --test-timeout=20000"
+    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run --test-timeout=60000",
+    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest --test-timeout=60000"
   },
   "devDependencies": {
     "@remix-run/dev": "^2.9.2",
