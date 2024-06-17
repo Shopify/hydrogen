@@ -100,7 +100,7 @@ export default {
       if (
         !url.pathname.startsWith('/account') &&
         !url.pathname.startsWith('/cart') &&
-        response.status === 200
+        (response.status === 200 || response.status === 204)
       ) {
         response.headers.set(
           'Oxygen-Cache-Control',
