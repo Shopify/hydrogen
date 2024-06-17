@@ -1,9 +1,11 @@
-/// <reference types="@shopify/remix-oxygen" />
+/**
+ * This file is used to provide types for generator utilities.
+ */
 
 import type {
-  storefront,
-  customeraccount,
-  hydrogencart,
+  Storefront,
+  CustomerAccount,
+  HydrogenCart,
 } from '@shopify/hydrogen';
 import type {
   LanguageCode,
@@ -26,10 +28,18 @@ declare module '@shopify/remix-oxygen' {
 declare global {
   /**
    * The I18nLocale used for Storefront API query context.
+   * Also used for the generated i18n functions.
    */
   type I18nLocale = {
     language: LanguageCode;
     country: CountryCode;
-    pathPrefix: string;
+    pathPrefix?: string;
+  };
+
+  /**
+   * This type is used to import types fro mini-oxygen
+   */
+  type ExecutionContext = {
+    waitUntil: (promise: Promise<unknown>) => void;
   };
 }
