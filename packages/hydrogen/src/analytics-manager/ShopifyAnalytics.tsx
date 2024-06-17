@@ -336,22 +336,18 @@ function missingErrorMessage(
   viewKeyName?: string,
 ) {
   if (type === 'cart') {
+    const name = `${
+      isVariantField ? 'merchandise' : 'merchandise.product'
+    }.${fieldName}`;
     // eslint-disable-next-line no-console
     console.error(
-      `[h2:error:ShopifyAnalytics] Can't set up cart analytics events because the \`cart.lines[].${
-        isVariantField ? 'merchandise' : 'merchandise.product'
-      }.${fieldName}\` value is missing from your GraphQL cart query. In your project, search for where \`fragment CartLine on CartLine\` is defined and make sure \`${
-        isVariantField ? 'merchandise' : 'merchandise.product'
-      }.${fieldName}\` is part of your cart query. Check the Hydrogen Skeleton template for reference: https://github.com/Shopify/hydrogen/blob/main/templates/skeleton/app/lib/fragments.ts#L25-L56.`,
+      `[h2:error:ShopifyAnalytics] Can't set up cart analytics events because the \`cart.lines[].${name}\` value is missing from your GraphQL cart query. In your project, search for where \`fragment CartLine on CartLine\` is defined and make sure \`${name}\` is part of your cart query. Check the Hydrogen Skeleton template for reference: https://github.com/Shopify/hydrogen/blob/main/templates/skeleton/app/lib/fragments.ts#L25-L56.`,
     );
   } else {
+    const name = `${viewKeyName || fieldName}`;
     // eslint-disable-next-line no-console
     console.error(
-      `[h2:error:ShopifyAnalytics] Can't set up product view analytics events because the \`${
-        viewKeyName || fieldName
-      }\` is missing from your \`<Analytics.ProductView>\`. Make sure \`${
-        viewKeyName || fieldName
-      }\` is part of your products data prop. Check the Hydrogen Skeleton template for reference: https://github.com/Shopify/hydrogen/blob/main/templates/skeleton/app/routes/products.%24handle.tsx#L159-L165.`,
+      `[h2:error:ShopifyAnalytics] Can't set up product view analytics events because the \`${name}\` is missing from your \`<Analytics.ProductView>\`. Make sure \`${name}\` is part of your products data prop. Check the Hydrogen Skeleton template for reference: https://github.com/Shopify/hydrogen/blob/main/templates/skeleton/app/routes/products.%24handle.tsx#L159-L165.`,
     );
   }
 }
