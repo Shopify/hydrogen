@@ -1,0 +1,11 @@
+{
+  "extends": "../../templates/skeleton/tsconfig.json",
+  "include": ["./**/*.d.ts", "./**/*.ts", "./**/*.tsx", "../../templates/skeleton/*.d.ts"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "*": ["./*", "../../templates/skeleton/*"],
+      "~/*": ["app/*", "../../templates/skeleton/app/*"]
+    }
+  }
+}

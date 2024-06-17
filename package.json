@@ -51,7 +51,8 @@
     "packages/hydrogen-react",
     "packages/mini-oxygen",
     "packages/remix-oxygen",
-    "templates/skeleton"
+    "templates/skeleton",
+    "examples/full-page-cache"
   ],
   "prettier": "@shopify/prettier-config",
   "dependencies": {
