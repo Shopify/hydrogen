@@ -1,4 +1,8 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src"]
+  "include": ["src"],
+  "compilerOptions": {
+    "moduleResolution": "Bundler",
+    "types": ["@shopify/oxygen-workers-types", "node"]
+  }
 }
