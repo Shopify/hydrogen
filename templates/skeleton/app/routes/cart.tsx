@@ -1,29 +1,14 @@
-import {
-  type MetaFunction,
-  type ShouldRevalidateFunction,
-  useLoaderData,
-} from '@remix-run/react';
+import {Await, type MetaFunction, useRouteLoaderData} from '@remix-run/react';
+import {Suspense} from 'react';
 import type {CartQueryDataReturn} from '@shopify/hydrogen';
 import {CartForm} from '@shopify/hydrogen';
-import {
-  json,
-  type LoaderFunctionArgs,
-  type ActionFunctionArgs,
-} from '@shopify/remix-oxygen';
+import {json, type ActionFunctionArgs} from '@shopify/remix-oxygen';
 import {CartMain} from '~/components/Cart';
+import type {RootLoader} from '~/root';
 
 export const meta: MetaFunction = () => {
   return [{title: `Hydrogen | Cart`}];
 };
-
-export const shouldRevalidate: ShouldRevalidateFunction = ({formAction}) => {
-  return formAction === '/cart';
-};
-
-export async function loader({context}: LoaderFunctionArgs) {
-  const {cart} = context;
-  return json(await cart.get());
-}
 
 export async function action({request, context}: ActionFunctionArgs) {
   const {cart} = context;
@@ -96,12 +81,22 @@ export async function action({request, context}: ActionFunctionArgs) {
 }
 
 export default function Cart() {
-  const cart = useLoaderData<typeof loader>();
+  const rootData = useRouteLoaderData<RootLoader>('root');
+  if (!rootData) return null;
 
   return (
     <div className="cart">
       <h1>Cart</h1>
-      <CartMain layout="page" cart={cart} />
+      <Suspense fallback={<p>Loading cart ...</p>}>
+        <Await
+          resolve={rootData.cart}
+          errorElement={<div>An error occurred</div>}
+        >
+          {(cart) => {
+            return <CartMain layout="page" cart={cart} />;
+          }}
+        </Await>
+      </Suspense>
     </div>
   );
 }

@@ -16,7 +16,6 @@ import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import {PageLayout} from '~/components/PageLayout';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
-import {CartProvider, useCart} from './components/CartProvider';
 
 export type RootLoader = typeof loader;
 
@@ -109,7 +108,7 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
 function loadDeferredData({context}: LoaderFunctionArgs) {
-  const {storefront, customerAccount} = context;
+  const {storefront, customerAccount, cart} = context;
 
   // defer the footer query (below the fold)
   const footer = storefront
@@ -125,6 +124,8 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
       return null;
     });
   return {
+    cart: cart.get(),
+    isLoggedIn: customerAccount.isLoggedIn(),
     footer,
   };
 }
@@ -132,7 +133,6 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
 function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
   const data = useRouteLoaderData<RootLoader>('root');
-  const cart = useCart();
 
   return (
     <html lang="en">
@@ -145,13 +145,11 @@ function Layout({children}: {children?: React.ReactNode}) {
       <body>
         {data ? (
           <Analytics.Provider
-            cart={cart}
+            cart={data.cart}
             shop={data.shop}
             consent={data.consent}
           >
-            <PageLayout {...data} cart={cart}>
-              {children}
-            </PageLayout>
+            <PageLayout {...data}>{children}</PageLayout>
           </Analytics.Provider>
         ) : (
           children
@@ -165,11 +163,9 @@ function Layout({children}: {children?: React.ReactNode}) {
 
 export default function App() {
   return (
-    <CartProvider>
-      <Layout>
-        <Outlet />
-      </Layout>
-    </CartProvider>
+    <Layout>
+      <Outlet />
+    </Layout>
   );
 }
 
