@@ -24,9 +24,17 @@ declare global {
     PUBLIC_CHECKOUT_DOMAIN: string;
   }
 
+  /**
+   * This type is used to import types from mini-oxygen
+   */
   interface ExecutionContext {
     waitUntil: WaitUntil;
   }
+
+  /**
+   * This type is used to import types from mini-oxygen
+   */
+  type ExportedHandlerFetchHandler = Function;
 }
 
 /**

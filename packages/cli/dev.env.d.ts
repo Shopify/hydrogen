@@ -37,9 +37,14 @@ declare global {
   };
 
   /**
-   * This type is used to import types fro mini-oxygen
+   * This type is used to import types from mini-oxygen
    */
   type ExecutionContext = {
     waitUntil: (promise: Promise<unknown>) => void;
   };
+
+  /**
+   * This type is used to import types from mini-oxygen
+   */
+  type ExportedHandlerFetchHandler = Function;
 }

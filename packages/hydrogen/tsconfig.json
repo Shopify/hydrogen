@@ -1,6 +1,6 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src", "examples.config.d.ts"],
+  "include": ["src", "dev.env.d.ts"],
   "compilerOptions": {
     "jsx": "react-jsx",
     "types": ["node", "vite/client", "jest", "@testing-library/jest-dom"],
