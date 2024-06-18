@@ -143,14 +143,14 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     if (scriptStatus !== 'done' || loadedEvent.current) return;
     loadedEvent.current = true;
 
-    if (!consentConfig.checkoutDomain) logMissingConfig('checkoutDomain');
-    if (!consentConfig.storefrontAccessToken)
-      logMissingConfig('storefrontAccessToken');
+    const {checkoutDomain, storefrontAccessToken} = consentConfig;
+    if (!checkoutDomain) logMissingConfig('checkoutDomain');
+    if (!storefrontAccessToken) logMissingConfig('storefrontAccessToken');
 
     // validate that the storefront access token is not a server API token
     if (
-      consentConfig.storefrontAccessToken.startsWith('shpat_') ||
-      consentConfig.storefrontAccessToken.length !== 32
+      storefrontAccessToken.startsWith('shpat_') ||
+      storefrontAccessToken.length !== 32
     ) {
       // eslint-disable-next-line no-console
       console.error(
@@ -158,11 +158,31 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
       );
     }
 
-    if (withPrivacyBanner && window?.privacyBanner) {
-      window?.privacyBanner?.loadBanner({
-        checkoutRootDomain: consentConfig.checkoutDomain,
-        storefrontAccessToken: consentConfig.storefrontAccessToken,
+    const config: CustomerPrivacyConsentConfig = {
+      checkoutRootDomain: checkoutDomain,
+      storefrontAccessToken,
+    };
+
+    if (checkoutDomain) {
+      let storefrontRootDomain = window.document.location.host;
+      const checkoutDomainParts = checkoutDomain.split('.').reverse();
+      const currentDomainParts = storefrontRootDomain.split('.').reverse();
+      const sameDomainParts: Array<string> = [];
+      checkoutDomainParts.forEach((part, index) => {
+        if (part === currentDomainParts[index]) {
+          sameDomainParts.push(part);
+        }
       });
+
+      storefrontRootDomain = sameDomainParts.reverse().join('.');
+
+      if (storefrontRootDomain) {
+        config.storefrontRootDomain = storefrontRootDomain;
+      }
+    }
+
+    if (withPrivacyBanner && window?.privacyBanner) {
+      window.privacyBanner?.loadBanner(config);
     }
 
     if (!window.Shopify?.customerPrivacy) return;
@@ -179,8 +199,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
         {
           ...consent,
           headlessStorefront: true,
-          checkoutRootDomain: consentConfig.checkoutDomain,
-          storefrontAccessToken: consentConfig.storefrontAccessToken,
+          ...config,
         },
         callback,
       );

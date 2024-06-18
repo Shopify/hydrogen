@@ -208,10 +208,7 @@ function productViewHandler(payload: ProductViewPayload) {
   if (
     eventPayload &&
     validateProducts({
-      eventName: PRODUCT_VIEWED,
-      productField: 'products',
-      variantField: 'product.<displayed_variant>',
-      fromSource: 'product_viewed products array',
+      type: 'product',
       products: payload.products,
     })
   ) {
@@ -318,10 +315,7 @@ function sendCartAnalytics({
   };
   if (
     validateProducts({
-      eventName: ADD_TO_CART,
-      productField: 'merchandise.product',
-      variantField: 'merchandise',
-      fromSource: 'cart query',
+      type: 'cart',
       products: [product],
     })
   ) {
@@ -335,17 +329,27 @@ function sendCartAnalytics({
   }
 }
 
-const PRODUCT_VIEWED = 'Product viewed';
-const ADD_TO_CART = 'Add to cart';
 function missingErrorMessage(
-  eventName: string,
-  missingFieldName: string,
-  fromSource: string,
+  type: 'cart' | 'product',
+  fieldName: string,
+  isVariantField: boolean,
+  viewKeyName?: string,
 ) {
-  // eslint-disable-next-line no-console
-  console.error(
-    `[h2:error:ShopifyAnalytics] ${eventName}: ${missingFieldName} is required from the ${fromSource}.`,
-  );
+  if (type === 'cart') {
+    const name = `${
+      isVariantField ? 'merchandise' : 'merchandise.product'
+    }.${fieldName}`;
+    // eslint-disable-next-line no-console
+    console.error(
+      `[h2:error:ShopifyAnalytics] Can't set up cart analytics events because the \`cart.lines[].${name}\` value is missing from your GraphQL cart query. In your project, search for where \`fragment CartLine on CartLine\` is defined and make sure \`${name}\` is part of your cart query. Check the Hydrogen Skeleton template for reference: https://github.com/Shopify/hydrogen/blob/main/templates/skeleton/app/lib/fragments.ts#L25-L56.`,
+    );
+  } else {
+    const name = `${viewKeyName || fieldName}`;
+    // eslint-disable-next-line no-console
+    console.error(
+      `[h2:error:ShopifyAnalytics] Can't set up product view analytics events because the \`${name}\` is missing from your \`<Analytics.ProductView>\`. Make sure \`${name}\` is part of your products data prop. Check the Hydrogen Skeleton template for reference: https://github.com/Shopify/hydrogen/blob/main/templates/skeleton/app/routes/products.%24handle.tsx#L159-L165.`,
+    );
+  }
 }
 
 // Product expected field and types:
@@ -360,50 +364,40 @@ function missingErrorMessage(
 // category: string, optional
 // quantity: float
 function validateProducts({
-  eventName,
-  productField,
-  variantField,
+  type,
   products,
-  fromSource,
 }: {
-  eventName: string;
-  productField: string;
-  variantField: string;
-  fromSource: string;
+  type: 'cart' | 'product';
   products: Array<Record<string, unknown>>;
 }) {
   if (!products || products.length === 0) {
-    missingErrorMessage(eventName, `${productField}`, fromSource);
+    missingErrorMessage(type, '', false, 'data.products');
     return false;
   }
 
   products.forEach((product) => {
     if (!product.id) {
-      missingErrorMessage(eventName, `${productField}.id`, fromSource);
+      missingErrorMessage(type, 'id', false);
       return false;
     }
     if (!product.title) {
-      missingErrorMessage(eventName, `${productField}.title`, fromSource);
+      missingErrorMessage(type, 'title', false);
       return false;
     }
     if (!product.price) {
-      missingErrorMessage(
-        eventName,
-        `${variantField}.price.amount`,
-        fromSource,
-      );
+      missingErrorMessage(type, 'price.amount', true, 'price');
       return false;
     }
     if (!product.vendor) {
-      missingErrorMessage(eventName, `${productField}.vendor`, fromSource);
+      missingErrorMessage(type, 'vendor', false);
       return false;
     }
     if (!product.variantId) {
-      missingErrorMessage(eventName, `${variantField}.id`, fromSource);
+      missingErrorMessage(type, 'id', true, 'variantId');
       return false;
     }
     if (!product.variantTitle) {
-      missingErrorMessage(eventName, `${variantField}.title`, fromSource);
+      missingErrorMessage(type, 'title', true, 'variantTitle');
       return false;
     }
   });
