@@ -1,4 +1,4 @@
-import {StorefrontApiErrors, formatAPIResult} from '../../storefront';
+import {formatAPIResult} from '../../storefront';
 import type {CustomerAccount} from '../../customer/types';
 import type {CartQueryOptions, CartReturn} from './cart-types';
 import type {
@@ -54,35 +54,20 @@ export function cartGetDefault({
 
     const [isCustomerLoggedIn, {cart, errors}] = await Promise.all([
       customerAccount ? customerAccount.isLoggedIn() : false,
-      storefront.query<{
-        cart: Cart;
-        errors: StorefrontApiErrors;
-      }>(CART_QUERY(cartFragment), {
-        variables: {
-          cartId,
-          ...cartInput,
-        },
+      storefront.query<{cart: Cart | null}>(CART_QUERY(cartFragment), {
+        variables: {cartId, ...cartInput},
         cache: storefront.CacheNone(),
       }),
     ]);
 
-    const result = formatAPIResult(
-      addCustomerLoggedInParam(isCustomerLoggedIn, cart),
-      errors,
-    );
+    if (isCustomerLoggedIn && cart?.checkoutUrl) {
+      const finalCheckoutUrl = new URL(cart.checkoutUrl);
+      finalCheckoutUrl.searchParams.set('logged_in', 'true');
+      cart.checkoutUrl = finalCheckoutUrl.toString();
+    }
 
-    return Object.keys(result).length === 0 ? null : result;
+    return cart || errors ? formatAPIResult(cart, errors) : null;
   };
-}
-
-function addCustomerLoggedInParam(isCustomerLoggedIn: boolean, cart: Cart) {
-  if (isCustomerLoggedIn && cart && cart.checkoutUrl) {
-    const finalCheckoutUrl = new URL(cart.checkoutUrl);
-    finalCheckoutUrl.searchParams.set('logged_in', 'true');
-    cart.checkoutUrl = finalCheckoutUrl.toString();
-  }
-
-  return cart;
 }
 
 //! @see https://shopify.dev/docs/api/storefront/latest/queries/cart
