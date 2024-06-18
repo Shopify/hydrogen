@@ -182,7 +182,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     }
 
     if (withPrivacyBanner && window?.privacyBanner) {
-      window?.privacyBanner?.loadBanner(config);
+      window.privacyBanner?.loadBanner(config);
     }
 
     if (!window.Shopify?.customerPrivacy) return;
