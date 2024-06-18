@@ -66,10 +66,12 @@ export function cartGetDefault({
       }),
     ]);
 
-    return formatAPIResult(
+    const result = formatAPIResult(
       addCustomerLoggedInParam(isCustomerLoggedIn, cart),
       errors,
     );
+
+    return Object.keys(result).length === 0 ? null : result;
   };
 }
 
