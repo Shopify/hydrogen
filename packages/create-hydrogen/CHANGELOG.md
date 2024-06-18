@@ -1,5 +1,11 @@
 # @shopify/create-hydrogen
 
+## 4.3.14
+
+### Patch Changes
+
+- Auto cookie domain detection for customer privacy api and better error message for missing analytics fields ([#2262](https://github.com/Shopify/hydrogen/pull/2262)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 4.3.13
 
 ### Patch Changes
