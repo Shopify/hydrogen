@@ -1,48 +1,21 @@
 {
   "name": "example-partytown",
   "private": true,
-  "sideEffects": false,
-  "version": "1.0.0",
+  "prettier": "@shopify/prettier-config",
   "scripts": {
-    "build": "npm run partytown && shopify hydrogen build",
-    "dev": "shopify hydrogen dev --codegen",
-    "preview": "shopify hydrogen preview --build",
+    "build": "npm run partytown && shopify hydrogen build --diff",
+    "dev": "shopify hydrogen dev --codegen --diff",
+    "preview": "shopify hydrogen preview --build --diff",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "typecheck": "tsc --noEmit",
     "codegen": "shopify hydrogen codegen",
     "partytown": "partytown copylib public/~partytown"
   },
-  "prettier": "@shopify/prettier-config",
   "dependencies": {
-    "@builder.io/partytown": "^0.8.1",
-    "@remix-run/react": "^2.9.2",
-    "@shopify/cli": "3.61.0",
-    "@shopify/cli-hydrogen": "^8.1.0",
-    "@shopify/hydrogen": "2024.4.3",
-    "@shopify/remix-oxygen": "^2.0.4",
-    "graphql": "^16.6.0",
-    "graphql-tag": "^2.12.6",
-    "isbot": "^3.6.6",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "@shopify/cli-hydrogen": "*",
+    "@builder.io/partytown": "^0.8.1"
   },
   "devDependencies": {
-    "@remix-run/dev": "^2.9.2",
-    "@remix-run/eslint-config": "^2.9.2",
-    "@shopify/mini-oxygen": "^3.0.3",
-    "@shopify/oxygen-workers-types": "^4.0.0",
-    "@shopify/prettier-config": "^1.1.2",
-    "@total-typescript/ts-reset": "^0.4.2",
-    "@types/eslint": "^8.4.10",
-    "@types/gtag.js": "^0.0.18",
-    "@types/react": "^18.2.22",
-    "@types/react-dom": "^18.2.7",
-    "eslint": "^8.20.0",
-    "eslint-plugin-hydrogen": "0.12.2",
-    "prettier": "^2.8.4",
-    "typescript": "^5.2.2"
-  },
-  "engines": {
-    "node": ">=18.0.0"
+    "@types/gtag.js": "^0.0.18"
   }
 }

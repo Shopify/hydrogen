@@ -198,43 +198,6 @@ describe('<VariantSelector>', () => {
     `);
   });
 
-  it('automatically appends options with only one value to the URL', () => {
-    const {asFragment} = render(
-      createElement(VariantSelector, {
-        handle: 'snowboard',
-        options: [
-          {name: 'Color', values: ['Red']},
-          {name: 'Size', values: ['S', 'M']},
-        ],
-        children: ({option}) =>
-          createElement(
-            'div',
-            null,
-            option.values.map(({value, to}) =>
-              createElement('a', {key: option.name + value, href: to}, value),
-            ),
-          ),
-      }),
-    );
-
-    expect(asFragment()).toMatchInlineSnapshot(`
-      <DocumentFragment>
-        <div>
-          <a
-            href="/products/snowboard?Size=S&Color=Red"
-          >
-            S
-          </a>
-          <a
-            href="/products/snowboard?Size=M&Color=Red"
-          >
-            M
-          </a>
-        </div>
-      </DocumentFragment>
-    `);
-  });
-
   it('prepends localization', () => {
     vi.mocked(useLocation).mockReturnValueOnce(
       fillLocation({search: '?Size=M', pathname: '/en-us/'}),
@@ -268,6 +231,13 @@ describe('<VariantSelector>', () => {
 
     expect(asFragment()).toMatchInlineSnapshot(`
       <DocumentFragment>
+        <div>
+          <a
+            href="/en-us/products/snowboard?Color=Red"
+          >
+            Red
+          </a>
+        </div>
         <div>
           <a
             href="/en-us/products/snowboard?Size=S&Color=Red"
@@ -318,6 +288,13 @@ describe('<VariantSelector>', () => {
 
     expect(asFragment()).toMatchInlineSnapshot(`
       <DocumentFragment>
+        <div>
+          <a
+            href="/products/snowboard?Color=Red"
+          >
+            Red
+          </a>
+        </div>
         <div>
           <a
             href="/products/snowboard?Size=S&Color=Red"

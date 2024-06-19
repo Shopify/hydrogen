@@ -23,7 +23,7 @@ jobs:
         id: flags
         run: |
           # IMPORTANT: Update this latestBranch whenever we move to a new major version:
-          echo "latestBranch=2024-04" >> $GITHUB_ENV
+          echo "latestBranch=2024-07" >> $GITHUB_ENV
           echo "latest=${{ github.ref_name == 'main' }}" >> $GITHUB_ENV
 
       - name: Checkout the code
@@ -83,10 +83,6 @@ jobs:
           node scripts/compile-template-for-dist.mjs skeleton
           (cd templates/skeleton-js && npm i --package-lock-only --workspaces false)
           (cd templates/skeleton-ts && npm i --package-lock-only --workspaces false)
-
-      - name: Compile hello-world
-        run: |
-          node scripts/compile-template-for-dist.mjs hello-world
 
       - name: Update templates in the dist branch
         run: |

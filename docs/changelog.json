@@ -1,7 +1,199 @@
 {
   "url": "https://github.com/Shopify/hydrogen/pulls?q=is%3Apr+is%3Aclosed+%5Bci%5D+release+in%3Atitle+is%3Amerged",
-  "version": "2024.4.3",
+  "version": "1",
   "releases": [
+    {
+      "title": "Auto cookie domain detection for customer privacy api and better error message for missing analytics fields",
+      "version": "2024.4.7",
+      "hash": "156e869563b8a7b3616618a7a9c1bf471be655b3",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2264",
+      "commit": "https://github.com/Shopify/hydrogen/commit/156e869563b8a7b3616618a7a9c1bf471be655b3",
+      "dependencies": {
+        "@remix-run/react": "^2.9.2",
+        "@shopify/cli-hydrogen": "8.1.1",
+        "@shopify/hydrogen": "^2024.4.7",
+        "@shopify/remix-oxygen": "^2.0.4"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.9.2",
+        "typescript": "^5.2.2",
+        "@shopify/cli": "3.61.2",
+        "@shopify/oxygen-workers-types": "^4.0.0",
+        "@remix-run/server-runtime": "^2.9.2"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Auto cookie domain detection for customer privacy api and better error message for missing analytics fields",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2262",
+          "id": "2262"
+        }
+      ],
+      "features": []
+    },
+    {
+      "title": "Fix shopify cookie creation and add auto top-level domain detection",
+      "version": "2024.4.6",
+      "hash": "af573bce7af2e51045dab6a2eaa27f33bfc59900",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2250",
+      "commit": "https://github.com/Shopify/hydrogen/commit/af573bce7af2e51045dab6a2eaa27f33bfc59900",
+      "dependencies": {
+        "@remix-run/react": "^2.9.2",
+        "@shopify/cli-hydrogen": "8.1.1",
+        "@shopify/hydrogen": "^2024.4.6",
+        "@shopify/remix-oxygen": "^2.0.4"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.9.2",
+        "typescript": "^5.2.2",
+        "@shopify/cli": "3.61.2",
+        "@shopify/oxygen-workers-types": "^4.0.0",
+        "@remix-run/server-runtime": "^2.9.2"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Fix analytics bugs",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2249",
+          "id": "2249"
+        }
+      ],
+      "features": []
+    },
+    {
+      "title": "Fix paths on Windows",
+      "version": "2024.4.5",
+      "hash": "6c6b2ea31fc9646ab288362b9f3d06a588292bf7",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2244",
+      "commit": "https://github.com/Shopify/hydrogen/pull/2244/commits/6c6b2ea31fc9646ab288362b9f3d06a588292bf7",
+      "dependencies": {
+        "@remix-run/react": "^2.9.2",
+        "@shopify/cli-hydrogen": "8.1.1",
+        "@shopify/hydrogen": "2024.4.5",
+        "@shopify/remix-oxygen": "2.0.4"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.9.2",
+        "@remix-run/server-runtime": "^2.9.2",
+        "@shopify/cli": "3.60.0",
+        "@shopify/oxygen-workers-types": "4.0.0",
+        "typescript": "^5.2.2",
+        "@graphql-codegen/cli": "5.0.2",
+        "@shopify/mini-oxygen": "^3.0.3",
+        "@shopify/hydrogen-codegen": "^0.3.1"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        },
+        "@graphql-codegen/cli": {
+          "required": true
+        },
+        "@shopify/mini-oxygen": {
+          "required": true
+        },
+        "@shopify/hydrogen-codegen": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Fix paths on Windows",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2243",
+          "id": "2243"
+        }
+      ],
+      "features": []
+    },
+    {
+      "title": "Fix infinite loop when checkoutDomain isn't supplied",
+      "version": "2024.4.4",
+      "hash": "ae7def1795b6c9a130b6d8b796fe6b30dfa40ea4",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2237",
+      "commit": "https://github.com/Shopify/hydrogen/pull/2237/commits/ae7def1795b6c9a130b6d8b796fe6b30dfa40ea4",
+      "dependencies": {
+        "@remix-run/react": "^2.9.2",
+        "@shopify/cli-hydrogen": "^8.1.0",
+        "@shopify/hydrogen": "2024.4.4",
+        "@shopify/remix-oxygen": "2.0.4"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.9.2",
+        "@remix-run/server-runtime": "^2.9.2",
+        "@shopify/cli": "3.60.0",
+        "@shopify/oxygen-workers-types": "4.0.0",
+        "typescript": "^5.2.2",
+        "@graphql-codegen/cli": "5.0.2",
+        "@shopify/mini-oxygen": "^3.0.3",
+        "@shopify/hydrogen-codegen": "^0.3.1"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        },
+        "@graphql-codegen/cli": {
+          "required": true
+        },
+        "@shopify/mini-oxygen": {
+          "required": true
+        },
+        "@shopify/hydrogen-codegen": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Fix infinite loop when checkoutDomain isn't supplied",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2235",
+          "id": "2235"
+        }
+      ],
+      "features": []
+    },
     {
       "title": "Optimistic cart, RichText component, stable analytics",
       "version": "2024.4.3",

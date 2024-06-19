@@ -1,4 +1,5 @@
 import {createRequire} from 'node:module';
+import {pathToFileURL} from 'node:url';
 import {findUpAndReadPackageJson} from '@shopify/cli-kit/node/node-package-manager';
 import {dirname, joinPath} from '@shopify/cli-kit/node/path';
 
@@ -17,10 +18,10 @@ export async function importVite(root: string): Promise<Vite> {
     viteNodeIndexFile,
   );
 
-  return import(viteNodePath);
+  return import(pathToFileURL(viteNodePath).href);
 }
 
 export function importLocal<T>(packageName: string, path: string): Promise<T> {
   const realPath = require.resolve(packageName, {paths: [path]});
-  return import(realPath);
+  return import(pathToFileURL(realPath).href);
 }

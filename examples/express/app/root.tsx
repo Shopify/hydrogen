@@ -8,12 +8,11 @@ import {
   Meta,
   Outlet,
   Scripts,
-  LiveReload,
   ScrollRestoration,
   useRouteLoaderData,
 } from '@remix-run/react';
 import type {Cart, Shop} from '@shopify/hydrogen/storefront-api-types';
-import styles from './styles/app.css';
+import styles from './styles/app.css?url';
 import {useNonce} from '@shopify/hydrogen';
 
 export const links: LinksFunction = () => {
@@ -91,7 +90,6 @@ function Layout({children}: {children?: React.ReactNode}) {
         )}
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
-        <LiveReload nonce={nonce} />
       </body>
     </html>
   );
