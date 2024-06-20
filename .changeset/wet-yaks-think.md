@@ -15,3 +15,15 @@ function Product() {
   return <ProductMain product={product} />;
 }
 ```
+
+This also introduces a small breaking change to the `VariantSelector` component, which now immediately updates which variant is active. If you'd like to retain the current functionality, and have the `VariantSelector` wait for the page navigation to complete before updating, use the `waitForNavigation` prop:
+
+```tsx
+<VariantSelector
+  handle={product.handle}
+  options={product.options}
+  waitForNavigation
+>
+  ...
+</VariantSelector>
+```
