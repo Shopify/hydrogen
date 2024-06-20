@@ -35,8 +35,8 @@ type VariantSelectorProps = {
     | Array<PartialDeep<ProductVariant>>;
   /** By default all products are under /products. Use this prop to provide a custom path. */
   productPath?: string;
-  /** Should the VariantSelector optimistically switch selected options */
-  optimistic?: boolean;
+  /** Should the VariantSelector wait to update until after the browser navigates to a variant. */
+  waitForNavigation?: boolean;
   children: ({option}: {option: VariantOption}) => ReactNode;
 };
 
@@ -45,7 +45,7 @@ export function VariantSelector({
   options = [],
   variants: _variants = [],
   productPath = 'products',
-  optimistic = false,
+  waitForNavigation = false,
   children,
 }: VariantSelectorProps) {
   const variants =
@@ -54,7 +54,7 @@ export function VariantSelector({
   const {searchParams, path, alreadyOnProductPage} = useVariantPath(
     handle,
     productPath,
-    optimistic,
+    waitForNavigation,
   );
 
   // If an option only has one value, it doesn't need a UI to select it
@@ -174,7 +174,7 @@ export const getSelectedProductOptions: GetSelectedProductOptions = (
 function useVariantPath(
   handle: string,
   productPath: string,
-  optimistic: boolean,
+  waitForNavigation: boolean,
 ) {
   const {pathname, search} = useLocation();
   const navigation = useNavigation();
@@ -191,11 +191,13 @@ function useVariantPath(
       : `/${productPath}/${handle}`;
 
     const searchParams = new URLSearchParams(
-      // Remix doesn't update the location until pending loaders complete but
-      // for optimistic updates, we need to know the destination search params
-      optimistic && navigation.state === 'loading'
-        ? navigation.location.search
-        : search,
+      // Remix doesn't update the location until pending loaders complete.
+      // By default we use the destination search params to make selecting a variant
+      // instant, but `waitForNavigation` makes the UI wait to update by only using
+      // the active browser search params.
+      waitForNavigation || navigation.state !== 'loading'
+        ? search
+        : navigation.location.search,
     );
 
     return {
@@ -206,5 +208,5 @@ function useVariantPath(
       alreadyOnProductPage: path === pathname,
       path,
     };
-  }, [pathname, search, optimistic, handle, productPath, navigation]);
+  }, [pathname, search, waitForNavigation, handle, productPath, navigation]);
 }

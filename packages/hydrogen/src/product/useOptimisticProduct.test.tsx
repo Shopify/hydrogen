@@ -1,10 +1,9 @@
 import {expect, test, describe, beforeEach, afterEach, vi} from 'vitest';
 import {useOptimisticProduct} from './useOptimisticProduct';
-import {renderHook, waitFor, act} from '@testing-library/react';
+import {renderHook, waitFor} from '@testing-library/react';
 
 let navigation = {state: 'idle', location: {search: ''}};
 
-vi.stubGlobal('reportError', vi.fn());
 vi.mock('@remix-run/react', async (importOrigninal) => {
   return {
     ...(await importOrigninal<typeof import('@remix-run/react')>()),
@@ -17,6 +16,7 @@ vi.mock('@remix-run/react', async (importOrigninal) => {
 describe('useOptimisticProduct', () => {
   beforeEach(() => {
     navigation = {state: 'idle', location: {search: ''}};
+    vi.stubGlobal('reportError', vi.fn());
   });
   afterEach(() => {
     vi.clearAllMocks();
