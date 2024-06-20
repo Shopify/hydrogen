@@ -16,7 +16,7 @@ const data: ReferenceEntityTemplateSchema = {
       url: '/docs/api/hydrogen/2024-04/hooks/useoptimisticcart',
     },
   ],
-  description: `The \`useOptimisticProduct\` takes an existing product object, processes a pending navigation to a product variant, and locally mutates the product with optimistic state. This makes switching product options immediate.`,
+  description: `The \`useOptimisticProduct\` takes an existing product object, processes a pending navigation to a product variant, and locally mutates the product with optimistic state. This makes switching product options immediate. It requires that the product query include a \`selectedVariant\` field populated by \`variantBySelectedOptions\`.`,
   type: 'component',
   defaultExample: {
     description: 'I am the default example',

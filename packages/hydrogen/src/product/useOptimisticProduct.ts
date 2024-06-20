@@ -14,20 +14,14 @@ type OptimisticProductInput = Product & {
   selectedVariant?: PartialDeep<ProductVariant>;
 };
 
-type ProductWithVariants = {
-  product: {
-    variants: {nodes: Array<PartialDeep<ProductVariant>>};
-  };
-};
-
 type OptimisticProductVariants =
   | Array<PartialDeep<ProductVariant>>
   | Promise<Array<PartialDeep<ProductVariant>>>
-  | ProductWithVariants
-  | Promise<ProductWithVariants>;
+  | PartialDeep<ProductVariant>
+  | Promise<PartialDeep<ProductVariant>>;
 
 /**
- * @param product The product object from `context.storefront.query()` returned by a server loader.
+ * @param product The product object from `context.storefront.query()` returned by a server loader. The query should use the `selectedVariant` field with `variantBySelectedOptions`.
  * @param variants The available product variants for the product. This can be an array of variants, a promise that resolves to an array of variants, or an object with a `product` key that contains the variants.
  * @returns A new product object where the `selectedVariant` property is set to the variant that matches the current URL search params. If no variant is found, the original product object is returned. The `isOptimistic` property is set to `true` if the `selectedVariant` has been optimistically changed.
  */
@@ -50,8 +44,8 @@ export function useOptimisticProduct<
           setResolvedVariants(
             productWithVariants instanceof Array
               ? productWithVariants
-              : (productWithVariants as unknown as ProductWithVariants).product
-                  .variants.nodes || [],
+              : (productWithVariants as PartialDeep<ProductVariant>).product
+                  ?.variants?.nodes || [],
           );
         }
       })
