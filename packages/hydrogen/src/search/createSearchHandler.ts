@@ -13,8 +13,9 @@ import type {
   PredictiveProductFragment,
   PredictiveQueryFragment,
   PredictiveSearchQuery,
+  SearchQueryFragment,
   SearchProductFragment,
-} from 'storefrontapi.generated';
+} from './types';
 
 type CreateSearchHandlerArgs = {
   /* The request object */
@@ -47,7 +48,6 @@ type SearchHandlerArgs = CommnonSearchHandlerArgs & {
     /* The pagination variables */
     variables: ReturnType<typeof getPaginationVariables>;
   };
-  // TODO: confirm this applies to predictive search too
   /* The number of search result items to fetch per page */
   pageBy: number;
 };
@@ -198,9 +198,10 @@ function parseSearchOptions({
 type SearchHandlerReturn = {
   term: string;
   result: {
-    items: any; // FIX: this is not the correct type
+    resources: null | SearchQueryFragment
     total: number;
   };
+  type: SearchType.DEFAULT;
 };
 
 type PredictiveSearchHandlerReturn = {
@@ -209,10 +210,12 @@ type PredictiveSearchHandlerReturn = {
     resources: NormalizedPredictiveSearchResults;
     total: number;
   };
+  type: SearchType.PREDICTIVE;
 };
 
 type SearchHandler = (args: SearchHandlerArgs) => Promise<SearchHandlerReturn>;
 const searchHandler: SearchHandler = async ({
+  type,
   term,
   storefront,
   search,
@@ -221,38 +224,35 @@ const searchHandler: SearchHandler = async ({
   if (!term) {
     return {
       term,
-      result: {items: null, total: 0},
+      result: {resources: null, total: 0},
+      type
     };
   }
 
-  // query search endpoint https://shopify.dev/docs/api/storefront/latest/queries/search
-  const {errors, ...data} = await storefront.query(QUERY, {
+  const {errors, ...resources} = await storefront.query<SearchQueryFragment>(QUERY, {
     variables: {
       query: term,
       ...search.variables,
     },
   });
 
-  // TODO: need to handle errors
   if (errors) {
-    throw new Error(errors);
+    throw new Error(errors.map((e) => e.message).join(', '));
   }
 
-  if (!data) {
+  if (!resources) {
     throw new Error('No search data returned from Shopify API');
   }
 
-  // TODO: value should be PRODUCTNODES....
-  const total = Object.values(data).reduce((total, value: any) => {
+  const total = Object.values(resources).reduce((total, value: any) => {
+    // TODO: check if I should applyTrackingParams to each result here
     return total + value.nodes.length;
   }, 0) as number;
 
-  const result = {
-    items: data,
-    total,
-  };
 
-  return {term, result};
+  const result = { resources, total, };
+
+  return {term, result, type};
 };
 
 const DEFAULT_SEARCH_TYPES: PredictiveSearchType[] = [
@@ -268,6 +268,7 @@ type PredictiveSearchHandler = (
 ) => Promise<PredictiveSearchHandlerReturn>;
 const predictiveSearchHandler: PredictiveSearchHandler = async ({
   term,
+  type,
   storefront,
   query: QUERY,
   predictive,
@@ -280,6 +281,7 @@ const predictiveSearchHandler: PredictiveSearchHandler = async ({
         total: 0,
       },
       term,
+      type
     };
   }
 
@@ -287,7 +289,6 @@ const predictiveSearchHandler: PredictiveSearchHandler = async ({
     variables: {...predictive, term},
   });
 
-  // FIX: add better error handling
   if (!data?.predictiveSearch) {
     throw new Error('No data returned from predictive search Shopify API');
   }
@@ -298,7 +299,7 @@ const predictiveSearchHandler: PredictiveSearchHandler = async ({
     localePathPrefix,
   );
 
-  return {result, term, types: predictive.types};
+  return {result, term, types: predictive.types, type}
 };
 
 type PredicticeSearchResultItemImage =
@@ -340,8 +341,9 @@ export type NormalizedPredictiveSearch = {
   resources: NormalizedPredictiveSearchResults;
   total: number;
 };
+
 /**
- * Normalize results and apply tracking qurery parameters to each result url
+ * Normalize predictive search results and apply tracking qurery parameters to each result url
  */
 function normalizePredictiveSearchResults(
   predictiveSearch: PredictiveSearchQuery['predictiveSearch'],
@@ -355,7 +357,6 @@ function normalizePredictiveSearchResults(
     };
   }
 
-  // FIX: We need to support multiple locales
   const localePrefix = locale ? `/${locale}` : '';
   const resources: NormalizedPredictiveSearchResults = [];
 
@@ -464,6 +465,9 @@ function normalizePredictiveSearchResults(
   return {resources, total};
 }
 
+/**
+ * Utility that applies shopify tracking params to a given url
+ */
 function applyTrackingParams(
   resource:
     | PredictiveQueryFragment
@@ -474,13 +478,13 @@ function applyTrackingParams(
     | PredictivePageFragment,
   params?: string,
 ) {
-  if (params) {
-    return resource?.trackingParameters
-      ? `?${params}&${resource.trackingParameters}`
-      : `?${params}`;
-  } else {
+  if (!params) {
     return resource?.trackingParameters
       ? `?${resource.trackingParameters}`
       : '';
   }
+
+  resource?.trackingParameters
+    ? `?${params}&${resource.trackingParameters}`
+    : `?${params}`;
 }
