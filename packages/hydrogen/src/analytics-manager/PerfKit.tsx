@@ -1,7 +1,7 @@
-import { parseGid, useLoadScript } from "@shopify/hydrogen-react";
-import { ShopAnalytics, useAnalytics } from "./AnalyticsProvider";
-import { AnalyticsEvent } from "./events";
-import { useEffect, useRef } from "react";
+import {parseGid, useLoadScript} from '@shopify/hydrogen-react';
+import {ShopAnalytics, useAnalytics} from './AnalyticsProvider';
+import {AnalyticsEvent} from './events';
+import {useEffect, useRef} from 'react';
 
 declare global {
   interface Window {
@@ -16,29 +16,22 @@ const PERF_KIT_UNSTABLE =
   'https://cdn.shopify.com/shopifycloud/perf-kit/shopify-perf-kit-unstable.min.js';
 // const PERF_KIT_LOCAL = 'http://localhost:3001/shopify-perf-kit.min.js';
 
-export function PerfKit({
-  shop,
-}: {
-  shop: ShopAnalytics,
-}) {
+export function PerfKit({shop}: {shop: ShopAnalytics}) {
   const loadedEvent = useRef(false);
   const {subscribe, register} = useAnalytics();
   const {ready} = register('Internal_Shopify_Perf_Kit');
 
-  const scriptStatus = useLoadScript(
-    PERF_KIT_UNSTABLE,
-    {
-      attributes: {
-        id: 'perfkit',
-        'data-application': 'hydrogen',
-        'data-shop-id': parseGid(shop.shopId).id.toString(),
-        'data-storefront-id': shop.hydrogenSubchannelId,
-        'data-monorail-region': 'global',
-        'data-spa-mode': 'true',
-        'data-resource-timing-sampling-rate': '100',
-      },
+  const scriptStatus = useLoadScript(PERF_KIT_UNSTABLE, {
+    attributes: {
+      id: 'perfkit',
+      'data-application': 'hydrogen',
+      'data-shop-id': parseGid(shop.shopId).id.toString(),
+      'data-storefront-id': shop.hydrogenSubchannelId,
+      'data-monorail-region': 'global',
+      'data-spa-mode': 'true',
+      'data-resource-timing-sampling-rate': '100',
     },
-  );
+  });
 
   useEffect(() => {
     if (scriptStatus !== 'done' || loadedEvent.current) return;
