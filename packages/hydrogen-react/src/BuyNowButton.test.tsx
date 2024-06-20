@@ -57,6 +57,7 @@ describe('<BuyNowButton/>', () => {
           ]}
           quantity={4}
           variantId="SKU123"
+          sellingPlanId="1234"
         >
           Buy now
         </BuyNowButton>,
@@ -70,6 +71,7 @@ describe('<BuyNowButton/>', () => {
           {
             quantity: 4,
             merchandiseId: 'SKU123',
+            sellingPlanId: '1234',
             attributes: [
               {key: 'color', value: 'blue'},
               {key: 'size', value: 'large'},
