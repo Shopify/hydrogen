@@ -1,5 +1,41 @@
 # @shopify/hydrogen
 
+## 2024.5.0
+
+### Minor Changes
+
+- Add `sellingPlanId` support to `BuyNowButton`. ([#2254](https://github.com/Shopify/hydrogen/pull/2254)) by [@dvisockas](https://github.com/dvisockas)
+
+### Patch Changes
+
+- `customerAccount` no longer commit session automatically in any situation. ([#2137](https://github.com/Shopify/hydrogen/pull/2137)) by [@michenly](https://github.com/michenly)
+
+- **Breaking change** ([#2113](https://github.com/Shopify/hydrogen/pull/2113)) by [@blittle](https://github.com/blittle)
+
+  Previously the `VariantSelector` component would filter out options that only had one value. This is undesireable for some apps. We've removed that filter, if you'd like to retain the existing functionality, simply filter the options prop before it is passed to the `VariantSelector` component:
+
+  ```diff
+   <VariantSelector
+     handle={product.handle}
+  +  options={product.options.filter((option) => option.values.length > 1)}
+  -  options={product.options}
+     variants={variants}>
+   </VariantSelector>
+  ```
+
+  Fixes [#1198](https://github.com/Shopify/hydrogen/discussions/1198)
+
+- Fix a small rounding issue when checking stale-while-revalidate timing. ([#2220](https://github.com/Shopify/hydrogen/pull/2220)) by [@frandiox](https://github.com/frandiox)
+
+- Fix customData from Analytics.Provider not being passed to page view events ([#2224](https://github.com/Shopify/hydrogen/pull/2224)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Auto cookie domain detection for customer privacy api and better error message for missing analytics fields ([#2256](https://github.com/Shopify/hydrogen/pull/2256)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Return `null` instead of empty object from `cart.get()` when the cart id is invalid. ([#2258](https://github.com/Shopify/hydrogen/pull/2258)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`54c2f7ad`](https://github.com/Shopify/hydrogen/commit/54c2f7ad3d0d52e6be10b2a54a1a4fd0cc107a35)]:
+  - @shopify/hydrogen-react@2024.5.0
+
 ## 2024.4.3
 
 ### Patch Changes

@@ -1,5 +1,90 @@
 # skeleton
 
+## 2024.4.10
+
+### Patch Changes
+
+- **Breaking change** ([#2113](https://github.com/Shopify/hydrogen/pull/2113)) by [@blittle](https://github.com/blittle)
+
+  Previously the `VariantSelector` component would filter out options that only had one value. This is undesireable for some apps. We've removed that filter, if you'd like to retain the existing functionality, simply filter the options prop before it is passed to the `VariantSelector` component:
+
+  ```diff
+   <VariantSelector
+     handle={product.handle}
+  +  options={product.options.filter((option) => option.values.length > 1)}
+  -  options={product.options}
+     variants={variants}>
+   </VariantSelector>
+  ```
+
+  Fixes [#1198](https://github.com/Shopify/hydrogen/discussions/1198)
+
+- Remove manual setting of session in headers and recommend setting it in server after response is created. ([#2137](https://github.com/Shopify/hydrogen/pull/2137)) by [@michenly](https://github.com/michenly)
+
+  Step 1: Add `isPending` implementation in session
+
+  ```diff
+  // in app/lib/session.ts
+  export class AppSession implements HydrogenSession {
+  +  public isPending = false;
+
+    get unset() {
+  +    this.isPending = true;
+      return this.#session.unset;
+    }
+
+    get set() {
+  +    this.isPending = true;
+      return this.#session.set;
+    }
+
+    commit() {
+  +    this.isPending = false;
+      return this.#sessionStorage.commitSession(this.#session);
+    }
+  }
+  ```
+
+  Step 2: update response header if `session.isPending` is true
+
+  ```diff
+  // in server.ts
+  export default {
+    async fetch(request: Request): Promise<Response> {
+      try {
+        const response = await handleRequest(request);
+
+  +      if (session.isPending) {
+  +        response.headers.set('Set-Cookie', await session.commit());
+  +      }
+
+        return response;
+      } catch (error) {
+        ...
+      }
+    },
+  };
+  ```
+
+  Step 3: remove setting cookie with session.commit() in routes
+
+  ```diff
+  // in route files
+  export async function loader({context}: LoaderFunctionArgs) {
+    return json({},
+  -    {
+  -      headers: {
+  -        'Set-Cookie': await context.session.commit(),
+  -      },
+      },
+    );
+  }
+  ```
+
+- Updated dependencies [[`4337200c`](https://github.com/Shopify/hydrogen/commit/4337200c7908d56c039171c283a4d92c31a8b7b6), [`8b9c726d`](https://github.com/Shopify/hydrogen/commit/8b9c726d34f3482b5b5a0da4c7c0c2f20e2c9caa), [`10a419bf`](https://github.com/Shopify/hydrogen/commit/10a419bf1db79cdfd8c41c0223ce695959f60da9), [`dcbd0bbf`](https://github.com/Shopify/hydrogen/commit/dcbd0bbf4073a3e35e96f3cce257f7b19b2b2aea), [`54c2f7ad`](https://github.com/Shopify/hydrogen/commit/54c2f7ad3d0d52e6be10b2a54a1a4fd0cc107a35), [`4337200c`](https://github.com/Shopify/hydrogen/commit/4337200c7908d56c039171c283a4d92c31a8b7b6), [`e96b332b`](https://github.com/Shopify/hydrogen/commit/e96b332ba1aba79aa3d5c2ce18001292070faf49), [`6cd5554b`](https://github.com/Shopify/hydrogen/commit/6cd5554b160d314d35964a5ee8976ed60972bf17), [`9eb60d73`](https://github.com/Shopify/hydrogen/commit/9eb60d73e552c3d22b9325ecbcd5878810893ad3), [`de3f70be`](https://github.com/Shopify/hydrogen/commit/de3f70be1a838eda746903cbb38cc25cf0e09fa3), [`83cb96f4`](https://github.com/Shopify/hydrogen/commit/83cb96f42078bf79b20a153d8a8461f75d573ab1)]:
+  - @shopify/hydrogen@2024.5.0
+  - @shopify/cli-hydrogen@8.1.2
+
 ## 2024.4.5
 
 ### Patch Changes

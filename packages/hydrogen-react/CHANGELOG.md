@@ -1,5 +1,11 @@
 # @shopify/hydrogen-react
 
+## 2024.5.0
+
+### Minor Changes
+
+- Add `sellingPlanId` support to `BuyNowButton`. ([#2254](https://github.com/Shopify/hydrogen/pull/2254)) by [@dvisockas](https://github.com/dvisockas)
+
 ## 2024.4.3
 
 ### Patch Changes
