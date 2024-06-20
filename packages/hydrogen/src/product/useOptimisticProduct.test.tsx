@@ -4,17 +4,16 @@ import {renderHook, waitFor} from '@testing-library/react';
 
 let navigation = {state: 'idle', location: {search: ''}};
 
-vi.mock('@remix-run/react', async (importOrigninal) => {
-  return {
-    ...(await importOrigninal<typeof import('@remix-run/react')>()),
-    useNavigation: () => {
-      return navigation;
-    },
-  };
-});
-
 describe('useOptimisticProduct', () => {
   beforeEach(() => {
+    vi.mock('@remix-run/react', async (importOrigninal) => {
+      return {
+        ...(await importOrigninal<typeof import('@remix-run/react')>()),
+        useNavigation: () => {
+          return navigation;
+        },
+      };
+    });
     navigation = {state: 'idle', location: {search: ''}};
     vi.stubGlobal('reportError', vi.fn());
   });
