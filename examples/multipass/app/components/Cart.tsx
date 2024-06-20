@@ -2,6 +2,7 @@ import {
   CartForm,
   Image,
   Money,
+  OptimisticCartLine,
   useOptimisticCart,
   type OptimisticCart,
 } from '@shopify/hydrogen';
@@ -15,10 +16,8 @@ import {MultipassCheckoutButton} from './MultipassCheckoutButton';
 /**********   EXAMPLE UPDATE END   ************/
 /***********************************************/
 
-type CartLine = OptimisticCart<CartApiQueryFragment>['lines']['nodes'][0];
-
 type CartMainProps = {
-  cart: CartApiQueryFragment | null;
+  cart: CartApiQueryFragment;
   layout: 'page' | 'aside';
 };
 
@@ -66,7 +65,7 @@ function CartLines({
   layout,
 }: {
   layout: CartMainProps['layout'];
-  lines: CartLine[];
+  lines: OptimisticCartLine[];
 }) {
   if (!lines) return null;
 
@@ -86,7 +85,7 @@ function CartLineItem({
   line,
 }: {
   layout: CartMainProps['layout'];
-  line: CartLine;
+  line: OptimisticCartLine;
 }) {
   const {id, merchandise} = line;
   const {product, title, image, selectedOptions} = merchandise;
@@ -200,7 +199,7 @@ function CartLineRemoveButton({
   );
 }
 
-function CartLineQuantity({line}: {line: CartLine}) {
+function CartLineQuantity({line}: {line: OptimisticCartLine}) {
   if (!line || typeof line?.quantity === 'undefined') return null;
   const {id: lineId, quantity, isOptimistic} = line;
   const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
@@ -241,7 +240,7 @@ function CartLinePrice({
   priceType = 'regular',
   ...passthroughProps
 }: {
-  line: CartLine;
+  line: OptimisticCartLine;
   priceType?: 'regular' | 'compareAt';
   [key: string]: any;
 }) {

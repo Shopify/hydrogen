@@ -8,7 +8,7 @@ import type {
 import {Aside} from '~/components/Aside';
 import {Footer} from '~/components/Footer';
 import {Header, HeaderMenu} from '~/components/Header';
-import {CartMain} from '~/components/Cart';
+import {CartMain} from '~/components/CartMain';
 import {
   PredictiveSearchForm,
   PredictiveSearchResults,
@@ -64,7 +64,7 @@ function CartAside({cart}: {cart: PageLayoutProps['cart']}) {
       <Suspense fallback={<p>Loading cart ...</p>}>
         <Await resolve={cart}>
           {(cart) => {
-            return <CartMain cart={cart} layout="aside" />;
+            return <CartMain cart={cart!} layout="aside" />;
           }}
         </Await>
       </Suspense>
