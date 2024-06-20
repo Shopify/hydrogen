@@ -14,7 +14,7 @@ declare global {
 
 const PERF_KIT_UNSTABLE =
   'https://cdn.shopify.com/shopifycloud/perf-kit/shopify-perf-kit-unstable.min.js';
-const PERF_KIT_LOCAL = 'http://localhost:3001/shopify-perf-kit.min.js';
+// const PERF_KIT_LOCAL = 'http://localhost:3001/shopify-perf-kit.min.js';
 
 export function PerfKit({
   shop,
@@ -22,12 +22,11 @@ export function PerfKit({
   shop: ShopAnalytics,
 }) {
   const loadedEvent = useRef(false);
-  const firstPageLoad = useRef(true);
   const {subscribe, register} = useAnalytics();
   const {ready} = register('Internal_Shopify_Perf_Kit');
 
   const scriptStatus = useLoadScript(
-    PERF_KIT_LOCAL,
+    PERF_KIT_UNSTABLE,
     {
       attributes: {
         id: 'perfkit',
@@ -46,7 +45,6 @@ export function PerfKit({
     loadedEvent.current = true;
 
     subscribe(AnalyticsEvent.PAGE_VIEWED, () => {
-      console.log('PerfKit: navigate');
       window.PerfKit.navigate();
     });
     subscribe(AnalyticsEvent.PRODUCT_VIEWED, () => {
