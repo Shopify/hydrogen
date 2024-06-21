@@ -1,5 +1,4 @@
 import {useFetchers} from '@remix-run/react';
-import type {cartGetDefault} from '../queries/cartGetDefault';
 import {CartForm} from '../CartForm';
 import type {
   CartLine,
@@ -11,9 +10,13 @@ import {
 } from './optimistic-cart.helper';
 import type {CartReturn} from '../queries/cart-types';
 
-export type OptimisticCart<T = ReturnType<typeof cartGetDefault>> = T & {
+export type OptimisticCartLine<T = CartLine> = T & {isOptimistic?: boolean};
+
+export type OptimisticCart<T = CartReturn> = Omit<T, 'lines'> & {
   isOptimistic?: boolean;
-  lines: {nodes: Array<CartLine & {isOptimistic?: boolean}>};
+  lines: {
+    nodes: Array<OptimisticCartLine>;
+  };
 };
 
 /**
@@ -22,7 +25,7 @@ export type OptimisticCart<T = ReturnType<typeof cartGetDefault>> = T & {
  * @returns A new cart object augmented with optimistic state. Each cart line item that is optimistically added includes an `isOptimistic` property. Also if the cart has _any_ optimistic state, a root property `isOptimistic` will be set to `true`.
  */
 export function useOptimisticCart<DefaultCart = CartReturn>(
-  cart: DefaultCart,
+  cart?: DefaultCart,
 ): OptimisticCart<DefaultCart> {
   const fetchers = useFetchers();
 
@@ -30,7 +33,7 @@ export function useOptimisticCart<DefaultCart = CartReturn>(
 
   const optimisticCart = (cart as CartReturn)?.lines
     ? (structuredClone(cart) as OptimisticCart<DefaultCart>)
-    : ({lines: {nodes: []}} as OptimisticCart<DefaultCart>);
+    : ({lines: {nodes: []}} as unknown as OptimisticCart<DefaultCart>);
 
   const cartLines = optimisticCart.lines.nodes;
 
@@ -54,7 +57,7 @@ export function useOptimisticCart<DefaultCart = CartReturn>(
           (line) =>
             line.merchandise.id ===
             (input.selectedVariant as ProductVariant)?.id,
-        ) as CartLine & {isOptimistic?: boolean};
+        );
 
         isOptimistic = true;
 

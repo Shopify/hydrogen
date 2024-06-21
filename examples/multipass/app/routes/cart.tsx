@@ -105,7 +105,7 @@ export default function Cart() {
           errorElement={<div>An error occurred</div>}
         >
           {(cart) => {
-            return <CartMain layout="page" cart={cart} />;
+            return <CartMain layout="page" cart={cart!} />;
           }}
         </Await>
       </Suspense>

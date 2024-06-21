@@ -67,21 +67,21 @@ type CartDiscountCodesUpdateRequire = {
   } & OtherFormData;
 };
 
-export type OptimisticCartLine = CartLineInput & {
+export type OptimisticCartLineInput = CartLineInput & {
   selectedVariant?: unknown;
 };
 
 type CartLinesAddProps = {
   action: 'LinesAdd';
   inputs?: {
-    lines: Array<OptimisticCartLine>;
+    lines: Array<OptimisticCartLineInput>;
   } & OtherFormData;
 };
 
 type CartLinesAddRequire = {
   action: 'LinesAdd';
   inputs: {
-    lines: Array<OptimisticCartLine>;
+    lines: Array<OptimisticCartLineInput>;
   } & OtherFormData;
 };
 

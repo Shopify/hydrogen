@@ -24,10 +24,10 @@ import {
   type VariantOption,
   getSelectedProductOptions,
   CartForm,
-  type OptimisticCartLine,
   Analytics,
   type CartViewPayload,
   useAnalytics,
+  type OptimisticCartLineInput,
 } from '@shopify/hydrogen';
 import type {
   SelectedOption,
@@ -604,7 +604,7 @@ function AddToCartButton({
   analytics?: unknown;
   children: React.ReactNode;
   disabled?: boolean;
-  lines: Array<OptimisticCartLine>;
+  lines: Array<OptimisticCartLineInput>;
   onClick?: () => void;
 }) {
   return (

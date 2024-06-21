@@ -3,7 +3,7 @@ import {Suspense} from 'react';
 import type {CartQueryDataReturn} from '@shopify/hydrogen';
 import {CartForm} from '@shopify/hydrogen';
 import {json, type ActionFunctionArgs} from '@shopify/remix-oxygen';
-import {CartMain} from '~/components/Cart';
+import {CartMain} from '~/components/CartMain';
 import type {RootLoader} from '~/root';
 
 export const meta: MetaFunction = () => {
@@ -93,7 +93,7 @@ export default function Cart() {
           errorElement={<div>An error occurred</div>}
         >
           {(cart) => {
-            return <CartMain layout="page" cart={cart} />;
+            return <CartMain layout="page" cart={cart!} />;
           }}
         </Await>
       </Suspense>

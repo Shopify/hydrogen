@@ -2,6 +2,7 @@ import {
   CartForm,
   Image,
   Money,
+  type OptimisticCartLine,
   useOptimisticCart,
   type OptimisticCart,
 } from '@shopify/hydrogen';
@@ -10,10 +11,8 @@ import {Link} from '@remix-run/react';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import {useVariantUrl} from '~/lib/variants';
 
-type CartLine = OptimisticCart<CartApiQueryFragment>['lines']['nodes'][0];
-
 type CartMainProps = {
-  cart: CartApiQueryFragment | null;
+  cart: CartApiQueryFragment;
   layout: 'page' | 'aside';
 };
 
@@ -61,7 +60,7 @@ function CartLines({
   layout,
 }: {
   layout: CartMainProps['layout'];
-  lines: CartLine[];
+  lines: OptimisticCartLine[];
 }) {
   if (!lines) return null;
 
@@ -81,7 +80,7 @@ function CartLineItem({
   line,
 }: {
   layout: CartMainProps['layout'];
-  line: CartLine;
+  line: OptimisticCartLine;
 }) {
   /***********************************************/
   /**********  EXAMPLE UPDATE STARTS  ************/
@@ -209,7 +208,7 @@ function CartLineRemoveButton({
   );
 }
 
-function CartLineQuantity({line}: {line: CartLine}) {
+function CartLineQuantity({line}: {line: OptimisticCartLine}) {
   if (!line || typeof line?.quantity === 'undefined') return null;
   const {id: lineId, quantity, isOptimistic} = line;
   const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
@@ -250,7 +249,7 @@ function CartLinePrice({
   priceType = 'regular',
   ...passthroughProps
 }: {
-  line: CartLine;
+  line: OptimisticCartLine;
   priceType?: 'regular' | 'compareAt';
   [key: string]: any;
 }) {
