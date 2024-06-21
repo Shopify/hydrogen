@@ -9,6 +9,7 @@ import {
 import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
 import {Link} from '@remix-run/react';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
+import type {PartialDeep} from 'type-fest';
 import {useVariantUrl} from '~/lib/variants';
 /***********************************************/
 /**********  EXAMPLE UPDATE STARTS  ************/
@@ -17,7 +18,7 @@ import {MultipassCheckoutButton} from './MultipassCheckoutButton';
 /***********************************************/
 
 type CartMainProps = {
-  cart: CartApiQueryFragment;
+  cart: CartApiQueryFragment | null;
   layout: 'page' | 'aside';
 };
 
@@ -42,10 +43,10 @@ function CartDetails({
   layout,
   cart,
 }: {
-  cart: OptimisticCart<CartApiQueryFragment>;
+  cart: OptimisticCart<CartApiQueryFragment | null>;
   layout: 'page' | 'aside';
 }) {
-  const cartHasItems = !!cart && cart.totalQuantity > 0;
+  const cartHasItems = cart?.totalQuantity && cart?.totalQuantity > 0;
 
   return (
     <div className="cart-details">
@@ -135,7 +136,7 @@ function CartLineItem({
   );
 }
 
-function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
+function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
   if (!checkoutUrl) return null;
 
   /***********************************************/
@@ -155,7 +156,7 @@ export function CartSummary({
   children = null,
 }: {
   children?: React.ReactNode;
-  cost: CartApiQueryFragment['cost'];
+  cost?: PartialDeep<CartApiQueryFragment['cost']>;
   layout: CartMainProps['layout'];
 }) {
   const className =
@@ -295,7 +296,7 @@ export function CartEmpty({
 function CartDiscounts({
   discountCodes,
 }: {
-  discountCodes: CartApiQueryFragment['discountCodes'];
+  discountCodes?: CartApiQueryFragment['discountCodes'];
 }) {
   const codes: string[] =
     discountCodes

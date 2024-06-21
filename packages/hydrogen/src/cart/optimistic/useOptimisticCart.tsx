@@ -8,23 +8,33 @@ import {
   getOptimisticLineId,
   isOptimisticLineId,
 } from './optimistic-cart.helper';
+import type {PartialDeep} from 'type-fest';
 import type {CartReturn} from '../queries/cart-types';
 
 export type OptimisticCartLine<T = CartLine> = T & {isOptimistic?: boolean};
 
-export type OptimisticCart<T = CartReturn> = Omit<T, 'lines'> & {
-  isOptimistic?: boolean;
-  lines: {
-    nodes: Array<OptimisticCartLine>;
-  };
-};
+export type OptimisticCart<T = CartReturn> = T extends {}
+  ? Omit<T, 'lines'> & {
+      isOptimistic?: boolean;
+      lines: {
+        nodes: Array<OptimisticCartLine>;
+      };
+    }
+  : // This is the null/undefined case, where the cart has yet to be created.
+    // But we still need to provide an optimistic cart object.
+    {
+      isOptimistic?: boolean;
+      lines: {
+        nodes: Array<OptimisticCartLine>;
+      };
+    } & Omit<PartialDeep<CartReturn>, 'lines'>;
 
 /**
  * @param cart The cart object from `context.cart.get()` returned by a server loader.
  *
  * @returns A new cart object augmented with optimistic state. Each cart line item that is optimistically added includes an `isOptimistic` property. Also if the cart has _any_ optimistic state, a root property `isOptimistic` will be set to `true`.
  */
-export function useOptimisticCart<DefaultCart = CartReturn>(
+export function useOptimisticCart<DefaultCart = PartialDeep<CartReturn>>(
   cart?: DefaultCart,
 ): OptimisticCart<DefaultCart> {
   const fetchers = useFetchers();

@@ -8,7 +8,7 @@ import {CartSummary} from './CartSummary';
 export type CartLayout = 'page' | 'aside';
 
 export type CartMainProps = {
-  cart: CartApiQueryFragment;
+  cart: CartApiQueryFragment | null;
   layout: CartLayout;
 };
 
@@ -26,7 +26,7 @@ export function CartMain({layout, cart: originalCart}: CartMainProps) {
     cart &&
     Boolean(cart?.discountCodes?.filter((code) => code.applicable)?.length);
   const className = `cart-main ${withDiscount ? 'with-discount' : ''}`;
-  const cartHasItems = !!cart && cart.totalQuantity > 0;
+  const cartHasItems = cart?.totalQuantity && cart.totalQuantity > 0;
 
   return (
     <div className={className}>
