@@ -3,4 +3,4 @@
 'skeleton': patch
 ---
 
-Update `@shopify/oxygen-workers-types` to v4.1.1
+Update `@shopify/oxygen-workers-types` to fix issues on Windows.
