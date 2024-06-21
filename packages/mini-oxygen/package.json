@@ -61,7 +61,7 @@
     "ws": "^8.16.0"
   },
   "devDependencies": {
-    "@shopify/oxygen-workers-types": "^4.1.1",
+    "@shopify/oxygen-workers-types": "^4.1.2",
     "@types/body-parser": "1.19.3",
     "@types/connect": "^3.4.35",
     "@types/eventsource": "^1.1.10",
