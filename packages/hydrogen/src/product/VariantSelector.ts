@@ -1,4 +1,4 @@
-import {useLocation} from '@remix-run/react';
+import {useLocation, useNavigation} from '@remix-run/react';
 import {flattenConnection} from '@shopify/hydrogen-react';
 import type {
   ProductOption,
@@ -35,6 +35,8 @@ type VariantSelectorProps = {
     | Array<PartialDeep<ProductVariant>>;
   /** By default all products are under /products. Use this prop to provide a custom path. */
   productPath?: string;
+  /** Should the VariantSelector wait to update until after the browser navigates to a variant. */
+  waitForNavigation?: boolean;
   children: ({option}: {option: VariantOption}) => ReactNode;
 };
 
@@ -43,6 +45,7 @@ export function VariantSelector({
   options = [],
   variants: _variants = [],
   productPath = 'products',
+  waitForNavigation = false,
   children,
 }: VariantSelectorProps) {
   const variants =
@@ -51,6 +54,7 @@ export function VariantSelector({
   const {searchParams, path, alreadyOnProductPage} = useVariantPath(
     handle,
     productPath,
+    waitForNavigation,
   );
 
   // If an option only has one value, it doesn't need a UI to select it
@@ -167,8 +171,13 @@ export const getSelectedProductOptions: GetSelectedProductOptions = (
   return selectedOptions;
 };
 
-function useVariantPath(handle: string, productPath: string) {
+function useVariantPath(
+  handle: string,
+  productPath: string,
+  waitForNavigation: boolean,
+) {
   const {pathname, search} = useLocation();
+  const navigation = useNavigation();
 
   return useMemo(() => {
     const match = /(\/[a-zA-Z]{2}-[a-zA-Z]{2}\/)/g.exec(pathname);
@@ -181,7 +190,15 @@ function useVariantPath(handle: string, productPath: string) {
       ? `${match![0]}${productPath}/${handle}`
       : `/${productPath}/${handle}`;
 
-    const searchParams = new URLSearchParams(search);
+    const searchParams = new URLSearchParams(
+      // Remix doesn't update the location until pending loaders complete.
+      // By default we use the destination search params to make selecting a variant
+      // instant, but `waitForNavigation` makes the UI wait to update by only using
+      // the active browser search params.
+      waitForNavigation || navigation.state !== 'loading'
+        ? search
+        : navigation.location.search,
+    );
 
     return {
       searchParams,
@@ -191,5 +208,5 @@ function useVariantPath(handle: string, productPath: string) {
       alreadyOnProductPage: path === pathname,
       path,
     };
-  }, [pathname, search, handle, productPath]);
+  }, [pathname, search, waitForNavigation, handle, productPath, navigation]);
 }

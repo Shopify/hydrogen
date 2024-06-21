@@ -3,7 +3,6 @@ import {useOptimisticCart} from './useOptimisticCart';
 import * as RemixReact from '@remix-run/react';
 import {type CartActionInput, CartForm} from '../CartForm';
 import {FormData} from 'formdata-polyfill/esm.min.js';
-import {CartReturn} from '../queries/cart-types';
 
 let fetchers: {formData: FormData}[] = [];
 

@@ -70,6 +70,8 @@ export {
   getSelectedProductOptions,
 } from './product/VariantSelector';
 
+export {useOptimisticProduct} from './product/useOptimisticProduct';
+
 export type {
   VariantOption,
   VariantOptionValue,

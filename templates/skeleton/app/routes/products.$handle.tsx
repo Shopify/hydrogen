@@ -2,7 +2,11 @@ import {Suspense} from 'react';
 import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {Await, useLoaderData, type MetaFunction} from '@remix-run/react';
 import type {ProductFragment} from 'storefrontapi.generated';
-import {getSelectedProductOptions, Analytics} from '@shopify/hydrogen';
+import {
+  getSelectedProductOptions,
+  Analytics,
+  useOptimisticProduct,
+} from '@shopify/hydrogen';
 import type {SelectedOption} from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/lib/variants';
 import {ProductPrice} from '~/components/ProductPrice';
@@ -123,7 +127,9 @@ function redirectToFirstVariant({
 }
 
 export default function Product() {
-  const {product, variants} = useLoaderData<typeof loader>();
+  const {product: originalProduct, variants} = useLoaderData<typeof loader>();
+  const product = useOptimisticProduct(originalProduct, variants);
+
   const {selectedVariant, title, descriptionHtml} = product;
 
   return (
