@@ -308,11 +308,6 @@ function triggerCartUpdate({
   });
 }
 
-function customerPrivacyReady() {
-  const event = new CustomEvent('visitorConsentCollected');
-  document.dispatchEvent(event);
-}
-
 function LoopAnalytics({
   children,
   registerCallback,
@@ -325,6 +320,10 @@ function LoopAnalytics({
 }): JSX.Element {
   const analytics = useAnalytics();
   const {ready} = analytics.register('loopAnalytics');
+  const {ready: customerPrivacyReady} = analytics.register(
+    'Internal_Shopify_CustomerPrivacy',
+  );
+  const {ready: perfKitReady} = analytics.register('Internal_Shopify_Perf_Kit');
 
   useEffect(() => {
     if (registerCallback) {
@@ -335,6 +334,7 @@ function LoopAnalytics({
   });
 
   customerPrivacyReady();
+  perfKitReady();
 
   return (
     <div>{typeof children === 'function' ? children(analytics) : children}</div>
