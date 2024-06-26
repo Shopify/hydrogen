@@ -29,6 +29,8 @@ export function generateSubRequestCacheControlHeader(
   );
 }
 
+const CACHE_URL = 'https://oxygen.myshopify.dev';
+
 /**
  * Get an item from the cache. If a match is found, returns a tuple
  * containing the `JSON.parse` version of the response as well
@@ -39,11 +41,27 @@ export async function getItemFromCache<T = any>(
   cache: Cache,
   key: string,
 ): Promise<undefined | [T | string, Response]> {
-  if (!cache) return;
-  const url = getKeyUrl(key);
-  const request = new Request(url);
+  let response = await fetch(CACHE_URL, {
+    method: 'POST',
+    body: JSON.stringify({method: 'match', key}),
+  })
+    .then((response) => {
+      return response.ok ? response : undefined;
+    })
+    .catch((error) => {
+      console.error(error);
+      return undefined;
+    });
 
-  const response = await CacheAPI.get(cache, request);
+  if (!response) {
+    console.debug('CACHE MATCH FALLBACK');
+
+    if (!cache) return;
+    const url = getKeyUrl(key);
+    const request = new Request(url);
+
+    response = await CacheAPI.get(cache, request);
+  }
 
   if (!response) {
     return;
@@ -67,6 +85,26 @@ export async function setItemInCache(
   value: any,
   userCacheOptions?: CachingStrategy,
 ) {
+  const result = await fetch(CACHE_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+      method: 'put',
+      key,
+      options: getCacheOption(userCacheOptions),
+      content: JSON.stringify(value),
+    }),
+  })
+    .then((response) => {
+      return response.ok ? response : undefined;
+    })
+    .catch((error) => {
+      console.error(error);
+      return undefined;
+    });
+
+  if (result) return;
+  console.debug('CACHE PUT FALLBACK');
+
   if (!cache) return;
 
   const url = getKeyUrl(key);
