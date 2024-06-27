@@ -51,12 +51,14 @@ export async function getItemFromCache<T = any>(
     if (!originalResponse.ok) throw new Error(originalResponse.statusText);
 
     const body = await originalResponse.json<{
-      value: number[]; // Serialized Uint8Array
+      value?: number[]; // Serialized Uint8Array
       status: CacheStatus;
     }>();
 
     return {
-      value: JSON.parse(decoder.decode(new Uint8Array(body.value))),
+      value: body.value
+        ? JSON.parse(decoder.decode(new Uint8Array(body.value)))
+        : undefined,
       status: body.status,
     };
   } catch (error) {
