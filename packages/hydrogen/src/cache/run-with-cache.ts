@@ -4,12 +4,7 @@ import {
   generateCacheControlHeader,
   type CachingStrategy,
 } from './strategies';
-import {
-  getItemFromCache,
-  getKeyUrl,
-  isStale,
-  setItemInCache,
-} from './sub-request';
+import {getItemFromCache, getKeyUrl, setItemInCache} from './sub-request';
 import {type StackInfo} from '../utils/callsites';
 import {hashKey} from '../utils/hash';
 
@@ -164,14 +159,15 @@ export async function runWithCache<T = unknown>(
       strategy,
     );
 
-  const cachedItem = await getItemFromCache<CachedItem>(cacheInstance, key);
-  // console.log('--- Cache', cachedItem ? 'HIT' : 'MISS');
+  const {value: cachedItem, status: cacheStatus} =
+    await getItemFromCache<CachedItem>(cacheInstance, key);
+  // console.log('--- Cache', cacheStatus);
 
-  if (cachedItem && typeof cachedItem[0] !== 'string') {
-    const [{value: cachedResult, debugInfo}, cacheInfo] = cachedItem;
-    cachedDebugInfo = debugInfo;
+  if (cachedItem && cacheStatus !== 'MISS') {
+    cachedDebugInfo = cachedItem.debugInfo;
+    const cachedValue = cachedItem.value;
 
-    const cacheStatus = isStale(key, cacheInfo) ? 'STALE' : 'HIT';
+    console.debug(`CACHE ${cacheStatus}`);
 
     if (!swrLock.has(key) && cacheStatus === 'STALE') {
       swrLock.add(key);
@@ -209,12 +205,14 @@ export async function runWithCache<T = unknown>(
 
     // Log HIT/STALE requests
     logSubRequestEvent?.({
-      result: cachedResult,
+      result: cachedValue,
       cacheStatus,
     });
 
-    return cachedResult;
+    return cachedValue;
   }
+
+  console.debug('CACHE MISS');
 
   const result = await actionFn({addDebugData});
 

@@ -29,6 +29,7 @@ export function generateSubRequestCacheControlHeader(
   );
 }
 
+type CacheStatus = 'HIT' | 'MISS' | 'STALE';
 const CACHE_URL = 'https://oxygen.myshopify.dev';
 
 /**
@@ -40,40 +41,54 @@ const CACHE_URL = 'https://oxygen.myshopify.dev';
 export async function getItemFromCache<T = any>(
   cache: Cache,
   key: string,
-): Promise<undefined | [T | string, Response]> {
-  let response = await fetch(CACHE_URL, {
-    method: 'POST',
-    body: JSON.stringify({method: 'match', key}),
-  })
-    .then((response) => {
-      return response.ok ? response : undefined;
-    })
-    .catch((error) => {
-      console.error(error);
-      return undefined;
+): Promise<{value?: T; status: CacheStatus}> {
+  try {
+    const originalResponse = await fetch(CACHE_URL, {
+      method: 'POST',
+      body: JSON.stringify({method: 'match', key}),
     });
 
-  if (!response) {
+    if (!originalResponse.ok) throw new Error(originalResponse.statusText);
+
+    const body = await originalResponse.json<{
+      value: number[]; // Serialized Uint8Array
+      status: CacheStatus;
+    }>();
+
+    return {
+      value: JSON.parse(decoder.decode(new Uint8Array(body.value))),
+      status: body.status,
+    };
+  } catch (error) {
+    console.error(error);
+
     console.debug('CACHE MATCH FALLBACK');
 
-    if (!cache) return;
+    if (!cache) return {status: 'MISS'};
+
     const url = getKeyUrl(key);
     const request = new Request(url);
 
-    response = await CacheAPI.get(cache, request);
-  }
+    const response = await CacheAPI.get(cache, request);
 
-  if (!response) {
-    return;
-  }
+    if (!response) return {status: 'MISS'};
 
-  const text = await response.text();
-  try {
-    return [parseJSON(text), response];
-  } catch {
-    return [text, response];
+    const text = await response.text();
+    try {
+      return {
+        value: parseJSON(text),
+        status: isStale(key, response) ? 'STALE' : 'HIT',
+      };
+      // return [parseJSON(text), response];
+    } catch {
+      return {value: undefined, status: 'MISS'};
+      // return [text, response];
+    }
   }
 }
+
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
 
 /**
  * Put an item into the cache.
@@ -91,15 +106,15 @@ export async function setItemInCache(
       method: 'put',
       key,
       options: getCacheOption(userCacheOptions),
-      content: JSON.stringify(value),
+      value: encoder.encode(JSON.stringify(value)),
     }),
   })
     .then((response) => {
-      return response.ok ? response : undefined;
+      return response.ok;
     })
     .catch((error) => {
       console.error(error);
-      return undefined;
+      return false;
     });
 
   if (result) return;
