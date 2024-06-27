@@ -72,10 +72,17 @@ export async function runWithCache<T = unknown>(
   }: WithCacheOptions<T>,
 ): Promise<T> {
   const startTime = Date.now();
-  const key = hashKey([
+  const key = await hashKey([
     // '__HYDROGEN_CACHE_ID__', // TODO purgeQueryCacheOnBuild
     ...(typeof cacheKey === 'string' ? [cacheKey] : cacheKey),
   ]);
+
+  // console.debug(key, {
+  //   original: (Array.isArray(cacheKey) ? cacheKey.join(':') : cacheKey).slice(
+  //     170,
+  //     270,
+  //   ),
+  // });
 
   let cachedDebugInfo: CachedDebugInfo | undefined;
   let userDebugInfo: CachedDebugInfo | undefined;

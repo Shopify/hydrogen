@@ -14,7 +14,7 @@ import {
  * Cache API is weird. We just need a full URL, so we make one up.
  */
 export function getKeyUrl(key: string) {
-  return `https://shopify.dev/?${key}`;
+  return `https://shopify.dev/?${encodeURIComponent(key)}`;
 }
 
 function getCacheOption(userCacheOptions?: CachingStrategy): AllCacheOptions {
@@ -64,7 +64,7 @@ export async function getItemFromCache<T = any>(
   } catch (error) {
     console.error(error);
 
-    console.debug('CACHE MATCH FALLBACK');
+    console.debug('CACHE:MATCH FALLBACK');
 
     if (!cache) return {status: 'MISS'};
 
@@ -120,7 +120,7 @@ export async function setItemInCache(
     });
 
   if (result) return;
-  console.debug('CACHE PUT FALLBACK');
+  console.debug('CACHE:PUT FALLBACK');
 
   if (!cache) return;
 
