@@ -108,7 +108,7 @@ export async function setItemInCache(
       method: 'put',
       key,
       options: getCacheOption(userCacheOptions),
-      value: encoder.encode(JSON.stringify(value)),
+      value: Object.values(encoder.encode(JSON.stringify(value))),
     }),
   })
     .then((response) => {
