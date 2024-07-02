@@ -162,3 +162,6 @@ export type {
 } from '@shopify/hydrogen-react';
 
 export type {HydrogenSessionData, HydrogenSession} from './types';
+
+export {newsletterSubscribeHandler as UNSTABLE_newsletterSubscribeHandler} from './newsletter-subscribe/newsletterSubscribeHandler';
+export {NewsletterSubscribeForm as UNSTABLE_NewsletterSubscribeForm} from './newsletter-subscribe/NewsletterSubscribeForm';
