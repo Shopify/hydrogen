@@ -240,7 +240,7 @@ describe('deploy', () => {
     expect(vi.mocked(renderSuccess)).toHaveBeenCalled();
   });
 
-  it('calls createDeploy against a environment selected by env', async () => {
+  it('calls createDeploy against an environment selected by env', async () => {
     vi.mocked(getOxygenDeploymentData).mockResolvedValue({
       oxygenDeploymentToken: 'some-encoded-token',
       environments: [
@@ -271,7 +271,7 @@ describe('deploy', () => {
     expect(vi.mocked(renderSuccess)).toHaveBeenCalled;
   });
 
-  it('calls createDeploy against a environment selected by envBranch', async () => {
+  it('calls createDeploy against an environment selected by envBranch', async () => {
     vi.mocked(getOxygenDeploymentData).mockResolvedValue({
       oxygenDeploymentToken: 'some-encoded-token',
       environments: [
@@ -302,6 +302,30 @@ describe('deploy', () => {
     expect(vi.mocked(renderSuccess)).toHaveBeenCalled;
   });
 
+  it('calls createDeploy against an envBranch in CI', async () => {
+    vi.mocked(ciPlatform).mockReturnValue({
+      isCI: true,
+      name: 'github',
+      metadata: {},
+    });
+
+    await runDeploy({
+      ...deployParams,
+      token: 'some-token',
+      envBranch: 'stage-1',
+    });
+
+    expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
+      config: {
+        ...expectedConfig,
+        environmentTag: 'stage-1',
+      },
+      hooks: expectedHooks,
+      logger: deploymentLogger,
+    });
+    expect(vi.mocked(renderSuccess)).toHaveBeenCalled;
+  });
+
   it("errors when the env provided doesn't match any environment", async () => {
     await expect(
       runDeploy({
@@ -311,7 +335,7 @@ describe('deploy', () => {
     ).rejects.toThrowError('Environment not found');
   });
 
-  it("errors when the env provided doesn't match any environment", async () => {
+  it("errors when the envBranch provided doesn't match any environment", async () => {
     await expect(
       runDeploy({
         ...deployParams,
