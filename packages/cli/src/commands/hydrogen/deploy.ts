@@ -351,6 +351,10 @@ export async function runDeploy(
     );
   }
 
+  if (isCI && envBranch) {
+    userProvidedEnvironmentTag = envBranch;
+  }
+
   if (!isCI) {
     deploymentData = await getOxygenDeploymentData({
       root,
