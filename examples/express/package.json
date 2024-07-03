@@ -10,11 +10,11 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@remix-run/css-bundle": "^2.9.2",
-    "@remix-run/express": "^2.9.2",
-    "@remix-run/node": "^2.9.2",
-    "@remix-run/react": "^2.9.2",
-    "@remix-run/server-runtime": "^2.9.2",
+    "@remix-run/css-bundle": "^2.10.1",
+    "@remix-run/express": "^2.10.1",
+    "@remix-run/node": "^2.10.1",
+    "@remix-run/react": "^2.10.1",
+    "@remix-run/server-runtime": "^2.10.1",
     "@shopify/cli": "3.61.2",
     "@shopify/cli-hydrogen": "^8.1.1",
     "@shopify/hydrogen": "2024.4.7",
@@ -27,8 +27,8 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@remix-run/dev": "^2.9.2",
-    "@remix-run/eslint-config": "^2.9.2",
+    "@remix-run/dev": "^2.10.1",
+    "@remix-run/eslint-config": "^2.10.1",
     "@types/compression": "^1.7.2",
     "@types/express": "^4.17.17",
     "@types/morgan": "^1.9.4",
