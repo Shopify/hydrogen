@@ -38,19 +38,19 @@ export function PerfKit({shop}: {shop: ShopAnalytics}) {
     loadedEvent.current = true;
 
     subscribe(AnalyticsEvent.PAGE_VIEWED, () => {
-      window.PerfKit.navigate();
+      window.PerfKit?.navigate();
     });
     subscribe(AnalyticsEvent.PRODUCT_VIEWED, () => {
-      window.PerfKit.setPageType('product');
+      window.PerfKit?.setPageType('product');
     });
     subscribe(AnalyticsEvent.COLLECTION_VIEWED, () => {
-      window.PerfKit.setPageType('collection');
+      window.PerfKit?.setPageType('collection');
     });
     subscribe(AnalyticsEvent.SEARCH_VIEWED, () => {
-      window.PerfKit.setPageType('search');
+      window.PerfKit?.setPageType('search');
     });
     subscribe(AnalyticsEvent.CART_VIEWED, () => {
-      window.PerfKit.setPageType('cart');
+      window.PerfKit?.setPageType('cart');
     });
 
     ready();
