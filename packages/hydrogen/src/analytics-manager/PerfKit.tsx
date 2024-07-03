@@ -54,6 +54,6 @@ export function PerfKit({shop}: {shop: ShopAnalytics}) {
     });
 
     ready();
-  }, [subscribe, ready]);
+  }, [subscribe, ready, scriptStatus]);
   return null;
 }

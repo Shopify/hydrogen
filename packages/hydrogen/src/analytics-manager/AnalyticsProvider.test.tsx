@@ -308,6 +308,13 @@ function triggerCartUpdate({
   });
 }
 
+function mockPerfKit() {
+  window.PerfKit = {
+    navigate: () => {},
+    setPageType: () => {},
+  };
+}
+
 function LoopAnalytics({
   children,
   registerCallback,
@@ -326,6 +333,7 @@ function LoopAnalytics({
   const {ready: perfKitReady} = analytics.register('Internal_Shopify_Perf_Kit');
 
   useEffect(() => {
+    mockPerfKit();
     if (registerCallback) {
       registerCallback(analytics, ready);
     } else {
