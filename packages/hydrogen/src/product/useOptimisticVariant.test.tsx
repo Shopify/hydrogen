@@ -1,10 +1,10 @@
 import {expect, test, describe, beforeEach, afterEach, vi} from 'vitest';
-import {useOptimisticProduct} from './useOptimisticProduct';
+import {useOptimisticVariant} from './useOptimisticVariant';
 import {renderHook, waitFor} from '@testing-library/react';
 
 let navigation = {state: 'idle', location: {search: ''}};
 
-describe('useOptimisticProduct', () => {
+describe('useOptimisticVariant', () => {
   beforeEach(() => {
     vi.mock('@remix-run/react', async (importOrigninal) => {
       return {
@@ -21,15 +21,15 @@ describe('useOptimisticProduct', () => {
     vi.clearAllMocks();
   });
   test('returns the original product if no fetchers are present', () => {
-    const product = {title: 'Product'};
+    const variant = {title: 'Product'};
     const {result} = renderHook(() =>
-      useOptimisticProduct(product, {
+      useOptimisticVariant(variant, {
         product: {
           variants: {nodes: []},
         },
       }),
     );
-    expect(result.current).toEqual(product);
+    expect(result.current).toEqual(variant);
   });
 
   test('returns the original product if no variants provided', () => {
@@ -37,15 +37,15 @@ describe('useOptimisticProduct', () => {
       state: 'loading',
       location: {search: new URLSearchParams('?variant=123').toString()},
     };
-    const product = {title: 'Product'};
+    const variant = {title: 'Product'};
     const {result} = renderHook(() =>
-      useOptimisticProduct(product, {
+      useOptimisticVariant(variant, {
         product: {
           variants: {nodes: []},
         },
       }),
     );
-    expect(result.current).toEqual(product);
+    expect(result.current).toEqual(variant);
   });
 
   test('returns an optimistic product', async () => {
@@ -57,9 +57,9 @@ describe('useOptimisticProduct', () => {
         ).toString(),
       },
     };
-    const product = {title: 'Product'};
+    const variant = {title: 'Product'};
     const {result} = renderHook(() =>
-      useOptimisticProduct(product, {
+      useOptimisticVariant(variant, {
         product: {
           variants: {
             nodes: [
@@ -78,9 +78,8 @@ describe('useOptimisticProduct', () => {
     );
 
     await waitFor(() => {
-      expect(result.current.isOptimistic).toEqual(true);
-      // @ts-expect-error
-      expect(result.current.selectedVariant).toEqual({
+      expect(result.current).toEqual({
+        isOptimistic: true,
         id: 'gid://shopify/ProductVariant/123',
         title: '158cm Sea Green / Desert',
         selectedOptions: [
@@ -100,9 +99,9 @@ describe('useOptimisticProduct', () => {
         ).toString(),
       },
     };
-    const product = {title: 'Product'};
+    const variant = {title: 'Product'};
     const {result} = renderHook(() =>
-      useOptimisticProduct(product, [
+      useOptimisticVariant(variant, [
         {
           id: 'gid://shopify/ProductVariant/123',
           title: '158cm Sea Green / Desert',
@@ -115,9 +114,8 @@ describe('useOptimisticProduct', () => {
     );
 
     await waitFor(() => {
-      expect(result.current.isOptimistic).toEqual(true);
-      // @ts-expect-error
-      expect(result.current.selectedVariant).toEqual({
+      expect(result.current).toEqual({
+        isOptimistic: true,
         id: 'gid://shopify/ProductVariant/123',
         title: '158cm Sea Green / Desert',
         selectedOptions: [
@@ -137,9 +135,9 @@ describe('useOptimisticProduct', () => {
         ).toString(),
       },
     };
-    const product = {title: 'Product'};
+    const variant = {title: 'Product'};
     const {result} = renderHook(() =>
-      useOptimisticProduct(product, {
+      useOptimisticVariant(variant, {
         product: {
           variants: {
             nodes: [
@@ -158,9 +156,8 @@ describe('useOptimisticProduct', () => {
     );
 
     await waitFor(() => {
-      expect(result.current.isOptimistic).toEqual(true);
-      // @ts-expect-error
-      expect(result.current.selectedVariant).toEqual({
+      expect(result.current).toEqual({
+        isOptimistic: true,
         id: 'gid://shopify/ProductVariant/123',
         title: '158cm Sea Green / Desert',
         selectedOptions: [
@@ -180,9 +177,9 @@ describe('useOptimisticProduct', () => {
         ).toString(),
       },
     };
-    const product = {title: 'Product'};
+    const variant = {title: 'Product'};
     renderHook(() =>
-      useOptimisticProduct(product, {
+      useOptimisticVariant(variant, {
         product: {
           variants: {
             nodes: [
@@ -199,7 +196,7 @@ describe('useOptimisticProduct', () => {
     await waitFor(() => {
       expect(globalThis.reportError).toHaveBeenCalledWith(
         new Error(
-          '[h2:error:useOptimisticProduct] The optimistic product hook requires your product query to include variants with the selectedOptions field.',
+          '[h2:error:useOptimisticVariant] The optimistic product hook requires your product query to include variants with the selectedOptions field.',
         ),
       );
     });
