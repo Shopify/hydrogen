@@ -9,6 +9,7 @@ export type FetchCacheOptions = {
   cache?: CachingStrategy;
   cacheInstance?: Cache;
   cacheKey?: CacheKey;
+  cacheTags?: string[];
   shouldCacheResponse?: (body: any, response: Response) => boolean;
   waitUntil?: ExecutionContext['waitUntil'];
   returnType?: 'json' | 'text' | 'arrayBuffer' | 'blob';
@@ -47,6 +48,7 @@ export async function fetchWithServerCache(
     cacheInstance,
     cache: cacheOptions,
     cacheKey = [url, requestInit],
+    cacheTags,
     shouldCacheResponse = () => true,
     waitUntil,
     returnType = 'json',
@@ -80,6 +82,7 @@ export async function fetchWithServerCache(
       cacheInstance,
       waitUntil,
       strategy: cacheOptions ?? null,
+      cacheTags,
       debugInfo,
       shouldCacheResult: (result) =>
         shouldCacheResponse(...fromSerializableResponse(result)),

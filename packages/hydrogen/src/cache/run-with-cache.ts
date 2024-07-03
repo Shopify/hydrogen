@@ -47,6 +47,7 @@ type WithCacheOptions<T = unknown> = {
   shouldCacheResult?: (value: T) => boolean;
   waitUntil?: ExecutionContext['waitUntil'];
   debugInfo?: DebugOptions;
+  cacheTags?: string[];
 };
 
 // Lock to prevent revalidating the same sub-request
@@ -69,6 +70,7 @@ export async function runWithCache<T = unknown>(
     shouldCacheResult = () => true,
     waitUntil,
     debugInfo,
+    cacheTags,
   }: WithCacheOptions<T>,
 ): Promise<T> {
   const startTime = Date.now();
@@ -136,6 +138,7 @@ export async function runWithCache<T = unknown>(
               status: cacheStatus,
               strategy: generateCacheControlHeader(strategy || {}),
               key,
+              tags: cacheTags,
             },
             waitUntil,
           });
@@ -164,6 +167,7 @@ export async function runWithCache<T = unknown>(
           process.env.NODE_ENV === 'development' ? mergeDebugInfo() : undefined,
       } satisfies CachedItem,
       strategy,
+      cacheTags,
     );
 
   const {value: cachedItem, status: cacheStatus} =

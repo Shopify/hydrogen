@@ -203,6 +203,11 @@ type StorefrontQueryOptions = StorefrontCommonExtraParams & {
    * to be able to manually invalidate by cache key later.
    */
   cacheKey?: CacheKey;
+  /**
+   * Tags to associate with this query. Useful to invalidate
+   * the cache by specifying one of the tags.
+   */
+  cacheTags?: string[];
 };
 
 type StorefrontMutationOptions = StorefrontCommonExtraParams & {
@@ -210,6 +215,7 @@ type StorefrontMutationOptions = StorefrontCommonExtraParams & {
   mutation: string;
   cache?: never;
   cacheKey?: never;
+  cacheTags?: never;
 };
 
 const defaultI18n: I18nBase = {language: 'EN', country: 'US'};
@@ -292,6 +298,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     displayName,
     stackInfo,
     cacheKey,
+    cacheTags,
   }: {variables?: GenericVariables; stackInfo?: StackInfo} & (
     | StorefrontQueryOptions
     | StorefrontMutationOptions
@@ -338,6 +345,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
             cacheKeyHeader,
             requestInit.body,
           ],
+          cacheTags,
           shouldCacheResponse: checkGraphQLErrors,
         };
 

@@ -101,12 +101,14 @@ export async function setItemInCache(
   key: string,
   value: any,
   userCacheOptions?: CachingStrategy,
+  tags?: string[],
 ) {
   const result = await fetch(CACHE_URL, {
     method: 'POST',
     body: JSON.stringify({
       method: 'put',
       key,
+      tags,
       options: getCacheOption(userCacheOptions),
       value: Object.values(encoder.encode(JSON.stringify(value))),
     }),
