@@ -294,7 +294,7 @@ export async function getChangelog(): Promise<ChangeLog> {
       throw new Error('Failed to fetch changelog.json');
     }
 
-    const json = await response.json<ChangeLog>();
+    const json: ChangeLog = await response.json();
 
     if ('releases' in json && 'url' in json) {
       CACHED_CHANGELOG = json;

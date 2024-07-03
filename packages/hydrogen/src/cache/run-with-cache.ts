@@ -12,6 +12,7 @@ import {
 } from './sub-request';
 import {type StackInfo} from '../utils/callsites';
 import {hashKey} from '../utils/hash';
+import type {WaitUntil} from '../types';
 
 /**
  * The cache key is used to uniquely identify a value in the cache.
@@ -50,7 +51,7 @@ type WithCacheOptions<T = unknown> = {
   strategy?: CachingStrategy | null;
   cacheInstance?: Cache;
   shouldCacheResult?: (value: T) => boolean;
-  waitUntil?: ExecutionContext['waitUntil'];
+  waitUntil?: WaitUntil;
   debugInfo?: DebugOptions;
 };
 

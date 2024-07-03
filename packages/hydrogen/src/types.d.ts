@@ -36,6 +36,8 @@ export interface HydrogenSession<
   isPending?: boolean;
 }
 
+export type WaitUntil = (promise: Promise<unknown>) => void;
+
 declare global {
   interface Window {
     privacyBanner: PrivacyBanner;

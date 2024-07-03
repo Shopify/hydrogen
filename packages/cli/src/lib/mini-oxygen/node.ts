@@ -50,7 +50,7 @@ export async function startNodeServer({
             method: 'POST',
             body: JSON.stringify({
               ...(asyncLocalStorage.getStore() as Record<string, string>),
-              ...(await request.json<Record<string, string>>()),
+              ...((await request.json()) as Record<string, string>),
             }),
           }),
         ),

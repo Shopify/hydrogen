@@ -1,13 +1,13 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src", "remix.env.d.ts", "assets"],
+  "include": ["src", "dev.env.d.ts", "assets"],
   "exclude": ["dist", "__tests__", "node_modules", ".turbo"],
   "compilerOptions": {
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "jsx": "react-jsx",
     "noUncheckedIndexedAccess": true,
-    "types": ["@shopify/oxygen-workers-types", "node", "@remix-run/dev"],
+    "types": ["node", "@remix-run/dev"],
     "outDir": "dist",
     "paths": {
       "~/mini-oxygen/*": ["../mini-oxygen/src/*"],

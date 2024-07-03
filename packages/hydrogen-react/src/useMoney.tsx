@@ -117,7 +117,7 @@ export function useMoney(money: MoneyV2): UseMoneyValue {
 
   const options = useMemo(
     () => ({
-      style: 'currency',
+      style: 'currency' as const,
       currency: money.currencyCode,
     }),
     [money.currencyCode],
