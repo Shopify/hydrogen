@@ -138,7 +138,7 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
   };
 }
 
-function Layout({children}: {children?: React.ReactNode}) {
+export function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
   const data = useRouteLoaderData<RootLoader>('root');
 
@@ -175,11 +175,7 @@ function Layout({children}: {children?: React.ReactNode}) {
 }
 
 export default function App() {
-  return (
-    <Layout>
-      <Outlet />
-    </Layout>
-  );
+  return <Outlet />;
 }
 
 export function ErrorBoundary() {
@@ -195,16 +191,14 @@ export function ErrorBoundary() {
   }
 
   return (
-    <Layout>
-      <div className="route-error">
-        <h1>Oops</h1>
-        <h2>{errorStatus}</h2>
-        {errorMessage && (
-          <fieldset>
-            <pre>{errorMessage}</pre>
-          </fieldset>
-        )}
-      </div>
-    </Layout>
+    <div className="route-error">
+      <h1>Oops</h1>
+      <h2>{errorStatus}</h2>
+      {errorMessage && (
+        <fieldset>
+          <pre>{errorMessage}</pre>
+        </fieldset>
+      )}
+    </div>
   );
 }
