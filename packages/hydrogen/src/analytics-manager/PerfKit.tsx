@@ -12,9 +12,10 @@ declare global {
   }
 }
 
+// Pin to a version that have SPA support.
+// TODO: Update to a stable version when available.
 const PERF_KIT_UNSTABLE =
-  'https://cdn.shopify.com/shopifycloud/perf-kit/shopify-perf-kit-unstable.min.js';
-// const PERF_KIT_LOCAL = 'http://localhost:3001/shopify-perf-kit.min.js';
+  'https://cdn.shopify.com/shopifycloud/perf-kit/shopify-perf-kit-1bd852a.min.js';
 
 export function PerfKit({shop}: {shop: ShopAnalytics}) {
   const loadedEvent = useRef(false);
