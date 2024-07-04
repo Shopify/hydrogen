@@ -45,6 +45,10 @@ import {
   type CartMetafieldDeleteFunction,
   cartMetafieldDeleteDefault,
 } from './queries/cartMetafieldDeleteDefault';
+import {
+  type CartGiftCardCodesUpdateFunction,
+  cartGiftCardCodesUpdateDefault,
+} from './queries/cartGiftCardCodeUpdateDefault';
 
 export type CartHandlerOptions = {
   storefront: Storefront;
@@ -71,6 +75,7 @@ export type HydrogenCart = {
   updateLines: ReturnType<typeof cartLinesUpdateDefault>;
   removeLines: ReturnType<typeof cartLinesRemoveDefault>;
   updateDiscountCodes: ReturnType<typeof cartDiscountCodesUpdateDefault>;
+  updateGiftCardCodes: ReturnType<typeof cartGiftCardCodesUpdateDefault>;
   updateBuyerIdentity: ReturnType<typeof cartBuyerIdentityUpdateDefault>;
   updateNote: ReturnType<typeof cartNoteUpdateDefault>;
   updateSelectedDeliveryOption: ReturnType<
@@ -156,6 +161,14 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
             optionalParams,
           )
         : await cartCreate({discountCodes}, optionalParams);
+    },
+    updateGiftCardCodes: async (giftCardCodes, optionalParams) => {
+      return cartId || optionalParams?.cartId
+        ? await cartGiftCardCodesUpdateDefault(mutateOptions)(
+          giftCardCodes,
+            optionalParams,
+          )
+        : await cartCreate({giftCardCodes}, optionalParams);
     },
     updateBuyerIdentity: async (buyerIdentity, optionalParams) => {
       return cartId || optionalParams?.cartId
@@ -283,6 +296,10 @@ export type HydrogenCartForDocs = {
    * Updates discount codes in the cart.
    */
   updateDiscountCodes?: CartDiscountCodesUpdateFunction;
+  /**
+   * Updates gift card codes in the cart.
+   */
+  updateGiftCardCodes?: CartGiftCardCodesUpdateFunction;
   /**
    * Updates items in the cart.
    */

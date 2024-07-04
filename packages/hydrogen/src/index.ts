@@ -38,6 +38,7 @@ export {cartLinesAddDefault} from './cart/queries/cartLinesAddDefault';
 export {cartLinesUpdateDefault} from './cart/queries/cartLinesUpdateDefault';
 export {cartLinesRemoveDefault} from './cart/queries/cartLinesRemoveDefault';
 export {cartDiscountCodesUpdateDefault} from './cart/queries/cartDiscountCodesUpdateDefault';
+export {cartGiftCardCodesUpdateDefault} from './cart/queries/cartGiftCardCodeUpdateDefault';
 export {cartBuyerIdentityUpdateDefault} from './cart/queries/cartBuyerIdentityUpdateDefault';
 export {cartNoteUpdateDefault} from './cart/queries/cartNoteUpdateDefault';
 export {cartSelectedDeliveryOptionsUpdateDefault} from './cart/queries/cartSelectedDeliveryOptionsUpdateDefault';
