@@ -41,7 +41,7 @@ describe('<ShopifyProvider/>', () => {
       });
 
       expect(result.current.getStorefrontApiUrl()).toBe(
-        'https://notashop.myshopify.com/api/2024-04/graphql.json',
+        'https://notashop.myshopify.com/api/2024-07/graphql.json',
       );
     });
 
@@ -183,7 +183,7 @@ describe('<ShopifyProvider/>', () => {
       });
 
       expect(result.current.getStorefrontApiUrl()).toBe(
-        'https://notashop.myshopify.com/api/2024-04/graphql.json',
+        'https://notashop.myshopify.com/api/2024-07/graphql.json',
       );
     });
 
@@ -219,7 +219,7 @@ describe('<ShopifyProvider/>', () => {
       });
 
       expect(result.current.getStorefrontApiUrl()).toBe(
-        'https://notashop.myshopify.com/api/2024-04/graphql.json',
+        'https://notashop.myshopify.com/api/2024-07/graphql.json',
       );
     });
   });

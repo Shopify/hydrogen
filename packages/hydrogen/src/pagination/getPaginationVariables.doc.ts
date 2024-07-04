@@ -8,7 +8,7 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'Pagination',
       type: 'components',
-      url: '/docs/api/hydrogen/2024-04/components/pagination',
+      url: '/docs/api/hydrogen/2024-07/components/pagination',
     },
   ],
   description: `The \`getPaginationVariables\` function is used with the [\`<Pagination>\`](/docs/api/hydrogen/components/pagnination) component to generate the variables needed to fetch paginated data from the Storefront API. The returned variables should be used within your storefront GraphQL query.`,

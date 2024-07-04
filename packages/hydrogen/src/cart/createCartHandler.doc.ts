@@ -36,7 +36,7 @@ const data: ReferenceEntityTemplateSchema = {
       title: 'Returns',
       type: 'HydrogenCartForDocs',
       description:
-        'The handler returns the following default methods. Any [custom](/docs/api/hydrogen/2024-04/utilities/createcarthandler#example-custom-methods) or overwritten methods will also be available in the returned cart instance.',
+        'The handler returns the following default methods. Any [custom](/docs/api/hydrogen/2024-07/utilities/createcarthandler#example-custom-methods) or overwritten methods will also be available in the returned cart instance.',
     },
   ],
   examples: {

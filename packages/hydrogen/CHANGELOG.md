@@ -130,7 +130,7 @@
 
 - Add JSdoc to `getSelectedProductOptions` utility and cleanup the skeleton implementation ([#2089](https://github.com/Shopify/hydrogen/pull/2089)) by [@juanpprieto](https://github.com/juanpprieto)
 
-- Adding support for B2B to the customer account client and cart handler to store and manage [buyer context](https://shopify.dev/docs/api/storefront/2024-04/input-objects/BuyerInput). Currently Unstable. ([#1886](https://github.com/Shopify/hydrogen/pull/1886)) by [@dustinfirman](https://github.com/dustinfirman)
+- Adding support for B2B to the customer account client and cart handler to store and manage [buyer context](https://shopify.dev/docs/api/storefront/2024-07/input-objects/BuyerInput). Currently Unstable. ([#1886](https://github.com/Shopify/hydrogen/pull/1886)) by [@dustinfirman](https://github.com/dustinfirman)
 
 - When extending the content security policy, if the default directive is 'none' then the default won't be merged into the final directive. ([#2076](https://github.com/Shopify/hydrogen/pull/2076)) by [@nkgentile](https://github.com/nkgentile)
 
