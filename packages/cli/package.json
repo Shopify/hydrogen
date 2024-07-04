@@ -35,9 +35,7 @@
   "dependencies": {
     "@ast-grep/napi": "0.11.0",
     "@oclif/core": "3.26.5",
-    "@shopify/cli-kit": "3.61.2",
     "@shopify/oxygen-cli": "4.4.9",
-    "@shopify/plugin-cloudflare": "3.61.2",
     "ansi-escapes": "^6.2.0",
     "cli-truncate": "^4.0.0",
     "diff": "^5.1.0",
@@ -57,6 +55,8 @@
     "@parcel/watcher": "^2.3.0"
   },
   "peerDependencies": {
+    "@shopify/cli-kit": "^3.61",
+    "@shopify/plugin-cloudflare": "^3.61",
     "@graphql-codegen/cli": "^5.0.2",
     "@remix-run/dev": "^2.1.0",
     "@shopify/hydrogen-codegen": "^0.3.1",
