@@ -49,12 +49,6 @@ export async function prepareDiffDirectory(
     joinPath(targetDirectory, 'node_modules'),
   );
 
-  const pw = watch
-    ? await import('@parcel/watcher').catch((error) => {
-        console.log('Could not watch for file changes.', error);
-      })
-    : undefined;
-
   const {default: chokidar} = await import('chokidar');
 
   const chokidarSubscriptions = [
