@@ -11,7 +11,7 @@ import type {PartialDeep} from 'type-fest';
 const SHOPIFY_CONFIG: ShopifyProviderProps = {
   storeDomain: 'https://notashop.myshopify.com',
   storefrontToken: 'abc123',
-  storefrontApiVersion: '2024-04',
+  storefrontApiVersion: '2024-07',
   countryIsoCode: 'CA',
   languageIsoCode: 'EN',
 };
@@ -84,7 +84,7 @@ describe('<ShopifyProvider/>', () => {
       ).toEqual({
         'X-SDK-Variant': 'hydrogen-react',
         'X-SDK-Variant-Source': 'react',
-        'X-SDK-Version': '2024-04',
+        'X-SDK-Version': '2024-07',
         'X-Shopify-Storefront-Access-Token': 'abc123',
         'content-type': 'application/json',
       });
@@ -110,7 +110,7 @@ describe('<ShopifyProvider/>', () => {
       ).toEqual({
         'X-SDK-Variant': 'hydrogen-react',
         'X-SDK-Variant-Source': 'react',
-        'X-SDK-Version': '2024-04',
+        'X-SDK-Version': '2024-07',
         'X-Shopify-Storefront-Access-Token': 'newtoken',
         'content-type': 'application/graphql',
       });
@@ -233,6 +233,6 @@ export function getShopifyConfig(
     languageIsoCode: config.languageIsoCode ?? 'EN',
     storeDomain: config.storeDomain ?? 'https://notashop.myshopify.io',
     storefrontToken: config.storefrontToken ?? 'abc123',
-    storefrontApiVersion: config.storefrontApiVersion ?? '2024-04',
+    storefrontApiVersion: config.storefrontApiVersion ?? '2024-07',
   };
 }
