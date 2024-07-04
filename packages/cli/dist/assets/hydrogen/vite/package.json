@@ -1,0 +1,14 @@
+{
+  "type": "module",
+  "scripts": {
+    "build": "shopify hydrogen build --codegen",
+    "dev": "shopify hydrogen dev --codegen"
+  },
+  "dependencies": {
+    "isbot": "^3.8.0"
+  },
+  "devDependencies": {
+    "vite": "^5.1.0",
+    "vite-tsconfig-paths": "^4.3.1"
+  }
+}

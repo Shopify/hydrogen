@@ -1,0 +1,171 @@
+import { Flags } from '@oclif/core';
+import Command from '@shopify/cli-kit/node/base-command';
+import { AbortError } from '@shopify/cli-kit/node/error';
+import { outputInfo } from '@shopify/cli-kit/node/output';
+import { resolvePath, joinPath } from '@shopify/cli-kit/node/path';
+import { setH2OVerbose, isH2Verbose, muteDevLogs } from '../../lib/log.js';
+import { getProjectPaths, hasRemixConfigFile } from '../../lib/remix-config.js';
+import { commonFlags, deprecated, overrideFlag, flagsToCamelObject, DEFAULT_APP_PORT } from '../../lib/flags.js';
+import { startMiniOxygen } from '../../lib/mini-oxygen/index.js';
+import { getAllEnvironmentVariables } from '../../lib/environment-variables.js';
+import { getConfig } from '../../lib/shopify-config.js';
+import { findPort } from '../../lib/find-port.js';
+import { getViteConfig } from '../../lib/vite-config.js';
+import { runBuild } from './build.js';
+import { runClassicCompilerBuild } from '../../lib/classic-compiler/build.js';
+import { setupResourceCleanup } from '../../lib/resource-cleanup.js';
+import { deferPromise } from '../../lib/defer.js';
+import { prepareDiffDirectory } from '../../lib/template-diff.js';
+
+class Preview extends Command {
+  static descriptionWithMarkdown = "Runs a server in your local development environment that serves your Hydrogen app's production build. Requires running the [build](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-build) command first.";
+  static description = "Runs a Hydrogen storefront in an Oxygen worker for production.";
+  static flags = {
+    ...commonFlags.path,
+    ...commonFlags.port,
+    worker: deprecated("--worker", { isBoolean: true }),
+    ...commonFlags.legacyRuntime,
+    ...commonFlags.env,
+    ...commonFlags.envBranch,
+    ...commonFlags.inspectorPort,
+    ...commonFlags.debug,
+    ...commonFlags.verbose,
+    // For building the app:
+    build: Flags.boolean({
+      description: "Builds the app before starting the preview server."
+    }),
+    watch: Flags.boolean({
+      description: "Watches for changes and rebuilds the project.",
+      dependsOn: ["build"]
+    }),
+    ...overrideFlag(commonFlags.entry, {
+      entry: { dependsOn: ["build"] }
+    }),
+    ...overrideFlag(commonFlags.codegen, {
+      codegen: { dependsOn: ["build"] }
+    }),
+    // Diff in preview only makes sense when combined with --build.
+    // Without the build flag, preview only needs access to the existing
+    // `dist` directory in the project, so there's no need to merge the
+    // project with the skeleton template in a temporary directory.
+    ...overrideFlag(commonFlags.diff, {
+      diff: { dependsOn: ["build"] }
+    })
+  };
+  async run() {
+    const { flags } = await this.parse(Preview);
+    const originalDirectory = flags.path ? resolvePath(flags.path) : process.cwd();
+    const diff = flags.build && flags.diff ? await prepareDiffDirectory(originalDirectory, flags.watch) : void 0;
+    const directory = diff?.targetDirectory ?? originalDirectory;
+    const { close } = await runPreview({
+      ...flagsToCamelObject(flags),
+      directory
+    });
+    setupResourceCleanup(async () => {
+      await close();
+      if (diff) {
+        await diff.copyDiffBuild();
+        await diff.cleanup();
+      }
+    });
+  }
+}
+async function runPreview({
+  port: appPort,
+  directory,
+  legacyRuntime = false,
+  env: envHandle,
+  envBranch,
+  inspectorPort,
+  debug,
+  verbose,
+  build: shouldBuild = false,
+  watch = false,
+  codegen: useCodegen = false,
+  codegenConfigPath,
+  entry
+}) {
+  if (!process.env.NODE_ENV)
+    process.env.NODE_ENV = watch ? "development" : "production";
+  if (verbose) setH2OVerbose();
+  if (!isH2Verbose()) muteDevLogs();
+  let { root, buildPath, buildPathWorkerFile, buildPathClient } = getProjectPaths(directory);
+  const isClassicProject = await hasRemixConfigFile(root);
+  if (watch && isClassicProject) {
+    throw new AbortError(
+      "Preview in watch mode is not supported for classic Remix projects.",
+      "Please use the dev command instead, which is the equivalent for classic projects."
+    );
+  }
+  let miniOxygen;
+  const projectBuild = deferPromise();
+  const buildOptions = {
+    directory: root,
+    entry,
+    disableRouteWarning: false,
+    lockfileCheck: false,
+    sourcemap: true,
+    useCodegen,
+    codegenConfigPath
+  };
+  const buildProcess = shouldBuild ? isClassicProject ? await runClassicCompilerBuild({
+    ...buildOptions,
+    bundleStats: false
+  }).then(projectBuild.resolve) : await runBuild({
+    ...buildOptions,
+    watch,
+    async onServerBuildFinish() {
+      if (projectBuild.state === "pending") {
+        projectBuild.resolve();
+      } else {
+        outputInfo("\u{1F3D7}\uFE0F  Project rebuilt. Reloading server...");
+      }
+      await miniOxygen?.reload();
+    }
+  }) : projectBuild.resolve();
+  if (!isClassicProject) {
+    const maybeResult = await getViteConfig(root).catch(() => null);
+    buildPathWorkerFile = maybeResult?.serverOutFile ?? joinPath(buildPath, "server", "index.js");
+  }
+  const { shop, storefront } = await getConfig(root);
+  const fetchRemote = !!shop && !!storefront?.id;
+  const { allVariables, logInjectedVariables } = await getAllEnvironmentVariables(
+    {
+      root,
+      fetchRemote,
+      envBranch,
+      envHandle
+    }
+  );
+  if (!appPort) {
+    appPort = await findPort(DEFAULT_APP_PORT);
+  }
+  const assetsPort = legacyRuntime ? 0 : await findPort(appPort + 100);
+  await projectBuild.promise;
+  logInjectedVariables();
+  miniOxygen = await startMiniOxygen(
+    {
+      root,
+      appPort,
+      assetsPort,
+      env: allVariables,
+      buildPathClient,
+      buildPathWorkerFile,
+      inspectorPort,
+      debug,
+      watch
+    },
+    legacyRuntime
+  );
+  miniOxygen.showBanner({
+    mode: "preview",
+    headlinePrefix: watch ? "Watching for changes. " : ""
+  });
+  return {
+    async close() {
+      await Promise.allSettled([miniOxygen.close(), buildProcess?.close()]);
+    }
+  };
+}
+
+export { Preview as default, runPreview };
