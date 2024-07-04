@@ -3,6 +3,48 @@
   "version": "1",
   "releases": [
     {
+      "title": "Auto cookie domain detection for customer privacy api and better error message for missing analytics fields",
+      "version": "2024.4.7",
+      "hash": "156e869563b8a7b3616618a7a9c1bf471be655b3",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2264",
+      "commit": "https://github.com/Shopify/hydrogen/commit/156e869563b8a7b3616618a7a9c1bf471be655b3",
+      "dependencies": {
+        "@remix-run/react": "^2.9.2",
+        "@shopify/cli-hydrogen": "8.1.1",
+        "@shopify/hydrogen": "^2024.4.7",
+        "@shopify/remix-oxygen": "^2.0.4"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.9.2",
+        "typescript": "^5.2.2",
+        "@shopify/cli": "3.61.2",
+        "@shopify/oxygen-workers-types": "^4.0.0",
+        "@remix-run/server-runtime": "^2.9.2"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Auto cookie domain detection for customer privacy api and better error message for missing analytics fields",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2262",
+          "id": "2262"
+        }
+      ],
+      "features": []
+    },
+    {
       "title": "Fix shopify cookie creation and add auto top-level domain detection",
       "version": "2024.4.6",
       "hash": "af573bce7af2e51045dab6a2eaa27f33bfc59900",

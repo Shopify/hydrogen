@@ -57,11 +57,11 @@
     "source-map": "^0.7.4",
     "source-map-support": "^0.5.21",
     "stack-trace": "^1.0.0-pre2",
-    "undici": "^5.28.2",
-    "ws": "^8.16.0"
+    "undici": "^5.28.4",
+    "ws": "^8.17.1"
   },
   "devDependencies": {
-    "@shopify/oxygen-workers-types": "^4.0.0",
+    "@shopify/oxygen-workers-types": "^4.1.2",
     "@types/body-parser": "1.19.3",
     "@types/connect": "^3.4.35",
     "@types/eventsource": "^1.1.10",

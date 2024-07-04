@@ -1,4 +1,10 @@
-import type {HydrogenCart, Storefront} from '@shopify/hydrogen';
+/**
+ * This file is used to provide types for doc examples.
+ * Do not place here types needed for the library itself.
+ */
+
+import type {HydrogenCart, Storefront} from './src/index';
+import type {WaitUntil} from './src/types';
 
 declare global {
   /**
@@ -17,6 +23,18 @@ declare global {
     PUBLIC_STOREFRONT_ID: string;
     PUBLIC_CHECKOUT_DOMAIN: string;
   }
+
+  /**
+   * This type is used to import types from mini-oxygen
+   */
+  interface ExecutionContext {
+    waitUntil: WaitUntil;
+  }
+
+  /**
+   * This type is used to import types from mini-oxygen
+   */
+  type ExportedHandlerFetchHandler = Function;
 }
 
 /**

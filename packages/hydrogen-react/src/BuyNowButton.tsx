@@ -11,6 +11,8 @@ interface BuyNowButtonPropsBase {
   quantity?: number;
   /** The ID of the variant. */
   variantId: string;
+  /** The selling plan ID of the subscription variant */
+  sellingPlanId?: string;
   /** An array of cart line attributes that belong to the item being added to the cart. */
   attributes?: {
     key: string;
@@ -34,6 +36,7 @@ export function BuyNowButton<AsType extends React.ElementType = 'button'>(
   const {
     quantity,
     variantId,
+    sellingPlanId,
     onClick,
     attributes,
     children,
@@ -54,10 +57,11 @@ export function BuyNowButton<AsType extends React.ElementType = 'button'>(
           quantity: quantity ?? 1,
           merchandiseId: variantId,
           attributes,
+          sellingPlanId,
         },
       ],
     });
-  }, [cartCreate, quantity, variantId, attributes]);
+  }, [cartCreate, quantity, variantId, attributes, sellingPlanId]);
 
   return (
     <BaseButton
