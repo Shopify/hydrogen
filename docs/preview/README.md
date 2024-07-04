@@ -4,8 +4,12 @@ This tool makes it easier to preview reference docs that are deployed to shopify
 
 ## Usage
 
-Run the CLI with a path to the docs metadata file, and an app will boot up rendering a preview of the docs.
+Run the dev command from a path that contains a `docs/generated/generated_docs_data.json` file.
+
+Example from the `packages/hydrogen` or `packages/hydrogen-react` directories:
 
 ```bash
-node preview/bin/cli.js path/to/generated_docs_data.json
+npm run dev --prefix ../../docs/preview
 ```
+
+Alternatively, pass `GEN_DOCS_PATH` as an environment variable to overwrite the default path.
