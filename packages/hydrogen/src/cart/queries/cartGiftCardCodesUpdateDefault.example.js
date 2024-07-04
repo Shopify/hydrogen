@@ -5,4 +5,4 @@ const cartGiftCardCodes = cartGiftCardCodesUpdateDefault({
   getCartId,
 });
 
-const result = await cartGiftCardCodes(['FREE_SHIPPING']);
+const result = await cartGiftCardCodes(['GIFT_CARD_CODE_123']);
