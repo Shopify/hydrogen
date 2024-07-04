@@ -1,7 +1,6 @@
 import {json, type LinksFunction} from '@remix-run/node';
 import {
   Links,
-  LiveReload,
   Meta,
   NavLink,
   Outlet,
@@ -10,7 +9,7 @@ import {
   useLoaderData,
   useParams,
 } from '@remix-run/react';
-import stylesheet from '~/tailwind.css';
+import stylesheet from '~/tailwind.css?url';
 import {Fragment, useCallback, useState} from 'react';
 import he from 'he';
 
@@ -19,8 +18,7 @@ export const links: LinksFunction = () => [
 ];
 
 export async function loader() {
-  delete require.cache[process.env.DOCS_META_FILE!];
-  const data = require(process.env.DOCS_META_FILE!);
+  const {default: data} = await import('virtual:docs.json');
 
   for (const doc of data) {
     for (const tab of doc.defaultExample.codeblock.tabs) {
@@ -69,7 +67,6 @@ export default function App() {
         </div>
         <ScrollRestoration />
         <Scripts />
-        <LiveReload />
       </body>
     </html>
   );
