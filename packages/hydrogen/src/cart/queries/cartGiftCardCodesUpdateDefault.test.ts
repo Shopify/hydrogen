@@ -2,7 +2,6 @@ import {describe, it, expect} from 'vitest';
 import {CART_ID, mockCreateStorefrontClient} from '../cart-test-helper';
 import {cartGiftCardCodesUpdateDefault} from './cartGiftCardCodeUpdateDefault';
 
-
 describe('cartGiftCardCodesUpdateDefault', () => {
   it('should return a default cart discount code update implementation', async () => {
     const cartGiftCardCodes = cartGiftCardCodesUpdateDefault({
