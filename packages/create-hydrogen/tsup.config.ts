@@ -16,7 +16,6 @@ export default defineConfig({
   bundle: true,
   external: [
     '@ast-grep/napi', // Required binary
-    '@parcel/watcher', // Not used but but needs to resolve it
     'react-devtools-core', // Not used but breaks the build otherwise
   ],
   // Needed for some CJS dependencies:
