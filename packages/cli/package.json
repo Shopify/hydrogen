@@ -39,6 +39,7 @@
     "@shopify/oxygen-cli": "4.4.9",
     "@shopify/plugin-cloudflare": "3.61.2",
     "ansi-escapes": "^6.2.0",
+    "chokidar": "3.5.3",
     "cli-truncate": "^4.0.0",
     "diff": "^5.1.0",
     "fs-extra": "^11.1.0",
@@ -52,9 +53,6 @@
     "tempy": "3.0.0",
     "ts-morph": "20.0.0",
     "use-resize-observer": "^9.1.0"
-  },
-  "optionalDependencies": {
-    "@parcel/watcher": "^2.3.0"
   },
   "peerDependencies": {
     "@graphql-codegen/cli": "^5.0.2",
