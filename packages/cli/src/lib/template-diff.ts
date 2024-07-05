@@ -57,13 +57,15 @@ export async function prepareDiffDirectory(
         // temporary directory to the original diff directory.
         chokidar
           .watch(joinPath(targetDirectory, '*.generated.d.ts'))
-          .on('all', async (event, path) => {
+          .on('all', async (eventName, eventFilePath) => {
             const targetFile = joinPath(
               diffDirectory,
-              relativePath(targetDirectory, path),
+              relativePath(targetDirectory, eventFilePath),
             );
-            await copyFile(path, targetFile);
+
+            await copyFile(eventFilePath, targetFile);
           }),
+
         // Copy new changes in the original diff directory to
         // the temporary directory.
         chokidar
@@ -75,16 +77,18 @@ export async function prepareDiffDirectory(
               '.shopify',
             ],
           })
-          .on('all', async (event, path) => {
+          .on('all', async (eventName, eventFilePath) => {
             const targetFile = joinPath(
               targetDirectory,
-              relativePath(diffDirectory, path),
+              relativePath(diffDirectory, eventFilePath),
             );
-            const fileInTemplate = path.replace(
+
+            const fileInTemplate = eventFilePath.replace(
               diffDirectory,
               templateDirectory,
             );
-            if (event === 'unlink') {
+
+            if (eventName === 'unlink') {
               return fileExists(fileInTemplate)
                 .then((exists) =>
                   exists
@@ -95,8 +99,10 @@ export async function prepareDiffDirectory(
                 )
                 .catch(() => {});
             }
-            return copyFile(path, targetFile);
+
+            return copyFile(eventFilePath, targetFile);
           }),
+
         // Copy new changes in the starter template to the temporary
         // directory only if they don't overwrite the files in the
         // original diff directory, which have higher priority.
@@ -109,18 +115,22 @@ export async function prepareDiffDirectory(
               '.shopify',
             ],
           })
-          .on('all', async (event, path) => {
-            const fileInDiff = path.replace(templateDirectory, diffDirectory);
+          .on('all', async (eventName, eventFilePath) => {
+            const fileInDiff = eventFilePath.replace(
+              templateDirectory,
+              diffDirectory,
+            );
+
             if (await fileExists(fileInDiff)) return;
 
             const targetFile = joinPath(
               targetDirectory,
-              relativePath(templateDirectory, path),
+              relativePath(templateDirectory, eventFilePath),
             );
 
-            return event === 'unlink'
+            return eventName === 'unlink'
               ? remove(targetFile).catch(() => {})
-              : copyFile(path, targetFile);
+              : copyFile(eventFilePath, targetFile);
           }),
       ]
     : [];
