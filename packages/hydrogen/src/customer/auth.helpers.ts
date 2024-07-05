@@ -5,7 +5,7 @@ import {
   CUSTOMER_API_CLIENT_ID,
   CUSTOMER_ACCOUNT_SESSION_KEY,
   BUYER_SESSION_KEY,
-} from '../constants';
+} from './constants';
 
 type H2OEvent = Parameters<NonNullable<typeof __H2O_LOG_EVENT>>[0];
 

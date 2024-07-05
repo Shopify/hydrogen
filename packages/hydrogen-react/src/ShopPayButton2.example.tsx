@@ -5,7 +5,7 @@ export default function App() {
     <ShopifyProvider
       storeDomain="my-store"
       storefrontToken="abc123"
-      storefrontApiVersion="2024-04"
+      storefrontApiVersion="2024-07"
       countryIsoCode="CA"
       languageIsoCode="EN"
     >
