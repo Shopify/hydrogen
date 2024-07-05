@@ -56,7 +56,9 @@ export async function prepareDiffDirectory(
         // Copy back the changes in generated d.ts from the
         // temporary directory to the original diff directory.
         chokidar
-          .watch(joinPath(targetDirectory, '*.generated.d.ts'))
+          .watch(joinPath(targetDirectory, '*.generated.d.ts'), {
+            ignoreInitial: true,
+          })
           .on('all', async (eventName, eventFilePath) => {
             const targetFile = joinPath(
               diffDirectory,
@@ -70,11 +72,12 @@ export async function prepareDiffDirectory(
         // the temporary directory.
         chokidar
           .watch(diffDirectory, {
+            ignoreInitial: true,
             ignored: [
-              '*.generated.d.ts',
-              'package.json',
-              'tsconfig.json',
-              '.shopify',
+              '**/*.generated.d.ts',
+              '**/package.json',
+              '**/tsconfig.json',
+              '**/.shopify',
             ],
           })
           .on('all', async (eventName, eventFilePath) => {
@@ -108,11 +111,12 @@ export async function prepareDiffDirectory(
         // original diff directory, which have higher priority.
         chokidar
           .watch(templateDirectory, {
+            ignoreInitial: true,
             ignored: [
-              '*.generated.d.ts',
-              'package.json',
-              'tsconfig.json',
-              '.shopify',
+              '**/*.generated.d.ts',
+              '**/package.json',
+              '**/tsconfig.json',
+              '**/.shopify',
             ],
           })
           .on('all', async (eventName, eventFilePath) => {
