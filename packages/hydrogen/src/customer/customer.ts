@@ -5,7 +5,7 @@ import {
   CUSTOMER_ACCOUNT_SESSION_KEY,
   BUYER_SESSION_KEY,
   USER_AGENT,
-} from '../constants';
+} from './constants';
 import {
   clearSession,
   generateCodeChallenge,

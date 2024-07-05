@@ -1,6 +1,6 @@
 /**
  * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
- * Based on Customer Account API 2024-04
+ * Based on Customer Account API 2024-07
  * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run `npm run graphql-types`.
  * Except custom Scalars, which are defined in the `codegen.ts` file
  */
@@ -31,6 +31,7 @@ export type Scalars = {
   Decimal: {input: string; output: string};
   HTML: {input: string; output: string};
   ISO8601DateTime: {input: string; output: string};
+  JSON: {input: unknown; output: unknown};
   URL: {input: string; output: string};
   UnsignedInt64: {input: string; output: string};
 };
@@ -58,24 +59,6 @@ export type AdditionalFeeSale = Node &
     /** The total tax amount for the sale. */
     totalTaxAmount: MoneyV2;
   };
-
-/** Return type for `addressCreate` mutation. */
-export type AddressCreatePayload = {
-  __typename?: 'AddressCreatePayload';
-  /** The created address. */
-  address?: Maybe<CustomerMailingAddress>;
-  /** The list of errors that occurred from executing the mutation. */
-  userErrors: Array<UserErrorsAddressUserErrors>;
-};
-
-/** Return type for `addressDelete` mutation. */
-export type AddressDeletePayload = {
-  __typename?: 'AddressDeletePayload';
-  /** The ID of the deleted address. */
-  deletedAddressId?: Maybe<Scalars['ID']['output']>;
-  /** The list of errors that occurred from executing the mutation. */
-  userErrors: Array<UserErrorsAddressUserErrors>;
-};
 
 /** The address form field. */
 export type AddressFormField = {
@@ -116,15 +99,6 @@ export type AddressFormSettings = {
   firstName: AddressFormField;
   /** The setting for the Phone form field. */
   phone: AddressFormField;
-};
-
-/** Return type for `addressUpdate` mutation. */
-export type AddressUpdatePayload = {
-  __typename?: 'AddressUpdatePayload';
-  /** The updated address. */
-  address?: Maybe<CustomerMailingAddress>;
-  /** The list of errors that occurred from executing the mutation. */
-  userErrors: Array<UserErrorsAddressUserErrors>;
 };
 
 /** A sale event that results in an adjustment to the order price. */
@@ -294,35 +268,6 @@ export type AvailableShippingRates = {
   shippingRates?: Maybe<Array<ShippingRate>>;
 };
 
-/** Represents the business account information. */
-export type BusinessAccount = {
-  __typename?: 'BusinessAccount';
-  /** The list of companies the customer operates in. */
-  companies: CompanyConnection;
-  /** The information of the customer's company. */
-  company?: Maybe<Company>;
-  /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
-  /** The profile of the customer. */
-  profile?: Maybe<Contact>;
-  /** The profile of the customer. */
-  profileV1?: Maybe<Contact>;
-};
-
-/** Represents the business account information. */
-export type BusinessAccountCompaniesArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
-/** Represents the business account information. */
-export type BusinessAccountCompanyArgs = {
-  id?: InputMaybe<Scalars['ID']['input']>;
-};
-
 /**
  * The input fields required for updating a business contact.
  *
@@ -343,15 +288,6 @@ export type BusinessContactUpdatePayload = {
   __typename?: 'BusinessContactUpdatePayload';
   /** The updated business contact information. */
   businessContact?: Maybe<CompanyContact>;
-  /** The list of errors that occurred from executing the mutation. */
-  userErrors: Array<UserErrorsBusinessContactUserErrors>;
-};
-
-/** Return type for `businessContactUpdateV1` mutation. */
-export type BusinessContactUpdateV1Payload = {
-  __typename?: 'BusinessContactUpdateV1Payload';
-  /** The updated business contact information. */
-  businessContact?: Maybe<Contact>;
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<UserErrorsBusinessContactUserErrors>;
 };
@@ -398,24 +334,6 @@ export type BusinessCustomerUserError = DisplayableError & {
   message: Scalars['String']['output'];
 };
 
-/** Return type for `businessLocationBillingAddressCreate` mutation. */
-export type BusinessLocationBillingAddressCreatePayload = {
-  __typename?: 'BusinessLocationBillingAddressCreatePayload';
-  /** The created address. */
-  businessLocationBillingAddress?: Maybe<CompanyAddress>;
-  /** The list of errors that occurred from executing the mutation. */
-  userErrors: Array<UserErrorsCompanyAddressUserErrors>;
-};
-
-/** Return type for `businessLocationBillingAddressUpdate` mutation. */
-export type BusinessLocationBillingAddressUpdatePayload = {
-  __typename?: 'BusinessLocationBillingAddressUpdatePayload';
-  /** The updated address. */
-  businessLocationBillingAddress?: Maybe<CompanyAddress>;
-  /** The list of errors that occurred from executing the mutation. */
-  userErrors: Array<UserErrorsCompanyAddressUserErrors>;
-};
-
 /** Return type for `businessLocationCreditCardAdd` mutation. */
 export type BusinessLocationCreditCardAddPayload = {
   __typename?: 'BusinessLocationCreditCardAddPayload';
@@ -450,24 +368,6 @@ export type BusinessLocationPaymentInstrumentRemovePayload = {
   deletedPaymentInstrumentId?: Maybe<Scalars['ID']['output']>;
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<UserErrorsBusinessLocationPaymentInstrumentUserErrors>;
-};
-
-/** Return type for `businessLocationShippingAddressCreate` mutation. */
-export type BusinessLocationShippingAddressCreatePayload = {
-  __typename?: 'BusinessLocationShippingAddressCreatePayload';
-  /** The created address. */
-  businessLocationShippingAddress?: Maybe<CompanyAddress>;
-  /** The list of errors that occurred from executing the mutation. */
-  userErrors: Array<UserErrorsCompanyAddressUserErrors>;
-};
-
-/** Return type for `businessLocationShippingAddressUpdate` mutation. */
-export type BusinessLocationShippingAddressUpdatePayload = {
-  __typename?: 'BusinessLocationShippingAddressUpdatePayload';
-  /** The updated address. */
-  businessLocationShippingAddress?: Maybe<CompanyAddress>;
-  /** The list of errors that occurred from executing the mutation. */
-  userErrors: Array<UserErrorsCompanyAddressUserErrors>;
 };
 
 /** The configuration for the buyer's checkout. */
@@ -658,8 +558,6 @@ export type Company = HasMetafields &
     orders: OrderConnection;
     /** The profile of the customer. */
     profile?: Maybe<CompanyContact>;
-    /** The profile of the customer. */
-    profileV1?: Maybe<Contact>;
   };
 
 /** Represents a company's information. */
@@ -754,7 +652,7 @@ export type CompanyAddress = Node & {
   phone?: Maybe<Scalars['String']['output']>;
   /** The region of the address, such as the province, state, or district. */
   province?: Maybe<Scalars['String']['output']>;
-  /** The two-letter code for the region, for example, ON. */
+  /** The alphanumeric code for the region, for example, ON. */
   provinceCode?: Maybe<Scalars['String']['output']>;
   /** The identity of the recipient, for example, 'Receiving Department'. */
   recipient?: Maybe<Scalars['String']['output']>;
@@ -766,7 +664,7 @@ export type CompanyAddress = Node & {
   updatedAt: Scalars['DateTime']['output'];
   /** The zip or postal code of the address. */
   zip?: Maybe<Scalars['String']['output']>;
-  /** The two-letter code for the region, for example, ON. */
+  /** The alphanumeric code for the region, for example, ON. */
   zoneCode?: Maybe<Scalars['String']['output']>;
 };
 
@@ -813,20 +711,6 @@ export type CompanyAddressType =
   /** The address is a shipping address. */
   | 'SHIPPING';
 
-/**
- * An auto-generated type for paginating through multiple Companies.
- *
- */
-export type CompanyConnection = {
-  __typename?: 'CompanyConnection';
-  /** A list of edges. */
-  edges: Array<CompanyEdge>;
-  /** A list of the nodes contained in CompanyEdge. */
-  nodes: Array<Company>;
-  /** Information to aid in pagination. */
-  pageInfo: PageInfo;
-};
-
 /** Represents the customer's contact information. */
 export type CompanyContact = Node & {
   __typename?: 'CompanyContact';
@@ -842,8 +726,6 @@ export type CompanyContact = Node & {
   id: Scalars['ID']['output'];
   /** The list of locations that the company contact belongs to. */
   locations: CompanyLocationConnection;
-  /** The list of locations that the company contact belongs to. */
-  locationsV1: LocationConnection;
   /** The list of company contact's orders. */
   orders: OrderConnection;
   /** The current status of the company contact. */
@@ -874,17 +756,6 @@ export type CompanyContactHasPermissionOnLocationsArgs = {
 
 /** Represents the customer's contact information. */
 export type CompanyContactLocationsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<CompanyLocationSortKeys>;
-};
-
-/** Represents the customer's contact information. */
-export type CompanyContactLocationsV1Args = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -954,8 +825,6 @@ export type CompanyContactRoleAssignment = Node & {
   __typename?: 'CompanyContactRoleAssignment';
   /** The company contact for whom this role is assigned. */
   contact: CompanyContact;
-  /** The company contact for whom this role is assigned. */
-  contactV1: Contact;
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
   /** The role that's assigned. */
@@ -1037,18 +906,6 @@ export type CompanyContactStatusType =
   /** The contact is enabled and active. */
   | 'ENABLED';
 
-/**
- * An auto-generated type which holds one Company and a cursor during pagination.
- *
- */
-export type CompanyEdge = {
-  __typename?: 'CompanyEdge';
-  /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
-  /** The item at the end of CompanyEdge. */
-  node: Company;
-};
-
 /** Represents a company's business location. */
 export type CompanyLocation = HasMetafields &
   Node & {
@@ -1059,8 +916,6 @@ export type CompanyLocation = HasMetafields &
     buyerExperienceConfiguration?: Maybe<BuyerExperienceConfiguration>;
     /** The list of contacts under a particular business location. */
     contacts: CompanyContactConnection;
-    /** The list of contacts under a particular business location. */
-    contactsV1: ContactConnection;
     /** The credit card corresponding to the provided ID. */
     creditCard?: Maybe<CustomerCreditCard>;
     /** The list of stored credit cards. */
@@ -1099,17 +954,6 @@ export type CompanyLocation = HasMetafields &
 
 /** Represents a company's business location. */
 export type CompanyLocationContactsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<CompanyContactSortKeys>;
-};
-
-/** Represents a company's business location. */
-export type CompanyLocationContactsV1Args = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -1232,161 +1076,6 @@ export type CompanyLocationSortKeys =
   | 'RELEVANCE'
   /** Sort by the `updated_at` value. */
   | 'UPDATED_AT';
-
-/** Represents customer's personal information. */
-export type Contact = Node & {
-  __typename?: 'Contact';
-  /** The Draft Order corresponding to the provided ID. */
-  draftOrder?: Maybe<DraftOrder>;
-  /** The list of company draft orders. */
-  draftOrders: DraftOrderConnection;
-  /** The email address of the customer. */
-  email?: Maybe<Scalars['String']['output']>;
-  /** The email address of the contact. */
-  emailAddress?: Maybe<CustomerEmailAddress>;
-  /** The first name of the customer. */
-  firstName?: Maybe<Scalars['String']['output']>;
-  /** Whether the company contact has view permission on any location. */
-  hasOrdersViewPermissionOnAnyLocation: Scalars['Boolean']['output'];
-  /** Whether the company contact has permissions on locations in the scope. */
-  hasPermissionOnLocations: Scalars['Boolean']['output'];
-  /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
-  /** The last name of the customer. */
-  lastName?: Maybe<Scalars['String']['output']>;
-  /** The locale of the customer. */
-  locale?: Maybe<Scalars['String']['output']>;
-  /** The Location corresponding to the provided ID. */
-  location?: Maybe<CompanyLocation>;
-  /** The Location corresponding to the provided ID. */
-  locationV1?: Maybe<Location>;
-  /** The list of locations that the business of the business contact belongs to. */
-  locations: CompanyLocationConnection;
-  /** The list of locations that the business of the business contact belongs to. */
-  locationsV1: LocationConnection;
-  /** The Order corresponding to the provided ID. */
-  order?: Maybe<Order>;
-  /** The Order corresponding to the provided ID. */
-  orderDetailsPageOrder?: Maybe<OrderDetailsPageOrder>;
-  /** The list of contact orders. */
-  orders: OrderConnection;
-  /** The phone number of the customer. */
-  phone?: Maybe<Scalars['String']['output']>;
-  /** The phone number of the customer. */
-  phoneNumber?: Maybe<CustomerPhoneNumber>;
-  /** The current status of the customer. */
-  status: CompanyContactStatusType;
-  /** Whether the company contact is exempt from being charged taxes on their orders. */
-  taxExempt: Scalars['Boolean']['output'];
-  /** The list of tax exemption types applied to the company_contact. */
-  taxExemptions: Array<TaxExemption>;
-  /** The list of tax exemptions applied to the company contact with additional details. */
-  taxExemptionsDetails: Array<TaxExemptionDetails>;
-  /** The title of the customer. */
-  title?: Maybe<Scalars['String']['output']>;
-};
-
-/** Represents customer's personal information. */
-export type ContactDraftOrderArgs = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents customer's personal information. */
-export type ContactDraftOrdersArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<DraftOrderSortKeys>;
-};
-
-/** Represents customer's personal information. */
-export type ContactHasPermissionOnLocationsArgs = {
-  permissions: Array<PermittedOperation>;
-  resource: ResourceType;
-  scope: ContactPermissionLocationScopeType;
-};
-
-/** Represents customer's personal information. */
-export type ContactLocationArgs = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents customer's personal information. */
-export type ContactLocationV1Args = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents customer's personal information. */
-export type ContactLocationsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<CompanyLocationSortKeys>;
-};
-
-/** Represents customer's personal information. */
-export type ContactLocationsV1Args = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<CompanyLocationSortKeys>;
-};
-
-/** Represents customer's personal information. */
-export type ContactOrderArgs = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents customer's personal information. */
-export type ContactOrderDetailsPageOrderArgs = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents customer's personal information. */
-export type ContactOrdersArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<OrderByContactSortKeys>;
-};
-
-/**
- * An auto-generated type for paginating through multiple Contacts.
- *
- */
-export type ContactConnection = {
-  __typename?: 'ContactConnection';
-  /** A list of edges. */
-  edges: Array<ContactEdge>;
-  /** A list of the nodes contained in ContactEdge. */
-  nodes: Array<Contact>;
-  /** Information to aid in pagination. */
-  pageInfo: PageInfo;
-};
-
-/**
- * An auto-generated type which holds one Contact and a cursor during pagination.
- *
- */
-export type ContactEdge = {
-  __typename?: 'ContactEdge';
-  /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
-  /** The item at the end of ContactEdge. */
-  node: Contact;
-};
 
 /**
  * Defines the extent of locations for which a contact holds permissions on a resource.
@@ -2281,6 +1970,7 @@ export type CurrencyCode =
 
 /** Represents the personal information of a customer. */
 export type Customer = HasMetafields &
+  HasStoreCreditAccounts &
   Node & {
     __typename?: 'Customer';
     /** The addresses associated with the customer. */
@@ -2334,6 +2024,8 @@ export type Customer = HasMetafields &
     phoneNumber?: Maybe<CustomerPhoneNumber>;
     /** A Return identified by ID. */
     return?: Maybe<Return>;
+    /** A list of the owner resource's store credit accounts. Store credit accounts are not shown for shops with store credit disabled at checkout. */
+    storeCreditAccounts: StoreCreditAccountConnection;
     /** A Subscription Contract resource identified by ID. */
     subscriptionContract?: Maybe<SubscriptionContract>;
     /** The Subscription Contracts associated with the customer. */
@@ -2416,6 +2108,15 @@ export type CustomerReturnArgs = {
 };
 
 /** Represents the personal information of a customer. */
+export type CustomerStoreCreditAccountsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  query?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Represents the personal information of a customer. */
 export type CustomerSubscriptionContractArgs = {
   id: Scalars['ID']['input'];
 };
@@ -2494,7 +2195,7 @@ export type CustomerAddress = Node & {
   /** The zip or postal code of the address. */
   zip?: Maybe<Scalars['String']['output']>;
   /**
-   * The two-letter code for the region.
+   * The alphanumeric code for the region.
    *
    * For example, ON.
    *
@@ -2582,9 +2283,8 @@ export type CustomerAddressInput = {
   /** The zip or postal code of the address. */
   zip?: InputMaybe<Scalars['String']['input']>;
   /**
-   * The two-letter code ([ISO 3166-2 alpha-2]](https://en.wikipedia.org/wiki/ISO_3166-2) format)
-   * for the region of the address, such as the province, state, or district. For example, 'ON' for Ontario,
-   * Canada.
+   * The alphanumeric code for the region of the address, such as the province, state, or district.
+   * For example, 'ON' for Ontario, Canada.
    *
    */
   zoneCode?: InputMaybe<Scalars['String']['input']>;
@@ -2811,7 +2511,7 @@ export type CustomerMailingAddress = Node & {
   /** The region of the address, such as the province, state, or district. */
   province?: Maybe<Scalars['String']['output']>;
   /**
-   * The two-letter code for the region.
+   * The alphanumeric code for the region.
    *
    * For example, ON.
    *
@@ -2829,7 +2529,7 @@ export type CustomerMailingAddress = Node & {
   /** The zip or postal code of the address. */
   zip?: Maybe<Scalars['String']['output']>;
   /**
-   * The two-letter code for the region.
+   * The alphanumeric code for the region.
    *
    * For example, ON.
    *
@@ -2845,32 +2545,6 @@ export type CustomerMailingAddress = Node & {
 export type CustomerMailingAddressFormattedArgs = {
   withCompany?: InputMaybe<Scalars['Boolean']['input']>;
   withName?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
-/**
- * An auto-generated type for paginating through multiple CustomerMailingAddresses.
- *
- */
-export type CustomerMailingAddressConnection = {
-  __typename?: 'CustomerMailingAddressConnection';
-  /** A list of edges. */
-  edges: Array<CustomerMailingAddressEdge>;
-  /** A list of the nodes contained in CustomerMailingAddressEdge. */
-  nodes: Array<CustomerMailingAddress>;
-  /** Information to aid in pagination. */
-  pageInfo: PageInfo;
-};
-
-/**
- * An auto-generated type which holds one CustomerMailingAddress and a cursor during pagination.
- *
- */
-export type CustomerMailingAddressEdge = {
-  __typename?: 'CustomerMailingAddressEdge';
-  /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
-  /** The item at the end of CustomerMailingAddressEdge. */
-  node: CustomerMailingAddress;
 };
 
 /** The input fields to create or update a mailing address. */
@@ -3113,20 +2787,22 @@ export type DraftOrder = Node & {
   currencyCode: CurrencyCode;
   /** The customer who placed the order. */
   customer?: Maybe<Customer>;
-  /** The customer who placed the order. */
-  customerV1?: Maybe<PersonalAccount>;
   /** The discount information for the draft order. */
   discountInformation: DraftOrderDiscountInformation;
   /** The email address of the customer, which is used to send notifications to. */
   email?: Maybe<Scalars['String']['output']>;
-  /** The email address of the customer, which is used to send notifications to. */
-  emailAddress?: Maybe<CustomerEmailAddress>;
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
   /** Whether the draft order is created from the online store and is open. */
   inReview: Scalars['Boolean']['output'];
   /** The link to the checkout, which is sent to the customer in the invoice email. */
   invoiceUrl?: Maybe<Scalars['URL']['output']>;
+  /** The merchandise lines marked as fees with total value, aggregated by title. */
+  legacyAggregatedMerchandiseTermsAsFees: Array<LegacyAggregatedMerchandiseTermsAsFees>;
+  /** Whether or not products marked as fees should be rendered as money lines. */
+  legacyRepresentProductsAsFees: Scalars['Boolean']['output'];
+  /** The subtotal of the line items (doesn't include shipping charges, shipping discounts, taxes, or fees). */
+  legacySubtotalWithoutFees: MoneyV2;
   /** The list of the line items in the draft order. */
   lineItems: DraftOrderLineItemConnection;
   /** The summary of draft order line items quantity. */
@@ -3142,8 +2818,6 @@ export type DraftOrder = Node & {
   phone?: Maybe<Scalars['String']['output']>;
   /** The purchasing entity for the draft order. */
   purchasingEntity?: Maybe<PurchasingEntity>;
-  /** The purchasing entity for the draft order. */
-  purchasingEntityV1?: Maybe<PurchasingEntityV1>;
   /** Whether the draft order requires shipping or not. */
   requiresShipping: Scalars['Boolean']['output'];
   /** The shipping address of the customer. */
@@ -3305,6 +2979,12 @@ export type DraftOrderLineItem = Node & {
   id: Scalars['ID']['output'];
   /** The image associated with the line item. */
   image?: Maybe<Image>;
+  /** Whether this is line item is marked as a fee. */
+  legacyFee: Scalars['Boolean']['output'];
+  /** The fee's description, if this line item has been marked as a fee. */
+  legacyFeeDescription?: Maybe<Scalars['String']['output']>;
+  /** The fee's title, if this line item has been marked as a fee. */
+  legacyFeeTitle?: Maybe<Scalars['String']['output']>;
   /** The name of the product. */
   name: Scalars['String']['output'];
   /**
@@ -3380,6 +3060,8 @@ export type DraftOrderLineItemsSummary = {
   __typename?: 'DraftOrderLineItemsSummary';
   /** The total number of line items in the draft order. */
   lineItemCount: Scalars['Int']['output'];
+  /** The total quantity of all legacy fee line items in the draft order. */
+  totalQuantityOfLegacyFeeLineItems: Scalars['Int']['output'];
   /** The total quantity of all line items in the draft order. */
   totalQuantityOfLineItems: Scalars['Int']['output'];
 };
@@ -3437,28 +3119,6 @@ export type DutySale = Node &
     /** The total tax amount for the sale. */
     totalTaxAmount: MoneyV2;
   };
-
-/**
- * Represents the customer's consent to receive marketing material by email.
- *
- */
-export type EmailMarketingConsentState = Node & {
-  __typename?: 'EmailMarketingConsentState';
-  /**
-   * The date and time when the customer consented to receive marketing material by email.
-   *
-   */
-  consentUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
-  /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
-  /**
-   * The marketing subscription opt-in level that the customer gave when they consented to receive marketing material by email.
-   *
-   */
-  marketingOptInLevel?: Maybe<MarketingOptInLevel>;
-  /** The current email marketing state for the customer. */
-  marketingState: EmailMarketingState;
-};
 
 /**
  * Represents the possible email marketing states for a customer.
@@ -3904,6 +3564,17 @@ export type GooglePayWalletConfig = {
   merchantOrigin: Scalars['String']['output'];
 };
 
+/**
+ * Represents a summary of the current version of data in a resource.
+ *
+ * The `compare_digest` field can be used as input for mutations that implement a compare-and-swap mechanism.
+ *
+ */
+export type HasCompareDigest = {
+  /** The data stored in the resource, represented as a digest. */
+  compareDigest: Scalars['String']['output'];
+};
+
 /** The information about the metafields associated with the specified resource. */
 export type HasMetafields = {
   /** A metafield found by namespace and key. */
@@ -3933,6 +3604,21 @@ export type HasMetafieldsIdentifier = {
   key: Scalars['String']['input'];
   /** A container for a set of metafields. */
   namespace: Scalars['String']['input'];
+};
+
+/** Represents information about the store credit accounts associated to the specified owner. */
+export type HasStoreCreditAccounts = {
+  /** A list of the owner resource's store credit accounts. Store credit accounts are not shown for shops with store credit disabled at checkout. */
+  storeCreditAccounts: StoreCreditAccountConnection;
+};
+
+/** Represents information about the store credit accounts associated to the specified owner. */
+export type HasStoreCreditAccountsStoreCreditAccountsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  query?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** Represents an image resource. */
@@ -4043,6 +3729,28 @@ export type ImageTransformInput = {
   scale?: InputMaybe<Scalars['Int']['input']>;
 };
 
+/** An object representing a product marked as a fee, aggregated by title. */
+export type LegacyAggregatedMerchandiseTermsAsFees = Node & {
+  __typename?: 'LegacyAggregatedMerchandiseTermsAsFees';
+  /**
+   * The description of the fee line, as provided by the _legacy_product_as_fee_description line item property.
+   *
+   */
+  description?: Maybe<Scalars['String']['output']>;
+  /** A globally-unique ID. */
+  id: Scalars['ID']['output'];
+  /**
+   * The title of the fee line, as provided by the _legacy_product_as_fee_title line item property.
+   *
+   */
+  title: Scalars['String']['output'];
+  /**
+   * The total value of all the products with the same title.
+   *
+   */
+  total: MoneyV2;
+};
+
 /** A single line item in an order. */
 export type LineItem = Node & {
   __typename?: 'LineItem';
@@ -4065,6 +3773,12 @@ export type LineItem = Node & {
   id: Scalars['ID']['output'];
   /** The image object associated with the line item. */
   image?: Maybe<Image>;
+  /** Whether this is line item is marked as a fee. */
+  legacyFee: Scalars['Boolean']['output'];
+  /** The fee's description, if this line item has been marked as a fee. */
+  legacyFeeDescription?: Maybe<Scalars['String']['output']>;
+  /** The fee's title, if this line item has been marked as a fee. */
+  legacyFeeTitle?: Maybe<Scalars['String']['output']>;
   /** The name of the product. */
   name: Scalars['String']['output'];
   /** The title of the line item variant. */
@@ -4241,112 +3955,6 @@ export type LineItemVariantOption = {
   value: Scalars['String']['output'];
 };
 
-/** Represents a company's business location. */
-export type Location = Node & {
-  __typename?: 'Location';
-  /** The billing address of the company location. */
-  billingAddress?: Maybe<CompanyAddress>;
-  /** The configuration of the buyer's B2B checkout. */
-  buyerExperienceConfiguration?: Maybe<BuyerExperienceConfiguration>;
-  /** The list of contacts under a particular business location. */
-  contacts: CompanyContactConnection;
-  /** The list of contacts under a particular business location. */
-  contactsV1: ContactConnection;
-  /** The credit card corresponding to the provided ID. */
-  creditCard?: Maybe<CustomerCreditCard>;
-  /** The list of stored credit cards. */
-  creditCards: CustomerCreditCardConnection;
-  /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
-  /** The market that includes the location's shipping address. If the shipping address is empty, the shop's primary market is returned. */
-  market: Market;
-  /** The name of the company location. */
-  name: Scalars['String']['output'];
-  /** The list of roles assigned to this location. */
-  roleAssignments: CompanyContactRoleAssignmentConnection;
-  /** The shipping address of the company location. */
-  shippingAddress?: Maybe<CompanyAddress>;
-  /** The list of tax exemptions applied to the location. */
-  taxExemptions: Array<TaxExemption>;
-  /** The list of tax exemptions applied to the location with additional details. */
-  taxExemptionsDetails: Array<TaxExemptionDetails>;
-  /** The tax id of the company location. */
-  taxIdentifier?: Maybe<Scalars['String']['output']>;
-};
-
-/** Represents a company's business location. */
-export type LocationContactsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<CompanyContactSortKeys>;
-};
-
-/** Represents a company's business location. */
-export type LocationContactsV1Args = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<CompanyContactSortKeys>;
-};
-
-/** Represents a company's business location. */
-export type LocationCreditCardArgs = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents a company's business location. */
-export type LocationCreditCardsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
-/** Represents a company's business location. */
-export type LocationRoleAssignmentsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<CompanyContactRoleAssignmentSortKeys>;
-};
-
-/**
- * An auto-generated type for paginating through multiple Locations.
- *
- */
-export type LocationConnection = {
-  __typename?: 'LocationConnection';
-  /** A list of edges. */
-  edges: Array<LocationEdge>;
-  /** A list of the nodes contained in LocationEdge. */
-  nodes: Array<Location>;
-  /** Information to aid in pagination. */
-  pageInfo: PageInfo;
-};
-
-/**
- * An auto-generated type which holds one Location and a cursor during pagination.
- *
- */
-export type LocationEdge = {
-  __typename?: 'LocationEdge';
-  /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
-  /** The item at the end of LocationEdge. */
-  node: Location;
-};
-
 /**
  * Captures the intentions of a discount that was manually created.
  *
@@ -4436,59 +4044,64 @@ export type MarketWebPresenceRootUrl = {
 };
 
 /**
- * The possible values for the marketing subscription opt-in level enabled
- * when the customer consented to receive marketing information.
- *
- * The levels follow the M3AAWG best practices guideline
- * [document](https://www.m3aawg.org/sites/maawg/files/news/M3AAWG_Senders_BCP_Ver3-2015-02.pdf).
- *
- */
-export type MarketingOptInLevel =
-  /**
-   * The customer gets a confirmation and needs to
-   * perform an intermediate step before getting marketing information after providing their information.
-   *
-   */
-  | 'CONFIRMED_OPT_IN'
-  /**
-   * The customer gets marketing information without any
-   * intermediate steps after providing their information.
-   *
-   */
-  | 'SINGLE_OPT_IN'
-  /**
-   * The customer gets marketing information, but the opt-in method is unknown.
-   *
-   */
-  | 'UNKNOWN';
-
-/**
  * The custom metadata attached to a resource. Metafields can be sorted into namespaces and are
  * comprised of keys, values, and value types.
  *
  */
-export type Metafield = Node & {
-  __typename?: 'Metafield';
-  /** The date and time when the metafield was created. */
-  createdAt: Scalars['DateTime']['output'];
-  /** The description of a metafield. */
-  description?: Maybe<Scalars['String']['output']>;
-  /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
-  /** The key name for a metafield. */
+export type Metafield = HasCompareDigest &
+  Node & {
+    __typename?: 'Metafield';
+    /** The data stored in the resource, represented as a digest. */
+    compareDigest: Scalars['String']['output'];
+    /** The date and time when the metafield was created. */
+    createdAt: Scalars['DateTime']['output'];
+    /** The description of a metafield. */
+    description?: Maybe<Scalars['String']['output']>;
+    /** A globally-unique ID. */
+    id: Scalars['ID']['output'];
+    /** The data stored in the metafield in JSON format. */
+    jsonValue: Scalars['JSON']['output'];
+    /** The key name for a metafield. */
+    key: Scalars['String']['output'];
+    /** The namespace for a metafield. */
+    namespace: Scalars['String']['output'];
+    /**
+     * The type name of the metafield.
+     * See the list of [supported types](https://shopify.dev/apps/metafields/definitions/types).
+     *
+     */
+    type: Scalars['String']['output'];
+    /** The date and time when the metafield was updated. */
+    updatedAt: Scalars['DateTime']['output'];
+    /** The value of a metafield. */
+    value: Scalars['String']['output'];
+  };
+
+/**
+ * Identifies a metafield by its owner resource, namespace, and key.
+ *
+ */
+export type MetafieldIdentifier = {
+  __typename?: 'MetafieldIdentifier';
+  /** The key of the metafield. */
   key: Scalars['String']['output'];
-  /** The namespace for a metafield. */
+  /** The namespace of the metafield. */
   namespace: Scalars['String']['output'];
-  /**
-   * The type name of the metafield.
-   * See the list of [supported types](https://shopify.dev/apps/metafields/definitions/types).
-   *
-   */
-  type: Scalars['String']['output'];
-  /** The date and time when the metafield was updated. */
-  updatedAt: Scalars['DateTime']['output'];
-  /** The value of a metafield. */
-  value: Scalars['String']['output'];
+  /** GID of the owner resource that the metafield belongs to. */
+  ownerId: Scalars['ID']['output'];
+};
+
+/**
+ * The input fields that identify metafields.
+ *
+ */
+export type MetafieldIdentifierInput = {
+  /** The key of the metafield. */
+  key: Scalars['String']['input'];
+  /** The namespace of the metafield. */
+  namespace: Scalars['String']['input'];
+  /** The unique ID of the resource that the metafield is attached to. */
+  ownerId: Scalars['ID']['input'];
 };
 
 /** Value type to describe the Metafield value. */
@@ -4503,6 +4116,128 @@ export type MetafieldValueType =
   | 'JSON_STRING'
   /** A string. */
   | 'STRING';
+
+/** Return type for `metafieldsDelete` mutation. */
+export type MetafieldsDeletePayload = {
+  __typename?: 'MetafieldsDeletePayload';
+  /** List of metafield identifiers that were deleted, null if the corresponding metafield isn't found. */
+  deletedMetafields?: Maybe<Array<Maybe<MetafieldIdentifier>>>;
+  /** The list of errors that occurred from executing the mutation. */
+  userErrors: Array<MetafieldsDeleteUserError>;
+};
+
+/** An error that occurs during the execution of `MetafieldsDelete`. */
+export type MetafieldsDeleteUserError = DisplayableError & {
+  __typename?: 'MetafieldsDeleteUserError';
+  /** The error code. */
+  code?: Maybe<MetafieldsDeleteUserErrorCode>;
+  /** The index of the array element that's causing the error. */
+  elementIndex?: Maybe<Scalars['Int']['output']>;
+  /** The path to the input field that caused the error. */
+  field?: Maybe<Array<Scalars['String']['output']>>;
+  /** The error message. */
+  message: Scalars['String']['output'];
+};
+
+/** Possible error codes that can be returned by `MetafieldsDeleteUserError`. */
+export type MetafieldsDeleteUserErrorCode =
+  /** The input value is blank. */
+  | 'BLANK'
+  /** Owner type can't be used in this mutation. */
+  | 'DISALLOWED_OWNER_TYPE'
+  /** The input value is invalid. */
+  | 'INVALID'
+  /** The metafield delete operation failed. */
+  | 'METAFIELD_DELETE_FAILED'
+  /** The record with the ID used as the input value couldn't be found. */
+  | 'NOT_FOUND';
+
+/** The input fields for a metafield value to set. */
+export type MetafieldsSetInput = {
+  /**
+   * The `compareDigest` value obtained from a previous query. Provide this with updates to ensure the metafield is modified safely.
+   *
+   */
+  compareDigest?: InputMaybe<Scalars['String']['input']>;
+  /**
+   * The unique identifier for a metafield within its namespace.
+   * Must be 3-64 characters long and can contain alphanumeric, hyphen, and underscore characters.
+   *
+   */
+  key: Scalars['String']['input'];
+  /**
+   * The container for a group of metafields that the metafield is or will be associated with. Used in tandem
+   * with `key` to lookup a metafield on a resource, preventing conflicts with other metafields with the
+   * same `key`.
+   * Must be 3-255 characters long and can contain alphanumeric, hyphen, and underscore characters.
+   *
+   */
+  namespace: Scalars['String']['input'];
+  /** The unique ID of the resource that the metafield is attached to. */
+  ownerId: Scalars['ID']['input'];
+  /**
+   * The type of data that is stored in the metafield.
+   * The type must be one of the [supported types](https://shopify.dev/apps/metafields/types).
+   * Required when there is no corresponding definition for the given `namespace`, `key`, and
+   * owner resource type (derived from `ownerId`).
+   *
+   */
+  type?: InputMaybe<Scalars['String']['input']>;
+  /**
+   * The data stored in the metafield. Always stored as a string, regardless of the metafield's type.
+   *
+   */
+  value: Scalars['String']['input'];
+};
+
+/** Return type for `metafieldsSet` mutation. */
+export type MetafieldsSetPayload = {
+  __typename?: 'MetafieldsSetPayload';
+  /** The list of metafields that were set. */
+  metafields?: Maybe<Array<Metafield>>;
+  /** The list of errors that occurred from executing the mutation. */
+  userErrors: Array<MetafieldsSetUserError>;
+};
+
+/** An error that occurs during the execution of `MetafieldsSet`. */
+export type MetafieldsSetUserError = DisplayableError & {
+  __typename?: 'MetafieldsSetUserError';
+  /** The error code. */
+  code?: Maybe<MetafieldsSetUserErrorCode>;
+  /** The index of the array element that's causing the error. */
+  elementIndex?: Maybe<Scalars['Int']['output']>;
+  /** The path to the input field that caused the error. */
+  field?: Maybe<Array<Scalars['String']['output']>>;
+  /** The error message. */
+  message: Scalars['String']['output'];
+};
+
+/** Possible error codes that can be returned by `MetafieldsSetUserError`. */
+export type MetafieldsSetUserErrorCode =
+  /** ApiPermission metafields can only be created or updated by the app owner. */
+  | 'APP_NOT_AUTHORIZED'
+  /** The input value is blank. */
+  | 'BLANK'
+  /** Owner type can't be used in this mutation. */
+  | 'DISALLOWED_OWNER_TYPE'
+  /** The input value isn't included in the list. */
+  | 'INCLUSION'
+  /** The compareDigest is invalid. */
+  | 'INVALID_COMPARE_DIGEST'
+  /** The type is invalid. */
+  | 'INVALID_TYPE'
+  /** The value is invalid for metafield type or for definition options. */
+  | 'INVALID_VALUE'
+  /** The input value should be less than or equal to the maximum value allowed. */
+  | 'LESS_THAN_OR_EQUAL_TO'
+  /** The input value needs to be blank. */
+  | 'PRESENT'
+  /** The metafield has been modified since it was loaded. */
+  | 'STALE_OBJECT'
+  /** The input value is too long. */
+  | 'TOO_LONG'
+  /** The input value is too short. */
+  | 'TOO_SHORT';
 
 /**
  * A collection of monetary values in their respective currencies. Typically used in the context of multi-currency pricing and transactions,
@@ -4532,21 +4267,6 @@ export type MoneyV2 = {
 /** This is the schema's entry point for all mutation operations. */
 export type Mutation = {
   __typename?: 'Mutation';
-  /**
-   * Creates a new address for a customer.
-   *
-   */
-  addressCreate?: Maybe<AddressCreatePayload>;
-  /**
-   * Deletes a specific address for a customer.
-   *
-   */
-  addressDelete?: Maybe<AddressDeletePayload>;
-  /**
-   * Updates a specific address for a customer.
-   *
-   */
-  addressUpdate?: Maybe<AddressUpdatePayload>;
   /** Adds a new credit card using Apple Pay. */
   applePayCreditCardAdd?: Maybe<ApplePayCreditCardAddPayload>;
   /** Updates a credit card using Apple Pay. */
@@ -4558,21 +4278,6 @@ export type Mutation = {
    *
    */
   businessContactUpdate?: Maybe<BusinessContactUpdatePayload>;
-  /**
-   * Updates the information for a business contact.
-   *
-   */
-  businessContactUpdateV1?: Maybe<BusinessContactUpdateV1Payload>;
-  /**
-   * Creates a billing address for a business location and optionally a shipping address with the same input.
-   *
-   */
-  businessLocationBillingAddressCreate?: Maybe<BusinessLocationBillingAddressCreatePayload>;
-  /**
-   * Updates the billing address of a business location.
-   *
-   */
-  businessLocationBillingAddressUpdate?: Maybe<BusinessLocationBillingAddressUpdatePayload>;
   /**
    * Adds a new credit card to the available payment methods of a customer.
    *
@@ -4588,16 +4293,6 @@ export type Mutation = {
    *
    */
   businessLocationPaymentInstrumentRemove?: Maybe<BusinessLocationPaymentInstrumentRemovePayload>;
-  /**
-   * Creates a shipping address for a business location and optionally a billing address with the same input.
-   *
-   */
-  businessLocationShippingAddressCreate?: Maybe<BusinessLocationShippingAddressCreatePayload>;
-  /**
-   * Updates the shipping address of a business location.
-   *
-   */
-  businessLocationShippingAddressUpdate?: Maybe<BusinessLocationShippingAddressUpdatePayload>;
   /** Updates an address on a company location. */
   companyLocationAssignAddress?: Maybe<CompanyLocationAssignAddressPayload>;
   /** Adds a new credit card to a customer's list of available payment methods. */
@@ -4634,6 +4329,24 @@ export type Mutation = {
   googlePayCreditCardAdd?: Maybe<GooglePayCreditCardAddPayload>;
   /** Updates a credit card using Google Pay. */
   googlePayCreditCardUpdate?: Maybe<GooglePayCreditCardUpdatePayload>;
+  /** Deletes multiple metafields in bulk. */
+  metafieldsDelete?: Maybe<MetafieldsDeletePayload>;
+  /**
+   * Sets metafield values. Metafield values will be set regardless if they were previously created or not.
+   *
+   * Allows a maximum of 25 metafields to be set at a time.
+   *
+   * This operation is atomic, meaning no changes are persisted if an error is encountered.
+   *
+   * As of `2024-07`, this operation supports compare-and-set functionality to better handle concurrent requests.
+   * If `compareDigest` is set for any metafield, the mutation will only set that metafield if the persisted metafield value matches the digest used on `compareDigest`.
+   * If the metafield doesn't exist yet, but you want to guarantee that the operation will run in a safe manner, set `compareDigest` to `null`.
+   * The `compareDigest` value can be acquired by querying the metafield object and selecting `compareDigest` as a field.
+   * If the `compareDigest` value does not match the digest for the persisted value, the mutation will return an error.
+   * You can opt out of write guarantees by not sending `compareDigest` in the request.
+   *
+   */
+  metafieldsSet?: Maybe<MetafieldsSetPayload>;
   /** Request a new return on behalf of a customer. */
   orderRequestReturn?: Maybe<OrderRequestReturnPayload>;
   /** Removes a payment instrument from a customer's account. */
@@ -4647,11 +4360,6 @@ export type Mutation = {
   paypalAccountEnable?: Maybe<PaypalAccountEnablePayload>;
   /** Creates a PayPal Express token. */
   paypalTokenCreate?: Maybe<PaypalTokenCreatePayload>;
-  /**
-   * Updates the customer's personal information.
-   *
-   */
-  personalInformationUpdate?: Maybe<PersonalInformationUpdatePayload>;
   /** Resends a gift card to the customer. */
   resendGiftCard?: Maybe<ResendGiftCardPayload>;
   /** Provides a URL that enables the customer to update a Shop Pay credit card. */
@@ -4678,24 +4386,6 @@ export type Mutation = {
   subscriptionContractPause?: Maybe<SubscriptionContractPausePayload>;
   /** Selects an option from a delivery options result and updates the delivery method on a Subscription Contract. */
   subscriptionContractSelectDeliveryMethod?: Maybe<SubscriptionContractSelectDeliveryMethodPayload>;
-};
-
-/** This is the schema's entry point for all mutation operations. */
-export type MutationAddressCreateArgs = {
-  address: CustomerMailingAddressInput;
-  defaultAddress?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
-/** This is the schema's entry point for all mutation operations. */
-export type MutationAddressDeleteArgs = {
-  addressId: Scalars['ID']['input'];
-};
-
-/** This is the schema's entry point for all mutation operations. */
-export type MutationAddressUpdateArgs = {
-  address?: InputMaybe<CustomerMailingAddressInput>;
-  addressId: Scalars['ID']['input'];
-  defaultAddress?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 /** This is the schema's entry point for all mutation operations. */
@@ -4726,25 +4416,6 @@ export type MutationBusinessContactUpdateArgs = {
 };
 
 /** This is the schema's entry point for all mutation operations. */
-export type MutationBusinessContactUpdateV1Args = {
-  companyId?: InputMaybe<Scalars['ID']['input']>;
-  input: BusinessContactUpdateInput;
-};
-
-/** This is the schema's entry point for all mutation operations. */
-export type MutationBusinessLocationBillingAddressCreateArgs = {
-  address: CompanyAddressInput;
-  companyLocationId: Scalars['ID']['input'];
-  useAsShipping?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
-/** This is the schema's entry point for all mutation operations. */
-export type MutationBusinessLocationBillingAddressUpdateArgs = {
-  address: CompanyAddressInput;
-  companyLocationId: Scalars['ID']['input'];
-};
-
-/** This is the schema's entry point for all mutation operations. */
 export type MutationBusinessLocationCreditCardAddArgs = {
   billingAddress: CustomerMailingAddressInput;
   companyLocationId: Scalars['ID']['input'];
@@ -4764,19 +4435,6 @@ export type MutationBusinessLocationPaymentInstrumentRemoveArgs = {
   companyLocationId: Scalars['ID']['input'];
   paymentInstrumentId: Scalars['ID']['input'];
   replacementPaymentInstrumentId?: InputMaybe<Scalars['ID']['input']>;
-};
-
-/** This is the schema's entry point for all mutation operations. */
-export type MutationBusinessLocationShippingAddressCreateArgs = {
-  address: CompanyAddressInput;
-  companyLocationId: Scalars['ID']['input'];
-  useAsBilling?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
-/** This is the schema's entry point for all mutation operations. */
-export type MutationBusinessLocationShippingAddressUpdateArgs = {
-  address: CompanyAddressInput;
-  companyLocationId: Scalars['ID']['input'];
 };
 
 /** This is the schema's entry point for all mutation operations. */
@@ -4837,6 +4495,16 @@ export type MutationGooglePayCreditCardUpdateArgs = {
 };
 
 /** This is the schema's entry point for all mutation operations. */
+export type MutationMetafieldsDeleteArgs = {
+  metafields: Array<MetafieldIdentifierInput>;
+};
+
+/** This is the schema's entry point for all mutation operations. */
+export type MutationMetafieldsSetArgs = {
+  metafields: Array<MetafieldsSetInput>;
+};
+
+/** This is the schema's entry point for all mutation operations. */
 export type MutationOrderRequestReturnArgs = {
   orderId: Scalars['ID']['input'];
   requestedLineItems: Array<RequestedLineItemInput>;
@@ -4858,11 +4526,6 @@ export type MutationPaymentInstrumentUpdateDefaultArgs = {
 export type MutationPaypalAccountEnableArgs = {
   paypalPayerId: Scalars['String']['input'];
   paypalToken: Scalars['String']['input'];
-};
-
-/** This is the schema's entry point for all mutation operations. */
-export type MutationPersonalInformationUpdateArgs = {
-  input: PersonalInformationUpdateInput;
 };
 
 /** This is the schema's entry point for all mutation operations. */
@@ -4959,8 +4622,6 @@ export type Order = HasMetafields &
      *
      */
     confirmationNumber?: Maybe<Scalars['String']['output']>;
-    /** Whether the customer who made the order has an enabled associated contact. */
-    contactExists: Scalars['Boolean']['output'];
     /** The date and time when the order was created. */
     createdAt: Scalars['DateTime']['output'];
     /** The shop currency when the order was placed. */
@@ -4971,10 +4632,6 @@ export type Order = HasMetafields &
     customer?: Maybe<Customer>;
     /** The locale code representing the region where this specific order was placed. */
     customerLocale?: Maybe<Scalars['String']['output']>;
-    /** The unique URL for the customer to access the order. */
-    customerStatusPageUrl?: Maybe<Scalars['URL']['output']>;
-    /** The customer who placed the order. */
-    customerV1?: Maybe<PersonalAccount>;
     /** The discounts that have been applied to the order. */
     discountApplications: DiscountApplicationConnection;
     /** The discount information for the order, including line-level discount applications. */
@@ -4992,8 +4649,6 @@ export type Order = HasMetafields &
     edited: Scalars['Boolean']['output'];
     /** The email address of the customer. */
     email?: Maybe<Scalars['String']['output']>;
-    /** The email address of the customer. */
-    emailAddress?: Maybe<CustomerEmailAddress>;
     /** The financial status of the order. */
     financialStatus?: Maybe<OrderFinancialStatus>;
     /** The fulfillment status of the order. */
@@ -5008,6 +4663,12 @@ export type Order = HasMetafields &
     id: Scalars['ID']['output'];
     /** The delivery or estimated delivery date of the latest fulfillment. */
     latestFulfillmentDeliveryDate?: Maybe<Scalars['DateTime']['output']>;
+    /** The merchandise lines marked as fees with total value, aggregated by title. */
+    legacyAggregatedMerchandiseTermsAsFees: Array<LegacyAggregatedMerchandiseTermsAsFees>;
+    /** Whether or not products marked as fees should be rendered as money lines. */
+    legacyRepresentProductsAsFees: Scalars['Boolean']['output'];
+    /** The price of the order before duties, shipping, taxes, and fees. */
+    legacySubtotalWithoutFees?: Maybe<MoneyV2>;
     /** The list of the order's line item containers (e.g., Unfulfilled). */
     lineItemContainers: Array<LineItemContainer>;
     /** The list of line items of the order. */
@@ -5066,6 +4727,8 @@ export type Order = HasMetafields &
     reorderPath?: Maybe<Scalars['String']['output']>;
     /** Whether the order requires shipping. */
     requiresShipping: Scalars['Boolean']['output'];
+    /** A Return identified by ID. */
+    return?: Maybe<Return>;
     /** The list of returns for the order with pagination. */
     returns: ReturnConnection;
     /**
@@ -5090,8 +4753,6 @@ export type Order = HasMetafields &
     soldInformation: OrderSoldInformation;
     /** The unique URL for the status page of the order. */
     statusPageUrl: Scalars['URL']['output'];
-    /** The unique URL for the status page of the order. */
-    statusUrl: Scalars['URL']['output'];
     /** The price of the order before duties, shipping, and taxes. */
     subtotal?: Maybe<MoneyV2>;
     /** The price of the order before order-level discounts, duties, shipping. It includes taxes in  tax-inclusive orders. */
@@ -5163,6 +4824,11 @@ export type OrderMetafieldArgs = {
 /** A customer’s completed request to purchase one or more products from a shop. */
 export type OrderMetafieldsArgs = {
   identifiers: Array<HasMetafieldsIdentifier>;
+};
+
+/** A customer’s completed request to purchase one or more products from a shop. */
+export type OrderReturnArgs = {
+  id: Scalars['ID']['input'];
 };
 
 /** A customer’s completed request to purchase one or more products from a shop. */
@@ -5430,6 +5096,8 @@ export type OrderEditSummaryChange = Node & {
 export type OrderFinancialStatus =
   /** Displayed as **Authorized**. */
   | 'AUTHORIZED'
+  /** Displayed as **Expired**. */
+  | 'EXPIRED'
   /** Displayed as **Paid**. */
   | 'PAID'
   /** Displayed as **Partially paid**. */
@@ -5509,6 +5177,8 @@ export type OrderLineItemsSummary = {
   __typename?: 'OrderLineItemsSummary';
   /** The number of line items in the order. */
   lineItemCount: Scalars['Int']['output'];
+  /** The total quantity of all legacy fees in the order. */
+  totalQuantityOfLegacyFeesLineItems: Scalars['Int']['output'];
   /** The total quantity of all line items in the order. */
   totalQuantityOfLineItems: Scalars['Int']['output'];
   /** The total quantity of all tips in the order. */
@@ -5707,7 +5377,9 @@ export type OrderTransactionType =
   /** A money order transaction. */
   | 'MONEY_ORDER'
   /** A Shopify installments transaction. */
-  | 'SHOPIFY_INSTALLMENTS';
+  | 'SHOPIFY_INSTALLMENTS'
+  /** A store credit transaction. */
+  | 'STORE_CREDIT';
 
 /**
  * Returns information about pagination in a connection, in accordance with the
@@ -5821,7 +5493,7 @@ export type PaymentInstrumentBillingAddress = {
   lastName?: Maybe<Scalars['String']['output']>;
   /** The region of the address, such as the province, state, or district. */
   province?: Maybe<Scalars['String']['output']>;
-  /** The two-letter code for the region, for example, ON. */
+  /** The alphanumeric code for the region, for example, ON. */
   provinceCode?: Maybe<Scalars['String']['output']>;
   /** The zip or postal code of the address. */
   zip?: Maybe<Scalars['String']['output']>;
@@ -6044,214 +5716,6 @@ export type PermittedOperation =
    */
   | 'VIEW';
 
-/** Represents the personal information of a customer. */
-export type PersonalAccount = HasMetafields &
-  Node & {
-    __typename?: 'PersonalAccount';
-    /**
-     * Indicates if the customer accepts email marketing communication.
-     * If the customer doesn't have an email address, then this property is `false`.
-     *
-     */
-    acceptsEmailMarketing: Scalars['Boolean']['output'];
-    /**
-     * Indicates if the customer accepts sms marketing communication.
-     * If the customer doesn't have a phone number, then this property is `false`.
-     *
-     */
-    acceptsSmsMarketing: Scalars['Boolean']['output'];
-    /** The addresses associated with the customer. */
-    addresses: CustomerMailingAddressConnection;
-    /** The list of wallet payment configs for providers that the payment method accepts. */
-    availableWalletPaymentConfigs: Array<WalletPaymentConfig>;
-    /** The date and time when the customer was created. */
-    createdAt: Scalars['DateTime']['output'];
-    /** The date and time when the customer was created. */
-    creationDate: Scalars['DateTime']['output'];
-    /** A Credit Card resource identified by ID. */
-    creditCard?: Maybe<CustomerCreditCard>;
-    /** The stored Credit Cards associated with the customer. */
-    creditCards: CustomerCreditCardConnection;
-    /** The email address of the customer. */
-    customerEmailAddress?: Maybe<CustomerEmailAddress>;
-    /** The phone number of the customer. */
-    customerPhoneNumber?: Maybe<CustomerPhoneNumber>;
-    /** The default mailing address of the customer. */
-    defaultAddress?: Maybe<CustomerMailingAddress>;
-    /**
-     * The full name of the customer, based on the first_name and last_name values. If these aren't available, it falls back to the customer's email address, and if that isn't available, the customer's phone number.
-     *
-     */
-    displayName: Scalars['String']['output'];
-    /** A Draft Order resource identified by ID. */
-    draftOrder?: Maybe<DraftOrder>;
-    /** The Draft Orders associated with the customer. */
-    draftOrders: DraftOrderConnection;
-    /** The email address of the customer. */
-    email?: Maybe<Scalars['String']['output']>;
-    /**
-     * The current email marketing state for the customer.
-     * If the customer doesn't have an email address, then this property is `null`.
-     *
-     */
-    emailMarketingConsent?: Maybe<EmailMarketingConsentState>;
-    /** The first name of the customer. */
-    firstName?: Maybe<Scalars['String']['output']>;
-    /** A globally-unique ID. */
-    id: Scalars['ID']['output'];
-    /** The URL to the avatar image of the customer. */
-    imageUrl: Scalars['URL']['output'];
-    /** The customer's most recently updated, incomplete checkout. */
-    lastIncompleteCheckout?: Maybe<Checkout>;
-    /** The last name of the customer. */
-    lastName?: Maybe<Scalars['String']['output']>;
-    /** A metafield found by namespace and key. */
-    metafield?: Maybe<Metafield>;
-    /**
-     * The metafields associated with the resource matching the
-     * supplied list of namespaces and keys.
-     *
-     */
-    metafields: Array<Maybe<Metafield>>;
-    /** Returns an Order resource by ID. */
-    order?: Maybe<Order>;
-    /** An Order resource identified by ID. */
-    orderDetailsPageOrder?: Maybe<OrderDetailsPageOrder>;
-    /** The orders associated with the customer. */
-    orders: OrderConnection;
-    /** A PayPal Billing Agreement resource. */
-    paypalBillingAgreement?: Maybe<PaypalBillingAgreement>;
-    /** The phone number of the customer. */
-    phone?: Maybe<Scalars['String']['output']>;
-    /** A Return identified by ID. */
-    return?: Maybe<Return>;
-    /** A Subscription Contract resource identified by ID. */
-    subscriptionContract?: Maybe<SubscriptionContract>;
-    /** The Subscription Contracts associated with the customer. */
-    subscriptionContracts: SubscriptionContractConnection;
-    /** A comma-separated list of tags that have been added to the customer. */
-    tags: Array<Scalars['String']['output']>;
-    /** Indicates whether the customer is exempt from being charged taxes on their orders. */
-    taxExempt: Scalars['Boolean']['output'];
-    /** The list of tax exemption types applied to the customer. */
-    taxExemptions: Array<TaxExemption>;
-    /** The list of tax exemptions applied to the customer with additional details. */
-    taxExemptionsDetails: Array<TaxExemptionDetails>;
-  };
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountAddressesArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  skipDefault?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountCreditCardArgs = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountCreditCardsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountDraftOrderArgs = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountDraftOrdersArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<DraftOrderSortKeys>;
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountMetafieldArgs = {
-  key: Scalars['String']['input'];
-  namespace: Scalars['String']['input'];
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountMetafieldsArgs = {
-  identifiers: Array<HasMetafieldsIdentifier>;
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountOrderArgs = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountOrderDetailsPageOrderArgs = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountOrdersArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<OrderSortKeys>;
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountReturnArgs = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountSubscriptionContractArgs = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountSubscriptionContractsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<SubscriptionContractsSortKeys>;
-};
-
-/**
- * The input fields to update a customer's personal information.
- *
- */
-export type PersonalInformationUpdateInput = {
-  /** The customer's first name. */
-  firstName?: InputMaybe<Scalars['String']['input']>;
-  /** The customer's last name. */
-  lastName?: InputMaybe<Scalars['String']['input']>;
-};
-
-/** Return type for `personalInformationUpdate` mutation. */
-export type PersonalInformationUpdatePayload = {
-  __typename?: 'PersonalInformationUpdatePayload';
-  /** The customer's personal information that has been updated. */
-  personalInformation?: Maybe<PersonalAccount>;
-  /** The list of errors that occurred from executing the mutation. */
-  userErrors: Array<UserErrorsPersonalInformationUserErrors>;
-};
-
 /**
  * The address of a pickup location.
  *
@@ -6354,6 +5818,12 @@ export type PublicOrder = Node & {
   hasEmail: Scalars['Boolean']['output'];
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
+  /** The merchandise lines marked as fees with total value, aggregated by title. */
+  legacyAggregatedMerchandiseTermsAsFees: Array<LegacyAggregatedMerchandiseTermsAsFees>;
+  /** Whether or not products marked as fees should be rendered as money lines. */
+  legacyRepresentProductsAsFees: Scalars['Boolean']['output'];
+  /** The price of the order before duties, shipping, taxes, and fees. */
+  legacySubtotalWithoutFees?: Maybe<MoneyV2>;
   /** The list of the order's line item containers (e.g., Unfulfilled). */
   lineItemContainers: Array<LineItemContainer>;
   /** The list of line items of the order. */
@@ -6385,6 +5855,8 @@ export type PublicOrder = Node & {
   reorderPath?: Maybe<Scalars['String']['output']>;
   /** Whether the order requires shipping. */
   requiresShipping: Scalars['Boolean']['output'];
+  /** A Return identified by ID. */
+  return?: Maybe<Return>;
   /** The list of returns for the order with pagination. */
   returns: ReturnConnection;
   /** The list of shipping line groups for the order. */
@@ -6436,6 +5908,11 @@ export type PublicOrderLineItemsArgs = {
 };
 
 /** The data that about an order that is visible to anyone with the order ID. */
+export type PublicOrderReturnArgs = {
+  id: Scalars['ID']['input'];
+};
+
+/** The data that about an order that is visible to anyone with the order ID. */
 export type PublicOrderReturnsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -6455,12 +5932,8 @@ export type PurchasingCompany = {
   company: Company;
   /** The company contact associated with the order or draft order. */
   contact?: Maybe<CompanyContact>;
-  /** The company contact associated with the order or draft order. */
-  contactV1?: Maybe<Contact>;
   /** The company location associated with the order or draft order. */
   location: CompanyLocation;
-  /** The company location associated with the order or draft order. */
-  locationV1: Location;
 };
 
 /**
@@ -6469,26 +5942,16 @@ export type PurchasingCompany = {
  */
 export type PurchasingEntity = Customer | PurchasingCompany;
 
-/**
- * Represents information about the purchasing entity for the order or draft order.
- *
- */
-export type PurchasingEntityV1 = PersonalAccount | PurchasingCompany;
-
 /** This acts as the public, top-level API from which all queries start. */
 export type QueryRoot = {
   __typename?: 'QueryRoot';
-  /** Returns the settings for the address form. */
-  addressFormSettings: AddressFormSettings;
-  /** Returns the business account of the customer. */
-  businessAccount: BusinessAccount;
   /** The information of the customer's company. */
   company?: Maybe<Company>;
   /** The Location corresponding to the provided ID. */
   companyLocation?: Maybe<CompanyLocation>;
   /** Returns the Customer resource. */
   customer: Customer;
-  /** Returns a Draft Order resource by ID. */
+  /** Returns a draft order resource by ID. */
   draftOrder?: Maybe<DraftOrder>;
   /** The API tokens for UI extensions. */
   extensionApiTokens?: Maybe<ExtensionApiTokens>;
@@ -6496,8 +5959,6 @@ export type QueryRoot = {
   order?: Maybe<Order>;
   /** An Order resource identified by ID. */
   orderDetailsPageOrder?: Maybe<OrderDetailsPageOrder>;
-  /** Returns the personal information of the customer. */
-  personalAccount: PersonalAccount;
   /** Returns the information about the shop. */
   shop: Shop;
   /**
@@ -7490,6 +6951,235 @@ export type SmsMarketingState =
    */
   | 'UNSUBSCRIBED';
 
+/**
+ * A store credit account contains a monetary balance that can be redeemed at checkout for purchases in the shop.
+ * The account is held in the specified currency and has an owner that cannot be transferred.
+ *
+ * The account balance is redeemable at checkout only when the owner is authenticated via [new customer accounts authentication](https://shopify.dev/docs/api/customer).
+ *
+ */
+export type StoreCreditAccount = Node & {
+  __typename?: 'StoreCreditAccount';
+  /** The current balance of the store credit account. */
+  balance: MoneyV2;
+  /** A globally-unique ID. */
+  id: Scalars['ID']['output'];
+  /** The transaction history of the store credit account. */
+  transactions: StoreCreditAccountTransactionConnection;
+};
+
+/**
+ * A store credit account contains a monetary balance that can be redeemed at checkout for purchases in the shop.
+ * The account is held in the specified currency and has an owner that cannot be transferred.
+ *
+ * The account balance is redeemable at checkout only when the owner is authenticated via [new customer accounts authentication](https://shopify.dev/docs/api/customer).
+ *
+ */
+export type StoreCreditAccountTransactionsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  query?: InputMaybe<Scalars['String']['input']>;
+  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  sortKey?: InputMaybe<TransactionSortKeys>;
+};
+
+/**
+ * An auto-generated type for paginating through multiple StoreCreditAccounts.
+ *
+ */
+export type StoreCreditAccountConnection = {
+  __typename?: 'StoreCreditAccountConnection';
+  /** A list of edges. */
+  edges: Array<StoreCreditAccountEdge>;
+  /** A list of the nodes contained in StoreCreditAccountEdge. */
+  nodes: Array<StoreCreditAccount>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+};
+
+/** A credit transaction which increases the store credit account balance. */
+export type StoreCreditAccountCreditTransaction = Node &
+  StoreCreditAccountTransaction & {
+    __typename?: 'StoreCreditAccountCreditTransaction';
+    /**
+     * The store credit account that the transaction belongs to.
+     *
+     */
+    account: StoreCreditAccount;
+    /**
+     * The amount of the transaction.
+     *
+     */
+    amount: MoneyV2;
+    /** The balance of the account after the transaction. */
+    balanceAfterTransaction: MoneyV2;
+    /** The date and time when the transaction was created. */
+    createdAt: Scalars['DateTime']['output'];
+    /**
+     * The time at which the transaction expires.
+     * Debit transactions will always spend the soonest expiring credit first.
+     *
+     */
+    expiresAt?: Maybe<Scalars['DateTime']['output']>;
+    /** A globally-unique ID. */
+    id: Scalars['ID']['output'];
+    /**
+     * The remaining amount of the credit.
+     * The remaining amount will decrease when a debit spends this credit. It may also increase if that debit is subsequently reverted.
+     * In the event that the credit expires, the remaining amount will represent the amount that remained as the expiry ocurred.
+     *
+     */
+    remainingAmount: MoneyV2;
+  };
+
+/**
+ * A debit revert transaction which increases the store credit account balance.
+ * Debit revert transactions are created automatically when a [store credit account debit transaction](https://shopify.dev/api/admin-graphql/latest/objects/StoreCreditAccountDebitTransaction) is reverted.
+ *
+ * Store credit account debit transactions are reverted when an order is cancelled, refunded or in the event of a payment failure at checkout.
+ * The amount added to the balance is equal to the amount reverted on the original credit.
+ *
+ */
+export type StoreCreditAccountDebitRevertTransaction = Node &
+  StoreCreditAccountTransaction & {
+    __typename?: 'StoreCreditAccountDebitRevertTransaction';
+    /**
+     * The store credit account that the transaction belongs to.
+     *
+     */
+    account: StoreCreditAccount;
+    /**
+     * The amount of the transaction.
+     *
+     */
+    amount: MoneyV2;
+    /** The balance of the account after the transaction. */
+    balanceAfterTransaction: MoneyV2;
+    /** The date and time when the transaction was created. */
+    createdAt: Scalars['DateTime']['output'];
+    /** The reverted debit transaction. */
+    debitTransaction: StoreCreditAccountDebitTransaction;
+    /** A globally-unique ID. */
+    id: Scalars['ID']['output'];
+  };
+
+/** A debit transaction which decreases the store credit account balance. */
+export type StoreCreditAccountDebitTransaction = Node &
+  StoreCreditAccountTransaction & {
+    __typename?: 'StoreCreditAccountDebitTransaction';
+    /**
+     * The store credit account that the transaction belongs to.
+     *
+     */
+    account: StoreCreditAccount;
+    /**
+     * The amount of the transaction.
+     *
+     */
+    amount: MoneyV2;
+    /** The balance of the account after the transaction. */
+    balanceAfterTransaction: MoneyV2;
+    /** The date and time when the transaction was created. */
+    createdAt: Scalars['DateTime']['output'];
+    /** A globally-unique ID. */
+    id: Scalars['ID']['output'];
+  };
+
+/**
+ * An auto-generated type which holds one StoreCreditAccount and a cursor during pagination.
+ *
+ */
+export type StoreCreditAccountEdge = {
+  __typename?: 'StoreCreditAccountEdge';
+  /** A cursor for use in pagination. */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of StoreCreditAccountEdge. */
+  node: StoreCreditAccount;
+};
+
+/**
+ * An expiration transaction which decreases the store credit account balance.
+ * Expiration transactions are created automatically when a [store credit account credit transaction](https://shopify.dev/api/admin-graphql/latest/objects/StoreCreditAccountCreditTransaction) expires.
+ *
+ * The amount subtracted from the balance is equal to the remaining amount of the credit transaction.
+ *
+ */
+export type StoreCreditAccountExpirationTransaction =
+  StoreCreditAccountTransaction & {
+    __typename?: 'StoreCreditAccountExpirationTransaction';
+    /**
+     * The store credit account that the transaction belongs to.
+     *
+     */
+    account: StoreCreditAccount;
+    /**
+     * The amount of the transaction.
+     *
+     */
+    amount: MoneyV2;
+    /** The balance of the account after the transaction. */
+    balanceAfterTransaction: MoneyV2;
+    /** The date and time when the transaction was created. */
+    createdAt: Scalars['DateTime']['output'];
+    /** The credit transaction which expired. */
+    creditTransaction: StoreCreditAccountCreditTransaction;
+  };
+
+/** Interface for a store credit account transaction. */
+export type StoreCreditAccountTransaction = {
+  /**
+   * The store credit account that the transaction belongs to.
+   *
+   */
+  account: StoreCreditAccount;
+  /**
+   * The amount of the transaction.
+   *
+   */
+  amount: MoneyV2;
+  /** The balance of the account after the transaction. */
+  balanceAfterTransaction: MoneyV2;
+  /** The date and time when the transaction was created. */
+  createdAt: Scalars['DateTime']['output'];
+};
+
+/**
+ * An auto-generated type for paginating through multiple StoreCreditAccountTransactions.
+ *
+ */
+export type StoreCreditAccountTransactionConnection = {
+  __typename?: 'StoreCreditAccountTransactionConnection';
+  /** A list of edges. */
+  edges: Array<StoreCreditAccountTransactionEdge>;
+  /** A list of the nodes contained in StoreCreditAccountTransactionEdge. */
+  nodes: Array<
+    | StoreCreditAccountCreditTransaction
+    | StoreCreditAccountDebitRevertTransaction
+    | StoreCreditAccountDebitTransaction
+    | StoreCreditAccountExpirationTransaction
+  >;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+};
+
+/**
+ * An auto-generated type which holds one StoreCreditAccountTransaction and a cursor during pagination.
+ *
+ */
+export type StoreCreditAccountTransactionEdge = {
+  __typename?: 'StoreCreditAccountTransactionEdge';
+  /** A cursor for use in pagination. */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of StoreCreditAccountTransactionEdge. */
+  node:
+    | StoreCreditAccountCreditTransaction
+    | StoreCreditAccountDebitRevertTransaction
+    | StoreCreditAccountDebitTransaction
+    | StoreCreditAccountExpirationTransaction;
+};
+
 /** Return type for `storefrontCustomerAccessTokenCreate` mutation. */
 export type StorefrontCustomerAccessTokenCreatePayload = {
   __typename?: 'StorefrontCustomerAccessTokenCreatePayload';
@@ -8197,7 +7887,7 @@ export type SubscriptionMailingAddress = {
   /** The region of the address, such as the province, state, or district. */
   province?: Maybe<Scalars['String']['output']>;
   /**
-   * The two-letter code for the region.
+   * The alphanumeric code for the region.
    * For example, ON.
    *
    */
@@ -9009,6 +8699,13 @@ export type TrackingInformation = {
   url?: Maybe<Scalars['URL']['output']>;
 };
 
+/** The set of valid sort keys for the Transaction query. */
+export type TransactionSortKeys =
+  /** Sort by the `created_at` value. */
+  | 'CREATED_AT'
+  /** Sort by the `expires_at` value. */
+  | 'EXPIRES_AT';
+
 /** The details related to the transaction type. */
 export type TransactionTypeDetails = {
   __typename?: 'TransactionTypeDetails';
@@ -9272,54 +8969,6 @@ export type UnknownSale = Node &
     totalTaxAmount: MoneyV2;
   };
 
-/** The error codes that are provided for failed address mutations. */
-export type UserErrorsAddressUserErrors = DisplayableError & {
-  __typename?: 'UserErrorsAddressUserErrors';
-  /** The error code. */
-  code?: Maybe<UserErrorsAddressUserErrorsCode>;
-  /** The path to the input field that caused the error. */
-  field?: Maybe<Array<Scalars['String']['output']>>;
-  /** The error message. */
-  message: Scalars['String']['output'];
-};
-
-/** Possible error codes that can be returned by `UserErrorsAddressUserErrors`. */
-export type UserErrorsAddressUserErrorsCode =
-  /** The Address1 field is missing. */
-  | 'ADDRESS1_MISSING'
-  /** The provided address already exists. */
-  | 'ADDRESS_ALREADY_EXISTS'
-  /** The provided address argument is empty. */
-  | 'ADDRESS_ARGUMENT_EMPTY'
-  /** The provided address ID doesn't exist. */
-  | 'ADDRESS_ID_DOES_NOT_EXIST'
-  /** The Country Code field is missing. */
-  | 'COUNTRY_CODE_MISSING'
-  /** The provided country doesn't exist. */
-  | 'COUNTRY_NOT_EXIST'
-  /** The default address can't be deleted before setting another one as default. */
-  | 'DELETING_DEFAULT_ADDRESS_NOT_ALLOWED'
-  /** Demoting the default address isn't allowed. */
-  | 'DEMOTING_DEFAULT_ADDRESS_NOT_ALLOWED'
-  /** The provided address field isn't valid. */
-  | 'INVALID'
-  /** The provided value is invalid for the country. */
-  | 'INVALID_FOR_COUNTRY'
-  /** The provided value is invalid for the country and province. */
-  | 'INVALID_FOR_COUNTRY_AND_PROVINCE'
-  /** The provided Territory Code isn't valid. */
-  | 'INVALID_TERRITORY_CODE'
-  /** The provided phone number isn't valid. */
-  | 'PHONE_NUMBER_NOT_VALID'
-  /** The field is required. */
-  | 'REQUIRED'
-  /** The Territory Code field is missing. */
-  | 'TERRITORY_CODE_MISSING'
-  /** The provided address field is too long. */
-  | 'TOO_LONG'
-  /** The Zone Code field is missing. */
-  | 'ZONE_CODE_MISSING';
-
 /** The error codes for failed business contact mutations. */
 export type UserErrorsBusinessContactUserErrors = DisplayableError & {
   __typename?: 'UserErrorsBusinessContactUserErrors';
@@ -9422,80 +9071,6 @@ export type UserErrorsBusinessLocationPaymentInstrumentUserErrorsCode =
   | 'YEAR_INVALID'
   /** The address's zip code is incorrect. */
   | 'ZIP_INCORRECT'
-  /** Zone Code field is missing. */
-  | 'ZONE_CODE_MISSING';
-
-/** The error codes for failed business location address mutations. */
-export type UserErrorsCompanyAddressUserErrors = DisplayableError & {
-  __typename?: 'UserErrorsCompanyAddressUserErrors';
-  /** The error code. */
-  code?: Maybe<UserErrorsCompanyAddressUserErrorsCode>;
-  /** The path to the input field that caused the error. */
-  field?: Maybe<Array<Scalars['String']['output']>>;
-  /** The error message. */
-  message: Scalars['String']['output'];
-};
-
-/** Possible error codes that can be returned by `UserErrorsCompanyAddressUserErrors`. */
-export type UserErrorsCompanyAddressUserErrorsCode =
-  /** Address1 field cannot be blank. */
-  | 'ADDRESS1_CANNOT_BE_BLANK'
-  /** Address1 field is missing. */
-  | 'ADDRESS1_MISSING'
-  /** Business location billing address doesn't exist. */
-  | 'BUSINESS_LOCATION_BILLING_ADDRESS_NOT_FOUND'
-  /** Business location doesn't exist. */
-  | 'BUSINESS_LOCATION_NOT_FOUND'
-  /** Business location shipping address doesn't exist. */
-  | 'BUSINESS_LOCATION_SHIPPING_ADDRESS_NOT_FOUND'
-  /** Company address create input argument is empty. */
-  | 'COMPANY_ADDRESS_CREATE_INPUT_ARGUMENT_EMPTY'
-  /** Company address update input argument is empty. */
-  | 'COMPANY_ADDRESS_UPDATE_INPUT_ARGUMENT_EMPTY'
-  /** Country_code field cannot be blank. */
-  | 'COUNTRY_CODE_CANNOT_BE_BLANK'
-  /** Country Code field is missing. */
-  | 'COUNTRY_CODE_MISSING'
-  /** Creating the address failed. */
-  | 'FAILED_TO_CREATE'
-  /** Deleting the address failed. */
-  | 'FAILED_TO_DELETE'
-  /** Setting the address failed. */
-  | 'FAILED_TO_SET_ADDRESS'
-  /** Setting the billing address failed. */
-  | 'FAILED_TO_SET_BILLING_ADDRESS'
-  /** Setting the shipping address failed. */
-  | 'FAILED_TO_SET_SHIPPING_ADDRESS'
-  /** Updating the address failed. */
-  | 'FAILED_TO_UPDATE'
-  /** The input value is invalid. */
-  | 'INVALID'
-  /** Invalid address field. */
-  | 'INVALID_ADDRESS_FIELD'
-  /** Invalid address type. */
-  | 'INVALID_ADDRESS_TYPE'
-  /** Location has already a billing address. */
-  | 'LOCATION_HAS_ALREADY_BILLING_ADDRESS'
-  /** Location has already a shipping address. */
-  | 'LOCATION_HAS_ALREADY_SHIPPING_ADDRESS'
-  /** The country does not have zones. */
-  | 'NO_ZONE_IN_COUNTRY'
-  /** Permission denied. */
-  | 'PERMISSION_DENIED'
-  /** Phone field cannot be blank. */
-  | 'PHONE_CANNOT_BE_BLANK'
-  /** Phone number is not valid. */
-  | 'PHONE_NUMBER_NOT_VALID'
-  /** Recipient and first/last name present at the same time. */
-  | 'PRESENT'
-  /** The field is required. */
-  | 'REQUIRED'
-  /** The field value is too long. */
-  | 'TOO_LONG'
-  /** Unexpected type. */
-  | 'UNEXPECTED_TYPE'
-  /** Zone_code field cannot be blank. */
-  | 'ZONE_CODE_CANNOT_BE_BLANK'
   /** Zone Code field is missing. */
   | 'ZONE_CODE_MISSING';
 
@@ -9715,28 +9290,6 @@ export type UserErrorsPaypalTokenUserErrorsCode =
   | 'REFERENCE_TRANSACTIONS_NOT_ENABLED'
   /** PayPal Express token could not be created. */
   | 'TOKEN_COULD_NOT_BE_CREATED';
-
-/** Provides error codes for failed personal information mutations. */
-export type UserErrorsPersonalInformationUserErrors = DisplayableError & {
-  __typename?: 'UserErrorsPersonalInformationUserErrors';
-  /** The error code. */
-  code?: Maybe<UserErrorsPersonalInformationUserErrorsCode>;
-  /** The path to the input field that caused the error. */
-  field?: Maybe<Array<Scalars['String']['output']>>;
-  /** The error message. */
-  message: Scalars['String']['output'];
-};
-
-/** Possible error codes that can be returned by `UserErrorsPersonalInformationUserErrors`. */
-export type UserErrorsPersonalInformationUserErrorsCode =
-  /** The customer does not exist. */
-  | 'CUSTOMER_DOES_NOT_EXIST'
-  /** The personal information field is not valid. */
-  | 'INVALID'
-  /** The personal information input argument is empty. */
-  | 'PERSONAL_INFORMATION_INPUT_ARGUMENT_EMPTY'
-  /** The personal information field is too long. */
-  | 'TOO_LONG';
 
 /** The error codes for failed resending gift card mutations. */
 export type UserErrorsResendGiftCardErrors = DisplayableError & {

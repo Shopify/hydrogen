@@ -2,7 +2,7 @@ import {createStorefrontClient} from '@shopify/hydrogen-react';
 
 export const client = createStorefrontClient({
   storeDomain: 'https://{store-name}.myshopify.com',
-  storefrontApiVersion: '2024-04',
+  storefrontApiVersion: '2024-07',
   privateStorefrontToken: '{private token for server-side requests}',
 });
 

@@ -1,1 +1,1 @@
-export const SFAPI_VERSION = '2024-04';
+export const SFAPI_VERSION = '2024-07';
