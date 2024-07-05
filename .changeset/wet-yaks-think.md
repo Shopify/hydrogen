@@ -2,17 +2,20 @@
 '@shopify/hydrogen': patch
 ---
 
-Add a `useOptimisticProduct` hook for optimistically rendering product variant changes. This makes switching product variants instantaneous. Example usage:
+Add a `useOptimisticVariant` hook for optimistically rendering product variant changes. This makes switching product variants instantaneous. Example usage:
 
 ```tsx
 function Product() {
-  const {product: originalProduct, variants} = useLoaderData<typeof loader>();
+  const {product, variants} = useLoaderData<typeof loader>();
 
-  // The product.selectedVariant optimistically changed during a page
-  // transition with one of the preloaded product variants
-  const product = useOptimisticProduct(originalProduct, variants);
+  // The selectedVariant optimistically changes during page
+  // transitions with one of the preloaded product variants
+  const selectedVariant = useOptimisticVariant(
+    product.selectedVariant,
+    variants,
+  );
 
-  return <ProductMain product={product} />;
+  return <ProductMain selectedVariant={selectedVariant} />;
 }
 ```
 

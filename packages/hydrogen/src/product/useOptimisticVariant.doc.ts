@@ -1,7 +1,7 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'useOptimisticProduct',
+  name: 'useOptimisticVariant',
   category: 'hooks',
   isVisualComponent: false,
   related: [
@@ -16,7 +16,7 @@ const data: ReferenceEntityTemplateSchema = {
       url: '/docs/api/hydrogen/2024-04/hooks/useoptimisticcart',
     },
   ],
-  description: `The \`useOptimisticProduct\` takes an existing product object, processes a pending navigation to a product variant, and locally mutates the product with optimistic state. This makes switching product options immediate. It requires that the product query include a \`selectedVariant\` field populated by \`variantBySelectedOptions\`.`,
+  description: `The \`useOptimisticVariant\` takes an existing product variant, processes a pending navigation to another product variant, and returns the data of the destination variant. This makes switching product options immediate.`,
   type: 'component',
   defaultExample: {
     description: 'I am the default example',
@@ -24,12 +24,12 @@ const data: ReferenceEntityTemplateSchema = {
       tabs: [
         {
           title: 'JavaScript',
-          code: './useOptimisticProduct.example.jsx',
+          code: './useOptimisticVariant.example.jsx',
           language: 'jsx',
         },
         {
           title: 'TypeScript',
-          code: './useOptimisticProduct.example.tsx',
+          code: './useOptimisticVariant.example.tsx',
           language: 'tsx',
         },
       ],
@@ -39,7 +39,7 @@ const data: ReferenceEntityTemplateSchema = {
   definitions: [
     {
       title: 'Props',
-      type: 'UseOptimisticProductGeneratedType',
+      type: 'useOptimisticVariantGeneratedType',
       description: '',
     },
   ],
