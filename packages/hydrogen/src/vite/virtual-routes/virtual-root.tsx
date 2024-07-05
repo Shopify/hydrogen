@@ -12,7 +12,7 @@ import {
   useRouteError,
 } from '@remix-run/react';
 import favicon from './assets/favicon.svg';
-import {Layout} from './components/Layout.jsx';
+import {PageLayout} from './components/PageLayout.jsx';
 import {useNonce} from '@shopify/hydrogen';
 
 import styles from './assets/styles.css?url';
@@ -24,7 +24,7 @@ export const links: LinksFunction = () => {
   ];
 };
 
-export default function App() {
+export function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
   return (
     <html lang="en">
@@ -40,9 +40,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout>
-          <Outlet />
-        </Layout>
+        <PageLayout>{children}</PageLayout>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>
@@ -51,7 +49,6 @@ export default function App() {
 }
 
 export function ErrorBoundary() {
-  const nonce = useNonce();
   const error = useRouteError();
   let errorMessage = 'Unknown error';
   let errorStatus = 500;
@@ -64,33 +61,14 @@ export function ErrorBoundary() {
   }
 
   return (
-    <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <title>Hydrogen</title>
-        <meta
-          name="description"
-          content="A custom storefront powered by Hydrogen"
-        />
-        <Meta />
-        <Links />
-      </head>
-      <body>
-        <Layout>
-          <div className="route-error">
-            <h1>Please report this error</h1>
-            <h2>{errorStatus}</h2>
-            {errorMessage && (
-              <fieldset>
-                <pre>{errorMessage}</pre>
-              </fieldset>
-            )}
-          </div>
-        </Layout>
-        <ScrollRestoration nonce={nonce} />
-        <Scripts nonce={nonce} />
-      </body>
-    </html>
+    <div className="route-error">
+      <h1>Please report this error</h1>
+      <h2>{errorStatus}</h2>
+      {errorMessage && (
+        <fieldset>
+          <pre>{errorMessage}</pre>
+        </fieldset>
+      )}
+    </div>
   );
 }

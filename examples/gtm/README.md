@@ -21,11 +21,11 @@ npm create @shopify/hydrogen@latest -- --template gtm
 
 The following files have been added (🆕) or changed from the default Hydration template:
 
-| File                                                                                              | Description   |
-| ------------------------------------------------------------------------------------------------- | -----------------------------------------------------------------------------------|
-| 🆕 [`app/components/GoogleTagManager.tsx`](app/components/GoogleTagManager.tsx)                   | A example of how to subscribe analytics events and can be used to push events to Google Tag Manager. |
-| [`app/root.tsx`](app/root.tsx)                                                                    | Updated the root layout with Google Tag Manager scripts |
-| [`app/entry.server.tsx`](app/entry.server.tsx)                                                    | Updated the `createContentSecurityPolicy` to include content security policies for Google Tag Manager |
+| File                                                                            | Description                                                                                           |
+| ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| 🆕 [`app/components/GoogleTagManager.tsx`](app/components/GoogleTagManager.tsx) | A example of how to subscribe analytics events and can be used to push events to Google Tag Manager.  |
+| [`app/root.tsx`](app/root.tsx)                                                  | Updated the root layout with Google Tag Manager scripts                                               |
+| [`app/entry.server.tsx`](app/entry.server.tsx)                                  | Updated the `createContentSecurityPolicy` to include content security policies for Google Tag Manager |
 
 ## Instructions
 
@@ -112,7 +112,7 @@ export function GoogleTagManager() {
   useEffect(() => {
     subscribe('product_viewed', () => {
       // Triggering a custom event in GTM when a product is viewed
-      window.dataLayer.push({'event': 'viewed-product'});
+      window.dataLayer.push({event: 'viewed-product'});
     });
 
     ready();
@@ -132,7 +132,6 @@ export function GoogleTagManager() {
 + import {GoogleTagManager} from '~/components/GoogleTagManager'
 ```
 
-
 #### 3.2 Add the script snippet of your tag for `<head>` and `<body>`
 
 Make sure that `GTM-<YOUR_GTM_ID>` is updated to your GTM tag id.
@@ -147,9 +146,9 @@ import {
 
 ...
 
-export default function App() {
+export function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
-  const data = useLoaderData<typeof loader>();
+  const data = useRouteLoaderData<RootLoader>('root');
 
   return (
     <html lang="en">
@@ -183,7 +182,7 @@ export default function App() {
 #### 3.3 Add the `GoogleTagManager` component to listen to events
 
 ```diff
-export default function App() {
+export function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
   const data = useLoaderData<typeof loader>();
 
@@ -201,9 +200,7 @@ export default function App() {
           shop={data.shop}
           consent={data.consent}
         >
-          <Layout {...data}>
-            <Outlet />
-          </Layout>
+          <PageLayout {...data}>{children}</PageLayout>
 +         <GoogleTagManager />
         </Analytics.Provider>
         <ScrollRestoration nonce={nonce} />
