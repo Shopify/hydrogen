@@ -1,7 +1,7 @@
 import {spawn} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {formatCode, getCodeFormatOptions} from './format-code.js';
-import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
+import {renderWarning} from '@shopify/cli-kit/node/ui';
 import {
   joinPath,
   relativePath,
@@ -173,8 +173,7 @@ async function generateTypes({
   const {config: codegenConfig} =
     // Load <root>/codegen.ts if available
     (await loadCodegenConfig({
-      configFilePath,
-      searchPlaces: [dirs.rootDirectory],
+      configFilePath: configFilePath ?? dirs.rootDirectory,
     })) ||
     // Fall back to default config
     (await generateDefaultConfig(dirs, forceSfapiVersion));
