@@ -49,5 +49,6 @@ export async function setupTailwind(
   return {
     workPromise,
     generatedAssets: Object.values(assetMap),
+    needsInstallDeps: true,
   };
 }

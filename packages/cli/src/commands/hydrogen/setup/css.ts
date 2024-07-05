@@ -88,7 +88,7 @@ export async function runSetupCSS({
   const setupOutput = await setupCssStrategy(strategy, remixConfig, force);
   if (!setupOutput) return;
 
-  const {workPromise, generatedAssets} = setupOutput;
+  const {workPromise, generatedAssets, needsInstallDeps} = setupOutput;
 
   const tasks = [
     {
@@ -99,7 +99,7 @@ export async function runSetupCSS({
     },
   ];
 
-  if (installDeps) {
+  if (installDeps && needsInstallDeps) {
     const gettingPkgManagerPromise = getPackageManager(
       remixConfig.rootDirectory,
     );

@@ -21,5 +21,6 @@ export async function setupVanillaExtract({
   return {
     workPromise,
     generatedAssets: [],
+    needsInstallDeps: true,
   };
 }

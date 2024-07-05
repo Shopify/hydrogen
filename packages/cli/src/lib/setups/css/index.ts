@@ -39,6 +39,7 @@ export function setupCssStrategy(
       return {
         workPromise: Promise.resolve(),
         generatedAssets: [],
+        needsInstallDeps: false,
       };
     default:
       throw new Error('Unknown strategy');
