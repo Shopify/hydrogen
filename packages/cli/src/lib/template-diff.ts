@@ -49,56 +49,50 @@ export async function prepareDiffDirectory(
     joinPath(targetDirectory, 'node_modules'),
   );
 
-  const pw = watch
-    ? await import('@parcel/watcher').catch((error) => {
-        console.log('Could not watch for file changes.', error);
-      })
-    : undefined;
+  const {default: chokidar} = await import('chokidar');
 
-  const subscriptions = await Promise.all([
-    // Copy back the changes in generated d.ts from the
-    // temporary directory to the original diff directory.
-    pw?.subscribe(
-      targetDirectory,
-      (error, events) => {
-        if (error) {
-          console.error(error);
-          return;
-        }
+  const subscriptions = watch
+    ? [
+        // Copy back the changes in generated d.ts from the
+        // temporary directory to the original diff directory.
+        chokidar
+          .watch(joinPath(targetDirectory, '*.generated.d.ts'), {
+            ignoreInitial: true,
+          })
+          .on('all', async (eventName, eventFilePath) => {
+            const targetFile = joinPath(
+              diffDirectory,
+              relativePath(targetDirectory, eventFilePath),
+            );
 
-        events.map((event) => {
-          return copyFile(
-            event.path,
-            joinPath(diffDirectory, relativePath(targetDirectory, event.path)),
-          );
-        });
-      },
-      {ignore: ['!*.generated.d.ts']},
-    ),
+            await copyFile(eventFilePath, targetFile);
+          }),
 
-    // Copy new changes in the original diff directory to
-    // the temporary directory.
-    pw?.subscribe(
-      diffDirectory,
-      async (error, events) => {
-        if (error) {
-          console.error(error);
-          return;
-        }
+        // Copy new changes in the original diff directory to
+        // the temporary directory.
+        chokidar
+          .watch(diffDirectory, {
+            ignoreInitial: true,
+            ignored: [
+              '**/*.generated.d.ts',
+              '**/package.json',
+              '**/tsconfig.json',
+              '**/.shopify',
+            ],
+          })
+          .on('all', async (eventName, eventFilePath) => {
+            const targetFile = joinPath(
+              targetDirectory,
+              relativePath(diffDirectory, eventFilePath),
+            );
 
-        await events.map((event) => {
-          const targetFile = joinPath(
-            targetDirectory,
-            relativePath(diffDirectory, event.path),
-          );
+            const fileInTemplate = eventFilePath.replace(
+              diffDirectory,
+              templateDirectory,
+            );
 
-          const fileInTemplate = event.path.replace(
-            diffDirectory,
-            templateDirectory,
-          );
-
-          return event.type === 'delete'
-            ? fileExists(fileInTemplate)
+            if (eventName === 'unlink') {
+              return fileExists(fileInTemplate)
                 .then((exists) =>
                   exists
                     ? // Replace it with original file from the starter template.
@@ -106,60 +100,44 @@ export async function prepareDiffDirectory(
                     : // Remove the file otherwise.
                       remove(targetFile),
                 )
-                .catch(() => {})
-            : copyFile(event.path, targetFile);
-        });
-      },
-      {
-        ignore: [
-          '*.generated.d.ts',
-          'package.json',
-          'tsconfig.json',
-          '.shopify',
-        ],
-      },
-    ),
+                .catch(() => {});
+            }
 
-    // Copy new changes in the starter template to the temporary
-    // directory only if they don't overwrite the files in the
-    // original diff directory, which have higher priority.
-    pw?.subscribe(
-      templateDirectory,
-      async (error, events) => {
-        if (error) {
-          console.error(error);
-          return;
-        }
+            return copyFile(eventFilePath, targetFile);
+          }),
 
-        await events.map(async (event) => {
-          const fileInDiff = event.path.replace(
-            templateDirectory,
-            diffDirectory,
-          );
+        // Copy new changes in the starter template to the temporary
+        // directory only if they don't overwrite the files in the
+        // original diff directory, which have higher priority.
+        chokidar
+          .watch(templateDirectory, {
+            ignoreInitial: true,
+            ignored: [
+              '**/*.generated.d.ts',
+              '**/package.json',
+              '**/tsconfig.json',
+              '**/.shopify',
+            ],
+          })
+          .on('all', async (eventName, eventFilePath) => {
+            const fileInDiff = eventFilePath.replace(
+              templateDirectory,
+              diffDirectory,
+            );
 
-          // File in diff directory has higher priority.
-          if (await fileExists(fileInDiff)) return;
+            if (await fileExists(fileInDiff)) return;
 
-          const targetFile = joinPath(
-            targetDirectory,
-            relativePath(templateDirectory, event.path),
-          );
+            const targetFile = joinPath(
+              targetDirectory,
+              relativePath(templateDirectory, eventFilePath),
+            );
 
-          return event.type === 'delete'
-            ? remove(targetFile).catch(() => {})
-            : copyFile(event.path, targetFile);
-        });
-      },
-      {
-        ignore: [
-          '*.generated.d.ts',
-          'package.json',
-          'tsconfig.json',
-          '.shopify',
-        ],
-      },
-    ),
-  ]);
+            return eventName === 'unlink'
+              ? remove(targetFile).catch(() => {})
+              : copyFile(eventFilePath, targetFile);
+          }),
+      ]
+    : [];
 
   return {
     /**
@@ -170,7 +148,7 @@ export async function prepareDiffDirectory(
      * Removes the temporary directory and stops the file watchers.
      */
     cleanup: async () => {
-      await Promise.all(subscriptions.map((sub) => sub?.unsubscribe()));
+      await Promise.all(subscriptions.map((sub) => sub.close()));
       await remove(targetDirectory);
     },
     /**

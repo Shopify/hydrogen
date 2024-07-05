@@ -1,4 +1,4 @@
-import type {HydrogenSession} from '../hydrogen';
+import type {HydrogenSession} from '../types';
 import {BadRequest} from './BadRequest';
 import {
   USER_AGENT,
@@ -130,9 +130,11 @@ export async function refreshToken({
     });
   }
 
-  const {access_token, expires_in, refresh_token} = await response.json<
-    Omit<AccessTokenResponse, 'id_token'>
-  >();
+  const {
+    access_token,
+    expires_in,
+    refresh_token,
+  }: Omit<AccessTokenResponse, 'id_token'> = await response.json();
 
   const accessToken = await exchangeAccessToken(
     access_token,
@@ -295,7 +297,7 @@ export async function exchangeAccessToken(
     ...debugInfo,
   });
 
-  const data = await response.json<AccessTokenResponse>();
+  const data: AccessTokenResponse = await response.json();
 
   if (data.error) {
     throw new BadRequest(data.error_description);

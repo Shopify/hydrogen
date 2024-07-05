@@ -30,7 +30,7 @@ export {changelogHandler} from './changelogHandler';
 export {
   CartForm,
   type CartActionInput,
-  type OptimisticCartLine,
+  type OptimisticCartLineInput,
 } from './cart/CartForm';
 export {cartCreateDefault} from './cart/queries/cartCreateDefault';
 export {cartGetDefault} from './cart/queries/cartGetDefault';
@@ -62,12 +62,15 @@ export type {
 export {
   useOptimisticCart,
   type OptimisticCart,
+  type OptimisticCartLine,
 } from './cart/optimistic/useOptimisticCart';
 
 export {
   VariantSelector,
   getSelectedProductOptions,
 } from './product/VariantSelector';
+
+export {useOptimisticProduct} from './product/useOptimisticProduct';
 
 export type {
   VariantOption,
@@ -158,4 +161,4 @@ export type {
   StorefrontApiResponsePartial,
 } from '@shopify/hydrogen-react';
 
-export type {HydrogenSessionData, HydrogenSession} from './hydrogen';
+export type {HydrogenSessionData, HydrogenSession} from './types';

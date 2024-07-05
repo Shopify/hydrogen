@@ -5,7 +5,7 @@
     "@shopify:registry": "https://registry.npmjs.org"
   },
   "license": "MIT",
-  "version": "4.3.10",
+  "version": "4.3.14",
   "type": "module",
   "scripts": {
     "build": "tsup --clean",
@@ -17,7 +17,7 @@
     "@ast-grep/napi": "0.11.0"
   },
   "devDependencies": {
-    "@shopify/cli-hydrogen": "^8.1.0",
+    "@shopify/cli-hydrogen": "^8.1.1",
     "tempy": "3.0.0"
   },
   "bin": "dist/create-app.js",
