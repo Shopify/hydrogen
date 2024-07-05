@@ -20,7 +20,7 @@ import {
 import favicon from './assets/favicon.svg';
 import resetStyles from './styles/reset.css?url';
 import appStyles from './styles/app.css?url';
-import {Layout} from '~/components/Layout';
+import {PageLayout} from '~/components/PageLayout';
 // [START import-custom]
 import {ThirdPartyAnalyticsIntegration} from '~/components/ThirdPartyAnalyticsIntegration';
 // [END import-custom]
@@ -110,9 +110,9 @@ export async function loader({context}: LoaderFunctionArgs) {
   );
 }
 
-export default function App() {
+export function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
-  const data = useLoaderData<typeof loader>();
+  const data = useRouteLoaderData<RootLoader>('root');
 
   return (
     <html lang="en">
@@ -131,9 +131,7 @@ export default function App() {
           customData={{foo: 'bar'}}
         >
         {/* [END provider] */}
-          <Layout {...data}>
-            <Outlet />
-          </Layout>
+          <PageLayout {...data}>{children}</PageLayout>
           {/* [START custom-component] */}
           <ThirdPartyAnalyticsIntegration />
           {/* [END custom-component] */}
@@ -147,10 +145,12 @@ export default function App() {
   );
 }
 
+export default function App() {
+  return <Outlet />;
+}
+
 export function ErrorBoundary() {
   const error = useRouteError();
-  const rootData = useLoaderData<typeof loader>();
-  const nonce = useNonce();
   let errorMessage = 'Unknown error';
   let errorStatus = 500;
 
@@ -162,29 +162,15 @@ export function ErrorBoundary() {
   }
 
   return (
-    <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <Meta />
-        <Links />
-      </head>
-      <body>
-        <Layout {...rootData}>
-          <div className="route-error">
-            <h1>Oops</h1>
-            <h2>{errorStatus}</h2>
-            {errorMessage && (
-              <fieldset>
-                <pre>{errorMessage}</pre>
-              </fieldset>
-            )}
-          </div>
-        </Layout>
-        <ScrollRestoration nonce={nonce} />
-        <Scripts nonce={nonce} />
-      </body>
-    </html>
+    <div className="route-error">
+      <h1>Oops</h1>
+      <h2>{errorStatus}</h2>
+      {errorMessage && (
+        <fieldset>
+          <pre>{errorMessage}</pre>
+        </fieldset>
+      )}
+    </div>
   );
 }
 
