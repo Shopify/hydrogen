@@ -2,6 +2,8 @@
 '@shopify/hydrogen': patch
 ---
 
+[**New Features**]
+
 Add a `useOptimisticVariant` hook for optimistically rendering product variant changes. This makes switching product variants instantaneous. Example usage:
 
 ```tsx

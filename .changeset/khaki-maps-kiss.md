@@ -1,6 +1,5 @@
 ---
 'skeleton': patch
-'@shopify/create-hydrogen': patch
 ---
 
 Update root to use [Remix's Layout Export pattern](https://remix.run/docs/en/main/file-conventions/root#layout-export) and eliminate the use of `useLoaderData` in root.
