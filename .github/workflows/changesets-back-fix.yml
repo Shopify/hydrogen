@@ -16,16 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.repository_owner == 'shopify'
     name: Back-fix changelog PR or Release
-    # Uncomment "outputs" section if you need the "compile" job to work
-    outputs:
-      published: ${{ steps.changesets.outputs.published }}
-      latest: ${{ env.latest }}
     steps:
-      # Uncomment "Flags" section if you need the "compile" job to work
-      - name: Flags
-        id: flags
-        run: |
-          echo "latest=${{ github.ref_name == '2024-04' }}" >> $GITHUB_ENV
       - name: Checkout the code
         uses: actions/checkout@v4
         # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
@@ -53,46 +44,9 @@ jobs:
         uses: changesets/action@v1
         with:
           version: npm run version
-          # Use this command to publish back-fix release onto specific major version npm tag
-          # publish: npm run changeset -- publish --tag ${{ github.ref_name }}
-          # Use this command to publish back-fix release onto latest npm tag if the next major release is not ready yet
-          publish: npm run changeset -- publish
+          publish: npm run changeset -- publish --tag ${{ github.ref_name }}
           commit: '[ci] back-fix release ${{ github.ref_name }}'
           title: '[ci] back-fix release ${{ github.ref_name }}'
         env:
           GITHUB_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-  # Uncomment the "compile" job so that we continue making latest releases on the back-fix branch
-  # before we switch to the next major version
-  compile:
-    needs: changelog
-    # Only compile templates if a release was published, and we're on the "latest" release branch
-    if: needs.changelog.outputs.published == 'true' && needs.changelog.outputs.latest == 'true'
-    runs-on: ubuntu-latest
-    name: Compile the typescript templates and push them to main
-    steps:
-      - name: Checkout the code
-        uses: actions/checkout@v4
-
-      - name: Install the packages
-        run: npm install --frozen-lockfile --ignore-engines
-
-      - name: Build the dist code
-        run: npm run build
-
-      - name: Compile skeleton
-        run: |
-          node scripts/compile-template-for-dist.mjs skeleton
-          (cd templates/skeleton-js && npm i --package-lock-only --workspaces false)
-          (cd templates/skeleton-ts && npm i --package-lock-only --workspaces false)
-
-      - name: Update templates in the dist branch
-        run: |
-          git add .
-          git status
-          git config user.email "hydrogen@shopify.com"
-          git config user.name "Hydrogen Bot"
-          git show-ref
-          git commit -m "Update templates for dist"
-          git push origin HEAD:dist --force
