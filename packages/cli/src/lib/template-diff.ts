@@ -134,7 +134,7 @@ export async function prepareDiffDirectory(
      * Removes the temporary directory and stops the file watchers.
      */
     cleanup: async () => {
-      subscriptions.forEach((sub) => sub.close());
+      await Promise.all(subscriptions.map((sub) => sub.close()));
       await remove(targetDirectory);
     },
     /**
