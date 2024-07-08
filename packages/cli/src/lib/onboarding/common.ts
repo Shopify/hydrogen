@@ -1,4 +1,4 @@
-import {readdir} from 'node:fs/promises';
+import {readdir, symlink} from 'node:fs/promises';
 import {
   installNodeModules,
   packageManagerFromUserAgent,
@@ -27,11 +27,13 @@ import {
   fileExists,
   isDirectory,
   writeFile,
+  copyFile,
 } from '@shopify/cli-kit/node/fs';
 import {
   outputDebug,
   formatPackageManagerCommand,
 } from '@shopify/cli-kit/node/output';
+import {currentProcessIsGlobal} from '@shopify/cli-kit/node/is-global';
 import colors from '@shopify/cli-kit/node/colors';
 import {type AdminSession, login, renderLoginSuccess} from '../auth.js';
 import {
@@ -59,7 +61,11 @@ import {
 } from '../setups/routes/generate.js';
 import {execAsync} from '../process.js';
 import {getStorefronts} from '../graphql/admin/link-storefront.js';
-import {currentProcessIsGlobal} from '@shopify/cli-kit/node/is-global';
+import {
+  getRepoNodeModules,
+  getSkeletonSourceDir,
+  isHydrogenMonorepo,
+} from '../build.js';
 
 export type InitOptions = {
   path?: string;
@@ -498,6 +504,23 @@ export async function handleDependencies(
         cancellationMessage: 'No',
         abortSignal: controller.signal,
       });
+    }
+  }
+
+  if (isHydrogenMonorepo) {
+    // In Hydrogen monorepo, add `.npmrc` to bypass Shopify registry
+    // and symlink `node_modules` to monorepo's node_modules.
+
+    await copyFile(
+      joinPath(getSkeletonSourceDir(), '.npmrc'),
+      joinPath(projectDir, '.npmrc'),
+    ).catch(() => {});
+
+    if (!shouldInstallDeps) {
+      await symlink(
+        await getRepoNodeModules(),
+        joinPath(projectDir, 'node_modules'),
+      ).catch(() => {});
     }
   }
 
