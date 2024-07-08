@@ -18,7 +18,6 @@
   "devDependencies": {
     "@remix-run/dev": "^2.10.1",
     "@types/diff": "^5.0.2",
-    "@types/fs-extra": "^11.0.1",
     "@types/gunzip-maybe": "^1.4.0",
     "@types/prettier": "^2.7.2",
     "@types/source-map-support": "^0.5.10",
@@ -42,7 +41,6 @@
     "chokidar": "3.5.3",
     "cli-truncate": "^4.0.0",
     "diff": "^5.1.0",
-    "fs-extra": "^11.1.0",
     "get-port": "^7.0.0",
     "gunzip-maybe": "^1.4.2",
     "prettier": "^2.8.4",
