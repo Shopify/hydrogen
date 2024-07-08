@@ -1,12 +1,10 @@
 export type CssSetupResult = {
   workPromise: Promise<unknown>;
   generatedAssets: string[];
-  helpUrl: string;
+  needsInstallDeps: boolean;
 };
 
 export type CssSetupConfig = {
   rootDirectory: string;
   appDirectory: string;
-  tailwind?: boolean;
-  postcss?: boolean;
 };

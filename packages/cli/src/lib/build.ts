@@ -22,9 +22,7 @@ export const ASSETS_STARTER_DIR_ROUTES = 'routes';
 
 export type AssetsDir =
   | 'tailwind'
-  | 'css-modules'
   | 'vanilla-extract'
-  | 'postcss'
   | 'vite'
   | 'i18n'
   | 'routes'

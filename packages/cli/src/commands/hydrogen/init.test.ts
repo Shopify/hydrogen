@@ -65,6 +65,7 @@ describe('init', () => {
       shortcut: true,
       quickstart: true,
       git: true,
+      styling: 'tailwind',
     });
   });
 
@@ -79,6 +80,7 @@ describe('init', () => {
           path: tmpDir,
           quickstart: true,
           language: 'ts',
+          styling: 'none',
         }),
       ).resolves.not.toThrow();
 

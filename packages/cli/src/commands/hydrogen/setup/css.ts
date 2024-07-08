@@ -5,20 +5,25 @@ import {
   flagsToCamelObject,
 } from '../../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
-import {renderSuccess, renderTasks} from '@shopify/cli-kit/node/ui';
+import {
+  renderSuccess,
+  renderTasks,
+  renderWarning,
+} from '@shopify/cli-kit/node/ui';
 import {
   getPackageManager,
   installNodeModules,
 } from '@shopify/cli-kit/node/node-package-manager';
 import {Args} from '@oclif/core';
-import {getRemixConfig, hasRemixConfigFile} from '../../../lib/remix-config.js';
 import {
   setupCssStrategy,
   SETUP_CSS_STRATEGIES,
   CSS_STRATEGY_NAME_MAP,
+  CSS_STRATEGY_HELP_URL_MAP,
   type CssStrategy,
   renderCssPrompt,
 } from '../../../lib/setups/css/index.js';
+import {getViteConfig} from '../../../lib/vite-config.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
 
 export default class SetupCSS extends Command {
@@ -64,21 +69,30 @@ export async function runSetupCSS({
   force?: boolean;
   installDeps: boolean;
 }) {
-  if (!(await hasRemixConfigFile(directory))) {
+  const viteConfig = await getViteConfig(directory).catch(() => null);
+  if (!viteConfig) {
     throw new AbortError(
-      'No remix.config.js file found. This command is not supported in Vite projects.',
+      'No Vite config found. This command is only supported in Vite projects.',
     );
   }
 
-  const remixConfigPromise = getRemixConfig(directory);
+  const {remixConfig} = viteConfig;
+
   const strategy = flagStrategy ? flagStrategy : await renderCssPrompt();
 
-  const remixConfig = await remixConfigPromise;
+  if (strategy === 'css-modules' || strategy === 'postcss') {
+    renderSuccess({
+      headline: `Vite works out of the box with ${CSS_STRATEGY_NAME_MAP[strategy]}.`,
+      body: `See the Vite documentation for more information:\n${CSS_STRATEGY_HELP_URL_MAP[strategy]}`,
+    });
+
+    return;
+  }
 
   const setupOutput = await setupCssStrategy(strategy, remixConfig, force);
   if (!setupOutput) return;
 
-  const {workPromise, generatedAssets, helpUrl} = setupOutput;
+  const {workPromise, generatedAssets, needsInstallDeps} = setupOutput;
 
   const tasks = [
     {
@@ -89,7 +103,9 @@ export async function runSetupCSS({
     },
   ];
 
-  if (installDeps) {
+  let isNpm = false;
+
+  if (installDeps && needsInstallDeps) {
     const gettingPkgManagerPromise = getPackageManager(
       remixConfig.rootDirectory,
     );
@@ -98,6 +114,8 @@ export async function runSetupCSS({
       title: 'Installing new dependencies',
       task: async () => {
         const packageManager = await gettingPkgManagerPromise;
+        isNpm = packageManager === 'npm' || packageManager === 'unknown';
+
         await installNodeModules({
           directory: remixConfig.rootDirectory,
           packageManager,
@@ -116,6 +134,19 @@ export async function runSetupCSS({
         ? 'You can now modify CSS configuration in the following files:\n' +
           generatedAssets.map((file) => `  - ${file}`).join('\n') +
           '\n'
-        : '') + `\nFor more information, visit ${helpUrl}.`,
+        : '') +
+      `\nFor more information, visit ${CSS_STRATEGY_HELP_URL_MAP[strategy]}`,
   });
+
+  // Due to a bug in NPM related to optional dependencies in Tailwind,
+  // we need to reinstall dependencies to fix node_modules:
+  // https://github.com/npm/cli/issues/4828
+  if (needsInstallDeps && isNpm && strategy === 'tailwind') {
+    renderWarning({
+      body: [
+        'Due to a bug in NPM, you might need to reinstall dependencies again.\nRun',
+        {command: 'npm install'},
+      ],
+    });
+  }
 }
