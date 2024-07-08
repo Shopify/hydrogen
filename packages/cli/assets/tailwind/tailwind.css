@@ -1,3 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/**
+ * Configure Tailwind v4 in this file using CSS variables and directives:
+ * https://tailwindcss.com/blog/tailwindcss-v4-alpha#css-first-configuration 
+ */
+
+@import 'tailwindcss';

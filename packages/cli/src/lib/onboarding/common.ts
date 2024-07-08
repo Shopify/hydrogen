@@ -410,10 +410,6 @@ export async function handleLanguage(
   };
 }
 
-// Extract this in a variable to avoid TS issues.
-// TODO: Remove this when CSS is supported in Vite
-const isCssDisabled: boolean = true;
-
 /**
  * Prompts the user to select a CSS strategy.
  * @returns The chosen strategy name and a function that sets up the CSS strategy.
@@ -423,8 +419,6 @@ export async function handleCssStrategy(
   controller: AbortController,
   flagStyling?: StylingChoice,
 ) {
-  if (isCssDisabled) return {};
-
   const selection =
     flagStyling ??
     (await renderCssPrompt({
@@ -438,6 +432,11 @@ export async function handleCssStrategy(
     cssStrategy,
     async setupCss() {
       if (cssStrategy) {
+        if (cssStrategy === 'postcss' || cssStrategy === 'css-modules') {
+          // Nothing to do in Vite projects
+          return;
+        }
+
         const result = await setupCssStrategy(
           cssStrategy,
           {

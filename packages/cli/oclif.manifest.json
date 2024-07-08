@@ -1029,6 +1029,14 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "styling": {
+          "description": "Sets the styling strategy to use. One of `tailwind`, `vanilla-extract`, `css-modules`, `postcss`, `none`.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_STYLING",
+          "name": "styling",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "markets": {
           "description": "Sets the URL structure to support multiple markets. Must be one of: `subfolders`, `domains`, `subdomains`, `none`. Example: `--markets subfolders`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_I18N",
@@ -1457,12 +1465,12 @@
       "aliases": [],
       "args": {
         "strategy": {
-          "description": "The CSS strategy to setup. One of tailwind,css-modules,vanilla-extract,postcss",
+          "description": "The CSS strategy to setup. One of tailwind,vanilla-extract,css-modules,postcss",
           "name": "strategy",
           "options": [
             "tailwind",
-            "css-modules",
             "vanilla-extract",
+            "css-modules",
             "postcss"
           ]
         }
