@@ -43,10 +43,9 @@ export default class DebugCpu extends Command {
       ? resolvePath(flags.path)
       : process.cwd();
 
-    const diff =
-      flags.build && flags.diff
-        ? await prepareDiffDirectory(originalDirectory, true)
-        : undefined;
+    const diff = flags.diff
+      ? await prepareDiffDirectory(originalDirectory, true)
+      : undefined;
 
     const {close} = await runDebugCpu({
       ...flagsToCamelObject(flags),
