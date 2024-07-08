@@ -5,7 +5,11 @@ import {
   flagsToCamelObject,
 } from '../../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
-import {renderSuccess, renderTasks} from '@shopify/cli-kit/node/ui';
+import {
+  renderSuccess,
+  renderTasks,
+  renderWarning,
+} from '@shopify/cli-kit/node/ui';
 import {
   getPackageManager,
   installNodeModules,
@@ -99,6 +103,8 @@ export async function runSetupCSS({
     },
   ];
 
+  let isNpm = false;
+
   if (installDeps && needsInstallDeps) {
     const gettingPkgManagerPromise = getPackageManager(
       remixConfig.rootDirectory,
@@ -108,6 +114,8 @@ export async function runSetupCSS({
       title: 'Installing new dependencies',
       task: async () => {
         const packageManager = await gettingPkgManagerPromise;
+        isNpm = packageManager === 'npm' || packageManager === 'unknown';
+
         await installNodeModules({
           directory: remixConfig.rootDirectory,
           packageManager,
@@ -129,4 +137,16 @@ export async function runSetupCSS({
         : '') +
       `\nFor more information, visit ${CSS_STRATEGY_HELP_URL_MAP[strategy]}`,
   });
+
+  // Due to a bug in NPM related to optional dependencies in Tailwind,
+  // we need to reinstall dependencies to fix node_modules:
+  // https://github.com/npm/cli/issues/4828
+  if (needsInstallDeps && isNpm && strategy === 'tailwind') {
+    renderWarning({
+      body: [
+        'Due to a bug in NPM, you might need to reinstall dependencies again.\nRun',
+        {command: 'npm install'},
+      ],
+    });
+  }
 }
