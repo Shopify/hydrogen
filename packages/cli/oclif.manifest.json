@@ -76,7 +76,7 @@
           "type": "boolean"
         },
         "bundle-stats": {
-          "description": "[Classic Remix Compiler] Show a bundle size summary after building. Defaults to true, use `--no-bundle-stats` to disable.",
+          "description": "Show a bundle size summary after building. Defaults to true, use `--no-bundle-stats` to disable.",
           "name": "bundle-stats",
           "allowNo": true,
           "type": "boolean"

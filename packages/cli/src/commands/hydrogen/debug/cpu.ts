@@ -133,6 +133,7 @@ async function runDebugCpu({directory, entry, output}: RunDebugCpuOptions) {
     sourcemap: true,
     disableRouteWarning: true,
     lockfileCheck: false,
+    bundleStats: false,
     ...hooks,
     onServerBuildStart() {
       if (times === 0) {

@@ -150,6 +150,7 @@ export async function runPreview({
     disableRouteWarning: false,
     lockfileCheck: false,
     sourcemap: true,
+    bundleStats: false,
     useCodegen,
     codegenConfigPath,
   };
@@ -158,7 +159,6 @@ export async function runPreview({
     ? isClassicProject
       ? await runClassicCompilerBuild({
           ...buildOptions,
-          bundleStats: false,
         }).then(projectBuild.resolve)
       : await runBuild({
           ...buildOptions,
