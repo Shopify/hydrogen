@@ -1,7 +1,7 @@
-import {join, resolve} from 'node:path';
+import {join} from 'node:path';
+import {writeFile, rm as remove, mkdir} from 'node:fs/promises';
 import http, {type IncomingMessage} from 'node:http';
 
-import {writeFile, ensureDir, remove} from 'fs-extra';
 import {temporaryDirectory} from 'tempy';
 import {it, vi, describe, beforeEach, expect, afterEach} from 'vitest';
 import EventSource from 'eventsource';
@@ -324,7 +324,7 @@ async function createFixture(name: string): Promise<Fixture> {
     assets: join(directory, 'assets'),
   };
 
-  await ensureDir(paths.assets);
+  await mkdir(paths.assets, {recursive: true});
   await writeFile(join(directory, '.gitignore'), '*');
 
   await writeFile(
@@ -370,8 +370,8 @@ export default {
   return {
     paths,
     destroy: async () => {
-      await remove(paths.assets);
-      await remove(directory);
+      await remove(paths.assets, {force: true, recursive: true});
+      await remove(directory, {force: true, recursive: true});
     },
     updateWorker: () => {
       return writeFile(

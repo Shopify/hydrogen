@@ -1,5 +1,5 @@
+import {symlink, rm as rmdir} from 'node:fs/promises';
 import {vi} from 'vitest';
-import {createSymlink, remove as rmdir} from 'fs-extra/esm';
 import {writeFile} from '@shopify/cli-kit/node/fs';
 import {dirname, joinPath} from '@shopify/cli-kit/node/path';
 import {getRepoNodeModules, getSkeletonSourceDir} from '../build.js';
@@ -57,8 +57,12 @@ vi.mock(
         });
 
         // "Install" dependencies by linking to monorepo's node_modules
-        await rmdir(joinPath(directory, 'node_modules')).catch(() => {});
-        await createSymlink(
+        await rmdir(joinPath(directory, 'node_modules'), {
+          force: true,
+          recursive: true,
+        }).catch(() => {});
+
+        await symlink(
           await getRepoNodeModules(),
           joinPath(directory, 'node_modules'),
         );

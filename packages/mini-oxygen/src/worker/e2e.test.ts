@@ -1,6 +1,5 @@
 import path from 'node:path';
-import fs from 'node:fs/promises';
-import {ensureFile as touchFile, remove as removeFile} from 'fs-extra/esm';
+import {mkdir, writeFile, readFile, rm as remove} from 'node:fs/promises';
 import {temporaryDirectoryTask} from 'tempy';
 import {it, vi, describe, expect} from 'vitest';
 import {transformWithEsbuild} from 'vite';
@@ -174,7 +173,7 @@ describe('MiniOxygen Worker Runtime', () => {
 
         // -- Test without sourcemaps:
 
-        await removeFile(miniOxygenOptions.sourceMapPath!);
+        await remove(miniOxygenOptions.sourceMapPath!, {force: true});
         await reloadMiniOxygen();
 
         await fetch('/');
@@ -245,8 +244,8 @@ function withFixtures(
 
     const writeFixture: WriteFixture = async (filename, content) => {
       const filepath = path.join(tmpDir, filename);
-      await touchFile(filepath);
-      await fs.writeFile(filepath, content, 'utf-8');
+      await mkdir(path.dirname(filepath), {recursive: true});
+      await writeFile(filepath, content, 'utf-8');
     };
     const writeAsset: WriteFixture = (filepath, content) =>
       writeFixture(path.join(relativeDistClient, filepath), content);
@@ -294,7 +293,7 @@ function withFixtures(
             {
               type: 'ESModule',
               path: absoluteBundlePath,
-              contents: await fs.readFile(absoluteBundlePath, 'utf-8'),
+              contents: await readFile(absoluteBundlePath, 'utf-8'),
             },
           ],
           bindings: {...optionsFromSetup?.bindings},
@@ -314,7 +313,7 @@ function withFixtures(
 
         if (Array.isArray(testWorker.modules)) {
           // Reload contents
-          testWorker.modules[0].contents = await fs.readFile(
+          testWorker.modules[0].contents = await readFile(
             absoluteBundlePath,
             'utf-8',
           );
