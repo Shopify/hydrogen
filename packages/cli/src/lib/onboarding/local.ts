@@ -1,4 +1,4 @@
-import {copy as copyWithFilter} from 'fs-extra/esm';
+import {cp as copyWithFilter} from 'node:fs/promises';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController} from '@shopify/cli-kit/node/abort';
 import {writeFile} from '@shopify/cli-kit/node/fs';
@@ -92,6 +92,8 @@ export async function setupLocalStarterTemplate(
     project.directory,
     // Filter out the `app` directory and server.ts, which will be generated later
     {
+      force: true,
+      recursive: true,
       filter: (filepath: string) =>
         !/^(app\/|dist\/|node_modules\/|server\.ts)/i.test(
           relativePath(templateDir, filepath),

@@ -1,8 +1,8 @@
+import {rmSync} from 'node:fs';
 import {defineConfig} from 'tsup';
-import fs from 'fs-extra';
 
 // Cleanup dist folder before buid/dev.
-fs.removeSync('./dist');
+rmSync('./dist', {recursive: true, force: true});
 
 export default defineConfig([
   {

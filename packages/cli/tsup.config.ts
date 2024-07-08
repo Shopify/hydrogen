@@ -1,6 +1,7 @@
 import path from 'node:path';
+import {rmSync} from 'node:fs';
+import {cp as copy} from 'node:fs/promises';
 import {defineConfig} from 'tsup';
-import fs from 'fs-extra';
 import {execAsync} from './src/lib/process';
 import {
   ASSETS_DIR_PREFIX,
@@ -10,7 +11,7 @@ import {
 import {replaceFileContent} from './src/lib/file';
 
 // Cleanup dist folder before buid/dev.
-fs.removeSync('./dist');
+rmSync('./dist', {recursive: true, force: true});
 
 const commonConfig = defineConfig({
   format: 'esm',
@@ -33,10 +34,10 @@ export default defineConfig([
     dts: {entry: ['src/index.ts', 'src/commands/hydrogen/init.ts']},
     async onSuccess() {
       // Copy assets templates
-      await fs.copy(
-        path.resolve('assets'),
-        path.join(outDir, ASSETS_DIR_PREFIX),
-      );
+      await copy(path.resolve('assets'), path.join(outDir, ASSETS_DIR_PREFIX), {
+        recursive: true,
+        force: true,
+      });
 
       // These files need to be packaged/distributed with the CLI
       // so that we can use them in the `generate` command.
@@ -46,7 +47,9 @@ export default defineConfig([
         ASSETS_STARTER_DIR,
       );
 
-      await fs.copy(getSkeletonSourceDir(), starterOutDir, {
+      await copy(getSkeletonSourceDir(), starterOutDir, {
+        force: true,
+        recursive: true,
         filter: (filepath: string) =>
           !/node_modules|\.shopify|\.cache|\.turbo|build|dist/gi.test(filepath),
       });
@@ -79,9 +82,10 @@ export default defineConfig([
     async onSuccess() {
       // For some reason, it seems that publicDir => outDir might be skipped on CI,
       // so ensure here that asset files are copied:
-      await fs.copy(
+      await copy(
         '../hydrogen/src/vite/virtual-routes/assets',
         `${outDir}/${ASSETS_DIR_PREFIX}/virtual-routes/assets`,
+        {recursive: true, force: true},
       );
 
       console.log('\n', 'Copied virtual route assets to build directory', '\n');
