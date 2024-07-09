@@ -4,7 +4,7 @@
  */
 
 import type {HydrogenCart, Storefront} from './src/index';
-import type {WaitUntil} from './src/types';
+import type {WaitUntil, ShopifyEnv} from './src/types';
 
 declare global {
   /**
@@ -15,14 +15,7 @@ declare global {
   /**
    * Declare expected Env parameter in fetch handler.
    */
-  interface Env {
-    SESSION_SECRET: string;
-    PUBLIC_STOREFRONT_API_TOKEN: string;
-    PRIVATE_STOREFRONT_API_TOKEN: string;
-    PUBLIC_STORE_DOMAIN: string;
-    PUBLIC_STOREFRONT_ID: string;
-    PUBLIC_CHECKOUT_DOMAIN: string;
-  }
+  interface Env extends ShopifyEnv {}
 
   /**
    * This type is used to import types from mini-oxygen
