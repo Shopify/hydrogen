@@ -43,7 +43,7 @@ import {
 +}
 
 export function ErrorBoundary() {
-  const rootData = useLoaderData<typeof loader>();
+- const rootData = useLoaderData<typeof loader>();
 
   return (
 -    <html>
