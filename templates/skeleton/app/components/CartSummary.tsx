@@ -3,7 +3,7 @@ import type {CartLayout} from '~/components/CartMain';
 import {CartForm, Money, type OptimisticCart} from '@shopify/hydrogen';
 
 type CartSummaryProps = {
-  cart: OptimisticCart<CartApiQueryFragment>;
+  cart: OptimisticCart<CartApiQueryFragment | null>;
   layout: CartLayout;
 };
 
@@ -29,7 +29,7 @@ export function CartSummary({cart, layout}: CartSummaryProps) {
     </div>
   );
 }
-function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
+function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
   if (!checkoutUrl) return null;
 
   return (
@@ -45,7 +45,7 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
 function CartDiscounts({
   discountCodes,
 }: {
-  discountCodes: CartApiQueryFragment['discountCodes'];
+  discountCodes?: CartApiQueryFragment['discountCodes'];
 }) {
   const codes: string[] =
     discountCodes

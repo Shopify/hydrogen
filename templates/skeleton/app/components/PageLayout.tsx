@@ -60,7 +60,7 @@ function CartAside({cart}: {cart: PageLayoutProps['cart']}) {
       <Suspense fallback={<p>Loading cart ...</p>}>
         <Await resolve={cart}>
           {(cart) => {
-            return <CartMain cart={cart!} layout="aside" />;
+            return <CartMain cart={cart} layout="aside" />;
           }}
         </Await>
       </Suspense>
