@@ -9,7 +9,6 @@ import {
 import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
 import {Link} from '@remix-run/react';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
-import type {PartialDeep} from 'type-fest';
 import {useVariantUrl} from '~/lib/variants';
 /***********************************************/
 /**********  EXAMPLE UPDATE STARTS  ************/
@@ -156,7 +155,7 @@ export function CartSummary({
   children = null,
 }: {
   children?: React.ReactNode;
-  cost?: PartialDeep<CartApiQueryFragment['cost']>;
+  cost?: OptimisticCart<CartApiQueryFragment | null>['cost'];
   layout: CartMainProps['layout'];
 }) {
   const className =
