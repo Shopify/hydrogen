@@ -308,9 +308,11 @@ function triggerCartUpdate({
   });
 }
 
-function customerPrivacyReady() {
-  const event = new CustomEvent('visitorConsentCollected');
-  document.dispatchEvent(event);
+function mockPerfKit() {
+  window.PerfKit = {
+    navigate: () => {},
+    setPageType: () => {},
+  };
 }
 
 function LoopAnalytics({
@@ -325,8 +327,13 @@ function LoopAnalytics({
 }): JSX.Element {
   const analytics = useAnalytics();
   const {ready} = analytics.register('loopAnalytics');
+  const {ready: customerPrivacyReady} = analytics.register(
+    'Internal_Shopify_CustomerPrivacy',
+  );
+  const {ready: perfKitReady} = analytics.register('Internal_Shopify_Perf_Kit');
 
   useEffect(() => {
+    mockPerfKit();
     if (registerCallback) {
       registerCallback(analytics, ready);
     } else {
@@ -335,6 +342,7 @@ function LoopAnalytics({
   });
 
   customerPrivacyReady();
+  perfKitReady();
 
   return (
     <div>{typeof children === 'function' ? children(analytics) : children}</div>
