@@ -37,6 +37,7 @@ import {ShopifyAnalytics} from './ShopifyAnalytics';
 import {CartAnalytics} from './CartAnalytics';
 import type {CustomerPrivacyApiProps} from '../customer-privacy/ShopifyCustomerPrivacy';
 import type {Storefront} from '../storefront';
+import {PerfKit} from './PerfKit';
 import {errorOnce, warnOnce} from '../utils/warning';
 
 export type ShopAnalytics = {
@@ -359,6 +360,7 @@ function AnalyticsProvider({
           domain={cookieDomain}
         />
       )}
+      {!!shop && <PerfKit shop={shop} />}
     </AnalyticsContext.Provider>
   );
 }
