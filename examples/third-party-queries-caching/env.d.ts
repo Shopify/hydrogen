@@ -10,6 +10,7 @@ import type {
   CustomerAccount,
   HydrogenCart,
   HydrogenSessionData,
+  ShopifyEnv,
 } from '@shopify/hydrogen';
 import type {AppSession} from '~/lib/session';
 import {createRickAndMortyClient} from './app/lib/createRickAndMortyClient.server';
@@ -23,16 +24,7 @@ declare global {
   /**
    * Declare expected Env parameter in fetch handler.
    */
-  interface Env {
-    SESSION_SECRET: string;
-    PUBLIC_STOREFRONT_API_TOKEN: string;
-    PRIVATE_STOREFRONT_API_TOKEN: string;
-    PUBLIC_STORE_DOMAIN: string;
-    PUBLIC_STOREFRONT_ID: string;
-    PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID: string;
-    PUBLIC_CUSTOMER_ACCOUNT_API_URL: string;
-    PUBLIC_CHECKOUT_DOMAIN: string;
-  }
+  interface Env extends ShopifyEnv {}
 }
 
 declare module '@shopify/remix-oxygen' {

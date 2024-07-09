@@ -161,4 +161,4 @@ export type {
   StorefrontApiResponsePartial,
 } from '@shopify/hydrogen-react';
 
-export type {HydrogenSessionData, HydrogenSession} from './types';
+export type {HydrogenSessionData, HydrogenSession, ShopifyEnv} from './types';

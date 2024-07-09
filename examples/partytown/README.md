@@ -214,12 +214,7 @@ declare global {
   /**
    * Declare expected Env parameter in fetch handler.
    */
-  interface Env {
-    SESSION_SECRET: string;
-    PUBLIC_STOREFRONT_API_TOKEN: string;
-    PRIVATE_STOREFRONT_API_TOKEN: string;
-    PUBLIC_STORE_DOMAIN: string;
-    PUBLIC_STOREFRONT_ID: string;
+  interface Env extends ShopifyEnv {
 +   GTM_CONTAINER_ID: `GTM-${string}`;
   }
 }
