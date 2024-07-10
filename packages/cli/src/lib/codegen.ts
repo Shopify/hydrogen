@@ -9,8 +9,11 @@ import {
   resolvePath,
 } from '@shopify/cli-kit/node/path';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import type {LoadCodegenConfigResult} from '@graphql-codegen/cli';
-import type {GraphQLConfig} from 'graphql-config';
+import type {
+  LoadCodegenConfigResult,
+  CodegenConfig,
+} from '@graphql-codegen/cli';
+import type {GraphQLConfig, GraphQLProjectConfig} from 'graphql-config';
 import {importLocal} from './import-utils.js';
 
 const nodePath = process.argv[1];
@@ -246,26 +249,33 @@ async function generateDefaultConfig(
     legacy: false,
   }).catch(() => undefined);
 
+  // Known project for SFAPI
   const sfapiSchema = getSchema('storefront');
   const sfapiProject = findGqlProject(sfapiSchema, gqlConfig);
 
-  const defaultGlob = '*!(*.d).{ts,tsx,js,jsx}'; // No d.ts files
-  const appDirRelative = relativePath(rootDirectory, appDirectory);
-
+  // Known project for SFAPI
   const caapiSchema = getSchema('customer-account', {throwIfMissing: false});
   const caapiProject = caapiSchema
     ? findGqlProject(caapiSchema, gqlConfig)
     : undefined;
 
-  const customerAccountAPIConfig = caapiProject?.documents
-    ? {
-        ['customer-accountapi.generated.d.ts']: {
-          preset,
-          schema: caapiSchema,
-          documents: caapiProject?.documents,
-        },
-      }
-    : undefined;
+  const defaultGlob = '*!(*.d).{ts,tsx,js,jsx}'; // No d.ts files
+  const appDirRelative = relativePath(rootDirectory, appDirectory);
+  const isKnownSchema = (schema: string) => {
+    const baseSfapiSchema = basename(sfapiSchema);
+    const baseCaapiSchema = caapiSchema && basename(caapiSchema);
+
+    return Boolean(
+      schema.endsWith(baseSfapiSchema) ||
+        (baseCaapiSchema && schema.endsWith(baseCaapiSchema)),
+    );
+  };
+
+  const otherCodegenProjects = Object.values(gqlConfig?.projects ?? {}).filter(
+    (project) =>
+      project.hasExtension('codegen') &&
+      (typeof project.schema !== 'string' || !isKnownSchema(project.schema)),
+  );
 
   return {
     filepath: 'virtual:codegen',
@@ -273,40 +283,85 @@ async function generateDefaultConfig(
       overwrite: true,
       pluckConfig: pluckConfig as any,
       generates: {
-        ['storefrontapi.generated.d.ts']: {
-          preset,
-          schema: sfapiSchema,
-          documents: sfapiProject?.documents ?? [
-            defaultGlob, // E.g. ./server.(t|j)s
-            joinPath(appDirRelative, '**', defaultGlob), // E.g. app/routes/_index.(t|j)sx
-          ],
+        // If the SFAPI project in GraphQL config has a codegen extension, use it.
+        // Otherwise, always fallback to our default config for SFAPI.
+        ...(getCodegenFromGraphQLConfig(sfapiProject) ?? {
+          ['storefrontapi.generated.d.ts']: {
+            preset,
+            schema: sfapiSchema,
+            documents: sfapiProject?.documents ?? [
+              defaultGlob, // E.g. ./server.(t|j)s
+              joinPath(appDirRelative, '**', defaultGlob), // E.g. app/routes/_index.(t|j)sx
+            ],
 
-          ...(!!forceSfapiVersion && {
-            presetConfig: {importTypes: false},
-            schema: {
-              [`https://hydrogen-preview.myshopify.com/api/${
-                forceSfapiVersion.split(':')[0]
-              }/graphql.json`]: {
-                headers: {
-                  'content-type': 'application/json',
-                  'X-Shopify-Storefront-Access-Token':
-                    forceSfapiVersion.split(':')[1] ??
-                    '3b580e70970c4528da70c98e097c2fa0',
+            ...(!!forceSfapiVersion && {
+              presetConfig: {importTypes: false},
+              schema: {
+                [`https://hydrogen-preview.myshopify.com/api/${
+                  forceSfapiVersion.split(':')[0]
+                }/graphql.json`]: {
+                  headers: {
+                    'content-type': 'application/json',
+                    'X-Shopify-Storefront-Access-Token':
+                      forceSfapiVersion.split(':')[1] ??
+                      '3b580e70970c4528da70c98e097c2fa0',
+                  },
                 },
               },
-            },
-            config: {
-              defaultScalarType: 'string',
-              scalars: {JSON: 'unknown'},
-            },
-          }),
-        },
-        ...customerAccountAPIConfig,
+              config: {
+                defaultScalarType: 'string',
+                scalars: {JSON: 'unknown'},
+              },
+            }),
+          },
+        }),
+
+        // If the CAAPI project in GraphQL config has a codegen extension, use it.
+        // Otherwise, check if the user provided a list of documents to scan for queries
+        // before falling back to our default config for CAAPI.
+        ...(getCodegenFromGraphQLConfig(caapiProject) ??
+          (caapiProject?.documents
+            ? {
+                ['customer-accountapi.generated.d.ts']: {
+                  preset,
+                  schema: caapiSchema,
+                  documents: caapiProject.documents,
+                },
+              }
+            : {})),
+
+        // Use other unknown codegen projects from the GraphQL config as they are.
+        ...otherCodegenProjects.reduce(
+          (acc, project) => ({...acc, ...getCodegenFromGraphQLConfig(project)}),
+          {},
+        ),
       },
     },
   };
 }
 
+/**
+ * Merges the 'codegen' extension properties with the GraphQL project properties.
+ * This avoids repeating `schema` and `documents` properties in the codegen config.
+ */
+function getCodegenFromGraphQLConfig(
+  project: GraphQLProjectConfig | undefined,
+) {
+  if (!project?.extensions?.codegen?.generates) return;
+
+  return Object.entries(
+    project.extensions.codegen.generates as CodegenConfig['generates'][string],
+  ).reduce((acc, [key, value]) => {
+    acc[key] = {...project, ...(Array.isArray(value) ? value[0] : value)};
+    return acc;
+  }, {} as CodegenConfig['generates']);
+}
+
+/**
+ * Finds a project in the GraphQL config that matches a given schema string.
+ * This is the only way to find the defined project for SFAPI and CAAPI, as
+ * the project name is arbitrary and can be different in each app.
+ */
 function findGqlProject(schemaFilepath: string, gqlConfig?: GraphQLConfig) {
   if (!gqlConfig) return;
 
@@ -315,7 +370,7 @@ function findGqlProject(schemaFilepath: string, gqlConfig?: GraphQLConfig) {
     (project) =>
       typeof project.schema === 'string' &&
       project.schema.endsWith(schemaFilename),
-  ) as GraphQLConfig['projects'][number];
+  ) as GraphQLProjectConfig | undefined;
 }
 
 /**
