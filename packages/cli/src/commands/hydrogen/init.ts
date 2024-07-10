@@ -126,7 +126,7 @@ export async function runInit(
     options.routes ??= true;
     options.shortcut ??= true;
     // TODO: enable Tailwind once v4 is stable
-    // options.styling ??= 'tailwind';
+    options.styling ??= 'none';
   }
 
   const showUpgrade = await checkCurrentCLIVersion();
