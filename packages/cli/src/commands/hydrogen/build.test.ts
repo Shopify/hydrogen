@@ -28,7 +28,9 @@ describe('build', () => {
       outputMock.clear();
       vi.stubEnv('NODE_ENV', 'production');
 
-      await expect(runBuild({directory: tmpDir})).resolves.not.toThrow();
+      await expect(
+        runBuild({directory: tmpDir, bundleStats: true}),
+      ).resolves.not.toThrow();
 
       const expectedBundlePath = 'dist/server/index.js';
 

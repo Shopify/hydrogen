@@ -49,7 +49,6 @@ export default class Build extends Command {
     'bundle-stats': Flags.boolean({
       description:
         'Show a bundle size summary after building. Defaults to true, use `--no-bundle-stats` to disable.',
-      default: true,
       allowNo: true,
     }),
   };
@@ -127,7 +126,7 @@ export async function runBuild({
   disableRouteWarning = false,
   lockfileCheck = true,
   assetPath = '/',
-  bundleStats = true,
+  bundleStats = !isCI(),
   watch = false,
   onServerBuildStart,
   onServerBuildFinish,
