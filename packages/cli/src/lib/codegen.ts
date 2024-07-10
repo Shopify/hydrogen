@@ -213,7 +213,7 @@ async function generateTypes({
   }, {} as Record<string, string[]>);
 }
 
-async function generateDefaultConfig(
+export async function generateDefaultConfig(
   {
     rootDirectory,
     appDirectory = resolvePath(rootDirectory, 'app'),
