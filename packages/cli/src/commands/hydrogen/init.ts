@@ -125,7 +125,8 @@ export async function runInit(
     options.path ??= './hydrogen-quickstart';
     options.routes ??= true;
     options.shortcut ??= true;
-    options.styling ??= 'tailwind';
+    // TODO: enable Tailwind once v4 is stable
+    options.styling ??= 'none';
   }
 
   const showUpgrade = await checkCurrentCLIVersion();

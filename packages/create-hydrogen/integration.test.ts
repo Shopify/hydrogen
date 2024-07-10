@@ -47,7 +47,6 @@ describe('create-hydrogen', () => {
         │                                                                              │
         │    Shopify:   Mock.shop                                                      │
         │    Language:  JavaScript                                                     │
-        │    Styling:   Tailwind (v4 alpha)                                            │
         │    Routes:                                                                   │
         │      • Home (/ & /:catchAll)                                                 │
         │      • Page (/pages/:handle)                                                 │
