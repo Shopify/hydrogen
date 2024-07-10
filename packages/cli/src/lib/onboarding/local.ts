@@ -210,25 +210,6 @@ export async function setupLocalStarterTemplate(
       options.git ? createInitialCommit(project.directory) : undefined,
     );
 
-  const {setupCss, cssStrategy} = await handleCssStrategy(
-    project.directory,
-    controller,
-    options.styling,
-  );
-
-  if (cssStrategy) {
-    backgroundWorkPromise = backgroundWorkPromise
-      .then(() => setupCss().catch(abort))
-      .then(() =>
-        options.git
-          ? commitAll(
-              project.directory,
-              'Setup ' + CSS_STRATEGY_NAME_MAP[cssStrategy],
-            )
-          : undefined,
-      );
-  }
-
   const {packageManager, shouldInstallDeps, installDeps} =
     await handleDependencies(
       project.directory,
@@ -240,7 +221,6 @@ export async function setupLocalStarterTemplate(
   const setupSummary: SetupSummary = {
     language,
     packageManager,
-    cssStrategy,
     depsInstalled: false,
     cliCommand: await getCliCommand('', packageManager),
   };
@@ -350,6 +330,26 @@ export async function setupLocalStarterTemplate(
           setupSummary.routesError = error as AbortError;
         });
     });
+  }
+
+  const {setupCss, cssStrategy} = await handleCssStrategy(
+    project.directory,
+    controller,
+    options.styling,
+  );
+
+  if (cssStrategy) {
+    setupSummary.cssStrategy = cssStrategy;
+    backgroundWorkPromise = backgroundWorkPromise
+      .then(() => setupCss().catch(abort))
+      .then(() =>
+        options.git
+          ? commitAll(
+              project.directory,
+              'Setup ' + CSS_STRATEGY_NAME_MAP[cssStrategy],
+            )
+          : undefined,
+      );
   }
 
   await renderTasks(tasks);
