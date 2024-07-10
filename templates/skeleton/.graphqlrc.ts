@@ -4,6 +4,7 @@ import {getSchema} from '@shopify/hydrogen-codegen';
 /**
  * GraphQL Config
  * @see https://the-guild.dev/graphql/config/docs/user/usage
+ * @type {IGraphQLConfig}
  */
 export default {
   projects: {
