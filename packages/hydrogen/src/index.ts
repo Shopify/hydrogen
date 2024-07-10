@@ -162,3 +162,9 @@ export type {
 } from '@shopify/hydrogen-react';
 
 export type {HydrogenSessionData, HydrogenSession, ShopifyEnv} from './types';
+
+export {
+  createShopifyHandler,
+  type ShopifyHandlerOptions,
+  type ShopifyHandler,
+} from './createShopifyHandler';
