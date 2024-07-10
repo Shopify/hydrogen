@@ -157,10 +157,10 @@ async function generateTypes({
   forceSfapiVersion,
   ...dirs
 }: CodegenOptions) {
-  type CodegeType = typeof import('@graphql-codegen/cli');
+  type CodegenType = typeof import('@graphql-codegen/cli');
 
   const {generate, loadCodegenConfig, CodegenContext} =
-    await importLocal<CodegeType>(
+    await importLocal<CodegenType>(
       '@graphql-codegen/cli',
       dirs.rootDirectory,
     ).catch(() => {
