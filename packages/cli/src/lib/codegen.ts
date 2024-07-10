@@ -318,18 +318,26 @@ function findGqlProject(schemaFilepath: string, gqlConfig?: GraphQLConfig) {
   ) as GraphQLConfig['projects'][number];
 }
 
+/**
+ * Adds prettier hook (Prettier is bundled in our CLI) to the projects that
+ * uses the Hydrogen preset. This ensures that the generated files are formatted properly.
+ */
 async function addHooksToHydrogenOptions(
   codegenConfig: LoadCodegenConfigResult['config'],
   {rootDirectory}: ProjectDirs,
 ) {
-  // Find generated files that use the Hydrogen preset
+  const name = Symbol.for('name');
   const hydrogenProjectsOptions = Object.values(codegenConfig.generates).filter(
     (value) => {
       const foundPreset = (Array.isArray(value) ? value[0] : value)?.preset;
       if (typeof foundPreset === 'object') {
-        const name = Symbol.for('name');
         if (name in foundPreset) {
-          return foundPreset[name] === 'hydrogen';
+          return (
+            // Preset from @shopify/hydrogen-codegen (e.g. SFAPI, CAAPI)
+            foundPreset[name] === 'hydrogen' ||
+            // Preset from @shopify/graphql-codegen (e.g. Admin API)
+            foundPreset[name] === '@shopify/graphql-codegen'
+          );
         }
       }
     },
