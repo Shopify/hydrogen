@@ -1,5 +1,171 @@
 # skeleton
 
+## 2024.7.1
+
+### Patch Changes
+
+- Update `@shopify/oxygen-workers-types` to fix issues on Windows. ([#2252](https://github.com/Shopify/hydrogen/pull/2252)) by [@michenly](https://github.com/michenly)
+
+- [**Breaking change**] ([#2113](https://github.com/Shopify/hydrogen/pull/2113)) by [@blittle](https://github.com/blittle)
+
+  Previously the `VariantSelector` component would filter out options that only had one value. This is undesireable for some apps. We've removed that filter, if you'd like to retain the existing functionality, simply filter the options prop before it is passed to the `VariantSelector` component:
+
+  ```diff
+   <VariantSelector
+     handle={product.handle}
+  +  options={product.options.filter((option) => option.values.length > 1)}
+  -  options={product.options}
+     variants={variants}>
+   </VariantSelector>
+  ```
+
+  Fixes [#1198](https://github.com/Shopify/hydrogen/discussions/1198)
+
+- Update remix to v2.10.1 ([#2290](https://github.com/Shopify/hydrogen/pull/2290)) by [@michenly](https://github.com/michenly)
+
+- Update root to use [Remix's Layout Export pattern](https://remix.run/docs/en/main/file-conventions/root#layout-export) and eliminate the use of `useLoaderData` in root. ([#2292](https://github.com/Shopify/hydrogen/pull/2292)) by [@michenly](https://github.com/michenly)
+
+  The diff below showcase how you can make this refactor in existing application.
+
+  ```diff
+  import {
+    Outlet,
+  -  useLoaderData,
+  +  useRouteLoaderData,
+  } from '@remix-run/react';
+  -import {Layout} from '~/components/Layout';
+  +import {PageLayout} from '~/components/PageLayout';
+
+  -export default function App() {
+  +export function Layout({children}: {children?: React.ReactNode}) {
+    const nonce = useNonce();
+  -  const data = useLoaderData<typeof loader>();
+  +  const data = useRouteLoaderData<typeof loader>('root');
+
+    return (
+      <html>
+      ...
+        <body>
+  -        <Layout {...data}>
+  -          <Outlet />
+  -        </Layout>
+  +        {data? (
+  +          <PageLayout {...data}>{children}</PageLayout>
+  +         ) : (
+  +          children
+  +        )}
+        </body>
+      </html>
+    );
+  }
+
+  +export default function App() {
+  +  return <Outlet />;
+  +}
+
+  export function ErrorBoundary() {
+  - const rootData = useLoaderData<typeof loader>();
+
+    return (
+  -    <html>
+  -    ...
+  -      <body>
+  -        <Layout {...rootData}>
+  -          <div className="route-error">
+  -            <h1>Error</h1>
+  -            ...
+  -          </div>
+  -        </Layout>
+  -      </body>
+  -    </html>
+  +    <div className="route-error">
+  +      <h1>Error</h1>
+  +      ...
+  +    </div>
+    );
+  }
+
+  ```
+
+- Refactor the cart and product form components ([#2132](https://github.com/Shopify/hydrogen/pull/2132)) by [@blittle](https://github.com/blittle)
+
+- Remove manual setting of session in headers and recommend setting it in server after response is created. ([#2137](https://github.com/Shopify/hydrogen/pull/2137)) by [@michenly](https://github.com/michenly)
+
+  Step 1: Add `isPending` implementation in session
+
+  ```diff
+  // in app/lib/session.ts
+  export class AppSession implements HydrogenSession {
+  +  public isPending = false;
+
+    get unset() {
+  +    this.isPending = true;
+      return this.#session.unset;
+    }
+
+    get set() {
+  +    this.isPending = true;
+      return this.#session.set;
+    }
+
+    commit() {
+  +    this.isPending = false;
+      return this.#sessionStorage.commitSession(this.#session);
+    }
+  }
+  ```
+
+  Step 2: update response header if `session.isPending` is true
+
+  ```diff
+  // in server.ts
+  export default {
+    async fetch(request: Request): Promise<Response> {
+      try {
+        const response = await handleRequest(request);
+
+  +      if (session.isPending) {
+  +        response.headers.set('Set-Cookie', await session.commit());
+  +      }
+
+        return response;
+      } catch (error) {
+        ...
+      }
+    },
+  };
+  ```
+
+  Step 3: remove setting cookie with session.commit() in routes
+
+  ```diff
+  // in route files
+  export async function loader({context}: LoaderFunctionArgs) {
+    return json({},
+  -    {
+  -      headers: {
+  -        'Set-Cookie': await context.session.commit(),
+  -      },
+      },
+    );
+  }
+  ```
+
+- Moved `@shopify/cli` from `dependencies` to `devDependencies`. ([#2312](https://github.com/Shopify/hydrogen/pull/2312)) by [@frandiox](https://github.com/frandiox)
+
+- The `@shopify/cli` package now bundles the `@shopify/cli-hydrogen` plugin. Therefore, you can now remove the latter from your local dependencies: ([#2306](https://github.com/Shopify/hydrogen/pull/2306)) by [@frandiox](https://github.com/frandiox)
+
+  ```diff
+      "@shopify/cli": "3.64.0",
+  -   "@shopify/cli-hydrogen": "^8.1.1",
+      "@shopify/hydrogen": "2024.7.0",
+  ```
+
+- Updated dependencies [[`a0e84d76`](https://github.com/Shopify/hydrogen/commit/a0e84d76b67d4c57c4defee06185949c41782eab), [`426bb390`](https://github.com/Shopify/hydrogen/commit/426bb390b25f51e57499ff6673aef70ded935e87), [`4337200c`](https://github.com/Shopify/hydrogen/commit/4337200c7908d56c039171c283a4d92c31a8b7b6), [`710625c7`](https://github.com/Shopify/hydrogen/commit/710625c740a6656488d4b419e2d2451bef9d076f), [`8b9c726d`](https://github.com/Shopify/hydrogen/commit/8b9c726d34f3482b5b5a0da4c7c0c2f20e2c9caa), [`10a419bf`](https://github.com/Shopify/hydrogen/commit/10a419bf1db79cdfd8c41c0223ce695959f60da9), [`6a6278bb`](https://github.com/Shopify/hydrogen/commit/6a6278bb9187b3b5a98cd98ec9dd278882d03c0d), [`66236ca6`](https://github.com/Shopify/hydrogen/commit/66236ca65ddefac99eaa553c7877c85863d84cc2), [`dcbd0bbf`](https://github.com/Shopify/hydrogen/commit/dcbd0bbf4073a3e35e96f3cce257f7b19b2b2aea), [`a5e03e2a`](https://github.com/Shopify/hydrogen/commit/a5e03e2a1e99fcd83ee5a2be7bf6f5f6b47984b3), [`c2690653`](https://github.com/Shopify/hydrogen/commit/c2690653b6b24f7318e9088551a37195255a2247), [`54c2f7ad`](https://github.com/Shopify/hydrogen/commit/54c2f7ad3d0d52e6be10b2a54a1a4fd0cc107a35), [`4337200c`](https://github.com/Shopify/hydrogen/commit/4337200c7908d56c039171c283a4d92c31a8b7b6), [`e96b332b`](https://github.com/Shopify/hydrogen/commit/e96b332ba1aba79aa3d5c2ce18001292070faf49), [`f3065371`](https://github.com/Shopify/hydrogen/commit/f3065371c1dda222c6e40bd8c20528dc9fdea9a5), [`6cd5554b`](https://github.com/Shopify/hydrogen/commit/6cd5554b160d314d35964a5ee8976ed60972bf17), [`9eb60d73`](https://github.com/Shopify/hydrogen/commit/9eb60d73e552c3d22b9325ecbcd5878810893ad3), [`e432533e`](https://github.com/Shopify/hydrogen/commit/e432533e7391ec3fe16a4a24f2b3363206842580), [`de3f70be`](https://github.com/Shopify/hydrogen/commit/de3f70be1a838eda746903cbb38cc25cf0e09fa3), [`83cb96f4`](https://github.com/Shopify/hydrogen/commit/83cb96f42078bf79b20a153d8a8461f75d573ab1)]:
+  - @shopify/remix-oxygen@2.0.5
+  - @shopify/cli-hydrogen@8.2.0
+  - @shopify/hydrogen@2024.7.1
+
 ## 2024.4.5
 
 ### Patch Changes
