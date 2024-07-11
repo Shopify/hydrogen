@@ -15,115 +15,150 @@ import {
   type CartHandlerOptions,
   type CartHandlerOptionsWithCustom,
   type CustomMethodsBase,
-  type CartHandlerReturn,
+  type HydrogenCart,
+  type HydrogenCartCustom,
 } from './cart/createCartHandler';
 import {cartGetIdDefault} from './cart/cartGetIdDefault';
 import {cartSetIdDefault} from './cart/cartSetIdDefault';
 import type {ShopifyEnv} from './types';
 
-type OptionsBase<
-  TI18n extends I18nBase,
-  TCustomMethods extends CustomMethodsBase,
-> = {
+// type for Options
+type OptionsBase<TI18n extends I18nBase> = {
   env: ShopifyEnv;
   request: Request;
-} & CreateStorefrontClientOptions<TI18n> &
-  (
-    | (Omit<
-        CartHandlerOptions,
-        'storefront' | 'customerAccount' | 'getCartId' | 'setCartId'
-      > & {
-        getCartId?: CartHandlerOptions['getCartId'];
-        setCartId?: CartHandlerOptions['setCartId'];
-      })
-    | (Omit<
-        CartHandlerOptionsWithCustom<TCustomMethods>,
-        'storefront' | 'customerAccount' | 'getCartId' | 'setCartId'
-      > & {
-        getCartId?: CartHandlerOptionsWithCustom<TCustomMethods>['getCartId'];
-        setCartId?: CartHandlerOptionsWithCustom<TCustomMethods>['setCartId'];
-      })
-  );
+} & CreateStorefrontClientOptions<TI18n>;
 
-type OptionsWithCustomerAccount<
-  TI18n extends I18nBase,
-  TCustomMethods extends CustomMethodsBase,
-> = OptionsBase<TI18n, TCustomMethods> & {
+type OptionsWithCustomerAccount = {
   useCustomerAccountAPI?: true;
 } & Omit<
-    CustomerAccountOptions,
-    'request' | 'customerAccountId' | 'customerAccountUrl'
-  > & {
+  CustomerAccountOptions,
+  'request' | 'customerAccountId' | 'customerAccountUrl'
+> & {
     customerAccountId?: CustomerAccountOptions['customerAccountId'];
     customerAccountUrl?: CustomerAccountOptions['customerAccountUrl'];
   };
 
-type OptionsWithOutCustomerAccount<
-  TI18n extends I18nBase,
-  TCustomMethods extends CustomMethodsBase,
-> = OptionsBase<TI18n, TCustomMethods> & {
+type OptionsWithoutCustomerAccount = {
   useCustomerAccountAPI: false;
 };
 
-export type ShopifyHandlerOptions<
-  TI18n extends I18nBase,
-  TCustomMethods extends CustomMethodsBase,
-> =
-  | OptionsWithCustomerAccount<TI18n, TCustomMethods>
-  | OptionsWithOutCustomerAccount<TI18n, TCustomMethods>;
+type OptionsWithCartCustomMethods<TCustomMethods extends CustomMethodsBase> =
+  Omit<
+    CartHandlerOptionsWithCustom<TCustomMethods>,
+    | 'storefront'
+    | 'customerAccount'
+    | 'getCartId'
+    | 'setCartId'
+    | 'customMethods'
+  > & {
+    getCartId?: CartHandlerOptionsWithCustom<TCustomMethods>['getCartId'];
+    setCartId?: CartHandlerOptionsWithCustom<TCustomMethods>['setCartId'];
+    customMethods: TCustomMethods;
+  };
 
-export interface ShopifyHandlerWithCustomerAccount<
+type OptionsWithoutCartCustomMethods = Omit<
+  CartHandlerOptions,
+  'storefront' | 'customerAccount' | 'getCartId' | 'setCartId' | 'customMethods'
+> & {
+  getCartId?: CartHandlerOptions['getCartId'];
+  setCartId?: CartHandlerOptions['setCartId'];
+};
+
+export type ShopifyHandlerOptions<
   TI18n extends I18nBase = {language: 'EN'; country: 'US'},
   TCustomMethods extends CustomMethodsBase = {},
-> {
+> = OptionsBase<TI18n> &
+  (OptionsWithCustomerAccount | OptionsWithoutCustomerAccount) &
+  (
+    | OptionsWithoutCartCustomMethods
+    | OptionsWithCartCustomMethods<TCustomMethods>
+  );
+
+// type for Returns
+interface HandlerReturnBase<TI18n extends I18nBase> {
   storefront: StorefrontClient<TI18n>['storefront'];
+}
+
+interface HandlerReturnWithCustomerAccount {
   customerAccount: CustomerAccount;
-  cart: CartHandlerReturn<TCustomMethods>;
 }
+interface HandlerReturnWithoutCustomerAccount {}
+type HandlerReturnCustomerAccount =
+  | HandlerReturnWithCustomerAccount
+  | HandlerReturnWithoutCustomerAccount;
 
-export interface ShopifyHandlerWithOutCustomerAccount<
-  TI18n extends I18nBase,
+interface HandlerReturnWithCartCustomMethods<
   TCustomMethods extends CustomMethodsBase,
 > {
-  storefront: StorefrontClient<TI18n>['storefront'];
-  customerAccount?: undefined;
-  cart: CartHandlerReturn<TCustomMethods>;
+  cart: HydrogenCartCustom<TCustomMethods>;
 }
-export type ShopifyHandler<
+interface HandlerReturnWithoutCartCustomMethods {
+  cart: HydrogenCart;
+}
+type HandlerReturnCartCustomMethods<TCustomMethods extends CustomMethodsBase> =
+  | HandlerReturnWithCartCustomMethods<TCustomMethods>
+  | HandlerReturnWithoutCartCustomMethods;
+
+export type ShopifyHandlerReturn<
+  TI18n extends I18nBase = {language: 'EN'; country: 'US'},
+  TCustomMethods extends CustomMethodsBase = {},
+> = HandlerReturnBase<TI18n> &
+  HandlerReturnCustomerAccount &
+  HandlerReturnCartCustomMethods<TCustomMethods>;
+
+// type for createShopifyHandler methods
+export function createShopifyHandler<
   TI18n extends I18nBase,
   TCustomMethods extends CustomMethodsBase,
-> =
-  | ShopifyHandlerWithCustomerAccount<TI18n, TCustomMethods>
-  | ShopifyHandlerWithOutCustomerAccount<TI18n, TCustomMethods>;
+>(
+  options: OptionsBase<TI18n> &
+    OptionsWithCustomerAccount &
+    OptionsWithCartCustomMethods<TCustomMethods>,
+): HandlerReturnBase<TI18n> &
+  HandlerReturnWithCustomerAccount &
+  HandlerReturnWithCartCustomMethods<TCustomMethods>;
+
+export function createShopifyHandler<TI18n extends I18nBase>(
+  options: OptionsBase<TI18n> &
+    OptionsWithCustomerAccount &
+    OptionsWithoutCartCustomMethods,
+): HandlerReturnBase<TI18n> &
+  HandlerReturnWithCustomerAccount &
+  HandlerReturnWithoutCartCustomMethods;
 
 export function createShopifyHandler<
   TI18n extends I18nBase,
   TCustomMethods extends CustomMethodsBase,
 >(
-  options: OptionsWithCustomerAccount<TI18n, TCustomMethods>,
-): ShopifyHandlerWithCustomerAccount<TI18n, TCustomMethods>;
+  options: OptionsBase<TI18n> &
+    OptionsWithoutCustomerAccount &
+    OptionsWithCartCustomMethods<TCustomMethods>,
+): HandlerReturnBase<TI18n> &
+  HandlerReturnWithoutCustomerAccount &
+  HandlerReturnWithCartCustomMethods<TCustomMethods>;
 
-export function createShopifyHandler<
-  TI18n extends I18nBase,
-  TCustomMethods extends CustomMethodsBase,
->(
-  options: OptionsWithOutCustomerAccount<TI18n, TCustomMethods>,
-): ShopifyHandlerWithOutCustomerAccount<TI18n, TCustomMethods>;
+export function createShopifyHandler<TI18n extends I18nBase>(
+  options: OptionsBase<TI18n> &
+    OptionsWithoutCustomerAccount &
+    OptionsWithoutCartCustomMethods,
+): HandlerReturnBase<TI18n> &
+  HandlerReturnWithoutCustomerAccount &
+  HandlerReturnWithoutCartCustomMethods;
 
 export function createShopifyHandler<
   TI18n extends I18nBase,
   TCustomMethods extends CustomMethodsBase,
 >(
   options: ShopifyHandlerOptions<TI18n, TCustomMethods>,
-): ShopifyHandler<TI18n, TCustomMethods> {
+): ShopifyHandlerReturn<TI18n, TCustomMethods> {
   const {env, request} = options;
 
   /**
    * Create Hydrogen's Storefront client.
    */
-  const {storefront} = createStorefrontClient({
+  const {storefront} = createStorefrontClient<TI18n>({
     ...options,
-    i18n: options.i18n || ({language: 'EN', country: 'US'} as TI18n),
+    i18n: (options.i18n as TI18n) || ({language: 'EN', country: 'US'} as TI18n),
     publicStorefrontToken:
       options.publicStorefrontToken || env.PUBLIC_STOREFRONT_API_TOKEN,
     privateStorefrontToken:
@@ -134,7 +169,7 @@ export function createShopifyHandler<
       options.storefrontHeaders || getStorefrontHeaders(request),
   });
 
-  let customerAccount;
+  let customerAccount: CustomerAccount | undefined = undefined;
   if (hasCustomerAccountAPI(options)) {
     /**
      * Create a client for Customer Account API.
@@ -160,16 +195,24 @@ export function createShopifyHandler<
     setCartId: options.setCartId || cartSetIdDefault(),
   });
 
-  return {storefront, customerAccount, cart};
+  return {
+    storefront,
+    customerAccount,
+    cart,
+  };
 }
 
+// Type Predicate Functions
 function hasCustomerAccountAPI<
   TI18n extends I18nBase,
   TCustomMethods extends CustomMethodsBase,
 >(
-  options:
-    | OptionsWithCustomerAccount<TI18n, TCustomMethods>
-    | OptionsWithOutCustomerAccount<TI18n, TCustomMethods>,
-): options is OptionsWithCustomerAccount<TI18n, TCustomMethods> {
+  options: ShopifyHandlerOptions<TI18n, TCustomMethods>,
+): options is OptionsBase<TI18n> &
+  OptionsWithCustomerAccount &
+  (
+    | OptionsWithoutCartCustomMethods
+    | OptionsWithCartCustomMethods<TCustomMethods>
+  ) {
   return options.useCustomerAccountAPI !== false;
 }

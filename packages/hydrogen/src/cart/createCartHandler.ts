@@ -195,7 +195,7 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
     return {
       ...methods,
       ...(options.customMethods ?? {}),
-    };
+    } as unknown as HydrogenCartCustom<TCustomMethods>;
   } else {
     return methods;
   }

@@ -166,5 +166,5 @@ export type {HydrogenSessionData, HydrogenSession, ShopifyEnv} from './types';
 export {
   createShopifyHandler,
   type ShopifyHandlerOptions,
-  type ShopifyHandler,
+  type ShopifyHandlerReturn,
 } from './createShopifyHandler';
