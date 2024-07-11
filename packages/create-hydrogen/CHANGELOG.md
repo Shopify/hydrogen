@@ -1,5 +1,11 @@
 # @shopify/create-hydrogen
 
+## 5.0.0
+
+### Major Changes
+
+- The code is now bundled to enhance installation speed. ([#2184](https://github.com/Shopify/hydrogen/pull/2184)) by [@frandiox](https://github.com/frandiox)
+
 ## 4.3.10
 
 ### Patch Changes
