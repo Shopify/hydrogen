@@ -15,7 +15,7 @@
     "build": "tsup --clean",
     "dev": "tsup --watch ./src --watch ../../node_modules/@shopify/hydrogen-react/dist/browser-prod/index.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "echo 'vitest run'",
+    "test": "vitest run",
     "prepack": "npm run build",
     "test:watch": "vitest",
     "build-docs": "sh ./docs/build-docs.sh && npm run format",

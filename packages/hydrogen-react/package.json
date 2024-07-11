@@ -123,7 +123,7 @@
     "format": "prettier --write \"{src,docs}/**/*\" --ignore-unknown",
     "graphql-types": "graphql-codegen --config codegen.ts && npm run format",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx src",
-    "test": "echo 'vitest run --coverage'",
+    "test": "vitest run --coverage",
     "test:watch": "vitest",
     "typecheck": "run-p typecheck:*",
     "typecheck:code": "tsc --noEmit",
