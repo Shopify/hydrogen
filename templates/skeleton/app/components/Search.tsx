@@ -91,6 +91,8 @@ export function PredictiveSearchResults() {
     if (!inputRef.current) return;
     inputRef.current.blur();
     inputRef.current.value = '';
+
+    // FIX: add event onGoToSearchResult
     // close the aside
     window.location.href = event.currentTarget.href;
   }
@@ -143,11 +145,11 @@ function NoPredictiveSearchResults({
   );
 }
 
-type SearchResultTypeProps = {
+type PredictiveSearchResultProps = {
   goToSearchResult: (event: React.MouseEvent<HTMLAnchorElement>) => void;
-  items: NormalizedPredictiveSearchResultItem[];
-  term: UseSearchReturn['term'];
-  type: NormalizedPredictiveSearchResults[number]['type'];
+  items: PredictiveSearchHandlerReturn['result']['resources'][0]['items'];
+  term: React.MutableRefObject<string>;
+  type: PredictiveSearchHandlerReturn['result']['resources'][0]['type'];
 };
 
 function PredictiveSearchResult({
@@ -155,7 +157,7 @@ function PredictiveSearchResult({
   items,
   term,
   type,
-}: SearchResultTypeProps) {
+}: PredictiveSearchResultProps) {
   const isSuggestions = type === 'queries';
   const categoryUrl = `/search?q=${
     term.current
@@ -167,7 +169,7 @@ function PredictiveSearchResult({
         <h5>{isSuggestions ? 'Suggestions' : type}</h5>
       </Link>
       <ul>
-        {items.map((item: NormalizedPredictiveSearchResultItem) => (
+        {items.map((item) => (
           <PredictiveSearchResultItem
             goToSearchResult={goToSearchResult}
             item={item}
@@ -179,14 +181,17 @@ function PredictiveSearchResult({
   );
 }
 
-type SearchResultItemProps = Pick<SearchResultTypeProps, 'goToSearchResult'> & {
-  item: NormalizedPredictiveSearchResultItem;
+type PredictiveSearchResultItemProps = Pick<
+  PredictiveSearchResultProps,
+  'goToSearchResult'
+> & {
+  item: PredictiveSearchHandlerReturn['result']['resources'][0]['items'][0];
 };
 
 function PredictiveSearchResultItem({
   goToSearchResult,
   item,
-}: SearchResultItemProps) {
+}: PredictiveSearchResultItemProps) {
   return (
     <li className="predictive-search-result-item" key={item.id}>
       <Link onClick={goToSearchResult} to={item.url}>
@@ -219,13 +224,7 @@ function PredictiveSearchResultItem({
   );
 }
 
-type UseSearchReturn = Omit<PredictiveSearchHandlerReturn, 'term'> & {
-  inputRef: React.MutableRefObject<HTMLInputElement | null>;
-  term: React.MutableRefObject<string>;
-  state: ReturnType<typeof useFetcher<typeof searchLoader>>['state'];
-};
-
-function usePredictiveSearch(): UseSearchReturn {
+function usePredictiveSearch() {
   const searchFetcher = useFetcher<{
     predictiveSearch: PredictiveSearchHandlerReturn;
   }>({
@@ -269,18 +268,15 @@ function usePredictiveSearch(): UseSearchReturn {
  * pluralToSingularSearchType(['articles', 'products']); // => 'ARTICLE,PRODUCT'
  * ```
  */
-function pluralToSingularSearchType(
-  type:
-    | NormalizedPredictiveSearchResults[number]['type']
-    | Array<NormalizedPredictiveSearchResults[number]['type']>,
-) {
+type ResourceTypes = PredictiveSearchHandlerReturn['result']['resources'][0]['type'];
+function pluralToSingularSearchType(type: ResourceTypes | Array<ResourceTypes>) {
   const plural = {
     articles: 'ARTICLE',
     collections: 'COLLECTION',
     pages: 'PAGE',
     products: 'PRODUCT',
     queries: 'QUERY',
-  };
+  } as const
 
   if (typeof type === 'string') {
     return plural[type];
