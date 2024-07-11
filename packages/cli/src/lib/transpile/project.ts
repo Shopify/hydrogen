@@ -63,6 +63,8 @@ export async function transpileProject(projectDir: string, keepTypes = true) {
   const entries = await glob('**/*.+(ts|tsx)', {
     absolute: true,
     cwd: projectDir,
+    dot: true,
+    ignore: ['**/node_modules/**'],
   });
 
   const formatConfig = await getCodeFormatOptions();

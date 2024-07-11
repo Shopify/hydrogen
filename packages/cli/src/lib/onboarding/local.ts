@@ -335,7 +335,12 @@ export async function setupLocalStarterTemplate(
           setupSummary.i18nError = error as AbortError;
         });
 
-      await setupRoutes(project.directory, language, i18nStrategy)
+      await setupRoutes(project.directory, language, {
+        i18nStrategy,
+        // The init process might have added and modified files. Do not overwrite them.
+        // E.g. CSS imports might have been added to the root.
+        overwriteFileDeps: false,
+      })
         .then((routes) => {
           setupSummary.routes = routes;
 
