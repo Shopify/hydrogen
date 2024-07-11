@@ -115,11 +115,13 @@ export async function runSetup(options: RunSetupOptions) {
         ]),
       )
       .then(async () => {
-        routes = await setupRoutes(
-          rootDirectory,
-          typescript ? 'ts' : 'js',
-          i18n,
-        );
+        routes = await setupRoutes(rootDirectory, typescript ? 'ts' : 'js', {
+          i18nStrategy: i18n,
+          // User might have added files before running this command.
+          // We should overwrite them to ensure the routes are set up correctly.
+          // Relies on Git to restore the files if needed.
+          overwriteFileDeps: true,
+        });
       });
   }
 

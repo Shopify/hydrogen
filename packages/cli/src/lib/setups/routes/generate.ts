@@ -175,6 +175,7 @@ type GenerateProjectFileOptions = {
   templatesRoot?: string;
   localePrefix?: string;
   signal?: AbortSignal;
+  overwriteFileDeps?: boolean;
 };
 
 /**
@@ -221,6 +222,7 @@ export async function generateProjectFile(
     localePrefix,
     v1RouteConvention = false,
     signal,
+    overwriteFileDeps = true,
   }: GenerateProjectFileOptions & {
     rootDirectory: string;
     appDirectory: string;
@@ -232,15 +234,6 @@ export async function generateProjectFile(
 
   const extension = (routeFrom.match(/(\.[jt]sx?)$/) ?? [])[1] ?? '.tsx';
   routeFrom = routeFrom.replace(extension, '');
-
-  const routeTemplatePath = await getTemplateAppFile(
-    routeFrom + extension,
-    templatesRoot,
-  );
-  const allFilesToGenerate = await findRouteDependencies(
-    routeTemplatePath,
-    await getTemplateAppFile('', templatesRoot),
-  );
 
   const routeDestinationPath = joinPath(
     appDirectory,
@@ -268,6 +261,15 @@ export async function generateProjectFile(
     result.operation = 'replaced';
   }
 
+  const routeTemplatePath = await getTemplateAppFile(
+    routeFrom + extension,
+    templatesRoot,
+  );
+  const allFilesToGenerate = await findRouteDependencies(
+    routeTemplatePath,
+    await getTemplateAppFile('', templatesRoot),
+  );
+
   for (const filePath of allFilesToGenerate) {
     const isRoute = filePath.startsWith(ASSETS_STARTER_DIR_ROUTES + '/');
     const destinationPath = isRoute
@@ -276,6 +278,10 @@ export async function generateProjectFile(
           appDirectory,
           filePath.replace(/\.ts(x?)$/, `.${typescript ? 'ts$1' : 'js$1'}`),
         );
+
+    if (!overwriteFileDeps && (await fileExists(destinationPath))) {
+      continue;
+    }
 
     // Create the directory if it doesn't exist.
     if (!(await fileExists(dirname(destinationPath)))) {

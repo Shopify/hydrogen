@@ -139,7 +139,7 @@ export async function handleRouteGeneration(
     setupRoutes: async (
       directory: string,
       language: Language,
-      i18nStrategy?: I18nStrategy,
+      options?: {i18nStrategy?: I18nStrategy; overwriteFileDeps?: boolean},
     ) => {
       if (needsRouteGeneration) {
         const result = await generateRoutes(
@@ -148,8 +148,10 @@ export async function handleRouteGeneration(
             directory,
             force: true,
             typescript: language === 'ts',
-            localePrefix: i18nStrategy === 'subfolders' ? 'locale' : false,
+            localePrefix:
+              options?.i18nStrategy === 'subfolders' ? 'locale' : false,
             signal: controller.signal,
+            ...options,
           },
           {
             rootDirectory: directory,
@@ -760,8 +762,13 @@ export function createAbortHandler(
       ),
     );
 
-    // Enable this when debugging tests:
-    // if (process.env.NODE_ENV === 'test') console.error(error);
+    if (process.env.SHOPIFY_UNIT_TEST && process.exit.name !== 'spy') {
+      // This is not an artificial error for testing, print it and
+      // throw an unhandled rejection. Otherwise, the error will be
+      // swallowed by the test runner after process.exit is called.
+      console.error('Error during test before process.exit:', error);
+      throw error;
+    }
 
     // This code runs asynchronously so throwing here
     // turns into an unhandled rejection. Exit process instead:
