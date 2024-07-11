@@ -1,5 +1,11 @@
 # @shopify/mini-oxygen
 
+## 3.0.4
+
+### Patch Changes
+
+- Security updates ([#2263](https://github.com/Shopify/hydrogen/pull/2263)) by [@dependabot](https://github.com/apps/dependabot)
+
 ## 3.0.3
 
 ### Patch Changes

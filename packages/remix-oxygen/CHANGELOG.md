@@ -1,5 +1,11 @@
 # @shopify/remix-oxygen
 
+## 2.0.5
+
+### Patch Changes
+
+- Update `@shopify/oxygen-workers-types` to fix issues on Windows. ([#2252](https://github.com/Shopify/hydrogen/pull/2252)) by [@michenly](https://github.com/michenly)
+
 ## 2.0.4
 
 ### Patch Changes
