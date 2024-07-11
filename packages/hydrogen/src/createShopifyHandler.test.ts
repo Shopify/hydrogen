@@ -62,7 +62,7 @@ const mockEnv = {
 const defaultOptions: Parameters<typeof createShopifyHandler>[0] = {
   env: mockEnv,
   request: new Request('https://localhost'),
-  session: {} as any,
+  customerAccountClientOptions: {session: {} as any},
 };
 
 describe('createShopifyHandler', () => {
@@ -107,7 +107,9 @@ describe('createShopifyHandler', () => {
 
       createShopifyHandler({
         ...defaultOptions,
-        publicStorefrontToken: publicStorefrontTokenOverwrite,
+        storefrontClientOptions: {
+          publicStorefrontToken: publicStorefrontTokenOverwrite,
+        },
       });
 
       expect(vi.mocked(createStorefrontClient)).toHaveBeenCalledWith(
@@ -120,7 +122,7 @@ describe('createShopifyHandler', () => {
     it('called createStorefrontClient with values that does not have default', async () => {
       createShopifyHandler({
         ...defaultOptions,
-        contentType: 'graphql',
+        storefrontClientOptions: {contentType: 'graphql'},
       });
 
       expect(vi.mocked(createStorefrontClient)).toHaveBeenCalledWith(
@@ -140,7 +142,7 @@ describe('createShopifyHandler', () => {
 
       createShopifyHandler({
         ...defaultOptions,
-        storefrontHeaders: mockeStorefrontHeaders,
+        storefrontClientOptions: {storefrontHeaders: mockeStorefrontHeaders},
       });
 
       expect(vi.mocked(createStorefrontClient)).toHaveBeenCalledWith(
@@ -162,10 +164,9 @@ describe('createShopifyHandler', () => {
       );
     });
 
-    it('returns customerAccount client if useCustomerAccountAPI is true', async () => {
+    it('returns customerAccount client if customerAccountClientOptions exist', async () => {
       const shopify = createShopifyHandler({
         ...defaultOptions,
-        useCustomerAccountAPI: true,
       });
 
       expect(shopify).toEqual(
@@ -173,10 +174,10 @@ describe('createShopifyHandler', () => {
       );
     });
 
-    it('does not return customerAccount client if useCustomerAccountAPI is false', async () => {
+    it('does not return customerAccount client if customerAccountClientOptions is undefined', async () => {
       const shopify = createShopifyHandler({
         ...defaultOptions,
-        useCustomerAccountAPI: false,
+        customerAccountClientOptions: undefined,
       });
 
       expect(shopify).toEqual(
@@ -200,7 +201,10 @@ describe('createShopifyHandler', () => {
 
       createShopifyHandler({
         ...defaultOptions,
-        customerAccountId: mockCustomerAccountId,
+        customerAccountClientOptions: {
+          session: {} as any,
+          customerAccountId: mockCustomerAccountId,
+        },
       });
 
       expect(vi.mocked(createCustomerAccountClient)).toHaveBeenCalledWith(
@@ -214,7 +218,10 @@ describe('createShopifyHandler', () => {
       const mockAuthUrl = 'customerAccountId overwrite';
       createShopifyHandler({
         ...defaultOptions,
-        authUrl: mockAuthUrl,
+        customerAccountClientOptions: {
+          session: {} as any,
+          authUrl: mockAuthUrl,
+        },
       });
 
       expect(vi.mocked(createCustomerAccountClient)).toHaveBeenCalledWith(
@@ -267,10 +274,12 @@ describe('createShopifyHandler', () => {
 
       createShopifyHandler({
         ...defaultOptions,
-        getCartId: mockGetCartId,
+        cartOptions: {
+          getCartId: mockGetCartId,
+        },
       });
 
-      expect(vi.mocked(createStorefrontClient)).toHaveBeenCalledWith(
+      expect(vi.mocked(createCartHandler)).toHaveBeenCalledWith(
         expect.objectContaining({
           getCartId: mockGetCartId,
         }),
@@ -282,10 +291,12 @@ describe('createShopifyHandler', () => {
 
       createShopifyHandler({
         ...defaultOptions,
-        cartQueryFragment: mockCartQueryFragment,
+        cartOptions: {
+          cartQueryFragment: mockCartQueryFragment,
+        },
       });
 
-      expect(vi.mocked(createStorefrontClient)).toHaveBeenCalledWith(
+      expect(vi.mocked(createCartHandler)).toHaveBeenCalledWith(
         expect.objectContaining({
           cartQueryFragment: mockCartQueryFragment,
         }),
@@ -299,7 +310,9 @@ describe('createShopifyHandler', () => {
 
       createShopifyHandler({
         ...defaultOptions,
-        getCartId: mockGetCartId,
+        cartOptions: {
+          getCartId: mockGetCartId,
+        },
       });
 
       expect(vi.mocked(createCartHandler)).toHaveBeenCalledWith(
@@ -318,7 +331,9 @@ describe('createShopifyHandler', () => {
 
       createShopifyHandler({
         ...defaultOptions,
-        setCartId: mockSetCartId,
+        cartOptions: {
+          setCartId: mockSetCartId,
+        },
       });
 
       expect(vi.mocked(createCartHandler)).toHaveBeenCalledWith(

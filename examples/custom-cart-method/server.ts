@@ -41,37 +41,44 @@ export default {
       const {storefront, customerAccount, cart} = createShopifyHandler({
         env,
         request,
-        session,
-        cache,
-        waitUntil,
-        cartQueryFragment: CART_QUERY_FRAGMENT,
-        /***********************************************/
-        /**********  EXAMPLE UPDATE STARTS  ************/
-        customMethods: {
-          updateLineByOptions: async (
-            productId: string,
-            selectedOptions: SelectedOptionInput[],
-            line: CartLineUpdateInput,
-          ) => {
-            const {product} = await storefront.query(PRODUCT_VARIANT_QUERY, {
-              variables: {
-                productId,
-                selectedOptions,
-              },
-            });
-
-            const lines = [
-              {...line, merchandiseId: product?.selectedVariant?.id},
-            ];
-
-            return await cartLinesUpdateDefault({
-              storefront,
-              getCartId: cartGetIdDefault(request.headers),
-            })(lines);
-          },
+        storefrontClientOptions: {
+          cache,
+          waitUntil,
         },
-        /**********   EXAMPLE UPDATE END   ************/
-        /***********************************************/
+        customerAccountClientOptions: {
+          session,
+          waitUntil,
+        },
+        cartOptions: {
+          cartQueryFragment: CART_QUERY_FRAGMENT,
+          /***********************************************/
+          /**********  EXAMPLE UPDATE STARTS  ************/
+          customMethods: {
+            updateLineByOptions: async (
+              productId: string,
+              selectedOptions: SelectedOptionInput[],
+              line: CartLineUpdateInput,
+            ) => {
+              const {product} = await storefront.query(PRODUCT_VARIANT_QUERY, {
+                variables: {
+                  productId,
+                  selectedOptions,
+                },
+              });
+
+              const lines = [
+                {...line, merchandiseId: product?.selectedVariant?.id},
+              ];
+
+              return await cartLinesUpdateDefault({
+                storefront,
+                getCartId: cartGetIdDefault(request.headers),
+              })(lines);
+            },
+          },
+          /**********   EXAMPLE UPDATE END   ************/
+          /***********************************************/
+        },
       });
 
       /**

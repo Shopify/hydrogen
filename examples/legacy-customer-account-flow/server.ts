@@ -7,6 +7,7 @@ import {
   createCartHandler,
   createStorefrontClient,
   storefrontRedirect,
+  createShopifyHandler,
 } from '@shopify/hydrogen';
 import {
   createRequestHandler,
@@ -39,29 +40,21 @@ export default {
         AppSession.init(request, [env.SESSION_SECRET]),
       ]);
 
-      /**
-       * Create Hydrogen's Storefront client.
-       */
-      const {storefront} = createStorefrontClient({
-        cache,
-        waitUntil,
-        i18n: {language: 'EN', country: 'US'},
-        publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-        privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
-        storeDomain: env.PUBLIC_STORE_DOMAIN,
-        storefrontId: env.PUBLIC_STOREFRONT_ID,
-        storefrontHeaders: getStorefrontHeaders(request),
-      });
-
-      /*
-       * Create a cart handler that will be used to
-       * create and update the cart in the session.
-       */
-      const cart = createCartHandler({
-        storefront,
-        getCartId: cartGetIdDefault(request.headers),
-        setCartId: cartSetIdDefault(),
-        cartQueryFragment: CART_QUERY_FRAGMENT,
+      const {storefront, cart} = createShopifyHandler({
+        env,
+        request,
+        storefrontClientOptions: {
+          cache,
+          waitUntil,
+        },
+        /***********************************************/
+        /**********  EXAMPLE UPDATE STARTS  ************/
+        customerAccountClientOptions: undefined,
+        /**********   EXAMPLE UPDATE END   ************/
+        /***********************************************/
+        cartOptions: {
+          cartQueryFragment: CART_QUERY_FRAGMENT,
+        },
       });
 
       /**

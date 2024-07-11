@@ -32,10 +32,17 @@ export default {
       const {storefront, customerAccount, cart} = createShopifyHandler({
         env,
         request,
-        session,
-        cache,
-        waitUntil,
-        cartQueryFragment: CART_QUERY_FRAGMENT,
+        storefrontClientOptions: {
+          cache,
+          waitUntil,
+        },
+        customerAccountClientOptions: {
+          session,
+          waitUntil,
+        },
+        cartOptions: {
+          cartQueryFragment: CART_QUERY_FRAGMENT,
+        },
       });
 
       /**
