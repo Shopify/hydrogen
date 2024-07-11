@@ -1,20 +1,8 @@
 // @ts-ignore
 // Virtual entry point for the app
 import * as remixBuild from 'virtual:remix/server-build';
-import {
-  cartGetIdDefault,
-  cartSetIdDefault,
-  createCartHandler,
-  createStorefrontClient,
-  storefrontRedirect,
-  createCustomerAccountClient,
-  createShopifyHandler,
-} from '@shopify/hydrogen';
-import {
-  createRequestHandler,
-  getStorefrontHeaders,
-  type AppLoadContext,
-} from '@shopify/remix-oxygen';
+import {storefrontRedirect, createShopifyHandler} from '@shopify/hydrogen';
+import {createRequestHandler, type AppLoadContext} from '@shopify/remix-oxygen';
 import {AppSession} from '~/lib/session';
 import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
 
