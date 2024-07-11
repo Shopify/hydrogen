@@ -139,7 +139,7 @@ export async function handleRouteGeneration(
     setupRoutes: async (
       directory: string,
       language: Language,
-      i18nStrategy?: I18nStrategy,
+      options?: {i18nStrategy?: I18nStrategy; overwriteFileDeps?: boolean},
     ) => {
       if (needsRouteGeneration) {
         const result = await generateRoutes(
@@ -148,8 +148,10 @@ export async function handleRouteGeneration(
             directory,
             force: true,
             typescript: language === 'ts',
-            localePrefix: i18nStrategy === 'subfolders' ? 'locale' : false,
+            localePrefix:
+              options?.i18nStrategy === 'subfolders' ? 'locale' : false,
             signal: controller.signal,
+            ...options,
           },
           {
             rootDirectory: directory,
