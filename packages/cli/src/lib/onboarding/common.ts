@@ -762,8 +762,13 @@ export function createAbortHandler(
       ),
     );
 
-    // Enable this when debugging tests:
-    if (process.env.NODE_ENV === 'test') console.error(error);
+    if (process.env.SHOPIFY_UNIT_TEST && process.exit.name !== 'spy') {
+      // This is not an artificial error for testing, print it and
+      // throw an unhandled rejection. Otherwise, the error will be
+      // swallowed by the test runner after process.exit is called.
+      console.error('Error during test before process.exit:', error);
+      throw error;
+    }
 
     // This code runs asynchronously so throwing here
     // turns into an unhandled rejection. Exit process instead:
