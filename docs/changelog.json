@@ -3,6 +3,162 @@
   "version": "1",
   "releases": [
     {
+      "title": "Optimistic variant, Remix upgrade, new session commit pattern, CSS Options back in CLI, Vite bundle analyzer",
+      "version": "2024.7.1",
+      "hash": "b4884b6232383cbf7d64547f48540d0c2fcf56fe",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2236",
+      "commit": "https://github.com/Shopify/hydrogen/commit/b4884b6232383cbf7d64547f48540d0c2fcf56fe",
+      "dependencies": {
+        "@remix-run/react": "^2.10.1",
+        "@remix-run/server-runtime": "^2.10.1",
+        "@shopify/hydrogen": "2024.7.1",
+        "@shopify/remix-oxygen": "^2.0.5"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.10.1",
+        "@shopify/cli": "^3.64.0",
+        "@shopify/oxygen-workers-types": "^4.1.2",
+        "typescript": "^5.2.2"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Remix upgrade and use Layout component in root file. This new pattern will eliminate the use of useLoaderData in ErrorBoundary and clean up the root file of duplicate code.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2290",
+          "id": "2290",
+          "steps": [
+            {
+              "title": "Refactor App export to become Layout export",
+              "desc": "In root file, changed default App export to Layout export. This component will wrap both the app content and ErrorBoundary. Ensure to use `useRouteLoaderData` and handle the case when returned data doesn't exist.",
+
+              "code": "YGBgZGlmZgotZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gQXBwKCkgeworZXhwb3J0IGZ1bmN0aW9uIExheW91dCh7Y2hpbGRyZW59OiB7Y2hpbGRyZW4/OiBSZWFjdC5SZWFjdE5vZGV9KSB7CiAgY29uc3Qgbm9uY2UgPSB1c2VOb25jZSgpOwotICBjb25zdCBkYXRhID0gdXNlTG9hZGVyRGF0YTx0eXBlb2YgbG9hZGVyPigpOworICBjb25zdCBkYXRhID0gdXNlUm91dGVMb2FkZXJEYXRhPHR5cGVvZiBsb2FkZXI+KCdyb290Jyk7CgogIHJldHVybiAoCiAgICA8aHRtbD4KICAgIC4uLgogICAgICA8Ym9keT4KLSAgICAgICAgPExheW91dCB7Li4uZGF0YX0+Ci0gICAgICAgICAgPE91dGxldCAvPgotICAgICAgICA8L0xheW91dD4KKyAgICAgICAge2RhdGE/ICgKKyAgICAgICAgICA8UGFnZUxheW91dCB7Li4uZGF0YX0+e2NoaWxkcmVufTwvUGFnZUxheW91dD4KKyAgICAgICAgICkgOiAoCisgICAgICAgICAgY2hpbGRyZW4KKyAgICAgICAgKX0KICAgICAgPC9ib2R5PgogICAgPC9odG1sPgogICk7Cn0KYGBg"
+            },
+            {
+              "title": "Simplify default App export",
+              "code": "YGBgZGlmZgorZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gQXBwKCkgeworICByZXR1cm4gPE91dGxldCAvPjsKK30KYGBg"
+            },
+            {
+              "title": "Remove wrapping layout from ErrorBoundary",
+              "code": "YGBgZGlmZgpleHBvcnQgZnVuY3Rpb24gRXJyb3JCb3VuZGFyeSgpIHsKLSBjb25zdCByb290RGF0YSA9IHVzZUxvYWRlckRhdGE8dHlwZW9mIGxvYWRlcj4oKTsKCiAgcmV0dXJuICgKLSAgICA8aHRtbD4KLSAgICAuLi4KLSAgICAgIDxib2R5PgotICAgICAgICA8TGF5b3V0IHsuLi5yb290RGF0YX0+Ci0gICAgICAgICAgPGRpdiBjbGFzc05hbWU9InJvdXRlLWVycm9yIj4KLSAgICAgICAgICAgIDxoMT5FcnJvcjwvaDE+Ci0gICAgICAgICAgICAuLi4KLSAgICAgICAgICA8L2Rpdj4KLSAgICAgICAgPC9MYXlvdXQ+Ci0gICAgICA8L2JvZHk+Ci0gICAgPC9odG1sPgorICAgIDxkaXYgY2xhc3NOYW1lPSJyb3V0ZS1lcnJvciI+CisgICAgICA8aDE+RXJyb3I8L2gxPgorICAgICAgLi4uCisgICAgPC9kaXY+CiAgKTsKfQpgYGA="
+            }
+          ]
+        },
+        {
+          "title": "Optimistic Cart type improvement",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2132",
+          "id": "2132"
+        },
+        {
+          "title": "Fix Codegen config resolution when project directory contains dots",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2293",
+          "id": "2293"
+        },
+        {
+          "title": "Allow `env-branch` to be passed when running h2 deploy in CI",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2281",
+          "id": "2281"
+        },
+        {
+          "title": "Fix CLI upgrade notification when running from a global process.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2281",
+          "id": "2281"
+        },
+        {
+          "title": "Remove PUBLIC_STORE_DOMAIN environment variable from `.env` when creating new projects with mock.shop",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2221",
+          "id": "2221"
+        },
+        {
+          "title": "Added an `--auth-bypass-token-duration` flag to the deploy command to allow for specified token duration between 1 to 12 hours",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2182",
+          "id": "2182"
+        },
+        {
+          "title": "[Breaking Change] `<VariantSelector />` improved handling of options",
+          "pr": "https://github.com/Shopify/hydrogen/pull/1198",
+          "id": "1198",
+          "steps": [
+            {
+              "title": "Update options prop when using <VariantSelector />",
+              "desc": "Previously, the `VariantSelector` component would filter out options that only had one value. This is undesirable for some apps. We've removed that filter. If you'd like to retain the existing functionality, then simply filter the options prop before it is passed to the `VariantSelector` component",
+              "code": "YGBgZGlmZgogPFZhcmlhbnRTZWxlY3RvcgogICBoYW5kbGU9e3Byb2R1Y3QuaGFuZGxlfQorICBvcHRpb25zPXtwcm9kdWN0Lm9wdGlvbnMuZmlsdGVyKChvcHRpb24pID0+IG9wdGlvbi52YWx1ZXMubGVuZ3RoID4gMSl9Ci0gIG9wdGlvbnM9e3Byb2R1Y3Qub3B0aW9uc30KICAgdmFyaWFudHM9e3ZhcmlhbnRzfT4KIDwvVmFyaWFudFNlbGVjdG9yPgpgYGA="
+            }
+          ]
+        },
+        {
+          "title": "Add `sellingPlanId` support to `<BuyNowButton />`",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2254",
+          "id": "2254"
+        },
+        {
+          "title": "[Breaking Change] The @shopify/cli package now bundles the @shopify/cli-hydrogen plugin.  Therefore, you can now remove the latter from your local dependencies",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2306",
+          "id": "2306"
+        }
+      ],
+      "features": [
+        {
+          "title": "Optimistic variant",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2113",
+          "id": "2113",
+          "steps": [
+            {
+              "title": "Example of product display page update",
+              "desc": "Add a `useOptimisticVariant` hook for optimistically rendering product variant changes. This makes switching product variants instantaneous",
+              "code": "YGBgLnRzeApmdW5jdGlvbiBQcm9kdWN0KCkgewogIGNvbnN0IHtwcm9kdWN0LCB2YXJpYW50c30gPSB1c2VMb2FkZXJEYXRhPHR5cGVvZiBsb2FkZXI+KCk7CgogIC8vIFRoZSBzZWxlY3RlZFZhcmlhbnQgb3B0aW1pc3RpY2FsbHkgY2hhbmdlcyBkdXJpbmcgcGFnZQogIC8vIHRyYW5zaXRpb25zIHdpdGggb25lIG9mIHRoZSBwcmVsb2FkZWQgcHJvZHVjdCB2YXJpYW50cwogIGNvbnN0IHNlbGVjdGVkVmFyaWFudCA9IHVzZU9wdGltaXN0aWNWYXJpYW50KAogICAgcHJvZHVjdC5zZWxlY3RlZFZhcmlhbnQsCiAgICB2YXJpYW50cywKICApOwoKICByZXR1cm4gPFByb2R1Y3RNYWluIHNlbGVjdGVkVmFyaWFudD17c2VsZWN0ZWRWYXJpYW50fSAvPjsKfQpgYGA="
+            },
+            {
+              "title": "Optional <VariantSelector /> update",
+              "desc": "This also introduces a small breaking change to the `VariantSelector` component, which now immediately updates which variant is active. If you'd like to retain the current functionality, and have the `VariantSelector` wait for the page navigation to complete before updating, use the `waitForNavigation` prop.",
+              "code": "YGBgZGlmZgo8VmFyaWFudFNlbGVjdG9yCiAgaGFuZGxlPXtwcm9kdWN0LmhhbmRsZX0KICBvcHRpb25zPXtwcm9kdWN0Lm9wdGlvbnN9CisgIHdhaXRGb3JOYXZpZ2F0aW9uCj4KICAuLi4KPC9WYXJpYW50U2VsZWN0b3I+CmBgYA=="
+            }
+          ]
+        },
+        {
+          "title": "[Breaking Change] New session commit pattern",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2137",
+          "id": "2137",
+          "steps": [
+            {
+              "title": "Add isPending implementation in session",
+              "code": "YGBgZGlmZgovLyBpbiBhcHAvbGliL3Nlc3Npb24udHMKZXhwb3J0IGNsYXNzIEFwcFNlc3Npb24gaW1wbGVtZW50cyBIeWRyb2dlblNlc3Npb24geworICBwdWJsaWMgaXNQZW5kaW5nID0gZmFsc2U7CgogIGdldCB1bnNldCgpIHsKKyAgICB0aGlzLmlzUGVuZGluZyA9IHRydWU7CiAgICByZXR1cm4gdGhpcy4jc2Vzc2lvbi51bnNldDsKICB9CgogIGdldCBzZXQoKSB7CisgICAgdGhpcy5pc1BlbmRpbmcgPSB0cnVlOwogICAgcmV0dXJuIHRoaXMuI3Nlc3Npb24uc2V0OwogIH0KCiAgY29tbWl0KCkgeworICAgIHRoaXMuaXNQZW5kaW5nID0gZmFsc2U7CiAgICByZXR1cm4gdGhpcy4jc2Vzc2lvblN0b3JhZ2UuY29tbWl0U2Vzc2lvbih0aGlzLiNzZXNzaW9uKTsKICB9Cn0KYGBg"
+            },
+            {
+              "title": "update response header if `session.isPending` is true",
+              "code": "YGBgZGlmZgovLyBpbiBzZXJ2ZXIudHMKZXhwb3J0IGRlZmF1bHQgewogIGFzeW5jIGZldGNoKHJlcXVlc3Q6IFJlcXVlc3QpOiBQcm9taXNlPFJlc3BvbnNlPiB7CiAgICB0cnkgewogICAgICBjb25zdCByZXNwb25zZSA9IGF3YWl0IGhhbmRsZVJlcXVlc3QocmVxdWVzdCk7CgorICAgICAgaWYgKHNlc3Npb24uaXNQZW5kaW5nKSB7CisgICAgICAgIHJlc3BvbnNlLmhlYWRlcnMuc2V0KCdTZXQtQ29va2llJywgYXdhaXQgc2Vzc2lvbi5jb21taXQoKSk7CisgICAgICB9CgogICAgICByZXR1cm4gcmVzcG9uc2U7CiAgICB9IGNhdGNoIChlcnJvcikgewogICAgICAuLi4KICAgIH0KICB9LAp9OwpgYGA="
+            },
+            {
+              "title": "remove setting cookie with `session.commit()` in routes",
+              "code": "YGBgZGlmZgovLyBpbiByb3V0ZSBmaWxlcwpleHBvcnQgYXN5bmMgZnVuY3Rpb24gbG9hZGVyKHtjb250ZXh0fTogTG9hZGVyRnVuY3Rpb25BcmdzKSB7CiAgcmV0dXJuIGpzb24oe30sCi0gICAgewotICAgICAgaGVhZGVyczogewotICAgICAgICAnU2V0LUNvb2tpZSc6IGF3YWl0IGNvbnRleHQuc2Vzc2lvbi5jb21taXQoKSwKLSAgICAgIH0sCiAgICB9LAogICk7Cn0KYGBg"
+            }
+          ]
+        },
+        {
+          "title": "CSS Options back in CLI for Vite projects",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2138",
+          "id": "2138"
+        },
+        {
+          "title": "Vite bundle analyzer",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2245",
+          "id": "2245"
+        }
+      ]
+    },
+    {
       "title": "Auto cookie domain detection for customer privacy api and better error message for missing analytics fields",
       "version": "2024.4.7",
       "hash": "156e869563b8a7b3616618a7a9c1bf471be655b3",
