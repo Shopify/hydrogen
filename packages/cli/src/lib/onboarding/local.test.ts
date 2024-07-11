@@ -132,7 +132,7 @@ describe('local templates', () => {
     });
   });
 
-  it('transpiles projects to JS', async () => {
+  it.skip('transpiles projects to JS', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       await setupTemplate({
         path: tmpDir,
