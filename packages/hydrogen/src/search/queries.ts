@@ -55,11 +55,11 @@ export const DEFAULT_SEARCH_QUERY = `#graphql
     $first: Int
     $language: LanguageCode
     $last: Int
-    $query: String!
+    $term: String!
     $startCursor: String
   ) @inContext(country: $country, language: $language) {
     products: search(
-      query: $query,
+      query: $term,
       unavailableProducts: HIDE,
       types: [PRODUCT],
       first: $first,
@@ -81,25 +81,37 @@ export const DEFAULT_SEARCH_QUERY = `#graphql
       }
     }
     pages: search(
-      query: $query,
+      query: $term,
       types: [PAGE],
-      first: 10
+      first: $first,
     ) {
       nodes {
         ...on Page {
           ...SearchPage
         }
       }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
     }
     articles: search(
-      query: $query,
+      query: $term,
       types: [ARTICLE],
-      first: 10
+      first: $first,
     ) {
       nodes {
         ...on Article {
           ...SearchArticle
         }
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
       }
     }
   }
@@ -175,13 +187,13 @@ export const DEFAULT_PREDICTIVE_SEARCH_QUERY = `#graphql
     $language: LanguageCode
     $limit: Int!
     $limitScope: PredictiveSearchLimitScope!
-    $searchTerm: String!
+    $term: String!
     $types: [PredictiveSearchType!]
   ) @inContext(country: $country, language: $language) {
     predictiveSearch(
       limit: $limit,
       limitScope: $limitScope,
-      query: $searchTerm,
+      query: $term,
       types: $types,
     ) {
       articles {

@@ -159,3 +159,14 @@ export type {
 } from '@shopify/hydrogen-react';
 
 export type {HydrogenSessionData, HydrogenSession} from './hydrogen';
+export {
+  createSearchHandler,
+  type SearchClient,
+  type SearchHandlerReturn,
+  type PredictiveSearchHandlerReturn,
+  type SearchReturn
+} from './search/createSearchHandler';
+export {
+  type SearchQueryFragment,
+} from './search/types';
+

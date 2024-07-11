@@ -15,7 +15,11 @@ import type {
   PredictiveSearchQuery,
   SearchQueryFragment,
   SearchProductFragment,
+  SearchArticleFragment,
+  SearchPageFragment,
 } from './types';
+
+import {parseSearchOptions} from './utils';
 
 type CreateSearchHandlerArgs = {
   /* The request object */
@@ -24,7 +28,7 @@ type CreateSearchHandlerArgs = {
   storefront: Storefront;
 };
 
-enum SearchType {
+export enum SearchType {
   DEFAULT = 'default',
   PREDICTIVE = 'predictive',
 }
@@ -40,7 +44,7 @@ type CommnonSearchHandlerArgs = {
   term: string;
 };
 
-type SearchHandlerArgs = CommnonSearchHandlerArgs & {
+export type SearchHandlerArgs = CommnonSearchHandlerArgs & {
   /* The type of search to perform */
   type: SearchType.DEFAULT;
   /* Standard search options */
@@ -54,7 +58,7 @@ type SearchHandlerArgs = CommnonSearchHandlerArgs & {
 
 type LocalePathPrefix = string;
 
-type PredictiveSearchHandlerArgs = CommnonSearchHandlerArgs & {
+export type PredictiveSearchHandlerArgs = CommnonSearchHandlerArgs & {
   /* The type of search to perform */
   type: SearchType.PREDICTIVE;
   /** The predictive search options */
@@ -81,145 +85,114 @@ type SearchClientArgs = {
   localePathPrefix?: LocalePathPrefix;
 };
 
-type SearchClient = (
-  args: SearchClientArgs,
-) => Promise<SearchHandlerReturn | PredictiveSearchHandlerReturn>;
+export type SearchClient = (
+  args?: SearchClientArgs,
+) => Promise<SearchReturn>;
 
+export type SearchReturn = {
+  search: SearchHandlerReturn | null;
+  predictiveSearch: PredictiveSearchHandlerReturn | null;
+};
+
+/**
+ * A factory function that creates a  client for handling search and predictive search requests to the Shopify Storefront API
+ * @param args The factory function arguments
+ * @returns A search client function
+
+ * @example - Using the search client to fetch search results
+ * ```js
+ *  const search = createSearchHandler({request, storefront});
+ *  const results = await search({term: 'shoes'});
+ * ```
+ */
 export function createSearchHandler({
   request,
   storefront,
 }: CreateSearchHandlerArgs): SearchClient {
-  return async function handler({
-    type: customType,
-    query: customerQuery,
-    pageBy = 8,
-    localePathPrefix = '',
-  }) {
+  return async function handler(args) {
+    const defaultArgs = {
+      type: SearchType.DEFAULT,
+      customQuery: DEFAULT_SEARCH_QUERY,
+      pageBy: 8,
+      localePathPrefix: '',
+    };
+
+    if (!args) {
+      args = defaultArgs;
+    }
+
+    const {
+      type: customType,
+      query: customerQuery,
+      pageBy = 8,
+      localePathPrefix = '',
+    } = args;
+
     let query = customerQuery;
 
     // Parse the request params
     let options = parseSearchOptions({request, pageBy});
 
+    // TODO: test if type of search is overwritable when passed as an argument
     // Use the custom type if provided
-    if (customType) {
-      options.type = customType;
-    }
+    // if (!options?.type) {
+    //   options.type = customType as SearchType;
+    // }
 
     // Fetch the correct search API based on the type
-    if (options.type === 'default') {
+    switch (options.type) {
+     case 'default': {
       if (!query) {
         query = DEFAULT_SEARCH_QUERY;
       }
 
-      return await searchHandler({query, storefront, ...options});
-    }
+      console.log('standard search', {query, options})
+      const response = await searchHandler({query, storefront, ...options});
+      return {search: response, predictiveSearch: null};
+     }
 
-    if (options.type === 'predictive') {
+     case 'predictive': {
       if (!query) {
         query = DEFAULT_PREDICTIVE_SEARCH_QUERY;
       }
-      return await predictiveSearchHandler({
+
+      console.log('predictive search', {query, options})
+      const response = await predictiveSearchHandler({
         query,
-        storefront,
         localePathPrefix,
+        storefront,
         ...options,
       });
-    }
 
-    throw new Error('Invalid search type');
+      return {predictiveSearch: response, search: null};
+     }
+
+      default:
+      throw new Error('Invalid search type');
+    }
   };
 }
 
-type ParseSearchOptionsArgs = {
-  request: Request;
-  pageBy: number;
-};
-
-type CommonSearchOptions = {
-  term: string;
-  type: SearchType;
-};
-
-type SearchOptions = Omit<
-  CommonSearchOptions &
-    SearchHandlerArgs & {
-      predictive: null;
-    },
-  'query' | 'storefront'
->;
-
-type PredictiveSearchOptions = Omit<
-  CommonSearchOptions &
-    PredictiveSearchHandlerArgs & {
-      search: null;
-    },
-  'query' | 'storefront' | 'localePathPrefix'
->;
-
-/**
- * A helper function to parse search and predictive search options from the request object
- */
-function parseSearchOptions({
-  request,
-  pageBy = 8,
-}: ParseSearchOptionsArgs): SearchOptions | PredictiveSearchOptions {
-  const url = new URL(request.url);
-  const searchParams = new URLSearchParams(url.search);
-  // Common search options
-  const term = String(searchParams.get('q') || '');
-  const type = String(searchParams.get('type') || 'default') as SearchType;
-
-  // Default search specific
-  if (type === 'default') {
-    const variables = getPaginationVariables(request, {pageBy});
-    const search = {variables};
-    return {type, term, search, predictive: null, pageBy};
-  }
-
-  // Predictive search specific
-  const limit = Number(searchParams.get('limit') || 10);
-  const limitScope = String(
-    searchParams.get('limit-scope') || 'EACH',
-  ) as PredictiveSearchLimitScope;
-  const rawTypes = String(searchParams.get('type') || 'ANY');
-
-  const types =
-    rawTypes === 'ANY'
-      ? DEFAULT_SEARCH_TYPES
-      : rawTypes
-          .split(',')
-          .map((t) => t.toUpperCase() as PredictiveSearchType)
-          .filter((t) => DEFAULT_SEARCH_TYPES.includes(t));
-
-  const predictive = {limit, limitScope, types};
-  return {type, term, predictive, search: null};
-}
-
-type SearchHandlerReturn = {
+/** Search handler ----------------------------------------------------------------------*/
+export type SearchHandlerReturn = {
   term: string;
   result: {
-    resources: null | SearchQueryFragment
+    // FIX: this should be normalized results not straight up query results
+    resources: SearchQueryFragment
     total: number;
   };
   type: SearchType.DEFAULT;
 };
 
-type PredictiveSearchHandlerReturn = {
-  term: string;
-  result: {
-    resources: NormalizedPredictiveSearchResults;
-    total: number;
-  };
-  type: SearchType.PREDICTIVE;
-};
 
 type SearchHandler = (args: SearchHandlerArgs) => Promise<SearchHandlerReturn>;
+
 const searchHandler: SearchHandler = async ({
   type,
   term,
   storefront,
   search,
-  query: QUERY,
+  query: SEARCH_QUERY,
 }) => {
   if (!term) {
     return {
@@ -229,48 +202,60 @@ const searchHandler: SearchHandler = async ({
     };
   }
 
-  const {errors, ...resources} = await storefront.query<SearchQueryFragment>(QUERY, {
+  const {errors, ...resources} = await storefront.query(SEARCH_QUERY, {
     variables: {
-      query: term,
-      ...search.variables,
+      term,
+      ...(search?.variables || {}),
     },
   });
 
   if (errors) {
-    throw new Error(errors.map((e) => e.message).join(', '));
+    throw new Error(errors.map((e: Error) => e.message).join(', '));
   }
 
   if (!resources) {
     throw new Error('No search data returned from Shopify API');
   }
 
-  const total = Object.values(resources).reduce((total, value: any) => {
-    // TODO: check if I should applyTrackingParams to each result here
+
+  const total = Object.entries(resources).reduce((total, [resourceType, value]: any) => {
+    // Apply tracking parameters to each search result
+    value.nodes = value.nodes.map((resource: SearchPageFragment | SearchArticleFragment | SearchProductFragment) => {
+      const trackingParams = applyTrackingParams(resource);
+      return {
+        ...resource,
+        // TODO: we don't know where each possible resource type is located and we should
+        // take into account localization
+        url: `/${resourceType}/${resource.handle}${trackingParams}`,
+      }
+    });
     return total + value.nodes.length;
   }, 0) as number;
-
 
   const result = { resources, total, };
 
   return {term, result, type};
 };
 
-const DEFAULT_SEARCH_TYPES: PredictiveSearchType[] = [
-  'ARTICLE',
-  'COLLECTION',
-  'PAGE',
-  'PRODUCT',
-  'QUERY',
-];
+/** Predictive Search handler ----------------------------------------------------------------------*/
+export type PredictiveSearchHandlerReturn = {
+  term: string;
+  result: {
+    resources: NormalizedPredictiveSearchResults;
+    total: number;
+  };
+  type: SearchType.PREDICTIVE;
+};
 
 type PredictiveSearchHandler = (
   args: PredictiveSearchHandlerArgs,
 ) => Promise<PredictiveSearchHandlerReturn>;
+
 const predictiveSearchHandler: PredictiveSearchHandler = async ({
   term,
   type,
   storefront,
-  query: QUERY,
+  query: PREDICTIVE_QUERY,
   predictive,
   localePathPrefix = '',
 }) => {
@@ -285,12 +270,12 @@ const predictiveSearchHandler: PredictiveSearchHandler = async ({
     };
   }
 
-  const data = await storefront.query(QUERY, {
+  const data = await storefront.query(PREDICTIVE_QUERY, {
     variables: {...predictive, term},
   });
 
   if (!data?.predictiveSearch) {
-    throw new Error('No data returned from predictive search Shopify API');
+    throw new Error(`No data returned from predictive search Shopify API: ${data.errors[0].message}`);
   }
 
   // Normalize the predictive search results by adding tracking parameters and locale path prefix
@@ -472,6 +457,8 @@ function applyTrackingParams(
   resource:
     | PredictiveQueryFragment
     | SearchProductFragment
+    | SearchArticleFragment
+    | SearchPageFragment
     | PredictiveProductFragment
     | PredictiveCollectionFragment
     | PredictiveArticleFragment

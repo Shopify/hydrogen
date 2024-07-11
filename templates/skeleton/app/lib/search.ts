@@ -1,6 +1,8 @@
 import type {
   PredictiveQueryFragment,
   SearchProductFragment,
+  SearchArticleFragment,
+  SearchPageFragment,
   PredictiveProductFragment,
   PredictiveCollectionFragment,
   PredictivePageFragment,
@@ -10,6 +12,8 @@ import type {
 export function applyTrackingParams(
   resource:
     | PredictiveQueryFragment
+    | SearchArticleFragment
+    | SearchPageFragment
     | SearchProductFragment
     | PredictiveProductFragment
     | PredictiveCollectionFragment

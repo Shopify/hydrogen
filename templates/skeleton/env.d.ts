@@ -10,6 +10,7 @@ import type {
   CustomerAccount,
   HydrogenCart,
   HydrogenSessionData,
+  SearchClient
 } from '@shopify/hydrogen';
 import type {AppSession} from '~/lib/session';
 
@@ -43,6 +44,7 @@ declare module '@shopify/remix-oxygen' {
     cart: HydrogenCart;
     storefront: Storefront;
     customerAccount: CustomerAccount;
+    search: SearchClient;
     session: AppSession;
     waitUntil: ExecutionContext['waitUntil'];
   }

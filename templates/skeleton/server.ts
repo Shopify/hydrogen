@@ -8,6 +8,7 @@ import {
   createStorefrontClient,
   storefrontRedirect,
   createCustomerAccountClient,
+  createSearchHandler
 } from '@shopify/hydrogen';
 import {
   createRequestHandler,
@@ -78,6 +79,12 @@ export default {
       });
 
       /**
+       * Create a search handler that will be used handle
+       * search and predictive searches in the app.
+       */
+      const search = createSearchHandler({ storefront, request })
+
+      /**
        * Create a Remix request handler and pass
        * Hydrogen's Storefront client to the loader context.
        */
@@ -89,6 +96,7 @@ export default {
           storefront,
           customerAccount,
           cart,
+          search,
           env,
           waitUntil,
         }),
