@@ -16,6 +16,8 @@ import {MultipassCheckoutButton} from './MultipassCheckoutButton';
 /**********   EXAMPLE UPDATE END   ************/
 /***********************************************/
 
+type CartLine = OptimisticCartLine<CartApiQueryFragment['lines']['nodes'][0]>;
+
 type CartMainProps = {
   cart: CartApiQueryFragment | null;
   layout: 'page' | 'aside';
@@ -65,7 +67,7 @@ function CartLines({
   layout,
 }: {
   layout: CartMainProps['layout'];
-  lines: OptimisticCartLine[];
+  lines: CartLine[];
 }) {
   if (!lines) return null;
 
@@ -85,7 +87,7 @@ function CartLineItem({
   line,
 }: {
   layout: CartMainProps['layout'];
-  line: OptimisticCartLine;
+  line: CartLine;
 }) {
   const {id, merchandise} = line;
   const {product, title, image, selectedOptions} = merchandise;
@@ -199,7 +201,7 @@ function CartLineRemoveButton({
   );
 }
 
-function CartLineQuantity({line}: {line: OptimisticCartLine}) {
+function CartLineQuantity({line}: {line: CartLine}) {
   if (!line || typeof line?.quantity === 'undefined') return null;
   const {id: lineId, quantity, isOptimistic} = line;
   const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
@@ -240,7 +242,7 @@ function CartLinePrice({
   priceType = 'regular',
   ...passthroughProps
 }: {
-  line: OptimisticCartLine;
+  line: CartLine;
   priceType?: 'regular' | 'compareAt';
   [key: string]: any;
 }) {

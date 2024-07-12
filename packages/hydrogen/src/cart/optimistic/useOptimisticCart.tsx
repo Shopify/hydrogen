@@ -25,7 +25,9 @@ export type OptimisticCart<T = CartReturn> = T extends undefined | null
   : Omit<T, 'lines'> & {
       isOptimistic?: boolean;
       lines: {
-        nodes: Array<OptimisticCartLine>;
+        nodes: T extends {lines: {nodes: Array<unknown>}}
+          ? Array<OptimisticCartLine<T['lines']['nodes']['0']>>
+          : Array<OptimisticCartLine>;
       };
     };
 
@@ -49,7 +51,7 @@ export function useOptimisticCart<
     ? (structuredClone(cart) as OptimisticCart<DefaultCart>)
     : ({lines: {nodes: []}} as unknown as OptimisticCart<DefaultCart>);
 
-  const cartLines = optimisticCart.lines.nodes;
+  const cartLines = optimisticCart.lines.nodes as OptimisticCartLine[];
 
   let isOptimistic = false;
 
