@@ -8,16 +8,6 @@ import EventSource from 'eventsource';
 
 import {startServer, Response, type MiniOxygenOptions} from './index.js';
 
-const testPort = 1337;
-
-// get-port does not detect a released port correctly in the testing environment
-vi.mock('get-port', () => {
-  return {
-    default: () => testPort,
-    portNumbers: () => [testPort],
-  };
-});
-
 describe('start()', () => {
   let fixture: Fixture;
   const defaultOptions: MiniOxygenOptions = {
@@ -39,13 +29,12 @@ describe('start()', () => {
     const miniOxygen = await startServer({
       ...defaultOptions,
       log: mockLogger,
-      port: testPort,
       workerFile: fixture.paths.workerFile,
     });
     await miniOxygen.close();
 
     expect(mockLogger).toHaveBeenCalledWith(
-      `\nStarted miniOxygen server. Listening at http://localhost:${testPort}\n`,
+      `\nStarted miniOxygen server. Listening at http://localhost:${miniOxygen.port}\n`,
     );
   });
 
@@ -53,13 +42,12 @@ describe('start()', () => {
     const miniOxygen = await startServer({
       ...defaultOptions,
       log: mockLogger,
-      port: testPort,
       workerFile: fixture.paths.workerFile,
     });
 
     let receivedData;
     let mimeType;
-    await sendRequest(testPort, '/html').then(async (response: any) => {
+    await sendRequest(miniOxygen.port, '/html').then(async (response: any) => {
       receivedData = response.data;
       mimeType = response.mimeType;
       await miniOxygen.close();
@@ -73,18 +61,19 @@ describe('start()', () => {
     const miniOxygen = await startServer({
       ...defaultOptions,
       log: mockLogger,
-      port: testPort,
       workerFile: fixture.paths.workerFile,
       assetsDir: fixture.paths.assets,
     });
 
     let receivedData;
     let mimeType;
-    await sendRequest(testPort, '/star.svg').then(async (response: any) => {
-      receivedData = response.data;
-      mimeType = response.mimeType;
-      await miniOxygen.close();
-    });
+    await sendRequest(miniOxygen.port, '/star.svg').then(
+      async (response: any) => {
+        receivedData = response.data;
+        mimeType = response.mimeType;
+        await miniOxygen.close();
+      },
+    );
     expect(receivedData).toBe(
       '<svg><polygon points="100,10 40,198 190,78 10,78 160,198" style="fill:gold;"/></svg>',
     );
@@ -94,20 +83,19 @@ describe('start()', () => {
     const miniOxygen = await startServer({
       ...defaultOptions,
       log: mockLogger,
-      port: testPort,
       workerFile: fixture.paths.workerFile,
       autoReload: true,
       watch: true,
     });
 
     let receivedData;
-    await sendRequest(testPort, '/html').then((response: any) => {
+    await sendRequest(miniOxygen.port, '/html').then((response: any) => {
       receivedData = response.data;
     });
     expect(receivedData).toContain('// MiniOxygen Auto Reload');
 
     const eventStream = new EventSource(
-      `http://localhost:${testPort}/__minioxygen_events`,
+      `http://localhost:${miniOxygen.port}/__minioxygen_events`,
     );
     const eventsCaught: MessageEvent[] = [];
     eventStream.addEventListener('message', (event: MessageEvent) =>
@@ -131,7 +119,6 @@ describe('start()', () => {
     const miniOxygen = await startServer({
       ...defaultOptions,
       log: mockLogger,
-      port: testPort,
       autoReload: true,
       script:
         `export default { fetch: () =>` +
@@ -142,7 +129,7 @@ describe('start()', () => {
     });
 
     let receivedData;
-    await sendRequest(testPort, '/').then((response: any) => {
+    await sendRequest(miniOxygen.port, '/').then((response: any) => {
       receivedData = response.data;
     });
 
@@ -155,7 +142,6 @@ describe('start()', () => {
     const miniOxygen = await startServer({
       ...defaultOptions,
       log: mockLogger,
-      port: testPort,
       script:
         'export default { fetch: (req) =>' +
         ' new Response(JSON.stringify(Object.fromEntries(req.headers.entries())))' +
@@ -163,7 +149,7 @@ describe('start()', () => {
     });
 
     let receivedData = '';
-    await sendRequest(testPort, '/').then((response: any) => {
+    await sendRequest(miniOxygen.port, '/').then((response: any) => {
       receivedData = response.data;
     });
 
@@ -187,13 +173,12 @@ describe('start()', () => {
 
     const miniOxygen = await startServer({
       ...defaultOptions,
-      port: testPort,
       workerFile: fixture.paths.workerFile,
       proxyServer: `localhost:${proxyPort}`,
     });
 
     let receivedData;
-    await sendRequest(testPort, '/html').then((response: any) => {
+    await sendRequest(miniOxygen.port, '/html').then((response: any) => {
       receivedData = response.data;
     });
 
@@ -207,17 +192,16 @@ describe('start()', () => {
     const miniOxygen = await startServer({
       ...defaultOptions,
       log: mockLogger,
-      port: testPort,
       workerFile: fixture.paths.workerFile,
       env: {test: 'foo'},
     });
 
-    let response = (await sendRequest(testPort, '/')) as {data: string};
+    let response = (await sendRequest(miniOxygen.port, '/')) as {data: string};
     expect(response.data).toEqual(JSON.stringify({test: 'foo'}));
 
     await miniOxygen.reload({env: {test: 'bar'}});
 
-    response = (await sendRequest(testPort, '/')) as {data: string};
+    response = (await sendRequest(miniOxygen.port, '/')) as {data: string};
     expect(response.data).toEqual(JSON.stringify({test: 'bar'}));
 
     await miniOxygen.close();
@@ -227,18 +211,17 @@ describe('start()', () => {
     const miniOxygen = await startServer({
       ...defaultOptions,
       log: mockLogger,
-      port: testPort,
       script: 'export default { fetch: () => new Response("foo") }',
     });
 
-    let response = (await sendRequest(testPort, '/')) as {data: string};
+    let response = (await sendRequest(miniOxygen.port, '/')) as {data: string};
     expect(response.data).toEqual('foo');
 
     await miniOxygen.reload({
       script: 'export default { fetch: () => new Response("bar") }',
     });
 
-    response = (await sendRequest(testPort, '/')) as {data: string};
+    response = (await sendRequest(miniOxygen.port, '/')) as {data: string};
     expect(response.data).toEqual('bar');
 
     await miniOxygen.close();
@@ -248,14 +231,15 @@ describe('start()', () => {
     const miniOxygen = await startServer({
       ...defaultOptions,
       log: mockLogger,
-      port: testPort,
       script: 'export default { fetch: () => fetch("foo") }',
       globalFetch: (url) => {
         return Promise.resolve(new Response(`${url}bar`));
       },
     });
 
-    const response = (await sendRequest(testPort, '/')) as {data: string};
+    const response = (await sendRequest(miniOxygen.port, '/')) as {
+      data: string;
+    };
     expect(response.data).toEqual('foobar');
 
     await miniOxygen.close();
@@ -265,7 +249,6 @@ describe('start()', () => {
     const miniOxygen = await startServer({
       ...defaultOptions,
       log: mockLogger,
-      port: testPort,
       script: 'export default { fetch: () => new Response("foo") }',
       onRequest: (request) => {
         if (new URL(request.url).pathname === '/test') {
@@ -274,10 +257,10 @@ describe('start()', () => {
       },
     });
 
-    let response = (await sendRequest(testPort, '/')) as {data: string};
+    let response = (await sendRequest(miniOxygen.port, '/')) as {data: string};
     expect(response.data).toEqual('foo');
 
-    response = (await sendRequest(testPort, '/test')) as {data: string};
+    response = (await sendRequest(miniOxygen.port, '/test')) as {data: string};
     expect(response.data).toEqual('bar');
 
     await miniOxygen.close();
@@ -287,7 +270,6 @@ describe('start()', () => {
     const miniOxygen = await startServer({
       ...defaultOptions,
       log: mockLogger,
-      port: testPort,
       script: 'export default { fetch: () => new Response("foo") }',
       onRequest: async (request, dispatchFetch) => {
         const response = await dispatchFetch(request);
@@ -295,7 +277,9 @@ describe('start()', () => {
       },
     });
 
-    const response = (await sendRequest(testPort, '/')) as {data: string};
+    const response = (await sendRequest(miniOxygen.port, '/')) as {
+      data: string;
+    };
     expect(response.data).toEqual('foobar');
 
     await miniOxygen.close();
