@@ -1,4 +1,4 @@
-import {expect, test, describe, afterEach, vi} from 'vitest';
+import {expect, it, describe, afterEach, vi} from 'vitest';
 import {useOptimisticCart} from './useOptimisticCart';
 import * as RemixReact from '@remix-run/react';
 import {type CartActionInput, CartForm} from '../CartForm';
@@ -35,7 +35,7 @@ describe('useOptimisticCart', () => {
   });
 
   describe('LinesAdd', () => {
-    test('errors when no selected variant is passed', async () => {
+    it('errors when no selected variant is passed', async () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesAdd,
         inputs: {lines: [{merchandiseId: '1', quantity: 1}]},
@@ -52,7 +52,7 @@ describe('useOptimisticCart', () => {
       );
     });
 
-    test('adds an optimistic line even when the cart is null', async () => {
+    it('adds an optimistic line even when the cart is null', async () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesAdd,
         inputs: {
@@ -79,7 +79,7 @@ describe('useOptimisticCart', () => {
       });
     });
 
-    test('adds an optimistic line even when the cart has null lines', async () => {
+    it('adds an optimistic line even when the cart has null lines', async () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesAdd,
         inputs: {
@@ -106,7 +106,7 @@ describe('useOptimisticCart', () => {
       });
     });
 
-    test('adds an optimistic line to an empty cart', async () => {
+    it('adds an optimistic line to an empty cart', async () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesAdd,
         inputs: {
@@ -133,7 +133,7 @@ describe('useOptimisticCart', () => {
       });
     });
 
-    test('adjusts the quantity of existing line items with LinesAdd', async () => {
+    it('adjusts the quantity of existing line items with LinesAdd', async () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesAdd,
         inputs: {
@@ -154,7 +154,7 @@ describe('useOptimisticCart', () => {
       expect(optimisticCart.lines.nodes[0].isOptimistic).toBe(true);
     });
 
-    test('adds an optimistic line with more than 1 quantity to an empty cart', async () => {
+    it('adds an optimistic line with more than 1 quantity to an empty cart', async () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesAdd,
         inputs: {
@@ -181,7 +181,7 @@ describe('useOptimisticCart', () => {
       });
     });
 
-    test('adds an optimistic line with more than 1 quantity to a cart with existing items', async () => {
+    it('adds an optimistic line with more than 1 quantity to a cart with existing items', async () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesAdd,
         inputs: {
@@ -202,7 +202,7 @@ describe('useOptimisticCart', () => {
       expect(optimisticCart.lines.nodes[0].isOptimistic).toBe(true);
     });
 
-    test('adds multiple items to the cart in the same action', async () => {
+    it('adds multiple items to the cart in the same action', async () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesAdd,
         inputs: {
@@ -244,7 +244,7 @@ describe('useOptimisticCart', () => {
       });
     });
 
-    test('adds multiple items to the cart in separate actions', async () => {
+    it('adds multiple items to the cart in separate actions', async () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesAdd,
         inputs: {
@@ -296,7 +296,7 @@ describe('useOptimisticCart', () => {
   });
 
   describe('LinesRemove', () => {
-    test('removes an existing line', async () => {
+    it('removes an existing line', async () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesRemove,
         inputs: {
@@ -311,7 +311,7 @@ describe('useOptimisticCart', () => {
       expect(optimisticCart).toStrictEqual({...EMPTY_CART, isOptimistic: true});
     });
 
-    test('removes multiple lines in the same action', async () => {
+    it('removes multiple lines in the same action', async () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesRemove,
         inputs: {
@@ -327,7 +327,7 @@ describe('useOptimisticCart', () => {
       expect(optimisticCart).toStrictEqual({...EMPTY_CART, isOptimistic: true});
     });
 
-    test('removes multiple lines in separate actions', async () => {
+    it('removes multiple lines in separate actions', async () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesRemove,
         inputs: {
@@ -351,7 +351,7 @@ describe('useOptimisticCart', () => {
       expect(optimisticCart).toStrictEqual({...EMPTY_CART, isOptimistic: true});
     });
 
-    test("warns when removing a line that doesn't exist", async () => {
+    it("warns when removing a line that doesn't exist", async () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesRemove,
         inputs: {
@@ -370,7 +370,7 @@ describe('useOptimisticCart', () => {
   });
 
   describe('LinesUpdate', () => {
-    test('updates the quantity on an existing line', async () => {
+    it('updates the quantity on an existing line', async () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesUpdate,
         inputs: {
@@ -388,7 +388,7 @@ describe('useOptimisticCart', () => {
       expect(optimisticCart.lines.nodes[0].quantity).toStrictEqual(2);
     });
 
-    test('removes line if quantity is 0', async () => {
+    it('removes line if quantity is 0', async () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesUpdate,
         inputs: {
@@ -406,7 +406,7 @@ describe('useOptimisticCart', () => {
       expect(optimisticCart).toStrictEqual({...EMPTY_CART, isOptimistic: true});
     });
 
-    test('updates the quantity of multiple lines in same action', async () => {
+    it('updates the quantity of multiple lines in same action', async () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesUpdate,
         inputs: {
@@ -431,7 +431,7 @@ describe('useOptimisticCart', () => {
       expect(optimisticCart.lines.nodes[1].isOptimistic).toBeFalsy();
     });
 
-    test('updates the quantity of multiple lines in separate actions', async () => {
+    it('updates the quantity of multiple lines in separate actions', async () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesUpdate,
         inputs: {
@@ -464,7 +464,7 @@ describe('useOptimisticCart', () => {
       expect(optimisticCart.lines.nodes[1].isOptimistic).toBeFalsy();
     });
 
-    test("warns when updating a line that doesn't exist", async () => {
+    it("warns when updating a line that doesn't exist", async () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesUpdate,
         inputs: {
@@ -487,7 +487,7 @@ describe('useOptimisticCart', () => {
   });
 
   describe('Multiple actions', () => {
-    test('errors if updating a line that has yet to be created', async () => {
+    it('errors if updating a line that has yet to be created', async () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesAdd,
         inputs: {
@@ -525,7 +525,7 @@ describe('useOptimisticCart', () => {
       );
     });
 
-    test('errors if removing a line that has yet to be created', async () => {
+    it('errors if removing a line that has yet to be created', async () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesAdd,
         inputs: {
@@ -557,7 +557,7 @@ describe('useOptimisticCart', () => {
       );
     });
 
-    test('changes line quantity multiple times', async () => {
+    it('changes line quantity multiple times', async () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesUpdate,
         inputs: {
@@ -599,7 +599,7 @@ describe('useOptimisticCart', () => {
       expect(optimisticCart.lines.nodes[0].isOptimistic).toBeFalsy();
     });
 
-    test('changes line quantity and remove line', async () => {
+    it('changes line quantity and remove line', async () => {
       addPendingCartAction({
         action: CartForm.ACTIONS.LinesUpdate,
         inputs: {

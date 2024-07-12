@@ -32,6 +32,7 @@ export function CartAnalytics({
   // resolve the cart that could have been deferred
   useEffect(() => {
     if (!currentCart) return;
+
     Promise.resolve(currentCart).then((updatedCart) => {
       if (updatedCart && updatedCart.lines) {
         if (!updatedCart.id) {
@@ -43,10 +44,11 @@ export function CartAnalytics({
           return;
         }
       }
+
       setCarts(({cart, prevCart}: Carts) => {
-        if (updatedCart?.updatedAt !== cart?.updatedAt)
-          return {cart: updatedCart, prevCart: cart};
-        return {cart, prevCart};
+        return updatedCart?.updatedAt !== cart?.updatedAt
+          ? {cart: updatedCart, prevCart: cart}
+          : {cart, prevCart};
       });
     });
     return () => {};

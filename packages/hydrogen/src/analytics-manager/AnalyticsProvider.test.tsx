@@ -1,5 +1,5 @@
-import {describe, expect, it, vi} from 'vitest';
-import {render, screen} from '@testing-library/react';
+import {describe, beforeAll, expect, it, vi} from 'vitest';
+import {render, screen, act} from '@testing-library/react';
 import {
   Analytics,
   AnalyticsContextValue,
@@ -20,7 +20,7 @@ const SHOP_DATA = {
 };
 
 const CONSENT_DATA = {
-  checkoutDomain: 'https://checkout.hydrogen.shop',
+  checkoutDomain: 'checkout.hydrogen.shop',
   storefrontAccessToken: '33ad0f277e864013b8e3c21d19432501',
 };
 
@@ -97,141 +97,184 @@ vi.mock('@remix-run/react', () => ({
   }),
 }));
 
+// Avoid downloading the PerfKit script in tests
+vi.mock('./PerfKit', () => ({
+  PerfKit: () => null,
+}));
+
 describe('<Analytics.Provider />', () => {
+  beforeAll(() => {
+    vi.stubGlobal(
+      'fetch',
+      function mockFetch(input: URL | RequestInfo): Promise<Response> {
+        const MONORAIL_ENDPOINT =
+          'https://monorail-edge.shopifysvc.com/unstable/produce_batch';
+        const CHECKOUT_ENDPOINT =
+          'https://checkout.hydrogen.shop/api/unstable/graphql.json';
+
+        if (input === MONORAIL_ENDPOINT || input === CHECKOUT_ENDPOINT) {
+          return Promise.resolve(
+            new Response('', {
+              status: 200,
+            }),
+          );
+        }
+
+        throw new Error('Analytics fetch mock - request not handled');
+      },
+    );
+  });
+
   it('renders its children', async () => {
     render(
       <Analytics.Provider cart={null} shop={SHOP_DATA} consent={CONSENT_DATA}>
         <div>child</div>;
       </Analytics.Provider>,
     );
+
+    // Wait until idle
+    await act(async () => {});
+
     expect(screen.getByText('child')).toBeInTheDocument();
   });
 
   describe('useAnalytics()', () => {
-    it('returns shop, cart, customData', () =>
-      new Promise((done) => {
-        renderAnalyticsProvider({
-          cart: CART_DATA,
-          customData: {test: 'test'},
-          callback: (analytics: AnalyticsContextValue | null) => {
-            expect(analytics?.canTrack()).toBe(true);
-            expect(analytics?.shop).toBe(SHOP_DATA);
-            expect(analytics?.cart).toBe(CART_DATA);
-            expect(analytics?.customData).toEqual({test: 'test'});
-            done(0);
-          },
-        });
-      }));
+    it('returns shop, cart, customData', async () => {
+      const {analytics} = await renderAnalyticsProvider({
+        initialCart: CART_DATA,
+        customData: {test: 'test'},
+      });
 
-    it('returns prevCart with an updated cart', () =>
-      new Promise((done) => {
-        triggerCartUpdate({
-          cart: CART_DATA_2,
-          callback: (analytics: AnalyticsContextValue | null) => {
-            expect(analytics?.canTrack()).toBe(true);
-            expect(analytics?.shop).toBe(SHOP_DATA);
-            expect(analytics?.cart).toBe(CART_DATA_2);
-            expect(analytics?.prevCart).toBe(CART_DATA);
-            done(0);
-          },
-        });
-      }));
+      expect(analytics?.canTrack()).toBe(true);
+      expect(analytics?.shop).toBe(SHOP_DATA);
+      expect(analytics?.cart).toBe(CART_DATA);
+      expect(analytics?.customData).toEqual({test: 'test'});
+    });
 
-    it('can subscribe and receive a page_viewed event', () =>
-      new Promise((done) => {
-        renderAnalyticsProvider({
-          cart: CART_DATA,
-          registerCallback: (analytics, ready) => {
-            analytics.subscribe('page_viewed', (payload) => {
-              expect(payload).not.toBe(null);
-              done(0);
-            });
-            ready();
-          },
-          callback: (analytics: AnalyticsContextValue | null) => {
-            expect(analytics?.canTrack()).toBe(true);
-            expect(analytics?.shop).toBe(SHOP_DATA);
-            expect(analytics?.cart).toBe(CART_DATA);
-          },
-        });
-      }));
+    it('returns prevCart with an updated cart', async () => {
+      const {analytics} = await triggerCartUpdate({
+        initialCart: CART_DATA,
+        updateCart: CART_DATA_2,
+      });
 
-    it('can subscribe and receive a product_viewed event', () =>
-      new Promise((done) => {
-        renderAnalyticsProvider({
-          cart: CART_DATA,
-          registerCallback: (analytics, ready) => {
-            analytics.subscribe('product_viewed', (payload) => {
-              expect(payload).not.toBe(null);
-              done(0);
-            });
-            ready();
-          },
-          callback: (analytics: AnalyticsContextValue | null) => {
-            expect(analytics?.canTrack()).toBe(true);
-            expect(analytics?.shop).toBe(SHOP_DATA);
-            expect(analytics?.cart).toBe(CART_DATA);
-          },
-          children: (
-            <Analytics.ProductView
-              data={{
-                products: [
-                  {
-                    id: 'gid://shopify/Product/6730943823928',
-                    title: 'The Full Stack Snowboard',
-                    price: '749.95',
-                    vendor: 'Snowdevil',
-                    variantId: 'gid://shopify/ProductVariant/41007290548280',
-                    variantTitle: '160cm / Syntax',
-                    quantity: 1,
-                  },
-                ],
-              }}
-            />
-          ),
-        });
-      }));
+      expect(analytics?.canTrack()).toBe(true);
+      expect(analytics?.shop).toBe(SHOP_DATA);
+      expect(analytics?.cart).toBe(CART_DATA_2);
+      expect(analytics?.prevCart).toBe(CART_DATA);
+    });
 
-    it('can subscribe and receive a product_added_to_cart event', () =>
-      new Promise((done) => {
-        triggerCartUpdate({
-          cart: CART_DATA_2,
-          registerCallback: (analytics, ready) => {
-            analytics.subscribe('product_added_to_cart', (payload) => {
-              expect(payload).not.toBe(null);
-              done(0);
-            });
-            ready();
-          },
-          callback: (analytics: AnalyticsContextValue | null) => {
-            expect(analytics?.canTrack()).toBe(true);
-          },
-        });
-      }));
+    it('can subscribe and receive a page_viewed event', async () => {
+      const pageViewedEvent = vi.fn();
 
-    it('can subscribe and receive a product_removed_from_cart event', () =>
-      new Promise((done) => {
-        triggerCartUpdate({
-          cart: CART_DATA_3,
-          registerCallback: (analytics, ready) => {
-            analytics.subscribe('product_removed_from_cart', (payload) => {
-              expect(payload).not.toBe(null);
-              done(0);
-            });
-            ready();
+      const {analytics} = await renderAnalyticsProvider({
+        initialCart: CART_DATA,
+        registerCallback: (analytics, ready) => {
+          analytics.subscribe('page_viewed', pageViewedEvent);
+          ready();
+        },
+      });
+
+      expect(analytics?.canTrack()).toBe(true);
+      expect(analytics?.shop).toBe(SHOP_DATA);
+      expect(analytics?.cart).toBe(CART_DATA);
+
+      expect(pageViewedEvent).toHaveBeenCalled();
+      expect(pageViewedEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          cart: expect.any(Object),
+          shop: SHOP_DATA,
+          url: expect.any(String),
+        }),
+      );
+    });
+
+    it('can subscribe and receive a product_viewed event', async () => {
+      const productViewedEvent = vi.fn();
+      const productsData = {
+        products: [
+          {
+            id: 'gid://shopify/Product/6730943823928',
+            title: 'The Full Stack Snowboard',
+            price: '749.95',
+            vendor: 'Snowdevil',
+            variantId: 'gid://shopify/ProductVariant/41007290548280',
+            variantTitle: '160cm / Syntax',
+            quantity: 1,
           },
-          callback: (analytics: AnalyticsContextValue | null) => {
-            expect(analytics?.canTrack()).toBe(true);
-          },
-        });
-      }));
+        ],
+      };
+
+      const {analytics} = await renderAnalyticsProvider({
+        initialCart: CART_DATA,
+        children: <Analytics.ProductView data={productsData} />,
+        registerCallback: (analytics, ready) => {
+          analytics.subscribe('product_viewed', productViewedEvent);
+          ready();
+        },
+      });
+
+      expect(analytics?.canTrack()).toBe(true);
+      expect(analytics?.shop).toBe(SHOP_DATA);
+      expect(analytics?.cart).toBe(CART_DATA);
+
+      expect(productViewedEvent).toHaveBeenCalled();
+      expect(productViewedEvent).toHaveBeenCalledWith(
+        expect.objectContaining(productsData),
+      );
+    });
+
+    it('can subscribe and receive a product_added_to_cart event', async () => {
+      const productAddedToCartEvent = vi.fn();
+
+      const {analytics} = await triggerCartUpdate({
+        initialCart: CART_DATA,
+        updateCart: CART_DATA_2,
+        registerCallback: (analytics, ready) => {
+          analytics.subscribe('product_added_to_cart', productAddedToCartEvent);
+          ready();
+        },
+      });
+
+      expect(analytics?.canTrack()).toBe(true);
+
+      expect(productAddedToCartEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          cart: expect.any(Object),
+          shop: SHOP_DATA,
+        }),
+      );
+    });
+
+    it('can subscribe and receive a product_removed_from_cart event', async () => {
+      const productRemovedFromCartEvent = vi.fn();
+
+      const {analytics} = await triggerCartUpdate({
+        initialCart: CART_DATA,
+        updateCart: CART_DATA_3,
+        registerCallback: (analytics, ready) => {
+          analytics.subscribe(
+            'product_removed_from_cart',
+            productRemovedFromCartEvent,
+          );
+          ready();
+        },
+      });
+
+      expect(analytics?.canTrack()).toBe(true);
+
+      expect(productRemovedFromCartEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          cart: expect.any(Object),
+          shop: SHOP_DATA,
+        }),
+      );
+    });
   });
 });
 
 type RenderAnalyticsProviderProps = {
-  cart: CartReturn | null;
+  initialCart: CartReturn;
   customData?: Record<string, unknown>;
-  callback: (analytics: AnalyticsContextValue | null) => void;
   registerCallback?: (
     analytics: AnalyticsContextValue,
     ready: () => void,
@@ -239,80 +282,82 @@ type RenderAnalyticsProviderProps = {
   children?: ReactNode;
 };
 
-function renderAnalyticsProvider({
-  cart,
+async function renderAnalyticsProvider({
+  initialCart,
   customData,
-  callback,
   registerCallback,
   children,
 }: RenderAnalyticsProviderProps) {
   let analytics: AnalyticsContextValue | null = null;
+  const getUpdatedAnalytics = () => analytics;
   const loopAnalyticsFn = (analyticsInstance: AnalyticsContextValue) => {
     analytics = analyticsInstance;
-
     return null;
   };
+
   const AnalyticsProvider = ({
     updateCart,
     updateCustomData,
   }: {
     updateCart?: CartReturn;
     updateCustomData?: Record<string, unknown>;
-  } = {}) => (
-    <Analytics.Provider
-      cart={updateCart || cart}
-      shop={SHOP_DATA}
-      consent={CONSENT_DATA}
-      customData={updateCustomData || customData}
-    >
-      <LoopAnalytics registerCallback={registerCallback}>
-        {loopAnalyticsFn}
-      </LoopAnalytics>
-      {children}
-    </Analytics.Provider>
-  );
+  } = {}) => {
+    return (
+      <Analytics.Provider
+        cart={updateCart || initialCart}
+        shop={SHOP_DATA}
+        consent={CONSENT_DATA}
+        customData={updateCustomData || customData}
+      >
+        <LoopAnalytics registerCallback={registerCallback}>
+          {loopAnalyticsFn}
+        </LoopAnalytics>
+        {children}
+      </Analytics.Provider>
+    );
+  };
 
   const {rerender} = render(<AnalyticsProvider />);
 
-  // First timeout - shop, customData available in context
-  setTimeout(() => {
-    rerender(<AnalyticsProvider />);
+  // The previous rendering updates the cart asynchronously in a
+  // `Promise.resolve(cart).then(...)`. Therefore, we need to
+  // await for the next tick to ensure React state is updated.
+  await act(async () => {});
 
-    // Second timeout - cart available in context
-    setTimeout(() => {
-      rerender(<AnalyticsProvider />);
-
-      callback(analytics);
-    });
-  });
-
-  return {rerender, AnalyticsProvider};
+  return {
+    rerender,
+    AnalyticsProvider,
+    getUpdatedAnalytics,
+    analytics: getUpdatedAnalytics(),
+  };
 }
 
-function triggerCartUpdate({
-  cart,
+async function triggerCartUpdate({
+  initialCart,
+  updateCart,
   customData,
-  callback,
   registerCallback,
-}: RenderAnalyticsProviderProps) {
-  const {rerender, AnalyticsProvider} = renderAnalyticsProvider({
-    cart: CART_DATA,
-    customData,
-    callback,
-    registerCallback,
-  });
+}: RenderAnalyticsProviderProps & {
+  updateCart: RenderAnalyticsProviderProps['initialCart'];
+}) {
+  const {rerender, AnalyticsProvider, getUpdatedAnalytics} =
+    await renderAnalyticsProvider({
+      initialCart,
+      customData,
+      registerCallback,
+    });
 
   // Triggers a cart update
-  setTimeout(() => {
-    rerender(<AnalyticsProvider updateCart={cart || CART_DATA} />);
-  });
-}
+  rerender(<AnalyticsProvider updateCart={updateCart} />);
 
-function mockPerfKit() {
-  window.PerfKit = {
-    navigate: () => {},
-    setPageType: () => {},
-  };
+  // The previous rendering updates the cart asynchronously in a
+  // `Promise.resolve(cart).then(...)`. Therefore, we need to
+  // await for the next tick to ensure React state is updated.
+  await act(async () => {});
+
+  // Only call this after the previous `act` has finished. Otherwise
+  // we don't get updated values from the useAnalytics() context.
+  return {analytics: getUpdatedAnalytics()};
 }
 
 function LoopAnalytics({
@@ -333,7 +378,6 @@ function LoopAnalytics({
   const {ready: perfKitReady} = analytics.register('Internal_Shopify_Perf_Kit');
 
   useEffect(() => {
-    mockPerfKit();
     if (registerCallback) {
       registerCallback(analytics, ready);
     } else {
