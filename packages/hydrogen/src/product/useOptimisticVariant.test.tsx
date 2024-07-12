@@ -1,5 +1,5 @@
 import {expect, it, describe, beforeEach, afterEach, vi} from 'vitest';
-import {renderHook, waitFor} from '@testing-library/react';
+import {act, renderHook} from '@testing-library/react';
 import {useNavigation} from '@remix-run/react';
 import {useOptimisticVariant} from './useOptimisticVariant';
 
@@ -18,34 +18,41 @@ describe('useOptimisticVariant', () => {
     vi.clearAllMocks();
   });
 
-  it('returns the original product if no fetchers are present', () => {
-    const variant = {title: 'Product'};
+  it('returns the original product if no fetchers are present', async () => {
+    // Do not create hook params inline inside `renderHook`
+    // to avoid infinite re-renders.
+    const selectedVariant = {title: 'Product'};
+    const variants = {product: {variants: {nodes: []}}};
+
     const {result} = renderHook(() =>
-      useOptimisticVariant(variant, {
-        product: {
-          variants: {nodes: []},
-        },
-      }),
+      useOptimisticVariant(selectedVariant, variants),
     );
-    expect(result.current).toEqual(variant);
+
+    // The hook runs `Promise.resolve(variants).then(...)`, which
+    // becomes an async operation. Wait here for the next tick before
+    // asserting the result.
+    await act(async () => {});
+
+    expect(result.current).toEqual(selectedVariant);
   });
 
-  it('returns the original product if no variants provided', () => {
+  it('returns the original product if no variants provided', async () => {
     vi.mocked(useNavigation).mockImplementation(() => ({
       state: 'loading',
       // @ts-expect-error
       location: {search: new URLSearchParams('?variant=123').toString()},
     }));
 
-    const variant = {title: 'Product'};
+    const selectedVariant = {title: 'Product'};
+    const variants = {product: {variants: {nodes: []}}};
+
     const {result} = renderHook(() =>
-      useOptimisticVariant(variant, {
-        product: {
-          variants: {nodes: []},
-        },
-      }),
+      useOptimisticVariant(selectedVariant, variants),
     );
-    expect(result.current).toEqual(variant);
+
+    await act(async () => {});
+
+    expect(result.current).toEqual(selectedVariant);
   });
 
   it('returns an optimistic product', async () => {
@@ -59,36 +66,38 @@ describe('useOptimisticVariant', () => {
       },
     }));
 
-    const variant = {title: 'Product'};
-    const {result} = renderHook(() =>
-      useOptimisticVariant(variant, {
-        product: {
-          variants: {
-            nodes: [
-              {
-                id: 'gid://shopify/ProductVariant/123',
-                title: '158cm Sea Green / Desert',
-                selectedOptions: [
-                  {name: 'Size', value: '158cm'},
-                  {name: 'Color', value: 'Sea Green / Desert'},
-                ],
-              },
-            ],
-          },
+    const selectedVariant = {title: 'Product'};
+    const variants = {
+      product: {
+        variants: {
+          nodes: [
+            {
+              id: 'gid://shopify/ProductVariant/123',
+              title: '158cm Sea Green / Desert',
+              selectedOptions: [
+                {name: 'Size', value: '158cm'},
+                {name: 'Color', value: 'Sea Green / Desert'},
+              ],
+            },
+          ],
         },
-      }),
+      },
+    };
+
+    const {result} = renderHook(() =>
+      useOptimisticVariant(selectedVariant, variants),
     );
 
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        isOptimistic: true,
-        id: 'gid://shopify/ProductVariant/123',
-        title: '158cm Sea Green / Desert',
-        selectedOptions: [
-          {name: 'Size', value: '158cm'},
-          {name: 'Color', value: 'Sea Green / Desert'},
-        ],
-      });
+    await act(async () => {});
+
+    expect(result.current).toEqual({
+      isOptimistic: true,
+      id: 'gid://shopify/ProductVariant/123',
+      title: '158cm Sea Green / Desert',
+      selectedOptions: [
+        {name: 'Size', value: '158cm'},
+        {name: 'Color', value: 'Sea Green / Desert'},
+      ],
     });
   });
 
@@ -103,30 +112,32 @@ describe('useOptimisticVariant', () => {
       },
     }));
 
-    const variant = {title: 'Product'};
-    const {result} = renderHook(() =>
-      useOptimisticVariant(variant, [
-        {
-          id: 'gid://shopify/ProductVariant/123',
-          title: '158cm Sea Green / Desert',
-          selectedOptions: [
-            {name: 'Size', value: '158cm'},
-            {name: 'Color', value: 'Sea Green / Desert'},
-          ],
-        },
-      ]),
-    );
-
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        isOptimistic: true,
+    const selectedVariant = {title: 'Product'};
+    const variants = [
+      {
         id: 'gid://shopify/ProductVariant/123',
         title: '158cm Sea Green / Desert',
         selectedOptions: [
           {name: 'Size', value: '158cm'},
           {name: 'Color', value: 'Sea Green / Desert'},
         ],
-      });
+      },
+    ];
+
+    const {result} = renderHook(() =>
+      useOptimisticVariant(selectedVariant, variants),
+    );
+
+    await act(async () => {});
+
+    expect(result.current).toEqual({
+      isOptimistic: true,
+      id: 'gid://shopify/ProductVariant/123',
+      title: '158cm Sea Green / Desert',
+      selectedOptions: [
+        {name: 'Size', value: '158cm'},
+        {name: 'Color', value: 'Sea Green / Desert'},
+      ],
     });
   });
 
@@ -141,36 +152,38 @@ describe('useOptimisticVariant', () => {
       },
     }));
 
-    const variant = {title: 'Product'};
-    const {result} = renderHook(() =>
-      useOptimisticVariant(variant, {
-        product: {
-          variants: {
-            nodes: [
-              {
-                id: 'gid://shopify/ProductVariant/123',
-                title: '158cm Sea Green / Desert',
-                selectedOptions: [
-                  {name: 'Size', value: '158cm'},
-                  {name: 'Color', value: 'Sea Green / Desert'},
-                ],
-              },
-            ],
-          },
+    const selectedVariant = {title: 'Product'};
+    const variants = {
+      product: {
+        variants: {
+          nodes: [
+            {
+              id: 'gid://shopify/ProductVariant/123',
+              title: '158cm Sea Green / Desert',
+              selectedOptions: [
+                {name: 'Size', value: '158cm'},
+                {name: 'Color', value: 'Sea Green / Desert'},
+              ],
+            },
+          ],
         },
-      }),
+      },
+    };
+
+    const {result} = renderHook(() =>
+      useOptimisticVariant(selectedVariant, variants),
     );
 
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        isOptimistic: true,
-        id: 'gid://shopify/ProductVariant/123',
-        title: '158cm Sea Green / Desert',
-        selectedOptions: [
-          {name: 'Size', value: '158cm'},
-          {name: 'Color', value: 'Sea Green / Desert'},
-        ],
-      });
+    await act(async () => {});
+
+    expect(result.current).toEqual({
+      isOptimistic: true,
+      id: 'gid://shopify/ProductVariant/123',
+      title: '158cm Sea Green / Desert',
+      selectedOptions: [
+        {name: 'Size', value: '158cm'},
+        {name: 'Color', value: 'Sea Green / Desert'},
+      ],
     });
   });
 
@@ -185,28 +198,28 @@ describe('useOptimisticVariant', () => {
       },
     }));
 
-    const variant = {title: 'Product'};
-    renderHook(() =>
-      useOptimisticVariant(variant, {
-        product: {
-          variants: {
-            nodes: [
-              {
-                id: 'gid://shopify/ProductVariant/123',
-                title: '158cm Sea Green / Desert',
-              },
-            ],
-          },
+    const selectedVariant = {title: 'Product'};
+    const variants = {
+      product: {
+        variants: {
+          nodes: [
+            {
+              id: 'gid://shopify/ProductVariant/123',
+              title: '158cm Sea Green / Desert',
+            },
+          ],
         },
-      }),
-    );
+      },
+    };
 
-    await waitFor(() => {
-      expect(globalThis.reportError).toHaveBeenCalledWith(
-        new Error(
-          '[h2:error:useOptimisticVariant] The optimistic product hook requires your product query to include variants with the selectedOptions field.',
-        ),
-      );
-    });
+    renderHook(() => useOptimisticVariant(selectedVariant, variants));
+
+    await act(async () => {});
+
+    expect(globalThis.reportError).toHaveBeenCalledWith(
+      new Error(
+        '[h2:error:useOptimisticVariant] The optimistic product hook requires your product query to include variants with the selectedOptions field.',
+      ),
+    );
   });
 });
