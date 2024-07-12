@@ -97,6 +97,11 @@ vi.mock('@remix-run/react', () => ({
   }),
 }));
 
+// Avoid downloading the PerfKit script in tests
+vi.mock('./PerfKit', () => ({
+  PerfKit: () => null,
+}));
+
 describe('<Analytics.Provider />', () => {
   beforeAll(() => {
     vi.stubGlobal(
@@ -118,23 +123,6 @@ describe('<Analytics.Provider />', () => {
         throw new Error('Analytics fetch mock - request not handled');
       },
     );
-
-    vi.stubGlobal('PerfKit', () => ({
-      navigate: () => {},
-      setPageType: () => {},
-    }));
-
-    const perfkit = document.createElement('script');
-    perfkit.setAttribute('data-application', 'hydrogen');
-    perfkit.setAttribute('data-shop-id', '1');
-    perfkit.setAttribute('data-storefront-id', '0');
-    perfkit.setAttribute('data-monorail-region', 'global');
-    perfkit.setAttribute('data-spa-mode', 'true');
-
-    // Defining `document.currentScript` to avoid errors in tests
-    Object.defineProperty(document, 'currentScript', {
-      value: perfkit, //document.createElement('script'),
-    });
   });
 
   it('renders its children', async () => {
