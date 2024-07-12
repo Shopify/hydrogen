@@ -1,26 +1,24 @@
-import {expect, test, describe, beforeEach, afterEach, vi} from 'vitest';
-import {useOptimisticVariant} from './useOptimisticVariant';
+import {expect, it, describe, beforeEach, afterEach, vi} from 'vitest';
 import {renderHook, waitFor} from '@testing-library/react';
-
-let navigation = {state: 'idle', location: {search: ''}};
+import {useNavigation} from '@remix-run/react';
+import {useOptimisticVariant} from './useOptimisticVariant';
 
 describe('useOptimisticVariant', () => {
   beforeEach(() => {
+    vi.stubGlobal('reportError', vi.fn());
     vi.mock('@remix-run/react', async (importOrigninal) => {
       return {
         ...(await importOrigninal<typeof import('@remix-run/react')>()),
-        useNavigation: () => {
-          return navigation;
-        },
+        useNavigation: vi.fn(() => ({state: 'idle', location: {search: ''}})),
       };
     });
-    navigation = {state: 'idle', location: {search: ''}};
-    vi.stubGlobal('reportError', vi.fn());
   });
+
   afterEach(() => {
     vi.clearAllMocks();
   });
-  test('returns the original product if no fetchers are present', () => {
+
+  it('returns the original product if no fetchers are present', () => {
     const variant = {title: 'Product'};
     const {result} = renderHook(() =>
       useOptimisticVariant(variant, {
@@ -32,11 +30,13 @@ describe('useOptimisticVariant', () => {
     expect(result.current).toEqual(variant);
   });
 
-  test('returns the original product if no variants provided', () => {
-    navigation = {
+  it('returns the original product if no variants provided', () => {
+    vi.mocked(useNavigation).mockImplementation(() => ({
       state: 'loading',
+      // @ts-expect-error
       location: {search: new URLSearchParams('?variant=123').toString()},
-    };
+    }));
+
     const variant = {title: 'Product'};
     const {result} = renderHook(() =>
       useOptimisticVariant(variant, {
@@ -48,15 +48,17 @@ describe('useOptimisticVariant', () => {
     expect(result.current).toEqual(variant);
   });
 
-  test('returns an optimistic product', async () => {
-    navigation = {
+  it('returns an optimistic product', async () => {
+    vi.mocked(useNavigation).mockImplementation(() => ({
       state: 'loading',
+      // @ts-expect-error
       location: {
         search: new URLSearchParams(
           '?Size=158cm&Color=Sea+Green+%2F+Desert',
         ).toString(),
       },
-    };
+    }));
+
     const variant = {title: 'Product'};
     const {result} = renderHook(() =>
       useOptimisticVariant(variant, {
@@ -90,15 +92,17 @@ describe('useOptimisticVariant', () => {
     });
   });
 
-  test('returns an optimistic product when using a direct variant array', async () => {
-    navigation = {
+  it('returns an optimistic product when using a direct variant array', async () => {
+    vi.mocked(useNavigation).mockImplementation(() => ({
       state: 'loading',
+      // @ts-expect-error
       location: {
         search: new URLSearchParams(
           '?Size=158cm&Color=Sea+Green+%2F+Desert',
         ).toString(),
       },
-    };
+    }));
+
     const variant = {title: 'Product'};
     const {result} = renderHook(() =>
       useOptimisticVariant(variant, [
@@ -126,15 +130,17 @@ describe('useOptimisticVariant', () => {
     });
   });
 
-  test('returns an optimistic product when URL has unknown search params', async () => {
-    navigation = {
+  it('returns an optimistic product when URL has unknown search params', async () => {
+    vi.mocked(useNavigation).mockImplementation(() => ({
       state: 'loading',
+      // @ts-expect-error
       location: {
         search: new URLSearchParams(
           '?Size=158cm&Color=Sea+Green+%2F+Desert&unknown=param',
         ).toString(),
       },
-    };
+    }));
+
     const variant = {title: 'Product'};
     const {result} = renderHook(() =>
       useOptimisticVariant(variant, {
@@ -168,15 +174,17 @@ describe('useOptimisticVariant', () => {
     });
   });
 
-  test('errors when selectedOptions is not included in variants', async () => {
-    navigation = {
+  it('errors when selectedOptions is not included in variants', async () => {
+    vi.mocked(useNavigation).mockImplementation(() => ({
       state: 'loading',
+      // @ts-expect-error
       location: {
         search: new URLSearchParams(
           '?Size=158cm&Color=Sea+Green+%2F+Desert',
         ).toString(),
       },
-    };
+    }));
+
     const variant = {title: 'Product'};
     renderHook(() =>
       useOptimisticVariant(variant, {
