@@ -40,16 +40,17 @@ export default {
         AppSession.init(request, [env.SESSION_SECRET]),
       ]);
 
-      const {storefront, cart} = createShopifyHandler({
+      const {storefront, customerAccount, cart} = createShopifyHandler({
         env,
         request,
-        storefrontClientOptions: {
-          cache,
-          waitUntil,
-        },
+        cache,
+        waitUntil,
+        session,
         /***********************************************/
         /**********  EXAMPLE UPDATE STARTS  ************/
-        customerAccountClientOptions: undefined,
+        customerAccountClientOptions: {
+          useLegacy: true,
+        },
         /**********   EXAMPLE UPDATE END   ************/
         /***********************************************/
         cartOptions: {

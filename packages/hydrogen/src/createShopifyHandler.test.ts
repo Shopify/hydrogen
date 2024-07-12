@@ -62,7 +62,6 @@ const mockEnv = {
 const defaultOptions: Parameters<typeof createShopifyHandler>[0] = {
   env: mockEnv,
   request: new Request('https://localhost'),
-  customerAccountClientOptions: {session: {} as any},
 };
 
 describe('createShopifyHandler', () => {
@@ -103,18 +102,23 @@ describe('createShopifyHandler', () => {
     });
 
     it('called createStorefrontClient with overwrite default values', async () => {
-      const publicStorefrontTokenOverwrite = 'publicStorefrontToken overwrite';
+      const mockStorefrontHeaders = {
+        requestGroupId: 'requestGroupId value',
+        buyerIp: 'buyerIp value',
+        cookie: 'cookie value',
+        purpose: 'purpose value',
+      };
 
       createShopifyHandler({
         ...defaultOptions,
         storefrontClientOptions: {
-          publicStorefrontToken: publicStorefrontTokenOverwrite,
+          storefrontHeaders: mockStorefrontHeaders,
         },
       });
 
       expect(vi.mocked(createStorefrontClient)).toHaveBeenCalledWith(
         expect.objectContaining({
-          publicStorefrontToken: publicStorefrontTokenOverwrite,
+          storefrontHeaders: mockStorefrontHeaders,
         }),
       );
     });
@@ -156,17 +160,10 @@ describe('createShopifyHandler', () => {
   });
 
   describe('customerAccount client', () => {
-    it('returns customerAccount client by default', async () => {
-      const shopify = createShopifyHandler(defaultOptions);
-
-      expect(shopify).toEqual(
-        expect.objectContaining({customerAccount: expect.any(Object)}),
-      );
-    });
-
-    it('returns customerAccount client if customerAccountClientOptions exist', async () => {
+    it('returns customerAccount client if session exist and useLegacy is not set', async () => {
       const shopify = createShopifyHandler({
         ...defaultOptions,
+        session: {} as any,
       });
 
       expect(shopify).toEqual(
@@ -174,10 +171,38 @@ describe('createShopifyHandler', () => {
       );
     });
 
-    it('does not return customerAccount client if customerAccountClientOptions is undefined', async () => {
+    it('returns customerAccount client if session exist and useLegacy is false', async () => {
       const shopify = createShopifyHandler({
         ...defaultOptions,
-        customerAccountClientOptions: undefined,
+        session: {} as any,
+        customerAccountClientOptions: {
+          useLegacy: false,
+        },
+      });
+
+      expect(shopify).toEqual(
+        expect.objectContaining({customerAccount: expect.any(Object)}),
+      );
+    });
+
+    it('does not returns customerAccount client if session exist and useLegacy is true', async () => {
+      const shopify = createShopifyHandler({
+        ...defaultOptions,
+        session: {} as any,
+        customerAccountClientOptions: {
+          useLegacy: true,
+        },
+      });
+
+      expect(shopify).toEqual(
+        expect.objectContaining({customerAccount: undefined}),
+      );
+    });
+
+    it('does not returns customerAccount client if there is no session', async () => {
+      const shopify = createShopifyHandler({
+        ...defaultOptions,
+        session: undefined,
       });
 
       expect(shopify).toEqual(
@@ -186,7 +211,7 @@ describe('createShopifyHandler', () => {
     });
 
     it('called createCustomerAccountClient with default values', async () => {
-      createShopifyHandler(defaultOptions);
+      createShopifyHandler({...defaultOptions, session: {} as any});
 
       expect(vi.mocked(createCustomerAccountClient)).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -196,30 +221,12 @@ describe('createShopifyHandler', () => {
       );
     });
 
-    it('called createCustomerAccountClient with overwrite default values', async () => {
-      const mockCustomerAccountId = 'customerAccountId overwrite';
-
-      createShopifyHandler({
-        ...defaultOptions,
-        customerAccountClientOptions: {
-          session: {} as any,
-          customerAccountId: mockCustomerAccountId,
-        },
-      });
-
-      expect(vi.mocked(createCustomerAccountClient)).toHaveBeenCalledWith(
-        expect.objectContaining({
-          customerAccountId: mockCustomerAccountId,
-        }),
-      );
-    });
-
     it('called createCustomerAccountClient with values that does not have default', async () => {
       const mockAuthUrl = 'customerAccountId overwrite';
       createShopifyHandler({
         ...defaultOptions,
+        session: {} as any,
         customerAccountClientOptions: {
-          session: {} as any,
           authUrl: mockAuthUrl,
         },
       });
