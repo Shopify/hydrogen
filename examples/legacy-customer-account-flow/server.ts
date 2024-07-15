@@ -1,19 +1,8 @@
 // @ts-ignore
 // Virtual entry point for the app
 import * as remixBuild from 'virtual:remix/server-build';
-import {
-  cartGetIdDefault,
-  cartSetIdDefault,
-  createCartHandler,
-  createStorefrontClient,
-  storefrontRedirect,
-  createShopifyHandler,
-} from '@shopify/hydrogen';
-import {
-  createRequestHandler,
-  getStorefrontHeaders,
-  type AppLoadContext,
-} from '@shopify/remix-oxygen';
+import {storefrontRedirect, createShopifyHandler} from '@shopify/hydrogen';
+import {createRequestHandler, type AppLoadContext} from '@shopify/remix-oxygen';
 import {AppSession} from '~/lib/session';
 import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
 
@@ -40,21 +29,19 @@ export default {
         AppSession.init(request, [env.SESSION_SECRET]),
       ]);
 
-      const {storefront, customerAccount, cart} = createShopifyHandler({
+      const {storefront, cart} = createShopifyHandler({
+        /***********************************************/
+        /**********  EXAMPLE UPDATE STARTS  ************/
+        useCustomerAccountAPI: false,
+        session: undefined,
+        /**********   EXAMPLE UPDATE END   ************/
+        /***********************************************/
         env,
         request,
         cache,
         waitUntil,
-        session,
-        /***********************************************/
-        /**********  EXAMPLE UPDATE STARTS  ************/
-        customerAccountClientOptions: {
-          useLegacy: true,
-        },
-        /**********   EXAMPLE UPDATE END   ************/
-        /***********************************************/
-        cartOptions: {
-          cartQueryFragment: CART_QUERY_FRAGMENT,
+        cart: {
+          queryFragment: CART_QUERY_FRAGMENT,
         },
       });
 

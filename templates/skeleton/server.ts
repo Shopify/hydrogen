@@ -35,8 +35,8 @@ export default {
         cache,
         waitUntil,
         session,
-        cartOptions: {
-          cartQueryFragment: CART_QUERY_FRAGMENT,
+        cart: {
+          queryFragment: CART_QUERY_FRAGMENT,
         },
       });
 

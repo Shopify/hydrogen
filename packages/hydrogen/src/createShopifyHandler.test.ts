@@ -177,7 +177,7 @@ describe('createShopifyHandler', () => {
   });
 
   describe('customerAccount client', () => {
-    it('returns customerAccount client if session exist and useLegacy is not set', async () => {
+    it('returns customerAccount client if session exist and useCustomerAccountAPI is not set', async () => {
       const shopify = createShopifyHandler({
         ...defaultOptions,
         session: {} as any,
@@ -188,13 +188,11 @@ describe('createShopifyHandler', () => {
       );
     });
 
-    it('returns customerAccount client if session exist and useLegacy is false', async () => {
+    it('returns customerAccount client if session exist and useCustomerAccountAPI is true', async () => {
       const shopify = createShopifyHandler({
+        useCustomerAccountAPI: true,
         ...defaultOptions,
         session: {} as any,
-        customerAccount: {
-          useLegacy: false,
-        },
       });
 
       expect(shopify).toEqual(
@@ -202,13 +200,11 @@ describe('createShopifyHandler', () => {
       );
     });
 
-    it('does not returns customerAccount client if session exist and useLegacy is true', async () => {
+    it('does not returns customerAccount client if session exist and useCustomerAccountAPI is false', async () => {
       const shopify = createShopifyHandler({
+        useCustomerAccountAPI: false,
         ...defaultOptions,
         session: {} as any,
-        customerAccount: {
-          useLegacy: true,
-        },
       });
 
       expect(shopify).toEqual(
@@ -219,7 +215,6 @@ describe('createShopifyHandler', () => {
     it('does not returns customerAccount client if there is no session', async () => {
       const shopify = createShopifyHandler({
         ...defaultOptions,
-        session: undefined,
       });
 
       expect(shopify).toEqual(

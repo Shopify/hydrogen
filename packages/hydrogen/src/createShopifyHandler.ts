@@ -24,12 +24,14 @@ import type {ShopifyEnv, WaitUntil, HydrogenSession} from './types';
 export type ShopifyHandlerOptions<
   TI18n extends I18nBase,
   TCustomMethods extends CustomMethodsBase,
+  TUseCustomerAccountAPI extends undefined | boolean,
 > = {
+  useCustomerAccountAPI?: TUseCustomerAccountAPI;
   env: ShopifyEnv;
   request: Request;
   cache?: Cache;
   waitUntil?: WaitUntil;
-  session?: HydrogenSession;
+  session?: TUseCustomerAccountAPI extends true ? HydrogenSession : undefined;
   i18n?: TI18n;
   logErrors?: boolean | ((error?: Error) => boolean);
   storefront?: {
@@ -38,7 +40,6 @@ export type ShopifyHandlerOptions<
     contentType?: CreateStorefrontClientOptions<TI18n>['contentType'];
   };
   customerAccount?: {
-    useLegacy?: boolean;
     apiVersion?: CustomerAccountOptions['customerApiVersion'];
     authUrl?: CustomerAccountOptions['authUrl'];
     customAuthStatusHandler?: CustomerAccountOptions['customAuthStatusHandler'];
@@ -54,14 +55,19 @@ export type ShopifyHandlerOptions<
 };
 
 export interface ShopifyHandlerReturnConditional<
-  Options extends ShopifyHandlerOptions<TI18n, TCustomMethods>,
   TI18n extends I18nBase,
   TCustomMethods extends CustomMethodsBase,
+  TUseCustomerAccountAPI extends undefined | boolean,
+  Options extends ShopifyHandlerOptions<
+    TI18n,
+    TCustomMethods,
+    TUseCustomerAccountAPI
+  >,
 > {
   storefront: StorefrontClient<TI18n>['storefront'];
-  customerAccount: Options['session'] extends undefined
-    ? undefined
-    : CustomerAccount;
+  customerAccount: TUseCustomerAccountAPI extends true
+    ? CustomerAccount
+    : undefined;
   cart: Options['cart'] extends {customMethods: CustomMethodsBase}
     ? HydrogenCartCustom<TCustomMethods>
     : HydrogenCart;
@@ -80,17 +86,25 @@ export interface ShopifyHandlerReturn<
 export function createShopifyHandler<
   TI18n extends I18nBase,
   TCustomMethods extends CustomMethodsBase,
+  TUseCustomerAccountAPI extends undefined | boolean = true,
 >(
-  options: ShopifyHandlerOptions<TI18n, TCustomMethods>,
-): ShopifyHandlerReturnConditional<typeof options, TI18n, TCustomMethods>;
+  options: ShopifyHandlerOptions<TI18n, TCustomMethods, TUseCustomerAccountAPI>,
+): ShopifyHandlerReturnConditional<
+  TI18n,
+  TCustomMethods,
+  TUseCustomerAccountAPI,
+  typeof options
+>;
 
 export function createShopifyHandler<
   TI18n extends I18nBase,
   TCustomMethods extends CustomMethodsBase,
+  TUseCustomerAccountAPI extends boolean,
 >(
-  options: ShopifyHandlerOptions<TI18n, TCustomMethods>,
+  options: ShopifyHandlerOptions<TI18n, TCustomMethods, TUseCustomerAccountAPI>,
 ): ShopifyHandlerReturn<TI18n, TCustomMethods> {
   const {
+    useCustomerAccountAPI = true,
     env,
     storefront: storefrontOptions = {},
     customerAccount: customerAccountOptions,
@@ -124,7 +138,7 @@ export function createShopifyHandler<
   });
 
   let customerAccount: CustomerAccount | undefined;
-  if (shareOptions.session) {
+  if (shareOptions.session && useCustomerAccountAPI) {
     /**
      * Create a client for Customer Account API.
      */
