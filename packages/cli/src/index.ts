@@ -14,7 +14,6 @@ import GenerateRoutes from './commands/hydrogen/generate/routes.js';
 import Init from './commands/hydrogen/init.js';
 import Link from './commands/hydrogen/link.js';
 import List from './commands/hydrogen/list.js';
-import Login from './commands/hydrogen/login.js';
 import Logout from './commands/hydrogen/logout.js';
 import Preview from './commands/hydrogen/preview.js';
 import Setup from './commands/hydrogen/setup.js';
@@ -36,7 +35,6 @@ export const COMMANDS = {
   'hydrogen:init': Init,
   'hydrogen:link': Link,
   'hydrogen:list': List,
-  'hydrogen:login': Login,
   'hydrogen:logout': Logout,
   'hydrogen:preview': Preview,
   'hydrogen:setup': Setup,
