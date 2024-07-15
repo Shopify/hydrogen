@@ -124,7 +124,7 @@ jobs:
           url: ${{ secrets.SLACK_NOTIFICATION_URL }}
           method: 'POST'
           customHeaders: '{"Content-Type": "application/json"}'
-          data: '{"version": "${{ env.HYDROGEN_VERSION }}"}'
+          data: "{\"version\": \"${{ env.HYDROGEN_VERSION }}\"}"
 
   # sync_latest:
   #   needs: changelog
