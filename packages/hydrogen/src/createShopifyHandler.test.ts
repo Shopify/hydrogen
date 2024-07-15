@@ -19,7 +19,7 @@ vi.mock('./storefront', async () => ({
   })),
 }));
 
-vi.mock('@shopify/remix-oxygen', async () => ({
+vi.mock('./getStorefrontHeaders', async () => ({
   getStorefrontHeaders: vi.fn(() => ({})),
 }));
 
