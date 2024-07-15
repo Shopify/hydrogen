@@ -167,6 +167,7 @@ export {
   createShopifyHandler,
   type ShopifyHandlerOptions,
   type ShopifyHandlerReturn,
+  type ShopifyHandlerReturnConditional,
 } from './createShopifyHandler';
 
 export {getStorefrontHeaders} from './getStorefrontHeaders';

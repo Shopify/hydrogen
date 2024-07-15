@@ -22,9 +22,9 @@ import {getStorefrontHeaders} from './getStorefrontHeaders';
 import type {ShopifyEnv, WaitUntil, HydrogenSession} from './types';
 
 export type ShopifyHandlerOptions<
-  TI18n extends I18nBase,
-  TCustomMethods extends CustomMethodsBase | undefined,
-  TUseStorefrontAPI extends undefined | boolean,
+  TI18n extends I18nBase = I18nBase,
+  TCustomMethods extends CustomMethodsBase | undefined = undefined,
+  TUseStorefrontAPI extends undefined | boolean = false,
 > = {
   env: ShopifyEnv;
   request: Request;
@@ -55,8 +55,8 @@ export type ShopifyHandlerOptions<
 };
 
 export interface ShopifyHandlerReturnConditional<
-  TI18n extends I18nBase,
-  TCustomMethods extends CustomMethodsBase | undefined,
+  TI18n extends I18nBase = I18nBase,
+  TCustomMethods extends CustomMethodsBase | undefined = undefined,
   TUseStorefrontAPI extends undefined | boolean = false,
 > {
   storefront: StorefrontClient<TI18n>['storefront'];
@@ -77,7 +77,7 @@ export interface ShopifyHandlerReturn<
 
 // type for createShopifyHandler methods
 export function createShopifyHandler<
-  TI18n extends I18nBase,
+  TI18n extends I18nBase = I18nBase,
   TCustomMethods extends CustomMethodsBase | undefined = undefined,
   TUseStorefrontAPI extends undefined | boolean = false,
 >(
@@ -87,7 +87,7 @@ export function createShopifyHandler<
 export function createShopifyHandler<
   TI18n extends I18nBase,
   TCustomMethods extends CustomMethodsBase,
-  TUseStorefrontAPI extends undefined | boolean = false,
+  TUseStorefrontAPI extends undefined | boolean,
 >(
   options: ShopifyHandlerOptions<TI18n, TCustomMethods, TUseStorefrontAPI>,
 ): ShopifyHandlerReturn<TI18n, TCustomMethods> {

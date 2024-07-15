@@ -1,21 +1,17 @@
 // @ts-ignore
 // Virtual entry point for the app
 import * as remixBuild from 'virtual:remix/server-build';
-import {
-  cartGetIdDefault,
-  cartSetIdDefault,
-  createCartHandler,
-  createStorefrontClient,
-  storefrontRedirect,
-  createCustomerAccountClient,
-  getStorefrontHeaders,
-} from '@shopify/hydrogen';
+import {storefrontRedirect, createShopifyHandler} from '@shopify/hydrogen';
 import {createRequestHandler, type AppLoadContext} from '@shopify/remix-oxygen';
 import {AppSession} from '~/lib/session';
 import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
 
+/***********************************************/
+/**********  EXAMPLE UPDATE STARTS  ************/
 // 1. Import the Rick and Morty client.
 import {createRickAndMortyClient} from './app/lib/createRickAndMortyClient.server';
+/**********   EXAMPLE UPDATE END   ************/
+/***********************************************/
 
 /**
  * Export a fetch handler in module format.
@@ -35,37 +31,24 @@ export default {
       }
 
       const waitUntil = executionContext.waitUntil.bind(executionContext);
-
       const [cache, session] = await Promise.all([
         caches.open('hydrogen'),
         AppSession.init(request, [env.SESSION_SECRET]),
       ]);
 
-      /**
-       * Create Hydrogen's Storefront client.
-       */
-      const {storefront} = createStorefrontClient({
+      const {storefront, customerAccount, cart} = createShopifyHandler({
+        env,
+        request,
         cache,
         waitUntil,
-        i18n: {language: 'EN', country: 'US'},
-        publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-        privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
-        storeDomain: env.PUBLIC_STORE_DOMAIN,
-        storefrontId: env.PUBLIC_STOREFRONT_ID,
-        storefrontHeaders: getStorefrontHeaders(request),
-      });
-
-      /**
-       * Create a client for Customer Account API.
-       */
-      const customerAccount = createCustomerAccountClient({
-        waitUntil,
-        request,
         session,
-        customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID,
-        customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_API_URL,
+        cart: {
+          queryFragment: CART_QUERY_FRAGMENT,
+        },
       });
 
+      /***********************************************/
+      /**********  EXAMPLE UPDATE STARTS  ************/
       /**
        * 2. Create a Rick and Morty client.
        */
@@ -74,17 +57,8 @@ export default {
         waitUntil,
         request,
       });
-
-      /*
-       * Create a cart handler that will be used to
-       * create and update the cart in the session.
-       */
-      const cart = createCartHandler({
-        storefront,
-        getCartId: cartGetIdDefault(request.headers),
-        setCartId: cartSetIdDefault(),
-        cartQueryFragment: CART_QUERY_FRAGMENT,
-      });
+      /**********   EXAMPLE UPDATE END   ************/
+      /***********************************************/
 
       /**
        * Create a Remix request handler and pass
@@ -100,7 +74,11 @@ export default {
           cart,
           env,
           waitUntil,
+          /***********************************************/
+          /**********  EXAMPLE UPDATE STARTS  ************/
           rickAndMorty, // 3. Pass the Rick and Morty client to the action and loader context.
+          /**********   EXAMPLE UPDATE END   ************/
+          /***********************************************/
         }),
       });
 
