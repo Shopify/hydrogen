@@ -1,8 +1,4 @@
-import {
-  renderInfo,
-  renderSelectPrompt,
-  renderSuccess,
-} from '@shopify/cli-kit/node/ui';
+import {renderSelectPrompt, renderSuccess} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {
   type AdminSession,
@@ -11,10 +7,6 @@ import {
   ensureAuthenticatedBusinessPlatform,
 } from '@shopify/cli-kit/node/session';
 import {normalizeStoreFqdn} from '@shopify/cli-kit/node/context/fqdn';
-import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
-import {renderTasks} from '@shopify/cli-kit/node/ui';
-import colors from '@shopify/cli-kit/node/colors';
-import ansiEscapes from 'ansi-escapes';
 import {
   getConfig,
   resetConfig,
@@ -22,8 +14,6 @@ import {
   type ShopifyConfig,
 } from './shopify-config.js';
 import {getUserAccount} from './graphql/business-platform/user-account.js';
-import {muteAuthLogs} from './log.js';
-import {deferPromise} from './defer.js';
 
 export type {AdminSession};
 
@@ -54,8 +44,6 @@ export async function login(root?: string, shop?: string | true) {
 
   if (shop) shop = await normalizeStoreFqdn(shop);
 
-  const hideLoginInfo = showLoginInfo();
-
   if (
     !shop ||
     !shopName ||
@@ -70,7 +58,6 @@ export async function login(root?: string, shop?: string | true) {
     });
 
     const userAccount = await getUserAccount(token);
-    await hideLoginInfo();
 
     const preselected =
       !forcePrompt &&
@@ -98,81 +85,11 @@ export async function login(root?: string, shop?: string | true) {
     ]);
   });
 
-  await hideLoginInfo();
-
   const config = root
     ? await setUserAccount(root, {shop, shopName, email})
     : {shop, shopName, email};
 
   return {session, config};
-}
-
-function showLoginInfo() {
-  const deferred = deferPromise();
-
-  console.log('');
-
-  let hasLoggedTimeout = false;
-  let hasLoggedPressKey = false;
-
-  const restoreLogs = muteAuthLogs({
-    onKeyTimeout: (link) => {
-      if (link) {
-        hasLoggedTimeout = true;
-        process.stdout.write(ansiEscapes.eraseLines(9));
-
-        try {
-          const secureLink = link.replace('http://', 'https://');
-          const url = new URL(secureLink);
-          const label = url.origin + '/...' + url.search.slice(-14);
-
-          renderInfo({
-            headline: 'Log in to Shopify',
-            body: outputContent`Timed out. Click to open your browser:\n${outputToken.link(
-              colors.white(label),
-              secureLink,
-            )}`.value,
-          });
-        } catch {
-          // Parsed wrong link
-        }
-      }
-    },
-    onPressKey: () => {
-      hasLoggedPressKey = true;
-      renderInfo({
-        headline: 'Log in to Shopify',
-        body: 'Press any key to login with your default browser',
-      });
-
-      process.stdin.once('data', () => {
-        renderTasks([
-          {
-            title: 'Waiting for Shopify authentication',
-            task: async () => {
-              await deferred.promise;
-            },
-          },
-        ]);
-      });
-    },
-  });
-
-  deferred.promise.then(() => {
-    restoreLogs();
-    if (hasLoggedPressKey) {
-      process.stdout.write(ansiEscapes.eraseLines(hasLoggedTimeout ? 11 : 10));
-    }
-  });
-
-  return async () => {
-    deferred.resolve();
-    // Without this timeout the process exits
-    // right after `renderTasks` is done.
-    // In some cases, it makes renderPrompt to return
-    // `undefined` without showing the prompt.
-    await new Promise((resolve) => setTimeout(resolve, 0));
-  };
 }
 
 export function renderLoginSuccess(config: ShopifyConfig) {
