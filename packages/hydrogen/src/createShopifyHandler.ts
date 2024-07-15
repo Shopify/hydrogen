@@ -32,28 +32,28 @@ export type ShopifyHandlerOptions<
   session?: HydrogenSession;
   i18n?: TI18n;
   logErrors?: boolean | ((error?: Error) => boolean);
-  storefrontClientOptions?: {
-    storefrontHeaders?: CreateStorefrontClientOptions<TI18n>['storefrontHeaders'];
-    storefrontApiVersion?: CreateStorefrontClientOptions<TI18n>['storefrontApiVersion'];
+  storefront?: {
+    headers?: CreateStorefrontClientOptions<TI18n>['storefrontHeaders'];
+    apiVersion?: CreateStorefrontClientOptions<TI18n>['storefrontApiVersion'];
     contentType?: CreateStorefrontClientOptions<TI18n>['contentType'];
   };
-  customerAccountClientOptions?: {
+  customerAccount?: {
     useLegacy?: boolean;
-    customerApiVersion?: CustomerAccountOptions['customerApiVersion'];
+    apiVersion?: CustomerAccountOptions['customerApiVersion'];
     authUrl?: CustomerAccountOptions['authUrl'];
     customAuthStatusHandler?: CustomerAccountOptions['customAuthStatusHandler'];
     unstableB2b?: CustomerAccountOptions['unstableB2b'];
   };
-  cartOptions?: {
-    getCartId?: CartHandlerOptions['getCartId'];
-    setCartId?: CartHandlerOptions['setCartId'];
-    cartQueryFragment?: CartHandlerOptions['cartQueryFragment'];
-    cartMutateFragment?: CartHandlerOptions['cartMutateFragment'];
+  cart?: {
+    getId?: CartHandlerOptions['getCartId'];
+    setId?: CartHandlerOptions['setCartId'];
+    queryFragment?: CartHandlerOptions['cartQueryFragment'];
+    mutateFragment?: CartHandlerOptions['cartMutateFragment'];
     customMethods?: TCustomMethods;
   };
 };
 
-export interface ShopifyHandlerReturn<
+export interface ShopifyHandlerReturnConditional<
   Options extends ShopifyHandlerOptions<TI18n, TCustomMethods>,
   TI18n extends I18nBase,
   TCustomMethods extends CustomMethodsBase,
@@ -62,9 +62,18 @@ export interface ShopifyHandlerReturn<
   customerAccount: Options['session'] extends undefined
     ? undefined
     : CustomerAccount;
-  cart: Options['cartOptions'] extends {customMethods: CustomMethodsBase}
+  cart: Options['cart'] extends {customMethods: CustomMethodsBase}
     ? HydrogenCartCustom<TCustomMethods>
     : HydrogenCart;
+}
+
+export interface ShopifyHandlerReturn<
+  TI18n extends I18nBase,
+  TCustomMethods extends CustomMethodsBase,
+> {
+  storefront: StorefrontClient<TI18n>['storefront'];
+  customerAccount: CustomerAccount | undefined;
+  cart: HydrogenCart | HydrogenCartCustom<TCustomMethods>;
 }
 
 // type for createShopifyHandler methods
@@ -73,12 +82,19 @@ export function createShopifyHandler<
   TCustomMethods extends CustomMethodsBase,
 >(
   options: ShopifyHandlerOptions<TI18n, TCustomMethods>,
-): ShopifyHandlerReturn<typeof options, TI18n, TCustomMethods> {
+): ShopifyHandlerReturnConditional<typeof options, TI18n, TCustomMethods>;
+
+export function createShopifyHandler<
+  TI18n extends I18nBase,
+  TCustomMethods extends CustomMethodsBase,
+>(
+  options: ShopifyHandlerOptions<TI18n, TCustomMethods>,
+): ShopifyHandlerReturn<TI18n, TCustomMethods> {
   const {
     env,
-    storefrontClientOptions = {},
-    customerAccountClientOptions,
-    cartOptions = {},
+    storefront: storefrontOptions = {},
+    customerAccount: customerAccountOptions,
+    cart: cartOptions = {},
     ...shareOptions
   } = options;
 
@@ -86,27 +102,46 @@ export function createShopifyHandler<
    * Create Hydrogen's Storefront client.
    */
   const {storefront} = createStorefrontClient<TI18n>({
-    ...shareOptions,
-    ...storefrontClientOptions,
-    publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-    privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
-    storeDomain: env.PUBLIC_STORE_DOMAIN,
-    storefrontId: env.PUBLIC_STOREFRONT_ID,
-    i18n: (options.i18n as TI18n) || ({language: 'EN', country: 'US'} as TI18n),
+    // share options
+    cache: shareOptions.cache,
+    waitUntil: shareOptions.waitUntil,
+    i18n:
+      (shareOptions.i18n as TI18n) ||
+      ({language: 'EN', country: 'US'} as TI18n),
+    logErrors: shareOptions.logErrors,
+    storefrontApiVersion: storefrontOptions.apiVersion,
+
+    // storefrontOptions
     storefrontHeaders:
-      storefrontClientOptions.storefrontHeaders ||
-      getStorefrontHeaders(shareOptions.request),
+      storefrontOptions.headers || getStorefrontHeaders(shareOptions.request),
+    contentType: storefrontOptions.contentType,
+
+    // defaults
+    storefrontId: env.PUBLIC_STOREFRONT_ID,
+    storeDomain: env.PUBLIC_STORE_DOMAIN,
+    privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
+    publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
   });
 
-  let customerAccount;
-  if (!customerAccountClientOptions?.useLegacy && shareOptions.session) {
+  let customerAccount: CustomerAccount | undefined;
+  if (shareOptions.session) {
     /**
      * Create a client for Customer Account API.
      */
     customerAccount = createCustomerAccountClient({
-      ...shareOptions,
-      ...customerAccountClientOptions,
+      // share options
       session: shareOptions.session,
+      request: shareOptions.request,
+      waitUntil: shareOptions.waitUntil,
+      logErrors: shareOptions.logErrors,
+
+      // customerAccountOptions
+      customerApiVersion: customerAccountOptions?.apiVersion,
+      authUrl: customerAccountOptions?.authUrl,
+      customAuthStatusHandler: customerAccountOptions?.customAuthStatusHandler,
+      unstableB2b: customerAccountOptions?.unstableB2b,
+
+      // defaults
       customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID,
       customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_API_URL,
     });
@@ -117,18 +152,22 @@ export function createShopifyHandler<
    * create and update the cart in the session.
    */
   const cart = createCartHandler({
-    ...shareOptions,
-    ...cartOptions,
+    // cartOptions
+    getCartId:
+      cartOptions.getId || cartGetIdDefault(shareOptions.request.headers),
+    setCartId: cartOptions.setId || cartSetIdDefault(),
+    cartQueryFragment: cartOptions.queryFragment,
+    cartMutateFragment: cartOptions.mutateFragment,
+    customMethods: cartOptions.customMethods,
+
+    // defaults
     storefront,
     customerAccount,
-    getCartId:
-      cartOptions.getCartId || cartGetIdDefault(shareOptions.request.headers),
-    setCartId: cartOptions.setCartId || cartSetIdDefault(),
   });
 
   return {
     storefront,
     customerAccount,
     cart,
-  } as ShopifyHandlerReturn<typeof options, TI18n, TCustomMethods>;
+  };
 }

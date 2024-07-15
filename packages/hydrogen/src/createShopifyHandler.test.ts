@@ -111,8 +111,8 @@ describe('createShopifyHandler', () => {
 
       createShopifyHandler({
         ...defaultOptions,
-        storefrontClientOptions: {
-          storefrontHeaders: mockStorefrontHeaders,
+        storefront: {
+          headers: mockStorefrontHeaders,
         },
       });
 
@@ -126,7 +126,7 @@ describe('createShopifyHandler', () => {
     it('called createStorefrontClient with values that does not have default', async () => {
       createShopifyHandler({
         ...defaultOptions,
-        storefrontClientOptions: {contentType: 'graphql'},
+        storefront: {contentType: 'graphql'},
       });
 
       expect(vi.mocked(createStorefrontClient)).toHaveBeenCalledWith(
@@ -146,7 +146,7 @@ describe('createShopifyHandler', () => {
 
       createShopifyHandler({
         ...defaultOptions,
-        storefrontClientOptions: {storefrontHeaders: mockeStorefrontHeaders},
+        storefront: {headers: mockeStorefrontHeaders},
       });
 
       expect(vi.mocked(createStorefrontClient)).toHaveBeenCalledWith(
@@ -156,6 +156,23 @@ describe('createShopifyHandler', () => {
       );
 
       expect(vi.mocked(getStorefrontHeaders)).not.toHaveBeenCalled();
+    });
+
+    it('called createStorefrontClient with renamed apiVersion key', async () => {
+      const mockApiVersion = 'new storefrontApiVersion';
+
+      createShopifyHandler({
+        ...defaultOptions,
+        storefront: {
+          apiVersion: mockApiVersion,
+        },
+      });
+
+      expect(vi.mocked(createStorefrontClient)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          storefrontApiVersion: mockApiVersion,
+        }),
+      );
     });
   });
 
@@ -175,7 +192,7 @@ describe('createShopifyHandler', () => {
       const shopify = createShopifyHandler({
         ...defaultOptions,
         session: {} as any,
-        customerAccountClientOptions: {
+        customerAccount: {
           useLegacy: false,
         },
       });
@@ -189,7 +206,7 @@ describe('createShopifyHandler', () => {
       const shopify = createShopifyHandler({
         ...defaultOptions,
         session: {} as any,
-        customerAccountClientOptions: {
+        customerAccount: {
           useLegacy: true,
         },
       });
@@ -226,7 +243,7 @@ describe('createShopifyHandler', () => {
       createShopifyHandler({
         ...defaultOptions,
         session: {} as any,
-        customerAccountClientOptions: {
+        customerAccount: {
           authUrl: mockAuthUrl,
         },
       });
@@ -234,6 +251,24 @@ describe('createShopifyHandler', () => {
       expect(vi.mocked(createCustomerAccountClient)).toHaveBeenCalledWith(
         expect.objectContaining({
           authUrl: mockAuthUrl,
+        }),
+      );
+    });
+
+    it('called createCustomerAccountClient with renamed apiVersion key', async () => {
+      const mockApiVersion = 'new customerApiVersion';
+
+      createShopifyHandler({
+        ...defaultOptions,
+        session: {} as any,
+        customerAccount: {
+          apiVersion: mockApiVersion,
+        },
+      });
+
+      expect(vi.mocked(createCustomerAccountClient)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          customerApiVersion: mockApiVersion,
         }),
       );
     });
@@ -281,8 +316,8 @@ describe('createShopifyHandler', () => {
 
       createShopifyHandler({
         ...defaultOptions,
-        cartOptions: {
-          getCartId: mockGetCartId,
+        cart: {
+          getId: mockGetCartId,
         },
       });
 
@@ -298,8 +333,8 @@ describe('createShopifyHandler', () => {
 
       createShopifyHandler({
         ...defaultOptions,
-        cartOptions: {
-          cartQueryFragment: mockCartQueryFragment,
+        cart: {
+          queryFragment: mockCartQueryFragment,
         },
       });
 
@@ -317,8 +352,8 @@ describe('createShopifyHandler', () => {
 
       createShopifyHandler({
         ...defaultOptions,
-        cartOptions: {
-          getCartId: mockGetCartId,
+        cart: {
+          getId: mockGetCartId,
         },
       });
 
@@ -338,8 +373,8 @@ describe('createShopifyHandler', () => {
 
       createShopifyHandler({
         ...defaultOptions,
-        cartOptions: {
-          setCartId: mockSetCartId,
+        cart: {
+          setId: mockSetCartId,
         },
       });
 
@@ -350,6 +385,40 @@ describe('createShopifyHandler', () => {
       );
 
       expect(vi.mocked(cartSetIdDefault)).not.toHaveBeenCalled();
+    });
+
+    it('called createCartHandler with renamed queryFragment key', async () => {
+      const mockQueryFragment = 'new queryFragment';
+
+      createShopifyHandler({
+        ...defaultOptions,
+        cart: {
+          queryFragment: mockQueryFragment,
+        },
+      });
+
+      expect(vi.mocked(createCartHandler)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          cartQueryFragment: mockQueryFragment,
+        }),
+      );
+    });
+
+    it('called createCartHandler with renamed mutateFragment key', async () => {
+      const mockMutateFragment = 'new mutateFragment';
+
+      createShopifyHandler({
+        ...defaultOptions,
+        cart: {
+          mutateFragment: mockMutateFragment,
+        },
+      });
+
+      expect(vi.mocked(createCartHandler)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          cartMutateFragment: mockMutateFragment,
+        }),
+      );
     });
   });
 });
