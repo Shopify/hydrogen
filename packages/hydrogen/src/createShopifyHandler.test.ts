@@ -1,20 +1,13 @@
-import {
-  vi,
-  describe,
-  it,
-  expect,
-  afterEach,
-  assertType,
-  expectTypeOf,
-} from 'vitest';
-import {
-  createShopifyHandler,
-  type ShopifyHandlerOptions,
-} from './createShopifyHandler';
+import {vi, describe, it, expect, afterEach, expectTypeOf} from 'vitest';
+import {createShopifyHandler} from './createShopifyHandler';
 import {createStorefrontClient} from './storefront';
 import {getStorefrontHeaders} from '@shopify/remix-oxygen';
 import {createCustomerAccountClient} from './customer/customer';
-import {createCartHandler} from './cart/createCartHandler';
+import {
+  createCartHandler,
+  type HydrogenCart,
+  type HydrogenCartCustom,
+} from './cart/createCartHandler';
 import {cartGetIdDefault} from './cart/cartGetIdDefault';
 import {cartSetIdDefault} from './cart/cartSetIdDefault';
 import type {CustomerAccount} from './customer/types';
@@ -429,6 +422,39 @@ describe('createShopifyHandler', () => {
           cartMutateFragment: mockMutateFragment,
         }),
       );
+    });
+
+    describe('cart return based on options', () => {
+      it('returns cart handler with HydrogenCart if there cart.customMethods key does not exist', async () => {
+        const shopify = createShopifyHandler(defaultOptions);
+
+        expect(shopify).toHaveProperty('cart');
+        expectTypeOf(shopify.cart).toEqualTypeOf<HydrogenCart>();
+      });
+
+      it('returns cart handler with HydrogenCart if there cart.customMethods is undefined', async () => {
+        const shopify = createShopifyHandler({
+          ...defaultOptions,
+          cart: {customMethods: undefined},
+        });
+
+        expect(shopify).toHaveProperty('cart');
+        expectTypeOf(shopify.cart).toEqualTypeOf<HydrogenCart>();
+      });
+
+      it('returns cart handler with HydrogenCartCustom if there cart.customMethods is defined', async () => {
+        const customMethods = {testMethod: () => {}};
+
+        const shopify = createShopifyHandler({
+          ...defaultOptions,
+          cart: {customMethods},
+        });
+
+        expect(shopify).toHaveProperty('cart');
+        expectTypeOf(shopify.cart).toEqualTypeOf<
+          HydrogenCartCustom<typeof customMethods>
+        >();
+      });
     });
   });
 });
