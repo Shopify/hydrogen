@@ -37,7 +37,7 @@ export default {
         /***********************************************/
         /**********  EXAMPLE UPDATE STARTS  ************/
         customerAccount: {
-          useCustomerAccountAPI: false,
+          useStorefrontAPI: true,
         },
         /**********   EXAMPLE UPDATE END   ************/
         /***********************************************/

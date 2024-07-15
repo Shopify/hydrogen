@@ -240,18 +240,18 @@ describe('createShopifyHandler', () => {
     });
 
     describe('customerAccount return based on options', () => {
-      it('returns customerAccount client if session exist and useCustomerAccountAPI is not set', async () => {
+      it('returns customerAccount client if session exist and useStorefrontAPI is not set', async () => {
         const shopify = createShopifyHandler(defaultOptionsWithCustomerAccount);
 
         expect(shopify).toHaveProperty('customerAccount');
         expectTypeOf(shopify.customerAccount).toEqualTypeOf<CustomerAccount>();
       });
 
-      it('returns customerAccount client if session exist and useCustomerAccountAPI is true', async () => {
+      it('returns customerAccount client if session exist and useStorefrontAPI is false', async () => {
         const shopify = createShopifyHandler({
           ...defaultOptionsWithCustomerAccount,
           customerAccount: {
-            useCustomerAccountAPI: true,
+            useStorefrontAPI: false,
           },
         });
 
@@ -259,11 +259,11 @@ describe('createShopifyHandler', () => {
         expectTypeOf(shopify.customerAccount).toEqualTypeOf<CustomerAccount>();
       });
 
-      it('does not returns customerAccount client if session exist and useCustomerAccountAPI is false', async () => {
+      it('does not returns customerAccount client if session exist and useStorefrontAPI is true', async () => {
         const shopify = createShopifyHandler({
           ...defaultOptionsWithCustomerAccount,
           customerAccount: {
-            useCustomerAccountAPI: false,
+            useStorefrontAPI: true,
           },
           session: undefined,
         });
