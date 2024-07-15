@@ -94,6 +94,38 @@ jobs:
           git commit -m "Update templates for dist"
           git push origin HEAD:dist --force
 
+  slack_announcement:
+    needs: changelog
+    # Only announce if a release was published, and we're on the "latest" release branch
+    if: needs.changelog.outputs.published == 'true' && needs.changelog.outputs.latest == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v3
+
+      - name: Read Hydrogen version from package.json
+        id: read_package_json
+        working-directory: ./packages/hydrogen
+        run: |
+          content=`cat ./package.json`
+          # the following lines are required for multi line json
+          content="${content//'%'/'%25'}"
+          content="${content//$'\n'/'%0A'}"
+          content="${content//$'\r'/'%0D'}"
+          # end of handling multi line json
+          echo "::set-output name=packageJson::$content"
+      - run: |
+          echo "HYDROGEN_VERSION=${{fromJSON(steps.read_package_json.outputs.packageJson).version}}" >> $GITHUB_ENV
+
+      - name: Post release announcement on Partner Slack
+        id: slack
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: ${{ secrets.SLACK_NOTIFICATION_URL }}
+          method: 'POST'
+          customHeaders: '{"Content-Type": "application/json"}'
+          data: "{\"version\": \"${{ env.HYDROGEN_VERSION }}\"}"
+
   # sync_latest:
   #   needs: changelog
   #   # Only update package-lock.json if a release was published, and we're on the "latest" release branch
