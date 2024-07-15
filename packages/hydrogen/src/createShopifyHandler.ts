@@ -26,12 +26,11 @@ export type ShopifyHandlerOptions<
   TCustomMethods extends CustomMethodsBase,
   TUseCustomerAccountAPI extends undefined | boolean,
 > = {
-  useCustomerAccountAPI?: TUseCustomerAccountAPI;
   env: ShopifyEnv;
   request: Request;
   cache?: Cache;
   waitUntil?: WaitUntil;
-  session?: TUseCustomerAccountAPI extends true ? HydrogenSession : undefined;
+  session?: TUseCustomerAccountAPI extends false ? undefined : HydrogenSession;
   i18n?: TI18n;
   logErrors?: boolean | ((error?: Error) => boolean);
   storefront?: {
@@ -40,6 +39,7 @@ export type ShopifyHandlerOptions<
     contentType?: CreateStorefrontClientOptions<TI18n>['contentType'];
   };
   customerAccount?: {
+    useCustomerAccountAPI?: TUseCustomerAccountAPI;
     apiVersion?: CustomerAccountOptions['customerApiVersion'];
     authUrl?: CustomerAccountOptions['authUrl'];
     customAuthStatusHandler?: CustomerAccountOptions['customAuthStatusHandler'];
@@ -65,9 +65,9 @@ export interface ShopifyHandlerReturnConditional<
   >,
 > {
   storefront: StorefrontClient<TI18n>['storefront'];
-  customerAccount: TUseCustomerAccountAPI extends true
-    ? CustomerAccount
-    : undefined;
+  customerAccount: TUseCustomerAccountAPI extends false
+    ? undefined
+    : CustomerAccount;
   cart: Options['cart'] extends {customMethods: CustomMethodsBase}
     ? HydrogenCartCustom<TCustomMethods>
     : HydrogenCart;
@@ -99,12 +99,11 @@ export function createShopifyHandler<
 export function createShopifyHandler<
   TI18n extends I18nBase,
   TCustomMethods extends CustomMethodsBase,
-  TUseCustomerAccountAPI extends boolean,
+  TUseCustomerAccountAPI extends undefined | boolean = true,
 >(
   options: ShopifyHandlerOptions<TI18n, TCustomMethods, TUseCustomerAccountAPI>,
 ): ShopifyHandlerReturn<TI18n, TCustomMethods> {
   const {
-    useCustomerAccountAPI = true,
     env,
     storefront: storefrontOptions = {},
     customerAccount: customerAccountOptions,
@@ -138,6 +137,8 @@ export function createShopifyHandler<
   });
 
   let customerAccount: CustomerAccount | undefined;
+  const useCustomerAccountAPI =
+    customerAccountOptions?.useCustomerAccountAPI || true;
   if (shareOptions.session && useCustomerAccountAPI) {
     /**
      * Create a client for Customer Account API.

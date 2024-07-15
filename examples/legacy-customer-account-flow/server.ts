@@ -30,16 +30,17 @@ export default {
       ]);
 
       const {storefront, cart} = createShopifyHandler({
-        /***********************************************/
-        /**********  EXAMPLE UPDATE STARTS  ************/
-        useCustomerAccountAPI: false,
-        session: undefined,
-        /**********   EXAMPLE UPDATE END   ************/
-        /***********************************************/
         env,
         request,
         cache,
         waitUntil,
+        /***********************************************/
+        /**********  EXAMPLE UPDATE STARTS  ************/
+        customerAccount: {
+          useCustomerAccountAPI: false,
+        },
+        /**********   EXAMPLE UPDATE END   ************/
+        /***********************************************/
         cart: {
           queryFragment: CART_QUERY_FRAGMENT,
         },

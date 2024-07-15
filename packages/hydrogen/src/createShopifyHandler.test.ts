@@ -1,11 +1,24 @@
-import {vi, describe, it, expect, afterEach} from 'vitest';
-import {createShopifyHandler} from './createShopifyHandler';
+import {
+  vi,
+  describe,
+  it,
+  expect,
+  afterEach,
+  assertType,
+  expectTypeOf,
+} from 'vitest';
+import {
+  createShopifyHandler,
+  type ShopifyHandlerOptions,
+} from './createShopifyHandler';
 import {createStorefrontClient} from './storefront';
 import {getStorefrontHeaders} from '@shopify/remix-oxygen';
 import {createCustomerAccountClient} from './customer/customer';
 import {createCartHandler} from './cart/createCartHandler';
 import {cartGetIdDefault} from './cart/cartGetIdDefault';
 import {cartSetIdDefault} from './cart/cartSetIdDefault';
+import type {CustomerAccount} from './customer/types';
+import type {HydrogenSession} from './types';
 
 vi.mock('./storefront', async () => ({
   createStorefrontClient: vi.fn(() => ({
@@ -59,7 +72,7 @@ const mockEnv = {
   PUBLIC_CHECKOUT_DOMAIN: 'PUBLIC_CHECKOUT_DOMAIN_value',
 };
 
-const defaultOptions: Parameters<typeof createShopifyHandler>[0] = {
+const defaultOptions = {
   env: mockEnv,
   request: new Request('https://localhost'),
 };
@@ -177,53 +190,13 @@ describe('createShopifyHandler', () => {
   });
 
   describe('customerAccount client', () => {
-    it('returns customerAccount client if session exist and useCustomerAccountAPI is not set', async () => {
-      const shopify = createShopifyHandler({
-        ...defaultOptions,
-        session: {} as any,
-      });
-
-      expect(shopify).toEqual(
-        expect.objectContaining({customerAccount: expect.any(Object)}),
-      );
-    });
-
-    it('returns customerAccount client if session exist and useCustomerAccountAPI is true', async () => {
-      const shopify = createShopifyHandler({
-        useCustomerAccountAPI: true,
-        ...defaultOptions,
-        session: {} as any,
-      });
-
-      expect(shopify).toEqual(
-        expect.objectContaining({customerAccount: expect.any(Object)}),
-      );
-    });
-
-    it('does not returns customerAccount client if session exist and useCustomerAccountAPI is false', async () => {
-      const shopify = createShopifyHandler({
-        useCustomerAccountAPI: false,
-        ...defaultOptions,
-        session: {} as any,
-      });
-
-      expect(shopify).toEqual(
-        expect.objectContaining({customerAccount: undefined}),
-      );
-    });
-
-    it('does not returns customerAccount client if there is no session', async () => {
-      const shopify = createShopifyHandler({
-        ...defaultOptions,
-      });
-
-      expect(shopify).toEqual(
-        expect.objectContaining({customerAccount: undefined}),
-      );
-    });
+    const defaultOptionsWithCustomerAccount = {
+      ...defaultOptions,
+      session: {} as HydrogenSession,
+    };
 
     it('called createCustomerAccountClient with default values', async () => {
-      createShopifyHandler({...defaultOptions, session: {} as any});
+      createShopifyHandler(defaultOptionsWithCustomerAccount);
 
       expect(vi.mocked(createCustomerAccountClient)).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -236,8 +209,7 @@ describe('createShopifyHandler', () => {
     it('called createCustomerAccountClient with values that does not have default', async () => {
       const mockAuthUrl = 'customerAccountId overwrite';
       createShopifyHandler({
-        ...defaultOptions,
-        session: {} as any,
+        ...defaultOptionsWithCustomerAccount,
         customerAccount: {
           authUrl: mockAuthUrl,
         },
@@ -254,8 +226,7 @@ describe('createShopifyHandler', () => {
       const mockApiVersion = 'new customerApiVersion';
 
       createShopifyHandler({
-        ...defaultOptions,
-        session: {} as any,
+        ...defaultOptionsWithCustomerAccount,
         customerAccount: {
           apiVersion: mockApiVersion,
         },
@@ -266,6 +237,50 @@ describe('createShopifyHandler', () => {
           customerApiVersion: mockApiVersion,
         }),
       );
+    });
+
+    describe('customerAccount return based on options', () => {
+      it('returns customerAccount client if session exist and useCustomerAccountAPI is not set', async () => {
+        const shopify = createShopifyHandler(defaultOptionsWithCustomerAccount);
+
+        expect(shopify).toHaveProperty('customerAccount');
+        expectTypeOf(shopify.customerAccount).toEqualTypeOf<CustomerAccount>();
+      });
+
+      it('returns customerAccount client if session exist and useCustomerAccountAPI is true', async () => {
+        const shopify = createShopifyHandler({
+          ...defaultOptionsWithCustomerAccount,
+          customerAccount: {
+            useCustomerAccountAPI: true,
+          },
+        });
+
+        expect(shopify).toHaveProperty('customerAccount');
+        expectTypeOf(shopify.customerAccount).toEqualTypeOf<CustomerAccount>();
+      });
+
+      it('does not returns customerAccount client if session exist and useCustomerAccountAPI is false', async () => {
+        const shopify = createShopifyHandler({
+          ...defaultOptionsWithCustomerAccount,
+          customerAccount: {
+            useCustomerAccountAPI: false,
+          },
+          session: undefined,
+        });
+
+        expect(shopify).toHaveProperty('customerAccount');
+        expect(shopify.customerAccount).toBeUndefined();
+      });
+
+      it('does not returns customerAccount client if there is no session', async () => {
+        const shopify = createShopifyHandler({
+          ...defaultOptionsWithCustomerAccount,
+          session: undefined,
+        });
+
+        expect(shopify).toHaveProperty('customerAccount');
+        expect(shopify.customerAccount).toBeUndefined();
+      });
     });
   });
 
