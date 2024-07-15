@@ -1,9 +1,10 @@
-import {storefrontRedirect, createStorefrontClient} from '@shopify/hydrogen';
-import * as remixBuild from '@remix-run/dev/server-build';
 import {
-  createRequestHandler,
+  storefrontRedirect,
+  createStorefrontClient,
   getStorefrontHeaders,
-} from '@shopify/remix-oxygen';
+} from '@shopify/hydrogen';
+import * as remixBuild from '@remix-run/dev/server-build';
+import {createRequestHandler} from '@shopify/remix-oxygen';
 
 export default {
   async fetch(request, env, executionContext) {

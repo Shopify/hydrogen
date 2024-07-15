@@ -1,7 +1,7 @@
 import {vi, describe, it, expect, afterEach, expectTypeOf} from 'vitest';
 import {createShopifyHandler} from './createShopifyHandler';
 import {createStorefrontClient} from './storefront';
-import {getStorefrontHeaders} from '@shopify/remix-oxygen';
+import {getStorefrontHeaders} from './getStorefrontHeaders';
 import {createCustomerAccountClient} from './customer/customer';
 import {
   createCartHandler,

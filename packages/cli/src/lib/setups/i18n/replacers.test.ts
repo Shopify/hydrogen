@@ -140,10 +140,10 @@ describe('i18n replacers', () => {
           createStorefrontClient,
           storefrontRedirect,
           createCustomerAccountClient,
+          getStorefrontHeaders,
         } from "@shopify/hydrogen";
         import {
           createRequestHandler,
-          getStorefrontHeaders,
           type AppLoadContext,
         } from "@shopify/remix-oxygen";
         import { AppSession } from "~/lib/session";

@@ -4,7 +4,6 @@ import {
   type StorefrontClient,
   type I18nBase,
 } from './storefront';
-import {getStorefrontHeaders} from '@shopify/remix-oxygen';
 import {createCustomerAccountClient} from './customer/customer';
 import {
   type CustomerAccountOptions,
@@ -19,6 +18,7 @@ import {
 } from './cart/createCartHandler';
 import {cartGetIdDefault} from './cart/cartGetIdDefault';
 import {cartSetIdDefault} from './cart/cartSetIdDefault';
+import {getStorefrontHeaders} from './getStorefrontHeaders';
 import type {ShopifyEnv, WaitUntil, HydrogenSession} from './types';
 
 export type ShopifyHandlerOptions<

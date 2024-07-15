@@ -7,12 +7,9 @@ import {
   createStorefrontClient,
   storefrontRedirect,
   createCustomerAccountClient,
-} from '@shopify/hydrogen';
-import {
-  createRequestHandler,
   getStorefrontHeaders,
-  type AppLoadContext,
-} from '@shopify/remix-oxygen';
+} from '@shopify/hydrogen';
+import {createRequestHandler, type AppLoadContext} from '@shopify/remix-oxygen';
 import {AppSession} from '~/lib/session';
 import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
 

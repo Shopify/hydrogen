@@ -168,3 +168,5 @@ export {
   type ShopifyHandlerOptions,
   type ShopifyHandlerReturn,
 } from './createShopifyHandler';
+
+export {getStorefrontHeaders} from './getStorefrontHeaders';

@@ -54,6 +54,7 @@ import {
   type StackInfo,
 } from './utils/callsites';
 import type {WaitUntil} from './types';
+import type {StorefrontHeaders} from './getStorefrontHeaders';
 
 export type I18nBase = {
   language: LanguageCode;
@@ -178,17 +179,6 @@ type HydrogenClientProps<TI18n> = {
 
 export type CreateStorefrontClientOptions<TI18n extends I18nBase> =
   HydrogenClientProps<TI18n> & StorefrontClientProps;
-
-type StorefrontHeaders = {
-  /** A unique ID that correlates all sub-requests together. */
-  requestGroupId: string | null;
-  /** The IP address of the client. */
-  buyerIp: string | null;
-  /** The cookie header from the client  */
-  cookie: string | null;
-  /** The purpose header value for debugging */
-  purpose: string | null;
-};
 
 type StorefrontQueryOptions = StorefrontCommonExtraParams & {
   query: string;
