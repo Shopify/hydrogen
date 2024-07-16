@@ -14,6 +14,7 @@ import {
   type ShopifyConfig,
 } from './shopify-config.js';
 import {getUserAccount} from './graphql/business-platform/user-account.js';
+import {enhanceAuthLogs} from './log.js';
 
 export type {AdminSession};
 
@@ -34,6 +35,8 @@ export async function logout(root: string) {
  * prompted to enter a shop domain.
  */
 export async function login(root?: string, shop?: string | true) {
+  enhanceAuthLogs(false);
+
   const forcePrompt = shop === true;
   const existingConfig = root ? await getConfig(root) : {};
   let {email, shopName} = existingConfig;

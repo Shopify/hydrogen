@@ -8,6 +8,7 @@ import {
 import {BugError} from '@shopify/cli-kit/node/error';
 import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
+import ansiEscapes from 'ansi-escapes';
 import {getGraphiQLUrl} from './graphiql-url.js';
 import {importLocal} from './import-utils.js';
 
@@ -265,6 +266,39 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
     // @ts-ignore
     return processStderrWrite.apply(process.stderr, args);
   };
+}
+
+export function enhanceAuthLogs(hideInitialLog = false) {
+  injectLogReplacer('log', warningDebouncer);
+
+  addMessageReplacers(
+    'auth',
+    [
+      ([first]) =>
+        hideInitialLog &&
+        typeof first === 'string' &&
+        first.includes('To run this command,'),
+      ([first]) => {
+        return;
+      },
+    ],
+    [
+      ([first]) =>
+        typeof first === 'string' &&
+        first.includes('Open this link to start the auth process'),
+      ([first]) => {
+        // Hide logs
+        return [first.replace('👉 ', '').replace(': ', ':\n')];
+      },
+    ],
+    [
+      ([first]) => typeof first === 'string' && first.includes('Logged in.'),
+      () => {
+        process.stdout.write(ansiEscapes.eraseLines(hideInitialLog ? 4 : 5));
+        return;
+      },
+    ],
+  );
 }
 
 /**

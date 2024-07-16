@@ -2,6 +2,7 @@ import Command from '@shopify/cli-kit/node/base-command';
 
 import {commonFlags} from '../../lib/flags.js';
 import {login, renderLoginSuccess} from '../../lib/auth.js';
+import {enhanceAuthLogs} from '../../lib/log.js';
 
 export default class Login extends Command {
   static descriptionWithMarkdown =
@@ -29,6 +30,7 @@ async function runLogin({
   path: root = process.cwd(),
   shop: shopFlag,
 }: LoginArguments) {
+  enhanceAuthLogs(true);
   const {config} = await login(root, shopFlag ?? true);
   renderLoginSuccess(config);
 }
