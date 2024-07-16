@@ -12,6 +12,7 @@
     "partytown": "partytown copylib public/~partytown"
   },
   "dependencies": {
+    "@shopify/cli-hydrogen": "*",
     "@builder.io/partytown": "^0.8.1"
   },
   "devDependencies": {
