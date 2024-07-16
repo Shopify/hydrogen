@@ -66,6 +66,7 @@ import {
   getSkeletonSourceDir,
   isHydrogenMonorepo,
 } from '../build.js';
+import {enhanceAuthLogs} from '../log.js';
 
 export type InitOptions = {
   path?: string;
@@ -243,6 +244,7 @@ type StorefrontInfo = {
 export async function handleStorefrontLink(
   controller: AbortController,
 ): Promise<StorefrontInfo> {
+  enhanceAuthLogs(true);
   const {session, config} = await login();
   renderLoginSuccess(config);
 

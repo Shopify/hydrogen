@@ -8,6 +8,7 @@ import {
 import {BugError} from '@shopify/cli-kit/node/error';
 import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
+import ansiEscapes from 'ansi-escapes';
 import {getGraphiQLUrl} from './graphiql-url.js';
 import {importLocal} from './import-utils.js';
 
@@ -267,76 +268,37 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
   };
 }
 
-const originalWrite = process.stdout.write;
-/**
- * Modify logs from cli-kit related to authentication
- */
-export function muteAuthLogs({
-  onPressKey,
-  onKeyTimeout,
-}: {
-  onPressKey: () => void;
-  onKeyTimeout: (link?: string) => void;
-}) {
-  if (process.stdout.write === originalWrite) {
-    const write = originalWrite.bind(process.stdout);
-
-    process.stdout.write = ((item, cb: any) => {
-      if (typeof item !== 'string') return write(item, cb);
-
-      const replacers = messageReplacers.reduce((acc, [matcher, replacer]) => {
-        if (matcher([item], acc.length)) acc.push(replacer);
-        return acc;
-      }, [] as Replacer[]);
-
-      if (replacers.length === 0) return write(item, cb);
-
-      const result = replacers.reduce(
-        (resultArgs, replacer) => resultArgs && replacer(resultArgs),
-        [item] as void | string[],
-      );
-
-      if (result) return write(result[0] as string, cb);
-    }) as typeof write;
-  }
+export function enhanceAuthLogs(hideInitialLog = false) {
+  injectLogReplacer('log', warningDebouncer);
 
   addMessageReplacers(
     'auth',
     [
-      ([first]) => typeof first === 'string' && first.includes('Auto-open'),
+      ([first]) =>
+        hideInitialLog &&
+        typeof first === 'string' &&
+        first.includes('To run this command,'),
       ([first]) => {
-        const content = (first as string).replace(' to Shopify Partners', '');
-
-        const link = content.match(/(https?:\/\/.*)Log in/)?.[1];
-        onKeyTimeout(link);
-
-        if (link) return;
-
-        return [content];
-      },
-    ],
-    [
-      ([first]) => typeof first === 'string' && first.includes('👉'),
-      () => {
-        onPressKey();
-        // Hide logs
         return;
       },
     ],
     [
       ([first]) =>
         typeof first === 'string' &&
-        (first.includes('Shopify Partners') || first.includes('Logged in')),
-      () => {
+        first.includes('Open this link to start the auth process'),
+      ([first]) => {
         // Hide logs
+        return [first.replace('👉 ', '').replace(': ', ':\n')];
+      },
+    ],
+    [
+      ([first]) => typeof first === 'string' && first.includes('Logged in.'),
+      () => {
+        process.stdout.write(ansiEscapes.eraseLines(hideInitialLog ? 4 : 5));
         return;
       },
     ],
   );
-
-  return () => {
-    process.stdout.write = originalWrite;
-  };
 }
 
 /**
