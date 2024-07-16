@@ -8,6 +8,7 @@ import {
   ASSETS_STARTER_DIR,
   getSkeletonSourceDir,
 } from './src/lib/build';
+import {replaceFileContent} from './src/lib/file';
 
 // Cleanup dist folder before buid/dev.
 rmSync('./dist', {recursive: true, force: true});
@@ -52,6 +53,13 @@ export default defineConfig([
         filter: (filepath: string) =>
           !/node_modules|\.shopify|\.cache|\.turbo|build|dist/gi.test(filepath),
       });
+
+      await replaceFileContent(
+        path.join(starterOutDir, 'package.json'),
+        false,
+        (content) =>
+          content.replace(/^\s*"@shopify\/cli-hydrogen": "[^"]+",?\n/m, ''),
+      );
 
       console.log(
         '\n',

@@ -81,15 +81,11 @@ function commandNeedsVM(id = '', argv: string[] = []) {
 function isHydrogenProject(projectPath: string) {
   try {
     const require = createRequire(import.meta.url);
-    const {dependencies, scripts} = require(joinPath(
-      projectPath,
-      'package.json',
-    ));
-
+    const {dependencies} = require(joinPath(projectPath, 'package.json'));
     return (
-      !!dependencies?.['@shopify/hydrogen'] ||
-      // Diff examples don't have dependencies:
-      !!scripts?.dev?.includes('--diff')
+      !!dependencies['@shopify/hydrogen'] ||
+      // Diff examples only have this package as a dependency
+      !!dependencies['@shopify/cli-hydrogen']
     );
   } catch {
     return false;

@@ -229,6 +229,12 @@ export async function applyTemplateDiff(
   await mergePackageJson(diffDirectory, targetDirectory, {
     ignoredKeys: ['h2:diff'],
     onResult: (pkgJson) => {
+      if (pkgJson.dependencies) {
+        // This package is added as '*' to make --diff work with global CLI.
+        // However, we don't want to add it to the package.json in projects.
+        delete pkgJson.dependencies['@shopify/cli-hydrogen'];
+      }
+
       for (const key of ['build', 'dev', 'preview']) {
         const scriptLine = pkgJson.scripts?.[key];
         if (pkgJson.scripts?.[key] && typeof scriptLine === 'string') {
