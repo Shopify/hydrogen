@@ -55,9 +55,7 @@ describe('i18n replacers', () => {
         import "@total-typescript/ts-reset";
 
         import type {
-          Storefront,
-          CustomerAccount,
-          HydrogenCart,
+          ShopifyContext,
           HydrogenSessionData,
           ShopifyEnv,
         } from "@shopify/hydrogen";
@@ -88,11 +86,8 @@ describe('i18n replacers', () => {
           /**
            * Declare local additions to the Remix loader context.
            */
-          interface AppLoadContext {
+          interface AppLoadContext extends ShopifyContext {
             env: Env;
-            cart: HydrogenCart;
-            storefront: Storefront<I18nLocale>;
-            customerAccount: CustomerAccount;
             session: AppSession;
             waitUntil: ExecutionContext["waitUntil"];
           }
@@ -164,7 +159,7 @@ describe('i18n replacers', () => {
                 AppSession.init(request, [env.SESSION_SECRET]),
               ]);
 
-              const { storefront, customerAccount, cart } = createShopifyHandler({
+              const shopify = createShopifyHandler({
                 env,
                 request,
                 cache,
@@ -185,9 +180,7 @@ describe('i18n replacers', () => {
                 mode: process.env.NODE_ENV,
                 getLoadContext: (): AppLoadContext => ({
                   session,
-                  storefront,
-                  customerAccount,
-                  cart,
+                  ...shopify,
                   env,
                   waitUntil,
                 }),
@@ -205,7 +198,11 @@ describe('i18n replacers', () => {
                  * If the redirect doesn't exist, then \`storefrontRedirect\`
                  * will pass through the 404 response.
                  */
-                return storefrontRedirect({ request, response, storefront });
+                return storefrontRedirect({
+                  request,
+                  response,
+                  storefront: shopify.storefront,
+                });
               }
 
               return response;

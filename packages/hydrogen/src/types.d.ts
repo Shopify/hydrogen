@@ -11,6 +11,7 @@ import {
 } from './customer/constants';
 import type {BuyerInput} from '@shopify/hydrogen-react/storefront-api-types';
 
+export {type ShopifyHandlerReturnConditional as ShopifyContext} from './createShopifyHandler';
 export interface HydrogenSessionData {
   [CUSTOMER_ACCOUNT_SESSION_KEY]: {
     accessToken?: string;

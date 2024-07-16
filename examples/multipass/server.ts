@@ -29,7 +29,7 @@ export default {
         AppSession.init(request, [env.SESSION_SECRET]),
       ]);
 
-      const {storefront, cart} = createShopifyHandler({
+      const shopify = createShopifyHandler({
         env,
         request,
         cache,
@@ -55,8 +55,7 @@ export default {
         mode: process.env.NODE_ENV,
         getLoadContext: (): AppLoadContext => ({
           session,
-          storefront,
-          cart,
+          ...shopify,
           env,
           waitUntil,
         }),
@@ -74,7 +73,11 @@ export default {
          * If the redirect doesn't exist, then `storefrontRedirect`
          * will pass through the 404 response.
          */
-        return storefrontRedirect({request, response, storefront});
+        return storefrontRedirect({
+          request,
+          response,
+          storefront: shopify.storefront,
+        });
       }
 
       return response;

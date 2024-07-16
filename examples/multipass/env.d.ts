@@ -6,9 +6,7 @@
 import '@total-typescript/ts-reset';
 
 import type {
-  Storefront,
-  CustomerAccount,
-  HydrogenCart,
+  ShopifyContext,
   HydrogenSessionData,
   ShopifyEnv,
 } from '@shopify/hydrogen';
@@ -38,10 +36,16 @@ declare module '@shopify/remix-oxygen' {
   /**
    * Declare local additions to the Remix loader context.
    */
-  interface AppLoadContext {
+  interface AppLoadContext
+    extends ShopifyContext<
+      /***********************************************/
+      /**********  EXAMPLE UPDATE STARTS  ************/
+      {language: 'EN'; country: 'US'},
+      true
+      /**********   EXAMPLE UPDATE END   ************/
+      /***********************************************/
+    > {
     env: Env;
-    cart: HydrogenCart;
-    storefront: Storefront;
     session: AppSession;
     waitUntil: ExecutionContext['waitUntil'];
   }

@@ -5,7 +5,7 @@
 // Enhance TypeScript's built-in typings.
 import '@total-typescript/ts-reset';
 
-import type {Storefront, HydrogenCart, ShopifyEnv} from '@shopify/hydrogen';
+import type {ShopifyContext, ShopifyEnv} from '@shopify/hydrogen';
 import type {CustomerAccessToken} from '@shopify/hydrogen/storefront-api-types';
 import type {AppSession} from '~/lib/session';
 
@@ -25,10 +25,16 @@ declare module '@shopify/remix-oxygen' {
   /**
    * Declare local additions to the Remix loader context.
    */
-  export interface AppLoadContext {
+  export interface AppLoadContext
+    extends ShopifyContext<
+      /***********************************************/
+      /**********  EXAMPLE UPDATE STARTS  ************/
+      {language: 'EN'; country: 'US'},
+      true
+      /**********   EXAMPLE UPDATE END   ************/
+      /***********************************************/
+    > {
     env: Env;
-    cart: HydrogenCart;
-    storefront: Storefront;
     session: AppSession;
     waitUntil: ExecutionContext['waitUntil'];
   }

@@ -6,10 +6,7 @@
 import '@total-typescript/ts-reset';
 
 import type {
-  Storefront,
-  CustomerAccount,
-  HydrogenCart,
-  HydrogenCartCustom,
+  ShopifyContext,
   HydrogenSessionData,
   CartQueryDataReturn,
   ShopifyEnv,
@@ -36,21 +33,23 @@ declare module '@shopify/remix-oxygen' {
   /**
    * Declare local additions to the Remix loader context.
    */
-  interface AppLoadContext {
+  interface AppLoadContext
+    extends ShopifyContext<
+      /***********************************************/
+      /**********  EXAMPLE UPDATE STARTS  ************/
+      {language: 'EN'; country: 'US'},
+      false,
+      {
+        updateLineByOptions: (
+          productId: string,
+          selectedOptions: SelectedOptionInput[],
+          line: CartLineUpdateInput,
+        ) => Promise<CartQueryDataReturn>;
+      }
+      /**********   EXAMPLE UPDATE END   ************/
+      /***********************************************/
+    > {
     env: Env;
-    /***********************************************/
-    /**********  EXAMPLE UPDATE STARTS  ************/
-    cart: HydrogenCartCustom<{
-      updateLineByOptions: (
-        productId: string,
-        selectedOptions: SelectedOptionInput[],
-        line: CartLineUpdateInput,
-      ) => Promise<CartQueryDataReturn>;
-    }>;
-    /**********   EXAMPLE UPDATE END   ************/
-    /***********************************************/
-    storefront: Storefront;
-    customerAccount: CustomerAccount;
     session: AppSession;
     waitUntil: ExecutionContext['waitUntil'];
   }

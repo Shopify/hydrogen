@@ -161,13 +161,13 @@ export type {
   StorefrontApiResponsePartial,
 } from '@shopify/hydrogen-react';
 
-export type {HydrogenSessionData, HydrogenSession, ShopifyEnv} from './types';
+export type {
+  HydrogenSessionData,
+  HydrogenSession,
+  ShopifyEnv,
+  ShopifyContext,
+} from './types';
 
-export {
-  createShopifyHandler,
-  type ShopifyHandlerOptions,
-  type ShopifyHandlerReturn,
-  type ShopifyHandlerReturnConditional,
-} from './createShopifyHandler';
+export {createShopifyHandler} from './createShopifyHandler';
 
 export {getStorefrontHeaders} from './getStorefrontHeaders';

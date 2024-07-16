@@ -38,7 +38,7 @@ export default {
         AppSession.init(request, [env.SESSION_SECRET]),
       ]);
 
-      const {storefront, customerAccount, cart} = createShopifyHandler({
+      const shopify = createShopifyHandler({
         env,
         request,
         cache,
@@ -54,19 +54,22 @@ export default {
               selectedOptions: SelectedOptionInput[],
               line: CartLineUpdateInput,
             ) => {
-              const {product} = await storefront.query(PRODUCT_VARIANT_QUERY, {
-                variables: {
-                  productId,
-                  selectedOptions,
+              const {product} = await shopify.storefront.query(
+                PRODUCT_VARIANT_QUERY,
+                {
+                  variables: {
+                    productId,
+                    selectedOptions,
+                  },
                 },
-              });
+              );
 
               const lines = [
                 {...line, merchandiseId: product?.selectedVariant?.id},
               ];
 
               return await cartLinesUpdateDefault({
-                storefront,
+                storefront: shopify.storefront,
                 getCartId: cartGetIdDefault(request.headers),
               })(lines);
             },
@@ -85,9 +88,7 @@ export default {
         mode: process.env.NODE_ENV,
         getLoadContext: (): AppLoadContext => ({
           session,
-          storefront,
-          customerAccount,
-          cart,
+          ...shopify,
           env,
           waitUntil,
         }),
@@ -105,7 +106,11 @@ export default {
          * If the redirect doesn't exist, then `storefrontRedirect`
          * will pass through the 404 response.
          */
-        return storefrontRedirect({request, response, storefront});
+        return storefrontRedirect({
+          request,
+          response,
+          storefront: shopify.storefront,
+        });
       }
 
       return response;
