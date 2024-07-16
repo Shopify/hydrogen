@@ -8,7 +8,11 @@ const require = createRequire(import.meta.url);
 export type Vite = typeof import('vite');
 
 export async function importVite(root: string): Promise<Vite> {
-  const vitePath = require.resolve('vite', {paths: [root]});
+  const vitePath = require.resolve(
+    'vite',
+    process.env.SHOPIFY_UNIT_TEST ? undefined : {paths: [root]},
+  );
+
   const vitePackageJson = await findUpAndReadPackageJson(vitePath);
 
   const viteNodeIndexFile = (vitePackageJson.content as any).exports?.['.']
@@ -22,6 +26,10 @@ export async function importVite(root: string): Promise<Vite> {
 }
 
 export function importLocal<T>(packageName: string, path: string): Promise<T> {
-  const realPath = require.resolve(packageName, {paths: [path]});
+  const realPath = require.resolve(
+    packageName,
+    process.env.SHOPIFY_UNIT_TEST ? undefined : {paths: [path]},
+  );
+
   return import(pathToFileURL(realPath).href);
 }
