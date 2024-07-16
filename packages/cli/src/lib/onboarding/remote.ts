@@ -11,7 +11,6 @@ import {
 } from '../template-downloader.js';
 import {applyTemplateDiff} from '../template-diff.js';
 import {getCliCommand} from '../shell.js';
-import {replaceFileContent} from '../file.js';
 import {
   commitAll,
   createAbortHandler,
@@ -69,15 +68,6 @@ export async function setupRemoteTemplate(
       }
 
       await copyFile(sourcePath, project.directory);
-      await replaceFileContent(
-        joinPath(project.directory, 'package.json'),
-        false,
-        (content) =>
-          // Remove the cli plugin dependency from the package.json because it's
-          // only used for monorepo development. This line is present in non-diff
-          // examples like `express` when scaffolding a new project:
-          content.replace(/^\s*"@shopify\/cli-hydrogen": "[^"]+",?\n/m, ''),
-      );
     })
     .catch(abort);
 
