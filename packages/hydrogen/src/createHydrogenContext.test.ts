@@ -1,5 +1,5 @@
 import {vi, describe, it, expect, afterEach, expectTypeOf} from 'vitest';
-import {createShopifyHandler} from './createShopifyHandler';
+import {createHydrogenContext} from './createHydrogenContext';
 import {createStorefrontClient} from './storefront';
 import {getStorefrontHeaders} from './getStorefrontHeaders';
 import {createCustomerAccountClient} from './customer/customer';
@@ -70,16 +70,16 @@ const defaultOptions = {
   request: new Request('https://localhost'),
 };
 
-describe('createShopifyHandler', () => {
+describe('createHydrogenContext', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
   describe('storefront client', () => {
     it('returns storefront client', async () => {
-      const shopify = createShopifyHandler(defaultOptions);
+      const hydrogenContext = createHydrogenContext(defaultOptions);
 
-      expect(shopify).toEqual(
+      expect(hydrogenContext).toEqual(
         expect.objectContaining({storefront: expect.any(Object)}),
       );
     });
@@ -87,7 +87,7 @@ describe('createShopifyHandler', () => {
     it('called createStorefrontClient with default values', async () => {
       const mockRequest = new Request('https://localhost');
 
-      createShopifyHandler({
+      createHydrogenContext({
         ...defaultOptions,
         request: mockRequest,
       });
@@ -115,7 +115,7 @@ describe('createShopifyHandler', () => {
         purpose: 'purpose value',
       };
 
-      createShopifyHandler({
+      createHydrogenContext({
         ...defaultOptions,
         storefront: {
           headers: mockStorefrontHeaders,
@@ -130,7 +130,7 @@ describe('createShopifyHandler', () => {
     });
 
     it('called createStorefrontClient with values that does not have default', async () => {
-      createShopifyHandler({
+      createHydrogenContext({
         ...defaultOptions,
         storefront: {contentType: 'graphql'},
       });
@@ -150,7 +150,7 @@ describe('createShopifyHandler', () => {
         purpose: 'purpose',
       };
 
-      createShopifyHandler({
+      createHydrogenContext({
         ...defaultOptions,
         storefront: {headers: mockeStorefrontHeaders},
       });
@@ -167,7 +167,7 @@ describe('createShopifyHandler', () => {
     it('called createStorefrontClient with renamed apiVersion key', async () => {
       const mockApiVersion = 'new storefrontApiVersion';
 
-      createShopifyHandler({
+      createHydrogenContext({
         ...defaultOptions,
         storefront: {
           apiVersion: mockApiVersion,
@@ -189,7 +189,7 @@ describe('createShopifyHandler', () => {
     };
 
     it('called createCustomerAccountClient with default values', async () => {
-      createShopifyHandler(defaultOptionsWithCustomerAccount);
+      createHydrogenContext(defaultOptionsWithCustomerAccount);
 
       expect(vi.mocked(createCustomerAccountClient)).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -201,7 +201,7 @@ describe('createShopifyHandler', () => {
 
     it('called createCustomerAccountClient with values that does not have default', async () => {
       const mockAuthUrl = 'customerAccountId overwrite';
-      createShopifyHandler({
+      createHydrogenContext({
         ...defaultOptionsWithCustomerAccount,
         customerAccount: {
           authUrl: mockAuthUrl,
@@ -218,7 +218,7 @@ describe('createShopifyHandler', () => {
     it('called createCustomerAccountClient with renamed apiVersion key', async () => {
       const mockApiVersion = 'new customerApiVersion';
 
-      createShopifyHandler({
+      createHydrogenContext({
         ...defaultOptionsWithCustomerAccount,
         customerAccount: {
           apiVersion: mockApiVersion,
@@ -234,26 +234,32 @@ describe('createShopifyHandler', () => {
 
     describe('customerAccount return based on options', () => {
       it('returns customerAccount client if session exist and useStorefrontAPI is not set', async () => {
-        const shopify = createShopifyHandler(defaultOptionsWithCustomerAccount);
+        const hydrogenContext = createHydrogenContext(
+          defaultOptionsWithCustomerAccount,
+        );
 
-        expect(shopify).toHaveProperty('customerAccount');
-        expectTypeOf(shopify.customerAccount).toEqualTypeOf<CustomerAccount>();
+        expect(hydrogenContext).toHaveProperty('customerAccount');
+        expectTypeOf(
+          hydrogenContext.customerAccount,
+        ).toEqualTypeOf<CustomerAccount>();
       });
 
       it('returns customerAccount client if session exist and useStorefrontAPI is false', async () => {
-        const shopify = createShopifyHandler({
+        const hydrogenContext = createHydrogenContext({
           ...defaultOptionsWithCustomerAccount,
           customerAccount: {
             useStorefrontAPI: false,
           },
         });
 
-        expect(shopify).toHaveProperty('customerAccount');
-        expectTypeOf(shopify.customerAccount).toEqualTypeOf<CustomerAccount>();
+        expect(hydrogenContext).toHaveProperty('customerAccount');
+        expectTypeOf(
+          hydrogenContext.customerAccount,
+        ).toEqualTypeOf<CustomerAccount>();
       });
 
       it('does not returns customerAccount client if session exist and useStorefrontAPI is true', async () => {
-        const shopify = createShopifyHandler({
+        const hydrogenContext = createHydrogenContext({
           ...defaultOptionsWithCustomerAccount,
           customerAccount: {
             useStorefrontAPI: true,
@@ -261,27 +267,27 @@ describe('createShopifyHandler', () => {
           session: undefined,
         });
 
-        expect(shopify).toHaveProperty('customerAccount');
-        expect(shopify.customerAccount).toBeUndefined();
+        expect(hydrogenContext).toHaveProperty('customerAccount');
+        expect(hydrogenContext.customerAccount).toBeUndefined();
       });
 
       it('does not returns customerAccount client if there is no session', async () => {
-        const shopify = createShopifyHandler({
+        const hydrogenContext = createHydrogenContext({
           ...defaultOptionsWithCustomerAccount,
           session: undefined,
         });
 
-        expect(shopify).toHaveProperty('customerAccount');
-        expect(shopify.customerAccount).toBeUndefined();
+        expect(hydrogenContext).toHaveProperty('customerAccount');
+        expect(hydrogenContext.customerAccount).toBeUndefined();
       });
     });
   });
 
   describe('cart client', () => {
     it('returns cart client', async () => {
-      const shopify = createShopifyHandler(defaultOptions);
+      const hydrogenContext = createHydrogenContext(defaultOptions);
 
-      expect(shopify).toStrictEqual(
+      expect(hydrogenContext).toStrictEqual(
         expect.objectContaining({cart: expect.any(Object)}),
       );
     });
@@ -289,15 +295,15 @@ describe('createShopifyHandler', () => {
     it('called createCartHandler with default values', async () => {
       const mockRequest = new Request('https://localhost');
 
-      const shopify = createShopifyHandler({
+      const hydrogenContext = createHydrogenContext({
         ...defaultOptions,
         request: mockRequest,
       });
 
       expect(vi.mocked(createCartHandler)).toHaveBeenCalledWith(
         expect.objectContaining({
-          storefront: shopify.storefront,
-          customerAccount: shopify.customerAccount,
+          storefront: hydrogenContext.storefront,
+          customerAccount: hydrogenContext.customerAccount,
           getCartId: expect.anything(),
           setCartId: expect.anything(),
         }),
@@ -317,7 +323,7 @@ describe('createShopifyHandler', () => {
         return 'mock getCartId';
       };
 
-      createShopifyHandler({
+      createHydrogenContext({
         ...defaultOptions,
         cart: {
           getId: mockGetCartId,
@@ -334,7 +340,7 @@ describe('createShopifyHandler', () => {
     it('called createCartHandler with values that does not have default', async () => {
       const mockCartQueryFragment = 'mock cartQueryFragment';
 
-      createShopifyHandler({
+      createHydrogenContext({
         ...defaultOptions,
         cart: {
           queryFragment: mockCartQueryFragment,
@@ -353,7 +359,7 @@ describe('createShopifyHandler', () => {
         return 'mock getCartId';
       };
 
-      createShopifyHandler({
+      createHydrogenContext({
         ...defaultOptions,
         cart: {
           getId: mockGetCartId,
@@ -374,7 +380,7 @@ describe('createShopifyHandler', () => {
         return new Headers();
       };
 
-      createShopifyHandler({
+      createHydrogenContext({
         ...defaultOptions,
         cart: {
           setId: mockSetCartId,
@@ -393,7 +399,7 @@ describe('createShopifyHandler', () => {
     it('called createCartHandler with renamed queryFragment key', async () => {
       const mockQueryFragment = 'new queryFragment';
 
-      createShopifyHandler({
+      createHydrogenContext({
         ...defaultOptions,
         cart: {
           queryFragment: mockQueryFragment,
@@ -410,7 +416,7 @@ describe('createShopifyHandler', () => {
     it('called createCartHandler with renamed mutateFragment key', async () => {
       const mockMutateFragment = 'new mutateFragment';
 
-      createShopifyHandler({
+      createHydrogenContext({
         ...defaultOptions,
         cart: {
           mutateFragment: mockMutateFragment,
@@ -426,32 +432,32 @@ describe('createShopifyHandler', () => {
 
     describe('cart return based on options', () => {
       it('returns cart handler with HydrogenCart if there cart.customMethods key does not exist', async () => {
-        const shopify = createShopifyHandler(defaultOptions);
+        const hydrogenContext = createHydrogenContext(defaultOptions);
 
-        expect(shopify).toHaveProperty('cart');
-        expectTypeOf(shopify.cart).toEqualTypeOf<HydrogenCart>();
+        expect(hydrogenContext).toHaveProperty('cart');
+        expectTypeOf(hydrogenContext.cart).toEqualTypeOf<HydrogenCart>();
       });
 
       it('returns cart handler with HydrogenCart if there cart.customMethods is undefined', async () => {
-        const shopify = createShopifyHandler({
+        const hydrogenContext = createHydrogenContext({
           ...defaultOptions,
           cart: {customMethods: undefined},
         });
 
-        expect(shopify).toHaveProperty('cart');
-        expectTypeOf(shopify.cart).toEqualTypeOf<HydrogenCart>();
+        expect(hydrogenContext).toHaveProperty('cart');
+        expectTypeOf(hydrogenContext.cart).toEqualTypeOf<HydrogenCart>();
       });
 
       it('returns cart handler with HydrogenCartCustom if there cart.customMethods is defined', async () => {
         const customMethods = {testMethod: () => {}};
 
-        const shopify = createShopifyHandler({
+        const hydrogenContext = createHydrogenContext({
           ...defaultOptions,
           cart: {customMethods},
         });
 
-        expect(shopify).toHaveProperty('cart');
-        expectTypeOf(shopify.cart).toEqualTypeOf<
+        expect(hydrogenContext).toHaveProperty('cart');
+        expectTypeOf(hydrogenContext.cart).toEqualTypeOf<
           HydrogenCartCustom<typeof customMethods>
         >();
       });

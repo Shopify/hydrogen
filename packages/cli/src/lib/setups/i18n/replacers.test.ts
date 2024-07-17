@@ -55,9 +55,9 @@ describe('i18n replacers', () => {
         import "@total-typescript/ts-reset";
 
         import type {
-          ShopifyContext,
+          HydrogenContext,
           HydrogenSessionData,
-          ShopifyEnv,
+          HydrogenEnv,
         } from "@shopify/hydrogen";
         import type {
           LanguageCode,
@@ -74,7 +74,7 @@ describe('i18n replacers', () => {
           /**
            * Declare expected Env parameter in fetch handler.
            */
-          interface Env extends ShopifyEnv {}
+          interface Env extends HydrogenEnv {}
 
           /**
            * The I18nLocale used for Storefront API query context.
@@ -86,7 +86,7 @@ describe('i18n replacers', () => {
           /**
            * Declare local additions to the Remix loader context.
            */
-          interface AppLoadContext extends ShopifyContext {
+          interface AppLoadContext extends HydrogenContext {
             env: Env;
             session: AppSession;
             waitUntil: ExecutionContext["waitUntil"];
@@ -128,7 +128,7 @@ describe('i18n replacers', () => {
         "// @ts-ignore
         // Virtual entry point for the app
         import * as remixBuild from "virtual:remix/server-build";
-        import { storefrontRedirect, createShopifyHandler } from "@shopify/hydrogen";
+        import { storefrontRedirect, createHydrogenContext } from "@shopify/hydrogen";
         import {
           createRequestHandler,
           type AppLoadContext,
@@ -159,7 +159,7 @@ describe('i18n replacers', () => {
                 AppSession.init(request, [env.SESSION_SECRET]),
               ]);
 
-              const shopify = createShopifyHandler({
+              const hydrogenContext = createHydrogenContext({
                 env,
                 request,
                 cache,
@@ -180,7 +180,7 @@ describe('i18n replacers', () => {
                 mode: process.env.NODE_ENV,
                 getLoadContext: (): AppLoadContext => ({
                   session,
-                  ...shopify,
+                  ...hydrogenContext,
                   env,
                   waitUntil,
                 }),
@@ -201,7 +201,7 @@ describe('i18n replacers', () => {
                 return storefrontRedirect({
                   request,
                   response,
-                  storefront: shopify.storefront,
+                  storefront: hydrogenContext.storefront,
                 });
               }
 

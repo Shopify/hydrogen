@@ -7,4 +7,4 @@
 
 Move `getStorefrontHeaders` from @shopify/remix-oxygen to @shopify/hydrogen
 
-Create `createShopifyHandler` that combined `createStorefrontClient`, `createCustomerAccountClient` and `createCartHandler`
+Create `createHydrogenContext` that combined `createStorefrontClient`, `createCustomerAccountClient` and `createCartHandler`

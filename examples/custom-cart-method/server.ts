@@ -5,7 +5,7 @@ import {
   cartGetIdDefault,
   storefrontRedirect,
   cartLinesUpdateDefault,
-  createShopifyHandler,
+  createHydrogenContext,
 } from '@shopify/hydrogen';
 import {createRequestHandler, type AppLoadContext} from '@shopify/remix-oxygen';
 import {AppSession} from '~/lib/session';
@@ -38,7 +38,7 @@ export default {
         AppSession.init(request, [env.SESSION_SECRET]),
       ]);
 
-      const shopify = createShopifyHandler({
+      const hydrogenContext = createHydrogenContext({
         env,
         request,
         cache,
@@ -54,7 +54,7 @@ export default {
               selectedOptions: SelectedOptionInput[],
               line: CartLineUpdateInput,
             ) => {
-              const {product} = await shopify.storefront.query(
+              const {product} = await hydrogenContext.storefront.query(
                 PRODUCT_VARIANT_QUERY,
                 {
                   variables: {
@@ -69,7 +69,7 @@ export default {
               ];
 
               return await cartLinesUpdateDefault({
-                storefront: shopify.storefront,
+                storefront: hydrogenContext.storefront,
                 getCartId: cartGetIdDefault(request.headers),
               })(lines);
             },
@@ -88,7 +88,7 @@ export default {
         mode: process.env.NODE_ENV,
         getLoadContext: (): AppLoadContext => ({
           session,
-          ...shopify,
+          ...hydrogenContext,
           env,
           waitUntil,
         }),
@@ -109,7 +109,7 @@ export default {
         return storefrontRedirect({
           request,
           response,
-          storefront: shopify.storefront,
+          storefront: hydrogenContext.storefront,
         });
       }
 

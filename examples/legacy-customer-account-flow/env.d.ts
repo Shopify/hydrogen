@@ -5,7 +5,7 @@
 // Enhance TypeScript's built-in typings.
 import '@total-typescript/ts-reset';
 
-import type {ShopifyContext, ShopifyEnv} from '@shopify/hydrogen';
+import type {HydrogenContext, HydrogenEnv} from '@shopify/hydrogen';
 import type {CustomerAccessToken} from '@shopify/hydrogen/storefront-api-types';
 import type {AppSession} from '~/lib/session';
 
@@ -18,7 +18,7 @@ declare global {
   /**
    * Declare expected Env parameter in fetch handler.
    */
-  interface Env extends ShopifyEnv {}
+  interface Env extends HydrogenEnv {}
 }
 
 declare module '@shopify/remix-oxygen' {
@@ -26,7 +26,7 @@ declare module '@shopify/remix-oxygen' {
    * Declare local additions to the Remix loader context.
    */
   export interface AppLoadContext
-    extends ShopifyContext<
+    extends HydrogenContext<
       /***********************************************/
       /**********  EXAMPLE UPDATE STARTS  ************/
       {language: 'EN'; country: 'US'},

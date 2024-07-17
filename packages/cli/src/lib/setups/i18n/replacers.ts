@@ -61,7 +61,7 @@ export async function replaceServerI18n(
     const i18nFunctionCall = `${i18nFunctionName}(${requestIdentifierName})`;
 
     const hydrogenImportPath = '@shopify/hydrogen';
-    const hydrogenImportName = 'createShopifyHandler';
+    const hydrogenImportName = 'createHydrogenContext';
 
     // Find the import statement for Hydrogen
     const importSpecifier = root.find({

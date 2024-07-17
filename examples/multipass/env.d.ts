@@ -6,9 +6,9 @@
 import '@total-typescript/ts-reset';
 
 import type {
-  ShopifyContext,
+  HydrogenContext,
   HydrogenSessionData,
-  ShopifyEnv,
+  HydrogenEnv,
 } from '@shopify/hydrogen';
 import type {AppSession} from '~/lib/session';
 
@@ -22,7 +22,7 @@ declare global {
    * Declare expected Env parameter in fetch handler.
    */
 
-  interface Env extends ShopifyEnv {
+  interface Env extends HydrogenEnv {
     /***********************************************/
     /**********  EXAMPLE UPDATE STARTS  ************/
     PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET: string;
@@ -37,7 +37,7 @@ declare module '@shopify/remix-oxygen' {
    * Declare local additions to the Remix loader context.
    */
   interface AppLoadContext
-    extends ShopifyContext<
+    extends HydrogenContext<
       /***********************************************/
       /**********  EXAMPLE UPDATE STARTS  ************/
       {language: 'EN'; country: 'US'},

@@ -4,7 +4,7 @@
  */
 
 import type {HydrogenCart, Storefront} from './src/index';
-import type {WaitUntil, ShopifyEnv} from './src/types';
+import type {WaitUntil, HydrogenEnv} from './src/types';
 
 declare global {
   /**
@@ -15,7 +15,7 @@ declare global {
   /**
    * Declare expected Env parameter in fetch handler.
    */
-  interface Env extends ShopifyEnv {}
+  interface Env extends HydrogenEnv {}
 
   /**
    * This type is used to import types from mini-oxygen

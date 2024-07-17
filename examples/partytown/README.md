@@ -214,7 +214,7 @@ declare global {
   /**
    * Declare expected Env parameter in fetch handler.
    */
-  interface Env extends ShopifyEnv {
+  interface Env extends HydrogenEnv {
 +   GTM_CONTAINER_ID: `GTM-${string}`;
   }
 }

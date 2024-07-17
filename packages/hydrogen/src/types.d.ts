@@ -10,8 +10,6 @@ import {
   BUYER_SESSION_KEY,
 } from './customer/constants';
 import type {BuyerInput} from '@shopify/hydrogen-react/storefront-api-types';
-
-export {type ShopifyHandlerReturnConditional as ShopifyContext} from './createShopifyHandler';
 export interface HydrogenSessionData {
   [CUSTOMER_ACCOUNT_SESSION_KEY]: {
     accessToken?: string;
@@ -42,7 +40,7 @@ export interface HydrogenSession<
 
 export type WaitUntil = (promise: Promise<unknown>) => void;
 
-export interface ShopifyEnv {
+export interface HydrogenEnv {
   SESSION_SECRET: string;
   PUBLIC_STOREFRONT_API_TOKEN: string;
   PRIVATE_STOREFRONT_API_TOKEN: string;

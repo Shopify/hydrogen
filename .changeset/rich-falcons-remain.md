@@ -4,14 +4,14 @@
 '@shopify/create-hydrogen': patch
 ---
 
-Create ShopifyEnv and use it for all the env.d.ts
+Create HydrogenEnv and use it for all the env.d.ts
 
 ```diff
 // in env.d.ts
 
-+ import type {ShopifyEnv} from '@shopify/hydrogen';
++ import type {HydrogenEnv} from '@shopify/hydrogen';
 
-+ interface Env extends ShopifyEnv {}
++ interface Env extends HydrogenEnv {}
 - interface Env {
 -   SESSION_SECRET: string;
 -  PUBLIC_STOREFRONT_API_TOKEN: string;

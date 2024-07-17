@@ -10,7 +10,7 @@ import type {
   CustomerAccount,
   HydrogenCart,
   HydrogenSessionData,
-  ShopifyEnv,
+  HydrogenEnv,
 } from '@shopify/hydrogen';
 import type {AppSession} from '~/lib/session';
 import {createRickAndMortyClient} from './app/lib/createRickAndMortyClient.server';
@@ -24,7 +24,7 @@ declare global {
   /**
    * Declare expected Env parameter in fetch handler.
    */
-  interface Env extends ShopifyEnv {}
+  interface Env extends HydrogenEnv {}
 }
 
 declare module '@shopify/remix-oxygen' {

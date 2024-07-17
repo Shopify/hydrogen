@@ -161,13 +161,9 @@ export type {
   StorefrontApiResponsePartial,
 } from '@shopify/hydrogen-react';
 
-export type {
-  HydrogenSessionData,
-  HydrogenSession,
-  ShopifyEnv,
-  ShopifyContext,
-} from './types';
+export type {HydrogenSessionData, HydrogenSession, HydrogenEnv} from './types';
 
-export {createShopifyHandler} from './createShopifyHandler';
+export {createHydrogenContext} from './createHydrogenContext';
+export {type HydrogenContextReturnConditional as HydrogenContext} from './createHydrogenContext';
 
 export {getStorefrontHeaders} from './getStorefrontHeaders';

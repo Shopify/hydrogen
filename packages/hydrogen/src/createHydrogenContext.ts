@@ -19,14 +19,14 @@ import {
 import {cartGetIdDefault} from './cart/cartGetIdDefault';
 import {cartSetIdDefault} from './cart/cartSetIdDefault';
 import {getStorefrontHeaders} from './getStorefrontHeaders';
-import type {ShopifyEnv, WaitUntil, HydrogenSession} from './types';
+import type {HydrogenEnv, WaitUntil, HydrogenSession} from './types';
 
-export type ShopifyHandlerOptions<
+export type HydrogenContextOptions<
   TI18n extends I18nBase = {language: 'EN'; country: 'US'},
   TUseStorefrontForCustomerAccount extends undefined | boolean = false,
   TCustomMethods extends CustomMethodsBase | undefined = undefined,
 > = {
-  env: ShopifyEnv;
+  env: HydrogenEnv;
   request: Request;
   cache?: Cache;
   waitUntil?: WaitUntil;
@@ -56,7 +56,7 @@ export type ShopifyHandlerOptions<
   };
 };
 
-export interface ShopifyHandlerReturnConditional<
+export interface HydrogenContextReturnConditional<
   TI18n extends I18nBase = {language: 'EN'; country: 'US'},
   TUseStorefrontForCustomerAccount extends undefined | boolean = false,
   TCustomMethods extends CustomMethodsBase | undefined = undefined,
@@ -70,7 +70,7 @@ export interface ShopifyHandlerReturnConditional<
     : HydrogenCart;
 }
 
-export interface ShopifyHandlerReturn<
+export interface HydrogenContextReturn<
   TI18n extends I18nBase,
   TCustomMethods extends CustomMethodsBase,
 > {
@@ -79,34 +79,34 @@ export interface ShopifyHandlerReturn<
   cart: HydrogenCart | HydrogenCartCustom<TCustomMethods>;
 }
 
-// type for createShopifyHandler methods
-export function createShopifyHandler<
+// type for createHydrogenContext methods
+export function createHydrogenContext<
   TI18n extends I18nBase = {language: 'EN'; country: 'US'},
   TCustomMethods extends CustomMethodsBase | undefined = undefined,
   TUseStorefrontForCustomerAccount extends undefined | boolean = false,
 >(
-  options: ShopifyHandlerOptions<
+  options: HydrogenContextOptions<
     TI18n,
     TUseStorefrontForCustomerAccount,
     TCustomMethods
   >,
-): ShopifyHandlerReturnConditional<
+): HydrogenContextReturnConditional<
   TI18n,
   TUseStorefrontForCustomerAccount,
   TCustomMethods
 >;
 
-export function createShopifyHandler<
+export function createHydrogenContext<
   TI18n extends I18nBase,
   TUseStorefrontForCustomerAccount extends undefined | boolean,
   TCustomMethods extends CustomMethodsBase,
 >(
-  options: ShopifyHandlerOptions<
+  options: HydrogenContextOptions<
     TI18n,
     TUseStorefrontForCustomerAccount,
     TCustomMethods
   >,
-): ShopifyHandlerReturn<TI18n, TCustomMethods> {
+): HydrogenContextReturn<TI18n, TCustomMethods> {
   const {
     env,
     storefront: storefrontOptions = {},

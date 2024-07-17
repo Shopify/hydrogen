@@ -1,7 +1,7 @@
 // @ts-ignore
 // Virtual entry point for the app
 import * as remixBuild from 'virtual:remix/server-build';
-import {storefrontRedirect, createShopifyHandler} from '@shopify/hydrogen';
+import {storefrontRedirect, createHydrogenContext} from '@shopify/hydrogen';
 import {createRequestHandler, type AppLoadContext} from '@shopify/remix-oxygen';
 import {AppSession} from '~/lib/session';
 import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
@@ -29,7 +29,7 @@ export default {
         AppSession.init(request, [env.SESSION_SECRET]),
       ]);
 
-      const shopify = createShopifyHandler({
+      const hydrogenContext = createHydrogenContext({
         env,
         request,
         cache,
@@ -55,7 +55,7 @@ export default {
         mode: process.env.NODE_ENV,
         getLoadContext: (): AppLoadContext => ({
           session,
-          ...shopify,
+          ...hydrogenContext,
           env,
           waitUntil,
         }),
@@ -76,7 +76,7 @@ export default {
         return storefrontRedirect({
           request,
           response,
-          storefront: shopify.storefront,
+          storefront: hydrogenContext.storefront,
         });
       }
 

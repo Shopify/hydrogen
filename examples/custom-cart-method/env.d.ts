@@ -6,10 +6,10 @@
 import '@total-typescript/ts-reset';
 
 import type {
-  ShopifyContext,
+  HydrogenContext,
   HydrogenSessionData,
   CartQueryDataReturn,
-  ShopifyEnv,
+  HydrogenEnv,
 } from '@shopify/hydrogen';
 import type {
   SelectedOptionInput,
@@ -26,7 +26,7 @@ declare global {
   /**
    * Declare expected Env parameter in fetch handler.
    */
-  interface Env extends ShopifyEnv {}
+  interface Env extends HydrogenEnv {}
 }
 
 declare module '@shopify/remix-oxygen' {
@@ -34,7 +34,7 @@ declare module '@shopify/remix-oxygen' {
    * Declare local additions to the Remix loader context.
    */
   interface AppLoadContext
-    extends ShopifyContext<
+    extends HydrogenContext<
       /***********************************************/
       /**********  EXAMPLE UPDATE STARTS  ************/
       {language: 'EN'; country: 'US'},
