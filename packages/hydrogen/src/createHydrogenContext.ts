@@ -20,6 +20,7 @@ import {cartGetIdDefault} from './cart/cartGetIdDefault';
 import {cartSetIdDefault} from './cart/cartSetIdDefault';
 import {getStorefrontHeaders} from './getStorefrontHeaders';
 import type {HydrogenEnv, WaitUntil, HydrogenSession} from './types';
+import type {CrossRuntimeRequest} from './utils/request';
 
 export type HydrogenContextOptions<
   TI18n extends I18nBase = {language: 'EN'; country: 'US'},
@@ -27,7 +28,7 @@ export type HydrogenContextOptions<
   TCustomMethods extends CustomMethodsBase | undefined = undefined,
 > = {
   env: HydrogenEnv;
-  request: Request;
+  request: Request | CrossRuntimeRequest;
   cache?: Cache;
   waitUntil?: WaitUntil;
   session?: TUseStorefrontForCustomerAccount extends true

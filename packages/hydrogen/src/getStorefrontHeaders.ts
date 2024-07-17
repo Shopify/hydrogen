@@ -1,3 +1,5 @@
+import type {CrossRuntimeRequest} from './utils/request';
+
 export type StorefrontHeaders = {
   /** A unique ID that correlates all sub-requests together. */
   requestGroupId: string | null;
@@ -9,12 +11,14 @@ export type StorefrontHeaders = {
   purpose: string | null;
 };
 
-export function getStorefrontHeaders(request: Request): StorefrontHeaders {
+export function getStorefrontHeaders(
+  request: Request | CrossRuntimeRequest,
+): StorefrontHeaders {
   const headers = request.headers;
   return {
-    requestGroupId: headers.get('request-id'),
-    buyerIp: headers.get('oxygen-buyer-ip'),
-    cookie: headers.get('cookie'),
-    purpose: headers.get('purpose'),
+    requestGroupId: (headers.get ? headers.get('request-id') : null) || null,
+    buyerIp: (headers.get ? headers.get('oxygen-buyer-ip') : null) || null,
+    cookie: (headers.get ? headers.get('cookie') : null) || null,
+    purpose: (headers.get ? headers.get('purpose') : null) || null,
   };
 }
