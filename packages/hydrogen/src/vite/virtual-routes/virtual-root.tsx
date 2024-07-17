@@ -12,7 +12,7 @@ import {
   useRouteError,
 } from '@remix-run/react';
 import favicon from './assets/favicon.svg';
-import {PageLayout} from './components/PageLayout.jsx';
+import {Layout} from './components/Layout.jsx';
 import {useNonce} from '@shopify/hydrogen';
 
 import styles from './assets/styles.css?url';
@@ -24,7 +24,7 @@ export const links: LinksFunction = () => {
   ];
 };
 
-export function Layout({children}: {children?: React.ReactNode}) {
+export default function App() {
   const nonce = useNonce();
   return (
     <html lang="en">
@@ -40,7 +40,9 @@ export function Layout({children}: {children?: React.ReactNode}) {
         <Links />
       </head>
       <body>
-        <PageLayout>{children}</PageLayout>
+        <Layout>
+          <Outlet />
+        </Layout>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>
@@ -61,14 +63,16 @@ export function ErrorBoundary() {
   }
 
   return (
-    <div className="route-error">
-      <h1>Please report this error</h1>
-      <h2>{errorStatus}</h2>
-      {errorMessage && (
-        <fieldset>
-          <pre>{errorMessage}</pre>
-        </fieldset>
-      )}
-    </div>
+    <Layout>
+      <div className="route-error">
+        <h1>Please report this error</h1>
+        <h2>{errorStatus}</h2>
+        {errorMessage && (
+          <fieldset>
+            <pre>{errorMessage}</pre>
+          </fieldset>
+        )}
+      </div>
+    </Layout>
   );
 }
