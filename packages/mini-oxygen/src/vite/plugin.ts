@@ -13,7 +13,7 @@ export type OxygenPluginOptions = Partial<
   Pick<
     MiniOxygenViteOptions,
     'entry' | 'env' | 'inspectorPort' | 'logRequestLine' | 'debug'
-  >
+  > & {unstableCache: boolean}
 >;
 
 type OxygenApiOptions = OxygenPluginOptions &
@@ -120,17 +120,25 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
       },
       transform(code, id, options) {
         if (
-          resolvedConfig?.command === 'serve' &&
-          resolvedConfig?.server?.hmr !== false &&
           options?.ssr &&
           (id === absoluteWorkerEntryFile ||
             id === absoluteWorkerEntryFile + path.extname(id))
         ) {
-          return {
+          if (pluginOptions?.unstableCache) {
+            code =
+              `import '@shopify/mini-oxygen/unstable-cache-polyfill';` + code;
+          }
+
+          if (
+            resolvedConfig?.command === 'serve' &&
+            resolvedConfig?.server?.hmr !== false
+          ) {
             // Accept HMR in server entry module to avoid full-page refresh in the browser.
             // Note: appending code at the end should not break the source map.
-            code: code + '\nif (import.meta.hot) import.meta.hot.accept();',
-          };
+            code = code + '\nif (import.meta.hot) import.meta.hot.accept();';
+          }
+
+          return {code};
         }
       },
     } satisfies OxygenPlugin,

@@ -7,7 +7,7 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 export default defineConfig({
   plugins: [
     hydrogen(),
-    oxygen(),
+    oxygen({unstableCache: true}),
     remix({
       presets: [hydrogen.preset()],
       future: {

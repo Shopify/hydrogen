@@ -11,7 +11,7 @@
   "main": "./dist/worker/index.js",
   "module": "dist/worker/index.js",
   "types": "./dist/worker/index.d.ts",
-  "sideEffects": false,
+  "sideEffects": true,
   "repository": "https://github.com/Shopify/hydrogen.git",
   "scripts": {
     "build": "tsup",
@@ -38,6 +38,10 @@
     "./vite": {
       "types": "./dist/vite/plugin.d.ts",
       "default": "./dist/vite/plugin.js"
+    },
+    "./unstable-cache-polyfill": {
+      "types": "./dist/cache/polyfill.d.ts",
+      "default": "./dist/cache/polyfill.js"
     },
     "./package.json": "./package.json"
   },
