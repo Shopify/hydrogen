@@ -3,6 +3,57 @@
   "version": "1",
   "releases": [
     {
+      "title": "Codegen config support multiple formats. CLI auth flow fix. Subrequest Profiler styling fix.",
+      "version": "2024.7.2",
+      "hash": "f7c45adb763750798c631291ac3063479c3678ac",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2347",
+      "commit": "https://github.com/Shopify/hydrogen/commit/f7c45adb763750798c631291ac3063479c3678ac",
+      "dependencies": {
+        "@remix-run/react": "^2.10.1",
+        "@remix-run/server-runtime": "^2.10.1",
+        "@shopify/hydrogen": "2024.7.2",
+        "@shopify/remix-oxygen": "^2.0.5"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.10.1",
+        "@shopify/cli": "~3.63.2",
+        "@shopify/oxygen-workers-types": "^4.1.2",
+        "typescript": "^5.2.2"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Fix CLI auth flow",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2331",
+          "id": "2331"
+        },
+        {
+          "title": "The Hydrogen CLI can now read the Codegen configuration from the GraphQL config file (e.g. .graphqlrc.js or .graphqlrc.yml)",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2311",
+          "id": "2311"
+        },
+        {
+          "title": "Force create-hydrogen update due to skeleton changes",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2346",
+          "id": "2346"
+        }
+      ],
+      "features": []
+    },
+    {
       "title": "Optimistic variant, Remix upgrade, new session commit pattern, CSS Options back in CLI, Vite bundle analyzer",
       "version": "2024.7.1",
       "hash": "b4884b6232383cbf7d64547f48540d0c2fcf56fe",
