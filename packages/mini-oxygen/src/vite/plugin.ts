@@ -37,6 +37,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
   let resolvedConfig: ResolvedConfig;
   let absoluteWorkerEntryFile: string;
   let apiOptions: OxygenApiOptions = {};
+  let entry = pluginOptions?.entry ?? DEFAULT_SSR_ENTRY;
 
   return [
     {
@@ -61,7 +62,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
                   config.build?.ssr === true
                     ? // No --entry flag passed by the user, use the
                       // option passed to the plugin or the default value
-                      pluginOptions.entry ?? DEFAULT_SSR_ENTRY
+                      entry
                     : // --entry flag passed by the user, keep it
                       config.build?.ssr,
               },
@@ -81,18 +82,19 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
           };
         },
       },
-      configureServer: {
-        order: 'pre',
-        handler: (viteDevServer) => {
-          const entry =
-            apiOptions.entry ?? pluginOptions.entry ?? DEFAULT_SSR_ENTRY;
-
-          // For transform hook:
-          resolvedConfig = viteDevServer.config;
+      configResolved: {
+        order: 'post',
+        handler(config) {
+          entry = apiOptions.entry ?? pluginOptions?.entry ?? DEFAULT_SSR_ENTRY;
+          resolvedConfig = config;
           absoluteWorkerEntryFile = path.isAbsolute(entry)
             ? entry
             : path.resolve(resolvedConfig.root, entry);
-
+        },
+      },
+      configureServer: {
+        order: 'pre',
+        handler(viteDevServer) {
           return () => {
             setupOxygenMiddleware(viteDevServer, async () => {
               const remoteEnv = await Promise.resolve(apiOptions.envPromise);
