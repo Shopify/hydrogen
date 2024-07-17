@@ -50,10 +50,10 @@ export async function getItemFromCache<T = any>(
 
     if (!originalResponse.ok) throw new Error(originalResponse.statusText);
 
-    const body = await originalResponse.json<{
+    const body: {
       value?: number[]; // Serialized Uint8Array
       status: CacheStatus;
-    }>();
+    } = await originalResponse.json();
 
     return {
       value: body.value
