@@ -96,6 +96,6 @@
   },
   "overrides": {
     "@oclif/core": "3.26.5",
-    "@shopify/cli-kit": "3.64.0"
+    "@shopify/cli-kit": "3.64.1"
   }
 }
