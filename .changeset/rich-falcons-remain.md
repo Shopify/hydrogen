@@ -1,10 +1,9 @@
 ---
 'skeleton': patch
-'@shopify/hydrogen': patch
 '@shopify/create-hydrogen': patch
 ---
 
-Create HydrogenEnv and use it for all the env.d.ts
+Use type `HydrogenEnv` for all the env.d.ts
 
 ```diff
 // in env.d.ts

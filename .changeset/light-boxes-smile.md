@@ -1,10 +1,10 @@
 ---
 '@shopify/remix-oxygen': patch
-'skeleton': patch
 '@shopify/hydrogen': patch
-'@shopify/create-hydrogen': patch
 ---
 
-Move `getStorefrontHeaders` from @shopify/remix-oxygen to @shopify/hydrogen
+Create `createHydrogenContext` that combined `createStorefrontClient`, `createCustomerAccountClient` and `createCartHandler`.
 
-Create `createHydrogenContext` that combined `createStorefrontClient`, `createCustomerAccountClient` and `createCartHandler`
+Move `getStorefrontHeaders` from `@shopify/remix-oxygen` to `@shopify/hydrogen` and deprecate the version in `@shopify/remix-oxygen`.
+
+Enable `cartGetIdDefault` and `getStorefrontHeaders` to be compatible with `CrossRuntimeRequest` thus compatible with express.
