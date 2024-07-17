@@ -11,9 +11,6 @@
     "typecheck": "tsc --noEmit",
     "codegen": "shopify hydrogen codegen"
   },
-  "dependencies": {
-    "@shopify/cli-hydrogen": "*"
-  },
   "h2:diff": {
     "skipFiles": [
       "vite.config.ts",
