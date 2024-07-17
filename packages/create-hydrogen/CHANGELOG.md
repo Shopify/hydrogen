@@ -1,5 +1,11 @@
 # @shopify/create-hydrogen
 
+## 5.0.2
+
+### Patch Changes
+
+- Force create-hydrogen update due to skeleton changes ([#2346](https://github.com/Shopify/hydrogen/pull/2346)) by [@michenly](https://github.com/michenly)
+
 ## 5.0.1
 
 ### Patch Changes
