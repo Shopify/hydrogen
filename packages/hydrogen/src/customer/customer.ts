@@ -5,7 +5,7 @@ import {
   CUSTOMER_ACCOUNT_SESSION_KEY,
   BUYER_SESSION_KEY,
   USER_AGENT,
-} from '../constants';
+} from './constants';
 import {
   clearSession,
   generateCodeChallenge,
@@ -486,8 +486,12 @@ export function createCustomerAccountClient({
         });
       }
 
-      const {access_token, expires_in, id_token, refresh_token} =
-        await response.json<AccessTokenResponse>();
+      const {
+        access_token,
+        expires_in,
+        id_token,
+        refresh_token,
+      }: AccessTokenResponse = await response.json();
 
       const sessionNonce = session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.nonce;
       const responseNonce = await getNonce(id_token);

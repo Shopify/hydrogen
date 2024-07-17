@@ -4,109 +4,10 @@ import {findFileWithExtension, replaceFileContent} from '../../file.js';
 import {importLangAstGrep, type SgNode} from '../../ast.js';
 
 /**
- * Adds new properties to the Remix config file.
- * @param rootDirectory Remix root directory
- * @param formatConfig Prettier formatting options
- * @returns
- */
-export async function replaceRemixConfig(
-  rootDirectory: string,
-  formatConfig: FormatOptions,
-  newProperties: Record<string, any>,
-) {
-  const {filepath, astType} = await findFileWithExtension(
-    rootDirectory,
-    'remix.config',
-  );
-
-  if (!filepath || !astType) {
-    throw new AbortError(
-      `Could not find remix.config.js file in ${rootDirectory}`,
-    );
-  }
-
-  await replaceFileContent(filepath, formatConfig, async (content) => {
-    const astGrep = await importLangAstGrep(astType);
-    const root = astGrep.parse(content).root();
-
-    const remixConfigNode = root.find({
-      rule: {
-        kind: 'object',
-        inside: {
-          any: [
-            {
-              kind: 'export_statement', // ESM
-            },
-            {
-              kind: 'assignment_expression', // CJS
-              has: {
-                kind: 'member_expression',
-                field: 'left',
-                pattern: 'module.exports',
-              },
-            },
-          ],
-        },
-      },
-    });
-
-    if (!remixConfigNode) {
-      throw new AbortError(
-        'Could not find a default export in remix.config.js',
-      );
-    }
-
-    newProperties = {...newProperties};
-    for (const key of Object.keys(newProperties)) {
-      const propertyNode = remixConfigNode.find({
-        rule: {
-          kind: 'pair',
-          has: {
-            field: 'key',
-            regex: `^${key}$`,
-          },
-        },
-      });
-
-      // Already installed?
-      if (
-        propertyNode?.text().endsWith(' ' + JSON.stringify(newProperties[key]))
-      ) {
-        delete newProperties[key];
-      }
-    }
-
-    if (Object.keys(newProperties).length === 0) {
-      // Nothign to change
-      return;
-    }
-
-    const childrenNodes = remixConfigNode.children();
-
-    // Place properties before `future` prop or at the end of the object.
-    const lastNode: SgNode | undefined =
-      childrenNodes.find((node) => node.text().startsWith('future:')) ??
-      childrenNodes.pop();
-
-    if (!lastNode) {
-      throw new AbortError('Could not add properties to Remix config');
-    }
-
-    const {start} = lastNode.range();
-    return (
-      content.slice(0, start.index) +
-      JSON.stringify(newProperties).slice(1, -1) +
-      ',' +
-      content.slice(start.index)
-    );
-  });
-}
-
-/**
  * Adds a new CSS file import to the root file and returns it from the `links` export.
  * @param appDirectory Remix app directory
  * @param formatConfig Prettier formatting options
- * @param importer Tuple of import name and import path
+ * @param importer Object describing the import statement and its usage
  */
 export async function replaceRootLinks(
   appDirectory: string,
@@ -137,9 +38,10 @@ export async function replaceRootLinks(
     const astGrep = await importLangAstGrep(astType);
     const root = astGrep.parse(content).root();
 
-    const lastImportNode = root
-      .findAll({rule: {kind: 'import_statement'}})
-      .pop();
+    const importNodes = root.findAll({rule: {kind: 'import_statement'}});
+    const lastImportNode =
+      importNodes.findLast((node) => node.text().includes('.css')) ||
+      importNodes.pop();
 
     const linksReturnNode = root.find({
       utils: {
@@ -194,15 +96,111 @@ export async function replaceRootLinks(
   });
 }
 
-export function injectCssBundlingLink(
-  appDirectory: string,
+/**
+ * Adds a new CSS file import to the root file and returns it from the `links` export.
+ * @param rootDirectory Root directory
+ * @param formatConfig Prettier formatting options
+ * @param importer Tuple of import name and import path
+ */
+export async function injectVitePlugin(
+  rootDirectory: string,
   formatConfig: FormatOptions,
+  importer: {
+    name: string;
+    path: string;
+    isDefault: boolean;
+  },
+  pluginOptions?: Record<string, any>,
 ) {
-  return replaceRootLinks(appDirectory, formatConfig, {
-    name: 'cssBundleHref',
-    path: '@remix-run/css-bundle',
-    isDefault: false,
-    isConditional: true,
-    isAbsolute: true,
+  const {filepath, astType} = await findFileWithExtension(
+    rootDirectory,
+    'vite.config',
+  );
+
+  if (!filepath || !astType) {
+    throw new AbortError(`Could not find vite.config file in ${rootDirectory}`);
+  }
+
+  await replaceFileContent(filepath, formatConfig, async (content) => {
+    const importStatement = `import ${
+      importer.isDefault ? importer.name : `{${importer.name}}`
+    } from '${importer.path}';`;
+
+    if (
+      new RegExp(`['"]${importer.path.replace('/', '\\/')}['"]`).test(content)
+    ) {
+      return; // Already installed
+    }
+
+    const astGrep = await importLangAstGrep(astType);
+    const root = astGrep.parse(content).root();
+
+    const lastImportNode = root
+      .findAll({rule: {kind: 'import_statement'}})
+      .pop();
+
+    const vitePluginListNode = root.find(vitePluginListRule);
+
+    if (!lastImportNode || !vitePluginListNode) {
+      throw new AbortError(
+        'Could not find a "plugins" key in Vite config file. Please add one and try again.',
+      );
+    }
+
+    const lastImportContent = lastImportNode.text();
+    const linksExportReturnContent = vitePluginListNode.text();
+    const newVitePluginItem = `${importer.name}(${
+      pluginOptions ? JSON.stringify(pluginOptions) : ''
+    })`;
+
+    return content
+      .replace(lastImportContent, lastImportContent + '\n' + importStatement)
+      .replace(
+        linksExportReturnContent,
+        linksExportReturnContent.replace('[', `[${newVitePluginItem},`),
+      );
   });
 }
+
+const vitePluginListRule = {
+  rule: {
+    // An array
+    pattern: '[$$$]',
+    inside: {
+      // directly in the value part of a `plugins` key
+      kind: 'pair',
+      stopBy: 'neighbor',
+      has: {
+        field: 'key',
+        regex: '^plugins$',
+        stopBy: 'neighbor',
+      },
+      inside: {
+        // directly inside an object (the Vite config object)
+        kind: 'object',
+        stopBy: 'neighbor',
+        // that is exported but is not inside another object
+        // e.g. `export default {something:{plugins:[]}}`
+        // doesn't match, but `export default {plugins:[]}` does.
+        // And `export default defineConfig({plugins:[]})` matches too.
+        all: [
+          {
+            inside: {
+              kind: 'export_statement',
+              regex: 'export default',
+              stopBy: 'end',
+            },
+          },
+          {
+            not: {
+              inside: {
+                kind: 'object',
+                stopBy: 'end',
+              },
+            },
+          },
+        ],
+      },
+    },
+  },
+};

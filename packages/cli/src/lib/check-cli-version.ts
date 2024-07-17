@@ -35,7 +35,8 @@ export async function checkCurrentCLIVersion() {
     !currentVersion ||
     !Object.values(UPGRADABLE_CLI_NAMES).some((name) => name === pkgName) ||
     currentVersion.includes('next') ||
-    currentVersion.includes('experimental')
+    currentVersion.includes('experimental') ||
+    currentVersion.includes('snapshot')
   ) {
     return;
   }

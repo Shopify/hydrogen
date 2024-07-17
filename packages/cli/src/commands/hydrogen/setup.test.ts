@@ -1,5 +1,5 @@
+import {symlink, cp as copyWithFilter} from 'node:fs/promises';
 import {describe, it, expect, vi, beforeEach} from 'vitest';
-import {copy as copyWithFilter, createSymlink} from 'fs-extra/esm';
 import {
   inTemporaryDirectory,
   fileExists,
@@ -41,6 +41,8 @@ describe('setup', () => {
   it('sets up an i18n strategy and generates routes', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       await copyWithFilter(getSkeletonSourceDir(), tmpDir, {
+        force: true,
+        recursive: true,
         filter: (src) =>
           !src.includes('node_modules') && !src.includes('routes'),
       });
@@ -49,7 +51,7 @@ describe('setup', () => {
         fileExists(joinPath(tmpDir, 'app/routes/_index.tsx')),
       ).resolves.toBeFalsy();
 
-      await createSymlink(
+      await symlink(
         await getRepoNodeModules(),
         joinPath(tmpDir, 'node_modules'),
       );

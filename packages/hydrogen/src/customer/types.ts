@@ -4,7 +4,7 @@ import type {
 } from '@shopify/hydrogen-codegen';
 import {type GraphQLError} from '../utils/graphql';
 import type {CrossRuntimeRequest} from '../utils/request';
-import type {HydrogenSession} from '../hydrogen';
+import type {HydrogenSession, WaitUntil} from '../types';
 import type {
   LanguageCode,
   BuyerInput,
@@ -137,7 +137,7 @@ export type CustomerAccountOptions = {
   /** The object for the current Request. It should be provided by your platform. */
   request: CrossRuntimeRequest;
   /** The waitUntil function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
-  waitUntil?: ExecutionContext['waitUntil'];
+  waitUntil?: WaitUntil;
   /** This is the route in your app that authorizes the customer after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/account/authorize`. */
   authUrl?: string;
   /** Use this method to overwrite the default logged-out redirect behavior. The default handler [throws a redirect](https://remix.run/docs/en/main/utils/redirect#:~:text=!session) to `/account/login` with current path as `return_to` query param. */

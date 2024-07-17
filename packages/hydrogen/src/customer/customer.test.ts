@@ -1,7 +1,7 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
-import type {HydrogenSession, HydrogenSessionData} from '../hydrogen';
+import type {HydrogenSession, HydrogenSessionData} from '../types';
 import {createCustomerAccountClient} from './customer';
-import {BUYER_SESSION_KEY, CUSTOMER_ACCOUNT_SESSION_KEY} from '../constants';
+import {BUYER_SESSION_KEY, CUSTOMER_ACCOUNT_SESSION_KEY} from './constants';
 import crypto from 'node:crypto';
 
 if (!globalThis.crypto) {

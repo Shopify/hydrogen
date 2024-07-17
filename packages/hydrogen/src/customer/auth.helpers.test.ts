@@ -1,6 +1,6 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
-import type {HydrogenSession} from '../hydrogen';
-import {CUSTOMER_ACCOUNT_SESSION_KEY} from '../constants';
+import type {HydrogenSession} from '../types';
+import {CUSTOMER_ACCOUNT_SESSION_KEY} from './constants';
 import {checkExpires, clearSession, refreshToken} from './auth.helpers';
 
 vi.mock('./BadRequest', () => {

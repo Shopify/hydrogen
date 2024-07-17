@@ -70,7 +70,7 @@ export {
   getSelectedProductOptions,
 } from './product/VariantSelector';
 
-export {useOptimisticProduct} from './product/useOptimisticProduct';
+export {useOptimisticVariant} from './product/useOptimisticVariant';
 
 export type {
   VariantOption,
@@ -161,4 +161,4 @@ export type {
   StorefrontApiResponsePartial,
 } from '@shopify/hydrogen-react';
 
-export type {HydrogenSessionData, HydrogenSession} from './hydrogen';
+export type {HydrogenSessionData, HydrogenSession} from './types';

@@ -17,7 +17,7 @@ import {MultipassCheckoutButton} from './MultipassCheckoutButton';
 /***********************************************/
 
 type CartMainProps = {
-  cart: CartApiQueryFragment;
+  cart: CartApiQueryFragment | null;
   layout: 'page' | 'aside';
 };
 
@@ -42,10 +42,10 @@ function CartDetails({
   layout,
   cart,
 }: {
-  cart: OptimisticCart<CartApiQueryFragment>;
+  cart: OptimisticCart<CartApiQueryFragment | null>;
   layout: 'page' | 'aside';
 }) {
-  const cartHasItems = !!cart && cart.totalQuantity > 0;
+  const cartHasItems = cart?.totalQuantity && cart?.totalQuantity > 0;
 
   return (
     <div className="cart-details">
@@ -135,7 +135,7 @@ function CartLineItem({
   );
 }
 
-function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
+function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
   if (!checkoutUrl) return null;
 
   /***********************************************/
@@ -155,7 +155,7 @@ export function CartSummary({
   children = null,
 }: {
   children?: React.ReactNode;
-  cost: CartApiQueryFragment['cost'];
+  cost?: OptimisticCart<CartApiQueryFragment | null>['cost'];
   layout: CartMainProps['layout'];
 }) {
   const className =
@@ -295,7 +295,7 @@ export function CartEmpty({
 function CartDiscounts({
   discountCodes,
 }: {
-  discountCodes: CartApiQueryFragment['discountCodes'];
+  discountCodes?: CartApiQueryFragment['discountCodes'];
 }) {
   const codes: string[] =
     discountCodes

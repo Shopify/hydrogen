@@ -43,10 +43,9 @@ export default class DebugCpu extends Command {
       ? resolvePath(flags.path)
       : process.cwd();
 
-    const diff =
-      flags.build && flags.diff
-        ? await prepareDiffDirectory(originalDirectory, true)
-        : undefined;
+    const diff = flags.diff
+      ? await prepareDiffDirectory(originalDirectory, true)
+      : undefined;
 
     const {close} = await runDebugCpu({
       ...flagsToCamelObject(flags),
@@ -133,6 +132,7 @@ async function runDebugCpu({directory, entry, output}: RunDebugCpuOptions) {
     sourcemap: true,
     disableRouteWarning: true,
     lockfileCheck: false,
+    bundleStats: false,
     ...hooks,
     onServerBuildStart() {
       if (times === 0) {

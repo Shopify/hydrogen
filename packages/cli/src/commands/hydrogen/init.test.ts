@@ -65,6 +65,8 @@ describe('init', () => {
       shortcut: true,
       quickstart: true,
       git: true,
+      // TODO: enable Tailwind once v4 is stable
+      styling: 'none',
     });
   });
 
@@ -79,6 +81,7 @@ describe('init', () => {
           path: tmpDir,
           quickstart: true,
           language: 'ts',
+          styling: 'none',
         }),
       ).resolves.not.toThrow();
 

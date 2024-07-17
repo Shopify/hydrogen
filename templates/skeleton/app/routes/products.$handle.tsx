@@ -5,7 +5,7 @@ import type {ProductFragment} from 'storefrontapi.generated';
 import {
   getSelectedProductOptions,
   Analytics,
-  useOptimisticProduct,
+  useOptimisticVariant,
 } from '@shopify/hydrogen';
 import type {SelectedOption} from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/lib/variants';
@@ -127,10 +127,13 @@ function redirectToFirstVariant({
 }
 
 export default function Product() {
-  const {product: originalProduct, variants} = useLoaderData<typeof loader>();
-  const product = useOptimisticProduct(originalProduct, variants);
+  const {product, variants} = useLoaderData<typeof loader>();
+  const selectedVariant = useOptimisticVariant(
+    product.selectedVariant,
+    variants,
+  );
 
-  const {selectedVariant, title, descriptionHtml} = product;
+  const {title, descriptionHtml} = product;
 
   return (
     <div className="product">

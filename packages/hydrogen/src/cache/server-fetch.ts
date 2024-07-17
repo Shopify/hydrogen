@@ -4,6 +4,7 @@ import {
   runWithCache,
   type DebugOptions,
 } from './run-with-cache.js';
+import type {WaitUntil} from '../types.js';
 
 export type FetchCacheOptions = {
   cache?: CachingStrategy;
@@ -11,7 +12,7 @@ export type FetchCacheOptions = {
   cacheKey?: CacheKey;
   cacheTags?: string[];
   shouldCacheResponse?: (body: any, response: Response) => boolean;
-  waitUntil?: ExecutionContext['waitUntil'];
+  waitUntil?: WaitUntil;
   returnType?: 'json' | 'text' | 'arrayBuffer' | 'blob';
   debugInfo?: DebugOptions;
 };

@@ -6,12 +6,13 @@ import {
   CacheKey,
   runWithCache,
 } from './run-with-cache';
+import type {WaitUntil} from '../types';
 
 type CreateWithCacheOptions = {
   /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */
   cache: Cache;
   /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
-  waitUntil: ExecutionContext['waitUntil'];
+  waitUntil: WaitUntil;
   /** The `request` object is used to access certain headers for debugging */
   request?: CrossRuntimeRequest;
 };
