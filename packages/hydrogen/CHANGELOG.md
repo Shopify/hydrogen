@@ -1,5 +1,11 @@
 # @shopify/hydrogen
 
+## 2024.7.2
+
+### Patch Changes
+
+- Fix subrequest profiler by removing the Layout export from virtual root. ([#2344](https://github.com/Shopify/hydrogen/pull/2344)) by [@michenly](https://github.com/michenly)
+
 ## 2024.7.1
 
 ### Patch Changes
