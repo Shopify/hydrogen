@@ -1,5 +1,14 @@
 # skeleton
 
+## 2024.7.2
+
+### Patch Changes
+
+- Changed the GraphQL config file format to be TS/JS instead of YAML. ([#2311](https://github.com/Shopify/hydrogen/pull/2311)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`18ea233c`](https://github.com/Shopify/hydrogen/commit/18ea233cd327bf3001ec9b107ad66b05c9c78584), [`8b2322d7`](https://github.com/Shopify/hydrogen/commit/8b2322d783078298cd5d20ec5f3b1faf99b7895b)]:
+  - @shopify/cli-hydrogen@8.3.0
+
 ## 2024.7.1
 
 ### Patch Changes

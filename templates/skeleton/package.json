@@ -2,7 +2,7 @@
   "name": "skeleton",
   "private": true,
   "sideEffects": false,
-  "version": "2024.7.1",
+  "version": "2024.7.2",
   "type": "module",
   "scripts": {
     "build": "shopify hydrogen build --codegen",

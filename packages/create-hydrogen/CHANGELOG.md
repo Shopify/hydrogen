@@ -1,5 +1,11 @@
 # @shopify/create-hydrogen
 
+## 5.0.1
+
+### Patch Changes
+
+- Fix auth flow. ([#2331](https://github.com/Shopify/hydrogen/pull/2331)) by [@graygilmore](https://github.com/graygilmore)
+
 ## 5.0.0
 
 ### Major Changes

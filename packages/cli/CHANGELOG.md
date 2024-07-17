@@ -1,5 +1,15 @@
 # @shopify/cli-hydrogen
 
+## 8.3.0
+
+### Minor Changes
+
+- The Hydrogen CLI can now read the Codegen configuration from the GraphQL config file (e.g. `.graphqlrc.js` or `.graphqlrc.yml`). ([#2311](https://github.com/Shopify/hydrogen/pull/2311)) by [@frandiox](https://github.com/frandiox)
+
+### Patch Changes
+
+- Fix auth flow. ([#2331](https://github.com/Shopify/hydrogen/pull/2331)) by [@graygilmore](https://github.com/graygilmore)
+
 ## 8.2.0
 
 ### Minor Changes
