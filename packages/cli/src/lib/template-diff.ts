@@ -171,16 +171,10 @@ export async function prepareDiffDirectory(
     async copyDiffBuild() {
       const target = joinPath(diffDirectory, 'dist');
       await remove(target);
-      await Promise.all([
-        copyDirectory(joinPath(targetDirectory, 'dist'), target, {
-          force: true,
-          recursive: true,
-        }),
-        copyFile(
-          joinPath(targetDirectory, '.env'),
-          joinPath(diffDirectory, '.env'),
-        ),
-      ]);
+      await copyDirectory(joinPath(targetDirectory, 'dist'), target, {
+        force: true,
+        recursive: true,
+      });
     },
   };
 }
