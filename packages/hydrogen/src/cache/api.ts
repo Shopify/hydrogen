@@ -67,17 +67,7 @@ async function getItem(
   return response;
 }
 
-/**
- * Put an item into the cache.
- */
-async function setItem(
-  cache: Cache,
-  request: Request,
-  response: Response,
-  userCacheOptions: CachingStrategy,
-) {
-  if (!cache) return;
-
+function getCacheControlHeaders(userCacheOptions: CachingStrategy) {
   /**
    * We are manually managing staled request by adding this workaround.
    * Why? cache control header support is dependent on hosting platform
@@ -129,9 +119,26 @@ async function setItem(
 
   // CF will override cache-control, so we need to keep a non-modified real-cache-control
   // cache-control is still necessary for mini-oxygen
-  response.headers.set('cache-control', paddedCacheControlString);
-  response.headers.set('real-cache-control', cacheControlString);
-  response.headers.set('cache-put-date', String(Date.now()));
+  return [
+    ['cache-control', paddedCacheControlString],
+    ['real-cache-control', cacheControlString],
+    ['cache-put-date', String(Date.now())],
+  ];
+}
+/**
+ * Put an item into the cache.
+ */
+async function setItem(
+  cache: Cache,
+  request: Request,
+  response: Response,
+  userCacheOptions: CachingStrategy,
+) {
+  if (!cache) return;
+
+  for (const [key, value] of getCacheControlHeaders(userCacheOptions)) {
+    response.headers.set(key, value);
+  }
 
   logCacheApiStatus('PUT', request, response);
   await cache.put(request, response);
@@ -187,6 +194,6 @@ export const CacheAPI = {
   get: getItem,
   set: setItem,
   delete: deleteItem,
-  generateDefaultCacheControlHeader,
+  getCacheControlHeaders,
   isStale,
 };

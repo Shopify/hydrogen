@@ -1,5 +1,3 @@
-import {createOxygenCache} from './index.js';
+import {createOxygenCache} from './worker-api.js';
 
-globalThis.caches.open = (cacheName) => {
-  return createOxygenCache(cacheName);
-};
+globalThis.caches.open = createOxygenCache;

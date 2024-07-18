@@ -12,8 +12,13 @@ const DEFAULT_SSR_ENTRY = './server';
 export type OxygenPluginOptions = Partial<
   Pick<
     MiniOxygenViteOptions,
-    'entry' | 'env' | 'inspectorPort' | 'logRequestLine' | 'debug'
-  > & {unstableCache: boolean}
+    | 'entry'
+    | 'env'
+    | 'inspectorPort'
+    | 'logRequestLine'
+    | 'debug'
+    | 'unstableOxygenCache'
+  >
 >;
 
 type OxygenApiOptions = OxygenPluginOptions &
@@ -109,6 +114,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
                   apiOptions.inspectorPort ?? pluginOptions.inspectorPort,
                 requestHook: apiOptions.requestHook,
                 entryPointErrorHandler: apiOptions.entryPointErrorHandler,
+                unstableOxygenCache: pluginOptions?.unstableOxygenCache,
                 logRequestLine:
                   // Give priority to the plugin option over the CLI option here,
                   // since the CLI one is just a default, not a user-provided flag.
@@ -124,7 +130,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
           (id === absoluteWorkerEntryFile ||
             id === absoluteWorkerEntryFile + path.extname(id))
         ) {
-          if (pluginOptions?.unstableCache) {
+          if (pluginOptions?.unstableOxygenCache) {
             code =
               `import '@shopify/mini-oxygen/unstable-cache-polyfill';` + code;
           }

@@ -66,6 +66,7 @@ export type MiniOxygenViteOptions = InternalMiniOxygenOptions & {
   debug?: boolean;
   inspectorPort?: number;
   logRequestLine?: null | RequestHook;
+  unstableOxygenCache?: boolean;
 };
 
 type MiniOxygen = ReturnType<typeof startMiniOxygenRuntime>;
@@ -79,6 +80,7 @@ function startMiniOxygenRuntime({
   entry: workerEntryFile,
   requestHook,
   logRequestLine = defaultLogRequestLine,
+  unstableOxygenCache,
 }: MiniOxygenViteOptions) {
   const wrappedHook =
     requestHook || logRequestLine
@@ -94,6 +96,7 @@ function startMiniOxygenRuntime({
   const miniOxygen = createMiniOxygen({
     debug,
     inspectorPort,
+    unstableOxygenCache,
     requestHook: null,
     workers: [
       {

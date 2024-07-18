@@ -21,16 +21,8 @@ function getCacheOption(userCacheOptions?: CachingStrategy): AllCacheOptions {
   return userCacheOptions || CacheDefault();
 }
 
-export function generateSubRequestCacheControlHeader(
-  userCacheOptions?: CachingStrategy,
-): string {
-  return CacheAPI.generateDefaultCacheControlHeader(
-    getCacheOption(userCacheOptions),
-  );
-}
-
 type CacheStatus = 'HIT' | 'MISS' | 'STALE';
-const CACHE_URL = 'https://oxygen.myshopify.dev';
+const CACHE_URL = 'https://oxygen.myshopify.dev/cache';
 
 /**
  * Get an item from the cache. If a match is found, returns a tuple
@@ -45,10 +37,14 @@ export async function getItemFromCache<T = any>(
   try {
     const originalResponse = await fetch(CACHE_URL, {
       method: 'POST',
-      body: JSON.stringify({method: 'match', key}),
+      body: JSON.stringify({
+        name: 'hydrogen',
+        method: 'match',
+        key,
+      }),
     });
 
-    if (!originalResponse.ok) throw new Error(originalResponse.statusText);
+    if (!originalResponse.ok) throw new Error(await originalResponse.text());
 
     const body: {
       value?: number[]; // Serialized Uint8Array
@@ -59,7 +55,7 @@ export async function getItemFromCache<T = any>(
       value: body.value
         ? JSON.parse(decoder.decode(new Uint8Array(body.value)))
         : undefined,
-      status: body.status,
+      status: isStale(key, originalResponse) ? 'STALE' : body.status,
     };
   } catch (error) {
     console.error(error);
@@ -78,8 +74,8 @@ export async function getItemFromCache<T = any>(
     const text = await response.text();
     try {
       return {
-        value: parseJSON(text),
-        status: isStale(key, response) ? 'STALE' : 'HIT',
+        value: text ? parseJSON(text) : undefined,
+        status: text ? (isStale(key, response) ? 'STALE' : 'HIT') : 'MISS',
       };
       // return [parseJSON(text), response];
     } catch {
@@ -106,11 +102,15 @@ export async function setItemInCache(
   const result = await fetch(CACHE_URL, {
     method: 'POST',
     body: JSON.stringify({
+      name: 'hydrogen',
       method: 'put',
       key,
       tags,
-      options: getCacheOption(userCacheOptions),
+      // options: getCacheOption(userCacheOptions),
       value: Object.values(encoder.encode(JSON.stringify(value))),
+      headers: CacheAPI.getCacheControlHeaders(
+        getCacheOption(userCacheOptions),
+      ),
     }),
   })
     .then((response) => {

@@ -26,6 +26,11 @@ import {findPort} from '../common/find-port.js';
 import {OXYGEN_COMPAT_PARAMS} from '../common/compat.js';
 import {isO2Verbose} from '../common/debug.js';
 import type {OnlyBindings, OnlyServices} from './utils.js';
+import {
+  isCacheRequest,
+  handleOutboundCacheRequest,
+  resetBindingStubs,
+} from '../cache/node-outbound-handler.js';
 
 export {
   buildAssetsUrl,
@@ -72,6 +77,7 @@ export type MiniOxygenOptions = InputMiniflareOptions & {
   assets?: AssetOptions;
   requestHook?: RequestHook | null;
   inspectWorkerName?: string;
+  unstableOxygenCache?: boolean;
 };
 
 export type MiniOxygenInstance = ReturnType<typeof createMiniOxygen>;
@@ -83,10 +89,15 @@ export function createMiniOxygen({
   sourceMapPath = '',
   requestHook,
   inspectWorkerName,
+  unstableOxygenCache = false,
   ...miniflareOptions
 }: MiniOxygenOptions) {
   const mf = new Miniflare(
-    buildMiniflareOptions(miniflareOptions, requestHook, assets),
+    buildMiniflareOptions(miniflareOptions, {
+      requestHook,
+      assets,
+      unstableOxygenCache,
+    }),
   );
 
   if (!sourceMapPath) {
@@ -116,6 +127,11 @@ export function createMiniOxygen({
         ? inspectorPort ?? findPort(DEFAULT_PUBLIC_INSPECTOR_PORT)
         : undefined,
     ]);
+
+    if (unstableOxygenCache) {
+      // Warmup
+      mf.getCaches().catch(() => {});
+    }
 
     reconnect = createInspectorConnector({
       sourceMapPath,
@@ -162,19 +178,26 @@ export function createMiniOxygen({
       });
 
       await reconnect(() =>
-        mf.setOptions(
-          buildMiniflareOptions(
-            {...miniflareOptions, ...newOptions},
-            requestHook,
-            assets,
-          ),
-        ),
+        mf
+          .setOptions(
+            buildMiniflareOptions(
+              {...miniflareOptions, ...newOptions},
+              {requestHook, assets, unstableOxygenCache},
+            ),
+          )
+          .then(resetBindingStubs),
       );
+
+      if (unstableOxygenCache) {
+        // Warmup
+        mf.getCaches().catch(() => {});
+      }
     },
     async dispose() {
       assetsServer?.closeAllConnections();
       assetsServer?.close();
       await mf.dispose();
+      resetBindingStubs();
       isDisposed = true;
     },
     get isDisposed() {
@@ -204,23 +227,16 @@ const oxygenHeadersMap = Object.values(OXYGEN_HEADERS_MAP).reduce(
   {} as Record<string, string>,
 );
 
-// Opt-out of TLS validation in the worker environment,
-// and run network requests in Node environment.
-// https://nodejs.org/api/cli.html#node_tls_reject_unauthorizedvalue
-const UNSAFE_OUTBOUND_SERVICE = {
-  async outboundService(request: Request) {
-    const response = await fetch(request.url, request);
-    // Remove brotli encoding:
-    // https://github.com/cloudflare/workers-sdk/issues/5345
-    response.headers.delete('Content-Encoding');
-    return response;
-  },
-};
-
 function buildMiniflareOptions(
   {workers, ...mfOverwriteOptions}: InputMiniflareOptions,
-  requestHook: RequestHook | null = defaultLogRequestLine,
-  assetsOptions?: AssetOptions,
+  {
+    requestHook = defaultLogRequestLine,
+    assets: assetsOptions,
+    unstableOxygenCache,
+  }: Pick<
+    MiniOxygenOptions,
+    'requestHook' | 'assets' | 'unstableOxygenCache'
+  > = {},
 ): OutputMiniflareOptions {
   const entryWorker = workers.find((worker) => !!worker.name);
   if (!entryWorker?.name) {
@@ -290,13 +306,36 @@ function buildMiniflareOptions(
       },
       ...workers.map((worker) => {
         const isNormalWorker = !wrappedBindings.has(worker.name);
-        const useUnsafeOutboundService =
-          isNormalWorker && process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0';
+        const useOutboundWorker =
+          isNormalWorker &&
+          (!!unstableOxygenCache ||
+            // Opt-out of TLS validation in the worker environment,
+            // and run network requests in Node environment.
+            // https://nodejs.org/api/cli.html#node_tls_reject_unauthorizedvalue
+            process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0');
 
         return {
           ...(isNormalWorker && OXYGEN_COMPAT_PARAMS),
-          ...(useUnsafeOutboundService && UNSAFE_OUTBOUND_SERVICE),
           ...worker,
+          ...(useOutboundWorker && {
+            async outboundService(request: Request, mf: Miniflare) {
+              if (isCacheRequest(request)) {
+                return handleOutboundCacheRequest(request, mf);
+              }
+
+              if (typeof worker.outboundService === 'function') {
+                return worker.outboundService(request, mf);
+              }
+
+              const response = await fetch(request.url, request);
+
+              // Remove brotli encoding:
+              // https://github.com/cloudflare/workers-sdk/issues/5345
+              response.headers.delete('Content-Encoding');
+
+              return response;
+            },
+          }),
         };
       }),
     ],
