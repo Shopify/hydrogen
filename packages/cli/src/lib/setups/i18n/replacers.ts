@@ -227,22 +227,19 @@ export async function replaceRemixEnv(
   }
 
   await replaceFileContent(envPath, formatConfig, async (content) => {
-    if (content.includes(`Storefront<`)) return; // Already set up
+    if (content.includes(`HydrogenContext<`)) return; // Already set up
 
     const astGrep = await importLangAstGrep('ts');
     const root = astGrep.parse(content).root();
 
     // -- Replace content in reversed order (bottom => top) to avoid changing string indexes
 
-    // 1. Change `Storefront` to `Storefront<I18nLocale>`
-    const storefrontTypeNode = root.find({
+    // 1. Change `HydrogenContext` to `HydrogenContext<I18nLocale>`
+    const hydrogenContextTypeNode = root.find({
       rule: {
-        kind: 'property_signature',
+        kind: 'extends_type_clause',
         has: {
-          kind: 'type_annotation',
-          has: {
-            regex: '^Storefront$',
-          },
+          regex: '^HydrogenContext$',
         },
         inside: {
           kind: 'interface_declaration',
@@ -252,12 +249,12 @@ export async function replaceRemixEnv(
       },
     });
 
-    if (storefrontTypeNode) {
-      const storefrontTypeNodeRange = storefrontTypeNode.range();
+    if (hydrogenContextTypeNode) {
+      const hydrogenContextTypeNodeRange = hydrogenContextTypeNode.range();
       content =
-        content.slice(0, storefrontTypeNodeRange.end.index) +
+        content.slice(0, hydrogenContextTypeNodeRange.end.index) +
         `<${i18nTypeName}>` +
-        content.slice(storefrontTypeNodeRange.end.index);
+        content.slice(hydrogenContextTypeNodeRange.end.index);
     }
 
     // 2. Build the global I18nLocale type

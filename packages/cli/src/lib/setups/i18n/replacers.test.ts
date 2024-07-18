@@ -1,4 +1,3 @@
-import {fileURLToPath} from 'node:url';
 import {describe, it, expect} from 'vitest';
 import {
   inTemporaryDirectory,
@@ -32,7 +31,7 @@ const checkTypes = (content: string) => {
 };
 
 describe('i18n replacers', () => {
-  it('adds i18n type to remix.env.d.ts', async () => {
+  it("adds i18n type to remix's env.d.ts", async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       const skeletonDir = getSkeletonSourceDir();
       await copyFile(joinPath(skeletonDir, envDts), joinPath(tmpDir, envDts));
@@ -86,7 +85,7 @@ describe('i18n replacers', () => {
           /**
            * Declare local additions to the Remix loader context.
            */
-          interface AppLoadContext extends HydrogenContext {
+          interface AppLoadContext extends HydrogenContext<I18nLocale> {
             env: Env;
             session: AppSession;
             waitUntil: ExecutionContext["waitUntil"];
