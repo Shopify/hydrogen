@@ -10,14 +10,14 @@ Use type `HydrogenContext` for all the env.d.ts
 
 + import type {HydrogenContext} from '@shopify/hydrogen';
 
-+ interface AppLoadContext extends HydrogenContext
++ interface AppLoadContext extends HydrogenContext<AppSession> {
 - interface AppLoadContext {
-  env: Env;
+-  env: Env;
 -  cart: HydrogenCart;
 -  storefront: Storefront;
 -  customerAccount: CustomerAccount;
-  session: AppSession;
-  waitUntil: ExecutionContext['waitUntil'];
+-  session: AppSession;
+-  waitUntil: ExecutionContext['waitUntil'];
 }
 
 ```

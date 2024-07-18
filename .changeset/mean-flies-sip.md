@@ -6,6 +6,19 @@
 Use `createHydrogenContext` for all the server.ts, ensure to overwrite any options that is not using the default values.
 
 ```diff
+// in env.d.ts
++ interface AppLoadContext extends HydrogenContext<AppSession> {
+- interface AppLoadContext {
+-  env: Env;
+-  cart: HydrogenCart;
+-  storefront: Storefront;
+-  customerAccount: CustomerAccount;
+-  session: AppSession;
+-  waitUntil: ExecutionContext['waitUntil'];
+}
+```
+
+```diff
 // in server.ts
 
 import {
@@ -23,23 +36,13 @@ import {
   type AppLoadContext,
 } from '@shopify/remix-oxygen';
 
-+ interface AppLoadContext extends HydrogenContext
-- interface AppLoadContext {
-  env: Env;
--  cart: HydrogenCart;
--  storefront: Storefront;
--  customerAccount: CustomerAccount;
-  session: AppSession;
-  waitUntil: ExecutionContext['waitUntil'];
-}
-
-
-+ const hydrogenContext = createHydrogenContext({
++ const hydrogenContext = createHydrogenContext<AppSession>({
 +   env,
 +   request,
 +   cache,
 +   waitUntil,
 +   session,
++   i18n: {language: 'EN', country: 'US'},
 +   cart: {
 +     queryFragment: CART_QUERY_FRAGMENT,
 +   },
@@ -75,15 +78,15 @@ import {
 const handleRequest = createRequestHandler({
   build: remixBuild,
   mode: process.env.NODE_ENV,
-  getLoadContext: (): AppLoadContext => ({
-    session,
--     storefront,
--     customerAccount,
--     cart,
-+     ...hydrogenContext,
-    env,
-    waitUntil,
-  }),
+-  getLoadContext: (): AppLoadContext => ({
++    ...hydrogenContext,
+-    session,
+-    storefront,
+-    customerAccount,
+-    cart,
+-    env,
+-    waitUntil,
+-  }),
 });
 
 ```

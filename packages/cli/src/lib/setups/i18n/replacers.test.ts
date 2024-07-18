@@ -8,7 +8,7 @@ import {
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {ts} from 'ts-morph';
 import {getAssetsDir, getSkeletonSourceDir} from '../../build.js';
-import {replaceRemixEnv, replaceServerI18n} from './replacers.js';
+import {replaceServerI18n} from './replacers.js';
 import {DEFAULT_COMPILER_OPTIONS} from '../../transpile/morph/index.js';
 
 const envDts = 'env.d.ts';
@@ -31,76 +31,6 @@ const checkTypes = (content: string) => {
 };
 
 describe('i18n replacers', () => {
-  it("adds i18n type to remix's env.d.ts", async () => {
-    await inTemporaryDirectory(async (tmpDir) => {
-      const skeletonDir = getSkeletonSourceDir();
-      await copyFile(joinPath(skeletonDir, envDts), joinPath(tmpDir, envDts));
-
-      await replaceRemixEnv(
-        {rootDirectory: tmpDir},
-        {},
-        await readFile(await getAssetsDir('i18n', 'domains.ts')),
-      );
-
-      const newContent = await readFile(joinPath(tmpDir, envDts));
-      expect(() => checkTypes(newContent)).not.toThrow();
-
-      expect(newContent).toMatchInlineSnapshot(`
-        "/// <reference types="vite/client" />
-        /// <reference types="@shopify/remix-oxygen" />
-        /// <reference types="@shopify/oxygen-workers-types" />
-
-        // Enhance TypeScript's built-in typings.
-        import "@total-typescript/ts-reset";
-
-        import type {
-          HydrogenContext,
-          HydrogenSessionData,
-          HydrogenEnv,
-        } from "@shopify/hydrogen";
-        import type {
-          LanguageCode,
-          CountryCode,
-        } from "@shopify/hydrogen/storefront-api-types";
-        import type { AppSession } from "~/lib/session";
-
-        declare global {
-          /**
-           * A global \`process\` object is only available during build to access NODE_ENV.
-           */
-          const process: { env: { NODE_ENV: "production" | "development" } };
-
-          /**
-           * Declare expected Env parameter in fetch handler.
-           */
-          interface Env extends HydrogenEnv {}
-
-          /**
-           * The I18nLocale used for Storefront API query context.
-           */
-          type I18nLocale = { language: LanguageCode; country: CountryCode };
-        }
-
-        declare module "@shopify/remix-oxygen" {
-          /**
-           * Declare local additions to the Remix loader context.
-           */
-          interface AppLoadContext extends HydrogenContext<I18nLocale> {
-            env: Env;
-            session: AppSession;
-            waitUntil: ExecutionContext["waitUntil"];
-          }
-
-          /**
-           * Declare local additions to the Remix session data.
-           */
-          interface SessionData extends HydrogenSessionData {}
-        }
-        "
-      `);
-    });
-  });
-
   it('adds i18n type to server.ts', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       const skeletonDir = getSkeletonSourceDir();
@@ -164,10 +94,10 @@ describe('i18n replacers', () => {
                 cache,
                 waitUntil,
                 session,
+                i18n: getLocaleFromRequest(request),
                 cart: {
                   queryFragment: CART_QUERY_FRAGMENT,
                 },
-                i18n: getLocaleFromRequest(request),
               });
 
               /**
@@ -178,10 +108,8 @@ describe('i18n replacers', () => {
                 build: remixBuild,
                 mode: process.env.NODE_ENV,
                 getLoadContext: (): AppLoadContext => ({
-                  session,
                   ...hydrogenContext,
-                  env,
-                  waitUntil,
+                  // declare additional Remix loader context here
                 }),
               });
 

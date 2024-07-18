@@ -6,9 +6,7 @@
 import '@total-typescript/ts-reset';
 
 import type {
-  Storefront,
-  CustomerAccount,
-  HydrogenCart,
+  HydrogenContext,
   HydrogenSessionData,
   HydrogenEnv,
 } from '@shopify/hydrogen';
@@ -21,28 +19,22 @@ declare global {
    */
   const process: {env: {NODE_ENV: 'production' | 'development'}};
 
-  /**
-   * Declare expected Env parameter in fetch handler.
-   */
-  interface Env extends HydrogenEnv {}
+  interface Env extends HydrogenEnv {
+    // declare additional Env parameter in the fetch handler and in Remix loader context here
+  }
 }
 
 declare module '@shopify/remix-oxygen' {
-  /**
-   * Declare local additions to the Remix loader context.
-   */
-  export interface AppLoadContext {
-    env: Env;
-    cart: HydrogenCart;
-    storefront: Storefront;
-    customerAccount: CustomerAccount;
+  interface AppLoadContext extends HydrogenContext<AppSession> {
+    // declare additional Remix loader context here
+    /***********************************************/
+    /**********  EXAMPLE UPDATE STARTS  ************/
     rickAndMorty: ReturnType<typeof createRickAndMortyClient>;
-    session: AppSession;
-    waitUntil: ExecutionContext['waitUntil'];
+    /**********   EXAMPLE UPDATE END   ************/
+    /***********************************************/
   }
 
-  /**
-   * Declare local additions to the Remix session data.
-   */
-  interface SessionData extends HydrogenSessionData {}
+  interface SessionData extends HydrogenSessionData {
+    // declare local additions to the Remix session data here
+  }
 }

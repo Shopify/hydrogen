@@ -42,6 +42,7 @@ export default {
         cache,
         waitUntil,
         session,
+        i18n: {language: 'EN', country: 'US'},
         cart: {
           queryFragment: CART_QUERY_FRAGMENT,
         },
@@ -67,17 +68,14 @@ export default {
       const handleRequest = createRequestHandler({
         build: remixBuild,
         mode: process.env.NODE_ENV,
+        /***********************************************/
+        /**********  EXAMPLE UPDATE STARTS  ************/
         getLoadContext: (): AppLoadContext => ({
-          session,
           ...hydrogenContext,
-          env,
-          waitUntil,
-          /***********************************************/
-          /**********  EXAMPLE UPDATE STARTS  ************/
           rickAndMorty, // 3. Pass the Rick and Morty client to the action and loader context.
-          /**********   EXAMPLE UPDATE END   ************/
-          /***********************************************/
         }),
+        /**********   EXAMPLE UPDATE END   ************/
+        /***********************************************/
       });
 
       const response = await handleRequest(request);

@@ -18,11 +18,8 @@ declare global {
    */
   const process: {env: {NODE_ENV: 'production' | 'development'}};
 
-  /**
-   * Declare expected Env parameter in fetch handler.
-   */
-
   interface Env extends HydrogenEnv {
+    // declare additional Env parameter in the fetch handler and in Remix loader context here
     /***********************************************/
     /**********  EXAMPLE UPDATE STARTS  ************/
     PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET: string;
@@ -33,29 +30,23 @@ declare global {
 }
 
 declare module '@shopify/remix-oxygen' {
-  /**
-   * Declare local additions to the Remix loader context.
-   */
   interface AppLoadContext
     extends HydrogenContext<
+      AppSession,
       /***********************************************/
       /**********  EXAMPLE UPDATE STARTS  ************/
-      {language: 'EN'; country: 'US'},
+      undefined,
       true
       /**********   EXAMPLE UPDATE END   ************/
       /***********************************************/
     > {
-    env: Env;
-    session: AppSession;
-    waitUntil: ExecutionContext['waitUntil'];
+    // declare additional Remix loader context here
   }
 
-  /**
-   * Declare the data we expect to access via `context.session`.
-   */
   /***********************************************/
   /**********  EXAMPLE UPDATE STARTS  ************/
-  export interface SessionData {
+  interface SessionData {
+    // declare local additions to the Remix session data here
     customerAccessToken: CustomerAccessToken;
   }
   /**********   EXAMPLE UPDATE END   ************/

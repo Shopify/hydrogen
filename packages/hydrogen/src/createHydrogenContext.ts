@@ -27,17 +27,17 @@ import type {
 import type {CrossRuntimeRequest} from './utils/request';
 
 export type HydrogenContextOptions<
-  TI18n extends I18nBase = {language: 'EN'; country: 'US'},
-  TUseStorefrontForCustomerAccount extends undefined | boolean = false,
+  TSession extends HydrogenSession | undefined = HydrogenSession,
   TCustomMethods extends CustomMethodsBase | undefined = undefined,
+  TUseStorefrontForCustomerAccount extends undefined | boolean = false,
+  TI18n extends I18nBase = I18nBase,
+  TEnv extends HydrogenEnv = Env,
 > = {
-  env: HydrogenEnv;
+  env: TEnv;
   request: Request | CrossRuntimeRequest;
   cache?: Cache;
   waitUntil?: WaitUntil;
-  session?: TUseStorefrontForCustomerAccount extends true
-    ? undefined
-    : HydrogenSession;
+  session?: TSession;
   i18n?: TI18n;
   logErrors?: boolean | ((error?: Error) => boolean);
   storefront?: {
@@ -61,10 +61,12 @@ export type HydrogenContextOptions<
   };
 };
 
-export interface HydrogenContextReturnConditional<
-  TI18n extends I18nBase = {language: 'EN'; country: 'US'},
-  TUseStorefrontForCustomerAccount extends undefined | boolean = false,
+export interface HydrogenContext<
+  TSession extends HydrogenSession | undefined = HydrogenSession,
   TCustomMethods extends CustomMethodsBase | undefined = undefined,
+  TUseStorefrontForCustomerAccount extends undefined | boolean = false,
+  TI18n extends I18nBase = I18nBase,
+  TEnv extends HydrogenEnv = Env,
 > {
   storefront: StorefrontClient<TI18n>['storefront'];
   customerAccount: TUseStorefrontForCustomerAccount extends true
@@ -73,51 +75,74 @@ export interface HydrogenContextReturnConditional<
   cart: TCustomMethods extends CustomMethodsBase
     ? HydrogenCartCustom<TCustomMethods>
     : HydrogenCart;
+  env: TEnv;
+  waitUntil?: WaitUntil;
+  session: TSession extends HydrogenSession ? NonNullable<TSession> : undefined;
 }
 
-export interface HydrogenContextReturn<
-  TI18n extends I18nBase,
+export interface HydrogenContextOverloads<
+  TSession extends HydrogenSession | undefined,
   TCustomMethods extends CustomMethodsBase,
+  TI18n extends I18nBase = I18nBase,
+  TEnv extends HydrogenEnv = Env,
 > {
   storefront: StorefrontClient<TI18n>['storefront'];
   customerAccount: CustomerAccount | undefined;
   cart: HydrogenCart | HydrogenCartCustom<TCustomMethods>;
+  env: TEnv;
+  waitUntil?: WaitUntil;
+  session: TSession | undefined;
 }
 
 // type for createHydrogenContext methods
 export function createHydrogenContext<
-  TI18n extends I18nBase = {language: 'EN'; country: 'US'},
+  TSession extends HydrogenSession | undefined = HydrogenSession,
   TCustomMethods extends CustomMethodsBase | undefined = undefined,
   TUseStorefrontForCustomerAccount extends undefined | boolean = false,
+  TI18n extends I18nBase = I18nBase,
+  TEnv extends HydrogenEnv = Env,
 >(
   options: HydrogenContextOptions<
-    TI18n,
+    TSession,
+    TCustomMethods,
     TUseStorefrontForCustomerAccount,
-    TCustomMethods
+    TI18n,
+    TEnv
   >,
-): HydrogenContextReturnConditional<
-  TI18n,
+): HydrogenContext<
+  TSession,
+  TCustomMethods,
   TUseStorefrontForCustomerAccount,
-  TCustomMethods
+  TI18n,
+  TEnv
 >;
 
 export function createHydrogenContext<
-  TI18n extends I18nBase,
-  TUseStorefrontForCustomerAccount extends undefined | boolean,
+  TSession extends HydrogenSession | undefined,
   TCustomMethods extends CustomMethodsBase,
+  TUseStorefrontForCustomerAccount extends undefined | boolean,
+  TI18n extends I18nBase,
+  TEnv extends HydrogenEnv = Env,
 >(
   options: HydrogenContextOptions<
-    TI18n,
+    TSession,
+    TCustomMethods,
     TUseStorefrontForCustomerAccount,
-    TCustomMethods
+    TI18n,
+    TEnv
   >,
-): HydrogenContextReturn<TI18n, TCustomMethods> {
+): HydrogenContextOverloads<TSession, TCustomMethods, TI18n, TEnv> {
   const {
     env,
+    request,
+    cache,
+    waitUntil,
+    i18n,
+    session,
+    logErrors,
     storefront: storefrontOptions = {},
     customerAccount: customerAccountOptions,
     cart: cartOptions = {},
-    ...shareOptions
   } = options;
 
   /**
@@ -125,17 +150,15 @@ export function createHydrogenContext<
    */
   const {storefront} = createStorefrontClient<TI18n>({
     // share options
-    cache: shareOptions.cache,
-    waitUntil: shareOptions.waitUntil,
-    i18n:
-      (shareOptions.i18n as TI18n) ||
-      ({language: 'EN', country: 'US'} as TI18n),
-    logErrors: shareOptions.logErrors,
+    cache,
+    waitUntil,
+    i18n,
+    logErrors,
     storefrontApiVersion: storefrontOptions.apiVersion,
 
     // storefrontOptions
     storefrontHeaders:
-      storefrontOptions.headers || getStorefrontHeaders(shareOptions.request),
+      storefrontOptions.headers || getStorefrontHeaders(request),
     contentType: storefrontOptions.contentType,
 
     // defaults
@@ -148,16 +171,16 @@ export function createHydrogenContext<
   let customerAccount: CustomerAccount | undefined;
   const useStorefrontForCustomerAccount =
     customerAccountOptions?.useStorefrontAPI || false;
-  if (shareOptions.session && !useStorefrontForCustomerAccount) {
+  if (session && !useStorefrontForCustomerAccount) {
     /**
      * Create a client for Customer Account API.
      */
     customerAccount = createCustomerAccountClient({
       // share options
-      session: shareOptions.session,
-      request: shareOptions.request,
-      waitUntil: shareOptions.waitUntil,
-      logErrors: shareOptions.logErrors,
+      session,
+      request,
+      waitUntil,
+      logErrors,
 
       // customerAccountOptions
       customerApiVersion: customerAccountOptions?.apiVersion,
@@ -169,6 +192,10 @@ export function createHydrogenContext<
       customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID,
       customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_API_URL,
     });
+  } else if (!session && !useStorefrontForCustomerAccount) {
+    console.warn(
+      `[h2:warn:createHydrogenContext] session is required to use Customer Account API. To disabled the usage, pass in {customerAccount: {useStorefrontAPI: true}}`,
+    );
   }
 
   /*
@@ -177,8 +204,7 @@ export function createHydrogenContext<
    */
   const cart = createCartHandler({
     // cartOptions
-    getCartId:
-      cartOptions.getId || cartGetIdDefault(shareOptions.request.headers),
+    getCartId: cartOptions.getId || cartGetIdDefault(request.headers),
     setCartId: cartOptions.setId || cartSetIdDefault(),
     cartQueryFragment: cartOptions.queryFragment,
     cartMutateFragment: cartOptions.mutateFragment,
@@ -193,6 +219,9 @@ export function createHydrogenContext<
     storefront,
     customerAccount,
     cart,
+    env,
+    waitUntil,
+    session,
   };
 }
 

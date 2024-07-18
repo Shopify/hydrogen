@@ -3,7 +3,7 @@ import {renderSelectPrompt} from '@shopify/cli-kit/node/ui';
 import {fileExists, readFile} from '@shopify/cli-kit/node/fs';
 import {AbortSignal} from '@shopify/cli-kit/node/abort';
 import {getCodeFormatOptions} from '../../format-code.js';
-import {replaceRemixEnv, replaceServerI18n} from './replacers.js';
+import {replaceServerI18n} from './replacers.js';
 import {getAssetsDir} from '../../build.js';
 
 export const SETUP_I18N_STRATEGIES = [
@@ -43,7 +43,6 @@ export async function setupI18nStrategy(
 
   const isJs = options.serverEntryPoint?.endsWith('.js') ?? false;
   await replaceServerI18n(options, formatConfig, template, isJs);
-  await replaceRemixEnv(options, formatConfig, template);
 }
 
 export async function renderI18nPrompt<

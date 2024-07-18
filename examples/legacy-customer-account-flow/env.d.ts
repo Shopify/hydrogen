@@ -5,8 +5,11 @@
 // Enhance TypeScript's built-in typings.
 import '@total-typescript/ts-reset';
 
-import type {HydrogenContext, HydrogenEnv} from '@shopify/hydrogen';
-import type {CustomerAccessToken} from '@shopify/hydrogen/storefront-api-types';
+import type {
+  HydrogenContext,
+  HydrogenSessionData,
+  HydrogenEnv,
+} from '@shopify/hydrogen';
 import type {AppSession} from '~/lib/session';
 
 declare global {
@@ -15,34 +18,31 @@ declare global {
    */
   const process: {env: {NODE_ENV: 'production' | 'development'}};
 
-  /**
-   * Declare expected Env parameter in fetch handler.
-   */
-  interface Env extends HydrogenEnv {}
+  interface Env extends HydrogenEnv {
+    // declare additional Env parameter use in the fetch handler and Remix loader context here
+  }
 }
 
 declare module '@shopify/remix-oxygen' {
-  /**
-   * Declare local additions to the Remix loader context.
-   */
-  export interface AppLoadContext
+  interface AppLoadContext
     extends HydrogenContext<
+      AppSession,
       /***********************************************/
       /**********  EXAMPLE UPDATE STARTS  ************/
-      {language: 'EN'; country: 'US'},
+      undefined,
       true
       /**********   EXAMPLE UPDATE END   ************/
       /***********************************************/
     > {
-    env: Env;
-    session: AppSession;
-    waitUntil: ExecutionContext['waitUntil'];
+    // declare additional Remix loader context here
   }
 
-  /**
-   * Declare the data we expect to access via `context.session`.
-   */
-  export interface SessionData {
+  /***********************************************/
+  /**********  EXAMPLE UPDATE STARTS  ************/
+  interface SessionData {
+    // declare local additions to the Remix session data here
     customerAccessToken: CustomerAccessToken;
   }
+  /**********   EXAMPLE UPDATE END   ************/
+  /***********************************************/
 }

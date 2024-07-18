@@ -14,7 +14,7 @@ import type {HydrogenSession} from './types';
 
 vi.mock('./storefront', async () => ({
   createStorefrontClient: vi.fn(() => ({
-    storefront: {i18n: {language: 'EN', country: 'US'}},
+    storefront: {},
   })),
 }));
 
@@ -63,6 +63,7 @@ const mockEnv = {
 const defaultOptions = {
   env: mockEnv,
   request: new Request('https://localhost'),
+  session: {} as HydrogenSession,
 };
 
 describe('createHydrogenContext', () => {
@@ -89,7 +90,6 @@ describe('createHydrogenContext', () => {
 
       expect(vi.mocked(createStorefrontClient)).toHaveBeenCalledWith(
         expect.objectContaining({
-          i18n: {language: 'EN', country: 'US'},
           publicStorefrontToken: mockEnv.PUBLIC_STOREFRONT_API_TOKEN,
           privateStorefrontToken: mockEnv.PRIVATE_STOREFRONT_API_TOKEN,
           storeDomain: mockEnv.PUBLIC_STORE_DOMAIN,
@@ -124,12 +124,16 @@ describe('createHydrogenContext', () => {
     it('called createStorefrontClient with values that does not have default', async () => {
       createHydrogenContext({
         ...defaultOptions,
-        storefront: {contentType: 'graphql'},
+        i18n: {language: 'EN', country: 'CA'},
+        storefront: {
+          contentType: 'graphql',
+        },
       });
 
       expect(vi.mocked(createStorefrontClient)).toHaveBeenCalledWith(
         expect.objectContaining({
           contentType: 'graphql',
+          i18n: {language: 'EN', country: 'CA'},
         }),
       );
     });
@@ -173,13 +177,8 @@ describe('createHydrogenContext', () => {
   });
 
   describe('customerAccount client', () => {
-    const defaultOptionsWithCustomerAccount = {
-      ...defaultOptions,
-      session: {} as HydrogenSession,
-    };
-
     it('called createCustomerAccountClient with default values', async () => {
-      createHydrogenContext(defaultOptionsWithCustomerAccount);
+      createHydrogenContext(defaultOptions);
 
       expect(vi.mocked(createCustomerAccountClient)).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -192,7 +191,7 @@ describe('createHydrogenContext', () => {
     it('called createCustomerAccountClient with values that does not have default', async () => {
       const mockAuthUrl = 'customerAccountId overwrite';
       createHydrogenContext({
-        ...defaultOptionsWithCustomerAccount,
+        ...defaultOptions,
         customerAccount: {
           authUrl: mockAuthUrl,
         },
@@ -209,7 +208,7 @@ describe('createHydrogenContext', () => {
       const mockApiVersion = 'new customerApiVersion';
 
       createHydrogenContext({
-        ...defaultOptionsWithCustomerAccount,
+        ...defaultOptions,
         customerAccount: {
           apiVersion: mockApiVersion,
         },
@@ -224,9 +223,7 @@ describe('createHydrogenContext', () => {
 
     describe('customerAccount return based on options', () => {
       it('returns customerAccount client if session exist and useStorefrontAPI is not set', async () => {
-        const hydrogenContext = createHydrogenContext(
-          defaultOptionsWithCustomerAccount,
-        );
+        const hydrogenContext = createHydrogenContext(defaultOptions);
 
         expect(hydrogenContext).toHaveProperty('customerAccount');
         expectTypeOf(
@@ -236,7 +233,7 @@ describe('createHydrogenContext', () => {
 
       it('returns customerAccount client if session exist and useStorefrontAPI is false', async () => {
         const hydrogenContext = createHydrogenContext({
-          ...defaultOptionsWithCustomerAccount,
+          ...defaultOptions,
           customerAccount: {
             useStorefrontAPI: false,
           },
@@ -250,7 +247,7 @@ describe('createHydrogenContext', () => {
 
       it('does not returns customerAccount client if session exist and useStorefrontAPI is true', async () => {
         const hydrogenContext = createHydrogenContext({
-          ...defaultOptionsWithCustomerAccount,
+          ...defaultOptions,
           customerAccount: {
             useStorefrontAPI: true,
           },
@@ -263,7 +260,7 @@ describe('createHydrogenContext', () => {
 
       it('does not returns customerAccount client if there is no session', async () => {
         const hydrogenContext = createHydrogenContext({
-          ...defaultOptionsWithCustomerAccount,
+          ...defaultOptions,
           session: undefined,
         });
 
@@ -451,6 +448,52 @@ describe('createHydrogenContext', () => {
           HydrogenCartCustom<typeof customMethods>
         >();
       });
+    });
+  });
+
+  describe('env', () => {
+    it('returns env as it was passed in', async () => {
+      const customizedEnv = {...mockEnv, extraKey: 'extra key value'};
+
+      const hydrogenContext = createHydrogenContext({
+        ...defaultOptions,
+        env: customizedEnv,
+      });
+
+      expect(hydrogenContext).toStrictEqual(
+        expect.objectContaining({env: customizedEnv}),
+      );
+    });
+  });
+
+  describe('waitUntil', () => {
+    it('returns waitUntil as it was passed in', async () => {
+      const mockWaitUntil = vi.fn();
+      const second = vi.fn();
+
+      const hydrogenContext = createHydrogenContext({
+        ...defaultOptions,
+        waitUntil: mockWaitUntil,
+      });
+
+      expect(hydrogenContext).toStrictEqual(
+        expect.objectContaining({waitUntil: mockWaitUntil}),
+      );
+    });
+  });
+
+  describe('session', () => {
+    it('returns waitUntil as it was passed in', async () => {
+      const mockSession = {} as HydrogenSession;
+
+      const hydrogenContext = createHydrogenContext({
+        ...defaultOptions,
+        session: mockSession,
+      });
+
+      expect(hydrogenContext).toStrictEqual(
+        expect.objectContaining({session: mockSession}),
+      );
     });
   });
 });

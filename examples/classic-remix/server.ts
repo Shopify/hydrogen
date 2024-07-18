@@ -1,4 +1,3 @@
-// @ts-ignore
 // Virtual entry point for the app
 import * as remixBuild from '@remix-run/dev/server-build';
 import {storefrontRedirect, createHydrogenContext} from '@shopify/hydrogen';
@@ -29,7 +28,7 @@ export default {
         AppSession.init(request, [env.SESSION_SECRET]),
       ]);
 
-      const hydrogenContext = createHydrogenContext({
+      const hydrogenContext = createHydrogenContext<AppSession>({
         env,
         request,
         cache,
@@ -48,10 +47,8 @@ export default {
         build: remixBuild,
         mode: process.env.NODE_ENV,
         getLoadContext: (): AppLoadContext => ({
-          session,
           ...hydrogenContext,
-          env,
-          waitUntil,
+          // declare additional Remix loader context here
         }),
       });
 

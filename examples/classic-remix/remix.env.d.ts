@@ -18,24 +18,17 @@ declare global {
    */
   const process: {env: {NODE_ENV: 'production' | 'development'}};
 
-  /**
-   * Declare expected Env parameter in fetch handler.
-   */
-  interface Env extends HydrogenEnv {}
+  interface Env extends HydrogenEnv {
+    // declare additional Env parameter use in the fetch handler and Remix loader context here
+  }
 }
 
 declare module '@shopify/remix-oxygen' {
-  /**
-   * Declare local additions to the Remix loader context.
-   */
-  interface AppLoadContext extends HydrogenContext {
-    env: Env;
-    session: AppSession;
-    waitUntil: ExecutionContext['waitUntil'];
+  interface AppLoadContext extends HydrogenContext<AppSession> {
+    // declare additional Remix loader context here
   }
 
-  /**
-   * Declare local additions to the Remix session data.
-   */
-  interface SessionData extends HydrogenSessionData {}
+  interface SessionData extends HydrogenSessionData {
+    // declare local additions to the Remix session data here
+  }
 }

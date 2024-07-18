@@ -42,6 +42,7 @@ export default {
         },
         /**********   EXAMPLE UPDATE END   ************/
         /***********************************************/
+        i18n: {language: 'EN', country: 'US'},
         cart: {
           queryFragment: CART_QUERY_FRAGMENT,
         },
@@ -55,10 +56,8 @@ export default {
         build: remixBuild,
         mode: process.env.NODE_ENV,
         getLoadContext: (): AppLoadContext => ({
-          session,
           ...hydrogenContext,
-          env,
-          waitUntil,
+          // declare additional Remix loader context here
         }),
       });
 

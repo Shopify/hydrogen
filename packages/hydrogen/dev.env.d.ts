@@ -3,7 +3,7 @@
  * Do not place here types needed for the library itself.
  */
 
-import type {HydrogenCart, Storefront} from './src/index';
+import type {HydrogenContext} from './src/index';
 import type {WaitUntil, HydrogenEnv} from './src/types';
 
 declare global {
@@ -12,10 +12,9 @@ declare global {
    */
   const process: {env: {NODE_ENV: 'production' | 'development'}};
 
-  /**
-   * Declare expected Env parameter in fetch handler.
-   */
-  interface Env extends HydrogenEnv {}
+  interface Env extends HydrogenEnv {
+    // declare additional Env parameter use in the fetch handler and Remix loader context here
+  }
 
   /**
    * This type is used to import types from mini-oxygen
@@ -30,14 +29,12 @@ declare global {
   type ExportedHandlerFetchHandler = Function;
 }
 
-/**
- * Declare local additions to `AppLoadContext` to include the session utilities we injected in `server.ts`.
- * This is used in code for examples.
- */
 declare module '@shopify/remix-oxygen' {
-  export interface AppLoadContext {
-    storefront: Storefront;
-    env: Env;
-    cart: HydrogenCart;
+  interface AppLoadContext extends HydrogenContext<AppSession> {
+    // declare additional Remix loader context here
+  }
+
+  interface SessionData extends HydrogenSessionData {
+    // declare local additions to the Remix session data here
   }
 }
