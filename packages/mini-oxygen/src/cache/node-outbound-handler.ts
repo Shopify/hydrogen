@@ -1,6 +1,11 @@
 // This code runs on Node environment
 import {Request, Response, type Miniflare} from 'miniflare';
-import {OXYGEN_CACHE_URL} from './common.js';
+import {
+  OXYGEN_CACHE_URL,
+  type OxygenCachePayload,
+  type OxygenCacheMatchResponse,
+} from './common.js';
+import {addSwrHeaders, isStale} from './swr.js';
 
 export function isCacheRequest(request: Request) {
   return request.url === OXYGEN_CACHE_URL;
@@ -15,37 +20,24 @@ export function resetBindingStubs() {
   openedCachesMap.clear();
 }
 
-type OxygenCachePayload = {
-  name: string;
-  key: string;
-  method: 'put' | 'match' | 'delete';
-  headers: Array<[string, string]>;
-  value: number[];
-};
-
 export async function handleOutboundCacheRequest(
   request: Request,
   mf: Miniflare,
 ) {
-  let tBody = Date.now();
   const body = (await request.json()) as OxygenCachePayload;
-  tBody = Date.now() - tBody;
-  let tGetCaches = Date.now();
   let cacheInstance = openedCachesMap.get(body.name);
 
   if (!cacheInstance) {
     const caches = (await mf.getCaches()) as unknown as GlobalCaches;
-
-    tGetCaches = Date.now() - tGetCaches;
-    var tCachesOpen = Date.now();
     cacheInstance = await caches.open(body.name);
-    tCachesOpen = Date.now() - tCachesOpen;
     openedCachesMap.set(body.name, cacheInstance);
-  } else {
-    tGetCaches = Date.now() - tGetCaches;
   }
 
-  const cacheKey = new Request(getKeyUrl(body.key)) as unknown as RequestInfo;
+  const cacheKey = new Request(
+    `https://shopify.dev/?cache_name=${encodeURIComponent(
+      body.name,
+    )}&cache_key=${encodeURIComponent(body.key)}`,
+  ) as unknown as RequestInfo;
 
   try {
     if (body.method === 'match') {
@@ -53,34 +45,32 @@ export async function handleOutboundCacheRequest(
         cacheKey,
       )) as unknown as Response;
 
-      return new Response(
-        JSON.stringify({
-          value: cacheResponse
-            ? Object.values(new Uint8Array(await cacheResponse?.arrayBuffer()))
-            : undefined,
-          status: cacheResponse ? 'HIT' : 'MISS',
-        }),
+      return Response.json(
+        (cacheResponse
+          ? {
+              status: isStale(cacheResponse) ? 'STALE' : 'HIT',
+              value: Object.values(
+                new Uint8Array(await cacheResponse?.arrayBuffer()),
+              ),
+            }
+          : {status: 'MISS'}) satisfies OxygenCacheMatchResponse,
         cacheResponse,
       );
     } else if (body.method === 'put') {
       const cacheValue = new Response(new Uint8Array(body.value), {
-        headers: body.headers,
+        headers: addSwrHeaders(body.headers),
       }) as unknown as FetchResponse;
 
       await cacheInstance.put(cacheKey, cacheValue);
       return new Response();
     } else if (body.method === 'delete') {
-      await cacheInstance.delete(cacheKey);
-      return new Response();
+      const isRemoved = await cacheInstance.delete(cacheKey);
+      return Response.json(isRemoved);
     } else {
-      throw new Error(`cache.${body.method} is not implemented`);
+      throw new Error(`cache.${(body as any).method} is not implemented`);
     }
   } catch (error) {
     console.error(error);
     return new Response((error as Error).message, {status: 500});
   }
-}
-
-function getKeyUrl(key: string) {
-  return `https://shopify.dev/?${encodeURIComponent(key)}`;
 }
