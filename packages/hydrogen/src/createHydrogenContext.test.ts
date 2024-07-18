@@ -1,7 +1,6 @@
 import {vi, describe, it, expect, afterEach, expectTypeOf} from 'vitest';
 import {createHydrogenContext} from './createHydrogenContext';
 import {createStorefrontClient} from './storefront';
-import {getStorefrontHeaders} from './getStorefrontHeaders';
 import {createCustomerAccountClient} from './customer/customer';
 import {
   createCartHandler,
@@ -17,10 +16,6 @@ vi.mock('./storefront', async () => ({
   createStorefrontClient: vi.fn(() => ({
     storefront: {i18n: {language: 'EN', country: 'US'}},
   })),
-}));
-
-vi.mock('./getStorefrontHeaders', async () => ({
-  getStorefrontHeaders: vi.fn(() => ({})),
 }));
 
 vi.mock('./customer/customer', async () => ({
@@ -102,9 +97,6 @@ describe('createHydrogenContext', () => {
           storefrontHeaders: expect.anything(),
         }),
       );
-
-      expect(vi.mocked(getStorefrontHeaders)).toHaveBeenCalledOnce();
-      expect(vi.mocked(getStorefrontHeaders)).toHaveBeenCalledWith(mockRequest);
     });
 
     it('called createStorefrontClient with overwrite default values', async () => {
@@ -160,8 +152,6 @@ describe('createHydrogenContext', () => {
           storefrontHeaders: mockeStorefrontHeaders,
         }),
       );
-
-      expect(vi.mocked(getStorefrontHeaders)).not.toHaveBeenCalled();
     });
 
     it('called createStorefrontClient with renamed apiVersion key', async () => {

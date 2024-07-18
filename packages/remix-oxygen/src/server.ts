@@ -70,9 +70,6 @@ type StorefrontHeaders = {
   purpose: string | null;
 };
 
-/**
- * @deprecated moved to @shopify/hydrogen
- */
 export function getStorefrontHeaders(request: Request): StorefrontHeaders {
   const headers = request.headers;
   return {

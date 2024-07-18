@@ -18,8 +18,12 @@ import {
 } from './cart/createCartHandler';
 import {cartGetIdDefault} from './cart/cartGetIdDefault';
 import {cartSetIdDefault} from './cart/cartSetIdDefault';
-import {getStorefrontHeaders} from './getStorefrontHeaders';
-import type {HydrogenEnv, WaitUntil, HydrogenSession} from './types';
+import type {
+  HydrogenEnv,
+  WaitUntil,
+  HydrogenSession,
+  StorefrontHeaders,
+} from './types';
 import type {CrossRuntimeRequest} from './utils/request';
 
 export type HydrogenContextOptions<
@@ -189,5 +193,17 @@ export function createHydrogenContext<
     storefront,
     customerAccount,
     cart,
+  };
+}
+
+function getStorefrontHeaders(
+  request: Request | CrossRuntimeRequest,
+): StorefrontHeaders {
+  const headers = request.headers;
+  return {
+    requestGroupId: (headers.get ? headers.get('request-id') : null) || null,
+    buyerIp: (headers.get ? headers.get('oxygen-buyer-ip') : null) || null,
+    cookie: (headers.get ? headers.get('cookie') : null) || null,
+    purpose: (headers.get ? headers.get('purpose') : null) || null,
   };
 }

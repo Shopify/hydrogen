@@ -165,5 +165,3 @@ export type {HydrogenSessionData, HydrogenSession, HydrogenEnv} from './types';
 
 export {createHydrogenContext} from './createHydrogenContext';
 export {type HydrogenContextReturnConditional as HydrogenContext} from './createHydrogenContext';
-
-export {getStorefrontHeaders} from './getStorefrontHeaders';

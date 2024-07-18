@@ -5,8 +5,10 @@ import {
   cartSetIdDefault,
 } from '@shopify/hydrogen';
 import * as remixBuild from '@remix-run/dev/server-build';
-import {getStorefrontHeaders} from '@shopify/hydrogen';
-import {createRequestHandler} from '@shopify/remix-oxygen';
+import {
+  createRequestHandler,
+  getStorefrontHeaders,
+} from '@shopify/remix-oxygen';
 
 export default {
   async fetch(

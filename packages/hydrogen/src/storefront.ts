@@ -53,8 +53,7 @@ import {
   withSyncStack,
   type StackInfo,
 } from './utils/callsites';
-import type {WaitUntil} from './types';
-import type {StorefrontHeaders} from './getStorefrontHeaders';
+import type {WaitUntil, StorefrontHeaders} from './types';
 
 export type I18nBase = {
   language: LanguageCode;
