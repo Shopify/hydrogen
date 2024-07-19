@@ -1,12 +1,20 @@
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {mkdir, writeFile, readFile, rm as remove} from 'node:fs/promises';
+import {
+  mkdir,
+  writeFile,
+  readFile,
+  rm as remove,
+  readdir,
+} from 'node:fs/promises';
+import {readdirSync} from 'node:fs';
 import {temporaryDirectoryTask} from 'tempy';
 import {it, vi, describe, expect} from 'vitest';
 import esbuild from 'esbuild';
 import {buildAssetsUrl} from './assets.js';
 import {createMiniOxygen, type MiniOxygenOptions} from './index.js';
 import {findPort} from '../common/find-port.js';
+import {OXYGEN_CACHE_STATUS_HEADER} from '../cache/common.js';
 
 describe('MiniOxygen Worker Runtime', () => {
   it('receives HTML from test worker', async () => {
@@ -175,21 +183,24 @@ describe('MiniOxygen Worker Runtime', () => {
         // -- Test without sourcemaps:
 
         await remove(miniOxygenOptions.sourceMapPath!, {force: true});
+        await new Promise((resolve) => setTimeout(resolve, 100));
         await reloadMiniOxygen();
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         await fetch('/');
         await vi.waitFor(
           () => expect(spy.mock.calls.length).toBeGreaterThan(1), // At least 2 calls
         );
 
-        // console.error with stack:
-        expect(spy, 'Logged without sourcemaps').toHaveBeenCalledWith(
-          expect.objectContaining({
-            stack: expect.stringMatching(
-              // Doesn't show `doStuff` because it's minified
-              /^Error: test$/,
-            ),
-          }),
+        await vi.waitFor(() =>
+          expect(spy, 'Logged without sourcemaps').toHaveBeenCalledWith(
+            expect.objectContaining({
+              stack: expect.stringMatching(
+                // Doesn't show `doStuff` because it's minified
+                /^Error:\s+test$/i,
+              ),
+            }),
+          ),
         );
 
         // Thrown error is also logged
@@ -252,6 +263,115 @@ describe('MiniOxygen Worker Runtime', () => {
         },
       );
     });
+
+    it('returns SWR headers', async () => {
+      await withFixtures(
+        async ({writeHandler}) => {
+          await writeHandler(
+            async (req) => {
+              const cache = await caches.open('test');
+              const cacheKey = new Request(req.url);
+              const match = await cache.match(cacheKey);
+
+              if (match) return match;
+
+              await cache.put(
+                cacheKey,
+                Response.json(true, {
+                  headers: {
+                    'cache-control':
+                      'public, max-age=1, stale-while-revalidate=10',
+                  },
+                }),
+              );
+
+              return Response.json(false);
+            },
+            {useOxygenCache: true},
+          );
+        },
+        async ({fetch}) => {
+          let response = await fetch('/test-cache');
+          await expect(response.json()).resolves.toEqual(false);
+          expect(response.headers.get(OXYGEN_CACHE_STATUS_HEADER)).toBeFalsy();
+
+          response = await fetch('/test-cache');
+          await expect(response.json()).resolves.toEqual(true);
+          expect(response.headers.get(OXYGEN_CACHE_STATUS_HEADER)).toEqual(
+            'HIT',
+          );
+
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+
+          response = await fetch('/test-cache');
+          await expect(response.json()).resolves.toEqual(true);
+          expect(response.headers.get(OXYGEN_CACHE_STATUS_HEADER)).toEqual(
+            'STALE',
+          );
+        },
+      );
+    });
+
+    it('deletes by tag', async () => {
+      await withFixtures(
+        async ({writeHandler}) => {
+          await writeHandler(
+            async (req) => {
+              const cache = await caches.open('test');
+
+              if (req.method === 'DELETE') {
+                return Response.json(
+                  await cache.delete(
+                    new Request(req.url + 'non-matching-key', {
+                      headers: [...req.headers],
+                    }),
+                  ),
+                );
+              }
+
+              const cacheKey = new Request(req.url);
+              const match = await cache.match(cacheKey);
+
+              if (match) return match;
+
+              await cache.put(
+                cacheKey,
+                Response.json(true, {
+                  headers: {
+                    'cache-control': 'public, max-age=10',
+                    'cache-tags': 'tag1,tag2',
+                  },
+                }),
+              );
+
+              return Response.json(false);
+            },
+            {useOxygenCache: true},
+          );
+        },
+        async ({fetch}) => {
+          let response = await fetch('/test-cache');
+          await expect(response.json()).resolves.toEqual(false);
+          expect(response.headers.get(OXYGEN_CACHE_STATUS_HEADER)).toBeFalsy();
+
+          response = await fetch('/test-cache');
+          await expect(response.json()).resolves.toEqual(true);
+          expect(response.headers.get(OXYGEN_CACHE_STATUS_HEADER)).toEqual(
+            'HIT',
+          );
+
+          response = await fetch('/test-cache', {
+            method: 'DELETE',
+            headers: {'cache-tags': 'tag2'},
+          });
+          await expect(response.json()).resolves.toEqual(true);
+
+          response = await fetch('/test-cache');
+          await expect(response.json()).resolves.toEqual(false);
+          expect(response.headers.get(OXYGEN_CACHE_STATUS_HEADER)).toBeFalsy(); // MISS
+        },
+      );
+    });
   });
 });
 
@@ -273,7 +393,7 @@ type WithFixturesSetupParams = {
 };
 
 type WithFixturesTestParams = WithFixturesSetupParams & {
-  fetch: (pathname: string) => Promise<Response>;
+  fetch: (pathname: string, init?: RequestInit) => Promise<Response>;
   fetchAsset: (pathname: string) => Promise<Response>;
   reloadMiniOxygen: (options?: ReloadOptions) => Promise<void>;
   miniOxygenOptions: Partial<MiniOxygenOptions>;
@@ -402,7 +522,8 @@ function withFixtures(
         writeAsset,
         reloadMiniOxygen,
         miniOxygenOptions,
-        fetch: (pathname: string) => fetch(workerUrl.origin + pathname),
+        fetch: (pathname: string, init) =>
+          fetch(workerUrl.origin + pathname, init),
         fetchAsset: (pathname: string) =>
           fetch(buildAssetsUrl(miniOxygenOptions.assets.port) + pathname),
       });

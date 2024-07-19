@@ -1,5 +1,6 @@
 export const OXYGEN_CACHE_URL = 'https://oxygen.myshopify.dev/cache';
 
+export const OXYGEN_CACHE_STATUS_HEADER = 'oxygen-cache-status';
 export const CACHE_CONTROL = 'cache-control';
 export const REAL_CACHE_CONTROL = 'real-cache-control';
 export const CACHE_PUT_DATE = 'cache-put-date';

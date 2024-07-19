@@ -271,7 +271,7 @@ function buildMiniflareOptions(
     // host: 'localhost',
     inspectorPort: 0,
     liveReload: false,
-    ...(isO2Verbose()
+    ...(mfOverwriteOptions.verbose || isO2Verbose()
       ? {verbose: true}
       : {
           verbose: false,

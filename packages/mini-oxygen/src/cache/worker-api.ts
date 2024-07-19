@@ -6,6 +6,7 @@ import {
   CACHE_PUT_DATE,
   type OxygenCacheMatchResponse,
   type OxygenCachePayload,
+  OXYGEN_CACHE_STATUS_HEADER,
 } from './common.js';
 
 export async function createOxygenCache(cacheName: string) {
@@ -104,7 +105,10 @@ export class OxygenCache implements Cache {
 
       return new Response(new Uint8Array(value), {
         status: cacheResponse.status ?? 200,
-        headers: [...cacheResponse.headers, ['oxygen-cache-status', status]],
+        headers: [
+          ...cacheResponse.headers,
+          [OXYGEN_CACHE_STATUS_HEADER, status],
+        ],
       });
     } catch (unknownError) {
       const error = unknownError as Error;
