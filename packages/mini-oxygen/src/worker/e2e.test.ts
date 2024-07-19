@@ -1,8 +1,9 @@
 import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {mkdir, writeFile, readFile, rm as remove} from 'node:fs/promises';
 import {temporaryDirectoryTask} from 'tempy';
 import {it, vi, describe, expect} from 'vitest';
-import {transformWithEsbuild} from 'vite';
+import esbuild from 'esbuild';
 import {buildAssetsUrl} from './assets.js';
 import {createMiniOxygen, type MiniOxygenOptions} from './index.js';
 import {findPort} from '../common/find-port.js';
@@ -186,7 +187,7 @@ describe('MiniOxygen Worker Runtime', () => {
           expect.objectContaining({
             stack: expect.stringMatching(
               // Doesn't show `doStuff` because it's minified
-              /Error: test\n\s+at \w .*at Object\.fetch/s,
+              /^Error: test$/,
             ),
           }),
         );
@@ -197,6 +198,60 @@ describe('MiniOxygen Worker Runtime', () => {
         spy.mockRestore();
       },
     );
+  });
+
+  describe('Oxygen Cache', () => {
+    it('applies polyfill', async () => {
+      await withFixtures(
+        async ({writeHandler}) => {
+          await writeHandler(
+            async () => {
+              const cache = await caches.open('test');
+              return new Response(cache.constructor.name);
+            },
+            {useOxygenCache: true},
+          );
+        },
+        async ({fetch}) => {
+          const response = await fetch('/test-cache');
+          // If the text is `Cache`, then it's using the native CF implementation
+          await expect(response.text()).resolves.toMatchObject('OxygenCache');
+        },
+      );
+    });
+
+    it('caches by key', async () => {
+      await withFixtures(
+        async ({writeHandler}) => {
+          await writeHandler(
+            async (req) => {
+              const cache = await caches.open('test');
+              const cacheKey = new Request(req.url);
+              const match = await cache.match(cacheKey);
+
+              if (match) return match;
+
+              await cache.put(
+                cacheKey,
+                Response.json(true, {
+                  headers: {'cache-control': 'public, max-age=10'},
+                }),
+              );
+
+              return Response.json(false);
+            },
+            {useOxygenCache: true},
+          );
+        },
+        async ({fetch}) => {
+          let response = await fetch('/test-cache');
+          await expect(response.json()).resolves.toEqual(false);
+
+          response = await fetch('/test-cache');
+          await expect(response.json()).resolves.toEqual(true);
+        },
+      );
+    });
   });
 });
 
@@ -213,7 +268,7 @@ type WithFixturesSetupParams = {
       env: Record<string, any>,
       executionContext: ExecutionContext,
     ) => Response | Promise<Response>,
-    options?: {sourcemap: boolean},
+    options?: {sourcemap?: boolean; useOxygenCache?: boolean},
   ) => Promise<void>;
 };
 
@@ -250,26 +305,44 @@ function withFixtures(
     const writeAsset: WriteFixture = (filepath, content) =>
       writeFixture(path.join(relativeDistClient, filepath), content);
 
+    const absoluteBundlePath = path.join(tmpDir, relativeWorkerEntry);
+    let unstableOxygenCache = false;
+
     const writeHandler = async (
       handler: Function,
-      {sourcemap = false} = {},
+      {sourcemap = false, useOxygenCache = false} = {},
     ) => {
       let code = `export default { fetch: ${handler.toString()} }`;
 
-      if (sourcemap) {
-        const result = await transformWithEsbuild(code, relativeWorkerEntry, {
-          minify: true,
-          sourcemap: true,
-        });
-
-        code = result.code;
-        await writeFixture(
-          relativeWorkerEntry + '.map',
-          JSON.stringify(result.map),
-        );
+      if (!sourcemap && !useOxygenCache) {
+        await writeFixture(relativeWorkerEntry, code);
+        return;
       }
 
-      await writeFixture(relativeWorkerEntry, code);
+      if (useOxygenCache) {
+        unstableOxygenCache = true;
+        code =
+          `import '${fileURLToPath(
+            new URL('../cache/polyfill.ts', import.meta.url),
+          ).replace('.ts', '.js')}';\n` + code;
+      }
+
+      await esbuild.build({
+        bundle: true,
+        format: 'esm',
+        minify: true,
+        sourcemap: sourcemap ? 'external' : false,
+        write: true,
+        outfile: absoluteBundlePath,
+        target: 'esnext',
+        keepNames: true, // Important to keep the class name OxygenCache
+        stdin: {
+          contents: code,
+          sourcefile: relativeWorkerEntry,
+          loader: 'ts',
+          resolveDir: '.',
+        },
+      });
     };
 
     const optionsFromSetup = await setup({
@@ -278,9 +351,10 @@ function withFixtures(
       writeHandler,
     });
 
-    const absoluteBundlePath = path.join(tmpDir, relativeWorkerEntry);
-
     const miniOxygenOptions = {
+      unstableOxygenCache,
+      requestHook: null,
+      sourceMapPath: path.join(tmpDir, relativeWorkerEntry + '.map'),
       assets: {
         directory: path.join(tmpDir, relativeDistClient),
         port: await findPort(1347),
@@ -299,8 +373,6 @@ function withFixtures(
           bindings: {...optionsFromSetup?.bindings},
         },
       ],
-      sourceMapPath: path.join(tmpDir, relativeWorkerEntry + '.map'),
-      requestHook: null,
     } satisfies MiniOxygenOptions;
 
     const miniOxygen = createMiniOxygen(miniOxygenOptions);
