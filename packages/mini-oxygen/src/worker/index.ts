@@ -29,7 +29,7 @@ import type {OnlyBindings, OnlyServices} from './utils.js';
 import {
   isCacheRequest,
   handleOutboundCacheRequest,
-  resetBindingStubs,
+  releaseNodeCacheResources,
 } from '../cache/node-outbound-handler.js';
 
 export {
@@ -185,7 +185,7 @@ export function createMiniOxygen({
               {requestHook, assets, unstableOxygenCache},
             ),
           )
-          .then(resetBindingStubs),
+          .then(releaseNodeCacheResources),
       );
 
       if (unstableOxygenCache) {
@@ -197,7 +197,7 @@ export function createMiniOxygen({
       assetsServer?.closeAllConnections();
       assetsServer?.close();
       await mf.dispose();
-      resetBindingStubs();
+      releaseNodeCacheResources();
       isDisposed = true;
     },
     get isDisposed() {

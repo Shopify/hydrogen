@@ -15,28 +15,6 @@ export async function createOxygenCache(cacheName: string) {
   return new OxygenCache(cacheName);
 }
 
-function notImplementedMessage(methodName: string) {
-  // Same message as native CF cache:
-  return `Failed to execute '${methodName}' on 'Cache': the method is not implemented.`;
-}
-
-async function cacheFetch(body: OxygenCachePayload) {
-  try {
-    const response = await fetch(OXYGEN_CACHE_URL, {
-      method: 'POST',
-      body: JSON.stringify(body),
-    });
-
-    if (!response.ok) throw new Error(response.statusText);
-
-    return response;
-  } catch (unknownError) {
-    const error = unknownError as Error;
-    error.message = `[o2:error:cache.${body.method}] ` + error.message;
-    console.error(error);
-  }
-}
-
 export class OxygenCache implements Cache {
   #cacheName: string;
 
@@ -147,5 +125,27 @@ export class OxygenCache implements Cache {
     });
 
     return cacheResponse ? await cacheResponse.json<boolean>() : false;
+  }
+}
+
+function notImplementedMessage(methodName: string) {
+  // Same message as native CF cache:
+  return `Failed to execute '${methodName}' on 'Cache': the method is not implemented.`;
+}
+
+async function cacheFetch(body: OxygenCachePayload) {
+  try {
+    const response = await fetch(OXYGEN_CACHE_URL, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) throw new Error(response.statusText);
+
+    return response;
+  } catch (unknownError) {
+    const error = unknownError as Error;
+    error.message = `[o2:error:cache.${body.method}] ` + error.message;
+    console.error(error);
   }
 }

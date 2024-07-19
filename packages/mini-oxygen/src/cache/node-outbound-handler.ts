@@ -14,10 +14,10 @@ export function isCacheRequest(request: Request) {
 type GlobalCaches = {open: (cacheName: string) => Promise<Cache>};
 type FetchResponse = InstanceType<typeof globalThis.Response>;
 
-// When Miniflare reloads, we need to recreate the stubs.
-const openedCachesMap = new Map<string, Cache>();
-export function resetBindingStubs() {
-  openedCachesMap.clear();
+// When Miniflare reloads, we need to reset these in-memory resources.
+const activeCacheInstances = new Map<string, Cache>();
+export function releaseNodeCacheResources() {
+  activeCacheInstances.clear();
 }
 
 export async function handleOutboundCacheRequest(
@@ -25,12 +25,12 @@ export async function handleOutboundCacheRequest(
   mf: Miniflare,
 ) {
   const body = (await request.json()) as OxygenCachePayload;
-  let cacheInstance = openedCachesMap.get(body.name);
+  let cacheInstance = activeCacheInstances.get(body.name);
 
   if (!cacheInstance) {
     const caches = (await mf.getCaches()) as unknown as GlobalCaches;
     cacheInstance = await caches.open(body.name);
-    openedCachesMap.set(body.name, cacheInstance);
+    activeCacheInstances.set(body.name, cacheInstance);
   }
 
   const cacheKey = new Request(
