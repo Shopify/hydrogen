@@ -73,12 +73,10 @@ export class OxygenCache implements Cache {
     headers.delete(REAL_CACHE_CONTROL);
     headers.delete(CACHE_PUT_DATE);
 
-    // TODO support tags
     await cacheFetch({
       name: this.#cacheName,
       method: 'put',
       key: request.url,
-      // tags,
       // options: getCacheOption(userCacheOptions),
       value: Object.values(new Uint8Array(await response.arrayBuffer())),
       headers: [...headers],
@@ -121,7 +119,7 @@ export class OxygenCache implements Cache {
       name: this.#cacheName,
       method: 'delete',
       key: request.url,
-      // tags,
+      headers: [...request.headers],
     });
 
     return cacheResponse ? await cacheResponse.json<boolean>() : false;

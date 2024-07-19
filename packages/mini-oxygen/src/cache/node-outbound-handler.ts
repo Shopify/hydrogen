@@ -16,8 +16,10 @@ type FetchResponse = InstanceType<typeof globalThis.Response>;
 
 // When Miniflare reloads, we need to reset these in-memory resources.
 const activeCacheInstances = new Map<string, Cache>();
+const cacheTagIndex = new Map<string, Set<string>>();
 export function releaseNodeCacheResources() {
   activeCacheInstances.clear();
+  cacheTagIndex.clear();
 }
 
 export async function handleOutboundCacheRequest(
@@ -33,11 +35,11 @@ export async function handleOutboundCacheRequest(
     activeCacheInstances.set(body.name, cacheInstance);
   }
 
-  const cacheKey = new Request(
-    `https://shopify.dev/?cache_name=${encodeURIComponent(
-      body.name,
-    )}&cache_key=${encodeURIComponent(body.key)}`,
-  ) as unknown as RequestInfo;
+  const cacheKeyUrl = `https://shopify.dev/?cache_name=${encodeURIComponent(
+    body.name,
+  )}&cache_key=${encodeURIComponent(body.key)}`;
+
+  const cacheKey = new Request(cacheKeyUrl) as unknown as RequestInfo;
 
   try {
     if (body.method === 'match') {
@@ -57,14 +59,28 @@ export async function handleOutboundCacheRequest(
         cacheResponse,
       );
     } else if (body.method === 'put') {
+      const headers = addSwrHeaders(body.headers);
+
       const cacheValue = new Response(new Uint8Array(body.value), {
-        headers: addSwrHeaders(body.headers),
+        headers: [...headers],
       }) as unknown as FetchResponse;
 
       await cacheInstance.put(cacheKey, cacheValue);
+
+      const cacheTags = headers.get('cache-tags')?.split(',');
+      if (cacheTags) {
+        indexKeyByTags(cacheKeyUrl, cacheTags);
+      }
+
       return new Response();
     } else if (body.method === 'delete') {
-      const isRemoved = await cacheInstance.delete(cacheKey);
+      const headers = new Headers(body.headers);
+      const cacheTags = headers.get('cache-tags')?.split(',');
+
+      const isRemoved = cacheTags
+        ? await deleteTaggedKeys(cacheInstance, cacheTags)
+        : await cacheInstance.delete(cacheKey);
+
       return Response.json(isRemoved);
     } else {
       throw new Error(`cache.${(body as any).method} is not implemented`);
@@ -73,4 +89,33 @@ export async function handleOutboundCacheRequest(
     console.error(error);
     return new Response((error as Error).message, {status: 500});
   }
+}
+
+function indexKeyByTags(keyUrl: string, tags: string[]) {
+  for (const tag of tags) {
+    const indexedKeys = cacheTagIndex.get(tag) ?? new Set();
+    indexedKeys.add(keyUrl);
+    cacheTagIndex.set(tag, indexedKeys);
+  }
+}
+
+async function deleteTaggedKeys(cacheInstance: Cache, tags: string[]) {
+  let hasRemovedSomethingAtAll = false;
+
+  for (const tag of tags) {
+    const indexedKeys = cacheTagIndex.get(tag);
+    if (indexedKeys) {
+      hasRemovedSomethingAtAll = indexedKeys.size > 0;
+
+      for (const keyUrl of indexedKeys) {
+        await cacheInstance.delete(
+          new Request(keyUrl) as unknown as RequestInfo,
+        );
+      }
+
+      indexedKeys.clear();
+    }
+  }
+
+  return hasRemovedSomethingAtAll;
 }

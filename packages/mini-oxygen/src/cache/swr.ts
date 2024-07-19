@@ -26,7 +26,7 @@ export function addSwrHeaders(originalHeaders: Array<[string, string]>) {
   headers.set(REAL_CACHE_CONTROL, cacheControlHeader);
   headers.set(CACHE_PUT_DATE, String(Date.now()));
 
-  return [...headers];
+  return headers;
 }
 
 export function isStale(response: Response) {

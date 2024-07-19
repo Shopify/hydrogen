@@ -12,6 +12,6 @@ export type OxygenCachePayload = {
   key: string;
 } & (
   | {method: 'match'}
-  | {method: 'delete'}
+  | {method: 'delete'; headers: Array<[string, string]>}
   | {method: 'put'; value: number[]; headers: Array<[string, string]>}
 );
