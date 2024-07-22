@@ -39,7 +39,7 @@ const data: ReferenceEntityTemplateSchema = {
   definitions: [
     {
       title: 'Props',
-      type: 'useOptimisticVariantGeneratedType',
+      type: 'UseOptimisticVariantGeneratedType',
       description: '',
     },
   ],
