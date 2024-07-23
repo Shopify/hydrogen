@@ -12,7 +12,7 @@ import {CartMain} from '~/components/CartMain';
 import {
   PredictiveSearchForm,
   PredictiveSearchResults,
-} from '~/components/Search';
+} from '~/components/PredictiveSearch';
 
 interface PageLayoutProps {
   cart: Promise<CartApiQueryFragment | null>;

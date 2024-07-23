@@ -55,7 +55,7 @@ type FetchSearchResultsReturn = {
     results: SearchQuery | null;
     totalResults: number;
   };
-  searchTerm: string;
+  term: string;
 };
 
 export const NO_PREDICTIVE_SEARCH_RESULTS: NormalizedPredictiveSearchResults = [
@@ -66,7 +66,7 @@ export const NO_PREDICTIVE_SEARCH_RESULTS: NormalizedPredictiveSearchResults = [
   {type: 'articles', items: []},
 ];
 
-export function SearchForm({searchTerm}: {searchTerm: string}) {
+export function SearchForm({term}: {term: string}) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   // focus the input when cmd+k is pressed
@@ -92,7 +92,7 @@ export function SearchForm({searchTerm}: {searchTerm: string}) {
   return (
     <Form method="get">
       <input
-        defaultValue={searchTerm}
+        defaultValue={term}
         name="q"
         placeholder="Search…"
         ref={inputRef}
@@ -106,9 +106,9 @@ export function SearchForm({searchTerm}: {searchTerm: string}) {
 
 export function SearchResults({
   results,
-  searchTerm,
+  term,
 }: Pick<FetchSearchResultsReturn['searchResults'], 'results'> & {
-  searchTerm: string;
+  term: string;
 }) {
   if (!results) {
     return null;
@@ -133,7 +133,7 @@ export function SearchResults({
               <SearchResultsProductsGrid
                 key="products"
                 products={productResults}
-                searchTerm={searchTerm}
+                term={term}
               />
             ) : null;
           }
@@ -156,8 +156,8 @@ export function SearchResults({
 
 function SearchResultsProductsGrid({
   products,
-  searchTerm,
-}: Pick<SearchQuery, 'products'> & {searchTerm: string}) {
+  term,
+}: Pick<SearchQuery, 'products'> & {term: string}) {
   return (
     <div className="search-result">
       <h2>Products</h2>
@@ -166,7 +166,7 @@ function SearchResultsProductsGrid({
           const ItemsMarkup = nodes.map((product) => {
             const trackingParams = applyTrackingParams(
               product,
-              `q=${encodeURIComponent(searchTerm)}`,
+              `q=${encodeURIComponent(term)}`,
             );
 
             return (
@@ -323,7 +323,7 @@ export function PredictiveSearchForm({
 }
 
 export function PredictiveSearchResults() {
-  const {results, totalResults, searchInputRef, searchTerm, state} =
+  const {results, totalResults, searchInputRef, term, state} =
     usePredictiveSearch();
 
   function goToSearchResult(event: React.MouseEvent<HTMLAnchorElement>) {
@@ -339,7 +339,7 @@ export function PredictiveSearchResults() {
   }
 
   if (!totalResults) {
-    return <NoPredictiveSearchResults searchTerm={searchTerm} />;
+    return <NoPredictiveSearchResults term={term} />;
   }
 
   return (
@@ -350,15 +350,15 @@ export function PredictiveSearchResults() {
             goToSearchResult={goToSearchResult}
             items={items}
             key={type}
-            searchTerm={searchTerm}
+            term={term}
             type={type}
           />
         ))}
       </div>
-      {searchTerm.current && (
-        <Link onClick={goToSearchResult} to={`/search?q=${searchTerm.current}`}>
+      {term.current && (
+        <Link onClick={goToSearchResult} to={`/search?q=${term.current}`}>
           <p>
-            View all results for <q>{searchTerm.current}</q>
+            View all results for <q>{term.current}</q>
             &nbsp; →
           </p>
         </Link>
@@ -368,16 +368,16 @@ export function PredictiveSearchResults() {
 }
 
 function NoPredictiveSearchResults({
-  searchTerm,
+  term,
 }: {
-  searchTerm: React.MutableRefObject<string>;
+  term: React.MutableRefObject<string>;
 }) {
-  if (!searchTerm.current) {
+  if (!term.current) {
     return null;
   }
   return (
     <p>
-      No results found for <q>{searchTerm.current}</q>
+      No results found for <q>{term.current}</q>
     </p>
   );
 }
@@ -385,19 +385,19 @@ function NoPredictiveSearchResults({
 type SearchResultTypeProps = {
   goToSearchResult: (event: React.MouseEvent<HTMLAnchorElement>) => void;
   items: NormalizedPredictiveSearchResultItem[];
-  searchTerm: UseSearchReturn['searchTerm'];
+  term: UseSearchReturn['term'];
   type: NormalizedPredictiveSearchResults[number]['type'];
 };
 
 function PredictiveSearchResult({
   goToSearchResult,
   items,
-  searchTerm,
+  term,
   type,
 }: SearchResultTypeProps) {
   const isSuggestions = type === 'queries';
   const categoryUrl = `/search?q=${
-    searchTerm.current
+    term.current
   }&type=${pluralToSingularSearchType(type)}`;
 
   return (
@@ -457,17 +457,17 @@ function SearchResultItem({goToSearchResult, item}: SearchResultItemProps) {
 
 type UseSearchReturn = NormalizedPredictiveSearch & {
   searchInputRef: React.MutableRefObject<HTMLInputElement | null>;
-  searchTerm: React.MutableRefObject<string>;
+  term: React.MutableRefObject<string>;
   state: ReturnType<typeof useFetcher<PredictiveSearchAPILoader>>['state'];
 };
 
 function usePredictiveSearch(): UseSearchReturn {
   const searchFetcher = useFetcher<FetchSearchResultsReturn>({key: 'search'});
-  const searchTerm = useRef<string>('');
+  const term = useRef<string>('');
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   if (searchFetcher?.state === 'loading') {
-    searchTerm.current = (searchFetcher.formData?.get('q') || '') as string;
+    term.current = (searchFetcher.formData?.get('q') || '') as string;
   }
 
   const search = (searchFetcher?.data?.searchResults || {
@@ -481,7 +481,7 @@ function usePredictiveSearch(): UseSearchReturn {
     searchInputRef.current = document.querySelector('input[type="search"]');
   }, []);
 
-  return {...search, searchInputRef, searchTerm, state: searchFetcher.state};
+  return {...search, searchInputRef, term, state: searchFetcher.state};
 }
 
 /**
