@@ -66,8 +66,8 @@ export default function SearchPage() {
         <SearchResults result={result} term={term}>
           {({articles, pages, products, term}) => (
             <div>
-              <SearchResults.Articles articles={articles} />
-              <SearchResults.Pages pages={pages} />
+              <SearchResults.Articles articles={articles} term={term} />
+              <SearchResults.Pages pages={pages} term={term} />
               <SearchResults.Products products={products} term={term} />
             </div>
           )}
