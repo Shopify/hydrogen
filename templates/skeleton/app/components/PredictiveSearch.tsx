@@ -7,7 +7,7 @@ import {
 } from '@remix-run/react';
 import {Image, Money, Pagination} from '@shopify/hydrogen';
 import React, {useRef, useEffect} from 'react';
-import {applyTrackingParams} from '~/lib/search';
+import {urlWithTrackingParams} from '~/lib/search';
 
 import type {
   PredictiveProductFragment,
@@ -66,209 +66,14 @@ export const NO_PREDICTIVE_SEARCH_RESULTS: NormalizedPredictiveSearchResults = [
   {type: 'articles', items: []},
 ];
 
-export function SearchForm({term}: {term: string}) {
-  const inputRef = useRef<HTMLInputElement | null>(null);
-
-  // focus the input when cmd+k is pressed
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'k' && event.metaKey) {
-        event.preventDefault();
-        inputRef.current?.focus();
-      }
-
-      if (event.key === 'Escape') {
-        inputRef.current?.blur();
-      }
-    }
-
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
-
-  return (
-    <Form method="get">
-      <input
-        defaultValue={term}
-        name="q"
-        placeholder="Search…"
-        ref={inputRef}
-        type="search"
-      />
-      &nbsp;
-      <button type="submit">Search</button>
-    </Form>
-  );
-}
-
-export function SearchResults({
-  results,
-  term,
-}: Pick<FetchSearchResultsReturn['searchResults'], 'results'> & {
-  term: string;
-}) {
-  if (!results) {
-    return null;
-  }
-  const keys = Object.keys(results) as Array<keyof typeof results>;
-  return (
-    <div>
-      {results &&
-        keys.map((type) => {
-          const resourceResults = results[type];
-
-          if (resourceResults.nodes[0]?.__typename === 'Page') {
-            const pageResults = resourceResults as SearchQuery['pages'];
-            return resourceResults.nodes.length ? (
-              <SearchResultPageGrid key="pages" pages={pageResults} />
-            ) : null;
-          }
-
-          if (resourceResults.nodes[0]?.__typename === 'Product') {
-            const productResults = resourceResults as SearchQuery['products'];
-            return resourceResults.nodes.length ? (
-              <SearchResultsProductsGrid
-                key="products"
-                products={productResults}
-                term={term}
-              />
-            ) : null;
-          }
-
-          if (resourceResults.nodes[0]?.__typename === 'Article') {
-            const articleResults = resourceResults as SearchQuery['articles'];
-            return resourceResults.nodes.length ? (
-              <SearchResultArticleGrid
-                key="articles"
-                articles={articleResults}
-              />
-            ) : null;
-          }
-
-          return null;
-        })}
-    </div>
-  );
-}
-
-function SearchResultsProductsGrid({
-  products,
-  term,
-}: Pick<SearchQuery, 'products'> & {term: string}) {
-  return (
-    <div className="search-result">
-      <h2>Products</h2>
-      <Pagination connection={products}>
-        {({nodes, isLoading, NextLink, PreviousLink}) => {
-          const ItemsMarkup = nodes.map((product) => {
-            const trackingParams = applyTrackingParams(
-              product,
-              `q=${encodeURIComponent(term)}`,
-            );
-
-            return (
-              <div className="search-results-item" key={product.id}>
-                <Link
-                  prefetch="intent"
-                  to={`/products/${product.handle}${trackingParams}`}
-                >
-                  {product.variants.nodes[0].image && (
-                    <Image
-                      data={product.variants.nodes[0].image}
-                      alt={product.title}
-                      width={50}
-                    />
-                  )}
-                  <div>
-                    <p>{product.title}</p>
-                    <small>
-                      <Money data={product.variants.nodes[0].price} />
-                    </small>
-                  </div>
-                </Link>
-              </div>
-            );
-          });
-          return (
-            <div>
-              <div>
-                <PreviousLink>
-                  {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
-                </PreviousLink>
-              </div>
-              <div>
-                {ItemsMarkup}
-                <br />
-              </div>
-              <div>
-                <NextLink>
-                  {isLoading ? 'Loading...' : <span>Load more ↓</span>}
-                </NextLink>
-              </div>
-            </div>
-          );
-        }}
-      </Pagination>
-      <br />
-    </div>
-  );
-}
-
-function SearchResultPageGrid({pages}: Pick<SearchQuery, 'pages'>) {
-  return (
-    <div className="search-result">
-      <h2>Pages</h2>
-      <div>
-        {pages?.nodes?.map((page) => (
-          <div className="search-results-item" key={page.id}>
-            <Link prefetch="intent" to={`/pages/${page.handle}`}>
-              {page.title}
-            </Link>
-          </div>
-        ))}
-      </div>
-      <br />
-    </div>
-  );
-}
-
-function SearchResultArticleGrid({articles}: Pick<SearchQuery, 'articles'>) {
-  return (
-    <div className="search-result">
-      <h2>Articles</h2>
-      <div>
-        {articles?.nodes?.map((article) => (
-          <div className="search-results-item" key={article.id}>
-            <Link prefetch="intent" to={`/blogs/${article.handle}`}>
-              {article.title}
-            </Link>
-          </div>
-        ))}
-      </div>
-      <br />
-    </div>
-  );
-}
-
-export function NoSearchResults() {
-  return <p>No results, try a different search.</p>;
-}
-
-type ChildrenRenderProps = {
-  fetchResults: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  fetcher: ReturnType<typeof useFetcher<PredictiveSearchAPILoader>>;
-  inputRef: React.MutableRefObject<HTMLInputElement | null>;
-};
-
-type SearchFromProps = {
-  action?: FormProps['action'];
-  className?: string;
-  children: (passedProps: ChildrenRenderProps) => React.ReactNode;
-  [key: string]: unknown;
-};
+type PredictiveSearchFormProps = {
+  action?: string;
+  children: (args: {
+    fetchResults: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    inputRef: React.MutableRefObject<HTMLInputElement | null>;
+    fetcher: ReturnType<typeof useFetcher>;
+  }) => React.ReactNode;
+} & FormProps;
 
 /**
  *  Search form component that sends search requests to the `/search` route
@@ -278,7 +83,7 @@ export function PredictiveSearchForm({
   children,
   className = 'predictive-search-form',
   ...props
-}: SearchFromProps) {
+}: PredictiveSearchFormProps) {
   const params = useParams();
   const fetcher = useFetcher<PredictiveSearchAPILoader>({
     key: 'search',
