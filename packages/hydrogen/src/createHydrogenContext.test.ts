@@ -222,7 +222,7 @@ describe('createHydrogenContext', () => {
     });
 
     describe('customerAccount return based on options', () => {
-      it('returns customerAccount client if session exist and useStorefrontAPI is not set', async () => {
+      it('returns customerAccount client if session exist and useLegacy is not set', async () => {
         const hydrogenContext = createHydrogenContext(defaultOptions);
 
         expect(hydrogenContext).toHaveProperty('customerAccount');
@@ -231,11 +231,11 @@ describe('createHydrogenContext', () => {
         ).toEqualTypeOf<CustomerAccount>();
       });
 
-      it('returns customerAccount client if session exist and useStorefrontAPI is false', async () => {
+      it('returns customerAccount client if session exist and useLegacy is false', async () => {
         const hydrogenContext = createHydrogenContext({
           ...defaultOptions,
           customerAccount: {
-            useStorefrontAPI: false,
+            useLegacy: false,
           },
         });
 
@@ -245,11 +245,11 @@ describe('createHydrogenContext', () => {
         ).toEqualTypeOf<CustomerAccount>();
       });
 
-      it('does not returns customerAccount client if session exist and useStorefrontAPI is true', async () => {
+      it('does not returns customerAccount client if session exist and useLegacy is true', async () => {
         const hydrogenContext = createHydrogenContext({
           ...defaultOptions,
           customerAccount: {
-            useStorefrontAPI: true,
+            useLegacy: true,
           },
           session: undefined,
         });

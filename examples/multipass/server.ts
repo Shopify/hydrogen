@@ -37,7 +37,7 @@ export default {
         /***********************************************/
         /**********  EXAMPLE UPDATE STARTS  ************/
         customerAccount: {
-          useStorefrontAPI: true,
+          useLegacy: true,
         },
         /**********   EXAMPLE UPDATE END   ************/
         /***********************************************/

@@ -46,7 +46,7 @@ export type HydrogenContextOptions<
     contentType?: CreateStorefrontClientOptions<TI18n>['contentType'];
   };
   customerAccount?: {
-    useStorefrontAPI?: TUseStorefrontForCustomerAccount;
+    useLegacy?: TUseStorefrontForCustomerAccount;
     apiVersion?: CustomerAccountOptions['customerApiVersion'];
     authUrl?: CustomerAccountOptions['authUrl'];
     customAuthStatusHandler?: CustomerAccountOptions['customAuthStatusHandler'];
@@ -170,7 +170,7 @@ export function createHydrogenContext<
 
   let customerAccount: CustomerAccount | undefined;
   const useStorefrontForCustomerAccount =
-    customerAccountOptions?.useStorefrontAPI || false;
+    customerAccountOptions?.useLegacy || false;
   if (session && !useStorefrontForCustomerAccount) {
     /**
      * Create a client for Customer Account API.
@@ -194,7 +194,7 @@ export function createHydrogenContext<
     });
   } else if (!session && !useStorefrontForCustomerAccount) {
     console.warn(
-      `[h2:warn:createHydrogenContext] session is required to use Customer Account API. To disabled the usage, pass in {customerAccount: {useStorefrontAPI: true}}`,
+      `[h2:warn:createHydrogenContext] session is required to use Customer Account API. To disabled the usage, pass in {customerAccount: {useLegacy: true}}`,
     );
   }
 
