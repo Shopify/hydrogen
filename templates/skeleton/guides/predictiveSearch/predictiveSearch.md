@@ -13,11 +13,10 @@ This integration uses the storefront API (SFAPI) [predictiveSearch]( https://sho
 
 ## Components
 
-| File                                                                                          | Description                                                                                   |
-| --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| [`app/components/SearchFormPredictive.tsx`](../../app/components/SearchFormPredictive.tsx) | A fully customizable form component configured to make form `POST` requests to the `/search` route.
-
-| [`app/components/SearchResultsPredictive.tsx`](../../app/components/SearchResultsPredictive.tsx) | A fully customizable search results wrapper, that provides compound components to render `articles`, `pages`, `products`, `collections` and `queries`. |
+|File  | Description   |
+|---|---|
+| [`app/components/SearchFormPredictive.tsx`](../../app/components/SearchFormPredictive.tsx) | A fully customizable form component configured to make form `POST` requests to the `/search` route. |
+| [`app/components/SearchResultsPredictive.tsx`](../../app/components/SearchResultsPredictive.tsx) |  A fully customizable search results wrapper, that provides compound components to render `articles`, `pages`, `products`, `collections` and `queries`. |
 
 ## Instructions
 
