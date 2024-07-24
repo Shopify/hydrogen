@@ -17,45 +17,8 @@ export const meta: MetaFunction = () => {
  * requested by the SearchPredictiveForm component
  */
 export async function action({request, context}: ActionFunctionArgs) {
-  const {storefront} = context;
-  const formData = await request.formData();
-  const term = String(formData.get('q') || '');
-  const limit = Number(formData.get('limit') || 10);
-
   try {
-    if (!term) {
-      throw new Error('No search term provided');
-    }
-
-    // Predictively search articles, collections, pages, products, and queries (suggestions)
-    const {predictiveSearch: items, errors} = await storefront.query(
-      PREDICTIVE_SEARCH_QUERY,
-      {
-        variables: {
-          // customize search options as needed
-          limit,
-          limitScope: 'EACH',
-          term,
-        },
-      },
-    );
-
-    if (errors) {
-      throw new Error(
-        `Shopify API errors: ${errors.map(({message}) => message).join(', ')}`,
-      );
-    }
-
-    if (!items) {
-      throw new Error('No predictive search data returned');
-    }
-
-    const total = Object.values(items).reduce(
-      (acc, {length}) => acc + length,
-      0,
-    );
-
-    return json({term, result: {items, total}, error: null});
+    return await predictiveSeach({request, context});
   } catch (error) {
     let message;
     if (error instanceof Error) {
@@ -65,7 +28,7 @@ export async function action({request, context}: ActionFunctionArgs) {
     } else {
       message = 'An unknown error occurred';
     }
-    return json({term, result: null, error: message});
+    return json({result: null, error: message});
   }
 }
 
@@ -74,30 +37,19 @@ export async function action({request, context}: ActionFunctionArgs) {
  * requested by the SearchForm component and /search route visits
  */
 export async function loader({request, context}: LoaderFunctionArgs) {
-  const {storefront} = context;
-  const url = new URL(request.url);
-  const searchParams = new URLSearchParams(url.search);
-  const variables = getPaginationVariables(request, {pageBy: 8});
-  const term = String(searchParams.get('q') || '');
-
-  // Search articles, pages, and products for the `q` term
-  const {errors, ...items} = await storefront.query(SEARCH_QUERY, {
-    variables: {...variables, term},
-  });
-
-  if (!items) {
-    throw new Error('No search data returned from Shopify API');
+  try {
+    return await search({request, context});
+  } catch (error) {
+    let message;
+    if (error instanceof Error) {
+      message = error.message;
+    } else if (typeof error === 'string') {
+      message = error;
+    } else {
+      message = 'An unknown error occurred';
+    }
+    return json({term: '', result: null, error: message});
   }
-
-  if (errors) {
-    throw new Error(errors[0].message);
-  }
-
-  const total = Object.values(items).reduce((acc, {nodes}) => {
-    return acc + nodes.length;
-  }, 0);
-
-  return json({term, result: {total, items}});
 }
 
 /**
@@ -109,8 +61,8 @@ export default function SearchPage() {
   return (
     <div className="search">
       <h1>Search</h1>
-      <SearchForm term={term}>
-        {({inputRef, term}) => (
+      <SearchForm>
+        {({inputRef}) => (
           <>
             <input
               defaultValue={term}
@@ -124,15 +76,15 @@ export default function SearchPage() {
           </>
         )}
       </SearchForm>
-      {!term || !result.total ? (
+      {!term || !result?.total ? (
         <SearchResults.Empty />
       ) : (
         <SearchResults result={result} term={term}>
           {({articles, pages, products, term}) => (
             <div>
-              <SearchResults.Articles articles={articles} term={term} />
-              <SearchResults.Pages pages={pages} term={term} />
               <SearchResults.Products products={products} term={term} />
+              <SearchResults.Pages pages={pages} term={term} />
+              <SearchResults.Articles articles={articles} term={term} />
             </div>
           )}
         </SearchResults>
@@ -273,6 +225,37 @@ export const SEARCH_QUERY = `#graphql
   ${PAGE_INFO_FRAGMENT}
 ` as const;
 
+
+/**
+ * Regular search fetcher
+ */
+async function search({request, context}: Pick<LoaderFunctionArgs, 'request' | 'context'>) {
+  const {storefront} = context;
+  const url = new URL(request.url);
+  const searchParams = new URLSearchParams(url.search);
+  const variables = getPaginationVariables(request, {pageBy: 8});
+  const term = String(searchParams.get('q') || '');
+
+  // Search articles, pages, and products for the `q` term
+  const {errors, ...items} = await storefront.query(SEARCH_QUERY, {
+    variables: {...variables, term},
+  });
+
+  if (!items) {
+    throw new Error('No search data returned from Shopify API');
+  }
+
+  if (errors) {
+    throw new Error(errors[0].message);
+  }
+
+  const total = Object.values(items).reduce((acc, {nodes}) => {
+    return acc + nodes.length;
+  }, 0);
+
+  return json({term, result: {total, items}});
+}
+
 /**
  * Predictive search query and fragments
  * (adjust as needed)
@@ -395,3 +378,45 @@ const PREDICTIVE_SEARCH_QUERY = `#graphql
   ${PREDICTIVE_SEARCH_PRODUCT_FRAGMENT}
   ${PREDICTIVE_SEARCH_QUERY_FRAGMENT}
 ` as const;
+
+/**
+ * Predictive search fetcher
+ */
+async function predictiveSeach({request, context}: Pick<ActionFunctionArgs, 'request' | 'context'>) {
+  const {storefront} = context;
+  const formData = await request.formData();
+  const term = String(formData.get('q') || '');
+
+  const limit = Number(formData.get('limit') || 10);
+
+  // Predictively search articles, collections, pages, products, and queries (suggestions)
+  const {predictiveSearch: items, errors} = await storefront.query(
+    PREDICTIVE_SEARCH_QUERY,
+    {
+      variables: {
+        // customize search options as needed
+        limit,
+        limitScope: 'EACH',
+        term,
+      },
+    },
+  );
+
+  if (errors) {
+    throw new Error(
+      `Shopify API errors: ${errors.map(({message}) => message).join(', ')}`,
+    );
+  }
+
+  if (!items) {
+    throw new Error('No predictive search data returned');
+  }
+
+  const total = Object.values(items).reduce(
+    (acc, {length}) => acc + length,
+    0,
+  );
+
+  return json({term, result: {items, total}, error: null});
+}
+

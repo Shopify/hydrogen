@@ -45,7 +45,6 @@ export function SearchResultsPredictive({
    * Utility that resets the search input and closes the search aside
    */
   function closeSearch() {
-    console.log('closeSearch');
     resetInput();
     aside.close();
   }
@@ -212,7 +211,7 @@ SearchResultsPredictive.Products = function ({
           const image = product?.variants?.nodes?.[0].image;
           return (
             <li className="predictive-search-result-item" key={product.id}>
-              <Link to={productUrl}>
+              <Link to={productUrl} onClick={closeSearch}>
                 {image && (
                   <Image
                     alt={image.altText ?? ''}
@@ -224,14 +223,13 @@ SearchResultsPredictive.Products = function ({
                 <div>
                   <p>{product.title}</p>
                   <small>
-                    {product?.variants?.nodes?.[0].price && (
-                      <Money
-                        data={product.variants.nodes[0].price}
-                      />
-                    )}
+                  {product?.variants?.nodes?.[0].price && (
+                    <Money
+                      data={product.variants.nodes[0].price}
+                    />
+                  )}
                   </small>
                 </div>
-
               </Link>
             </li>
           );
@@ -335,7 +333,9 @@ function usePredictiveSearch() {
     inputRef.current = document.querySelector('input[type="search"]');
   }, []);
 
-  const { items, total } = (fetcher?.data?.result || defaultResult) as PredictiveSearchResult
+  const { items, total } = !term.current
+    ? defaultResult // clear results when the search term is empty
+    : (fetcher?.data?.result || defaultResult) as PredictiveSearchResult
 
   return { items, total, inputRef, term, fetcher };
 }

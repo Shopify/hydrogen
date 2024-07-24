@@ -169,8 +169,6 @@ export function ErrorBoundary() {
   const error = useRouteError();
   let errorMessage = 'Unknown error';
   let errorStatus = 500;
-  debugger;
-  console.error('Route error:', error);
 
   if (isRouteErrorResponse(error)) {
     errorMessage = error?.data?.message ?? error.data;

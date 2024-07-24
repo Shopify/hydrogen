@@ -1,5 +1,49 @@
 import type {Maybe} from '@shopify/hydrogen/storefront-api-types';
 
+
+/**
+ * Predictive search fetcher
+ */
+async function predictiveSeach({term, request, context}: Pick<ActionFunctionArgs, 'request' | 'context'> & {term: string}) {
+  const {storefront} = context;
+  const formData = await request.formData();
+  const limit = Number(formData.get('limit') || 10);
+
+  if (!term) {
+    throw new Error('No search term provided');
+  }
+
+  // Predictively search articles, collections, pages, products, and queries (suggestions)
+  const {predictiveSearch: items, errors} = await storefront.query(
+    PREDICTIVE_SEARCH_QUERY,
+    {
+      variables: {
+        // customize search options as needed
+        limit,
+        limitScope: 'EACH',
+        term,
+      },
+    },
+  );
+
+  if (errors) {
+    throw new Error(
+      `Shopify API errors: ${errors.map(({message}) => message).join(', ')}`,
+    );
+  }
+
+  if (!items) {
+    throw new Error('No predictive search data returned');
+  }
+
+  const total = Object.values(items).reduce(
+    (acc, {length}) => acc + length,
+    0,
+  );
+
+  return json({term, result: {items, total}, error: null});
+}
+
 /**
  * A utility function that appends tracking parameters to a URL. Tracking parameters are
  * used internally by shopify to enhance search results and admin dashboards.

@@ -1,6 +1,7 @@
 import {useFetcher, useNavigate, type FormProps} from '@remix-run/react';
 import React, {useRef, useEffect} from 'react';
 import type {action as predictiveSearchAction} from '~/routes/search';
+import { useAside } from './Aside';
 
 type SearchFormPredictiveChildren = (args: {
   fetchResults: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -24,6 +25,7 @@ export function SearchFormPredictive({
   const fetcher = useFetcher<typeof predictiveSearchAction>({key: 'search'});
   const inputRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
+  const aside = useAside();
 
   /** Reset the input value and blur the input */
   function resetInput(event: React.FormEvent<HTMLFormElement>) {
@@ -41,6 +43,7 @@ export function SearchFormPredictive({
       ? `/search?q=${inputRef.current.value}`
       : `/search`;
     navigate(searchUrl);
+    aside.close();
     return;
   }
 

@@ -4,9 +4,7 @@ import {useRef, useEffect} from 'react';
 type SearchFormProps = Omit<FormProps, 'children'> & {
   children: (args: {
     inputRef: React.RefObject<HTMLInputElement>;
-    term: string;
   }) => React.ReactNode;
-  term: string;
 };
 
 /**
@@ -17,8 +15,8 @@ type SearchFormProps = Omit<FormProps, 'children'> & {
  * @returns The search form
  * @example
  * ```tsx
- * <SearchForm term={term}>
- *  {({inputRef, term}) => (
+ * <SearchForm>
+ *  {({inputRef}) => (
  *    <>
  *      <input
  *        ref={inputRef}
@@ -32,7 +30,7 @@ type SearchFormProps = Omit<FormProps, 'children'> & {
  *  )}
  *  </SearchForm>
  */
-export function SearchForm({children, term, ...props}: SearchFormProps) {
+export function SearchForm({children, ...props}: SearchFormProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   useFocusOnCmdK({inputRef});
@@ -43,7 +41,7 @@ export function SearchForm({children, term, ...props}: SearchFormProps) {
 
   return (
     <Form method="get" {...props}>
-      {children({inputRef, term})}
+      {children({inputRef})}
     </Form>
   );
 }
