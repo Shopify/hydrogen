@@ -5,7 +5,7 @@ import {urlWithTrackingParams} from '~/lib/search';
 import type {loader as searchLoader} from '~/routes/search';
 
 type SearchLoader = SerializeFrom<typeof searchLoader>;
-type SearchResult = SearchLoader['result'];
+type SearchResult = NonNullable<SearchLoader['result']>;
 type SearchItems = SearchResult['items'];
 
 type SearchResultsProps = SearchLoader & {
@@ -20,7 +20,7 @@ export function SearchResults({result, term, children}: SearchResultsProps) {
   return children({...result.items, term});
 }
 
-SearchResults.Articles = function SearchResultArticleGrid({
+SearchResults.Articles = function({
   articles,
   term,
 }: {
@@ -54,7 +54,7 @@ SearchResults.Articles = function SearchResultArticleGrid({
   );
 };
 
-SearchResults.Pages = function SearchResultPageGrid({
+SearchResults.Pages = function({
   pages,
   term,
 }: {
@@ -88,7 +88,7 @@ SearchResults.Pages = function SearchResultPageGrid({
   );
 };
 
-SearchResults.Products = function SearchResultsProductsGrid({
+SearchResults.Products = function({
   products,
   term,
 }: Pick<SearchItems, 'products'> & {term: string}) {
@@ -151,6 +151,6 @@ SearchResults.Products = function SearchResultsProductsGrid({
   );
 };
 
-SearchResults.Empty = function NoSearchResults() {
+SearchResults.Empty = function() {
   return <p>No results, try a different search.</p>;
 };
