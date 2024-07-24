@@ -1,10 +1,8 @@
 import {Link} from '@remix-run/react';
-import {Pagination, Image, Money} from '@shopify/hydrogen';
-import type {
-  CollectionQuery,
-  ProductItemFragment,
-} from 'storefrontapi.generated';
+import {Image, Money} from '@shopify/hydrogen';
+import type {ProductItemFragment} from 'storefrontapi.generated';
 import {useVariantUrl} from '~/lib/variants';
+import {PaginatedResourceSection} from '~/components/sections/PaginatedResourceSection';
 
 export function CollectionTemplate({
   title,
@@ -14,43 +12,25 @@ export function CollectionTemplate({
   title: string;
   description?: string;
   products: React.ComponentProps<
-    typeof Pagination<ProductItemFragment>
+    typeof PaginatedResourceSection<ProductItemFragment>
   >['connection'];
 }) {
   return (
     <div className="collection">
       <h1>{title}</h1>
       {description && <p className="collection-description">{description}</p>}
-      <Pagination connection={products}>
-        {({nodes, isLoading, PreviousLink, NextLink}) => (
-          <>
-            <PreviousLink>
-              {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
-            </PreviousLink>
-            <ProductsGrid products={nodes} />
-            <br />
-            <NextLink>
-              {isLoading ? 'Loading...' : <span>Load more ↓</span>}
-            </NextLink>
-          </>
-        )}
-      </Pagination>
-    </div>
-  );
-}
-
-function ProductsGrid({products}: {products: ProductItemFragment[]}) {
-  return (
-    <div className="products-grid">
-      {products.map((product, index) => {
-        return (
+      <PaginatedResourceSection
+        connection={products}
+        resourcesClassName="products-grid"
+      >
+        {({node: product, index}) => (
           <ProductItem
             key={product.id}
             product={product}
             loading={index < 8 ? 'eager' : undefined}
           />
-        );
-      })}
+        )}
+      </PaginatedResourceSection>
     </div>
   );
 }
