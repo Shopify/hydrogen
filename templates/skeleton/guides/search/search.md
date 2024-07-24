@@ -8,18 +8,14 @@ endpoint to retrieve search results based on a search term.
 
 ## Component Architecture
 
-[[IMAGE GOES HERE]]
+![alt text](./search.jpg)
 
 ## Components
-
-This folder contains the minimal set of files needed to showcase the implementation.
-Files that aren’t included by default with Hydrogen and that you’ll need to
-create are labeled with 🆕.
 
 | File                                                                                          | Description                                                                                   |
 | --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | [`app/components/SearchForm.tsx`](app/components/SearchForm.tsx) | A fully customizable
-form component configured to make form `GET` requests to the `/search` route.
+form component configured to make (server-side) form `GET` requests to the `/search` route.
 
 | [`app/components/SearchResults.tsx`](app/components/SearchResults.tsx) | A fully customizable
 search results wrapper, that provides compound components to render `articles`, `pages` and `products`.
@@ -293,8 +289,10 @@ const term = String(searchParams.get('query') || '');
 
 ### How to customize the way the results look?
 
-Simply go to `/app/components/SearchResults` and look for the compound component for any
-give results type. e.g change how page results look
+Simply go to `/app/components/SearchResults.txx` and look for the compound component you
+want to modify.
+
+For example, let's render articles in a horizontal flex container
 
 ```diff
 SearchResults.Pages = function({
@@ -330,8 +328,3 @@ SearchResults.Pages = function({
   );
 };
 ```
-
-And that's it. A simple step by step guide explaining how Hydrogen's `route/search` works.
-
-
-
