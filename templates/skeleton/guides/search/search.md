@@ -6,7 +6,7 @@ implement a traditional search flow.
 This integration uses the storefront API (SFAPI) [search]( https://shopify.dev/docs/api/storefront/latest/queries/search)
 endpoint to retrieve search results based on a search term.
 
-## Component Architecture
+## Components Architecture
 
 ![alt text](./search.jpg)
 
