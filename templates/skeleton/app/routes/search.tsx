@@ -1,4 +1,8 @@
-import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {
+  json,
+  type LoaderFunctionArgs,
+  type ActionFunctionArgs,
+} from '@shopify/remix-oxygen';
 import {useLoaderData, type MetaFunction} from '@remix-run/react';
 import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {SearchForm} from '~/components/SearchForm';
@@ -8,6 +12,67 @@ export const meta: MetaFunction = () => {
   return [{title: `Hydrogen | Search`}];
 };
 
+/**
+ * Handles predictive search POST requests
+ * requested by the SearchPredictiveForm component
+ */
+export async function action({request, context}: ActionFunctionArgs) {
+  const {storefront} = context;
+  const formData = await request.formData();
+  const term = String(formData.get('q') || '');
+  const limit = Number(formData.get('limit') || 10);
+
+  try {
+    if (!term) {
+      throw new Error('No search term provided');
+    }
+
+    // Predictively search articles, collections, pages, products, and queries (suggestions)
+    const {predictiveSearch: items, errors} = await storefront.query(
+      PREDICTIVE_SEARCH_QUERY,
+      {
+        variables: {
+          // customize search options as needed
+          limit,
+          limitScope: 'EACH',
+          term,
+        },
+      },
+    );
+
+    if (errors) {
+      throw new Error(
+        `Shopify API errors: ${errors.map(({message}) => message).join(', ')}`,
+      );
+    }
+
+    if (!items) {
+      throw new Error('No predictive search data returned');
+    }
+
+    const total = Object.values(items).reduce(
+      (acc, {length}) => acc + length,
+      0,
+    );
+
+    return json({term, result: {items, total}, error: null});
+  } catch (error) {
+    let message;
+    if (error instanceof Error) {
+      message = error.message;
+    } else if (typeof error === 'string') {
+      message = error;
+    } else {
+      message = 'An unknown error occurred';
+    }
+    return json({term, result: null, error: message});
+  }
+}
+
+/**
+ * Handles regular search GET requests
+ * requested by the SearchForm component and /search route visits
+ */
 export async function loader({request, context}: LoaderFunctionArgs) {
   const {storefront} = context;
   const url = new URL(request.url);
@@ -35,6 +100,9 @@ export async function loader({request, context}: LoaderFunctionArgs) {
   return json({term, result: {total, items}});
 }
 
+/**
+ * Renders the /search route
+ */
 export default function SearchPage() {
   const {term, result} = useLoaderData<typeof loader>();
 
@@ -74,6 +142,10 @@ export default function SearchPage() {
   );
 }
 
+/**
+ * Regular search query and fragments
+ * (adjust as needed)
+ */
 const SEARCH_PRODUCT_FRAGMENT = `#graphql
   fragment SearchProduct on Product {
     __typename
@@ -199,4 +271,127 @@ export const SEARCH_QUERY = `#graphql
   ${SEARCH_PAGE_FRAGMENT}
   ${SEARCH_ARTICLE_FRAGMENT}
   ${PAGE_INFO_FRAGMENT}
+` as const;
+
+/**
+ * Predictive search query and fragments
+ * (adjust as needed)
+ */
+const PREDICTIVE_SEARCH_ARTICLE_FRAGMENT = `#graphql
+  fragment PredictiveArticle on Article {
+    __typename
+    id
+    title
+    handle
+    blog {
+      handle
+    }
+    image {
+      url
+      altText
+      width
+      height
+    }
+    trackingParameters
+  }
+` as const;
+
+const PREDICTIVE_SEARCH_COLLECTION_FRAGMENT = `#graphql
+  fragment PredictiveCollection on Collection {
+    __typename
+    id
+    title
+    handle
+    image {
+      url
+      altText
+      width
+      height
+    }
+    trackingParameters
+  }
+` as const;
+
+const PREDICTIVE_SEARCH_PAGE_FRAGMENT = `#graphql
+  fragment PredictivePage on Page {
+    __typename
+    id
+    title
+    handle
+    trackingParameters
+  }
+` as const;
+
+const PREDICTIVE_SEARCH_PRODUCT_FRAGMENT = `#graphql
+  fragment PredictiveProduct on Product {
+    __typename
+    id
+    title
+    handle
+    trackingParameters
+    variants(first: 1) {
+      nodes {
+        id
+        image {
+          url
+          altText
+          width
+          height
+        }
+        price {
+          amount
+          currencyCode
+        }
+      }
+    }
+  }
+` as const;
+
+const PREDICTIVE_SEARCH_QUERY_FRAGMENT = `#graphql
+  fragment PredictiveQuery on SearchQuerySuggestion {
+    __typename
+    text
+    styledText
+    trackingParameters
+  }
+` as const;
+
+// NOTE: https://shopify.dev/docs/api/storefront/latest/queries/predictiveSearch
+const PREDICTIVE_SEARCH_QUERY = `#graphql
+  query predictiveSearch(
+    $country: CountryCode
+    $language: LanguageCode
+    $limit: Int!
+    $limitScope: PredictiveSearchLimitScope!
+    $term: String!
+    $types: [PredictiveSearchType!]
+  ) @inContext(country: $country, language: $language) {
+    predictiveSearch(
+      limit: $limit,
+      limitScope: $limitScope,
+      query: $term,
+      types: $types,
+    ) {
+      articles {
+        ...PredictiveArticle
+      }
+      collections {
+        ...PredictiveCollection
+      }
+      pages {
+        ...PredictivePage
+      }
+      products {
+        ...PredictiveProduct
+      }
+      queries {
+        ...PredictiveQuery
+      }
+    }
+  }
+  ${PREDICTIVE_SEARCH_ARTICLE_FRAGMENT}
+  ${PREDICTIVE_SEARCH_COLLECTION_FRAGMENT}
+  ${PREDICTIVE_SEARCH_PAGE_FRAGMENT}
+  ${PREDICTIVE_SEARCH_PRODUCT_FRAGMENT}
+  ${PREDICTIVE_SEARCH_QUERY_FRAGMENT}
 ` as const;

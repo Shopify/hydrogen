@@ -1,16 +1,37 @@
 import {Form, type FormProps} from '@remix-run/react';
 import {useRef, useEffect} from 'react';
 
-type ChildrenFunction = (args: {
-  inputRef: React.RefObject<HTMLInputElement>;
-  term: string;
-}) => React.ReactNode;
-
 type SearchFormProps = Omit<FormProps, 'children'> & {
-  children: ChildrenFunction;
+  children: (args: {
+    inputRef: React.RefObject<HTMLInputElement>;
+    term: string;
+  }) => React.ReactNode;
   term: string;
 };
 
+/**
+ * Search form component that sends search requests to the `/search` route
+ * @param children - A function that receives an object with the inputRef and term
+ * @param term - The search term
+ * @param props - The form props
+ * @returns The search form
+ * @example
+ * ```tsx
+ * <SearchForm term={term}>
+ *  {({inputRef, term}) => (
+ *    <>
+ *      <input
+ *        ref={inputRef}
+ *        type="search"
+ *        defaultValue={term}
+ *        name="q"
+ *        placeholder="Search…"
+ *      />
+ *      <button type="submit">Search</button>
+ *   </>
+ *  )}
+ *  </SearchForm>
+ */
 export function SearchForm({children, term, ...props}: SearchFormProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -27,6 +48,10 @@ export function SearchForm({children, term, ...props}: SearchFormProps) {
   );
 }
 
+/**
+ * Focuses the input when cmd+k is pressed
+ * @param inputRef - The input ref
+ */
 function useFocusOnCmdK({
   inputRef,
 }: {
@@ -50,5 +75,5 @@ function useFocusOnCmdK({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [inputRef]);
 }
