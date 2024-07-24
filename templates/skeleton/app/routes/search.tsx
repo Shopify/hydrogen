@@ -14,7 +14,7 @@ export const meta: MetaFunction = () => {
 
 /**
  * Handles predictive search POST requests
- * requested by the SearchPredictiveForm component
+ * requested by the SearchFormPredictive component
  */
 export async function action({request, context}: ActionFunctionArgs) {
   try {

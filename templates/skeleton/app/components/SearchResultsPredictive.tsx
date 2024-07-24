@@ -207,7 +207,6 @@ SearchResultsPredictive.Products = function ({
             trackingParams: product.trackingParameters,
             term: term.current,
           });
-          console.log(productUrl)
           const image = product?.variants?.nodes?.[0].image;
           return (
             <li className="predictive-search-result-item" key={product.id}>
