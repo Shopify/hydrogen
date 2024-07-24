@@ -50,12 +50,7 @@ export function SearchFormPredictive({
   /** Fetch search results based on the input value */
   function fetchResults(event: React.ChangeEvent<HTMLInputElement>) {
     const term = event.target.value || '';
-    const idle = fetcher.state === 'idle';
-    const error = fetcher?.data?.error;
-    console.log('submit',{term, idle, error})
-
-    // if (!idle || error || !term) return;
-    fetcher.submit({q: term, limit: 10}, {method: 'POST', action: '/search'});
+    fetcher.submit({q: term, limit: 5}, {method: 'POST', action: '/search'});
     return;
   }
 

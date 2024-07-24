@@ -16,7 +16,6 @@ export function SearchResults({result, term, children}: SearchResultsProps) {
   if (!result?.total) {
     return null;
   }
-
   return children({...result.items, term});
 }
 
