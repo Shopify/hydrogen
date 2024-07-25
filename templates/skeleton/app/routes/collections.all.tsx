@@ -31,7 +31,7 @@ async function loadCriticalData({context, request}: LoaderFunctionArgs) {
   });
 
   const [{products}] = await Promise.all([
-    storefront.query(CATALOG_QUERY, {
+    storefront.query(PRODUCTS_ALL_QUERY, {
       variables: {...paginationVariables},
     }),
     // Add other queries here, so that they are loaded in parallel
@@ -55,8 +55,8 @@ export default function Collection() {
 }
 
 // NOTE: https://shopify.dev/docs/api/storefront/2024-01/objects/product
-const CATALOG_QUERY = `#graphql
-  query Catalog(
+const PRODUCTS_ALL_QUERY = `#graphql
+  query ProductsAll(
     $country: CountryCode
     $language: LanguageCode
     $first: Int
