@@ -27,9 +27,8 @@ import type {
 import type {CrossRuntimeRequest} from './utils/request';
 
 export type HydrogenContextOptions<
-  TSession extends HydrogenSession | undefined = HydrogenSession,
+  TSession extends HydrogenSession = HydrogenSession,
   TCustomMethods extends CustomMethodsBase | undefined = undefined,
-  TUseStorefrontForCustomerAccount extends undefined | boolean = false,
   TI18n extends I18nBase = I18nBase,
   TEnv extends HydrogenEnv = Env,
 > = {
@@ -37,7 +36,7 @@ export type HydrogenContextOptions<
   request: Request | CrossRuntimeRequest;
   cache?: Cache;
   waitUntil?: WaitUntil;
-  session?: TSession;
+  session: TSession;
   i18n?: TI18n;
   logErrors?: boolean | ((error?: Error) => boolean);
   storefront?: {
@@ -46,7 +45,6 @@ export type HydrogenContextOptions<
     contentType?: CreateStorefrontClientOptions<TI18n>['contentType'];
   };
   customerAccount?: {
-    useLegacy?: TUseStorefrontForCustomerAccount;
     apiVersion?: CustomerAccountOptions['customerApiVersion'];
     authUrl?: CustomerAccountOptions['authUrl'];
     customAuthStatusHandler?: CustomerAccountOptions['customAuthStatusHandler'];
@@ -62,75 +60,52 @@ export type HydrogenContextOptions<
 };
 
 export interface HydrogenContext<
-  TSession extends HydrogenSession | undefined = HydrogenSession,
+  TSession extends HydrogenSession = HydrogenSession,
   TCustomMethods extends CustomMethodsBase | undefined = undefined,
-  TUseStorefrontForCustomerAccount extends undefined | boolean = false,
   TI18n extends I18nBase = I18nBase,
   TEnv extends HydrogenEnv = Env,
 > {
   storefront: StorefrontClient<TI18n>['storefront'];
-  customerAccount: TUseStorefrontForCustomerAccount extends true
-    ? undefined
-    : CustomerAccount;
+  customerAccount: CustomerAccount;
   cart: TCustomMethods extends CustomMethodsBase
     ? HydrogenCartCustom<TCustomMethods>
     : HydrogenCart;
   env: TEnv;
   waitUntil?: WaitUntil;
-  session: TSession extends HydrogenSession ? NonNullable<TSession> : undefined;
+  session: TSession;
 }
 
 export interface HydrogenContextOverloads<
-  TSession extends HydrogenSession | undefined,
+  TSession extends HydrogenSession,
   TCustomMethods extends CustomMethodsBase,
   TI18n extends I18nBase = I18nBase,
   TEnv extends HydrogenEnv = Env,
 > {
   storefront: StorefrontClient<TI18n>['storefront'];
-  customerAccount: CustomerAccount | undefined;
+  customerAccount: CustomerAccount;
   cart: HydrogenCart | HydrogenCartCustom<TCustomMethods>;
   env: TEnv;
   waitUntil?: WaitUntil;
-  session: TSession | undefined;
+  session: TSession;
 }
 
 // type for createHydrogenContext methods
 export function createHydrogenContext<
-  TSession extends HydrogenSession | undefined = HydrogenSession,
+  TSession extends HydrogenSession = HydrogenSession,
   TCustomMethods extends CustomMethodsBase | undefined = undefined,
-  TUseStorefrontForCustomerAccount extends undefined | boolean = false,
   TI18n extends I18nBase = I18nBase,
   TEnv extends HydrogenEnv = Env,
 >(
-  options: HydrogenContextOptions<
-    TSession,
-    TCustomMethods,
-    TUseStorefrontForCustomerAccount,
-    TI18n,
-    TEnv
-  >,
-): HydrogenContext<
-  TSession,
-  TCustomMethods,
-  TUseStorefrontForCustomerAccount,
-  TI18n,
-  TEnv
->;
+  options: HydrogenContextOptions<TSession, TCustomMethods, TI18n, TEnv>,
+): HydrogenContext<TSession, TCustomMethods, TI18n, TEnv>;
 
 export function createHydrogenContext<
-  TSession extends HydrogenSession | undefined,
+  TSession extends HydrogenSession,
   TCustomMethods extends CustomMethodsBase,
-  TUseStorefrontForCustomerAccount extends undefined | boolean,
   TI18n extends I18nBase,
   TEnv extends HydrogenEnv = Env,
 >(
-  options: HydrogenContextOptions<
-    TSession,
-    TCustomMethods,
-    TUseStorefrontForCustomerAccount,
-    TI18n,
-    TEnv
-  >,
+  options: HydrogenContextOptions<TSession, TCustomMethods, TI18n, TEnv>,
 ): HydrogenContextOverloads<TSession, TCustomMethods, TI18n, TEnv> {
   const {
     env,
@@ -144,6 +119,12 @@ export function createHydrogenContext<
     customerAccount: customerAccountOptions,
     cart: cartOptions = {},
   } = options;
+
+  if (!session) {
+    console.warn(
+      `[h2:warn:createHydrogenContext] A session object is required to create hydrogen context.`,
+    );
+  }
 
   /**
    * Create Hydrogen's Storefront client.
@@ -168,35 +149,23 @@ export function createHydrogenContext<
     publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
   });
 
-  let customerAccount: CustomerAccount | undefined;
-  const useStorefrontForCustomerAccount =
-    customerAccountOptions?.useLegacy || false;
-  if (session && !useStorefrontForCustomerAccount) {
-    /**
-     * Create a client for Customer Account API.
-     */
-    customerAccount = createCustomerAccountClient({
-      // share options
-      session,
-      request,
-      waitUntil,
-      logErrors,
+  const customerAccount = createCustomerAccountClient({
+    // share options
+    session,
+    request,
+    waitUntil,
+    logErrors,
 
-      // customerAccountOptions
-      customerApiVersion: customerAccountOptions?.apiVersion,
-      authUrl: customerAccountOptions?.authUrl,
-      customAuthStatusHandler: customerAccountOptions?.customAuthStatusHandler,
-      unstableB2b: customerAccountOptions?.unstableB2b,
+    // customerAccountOptions
+    customerApiVersion: customerAccountOptions?.apiVersion,
+    authUrl: customerAccountOptions?.authUrl,
+    customAuthStatusHandler: customerAccountOptions?.customAuthStatusHandler,
+    unstableB2b: customerAccountOptions?.unstableB2b,
 
-      // defaults
-      customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID,
-      customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_API_URL,
-    });
-  } else if (!session && !useStorefrontForCustomerAccount) {
-    console.warn(
-      `[h2:warn:createHydrogenContext] session is required to use Customer Account API. To disabled the usage, pass in {customerAccount: {useLegacy: true}}`,
-    );
-  }
+    // defaults
+    customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID,
+    customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_API_URL,
+  });
 
   /*
    * Create a cart handler that will be used to

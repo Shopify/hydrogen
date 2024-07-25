@@ -220,54 +220,6 @@ describe('createHydrogenContext', () => {
         }),
       );
     });
-
-    describe('customerAccount return based on options', () => {
-      it('returns customerAccount client if session exist and useLegacy is not set', async () => {
-        const hydrogenContext = createHydrogenContext(defaultOptions);
-
-        expect(hydrogenContext).toHaveProperty('customerAccount');
-        expectTypeOf(
-          hydrogenContext.customerAccount,
-        ).toEqualTypeOf<CustomerAccount>();
-      });
-
-      it('returns customerAccount client if session exist and useLegacy is false', async () => {
-        const hydrogenContext = createHydrogenContext({
-          ...defaultOptions,
-          customerAccount: {
-            useLegacy: false,
-          },
-        });
-
-        expect(hydrogenContext).toHaveProperty('customerAccount');
-        expectTypeOf(
-          hydrogenContext.customerAccount,
-        ).toEqualTypeOf<CustomerAccount>();
-      });
-
-      it('does not returns customerAccount client if session exist and useLegacy is true', async () => {
-        const hydrogenContext = createHydrogenContext({
-          ...defaultOptions,
-          customerAccount: {
-            useLegacy: true,
-          },
-          session: undefined,
-        });
-
-        expect(hydrogenContext).toHaveProperty('customerAccount');
-        expect(hydrogenContext.customerAccount).toBeUndefined();
-      });
-
-      it('does not returns customerAccount client if there is no session', async () => {
-        const hydrogenContext = createHydrogenContext({
-          ...defaultOptions,
-          session: undefined,
-        });
-
-        expect(hydrogenContext).toHaveProperty('customerAccount');
-        expect(hydrogenContext.customerAccount).toBeUndefined();
-      });
-    });
   });
 
   describe('cart client', () => {
