@@ -3,7 +3,7 @@ import type {CartLayout} from './CartMain';
 import {CartForm, Image, type OptimisticCartLine} from '@shopify/hydrogen';
 import {useVariantUrl} from '~/lib/variants';
 import {Link} from '@remix-run/react';
-import {ProductPrice} from '~/components/blocks/ProductPrice';
+import {ProductPrice} from '~/components/sections/ProductPrice';
 import {useAside} from '~/components/sections/Aside';
 
 /**

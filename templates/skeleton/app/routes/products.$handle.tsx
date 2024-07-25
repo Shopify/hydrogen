@@ -9,8 +9,8 @@ import {
 } from '@shopify/hydrogen';
 import type {SelectedOption} from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/lib/variants';
-import {ProductPrice} from '~/components/blocks/ProductPrice';
-import {ProductImage} from '~/components/blocks/ProductImage';
+import {ProductPrice} from '~/components/sections/ProductPrice';
+import {ProductImage} from '~/components/sections/ProductImage';
 import {ProductForm} from '~/components/sections/ProductForm';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
