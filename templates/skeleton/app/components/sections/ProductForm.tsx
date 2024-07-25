@@ -9,7 +9,7 @@ import type {
   ProductFragment,
   ProductVariantFragment,
 } from 'storefrontapi.generated';
-import {useAside} from '~/components/Aside';
+import {useAside} from '~/components/sections/Aside';
 
 export function ProductForm({
   product,

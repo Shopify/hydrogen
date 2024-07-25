@@ -2,8 +2,8 @@ import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import type {
   NormalizedPredictiveSearch,
   NormalizedPredictiveSearchResults,
-} from '~/components/Search';
-import {NO_PREDICTIVE_SEARCH_RESULTS} from '~/components/Search';
+} from '~/components/sections/Search';
+import {NO_PREDICTIVE_SEARCH_RESULTS} from '~/components/sections/Search';
 import {applyTrackingParams} from '~/lib/search';
 
 import type {

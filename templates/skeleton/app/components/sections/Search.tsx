@@ -17,7 +17,7 @@ import type {
   SearchQuery,
 } from 'storefrontapi.generated';
 
-import type {PredictiveSearchAPILoader} from '../routes/api.predictive-search';
+import type {PredictiveSearchAPILoader} from '../../routes/api.predictive-search';
 
 type PredicticeSearchResultItemImage =
   | PredictiveCollectionFragment['image']

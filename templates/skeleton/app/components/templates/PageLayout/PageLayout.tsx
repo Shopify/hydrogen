@@ -6,13 +6,13 @@ import type {
   HeaderQuery,
 } from 'storefrontapi.generated';
 import {Aside} from '~/components/sections/Aside';
-import {Footer} from '~/components/Footer';
-import {Header, HeaderMenu} from '~/components/Header';
-import {CartMain} from '~/components/CartMain';
+import {Footer} from './Footer';
+import {Header, HeaderMenu} from './Header';
+import {CartMain} from '~/components/templates/CartMain';
 import {
   PredictiveSearchForm,
   PredictiveSearchResults,
-} from '~/components/Search';
+} from '~/components/sections/Search';
 
 interface PageLayoutProps {
   cart: Promise<CartApiQueryFragment | null>;
