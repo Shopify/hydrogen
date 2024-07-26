@@ -34,27 +34,53 @@ export type HydrogenContextOptions<
 > = {
   env: TEnv;
   request: Request | CrossRuntimeRequest;
+  /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */
   cache?: Cache;
+  /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
   waitUntil?: WaitUntil;
   session: TSession;
+  /** An object containing a country code and language code */
   i18n?: TI18n;
+  /** Whether it should print GraphQL errors automatically. Defaults to true */
   logErrors?: boolean | ((error?: Error) => boolean);
+  /** Storefront client overwrite options. See documentation for createStorefrontClient for more information. */
   storefront?: {
+    /** Storefront API headers. Default values set from request header.  */
     headers?: CreateStorefrontClientOptions<TI18n>['storefrontHeaders'];
+    /** Override the Storefront API version for this query. */
     apiVersion?: CreateStorefrontClientOptions<TI18n>['storefrontApiVersion'];
-    contentType?: CreateStorefrontClientOptions<TI18n>['contentType'];
   };
+  /** Customer Account client overwrite options. See documentation for createCustomerAccountClient for more information. */
   customerAccount?: {
+    /** Override the version of the API */
     apiVersion?: CustomerAccountOptions['customerApiVersion'];
+    /** This is the route in your app that authorizes the customer after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/account/authorize`. */
     authUrl?: CustomerAccountOptions['authUrl'];
+    /** Use this method to overwrite the default logged-out redirect behavior. The default handler [throws a redirect](https://remix.run/docs/en/main/utils/redirect#:~:text=!session) to `/account/login` with current path as `return_to` query param. */
     customAuthStatusHandler?: CustomerAccountOptions['customAuthStatusHandler'];
+    /** UNSTABLE feature, this will eventually goes away. If true then we will exchange customerAccessToken for storefrontCustomerAccessToken. */
     unstableB2b?: CustomerAccountOptions['unstableB2b'];
   };
+  /** Cart handler overwrite options. See documentation for createCartHandler for more information. */
   cart?: {
+    /** A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`. */
     getId?: CartHandlerOptions['getCartId'];
+    /** A function that sets the cart ID. */
     setId?: CartHandlerOptions['setCartId'];
+    /**
+     * The cart query fragment used by `cart.get()`.
+     * See the [example usage](/docs/api/hydrogen/2024-07/utilities/createcarthandler#example-cart-fragments) in the documentation.
+     */
     queryFragment?: CartHandlerOptions['cartQueryFragment'];
+    /**
+     * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.
+     * See the [example usage](/docs/api/hydrogen/2024-07/utilities/createcarthandler#example-cart-fragments) in the documentation.
+     */
     mutateFragment?: CartHandlerOptions['cartMutateFragment'];
+    /**
+     * Define custom methods or override existing methods for your cart API instance.
+     * See the [example usage](/docs/api/hydrogen/2024-07/utilities/createcarthandler#example-custom-methods) in the documentation.
+     */
     customMethods?: TCustomMethods;
   };
 };
@@ -135,12 +161,11 @@ export function createHydrogenContext<
     waitUntil,
     i18n,
     logErrors,
-    storefrontApiVersion: storefrontOptions.apiVersion,
 
     // storefrontOptions
     storefrontHeaders:
       storefrontOptions.headers || getStorefrontHeaders(request),
-    contentType: storefrontOptions.contentType,
+    storefrontApiVersion: storefrontOptions.apiVersion,
 
     // defaults
     storefrontId: env.PUBLIC_STOREFRONT_ID,
@@ -205,3 +230,69 @@ function getStorefrontHeaders(
     purpose: (headers.get ? headers.get('purpose') : null) || null,
   };
 }
+
+export type HydrogenContextOptionsForDocs<
+  TSession extends HydrogenSession = HydrogenSession,
+  TI18n extends I18nBase = I18nBase,
+> = {
+  env: {
+    SESSION_SECRET: string;
+    PUBLIC_STOREFRONT_API_TOKEN: string;
+    PRIVATE_STOREFRONT_API_TOKEN: string;
+    PUBLIC_STORE_DOMAIN: string;
+    PUBLIC_STOREFRONT_ID: string;
+    PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID: string;
+    PUBLIC_CUSTOMER_ACCOUNT_API_URL: string;
+    PUBLIC_CHECKOUT_DOMAIN: string;
+  };
+  request: Request | CrossRuntimeRequest;
+  /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */
+  cache?: Cache;
+  /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
+  waitUntil?: WaitUntil;
+  session: TSession;
+  /** An object containing a country code and language code */
+  i18n?: TI18n;
+  /** Whether it should print GraphQL errors automatically. Defaults to true */
+  logErrors?: boolean | ((error?: Error) => boolean);
+  /** Storefront client overwrite options. See documentation for createStorefrontClient for more information. */
+  storefront?: {
+    /** Storefront API headers. Default values set from request header.  */
+    headers?: StorefrontHeaders;
+    /** Override the Storefront API version for this query. */
+    apiVersion?: string;
+  };
+  /** Customer Account client overwrite options. See documentation for createCustomerAccountClient for more information. */
+  customerAccount?: {
+    /** Override the version of the API */
+    apiVersion?: string;
+    /** This is the route in your app that authorizes the customer after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/account/authorize`. */
+    authUrl?: string;
+    /** Use this method to overwrite the default logged-out redirect behavior. The default handler [throws a redirect](https://remix.run/docs/en/main/utils/redirect#:~:text=!session) to `/account/login` with current path as `return_to` query param. */
+    customAuthStatusHandler?: () => Response | NonNullable<unknown> | null;
+    /** UNSTABLE feature, this will eventually goes away. If true then we will exchange customerAccessToken for storefrontCustomerAccessToken. */
+    unstableB2b?: boolean;
+  };
+  /** Cart handler overwrite options. See documentation for createCartHandler for more information. */
+  cart?: {
+    /** A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`. */
+    getId?: () => string | undefined;
+    /** A function that sets the cart ID. */
+    setId?: (cartId: string) => Headers;
+    /**
+     * The cart query fragment used by `cart.get()`.
+     * See the [example usage](/docs/api/hydrogen/2024-07/utilities/createcarthandler#example-cart-fragments) in the documentation.
+     */
+    queryFragment?: string;
+    /**
+     * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.
+     * See the [example usage](/docs/api/hydrogen/2024-07/utilities/createcarthandler#example-cart-fragments) in the documentation.
+     */
+    mutateFragment?: string;
+    /**
+     * Define custom methods or override existing methods for your cart API instance.
+     * See the [example usage](/docs/api/hydrogen/2024-07/utilities/createcarthandler#example-custom-methods) in the documentation.
+     */
+    customMethods?: Record<string, Function>;
+  };
+};

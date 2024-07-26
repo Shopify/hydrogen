@@ -125,14 +125,10 @@ describe('createHydrogenContext', () => {
       createHydrogenContext({
         ...defaultOptions,
         i18n: {language: 'EN', country: 'CA'},
-        storefront: {
-          contentType: 'graphql',
-        },
       });
 
       expect(vi.mocked(createStorefrontClient)).toHaveBeenCalledWith(
         expect.objectContaining({
-          contentType: 'graphql',
           i18n: {language: 'EN', country: 'CA'},
         }),
       );
