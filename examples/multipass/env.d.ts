@@ -30,16 +30,7 @@ declare global {
 }
 
 declare module '@shopify/remix-oxygen' {
-  interface AppLoadContext
-    extends HydrogenContext<
-      AppSession,
-      /***********************************************/
-      /**********  EXAMPLE UPDATE STARTS  ************/
-      undefined,
-      true
-      /**********   EXAMPLE UPDATE END   ************/
-      /***********************************************/
-    > {
+  interface AppLoadContext extends HydrogenContext<AppSession> {
     // declare additional Remix loader context here
   }
 

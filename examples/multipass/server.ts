@@ -34,13 +34,6 @@ export default {
         request,
         cache,
         waitUntil,
-        /***********************************************/
-        /**********  EXAMPLE UPDATE STARTS  ************/
-        customerAccount: {
-          useLegacy: true,
-        },
-        /**********   EXAMPLE UPDATE END   ************/
-        /***********************************************/
         session,
         i18n: {language: 'EN', country: 'US'},
         cart: {
