@@ -2,9 +2,9 @@ import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, type MetaFunction} from '@remix-run/react';
 import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {
-  CollectionTemplate,
+  CollectionPage,
   PRODUCT_ITEM_FRAGMENT,
-} from '~/components/templates/CollectionTemplate';
+} from '~/components/CollectionPage';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
@@ -71,7 +71,7 @@ export default function Collection() {
 
   return (
     <>
-      <CollectionTemplate
+      <CollectionPage
         title={collection.title}
         description={collection.description}
         products={collection.products}

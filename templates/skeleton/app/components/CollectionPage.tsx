@@ -2,9 +2,9 @@ import {Link} from '@remix-run/react';
 import {Image, Money} from '@shopify/hydrogen';
 import type {ProductItemFragment} from 'storefrontapi.generated';
 import {useVariantUrl} from '~/lib/variants';
-import {PaginatedResourceSection} from '~/components/sections/PaginatedResourceSection';
+import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 
-export function CollectionTemplate({
+export function CollectionPage({
   title,
   description,
   products,

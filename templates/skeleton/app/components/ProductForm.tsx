@@ -1,15 +1,11 @@
-import {Link, type FetcherWithComponents} from '@remix-run/react';
-import {
-  type VariantOption,
-  VariantSelector,
-  CartForm,
-  type OptimisticCartLineInput,
-} from '@shopify/hydrogen';
+import {Link} from '@remix-run/react';
+import {type VariantOption, VariantSelector} from '@shopify/hydrogen';
 import type {
   ProductFragment,
   ProductVariantFragment,
 } from 'storefrontapi.generated';
-import {useAside} from '~/components/sections/Aside';
+import {AddToCartButton} from '~/components/AddToCartButton';
+import {useAside} from '~/components/Aside';
 
 export function ProductForm({
   product,
@@ -80,40 +76,5 @@ function ProductOptions({option}: {option: VariantOption}) {
       </div>
       <br />
     </div>
-  );
-}
-
-function AddToCartButton({
-  analytics,
-  children,
-  disabled,
-  lines,
-  onClick,
-}: {
-  analytics?: unknown;
-  children: React.ReactNode;
-  disabled?: boolean;
-  lines: Array<OptimisticCartLineInput>;
-  onClick?: () => void;
-}) {
-  return (
-    <CartForm route="/cart" inputs={{lines}} action={CartForm.ACTIONS.LinesAdd}>
-      {(fetcher: FetcherWithComponents<any>) => (
-        <>
-          <input
-            name="analytics"
-            type="hidden"
-            value={JSON.stringify(analytics)}
-          />
-          <button
-            type="submit"
-            onClick={onClick}
-            disabled={disabled ?? fetcher.state !== 'idle'}
-          >
-            {children}
-          </button>
-        </>
-      )}
-    </CartForm>
   );
 }

@@ -3,7 +3,7 @@ import {Suspense} from 'react';
 import type {CartQueryDataReturn} from '@shopify/hydrogen';
 import {CartForm} from '@shopify/hydrogen';
 import {json, type ActionFunctionArgs} from '@shopify/remix-oxygen';
-import {CartMain} from '~/components/templates/CartMain';
+import {CartMain} from '~/components/CartMain';
 import type {RootLoader} from '~/root';
 
 export const meta: MetaFunction = () => {

@@ -8,7 +8,6 @@ import {
 import {Image, Money, Pagination} from '@shopify/hydrogen';
 import React, {useRef, useEffect} from 'react';
 import {applyTrackingParams} from '~/lib/search';
-import {PaginatedResourceSection} from '~/components/sections/PaginatedResourceSection';
 
 import type {
   PredictiveProductFragment,
@@ -17,7 +16,7 @@ import type {
   SearchQuery,
 } from 'storefrontapi.generated';
 
-import type {PredictiveSearchAPILoader} from '../../routes/api.predictive-search';
+import type {PredictiveSearchAPILoader} from '../routes/api.predictive-search';
 
 type PredicticeSearchResultItemImage =
   | PredictiveCollectionFragment['image']
@@ -162,37 +161,57 @@ function SearchResultsProductsGrid({
   return (
     <div className="search-result">
       <h2>Products</h2>
-      <PaginatedResourceSection connection={products}>
-        {({node: product}) => {
-          const trackingParams = applyTrackingParams(
-            product,
-            `q=${encodeURIComponent(searchTerm)}`,
-          );
+      <Pagination connection={products}>
+        {({nodes, isLoading, NextLink, PreviousLink}) => {
+          const ItemsMarkup = nodes.map((product) => {
+            const trackingParams = applyTrackingParams(
+              product,
+              `q=${encodeURIComponent(searchTerm)}`,
+            );
 
+            return (
+              <div className="search-results-item" key={product.id}>
+                <Link
+                  prefetch="intent"
+                  to={`/products/${product.handle}${trackingParams}`}
+                >
+                  {product.variants.nodes[0].image && (
+                    <Image
+                      data={product.variants.nodes[0].image}
+                      alt={product.title}
+                      width={50}
+                    />
+                  )}
+                  <div>
+                    <p>{product.title}</p>
+                    <small>
+                      <Money data={product.variants.nodes[0].price} />
+                    </small>
+                  </div>
+                </Link>
+              </div>
+            );
+          });
           return (
-            <div className="search-results-item" key={product.id}>
-              <Link
-                prefetch="intent"
-                to={`/products/${product.handle}${trackingParams}`}
-              >
-                {product.variants.nodes[0].image && (
-                  <Image
-                    data={product.variants.nodes[0].image}
-                    alt={product.title}
-                    width={50}
-                  />
-                )}
-                <div>
-                  <p>{product.title}</p>
-                  <small>
-                    <Money data={product.variants.nodes[0].price} />
-                  </small>
-                </div>
-              </Link>
+            <div>
+              <div>
+                <PreviousLink>
+                  {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
+                </PreviousLink>
+              </div>
+              <div>
+                {ItemsMarkup}
+                <br />
+              </div>
+              <div>
+                <NextLink>
+                  {isLoading ? 'Loading...' : <span>Load more ↓</span>}
+                </NextLink>
+              </div>
             </div>
           );
         }}
-      </PaginatedResourceSection>
+      </Pagination>
       <br />
     </div>
   );

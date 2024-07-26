@@ -2,9 +2,9 @@ import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, type MetaFunction} from '@remix-run/react';
 import {getPaginationVariables} from '@shopify/hydrogen';
 import {
-  CollectionTemplate,
+  CollectionPage,
   PRODUCT_ITEM_FRAGMENT,
-} from '~/components/templates/CollectionTemplate';
+} from '~/components/CollectionPage';
 
 export const meta: MetaFunction<typeof loader> = () => {
   return [{title: `Hydrogen | Products`}];
@@ -51,7 +51,7 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
 export default function Collection() {
   const {products} = useLoaderData<typeof loader>();
 
-  return <CollectionTemplate title="Products" products={products} />;
+  return <CollectionPage title="Products" products={products} />;
 }
 
 // NOTE: https://shopify.dev/docs/api/storefront/2024-01/objects/product

@@ -5,14 +5,14 @@ import type {
   FooterQuery,
   HeaderQuery,
 } from 'storefrontapi.generated';
-import {Aside} from '~/components/sections/Aside';
-import {Footer} from './Footer';
-import {Header, HeaderMenu} from './Header';
-import {CartMain} from '~/components/templates/CartMain';
+import {Aside} from '~/components/Aside';
+import {Footer} from '~/components/Footer';
+import {Header, HeaderMenu} from '~/components/Header';
+import {CartMain} from '~/components/CartMain';
 import {
   PredictiveSearchForm,
   PredictiveSearchResults,
-} from '~/components/sections/Search';
+} from '~/components/Search';
 
 interface PageLayoutProps {
   cart: Promise<CartApiQueryFragment | null>;

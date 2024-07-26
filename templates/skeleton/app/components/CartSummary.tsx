@@ -1,5 +1,5 @@
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
-import type {CartLayout} from './CartMain';
+import type {CartLayout} from '~/components/CartMain';
 import {CartForm, Money, type OptimisticCart} from '@shopify/hydrogen';
 
 type CartSummaryProps = {
