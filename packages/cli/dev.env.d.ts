@@ -13,7 +13,7 @@ declare module '@shopify/remix-oxygen' {
    * Declare local additions to the Remix loader context.
    */
   export interface AppLoadContext
-    extends HydrogenContext<HydrogenSession, undefined, false, I18nLocale> {}
+    extends HydrogenContext<HydrogenSession, undefined, I18nLocale> {}
 }
 
 declare global {
