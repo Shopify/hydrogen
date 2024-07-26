@@ -16,7 +16,7 @@ import {MultipassCheckoutButton} from './MultipassCheckoutButton';
 /**********   EXAMPLE UPDATE END   ************/
 /***********************************************/
 
-type CartLine = OptimisticCartLine<CartApiQueryFragment['lines']['nodes'][0]>;
+type CartLine = OptimisticCartLine<CartApiQueryFragment>;
 
 type CartMainProps = {
   cart: CartApiQueryFragment | null;

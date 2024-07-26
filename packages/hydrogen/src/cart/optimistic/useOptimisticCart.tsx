@@ -11,7 +11,11 @@ import {
 import type {PartialDeep} from 'type-fest';
 import type {CartReturn} from '../queries/cart-types';
 
-export type OptimisticCartLine<T = CartLine> = T & {isOptimistic?: boolean};
+export type OptimisticCartLine<T = CartLine | CartReturn> = T extends {
+  lines: {nodes: Array<unknown>};
+}
+  ? T['lines']['nodes'][0] & {isOptimistic?: boolean}
+  : T & {isOptimistic?: boolean};
 
 export type OptimisticCart<T = CartReturn> = T extends undefined | null
   ? // This is the null/undefined case, where the cart has yet to be created.

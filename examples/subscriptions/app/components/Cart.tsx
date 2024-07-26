@@ -11,7 +11,7 @@ import {Link} from '@remix-run/react';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import {useVariantUrl} from '~/lib/variants';
 
-type CartLine = OptimisticCartLine<CartApiQueryFragment['lines']['nodes'][0]>;
+type CartLine = OptimisticCartLine<CartApiQueryFragment>;
 
 type CartMainProps = {
   cart: CartApiQueryFragment;
