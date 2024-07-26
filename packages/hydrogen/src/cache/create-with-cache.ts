@@ -23,8 +23,8 @@ type CreateWithCacheOptions = {
  * Use this to call any third-party APIs from loaders or actions.
  *
  * > Note:
- * > Sometimes a request to a third-party API might fail, and the result should *not* be cached.
- * > Prevent caching by throwing when a request fails. If you don't throw, the result will be cached.
+ * > Sometimes a request to a third-party API might fail, so you shouldn't cache the result.
+ * > To prevent caching, throw when a request fails. If you don't throw, then the result is cached.
  */
 export function createWithCache<T = unknown>(
   cacheOptions: CreateWithCacheOptions,
