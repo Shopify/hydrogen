@@ -32,12 +32,15 @@ export type HydrogenContextOptions<
   TI18n extends I18nBase = I18nBase,
   TEnv extends HydrogenEnv = Env,
 > = {
+  /* Environment variables from the fetch function */
   env: TEnv;
+  /* Request object from the fetch function */
   request: Request | CrossRuntimeRequest;
   /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */
   cache?: Cache;
   /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
   waitUntil?: WaitUntil;
+  /** Any cookie implementation. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */
   session: TSession;
   /** An object containing a country code and language code */
   i18n?: TI18n;
@@ -91,13 +94,19 @@ export interface HydrogenContext<
   TI18n extends I18nBase = I18nBase,
   TEnv extends HydrogenEnv = Env,
 > {
+  /** A GraphQL client for querying the [Storefront API](https://shopify.dev/docs/api/storefront). */
   storefront: StorefrontClient<TI18n>['storefront'];
+  /** A GraphQL client for querying the [Customer Account API](https://shopify.dev/docs/api/customer). It also provides methods to authenticate and check if the user is logged in. */
   customerAccount: CustomerAccount;
+  /** A collection of utilities used to interact with the cart. */
   cart: TCustomMethods extends CustomMethodsBase
     ? HydrogenCartCustom<TCustomMethods>
     : HydrogenCart;
+  /* Request object from the fetch function */
   env: TEnv;
+  /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
   waitUntil?: WaitUntil;
+  /** Any cookie implementation. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */
   session: TSession;
 }
 
@@ -234,22 +243,17 @@ function getStorefrontHeaders(
 export type HydrogenContextOptionsForDocs<
   TSession extends HydrogenSession = HydrogenSession,
   TI18n extends I18nBase = I18nBase,
+  TEnv extends HydrogenEnv = Env,
 > = {
-  env: {
-    SESSION_SECRET: string;
-    PUBLIC_STOREFRONT_API_TOKEN: string;
-    PRIVATE_STOREFRONT_API_TOKEN: string;
-    PUBLIC_STORE_DOMAIN: string;
-    PUBLIC_STOREFRONT_ID: string;
-    PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID: string;
-    PUBLIC_CUSTOMER_ACCOUNT_API_URL: string;
-    PUBLIC_CHECKOUT_DOMAIN: string;
-  };
+  /* Environment variables from the fetch function */
+  env: TEnv;
+  /* Request object from the fetch function */
   request: Request | CrossRuntimeRequest;
   /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */
   cache?: Cache;
   /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
   waitUntil?: WaitUntil;
+  /** Any cookie implementation. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */
   session: TSession;
   /** An object containing a country code and language code */
   i18n?: TI18n;
