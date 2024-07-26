@@ -12,6 +12,7 @@ import type {
   HydrogenSessionData,
 } from '@shopify/hydrogen';
 import type {AppSession} from '~/lib/session';
+import {SomeContext} from 'test';
 
 declare global {
   /**
@@ -38,7 +39,7 @@ declare module '@shopify/remix-oxygen' {
   /**
    * Declare local additions to the Remix loader context.
    */
-  interface AppLoadContext {
+  interface AppLoadContext extends SomeContext {
     env: Env;
     cart: HydrogenCart;
     storefront: Storefront;

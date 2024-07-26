@@ -16,6 +16,7 @@ import {
 } from '@shopify/remix-oxygen';
 import {AppSession} from '~/lib/session';
 import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
+import {someContext} from 'test';
 
 /**
  * Export a fetch handler in module format.
@@ -91,6 +92,7 @@ export default {
           cart,
           env,
           waitUntil,
+          ...someContext(),
         }),
       });
 
