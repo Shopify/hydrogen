@@ -7,6 +7,7 @@ import {
   useContext,
   useRef,
 } from 'react';
+import isbot from 'isbot';
 import {type CartReturn} from '../cart/queries/cart-types';
 import {
   AnalyticsPageView,
@@ -258,6 +259,11 @@ function register(key: string) {
   };
 }
 
+function isBot() {
+  const userAgent = window.navigator.userAgent;
+  return isbot(userAgent)
+}
+
 // This functions attempts to automatically determine if the user can be tracked if the
 // customer privacy API is available. If not, it will default to false.
 function shopifyCanTrack(): boolean {
@@ -278,7 +284,6 @@ function AnalyticsProvider({
   consent,
   customData = {},
   shop: shopProp = null,
-  disableThrowOnError = false,
   cookieDomain,
 }: AnalyticsProviderProps): JSX.Element {
   const listenerSet = useRef(false);
@@ -288,7 +293,9 @@ function AnalyticsProvider({
   );
   const [carts, setCarts] = useState<Carts>({cart: null, prevCart: null});
   const [canTrack, setCanTrack] = useState<() => boolean>(
-    customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
+     isBot()
+       ? () => false
+       : customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
   );
 
   if (!!shop) {
@@ -355,7 +362,10 @@ function AnalyticsProvider({
           onReady={() => {
             listenerSet.current = true;
             setConsentLoaded(true);
-            setCanTrack(() => shopifyCanTrack);
+            setCanTrack(isBot()
+              ? () => false
+              : () => shopifyCanTrack
+            );
           }}
           domain={cookieDomain}
         />
@@ -393,8 +403,6 @@ function useShopAnalytics(shopProp: AnalyticsProviderProps['shop']): {
 
   return {shop};
 }
-
-// TODO: useCustomerAnalytics hook
 
 type ShopAnalyticsProps = {
   /**
