@@ -1,4 +1,8 @@
+/***********************************************/
+/**********  EXAMPLE UPDATE STARTS  ************/
 /// <reference types="@remix-run/dev" />
+/**********   EXAMPLE UPDATE END   ************/
+/***********************************************/
 /// <reference types="@shopify/remix-oxygen" />
 /// <reference types="@shopify/oxygen-workers-types" />
 
@@ -10,7 +14,7 @@ import type {
   HydrogenSessionData,
   HydrogenEnv,
 } from '@shopify/hydrogen';
-import type {AppSession} from '~/lib/session';
+import type {CustomAppLoadContext} from '~/lib/context';
 
 declare global {
   /**
@@ -24,8 +28,8 @@ declare global {
 }
 
 declare module '@shopify/remix-oxygen' {
-  interface AppLoadContext extends HydrogenContext<AppSession> {
-    // declare additional Remix loader context here
+  interface AppLoadContext extends CustomAppLoadContext {
+    // to change context type, change the return of createAppLoadContext() instead
   }
 
   interface SessionData extends HydrogenSessionData {

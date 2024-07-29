@@ -1,9 +1,12 @@
 // Virtual entry point for the app
+/***********************************************/
+/**********  EXAMPLE UPDATE STARTS  ************/
 import * as remixBuild from '@remix-run/dev/server-build';
-import {storefrontRedirect, createHydrogenContext} from '@shopify/hydrogen';
-import {createRequestHandler, type AppLoadContext} from '@shopify/remix-oxygen';
-import {AppSession} from '~/lib/session';
-import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
+/**********   EXAMPLE UPDATE END   ************/
+/***********************************************/
+import {storefrontRedirect} from '@shopify/hydrogen';
+import {createRequestHandler} from '@shopify/remix-oxygen';
+import {createAppLoadContext} from '~/lib/context';
 
 /**
  * Export a fetch handler in module format.
@@ -22,22 +25,11 @@ export default {
         throw new Error('SESSION_SECRET environment variable is not set');
       }
 
-      const waitUntil = executionContext.waitUntil.bind(executionContext);
-      const [cache, session] = await Promise.all([
-        caches.open('hydrogen'),
-        AppSession.init(request, [env.SESSION_SECRET]),
-      ]);
-
-      const hydrogenContext = createHydrogenContext<AppSession>({
-        env,
+      const appLoadContext = await createAppLoadContext(
         request,
-        cache,
-        waitUntil,
-        session,
-        cart: {
-          queryFragment: CART_QUERY_FRAGMENT,
-        },
-      });
+        env,
+        executionContext,
+      );
 
       /**
        * Create a Remix request handler and pass
@@ -46,16 +38,16 @@ export default {
       const handleRequest = createRequestHandler({
         build: remixBuild,
         mode: process.env.NODE_ENV,
-        getLoadContext: (): AppLoadContext => ({
-          ...hydrogenContext,
-          // declare additional Remix loader context here
-        }),
+        getLoadContext: () => appLoadContext,
       });
 
       const response = await handleRequest(request);
 
-      if (session.isPending) {
-        response.headers.set('Set-Cookie', await session.commit());
+      if (appLoadContext.session.isPending) {
+        response.headers.set(
+          'Set-Cookie',
+          await appLoadContext.session.commit(),
+        );
       }
 
       if (response.status === 404) {
@@ -67,7 +59,7 @@ export default {
         return storefrontRedirect({
           request,
           response,
-          storefront: hydrogenContext.storefront,
+          storefront: appLoadContext.storefront,
         });
       }
 
