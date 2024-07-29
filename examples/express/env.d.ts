@@ -1,6 +1,5 @@
 /// <reference types="vite/client" />
-/// <reference types="@shopify/remix-oxygen" />
-/// <reference types="@shopify/oxygen-workers-types" />
+/// <reference types="@remix-run/node" />
 
 // Enhance TypeScript's built-in typings.
 import '@total-typescript/ts-reset';
@@ -34,7 +33,7 @@ declare global {
   }
 }
 
-declare module '@shopify/remix-oxygen' {
+declare module '@remix-run/node' {
   /**
    * Declare local additions to the Remix loader context.
    */
