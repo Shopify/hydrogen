@@ -1,16 +1,16 @@
 import {Link, useLoaderData, type MetaFunction} from '@remix-run/react';
 import {
   Money,
-  Pagination,
   getPaginationVariables,
   flattenConnection,
 } from '@shopify/hydrogen';
-import {json, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {CUSTOMER_ORDERS_QUERY} from '~/graphql/customer-account/CustomerOrdersQuery';
 import type {
   CustomerOrdersFragment,
   OrderItemFragment,
 } from 'customer-accountapi.generated';
+import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 
 export const meta: MetaFunction = () => {
   return [{title: 'Orders'}];
@@ -51,23 +51,9 @@ function OrdersTable({orders}: Pick<CustomerOrdersFragment, 'orders'>) {
   return (
     <div className="acccount-orders">
       {orders?.nodes.length ? (
-        <Pagination connection={orders}>
-          {({nodes, isLoading, PreviousLink, NextLink}) => {
-            return (
-              <>
-                <PreviousLink>
-                  {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
-                </PreviousLink>
-                {nodes.map((order) => {
-                  return <OrderItem key={order.id} order={order} />;
-                })}
-                <NextLink>
-                  {isLoading ? 'Loading...' : <span>Load more ↓</span>}
-                </NextLink>
-              </>
-            );
-          }}
-        </Pagination>
+        <PaginatedResourceSection connection={orders}>
+          {({node: order}) => <OrderItem key={order.id} order={order} />}
+        </PaginatedResourceSection>
       ) : (
         <EmptyOrders />
       )}
