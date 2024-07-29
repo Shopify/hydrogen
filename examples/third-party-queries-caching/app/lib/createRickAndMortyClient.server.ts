@@ -42,6 +42,7 @@ export function createRickAndMortyClient({
           });
 
           if (!response.ok) {
+            // Throwing is important to prevent the results from being cached
             throw new Error(
               `Error fetching from rick and morty api: ${response.statusText}`,
             );

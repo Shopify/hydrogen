@@ -22,12 +22,15 @@ type CreateWithCacheOptions = {
  * like `fetch` and caches the result according to the strategy provided.
  * Use this to call any third-party APIs from loaders or actions.
  *
+ * > Note:
+ * > Sometimes a request to a third-party API might fail, so you shouldn't cache the result.
+ * > To prevent caching, throw when a request fails. If you don't throw, then the result is cached.
  */
-export function createWithCache<T = unknown>({
-  cache,
-  waitUntil,
-  request,
-}: CreateWithCacheOptions): CreateWithCacheReturn<T> {
+export function createWithCache<T = unknown>(
+  cacheOptions: CreateWithCacheOptions,
+): CreateWithCacheReturn<T> {
+  const {cache, waitUntil, request} = cacheOptions;
+
   return function withCache<T = unknown>(
     cacheKey: CacheKey,
     strategy: CachingStrategy,
