@@ -87,7 +87,6 @@ export default class Build extends Command {
         });
       }
     } else {
-      console.log('\n---After build---\n');
       if (diff) {
         await diff.copyDiffBuild();
         await diff.cleanup();
