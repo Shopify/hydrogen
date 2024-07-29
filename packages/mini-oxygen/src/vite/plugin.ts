@@ -132,6 +132,29 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
           };
         }
       },
+      generateBundle(_, bundle) {
+        if (apiOptions.compatibilityDate) {
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(apiOptions.compatibilityDate)) {
+            throw new Error(
+              `Invalid compatibility date "${apiOptions.compatibilityDate}"`,
+            );
+          }
+
+          const oxygenJsonFile = 'oxygen.json';
+          const oxygenJsonContent = {
+            version: 1,
+            compatibilityDate: apiOptions.compatibilityDate,
+          };
+
+          bundle[oxygenJsonFile] = {
+            type: 'asset',
+            fileName: oxygenJsonFile,
+            name: oxygenJsonFile,
+            needsCodeReference: false,
+            source: JSON.stringify(oxygenJsonContent, null, 2),
+          };
+        }
+      },
     } satisfies OxygenPlugin,
   ];
 }
