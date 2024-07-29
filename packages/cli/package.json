@@ -34,9 +34,9 @@
   "dependencies": {
     "@ast-grep/napi": "0.11.0",
     "@oclif/core": "3.26.5",
-    "@shopify/cli-kit": "3.64.1",
+    "@shopify/cli-kit": "^0.0.0-snapshot-20240729112727",
     "@shopify/oxygen-cli": "4.4.9",
-    "@shopify/plugin-cloudflare": "3.64.1",
+    "@shopify/plugin-cloudflare": "^0.0.0-snapshot-20240729112727",
     "ansi-escapes": "^6.2.0",
     "chokidar": "3.5.3",
     "cli-truncate": "^4.0.0",
