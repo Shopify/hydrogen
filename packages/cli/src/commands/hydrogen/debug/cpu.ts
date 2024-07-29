@@ -5,10 +5,7 @@ import {outputInfo} from '@shopify/cli-kit/node/output';
 import {writeFile} from '@shopify/cli-kit/node/fs';
 import colors from '@shopify/cli-kit/node/colors';
 import ansiEscapes from 'ansi-escapes';
-import {
-  getProjectPaths,
-  hasRemixConfigFile,
-} from '../../../lib/remix-config.js';
+import {getProjectPaths, isClassicProject} from '../../../lib/remix-config.js';
 import {muteDevLogs} from '../../../lib/log.js';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import {prepareDiffDirectory} from '../../../lib/template-diff.js';
@@ -73,8 +70,6 @@ async function runDebugCpu({directory, entry, output}: RunDebugCpuOptions) {
 
   let {buildPath, buildPathWorkerFile} = getProjectPaths(directory);
 
-  const isClassicProject = await hasRemixConfigFile(directory);
-
   outputInfo(
     '⏳️ Starting profiler for CPU startup... Profile will be written to:\n' +
       colors.dim(output),
@@ -110,7 +105,7 @@ async function runDebugCpu({directory, entry, output}: RunDebugCpuOptions) {
     },
   };
 
-  if (isClassicProject) {
+  if (await isClassicProject(directory)) {
     return runClassicCompilerDebugCpu({
       directory,
       output,

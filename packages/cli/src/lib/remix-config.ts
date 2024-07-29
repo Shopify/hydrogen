@@ -10,7 +10,7 @@ import {fileExists} from '@shopify/cli-kit/node/fs';
 import {muteRemixLogs} from './log.js';
 import {REQUIRED_REMIX_VERSION} from './remix-version-check.js';
 import {findFileWithExtension} from './file.js';
-import {getViteConfig} from './vite-config.js';
+import {getViteConfig, isViteProject} from './vite-config.js';
 import {importLocal} from './import-utils.js';
 import {hydrogenPackagesPath, isHydrogenMonorepo} from './build.js';
 
@@ -21,6 +21,13 @@ export type {RemixConfig, ServerMode, RawRemixConfig};
 export async function hasRemixConfigFile(root: string) {
   const result = await findFileWithExtension(root, 'remix.config');
   return !!result.filepath;
+}
+
+export async function isClassicProject(root: string) {
+  const isVite = await isViteProject(root);
+  if (isVite) return false;
+
+  return hasRemixConfigFile(root);
 }
 
 const BUILD_DIR = 'dist'; // Hardcoded in Oxygen
