@@ -11,10 +11,14 @@ import {
 import type {PartialDeep} from 'type-fest';
 import type {CartReturn} from '../queries/cart-types';
 
-export type OptimisticCartLine<T = CartLine | CartReturn> = T extends {
-  lines: {nodes: Array<unknown>};
-}
-  ? T['lines']['nodes'][0] & {isOptimistic?: boolean}
+type LikeACart = {
+  lines: {
+    nodes: Array<unknown>;
+  };
+};
+
+export type OptimisticCartLine<T = CartLine | CartReturn> = T extends LikeACart
+  ? T['lines']['nodes'][number] & {isOptimistic?: boolean}
   : T & {isOptimistic?: boolean};
 
 export type OptimisticCart<T = CartReturn> = T extends undefined | null
@@ -29,9 +33,7 @@ export type OptimisticCart<T = CartReturn> = T extends undefined | null
   : Omit<T, 'lines'> & {
       isOptimistic?: boolean;
       lines: {
-        nodes: T extends {lines: {nodes: Array<unknown>}}
-          ? Array<OptimisticCartLine<T['lines']['nodes']['0']>>
-          : Array<OptimisticCartLine>;
+        nodes: Array<OptimisticCartLine<T>>;
       };
     };
 

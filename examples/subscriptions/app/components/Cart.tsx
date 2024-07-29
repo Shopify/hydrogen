@@ -86,8 +86,6 @@ function CartLineItem({
 }) {
   /***********************************************/
   /**********  EXAMPLE UPDATE STARTS  ************/
-  // @ts-expect-error - your project should need this expect error.
-  // It's necessary in our mono repo example setup
   const {id, merchandise, sellingPlanAllocation} = line;
   /**********   EXAMPLE UPDATE END   ************/
   /***********************************************/
