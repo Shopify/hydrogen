@@ -87,8 +87,8 @@ export default class Build extends Command {
         });
       }
     } else {
-      console.log('---After build---', process.env.SHOPIFY_UNIT_TEST);
-      if (diff && process.env.SHOPIFY_UNIT_TEST) {
+      console.log('\n---After build---\n');
+      if (diff) {
         await diff.copyDiffBuild();
         await diff.cleanup();
       }
