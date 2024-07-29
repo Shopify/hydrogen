@@ -260,8 +260,8 @@ function register(key: string) {
 }
 
 function isBot() {
-  const userAgent = window.navigator.userAgent;
-  return isbot(userAgent)
+  if (typeof window === 'undefined' || !window.navigator) return false;
+  return isbot(window.navigator.userAgent);
 }
 
 // This functions attempts to automatically determine if the user can be tracked if the
@@ -294,7 +294,7 @@ function AnalyticsProvider({
   const [carts, setCarts] = useState<Carts>({cart: null, prevCart: null});
   const [canTrack, setCanTrack] = useState<() => boolean>(
      isBot()
-       ? () => false
+       ? () => () => false
        : customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
   );
 
@@ -363,7 +363,7 @@ function AnalyticsProvider({
             listenerSet.current = true;
             setConsentLoaded(true);
             setCanTrack(isBot()
-              ? () => false
+              ? () => () => false
               : () => shopifyCanTrack
             );
           }}

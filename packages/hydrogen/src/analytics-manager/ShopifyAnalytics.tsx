@@ -23,7 +23,7 @@ import type {
   CartLineUpdatePayload,
   SearchViewPayload,
 } from './AnalyticsView';
-import {useEffect, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {
   CartLine,
   ComponentizableCartLine,
@@ -63,6 +63,7 @@ export function ShopifyAnalytics({
   const {subscribe, register, canTrack} = useAnalytics();
   const [shopifyReady, setShopifyReady] = useState(false);
   const [privacyReady, setPrivacyReady] = useState(false);
+  const init = useRef(false)
   const {ready: shopifyAnalyticsReady} = register('Internal_Shopify_Analytics');
   const {ready: customerPrivacyReady} = register(
     'Internal_Shopify_CustomerPrivacy',
@@ -99,6 +100,9 @@ export function ShopifyAnalytics({
   });
 
   useEffect(() => {
+    if (init.current) return;
+    init.current = true;
+
     // Views
     subscribe(AnalyticsEvent.PAGE_VIEWED, pageViewHandler);
     subscribe(AnalyticsEvent.PRODUCT_VIEWED, productViewHandler);
