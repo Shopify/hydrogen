@@ -221,22 +221,20 @@ export async function runDev({
     await removeFile(joinPath(root, 'node_modules/.vite'));
   }
 
-  const customLogger = vite.createLogger();
-  if (process.env.SHOPIFY_UNIT_TEST) {
-    // Make logs from Vite visible in tests
-    customLogger.info = (msg) => collectLog('info', msg);
-    customLogger.warn = (msg) => collectLog('warn', msg);
-    customLogger.error = (msg) => collectLog('error', msg);
-  }
-
   const formatOptionsPromise = Promise.resolve().then(() =>
     getCodeFormatOptions(root),
   );
 
   const viteServer = await vite.createServer({
     root,
-    customLogger,
     clearScreen: false,
+    customLogger: process.env.SHOPIFY_UNIT_TEST
+      ? Object.assign(vite.createLogger(), {
+          info: (msg: string) => collectLog('info', msg),
+          warn: (msg: string) => collectLog('warn', msg),
+          error: (msg: string) => collectLog('error', msg),
+        })
+      : undefined,
     server: {
       host: host ? true : undefined,
       // Allow Vite to read files from the Hydrogen packages in local development.
