@@ -24,7 +24,7 @@ import type {
   HydrogenSession,
   StorefrontHeaders,
 } from './types';
-import type {CrossRuntimeRequest} from './utils/request';
+import {type CrossRuntimeRequest, getHeader} from './utils/request';
 
 export type HydrogenContextOptions<
   TSession extends HydrogenSession = HydrogenSession,
@@ -35,7 +35,7 @@ export type HydrogenContextOptions<
   /* Environment variables from the fetch function */
   env: TEnv;
   /* Request object from the fetch function */
-  request: Request | CrossRuntimeRequest;
+  request: CrossRuntimeRequest;
   /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */
   cache?: Cache;
   /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
@@ -228,15 +228,12 @@ export function createHydrogenContext<
   };
 }
 
-function getStorefrontHeaders(
-  request: Request | CrossRuntimeRequest,
-): StorefrontHeaders {
-  const headers = request.headers;
+function getStorefrontHeaders(request: CrossRuntimeRequest): StorefrontHeaders {
   return {
-    requestGroupId: (headers.get ? headers.get('request-id') : null) || null,
-    buyerIp: (headers.get ? headers.get('oxygen-buyer-ip') : null) || null,
-    cookie: (headers.get ? headers.get('cookie') : null) || null,
-    purpose: (headers.get ? headers.get('purpose') : null) || null,
+    requestGroupId: getHeader(request, 'request-id'),
+    buyerIp: getHeader(request, 'oxygen-buyer-ip'),
+    cookie: getHeader(request, 'cookie'),
+    purpose: getHeader(request, 'purpose'),
   };
 }
 
@@ -248,7 +245,7 @@ export type HydrogenContextOptionsForDocs<
   /* Environment variables from the fetch function */
   env: TEnv;
   /* Request object from the fetch function */
-  request: Request | CrossRuntimeRequest;
+  request: CrossRuntimeRequest;
   /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */
   cache?: Cache;
   /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
