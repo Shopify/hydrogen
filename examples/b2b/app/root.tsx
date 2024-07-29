@@ -147,19 +147,6 @@ export function Layout({children}: {children?: React.ReactNode}) {
             shop={data.shop}
             consent={data.consent}
           >
-            <B2BLocationProvider>
-              <PageLayout {...data}>{children}</PageLayout>
-            </B2BLocationProvider>
-          </Analytics.Provider>
-        ) : (
-          children
-        )}
-        {data ? (
-          <Analytics.Provider
-            cart={data.cart}
-            shop={data.shop}
-            consent={data.consent}
-          >
             {/***********************************************/
             /**********  EXAMPLE UPDATE STARTS  ************/}
             <B2BLocationProvider>
