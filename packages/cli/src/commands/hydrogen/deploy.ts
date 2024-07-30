@@ -47,7 +47,7 @@ import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
 import {runBuild} from './build.js';
 import {getViteConfig} from '../../lib/vite-config.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
-import {hasRemixConfigFile} from '../../lib/remix-config.js';
+import {isClassicProject} from '../../lib/remix-config.js';
 import {packageManagers} from '../../lib/package-managers.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 
@@ -449,7 +449,7 @@ export async function runDeploy(
   let assetsDir = 'dist/client';
   let workerDir = 'dist/worker';
 
-  const isClassicCompiler = await hasRemixConfigFile(root);
+  const isClassicCompiler = await isClassicProject(root);
 
   if (!isClassicCompiler) {
     const viteConfig = await getViteConfig(root, ssrEntry).catch(() => null);

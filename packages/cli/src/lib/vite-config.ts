@@ -10,10 +10,25 @@ import {importVite} from './import-utils.js';
 // Do not import JS from here, only types
 import type {HydrogenPlugin} from '~/hydrogen/vite/plugin.js';
 import type {OxygenPlugin} from '~/mini-oxygen/vite/plugin.js';
+import {hasRemixConfigFile} from './remix-config.js';
+import {renderWarning} from '@shopify/cli-kit/node/ui';
 
 export async function hasViteConfig(root: string) {
   const result = await findFileWithExtension(root, 'vite.config');
   return !!result.filepath;
+}
+
+export async function isViteProject(root: string) {
+  const isVite = await hasViteConfig(root);
+
+  if (isVite && (await hasRemixConfigFile(root))) {
+    renderWarning({
+      headline: 'Both Vite and Remix config files found.',
+      body: 'The remix.config.js file is not used in Vite projects. Please remove it to avoid conflicts.',
+    });
+  }
+
+  return isVite;
 }
 
 export async function getViteConfig(root: string, ssrEntryFlag?: string) {
