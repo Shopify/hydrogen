@@ -1,5 +1,4 @@
 import {createRequire} from 'node:module';
-import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {readdir} from 'node:fs/promises';
 import type {ServerMode} from '@remix-run/dev/dist/config/serverModes.js';
@@ -72,7 +71,7 @@ export async function getRemixConfig(
   root: string,
   mode = process.env.NODE_ENV as ServerMode,
 ) {
-  if (!(await hasRemixConfigFile(root))) {
+  if (await isViteProject(root)) {
     return (await getViteConfig(root)).remixConfig;
   }
 
