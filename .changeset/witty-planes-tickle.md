@@ -1,5 +1,6 @@
 ---
 'skeleton': patch
+'@shopify/create-hydrogen': patch
 ---
 
 Add a hydration check for google web cache. This prevents an infinite redirect when viewing the cached version of a hydrogen site on Google.
