@@ -113,6 +113,8 @@ export function spawnCodegenProcess({
     if (/`punycode`/.test(message)) return;
     if (/\.body\[\d\]/.test(message)) return;
     if (/console\.time(End)?\(\)/.test(message)) return;
+    // Skip banners output by ourselves:
+    if (/─ (warning|info|success) ───/.test(message)) return;
 
     console.log('');
     renderWarning({headline: message, body: details});

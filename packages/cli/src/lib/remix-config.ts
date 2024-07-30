@@ -1,5 +1,4 @@
 import {createRequire} from 'node:module';
-import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {readdir} from 'node:fs/promises';
 import type {ServerMode} from '@remix-run/dev/dist/config/serverModes.js';
@@ -10,7 +9,7 @@ import {fileExists} from '@shopify/cli-kit/node/fs';
 import {muteRemixLogs} from './log.js';
 import {REQUIRED_REMIX_VERSION} from './remix-version-check.js';
 import {findFileWithExtension} from './file.js';
-import {getViteConfig} from './vite-config.js';
+import {getViteConfig, isViteProject} from './vite-config.js';
 import {importLocal} from './import-utils.js';
 import {hydrogenPackagesPath, isHydrogenMonorepo} from './build.js';
 
@@ -21,6 +20,13 @@ export type {RemixConfig, ServerMode, RawRemixConfig};
 export async function hasRemixConfigFile(root: string) {
   const result = await findFileWithExtension(root, 'remix.config');
   return !!result.filepath;
+}
+
+export async function isClassicProject(root: string) {
+  const isVite = await isViteProject(root);
+  if (isVite) return false;
+
+  return hasRemixConfigFile(root);
 }
 
 const BUILD_DIR = 'dist'; // Hardcoded in Oxygen
@@ -65,7 +71,7 @@ export async function getRemixConfig(
   root: string,
   mode = process.env.NODE_ENV as ServerMode,
 ) {
-  if (!(await hasRemixConfigFile(root))) {
+  if (await isViteProject(root)) {
     return (await getViteConfig(root)).remixConfig;
   }
 

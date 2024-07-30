@@ -12,7 +12,7 @@ import {fileSize, removeFile} from '@shopify/cli-kit/node/fs';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
-import {hasViteConfig, getViteConfig} from '../../lib/vite-config.js';
+import {getViteConfig, isViteProject} from '../../lib/vite-config.js';
 import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
 import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
@@ -71,7 +71,7 @@ export default class Build extends Command {
       directory,
     };
 
-    const result = (await hasViteConfig(directory))
+    const result = (await isViteProject(directory))
       ? await runBuild(buildParams)
       : await runClassicCompilerBuild(buildParams);
 
