@@ -1,4 +1,4 @@
-import {type OptimisticCartLine, useOptimisticCart} from '@shopify/hydrogen';
+import {useOptimisticCart} from '@shopify/hydrogen';
 import {Link} from '@remix-run/react';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import {useAside} from '~/components/Aside';
@@ -34,7 +34,7 @@ export function CartMain({layout, cart: originalCart}: CartMainProps) {
       <div className="cart-details">
         <div aria-labelledby="cart-lines">
           <ul>
-            {(cart?.lines?.nodes ?? []).map((line: OptimisticCartLine) => (
+            {(cart?.lines?.nodes ?? []).map((line) => (
               <CartLineItem key={line.id} line={line} layout={layout} />
             ))}
           </ul>
