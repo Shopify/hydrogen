@@ -321,7 +321,8 @@ export async function setupLocalStarterTemplate(
 
       await setupI18n({
         rootDirectory: project.directory,
-        serverEntryPoint: language === 'ts' ? 'server.ts' : 'server.js',
+        contextCreate:
+          language === 'ts' ? 'app/lib/context.ts' : 'app/lib/context.js',
       })
         .then(() =>
           options.git

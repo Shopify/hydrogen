@@ -1,6 +1,12 @@
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
-import {fileExists} from '@shopify/cli-kit/node/fs';
+import {
+  joinPath,
+  resolvePath,
+  dirname,
+  relativePath,
+  extname,
+} from '@shopify/cli-kit/node/path';
+import {fileExists, copyFile, readFile} from '@shopify/cli-kit/node/fs';
 import {findFileWithExtension, replaceFileContent} from '../../file.js';
 import type {FormatOptions} from '../../format-code.js';
 import type {I18nSetupConfig} from './index.js';
@@ -8,25 +14,35 @@ import {importLangAstGrep} from '../../ast.js';
 import {transpileFile} from '../../transpile/index.js';
 
 /**
- * Adds the `getLocaleFromRequest` function to the server entrypoint and calls it.
+ * Adds the `getLocaleFromRequest` function to createAppLoadContext method and calls it.
  */
-export async function replaceServerI18n(
-  {rootDirectory, serverEntryPoint = 'server'}: I18nSetupConfig,
+export async function replaceContextI18n(
+  {rootDirectory, contextCreate = 'app/lib/context.ts'}: I18nSetupConfig,
   formatConfig: FormatOptions,
-  localeExtractImpl: string,
-  isJs: boolean,
+  i18nStrategyFilePath: string,
 ) {
-  const {filepath, astType} = await findEntryFile({
+  const createContextMethodName = 'createAppLoadContext';
+  const {filepath, astType} = await findContextCreateFile({
     rootDirectory,
-    serverEntryPoint,
+    contextCreate,
   });
+
+  const localeExtractImpl = await readFile(i18nStrategyFilePath);
+
+  const i18nFileFinalPath = await replaceI18nStrategy(
+    {rootDirectory, contextCreate},
+    formatConfig,
+    i18nStrategyFilePath,
+  );
 
   await replaceFileContent(filepath, formatConfig, async (content) => {
     const astGrep = await importLangAstGrep(astType);
     const root = astGrep.parse(content).root();
 
-    // First parameter of the `fetch` function.
-    // Normally it's called `request`, but it could be renamed.
+    // -- Find all the places that need replacement in the context create file
+
+    // Build i18n function call using request name (1st parameter of the `createAppLoadContext` function)
+    // and i18n function name from i18nStrategyFilePath file content
     const requestIdentifier = root.find({
       rule: {
         kind: 'identifier',
@@ -34,15 +50,11 @@ export async function replaceServerI18n(
           kind: 'formal_parameters',
           stopBy: 'end',
           inside: {
-            kind: 'method_definition',
+            kind: 'function_declaration',
             stopBy: 'end',
             has: {
-              kind: 'property_identifier',
-              regex: '^fetch$',
-            },
-            inside: {
-              kind: 'export_statement',
-              stopBy: 'end',
+              kind: 'identifier',
+              regex: `^${createContextMethodName}$`,
             },
           },
         },
@@ -62,6 +74,10 @@ export async function replaceServerI18n(
 
     const hydrogenImportPath = '@shopify/hydrogen';
     const hydrogenImportName = 'createHydrogenContext';
+
+    // -- Replace content in reversed order (bottom => top) to avoid changing string indexes
+
+    // 1. Replace i18n option in createHydrogenContext() with i18n function call
 
     // Find the import statement for Hydrogen
     const importSpecifier = root.find({
@@ -90,7 +106,7 @@ export async function replaceServerI18n(
 
     if (!importName) {
       throw new AbortError(
-        `Could not find a Hydrogen import in ${serverEntryPoint}`,
+        `Could not find a Hydrogen import in ${contextCreate}`,
         `Please import "${hydrogenImportName}" from "${hydrogenImportPath}"`,
       );
     }
@@ -114,50 +130,10 @@ export async function replaceServerI18n(
 
     if (!argumentObject) {
       throw new AbortError(
-        `Could not find a Hydrogen client instantiation with an inline object as argument in ${serverEntryPoint}`,
+        `Could not find a Hydrogen client instantiation with an inline object as argument in ${contextCreate}`,
         `Please add a call to ${importName}({...})`,
       );
     }
-
-    const defaultExportObject = root.find({
-      rule: {
-        kind: 'export_statement',
-        regex: '^export default \\{',
-      },
-    });
-
-    if (!defaultExportObject) {
-      throw new AbortError(
-        'Could not find a default export in the server entry point',
-      );
-    }
-
-    let localeExtractFn =
-      localeExtractImpl.match(/^(\/\*\*.*?\*\/\n)?^function .+?^}/ms)?.[0] ||
-      '';
-    if (!localeExtractFn) {
-      throw new AbortError(
-        'Could not find the locale extract function. This is a bug in Hydrogen.',
-      );
-    }
-
-    if (isJs) {
-      localeExtractFn = await transpileFile(
-        localeExtractFn,
-        'locale-extract-server.ts',
-      );
-    } else {
-      // Remove JSDoc comments for TS
-      localeExtractFn = localeExtractFn.replace(/\/\*\*.*?\*\//gms, '');
-    }
-
-    const defaultExportEnd = defaultExportObject.range().end.index;
-
-    // Inject i18n function right after the default export
-    content =
-      content.slice(0, defaultExportEnd) +
-      `\n\n${localeExtractFn}\n` +
-      content.slice(defaultExportEnd);
 
     const i18nProperty = argumentObject.find({
       rule: {
@@ -192,15 +168,95 @@ export async function replaceServerI18n(
         content.slice(end.index - 1);
     }
 
+    // 2. Add i18n file import
+    const lastImport = root.findAll({rule: {kind: 'import_statement'}}).pop();
+    const lastImportRange = lastImport?.range() ?? {
+      end: {index: 0},
+    };
+
+    const i18nFunctionImport = joinPath(
+      '~',
+      relativePath(
+        joinPath(rootDirectory, 'app'),
+        i18nFileFinalPath.slice(0, -extname(i18nFileFinalPath).length),
+      ),
+    );
+
+    content =
+      content.slice(0, lastImportRange.end.index) +
+      `import {getLocaleFromRequest} from "${i18nFunctionImport}";` +
+      content.slice(lastImportRange.end.index);
+
     return content;
   });
 }
 
-async function findEntryFile({
+/**
+ * Adds I18nLocale file and update the i18n type import
+ */
+async function replaceI18nStrategy(
+  {rootDirectory, contextCreate = 'app/lib/context.ts'}: I18nSetupConfig,
+  formatConfig: FormatOptions,
+  i18nStrategyFilePath: string,
+) {
+  const isJs = contextCreate?.endsWith('.js') || false;
+
+  const i18nPath = joinPath(
+    rootDirectory,
+    dirname(contextCreate),
+    isJs ? 'i18n.js' : 'i18n.ts',
+  );
+
+  if (await fileExists(i18nPath)) {
+    throw new AbortError(
+      `${i18nPath} already exist. Renamed or remove the existing file before continue.`,
+    );
+  }
+
+  await copyFile(i18nStrategyFilePath, i18nPath);
+
+  await replaceFileContent(i18nPath, formatConfig, async (content) => {
+    const astGrep = await importLangAstGrep('ts');
+    const root = astGrep.parse(content).root();
+
+    // update imported type from mock-i18n-types to @shopify/hydrogen with TS file
+    const importFromNode = root.find({
+      rule: {
+        kind: 'string',
+        inside: {
+          kind: 'import_statement',
+          stopBy: 'end',
+          regex: 'mock-i18n-types',
+        },
+      },
+    });
+
+    const importFromRange = importFromNode?.range() ?? {
+      start: {index: 0},
+      end: {index: 0},
+    };
+
+    content =
+      content.slice(0, importFromRange.start.index + 1) +
+      '@shopify/hydrogen' +
+      content.slice(importFromRange.end.index - 1);
+
+    if (isJs) {
+      // transpileFile to js file
+      content = await transpileFile(content, i18nStrategyFilePath);
+    }
+
+    return content;
+  });
+
+  return i18nPath;
+}
+
+async function findContextCreateFile({
   rootDirectory,
-  serverEntryPoint = 'server',
+  contextCreate = 'app/lib/context.ts',
 }: I18nSetupConfig) {
-  const match = serverEntryPoint.match(/\.([jt]sx?)$/)?.[1] as
+  const match = contextCreate.match(/\.([jt]sx?)$/)?.[1] as
     | 'ts'
     | 'tsx'
     | 'js'
@@ -208,12 +264,15 @@ async function findEntryFile({
     | undefined;
 
   const {filepath, astType} = match
-    ? {filepath: resolvePath(rootDirectory, serverEntryPoint), astType: match}
-    : await findFileWithExtension(rootDirectory, serverEntryPoint);
+    ? {filepath: resolvePath(rootDirectory, contextCreate), astType: match}
+    : await findFileWithExtension(rootDirectory, joinPath(contextCreate));
 
   if (!filepath || !astType) {
     throw new AbortError(
-      `Could not find a server entry point at ${serverEntryPoint}`,
+      `Could not find a context create file at ${resolvePath(
+        rootDirectory,
+        contextCreate,
+      )}`,
     );
   }
 
