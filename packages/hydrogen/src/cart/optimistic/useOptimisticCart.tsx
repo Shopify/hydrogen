@@ -11,7 +11,15 @@ import {
 import type {PartialDeep} from 'type-fest';
 import type {CartReturn} from '../queries/cart-types';
 
-export type OptimisticCartLine<T = CartLine> = T & {isOptimistic?: boolean};
+type LikeACart = {
+  lines: {
+    nodes: Array<unknown>;
+  };
+};
+
+export type OptimisticCartLine<T = CartLine | CartReturn> = T extends LikeACart
+  ? T['lines']['nodes'][number] & {isOptimistic?: boolean}
+  : T & {isOptimistic?: boolean};
 
 export type OptimisticCart<T = CartReturn> = T extends undefined | null
   ? // This is the null/undefined case, where the cart has yet to be created.
@@ -25,7 +33,7 @@ export type OptimisticCart<T = CartReturn> = T extends undefined | null
   : Omit<T, 'lines'> & {
       isOptimistic?: boolean;
       lines: {
-        nodes: Array<OptimisticCartLine>;
+        nodes: Array<OptimisticCartLine<T>>;
       };
     };
 
@@ -49,7 +57,7 @@ export function useOptimisticCart<
     ? (structuredClone(cart) as OptimisticCart<DefaultCart>)
     : ({lines: {nodes: []}} as unknown as OptimisticCart<DefaultCart>);
 
-  const cartLines = optimisticCart.lines.nodes;
+  const cartLines = optimisticCart.lines.nodes as OptimisticCartLine[];
 
   let isOptimistic = false;
 

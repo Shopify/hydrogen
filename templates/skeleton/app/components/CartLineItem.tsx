@@ -5,6 +5,9 @@ import {useVariantUrl} from '~/lib/variants';
 import {Link} from '@remix-run/react';
 import {ProductPrice} from './ProductPrice';
 import {useAside} from './Aside';
+import type {CartApiQueryFragment} from 'storefrontapi.generated';
+
+type CartLine = OptimisticCartLine<CartApiQueryFragment>;
 
 /**
  * A single line item in the cart. It displays the product image, title, price.
@@ -15,7 +18,7 @@ export function CartLineItem({
   line,
 }: {
   layout: CartLayout;
-  line: OptimisticCartLine;
+  line: CartLine;
 }) {
   const {id, merchandise} = line;
   const {product, title, image, selectedOptions} = merchandise;
@@ -70,7 +73,7 @@ export function CartLineItem({
  * These controls are disabled when the line item is new, and the server
  * hasn't yet responded that it was successfully added to the cart.
  */
-function CartLineQuantity({line}: {line: OptimisticCartLine}) {
+function CartLineQuantity({line}: {line: CartLine}) {
   if (!line || typeof line?.quantity === 'undefined') return null;
   const {id: lineId, quantity, isOptimistic} = line;
   const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
