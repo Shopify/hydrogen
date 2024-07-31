@@ -23,6 +23,13 @@ export default function App() {
         {/* Note you don't need to pass a nonce to the script component 
         because it's automatically added */}
         <Script src="https://some-custom-script.js" />
+        {/* Nonce is not supported with `waitForHydration`. Instead you
+        need to add the domain of the script directly to your Content 
+        Securitiy Policy directives. */}
+        <Script
+          waitForHydration
+          src="https://domain.com/script-that-modifies-dom.js"
+        />
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
         <LiveReload nonce={nonce} />
