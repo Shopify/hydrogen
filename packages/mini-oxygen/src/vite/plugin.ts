@@ -143,7 +143,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
           const oxygenJsonFile = 'oxygen.json';
           const oxygenJsonContent = {
             version: 1,
-            compatibilityDate: apiOptions.compatibilityDate,
+            compatibility_date: apiOptions.compatibilityDate,
           };
 
           bundle[oxygenJsonFile] = {
