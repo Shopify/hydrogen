@@ -91,6 +91,8 @@ export {
   Analytics,
   useAnalytics,
   getShopAnalytics,
+  type ShopAnalytics,
+  type AnalyticsContextValue,
 } from './analytics-manager/AnalyticsProvider';
 export {AnalyticsEvent} from './analytics-manager/events';
 export {
