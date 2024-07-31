@@ -14,7 +14,7 @@ import type {
   HydrogenSessionData,
   HydrogenEnv,
 } from '@shopify/hydrogen';
-import type {CustomAppLoadContext} from '~/lib/context';
+import type {createAppLoadContext} from '~/lib/context';
 
 declare global {
   /**
@@ -28,7 +28,8 @@ declare global {
 }
 
 declare module '@shopify/remix-oxygen' {
-  interface AppLoadContext extends CustomAppLoadContext {
+  interface AppLoadContext
+    extends Awaited<ReturnType<typeof createAppLoadContext>> {
     // to change context type, change the return of createAppLoadContext() instead
   }
 

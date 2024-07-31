@@ -12,11 +12,6 @@ import {createRickAndMortyClient} from '~/lib/createRickAndMortyClient.server';
  * The context implementation is separate from server.ts
  * so that type can be extracted for AppLoadContext
  * */
-
-export type CustomAppLoadContext = Awaited<
-  ReturnType<typeof createAppLoadContext>
->;
-
 export async function createAppLoadContext(
   request: Request,
   env: Env,
