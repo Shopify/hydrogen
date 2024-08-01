@@ -8,7 +8,7 @@ export default defineConfig({
     coverage: {
       all: true,
       include: ['src/**'],
-      exclude: ['src/vite/virtual-routes/**'],
+      exclude: ['src/vite/virtual-routes/**', 'src/vite/magic-routes/**'],
     },
   },
 });

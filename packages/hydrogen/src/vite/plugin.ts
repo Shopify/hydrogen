@@ -7,6 +7,7 @@ import {
 import type {HydrogenPluginOptions} from './types.js';
 import {type RequestEventPayload, emitRequestEvent} from './request-events.js';
 import {getVirtualRoutes} from './get-virtual-routes.js';
+import {getMagicRoutes} from './get-magic-routes.js';
 
 // Do not import JS from here, only types
 import type {OxygenPlugin} from '~/mini-oxygen/vite/plugin.js';
@@ -207,12 +208,16 @@ hydrogen.preset = () =>
           }
 
           const {root, routes: virtualRoutes} = await getVirtualRoutes();
+          const magicRoutes = await getMagicRoutes();
 
           const result = defineRoutes((route) => {
             route(root.path, root.file, {id: root.id}, () => {
               virtualRoutes.map(({path, file, index, id}) => {
                 route(path, file, {id, index});
               });
+            });
+            magicRoutes.forEach((magicRoute) => {
+              route(...magicRoute);
             });
           });
 
