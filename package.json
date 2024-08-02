@@ -40,7 +40,6 @@
     "examples/legacy-customer-account-flow",
     "examples/metaobjects",
     "examples/multipass",
-    "examples/optimistic-cart-ui",
     "examples/partytown",
     "examples/subscriptions",
     "examples/third-party-queries-caching",
