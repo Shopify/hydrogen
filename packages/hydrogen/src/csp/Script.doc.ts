@@ -16,7 +16,7 @@ const data: ReferenceEntityTemplateSchema = {
       url: '/docs/api/hydrogen/2024-07/hooks/usenonce',
     },
   ],
-  description: `Use the \`Script\` component to add third-party scripts to your app. It automatically adds a nonce attribute from your [content security policy](/docs/custom-storefronts/hydrogen/content-security-policy).`,
+  description: `Use the \`Script\` component to add third-party scripts to your app. It automatically adds a nonce attribute from your [content security policy](/docs/custom-storefronts/hydrogen/content-security-policy). If you load a script that directly modifies the DOM, you are likely to have hydration errors. Use the \`waitForHydration\` prop to load the script after the page hydrates.`,
   type: 'component',
   defaultExample: {
     description: 'I am the default example',
