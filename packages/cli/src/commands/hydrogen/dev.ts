@@ -77,6 +77,7 @@ export default class Dev extends Command {
     ...commonFlags.inspectorPort,
     ...commonFlags.env,
     ...commonFlags.envBranch,
+    ...commonFlags.envFile,
     'disable-version-check': Flags.boolean({
       description: 'Skip the version check when running `hydrogen dev`',
       default: false,
@@ -167,6 +168,7 @@ type DevOptions = {
   customerAccountPush?: boolean;
   cliConfig: Config;
   verbose?: boolean;
+  envFile: string;
 };
 
 export async function runDev({
@@ -184,6 +186,7 @@ export async function runDev({
   disableVersionCheck = false,
   inspectorPort,
   customerAccountPush: customerAccountPushFlag = false,
+  envFile,
   cliConfig,
   verbose,
 }: DevOptions) {
@@ -198,6 +201,7 @@ export async function runDev({
   const backgroundPromise = getDevConfigInBackground(
     root,
     customerAccountPushFlag,
+    envFile,
   );
 
   const envPromise = backgroundPromise.then(({fetchRemote, localVariables}) =>
@@ -207,6 +211,7 @@ export async function runDev({
       envHandle,
       fetchRemote,
       localVariables,
+      envFile,
     }),
   );
 
