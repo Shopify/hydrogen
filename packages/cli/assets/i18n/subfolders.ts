@@ -1,15 +1,10 @@
-import type {LanguageCode, CountryCode} from './mock-i18n-types.js';
+import type {I18nBase} from './mock-i18n-types.js';
 
-export type I18nLocale = {
-  language: LanguageCode;
-  country: CountryCode;
+export interface I18nLocale extends I18nBase {
   pathPrefix: string;
-};
+}
 
-/**
- * @returns {I18nLocale}
- */
-function getLocaleFromRequest(request: Request): I18nLocale {
+export function getLocaleFromRequest(request: Request): I18nLocale {
   const url = new URL(request.url);
   const firstPathPart = url.pathname.split('/')[1]?.toUpperCase() ?? '';
 
@@ -25,5 +20,3 @@ function getLocaleFromRequest(request: Request): I18nLocale {
 
   return {language, country, pathPrefix};
 }
-
-export {getLocaleFromRequest};

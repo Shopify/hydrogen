@@ -2,11 +2,7 @@
  * This file is used to provide types for generator utilities.
  */
 
-import type {
-  Storefront,
-  CustomerAccount,
-  HydrogenCart,
-} from '@shopify/hydrogen';
+import type {HydrogenContext, HydrogenSession} from '@shopify/hydrogen';
 import type {
   LanguageCode,
   CountryCode,
@@ -16,13 +12,8 @@ declare module '@shopify/remix-oxygen' {
   /**
    * Declare local additions to the Remix loader context.
    */
-  export interface AppLoadContext {
-    env: Env;
-    cart: HydrogenCart;
-    storefront: Storefront<I18nLocale>;
-    customerAccount: CustomerAccount;
-    waitUntil: ExecutionContext['waitUntil'];
-  }
+  export interface AppLoadContext
+    extends HydrogenContext<HydrogenSession, undefined, I18nLocale> {}
 }
 
 declare global {
