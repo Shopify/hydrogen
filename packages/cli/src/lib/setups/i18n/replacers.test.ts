@@ -125,10 +125,7 @@ describe('i18n replacers', () => {
       expect(newContent).toMatchInlineSnapshot(`
         "import type { I18nBase } from "@shopify/hydrogen";
 
-        /**
-         * @returns {I18nBase}
-         */
-        function getLocaleFromRequest(request: Request): I18nBase {
+        export function getLocaleFromRequest(request: Request): I18nBase {
           const defaultLocale: I18nBase = { language: "EN", country: "US" };
           const supportedLocales = {
             ES: "ES",
@@ -147,8 +144,6 @@ describe('i18n replacers', () => {
             ? { language: supportedLocales[domain], country: domain }
             : defaultLocale;
         }
-
-        export { getLocaleFromRequest };
         "
       `);
     });
@@ -176,10 +171,7 @@ describe('i18n replacers', () => {
       expect(newContent).toMatchInlineSnapshot(`
         "import type { I18nBase } from "@shopify/hydrogen";
 
-        /**
-         * @returns {I18nBase}
-         */
-        function getLocaleFromRequest(request: Request): I18nBase {
+        export function getLocaleFromRequest(request: Request): I18nBase {
           const defaultLocale: I18nBase = { language: "EN", country: "US" };
           const supportedLocales = {
             ES: "ES",
@@ -197,8 +189,6 @@ describe('i18n replacers', () => {
             ? { language: supportedLocales[firstSubdomain], country: firstSubdomain }
             : defaultLocale;
         }
-
-        export { getLocaleFromRequest };
         "
       `);
     });
@@ -230,10 +220,7 @@ describe('i18n replacers', () => {
           pathPrefix: string;
         }
 
-        /**
-         * @returns {I18nLocale}
-         */
-        function getLocaleFromRequest(request: Request): I18nLocale {
+        export function getLocaleFromRequest(request: Request): I18nLocale {
           const url = new URL(request.url);
           const firstPathPart = url.pathname.split("/")[1]?.toUpperCase() ?? "";
 
@@ -249,8 +236,6 @@ describe('i18n replacers', () => {
 
           return { language, country, pathPrefix };
         }
-
-        export { getLocaleFromRequest };
         "
       `);
     });
@@ -304,10 +289,9 @@ describe('i18n replacers', () => {
 
       expect(newContent).toMatchInlineSnapshot(`
         "/**
-         * @returns {I18nBase}
          * @param {Request} request
          */
-        function getLocaleFromRequest(request) {
+        export function getLocaleFromRequest(request) {
           const defaultLocale = { language: "EN", country: "US" };
           const supportedLocales = {
             ES: "ES",
@@ -323,8 +307,6 @@ describe('i18n replacers', () => {
             ? { language: supportedLocales[domain], country: domain }
             : defaultLocale;
         }
-
-        export { getLocaleFromRequest };
 
         /** @typedef {import('@shopify/hydrogen').I18nBase} I18nBase */
         "
