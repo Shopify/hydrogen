@@ -18,13 +18,6 @@ export default {
     executionContext: ExecutionContext,
   ): Promise<Response> {
     try {
-      /**
-       * Open a cache instance in the worker and a custom session instance.
-       */
-      if (!env?.SESSION_SECRET) {
-        throw new Error('SESSION_SECRET environment variable is not set');
-      }
-
       const appLoadContext = await createAppLoadContext(
         request,
         env,
