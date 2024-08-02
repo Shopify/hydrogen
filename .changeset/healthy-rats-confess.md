@@ -1,6 +1,5 @@
 ---
 'skeleton': patch
-'@shopify/create-hydrogen': patch
 ---
 
 1. Create a app/lib/context file and use `createHydrogenContext` in it.
@@ -9,8 +8,6 @@
 // in app/lib/context
 
 import {createHydrogenContext} from '@shopify/hydrogen';
-
-export type CustomAppLoadContext = Awaited<ReturnType<typeof createAppLoadContext>>;
 
 export async function createAppLoadContext(
   request: Request,
@@ -30,12 +27,15 @@ export async function createAppLoadContext(
       // ensure to overwrite any options that is not using the default values from your server.ts
     });
 
-  return hydrogenContext;
+  return {
+    ...hydrogenContext,
+    // declare additional Remix loader context
+  };
 }
 
 ```
 
-2. Use `createAppLoadContext` method in server.ts Ensure to overwrite any options that is not using the default values.
+2. Use `createAppLoadContext` method in server.ts Ensure to overwrite any options that is not using the default values in `createHydrogenContext`.
 
 ```diff
 // in server.ts
@@ -97,9 +97,9 @@ export default {
 ```diff
 // in env.d.ts
 
-+ import type {CustomAppLoadContext} from '~/lib/context';
++ import type {createAppLoadContext} from '~/lib/context';
 
-+ interface AppLoadContext extends CustomAppLoadContext {
++ interface AppLoadContext extends Awaited<ReturnType<typeof createAppLoadContext>> {
 - interface AppLoadContext {
 -  env: Env;
 -  cart: HydrogenCart;

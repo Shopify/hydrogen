@@ -1,6 +1,5 @@
 ---
 'skeleton': patch
-'@shopify/create-hydrogen': patch
 ---
 
 Use type `HydrogenEnv` for all the env.d.ts
