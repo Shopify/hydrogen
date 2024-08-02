@@ -222,30 +222,7 @@ async function replaceI18nStrategy(
   await copyFile(i18nStrategyFilePath, i18nPath);
 
   await replaceFileContent(i18nPath, formatConfig, async (content) => {
-    const astGrep = await importLangAstGrep('ts');
-    const root = astGrep.parse(content).root();
-
-    // update imported type from mock-i18n-types to @shopify/hydrogen with TS file
-    const importFromNode = root.find({
-      rule: {
-        kind: 'string',
-        inside: {
-          kind: 'import_statement',
-          stopBy: 'end',
-          regex: 'mock-i18n-types',
-        },
-      },
-    });
-
-    const importFromRange = importFromNode?.range() ?? {
-      start: {index: 0},
-      end: {index: 0},
-    };
-
-    content =
-      content.slice(0, importFromRange.start.index + 1) +
-      '@shopify/hydrogen' +
-      content.slice(importFromRange.end.index - 1);
+    content = content.replace(/\.\/mock-i18n-types\.js/, '@shopify/hydrogen');
 
     if (isJs) {
       // transpileFile to js file
