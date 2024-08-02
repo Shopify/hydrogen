@@ -17,7 +17,10 @@ import {transpileFile} from '../../transpile/index.js';
  * Adds the `getLocaleFromRequest` function to createAppLoadContext method and calls it.
  */
 export async function replaceContextI18n(
-  {rootDirectory, contextCreate = 'app/lib/context.ts'}: I18nSetupConfig,
+  {
+    rootDirectory,
+    contextCreate = joinPath('app', 'lib', 'context.ts'),
+  }: I18nSetupConfig,
   formatConfig: FormatOptions,
   i18nStrategyFilePath: string,
 ) {
@@ -195,7 +198,10 @@ export async function replaceContextI18n(
  * Adds I18nLocale file and update the i18n type import
  */
 async function replaceI18nStrategy(
-  {rootDirectory, contextCreate = 'app/lib/context.ts'}: I18nSetupConfig,
+  {
+    rootDirectory,
+    contextCreate = joinPath('app', 'lib', 'context.ts'),
+  }: I18nSetupConfig,
   formatConfig: FormatOptions,
   i18nStrategyFilePath: string,
 ) {
@@ -254,7 +260,7 @@ async function replaceI18nStrategy(
 
 async function findContextCreateFile({
   rootDirectory,
-  contextCreate = 'app/lib/context.ts',
+  contextCreate = joinPath('app', 'lib', 'context.ts'),
 }: I18nSetupConfig) {
   const match = contextCreate.match(/\.([jt]sx?)$/)?.[1] as
     | 'ts'
