@@ -5,7 +5,7 @@ import {useLoadScript} from '@shopify/hydrogen-react';
 type ScriptProps = HydrogenScriptProps & ScriptAttributes;
 
 interface HydrogenScriptProps {
-  /** Wait to load the script until after the page hydrates. This prevents hydration errors for scripts that modify the DOM. Note: `nonce` is not supported when using `waitForHydration`. Instead you need to add the domain of the script directly to your [Content Securitiy Policy directives](https://shopify.dev/docs/storefronts/headless/hydrogen/content-security-policy#step-3-customize-the-content-security-policy).*/
+  /** Wait to load the script until after the page hydrates. This prevents hydration errors for scripts that modify the DOM. Note: For security, `nonce` is not supported when using `waitForHydration`. Instead you need to add the domain of the script directly to your [Content Securitiy Policy directives](https://shopify.dev/docs/storefronts/headless/hydrogen/content-security-policy#step-3-customize-the-content-security-policy).*/
   waitForHydration?: boolean;
 }
 
