@@ -741,6 +741,15 @@
           "multiple": false,
           "type": "option"
         },
+        "env-file": {
+          "description": "Path to an environment file to override existing environment variables. Defaults to the '.env' located in your project path `--path`.",
+          "name": "env-file",
+          "required": false,
+          "default": ".env",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -792,8 +801,10 @@
           "type": "option"
         },
         "env-file": {
-          "description": "Path to an environment file to override existing environment variables for the selected environment. Defaults to the '.env' located in your project path `--path`.",
+          "description": "Path to an environment file to override existing environment variables. Defaults to the '.env' located in your project path `--path`.",
           "name": "env-file",
+          "required": false,
+          "default": ".env",
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
