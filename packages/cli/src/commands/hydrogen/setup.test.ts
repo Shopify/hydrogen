@@ -72,9 +72,11 @@ describe('setup', () => {
         fileExists(joinPath(tmpDir, 'app/routes/($locale)._index.tsx')),
       ).resolves.toBeTruthy();
 
-      const serverFile = await readFile(`${tmpDir}/server.ts`);
-      expect(serverFile).toMatch(/i18n: getLocaleFromRequest\(request\),/);
-      expect(serverFile).toMatch(/url.pathname/);
+      const contextFile = await readFile(`${tmpDir}/app/lib/context.ts`);
+      expect(contextFile).toMatch(/i18n: getLocaleFromRequest\(request\),/);
+
+      const i18nFile = await readFile(`${tmpDir}/app/lib/i18n.ts`);
+      expect(i18nFile).toMatch(/url.pathname/);
 
       const output = outputMock.info();
       expect(output).toMatch('success');

@@ -1,9 +1,8 @@
-import {fileURLToPath} from 'node:url';
 import {renderSelectPrompt} from '@shopify/cli-kit/node/ui';
-import {fileExists, readFile} from '@shopify/cli-kit/node/fs';
+import {fileExists} from '@shopify/cli-kit/node/fs';
 import {AbortSignal} from '@shopify/cli-kit/node/abort';
 import {getCodeFormatOptions} from '../../format-code.js';
-import {replaceRemixEnv, replaceServerI18n} from './replacers.js';
+import {replaceContextI18n} from './replacers.js';
 import {getAssetsDir} from '../../build.js';
 
 export const SETUP_I18N_STRATEGIES = [
@@ -25,7 +24,7 @@ export type I18nChoice = (typeof I18N_CHOICES)[number];
 
 export type I18nSetupConfig = {
   rootDirectory: string;
-  serverEntryPoint?: string;
+  contextCreate?: string;
 };
 
 export async function setupI18nStrategy(
@@ -38,12 +37,9 @@ export async function setupI18nStrategy(
     throw new Error('Unknown strategy');
   }
 
-  const template = await readFile(templatePath);
   const formatConfig = await getCodeFormatOptions(options.rootDirectory);
 
-  const isJs = options.serverEntryPoint?.endsWith('.js') ?? false;
-  await replaceServerI18n(options, formatConfig, template, isJs);
-  await replaceRemixEnv(options, formatConfig, template);
+  await replaceContextI18n(options, formatConfig, templatePath);
 }
 
 export async function renderI18nPrompt<
