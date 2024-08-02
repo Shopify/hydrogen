@@ -12,7 +12,7 @@ const data: ReferenceEntityTemplateSchema = {
     },
   ],
   description: `
-The \`createHydrogenContext\` function creates all the context object required to use Hydrogen utilities throughout a Hydrogen project.`,
+The \`createHydrogenContext\` function creates the context object required to use Hydrogen utilities throughout a Hydrogen project.`,
   type: 'utility',
   defaultExample: {
     description: 'I am the default example',
