@@ -110,6 +110,9 @@ export interface HydrogenContext<
   session: TSession;
 }
 
+// Since HydrogenContext uses a conditional type with a free type parameter,
+// TS cannot definitively determine what the return type should be within the function body
+// HydrogenContextOverloads is use to restore type assertions so we don't need to do type casting
 export interface HydrogenContextOverloads<
   TSession extends HydrogenSession,
   TCustomMethods extends CustomMethodsBase,
