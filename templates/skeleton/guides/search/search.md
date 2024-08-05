@@ -3,7 +3,7 @@
 Our skeleton template ships with a `/search` route and a set of components to easily
 implement a traditional search flow.
 
-This integration uses the storefront API (SFAPI) [search]( https://shopify.dev/docs/api/storefront/latest/queries/search)
+This integration uses the storefront API (SFAPI) [search](https://shopify.dev/docs/api/storefront/latest/queries/search)
 endpoint to retrieve search results based on a search term.
 
 ## Components Architecture
@@ -12,10 +12,10 @@ endpoint to retrieve search results based on a search term.
 
 ## Components
 
-|File  | Description   |
-|---|---|
-| [`app/components/SearchForm.tsx`](app/components/SearchForm.tsx) | A fully customizable form component configured to make (server-side) form `GET` requests to the `/search` route. |
-| [`app/components/SearchResults.tsx`](app/components/SearchResults.tsx) |  A fully customizable search results wrapper, that provides compound components to render `articles`, `pages` and `products` |
+| File                                                                   | Description                                                                                                                 |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| [`app/components/SearchForm.tsx`](app/components/SearchForm.tsx)       | A fully customizable form component configured to make (server-side) form `GET` requests to the `/search` route.            |
+| [`app/components/SearchResults.tsx`](app/components/SearchResults.tsx) | A fully customizable search results wrapper, that provides compound components to render `articles`, `pages` and `products` |
 
 ## Instructions
 
@@ -162,7 +162,10 @@ export const SEARCH_QUERY = `#graphql
 /**
  * Regular search fetcher
  */
-async function search({request, context}: Pick<LoaderFunctionArgs, 'request' | 'context'>) {
+async function search({
+  request,
+  context,
+}: Pick<LoaderFunctionArgs, 'request' | 'context'>) {
   const {storefront} = context;
   const url = new URL(request.url);
   const searchParams = new URLSearchParams(url.search);

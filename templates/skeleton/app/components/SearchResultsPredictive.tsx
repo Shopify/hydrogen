@@ -1,22 +1,25 @@
-import { Link, useFetcher} from '@remix-run/react';
-import { Image, Money } from '@shopify/hydrogen';
-import React, { useRef, useEffect } from 'react';
+import {Link, useFetcher} from '@remix-run/react';
+import {Image, Money} from '@shopify/hydrogen';
+import React, {useRef, useEffect} from 'react';
 
-import type { SerializeFrom } from '@shopify/remix-oxygen';
-import { action as predictiveSearchAction } from '~/routes/search';
+import type {SerializeFrom} from '@shopify/remix-oxygen';
+import {action as predictiveSearchAction} from '~/routes/search';
 
-import { useAside } from './Aside';
-import { urlWithTrackingParams } from '~/lib/search';
+import {useAside} from './Aside';
+import {urlWithTrackingParams} from '~/lib/search';
 
 type PredictiveSearchAction = SerializeFrom<typeof predictiveSearchAction>;
 
 type UsePredictiveSearchReturn = ReturnType<typeof usePredictiveSearch>;
 type PredictiveSearchItems = NonNullable<UsePredictiveSearchReturn>['items'];
 
-type SearchResultsPredictiveArgs =  Pick<UsePredictiveSearchReturn, 'term' | 'total' | 'inputRef'> & {
-    state: UsePredictiveSearchReturn['fetcher']['state'];
-    items: PredictiveSearchItems;
-    closeSearch: () => void;
+type SearchResultsPredictiveArgs = Pick<
+  UsePredictiveSearchReturn,
+  'term' | 'total' | 'inputRef'
+> & {
+  state: UsePredictiveSearchReturn['fetcher']['state'];
+  items: PredictiveSearchItems;
+  closeSearch: () => void;
 };
 
 type SearchResultsPredictiveProps = {
@@ -30,7 +33,7 @@ export function SearchResultsPredictive({
   children,
 }: SearchResultsPredictiveProps) {
   const aside = useAside();
-  const { term, inputRef, fetcher, total, items } = usePredictiveSearch();
+  const {term, inputRef, fetcher, total, items} = usePredictiveSearch();
 
   /*
    * Utility that resets the search input
@@ -62,7 +65,8 @@ export function SearchResultsPredictive({
 type SearchResultsPredictiveArticlesProps = Pick<
   PredictiveSearchItems,
   'articles'
-> & Pick<SearchResultsPredictiveArgs, 'term' | 'closeSearch'>;
+> &
+  Pick<SearchResultsPredictiveArgs, 'term' | 'closeSearch'>;
 
 SearchResultsPredictive.Articles = function ({
   articles,
@@ -107,7 +111,8 @@ SearchResultsPredictive.Articles = function ({
 type SearchResultsPredictiveCollectionsProps = Pick<
   PredictiveSearchItems,
   'collections'
-> & Pick<SearchResultsPredictiveArgs, 'term' | 'closeSearch'>;
+> &
+  Pick<SearchResultsPredictiveArgs, 'term' | 'closeSearch'>;
 
 SearchResultsPredictive.Collections = function ({
   collections,
@@ -146,13 +151,11 @@ SearchResultsPredictive.Collections = function ({
         })}
       </ul>
     </div>
-  )
+  );
 };
 
-type SearchResultsPredictivePagesProps = Pick<
-  PredictiveSearchItems,
-  'pages'
-> & Pick<SearchResultsPredictiveArgs, 'term' | 'closeSearch'>;
+type SearchResultsPredictivePagesProps = Pick<PredictiveSearchItems, 'pages'> &
+  Pick<SearchResultsPredictiveArgs, 'term' | 'closeSearch'>;
 SearchResultsPredictive.Pages = function ({
   pages,
   closeSearch,
@@ -182,13 +185,14 @@ SearchResultsPredictive.Pages = function ({
         })}
       </ul>
     </div>
-  )
+  );
 };
 
 type SearchResultsPredictiveProductsProps = Pick<
   PredictiveSearchItems,
   'products'
-> & Pick<SearchResultsPredictiveArgs, 'term' | 'closeSearch'>;
+> &
+  Pick<SearchResultsPredictiveArgs, 'term' | 'closeSearch'>;
 
 SearchResultsPredictive.Products = function ({
   products,
@@ -222,11 +226,9 @@ SearchResultsPredictive.Products = function ({
                 <div>
                   <p>{product.title}</p>
                   <small>
-                  {product?.variants?.nodes?.[0].price && (
-                    <Money
-                      data={product.variants.nodes[0].price}
-                    />
-                  )}
+                    {product?.variants?.nodes?.[0].price && (
+                      <Money data={product.variants.nodes[0].price} />
+                    )}
                   </small>
                 </div>
               </Link>
@@ -235,13 +237,14 @@ SearchResultsPredictive.Products = function ({
         })}
       </ul>
     </div>
-  )
+  );
 };
 
 type SearchResultsPredictiveQueriesProps = Pick<
   PredictiveSearchItems,
   'queries'
-> & Pick<SearchResultsPredictiveArgs, 'term' | 'inputRef'>;
+> &
+  Pick<SearchResultsPredictiveArgs, 'term' | 'inputRef'>;
 
 SearchResultsPredictive.Queries = function ({
   queries,
@@ -272,7 +275,7 @@ SearchResultsPredictive.Queries = function ({
         })}
       </ul>
     </div>
-  )
+  );
 };
 
 SearchResultsPredictive.Empty = function ({
@@ -289,7 +292,6 @@ SearchResultsPredictive.Empty = function ({
     </p>
   );
 };
-
 
 type PredictiveSearchResult = {
   items: NonNullable<NonNullable<PredictiveSearchAction['result']>['items']>;
@@ -332,9 +334,9 @@ function usePredictiveSearch() {
     inputRef.current = document.querySelector('input[type="search"]');
   }, []);
 
-  const { items, total } = !term.current
+  const {items, total} = !term.current
     ? defaultResult // clear results when the search term is empty
-    : (fetcher?.data?.result || defaultResult) as PredictiveSearchResult
+    : ((fetcher?.data?.result || defaultResult) as PredictiveSearchResult);
 
-  return { items, total, inputRef, term, fetcher };
+  return {items, total, inputRef, term, fetcher};
 }

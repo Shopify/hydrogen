@@ -2,10 +2,10 @@
 
 Our skeleton template ships with predictive search functionality. While [regular search](../search/search.md)
 provides paginated search of `pages`, `articles` and `products` inside the `/search` route,
-predictive provides real-time results in a aside drawer for `pages`, `articles`, `products`, `collections`  and
+predictive provides real-time results in a aside drawer for `pages`, `articles`, `products`, `collections` and
 recommended `queries/suggestions`.
 
-This integration uses the storefront API (SFAPI) [predictiveSearch]( https://shopify.dev/docs/api/storefront/latest/queries/vpredictiveSearch) endpoint to retrieve predictive search results based on a search term.
+This integration uses the storefront API (SFAPI) [predictiveSearch](https://shopify.dev/docs/api/storefront/latest/queries/vpredictiveSearch) endpoint to retrieve predictive search results based on a search term.
 
 ## Components Architecture
 
@@ -13,10 +13,10 @@ This integration uses the storefront API (SFAPI) [predictiveSearch]( https://sho
 
 ## Components
 
-|File  | Description   |
-|---|---|
-| [`app/components/SearchFormPredictive.tsx`](../../app/components/SearchFormPredictive.tsx) | A fully customizable form component configured to make form `POST` requests to the `/search` route. |
-| [`app/components/SearchResultsPredictive.tsx`](../../app/components/SearchResultsPredictive.tsx) |  A fully customizable search results wrapper, that provides compound components to render `articles`, `pages`, `products`, `collections` and `queries`. |
+| File                                                                                             | Description                                                                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`app/components/SearchFormPredictive.tsx`](../../app/components/SearchFormPredictive.tsx)       | A fully customizable form component configured to make form `POST` requests to the `/search` route.                                                    |
+| [`app/components/SearchResultsPredictive.tsx`](../../app/components/SearchResultsPredictive.tsx) | A fully customizable search results wrapper, that provides compound components to render `articles`, `pages`, `products`, `collections` and `queries`. |
 
 ## Instructions
 
@@ -157,7 +157,10 @@ const PREDICTIVE_SEARCH_QUERY = `#graphql
 /**
  * Predictive search fetcher
  */
-async function predictiveSeach({request, context}: Pick<ActionFunctionArgs, 'request' | 'context'>) {
+async function predictiveSeach({
+  request,
+  context,
+}: Pick<ActionFunctionArgs, 'request' | 'context'>) {
   const {storefront} = context;
   const formData = await request.formData();
   const term = String(formData.get('q') || '');
@@ -187,10 +190,7 @@ async function predictiveSeach({request, context}: Pick<ActionFunctionArgs, 'req
     throw new Error('No predictive search data returned');
   }
 
-  const total = Object.values(items).reduce(
-    (acc, {length}) => acc + length,
-    0,
-  );
+  const total = Object.values(items).reduce((acc, {length}) => acc + length, 0);
 
   return json({term, result: {items, total}, error: null});
 }

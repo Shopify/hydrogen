@@ -19,7 +19,7 @@ export function SearchResults({result, term, children}: SearchResultsProps) {
   return children({...result.items, term});
 }
 
-SearchResults.Articles = function({
+SearchResults.Articles = function ({
   articles,
   term,
 }: {
@@ -53,7 +53,7 @@ SearchResults.Articles = function({
   );
 };
 
-SearchResults.Pages = function({
+SearchResults.Pages = function ({
   pages,
   term,
 }: {
@@ -87,7 +87,7 @@ SearchResults.Pages = function({
   );
 };
 
-SearchResults.Products = function({
+SearchResults.Products = function ({
   products,
   term,
 }: Pick<SearchItems, 'products'> & {term: string}) {
@@ -150,6 +150,6 @@ SearchResults.Products = function({
   );
 };
 
-SearchResults.Empty = function() {
+SearchResults.Empty = function () {
   return <p>No results, try a different search.</p>;
 };

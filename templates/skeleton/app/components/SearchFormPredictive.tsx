@@ -1,7 +1,7 @@
 import {useFetcher, useNavigate, type FormProps} from '@remix-run/react';
 import React, {useRef, useEffect} from 'react';
 import type {action as predictiveSearchAction} from '~/routes/search';
-import { useAside } from './Aside';
+import {useAside} from './Aside';
 
 type SearchFormPredictiveChildren = (args: {
   fetchResults: (event: React.ChangeEvent<HTMLInputElement>) => void;

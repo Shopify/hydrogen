@@ -225,11 +225,13 @@ export const SEARCH_QUERY = `#graphql
   ${PAGE_INFO_FRAGMENT}
 ` as const;
 
-
 /**
  * Regular search fetcher
  */
-async function search({request, context}: Pick<LoaderFunctionArgs, 'request' | 'context'>) {
+async function search({
+  request,
+  context,
+}: Pick<LoaderFunctionArgs, 'request' | 'context'>) {
   const {storefront} = context;
   const url = new URL(request.url);
   const searchParams = new URLSearchParams(url.search);
@@ -382,7 +384,10 @@ const PREDICTIVE_SEARCH_QUERY = `#graphql
 /**
  * Predictive search fetcher
  */
-async function predictiveSeach({request, context}: Pick<ActionFunctionArgs, 'request' | 'context'>) {
+async function predictiveSeach({
+  request,
+  context,
+}: Pick<ActionFunctionArgs, 'request' | 'context'>) {
   const {storefront} = context;
   const formData = await request.formData();
   const term = String(formData.get('q') || '');
@@ -412,11 +417,7 @@ async function predictiveSeach({request, context}: Pick<ActionFunctionArgs, 'req
     throw new Error('No predictive search data returned');
   }
 
-  const total = Object.values(items).reduce(
-    (acc, {length}) => acc + length,
-    0,
-  );
+  const total = Object.values(items).reduce((acc, {length}) => acc + length, 0);
 
   return json({term, result: {items, total}, error: null});
 }
-
