@@ -223,7 +223,7 @@ export async function loader({request, context}: LoaderFunctionArgs) {
 Finally, create a default export to render both the search form and the search results
 
 ```ts
-mport {SearchForm} from '~/components/SearchForm';
+import {SearchForm} from '~/components/SearchForm';
 import {SearchResults} from '~/components/SearchResults';
 
 /**
