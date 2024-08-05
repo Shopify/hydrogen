@@ -127,14 +127,14 @@ function SearchAside() {
                   closeSearch={closeSearch}
                   term={term}
                 />
-                {term.current && total && (
+                {term.current && total ? (
                   <Link onClick={closeSearch} to={`/search?q=${term.current}`}>
                     <p>
                       View all results for <q>{term.current}</q>
                       &nbsp; →
                     </p>
                   </Link>
-                )}
+                ) : null}
               </>
             );
           }}

@@ -3,7 +3,7 @@ import {Image, Money} from '@shopify/hydrogen';
 import React, {useRef, useEffect} from 'react';
 
 import type {SerializeFrom} from '@shopify/remix-oxygen';
-import {action as predictiveSearchAction} from '~/routes/search';
+import type {action as predictiveSearchAction} from '~/routes/search';
 
 import {useAside} from './Aside';
 import {urlWithTrackingParams} from '~/lib/search';
@@ -261,6 +261,7 @@ SearchResultsPredictive.Queries = function ({
           return (
             <li className="predictive-search-result-item" key={suggestion.text}>
               <div
+                role="presentation"
                 onClick={() => {
                   if (!inputRef.current) return;
                   inputRef.current.value = suggestion.text;

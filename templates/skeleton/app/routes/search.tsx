@@ -56,7 +56,7 @@ export async function loader({request, context}: LoaderFunctionArgs) {
  * Renders the /search route
  */
 export default function SearchPage() {
-  const {term, result} = useLoaderData<typeof loader>();
+  const {term, result, error} = useLoaderData<typeof loader>();
 
   return (
     <div className="search">
@@ -76,6 +76,7 @@ export default function SearchPage() {
           </>
         )}
       </SearchForm>
+      {error && <p style={{color: 'red'}}>{error}</p>}
       {!term || !result?.total ? (
         <SearchResults.Empty />
       ) : (
@@ -234,9 +235,9 @@ async function search({
 }: Pick<LoaderFunctionArgs, 'request' | 'context'>) {
   const {storefront} = context;
   const url = new URL(request.url);
-  const searchParams = new URLSearchParams(url.search);
   const variables = getPaginationVariables(request, {pageBy: 8});
-  const term = String(searchParams.get('q') || '');
+  const term = String(url.searchParams.get('q') || '');
+  let error = null;
 
   // Search articles, pages, and products for the `q` term
   const {errors, ...items} = await storefront.query(SEARCH_QUERY, {
@@ -248,14 +249,14 @@ async function search({
   }
 
   if (errors) {
-    throw new Error(errors[0].message);
+    error = errors.map(({message}) => message).join(', ');
   }
 
   const total = Object.values(items).reduce((acc, {nodes}) => {
     return acc + nodes.length;
   }, 0);
 
-  return json({term, result: {total, items}});
+  return json({term, result: {total, items}, error});
 }
 
 /**
