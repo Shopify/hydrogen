@@ -3,7 +3,7 @@ import { Image, Money } from '@shopify/hydrogen';
 import React, { useRef, useEffect } from 'react';
 
 import type { SerializeFrom } from '@shopify/remix-oxygen';
-import type { action as predictiveSearchAction } from '~/routes/search';
+import { action as predictiveSearchAction } from '~/routes/search';
 
 import { useAside } from './Aside';
 import { urlWithTrackingParams } from '~/lib/search';

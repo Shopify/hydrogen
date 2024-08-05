@@ -2,7 +2,7 @@ import {Link} from '@remix-run/react';
 import {Image, Money, Pagination} from '@shopify/hydrogen';
 import type {SerializeFrom} from '@shopify/remix-oxygen';
 import {urlWithTrackingParams} from '~/lib/search';
-import type {loader as searchLoader} from '~/routes/search';
+import {loader as searchLoader} from '~/routes/search';
 
 type SearchLoader = SerializeFrom<typeof searchLoader>;
 type SearchResult = NonNullable<SearchLoader['result']>;

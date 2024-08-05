@@ -40,7 +40,7 @@ export async function loader({request, context}: LoaderFunctionArgs) {
   try {
     return await search({request, context});
   } catch (error) {
-    let message;
+    let message = '';
     if (error instanceof Error) {
       message = error.message;
     } else if (typeof error === 'string') {
