@@ -44,27 +44,30 @@ export function notifyIssueWithTunnelAndMockShop(cliCommand: string) {
 export function getDevConfigInBackground(
   root: string,
   customerAccountPushFlag: boolean,
+  envFile: string,
 ) {
-  return getLocalVariables(root).then(async ({variables: localVariables}) => {
-    const customerAccountPush =
-      customerAccountPushFlag && !isMockShop(localVariables);
+  return getLocalVariables(root, envFile).then(
+    async ({variables: localVariables}) => {
+      const customerAccountPush =
+        customerAccountPushFlag && !isMockShop(localVariables);
 
-    // ensure this occur before `getConfig` since it can run link and changed env vars
-    if (customerAccountPush) {
-      await getStorefrontId(root);
-    }
+      // ensure this occur before `getConfig` since it can run link and changed env vars
+      if (customerAccountPush) {
+        await getStorefrontId(root);
+      }
 
-    const {shop, storefront} = await getConfig(root);
-    const storefrontId = storefront?.id;
+      const {shop, storefront} = await getConfig(root);
+      const storefrontId = storefront?.id;
 
-    return {
-      storefrontId,
-      customerAccountPush,
-      fetchRemote: !!shop && !!storefrontId,
-      localVariables,
-      storefrontTitle: storefront?.title,
-    };
-  });
+      return {
+        storefrontId,
+        customerAccountPush,
+        fetchRemote: !!shop && !!storefrontId,
+        localVariables,
+        storefrontTitle: storefront?.title,
+      };
+    },
+  );
 }
 
 export const TUNNEL_DOMAIN = Object.freeze({

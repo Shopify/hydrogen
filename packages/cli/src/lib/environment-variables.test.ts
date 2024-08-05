@@ -14,6 +14,8 @@ vi.mock('./graphql/admin/pull-variables.js');
 vi.mock('./graphql/admin/list-environments.js');
 
 describe('getAllEnvironmentVariables()', () => {
+  const envFile = '.env';
+
   const ADMIN_SESSION = {
     token: 'abc123',
     storeFqdn: 'my-shop',
@@ -62,6 +64,7 @@ describe('getAllEnvironmentVariables()', () => {
     await inTemporaryDirectory(async (tmpDir) => {
       const {allVariables} = await getAllEnvironmentVariables({
         root: tmpDir,
+        envFile,
       });
 
       expect(allVariables).toMatchObject({PUBLIC_API_TOKEN: 'abc123'});
@@ -73,6 +76,7 @@ describe('getAllEnvironmentVariables()', () => {
       await getAllEnvironmentVariables({
         envHandle: 'production',
         root: tmpDir,
+        envFile,
       });
 
       expect(getStorefrontEnvVariables).toHaveBeenCalledWith(
@@ -88,6 +92,7 @@ describe('getAllEnvironmentVariables()', () => {
       await getAllEnvironmentVariables({
         envBranch: 'main',
         root: tmpDir,
+        envFile,
       });
 
       expect(getStorefrontEnvVariables).toHaveBeenCalledWith(
@@ -104,6 +109,7 @@ describe('getAllEnvironmentVariables()', () => {
         envBranch: 'main',
         root: tmpDir,
         fetchRemote: false,
+        envFile,
       });
 
       expect(getStorefrontEnvVariables).not.toHaveBeenCalled();
@@ -116,6 +122,7 @@ describe('getAllEnvironmentVariables()', () => {
 
       const {logInjectedVariables} = await getAllEnvironmentVariables({
         root: tmpDir,
+        envFile,
       });
 
       logInjectedVariables();
@@ -138,6 +145,7 @@ describe('getAllEnvironmentVariables()', () => {
 
       const {logInjectedVariables} = await getAllEnvironmentVariables({
         root: tmpDir,
+        envFile,
       });
 
       logInjectedVariables();
@@ -169,6 +177,7 @@ describe('getAllEnvironmentVariables()', () => {
 
         const {logInjectedVariables} = await getAllEnvironmentVariables({
           root: tmpDir,
+          envFile,
         });
 
         logInjectedVariables();
@@ -183,13 +192,14 @@ describe('getAllEnvironmentVariables()', () => {
   describe('when there are local variables', () => {
     it('includes local variables in the list', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        const filePath = joinPath(tmpDir, '.env');
+        const filePath = joinPath(tmpDir, envFile);
         await writeFile(filePath, 'LOCAL_TOKEN=1');
 
         const outputMock = mockAndCaptureOutput();
 
         const {logInjectedVariables} = await getAllEnvironmentVariables({
           root: tmpDir,
+          envFile,
         });
 
         logInjectedVariables();
@@ -201,13 +211,14 @@ describe('getAllEnvironmentVariables()', () => {
     describe('and they overwrite remote variables', () => {
       it('uses special messaging to alert the user', async () => {
         await inTemporaryDirectory(async (tmpDir) => {
-          const filePath = joinPath(tmpDir, '.env');
+          const filePath = joinPath(tmpDir, envFile);
           await writeFile(filePath, 'PUBLIC_API_TOKEN=abc');
 
           const outputMock = mockAndCaptureOutput();
 
           const {logInjectedVariables} = await getAllEnvironmentVariables({
             root: tmpDir,
+            envFile,
           });
 
           logInjectedVariables();

@@ -18,6 +18,7 @@ interface Arguments {
   envHandle?: string;
   envBranch?: string;
   fetchRemote?: boolean;
+  envFile: string;
   localVariables?: EnvMap;
 }
 
@@ -30,6 +31,7 @@ export async function getAllEnvironmentVariables({
   root,
   envHandle,
   envBranch,
+  envFile,
   fetchRemote = true,
   localVariables: inlineLocalVariables,
 }: Arguments) {
@@ -54,7 +56,7 @@ export async function getAllEnvironmentVariables({
       // Get local vars
       inlineLocalVariables
         ? {variables: inlineLocalVariables}
-        : getLocalVariables(root),
+        : getLocalVariables(root, envFile),
     ]);
 
   const remoteSecretKeys = Object.keys(remoteSecrets);
@@ -73,7 +75,7 @@ export async function getAllEnvironmentVariables({
           ...remotePublicKeys
             .filter((key) => !localKeys.includes(key))
             .map((key) => [key, 'from Oxygen']),
-          ...localKeys.map((key) => [key, 'from local .env']),
+          ...localKeys.map((key) => [key, `from local ${envFile}`]),
           // Ensure secret variables always get added to the bottom of the list
           ...remoteSecretKeys
             .filter((key) => !localKeys.includes(key))
@@ -129,8 +131,8 @@ async function getRemoteVariables(
   return {remoteVariables, remoteSecrets};
 }
 
-export async function getLocalVariables(root: string) {
-  const dotEnvPath = resolvePath(root, '.env');
+export async function getLocalVariables(root: string, envFile: string) {
+  const dotEnvPath = resolvePath(root, envFile);
 
   return await fileExists(dotEnvPath).then((exists) =>
     exists ? readAndParseDotEnv(dotEnvPath) : {variables: {} as EnvMap},

@@ -35,6 +35,8 @@ vi.mock('../../../lib/verify-linked-storefront.js');
 vi.mock('../../../lib/graphql/admin/pull-variables.js');
 
 describe('pullVariables', () => {
+  const envFile = '.env';
+
   const ADMIN_SESSION: AdminSession = {
     token: 'abc123',
     storeFqdn: 'my-shop',
@@ -95,7 +97,7 @@ describe('pullVariables', () => {
   describe('when environment is provided', () => {
     it('calls getStorefrontEnvVariables when handle is provided', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        await runEnvPull({path: tmpDir, env: 'staging'});
+        await runEnvPull({path: tmpDir, env: 'staging', envFile});
 
         expect(getStorefrontEnvVariables).toHaveBeenCalledWith(
           ADMIN_SESSION,
@@ -107,7 +109,7 @@ describe('pullVariables', () => {
 
     it('calls getStorefrontEnvVariables when branch is provided', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        await runEnvPull({path: tmpDir, envBranch: 'main'});
+        await runEnvPull({path: tmpDir, envBranch: 'main', envFile});
 
         expect(getStorefrontEnvVariables).toHaveBeenCalledWith(
           ADMIN_SESSION,
@@ -120,7 +122,7 @@ describe('pullVariables', () => {
     it('throws error if handle does not map to any environment', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
         await expect(
-          runEnvPull({path: tmpDir, env: 'fake'}),
+          runEnvPull({path: tmpDir, env: 'fake', envFile}),
         ).rejects.toThrowError('Environment not found');
       });
     });
@@ -128,19 +130,33 @@ describe('pullVariables', () => {
     it('throws error if branch does not map to any environment', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
         await expect(
-          runEnvPull({path: tmpDir, envBranch: 'fake'}),
+          runEnvPull({path: tmpDir, envBranch: 'fake', envFile}),
         ).rejects.toThrowError('Environment not found');
       });
     });
   });
 
-  it('writes environment variables to a .env file', async () => {
+  it('writes environment variables to a .env file by default', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
-      const filePath = joinPath(tmpDir, '.env');
+      const filePath = joinPath(tmpDir, envFile);
 
       expect(await fileExists(filePath)).toBeFalsy();
 
-      await runEnvPull({path: tmpDir});
+      await runEnvPull({path: tmpDir, envFile});
+
+      expect(await readFile(filePath)).toStrictEqual(
+        'PUBLIC_API_TOKEN=abc123\n' + 'PRIVATE_API_TOKEN=""',
+      );
+    });
+  });
+
+  it('writes environment variables to a specified file', async () => {
+    await inTemporaryDirectory(async (tmpDir) => {
+      const filePath = joinPath(tmpDir, '.env.test');
+
+      expect(await fileExists(filePath)).toBeFalsy();
+
+      await runEnvPull({path: tmpDir, envFile: '.env.test'});
 
       expect(await readFile(filePath)).toStrictEqual(
         'PUBLIC_API_TOKEN=abc123\n' + 'PRIVATE_API_TOKEN=""',
@@ -152,7 +168,7 @@ describe('pullVariables', () => {
     await inTemporaryDirectory(async (tmpDir) => {
       const outputMock = mockAndCaptureOutput();
 
-      await runEnvPull({path: tmpDir});
+      await runEnvPull({path: tmpDir, envFile});
 
       expect(outputMock.warn()).toMatch(
         /Existing Link contains environment variables marked as secret, so their/,
@@ -165,7 +181,7 @@ describe('pullVariables', () => {
     await inTemporaryDirectory(async (tmpDir) => {
       const outputMock = mockAndCaptureOutput();
 
-      await runEnvPull({path: tmpDir});
+      await runEnvPull({path: tmpDir, envFile});
 
       expect(outputMock.info()).toMatch(
         /Changes have been made to your \.env file/,
@@ -185,7 +201,7 @@ describe('pullVariables', () => {
       await inTemporaryDirectory(async (tmpDir) => {
         const outputMock = mockAndCaptureOutput();
 
-        await runEnvPull({path: tmpDir});
+        await runEnvPull({path: tmpDir, envFile});
 
         expect(outputMock.info()).toMatch(/No environment variables found\./);
       });
@@ -199,7 +215,7 @@ describe('pullVariables', () => {
 
     it('ends without requesting variables', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        await runEnvPull({path: tmpDir});
+        await runEnvPull({path: tmpDir, envFile});
 
         expect(getStorefrontEnvVariables).not.toHaveBeenCalled();
       });
@@ -210,7 +226,7 @@ describe('pullVariables', () => {
         vi.mocked(renderConfirmationPrompt).mockResolvedValue(false);
 
         await inTemporaryDirectory(async (tmpDir) => {
-          await runEnvPull({path: tmpDir});
+          await runEnvPull({path: tmpDir, envFile});
 
           expect(getStorefrontEnvVariables).not.toHaveBeenCalled();
         });
@@ -225,7 +241,7 @@ describe('pullVariables', () => {
 
     it('renders missing storefronts message and ends', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        await runEnvPull({path: tmpDir});
+        await runEnvPull({path: tmpDir, envFile});
 
         expect(renderMissingStorefront).toHaveBeenCalledOnce();
       });
@@ -239,10 +255,10 @@ describe('pullVariables', () => {
 
     it('prompts the user to confirm', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        const filePath = joinPath(tmpDir, '.env');
+        const filePath = joinPath(tmpDir, envFile);
         await writeFile(filePath, 'EXISTING_TOKEN=1');
 
-        await runEnvPull({path: tmpDir});
+        await runEnvPull({path: tmpDir, envFile});
 
         expect(renderConfirmationPrompt).toHaveBeenCalledWith({
           confirmationMessage: `Yes, confirm changes`,
@@ -257,10 +273,10 @@ describe('pullVariables', () => {
     describe('and --force is enabled', () => {
       it('does not prompt the user to confirm', async () => {
         await inTemporaryDirectory(async (tmpDir) => {
-          const filePath = joinPath(tmpDir, '.env');
+          const filePath = joinPath(tmpDir, envFile);
           await writeFile(filePath, 'EXISTING_TOKEN=1');
 
-          await runEnvPull({path: tmpDir, force: true});
+          await runEnvPull({path: tmpDir, force: true, envFile});
 
           expect(renderConfirmationPrompt).not.toHaveBeenCalled();
         });

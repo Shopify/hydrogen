@@ -63,6 +63,7 @@ type DevOptions = {
   cliConfig: Config;
   shouldLiveReload?: boolean;
   verbose?: boolean;
+  envFile: string;
 };
 
 export async function runClassicCompilerDev({
@@ -80,6 +81,7 @@ export async function runClassicCompilerDev({
   inspectorPort,
   customerAccountPush: customerAccountPushFlag = false,
   shouldLiveReload = true,
+  envFile,
   cliConfig,
   verbose,
 }: DevOptions) {
@@ -135,6 +137,7 @@ export async function runClassicCompilerDev({
   const backgroundPromise = getDevConfigInBackground(
     root,
     customerAccountPushFlag,
+    envFile,
   );
 
   const tunnelPromise =
@@ -160,6 +163,7 @@ export async function runClassicCompilerDev({
       envBranch,
       envHandle,
       localVariables,
+      envFile,
     }),
   );
 
@@ -315,7 +319,7 @@ export async function runClassicCompilerDev({
         const [relative, absolute] = getFilePaths(file);
         outputInfo(`\n📄 File changed: ${relative}`);
 
-        if (relative.endsWith('.env')) {
+        if (relative.endsWith(envFile)) {
           skipRebuildLogs = true;
           const {fetchRemote} = await backgroundPromise;
           const {allVariables, logInjectedVariables} =
@@ -324,6 +328,7 @@ export async function runClassicCompilerDev({
               fetchRemote,
               envBranch,
               envHandle,
+              envFile,
             });
 
           logInjectedVariables();

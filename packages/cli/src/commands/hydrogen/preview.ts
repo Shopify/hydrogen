@@ -37,6 +37,7 @@ export default class Preview extends Command {
     ...commonFlags.legacyRuntime,
     ...commonFlags.env,
     ...commonFlags.envBranch,
+    ...commonFlags.envFile,
     ...commonFlags.inspectorPort,
     ...commonFlags.debug,
     ...commonFlags.verbose,
@@ -106,6 +107,7 @@ type PreviewOptions = {
   entry?: string;
   codegen?: boolean;
   codegenConfigPath?: string;
+  envFile: string;
 };
 
 export async function runPreview({
@@ -122,6 +124,7 @@ export async function runPreview({
   codegen: useCodegen = false,
   codegenConfigPath,
   entry,
+  envFile,
 }: PreviewOptions) {
   if (!process.env.NODE_ENV)
     process.env.NODE_ENV = watch ? 'development' : 'production';
@@ -189,6 +192,7 @@ export async function runPreview({
       fetchRemote,
       envBranch,
       envHandle,
+      envFile,
     },
   );
 

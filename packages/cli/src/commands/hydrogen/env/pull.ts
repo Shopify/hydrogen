@@ -37,6 +37,7 @@ export default class EnvPull extends Command {
   static flags = {
     ...commonFlags.env,
     ...commonFlags.envBranch,
+    ...commonFlags.envFile,
     ...commonFlags.path,
     ...commonFlags.force,
   };
@@ -50,6 +51,7 @@ export default class EnvPull extends Command {
 interface EnvPullOptions {
   env?: string;
   envBranch?: string;
+  envFile: string;
   force?: boolean;
   path?: string;
 }
@@ -58,6 +60,7 @@ export async function runEnvPull({
   env: envHandle,
   envBranch,
   path: root = process.cwd(),
+  envFile,
   force,
 }: EnvPullOptions) {
   const [{session, config}, cliCommand] = await Promise.all([
@@ -114,8 +117,8 @@ export async function runEnvPull({
   const variables = storefront.environmentVariables;
   if (!variables.length) return;
 
-  const fileName = colors.whiteBright(`.env`);
-  const dotEnvPath = resolvePath(root, '.env');
+  const fileName = colors.whiteBright(envFile);
+  const dotEnvPath = resolvePath(root, envFile);
   const fetchedEnv: Record<string, string> = {};
 
   variables.forEach(({isSecret, key, value}) => {
@@ -140,7 +143,8 @@ export async function runEnvPull({
     const overwrite = await renderConfirmationPrompt({
       confirmationMessage: `Yes, confirm changes`,
       cancellationMessage: `No, make changes later`,
-      message: outputContent`We'll make the following changes to your .env file:
+      message:
+        outputContent`We'll make the following changes to your ${fileName} file:
 
 ${outputToken.linesDiff(diff)}
 Continue?`.value,

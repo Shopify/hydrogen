@@ -79,6 +79,15 @@ export const commonFlags = {
       },
     }),
   },
+  envFile: {
+    'env-file': Flags.string({
+      description:
+        "Path to an environment file to override existing environment variables. \
+Defaults to the '.env' located in your project path `--path`.",
+      required: false,
+      default: '.env',
+    }),
+  },
   sourcemap: {
     sourcemap: Flags.boolean({
       description:

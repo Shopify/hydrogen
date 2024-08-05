@@ -40,7 +40,11 @@ import {
   orderEnvironmentsBySafety,
 } from '../../lib/common.js';
 import {execAsync} from '../../lib/process.js';
-import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
+import {
+  commonFlags,
+  flagsToCamelObject,
+  overrideFlag,
+} from '../../lib/flags.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
 import {OxygenDeploymentData} from '../../lib/graphql/admin/get-oxygen-data.js';
 import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
@@ -69,10 +73,12 @@ export default class Deploy extends Command {
     ...commonFlags.entry,
     ...commonFlags.env,
     ...commonFlags.envBranch,
-    'env-file': Flags.string({
-      description:
-        'Path to an environment file to override existing environment variables for the deployment.',
-      required: false,
+    ...overrideFlag(commonFlags.envFile, {
+      'env-file': {
+        description:
+          'Path to an environment file to override existing environment variables for the deployment.',
+        default: undefined,
+      },
     }),
     preview: Flags.boolean({
       description:
