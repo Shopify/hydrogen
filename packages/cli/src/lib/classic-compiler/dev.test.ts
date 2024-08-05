@@ -37,6 +37,7 @@ describe('Classic Remix Compiler dev', () => {
         disableVirtualRoutes: true,
         disableVersionCheck: true,
         cliConfig: {} as any,
+        envFile: '.env',
       });
 
       try {
