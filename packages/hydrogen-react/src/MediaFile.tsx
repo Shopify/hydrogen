@@ -1,4 +1,4 @@
-import {Image, type HydrogenImageProps} from './Image.js';
+import {Image, type FocalPoint, type HydrogenImageProps} from './Image.js';
 import {Video} from './Video.js';
 import {ExternalVideo} from './ExternalVideo.js';
 import {ModelViewer} from './ModelViewer.js';
@@ -52,11 +52,16 @@ export function MediaFile({
         }
       }
 
+      const {focalPoint} =
+        (data.presentation?.asJson as {focalPoint: FocalPoint} | undefined) ||
+        {};
+
       return (
         <Image
           {...passthroughProps}
           {...mediaOptions?.image}
           data={data.image}
+          focalPoint={focalPoint}
         />
       );
     }

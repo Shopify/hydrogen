@@ -41,6 +41,11 @@ export type LoaderParams = {
 
 export type Loader = (params: LoaderParams) => string;
 
+export type FocalPoint = {
+  x: string;
+  y: string;
+};
+
 /*
  * @TODO: Expand to include focal point support; and/or switch this to be an SF API type
  */
@@ -100,6 +105,14 @@ type HydrogenImageBaseProps = {
    * your own function to use a another provider, as long as they support URL based image transformations.
    */
   loader?: Loader;
+  /**
+   * Optional `{x,y}` focal point values (between 0 and 1). This can be set from the shop admin when editing media image
+   * files and exposed via the Storefront API for MediaImages. A focal point is a position in an image that the merchant
+   * wants to remain in view as the image is cropped and adjusted by the theme. When this prop is set,
+   * `object-fit: none` and `object-position`: `x% y%` styles will be applied to the image.
+   * {@link https://shopify.dev/docs/api/storefront/2024-04/objects/MediaPresentation}
+   */
+  focalPoint?: FocalPoint;
   /** An optional prop you can use to change the default srcSet generation behaviour */
   srcSetOptions?: SrcSetOptions;
 };
@@ -170,6 +183,8 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
         placeholderWidth: 100,
       },
       width = '100%',
+      focalPoint,
+      style: styleProp,
       ...passthroughProps
     },
     ref,
@@ -280,6 +295,32 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
     }
 
     /*
+     * Focal point support
+     * https://shopify.dev/changelog/access-image-focal-point-from-the-storefront-api
+     */
+
+    const style = React.useMemo(() => {
+      const style = {...styleProp};
+
+      if (focalPoint) {
+        const {x, y} = focalPoint;
+        if (!(Number(x) >= 0 && Number(y) >= 0)) {
+          if (__HYDROGEN_DEV__) {
+            console.warn(
+              '[h2:warn:Image] Focal point values must be between 0 and 1.',
+            );
+          }
+        } else {
+          style.objectFit ??= 'none';
+          style.objectPosition ??= `${(Number(x) * 100).toFixed(4)}% ${(
+            Number(y) * 100
+          ).toFixed(4)}%`;
+        }
+      }
+      return style;
+    }, [styleProp, focalPoint]);
+
+    /*
      * We check to see whether the image is fixed width or not,
      * if fixed, we still provide a srcSet, but only to account for
      * different pixel densities.
@@ -296,6 +337,7 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
           loading={loading}
           normalizedProps={normalizedProps}
           passthroughProps={passthroughProps}
+          style={style}
           ref={ref}
           width={width}
         />
@@ -312,6 +354,7 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
           normalizedProps={normalizedProps}
           passthroughProps={passthroughProps}
           placeholderWidth={placeholderWidth}
+          style={style}
           ref={ref}
           sizes={sizes}
         />
@@ -351,6 +394,7 @@ const FixedWidthImage = React.forwardRef<
       loading,
       normalizedProps,
       passthroughProps,
+      style,
       width,
     },
     ref,
@@ -425,7 +469,7 @@ const FixedWidthImage = React.forwardRef<
         width={fixed.width}
         style={{
           aspectRatio: fixed.aspectRatio,
-          ...passthroughProps.style,
+          ...style,
         }}
         {...passthroughProps}
       />
@@ -461,6 +505,7 @@ const FluidImage = React.forwardRef<HTMLImageElement, FluidImageProps>(
       normalizedProps,
       passthroughProps,
       placeholderWidth,
+      style,
       sizes,
     },
     ref,
@@ -508,7 +553,7 @@ const FluidImage = React.forwardRef<HTMLImageElement, FluidImageProps>(
         style={{
           width: normalizedProps.width,
           aspectRatio: normalizedProps.aspectRatio,
-          ...passthroughProps.style,
+          ...style,
         }}
       />
     );
