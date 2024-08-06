@@ -51,6 +51,18 @@ export async function action({request, context}) {
       result = await cart.updateDiscountCodes(discountCodes);
       break;
     }
+    case CartForm.ACTIONS.GiftCardCodesUpdate: {
+      const formGiftCardCode = inputs.giftCardCode;
+
+      // User inputted gift card code
+      const giftCardCodes = formGiftCardCode ? [formGiftCardCode] : [];
+
+      // Combine discount codes already applied on cart
+      giftCardCodes.push(...inputs.giftCardCodes);
+
+      result = await cart.updateGiftCardCodes(giftCardCodes);
+      break;
+    }
     case CartForm.ACTIONS.BuyerIdentityUpdate: {
       result = await cart.updateBuyerIdentity({
         ...inputs.buyerIdentity,
