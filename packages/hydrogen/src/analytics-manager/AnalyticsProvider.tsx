@@ -278,7 +278,6 @@ function AnalyticsProvider({
   consent,
   customData = {},
   shop: shopProp = null,
-  disableThrowOnError = false,
   cookieDomain,
 }: AnalyticsProviderProps): JSX.Element {
   const listenerSet = useRef(false);
@@ -393,8 +392,6 @@ function useShopAnalytics(shopProp: AnalyticsProviderProps['shop']): {
 
   return {shop};
 }
-
-// TODO: useCustomerAnalytics hook
 
 type ShopAnalyticsProps = {
   /**
