@@ -45,7 +45,7 @@ export async function action({request, context}) {
       // User inputted discount code
       const discountCodes = formDiscountCode ? [formDiscountCode] : [];
 
-      // Combine discount code codes already applied on cart
+      // Combine discount codes already applied on cart
       discountCodes.push(...inputs.discountCodes);
 
       result = await cart.updateDiscountCodes(discountCodes);
