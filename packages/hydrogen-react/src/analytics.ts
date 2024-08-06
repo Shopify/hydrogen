@@ -65,6 +65,12 @@ export function sendShopifyAnalytics(
   }
 }
 
+// Shopify monorail return invalid agent for Lighthouse userAgents
+function isLighthouseUserAgent() {
+  if (typeof window === 'undefined' || !window.navigator) return false;
+  return /Chrome-Lighthouse/.test(window.navigator.userAgent);
+}
+
 type MonorailResponse = {
   status: number;
   message: string;
@@ -76,6 +82,10 @@ function sendToShopify(
   events: ShopifyMonorailEvent[],
   shopDomain?: string,
 ): Promise<void> {
+  if (isLighthouseUserAgent()) {
+    return Promise.resolve();
+  }
+
   const eventsToBeSent = {
     events,
     metadata: {

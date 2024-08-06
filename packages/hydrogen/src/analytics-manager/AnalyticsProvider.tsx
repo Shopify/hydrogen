@@ -7,7 +7,6 @@ import {
   useContext,
   useRef,
 } from 'react';
-import isbot from 'isbot';
 import {type CartReturn} from '../cart/queries/cart-types';
 import {
   AnalyticsPageView,
@@ -259,11 +258,6 @@ function register(key: string) {
   };
 }
 
-function isBot() {
-  if (typeof window === 'undefined' || !window.navigator) return false;
-  return isbot(window.navigator.userAgent);
-}
-
 // This functions attempts to automatically determine if the user can be tracked if the
 // customer privacy API is available. If not, it will default to false.
 function shopifyCanTrack(): boolean {
@@ -293,9 +287,7 @@ function AnalyticsProvider({
   );
   const [carts, setCarts] = useState<Carts>({cart: null, prevCart: null});
   const [canTrack, setCanTrack] = useState<() => boolean>(
-     isBot()
-       ? () => () => false
-       : customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
+    customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
   );
 
   if (!!shop) {
@@ -362,10 +354,7 @@ function AnalyticsProvider({
           onReady={() => {
             listenerSet.current = true;
             setConsentLoaded(true);
-            setCanTrack(isBot()
-              ? () => () => false
-              : () => shopifyCanTrack
-            );
+            setCanTrack(() => shopifyCanTrack);
           }}
           domain={cookieDomain}
         />
