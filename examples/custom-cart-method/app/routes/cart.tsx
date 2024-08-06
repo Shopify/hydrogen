@@ -64,7 +64,7 @@ export async function action({request, context}: ActionFunctionArgs) {
         formDiscountCode ? [formDiscountCode] : []
       ) as string[];
 
-      // Combine giftcard codes already applied on cart
+      // Combine discount codes already applied on cart
       discountCodes.push(...inputs.discountCodes);
 
       result = await cart.updateDiscountCodes(discountCodes);
@@ -78,7 +78,7 @@ export async function action({request, context}: ActionFunctionArgs) {
         formGiftCardCode ? [formGiftCardCode] : []
       ) as string[];
 
-      // Combine giftcard codes already applied on cart
+      // Combine gift card codes already applied on cart
       giftCardCodes.push(...inputs.giftCardCodes);
 
       result = await cart.updateGiftCardCodes(giftCardCodes);
