@@ -45,7 +45,7 @@ export async function action({request, context}) {
       // User inputted discount code
       const discountCodes = formDiscountCode ? [formDiscountCode] : [];
 
-      // Combine giftcard codes already applied on cart
+      // Combine discount code codes already applied on cart
       discountCodes.push(...inputs.discountCodes);
 
       result = await cart.updateDiscountCodes(discountCodes);
@@ -57,7 +57,7 @@ export async function action({request, context}) {
       // User inputted gift card code
       const giftCardCodes = formGiftCardCode ? [formGiftCardCode] : [];
 
-      // Combine giftcard codes already applied on cart
+      // Combine gift card codes already applied on cart
       giftCardCodes.push(...inputs.giftCardCodes);
 
       result = await cart.updateGiftCardCodes(giftCardCodes);
