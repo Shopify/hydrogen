@@ -69,7 +69,6 @@ export default defineConfig([
       'src/vite/**/*.ts',
       '!src/vite/**/*.test.ts',
       '!src/vite/virtual-routes/**/*',
-      '!src/vite/magic-routes/**/*',
     ],
     outDir: 'dist/vite',
     format: 'esm',
@@ -79,7 +78,10 @@ export default defineConfig([
     dts: true,
   },
   {
-    entry: ['src/vite/virtual-routes/**/*.tsx'],
+    entry: [
+      'src/vite/virtual-routes/**/*.tsx',
+      'src/vite/virtual-routes/**/*.ts',
+    ],
     outDir: `${outDir}/vite/virtual-routes`,
     outExtension: () => ({js: '.jsx'}),
     format: 'esm',
@@ -100,18 +102,5 @@ export default defineConfig([
 
       console.log('\n', 'Copied virtual route assets to build directory', '\n');
     },
-  },
-  {
-    entry: ['src/vite/magic-routes/*.ts'],
-    outDir: `${outDir}/vite/magic-routes`,
-    outExtension: () => ({js: '.js'}),
-    format: 'esm',
-    minify: false,
-    bundle: false,
-    splitting: false,
-    treeshake: false,
-    sourcemap: false,
-    publicDir: false,
-    dts: false,
   },
 ]);

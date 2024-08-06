@@ -7,7 +7,6 @@ import {
 import type {HydrogenPluginOptions} from './types.js';
 import {type RequestEventPayload, emitRequestEvent} from './request-events.js';
 import {getVirtualRoutes} from './get-virtual-routes.js';
-import {getMagicRoutes} from './get-magic-routes.js';
 
 // Do not import JS from here, only types
 import type {OxygenPlugin} from '~/mini-oxygen/vite/plugin.js';
@@ -205,19 +204,23 @@ hydrogen.preset = () =>
           }
 
           const appDirectory = sharedOptions.remixConfig?.appDirectory;
-          const {root, routes: virtualRoutes} = await getVirtualRoutes();
-          const magicRoutes = await getMagicRoutes(appDirectory);
+          const {
+            routes: virtualRoutes,
+            devRoutes,
+            devRoot,
+          } = await getVirtualRoutes(appDirectory);
 
           const result = defineRoutes((route) => {
             if (sharedOptions.command !== 'build') {
-              route(root.path, root.file, {id: root.id}, () => {
-                virtualRoutes.map(({path, file, index, id}) => {
-                  route(path, file, {id, index});
+              route(devRoot.path, devRoot.file, devRoot.options, () => {
+                devRoutes.map((devRoute) => {
+                  route(devRoute.path, devRoute.file, devRoute.options);
                 });
               });
             }
-            magicRoutes.forEach((magicRoute) => {
-              route(...magicRoute);
+
+            virtualRoutes.forEach((virtualRoute) => {
+              route(virtualRoute.path, virtualRoute.file, virtualRoute.options);
             });
           });
 
@@ -236,9 +239,9 @@ hydrogen.preset = () =>
           // undefined / empty string when matching routes so it
           // doesn't match the user root.
 
-          if (sharedOptions.command !== 'build') {
+          if (sharedOptions.command !== 'build' && devRoot.options.id) {
             // @ts-expect-error
-            result[root.id].parentId = new String('');
+            result[devRoot.options.id].parentId = new String('');
           }
 
           return result;
