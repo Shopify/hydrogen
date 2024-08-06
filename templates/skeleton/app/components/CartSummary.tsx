@@ -3,7 +3,6 @@ import type {CartLayout} from '~/components/CartMain';
 import {CartForm, Money, type OptimisticCart} from '@shopify/hydrogen';
 import { useRef } from 'react';
 import { FetcherWithComponents } from '@remix-run/react';
-import { AppliedGiftCard, MoneyV2 } from '@shopify/hydrogen/customer-account-api-types';
 
 type CartSummaryProps = {
   cart: OptimisticCart<CartApiQueryFragment | null>;
@@ -107,7 +106,7 @@ function UpdateDiscountForm({
 function CartGiftCard({
   giftCardCodes,
 }: {
-  giftCardCodes: CartApiQueryFragment['appliedGiftCards'];
+  giftCardCodes: CartApiQueryFragment['appliedGiftCards'] | undefined;
 }) {
   const appliedGiftCardCodes = useRef<string[]>([]);
   const codes: string[] = giftCardCodes?.map(({lastCharacters}) => `***${lastCharacters}`) || [];
