@@ -204,8 +204,9 @@ hydrogen.preset = () =>
             return {};
           }
 
+          const appDirectory = sharedOptions.remixConfig?.appDirectory;
           const {root, routes: virtualRoutes} = await getVirtualRoutes();
-          const magicRoutes = await getMagicRoutes();
+          const magicRoutes = await getMagicRoutes(appDirectory);
 
           const result = defineRoutes((route) => {
             if (sharedOptions.command !== 'build') {
