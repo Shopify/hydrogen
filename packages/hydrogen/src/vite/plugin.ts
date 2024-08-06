@@ -200,10 +200,7 @@ hydrogen.preset = () =>
       return {
         buildDirectory: 'dist',
         async routes(defineRoutes) {
-          if (
-            sharedOptions.disableVirtualRoutes ||
-            sharedOptions.command !== 'serve'
-          ) {
+          if (sharedOptions.disableVirtualRoutes) {
             return {};
           }
 
@@ -211,11 +208,13 @@ hydrogen.preset = () =>
           const magicRoutes = await getMagicRoutes();
 
           const result = defineRoutes((route) => {
-            route(root.path, root.file, {id: root.id}, () => {
-              virtualRoutes.map(({path, file, index, id}) => {
-                route(path, file, {id, index});
+            if (sharedOptions.command !== 'build') {
+              route(root.path, root.file, {id: root.id}, () => {
+                virtualRoutes.map(({path, file, index, id}) => {
+                  route(path, file, {id, index});
+                });
               });
-            });
+            }
             magicRoutes.forEach((magicRoute) => {
               route(...magicRoute);
             });
@@ -235,8 +234,11 @@ hydrogen.preset = () =>
           // overwrite it with `root`. Later, this value acts as an
           // undefined / empty string when matching routes so it
           // doesn't match the user root.
-          // @ts-expect-error
-          result[root.id].parentId = new String('');
+
+          if (sharedOptions.command !== 'build') {
+            // @ts-expect-error
+            result[root.id].parentId = new String('');
+          }
 
           return result;
         },
