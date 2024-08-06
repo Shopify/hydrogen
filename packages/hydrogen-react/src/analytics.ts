@@ -66,7 +66,7 @@ export function sendShopifyAnalytics(
 }
 
 // Shopify monorail return invalid agent for Lighthouse userAgents
-function isLighthouseUserAgent() {
+function isLighthouseUserAgent(): boolean {
   if (typeof window === 'undefined' || !window.navigator) return false;
   return /Chrome-Lighthouse/.test(window.navigator.userAgent);
 }
