@@ -1,5 +1,40 @@
 # @shopify/cli-hydrogen
 
+## 8.3.0
+
+### Minor Changes
+
+- The Hydrogen CLI can now read the Codegen configuration from the GraphQL config file (e.g. `.graphqlrc.js` or `.graphqlrc.yml`). ([#2311](https://github.com/Shopify/hydrogen/pull/2311)) by [@frandiox](https://github.com/frandiox)
+
+### Patch Changes
+
+- Fix auth flow. ([#2331](https://github.com/Shopify/hydrogen/pull/2331)) by [@graygilmore](https://github.com/graygilmore)
+
+## 8.2.0
+
+### Minor Changes
+
+- Support Vite projects in `h2 setup css` command to setup Tailwind and vanilla-extract. Drop CSS setup support for classic Remix projects. ([#2245](https://github.com/Shopify/hydrogen/pull/2245)) by [@frandiox](https://github.com/frandiox)
+
+- The build process in Vite projects now generates a bundle analysis tool for the server files. ([#2138](https://github.com/Shopify/hydrogen/pull/2138)) by [@frandiox](https://github.com/frandiox)
+
+### Patch Changes
+
+- Fix Codegen config resolution when project directory contains dots. ([#2293](https://github.com/Shopify/hydrogen/pull/2293)) by [@frandiox](https://github.com/frandiox)
+
+- [Bug fix] Allow env-branch to be passed when running `h2 deploy` in CI ([#2281](https://github.com/Shopify/hydrogen/pull/2281)) by [@aswamy](https://github.com/aswamy)
+
+- Fix CLI upgrade notification when running from a global process. ([#2184](https://github.com/Shopify/hydrogen/pull/2184)) by [@frandiox](https://github.com/frandiox)
+
+- skeleton template was updated to do session commit in server call instead of routes ([#2137](https://github.com/Shopify/hydrogen/pull/2137)) by [@michenly](https://github.com/michenly)
+
+- Remove `PUBLIC_STORE_DOMAIN` environment variable from `.env` when creating new projects with mock.shop. ([#2221](https://github.com/Shopify/hydrogen/pull/2221)) by [@frandiox](https://github.com/frandiox)
+
+- Added an `--auth-bypass-token-duration` flag to the `deploy` command to allow for specified token duration between 1 to 12 hours. ([#2182](https://github.com/Shopify/hydrogen/pull/2182)) by [@NelsonLee-Code](https://github.com/NelsonLee-Code)
+
+- Updated dependencies [[`0924410f`](https://github.com/Shopify/hydrogen/commit/0924410fa2a1d13d46f09ca42fb1f1de3e0a4f57)]:
+  - @shopify/mini-oxygen@3.0.4
+
 ## 8.1.0
 
 ### Minor Changes

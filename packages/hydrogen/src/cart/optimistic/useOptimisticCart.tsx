@@ -8,25 +8,47 @@ import {
   getOptimisticLineId,
   isOptimisticLineId,
 } from './optimistic-cart.helper';
+import type {PartialDeep} from 'type-fest';
 import type {CartReturn} from '../queries/cart-types';
 
-export type OptimisticCartLine<T = CartLine> = T & {isOptimistic?: boolean};
-
-export type OptimisticCart<T = CartReturn> = Omit<T, 'lines'> & {
-  isOptimistic?: boolean;
+type LikeACart = {
   lines: {
-    nodes: Array<OptimisticCartLine>;
+    nodes: Array<unknown>;
   };
 };
+
+export type OptimisticCartLine<T = CartLine | CartReturn> = T extends LikeACart
+  ? T['lines']['nodes'][number] & {isOptimistic?: boolean}
+  : T & {isOptimistic?: boolean};
+
+export type OptimisticCart<T = CartReturn> = T extends undefined | null
+  ? // This is the null/undefined case, where the cart has yet to be created.
+    // But we still need to provide an optimistic cart object.
+    {
+      isOptimistic?: boolean;
+      lines: {
+        nodes: Array<OptimisticCartLine>;
+      };
+    } & Omit<PartialDeep<CartReturn>, 'lines'>
+  : Omit<T, 'lines'> & {
+      isOptimistic?: boolean;
+      lines: {
+        nodes: Array<OptimisticCartLine<T>>;
+      };
+    };
 
 /**
  * @param cart The cart object from `context.cart.get()` returned by a server loader.
  *
  * @returns A new cart object augmented with optimistic state. Each cart line item that is optimistically added includes an `isOptimistic` property. Also if the cart has _any_ optimistic state, a root property `isOptimistic` will be set to `true`.
  */
-export function useOptimisticCart<DefaultCart = CartReturn>(
-  cart?: DefaultCart,
-): OptimisticCart<DefaultCart> {
+export function useOptimisticCart<
+  DefaultCart = {
+    lines?: {
+      nodes: Array<{id: string; quantity: number; merchandise: {is: string}}>;
+    };
+  },
+>(cart?: DefaultCart): OptimisticCart<DefaultCart> {
   const fetchers = useFetchers();
 
   if (!fetchers || !fetchers.length) return cart as OptimisticCart<DefaultCart>;
@@ -35,7 +57,7 @@ export function useOptimisticCart<DefaultCart = CartReturn>(
     ? (structuredClone(cart) as OptimisticCart<DefaultCart>)
     : ({lines: {nodes: []}} as unknown as OptimisticCart<DefaultCart>);
 
-  const cartLines = optimisticCart.lines.nodes;
+  const cartLines = optimisticCart.lines.nodes as OptimisticCartLine[];
 
   let isOptimistic = false;
 

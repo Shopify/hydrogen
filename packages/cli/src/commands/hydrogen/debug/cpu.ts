@@ -5,10 +5,7 @@ import {outputInfo} from '@shopify/cli-kit/node/output';
 import {writeFile} from '@shopify/cli-kit/node/fs';
 import colors from '@shopify/cli-kit/node/colors';
 import ansiEscapes from 'ansi-escapes';
-import {
-  getProjectPaths,
-  hasRemixConfigFile,
-} from '../../../lib/remix-config.js';
+import {getProjectPaths, isClassicProject} from '../../../lib/remix-config.js';
 import {muteDevLogs} from '../../../lib/log.js';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import {prepareDiffDirectory} from '../../../lib/template-diff.js';
@@ -43,10 +40,9 @@ export default class DebugCpu extends Command {
       ? resolvePath(flags.path)
       : process.cwd();
 
-    const diff =
-      flags.build && flags.diff
-        ? await prepareDiffDirectory(originalDirectory, true)
-        : undefined;
+    const diff = flags.diff
+      ? await prepareDiffDirectory(originalDirectory, true)
+      : undefined;
 
     const {close} = await runDebugCpu({
       ...flagsToCamelObject(flags),
@@ -73,8 +69,6 @@ async function runDebugCpu({directory, entry, output}: RunDebugCpuOptions) {
   muteDevLogs({workerReload: false});
 
   let {buildPath, buildPathWorkerFile} = getProjectPaths(directory);
-
-  const isClassicProject = await hasRemixConfigFile(directory);
 
   outputInfo(
     '⏳️ Starting profiler for CPU startup... Profile will be written to:\n' +
@@ -111,7 +105,7 @@ async function runDebugCpu({directory, entry, output}: RunDebugCpuOptions) {
     },
   };
 
-  if (isClassicProject) {
+  if (await isClassicProject(directory)) {
     return runClassicCompilerDebugCpu({
       directory,
       output,
@@ -133,6 +127,7 @@ async function runDebugCpu({directory, entry, output}: RunDebugCpuOptions) {
     sourcemap: true,
     disableRouteWarning: true,
     lockfileCheck: false,
+    bundleStats: false,
     ...hooks,
     onServerBuildStart() {
       if (times === 0) {

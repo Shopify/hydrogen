@@ -1,5 +1,6 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
+import {outputNewline} from '@shopify/cli-kit/node/output';
 
 import {commonFlags} from '../../lib/flags.js';
 import {logout} from '../../lib/auth.js';
@@ -24,6 +25,7 @@ interface LogoutArguments {
 }
 
 async function runLogout({path: root = process.cwd()}: LogoutArguments) {
+  outputNewline();
   await logout(root);
   renderSuccess({body: 'You are logged out from Shopify.'});
 }

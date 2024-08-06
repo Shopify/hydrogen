@@ -37,6 +37,7 @@ import {ShopifyAnalytics} from './ShopifyAnalytics';
 import {CartAnalytics} from './CartAnalytics';
 import type {CustomerPrivacyApiProps} from '../customer-privacy/ShopifyCustomerPrivacy';
 import type {Storefront} from '../storefront';
+import {PerfKit} from './PerfKit';
 import {errorOnce, warnOnce} from '../utils/warning';
 
 export type ShopAnalytics = {
@@ -277,7 +278,6 @@ function AnalyticsProvider({
   consent,
   customData = {},
   shop: shopProp = null,
-  disableThrowOnError = false,
   cookieDomain,
 }: AnalyticsProviderProps): JSX.Element {
   const listenerSet = useRef(false);
@@ -359,6 +359,7 @@ function AnalyticsProvider({
           domain={cookieDomain}
         />
       )}
+      {!!shop && <PerfKit shop={shop} />}
     </AnalyticsContext.Provider>
   );
 }
@@ -391,8 +392,6 @@ function useShopAnalytics(shopProp: AnalyticsProviderProps['shop']): {
 
   return {shop};
 }
-
-// TODO: useCustomerAnalytics hook
 
 type ShopAnalyticsProps = {
   /**

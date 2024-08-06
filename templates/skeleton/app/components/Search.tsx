@@ -309,7 +309,6 @@ export function PredictiveSearchForm({
       {...props}
       className={className}
       onSubmit={(event) => {
-        debugger;
         event.preventDefault();
         event.stopPropagation();
         if (!inputRef?.current || inputRef.current.value === '') {

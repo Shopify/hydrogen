@@ -6,7 +6,7 @@ import { FetcherWithComponents } from '@remix-run/react';
 import { AppliedGiftCard, MoneyV2 } from '@shopify/hydrogen/customer-account-api-types';
 
 type CartSummaryProps = {
-  cart: OptimisticCart<CartApiQueryFragment>;
+  cart: OptimisticCart<CartApiQueryFragment | null>;
   layout: CartLayout;
 };
 
@@ -33,7 +33,7 @@ export function CartSummary({cart, layout}: CartSummaryProps) {
     </div>
   );
 }
-function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
+function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
   if (!checkoutUrl) return null;
 
   return (
@@ -49,7 +49,7 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
 function CartDiscounts({
   discountCodes,
 }: {
-  discountCodes: CartApiQueryFragment['discountCodes'];
+  discountCodes?: CartApiQueryFragment['discountCodes'];
 }) {
   const codes: string[] =
     discountCodes

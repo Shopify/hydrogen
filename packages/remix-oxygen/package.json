@@ -5,7 +5,7 @@
     "@shopify:registry": "https://registry.npmjs.org"
   },
   "type": "module",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "license": "MIT",
   "main": "dist/index.cjs",
   "module": "dist/production/index.js",

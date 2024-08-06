@@ -56,9 +56,7 @@ type RunSetupOptions = {
 
 export async function runSetup(options: RunSetupOptions) {
   const controller = new AbortController();
-  const {rootDirectory, appDirectory, serverEntryPoint} = await getRemixConfig(
-    options.directory,
-  );
+  const {rootDirectory, appDirectory} = await getRemixConfig(options.directory);
 
   const location = basename(rootDirectory);
   const cliCommandPromise = getCliCommand();
@@ -115,11 +113,13 @@ export async function runSetup(options: RunSetupOptions) {
         ]),
       )
       .then(async () => {
-        routes = await setupRoutes(
-          rootDirectory,
-          typescript ? 'ts' : 'js',
-          i18n,
-        );
+        routes = await setupRoutes(rootDirectory, typescript ? 'ts' : 'js', {
+          i18nStrategy: i18n,
+          // User might have added files before running this command.
+          // We should overwrite them to ensure the routes are set up correctly.
+          // Relies on Git to restore the files if needed.
+          overwriteFileDeps: true,
+        });
       });
   }
 
@@ -127,7 +127,7 @@ export async function runSetup(options: RunSetupOptions) {
     // i18n setup needs to happen after copying the app entries,
     // because it needs to modify the server entry point.
     backgroundWorkPromise = backgroundWorkPromise.then(() =>
-      setupI18nStrategy(i18n, {rootDirectory, serverEntryPoint}),
+      setupI18nStrategy(i18n, {rootDirectory}),
     );
   }
 

@@ -1,15 +1,26 @@
 import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
-import {resolvePath, joinPath, dirname} from '@shopify/cli-kit/node/path';
-import {outputWarn, collectLog} from '@shopify/cli-kit/node/output';
+import {resolvePath, joinPath} from '@shopify/cli-kit/node/path';
+import {
+  outputWarn,
+  collectLog,
+  outputInfo,
+  outputContent,
+  outputToken,
+} from '@shopify/cli-kit/node/output';
 import {fileSize, removeFile} from '@shopify/cli-kit/node/fs';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
-import {hasViteConfig, getViteConfig} from '../../lib/vite-config.js';
+import {getViteConfig, isViteProject} from '../../lib/vite-config.js';
 import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
 import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
+import {hydrogenBundleAnalyzer} from '../../lib/bundle/vite-plugin.js';
+import {
+  BUNDLE_ANALYZER_HTML_FILE,
+  getBundleAnalysisSummary,
+} from '../../lib/bundle/analyzer.js';
 import {codegen, spawnCodegenProcess} from '../../lib/codegen.js';
 import {isCI} from '../../lib/is-ci.js';
 import {importVite} from '../../lib/import-utils.js';
@@ -37,8 +48,7 @@ export default class Build extends Command {
     // For the classic compiler:
     'bundle-stats': Flags.boolean({
       description:
-        '[Classic Remix Compiler] Show a bundle size summary after building. Defaults to true, use `--no-bundle-stats` to disable.',
-      default: true,
+        'Show a bundle size summary after building. Defaults to true, use `--no-bundle-stats` to disable.',
       allowNo: true,
     }),
   };
@@ -61,7 +71,7 @@ export default class Build extends Command {
       directory,
     };
 
-    const result = (await hasViteConfig(directory))
+    const result = (await isViteProject(directory))
       ? await runBuild(buildParams)
       : await runClassicCompilerBuild(buildParams);
 
@@ -116,6 +126,7 @@ export async function runBuild({
   disableRouteWarning = false,
   lockfileCheck = true,
   assetPath = '/',
+  bundleStats = !isCI(),
   watch = false,
   onServerBuildStart,
   onServerBuildFinish,
@@ -233,6 +244,27 @@ export async function runBuild({
           this.error(new Error('Process exited before server build finished.'));
         },
       },
+      ...(bundleStats
+        ? [
+            hydrogenBundleAnalyzer({
+              minify: serverMinify
+                ? (code, filepath) =>
+                    vite
+                      .transformWithEsbuild(code, filepath, {
+                        minify: true,
+                        minifyWhitespace: true,
+                        minifySyntax: true,
+                        minifyIdentifiers: true,
+                        sourcemap: false,
+                        treeShaking: false, // Tree-shaking would drop most exports in routes
+                        legalComments: 'none',
+                        target: 'esnext',
+                      })
+                      .then((result) => result.code)
+                : undefined,
+            }),
+          ]
+        : []),
     ],
   });
 
@@ -257,6 +289,20 @@ export async function runBuild({
     : undefined;
 
   if (!watch && process.env.NODE_ENV !== 'development') {
+    if (bundleStats) {
+      const bundleAnalysisPath =
+        'file://' + joinPath(serverOutDir, BUNDLE_ANALYZER_HTML_FILE);
+
+      outputInfo(
+        outputContent`${
+          (await getBundleAnalysisSummary(serverOutDir)) || '\n'
+        }\n    │\n    └─── ${outputToken.link(
+          'Complete analysis: ' + bundleAnalysisPath,
+          bundleAnalysisPath,
+        )}\n\n`,
+      );
+    }
+
     const sizeMB = (await fileSize(serverOutFile)) / (1024 * 1024);
 
     if (sizeMB >= WORKER_BUILD_SIZE_LIMIT) {

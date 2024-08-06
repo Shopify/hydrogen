@@ -177,6 +177,71 @@ describe('local templates', () => {
     });
   });
 
+  describe('styling libraries', () => {
+    it('scaffolds Tailwind CSS', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        await setupTemplate({
+          path: tmpDir,
+          git: false,
+          language: 'ts',
+          styling: 'tailwind',
+          routes: true,
+        });
+
+        // Injects dependencies
+        const packageJson = await readFile(`${tmpDir}/package.json`);
+        expect(packageJson).toMatch(/"@tailwindcss\/vite": "/);
+
+        // Copies Tailwind file
+        await expect(
+          readFile(`${tmpDir}/app/styles/tailwind.css`),
+        ).resolves.toMatch(/@import 'tailwindcss';/);
+
+        // Injects styles in Root
+        const rootFile = await readFile(`${tmpDir}/app/root.tsx`);
+        await expect(rootFile).toMatch(/import tailwindCss from/);
+        await expect(rootFile).toMatch(
+          /export function links\(\) \{.*?return \[.*\{rel: 'stylesheet', href: tailwindCss\}/ims,
+        );
+
+        // Adds the Vite plugin
+        const viteConfig = await readFile(`${tmpDir}/vite.config.ts`);
+        await expect(viteConfig).toMatch(/tailwindcss\(\)/);
+
+        const output = outputMock.info();
+        expect(output).toMatch('success');
+        expect(output).not.toMatch('warning');
+        expect(output).toMatch(/Styling:\s*Tailwind/);
+      });
+    });
+
+    it('scaffolds Vanilla Extract', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        await setupTemplate({
+          path: tmpDir,
+          git: false,
+          language: 'ts',
+          styling: 'vanilla-extract',
+          routes: true,
+        });
+
+        // Injects dependencies
+        const packageJson = await readFile(`${tmpDir}/package.json`);
+        expect(packageJson).toMatch(/"@vanilla-extract\/vite-plugin": "/);
+        expect(packageJson).toMatch(/"@vanilla-extract\/css": "/);
+
+        // Adds the Vite plugin
+        const viteConfig = await readFile(`${tmpDir}/vite.config.ts`);
+        await expect(viteConfig).toMatch(/vanillaExtractPlugin\(\)/);
+
+        const output = outputMock.info();
+        expect(output).toMatch('success');
+        expect(output).not.toMatch('warning');
+        expect(output).toMatch(/Styling:\s*Vanilla Extract/);
+      });
+    });
+  });
+
   describe('i18n strategies', () => {
     it('scaffolds i18n with domains strategy', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
@@ -192,9 +257,11 @@ describe('local templates', () => {
         expect(resultFiles).toContain('app/routes/_index.tsx');
 
         // Injects styles in Root
-        const serverFile = await readFile(`${tmpDir}/server.ts`);
-        expect(serverFile).toMatch(/i18n: getLocaleFromRequest\(request\),/);
-        expect(serverFile).toMatch(/domain = url.hostname/);
+        const contextFile = await readFile(`${tmpDir}/app/lib/context.ts`);
+        expect(contextFile).toMatch(/i18n: getLocaleFromRequest\(request\),/);
+
+        const i18nFile = await readFile(`${tmpDir}/app/lib/i18n.ts`);
+        expect(i18nFile).toMatch(/domain = url.hostname/);
 
         const output = outputMock.info();
         expect(output).toMatch('success');
@@ -217,9 +284,11 @@ describe('local templates', () => {
         expect(resultFiles).toContain('app/routes/_index.tsx');
 
         // Injects styles in Root
-        const serverFile = await readFile(`${tmpDir}/server.ts`);
-        expect(serverFile).toMatch(/i18n: getLocaleFromRequest\(request\),/);
-        expect(serverFile).toMatch(/firstSubdomain = url.hostname/);
+        const contextFile = await readFile(`${tmpDir}/app/lib/context.ts`);
+        expect(contextFile).toMatch(/i18n: getLocaleFromRequest\(request\),/);
+
+        const i18nFile = await readFile(`${tmpDir}/app/lib/i18n.ts`);
+        expect(i18nFile).toMatch(/firstSubdomain = url.hostname/);
 
         const output = outputMock.info();
         expect(output).toMatch('success');
@@ -246,9 +315,11 @@ describe('local templates', () => {
         expect(resultFiles).toContain('app/routes/($locale).tsx');
 
         // Injects styles in Root
-        const serverFile = await readFile(`${tmpDir}/server.ts`);
-        expect(serverFile).toMatch(/i18n: getLocaleFromRequest\(request\),/);
-        expect(serverFile).toMatch(/url.pathname/);
+        const contextFile = await readFile(`${tmpDir}/app/lib/context.ts`);
+        expect(contextFile).toMatch(/i18n: getLocaleFromRequest\(request\),/);
+
+        const i18nFile = await readFile(`${tmpDir}/app/lib/i18n.ts`);
+        expect(i18nFile).toMatch(/url.pathname/);
 
         const output = outputMock.info();
         expect(output).toMatch('success');

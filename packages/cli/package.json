@@ -4,7 +4,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "8.1.1",
+  "version": "8.3.0",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -18,7 +18,6 @@
   "devDependencies": {
     "@remix-run/dev": "^2.10.1",
     "@types/diff": "^5.0.2",
-    "@types/fs-extra": "^11.0.1",
     "@types/gunzip-maybe": "^1.4.0",
     "@types/prettier": "^2.7.2",
     "@types/source-map-support": "^0.5.10",
@@ -35,14 +34,13 @@
   "dependencies": {
     "@ast-grep/napi": "0.11.0",
     "@oclif/core": "3.26.5",
-    "@shopify/cli-kit": "3.61.2",
+    "@shopify/cli-kit": "3.64.0",
     "@shopify/oxygen-cli": "4.4.9",
-    "@shopify/plugin-cloudflare": "3.61.2",
+    "@shopify/plugin-cloudflare": "3.64.0",
     "ansi-escapes": "^6.2.0",
     "chokidar": "3.5.3",
     "cli-truncate": "^4.0.0",
     "diff": "^5.1.0",
-    "fs-extra": "^11.1.0",
     "get-port": "^7.0.0",
     "gunzip-maybe": "^1.4.2",
     "prettier": "^2.8.4",
@@ -58,7 +56,7 @@
     "@graphql-codegen/cli": "^5.0.2",
     "@remix-run/dev": "^2.1.0",
     "@shopify/hydrogen-codegen": "^0.3.1",
-    "@shopify/mini-oxygen": "^3.0.3",
+    "@shopify/mini-oxygen": "^3.0.4",
     "graphql-config": "^5.0.3",
     "vite": "^5.1.0"
   },

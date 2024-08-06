@@ -1,5 +1,5 @@
+import {symlink, cp as copyDirectory} from 'node:fs/promises';
 import {temporaryDirectory} from 'tempy';
-import {createSymlink, copy as copyDirectory} from 'fs-extra/esm';
 import {
   copyFile,
   fileExists,
@@ -44,7 +44,7 @@ export async function prepareDiffDirectory(
   const templateDirectory = await getStarterDir(isHydrogenMonorepo);
   await applyTemplateDiff(targetDirectory, diffDirectory, templateDirectory);
 
-  await createSymlink(
+  await symlink(
     await getRepoNodeModules(),
     joinPath(targetDirectory, 'node_modules'),
   );
@@ -162,7 +162,7 @@ export async function prepareDiffDirectory(
 
       const target = joinPath(diffDirectory, '.shopify');
       await remove(target);
-      await copyDirectory(source, target, {overwrite: true});
+      await copyDirectory(source, target, {recursive: true, force: true});
     },
     /**
      * Brings the `dist` directory back to the original project.
@@ -173,7 +173,8 @@ export async function prepareDiffDirectory(
       await remove(target);
       await Promise.all([
         copyDirectory(joinPath(targetDirectory, 'dist'), target, {
-          overwrite: true,
+          force: true,
+          recursive: true,
         }),
         copyFile(
           joinPath(targetDirectory, '.env'),
@@ -209,6 +210,8 @@ export async function applyTemplateDiff(
     };
 
   await copyDirectory(templateDir, targetDirectory, {
+    force: true,
+    recursive: true,
     filter: createFilter(
       // Do not copy .shopify from skeleton to avoid linking in examples inadvertedly
       /(^|\/|\\)(dist|node_modules|\.cache|\.turbo|\.shopify|CHANGELOG\.md)(\/|\\|$)/i,
@@ -216,6 +219,8 @@ export async function applyTemplateDiff(
     ),
   });
   await copyDirectory(diffDirectory, targetDirectory, {
+    force: true,
+    recursive: true,
     filter: createFilter(
       /(^|\/|\\)(dist|node_modules|\.cache|.turbo|package\.json|tsconfig\.json)(\/|\\|$)/i,
     ),

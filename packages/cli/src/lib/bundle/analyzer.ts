@@ -1,13 +1,15 @@
 import {joinPath, dirname} from '@shopify/cli-kit/node/path';
-import {fileURLToPath} from 'node:url';
 import {writeFile, readFile, fileExists} from '@shopify/cli-kit/node/fs';
 import colors from '@shopify/cli-kit/node/colors';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
 import {getAssetsDir} from '../build.js';
 
-export async function buildBundleAnalysis(buildPath: string) {
+export const BUNDLE_ANALYZER_JSON_FILE = 'metafile.server.json';
+export const BUNDLE_ANALYZER_HTML_FILE = 'server-bundle-analyzer.html';
+
+export async function classicBuildBundleAnalysis(buildPath: string) {
   const workerBuildPath = joinPath(buildPath, 'worker');
-  const serverMetafile = 'metafile.server.json';
+  const serverMetafile = BUNDLE_ANALYZER_JSON_FILE;
   const clientMetafile = 'metafile.js.json';
 
   const hasMetafile = (
@@ -21,12 +23,12 @@ export async function buildBundleAnalysis(buildPath: string) {
 
   try {
     await Promise.all([
-      writeBundleAnalyzerFile(
+      classicWriteBundleAnalyzerFile(
         workerBuildPath,
         serverMetafile,
         'worker-bundle-analyzer.html',
       ),
-      writeBundleAnalyzerFile(
+      classicWriteBundleAnalyzerFile(
         workerBuildPath,
         clientMetafile,
         'client-bundle-analyzer.html',
@@ -46,7 +48,23 @@ export async function buildBundleAnalysis(buildPath: string) {
   }
 }
 
-async function writeBundleAnalyzerFile(
+export async function getAnalyzerTemplate() {
+  return readFile(await getAssetsDir('bundle', 'analyzer.html'));
+}
+
+export function injectAnalyzerTemplateData(
+  analysisTemplate: string,
+  metafile: string,
+) {
+  return analysisTemplate.replace(
+    `globalThis.METAFILE = '';`,
+    `globalThis.METAFILE = '${Buffer.from(metafile, 'utf-8').toString(
+      'base64',
+    )}';`,
+  );
+}
+
+async function classicWriteBundleAnalyzerFile(
   workerBuildPath: string,
   metafileName: string,
   outputFile: string,
@@ -55,33 +73,25 @@ async function writeBundleAnalyzerFile(
     encoding: 'utf8',
   });
 
-  const metafile64 = Buffer.from(metafile, 'utf-8').toString('base64');
-
-  const analysisTemplate = await readFile(
-    await getAssetsDir('bundle', 'analyzer.html'),
+  await writeFile(
+    joinPath(workerBuildPath, outputFile),
+    injectAnalyzerTemplateData(await getAnalyzerTemplate(), metafile),
   );
-
-  const templateWithMetafile = analysisTemplate.replace(
-    `globalThis.METAFILE = '';`,
-    `globalThis.METAFILE = '${metafile64}';`,
-  );
-
-  await writeFile(joinPath(workerBuildPath, outputFile), templateWithMetafile);
 }
 
-export async function getBundleAnalysisSummary(bundlePath: string) {
-  const esbuild = await import('esbuild').catch(() => {});
+export async function getBundleAnalysisSummary(distPath: string) {
+  try {
+    // This dependency is added globally by the CLI, and locally by Vite.
+    const esbuild = await import('esbuild');
 
-  if (esbuild) {
-    const metafilePath = joinPath(dirname(bundlePath), 'metafile.server.json');
+    const metafileAnalysis = await esbuild.analyzeMetafile(
+      await readFile(joinPath(distPath, BUNDLE_ANALYZER_JSON_FILE)),
+      {color: true},
+    );
 
     return (
       '    │\n ' +
-      (
-        await esbuild.analyzeMetafile(await readFile(metafilePath), {
-          color: true,
-        })
-      )
+      metafileAnalysis
         .split('\n')
         .filter((line) => {
           const match = line.match(
@@ -96,5 +106,14 @@ export async function getBundleAnalysisSummary(bundlePath: string) {
         .replace(/\n/g, '\n ')
         .replace(/(\.\.\/)+node_modules\//g, (match) => colors.dim(match))
     );
+  } catch (error) {
+    console.warn(
+      'Could not generate bundle analysis summary:',
+      (error as Error).message,
+    );
   }
+}
+
+export function classicGetBundleAnalysisSummary(bundlePath: string) {
+  return getBundleAnalysisSummary(dirname(bundlePath));
 }

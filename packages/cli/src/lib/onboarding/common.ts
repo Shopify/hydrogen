@@ -1,4 +1,4 @@
-import {readdir} from 'node:fs/promises';
+import {readdir, symlink} from 'node:fs/promises';
 import {
   installNodeModules,
   packageManagerFromUserAgent,
@@ -27,11 +27,13 @@ import {
   fileExists,
   isDirectory,
   writeFile,
+  copyFile,
 } from '@shopify/cli-kit/node/fs';
 import {
   outputDebug,
   formatPackageManagerCommand,
 } from '@shopify/cli-kit/node/output';
+import {currentProcessIsGlobal} from '@shopify/cli-kit/node/is-global';
 import colors from '@shopify/cli-kit/node/colors';
 import {type AdminSession, login, renderLoginSuccess} from '../auth.js';
 import {
@@ -59,7 +61,12 @@ import {
 } from '../setups/routes/generate.js';
 import {execAsync} from '../process.js';
 import {getStorefronts} from '../graphql/admin/link-storefront.js';
-import {currentProcessIsGlobal} from '@shopify/cli-kit/node/is-global';
+import {
+  getRepoNodeModules,
+  getSkeletonSourceDir,
+  isHydrogenMonorepo,
+} from '../build.js';
+import {enhanceAuthLogs} from '../log.js';
 
 export type InitOptions = {
   path?: string;
@@ -133,7 +140,7 @@ export async function handleRouteGeneration(
     setupRoutes: async (
       directory: string,
       language: Language,
-      i18nStrategy?: I18nStrategy,
+      options?: {i18nStrategy?: I18nStrategy; overwriteFileDeps?: boolean},
     ) => {
       if (needsRouteGeneration) {
         const result = await generateRoutes(
@@ -142,8 +149,10 @@ export async function handleRouteGeneration(
             directory,
             force: true,
             typescript: language === 'ts',
-            localePrefix: i18nStrategy === 'subfolders' ? 'locale' : false,
+            localePrefix:
+              options?.i18nStrategy === 'subfolders' ? 'locale' : false,
             signal: controller.signal,
+            ...options,
           },
           {
             rootDirectory: directory,
@@ -235,6 +244,7 @@ type StorefrontInfo = {
 export async function handleStorefrontLink(
   controller: AbortController,
 ): Promise<StorefrontInfo> {
+  enhanceAuthLogs(true);
   const {session, config} = await login();
   renderLoginSuccess(config);
 
@@ -410,10 +420,6 @@ export async function handleLanguage(
   };
 }
 
-// Extract this in a variable to avoid TS issues.
-// TODO: Remove this when CSS is supported in Vite
-const isCssDisabled: boolean = true;
-
 /**
  * Prompts the user to select a CSS strategy.
  * @returns The chosen strategy name and a function that sets up the CSS strategy.
@@ -423,8 +429,6 @@ export async function handleCssStrategy(
   controller: AbortController,
   flagStyling?: StylingChoice,
 ) {
-  if (isCssDisabled) return {};
-
   const selection =
     flagStyling ??
     (await renderCssPrompt({
@@ -438,6 +442,11 @@ export async function handleCssStrategy(
     cssStrategy,
     async setupCss() {
       if (cssStrategy) {
+        if (cssStrategy === 'postcss' || cssStrategy === 'css-modules') {
+          // Nothing to do in Vite projects
+          return;
+        }
+
         const result = await setupCssStrategy(
           cssStrategy,
           {
@@ -498,6 +507,23 @@ export async function handleDependencies(
         cancellationMessage: 'No',
         abortSignal: controller.signal,
       });
+    }
+  }
+
+  if (isHydrogenMonorepo) {
+    // In Hydrogen monorepo, add `.npmrc` to bypass Shopify registry
+    // and symlink `node_modules` to monorepo's node_modules.
+
+    await copyFile(
+      joinPath(getSkeletonSourceDir(), '.npmrc'),
+      joinPath(projectDir, '.npmrc'),
+    ).catch(() => {});
+
+    if (!shouldInstallDeps) {
+      await symlink(
+        await getRepoNodeModules(),
+        joinPath(projectDir, 'node_modules'),
+      ).catch(() => {});
     }
   }
 
@@ -738,8 +764,13 @@ export function createAbortHandler(
       ),
     );
 
-    // Enable this when debugging tests:
-    // if (process.env.NODE_ENV === 'test') console.error(error);
+    if (process.env.SHOPIFY_UNIT_TEST && process.exit.name !== 'spy') {
+      // This is not an artificial error for testing, print it and
+      // throw an unhandled rejection. Otherwise, the error will be
+      // swallowed by the test runner after process.exit is called.
+      console.error('Error during test before process.exit:', error);
+      throw error;
+    }
 
     // This code runs asynchronously so throwing here
     // turns into an unhandled rejection. Exit process instead:

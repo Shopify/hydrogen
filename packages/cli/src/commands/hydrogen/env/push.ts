@@ -1,6 +1,5 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {diffLines} from 'diff';
-import {Flags} from '@oclif/core';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import {login} from '../../../lib/auth.js';
 import {getCliCommand} from '../../../lib/shell.js';
@@ -40,11 +39,7 @@ export default class EnvPush extends Command {
 
   static flags = {
     ...commonFlags.env,
-    'env-file': Flags.string({
-      description:
-        "Path to an environment file to override existing environment variables for the selected environment. \
-Defaults to the '.env' located in your project path `--path`.",
-    }),
+    ...commonFlags.envFile,
     ...commonFlags.path,
   };
 
@@ -56,7 +51,7 @@ Defaults to the '.env' located in your project path `--path`.",
 
 interface EnvPushOptions {
   env?: string;
-  envFile?: string;
+  envFile: string;
   path?: string;
 }
 
@@ -68,7 +63,7 @@ export async function runEnvPush({
   let validatedEnvironment: Environment;
 
   // Ensure local .env file
-  const dotEnvPath = envFile || resolvePath(path, '.env');
+  const dotEnvPath = resolvePath(path, envFile);
   const {variables: localVariables} = await readAndParseDotEnv(dotEnvPath);
 
   // Authenticate

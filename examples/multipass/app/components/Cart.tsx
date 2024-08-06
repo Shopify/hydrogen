@@ -16,8 +16,10 @@ import {MultipassCheckoutButton} from './MultipassCheckoutButton';
 /**********   EXAMPLE UPDATE END   ************/
 /***********************************************/
 
+type CartLine = OptimisticCartLine<CartApiQueryFragment>;
+
 type CartMainProps = {
-  cart: CartApiQueryFragment;
+  cart: CartApiQueryFragment | null;
   layout: 'page' | 'aside';
 };
 
@@ -42,10 +44,10 @@ function CartDetails({
   layout,
   cart,
 }: {
-  cart: OptimisticCart<CartApiQueryFragment>;
+  cart: OptimisticCart<CartApiQueryFragment | null>;
   layout: 'page' | 'aside';
 }) {
-  const cartHasItems = !!cart && cart.totalQuantity > 0;
+  const cartHasItems = cart?.totalQuantity && cart?.totalQuantity > 0;
 
   return (
     <div className="cart-details">
@@ -65,7 +67,7 @@ function CartLines({
   layout,
 }: {
   layout: CartMainProps['layout'];
-  lines: OptimisticCartLine[];
+  lines: CartLine[];
 }) {
   if (!lines) return null;
 
@@ -85,7 +87,7 @@ function CartLineItem({
   line,
 }: {
   layout: CartMainProps['layout'];
-  line: OptimisticCartLine;
+  line: CartLine;
 }) {
   const {id, merchandise} = line;
   const {product, title, image, selectedOptions} = merchandise;
@@ -135,7 +137,7 @@ function CartLineItem({
   );
 }
 
-function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
+function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
   if (!checkoutUrl) return null;
 
   /***********************************************/
@@ -155,7 +157,7 @@ export function CartSummary({
   children = null,
 }: {
   children?: React.ReactNode;
-  cost: CartApiQueryFragment['cost'];
+  cost?: OptimisticCart<CartApiQueryFragment | null>['cost'];
   layout: CartMainProps['layout'];
 }) {
   const className =
@@ -199,7 +201,7 @@ function CartLineRemoveButton({
   );
 }
 
-function CartLineQuantity({line}: {line: OptimisticCartLine}) {
+function CartLineQuantity({line}: {line: CartLine}) {
   if (!line || typeof line?.quantity === 'undefined') return null;
   const {id: lineId, quantity, isOptimistic} = line;
   const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
@@ -240,7 +242,7 @@ function CartLinePrice({
   priceType = 'regular',
   ...passthroughProps
 }: {
-  line: OptimisticCartLine;
+  line: CartLine;
   priceType?: 'regular' | 'compareAt';
   [key: string]: any;
 }) {
@@ -295,7 +297,7 @@ export function CartEmpty({
 function CartDiscounts({
   discountCodes,
 }: {
-  discountCodes: CartApiQueryFragment['discountCodes'];
+  discountCodes?: CartApiQueryFragment['discountCodes'];
 }) {
   const codes: string[] =
     discountCodes

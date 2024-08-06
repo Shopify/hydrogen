@@ -1,5 +1,5 @@
+import {symlink, cp as copyWithFilter} from 'node:fs/promises';
 import {describe, it, expect, vi, beforeEach} from 'vitest';
-import {copy as copyWithFilter, createSymlink} from 'fs-extra/esm';
 import {
   inTemporaryDirectory,
   fileExists,
@@ -41,6 +41,8 @@ describe('setup', () => {
   it('sets up an i18n strategy and generates routes', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       await copyWithFilter(getSkeletonSourceDir(), tmpDir, {
+        force: true,
+        recursive: true,
         filter: (src) =>
           !src.includes('node_modules') && !src.includes('routes'),
       });
@@ -49,7 +51,7 @@ describe('setup', () => {
         fileExists(joinPath(tmpDir, 'app/routes/_index.tsx')),
       ).resolves.toBeFalsy();
 
-      await createSymlink(
+      await symlink(
         await getRepoNodeModules(),
         joinPath(tmpDir, 'node_modules'),
       );
@@ -70,9 +72,11 @@ describe('setup', () => {
         fileExists(joinPath(tmpDir, 'app/routes/($locale)._index.tsx')),
       ).resolves.toBeTruthy();
 
-      const serverFile = await readFile(`${tmpDir}/server.ts`);
-      expect(serverFile).toMatch(/i18n: getLocaleFromRequest\(request\),/);
-      expect(serverFile).toMatch(/url.pathname/);
+      const contextFile = await readFile(`${tmpDir}/app/lib/context.ts`);
+      expect(contextFile).toMatch(/i18n: getLocaleFromRequest\(request\),/);
+
+      const i18nFile = await readFile(`${tmpDir}/app/lib/i18n.ts`);
+      expect(i18nFile).toMatch(/url.pathname/);
 
       const output = outputMock.info();
       expect(output).toMatch('success');

@@ -41,8 +41,11 @@ import {
 import {getCliCommand} from '../../lib/shell.js';
 import {findPort} from '../../lib/find-port.js';
 import {logRequestLine} from '../../lib/mini-oxygen/common.js';
-import {findHydrogenPlugin, findOxygenPlugin} from '../../lib/vite-config.js';
-import {hasViteConfig} from '../../lib/vite-config.js';
+import {
+  findHydrogenPlugin,
+  findOxygenPlugin,
+  isViteProject,
+} from '../../lib/vite-config.js';
 import {runClassicCompilerDev} from '../../lib/classic-compiler/dev.js';
 import {importVite} from '../../lib/import-utils.js';
 import {createEntryPointErrorHandler} from '../../lib/deps-optimizer.js';
@@ -74,6 +77,7 @@ export default class Dev extends Command {
     ...commonFlags.inspectorPort,
     ...commonFlags.env,
     ...commonFlags.envBranch,
+    ...commonFlags.envFile,
     'disable-version-check': Flags.boolean({
       description: 'Skip the version check when running `hydrogen dev`',
       default: false,
@@ -131,7 +135,7 @@ export default class Dev extends Command {
       cliConfig: this.config,
     };
 
-    const {close} = (await hasViteConfig(directory))
+    const {close} = (await isViteProject(directory))
       ? await runDev(devParams)
       : await runClassicCompilerDev(devParams);
 
@@ -164,6 +168,7 @@ type DevOptions = {
   customerAccountPush?: boolean;
   cliConfig: Config;
   verbose?: boolean;
+  envFile: string;
 };
 
 export async function runDev({
@@ -181,6 +186,7 @@ export async function runDev({
   disableVersionCheck = false,
   inspectorPort,
   customerAccountPush: customerAccountPushFlag = false,
+  envFile,
   cliConfig,
   verbose,
 }: DevOptions) {
@@ -195,6 +201,7 @@ export async function runDev({
   const backgroundPromise = getDevConfigInBackground(
     root,
     customerAccountPushFlag,
+    envFile,
   );
 
   const envPromise = backgroundPromise.then(({fetchRemote, localVariables}) =>
@@ -204,6 +211,7 @@ export async function runDev({
       envHandle,
       fetchRemote,
       localVariables,
+      envFile,
     }),
   );
 
@@ -221,22 +229,20 @@ export async function runDev({
     await removeFile(joinPath(root, 'node_modules/.vite'));
   }
 
-  const customLogger = vite.createLogger();
-  if (process.env.SHOPIFY_UNIT_TEST) {
-    // Make logs from Vite visible in tests
-    customLogger.info = (msg) => collectLog('info', msg);
-    customLogger.warn = (msg) => collectLog('warn', msg);
-    customLogger.error = (msg) => collectLog('error', msg);
-  }
-
   const formatOptionsPromise = Promise.resolve().then(() =>
     getCodeFormatOptions(root),
   );
 
   const viteServer = await vite.createServer({
     root,
-    customLogger,
     clearScreen: false,
+    customLogger: process.env.SHOPIFY_UNIT_TEST
+      ? Object.assign(vite.createLogger(), {
+          info: (msg: string) => collectLog('info', msg),
+          warn: (msg: string) => collectLog('warn', msg),
+          error: (msg: string) => collectLog('error', msg),
+        })
+      : undefined,
     server: {
       host: host ? true : undefined,
       // Allow Vite to read files from the Hydrogen packages in local development.

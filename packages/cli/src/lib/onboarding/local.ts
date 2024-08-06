@@ -1,4 +1,4 @@
-import {copy as copyWithFilter} from 'fs-extra/esm';
+import {cp as copyWithFilter} from 'node:fs/promises';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController} from '@shopify/cli-kit/node/abort';
 import {writeFile} from '@shopify/cli-kit/node/fs';
@@ -92,6 +92,8 @@ export async function setupLocalStarterTemplate(
     project.directory,
     // Filter out the `app` directory and server.ts, which will be generated later
     {
+      force: true,
+      recursive: true,
       filter: (filepath: string) =>
         !/^(app\/|dist\/|node_modules\/|server\.ts)/i.test(
           relativePath(templateDir, filepath),
@@ -319,7 +321,8 @@ export async function setupLocalStarterTemplate(
 
       await setupI18n({
         rootDirectory: project.directory,
-        serverEntryPoint: language === 'ts' ? 'server.ts' : 'server.js',
+        contextCreate:
+          language === 'ts' ? 'app/lib/context.ts' : 'app/lib/context.js',
       })
         .then(() =>
           options.git
@@ -333,7 +336,12 @@ export async function setupLocalStarterTemplate(
           setupSummary.i18nError = error as AbortError;
         });
 
-      await setupRoutes(project.directory, language, i18nStrategy)
+      await setupRoutes(project.directory, language, {
+        i18nStrategy,
+        // The init process might have added and modified files. Do not overwrite them.
+        // E.g. CSS imports might have been added to the root.
+        overwriteFileDeps: false,
+      })
         .then((routes) => {
           setupSummary.routes = routes;
 

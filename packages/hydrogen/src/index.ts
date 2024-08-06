@@ -92,6 +92,7 @@ export {
   Analytics,
   useAnalytics,
   getShopAnalytics,
+  type ShopAnalytics,
 } from './analytics-manager/AnalyticsProvider';
 export {AnalyticsEvent} from './analytics-manager/events';
 export {
@@ -162,4 +163,9 @@ export type {
   StorefrontApiResponsePartial,
 } from '@shopify/hydrogen-react';
 
-export type {HydrogenSessionData, HydrogenSession} from './types';
+export type {HydrogenSessionData, HydrogenSession, HydrogenEnv} from './types';
+
+export {
+  createHydrogenContext,
+  type HydrogenContext,
+} from './createHydrogenContext';
