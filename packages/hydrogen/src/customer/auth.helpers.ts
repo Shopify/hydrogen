@@ -6,6 +6,7 @@ import {
   CUSTOMER_ACCOUNT_SESSION_KEY,
   BUYER_SESSION_KEY,
 } from './constants';
+import {URL_TYPE} from './getCustomerAccountUrl';
 
 type H2OEvent = Parameters<NonNullable<typeof __H2O_LOG_EVENT>>[0];
 
@@ -70,14 +71,14 @@ export interface AccessTokenResponse {
 export async function refreshToken({
   session,
   customerAccountId,
-  customerAccountUrl,
+  customerAccountTokenExchangeUrl,
   httpsOrigin,
   debugInfo,
   exchangeForStorefrontCustomerAccessToken,
 }: {
   session: HydrogenSession;
   customerAccountId: string;
-  customerAccountUrl: string;
+  customerAccountTokenExchangeUrl: string;
   httpsOrigin: string;
   debugInfo?: Partial<H2OEvent>;
   exchangeForStorefrontCustomerAccessToken: () => Promise<void>;
@@ -105,7 +106,7 @@ export async function refreshToken({
   };
 
   const startTime = new Date().getTime();
-  const url = `${customerAccountUrl}/auth/oauth/token`;
+  const url = customerAccountTokenExchangeUrl;
   const response = await fetch(url, {
     method: 'POST',
     headers,
@@ -139,7 +140,7 @@ export async function refreshToken({
   const accessToken = await exchangeAccessToken(
     access_token,
     customerAccountId,
-    customerAccountUrl,
+    customerAccountTokenExchangeUrl,
     httpsOrigin,
     debugInfo,
   );
@@ -166,7 +167,7 @@ export async function checkExpires({
   expiresAt,
   session,
   customerAccountId,
-  customerAccountUrl,
+  customerAccountTokenExchangeUrl,
   httpsOrigin,
   debugInfo,
   exchangeForStorefrontCustomerAccessToken,
@@ -175,7 +176,7 @@ export async function checkExpires({
   expiresAt: string;
   session: HydrogenSession;
   customerAccountId: string;
-  customerAccountUrl: string;
+  customerAccountTokenExchangeUrl: string;
   httpsOrigin: string;
   debugInfo?: Partial<H2OEvent>;
   exchangeForStorefrontCustomerAccessToken: () => Promise<void>;
@@ -187,7 +188,7 @@ export async function checkExpires({
         locks.refresh = refreshToken({
           session,
           customerAccountId,
-          customerAccountUrl,
+          customerAccountTokenExchangeUrl,
           httpsOrigin,
           debugInfo,
           exchangeForStorefrontCustomerAccessToken,
@@ -251,7 +252,7 @@ export function generateState() {
 export async function exchangeAccessToken(
   authAccessToken: string | undefined,
   customerAccountId: string,
-  customerAccountUrl: string,
+  customerAccountTokenExchangeUrl: string,
   httpsOrigin: string,
   debugInfo?: Partial<H2OEvent>,
 ) {
@@ -282,7 +283,7 @@ export async function exchangeAccessToken(
   };
 
   const startTime = new Date().getTime();
-  const url = `${customerAccountUrl}/auth/oauth/token`;
+  const url = customerAccountTokenExchangeUrl;
   const response = await fetch(url, {
     method: 'POST',
     headers,
