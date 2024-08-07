@@ -11,14 +11,20 @@ export type PredictiveSearchReturn = ResultWithItems<
   NonNullable<PredictiveSearchQuery['predictiveSearch']>
 >;
 
+interface UrlWithTrackingParams {
+  /** The base URL to which the tracking parameters will be appended. */
+  baseUrl: string;
+  /** The trackingParams returned by the Storefront API. */
+  trackingParams?: string | null;
+  /** Any additional query parameters to be appended to the URL. */
+  params?: Record<string, string>;
+  /** The search term to be appended to the URL. */
+  term: string;
+}
+
 /**
  * A utility function that appends tracking parameters to a URL. Tracking parameters are
  * used internally by shopify to enhance search results and admin dashboards.
- * @param baseUrl - The base URL to which the tracking parameters will be appended.
- * @param trackingParams - The trackingParams returned by the Storefront API.
- * @param params - Any additional query parameters to be appended to the URL.
- * @param term - The search term to be appended to the URL.
- * @returns The URL with the tracking parameters appended.
  * @example
  * ```ts
  * const url = 'www.example.com';
@@ -35,12 +41,7 @@ export function urlWithTrackingParams({
   trackingParams,
   params: extraParams,
   term,
-}: {
-  baseUrl: string;
-  trackingParams?: string | null;
-  params?: Record<string, string>;
-  term: string;
-}) {
+}: UrlWithTrackingParams) {
   let search = new URLSearchParams({
     ...extraParams,
     q: encodeURIComponent(term),

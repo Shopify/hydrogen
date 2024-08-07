@@ -8,11 +8,7 @@ type SearchFormProps = Omit<FormProps, 'children'> & {
 };
 
 /**
- * Search form component that sends search requests to the `/search` route
- * @param children - A function that receives an object with the inputRef and term
- * @param term - The search term
- * @param props - The form props
- * @returns The search form
+ * Search form component that sends search requests to the `/search` route.
  * @example
  * ```tsx
  * <SearchForm>
@@ -48,7 +44,6 @@ export function SearchForm({children, ...props}: SearchFormProps) {
 
 /**
  * Focuses the input when cmd+k is pressed
- * @param inputRef - The input ref
  */
 function useFocusOnCmdK(inputRef: React.RefObject<HTMLInputElement>) {
   // focus the input when cmd+k is pressed

@@ -1,13 +1,18 @@
-import {useFetcher, useNavigate, type FormProps} from '@remix-run/react';
+import {
+  useFetcher,
+  useNavigate,
+  type FormProps,
+  type Fetcher,
+} from '@remix-run/react';
 import React, {useRef, useEffect} from 'react';
-import type {action as predictiveSearchAction} from '~/routes/search';
+import type {PredictiveSearchReturn} from '~/lib/search';
 import {useAside} from './Aside';
 
 type SearchFormPredictiveChildren = (args: {
   fetchResults: (event: React.ChangeEvent<HTMLInputElement>) => void;
   goToSearch: () => void;
   inputRef: React.MutableRefObject<HTMLInputElement | null>;
-  fetcher: ReturnType<typeof useFetcher<typeof predictiveSearchAction>>;
+  fetcher: Fetcher<PredictiveSearchReturn>;
 }) => React.ReactNode;
 
 type SearchFormPredictiveProps = Omit<FormProps, 'children'> & {
@@ -24,7 +29,7 @@ export function SearchFormPredictive({
   className = 'predictive-search-form',
   ...props
 }: SearchFormPredictiveProps) {
-  const fetcher = useFetcher<typeof predictiveSearchAction>({key: 'search'});
+  const fetcher = useFetcher<PredictiveSearchReturn>({key: 'search'});
   const inputRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
   const aside = useAside();

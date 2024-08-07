@@ -25,7 +25,12 @@ export function SearchResults({
   return children({...result.items, term});
 }
 
-SearchResults.Articles = function ({
+SearchResults.Articles = SearchResultsArticles;
+SearchResults.Pages = SearchResultsPages;
+SearchResults.Products = SearchResultsProducts;
+SearchResults.Empty = SearchResultsEmpty;
+
+function SearchResultsArticles({
   term,
   articles,
 }: PartialSearchResult<'articles'>) {
@@ -56,9 +61,9 @@ SearchResults.Articles = function ({
       <br />
     </div>
   );
-};
+}
 
-SearchResults.Pages = function ({term, pages}: PartialSearchResult<'pages'>) {
+function SearchResultsPages({term, pages}: PartialSearchResult<'pages'>) {
   if (!pages?.nodes.length) {
     return null;
   }
@@ -86,9 +91,9 @@ SearchResults.Pages = function ({term, pages}: PartialSearchResult<'pages'>) {
       <br />
     </div>
   );
-};
+}
 
-SearchResults.Products = function ({
+function SearchResultsProducts({
   term,
   products,
 }: PartialSearchResult<'products'>) {
@@ -152,8 +157,8 @@ SearchResults.Products = function ({
       <br />
     </div>
   );
-};
+}
 
-SearchResults.Empty = function () {
+function SearchResultsEmpty() {
   return <p>No results, try a different search.</p>;
-};
+}

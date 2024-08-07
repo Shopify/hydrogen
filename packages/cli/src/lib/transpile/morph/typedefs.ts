@@ -57,6 +57,9 @@ export function generateTypeDefs(sourceFile: SourceFile, code: string) {
   const knownGenerics: Record<string, string | undefined> = {
     MetaFunction: 'T',
     SerializeFrom: 'T',
+    Fetcher: 'T',
+    PartialPredictiveSearchResult: 'ItemType, ExtraProps',
+    PartialSearchResult: 'ItemType',
   };
 
   typedefsFromImports.forEach((typeElements, moduleSpecifier) => {

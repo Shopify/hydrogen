@@ -6,8 +6,16 @@ import {useAside} from './Aside';
 
 type PredictiveSearchItems = PredictiveSearchReturn['result']['items'];
 
+type UsePredictiveSearchReturn = {
+  term: React.MutableRefObject<string>;
+  total: number;
+  inputRef: React.MutableRefObject<HTMLInputElement | null>;
+  items: PredictiveSearchItems;
+  fetcher: Fetcher<PredictiveSearchReturn>;
+};
+
 type SearchResultsPredictiveArgs = Pick<
-  ReturnType<typeof usePredictiveSearch>,
+  UsePredictiveSearchReturn,
   'term' | 'total' | 'inputRef' | 'items'
 > & {
   state: Fetcher['state'];
@@ -61,7 +69,14 @@ export function SearchResultsPredictive({
   });
 }
 
-SearchResultsPredictive.Articles = function ({
+SearchResultsPredictive.Articles = SearchResultsPredictiveArticles;
+SearchResultsPredictive.Collections = SearchResultsPredictiveCollections;
+SearchResultsPredictive.Pages = SearchResultsPredictivePages;
+SearchResultsPredictive.Products = SearchResultsPredictiveProducts;
+SearchResultsPredictive.Queries = SearchResultsPredictiveQueries;
+SearchResultsPredictive.Empty = SearchResultsPredictiveEmpty;
+
+function SearchResultsPredictiveArticles({
   term,
   articles,
   closeSearch,
@@ -100,9 +115,9 @@ SearchResultsPredictive.Articles = function ({
       </ul>
     </div>
   );
-};
+}
 
-SearchResultsPredictive.Collections = function ({
+function SearchResultsPredictiveCollections({
   term,
   collections,
   closeSearch,
@@ -141,9 +156,9 @@ SearchResultsPredictive.Collections = function ({
       </ul>
     </div>
   );
-};
+}
 
-SearchResultsPredictive.Pages = function ({
+function SearchResultsPredictivePages({
   term,
   pages,
   closeSearch,
@@ -174,9 +189,9 @@ SearchResultsPredictive.Pages = function ({
       </ul>
     </div>
   );
-};
+}
 
-SearchResultsPredictive.Products = function ({
+function SearchResultsPredictiveProducts({
   term,
   products,
   closeSearch,
@@ -221,9 +236,9 @@ SearchResultsPredictive.Products = function ({
       </ul>
     </div>
   );
-};
+}
 
-SearchResultsPredictive.Queries = function ({
+function SearchResultsPredictiveQueries({
   queries,
   inputRef,
 }: PartialPredictiveSearchResult<'queries', 'inputRef'>) {
@@ -255,9 +270,9 @@ SearchResultsPredictive.Queries = function ({
       </ul>
     </div>
   );
-};
+}
 
-SearchResultsPredictive.Empty = function ({
+function SearchResultsPredictiveEmpty({
   term,
 }: {
   term: React.MutableRefObject<string>;
@@ -271,7 +286,7 @@ SearchResultsPredictive.Empty = function ({
       No results found for <q>{term.current}</q>
     </p>
   );
-};
+}
 
 const defaultResult: PredictiveSearchReturn['result'] = {
   items: {
@@ -285,14 +300,13 @@ const defaultResult: PredictiveSearchReturn['result'] = {
 };
 
 /**
- * Hook that returns the predictive search results and fetcher and input ref
- * @returns Predictive search results and fetcher and input ref
+ * Hook that returns the predictive search results and fetcher and input ref.
  * @example
  * '''ts
  * const { items, total, inputRef, term, fetcher } = usePredictiveSearch();
  * '''
  **/
-function usePredictiveSearch() {
+function usePredictiveSearch(): UsePredictiveSearchReturn {
   const fetcher = useFetcher<PredictiveSearchReturn>({key: 'search'});
   const term = useRef<string>('');
   const inputRef = useRef<HTMLInputElement | null>(null);
