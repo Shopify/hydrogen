@@ -130,11 +130,11 @@ function CartGiftCard({
       <dl hidden={!codes.length}>
         <div>
           <dt>Applied Gift Card(s)</dt>
-          <UpdateGiftCardForm removeAppliedCode={removeAppliedCode}>
+          <UpdateGiftCardForm>
             <div className="cart-discount">
               <code>{codes?.join(', ')}</code>
               &nbsp;
-              <button>Remove</button>
+              <button onSubmit={() => removeAppliedCode}>Remove</button>
             </div>
           </UpdateGiftCardForm>
         </div>
@@ -155,7 +155,6 @@ function CartGiftCard({
 function UpdateGiftCardForm({
   giftCardCodes,
   saveAppliedCode,
-  removeAppliedCode,
   children,
 }: {
   giftCardCodes?: string[];
@@ -173,8 +172,8 @@ function UpdateGiftCardForm({
     >
       {(fetcher: FetcherWithComponents<any>) => {
         const code = fetcher.formData?.get('giftCardCode');
+        console.log('code:', code);
         if (code) saveAppliedCode && saveAppliedCode(code as string);
-        removeAppliedCode && removeAppliedCode();
         return children;
       }}
     </CartForm>
