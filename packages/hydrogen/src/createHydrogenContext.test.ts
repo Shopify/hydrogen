@@ -58,6 +58,7 @@ const mockEnv = {
     'PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID_value',
   PUBLIC_CUSTOMER_ACCOUNT_API_URL: 'PUBLIC_CUSTOMER_ACCOUNT_API_URL_value',
   PUBLIC_CHECKOUT_DOMAIN: 'PUBLIC_CHECKOUT_DOMAIN_value',
+  SHOP_ID: 'SHOP_ID_value',
 };
 
 const defaultOptions = {
@@ -179,7 +180,7 @@ describe('createHydrogenContext', () => {
       expect(vi.mocked(createCustomerAccountClient)).toHaveBeenCalledWith(
         expect.objectContaining({
           customerAccountId: mockEnv.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID,
-          customerAccountUrl: mockEnv.PUBLIC_CUSTOMER_ACCOUNT_API_URL,
+          shopId: mockEnv.SHOP_ID,
         }),
       );
     });
