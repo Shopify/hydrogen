@@ -95,7 +95,7 @@ export async function setupLocalStarterTemplate(
       force: true,
       recursive: true,
       filter: (filepath: string) =>
-        !/^(app\/|dist\/|node_modules\/|server\.ts)/i.test(
+        !/^(app\/|dist\/|node_modules\/|server\.ts|\.shopify\/)/i.test(
           relativePath(templateDir, filepath),
         ),
     },
