@@ -26,7 +26,8 @@ export default {
           body: query,
         });
 
-        // Throw if the response is unsuccessful
+        // Throw if the response is unsuccessful.
+        // This is important to prevent the results from being cached.
         if (!response.ok) throw new Error(response.statusText);
 
         const {data, error} = (await response.json()) as {

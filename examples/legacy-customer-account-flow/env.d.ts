@@ -5,9 +5,12 @@
 // Enhance TypeScript's built-in typings.
 import '@total-typescript/ts-reset';
 
-import type {Storefront, HydrogenCart} from '@shopify/hydrogen';
-import type {CustomerAccessToken} from '@shopify/hydrogen/storefront-api-types';
-import type {AppSession} from '~/lib/session';
+import type {
+  HydrogenContext,
+  HydrogenSessionData,
+  HydrogenEnv,
+} from '@shopify/hydrogen';
+import type {createAppLoadContext} from '~/lib/context';
 
 declare global {
   /**
@@ -15,35 +18,23 @@ declare global {
    */
   const process: {env: {NODE_ENV: 'production' | 'development'}};
 
-  /**
-   * Declare expected Env parameter in fetch handler.
-   */
-  interface Env {
-    SESSION_SECRET: string;
-    PUBLIC_STOREFRONT_API_TOKEN: string;
-    PRIVATE_STOREFRONT_API_TOKEN: string;
-    PUBLIC_STORE_DOMAIN: string;
-    PUBLIC_STOREFRONT_ID: string;
-    PUBLIC_CHECKOUT_DOMAIN: string;
+  interface Env extends HydrogenEnv {
+    // declare additional Env parameter use in the fetch handler and Remix loader context here
   }
 }
 
 declare module '@shopify/remix-oxygen' {
-  /**
-   * Declare local additions to the Remix loader context.
-   */
-  export interface AppLoadContext {
-    env: Env;
-    cart: HydrogenCart;
-    storefront: Storefront;
-    session: AppSession;
-    waitUntil: ExecutionContext['waitUntil'];
+  interface AppLoadContext
+    extends Awaited<ReturnType<typeof createAppLoadContext>> {
+    // to change context type, change the return of createAppLoadContext() instead
   }
 
-  /**
-   * Declare the data we expect to access via `context.session`.
-   */
-  export interface SessionData {
+  /***********************************************/
+  /**********  EXAMPLE UPDATE STARTS  ************/
+  interface SessionData {
+    // declare local additions to the Remix session data here
     customerAccessToken: CustomerAccessToken;
   }
+  /**********   EXAMPLE UPDATE END   ************/
+  /***********************************************/
 }

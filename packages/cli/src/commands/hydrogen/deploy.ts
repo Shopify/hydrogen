@@ -40,14 +40,18 @@ import {
   orderEnvironmentsBySafety,
 } from '../../lib/common.js';
 import {execAsync} from '../../lib/process.js';
-import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
+import {
+  commonFlags,
+  flagsToCamelObject,
+  overrideFlag,
+} from '../../lib/flags.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
 import {OxygenDeploymentData} from '../../lib/graphql/admin/get-oxygen-data.js';
 import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
 import {runBuild} from './build.js';
 import {getViteConfig} from '../../lib/vite-config.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
-import {hasRemixConfigFile} from '../../lib/remix-config.js';
+import {isClassicProject} from '../../lib/remix-config.js';
 import {packageManagers} from '../../lib/package-managers.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 
@@ -69,10 +73,12 @@ export default class Deploy extends Command {
     ...commonFlags.entry,
     ...commonFlags.env,
     ...commonFlags.envBranch,
-    'env-file': Flags.string({
-      description:
-        'Path to an environment file to override existing environment variables for the deployment.',
-      required: false,
+    ...overrideFlag(commonFlags.envFile, {
+      'env-file': {
+        description:
+          'Path to an environment file to override existing environment variables for the deployment.',
+        default: undefined,
+      },
     }),
     preview: Flags.boolean({
       description:
@@ -449,7 +455,7 @@ export async function runDeploy(
   let assetsDir = 'dist/client';
   let workerDir = 'dist/worker';
 
-  const isClassicCompiler = await hasRemixConfigFile(root);
+  const isClassicCompiler = await isClassicProject(root);
 
   if (!isClassicCompiler) {
     const viteConfig = await getViteConfig(root, ssrEntry).catch(() => null);

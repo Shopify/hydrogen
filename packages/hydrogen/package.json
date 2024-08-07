@@ -74,7 +74,7 @@
     "@remix-run/dev": "^2.1.0",
     "@remix-run/react": "^2.1.0",
     "@remix-run/server-runtime": "^2.10.1",
-    "@shopify/generate-docs": "0.11.1",
+    "@shopify/generate-docs": "0.16.2",
     "@shopify/hydrogen-codegen": "*",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^14.0.0",
