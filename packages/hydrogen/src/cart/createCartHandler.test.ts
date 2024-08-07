@@ -34,7 +34,7 @@ describe('createCartHandler', () => {
     const cart = getCartHandler();
 
     expectTypeOf(cart).toEqualTypeOf<HydrogenCart>;
-    expect(Object.keys(cart)).toHaveLength(14);
+    expect(Object.keys(cart)).toHaveLength(15);
     expect(cart).toHaveProperty('get');
     expect(cart).toHaveProperty('getCartId');
     expect(cart).toHaveProperty('setCartId');
@@ -65,7 +65,7 @@ describe('createCartHandler', () => {
     });
 
     expectTypeOf(cart).toEqualTypeOf<HydrogenCartCustom<{foo: () => 'bar'}>>;
-    expect(Object.keys(cart)).toHaveLength(15);
+    expect(Object.keys(cart)).toHaveLength(16);
     expect(cart.foo()).toBe('bar');
   });
 
@@ -79,7 +79,7 @@ describe('createCartHandler', () => {
     });
 
     expectTypeOf(cart).toEqualTypeOf<HydrogenCart>;
-    expect(Object.keys(cart)).toHaveLength(14);
+    expect(Object.keys(cart)).toHaveLength(15);
     expect(await cart.get()).toBe('bar');
   });
 

@@ -16,13 +16,13 @@ export function cartGiftCardCodesUpdateDefault(
   options: CartQueryOptions,
 ): CartGiftCardCodesUpdateFunction {
   return async (giftCardCodes, optionalParams) => {
-    // Ensure the discount codes are unique
+    // Ensure the gift card codes are unique
     const uniqueCodes = giftCardCodes.filter((value, index, array) => {
       return array.indexOf(value) === index;
     });
 
-    const {cartDiscountCodesUpdate, errors} = await options.storefront.mutate<{
-      cartDiscountCodesUpdate: CartQueryData;
+    const {cartGiftCardCodesUpdate, errors} = await options.storefront.mutate<{
+      cartGiftCardCodesUpdate: CartQueryData;
       errors: StorefrontApiErrors;
     }>(CART_GIFT_CARD_CODE_UPDATE_MUTATION(options.cartFragment), {
       variables: {
@@ -31,7 +31,7 @@ export function cartGiftCardCodesUpdateDefault(
         ...optionalParams,
       },
     });
-    return formatAPIResult(cartDiscountCodesUpdate, errors);
+    return formatAPIResult(cartGiftCardCodesUpdate, errors);
   };
 }
 

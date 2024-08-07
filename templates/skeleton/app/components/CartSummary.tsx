@@ -109,6 +109,7 @@ function CartGiftCard({
   giftCardCodes: CartApiQueryFragment['appliedGiftCards'] | undefined;
 }) {
   const appliedGiftCardCodes = useRef<string[]>([]);
+  const giftCardCodeInput = useRef<HTMLInputElement>(null);
   const codes: string[] = giftCardCodes?.map(({lastCharacters}) => `***${lastCharacters}`) || [];
 
   function saveAppliedCode(code: string) {
@@ -116,6 +117,7 @@ function CartGiftCard({
     if (!appliedGiftCardCodes.current.includes(formattedCode)) {
       appliedGiftCardCodes.current.push(formattedCode);
     }
+    giftCardCodeInput.current!.value = '';
   }
 
   function removeAppliedCode() {
@@ -141,7 +143,7 @@ function CartGiftCard({
       {/* Show an input to apply a discount */}
       <UpdateGiftCardForm giftCardCodes={appliedGiftCardCodes.current} saveAppliedCode={saveAppliedCode}>
         <div>
-          <input type="text" name="giftCardCode" placeholder="Gift card code" />
+          <input type="text" name="giftCardCode" placeholder="Gift card code" ref={giftCardCodeInput} />
           &nbsp;
           <button type="submit">Apply</button>
         </div>
