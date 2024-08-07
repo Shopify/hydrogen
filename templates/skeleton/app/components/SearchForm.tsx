@@ -1,5 +1,5 @@
-import {Form, type FormProps} from '@remix-run/react';
 import {useRef, useEffect} from 'react';
+import {Form, type FormProps} from '@remix-run/react';
 
 type SearchFormProps = Omit<FormProps, 'children'> & {
   children: (args: {
@@ -33,7 +33,7 @@ type SearchFormProps = Omit<FormProps, 'children'> & {
 export function SearchForm({children, ...props}: SearchFormProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  useFocusOnCmdK({inputRef});
+  useFocusOnCmdK(inputRef);
 
   if (typeof children !== 'function') {
     return null;
@@ -50,11 +50,7 @@ export function SearchForm({children, ...props}: SearchFormProps) {
  * Focuses the input when cmd+k is pressed
  * @param inputRef - The input ref
  */
-function useFocusOnCmdK({
-  inputRef,
-}: {
-  inputRef: React.RefObject<HTMLInputElement>;
-}) {
+function useFocusOnCmdK(inputRef: React.RefObject<HTMLInputElement>) {
   // focus the input when cmd+k is pressed
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {

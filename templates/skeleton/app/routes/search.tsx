@@ -7,6 +7,7 @@ import {useLoaderData, type MetaFunction} from '@remix-run/react';
 import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {SearchForm} from '~/components/SearchForm';
 import {SearchResults} from '~/components/SearchResults';
+import type {SearchReturn, PredictiveSearchReturn} from '~/lib/search';
 
 export const meta: MetaFunction = () => {
   return [{title: `Hydrogen | Search`}];
@@ -16,40 +17,26 @@ export const meta: MetaFunction = () => {
  * Handles predictive search POST requests
  * requested by the SearchFormPredictive component
  */
-export async function action({request, context}: ActionFunctionArgs) {
-  try {
-    return await predictiveSeach({request, context});
-  } catch (error) {
-    let message;
-    if (error instanceof Error) {
-      message = error.message;
-    } else if (typeof error === 'string') {
-      message = error;
-    } else {
-      message = 'An unknown error occurred';
-    }
-    return json({result: null, error: message});
-  }
+export function action({request, context}: ActionFunctionArgs) {
+  return predictiveSeach({request, context})
+    .then(json)
+    .catch((error: Error) => {
+      console.error(error);
+      return json({term: '', result: null, error: error.message});
+    });
 }
 
 /**
  * Handles regular search GET requests
  * requested by the SearchForm component and /search route visits
  */
-export async function loader({request, context}: LoaderFunctionArgs) {
-  try {
-    return await search({request, context});
-  } catch (error) {
-    let message = '';
-    if (error instanceof Error) {
-      message = error.message;
-    } else if (typeof error === 'string') {
-      message = error;
-    } else {
-      message = 'An unknown error occurred';
-    }
-    return json({term: '', result: null, error: message});
-  }
+export function loader({request, context}: LoaderFunctionArgs) {
+  return search({request, context})
+    .then(json)
+    .catch((error: Error) => {
+      console.error(error);
+      return json({term: '', result: null, error: error.message});
+    });
 }
 
 /**
@@ -232,12 +219,11 @@ export const SEARCH_QUERY = `#graphql
 async function search({
   request,
   context,
-}: Pick<LoaderFunctionArgs, 'request' | 'context'>) {
+}: Pick<LoaderFunctionArgs, 'request' | 'context'>): Promise<SearchReturn> {
   const {storefront} = context;
   const url = new URL(request.url);
   const variables = getPaginationVariables(request, {pageBy: 8});
   const term = String(url.searchParams.get('q') || '');
-  let error = null;
 
   // Search articles, pages, and products for the `q` term
   const {errors, ...items} = await storefront.query(SEARCH_QUERY, {
@@ -248,15 +234,16 @@ async function search({
     throw new Error('No search data returned from Shopify API');
   }
 
-  if (errors) {
-    error = errors.map(({message}) => message).join(', ');
-  }
+  const total = Object.values(items).reduce(
+    (acc, {nodes}) => acc + nodes.length,
+    0,
+  );
 
-  const total = Object.values(items).reduce((acc, {nodes}) => {
-    return acc + nodes.length;
-  }, 0);
+  const error = errors
+    ? errors.map(({message}) => message).join(', ')
+    : undefined;
 
-  return json({term, result: {total, items}, error});
+  return {term, error, result: {total, items}};
 }
 
 /**
@@ -388,11 +375,13 @@ const PREDICTIVE_SEARCH_QUERY = `#graphql
 async function predictiveSeach({
   request,
   context,
-}: Pick<ActionFunctionArgs, 'request' | 'context'>) {
+}: Pick<
+  ActionFunctionArgs,
+  'request' | 'context'
+>): Promise<PredictiveSearchReturn> {
   const {storefront} = context;
   const formData = await request.formData();
   const term = String(formData.get('q') || '');
-
   const limit = Number(formData.get('limit') || 10);
 
   // Predictively search articles, collections, pages, products, and queries (suggestions)
@@ -415,10 +404,13 @@ async function predictiveSeach({
   }
 
   if (!items) {
-    throw new Error('No predictive search data returned');
+    throw new Error('No predictive search data returned from Shopify API');
   }
 
-  const total = Object.values(items).reduce((acc, {length}) => acc + length, 0);
+  const total = Object.values(items).reduce(
+    (acc, item) => acc + item.length,
+    0,
+  );
 
-  return json({term, result: {items, total}, error: null});
+  return {term, result: {items, total}};
 }

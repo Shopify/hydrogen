@@ -1,38 +1,38 @@
 import {Link} from '@remix-run/react';
 import {Image, Money, Pagination} from '@shopify/hydrogen';
-import type {SerializeFrom} from '@shopify/remix-oxygen';
-import {urlWithTrackingParams} from '~/lib/search';
-import {loader as searchLoader} from '~/routes/search';
+import {urlWithTrackingParams, type SearchReturn} from '~/lib/search';
 
-type SearchLoader = SerializeFrom<typeof searchLoader>;
-type SearchResult = NonNullable<SearchLoader['result']>;
-type SearchItems = SearchResult['items'];
+type SearchItems = SearchReturn['result']['items'];
+type PartialSearchResult<ItemType extends keyof SearchItems> = Pick<
+  SearchItems,
+  ItemType
+> &
+  Pick<SearchReturn, 'term'>;
 
-type SearchResultsProps = SearchLoader & {
+type SearchResultsProps = SearchReturn & {
   children: (args: SearchItems & {term: string}) => React.ReactNode;
 };
 
 export function SearchResults({
-  result,
   term,
+  result,
   children,
 }: Omit<SearchResultsProps, 'error'>) {
   if (!result?.total) {
     return null;
   }
+
   return children({...result.items, term});
 }
 
 SearchResults.Articles = function ({
-  articles,
   term,
-}: {
-  articles: SearchItems['articles'];
-  term: string;
-}) {
+  articles,
+}: PartialSearchResult<'articles'>) {
   if (!articles?.nodes.length) {
     return null;
   }
+
   return (
     <div className="search-result">
       <h2>Articles</h2>
@@ -43,6 +43,7 @@ SearchResults.Articles = function ({
             trackingParams: article.trackingParameters,
             term,
           });
+
           return (
             <div className="search-results-item" key={article.id}>
               <Link prefetch="intent" to={articleUrl}>
@@ -57,16 +58,11 @@ SearchResults.Articles = function ({
   );
 };
 
-SearchResults.Pages = function ({
-  pages,
-  term,
-}: {
-  pages: SearchItems['pages'];
-  term: string;
-}) {
+SearchResults.Pages = function ({term, pages}: PartialSearchResult<'pages'>) {
   if (!pages?.nodes.length) {
     return null;
   }
+
   return (
     <div className="search-result">
       <h2>Pages</h2>
@@ -77,6 +73,7 @@ SearchResults.Pages = function ({
             trackingParams: page.trackingParameters,
             term,
           });
+
           return (
             <div className="search-results-item" key={page.id}>
               <Link prefetch="intent" to={pageUrl}>
@@ -92,12 +89,13 @@ SearchResults.Pages = function ({
 };
 
 SearchResults.Products = function ({
-  products,
   term,
-}: Pick<SearchItems, 'products'> & {term: string}) {
+  products,
+}: PartialSearchResult<'products'>) {
   if (!products?.nodes.length) {
     return null;
   }
+
   return (
     <div className="search-result">
       <h2>Products</h2>
@@ -109,6 +107,7 @@ SearchResults.Products = function ({
               trackingParams: product.trackingParameters,
               term,
             });
+
             return (
               <div className="search-results-item" key={product.id}>
                 <Link prefetch="intent" to={productUrl}>
@@ -129,6 +128,7 @@ SearchResults.Products = function ({
               </div>
             );
           });
+
           return (
             <div>
               <div>

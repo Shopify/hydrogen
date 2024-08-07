@@ -9,7 +9,10 @@ import {Aside} from '~/components/Aside';
 import {Footer} from '~/components/Footer';
 import {Header, HeaderMenu} from '~/components/Header';
 import {CartMain} from '~/components/CartMain';
-import {SearchFormPredictive} from '~/components/SearchFormPredictive';
+import {
+  SEARCH_ENDPOINT,
+  SearchFormPredictive,
+} from '~/components/SearchFormPredictive';
 import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
 
 interface PageLayoutProps {
@@ -104,7 +107,6 @@ function SearchAside() {
               <>
                 <SearchResultsPredictive.Queries
                   queries={queries}
-                  term={term}
                   inputRef={inputRef}
                 />
                 <SearchResultsPredictive.Products
@@ -128,7 +130,10 @@ function SearchAside() {
                   term={term}
                 />
                 {term.current && total ? (
-                  <Link onClick={closeSearch} to={`/search?q=${term.current}`}>
+                  <Link
+                    onClick={closeSearch}
+                    to={`${SEARCH_ENDPOINT}?q=${term.current}`}
+                  >
                     <p>
                       View all results for <q>{term.current}</q>
                       &nbsp; →

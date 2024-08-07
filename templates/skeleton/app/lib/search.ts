@@ -1,4 +1,15 @@
-import type {Maybe} from '@shopify/hydrogen/storefront-api-types';
+import type {PredictiveSearchQuery, SearchQuery} from 'storefrontapi.generated';
+
+type ResultWithItems<T> = {
+  term: string;
+  error?: string;
+  result: {total: number; items: T};
+};
+
+export type SearchReturn = ResultWithItems<SearchQuery>;
+export type PredictiveSearchReturn = ResultWithItems<
+  NonNullable<PredictiveSearchQuery['predictiveSearch']>
+>;
 
 /**
  * A utility function that appends tracking parameters to a URL. Tracking parameters are
@@ -22,29 +33,22 @@ import type {Maybe} from '@shopify/hydrogen/storefront-api-types';
 export function urlWithTrackingParams({
   baseUrl,
   trackingParams,
-  params,
+  params: extraParams,
   term,
 }: {
   baseUrl: string;
-  trackingParams: Maybe<string> | undefined;
+  trackingParams?: string | null;
   params?: Record<string, string>;
   term: string;
 }) {
-  const p = new URLSearchParams(params || {});
-
-  if (typeof term === 'string') {
-    p.append('q', encodeURIComponent(term));
-  }
-
-  let url = `${baseUrl}?${p.toString()}`;
+  let search = new URLSearchParams({
+    ...extraParams,
+    q: encodeURIComponent(term),
+  }).toString();
 
   if (trackingParams) {
-    if (p.size > 0) {
-      url = `${url}${trackingParams}`;
-    } else {
-      url = `${url}?${trackingParams}`;
-    }
+    search = `${search}&${trackingParams}`;
   }
 
-  return url;
+  return `${baseUrl}?${search}`;
 }

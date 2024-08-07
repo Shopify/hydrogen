@@ -14,6 +14,8 @@ type SearchFormPredictiveProps = Omit<FormProps, 'children'> & {
   children: SearchFormPredictiveChildren | null;
 };
 
+export const SEARCH_ENDPOINT = '/search';
+
 /**
  *  Search form component that sends search requests to the `/search` route
  **/
@@ -31,27 +33,24 @@ export function SearchFormPredictive({
   function resetInput(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     event.stopPropagation();
-    if (!inputRef?.current || inputRef.current.value === '') {
-      return;
+    if (inputRef?.current?.value) {
+      inputRef.current.blur();
     }
-    inputRef.current.blur();
   }
 
   /** Navigate to the search page with the current input value */
   function goToSearch() {
-    const searchUrl = inputRef?.current?.value
-      ? `/search?q=${inputRef.current.value}`
-      : `/search`;
-    navigate(searchUrl);
+    const term = inputRef?.current?.value;
+    navigate(SEARCH_ENDPOINT + (term ? `?q=${term}` : ''));
     aside.close();
-    return;
   }
 
   /** Fetch search results based on the input value */
   function fetchResults(event: React.ChangeEvent<HTMLInputElement>) {
-    const term = event.target.value || '';
-    fetcher.submit({q: term, limit: 5}, {method: 'POST', action: '/search'});
-    return;
+    fetcher.submit(
+      {q: event.target.value || '', limit: 5},
+      {method: 'POST', action: SEARCH_ENDPOINT},
+    );
   }
 
   // ensure the passed input has a type of search, because SearchResults
