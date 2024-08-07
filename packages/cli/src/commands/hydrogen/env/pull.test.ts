@@ -264,7 +264,7 @@ describe('pullVariables', () => {
           confirmationMessage: `Yes, confirm changes`,
           cancellationMessage: `No, make changes later`,
           message: expect.stringMatching(
-            /We'll make the following changes to your \.env file:/,
+            /We'll make the following changes to your .*?\.env.*? file:/,
           ),
         });
       });
