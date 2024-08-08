@@ -1,29 +1,55 @@
-import type {
-  PredictiveQueryFragment,
-  SearchProductFragment,
-  PredictiveProductFragment,
-  PredictiveCollectionFragment,
-  PredictivePageFragment,
-  PredictiveArticleFragment,
-} from 'storefrontapi.generated';
+import type {PredictiveSearchQuery, SearchQuery} from 'storefrontapi.generated';
 
-export function applyTrackingParams(
-  resource:
-    | PredictiveQueryFragment
-    | SearchProductFragment
-    | PredictiveProductFragment
-    | PredictiveCollectionFragment
-    | PredictiveArticleFragment
-    | PredictivePageFragment,
-  params?: string,
-) {
-  if (params) {
-    return resource?.trackingParameters
-      ? `?${params}&${resource.trackingParameters}`
-      : `?${params}`;
-  } else {
-    return resource?.trackingParameters
-      ? `?${resource.trackingParameters}`
-      : '';
+type ResultWithItems<T> = {
+  term: string;
+  error?: string;
+  result: {total: number; items: T};
+};
+
+export type SearchReturn = ResultWithItems<SearchQuery>;
+export type PredictiveSearchReturn = ResultWithItems<
+  NonNullable<PredictiveSearchQuery['predictiveSearch']>
+>;
+
+interface UrlWithTrackingParams {
+  /** The base URL to which the tracking parameters will be appended. */
+  baseUrl: string;
+  /** The trackingParams returned by the Storefront API. */
+  trackingParams?: string | null;
+  /** Any additional query parameters to be appended to the URL. */
+  params?: Record<string, string>;
+  /** The search term to be appended to the URL. */
+  term: string;
+}
+
+/**
+ * A utility function that appends tracking parameters to a URL. Tracking parameters are
+ * used internally by shopify to enhance search results and admin dashboards.
+ * @example
+ * ```ts
+ * const url = 'www.example.com';
+ * const trackingParams = 'utm_source=shopify&utm_medium=shopify_app&utm_campaign=storefront';
+ * const params = { foo: 'bar' };
+ * const term = 'search term';
+ * const url = urlWithTrackingParams({ baseUrl, trackingParams, params, term });
+ * console.log(url);
+ * // Output: 'https://www.example.com?foo=bar&q=search%20term&utm_source=shopify&utm_medium=shopify_app&utm_campaign=storefront'
+ * ```
+ */
+export function urlWithTrackingParams({
+  baseUrl,
+  trackingParams,
+  params: extraParams,
+  term,
+}: UrlWithTrackingParams) {
+  let search = new URLSearchParams({
+    ...extraParams,
+    q: encodeURIComponent(term),
+  }).toString();
+
+  if (trackingParams) {
+    search = `${search}&${trackingParams}`;
   }
+
+  return `${baseUrl}?${search}`;
 }
