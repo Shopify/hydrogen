@@ -17,7 +17,7 @@ export function SearchResults({
   term,
   result,
   children,
-}: Omit<SearchResultsProps, 'error'>) {
+}: Omit<SearchResultsProps, 'error' | 'type'>) {
   if (!result?.total) {
     return null;
   }

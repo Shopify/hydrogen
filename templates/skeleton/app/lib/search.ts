@@ -3,14 +3,19 @@ import type {
   RegularSearchQuery,
 } from 'storefrontapi.generated';
 
-type ResultWithItems<T> = {
+type ResultWithItems<Type extends 'predictive' | 'regular', Items> = {
+  type: Type;
   term: string;
   error?: string;
-  result: {total: number; items: T};
+  result: {total: number; items: Items};
 };
 
-export type RegularSearchReturn = ResultWithItems<RegularSearchQuery>;
+export type RegularSearchReturn = ResultWithItems<
+  'regular',
+  RegularSearchQuery
+>;
 export type PredictiveSearchReturn = ResultWithItems<
+  'predictive',
   NonNullable<PredictiveSearchQuery['predictiveSearch']>
 >;
 
