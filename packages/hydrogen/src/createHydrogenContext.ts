@@ -28,7 +28,7 @@ import {type CrossRuntimeRequest, getHeader} from './utils/request';
 
 export type HydrogenContextOptions<
   TSession extends HydrogenSession = HydrogenSession,
-  TCustomMethods extends CustomMethodsBase | undefined = undefined,
+  TCustomMethods extends CustomMethodsBase | undefined = {},
   TI18n extends I18nBase = I18nBase,
   TEnv extends HydrogenEnv = Env,
 > = {
@@ -90,7 +90,7 @@ export type HydrogenContextOptions<
 
 export interface HydrogenContext<
   TSession extends HydrogenSession = HydrogenSession,
-  TCustomMethods extends CustomMethodsBase | undefined = undefined,
+  TCustomMethods extends CustomMethodsBase | undefined = {},
   TI18n extends I18nBase = I18nBase,
   TEnv extends HydrogenEnv = Env,
 > {
@@ -130,7 +130,7 @@ export interface HydrogenContextOverloads<
 // type for createHydrogenContext methods
 export function createHydrogenContext<
   TSession extends HydrogenSession = HydrogenSession,
-  TCustomMethods extends CustomMethodsBase | undefined = undefined,
+  TCustomMethods extends CustomMethodsBase | undefined = {},
   TI18n extends I18nBase = I18nBase,
   TEnv extends HydrogenEnv = Env,
 >(

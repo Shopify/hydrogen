@@ -43,6 +43,9 @@ export async function createAppLoadContext(
       queryFragment: CART_QUERY_FRAGMENT,
       /***********************************************/
       /**********  EXAMPLE UPDATE STARTS  ************/
+      // Avoid using method definition in customMethods ie. methodDefinition() {}
+      // as TypeScript is unable to correctly infer the type
+      // if method definition is necessary, declaring customMethods separately
       customMethods: {
         updateLineByOptions: async (
           productId: string,
