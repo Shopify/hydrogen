@@ -384,7 +384,7 @@ describe('createHydrogenContext', () => {
       });
 
       it('returns cart handler with HydrogenCartCustom if there cart.customMethods is defined', async () => {
-        const customMethods = {testMethod: () => {}};
+        const customMethods = {arrowFunction: () => {}};
 
         const hydrogenContext = createHydrogenContext({
           ...defaultOptions,
@@ -394,6 +394,36 @@ describe('createHydrogenContext', () => {
         expect(hydrogenContext).toHaveProperty('cart');
         expectTypeOf(hydrogenContext.cart).toEqualTypeOf<
           HydrogenCartCustom<typeof customMethods>
+        >();
+      });
+
+      it('returns cart handler with HydrogenCartCustom if there cart.customMethods is defined using method definition', async () => {
+        const customMethods = {methodDefinition() {}};
+
+        const hydrogenContext = createHydrogenContext({
+          ...defaultOptions,
+          cart: {customMethods},
+        });
+
+        expect(hydrogenContext).toHaveProperty('cart');
+        expectTypeOf(hydrogenContext.cart).toEqualTypeOf<
+          HydrogenCartCustom<typeof customMethods>
+        >();
+      });
+
+      it('returns cart handler with HydrogenCartCustom if there cart.customMethods is defined using method definition and declare inline', async () => {
+        const hydrogenContext = createHydrogenContext({
+          ...defaultOptions,
+          cart: {
+            customMethods: {
+              methodDefinition() {},
+            },
+          },
+        });
+
+        expect(hydrogenContext).toHaveProperty('cart');
+        expectTypeOf(hydrogenContext.cart).toEqualTypeOf<
+          HydrogenCartCustom<{methodDefinition(): void}>
         >();
       });
     });
