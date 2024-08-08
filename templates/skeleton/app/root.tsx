@@ -16,6 +16,7 @@ import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import {PageLayout} from '~/components/PageLayout';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
+import {SEARCH_ENDPOINT} from '~/components/SearchFormPredictive';
 
 export type RootLoader = typeof loader;
 
@@ -24,20 +25,21 @@ export type RootLoader = typeof loader;
  */
 export const shouldRevalidate: ShouldRevalidateFunction = ({
   formMethod,
+  formAction,
   currentUrl,
   nextUrl,
+  defaultShouldRevalidate,
 }) => {
+  // skip revalidation when submitting the search form
+  if (formAction === SEARCH_ENDPOINT) return false;
+
   // revalidate when a mutation is performed e.g add to cart, login...
-  if (formMethod && formMethod !== 'GET') {
-    return true;
-  }
+  if (formMethod && formMethod !== 'GET') return true;
 
   // revalidate when manually revalidating via useRevalidator
-  if (currentUrl.toString() === nextUrl.toString()) {
-    return true;
-  }
+  if (currentUrl.toString() === nextUrl.toString()) return true;
 
-  return false;
+  return defaultShouldRevalidate;
 };
 
 export function links() {
