@@ -15,7 +15,7 @@ export default async function handleRequest(
     shop: {
       checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
       storeDomain: context.env.PUBLIC_STORE_DOMAIN,
-    }
+    },
   });
 
   const body = await renderToReadableStream(

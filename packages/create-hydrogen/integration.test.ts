@@ -56,7 +56,7 @@ describe('create-hydrogen', () => {
         │      • Policies (/policies & /policies/:handle)                              │
         │      • Blogs (/blogs/*)                                                      │
         │      • Account (/account/*)                                                  │
-        │      • Search (/api/predictive-search & /search)                             │
+        │      • Search (/search)                                                      │
         │      • Robots (/robots.txt)                                                  │
         │      • Sitemap (/sitemap.xml)                                                │
         │                                                                              │

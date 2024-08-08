@@ -14,6 +14,7 @@ import {
   useNavigation,
   useOutletContext,
   type MetaFunction,
+  type Fetcher,
 } from '@remix-run/react';
 import {
   UPDATE_ADDRESS_MUTATION,
@@ -364,9 +365,7 @@ export function AddressForm({
   address: CustomerAddressInput;
   defaultAddress: CustomerFragment['defaultAddress'];
   children: (props: {
-    stateForMethod: (
-      method: 'PUT' | 'POST' | 'DELETE',
-    ) => ReturnType<typeof useNavigation>['state'];
+    stateForMethod: (method: 'PUT' | 'POST' | 'DELETE') => Fetcher['state'];
   }) => React.ReactNode;
 }) {
   const {state, formMethod} = useNavigation();

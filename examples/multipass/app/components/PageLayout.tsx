@@ -9,10 +9,6 @@ import {Aside} from '~/components/Aside';
 import {Footer} from '~/components/Footer';
 import {Header, HeaderMenu} from '~/components/Header';
 import {CartMain} from '~/components/Cart';
-import {
-  PredictiveSearchForm,
-  PredictiveSearchResults,
-} from '~/components/Search';
 
 interface PageLayoutProps {
   cart: Promise<CartApiQueryFragment | null>;
@@ -38,7 +34,6 @@ export function PageLayout({
   return (
     <Aside.Provider>
       <CartAside cart={cart} />
-      <SearchAside />
       <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
       {header && (
         <Header
@@ -68,41 +63,6 @@ function CartAside({cart}: {cart: PageLayoutProps['cart']}) {
           }}
         </Await>
       </Suspense>
-    </Aside>
-  );
-}
-
-function SearchAside() {
-  return (
-    <Aside type="search" heading="SEARCH">
-      <div className="predictive-search">
-        <br />
-        <PredictiveSearchForm>
-          {({fetchResults, inputRef}) => (
-            <div>
-              <input
-                name="q"
-                onChange={fetchResults}
-                onFocus={fetchResults}
-                placeholder="Search"
-                ref={inputRef}
-                type="search"
-              />
-              &nbsp;
-              <button
-                onClick={() => {
-                  window.location.href = inputRef?.current?.value
-                    ? `/search?q=${inputRef.current.value}`
-                    : `/search`;
-                }}
-              >
-                Search
-              </button>
-            </div>
-          )}
-        </PredictiveSearchForm>
-        <PredictiveSearchResults />
-      </div>
     </Aside>
   );
 }
