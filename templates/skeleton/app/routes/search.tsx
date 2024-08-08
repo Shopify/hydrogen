@@ -8,7 +8,7 @@ import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {SearchForm} from '~/components/SearchForm';
 import {SearchResults} from '~/components/SearchResults';
 import {
-  type SearchReturn,
+  type RegularSearchReturn,
   type PredictiveSearchReturn,
   getEmptyPredictiveSearchResult,
 } from '~/lib/search';
@@ -35,7 +35,7 @@ export function action({request, context}: ActionFunctionArgs) {
  * requested by the SearchForm component and /search route visits
  */
 export function loader({request, context}: LoaderFunctionArgs) {
-  return search({request, context})
+  return regularSearch({request, context})
     .then(json)
     .catch((error: Error) => {
       console.error(error);
@@ -160,7 +160,7 @@ const PAGE_INFO_FRAGMENT = `#graphql
 
 // NOTE: https://shopify.dev/docs/api/storefront/latest/queries/search
 export const SEARCH_QUERY = `#graphql
-  query Search(
+  query RegularSearch(
     $country: CountryCode
     $endCursor: String
     $first: Int
@@ -220,10 +220,13 @@ export const SEARCH_QUERY = `#graphql
 /**
  * Regular search fetcher
  */
-async function search({
+async function regularSearch({
   request,
   context,
-}: Pick<LoaderFunctionArgs, 'request' | 'context'>): Promise<SearchReturn> {
+}: Pick<
+  LoaderFunctionArgs,
+  'request' | 'context'
+>): Promise<RegularSearchReturn> {
   const {storefront} = context;
   const url = new URL(request.url);
   const variables = getPaginationVariables(request, {pageBy: 8});
