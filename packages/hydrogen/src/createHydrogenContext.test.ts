@@ -410,6 +410,36 @@ describe('createHydrogenContext', () => {
           HydrogenCartCustom<typeof customMethods>
         >();
       });
+
+      it('returns cart handler with HydrogenCartCustom if there cart.customMethods is defined using method definition and declare inline', async () => {
+        // this will pass in ts file but fail in js file.
+        // which is why we still left a note in the custom-cart-method example to avoid using method definition
+        const hydrogenContext = createHydrogenContext({
+          ...defaultOptions,
+          cart: {
+            customMethods: {
+              methodDefinition() {},
+            },
+          },
+        });
+
+        expect(hydrogenContext).toHaveProperty('cart');
+        expectTypeOf(hydrogenContext.cart).toEqualTypeOf<
+          HydrogenCartCustom<{methodDefinition(): void}>
+        >();
+      });
+
+      it('returns cart handler with HydrogenCart if there cart.customMethods is an empty object', async () => {
+        const hydrogenContext = createHydrogenContext({
+          ...defaultOptions,
+          cart: {
+            customMethods: {},
+          },
+        });
+
+        expect(hydrogenContext).toHaveProperty('cart');
+        expectTypeOf(hydrogenContext.cart).toEqualTypeOf<HydrogenCart>();
+      });
     });
   });
 
