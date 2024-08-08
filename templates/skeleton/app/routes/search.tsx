@@ -22,7 +22,7 @@ export const meta: MetaFunction = () => {
  * requested by the SearchFormPredictive component
  */
 export function action({request, context}: ActionFunctionArgs) {
-  return predictiveSeach({request, context})
+  return predictiveSearch({request, context})
     .then(json)
     .catch((error: Error) => {
       console.error(error);
@@ -338,7 +338,7 @@ const PREDICTIVE_SEARCH_QUERY_FRAGMENT = `#graphql
 
 // NOTE: https://shopify.dev/docs/api/storefront/latest/queries/predictiveSearch
 const PREDICTIVE_SEARCH_QUERY = `#graphql
-  query predictiveSearch(
+  query PredictiveSearch(
     $country: CountryCode
     $language: LanguageCode
     $limit: Int!
@@ -379,7 +379,7 @@ const PREDICTIVE_SEARCH_QUERY = `#graphql
 /**
  * Predictive search fetcher
  */
-async function predictiveSeach({
+async function predictiveSearch({
   request,
   context,
 }: Pick<
