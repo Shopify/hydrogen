@@ -17,10 +17,10 @@ type SITEMAP_INDEX_TYPE =
 /**
  * Generate a sitemap index that links to separate sitemaps for each resource type.
  */
-export async function getSitemapIndex(
-  storefront: LoaderFunctionArgs['context']['storefront'],
-  request: Request,
-  types: SITEMAP_INDEX_TYPE[] = [
+export async function getSitemapIndex({
+  storefront,
+  request,
+  types = [
     'pages',
     'products',
     'collections',
@@ -28,7 +28,11 @@ export async function getSitemapIndex(
     'pages',
     'articles',
   ],
-) {
+}: {
+  storefront: LoaderFunctionArgs['context']['storefront'];
+  request: Request;
+  types: SITEMAP_INDEX_TYPE[];
+}) {
   const data = await storefront.query(SITEMAP_INDEX_QUERY, {
     storefrontApiVersion: 'unstable',
   });
