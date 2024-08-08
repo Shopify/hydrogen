@@ -410,22 +410,6 @@ describe('createHydrogenContext', () => {
           HydrogenCartCustom<typeof customMethods>
         >();
       });
-
-      it('returns cart handler with HydrogenCartCustom if there cart.customMethods is defined using method definition and declare inline', async () => {
-        const hydrogenContext = createHydrogenContext({
-          ...defaultOptions,
-          cart: {
-            customMethods: {
-              methodDefinition() {},
-            },
-          },
-        });
-
-        expect(hydrogenContext).toHaveProperty('cart');
-        expectTypeOf(hydrogenContext.cart).toEqualTypeOf<
-          HydrogenCartCustom<{methodDefinition(): void}>
-        >();
-      });
     });
   });
 

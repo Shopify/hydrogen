@@ -44,6 +44,9 @@ export async function createAppLoadContext(
       /***********************************************/
       /**********  EXAMPLE UPDATE STARTS  ************/
       customMethods: {
+        // Avoid using method definition in customMethods ie. methodDefinition() {}
+        // as TypeScript is unable to correctly infer the type
+        // if method definition is necessary, declaring customMethods separately
         updateLineByOptions: async (
           productId: string,
           selectedOptions: SelectedOptionInput[],
