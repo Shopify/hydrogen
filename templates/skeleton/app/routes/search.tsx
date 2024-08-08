@@ -7,7 +7,11 @@ import {useLoaderData, type MetaFunction} from '@remix-run/react';
 import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {SearchForm} from '~/components/SearchForm';
 import {SearchResults} from '~/components/SearchResults';
-import type {SearchReturn, PredictiveSearchReturn} from '~/lib/search';
+import {
+  type SearchReturn,
+  type PredictiveSearchReturn,
+  getEmptyPredictiveSearchResult,
+} from '~/lib/search';
 
 export const meta: MetaFunction = () => {
   return [{title: `Hydrogen | Search`}];
@@ -381,8 +385,10 @@ async function predictiveSeach({
 >): Promise<PredictiveSearchReturn> {
   const {storefront} = context;
   const formData = await request.formData();
-  const term = String(formData.get('q') || '');
+  const term = String(formData.get('q') || '').trim();
   const limit = Number(formData.get('limit') || 10);
+
+  if (!term) return {term, result: getEmptyPredictiveSearchResult()};
 
   // Predictively search articles, collections, pages, products, and queries (suggestions)
   const {predictiveSearch: items, errors} = await storefront.query(
