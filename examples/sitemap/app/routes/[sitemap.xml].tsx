@@ -5,7 +5,11 @@ export async function loader({
   request,
   context: {storefront},
 }: LoaderFunctionArgs) {
-  const response = await getSitemapIndex(storefront, request);
+  const response = await getSitemapIndex({
+    storefront,
+    request,
+    types: ['products', 'collections'],
+  });
 
   response.headers.set('Cache-Control', `max-age=${60 * 60 * 24}`);
 
