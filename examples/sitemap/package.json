@@ -1,0 +1,16 @@
+{
+  "name": "example-sitemap",
+  "private": true,
+  "prettier": "@shopify/prettier-config",
+  "scripts": {
+    "build": "shopify hydrogen build --diff",
+    "dev": "shopify hydrogen dev --codegen --diff",
+    "preview": "shopify hydrogen preview --build --diff",
+    "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
+    "typecheck": "tsc --noEmit",
+    "codegen": "shopify hydrogen codegen"
+  },
+  "dependencies": {
+    "@shopify/cli-hydrogen": "*"
+  }
+}

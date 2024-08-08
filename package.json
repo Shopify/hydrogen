@@ -40,6 +40,7 @@
     "examples/legacy-customer-account-flow",
     "examples/metaobjects",
     "examples/multipass",
+    "examples/sitemap",
     "examples/partytown",
     "examples/subscriptions",
     "examples/third-party-queries-caching",
