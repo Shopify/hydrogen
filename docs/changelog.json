@@ -5,9 +5,9 @@
     {
       "title": "Support for custom .env files. Simplified creation of app context.",
       "version": "2024.7.3",
-      "hash": "",
+      "hash": "37ec3bd1be30ba0612fec4438f92c46015fc7efb",
       "pr": "https://github.com/Shopify/hydrogen/pull/2378",
-      "commit": "",
+      "commit": "https://github.com/Shopify/hydrogen/commit/37ec3bd1be30ba0612fec4438f92c46015fc7efb",
       "dependencies": {
         "@remix-run/react": "^2.10.1",
         "@remix-run/server-runtime": "^2.10.1",
@@ -16,7 +16,7 @@
       },
       "devDependencies": {
         "@remix-run/dev": "^2.10.1",
-        "@shopify/cli": "3.65.1",
+        "@shopify/cli": "3.65.3",
         "@shopify/oxygen-workers-types": "^4.1.2",
         "typescript": "^5.2.2"
       },
