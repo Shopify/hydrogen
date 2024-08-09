@@ -58,7 +58,7 @@ describe('auth.helpers', () => {
         await refreshToken({
           session,
           customerAccountId: 'customerAccountId',
-          customerAccountUrl: 'customerAccountUrl',
+          customerAccountTokenExchangeUrl: 'customerAccountTokenExchangeUrl',
           httpsOrigin: 'https://localhost',
           exchangeForStorefrontCustomerAccessToken,
         });
@@ -78,7 +78,7 @@ describe('auth.helpers', () => {
         await refreshToken({
           session,
           customerAccountId: 'customerAccountId',
-          customerAccountUrl: 'customerAccountUrl',
+          customerAccountTokenExchangeUrl: 'customerAccountTokenExchangeUrl',
           httpsOrigin: 'https://localhost',
           exchangeForStorefrontCustomerAccessToken,
         });
@@ -107,7 +107,7 @@ describe('auth.helpers', () => {
         await refreshToken({
           session,
           customerAccountId: 'customerAccountId',
-          customerAccountUrl: 'customerAccountUrl',
+          customerAccountTokenExchangeUrl: 'customerAccountTokenExchangeUrl',
           httpsOrigin: 'https://localhost',
           exchangeForStorefrontCustomerAccessToken,
         });
@@ -138,7 +138,7 @@ describe('auth.helpers', () => {
       await refreshToken({
         session,
         customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'customerAccountUrl',
+        customerAccountTokenExchangeUrl: 'customerAccountTokenExchangeUrl',
         httpsOrigin: 'https://localhost',
         exchangeForStorefrontCustomerAccessToken,
       });
@@ -197,7 +197,7 @@ describe('auth.helpers', () => {
           expiresAt: new Date().getTime() + 10000 + '',
           session,
           customerAccountId: 'customerAccountId',
-          customerAccountUrl: 'customerAccountUrl',
+          customerAccountTokenExchangeUrl: 'customerAccountTokenExchangeUrl',
           httpsOrigin: 'https://localhost',
           exchangeForStorefrontCustomerAccessToken,
         });
@@ -228,7 +228,7 @@ describe('auth.helpers', () => {
         expiresAt: '100',
         session,
         customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'customerAccountUrl',
+        customerAccountTokenExchangeUrl: 'customerAccountTokenExchangeUrl',
         httpsOrigin: 'https://localhost',
         exchangeForStorefrontCustomerAccessToken,
       });
@@ -269,7 +269,7 @@ describe('auth.helpers', () => {
         expiresAt: '100',
         session,
         customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'customerAccountUrl',
+        customerAccountTokenExchangeUrl: 'customerAccountTokenExchangeUrl',
         httpsOrigin: 'https://localhost',
         exchangeForStorefrontCustomerAccessToken,
       });
