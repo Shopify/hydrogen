@@ -1,5 +1,24 @@
 # @shopify/hydrogen
 
+## 2024.7.3
+
+### Patch Changes
+
+- Prevent sending analytics data to Shopify when Chrome-Lighthouse user agent is detected ([#2401](https://github.com/Shopify/hydrogen/pull/2401)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Create `createHydrogenContext` that combined `createStorefrontClient`, `createCustomerAccountClient` and `createCartHandler`. ([#2333](https://github.com/Shopify/hydrogen/pull/2333)) by [@michenly](https://github.com/michenly)
+
+- Add a `waitForHydration` prop to the `Script` component to delay loading until after hydration. This fixes third-party scripts that modify the DOM and cause hydration errors. ([#2389](https://github.com/Shopify/hydrogen/pull/2389)) by [@blittle](https://github.com/blittle)
+
+  Note: For security, `nonce` is not supported when using `waitForHydration`. Instead you need to add the domain of the script directly to your [Content Securitiy Policy directives](https://shopify.dev/docs/storefronts/headless/hydrogen/content-security-policy#step-3-customize-the-content-security-policy).
+
+- Fix the `OptimisticCart` type to properly retain the generic of line items. The `OptimisticCartLine` type now takes a cart or cart line item generic. ([#2327](https://github.com/Shopify/hydrogen/pull/2327)) by [@blittle](https://github.com/blittle)
+
+- Export `ShopAnalytics` type ([#2384](https://github.com/Shopify/hydrogen/pull/2384)) by [@Braedencraig](https://github.com/Braedencraig)
+
+- Updated dependencies [[`cfbfc827`](https://github.com/Shopify/hydrogen/commit/cfbfc827e40e7425cf213a099eafb7a581b2885f), [`b09e9a4c`](https://github.com/Shopify/hydrogen/commit/b09e9a4ca7b931e48462c2d174ca9f67c37f1da2)]:
+  - @shopify/hydrogen-react@2024.7.2
+
 ## 2024.7.2
 
 ### Patch Changes

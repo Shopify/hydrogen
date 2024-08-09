@@ -1,5 +1,11 @@
 # @shopify/remix-oxygen
 
+## 2.0.6
+
+### Patch Changes
+
+- Return a 400 BadRequest for HEAD and GET requests that include a body ([#2360](https://github.com/Shopify/hydrogen/pull/2360)) by [@blittle](https://github.com/blittle)
+
 ## 2.0.5
 
 ### Patch Changes
