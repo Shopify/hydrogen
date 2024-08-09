@@ -1,15 +1,15 @@
 import {Link} from '@remix-run/react';
 import {Image, Money, Pagination} from '@shopify/hydrogen';
-import {urlWithTrackingParams, type SearchReturn} from '~/lib/search';
+import {urlWithTrackingParams, type RegularSearchReturn} from '~/lib/search';
 
-type SearchItems = SearchReturn['result']['items'];
+type SearchItems = RegularSearchReturn['result']['items'];
 type PartialSearchResult<ItemType extends keyof SearchItems> = Pick<
   SearchItems,
   ItemType
 > &
-  Pick<SearchReturn, 'term'>;
+  Pick<RegularSearchReturn, 'term'>;
 
-type SearchResultsProps = SearchReturn & {
+type SearchResultsProps = RegularSearchReturn & {
   children: (args: SearchItems & {term: string}) => React.ReactNode;
 };
 
@@ -17,7 +17,7 @@ export function SearchResults({
   term,
   result,
   children,
-}: Omit<SearchResultsProps, 'error'>) {
+}: Omit<SearchResultsProps, 'error' | 'type'>) {
   if (!result?.total) {
     return null;
   }

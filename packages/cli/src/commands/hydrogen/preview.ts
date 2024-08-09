@@ -87,6 +87,7 @@ export default class Preview extends Command {
       await close();
       if (diff) {
         await diff.copyDiffBuild();
+        if (flags.codegen) await diff.copyDiffCodegen();
         await diff.cleanup();
       }
     });

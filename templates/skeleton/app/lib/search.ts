@@ -1,15 +1,39 @@
-import type {PredictiveSearchQuery, SearchQuery} from 'storefrontapi.generated';
+import type {
+  PredictiveSearchQuery,
+  RegularSearchQuery,
+} from 'storefrontapi.generated';
 
-type ResultWithItems<T> = {
+type ResultWithItems<Type extends 'predictive' | 'regular', Items> = {
+  type: Type;
   term: string;
   error?: string;
-  result: {total: number; items: T};
+  result: {total: number; items: Items};
 };
 
-export type SearchReturn = ResultWithItems<SearchQuery>;
+export type RegularSearchReturn = ResultWithItems<
+  'regular',
+  RegularSearchQuery
+>;
 export type PredictiveSearchReturn = ResultWithItems<
+  'predictive',
   NonNullable<PredictiveSearchQuery['predictiveSearch']>
 >;
+
+/**
+ * Returns the empty state of a predictive search result to reset the search state.
+ */
+export function getEmptyPredictiveSearchResult(): PredictiveSearchReturn['result'] {
+  return {
+    total: 0,
+    items: {
+      articles: [],
+      collections: [],
+      products: [],
+      pages: [],
+      queries: [],
+    },
+  };
+}
 
 interface UrlWithTrackingParams {
   /** The base URL to which the tracking parameters will be appended. */
