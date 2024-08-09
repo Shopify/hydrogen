@@ -15,7 +15,7 @@ This integration uses the storefront API (SFAPI) [predictiveSearch](https://shop
 
 | File                                                                                             | Description                                                                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [`app/components/SearchFormPredictive.tsx`](../../app/components/SearchFormPredictive.tsx)       | A fully customizable form component configured to make form `POST` requests to the `/search` route.                                                    |
+| [`app/components/SearchFormPredictive.tsx`](../../app/components/SearchFormPredictive.tsx)       | A fully customizable form component configured to make form `GET` requests to the `/search` route.                                                    |
 | [`app/components/SearchResultsPredictive.tsx`](../../app/components/SearchResultsPredictive.tsx) | A fully customizable search results wrapper, that provides compound components to render `articles`, `pages`, `products`, `collections` and `queries`. |
 
 ## Instructions
@@ -196,33 +196,36 @@ async function predictiveSeach({
 }
 ```
 
-### 3. Add an `action` export to the route
+### 3. Add a `loader` export to the route
 
-This action receives and processes `POST` requests from the `<SearchFormPredictive />`
-component.
+This action receives and processes `GET` requests from the `<SearchFormPredictive />`
+component. These request include the search parameter `predictive` to identify them over
+regular search requests.
 
 A `q` URL parameter will be used as the search term and appended automatically by
 the form if present in it's children prop.
 
 ```ts
 /**
- * Handles predictive search POST requests
+ * Handles predictive search GET requests
  * requested by the SearchFormPredictive component
  */
-export async function action({request, context}: ActionFunctionArgs) {
-  try {
-    return await predictiveSeach({request, context});
-  } catch (error) {
-    let message;
-    if (error instanceof Error) {
-      message = error.message;
-    } else if (typeof error === 'string') {
-      message = error;
-    } else {
-      message = 'An unknown error occurred';
-    }
-    return json({result: null, error: message});
+export async function loader({request, context}: LoaderFunctionArgs) {
+  const url = new URL(request.url);
+  const isPredictive = url.searchParams.has('predictive');
+
+  if (!isPredictive) {
+    return json({})
   }
+
+  const searchPromise = predictiveSearch({request, context})
+
+  searchPromise.catch((error: Error) => {
+    console.error(error);
+    return {term: '', result: null, error: error.message};
+  });
+
+  return json(await searchPromise);
 }
 ```
 

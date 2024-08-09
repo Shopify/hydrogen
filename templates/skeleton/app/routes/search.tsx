@@ -7,43 +7,37 @@ import {useLoaderData, type MetaFunction} from '@remix-run/react';
 import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {SearchForm} from '~/components/SearchForm';
 import {SearchResults} from '~/components/SearchResults';
-import type {SearchReturn, PredictiveSearchReturn} from '~/lib/search';
+import {
+  type RegularSearchReturn,
+  type PredictiveSearchReturn,
+  getEmptyPredictiveSearchResult,
+} from '~/lib/search';
 
 export const meta: MetaFunction = () => {
   return [{title: `Hydrogen | Search`}];
 };
 
-/**
- * Handles predictive search POST requests
- * requested by the SearchFormPredictive component
- */
-export function action({request, context}: ActionFunctionArgs) {
-  return predictiveSeach({request, context})
-    .then(json)
-    .catch((error: Error) => {
-      console.error(error);
-      return json({term: '', result: null, error: error.message});
-    });
-}
+export async function loader({request, context}: LoaderFunctionArgs) {
+  const url = new URL(request.url);
+  const isPredictive = url.searchParams.has('predictive');
+  const searchPromise = isPredictive
+    ? predictiveSearch({request, context})
+    : regularSearch({request, context});
 
-/**
- * Handles regular search GET requests
- * requested by the SearchForm component and /search route visits
- */
-export function loader({request, context}: LoaderFunctionArgs) {
-  return search({request, context})
-    .then(json)
-    .catch((error: Error) => {
-      console.error(error);
-      return json({term: '', result: null, error: error.message});
-    });
+  searchPromise.catch((error: Error) => {
+    console.error(error);
+    return {term: '', result: null, error: error.message};
+  });
+
+  return json(await searchPromise);
 }
 
 /**
  * Renders the /search route
  */
 export default function SearchPage() {
-  const {term, result, error} = useLoaderData<typeof loader>();
+  const {type, term, result, error} = useLoaderData<typeof loader>();
+  if (type === 'predictive') return null;
 
   return (
     <div className="search">
@@ -156,7 +150,7 @@ const PAGE_INFO_FRAGMENT = `#graphql
 
 // NOTE: https://shopify.dev/docs/api/storefront/latest/queries/search
 export const SEARCH_QUERY = `#graphql
-  query Search(
+  query RegularSearch(
     $country: CountryCode
     $endCursor: String
     $first: Int
@@ -216,10 +210,13 @@ export const SEARCH_QUERY = `#graphql
 /**
  * Regular search fetcher
  */
-async function search({
+async function regularSearch({
   request,
   context,
-}: Pick<LoaderFunctionArgs, 'request' | 'context'>): Promise<SearchReturn> {
+}: Pick<
+  LoaderFunctionArgs,
+  'request' | 'context'
+>): Promise<RegularSearchReturn> {
   const {storefront} = context;
   const url = new URL(request.url);
   const variables = getPaginationVariables(request, {pageBy: 8});
@@ -243,7 +240,7 @@ async function search({
     ? errors.map(({message}) => message).join(', ')
     : undefined;
 
-  return {term, error, result: {total, items}};
+  return {type: 'regular', term, error, result: {total, items}};
 }
 
 /**
@@ -331,7 +328,7 @@ const PREDICTIVE_SEARCH_QUERY_FRAGMENT = `#graphql
 
 // NOTE: https://shopify.dev/docs/api/storefront/latest/queries/predictiveSearch
 const PREDICTIVE_SEARCH_QUERY = `#graphql
-  query predictiveSearch(
+  query PredictiveSearch(
     $country: CountryCode
     $language: LanguageCode
     $limit: Int!
@@ -372,7 +369,7 @@ const PREDICTIVE_SEARCH_QUERY = `#graphql
 /**
  * Predictive search fetcher
  */
-async function predictiveSeach({
+async function predictiveSearch({
   request,
   context,
 }: Pick<
@@ -380,9 +377,12 @@ async function predictiveSeach({
   'request' | 'context'
 >): Promise<PredictiveSearchReturn> {
   const {storefront} = context;
-  const formData = await request.formData();
-  const term = String(formData.get('q') || '');
-  const limit = Number(formData.get('limit') || 10);
+  const url = new URL(request.url);
+  const term = String(url.searchParams.get('q') || '').trim();
+  const limit = Number(url.searchParams.get('limit') || 10);
+  const type = 'predictive';
+
+  if (!term) return {type, term, result: getEmptyPredictiveSearchResult()};
 
   // Predictively search articles, collections, pages, products, and queries (suggestions)
   const {predictiveSearch: items, errors} = await storefront.query(
@@ -412,5 +412,5 @@ async function predictiveSeach({
     0,
   );
 
-  return {term, result: {items, total}};
+  return {type, term, result: {items, total}};
 }

@@ -82,6 +82,7 @@ export default class Build extends Command {
 
           if (diff) {
             await diff.copyDiffBuild();
+            if (flags.codegen) await diff.copyDiffCodegen();
             await diff.cleanup();
           }
         });
@@ -89,6 +90,7 @@ export default class Build extends Command {
     } else {
       if (diff) {
         await diff.copyDiffBuild();
+        if (flags.codegen) await diff.copyDiffCodegen();
         await diff.cleanup();
       }
 

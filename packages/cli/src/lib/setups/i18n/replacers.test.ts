@@ -290,6 +290,7 @@ describe('i18n replacers', () => {
       expect(newContent).toMatchInlineSnapshot(`
         "/**
          * @param {Request} request
+         * @return {I18nBase}
          */
         export function getLocaleFromRequest(request) {
           const defaultLocale = { language: "EN", country: "US" };

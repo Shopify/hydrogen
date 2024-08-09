@@ -38,10 +38,13 @@ export async function replaceRootLinks(
     const astGrep = await importLangAstGrep(astType);
     const root = astGrep.parse(content).root();
 
-    const importNodes = root.findAll({rule: {kind: 'import_statement'}});
+    const importNodes = root
+      .findAll({rule: {kind: 'import_statement'}})
+      .reverse();
+
     const lastImportNode =
-      importNodes.findLast((node) => node.text().includes('.css')) ||
-      importNodes.pop();
+      importNodes.find((node) => node.text().includes('.css')) ||
+      importNodes.shift();
 
     const linksReturnNode = root.find({
       utils: {

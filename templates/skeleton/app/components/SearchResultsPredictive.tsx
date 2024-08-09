@@ -1,7 +1,11 @@
 import {Link, useFetcher, type Fetcher} from '@remix-run/react';
 import {Image, Money} from '@shopify/hydrogen';
 import React, {useRef, useEffect} from 'react';
-import {urlWithTrackingParams, type PredictiveSearchReturn} from '~/lib/search';
+import {
+  getEmptyPredictiveSearchResult,
+  urlWithTrackingParams,
+  type PredictiveSearchReturn,
+} from '~/lib/search';
 import {useAside} from './Aside';
 
 type PredictiveSearchItems = PredictiveSearchReturn['result']['items'];
@@ -288,17 +292,6 @@ function SearchResultsPredictiveEmpty({
   );
 }
 
-const defaultResult: PredictiveSearchReturn['result'] = {
-  items: {
-    articles: [],
-    collections: [],
-    products: [],
-    pages: [],
-    queries: [],
-  },
-  total: 0,
-};
-
 /**
  * Hook that returns the predictive search results and fetcher and input ref.
  * @example
@@ -322,9 +315,8 @@ function usePredictiveSearch(): UsePredictiveSearchReturn {
     }
   }, []);
 
-  const {items, total} = term.current
-    ? fetcher?.data?.result ?? defaultResult
-    : defaultResult; // clear results when the search term is empty
+  const {items, total} =
+    fetcher?.data?.result ?? getEmptyPredictiveSearchResult();
 
   return {items, total, inputRef, term, fetcher};
 }

@@ -42,9 +42,16 @@ export function generateFunctionDocumentation(
     const declaration = functionNode as FunctionDeclaration;
     const jsDocs = declaration.getJsDocs()[0];
 
-    if (jsDocs?.getTags().length === 0) {
+    if (
+      jsDocs &&
+      !jsDocs.getTags().find((tag) => tag.getTagName() === 'return')
+    ) {
       const returnType = declaration.getReturnType().getText();
-      if (isAnnotableType(returnType)) {
+      const hasManuallySpecifiedReturnType = !!declaration
+        .getSignature()
+        .compilerSignature.getReturnType().aliasSymbol;
+
+      if (hasManuallySpecifiedReturnType) {
         jsDocs.addTag({tagName: 'return', text: normalizeType(returnType)});
       }
     }
