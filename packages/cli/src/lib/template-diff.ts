@@ -182,6 +182,21 @@ export async function prepareDiffDirectory(
         ),
       ]);
     },
+    /**
+     * Brings the generated d.ts files back to the original project.
+     */
+    copyGeneratedDTs() {
+      return Promise.all([
+        copyFile(
+          joinPath(targetDirectory, 'storefrontapi.generated.d.ts'),
+          joinPath(diffDirectory, 'storefrontapi.generated.d.ts'),
+        ),
+        copyFile(
+          joinPath(targetDirectory, 'customer-accountapi.generated.d.ts'),
+          joinPath(diffDirectory, 'customer-accountapi.generated.d.ts'),
+        ),
+      ]);
+    },
   };
 }
 
