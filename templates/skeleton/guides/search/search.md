@@ -196,9 +196,6 @@ async function search({
 ### 3. Add a `loader` export to the route
 
 This loader receives and processes `GET` requests from the `<SearchForm />` component.
-These requests will include the search parameter `regular` to identify them over `predictive`
-search requests.
-
 
 A `q` URL parameter will be used as the search term and appended automatically by
 the form if present in it's children prop
@@ -210,7 +207,7 @@ the form if present in it's children prop
  */
 export async function loader({request, context}: LoaderFunctionArgs) {
   const url = new URL(request.url);
-  const isRegular = url.searchParams.has('regular');
+  const isRegular = !url.searchParams.has('predictive');
 
   if (!isRegular) {
     return json({})
