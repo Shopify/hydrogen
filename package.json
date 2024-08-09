@@ -41,6 +41,7 @@
     "examples/metaobjects",
     "examples/multipass",
     "examples/optimistic-cart-ui",
+    "examples/sitemap",
     "examples/partytown",
     "examples/subscriptions",
     "examples/third-party-queries-caching",
