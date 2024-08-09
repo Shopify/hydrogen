@@ -53,7 +53,7 @@ export default class Codegen extends Command {
     });
 
     if (diff) {
-      await diff.copyGeneratedDTs();
+      await diff.copyDiffCodegen();
       await diff.cleanup();
     }
   }

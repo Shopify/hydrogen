@@ -185,7 +185,7 @@ export async function prepareDiffDirectory(
     /**
      * Brings the generated d.ts files back to the original project.
      */
-    copyGeneratedDTs() {
+    copyDiffCodegen() {
       return Promise.all([
         copyFile(
           joinPath(targetDirectory, 'storefrontapi.generated.d.ts'),
