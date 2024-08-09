@@ -28,10 +28,12 @@ export async function getSitemapIndex({
     'pages',
     'articles',
   ],
+  customUrls = [],
 }: {
   storefront: LoaderFunctionArgs['context']['storefront'];
   request: Request;
-  types: SITEMAP_INDEX_TYPE[];
+  types?: SITEMAP_INDEX_TYPE[];
+  customUrls?: string[];
 }) {
   const data = await storefront.query(SITEMAP_INDEX_QUERY, {
     storefrontApiVersion: 'unstable',
@@ -46,6 +48,13 @@ export async function getSitemapIndex({
   const body = `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${types
   .map((type) => getSiteMapLinks(type, data[type].pagesCount.count, baseUrl))
+  .join('\n')}
+${customUrls
+  .map(
+    (url) => `<sitemap>
+  <loc>${url}</loc>
+</sitemap>`,
+  )
   .join('\n')}
 </urlset>`;
 
@@ -66,13 +75,18 @@ type GetSiteMapOptions = {
   request: Request;
   /** A function that produces a canonical url for a resource. It is called multiple times for each locale supported by the app. */
   getLink: (options: {
-    type: SITEMAP_INDEX_TYPE;
+    type: string | SITEMAP_INDEX_TYPE;
     baseUrl: string;
     handle?: string;
     locale?: Locale;
   }) => string;
   /** An array of locales to generate alternate tags */
   locales: Locale[];
+  /** Optionally customize the changefreq property for each URL */
+  getChangeFreq?: (options: {
+    type: string | SITEMAP_INDEX_TYPE;
+    handle: string;
+  }) => string;
 };
 
 /**
@@ -106,10 +120,11 @@ export async function getSitemap(options: GetSiteMapOptions) {
   const body = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${data.sitemap.resources.items
-  .map((item: {handle: string; updatedAt: string}) => {
+  .map((item: {handle: string; updatedAt: string; type?: string}) => {
     return `${renderUrlTag({
+      getChangeFreq: options.getChangeFreq,
       url: getLink({
-        type,
+        type: item.type ?? type,
         baseUrl,
         handle: item.handle,
       }),
@@ -117,6 +132,7 @@ ${data.sitemap.resources.items
       getLink,
       updatedAt: item.updatedAt,
       handle: item.handle,
+      metaobjectType: item.type,
       locales,
       baseUrl,
     })}`;
@@ -135,7 +151,7 @@ ${data.sitemap.resources.items
 function getSiteMapLinks(resource: string, count: number, baseUrl: string) {
   let links = ``;
 
-  for (let i = 0; i < count; i++) {
+  for (let i = 1; i <= count; i++) {
     links += `<sitemap>
   <loc>${baseUrl}/sitemap/${resource}/${i}.xml</loc>
 </sitemap>`;
@@ -151,12 +167,15 @@ function renderUrlTag({
   getLink,
   baseUrl,
   handle,
+  getChangeFreq,
+  metaobjectType,
 }: {
   type: SITEMAP_INDEX_TYPE;
   baseUrl: string;
   handle: string;
+  metaobjectType?: string;
   getLink: (options: {
-    type: SITEMAP_INDEX_TYPE;
+    type: string;
     baseUrl: string;
     handle?: string;
     locale?: Locale;
@@ -164,16 +183,24 @@ function renderUrlTag({
   url: string;
   updatedAt: string;
   locales: Locale[];
+  getChangeFreq?: (options: {type: string; handle: string}) => string;
 }) {
   return `<url>
   <loc>${url}</loc>
   <lastmod>${updatedAt}</lastmod>
-  <changefreq>weekly</changefreq>
-  ${locales
-    .map((locale) =>
-      renderAlternateTag(getLink({type, baseUrl, handle, locale}), locale),
-    )
-    .join('\n')}
+  <changefreq>${
+    getChangeFreq
+      ? getChangeFreq({type: metaobjectType ?? type, handle})
+      : 'weekly'
+  }</changefreq>
+${locales
+  .map((locale) =>
+    renderAlternateTag(
+      getLink({type: metaobjectType ?? type, baseUrl, handle, locale}),
+      locale,
+    ),
+  )
+  .join('\n')}
 </url>
   `.trim();
 }
@@ -221,6 +248,48 @@ const ARTICLE_SITEMAP_QUERY = `#graphql
     }
 ` as const;
 
+const PAGE_SITEMAP_QUERY = `#graphql
+    query SitemapProducts($page: Int!) {
+      sitemap(type: PAGE) {
+        resources(page: $page) {
+          items {
+            handle
+            updatedAt
+          }
+        }
+      }
+    }
+` as const;
+
+const BLOG_SITEMAP_QUERY = `#graphql
+    query SitemapProducts($page: Int!) {
+      sitemap(type: BLOG) {
+        resources(page: $page) {
+          items {
+            handle
+            updatedAt
+          }
+        }
+      }
+    }
+` as const;
+
+const METAOBJECT_SITEMAP_QUERY = `#graphql
+    query SitemapProducts($page: Int!) {
+      sitemap(type: METAOBJECT_PAGE) {
+        resources(page: $page) {
+          items {
+            handle
+            updatedAt
+            ... on SitemapResourceMetaobject {
+              type
+            }
+          }
+        }
+      }
+    }
+` as const;
+
 const SITEMAP_INDEX_QUERY = `#graphql
 query SitemapIndex {
   products: sitemap(type: PRODUCT) {
@@ -260,4 +329,7 @@ const QUERIES = {
   products: PRODUCT_SITEMAP_QUERY,
   articles: ARTICLE_SITEMAP_QUERY,
   collections: COLLECTION_SITEMAP_QUERY,
+  pages: PAGE_SITEMAP_QUERY,
+  blogs: BLOG_SITEMAP_QUERY,
+  metaObjects: METAOBJECT_SITEMAP_QUERY,
 };
