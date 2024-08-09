@@ -174,11 +174,9 @@ describe('remote templates', () => {
       expect(resultFiles).toEqual(
         expect.arrayContaining(
           templateFiles.map((item) =>
-            item.endsWith('.d.ts')
-              ? item
-              : item
-                  .replace(/\.ts(x)?$/, '.js$1')
-                  .replace(/tsconfig\.json$/, 'jsconfig.json'),
+            item
+              .replace(/(?<!\.d)\.ts(x)?$/, '.js$1')
+              .replace(/tsconfig\.json$/, 'jsconfig.json'),
           ),
         ),
       );

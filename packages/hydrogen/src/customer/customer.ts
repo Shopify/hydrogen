@@ -83,6 +83,12 @@ export function createCustomerAccountClient({
     );
   }
 
+  if (!session) {
+    console.warn(
+      `[h2:warn:createCustomerAccountClient] session is required to use Customer Account API. Ensure the session object passed in exist.`,
+    );
+  }
+
   if (!request?.url) {
     throw new Error(
       '[h2:error:createCustomerAccountClient] The request object does not contain a URL.',

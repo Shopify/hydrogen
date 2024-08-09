@@ -149,13 +149,11 @@ describe('local templates', () => {
 
       expect(resultFiles).toEqual(
         expect.arrayContaining(
-          templateFiles
-            .filter((item) => !item.endsWith('.d.ts'))
-            .map((item) =>
-              item
-                .replace(/\.ts(x)?$/, '.js$1')
-                .replace(/tsconfig\.json$/, 'jsconfig.json'),
-            ),
+          templateFiles.map((item) =>
+            item
+              .replace(/(?<!\.d)\.ts(x)?$/, '.js$1')
+              .replace(/tsconfig\.json$/, 'jsconfig.json'),
+          ),
         ),
       );
 
@@ -257,9 +255,11 @@ describe('local templates', () => {
         expect(resultFiles).toContain('app/routes/_index.tsx');
 
         // Injects styles in Root
-        const serverFile = await readFile(`${tmpDir}/server.ts`);
-        expect(serverFile).toMatch(/i18n: getLocaleFromRequest\(request\),/);
-        expect(serverFile).toMatch(/domain = url.hostname/);
+        const contextFile = await readFile(`${tmpDir}/app/lib/context.ts`);
+        expect(contextFile).toMatch(/i18n: getLocaleFromRequest\(request\),/);
+
+        const i18nFile = await readFile(`${tmpDir}/app/lib/i18n.ts`);
+        expect(i18nFile).toMatch(/domain = url.hostname/);
 
         const output = outputMock.info();
         expect(output).toMatch('success');
@@ -282,9 +282,11 @@ describe('local templates', () => {
         expect(resultFiles).toContain('app/routes/_index.tsx');
 
         // Injects styles in Root
-        const serverFile = await readFile(`${tmpDir}/server.ts`);
-        expect(serverFile).toMatch(/i18n: getLocaleFromRequest\(request\),/);
-        expect(serverFile).toMatch(/firstSubdomain = url.hostname/);
+        const contextFile = await readFile(`${tmpDir}/app/lib/context.ts`);
+        expect(contextFile).toMatch(/i18n: getLocaleFromRequest\(request\),/);
+
+        const i18nFile = await readFile(`${tmpDir}/app/lib/i18n.ts`);
+        expect(i18nFile).toMatch(/firstSubdomain = url.hostname/);
 
         const output = outputMock.info();
         expect(output).toMatch('success');
@@ -311,9 +313,11 @@ describe('local templates', () => {
         expect(resultFiles).toContain('app/routes/($locale).tsx');
 
         // Injects styles in Root
-        const serverFile = await readFile(`${tmpDir}/server.ts`);
-        expect(serverFile).toMatch(/i18n: getLocaleFromRequest\(request\),/);
-        expect(serverFile).toMatch(/url.pathname/);
+        const contextFile = await readFile(`${tmpDir}/app/lib/context.ts`);
+        expect(contextFile).toMatch(/i18n: getLocaleFromRequest\(request\),/);
+
+        const i18nFile = await readFile(`${tmpDir}/app/lib/i18n.ts`);
+        expect(i18nFile).toMatch(/url.pathname/);
 
         const output = outputMock.info();
         expect(output).toMatch('success');

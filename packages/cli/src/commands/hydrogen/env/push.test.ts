@@ -35,6 +35,8 @@ vi.mock('../../../lib/graphql/admin/list-environments.js');
 vi.mock('../../../lib/verify-linked-storefront.js');
 vi.mock('../../../lib/graphql/admin/push-variables.js');
 
+const envFile = '.env';
+
 const ADMIN_SESSION: AdminSession = {
   token: 'abc123',
   storeFqdn: 'my-shop',
@@ -113,11 +115,11 @@ describe('pushVariables', () => {
     vi.mocked(renderConfirmationPrompt).mockResolvedValue(true);
 
     await inTemporaryDirectory(async (tmpDir) => {
-      const filePath = joinPath(tmpDir, '.env');
+      const filePath = joinPath(tmpDir, envFile);
       await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=2');
 
       await expect(
-        runEnvPush({path: tmpDir, env: 'preview'}),
+        runEnvPush({path: tmpDir, env: 'preview', envFile}),
       ).resolves.not.toThrow();
 
       expect(getStorefrontEnvironments).toHaveBeenCalledWith(
@@ -135,10 +137,10 @@ describe('pushVariables', () => {
     });
 
     await inTemporaryDirectory(async (tmpDir) => {
-      const filePath = joinPath(tmpDir, '.env');
+      const filePath = joinPath(tmpDir, envFile);
       await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=2');
       await expect(
-        runEnvPush({path: tmpDir, env: 'preview'}),
+        runEnvPush({path: tmpDir, env: 'preview', envFile}),
       ).rejects.toThrowError('No environments found');
     });
   });
@@ -149,9 +151,9 @@ describe('pushVariables', () => {
     );
 
     await inTemporaryDirectory(async (tmpDir) => {
-      const filePath = joinPath(tmpDir, '.env');
+      const filePath = joinPath(tmpDir, envFile);
       await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=2');
-      await expect(runEnvPush({path: tmpDir})).resolves.not.toThrow();
+      await expect(runEnvPush({path: tmpDir, envFile})).resolves.not.toThrow();
 
       expect(renderSelectPrompt).toHaveBeenCalledWith({
         message:
@@ -170,20 +172,20 @@ describe('pushVariables', () => {
   describe('when env is passed', () => {
     it('errors when the environment does not match graphql', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        const filePath = joinPath(tmpDir, '.env');
+        const filePath = joinPath(tmpDir, envFile);
         await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=2');
         await expect(
-          runEnvPush({path: tmpDir, env: 'something-random'}),
+          runEnvPush({path: tmpDir, env: 'something-random', envFile}),
         ).rejects.toThrowError('Environment not found');
       });
     });
 
     it("ensures getStorefrontEnvVariables is called with environment's handle", async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        const filePath = joinPath(tmpDir, '.env');
+        const filePath = joinPath(tmpDir, envFile);
         await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=2');
         await expect(
-          runEnvPush({path: tmpDir, env: 'production'}),
+          runEnvPush({path: tmpDir, env: 'production', envFile}),
         ).resolves.not.toThrow();
 
         await expect(getStorefrontEnvVariables).toHaveBeenCalledWith(
@@ -197,26 +199,28 @@ describe('pushVariables', () => {
 
   describe('how environment file path is resolved', () => {
     it('uses the .env file in the current path', async () => {
-      const filePath = joinPath(process.cwd(), '.env');
+      const filePath = joinPath(process.cwd(), envFile);
       await writeFile(filePath, 'NEW_TOKEN_1=1\nNEW_TOKEN_2=2');
 
-      await expect(runEnvPush({env: 'production'})).resolves.not.toThrow();
+      await expect(
+        runEnvPush({env: 'production', envFile}),
+      ).resolves.not.toThrow();
     });
 
     it('uses the .env file in the provided path', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        const filePath = joinPath(tmpDir, '.env');
+        const filePath = joinPath(tmpDir, envFile);
         await writeFile(filePath, 'NEW_TOKEN_1=1\nNEW_TOKEN_2=2');
 
         await expect(
-          runEnvPush({path: tmpDir, env: 'production'}),
+          runEnvPush({path: tmpDir, env: 'production', envFile}),
         ).resolves.not.toThrow();
       });
     });
 
     it('uses the .env file provided by the `--env-file` flag', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        const filePath = joinPath(tmpDir, '.env');
+        const filePath = joinPath(tmpDir, envFile);
         await writeFile(filePath, 'NEW_TOKEN_1=1\nNEW_TOKEN_2=2');
 
         await expect(
@@ -243,11 +247,11 @@ describe('pushVariables', () => {
 
     it("doesn't fetch environment info to push env vars", async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        const filePath = joinPath(tmpDir, '.env');
+        const filePath = joinPath(tmpDir, envFile);
         await writeFile(filePath, 'NEW_TOKEN_1=1\nNEW_TOKEN_2=2');
 
         await expect(
-          runEnvPush({path: tmpDir, env: 'production'}),
+          runEnvPush({path: tmpDir, env: 'production', envFile}),
         ).resolves.not.toThrow();
 
         expect(getStorefrontEnvironments).not.toHaveBeenCalled();
@@ -277,10 +281,10 @@ describe('pushVariables', () => {
     });
 
     await inTemporaryDirectory(async (tmpDir) => {
-      const filePath = joinPath(tmpDir, '.env');
+      const filePath = joinPath(tmpDir, envFile);
       await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=2');
       await expect(
-        runEnvPush({path: tmpDir, env: 'preview'}),
+        runEnvPush({path: tmpDir, env: 'preview', envFile}),
       ).resolves.not.toThrow();
 
       expect(outputMock.info()).toMatch(
@@ -313,10 +317,10 @@ describe('pushVariables', () => {
     });
 
     await inTemporaryDirectory(async (tmpDir) => {
-      const filePath = joinPath(tmpDir, '.env');
+      const filePath = joinPath(tmpDir, envFile);
       await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=2');
       await expect(
-        runEnvPush({path: tmpDir, env: 'preview'}),
+        runEnvPush({path: tmpDir, env: 'preview', envFile}),
       ).resolves.not.toThrow();
 
       expect(renderConfirmationPrompt).toHaveBeenCalled();
@@ -347,10 +351,10 @@ describe('pushVariables', () => {
     });
 
     await inTemporaryDirectory(async (tmpDir) => {
-      const filePath = joinPath(tmpDir, '.env');
+      const filePath = joinPath(tmpDir, envFile);
       await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=2');
       await expect(
-        runEnvPush({path: tmpDir, env: 'preview'}),
+        runEnvPush({path: tmpDir, env: 'preview', envFile}),
       ).resolves.not.toThrow();
     });
 
@@ -383,10 +387,10 @@ describe('pushVariables', () => {
     });
 
     await inTemporaryDirectory(async (tmpDir) => {
-      const filePath = joinPath(tmpDir, '.env');
+      const filePath = joinPath(tmpDir, envFile);
       await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=2');
       await expect(
-        runEnvPush({path: tmpDir, env: 'preview'}),
+        runEnvPush({path: tmpDir, env: 'preview', envFile}),
       ).resolves.not.toThrow();
 
       expect(outputMock.info()).toMatch(
@@ -419,10 +423,10 @@ describe('pushVariables', () => {
     });
 
     await inTemporaryDirectory(async (tmpDir) => {
-      const filePath = joinPath(tmpDir, '.env');
+      const filePath = joinPath(tmpDir, envFile);
       await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=2');
       await expect(
-        runEnvPush({path: tmpDir, env: 'preview'}),
+        runEnvPush({path: tmpDir, env: 'preview', envFile}),
       ).resolves.not.toThrow();
 
       expect(pushStorefrontEnvVariables).not.toHaveBeenCalled();
@@ -453,10 +457,10 @@ describe('pushVariables', () => {
     });
 
     await inTemporaryDirectory(async (tmpDir) => {
-      const filePath = joinPath(tmpDir, '.env');
+      const filePath = joinPath(tmpDir, envFile);
       await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=NEW_VALUE');
       await expect(
-        runEnvPush({path: tmpDir, env: 'preview'}),
+        runEnvPush({path: tmpDir, env: 'preview', envFile}),
       ).resolves.not.toThrow();
 
       expect(pushStorefrontEnvVariables).toHaveBeenCalledWith(

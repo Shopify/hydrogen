@@ -1,11 +1,12 @@
-import path from 'path';
 import Command from '@shopify/cli-kit/node/base-command';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
+import {resolvePath} from '@shopify/cli-kit/node/path';
 import {Flags} from '@oclif/core';
 import {getProjectPaths, getRemixConfig} from '../../lib/remix-config.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {codegen} from '../../lib/codegen.js';
+import {prepareDiffDirectory} from '../../lib/template-diff.js';
 
 export default class Codegen extends Command {
   static descriptionWithMarkdown =
@@ -31,16 +32,30 @@ export default class Codegen extends Command {
       required: false,
       default: false,
     }),
+    ...commonFlags.diff,
   };
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Codegen);
-    const directory = flags.path ? path.resolve(flags.path) : process.cwd();
+    const originalDirectory = flags.path
+      ? resolvePath(flags.path)
+      : process.cwd();
+
+    const diff = flags.diff
+      ? await prepareDiffDirectory(originalDirectory, flags.watch)
+      : undefined;
+
+    const directory = diff?.targetDirectory ?? originalDirectory;
 
     await runCodegen({
       ...flagsToCamelObject(flags),
       directory,
     });
+
+    if (diff) {
+      await diff.copyDiffCodegen();
+      await diff.cleanup();
+    }
   }
 }
 
