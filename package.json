@@ -18,6 +18,7 @@
     "format": "prettier --write --ignore-unknown ./packages",
     "format:check": "prettier --check --ignore-unknown ./packages",
     "typecheck": "turbo typecheck --parallel",
+    "typecheck:examples": "turbo typecheck --parallel --filter=./examples/*",
     "test": "turbo run test --parallel",
     "test:watch": "turbo run test:watch",
     "version": "changeset version && npm run version:post",

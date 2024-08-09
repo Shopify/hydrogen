@@ -53,8 +53,8 @@ export function SearchFormPredictive({
   /** Fetch search results based on the input value */
   function fetchResults(event: React.ChangeEvent<HTMLInputElement>) {
     fetcher.submit(
-      {q: event.target.value || '', limit: 5},
-      {method: 'POST', action: SEARCH_ENDPOINT},
+      {q: event.target.value || '', limit: 5, predictive: true},
+      {method: 'GET', action: SEARCH_ENDPOINT},
     );
   }
 
