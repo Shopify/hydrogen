@@ -199,20 +199,28 @@ hydrogen.preset = () =>
       return {
         buildDirectory: 'dist',
         async routes(defineRoutes) {
-          if (
-            sharedOptions.disableVirtualRoutes ||
-            sharedOptions.command !== 'serve'
-          ) {
+          if (sharedOptions.disableVirtualRoutes) {
             return {};
           }
 
-          const {root, routes: virtualRoutes} = await getVirtualRoutes();
+          const appDirectory = sharedOptions.remixConfig?.appDirectory;
+          const {
+            routes: virtualRoutes,
+            devRoutes,
+            devRoot,
+          } = await getVirtualRoutes(appDirectory);
 
           const result = defineRoutes((route) => {
-            route(root.path, root.file, {id: root.id}, () => {
-              virtualRoutes.map(({path, file, index, id}) => {
-                route(path, file, {id, index});
+            if (sharedOptions.command !== 'build') {
+              route(devRoot.path, devRoot.file, devRoot.options, () => {
+                devRoutes.map((devRoute) => {
+                  route(devRoute.path, devRoute.file, devRoute.options);
+                });
               });
+            }
+
+            virtualRoutes.forEach((virtualRoute) => {
+              route(virtualRoute.path, virtualRoute.file, virtualRoute.options);
             });
           });
 
@@ -230,8 +238,11 @@ hydrogen.preset = () =>
           // overwrite it with `root`. Later, this value acts as an
           // undefined / empty string when matching routes so it
           // doesn't match the user root.
-          // @ts-expect-error
-          result[root.id].parentId = new String('');
+
+          if (sharedOptions.command !== 'build' && devRoot.options.id) {
+            // @ts-expect-error
+            result[devRoot.options.id].parentId = new String('');
+          }
 
           return result;
         },

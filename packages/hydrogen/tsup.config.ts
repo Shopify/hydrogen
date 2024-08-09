@@ -78,7 +78,10 @@ export default defineConfig([
     dts: true,
   },
   {
-    entry: ['src/vite/virtual-routes/**/*.tsx'],
+    entry: [
+      'src/vite/virtual-routes/**/*.tsx',
+      'src/vite/virtual-routes/**/*.ts',
+    ],
     outDir: `${outDir}/vite/virtual-routes`,
     outExtension: () => ({js: '.jsx'}),
     format: 'esm',
