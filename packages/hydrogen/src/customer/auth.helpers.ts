@@ -308,7 +308,7 @@ export async function exchangeAccessToken(
 }
 
 export function getNonce(token: string) {
-  return decodeJwt(token).payload.nonce;
+  return decodeJwt(token.replace("shcit_", "")).payload.nonce;
 }
 
 function decodeJwt(token: string) {
