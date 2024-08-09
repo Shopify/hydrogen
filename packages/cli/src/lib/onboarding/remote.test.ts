@@ -131,9 +131,6 @@ describe('remote templates', () => {
         ...examplePkgJson.dependencies,
       };
 
-      // Removed to avoid conflicts with the global bundled CLI
-      delete expectedDeps['@shopify/cli-hydrogen'];
-
       expect(resultPkgJson.dependencies).toEqual(
         expect.objectContaining(expectedDeps),
       );
