@@ -18,9 +18,8 @@ export function createGetCustomerAccountUrl(
     : deprecatedCustomerAccountUrl;
 
   const customerAccountAuthUrl = shopId
-    ? `${deprecatedCustomerAccountUrl}/auth_test`
-    // ? `https://shopify.com/authentication/${shopId}`
-    : `${deprecatedCustomerAccountUrl}/auth`;
+    ? `http://shopify.com/${shopId}/auth_test`
+    : `https://shopify.com/authentication/${shopId}`;
 
   return function getCustomerAccountUrl(urlType: URL_TYPE): string {
     switch (urlType) {
@@ -34,9 +33,7 @@ export function createGetCustomerAccountUrl(
       case URL_TYPE.AUTH:
         return `${customerAccountAuthUrl}/oauth/authorize`;
       case URL_TYPE.LOGIN_SCOPE:
-        return shopId
-          ? 'openid email customer-account-api:full'
-          : 'openid email https://api.customers.com/auth/customer.graphql';
+        return 'openid email https://api.customers.com/auth/customer.graphql';
       case URL_TYPE.TOKEN_EXCHANGE:
         return `${customerAccountAuthUrl}/oauth/token`;
       case URL_TYPE.LOGOUT:
