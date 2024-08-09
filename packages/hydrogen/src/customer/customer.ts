@@ -367,7 +367,7 @@ export function createCustomerAccountClient({
       loginUrl.searchParams.append('redirect_uri', redirectUri);
       loginUrl.searchParams.set(
         'scope',
-        'openid email https://api.customers.com/auth/customer.graphql',
+        getCustomerAccountUrl(URL_TYPE.LOGIN_SCOPE),
       );
       loginUrl.searchParams.append('state', state);
       loginUrl.searchParams.append('nonce', nonce);
