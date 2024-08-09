@@ -171,16 +171,10 @@ export async function prepareDiffDirectory(
     async copyDiffBuild() {
       const target = joinPath(diffDirectory, 'dist');
       await remove(target);
-      await Promise.all([
-        copyDirectory(joinPath(targetDirectory, 'dist'), target, {
-          force: true,
-          recursive: true,
-        }),
-        copyFile(
-          joinPath(targetDirectory, '.env'),
-          joinPath(diffDirectory, '.env'),
-        ),
-      ]);
+      await copyDirectory(joinPath(targetDirectory, 'dist'), target, {
+        force: true,
+        recursive: true,
+      });
     },
     /**
      * Brings the generated d.ts files back to the original project.
@@ -244,12 +238,6 @@ export async function applyTemplateDiff(
   await mergePackageJson(diffDirectory, targetDirectory, {
     ignoredKeys: ['h2:diff'],
     onResult: (pkgJson) => {
-      if (pkgJson.dependencies) {
-        // This package is added as '*' to make --diff work with global CLI.
-        // However, we don't want to add it to the package.json in projects.
-        delete pkgJson.dependencies['@shopify/cli-hydrogen'];
-      }
-
       for (const key of ['build', 'dev', 'preview']) {
         const scriptLine = pkgJson.scripts?.[key];
         if (pkgJson.scripts?.[key] && typeof scriptLine === 'string') {

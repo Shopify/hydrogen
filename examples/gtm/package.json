@@ -10,8 +10,5 @@
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "typecheck": "tsc --noEmit",
     "codegen": "shopify hydrogen codegen"
-  },
-  "dependencies": {
-    "@shopify/cli-hydrogen": "*"
   }
 }
