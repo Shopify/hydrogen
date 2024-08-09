@@ -141,15 +141,20 @@ export async function setupLocalStarterTemplate(
 
   backgroundWorkPromise = backgroundWorkPromise.then(() => {
     const promises: Array<Promise<any>> = [
-      // Add project name to package.json
       replaceFileContent(
         joinPath(project.directory, 'package.json'),
         false,
-        (content) =>
-          content.replace(
+        (content) => {
+          // Add @shopify/cli-hydrogen to special versions
+          // because the global CLI won't bundle it:
+          content = maybeInjectCliHydrogen(content);
+
+          // Add project name to package.json
+          return content.replace(
             /"name": "[^"]+"/,
             `"name": "${hyphenate(storefrontInfo?.title ?? project.name)}"`,
-          ),
+          );
+        },
       ),
     ];
 
@@ -370,4 +375,22 @@ export async function setupLocalStarterTemplate(
     ...project,
     ...setupSummary,
   };
+}
+
+function maybeInjectCliHydrogen(pkgJsonContent: string) {
+  const hydrogenDep = pkgJsonContent.match(
+    /^\s+"@shopify\/hydrogen":\s+"[^"]+",\n/m,
+  )?.[0];
+
+  // next, snapshot, unstable, experimental, etc.
+  if (hydrogenDep && /"0\.0\.0-\w+-/.test(hydrogenDep)) {
+    const cliHydrogenDep = hydrogenDep.replace('hydrogen', 'cli-hydrogen');
+
+    pkgJsonContent = pkgJsonContent.replace(
+      hydrogenDep,
+      cliHydrogenDep + hydrogenDep,
+    );
+  }
+
+  return pkgJsonContent;
 }
