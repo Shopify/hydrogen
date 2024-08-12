@@ -6,7 +6,7 @@ This method takes a product Id, currently selected options, and query for the `m
 
 It also showcase an end-to-end implementation of [custom method](https://shopify.dev/docs/api/hydrogen/2023-10/utilities/createcarthandler#example-custom-methods) including the additional handler for `CustomUpdateLineByOptions` action (all custom method action should be prefix with `Custom`) in cart route, and the UI that trigger the handler.
 
-Note that this is an isolated example, for a better edit in cart user experience we recommend implementing [optimistic-cart-ui](../optimistic-cart-ui) along side of this example.
+Note that this is an isolated example, for a better edit in cart user experience we recommend implementing an optimistic cart along side of this example.
 
 ## Install
 
