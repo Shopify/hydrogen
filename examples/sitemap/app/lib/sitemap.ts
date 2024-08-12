@@ -4,6 +4,10 @@ import {
   LanguageCode,
 } from '@shopify/hydrogen/storefront-api-types';
 
+const SITEMAP_PREFIX = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">`;
+const SITEMAP_SUFFIX = `</urlset>`;
+
 type Locale = `${LanguageCode}-${CountryCode}`;
 
 type SITEMAP_INDEX_TYPE =
@@ -45,18 +49,17 @@ export async function getSitemapIndex({
 
   const baseUrl = new URL(request.url).origin;
 
-  const body = `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-${types
-  .map((type) => getSiteMapLinks(type, data[type].pagesCount.count, baseUrl))
-  .join('\n')}
-${customUrls
-  .map(
-    (url) => `<sitemap>
-  <loc>${url}</loc>
-</sitemap>`,
-  )
-  .join('\n')}
-</urlset>`;
+  const body =
+    SITEMAP_PREFIX +
+    types
+      .map((type) =>
+        getSiteMapLinks(type, data[type].pagesCount.count, baseUrl),
+      )
+      .join('\n') +
+    customUrls
+      .map((url) => '<sitemap><loc>' + url + '</loc></sitemap>')
+      .join('\n') +
+    SITEMAP_SUFFIX;
 
   return new Response(body, {
     headers: {
@@ -117,28 +120,28 @@ export async function getSitemap(options: GetSiteMapOptions) {
 
   const baseUrl = new URL(request.url).origin;
 
-  const body = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-${data.sitemap.resources.items
-  .map((item: {handle: string; updatedAt: string; type?: string}) => {
-    return `${renderUrlTag({
-      getChangeFreq: options.getChangeFreq,
-      url: getLink({
-        type: item.type ?? type,
-        baseUrl,
-        handle: item.handle,
-      }),
-      type,
-      getLink,
-      updatedAt: item.updatedAt,
-      handle: item.handle,
-      metaobjectType: item.type,
-      locales,
-      baseUrl,
-    })}`;
-  })
-  .join('\n')}
-</urlset>`;
+  const body =
+    SITEMAP_PREFIX +
+    data.sitemap.resources.items
+      .map((item: {handle: string; updatedAt: string; type?: string}) => {
+        return renderUrlTag({
+          getChangeFreq: options.getChangeFreq,
+          url: getLink({
+            type: item.type ?? type,
+            baseUrl,
+            handle: item.handle,
+          }),
+          type,
+          getLink,
+          updatedAt: item.updatedAt,
+          handle: item.handle,
+          metaobjectType: item.type,
+          locales,
+          baseUrl,
+        });
+      })
+      .join('\n') +
+    SITEMAP_SUFFIX;
 
   return new Response(body, {
     headers: {
@@ -152,9 +155,7 @@ function getSiteMapLinks(resource: string, count: number, baseUrl: string) {
   let links = ``;
 
   for (let i = 1; i <= count; i++) {
-    links += `<sitemap>
-  <loc>${baseUrl}/sitemap/${resource}/${i}.xml</loc>
-</sitemap>`;
+    links += `<sitemap><loc>${baseUrl}/sitemap/${resource}/${i}.xml</loc></sitemap>`;
   }
   return links;
 }
