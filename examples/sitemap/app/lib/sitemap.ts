@@ -24,14 +24,7 @@ type SITEMAP_INDEX_TYPE =
 export async function getSitemapIndex({
   storefront,
   request,
-  types = [
-    'pages',
-    'products',
-    'collections',
-    'metaObjects',
-    'pages',
-    'articles',
-  ],
+  types = ['products', 'pages', 'collections', 'metaObjects', 'articles'],
   customUrls = [],
 }: {
   storefront: LoaderFunctionArgs['context']['storefront'];
@@ -69,7 +62,7 @@ export async function getSitemapIndex({
   });
 }
 
-type GetSiteMapOptions = {
+interface GetSiteMapOptions {
   /** The params object from Remix */
   params: LoaderFunctionArgs['params'];
   /** The Storefront API Client from Hydrogen */
@@ -90,7 +83,7 @@ type GetSiteMapOptions = {
     type: string | SITEMAP_INDEX_TYPE;
     handle: string;
   }) => string;
-};
+}
 
 /**
  * Generate a sitemap for a specific resource type.
