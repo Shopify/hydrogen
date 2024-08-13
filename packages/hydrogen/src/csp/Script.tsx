@@ -15,7 +15,6 @@ export const Script = forwardRef<HTMLScriptElement, ScriptProps>(
   (props, ref) => {
     const {waitForHydration, src, ...rest} = props;
 
-    if (!src) throw new Error('Script components require a `src` prop');
     if (waitForHydration) return <LazyScript src={src} options={rest} />;
 
     const nonce = useNonce();
@@ -36,9 +35,14 @@ function LazyScript({
   src,
   options,
 }: {
-  src: string;
+  src?: string;
   options: JSX.IntrinsicElements['script'];
 }) {
+  if (!src)
+    throw new Error(
+      '`waitForHydration` with the Script copmonent requires a `src` prop',
+    );
+
   useLoadScript(src, {
     attributes: options as Record<string, string>,
   });
