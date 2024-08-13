@@ -23,6 +23,7 @@ jobs:
             {name: 'metaobjects', token: '1000014928'},
             {name: 'third-party-queries-caching', token: '1000014929'},
             {name: 'custom-cart-method', token: '1000014930'},
+            {name: 'sitemap', token: '1000022490'},
           ]
     steps:
       - uses: actions/checkout@v4
@@ -58,6 +59,7 @@ jobs:
           npx shopify hydrogen deploy --no-lockfile-check --diff --token=$OXYGEN_DEPLOYMENT_TOKEN_${{ matrix.examples.token }}
         env:
           OXYGEN_DEPLOYMENT_TOKEN_1000014888: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014888 }}
+          OXYGEN_DEPLOYMENT_TOKEN_1000022490: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000022490 }}
           OXYGEN_DEPLOYMENT_TOKEN_1000014892: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014892 }}
           OXYGEN_DEPLOYMENT_TOKEN_1000014928: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014928 }}
           OXYGEN_DEPLOYMENT_TOKEN_1000014929: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014929 }}
