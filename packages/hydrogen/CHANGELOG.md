@@ -1,5 +1,11 @@
 # @shopify/hydrogen
 
+## 2024.7.4
+
+### Patch Changes
+
+- Fix the `Script` component to not throw when using it for inline scripts with `dangerouslySetInnerHTML` ([#2428](https://github.com/Shopify/hydrogen/pull/2428)) by [@blittle](https://github.com/blittle)
+
 ## 2024.7.3
 
 ### Patch Changes
