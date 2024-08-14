@@ -51,6 +51,7 @@ jobs:
         run: |
           npx shopify hydrogen deploy --no-lockfile-check --diff --token=$OXYGEN_DEPLOYMENT_TOKEN_${{ matrix.examples.token }}
         env:
+          SHOPIFY_HYDROGEN_FLAG_METADATA_DESCRIPTION: ${{ github.event.head_commit.message }}
           OXYGEN_DEPLOYMENT_TOKEN_1000014888: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014888 }}
           OXYGEN_DEPLOYMENT_TOKEN_1000022490: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000022490 }}
           OXYGEN_DEPLOYMENT_TOKEN_1000014892: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014892 }}
