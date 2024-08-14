@@ -87,7 +87,7 @@ describe('<Script />', () => {
       );
     }
     expect(renderComponent).toThrowError(
-      '`waitForHydration` with the Script copmonent requires a `src` prop',
+      '`waitForHydration` with the Script component requires a `src` prop',
     );
   });
 });

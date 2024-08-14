@@ -40,7 +40,7 @@ function LazyScript({
 }) {
   if (!src)
     throw new Error(
-      '`waitForHydration` with the Script copmonent requires a `src` prop',
+      '`waitForHydration` with the Script component requires a `src` prop',
     );
 
   useLoadScript(src, {
