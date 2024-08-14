@@ -2,7 +2,7 @@
 #! oxygen_storefront_id: 1000014875
 
 name: Skeleton deploy
-on: [push]
+on: workflow_dispatch
 
 permissions:
   contents: read

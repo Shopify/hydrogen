@@ -17,14 +17,7 @@ jobs:
       # In addition to updating the examples matrix below, make sure to also update
       # the add a key in the `env` block of the `Build and Publish to Oxygen` step
       matrix:
-        examples:
-          [
-            {name: 'classic-remix', token: '1000014892'},
-            {name: 'metaobjects', token: '1000014928'},
-            {name: 'third-party-queries-caching', token: '1000014929'},
-            {name: 'custom-cart-method', token: '1000014930'},
-            {name: 'sitemap', token: '1000022490'},
-          ]
+        examples: [{name: 'classic-remix', token: '1000014892'}]
     steps:
       - uses: actions/checkout@v4
 

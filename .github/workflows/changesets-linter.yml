@@ -1,5 +1,4 @@
-on:
-  pull_request:
+on: workflow_dispatch
 
 name: Changelog Linter
 jobs:
