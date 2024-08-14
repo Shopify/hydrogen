@@ -1,5 +1,13 @@
 # @shopify/cli-hydrogen
 
+## 8.4.1
+
+### Patch Changes
+
+- Update starter template with latest Hydrogen version. ([#2432](https://github.com/Shopify/hydrogen/pull/2432)) by [@frandiox](https://github.com/frandiox)
+
+- Fix upgrade notification right after scaffolding a new project. ([#2432](https://github.com/Shopify/hydrogen/pull/2432)) by [@frandiox](https://github.com/frandiox)
+
 ## 8.4.0
 
 ### Minor Changes
