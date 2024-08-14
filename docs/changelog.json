@@ -3,6 +3,47 @@
   "version": "1",
   "releases": [
     {
+      "title": "Fix a regression issue with the `Script` component.",
+      "version": "2024.7.4",
+      "hash": "8df49d7241f404e0b036c3c92bd0de11081ad889",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2431",
+      "commit": "https://github.com/Shopify/hydrogen/commit/8df49d7241f404e0b036c3c92bd0de11081ad889",
+      "dependencies": {
+        "@remix-run/react": "^2.10.1",
+        "@remix-run/server-runtime": "^2.10.1",
+        "@shopify/hydrogen": "2024.7.4",
+        "@shopify/remix-oxygen": "^2.0.6"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.10.1",
+        "@shopify/cli": "3.65.3",
+        "@shopify/oxygen-workers-types": "^4.1.2",
+        "typescript": "^5.2.2"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Fix the `Script` component to not throw when using it for inline scripts with `dangerouslySetInnerHTML`",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2428",
+          "id": "2428"
+        }
+      ],
+      "features": []
+    },
+    {
       "title": "Support for custom .env files. Simplified creation of app context.",
       "version": "2024.7.3",
       "hash": "37ec3bd1be30ba0612fec4438f92c46015fc7efb",
