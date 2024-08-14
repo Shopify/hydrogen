@@ -33,6 +33,27 @@ describe('<Script />', () => {
     `);
   });
 
+  it('loads an inline script', () => {
+    const {asFragment} = render(
+      createElement(NonceProvider, {
+        value: 'somenonce',
+        children: createElement(Script, {
+          dangerouslySetInnerHTML: {__html: 'alert("hi")'},
+        }),
+      }),
+    );
+
+    expect(asFragment()).toMatchInlineSnapshot(`
+      <DocumentFragment>
+        <script
+          nonce="somenonce"
+        >
+          alert("hi")
+        </script>
+      </DocumentFragment>
+    `);
+  });
+
   it('should load scripts after hydration', () => {
     const {asFragment} = render(
       createElement(NonceProvider, {
@@ -52,5 +73,21 @@ describe('<Script />', () => {
     expect(useLoadScript).toHaveBeenCalledWith('https://some-src.js', {
       attributes: {},
     });
+  });
+
+  it('throws without a src prop when using waitForHydration', () => {
+    function renderComponent() {
+      render(
+        createElement(NonceProvider, {
+          value: 'somenonce',
+          children: createElement(Script, {
+            waitForHydration: true,
+          }),
+        }),
+      );
+    }
+    expect(renderComponent).toThrowError(
+      '`waitForHydration` with the Script component requires a `src` prop',
+    );
   });
 });
