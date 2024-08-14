@@ -319,12 +319,18 @@ function hasOutdatedDependencies({
     ...release.dependencies,
     ...release.devDependencies,
   }).some(([name, version]) => {
+    // Skip checking the bundled CLI for now because it's always outdated.
+    // (we release a new version of the CLI after every Hydrogen release)
+    if (name === '@shopify/cli') return false;
+
     const currentDependencyVersion = currentDependencies?.[name];
     if (!currentDependencyVersion) return false;
+
     const isDependencyOutdated = semver.gt(
       getAbsoluteVersion(version),
       getAbsoluteVersion(currentDependencyVersion),
     );
+
     return isDependencyOutdated;
   });
 }
