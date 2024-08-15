@@ -61,7 +61,7 @@ export function VariantSelector({
   // But instead it always needs to be added to the product options so
   // the SFAPI properly finds the variant
   const optionsWithOnlyOneValue = options.filter(
-    (option) => option?.values?.length === 1,
+    (option) => option?.optionValues?.length === 1,
   );
 
   return createElement(
@@ -72,7 +72,7 @@ export function VariantSelector({
         let activeValue;
         let availableValues: VariantOptionValue[] = [];
 
-        for (let value of option.values!) {
+        for (let value of option.optionValues!) {
           // The clone the search params for each value, so we can calculate
           // a new URL for each option value pair
           const clonedSearchParams = new URLSearchParams(
@@ -83,7 +83,7 @@ export function VariantSelector({
           // Because we hide options with only one value, they aren't selectable,
           // but they still need to get into the URL
           optionsWithOnlyOneValue.forEach((option) => {
-            clonedSearchParams.set(option.name!, option.values![0]!);
+            clonedSearchParams.set(option.name!, option.optionValues![0]!);
           });
 
           // Find a variant that matches all selected options.

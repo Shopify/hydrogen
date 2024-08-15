@@ -31,6 +31,9 @@ export async function createAppLoadContext(
     waitUntil,
     session,
     i18n: {language: 'EN', country: 'US'},
+    storefront: {
+      apiVersion: 'unstable',
+    },
     cart: {
       queryFragment: CART_QUERY_FRAGMENT,
     },

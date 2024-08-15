@@ -1,17 +1,19 @@
 import {Suspense} from 'react';
 import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {Await, useLoaderData, type MetaFunction} from '@remix-run/react';
+import {Await, Link, useLoaderData, type MetaFunction} from '@remix-run/react';
 import type {ProductFragment} from 'storefrontapi.generated';
 import {
   getSelectedProductOptions,
   Analytics,
   useOptimisticVariant,
 } from '@shopify/hydrogen';
-import type {SelectedOption} from '@shopify/hydrogen/storefront-api-types';
+import type {ProductVariant, SelectedOption} from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/lib/variants';
 import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
+import { decodeOptionValues } from '~/lib/optionValueDecoder';
+import { AddToCartButton } from '~/components/AddToCartButton';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
@@ -50,26 +52,12 @@ async function loadCriticalData({
     // Add other queries here, so that they are loaded in parallel
   ]);
 
-  if (!product?.id) {
-    throw new Response(null, {status: 404});
+  if (!product.selectedVariant) {
+    product.selectedVariant = product.firstAvailableVariant;
   }
 
-  const firstVariant = product.variants.nodes[0];
-  const firstVariantIsDefault = Boolean(
-    firstVariant.selectedOptions.find(
-      (option: SelectedOption) =>
-        option.name === 'Title' && option.value === 'Default Title',
-    ),
-  );
-
-  if (firstVariantIsDefault) {
-    product.selectedVariant = firstVariant;
-  } else {
-    // if no selected variant was returned from the selected options,
-    // we redirect to the first variant's url with it's selected options applied
-    if (!product.selectedVariant) {
-      throw redirectToFirstVariant({product, request});
-    }
+  if (!product.selectedVariant) {
+    product.selectedVariant = product.variants.nodes[0];
   }
 
   return {
@@ -103,27 +91,67 @@ function loadDeferredData({context, params}: LoaderFunctionArgs) {
   };
 }
 
-function redirectToFirstVariant({
-  product,
-  request,
-}: {
-  product: ProductFragment;
-  request: Request;
-}) {
-  const url = new URL(request.url);
-  const firstVariant = product.variants.nodes[0];
+function mapSelectedProductOption(options: Pick<SelectedOption, "name" | "value">[]) {
+  return Object.assign({}, ...options.map((key) => {
+    return {[key.name]: key.value};
+  }));
+}
 
-  return redirect(
-    getVariantUrl({
-      pathname: url.pathname,
-      handle: product.handle,
-      selectedOptions: firstVariant.selectedOptions,
-      searchParams: new URLSearchParams(url.search),
-    }),
-    {
-      status: 302,
-    },
-  );
+function mapAdjacentVariants(variants: ProductVariant[]) {
+  return Object.assign({}, ...variants.map((variant) => {
+    const keyName = mapSelectedProductOption(variant.selectedOptions || []);
+    return {[JSON.stringify(keyName)]: variant};
+  }));
+}
+
+function mapOptionExistence(encodedVariantExistence: string, options: ProductFragment['options']) {
+  const validOptions: string[] = [];
+  const decodedVariantExistence = decodeOptionValues(encodedVariantExistence);
+  // console.log('decodedVariantExistenceMap', decodedVariantExistence);
+  decodedVariantExistence.forEach((optionSet) => {
+    const decodedOption = Object.assign({}, ...optionSet.map((option, index) => {
+      const productOption = options[index];
+      return {[productOption.name]: productOption.optionValues[option].name};
+    }));
+    validOptions.push(JSON.stringify(decodedOption));
+  });
+  return validOptions;
+}
+
+function useProductOptions(product : ProductFragment) {
+  const variants = mapAdjacentVariants([
+    product.selectedVariant,
+    ...product.adjacentVariants,
+  ]);
+
+  const selectedOptions = mapSelectedProductOption(product.selectedVariant?.selectedOptions || []);
+  const decodedVariantExistence = mapOptionExistence(product.encodedVariantExistence, product.options);
+
+  console.log('encodedVariantExistence', product.encodedVariantExistence);
+
+  return product.options.map((option) => {
+    return {
+      ...option,
+      optionValues: option.optionValues.map((value) => {
+        const targetOption = {...selectedOptions};
+        targetOption[option.name] = value.name;
+        const targetKey = JSON.stringify(targetOption);
+        const variant = variants[targetKey];
+        const searchParams = new URLSearchParams(targetOption);
+        const link = variant && `${variant?.product?.handle}?${searchParams.toString()}`;
+
+        return {
+          ...value,
+          variant,
+          link,
+          selected: selectedOptions[option.name] === value.name,
+          exists: decodedVariantExistence.includes(targetKey),
+          available: variant?.availableForSale || false,
+        };
+      }),
+    };
+  });
+
 }
 
 export default function Product() {
@@ -134,6 +162,10 @@ export default function Product() {
   );
 
   const {title, descriptionHtml} = product;
+  const productOptions = useProductOptions(product);
+
+  console.log('adjacentVariants', product.adjacentVariants);
+  console.log('productOptions', productOptions);
 
   return (
     <div className="product">
@@ -145,28 +177,65 @@ export default function Product() {
           compareAtPrice={selectedVariant?.compareAtPrice}
         />
         <br />
-        <Suspense
-          fallback={
-            <ProductForm
-              product={product}
-              selectedVariant={selectedVariant}
-              variants={[]}
-            />
-          }
-        >
-          <Await
-            errorElement="There was a problem loading product variants"
-            resolve={variants}
-          >
-            {(data) => (
-              <ProductForm
-                product={product}
-                selectedVariant={selectedVariant}
-                variants={data?.product?.variants.nodes || []}
-              />
-            )}
-          </Await>
-        </Suspense>
+
+        {productOptions.map((option) => (
+          <div className="product-options" key={option.name}>
+            <h5>{option.name}</h5>
+            <div className="product-options-grid">
+              {option.optionValues.map((value) => {
+                const {name, link, selected, exists, available} = value;
+                if (exists && link) {
+                  return (
+                    <Link
+                      className="product-options-item"
+                      key={option.name + name}
+                      prefetch="intent"
+                      preventScrollReset
+                      replace
+                      to={`/products/${link}`}
+                      style={{
+                        border: selected ? '1px solid black' : '1px solid transparent',
+                        opacity: available ? 1 : 0.3,
+                      }}
+                    >
+                      {name}
+                    </Link>
+                  );
+                } else {
+                  return (
+                    <div
+                      className="product-options-item"
+                      key={option.name + name}
+                      style={{
+                        opacity: 0.05,
+                      }}
+                    >
+                      {name}
+                    </div>
+                  );
+                }
+              })}
+            </div>
+            <br />
+          </div>
+        ))}
+        <br />
+      <AddToCartButton
+        disabled={!selectedVariant || !selectedVariant.availableForSale}
+        onClick={() => {
+          open('cart');
+        }}
+        lines={[
+          {
+            merchandiseId: selectedVariant.id,
+            quantity: 1,
+            selectedVariant,
+          },
+        ]}
+      >
+        {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
+      </AddToCartButton>
+
         <br />
         <br />
         <p>
@@ -242,15 +311,28 @@ const PRODUCT_FRAGMENT = `#graphql
     description
     options {
       name
-      values
+      optionValues {
+        name
+      }
     }
-    selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
+    encodedVariantExistence
+    selectedVariant: variantBySelectedOptions(
+      selectedOptions: $selectedOptions
+      ignoreUnknownOptions: true
+      caseInsensitiveMatch: true
+    ) {
+      ...ProductVariant
+    }
+    firstAvailableVariant {
       ...ProductVariant
     }
     variants(first: 1) {
       nodes {
         ...ProductVariant
       }
+    }
+    adjacentVariants (selectedOptions: $selectedOptions) {
+      ...ProductVariant
     }
     seo {
       description

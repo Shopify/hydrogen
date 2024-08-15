@@ -21,7 +21,7 @@ export function ProductForm({
     <div className="product-form">
       <VariantSelector
         handle={product.handle}
-        options={product.options.filter((option) => option.values.length > 1)}
+        options={product.options.filter((option) => option.optionValues.length > 1)}
         variants={variants}
       >
         {({option}) => <ProductOptions key={option.name} option={option} />}
@@ -55,7 +55,7 @@ function ProductOptions({option}: {option: VariantOption}) {
     <div className="product-options" key={option.name}>
       <h5>{option.name}</h5>
       <div className="product-options-grid">
-        {option.values.map(({value, isAvailable, isActive, to}) => {
+        {option.optionValues.map(({value, isAvailable, isActive, to}) => {
           return (
             <Link
               className="product-options-item"
