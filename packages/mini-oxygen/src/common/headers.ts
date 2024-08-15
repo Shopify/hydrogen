@@ -8,6 +8,8 @@ export const OXYGEN_HEADERS_MAP = {
   region: {name: 'oxygen-buyer-region', defaultValue: 'California'},
   regionCode: {name: 'oxygen-buyer-region-code', defaultValue: 'CA'},
   city: {name: 'oxygen-buyer-city', defaultValue: 'San Francisco'},
+  postalCode: {name: 'oxygen-buyer-postal-code', defaultValue: '94105'},
+  metroCode: {name: 'oxygen-buyer-metro-code', defaultValue: '807'},
   isEuCountry: {name: 'oxygen-buyer-is-eu-country', defaultValue: ''},
   timezone: {
     name: 'oxygen-buyer-timezone',
