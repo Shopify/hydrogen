@@ -23,6 +23,7 @@ export function ProductForm({
         handle={product.handle}
         options={product.options.filter((option) => option.values.length > 1)}
         variants={variants}
+        firstAvailableVariant={product.firstAvailableVariant}
       >
         {({option}) => <ProductOptions key={option.name} option={option} />}
       </VariantSelector>

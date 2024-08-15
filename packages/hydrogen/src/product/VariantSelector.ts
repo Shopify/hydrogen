@@ -37,6 +37,8 @@ type VariantSelectorProps = {
   productPath?: string;
   /** Should the VariantSelector wait to update until after the browser navigates to a variant. */
   waitForNavigation?: boolean;
+  /** If provided, selector will default to selecting this variant. This is useful for the initial page load, before a variant is selected. */
+  firstAvailableVariant?: ProductVariant;
   children: ({option}: {option: VariantOption}) => ReactNode;
 };
 
@@ -46,6 +48,7 @@ export function VariantSelector({
   variants: _variants = [],
   productPath = 'products',
   waitForNavigation = false,
+  firstAvailableVariant,
   children,
 }: VariantSelectorProps) {
   const variants =
@@ -95,11 +98,20 @@ export function VariantSelector({
             ),
           );
 
-          const currentParam = searchParams.get(option.name!);
+          let selectedValue = searchParams.get(option.name!);
 
-          const calculatedActiveValue = currentParam
-            ? // If a URL parameter exists for the current option, check if it equals the current value
-              currentParam === value!
+          if (!selectedValue && firstAvailableVariant) {
+            // If there's no value set via a URL parameter, default
+            // to the value from the first available variant
+            selectedValue =
+              firstAvailableVariant?.selectedOptions?.find(
+                (option) => option?.name === option?.name,
+              )?.value || null;
+          }
+
+          const calculatedActiveValue = selectedValue
+            ? // Check if the selected value equals the current value
+              selectedValue === value!
             : false;
 
           if (calculatedActiveValue) {
