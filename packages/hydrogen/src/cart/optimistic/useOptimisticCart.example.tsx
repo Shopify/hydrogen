@@ -11,13 +11,13 @@ export async function loader({context}: LoaderFunctionArgs) {
 }
 
 // The cart component renders each line item in the cart.
-export function Cart({cart}: {cart: Cart}) {
+export function Cart({cart: originalCart}: {cart: Cart}) {
   // `useOptimisticCart` adds optimistic line items to the cart.
   // These line items are displayed in the cart until the server responds.
-  const optimisticCart = useOptimisticCart(cart);
-  if (!optimisticCart?.lines?.nodes?.length) return <p>Nothing in cart</p>;
+  const cart = useOptimisticCart(originalCart);
+  if (!cart?.lines?.nodes?.length) return <p>Nothing in cart</p>;
 
-  return optimisticCart.lines.nodes.map((line) => (
+  return cart.lines.nodes.map((line) => (
     <div key={line.id}>
       <Link to={`/products${line.merchandise.product.handle}`}>
         {line.merchandise.product.title}
