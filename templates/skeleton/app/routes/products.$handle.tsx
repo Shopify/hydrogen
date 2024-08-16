@@ -109,8 +109,10 @@ function mapOptionExistence(encodedVariantExistence: string, options: ProductFra
   const decodedVariantExistence = decodeOptionValues(encodedVariantExistence);
   // console.log('decodedVariantExistenceMap', decodedVariantExistence);
   decodedVariantExistence.forEach((optionSet) => {
+    console.log('optionSet', optionSet);
     const decodedOption = Object.assign({}, ...optionSet.map((option, index) => {
       const productOption = options[index];
+      console.log('productOption', productOption, option, productOption.optionValues[option]);
       return {[productOption.name]: productOption.optionValues[option].name};
     }));
     validOptions.push(JSON.stringify(decodedOption));
