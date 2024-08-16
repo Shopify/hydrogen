@@ -13,16 +13,15 @@ declare global {
 }
 
 // Pin to a version that have SPA support.
-// TODO: Update to a stable version when available.
-const PERF_KIT_UNSTABLE =
-  'https://cdn.shopify.com/shopifycloud/perf-kit/shopify-perf-kit-1bd852a.min.js';
+const PERF_KIT_URL =
+  'https://cdn.shopify.com/shopifycloud/perf-kit/shopify-perf-kit-1.0.0.min.js';
 
 export function PerfKit({shop}: {shop: ShopAnalytics}) {
   const loadedEvent = useRef(false);
   const {subscribe, register} = useAnalytics();
   const {ready} = register('Internal_Shopify_Perf_Kit');
 
-  const scriptStatus = useLoadScript(PERF_KIT_UNSTABLE, {
+  const scriptStatus = useLoadScript(PERF_KIT_URL, {
     attributes: {
       id: 'perfkit',
       'data-application': 'hydrogen',
