@@ -34,7 +34,7 @@ describe('createCartHandler', () => {
     const cart = getCartHandler();
 
     expectTypeOf(cart).toEqualTypeOf<HydrogenCart>;
-    expect(Object.keys(cart)).toHaveLength(14);
+    expect(Object.keys(cart)).toHaveLength(15);
     expect(cart).toHaveProperty('get');
     expect(cart).toHaveProperty('getCartId');
     expect(cart).toHaveProperty('setCartId');
@@ -43,6 +43,7 @@ describe('createCartHandler', () => {
     expect(cart).toHaveProperty('updateLines');
     expect(cart).toHaveProperty('removeLines');
     expect(cart).toHaveProperty('updateDiscountCodes');
+    expect(cart).toHaveProperty('updateGiftCardCodes');
     expect(cart).toHaveProperty('updateBuyerIdentity');
     expect(cart).toHaveProperty('updateNote');
     expect(cart).toHaveProperty('updateSelectedDeliveryOption');
@@ -64,7 +65,7 @@ describe('createCartHandler', () => {
     });
 
     expectTypeOf(cart).toEqualTypeOf<HydrogenCartCustom<{foo: () => 'bar'}>>;
-    expect(Object.keys(cart)).toHaveLength(15);
+    expect(Object.keys(cart)).toHaveLength(16);
     expect(cart.foo()).toBe('bar');
   });
 
@@ -78,7 +79,7 @@ describe('createCartHandler', () => {
     });
 
     expectTypeOf(cart).toEqualTypeOf<HydrogenCart>;
-    expect(Object.keys(cart)).toHaveLength(14);
+    expect(Object.keys(cart)).toHaveLength(15);
     expect(await cart.get()).toBe('bar');
   });
 
@@ -139,6 +140,9 @@ describe('createCartHandler', () => {
 
     const result11 = await cart.deleteMetafield('some.key');
     expect(result11.userErrors?.[0]).not.toContain(cartMutateFragment);
+
+    const result12 = await cart.updateGiftCardCodes([]);
+    expect(result12.userErrors?.[0]).toContain(cartMutateFragment);
   });
 
   it('function get has a working default implementation', async () => {
@@ -249,6 +253,32 @@ describe('createCartHandler', () => {
     const cart = getCartHandler();
 
     const result = await cart.updateDiscountCodes([]);
+
+    expect(result.cart).toHaveProperty('id', 'c1-new-cart-id');
+  });
+
+  it('function updateGiftCardCodes has a working default implementation', async () => {
+    const cart = getCartHandler({cartId: 'c1-123'});
+
+    const result = await cart.updateGiftCardCodes([]);
+
+    expect(result.cart).toHaveProperty('id', 'gid://shopify/Cart/c1-123');
+  });
+
+  it('function updateGiftCardCodes can provide overridable parameter', async () => {
+    const cart = getCartHandler({cartId: 'c1-123'});
+
+    const result = await cart.updateGiftCardCodes([], {
+      cartId: 'gid://shopify/Cart/c1-456',
+    });
+
+    expect(result.cart).toHaveProperty('id', 'gid://shopify/Cart/c1-456');
+  });
+
+  it('function updateGiftCardCodes creates a cart if cart id is not found', async () => {
+    const cart = getCartHandler();
+
+    const result = await cart.updateGiftCardCodes([]);
 
     expect(result.cart).toHaveProperty('id', 'c1-new-cart-id');
   });

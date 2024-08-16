@@ -232,6 +232,19 @@ const data: ReferenceEntityTemplateSchema = {
             },
           },
           {
+            description: 'Update gift card codes in the cart.',
+            codeblock: {
+              title: 'cart.updateGiftCardCodes',
+              tabs: [
+                {
+                  title: 'JavaScript',
+                  code: './createCartHandler.updateGiftCardCodes.example.js',
+                  language: 'js',
+                },
+              ],
+            },
+          },
+          {
             description: 'Update items in the cart.',
             codeblock: {
               title: 'cart.updateLines',
