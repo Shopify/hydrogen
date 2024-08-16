@@ -1,5 +1,13 @@
 # @shopify/hydrogen-react
 
+## 2024.7.2
+
+### Patch Changes
+
+- Improve performance of currency formatting ([#2372](https://github.com/Shopify/hydrogen/pull/2372)) by [@blittle](https://github.com/blittle)
+
+- Prevent sending analytics data to Shopify when Chrome-Lighthouse user agent is detected ([#2401](https://github.com/Shopify/hydrogen/pull/2401)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 2024.7.1
 
 ### Patch Changes

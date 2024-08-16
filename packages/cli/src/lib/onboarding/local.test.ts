@@ -149,13 +149,11 @@ describe('local templates', () => {
 
       expect(resultFiles).toEqual(
         expect.arrayContaining(
-          templateFiles
-            .filter((item) => !item.endsWith('.d.ts'))
-            .map((item) =>
-              item
-                .replace(/\.ts(x)?$/, '.js$1')
-                .replace(/tsconfig\.json$/, 'jsconfig.json'),
-            ),
+          templateFiles.map((item) =>
+            item
+              .replace(/(?<!\.d)\.ts(x)?$/, '.js$1')
+              .replace(/tsconfig\.json$/, 'jsconfig.json'),
+          ),
         ),
       );
 

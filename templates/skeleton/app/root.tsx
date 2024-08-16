@@ -26,18 +26,15 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
   formMethod,
   currentUrl,
   nextUrl,
+  defaultShouldRevalidate,
 }) => {
   // revalidate when a mutation is performed e.g add to cart, login...
-  if (formMethod && formMethod !== 'GET') {
-    return true;
-  }
+  if (formMethod && formMethod !== 'GET') return true;
 
   // revalidate when manually revalidating via useRevalidator
-  if (currentUrl.toString() === nextUrl.toString()) {
-    return true;
-  }
+  if (currentUrl.toString() === nextUrl.toString()) return true;
 
-  return false;
+  return defaultShouldRevalidate;
 };
 
 export function links() {

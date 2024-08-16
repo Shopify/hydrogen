@@ -1,5 +1,34 @@
 # @shopify/create-hydrogen
 
+## 5.0.4
+
+### Patch Changes
+
+- Update starter template with latest Hydrogen version. ([#2432](https://github.com/Shopify/hydrogen/pull/2432)) by [@frandiox](https://github.com/frandiox)
+
+## 5.0.3
+
+### Patch Changes
+
+- starter template updated ([#2333](https://github.com/Shopify/hydrogen/pull/2333)) by [@michenly](https://github.com/michenly)
+
+- Add a hydration check for google web cache. This prevents an infinite redirect when viewing the cached version of a hydrogen site on Google. ([#2334](https://github.com/Shopify/hydrogen/pull/2334)) by [@blittle](https://github.com/blittle)
+
+  Update your entry.server.jsx file to include this check:
+
+  ```diff
+  + if (!window.location.origin.includes("webcache.googleusercontent.com")) {
+     startTransition(() => {
+       hydrateRoot(
+         document,
+         <StrictMode>
+           <RemixBrowser />
+         </StrictMode>
+       );
+     });
+  + }
+  ```
+
 ## 5.0.2
 
 ### Patch Changes

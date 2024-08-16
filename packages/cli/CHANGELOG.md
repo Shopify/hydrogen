@@ -1,5 +1,27 @@
 # @shopify/cli-hydrogen
 
+## 8.4.1
+
+### Patch Changes
+
+- Update starter template with latest Hydrogen version. ([#2432](https://github.com/Shopify/hydrogen/pull/2432)) by [@frandiox](https://github.com/frandiox)
+
+- Fix upgrade notification right after scaffolding a new project. ([#2432](https://github.com/Shopify/hydrogen/pull/2432)) by [@frandiox](https://github.com/frandiox)
+
+## 8.4.0
+
+### Minor Changes
+
+- Support `--env-file` in env:pull, dev, and preview commands to specify custom `.env` files. ([#2392](https://github.com/Shopify/hydrogen/pull/2392)) by [@frandiox](https://github.com/frandiox)
+
+### Patch Changes
+
+- Allow passing `customLogger` in `vite.config.js`. ([#2341](https://github.com/Shopify/hydrogen/pull/2341)) by [@frandiox](https://github.com/frandiox)
+
+- Ignore `remix.config.js` file when `vite.config.js` is present, and warn about it. ([#2379](https://github.com/Shopify/hydrogen/pull/2379)) by [@frandiox](https://github.com/frandiox)
+
+- Support special versions like `next` or `experimental` in CLI. ([#2417](https://github.com/Shopify/hydrogen/pull/2417)) by [@frandiox](https://github.com/frandiox)
+
 ## 8.3.0
 
 ### Minor Changes

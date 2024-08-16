@@ -3,6 +3,144 @@
   "version": "1",
   "releases": [
     {
+      "title": "Fix a regression issue with the `Script` component.",
+      "version": "2024.7.4",
+      "hash": "8df49d7241f404e0b036c3c92bd0de11081ad889",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2431",
+      "commit": "https://github.com/Shopify/hydrogen/commit/8df49d7241f404e0b036c3c92bd0de11081ad889",
+      "dependencies": {
+        "@remix-run/react": "^2.10.1",
+        "@remix-run/server-runtime": "^2.10.1",
+        "@shopify/hydrogen": "2024.7.4",
+        "@shopify/remix-oxygen": "^2.0.6"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.10.1",
+        "@shopify/cli": "3.65.3",
+        "@shopify/oxygen-workers-types": "^4.1.2",
+        "typescript": "^5.2.2"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Fix the `Script` component to not throw when using it for inline scripts with `dangerouslySetInnerHTML`",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2428",
+          "id": "2428"
+        }
+      ],
+      "features": []
+    },
+    {
+      "title": "Support for custom .env files. Simplified creation of app context.",
+      "version": "2024.7.3",
+      "hash": "37ec3bd1be30ba0612fec4438f92c46015fc7efb",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2378",
+      "commit": "https://github.com/Shopify/hydrogen/commit/37ec3bd1be30ba0612fec4438f92c46015fc7efb",
+      "dependencies": {
+        "@remix-run/react": "^2.10.1",
+        "@remix-run/server-runtime": "^2.10.1",
+        "@shopify/hydrogen": "2024.7.3",
+        "@shopify/remix-oxygen": "^2.0.6"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.10.1",
+        "@shopify/cli": "3.65.3",
+        "@shopify/oxygen-workers-types": "^4.1.2",
+        "typescript": "^5.2.2"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Allow passing `customLogger` to Vite",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2341",
+          "id": "2341"
+        },
+        {
+          "title": "Prevent sending analytics data to Shopify when Chrome-Lighthouse user agent is detected",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2401",
+          "id": "2401"
+        },
+        {
+          "title": "Fix the OptimisticCart type to properly retain the generic of line items. The OptimisticCartLine type now takes a cart or cart line item generic",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2327",
+          "id": "2327"
+        },
+        {
+          "title": "Return a 400 BadRequest for HEAD and GET requests that include a body",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2360",
+          "id": "2360"
+        },
+        {
+          "title": "Fix an infinite redirect when viewing the cached version of a Hydrogen site on Google Web Cache",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2334",
+          "id": "2334",
+          "steps": [
+            {
+              "title": "Update your entry.server.jsx file to include this check",
+              "code": "YGBgZGlmZgorIGlmICghd2luZG93LmxvY2F0aW9uLm9yaWdpbi5pbmNsdWRlcygid2ViY2FjaGUuZ29vZ2xldXNlcmNvbnRlbnQuY29tIikpIHsKICAgc3RhcnRUcmFuc2l0aW9uKCgpID0+IHsKICAgICBoeWRyYXRlUm9vdCgKICAgICAgIGRvY3VtZW50LAogICAgICAgPFN0cmljdE1vZGU+CiAgICAgICAgIDxSZW1peEJyb3dzZXIgLz4KICAgICAgIDwvU3RyaWN0TW9kZT4KICAgICApOwogICB9KTsKKyB9CmBgYA=="
+            }
+          ]
+        }
+      ],
+      "features": [
+        {
+          "title": "Support for custom .env files",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2392",
+          "id": "2392"
+        },
+        {
+          "title": "Simplified creation of app context.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2333",
+          "id": "2333",
+          "steps": [
+            {
+              "title": "Create a app/lib/context file and use `createHydrogenContext` in it.",
+              "code": "YGBgLnRzCi8vIGluIGFwcC9saWIvY29udGV4dAoKaW1wb3J0IHtjcmVhdGVIeWRyb2dlbkNvbnRleHR9IGZyb20gJ0BzaG9waWZ5L2h5ZHJvZ2VuJzsKCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBjcmVhdGVBcHBMb2FkQ29udGV4dCgKICByZXF1ZXN0OiBSZXF1ZXN0LAogIGVudjogRW52LAogIGV4ZWN1dGlvbkNvbnRleHQ6IEV4ZWN1dGlvbkNvbnRleHQsCikgewogICAgY29uc3QgaHlkcm9nZW5Db250ZXh0ID0gY3JlYXRlSHlkcm9nZW5Db250ZXh0KHsKICAgICAgZW52LAogICAgICByZXF1ZXN0LAogICAgICBjYWNoZSwKICAgICAgd2FpdFVudGlsLAogICAgICBzZXNzaW9uLAogICAgICBpMThuOiB7bGFuZ3VhZ2U6ICdFTicsIGNvdW50cnk6ICdVUyd9LAogICAgICBjYXJ0OiB7CiAgICAgICAgcXVlcnlGcmFnbWVudDogQ0FSVF9RVUVSWV9GUkFHTUVOVCwKICAgICAgfSwKICAgICAgLy8gZW5zdXJlIHRvIG92ZXJ3cml0ZSBhbnkgb3B0aW9ucyB0aGF0IGlzIG5vdCB1c2luZyB0aGUgZGVmYXVsdCB2YWx1ZXMgZnJvbSB5b3VyIHNlcnZlci50cwogICAgfSk7CgogIHJldHVybiB7CiAgICAuLi5oeWRyb2dlbkNvbnRleHQsCiAgICAvLyBkZWNsYXJlIGFkZGl0aW9uYWwgUmVtaXggbG9hZGVyIGNvbnRleHQKICB9Owp9CgpgYGA="
+            },
+            {
+              "title": "Use `createAppLoadContext` method in server.ts Ensure to overwrite any options that is not using the default values in `createHydrogenContext`",
+              "code": "YGBgZGlmZgovLyBpbiBzZXJ2ZXIudHMKCi0gaW1wb3J0IHsKLSAgIGNyZWF0ZUNhcnRIYW5kbGVyLAotICAgY3JlYXRlU3RvcmVmcm9udENsaWVudCwKLSAgIGNyZWF0ZUN1c3RvbWVyQWNjb3VudENsaWVudCwKLSB9IGZyb20gJ0BzaG9waWZ5L2h5ZHJvZ2VuJzsKKyBpbXBvcnQge2NyZWF0ZUFwcExvYWRDb250ZXh0fSBmcm9tICd+L2xpYi9jb250ZXh0JzsKCmV4cG9ydCBkZWZhdWx0IHsKICBhc3luYyBmZXRjaCgKICAgIHJlcXVlc3Q6IFJlcXVlc3QsCiAgICBlbnY6IEVudiwKICAgIGV4ZWN1dGlvbkNvbnRleHQ6IEV4ZWN1dGlvbkNvbnRleHQsCiAgKTogUHJvbWlzZTxSZXNwb25zZT4gewoKLSAgIGNvbnN0IHtzdG9yZWZyb250fSA9IGNyZWF0ZVN0b3JlZnJvbnRDbGllbnQoCi0gICAgIC4uLgotICAgKTsKCi0gICBjb25zdCBjdXN0b21lckFjY291bnQgPSBjcmVhdGVDdXN0b21lckFjY291bnRDbGllbnQoCi0gICAgIC4uLgotICAgKTsKCi0gICBjb25zdCBjYXJ0ID0gY3JlYXRlQ2FydEhhbmRsZXIoCi0gICAgIC4uLgotICAgKTsKCisgICBjb25zdCBhcHBMb2FkQ29udGV4dCA9IGF3YWl0IGNyZWF0ZUFwcExvYWRDb250ZXh0KAorICAgICAgcmVxdWVzdCwKKyAgICAgIGVudiwKKyAgICAgIGV4ZWN1dGlvbkNvbnRleHQsCisgICApOwoKICAgIC8qKgogICAgICAqIENyZWF0ZSBhIFJlbWl4IHJlcXVlc3QgaGFuZGxlciBhbmQgcGFzcwogICAgICAqIEh5ZHJvZ2VuJ3MgU3RvcmVmcm9udCBjbGllbnQgdG8gdGhlIGxvYWRlciBjb250ZXh0LgogICAgICAqLwogICAgY29uc3QgaGFuZGxlUmVxdWVzdCA9IGNyZWF0ZVJlcXVlc3RIYW5kbGVyKHsKICAgICAgYnVpbGQ6IHJlbWl4QnVpbGQsCiAgICAgIG1vZGU6IHByb2Nlc3MuZW52Lk5PREVfRU5WLAotICAgICAgZ2V0TG9hZENvbnRleHQ6ICgpOiBBcHBMb2FkQ29udGV4dCA9PiAoewotICAgICAgICBzZXNzaW9uLAotICAgICAgICBzdG9yZWZyb250LAotICAgICAgICBjdXN0b21lckFjY291bnQsCi0gICAgICAgIGNhcnQsCi0gICAgICAgIGVudiwKLSAgICAgICAgd2FpdFVudGlsLAotICAgICAgfSksCisgICAgICBnZXRMb2FkQ29udGV4dDogKCkgPT4gYXBwTG9hZENvbnRleHQsCiAgICB9KTsKICB9CmBgYA=="
+            },
+            {
+              "title": "Use infer type for AppLoadContext in env.d.ts",
+              "code": "YGBgZGlmZgovLyBpbiBlbnYuZC50cwoKKyBpbXBvcnQgdHlwZSB7Y3JlYXRlQXBwTG9hZENvbnRleHR9IGZyb20gJ34vbGliL2NvbnRleHQnOwoKKyBpbnRlcmZhY2UgQXBwTG9hZENvbnRleHQgZXh0ZW5kcyBBd2FpdGVkPFJldHVyblR5cGU8dHlwZW9mIGNyZWF0ZUFwcExvYWRDb250ZXh0Pj4gewotIGludGVyZmFjZSBBcHBMb2FkQ29udGV4dCB7Ci0gIGVudjogRW52OwotICBjYXJ0OiBIeWRyb2dlbkNhcnQ7Ci0gIHN0b3JlZnJvbnQ6IFN0b3JlZnJvbnQ7Ci0gIGN1c3RvbWVyQWNjb3VudDogQ3VzdG9tZXJBY2NvdW50OwotICBzZXNzaW9uOiBBcHBTZXNzaW9uOwotICB3YWl0VW50aWw6IEV4ZWN1dGlvbkNvbnRleHRbJ3dhaXRVbnRpbCddOwp9CgpgYGA=YGBgZGlmZgovLyBpbiBlbnYuZC50cwoKKyBpbXBvcnQgdHlwZSB7Y3JlYXRlQXBwTG9hZENvbnRleHR9IGZyb20gJ34vbGliL2NvbnRleHQnOwoKKyBpbnRlcmZhY2UgQXBwTG9hZENvbnRleHQgZXh0ZW5kcyBBd2FpdGVkPFJldHVyblR5cGU8dHlwZW9mIGNyZWF0ZUFwcExvYWRDb250ZXh0Pj4gewotIGludGVyZmFjZSBBcHBMb2FkQ29udGV4dCB7Ci0gIGVudjogRW52OwotICBjYXJ0OiBIeWRyb2dlbkNhcnQ7Ci0gIHN0b3JlZnJvbnQ6IFN0b3JlZnJvbnQ7Ci0gIGN1c3RvbWVyQWNjb3VudDogQ3VzdG9tZXJBY2NvdW50OwotICBzZXNzaW9uOiBBcHBTZXNzaW9uOwotICB3YWl0VW50aWw6IEV4ZWN1dGlvbkNvbnRleHRbJ3dhaXRVbnRpbCddOwp9CgpgYGA="
+            }
+          ]
+        },
+        {
+          "title": "Add a waitForHydration prop to the Script component to delay loading until after hydration",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2389",
+          "id": "2389"
+        }
+      ]
+    },
+    {
       "title": "Codegen config support multiple formats. CLI auth flow fix. Subrequest Profiler styling fix.",
       "version": "2024.7.2",
       "hash": "f7c45adb763750798c631291ac3063479c3678ac",
