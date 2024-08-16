@@ -207,6 +207,7 @@ export default function Product() {
                       className="product-options-item"
                       key={option.name + name}
                       style={{
+                        border: '1px solid transparent',
                         opacity: 0.05,
                       }}
                     >

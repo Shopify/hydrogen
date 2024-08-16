@@ -78,11 +78,13 @@ export function VariantSelector({
           const clonedSearchParams = new URLSearchParams(
             alreadyOnProductPage ? searchParams : undefined,
           );
+          // @ts-ignore
           clonedSearchParams.set(option.name!, value!);
 
           // Because we hide options with only one value, they aren't selectable,
           // but they still need to get into the URL
           optionsWithOnlyOneValue.forEach((option) => {
+            // @ts-ignore
             clonedSearchParams.set(option.name!, option.optionValues![0]!);
           });
 
@@ -99,6 +101,7 @@ export function VariantSelector({
 
           const calculatedActiveValue = currentParam
             ? // If a URL parameter exists for the current option, check if it equals the current value
+              // @ts-ignore
               currentParam === value!
             : false;
 
@@ -111,6 +114,7 @@ export function VariantSelector({
           const searchString = '?' + clonedSearchParams.toString();
 
           availableValues.push({
+            // @ts-ignore
             value: value!,
             isAvailable: variant ? variant.availableForSale! : true,
             to: path + searchString,
@@ -123,6 +127,7 @@ export function VariantSelector({
         return children({
           option: {
             name: option.name!,
+            // @ts-ignore
             value: activeValue,
             values: availableValues,
           },
