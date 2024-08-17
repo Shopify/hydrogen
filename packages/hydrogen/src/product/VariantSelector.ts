@@ -57,12 +57,12 @@ export function VariantSelector({
     waitForNavigation,
   );
 
-  // If an option only has one value, it doesn't need a UI to select it
-  // But instead it always needs to be added to the product options so
-  // the SFAPI properly finds the variant
-  const optionsWithOnlyOneValue = options.filter(
-    (option) => option?.values?.length === 1,
-  );
+  // Ensure that single-value options are always selected
+  options.forEach((option) => {
+    if (option.values!.length === 1) {
+      searchParams.set(option.name!, option.values![0]!);
+    }
+  });
 
   return createElement(
     Fragment,
@@ -78,13 +78,10 @@ export function VariantSelector({
           const clonedSearchParams = new URLSearchParams(
             alreadyOnProductPage ? searchParams : undefined,
           );
-          clonedSearchParams.set(option.name!, value!);
 
-          // Because we hide options with only one value, they aren't selectable,
-          // but they still need to get into the URL
-          optionsWithOnlyOneValue.forEach((option) => {
-            clonedSearchParams.set(option.name!, option.values![0]!);
-          });
+          if (option.values!.length > 1) {
+            clonedSearchParams.set(option.name!, value!);
+          }
 
           // Find a variant that matches all selected options.
           const variant = variants.find((variant) =>
