@@ -37,7 +37,7 @@ export function createRequestHandler<Context = unknown>({
 
     if (url.pathname.includes('//')) {
       return new Response(null, {
-        status: 302,
+        status: 301,
         headers: {
           location: url.pathname.replace(/\/+/g, '/'),
         },
