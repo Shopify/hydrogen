@@ -14,12 +14,22 @@ jobs:
       - name: Checkout default branch
         uses: actions/checkout@v4
 
+      - name: Checkout PR branch
+        run: |
+          gh pr checkout ${{ github.event.issue.number }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: ⎔ Setup node
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
+
+      - name: Force snapshot changeset
+        run: |
+          echo "---\\n\'@shopify/create-hydrogen\': patch\\n---" > .changeset/force-snapshot-build.md
 
       - name: 📥 Install dependencies
         run: npm ci
@@ -35,7 +45,10 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create snapshot version
-        uses: Shopify/snapit@f9e1c0990888000fb4b2e622319ee69e2dc84e67 # pin@main
+        uses: Shopify/snapit@0c0d2dd62c9b0c94b7d03e1f54e72f18548e7752 # pin@main
+        with:
+          github_comment_included_packages: '@shopify/hydrogen,@shopify/cli-hydrogen,@shopify/hydrogen-codegen,@shopify/mini-oxygen,@shopify/remix-oxygen'
+          custom_message_suffix: "\n> Create a new project with all the released packages running `npm create @shopify/hydrogen@<snapshot_version>`\n>To try a new CLI plugin version, add `@shopify/cli-hydrogen` as a dependency to your project using the snapshot version."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
