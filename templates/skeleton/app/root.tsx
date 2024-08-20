@@ -69,10 +69,13 @@ export async function loader(args: LoaderFunctionArgs) {
     shop: getShopAnalytics({
       storefront,
       publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
+      country: 'CA',
+      language: 'FR',
     }),
     consent: {
       checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+      withPrivacyBanner: true
     },
   });
 }
@@ -130,6 +133,7 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
 export function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
   const data = useRouteLoaderData<RootLoader>('root');
+  console.log(data)
 
   return (
     <html lang="en">
@@ -145,6 +149,7 @@ export function Layout({children}: {children?: React.ReactNode}) {
             cart={data.cart}
             shop={data.shop}
             consent={data.consent}
+
           >
             <PageLayout {...data}>{children}</PageLayout>
           </Analytics.Provider>
