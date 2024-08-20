@@ -18,7 +18,7 @@ jobs:
 
       - name: Force snapshot changeset
         run: |
-          echo "---\\n\'@shopify/create-hydrogen\': patch\\n---" > .changeset/force-snapshot-build.md
+          printf "---\n'@shopify/create-hydrogen': patch\n---\n\nForce snapshot build.\n" > .changeset/force-snapshot-build.md
 
       - name: Create snapshot version
         uses: Shopify/snapit@0c0d2dd62c9b0c94b7d03e1f54e72f18548e7752 # pin to a specific commit
