@@ -48,22 +48,15 @@ export function HeaderMenu({
   publicStoreDomain: HeaderProps['publicStoreDomain'];
 }) {
   const className = `header-menu-${viewport}`;
-  const prefetch = viewport === 'mobile' ? 'viewport' : 'intent';
-
-  function closeAside(event: React.MouseEvent<HTMLAnchorElement>) {
-    if (viewport === 'mobile') {
-      event.preventDefault();
-      window.location.href = event.currentTarget.href;
-    }
-  }
+  const {close} = useAside();
 
   return (
     <nav className={className} role="navigation">
       {viewport === 'mobile' && (
         <NavLink
           end
-          onClick={closeAside}
-          prefetch={prefetch}
+          onClick={close}
+          prefetch="intent"
           style={activeLinkStyle}
           to="/"
         >
@@ -85,8 +78,8 @@ export function HeaderMenu({
             className="header-menu-item"
             end
             key={item.id}
-            onClick={closeAside}
-            prefetch={prefetch}
+            onClick={close}
+            prefetch="intent"
             style={activeLinkStyle}
             to={url}
           >
