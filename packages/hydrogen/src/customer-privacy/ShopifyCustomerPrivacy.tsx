@@ -1,4 +1,5 @@
 import {useLoadScript} from '@shopify/hydrogen-react';
+import { CountryCode, LanguageCode } from '@shopify/hydrogen-react/storefront-api-types';
 import {useEffect, useRef} from 'react';
 
 export type ConsentStatus = boolean | undefined;
@@ -25,6 +26,8 @@ export type CustomerPrivacyConsentConfig = {
   checkoutRootDomain?: string;
   storefrontRootDomain?: string;
   storefrontAccessToken?: string;
+  country?: CountryCode;
+  language?: LanguageCode;
 };
 
 export type SetConsentHeadlessParams = VisitorConsent &
@@ -82,6 +85,10 @@ export type CustomerPrivacyApiProps = {
   storefrontAccessToken: string;
   /** Whether to load the Shopify privacy banner as configured in Shopify admin. Defaults to true. */
   withPrivacyBanner?: boolean;
+  /** Country code for the shop. */
+  country?: CountryCode;
+  /** Language code for the shop. */
+  language?: LanguageCode;
   /** Callback to be called when visitor consent is collected. */
   onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;
   /** Callback to be call when customer privacy api is ready. */
@@ -161,6 +168,8 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     const config: CustomerPrivacyConsentConfig = {
       checkoutRootDomain: checkoutDomain,
       storefrontAccessToken,
+      country: consentConfig.country,
+      language: consentConfig.language,
     };
 
     if (checkoutDomain) {
