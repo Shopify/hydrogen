@@ -1,0 +1,31 @@
+name: Snapit
+
+on:
+  issue_comment:
+    types:
+      - created
+
+jobs:
+  snapit:
+    name: Snapit
+    if: ${{ github.event.issue.pull_request && github.event.comment.body == '/snapit' }}
+    runs-on: ubuntu-latest
+    steps:
+      # WARNING: DO NOT RUN ANY CUSTOM LOCAL SCRIPT BEFORE RUNNING THE SNAPIT ACTION
+      # This action can be executed by 3rd party users and it should not be able to run arbitrary code from a PR.
+      - name: Checkout current branch
+        uses: actions/checkout@v4
+
+      - name: Force snapshot changeset
+        run: |
+          echo "---\\n\'@shopify/create-hydrogen\': patch\\n---" > .changeset/force-snapshot-build.md
+
+      - name: Create snapshot version
+        uses: Shopify/snapit@0c0d2dd62c9b0c94b7d03e1f54e72f18548e7752 # pin to a specific commit
+        with:
+          github_comment_included_packages: '@shopify/hydrogen,@shopify/cli-hydrogen,@shopify/hydrogen-codegen,@shopify/mini-oxygen,@shopify/remix-oxygen'
+          custom_message_suffix: "\n> Create a new project with all the released packages running `npm create @shopify/hydrogen@<snapshot_version>`\n>To try a new CLI plugin version, add `@shopify/cli-hydrogen` as a dependency to your project using the snapshot version."
+          build_script: 'npm run build'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
