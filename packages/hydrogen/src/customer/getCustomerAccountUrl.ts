@@ -17,7 +17,9 @@ export function createGetCustomerAccountUrl(
     ? `https://shopify.com/${shopId}`
     : deprecatedCustomerAccountUrl;
 
-  const customerAccountAuthUrl = `https://shopify.com/${shopId}/auth_test`;
+  const customerAccountAuthUrl = shopId
+    ? `https://shopify.com/${shopId}/auth_test`
+    : `${deprecatedCustomerAccountUrl}/auth_test`;
 
   return function getCustomerAccountUrl(urlType: URL_TYPE): string {
     switch (urlType) {
