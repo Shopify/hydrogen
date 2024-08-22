@@ -1,5 +1,8 @@
 import {useLoadScript} from '@shopify/hydrogen-react';
-import { CountryCode, LanguageCode } from '@shopify/hydrogen-react/storefront-api-types';
+import {
+  CountryCode,
+  LanguageCode,
+} from '@shopify/hydrogen-react/storefront-api-types';
 import {useEffect, useRef} from 'react';
 
 export type ConsentStatus = boolean | undefined;
@@ -197,19 +200,29 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
       privacyBannerOverritten.current = true;
       overridePrivacyBannerShowPreferences({config, privacyBanner});
 
-      const loadBanner = overridePrivacyBannerLoadBanner({config, privacyBanner});
+      const loadBanner = overridePrivacyBannerLoadBanner({
+        config,
+        privacyBanner,
+      });
       if (withPrivacyBanner && loadBanner) {
-         // auto load the banner if applicable
-         loadBanner();
+        // auto load the banner if applicable
+        loadBanner();
       }
     }
 
-    if (!customerPrivacy) return
+    if (!customerPrivacy) return;
 
     onReady && onReady();
-  }, [scriptStatus, withPrivacyBanner, consentConfig, customerPrivacy, privacyBanner, onReady]);
+  }, [
+    scriptStatus,
+    withPrivacyBanner,
+    consentConfig,
+    customerPrivacy,
+    privacyBanner,
+    onReady,
+  ]);
 
-  return
+  return;
 }
 
 /**
@@ -237,14 +250,13 @@ function parseStoreDomain(checkoutDomain: string) {
   return storefrontRootDomain;
 }
 
-
 /**
  * Overrides the customerPrivacy.setTrackingConsent method to include the headless storefront configuration.
  */
 function overrideCustomerPrivacysetTrackingConsent({
   customerPrivacy,
   config,
-}:{
+}: {
   customerPrivacy: CustomerPrivacy;
   config: CustomerPrivacyConsentConfig;
 }) {
@@ -292,7 +304,9 @@ function overridePrivacyBannerLoadBanner({
 
   const original = privacyBanner.loadBanner;
 
-  function updatedLoadBanner(userConfig?: Partial<CustomerPrivacyConsentConfig>) {
+  function updatedLoadBanner(
+    userConfig?: Partial<CustomerPrivacyConsentConfig>,
+  ) {
     if (typeof userConfig === 'object') {
       const mergedConfig = {...config, ...userConfig};
       original(mergedConfig);
@@ -321,7 +335,9 @@ function overridePrivacyBannerShowPreferences({
 
   const original = privacyBanner.showPreferences;
 
-  function updatedShowPreferences(userConfig?: Partial<CustomerPrivacyConsentConfig>) {
+  function updatedShowPreferences(
+    userConfig?: Partial<CustomerPrivacyConsentConfig>,
+  ) {
     if (typeof userConfig === 'object') {
       const mergedConfig = {...config, ...userConfig};
       original(mergedConfig);
@@ -406,7 +422,7 @@ function overridePrivacyBannerShowPreferences({
 export function getCustomerPrivacy() {
   try {
     return window.Shopify && window.Shopify.customerPrivacy
-      ? window.Shopify?.customerPrivacy as CustomerPrivacy
+      ? (window.Shopify?.customerPrivacy as CustomerPrivacy)
       : null;
   } catch (e) {
     return null;
@@ -423,16 +439,16 @@ export function getCustomerPrivacy() {
  *  if (privacyBanner) {
  *   // show the banner
  *   privacyBanner.loadBanner()
-*
-*    // show the preferences
-*    privacyBanner.showPreferences()
-*   }
+ *
+ *    // show the preferences
+ *    privacyBanner.showPreferences()
+ *   }
  * ```
  */
 export function getPrivacyBanner() {
   try {
     return window && window?.privacyBanner
-      ? window.privacyBanner as PrivacyBanner
+      ? (window.privacyBanner as PrivacyBanner)
       : null;
   } catch (e) {
     return null;

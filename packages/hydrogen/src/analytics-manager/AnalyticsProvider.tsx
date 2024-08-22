@@ -37,7 +37,13 @@ import type {
 import {AnalyticsEvent} from './events';
 import {ShopifyAnalytics} from './ShopifyAnalytics';
 import {CartAnalytics} from './CartAnalytics';
-import {type PrivacyBanner, getCustomerPrivacy, getPrivacyBanner, type CustomerPrivacy, type CustomerPrivacyApiProps} from '../customer-privacy/ShopifyCustomerPrivacy';
+import {
+  type PrivacyBanner,
+  getCustomerPrivacy,
+  getPrivacyBanner,
+  type CustomerPrivacy,
+  type CustomerPrivacyApiProps,
+} from '../customer-privacy/ShopifyCustomerPrivacy';
 import type {Storefront} from '../storefront';
 import {PerfKit} from './PerfKit';
 import {errorOnce, warnOnce} from '../utils/warning';
@@ -53,13 +59,12 @@ export type ShopAnalytics = {
   hydrogenSubchannelId: string | '0';
 };
 
-export type Consent = Partial<Pick<CustomerPrivacyApiProps,
-  | 'checkoutDomain'
-  | 'storefrontAccessToken'
-  | 'withPrivacyBanner'
-  | 'country'
+export type Consent = Partial<
+  Pick<
+    CustomerPrivacyApiProps,
+    'checkoutDomain' | 'storefrontAccessToken' | 'withPrivacyBanner' | 'country'
   >
-> & { language?: LanguageCode }; // the privacyBanner SDKs refers to "language" as "locale" :(
+> & {language?: LanguageCode}; // the privacyBanner SDKs refers to "language" as "locale" :(
 
 export type AnalyticsProviderProps = {
   /** React children to render. */
@@ -105,7 +110,7 @@ export type AnalyticsContextValue = {
   /** The privacy banner SDK methods with the config applied */
   privacyBanner: PrivacyBanner | null;
   /** The customer privacy SDK methods with the config applied */
-  customerPrivacy: CustomerPrivacy | null
+  customerPrivacy: CustomerPrivacy | null;
 };
 
 export const defaultAnalyticsContext: AnalyticsContextValue = {
@@ -118,7 +123,7 @@ export const defaultAnalyticsContext: AnalyticsContextValue = {
   subscribe: () => {},
   register: () => ({ready: () => {}}),
   privacyBanner: null,
-  customerPrivacy: null
+  customerPrivacy: null,
 };
 
 const AnalyticsContext = createContext<AnalyticsContextValue>(
@@ -302,7 +307,7 @@ function AnalyticsProvider({
   );
   const privacyBanner = getPrivacyBanner();
   const customerPrivacy = getCustomerPrivacy();
-  const forceUpdate = useReducer(() => ({}), {})[1] as () => void
+  const forceUpdate = useReducer(() => ({}), {})[1] as () => void;
 
   if (!!shop) {
     // If mock shop is used, log error instead of throwing
@@ -347,7 +352,7 @@ function AnalyticsProvider({
       subscribe,
       register,
       customerPrivacy,
-      privacyBanner
+      privacyBanner,
     };
   }, [
     consentLoaded,
