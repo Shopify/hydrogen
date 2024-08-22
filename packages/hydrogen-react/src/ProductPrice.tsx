@@ -63,7 +63,9 @@ export function ProductPrice<
   } else {
     if (variantId && variant) {
       if (variant.priceV2) {
-        console.error('[ProductPrice] `priceV2` is deprecated. Use `price` instead.');
+        console.error(
+          '<ProductPrice> `priceV2` is deprecated. Use `price` instead.',
+        );
       }
 
       price = variant.price ?? variant.priceV2;
