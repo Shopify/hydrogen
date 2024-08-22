@@ -49,9 +49,45 @@ export function HeaderMenu({
 }) {
   const className = `header-menu-${viewport}`;
   const {close} = useAside();
+  const {privacyBanner, customerPrivacy} = useAnalytics();
+  console.log({privacyBanner, customerPrivacy});
 
   return (
     <nav className={className} role="navigation">
+      <button
+        onClick={() => {
+          if (!privacyBanner) return;
+          privacyBanner.loadBanner();
+        }}
+      >
+        Banner
+      </button>
+      <button
+        onClick={() => {
+          console.log('showing preferences');
+          if (!privacyBanner) return;
+          console.log('showing preferences');
+          privacyBanner.showPreferences();
+        }}
+      >
+        Preferences
+      </button>
+      <button
+        onClick={() => {
+          if (!privacyBanner) return;
+          privacyBanner.loadBanner({locale: 'FR', country: 'CA'});
+        }}
+      >
+        Banner (FR)
+      </button>
+      <button
+        onClick={() => {
+          if (!privacyBanner) return;
+          privacyBanner.showPreferences({locale: 'ES', country: 'ES'});
+        }}
+      >
+        Preferences (ES)
+      </button>
       {viewport === 'mobile' && (
         <NavLink
           end

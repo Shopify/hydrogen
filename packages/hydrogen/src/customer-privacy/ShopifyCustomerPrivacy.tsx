@@ -23,11 +23,12 @@ export type VisitorConsentCollected = {
 export type CustomerPrivacyApiLoaded = boolean;
 
 export type CustomerPrivacyConsentConfig = {
-  checkoutRootDomain?: string;
+  checkoutRootDomain: string;
   storefrontRootDomain?: string;
-  storefrontAccessToken?: string;
+  storefrontAccessToken: string;
   country?: CountryCode;
-  language?: LanguageCode;
+  /** The privacyBanner refers to `language` as `locale`  */
+  locale?: LanguageCode;
 };
 
 export type SetConsentHeadlessParams = VisitorConsent &
@@ -65,12 +66,16 @@ export type CustomerPrivacy = {
   analyticsProcessingAllowed: () => boolean;
   setTrackingConsent: (
     consent: SetConsentHeadlessParams,
-    callback: () => void,
+    callback: (data: {error: string} | undefined) => void,
   ) => void;
 };
 
+// NOTE: options is optional because we override these method(s) with  pre-applied options
 export type PrivacyBanner = {
-  loadBanner: (options: CustomerPrivacyConsentConfig) => void;
+  /* Display the privacy banner */
+  loadBanner: (options?: Partial<CustomerPrivacyConsentConfig>) => void;
+  /* Display the consent preferences banner */
+  showPreferences: (options?: Partial<CustomerPrivacyConsentConfig>) => void;
 };
 
 export interface CustomEventMap {
@@ -88,7 +93,7 @@ export type CustomerPrivacyApiProps = {
   /** Country code for the shop. */
   country?: CountryCode;
   /** Language code for the shop. */
-  language?: LanguageCode;
+  locale?: LanguageCode;
   /** Callback to be called when visitor consent is collected. */
   onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;
   /** Callback to be call when customer privacy api is ready. */
@@ -114,6 +119,8 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     onReady,
     ...consentConfig
   } = props;
+  const privacyBannerOverritten = useRef(false);
+  const customerPrivacyOverritten = useRef(false);
   const loadedEvent = useRef(false);
   const scriptStatus = useLoadScript(
     withPrivacyBanner ? CONSENT_API_WITH_BANNER : CONSENT_API,
@@ -124,6 +131,10 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     },
   );
 
+  const customerPrivacy = getCustomerPrivacy();
+  const privacyBanner = getPrivacyBanner();
+
+  // settings event listeners for visitorConsentCollected
   useEffect(() => {
     const consentCollectedHandler = (
       event: CustomEvent<VisitorConsentCollected>,
@@ -146,6 +157,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     };
   }, [onVisitorConsentCollected]);
 
+  // maybe auto load the banner and override the setTrackingConsent method
   useEffect(() => {
     if (scriptStatus !== 'done' || loadedEvent.current) return;
     loadedEvent.current = true;
@@ -165,68 +177,262 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
       );
     }
 
+    const storefrontRootDomain = parseStoreDomain(checkoutDomain);
+
     const config: CustomerPrivacyConsentConfig = {
       checkoutRootDomain: checkoutDomain,
       storefrontAccessToken,
+      storefrontRootDomain,
       country: consentConfig.country,
-      language: consentConfig.language,
+      locale: consentConfig.locale,
     };
 
-    if (checkoutDomain) {
-      let storefrontRootDomain = window.document.location.host;
-      const checkoutDomainParts = checkoutDomain.split('.').reverse();
-      const currentDomainParts = storefrontRootDomain.split('.').reverse();
-      const sameDomainParts: Array<string> = [];
-      checkoutDomainParts.forEach((part, index) => {
-        if (part === currentDomainParts[index]) {
-          sameDomainParts.push(part);
-        }
-      });
+    // if the store domain is not set, we will try to set it based on the checkout domain
+    if (customerPrivacy && !customerPrivacyOverritten.current) {
+      customerPrivacyOverritten.current = true;
+      overrideCustomerPrivacysetTrackingConsent({config, customerPrivacy});
+    }
 
-      storefrontRootDomain = sameDomainParts.reverse().join('.');
+    if (privacyBanner && !privacyBannerOverritten.current) {
+      privacyBannerOverritten.current = true;
+      overridePrivacyBannerShowPreferences({config, privacyBanner});
 
-      if (storefrontRootDomain) {
-        config.storefrontRootDomain = storefrontRootDomain;
+      const loadBanner = overridePrivacyBannerLoadBanner({config, privacyBanner});
+      if (withPrivacyBanner && loadBanner) {
+         // auto load the banner if applicable
+         loadBanner();
       }
     }
 
-    if (withPrivacyBanner && window?.privacyBanner) {
-      window.privacyBanner?.loadBanner(config);
-    }
-
-    if (!window.Shopify?.customerPrivacy) return;
-
-    // Override the setTrackingConsent method to include the headless storefront configuration
-    const originalSetTrackingConsent =
-      window.Shopify.customerPrivacy.setTrackingConsent;
-
-    function overrideSetTrackingConsent(
-      consent: VisitorConsent,
-      callback: (data: {error: string} | undefined) => void,
-    ) {
-      originalSetTrackingConsent(
-        {
-          ...consent,
-          headlessStorefront: true,
-          ...config,
-        },
-        callback,
-      );
-    }
-
-    window.Shopify.customerPrivacy.setTrackingConsent =
-      overrideSetTrackingConsent;
+    if (!customerPrivacy) return
 
     onReady && onReady();
-  }, [scriptStatus, withPrivacyBanner, consentConfig]);
+  }, [scriptStatus, withPrivacyBanner, consentConfig, customerPrivacy, privacyBanner, onReady]);
 
-  return;
+  return
 }
 
-export function getCustomerPrivacy(): CustomerPrivacy | null {
+/**
+ * Extracts the root domain from the checkout domain otherwise returns the checkout domain.
+ */
+function parseStoreDomain(checkoutDomain: string) {
+  if (typeof window === 'undefined') return;
+
+  const host = window.document.location.host;
+  const checkoutDomainParts = checkoutDomain.split('.').reverse();
+  const currentDomainParts = host.split('.').reverse();
+  const sameDomainParts: Array<string> = [];
+  checkoutDomainParts.forEach((part, index) => {
+    if (part === currentDomainParts[index]) {
+      sameDomainParts.push(part);
+    }
+  });
+
+  const storefrontRootDomain = sameDomainParts.reverse().join('.');
+
+  if (!storefrontRootDomain) {
+    return checkoutDomain;
+  }
+
+  return storefrontRootDomain;
+}
+
+
+/**
+ * Overrides the customerPrivacy.setTrackingConsent method to include the headless storefront configuration.
+ */
+function overrideCustomerPrivacysetTrackingConsent({
+  customerPrivacy,
+  config,
+}:{
+  customerPrivacy: CustomerPrivacy;
+  config: CustomerPrivacyConsentConfig;
+}) {
+  if (!customerPrivacy || !config) {
+    return;
+  }
+
+  // Override the setTrackingConsent method to include the headless storefront configuration
+  const original = customerPrivacy.setTrackingConsent;
+
+  function updatedSetTrackingConsent(
+    consent: VisitorConsent,
+    callback: (data: {error: string} | undefined) => void,
+  ) {
+    original(
+      {
+        ...consent,
+        headlessStorefront: true,
+        ...config,
+      },
+      callback,
+    );
+  }
+
+  // preset our config so that 3rd parties don't need to pass it in. They will need
+  // to only pass in the consent choices {marketing, analytics, preferences, sale_of_data}
+  window.Shopify.customerPrivacy.setTrackingConsent = updatedSetTrackingConsent;
+
+  return updatedSetTrackingConsent;
+}
+
+/**
+ * Overrides the privacyBanner.loadBanner method to include the headless storefront configuration.
+ */
+function overridePrivacyBannerLoadBanner({
+  privacyBanner,
+  config,
+}: {
+  privacyBanner: PrivacyBanner;
+  config: CustomerPrivacyConsentConfig;
+}) {
+  if (!privacyBanner?.loadBanner || !config) {
+    return;
+  }
+
+  const original = privacyBanner.loadBanner;
+
+  function updatedLoadBanner(userConfig?: Partial<CustomerPrivacyConsentConfig>) {
+    if (typeof userConfig === 'object') {
+      const mergedConfig = {...config, ...userConfig};
+      original(mergedConfig);
+      return;
+    }
+    original(config);
+  }
+
+  window.privacyBanner.loadBanner = updatedLoadBanner;
+  return updatedLoadBanner;
+}
+
+/*
+ * Overrides the privacyBanner.showPreferences method to include the headless storefront configuration.
+ */
+function overridePrivacyBannerShowPreferences({
+  privacyBanner,
+  config,
+}: {
+  privacyBanner: PrivacyBanner;
+  config: CustomerPrivacyConsentConfig;
+}) {
+  if (!privacyBanner?.showPreferences || !config) {
+    return;
+  }
+
+  const original = privacyBanner.showPreferences;
+
+  function updatedShowPreferences(userConfig?: Partial<CustomerPrivacyConsentConfig>) {
+    if (typeof userConfig === 'object') {
+      const mergedConfig = {...config, ...userConfig};
+      original(mergedConfig);
+      return;
+    }
+    original(config);
+  }
+
+  window.privacyBanner.showPreferences = updatedShowPreferences;
+  return updatedShowPreferences;
+}
+
+/*
+ * Returns Shopify's customerPrivacy methods if loaded in the `window` object.
+ * @returns CustomerPrivacy | null
+ * @example
+ * ```ts
+ * const customerPrivacy = getCustomerPrivacy()
+ *
+ * if (customerPrivacy) {
+ *  // get the current visitor consent
+ *  const visitorConsent = customerPrivacy.currentVisitorConsent()
+ *
+ *  // set the tracking consent
+ *  customerPrivacy.setTrackingConsent({marketing: true...}, () => {
+ *    // do something after the consent is set
+ *  })
+ *
+ *  // check if marketing is allowed
+ *  const marketingAllowed = customerPrivacy.marketingAllowed()
+ *  console.log(marketingAllowed)
+ *
+ *  // check if analytics is allowed
+ *  const analyticsAllowed = customerPrivacy.analyticsProcessingAllowed()
+ *  console.log(analyticsAllowed)
+ *
+ *  // check if preferences are allowed
+ *  const preferencesAllowed = customerPrivacy.preferencesProcessingAllowed()
+ *  console.log(preferencesAllowed)
+ *
+ *  // check if sale of data is allowed
+ *  const saleOfDataAllowed = customerPrivacy.saleOfDataAllowed()
+ *
+ *  // check if third party marketing is allowed
+ *  const thirdPartyMarketingAllowed = customerPrivacy.thirdPartyMarketingAllowed()
+ *
+ *  // check if first party marketing is allowed
+ *  const firstPartyMarketingAllowed = customerPrivacy.firstPartyMarketingAllowed()
+ *
+ *  // check if the banner should be shown
+ *  const shouldShowBanner = customerPrivacy.shouldShowBanner()
+ *
+ *  // check if the GDPR banner should be shown
+ *  const shouldShowGDPRBanner = customerPrivacy.shouldShowGDPRBanner()
+ *
+ *  // check if the CCPA banner should be shown
+ *  const shouldShowCCPABanner = customerPrivacy.shouldShowCCPABanner()
+ *
+ *  // check if the regulation is enforced
+ *  const isRegulationEnforced = customerPrivacy.isRegulationEnforced()
+ *
+ *  // get the regulation
+ *  const regulation = customerPrivacy.getRegulation()
+ *
+ *  // get the sale of data region
+ *  const saleOfDataRegion = customerPrivacy.saleOfDataRegion()
+ *
+ *  // get the shop preferences
+ *  const shopPrefs = customerPrivacy.getShopPrefs()
+ *
+ *  // get the tracking consent
+ *  const trackingConsent = customerPrivacy.getTrackingConsent()
+ *
+ *  // get the CCPA consent
+ *  const ccpaConsent = customerPrivacy.getCCPAConsent()
+ *
+ *  // check if the merchant supports granular consent
+ *  const doesMerchantSupportGranularConsent = customerPrivacy.doesMerchantSupportGranularConsent()
+ * }
+ * ```
+ */
+export function getCustomerPrivacy() {
   try {
     return window.Shopify && window.Shopify.customerPrivacy
-      ? window.Shopify?.customerPrivacy
+      ? window.Shopify?.customerPrivacy as CustomerPrivacy
+      : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Returns Shopify's privacyBanner methods if loaded in the `window` object.
+ * @returns PrivacyBanner | null
+ * @example
+ * ```ts
+ *  const privacyBanner = getPrivacyBanner()
+ *
+ *  if (privacyBanner) {
+ *   // show the banner
+ *   privacyBanner.loadBanner()
+*
+*    // show the preferences
+*    privacyBanner.showPreferences()
+*   }
+ * ```
+ */
+export function getPrivacyBanner() {
+  try {
+    return window && window?.privacyBanner
+      ? window.privacyBanner as PrivacyBanner
       : null;
   } catch (e) {
     return null;

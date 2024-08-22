@@ -117,6 +117,7 @@ export {
   type CustomerPrivacyApiProps,
   useCustomerPrivacy,
   getCustomerPrivacy,
+  getPrivacyBanner,
 } from './customer-privacy/ShopifyCustomerPrivacy';
 
 export {

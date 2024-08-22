@@ -27,8 +27,6 @@ import {useEffect, useRef, useState} from 'react';
 import {
   CartLine,
   ComponentizableCartLine,
-  CountryCode,
-  LanguageCode,
   Maybe,
 } from '@shopify/hydrogen-react/storefront-api-types';
 
@@ -57,14 +55,10 @@ export function ShopifyAnalytics({
   consent,
   onReady,
   domain,
-  country,
-  language,
 }: {
   consent: AnalyticsProviderProps['consent'];
   onReady: () => void;
   domain?: string;
-  country?: CountryCode;
-  language?: LanguageCode;
 }) {
   const {subscribe, register, canTrack} = useAnalytics();
   const [shopifyReady, setShopifyReady] = useState(false);
@@ -84,16 +78,15 @@ export function ShopifyAnalytics({
     analyticsReady();
   };
 
-  const {checkoutDomain, storefrontAccessToken, withPrivacyBanner} = consent;
+  const {checkoutDomain, storefrontAccessToken, language} = consent;
 
   useCustomerPrivacy({
+    ...consent,
+    locale: language,
     checkoutDomain: !checkoutDomain ? 'mock.shop' : checkoutDomain,
     storefrontAccessToken: !storefrontAccessToken
       ? 'abcdefghijklmnopqrstuvwxyz123456'
       : storefrontAccessToken,
-    withPrivacyBanner,
-    country,
-    language,
     onVisitorConsentCollected: setCustomerPrivacyReady,
     onReady: () => {
       // Set customer privacy ready 3 seconds after load

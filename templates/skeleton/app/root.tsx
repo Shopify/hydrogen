@@ -69,13 +69,13 @@ export async function loader(args: LoaderFunctionArgs) {
     shop: getShopAnalytics({
       storefront,
       publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
-      country: 'CA',
-      language: 'FR',
     }),
     consent: {
       checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-      withPrivacyBanner: true
+      // localize the privacy banner
+      country: args.context.storefront.i18n.country, // or Oxygen buyer geo country
+      language: args.context.storefront.i18n.language, // or 0xygen byuer geo language
     },
   });
 }
@@ -97,9 +97,7 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
     // Add other queries here, so that they are loaded in parallel
   ]);
 
-  return {
-    header,
-  };
+  return {header};
 }
 
 /**
@@ -133,7 +131,6 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
 export function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
   const data = useRouteLoaderData<RootLoader>('root');
-  console.log(data)
 
   return (
     <html lang="en">
@@ -149,7 +146,6 @@ export function Layout({children}: {children?: React.ReactNode}) {
             cart={data.cart}
             shop={data.shop}
             consent={data.consent}
-
           >
             <PageLayout {...data}>{children}</PageLayout>
           </Analytics.Provider>
