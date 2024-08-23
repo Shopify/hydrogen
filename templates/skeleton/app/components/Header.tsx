@@ -49,8 +49,7 @@ export function HeaderMenu({
 }) {
   const className = `header-menu-${viewport}`;
   const {close} = useAside();
-  const {privacyBanner, customerPrivacy} = useAnalytics();
-  console.log({privacyBanner, customerPrivacy});
+  const {privacyBanner} = useAnalytics();
 
   return (
     <nav className={className} role="navigation">
@@ -60,17 +59,15 @@ export function HeaderMenu({
           privacyBanner.loadBanner();
         }}
       >
-        Banner
+        Banner (EN)
       </button>
       <button
         onClick={() => {
-          console.log('showing preferences');
           if (!privacyBanner) return;
-          console.log('showing preferences');
           privacyBanner.showPreferences();
         }}
       >
-        Preferences
+        Preferences (EN)
       </button>
       <button
         onClick={() => {

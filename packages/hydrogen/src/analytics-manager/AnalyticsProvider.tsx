@@ -6,8 +6,6 @@ import {
   createContext,
   useContext,
   useRef,
-  useReducer,
-  useCallback,
 } from 'react';
 import {type CartReturn} from '../cart/queries/cart-types';
 import {
@@ -122,8 +120,8 @@ export const defaultAnalyticsContext: AnalyticsContextValue = {
   shop: null,
   subscribe: () => {},
   register: () => ({ready: () => {}}),
-  privacyBanner: null,
   customerPrivacy: null,
+  privacyBanner: null,
 };
 
 const AnalyticsContext = createContext<AnalyticsContextValue>(
@@ -298,16 +296,13 @@ function AnalyticsProvider({
 }: AnalyticsProviderProps): JSX.Element {
   const listenerSet = useRef(false);
   const {shop} = useShopAnalytics(shopProp);
-  const [consentLoaded, setConsentLoaded] = useState(
+  const [analyticsLoaded, setAnalyticsLoaded] = useState(
     customCanTrack ? true : false,
   );
   const [carts, setCarts] = useState<Carts>({cart: null, prevCart: null});
   const [canTrack, setCanTrack] = useState<() => boolean>(
     customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
   );
-  const privacyBanner = getPrivacyBanner();
-  const customerPrivacy = getCustomerPrivacy();
-  const forceUpdate = useReducer(() => ({}), {})[1] as () => void;
 
   if (!!shop) {
     // If mock shop is used, log error instead of throwing
@@ -339,6 +334,10 @@ function AnalyticsProvider({
       if (!consent?.language) {
         consent.language = 'EN';
       }
+
+      if (consent.withPrivacyBanner === undefined) {
+        consent.withPrivacyBanner = true;
+      }
     }
   }
 
@@ -351,14 +350,12 @@ function AnalyticsProvider({
       shop,
       subscribe,
       register,
-      customerPrivacy,
-      privacyBanner,
+      customerPrivacy: getCustomerPrivacy(),
+      privacyBanner: getPrivacyBanner()
     };
   }, [
-    consentLoaded,
-    canTrack(),
+    analyticsLoaded,
     canTrack,
-    JSON.stringify(canTrack),
     carts,
     carts.cart?.updatedAt,
     carts.prevCart,
@@ -368,8 +365,8 @@ function AnalyticsProvider({
     shop,
     register,
     JSON.stringify(registers),
-    customerPrivacy,
-    privacyBanner,
+    getCustomerPrivacy,
+    getPrivacyBanner,
   ]);
 
   return (
@@ -384,7 +381,7 @@ function AnalyticsProvider({
           consent={consent}
           onReady={() => {
             listenerSet.current = true;
-            setConsentLoaded(true);
+            setAnalyticsLoaded(true);
             setCanTrack(() => shopifyCanTrack);
           }}
           domain={cookieDomain}

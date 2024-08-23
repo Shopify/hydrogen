@@ -64,22 +64,12 @@ export function ShopifyAnalytics({
   const [shopifyReady, setShopifyReady] = useState(false);
   const [privacyReady, setPrivacyReady] = useState(false);
   const init = useRef(false);
-  const {ready: shopifyAnalyticsReady} = register('Internal_Shopify_Analytics');
-  const {ready: customerPrivacyReady} = register(
-    'Internal_Shopify_CustomerPrivacy',
-  );
-  const analyticsReady = () => {
-    shopifyReady && privacyReady && onReady();
-  };
-
-  const setCustomerPrivacyReady = () => {
-    setPrivacyReady(true);
-    customerPrivacyReady();
-    analyticsReady();
-  };
-
   const {checkoutDomain, storefrontAccessToken, language} = consent;
+  const {ready: shopifyAnalyticsReady} = register(
+    'Internal_Shopify_Analytics',
+  );
 
+  // load customer privacy and (optionally) the privacy banner APIs
   useCustomerPrivacy({
     ...consent,
     locale: language,
@@ -87,18 +77,14 @@ export function ShopifyAnalytics({
     storefrontAccessToken: !storefrontAccessToken
       ? 'abcdefghijklmnopqrstuvwxyz123456'
       : storefrontAccessToken,
-    onVisitorConsentCollected: setCustomerPrivacyReady,
-    onReady: () => {
-      // Set customer privacy ready 3 seconds after load
-      setTimeout(setCustomerPrivacyReady, 3000);
-    },
+    onVisitorConsentCollected: () => setPrivacyReady(true),
+    onReady: () => setPrivacyReady(true)
   });
 
-  useShopifyCookies({
-    hasUserConsent: shopifyReady && privacyReady ? canTrack() : true,
-    domain,
-    checkoutDomain,
-  });
+  const hasUserConsent = privacyReady ? canTrack() : false;
+
+  // set up shopify_Y and shopify_S cookies
+  useShopifyCookies({ hasUserConsent, domain, checkoutDomain });
 
   useEffect(() => {
     if (init.current) return;
@@ -113,10 +99,15 @@ export function ShopifyAnalytics({
     // Cart
     subscribe(AnalyticsEvent.PRODUCT_ADD_TO_CART, productAddedToCartHandler);
 
-    shopifyAnalyticsReady();
     setShopifyReady(true);
-    analyticsReady();
-  }, [subscribe, shopifyAnalyticsReady]);
+  }, [subscribe]);
+
+  useEffect(() => {
+    if (shopifyReady && privacyReady) {
+      shopifyAnalyticsReady();
+      onReady();
+    }
+  }, [shopifyReady, privacyReady, onReady]);
 
   return null;
 }

@@ -73,9 +73,10 @@ export async function loader(args: LoaderFunctionArgs) {
     consent: {
       checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+      withPrivacyBanner: false,
       // localize the privacy banner
-      country: args.context.storefront.i18n.country, // or Oxygen buyer geo country
-      language: args.context.storefront.i18n.language, // or 0xygen byuer geo language
+      country: args.context.storefront.i18n.country,
+      language: args.context.storefront.i18n.language,
     },
   });
 }
