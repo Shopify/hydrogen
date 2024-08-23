@@ -351,7 +351,7 @@ function AnalyticsProvider({
       subscribe,
       register,
       customerPrivacy: getCustomerPrivacy(),
-      privacyBanner: getPrivacyBanner()
+      privacyBanner: getPrivacyBanner(),
     };
   }, [
     analyticsLoaded,

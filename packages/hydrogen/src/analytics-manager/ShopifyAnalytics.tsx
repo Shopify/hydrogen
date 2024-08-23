@@ -65,9 +65,7 @@ export function ShopifyAnalytics({
   const [privacyReady, setPrivacyReady] = useState(false);
   const init = useRef(false);
   const {checkoutDomain, storefrontAccessToken, language} = consent;
-  const {ready: shopifyAnalyticsReady} = register(
-    'Internal_Shopify_Analytics',
-  );
+  const {ready: shopifyAnalyticsReady} = register('Internal_Shopify_Analytics');
 
   // load customer privacy and (optionally) the privacy banner APIs
   useCustomerPrivacy({
@@ -78,13 +76,13 @@ export function ShopifyAnalytics({
       ? 'abcdefghijklmnopqrstuvwxyz123456'
       : storefrontAccessToken,
     onVisitorConsentCollected: () => setPrivacyReady(true),
-    onReady: () => setPrivacyReady(true)
+    onReady: () => setPrivacyReady(true),
   });
 
   const hasUserConsent = privacyReady ? canTrack() : false;
 
   // set up shopify_Y and shopify_S cookies
-  useShopifyCookies({ hasUserConsent, domain, checkoutDomain });
+  useShopifyCookies({hasUserConsent, domain, checkoutDomain});
 
   useEffect(() => {
     if (init.current) return;

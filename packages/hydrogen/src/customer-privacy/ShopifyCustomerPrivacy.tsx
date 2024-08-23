@@ -126,16 +126,16 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   // Load the Shopify customer privacy API with or without the privacy banner
   // NOTE: We no longer use the status because we need `ready` to be not when the script is loaded
   // but instead when both `privacyBanner` (optional) and customerPrivacy are loaded in the window
-  useLoadScript(
-    withPrivacyBanner ? CONSENT_API_WITH_BANNER : CONSENT_API,
-    {
-      attributes: {
-        id: 'customer-privacy-api',
-      },
+  useLoadScript(withPrivacyBanner ? CONSENT_API_WITH_BANNER : CONSENT_API, {
+    attributes: {
+      id: 'customer-privacy-api',
     },
-  );
+  });
 
-  const {observing, setLoaded} = useApisLoaded({withPrivacyBanner, onLoaded: onReady})
+  const {observing, setLoaded} = useApisLoaded({
+    withPrivacyBanner,
+    onLoaded: onReady,
+  });
 
   const config = useMemo(() => {
     const {checkoutDomain, storefrontAccessToken} = consentConfig;
@@ -192,122 +192,162 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   // pre-applied versions
   useEffect(() => {
     if (!withPrivacyBanner || observing.current.privacyBanner) return;
-    observing.current.privacyBanner = true
+    observing.current.privacyBanner = true;
 
-    let customPrivacyBanner: PrivacyBanner | undefined = undefined
+    let customPrivacyBanner: PrivacyBanner | undefined = undefined;
 
     const privacyBannerWatcher = {
       configurable: true,
       get() {
-        return customPrivacyBanner
+        return customPrivacyBanner;
       },
       set(value: unknown) {
-        if (typeof value === 'object' && value !== null && 'showPreferences' in value && 'loadBanner' in value) {
-          const privacyBanner = value as PrivacyBanner
+        if (
+          typeof value === 'object' &&
+          value !== null &&
+          'showPreferences' in value &&
+          'loadBanner' in value
+        ) {
+          const privacyBanner = value as PrivacyBanner;
 
           // auto load the banner if applicable
-          privacyBanner.loadBanner(config)
+          privacyBanner.loadBanner(config);
 
           // overwrite the privacyBanner methods
-          customPrivacyBanner = overridePrivacyBannerMethods({privacyBanner, config})
+          customPrivacyBanner = overridePrivacyBannerMethods({
+            privacyBanner,
+            config,
+          });
 
           // set the loaded state for the privacyBanner
-          setLoaded.privacyBanner()
+          setLoaded.privacyBanner();
         }
-      }
-    }
+      },
+    };
 
-    Object.defineProperty(window, 'privacyBanner', privacyBannerWatcher)
-  }, [withPrivacyBanner, config, overridePrivacyBannerMethods, setLoaded.privacyBanner]);
-
+    Object.defineProperty(window, 'privacyBanner', privacyBannerWatcher);
+  }, [
+    withPrivacyBanner,
+    config,
+    overridePrivacyBannerMethods,
+    setLoaded.privacyBanner,
+  ]);
 
   // monitor when the Shopify.customerPrivacy is added to the window and override the
   // setTracking consent method with the config pre-applied
   useEffect(() => {
     if (observing.current.customerPrivacy) return;
-    observing.current.customerPrivacy = true
+    observing.current.customerPrivacy = true;
 
-    let customCustomerPrivacy: CustomerPrivacy | null = null
-    let customShopify: {customerPrivacy: CustomerPrivacy} | undefined | object = undefined
+    let customCustomerPrivacy: CustomerPrivacy | null = null;
+    let customShopify: {customerPrivacy: CustomerPrivacy} | undefined | object =
+      undefined;
 
     // monitor for when window.Shopify = {} is first set
     Object.defineProperty(window, 'Shopify', {
       configurable: true,
       get() {
-        return customShopify
+        return customShopify;
       },
       set(value: unknown) {
         // monitor for when window.Shopify = {} is first set
-        if (typeof value === 'object' && value !== null && Object.keys(value).length === 0) {
-          customShopify = value as object
+        if (
+          typeof value === 'object' &&
+          value !== null &&
+          Object.keys(value).length === 0
+        ) {
+          customShopify = value as object;
 
           // monitor for when window.Shopify.customerPrivacy is set
           Object.defineProperty(window.Shopify, 'customerPrivacy', {
             configurable: true,
             get() {
-              return customCustomerPrivacy
+              return customCustomerPrivacy;
             },
             set(value: unknown) {
-              if (typeof value === 'object' && value !== null && 'setTrackingConsent' in value) {
-                const customerPrivacy = value as CustomerPrivacy
+              if (
+                typeof value === 'object' &&
+                value !== null &&
+                'setTrackingConsent' in value
+              ) {
+                const customerPrivacy = value as CustomerPrivacy;
 
                 // overwrite the tracking consent method
-                customCustomerPrivacy =  {
+                customCustomerPrivacy = {
                   ...customerPrivacy,
-                  setTrackingConsent: overrideCustomerPrivacySetTrackingConsent({customerPrivacy, config})
-                }
+                  setTrackingConsent: overrideCustomerPrivacySetTrackingConsent(
+                    {customerPrivacy, config},
+                  ),
+                };
 
-                customShopify = {...customShopify, customerPrivacy: customCustomerPrivacy}
+                customShopify = {
+                  ...customShopify,
+                  customerPrivacy: customCustomerPrivacy,
+                };
 
-                setLoaded.customerPrivacy()
+                setLoaded.customerPrivacy();
               }
-            }
-          })
+            },
+          });
         }
-      }
-    })
-
-  }, [config, overrideCustomerPrivacySetTrackingConsent, setLoaded.customerPrivacy]);
+      },
+    });
+  }, [
+    config,
+    overrideCustomerPrivacySetTrackingConsent,
+    setLoaded.customerPrivacy,
+  ]);
 
   // return the customerPrivacy and privacyBanner (optional) modified APIs
   const result = {
     customerPrivacy: getCustomerPrivacy(),
-  } as {customerPrivacy: CustomerPrivacy | null, privacyBanner?: PrivacyBanner | null};
+  } as {
+    customerPrivacy: CustomerPrivacy | null;
+    privacyBanner?: PrivacyBanner | null;
+  };
 
   if (withPrivacyBanner) {
-    result.privacyBanner = getPrivacyBanner()
+    result.privacyBanner = getPrivacyBanner();
   }
 
   return result;
 }
 
-function useApisLoaded({withPrivacyBanner, onLoaded}: {withPrivacyBanner: boolean, onLoaded?: () => void}) {
+function useApisLoaded({
+  withPrivacyBanner,
+  onLoaded,
+}: {
+  withPrivacyBanner: boolean;
+  onLoaded?: () => void;
+}) {
   // used to help run the watchers only once
   const observing = useRef({customerPrivacy: false, privacyBanner: false});
 
   // [customerPrivacy, privacyBanner]
-  const [apisLoaded, setApisLoaded] = useState(withPrivacyBanner ? [false, false] : [false]);
+  const [apisLoaded, setApisLoaded] = useState(
+    withPrivacyBanner ? [false, false] : [false],
+  );
 
   // combined loaded state for both APIs
-  const loaded = apisLoaded.every(Boolean)
+  const loaded = apisLoaded.every(Boolean);
 
   const setLoaded = {
     customerPrivacy: () => {
-      setApisLoaded((prev) => [true, prev[1]])
+      setApisLoaded((prev) => [true, prev[1]]);
     },
     privacyBanner: () => {
-      setApisLoaded((prev) => [prev[0], true])
-    }
-  }
+      setApisLoaded((prev) => [prev[0], true]);
+    },
+  };
 
   useEffect(() => {
     if (loaded && onLoaded) {
       // both APIs are loaded in the window
-      onLoaded()
+      onLoaded();
     }
-  }, [loaded, onLoaded])
+  }, [loaded, onLoaded]);
 
-  return {observing, setLoaded}
+  return {observing, setLoaded};
 }
 
 /**
@@ -371,9 +411,7 @@ function overridePrivacyBannerMethods({
   const originalLoadBanner = privacyBanner.loadBanner;
   const originalShowPreferences = privacyBanner.showPreferences;
 
-  function loadBanner(
-    userConfig?: Partial<CustomerPrivacyConsentConfig>,
-  ) {
+  function loadBanner(userConfig?: Partial<CustomerPrivacyConsentConfig>) {
     if (typeof userConfig === 'object') {
       originalLoadBanner({...config, ...userConfig});
       return;
@@ -381,9 +419,7 @@ function overridePrivacyBannerMethods({
     originalLoadBanner(config);
   }
 
-  function showPreferences(
-    userConfig?: Partial<CustomerPrivacyConsentConfig>,
-  ) {
+  function showPreferences(userConfig?: Partial<CustomerPrivacyConsentConfig>) {
     if (typeof userConfig === 'object') {
       originalShowPreferences({...config, ...userConfig});
       return;
@@ -495,5 +531,5 @@ export function getPrivacyBanner() {
       : null;
   } catch (e) {
     return null;
-}
   }
+}
