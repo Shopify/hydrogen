@@ -4,6 +4,10 @@ import {
   LanguageCode,
 } from '@shopify/hydrogen/storefront-api-types';
 
+const SITEMAP_INDEX_PREFIX = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
+const SITEMAP_INDEX_SUFFIX = `</sitemapindex>`;
+
 const SITEMAP_PREFIX = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">`;
 const SITEMAP_SUFFIX = `</urlset>`;
@@ -43,7 +47,7 @@ export async function getSitemapIndex({
   const baseUrl = new URL(request.url).origin;
 
   const body =
-    SITEMAP_PREFIX +
+    SITEMAP_INDEX_PREFIX +
     types
       .map((type) =>
         getSiteMapLinks(type, data[type].pagesCount.count, baseUrl),
@@ -52,7 +56,7 @@ export async function getSitemapIndex({
     customUrls
       .map((url) => '<sitemap><loc>' + url + '</loc></sitemap>')
       .join('\n') +
-    SITEMAP_SUFFIX;
+    SITEMAP_INDEX_SUFFIX;
 
   return new Response(body, {
     headers: {
