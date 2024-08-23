@@ -1,15 +1,16 @@
-import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {Await, useLoaderData, Link, type MetaFunction} from '@remix-run/react';
+import {
+  defer,
+  type MetaArgs,
+  type LoaderFunctionArgs,
+} from '@shopify/remix-oxygen';
+import {Await, useLoaderData, Link} from '@remix-run/react';
 import {Suspense} from 'react';
-import {Image, Money} from '@shopify/hydrogen';
+import {Image, Money, getSeoMeta} from '@shopify/hydrogen';
 import type {
   FeaturedCollectionFragment,
   RecommendedProductsQuery,
 } from 'storefrontapi.generated';
-
-export const meta: MetaFunction = () => {
-  return [{title: 'Hydrogen | Home'}];
-};
+import {seoPayload} from '~/lib/seo';
 
 export async function loader(args: LoaderFunctionArgs) {
   // Start fetching non-critical data without blocking time to first byte
@@ -33,6 +34,7 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
 
   return {
     featuredCollection: collections.nodes[0],
+    seo: seoPayload.home(),
   };
 }
 
@@ -54,6 +56,10 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
     recommendedProducts,
   };
 }
+
+export const meta = ({matches}: MetaArgs<typeof loader>) => {
+  return getSeoMeta(...matches.map((match) => (match.data as any).seo));
+};
 
 export default function Homepage() {
   const data = useLoaderData<typeof loader>();

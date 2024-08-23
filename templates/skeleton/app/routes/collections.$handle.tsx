@@ -1,18 +1,21 @@
-import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {useLoaderData, Link, type MetaFunction} from '@remix-run/react';
+import {
+  defer,
+  redirect,
+  type LoaderFunctionArgs,
+  type MetaArgs,
+} from '@shopify/remix-oxygen';
+import {useLoaderData, Link} from '@remix-run/react';
 import {
   getPaginationVariables,
   Image,
   Money,
   Analytics,
+  getSeoMeta,
 } from '@shopify/hydrogen';
 import type {ProductItemFragment} from 'storefrontapi.generated';
 import {useVariantUrl} from '~/lib/variants';
+import {seoPayload} from '~/lib/seo';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
-
-export const meta: MetaFunction<typeof loader> = ({data}) => {
-  return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
-};
 
 export async function loader(args: LoaderFunctionArgs) {
   // Start fetching non-critical data without blocking time to first byte
@@ -50,6 +53,8 @@ async function loadCriticalData({
     }),
   ]);
 
+  const seo = seoPayload.collection({collection, url: request.url});
+
   if (!collection) {
     throw new Response(`Collection ${handle} not found`, {
       status: 404,
@@ -58,6 +63,7 @@ async function loadCriticalData({
 
   return {
     collection,
+    seo,
   };
 }
 
@@ -101,6 +107,10 @@ export default function Collection() {
   );
 }
 
+export const meta = ({matches}: MetaArgs<typeof loader>) => {
+  return getSeoMeta(...matches.map((match) => (match.data as any).seo));
+};
+
 function ProductItem({
   product,
   loading,
@@ -143,6 +153,10 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
     id
     handle
     title
+    seo {
+      title
+      description
+    }
     featuredImage {
       id
       altText
@@ -186,6 +200,10 @@ const COLLECTION_QUERY = `#graphql
       handle
       title
       description
+      seo {
+        description
+        title
+      }
       products(
         first: $first,
         last: $last,
