@@ -3,7 +3,6 @@ import {describe, expect, it} from 'vitest';
 import {render, screen} from '@testing-library/react';
 import {getProduct, getVariant} from './ProductProvider.test.helpers.js';
 import {ProductPrice} from './ProductPrice.js';
-import {faker} from '@faker-js/faker';
 
 describe('<ProductPrice />', () => {
   describe('variantId prop is provided', () => {
