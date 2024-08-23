@@ -116,8 +116,10 @@ export {
   type CustomEventMap,
   type CustomerPrivacyApiProps,
   useCustomerPrivacy,
+  /*
+    @deprecated use useAnalytics or useCustomerPrivacy instead
+  */
   getCustomerPrivacy,
-  getPrivacyBanner,
 } from './customer-privacy/ShopifyCustomerPrivacy';
 
 export {
