@@ -142,6 +142,53 @@ describe('<Image />', () => {
 
       expect(screen.getByRole('img').style.aspectRatio).toBe('600/400');
     });
+
+    it('does not create srcset with greater width or height when using aspect-ratio with no width', () => {
+      const data = {height: 300, width: 400};
+
+      render(
+        <Image
+          {...defaultProps}
+          sizes="100vw"
+          data={data}
+          aspectRatio={'1/1'}
+          srcSetOptions={{
+            intervals: 15,
+            startingWidth: 200,
+            incrementSize: 200,
+            placeholderWidth: 100,
+          }}
+        />,
+      );
+
+      expect(screen.getByRole<HTMLImageElement>('img').srcset).not.toContain(
+        '400w',
+      );
+    });
+
+    it('does not create srcset with greater width or height when using aspect-ratio with width', () => {
+      const data = {height: 300, width: 400};
+
+      render(
+        <Image
+          {...defaultProps}
+          sizes="100vw"
+          data={data}
+          aspectRatio={'1/1'}
+          srcSetOptions={{
+            intervals: 15,
+            startingWidth: 200,
+            incrementSize: 200,
+            placeholderWidth: 100,
+          }}
+          width={200}
+        />,
+      );
+
+      expect(screen.getByRole<HTMLImageElement>('img').srcset).not.toContain(
+        '2x',
+      );
+    });
   });
 
   describe('warnings', () => {

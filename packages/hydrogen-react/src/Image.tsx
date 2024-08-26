@@ -298,6 +298,7 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
           passthroughProps={passthroughProps}
           ref={ref}
           width={width}
+          data={data}
         />
       );
     } else {
@@ -314,6 +315,7 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
           placeholderWidth={placeholderWidth}
           ref={ref}
           sizes={sizes}
+          data={data}
         />
       );
     }
@@ -328,13 +330,14 @@ type FixedImageExludedProps =
   | 'srcSetOptions'
   | 'widths';
 
-type FixedWidthImageProps = Omit<HydrogenImageProps, FixedImageExludedProps> & {
-  loader: Loader;
-  passthroughProps: React.ImgHTMLAttributes<HTMLImageElement>;
-  normalizedProps: NormalizedProps;
-  imageWidths: number[];
-  ref: React.Ref<HTMLImageElement>;
-};
+type FixedWidthImageProps = Omit<HydrogenImageProps, FixedImageExludedProps> &
+  Pick<HydrogenImageBaseProps, 'data'> & {
+    loader: Loader;
+    passthroughProps: React.ImgHTMLAttributes<HTMLImageElement>;
+    normalizedProps: NormalizedProps;
+    imageWidths: number[];
+    ref: React.Ref<HTMLImageElement>;
+  };
 
 const FixedWidthImage = React.forwardRef<
   HTMLImageElement,
@@ -352,6 +355,7 @@ const FixedWidthImage = React.forwardRef<
       normalizedProps,
       passthroughProps,
       width,
+      data,
     },
     ref,
   ) => {
@@ -388,7 +392,15 @@ const FixedWidthImage = React.forwardRef<
         ? intWidth * (parseAspectRatio(fixedAspectRatio) ?? 1)
         : undefined;
 
-      const srcSet = generateSrcSet(normalizedProps.src, sizesArray, loader);
+      const srcSet = generateSrcSet(
+        {
+          src: normalizedProps.src,
+          width: data?.width ?? undefined,
+          height: data?.height ?? undefined,
+        },
+        sizesArray,
+        loader,
+      );
       const src = loader({
         src: normalizedProps.src,
         width: intWidth,
@@ -406,10 +418,15 @@ const FixedWidthImage = React.forwardRef<
     }, [
       aspectRatio,
       crop,
+      data?.height,
+      data?.width,
       height,
       imageWidths,
       loader,
-      normalizedProps,
+      normalizedProps.aspectRatio,
+      normalizedProps.height,
+      normalizedProps.src,
+      normalizedProps.width,
       width,
     ]);
 
@@ -441,14 +458,15 @@ type FluidImageExcludedProps =
   | 'loaderOptions'
   | 'srcSetOptions';
 
-type FluidImageProps = Omit<HydrogenImageProps, FluidImageExcludedProps> & {
-  imageWidths: number[];
-  loader: Loader;
-  normalizedProps: NormalizedProps;
-  passthroughProps: React.ImgHTMLAttributes<HTMLImageElement>;
-  placeholderWidth: number;
-  ref: React.Ref<HTMLImageElement>;
-};
+type FluidImageProps = Omit<HydrogenImageProps, FluidImageExcludedProps> &
+  Pick<HydrogenImageBaseProps, 'data'> & {
+    imageWidths: number[];
+    loader: Loader;
+    normalizedProps: NormalizedProps;
+    passthroughProps: React.ImgHTMLAttributes<HTMLImageElement>;
+    placeholderWidth: number;
+    ref: React.Ref<HTMLImageElement>;
+  };
 
 const FluidImage = React.forwardRef<HTMLImageElement, FluidImageProps>(
   (
@@ -462,6 +480,7 @@ const FluidImage = React.forwardRef<HTMLImageElement, FluidImageProps>(
       passthroughProps,
       placeholderWidth,
       sizes,
+      data,
     },
     ref,
   ) => {
@@ -477,7 +496,15 @@ const FluidImage = React.forwardRef<HTMLImageElement, FluidImageProps>(
             (parseAspectRatio(normalizedProps.aspectRatio) ?? 1)
           : undefined;
 
-      const srcSet = generateSrcSet(normalizedProps.src, sizesArray, loader);
+      const srcSet = generateSrcSet(
+        {
+          src: normalizedProps.src,
+          width: data?.width ?? undefined,
+          height: data?.height ?? undefined,
+        },
+        sizesArray,
+        loader,
+      );
 
       const src = loader({
         src: normalizedProps.src,
@@ -491,7 +518,16 @@ const FluidImage = React.forwardRef<HTMLImageElement, FluidImageProps>(
         srcSet,
         src,
       };
-    }, [crop, imageWidths, loader, normalizedProps, placeholderWidth]);
+    }, [
+      crop,
+      data?.height,
+      data?.width,
+      imageWidths,
+      loader,
+      normalizedProps.aspectRatio,
+      normalizedProps.src,
+      placeholderWidth,
+    ]);
 
     return (
       <img
@@ -626,29 +662,40 @@ function isFixedWidth(width: string | number): boolean {
 
 /**
  * This function generates a srcSet for Shopify images.
- * @param src - The source URL of the image, e.g. https://cdn.shopify.com/static/sample-images/garnished.jpeg
+ * @param image - An object containing the image data. URL of the image, e.g. https://cdn.shopify.com/static/sample-images/garnished.jpeg, along with its width and height
  * @param sizesArray - An array of objects containing the `width`, `height`, and `crop` of the image, e.g. [\{width: 200, height: 200, crop: 'center'\}, \{width: 400, height: 400, crop: 'center'\}]
  * @param loader - A function that takes a Shopify image URL and returns a Shopify image URL with the correct query parameters
  * @returns A srcSet for Shopify images, e.g. 'https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=200&height=200&crop=center 200w, https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=400&height=400&crop=center 400w'
  */
 export function generateSrcSet(
-  src?: string,
+  image: {src?: string; width?: number; height?: number},
   sizesArray?: Array<{width?: number; height?: number; crop?: Crop}>,
   loader: Loader = shopifyLoader,
 ): string {
-  if (!src) {
+  if (!image.src) {
     return '';
   }
 
   if (sizesArray?.length === 0 || !sizesArray) {
-    return src;
+    return image.src;
   }
 
   return sizesArray
+    .filter((size) => {
+      if (image.width && size.width && size.width > image.width) {
+        return false;
+      }
+
+      if (image.height && size.height && size.height > image.height) {
+        return false;
+      }
+
+      return true;
+    })
     .map(
       (size, i) =>
         `${loader({
-          src,
+          src: image.src,
           width: size.width,
           height: size.height,
           crop: size.crop,
