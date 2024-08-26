@@ -143,13 +143,43 @@ describe('<Image />', () => {
       expect(screen.getByRole('img').style.aspectRatio).toBe('600/400');
     });
 
-    it('does not create srcset with greater width or height when using aspect-ratio with no width', () => {
+    it('does not create srcset with greater dimensions than source image', () => {
       const data = {height: 300, width: 400};
 
       render(
         <Image
           {...defaultProps}
-          sizes="100vw"
+          data={data}
+          srcSetOptions={{
+            intervals: 15,
+            startingWidth: 200,
+            incrementSize: 200,
+            placeholderWidth: 100,
+          }}
+        />,
+      );
+
+      expect(screen.getByRole<HTMLImageElement>('img').srcset).not.toContain(
+        '600w',
+      );
+    });
+
+    it('does not create srcset with greater dimensions than source image when using width', () => {
+      const data = {height: 300, width: 400};
+
+      render(<Image {...defaultProps} data={data} width={200} />);
+
+      expect(screen.getByRole<HTMLImageElement>('img').srcset).not.toContain(
+        '3x',
+      );
+    });
+
+    it('does not create srcset with greater dimensions than source image when using aspect-ratio', () => {
+      const data = {height: 300, width: 400};
+
+      render(
+        <Image
+          {...defaultProps}
           data={data}
           aspectRatio={'1/1'}
           srcSetOptions={{
@@ -166,23 +196,11 @@ describe('<Image />', () => {
       );
     });
 
-    it('does not create srcset with greater width or height when using aspect-ratio with width', () => {
+    it('does not create srcset with greater dimensions than source image when using aspect-ratio and width', () => {
       const data = {height: 300, width: 400};
 
       render(
-        <Image
-          {...defaultProps}
-          sizes="100vw"
-          data={data}
-          aspectRatio={'1/1'}
-          srcSetOptions={{
-            intervals: 15,
-            startingWidth: 200,
-            incrementSize: 200,
-            placeholderWidth: 100,
-          }}
-          width={200}
-        />,
+        <Image {...defaultProps} data={data} aspectRatio={'1/1'} width={200} />,
       );
 
       expect(screen.getByRole<HTMLImageElement>('img').srcset).not.toContain(
