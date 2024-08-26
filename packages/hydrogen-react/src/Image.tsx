@@ -713,7 +713,7 @@ export function generateSizes(
     }[]
   | undefined {
   if (!imageWidths) return;
-  const sizes = imageWidths.map((width: number) => {
+  return imageWidths.map((width: number) => {
     return {
       width,
       height: aspectRatio
@@ -722,7 +722,6 @@ export function generateSizes(
       crop,
     };
   });
-  return sizes;
   /*
     Given:
       ([100, 200], 1/1, 'center')
