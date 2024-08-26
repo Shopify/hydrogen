@@ -46,7 +46,7 @@ async function loadCriticalData({
 
   console.log('wow');
 
-  await promiseWithTimeout({
+  promiseWithTimeout({
     promise: new Promise((resolve) => setTimeout(resolve, 6000)),
   });
 
