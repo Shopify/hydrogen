@@ -374,7 +374,7 @@ const FixedWidthImage = React.forwardRef<
         : undefined;
 
       /*
-       * The Sizes Array generates an array of all of the parts
+       * The Sizes Array generates an array of all the parts
        * that make up the srcSet, including the width, height, and crop
        */
       const sizesArray =
