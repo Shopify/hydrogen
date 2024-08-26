@@ -621,10 +621,7 @@ function getNormalizedFixedUnit(value?: string | number): number | undefined {
  */
 function isFixedWidth(width: string | number): boolean {
   const fixedEndings = /\d(px|em|rem)$/;
-  return (
-    typeof width === 'number' ||
-    (typeof width === 'string' && fixedEndings.test(width))
-  );
+  return typeof width === 'number' || fixedEndings.test(width);
 }
 
 /**
