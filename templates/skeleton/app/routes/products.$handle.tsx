@@ -12,6 +12,7 @@ import {getVariantUrl} from '~/lib/variants';
 import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
+import {promiseWithTimeout} from '~/lib/timeout';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
@@ -42,6 +43,12 @@ async function loadCriticalData({
   if (!handle) {
     throw new Error('Expected product handle to be defined');
   }
+
+  console.log('wow');
+
+  await promiseWithTimeout({
+    promise: new Promise((resolve) => setTimeout(resolve, 6000)),
+  });
 
   const [{product}] = await Promise.all([
     storefront.query(PRODUCT_QUERY, {
