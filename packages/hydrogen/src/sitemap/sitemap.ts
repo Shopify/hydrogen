@@ -1,4 +1,5 @@
 import type {LoaderFunctionArgs} from '@remix-run/server-runtime';
+import type {Storefront} from '../storefront';
 
 const SITEMAP_INDEX_PREFIX = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
@@ -18,7 +19,7 @@ type SITEMAP_INDEX_TYPE =
 
 interface SitemapIndexOptions {
   /** The Storefront API Client from Hydrogen */
-  storefront: LoaderFunctionArgs['context']['storefront'];
+  storefront: Storefront;
   /** A Remix Request object */
   request: Request;
   /** The types of pages to include in the sitemap index. */
@@ -99,7 +100,7 @@ interface GetSiteMapOptions {
   /** The params object from Remix */
   params: LoaderFunctionArgs['params'];
   /** The Storefront API Client from Hydrogen */
-  storefront: LoaderFunctionArgs['context']['storefront'];
+  storefront: Storefront;
   /** A Remix Request object */
   request: Request;
   /** A function that produces a canonical url for a resource. It is called multiple times for each locale supported by the app. */
