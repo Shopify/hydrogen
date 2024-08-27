@@ -384,7 +384,10 @@ const FixedWidthImage = React.forwardRef<
       const sizesArray =
         imageWidths === undefined
           ? undefined
-          : generateSizes(imageWidths, fixedAspectRatio, crop);
+          : generateSizes(imageWidths, fixedAspectRatio, crop, {
+              width: data?.width ?? undefined,
+              height: data?.height ?? undefined,
+            });
 
       const fixedHeight = intHeight
         ? intHeight
@@ -392,15 +395,7 @@ const FixedWidthImage = React.forwardRef<
         ? intWidth * (parseAspectRatio(fixedAspectRatio) ?? 1)
         : undefined;
 
-      const srcSet = generateSrcSet(
-        {
-          src: normalizedProps.src,
-          width: data?.width ?? undefined,
-          height: data?.height ?? undefined,
-        },
-        sizesArray,
-        loader,
-      );
+      const srcSet = generateSrcSet(normalizedProps.src, sizesArray, loader);
       const src = loader({
         src: normalizedProps.src,
         width: intWidth,
@@ -488,7 +483,10 @@ const FluidImage = React.forwardRef<HTMLImageElement, FluidImageProps>(
       const sizesArray =
         imageWidths === undefined
           ? undefined
-          : generateSizes(imageWidths, normalizedProps.aspectRatio, crop);
+          : generateSizes(imageWidths, normalizedProps.aspectRatio, crop, {
+              width: data?.width ?? undefined,
+              height: data?.height ?? undefined,
+            });
 
       const placeholderHeight =
         normalizedProps.aspectRatio && placeholderWidth
@@ -496,15 +494,7 @@ const FluidImage = React.forwardRef<HTMLImageElement, FluidImageProps>(
             (parseAspectRatio(normalizedProps.aspectRatio) ?? 1)
           : undefined;
 
-      const srcSet = generateSrcSet(
-        {
-          src: normalizedProps.src,
-          width: data?.width ?? undefined,
-          height: data?.height ?? undefined,
-        },
-        sizesArray,
-        loader,
-      );
+      const srcSet = generateSrcSet(normalizedProps.src, sizesArray, loader);
 
       const src = loader({
         src: normalizedProps.src,
@@ -662,40 +652,29 @@ function isFixedWidth(width: string | number): boolean {
 
 /**
  * This function generates a srcSet for Shopify images.
- * @param image - An object containing the image data. URL of the image, e.g. https://cdn.shopify.com/static/sample-images/garnished.jpeg, along with its width and height
+ * @param src - The source URL of the image, e.g. https://cdn.shopify.com/static/sample-images/garnished.jpeg
  * @param sizesArray - An array of objects containing the `width`, `height`, and `crop` of the image, e.g. [\{width: 200, height: 200, crop: 'center'\}, \{width: 400, height: 400, crop: 'center'\}]
  * @param loader - A function that takes a Shopify image URL and returns a Shopify image URL with the correct query parameters
  * @returns A srcSet for Shopify images, e.g. 'https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=200&height=200&crop=center 200w, https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=400&height=400&crop=center 400w'
  */
 export function generateSrcSet(
-  image: {src?: string; width?: number; height?: number},
+  src?: string,
   sizesArray?: Array<{width?: number; height?: number; crop?: Crop}>,
   loader: Loader = shopifyLoader,
 ): string {
-  if (!image.src) {
+  if (!src) {
     return '';
   }
 
   if (sizesArray?.length === 0 || !sizesArray) {
-    return image.src;
+    return src;
   }
 
   return sizesArray
-    .filter((size) => {
-      if (image.width && size.width && size.width > image.width) {
-        return false;
-      }
-
-      if (image.height && size.height && size.height > image.height) {
-        return false;
-      }
-
-      return true;
-    })
     .map(
       (size, i) =>
         `${loader({
-          src: image.src,
+          src,
           width: size.width,
           height: size.height,
           crop: size.crop,
@@ -749,6 +728,7 @@ export function generateSizes(
   imageWidths?: number[],
   aspectRatio?: string,
   crop: Crop = 'center',
+  sourceDimensions?: {width?: number; height?: number},
 ):
   | {
       width: number;
@@ -757,15 +737,31 @@ export function generateSizes(
     }[]
   | undefined {
   if (!imageWidths) return;
-  return imageWidths.map((width: number) => {
-    return {
-      width,
-      height: aspectRatio
-        ? width * (parseAspectRatio(aspectRatio) ?? 1)
-        : undefined,
-      crop,
-    };
-  });
+  return imageWidths
+    .map((width: number) => {
+      return {
+        width,
+        height: aspectRatio
+          ? width * (parseAspectRatio(aspectRatio) ?? 1)
+          : undefined,
+        crop,
+      };
+    })
+    .filter(({width, height}) => {
+      if (sourceDimensions?.width && width > sourceDimensions.width) {
+        return false;
+      }
+
+      if (
+        sourceDimensions?.height &&
+        height &&
+        height > sourceDimensions.height
+      ) {
+        return false;
+      }
+
+      return true;
+    });
   /*
     Given:
       ([100, 200], 1/1, 'center')
