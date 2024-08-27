@@ -33,11 +33,12 @@ function root({
   };
 }
 
-function home(): SeoConfig {
+function home({url}: {url: Request['url']}): SeoConfig {
   return {
     title: 'Home',
     titleTemplate: '%s | Hydrogen',
     description: 'The Hydrogen Skeleton template',
+    url,
     robots: {
       noIndex: false,
       noFollow: false,
@@ -150,6 +151,7 @@ function product({
   return {
     title: product?.seo?.title ?? product?.title,
     description,
+    url,
     media: selectedVariant?.image,
     jsonLd: productJsonLd({product, selectedVariant, url}),
   };
@@ -230,6 +232,7 @@ function collection({
     description: truncate(
       collection?.seo?.description ?? collection?.description ?? '',
     ),
+    url,
     media: {
       type: 'image',
       url: collection?.image?.url,

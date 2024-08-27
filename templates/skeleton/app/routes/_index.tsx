@@ -26,7 +26,7 @@ export async function loader(args: LoaderFunctionArgs) {
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function loadCriticalData({context}: LoaderFunctionArgs) {
+async function loadCriticalData({context, request}: LoaderFunctionArgs) {
   const [{collections}] = await Promise.all([
     context.storefront.query(FEATURED_COLLECTION_QUERY),
     // Add other queries here, so that they are loaded in parallel
@@ -34,7 +34,7 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
 
   return {
     featuredCollection: collections.nodes[0],
-    seo: seoPayload.home(),
+    seo: seoPayload.home({url: request.url}),
   };
 }
 
