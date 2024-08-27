@@ -22,7 +22,7 @@
           "type": "option"
         },
         "sourcemap": {
-          "description": "Controls whether sourcemaps are generated. Default to `true`. Deactivate `--no-sourcemaps`.",
+          "description": "Controls whether server sourcemaps are generated. Default to `true`. Deactivate `--no-sourcemaps`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_SOURCEMAP",
           "name": "sourcemap",
           "allowNo": true,
@@ -79,6 +79,13 @@
           "description": "Show a bundle size summary after building. Defaults to true, use `--no-bundle-stats` to disable.",
           "name": "bundle-stats",
           "allowNo": true,
+          "type": "boolean"
+        },
+        "force-client-sourcemap": {
+          "description": "Client sourcemapping is avoided by default because it makes backend code visible in the browser. Use this flag to force enabling it.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_FORCE_CLIENT_SOURCEMAP",
+          "name": "force-client-sourcemap",
+          "allowNo": false,
           "type": "boolean"
         }
       },
@@ -675,7 +682,7 @@
           "type": "boolean"
         },
         "sourcemap": {
-          "description": "[Classic Remix Compiler] Controls whether sourcemaps are generated. Default to `true`. Deactivate `--no-sourcemaps`.",
+          "description": "[Classic Remix Compiler] Controls whether server sourcemaps are generated. Default to `true`. Deactivate `--no-sourcemaps`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_SOURCEMAP",
           "name": "sourcemap",
           "allowNo": true,
