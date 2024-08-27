@@ -169,3 +169,5 @@ export {
   createHydrogenContext,
   type HydrogenContext,
 } from './createHydrogenContext';
+
+export {getSitemapIndex, getSitemap} from './sitemap/sitemap';
