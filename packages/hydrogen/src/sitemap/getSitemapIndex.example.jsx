@@ -1,4 +1,4 @@
-import {getSitemapIndex} from '@shopify/hydrogen';
+import {unstable__getSitemapIndex as getSitemapIndex} from '@shopify/hydrogen';
 
 export async function loader({request, context: {storefront}}) {
   const response = await getSitemapIndex({

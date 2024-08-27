@@ -103,7 +103,7 @@ interface GetSiteMapOptions {
   /** A Remix Request object */
   request: Request;
   /** A function that produces a canonical url for a resource. It is called multiple times for each locale supported by the app. */
-  getLink?: (options: {
+  getLink: (options: {
     type: string | SITEMAP_INDEX_TYPE;
     baseUrl: string;
     handle?: string;
