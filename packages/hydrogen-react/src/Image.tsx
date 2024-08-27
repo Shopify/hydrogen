@@ -413,15 +413,11 @@ const FixedWidthImage = React.forwardRef<
     }, [
       aspectRatio,
       crop,
-      data?.height,
-      data?.width,
+      data,
       height,
       imageWidths,
       loader,
-      normalizedProps.aspectRatio,
-      normalizedProps.height,
-      normalizedProps.src,
-      normalizedProps.width,
+      normalizedProps,
       width,
     ]);
 
@@ -508,16 +504,7 @@ const FluidImage = React.forwardRef<HTMLImageElement, FluidImageProps>(
         srcSet,
         src,
       };
-    }, [
-      crop,
-      data?.height,
-      data?.width,
-      imageWidths,
-      loader,
-      normalizedProps.aspectRatio,
-      normalizedProps.src,
-      placeholderWidth,
-    ]);
+    }, [crop, data, imageWidths, loader, normalizedProps, placeholderWidth]);
 
     return (
       <img
