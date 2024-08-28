@@ -104,6 +104,9 @@ vi.mock('./PerfKit', () => ({
 
 describe('<Analytics.Provider />', () => {
   beforeAll(() => {
+    global.document.cookie = `_cmp_a=%7B%22purposes%22%3A%7B%22p%22%3Afalse%2C%22a%22%3Afalse%2C%22m%22%3Afalse%2C%22t%22%3Atrue%7D%2C%22display_banner%22%3Afalse%2C%22sale_of_data_region%22%3Afalse%7D`;
+    global.document.cookie = `_tracking_consent=%7B%22con%22%3A%7B%22CMP%22%3A%7B%22a%22%3A%22%22%2C%22m%22%3A%22%22%2C%22p%22%3A%22%22%2C%22s%22%3A%22%22%7D%7D%2C%22v%22%3A%222.1%22%2C%22region%22%3A%22CAON%22%2C%22reg%22%3A%22%22%7D`;
+
     vi.stubGlobal(
       'fetch',
       function mockFetch(input: URL | RequestInfo): Promise<Response> {
@@ -139,16 +142,30 @@ describe('<Analytics.Provider />', () => {
   });
 
   describe('useAnalytics()', () => {
-    it('returns shop, cart, customData', async () => {
+    it('returns shop, cart, customData, privacyBanner and customerPrivacy', async () => {
       const {analytics} = await renderAnalyticsProvider({
         initialCart: CART_DATA,
         customData: {test: 'test'},
+        mockCanTrack: false,
       });
 
-      expect(analytics?.canTrack()).toBe(true);
+      expect(analytics?.canTrack()).toBe(false);
       expect(analytics?.shop).toBe(SHOP_DATA);
       expect(analytics?.cart).toBe(CART_DATA);
       expect(analytics?.customData).toEqual({test: 'test'});
+      expect(analytics?.privacyBanner).toEqual(null);
+      expect(analytics?.customerPrivacy).toEqual(null);
+    });
+
+    it('returns default canTrack true', async () => {
+      // TODO: render the AnalyticsProvider
+      const {analytics} = await renderAnalyticsProvider({
+        initialCart: CART_DATA,
+        customData: {test: 'test'},
+        mockCanTrack: true,
+      });
+
+      expect(analytics?.canTrack()).toBe(true);
     });
 
     it('returns prevCart with an updated cart', async () => {
@@ -157,7 +174,7 @@ describe('<Analytics.Provider />', () => {
         updateCart: CART_DATA_2,
       });
 
-      expect(analytics?.canTrack()).toBe(true);
+      expect(analytics?.canTrack()).toBe(false);
       expect(analytics?.shop).toBe(SHOP_DATA);
       expect(analytics?.cart).toBe(CART_DATA_2);
       expect(analytics?.prevCart).toBe(CART_DATA);
@@ -174,12 +191,12 @@ describe('<Analytics.Provider />', () => {
         },
       });
 
-      expect(analytics?.canTrack()).toBe(true);
+      expect(analytics?.canTrack()).toBe(false);
       expect(analytics?.shop).toBe(SHOP_DATA);
       expect(analytics?.cart).toBe(CART_DATA);
 
-      expect(pageViewedEvent).toHaveBeenCalled();
-      expect(pageViewedEvent).toHaveBeenCalledWith(
+      expect(pageViewedEvent).not.toHaveBeenCalled();
+      expect(pageViewedEvent).not.toHaveBeenCalledWith(
         expect.objectContaining({
           cart: expect.any(Object),
           shop: SHOP_DATA,
@@ -213,12 +230,12 @@ describe('<Analytics.Provider />', () => {
         },
       });
 
-      expect(analytics?.canTrack()).toBe(true);
+      expect(analytics?.canTrack()).toBe(false);
       expect(analytics?.shop).toBe(SHOP_DATA);
       expect(analytics?.cart).toBe(CART_DATA);
 
-      expect(productViewedEvent).toHaveBeenCalled();
-      expect(productViewedEvent).toHaveBeenCalledWith(
+      expect(productViewedEvent).not.toHaveBeenCalled();
+      expect(productViewedEvent).not.toHaveBeenCalledWith(
         expect.objectContaining(productsData),
       );
     });
@@ -235,9 +252,9 @@ describe('<Analytics.Provider />', () => {
         },
       });
 
-      expect(analytics?.canTrack()).toBe(true);
+      expect(analytics?.canTrack()).toBe(false);
 
-      expect(productAddedToCartEvent).toHaveBeenCalledWith(
+      expect(productAddedToCartEvent).not.toHaveBeenCalledWith(
         expect.objectContaining({
           cart: expect.any(Object),
           shop: SHOP_DATA,
@@ -260,9 +277,9 @@ describe('<Analytics.Provider />', () => {
         },
       });
 
-      expect(analytics?.canTrack()).toBe(true);
+      expect(analytics?.canTrack()).toBe(false);
 
-      expect(productRemovedFromCartEvent).toHaveBeenCalledWith(
+      expect(productRemovedFromCartEvent).not.toHaveBeenCalledWith(
         expect.objectContaining({
           cart: expect.any(Object),
           shop: SHOP_DATA,
@@ -280,6 +297,7 @@ type RenderAnalyticsProviderProps = {
     ready: () => void,
   ) => void;
   children?: ReactNode;
+  mockCanTrack?: boolean;
 };
 
 async function renderAnalyticsProvider({
@@ -287,6 +305,7 @@ async function renderAnalyticsProvider({
   customData,
   registerCallback,
   children,
+  mockCanTrack = false,
 }: RenderAnalyticsProviderProps) {
   let analytics: AnalyticsContextValue | null = null;
   const getUpdatedAnalytics = () => analytics;
@@ -309,7 +328,10 @@ async function renderAnalyticsProvider({
         consent={CONSENT_DATA}
         customData={updateCustomData || customData}
       >
-        <LoopAnalytics registerCallback={registerCallback}>
+        <LoopAnalytics
+          registerCallback={registerCallback}
+          mockCanTrack={mockCanTrack}
+        >
           {loopAnalyticsFn}
         </LoopAnalytics>
         {children}
@@ -363,29 +385,35 @@ async function triggerCartUpdate({
 function LoopAnalytics({
   children,
   registerCallback,
+  mockCanTrack = false,
 }: {
   children: ReactNode | ((analytics: AnalyticsContextValue) => ReactNode);
   registerCallback?: (
     analytics: AnalyticsContextValue,
     ready: () => void,
   ) => void;
+  mockCanTrack?: boolean;
 }): JSX.Element {
   const analytics = useAnalytics();
   const {ready} = analytics.register('loopAnalytics');
-  const {ready: customerPrivacyReady} = analytics.register(
-    'Internal_Shopify_CustomerPrivacy',
-  );
   const {ready: perfKitReady} = analytics.register('Internal_Shopify_Perf_Kit');
 
   useEffect(() => {
+    if (mockCanTrack) {
+      //@ts-ignore
+      window.Shopify = {};
+      window.Shopify.customerPrivacy = {
+        setTrackingConsent: () => {},
+        analyticsProcessingAllowed: () => true,
+      };
+    }
     if (registerCallback) {
       registerCallback(analytics, ready);
     } else {
       ready();
     }
-  });
+  }, [analytics, ready, registerCallback, mockCanTrack]);
 
-  customerPrivacyReady();
   perfKitReady();
 
   return (
