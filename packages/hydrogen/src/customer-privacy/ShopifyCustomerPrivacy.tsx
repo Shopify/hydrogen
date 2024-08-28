@@ -61,7 +61,7 @@ export type SetConsentHeadlessParams = VisitorConsent &
   shouldShowGDPRBanner
   thirdPartyMarketingAllowed
 **/
-export type CustomerPrivacy = {
+export type OriginalCustomerPrivacy = {
   currentVisitorConsent: () => VisitorConsent;
   preferencesProcessingAllowed: () => boolean;
   saleOfDataAllowed: () => boolean;
@@ -69,6 +69,13 @@ export type CustomerPrivacy = {
   analyticsProcessingAllowed: () => boolean;
   setTrackingConsent: (
     consent: SetConsentHeadlessParams,
+    callback: (data: {error: string} | undefined) => void,
+  ) => void;
+};
+
+export type CustomerPrivacy = Omit<OriginalCustomerPrivacy, 'setTrackingConsent'> & {
+  setTrackingConsent: (
+    consent: VisitorConsent, // we have already applied the headlessStorefront in the override
     callback: (data: {error: string} | undefined) => void,
   ) => void;
 };
@@ -376,7 +383,7 @@ function overrideCustomerPrivacySetTrackingConsent({
   customerPrivacy,
   config,
 }: {
-  customerPrivacy: CustomerPrivacy;
+  customerPrivacy: OriginalCustomerPrivacy;
   config: CustomerPrivacyConsentConfig;
 }) {
   // Override the setTrackingConsent method to include the headless storefront configuration
