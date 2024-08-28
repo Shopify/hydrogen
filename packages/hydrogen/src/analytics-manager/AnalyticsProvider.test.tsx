@@ -395,9 +395,13 @@ function LoopAnalytics({
 }): JSX.Element {
   const analytics = useAnalytics();
   const {ready} = analytics.register('loopAnalytics');
-  const {ready: customerPrivacyReady} = analytics.register('Internal_Shopify_Customer_Privacy');
+  const {ready: customerPrivacyReady} = analytics.register(
+    'Internal_Shopify_Customer_Privacy',
+  );
   const {ready: perfKitReady} = analytics.register('Internal_Shopify_Perf_Kit');
-  const {ready: analyticsReady} = analytics.register('Internal_Shopify_Analytics');
+  const {ready: analyticsReady} = analytics.register(
+    'Internal_Shopify_Analytics',
+  );
 
   useEffect(() => {
     // Mock the original customerPrivacy script injected APIs.
@@ -414,7 +418,7 @@ function LoopAnalytics({
     } else {
       ready();
     }
-  })
+  });
 
   perfKitReady();
   customerPrivacyReady();

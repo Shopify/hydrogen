@@ -2,7 +2,7 @@ import {useCustomerPrivacy} from '@shopify/hydrogen';
 import {useEffect} from 'react';
 
 export function MyComponent() {
-  const {customerPrivacy, privacyBanner = null} =  useCustomerPrivacy({
+  const {customerPrivacy, privacyBanner = null} = useCustomerPrivacy({
     storefrontAccessToken: '12345',
     checkoutDomain: 'checkout.example.com',
     onVisitorConsentCollected: (consent) => {
@@ -13,21 +13,27 @@ export function MyComponent() {
   useEffect(() => {
     if (customerPrivacy) {
       // check if user has marketing consent
-      console.log('User marketing consent:', customerPrivacy.analyticsProcessingAllowed())
+      console.log(
+        'User marketing consent:',
+        customerPrivacy.analyticsProcessingAllowed(),
+      );
 
       // or set tracking consent
-      customerPrivacy.setTrackingConsent({
-        marketing: true,
-        analytics: true,
-        preferences: true,
-        sale_of_data: true,
-      }, (data) => {
-        if (data?.error) {
-          console.error('Error setting tracking consent:', data.error);
-          return;
-        }
-        console.log('Tracking consent set');
-      })
+      customerPrivacy.setTrackingConsent(
+        {
+          marketing: true,
+          analytics: true,
+          preferences: true,
+          sale_of_data: true,
+        },
+        (data) => {
+          if (data?.error) {
+            console.error('Error setting tracking consent:', data.error);
+            return;
+          }
+          console.log('Tracking consent set');
+        },
+      );
     }
 
     if (privacyBanner) {

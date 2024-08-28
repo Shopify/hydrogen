@@ -73,7 +73,10 @@ export type OriginalCustomerPrivacy = {
   ) => void;
 };
 
-export type CustomerPrivacy = Omit<OriginalCustomerPrivacy, 'setTrackingConsent'> & {
+export type CustomerPrivacy = Omit<
+  OriginalCustomerPrivacy,
+  'setTrackingConsent'
+> & {
   setTrackingConsent: (
     consent: VisitorConsent, // we have already applied the headlessStorefront in the override
     callback: (data: {error: string} | undefined) => void,
