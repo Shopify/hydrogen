@@ -103,9 +103,9 @@ export type CustomerPrivacyApiProps = {
   onReady?: () => void;
 };
 
-const CONSENT_API =
+export const CONSENT_API =
   'https://cdn.shopify.com/shopifycloud/consent-tracking-api/v0.1/consent-tracking-api.js';
-const CONSENT_API_WITH_BANNER =
+export const CONSENT_API_WITH_BANNER =
   'https://cdn.shopify.com/shopifycloud/privacy-banner/storefront-banner.js';
 
 function logMissingConfig(fieldName: string) {
