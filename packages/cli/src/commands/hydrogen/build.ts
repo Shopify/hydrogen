@@ -44,12 +44,15 @@ export default class Build extends Command {
         'Watches for changes and rebuilds the project writing output to disk.',
       env: 'SHOPIFY_HYDROGEN_FLAG_WATCH',
     }),
-
-    // For the classic compiler:
     'bundle-stats': Flags.boolean({
       description:
         'Show a bundle size summary after building. Defaults to true, use `--no-bundle-stats` to disable.',
       allowNo: true,
+    }),
+    'force-client-sourcemap': Flags.boolean({
+      description:
+        'Client sourcemapping is avoided by default because it makes backend code visible in the browser. Use this flag to force enabling it.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_FORCE_CLIENT_SOURCEMAP',
     }),
   };
 
@@ -110,6 +113,7 @@ type RunBuildOptions = {
   useCodegen?: boolean;
   codegenConfigPath?: string;
   sourcemap?: boolean;
+  forceClientSourcemap?: boolean;
   disableRouteWarning?: boolean;
   assetPath?: string;
   bundleStats?: boolean;
@@ -125,6 +129,7 @@ export async function runBuild({
   useCodegen = false,
   codegenConfigPath,
   sourcemap = true,
+  forceClientSourcemap,
   disableRouteWarning = false,
   lockfileCheck = true,
   assetPath = '/',
@@ -177,8 +182,10 @@ export async function runBuild({
     build: {
       emptyOutDir: true,
       copyPublicDir: true,
-      // Disable client sourcemaps in production
-      sourcemap: process.env.NODE_ENV !== 'production' && sourcemap,
+      // Disable client sourcemaps in production by default
+      sourcemap:
+        forceClientSourcemap ??
+        (process.env.NODE_ENV !== 'production' && sourcemap),
       watch: watch ? {} : null,
     },
     plugins: [
