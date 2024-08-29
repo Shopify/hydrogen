@@ -34,6 +34,10 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
   // revalidate when manually revalidating via useRevalidator
   if (currentUrl.toString() === nextUrl.toString()) return true;
 
+  // Prevents root revalidation when navigating using query params
+  // e.g. /products/snowboard?Size=154cm ->/products/snowboard?Size=158cm
+  if (currentUrl.pathname === nextUrl.pathname) return false;
+
   return defaultShouldRevalidate;
 };
 
