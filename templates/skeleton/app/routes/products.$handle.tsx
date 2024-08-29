@@ -11,6 +11,7 @@ import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import { AddToCartButton } from '~/components/AddToCartButton';
 import type { ProductVariant } from '@shopify/hydrogen/storefront-api-types';
+import { useAside } from '~/components/Aside';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
@@ -102,6 +103,7 @@ export default function Product() {
   // );
   const selectedVariant = product.selectedVariant;
   const navigate = useNavigate();
+  const {open} = useAside();
 
   const {title, descriptionHtml} = product;
 
@@ -207,7 +209,6 @@ export default function Product() {
         >
           {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
         </AddToCartButton>
-
         <br />
         <br />
         <p>
