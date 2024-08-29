@@ -1,19 +1,16 @@
-import {Suspense} from 'react';
-import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {Await, Link, useLoaderData, type MetaFunction} from '@remix-run/react';
-import type {ProductFragment} from 'storefrontapi.generated';
+import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {Link, useLoaderData, useNavigate, type MetaFunction} from '@remix-run/react';
+
 import {
   getSelectedProductOptions,
   Analytics,
   useOptimisticVariant,
+  getProductOptions,
 } from '@shopify/hydrogen';
-import type {ProductVariant, SelectedOption} from '@shopify/hydrogen/storefront-api-types';
-import {getVariantUrl} from '~/lib/variants';
 import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
-import {ProductForm} from '~/components/ProductForm';
-import { decodeOptionValues } from '~/lib/optionValueDecoder';
 import { AddToCartButton } from '~/components/AddToCartButton';
+import type { ProductVariant } from '@shopify/hydrogen/storefront-api-types';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
@@ -21,12 +18,12 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
 
 export async function loader(args: LoaderFunctionArgs) {
   // Start fetching non-critical data without blocking time to first byte
-  const deferredData = loadDeferredData(args);
+  // const deferredData = loadDeferredData(args);
 
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
 
-  return defer({...deferredData, ...criticalData});
+  return defer({...criticalData});
 }
 
 /**
@@ -52,16 +49,20 @@ async function loadCriticalData({
     // Add other queries here, so that they are loaded in parallel
   ]);
 
-  if (!product.selectedVariant) {
-    product.selectedVariant = product.firstAvailableVariant;
+  let selectedVariant: ProductVariant = product?.selectedVariant;
+
+  if (!selectedVariant) {
+    selectedVariant = product?.firstAvailableVariant;
   }
 
-  if (!product.selectedVariant) {
-    product.selectedVariant = product.variants.nodes[0];
+  if (!selectedVariant) {
+    selectedVariant = product?.variants.nodes[0];
   }
-
   return {
-    product,
+    product: {
+      ...product,
+      selectedVariant,
+    },
   };
 }
 
@@ -91,83 +92,26 @@ function loadDeferredData({context, params}: LoaderFunctionArgs) {
   };
 }
 
-function mapSelectedProductOption(options: Pick<SelectedOption, "name" | "value">[]) {
-  return Object.assign({}, ...options.map((key) => {
-    return {[key.name]: key.value};
-  }));
-}
-
-function mapAdjacentVariants(variants: ProductVariant[]) {
-  return Object.assign({}, ...variants.map((variant) => {
-    const keyName = mapSelectedProductOption(variant.selectedOptions || []);
-    return {[JSON.stringify(keyName)]: variant};
-  }));
-}
-
-function mapOptionExistence(encodedVariantExistence: string, options: ProductFragment['options']) {
-  const validOptions: string[] = [];
-  const decodedVariantExistence = decodeOptionValues(encodedVariantExistence);
-  // console.log('decodedVariantExistenceMap', decodedVariantExistence);
-  decodedVariantExistence.forEach((optionSet) => {
-    console.log('optionSet', optionSet);
-    const decodedOption = Object.assign({}, ...optionSet.map((option, index) => {
-      const productOption = options[index];
-      console.log('productOption', productOption, option, productOption.optionValues[option]);
-      return {[productOption.name]: productOption.optionValues[option].name};
-    }));
-    validOptions.push(JSON.stringify(decodedOption));
-  });
-  return validOptions;
-}
-
-function useProductOptions(product : ProductFragment) {
-  const variants = mapAdjacentVariants([
-    product.selectedVariant,
-    ...product.adjacentVariants,
-  ]);
-
-  const selectedOptions = mapSelectedProductOption(product.selectedVariant?.selectedOptions || []);
-  const decodedVariantExistence = mapOptionExistence(product.encodedVariantExistence, product.options);
-
-  console.log('encodedVariantExistence', product.encodedVariantExistence);
-
-  return product.options.map((option) => {
-    return {
-      ...option,
-      optionValues: option.optionValues.map((value) => {
-        const targetOption = {...selectedOptions};
-        targetOption[option.name] = value.name;
-        const targetKey = JSON.stringify(targetOption);
-        const variant = variants[targetKey];
-        const searchParams = new URLSearchParams(targetOption);
-        const link = variant && `${variant?.product?.handle}?${searchParams.toString()}`;
-
-        return {
-          ...value,
-          variant,
-          link,
-          selected: selectedOptions[option.name] === value.name,
-          exists: decodedVariantExistence.includes(targetKey),
-          available: variant?.availableForSale || false,
-        };
-      }),
-    };
-  });
-
-}
-
 export default function Product() {
-  const {product, variants} = useLoaderData<typeof loader>();
-  const selectedVariant = useOptimisticVariant(
-    product.selectedVariant,
-    variants,
-  );
+  const {product} = useLoaderData<typeof loader>();
+
+  // This works weirdly with the encodedVariantExistence
+  // const selectedVariant = useOptimisticVariant(
+  //   product.selectedVariant,
+  //   product.adjacentVariants,
+  // );
+  const selectedVariant = product.selectedVariant;
+  const navigate = useNavigate();
 
   const {title, descriptionHtml} = product;
-  const productOptions = useProductOptions(product);
 
-  console.log('adjacentVariants', product.adjacentVariants);
-  console.log('productOptions', productOptions);
+  const productOptions = getProductOptions({
+    productHandle: product.handle,
+    options: product.options,
+    selectedVariant,
+    adjacentVariants: product.adjacentVariants,
+    encodedVariantExistence: product.encodedVariantExistence,
+  });
 
   return (
     <div className="product">
@@ -179,14 +123,39 @@ export default function Product() {
           compareAtPrice={selectedVariant?.compareAtPrice}
         />
         <br />
-
         {productOptions.map((option) => (
           <div className="product-options" key={option.name}>
             <h5>{option.name}</h5>
             <div className="product-options-grid">
               {option.optionValues.map((value) => {
-                const {name, link, selected, exists, available} = value;
-                if (exists && link) {
+                const {name, handle, variantUriQuery, selected, exists, available, isDifferentProduct} = value;
+                if (selected) {
+                  return (
+                    <div
+                      className="product-options-item"
+                      key={option.name + name}
+                      style={{
+                        border: '1px solid black',
+                      }}
+                    >
+                      {name}
+                    </div>
+                  );
+                }else if (exists && !isDifferentProduct) {
+                  return (
+                    <div
+                      className="product-options-item link"
+                      key={option.name + name}
+                      onClick={() => {
+                        navigate(`?${variantUriQuery}`, {
+                          replace: true,
+                        });
+                      }}
+                    >
+                      {name}
+                    </div>
+                  );
+                } else if (handle && isDifferentProduct) {
                   return (
                     <Link
                       className="product-options-item"
@@ -194,7 +163,7 @@ export default function Product() {
                       prefetch="intent"
                       preventScrollReset
                       replace
-                      to={`/products/${link}`}
+                      to={`/products/${handle}?${variantUriQuery}`}
                       style={{
                         border: selected ? '1px solid black' : '1px solid transparent',
                         opacity: available ? 1 : 0.3,
@@ -223,21 +192,21 @@ export default function Product() {
           </div>
         ))}
         <br />
-      <AddToCartButton
-        disabled={!selectedVariant || !selectedVariant.availableForSale}
-        onClick={() => {
-          open('cart');
-        }}
-        lines={[
-          {
-            merchandiseId: selectedVariant.id,
-            quantity: 1,
-            selectedVariant,
-          },
-        ]}
-      >
-        {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
-      </AddToCartButton>
+        <AddToCartButton
+          disabled={!selectedVariant || !selectedVariant.availableForSale}
+          onClick={() => {
+            open('cart');
+          }}
+          lines={[
+            {
+              merchandiseId: selectedVariant.id,
+              quantity: 1,
+              selectedVariant,
+            },
+          ]}
+        >
+          {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
+        </AddToCartButton>
 
         <br />
         <br />
