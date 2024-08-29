@@ -215,7 +215,7 @@ export function getProductOptions({
           selected: selectedOptions[option.name] === value.name,
           exists: decodedVariantExistence.includes(targetKey),
           available: variant?.availableForSale || false,
-          isDifferentProduct: handle !== productHandle,
+          isDifferentProduct: handle ? handle !== productHandle : false,
         };
       }),
     };

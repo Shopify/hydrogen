@@ -450,8 +450,21 @@ button.reset:hover:not(:has(> *)) {
   grid-gap: 0.75rem;
 }
 
-.product-options-item {
+.product-options-item,
+.product-options-item:disabled {
   padding: 0.25rem 0.5rem;
+  background-color: transparent;
+  font-size: 1rem;
+}
+
+.product-option-label-swatch {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0.25rem 0;
+}
+
+.product-option-label-swatch img {
+  width: 100%;
 }
 
 /*

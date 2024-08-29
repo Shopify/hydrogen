@@ -10,7 +10,7 @@ import {
 import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import { AddToCartButton } from '~/components/AddToCartButton';
-import type { ProductVariant } from '@shopify/hydrogen/storefront-api-types';
+import type { Maybe, ProductOptionValueSwatch, ProductVariant } from '@shopify/hydrogen/storefront-api-types';
 import { useAside } from '~/components/Aside';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
@@ -130,34 +130,20 @@ export default function Product() {
             <h5>{option.name}</h5>
             <div className="product-options-grid">
               {option.optionValues.map((value) => {
-                const {name, handle, variantUriQuery, selected, exists, available, isDifferentProduct} = value;
-                if (selected) {
-                  return (
-                    <div
-                      className="product-options-item"
-                      key={option.name + name}
-                      style={{
-                        border: '1px solid black',
-                      }}
-                    >
-                      {name}
-                    </div>
-                  );
-                }else if (exists && !isDifferentProduct) {
-                  return (
-                    <div
-                      className="product-options-item link"
-                      key={option.name + name}
-                      onClick={() => {
-                        navigate(`?${variantUriQuery}`, {
-                          replace: true,
-                        });
-                      }}
-                    >
-                      {name}
-                    </div>
-                  );
-                } else if (handle && isDifferentProduct) {
+                const {
+                  name,
+                  handle,
+                  variantUriQuery,
+                  selected,
+                  exists,
+                  available,
+                  isDifferentProduct,
+                  swatch,
+                } = value;
+
+
+
+                if (isDifferentProduct) {
                   return (
                     <Link
                       className="product-options-item"
@@ -171,21 +157,30 @@ export default function Product() {
                         opacity: available ? 1 : 0.3,
                       }}
                     >
-                      {name}
+                      <ProductOptionSwatch swatch={swatch} name={name} />
                     </Link>
                   );
                 } else {
                   return (
-                    <div
-                      className="product-options-item"
+                    <button
+                      type="button"
+                      className={`product-options-item${exists && !selected ? ' link' : ''}`}
                       key={option.name + name}
+                      disabled={!exists}
                       style={{
-                        border: '1px solid transparent',
-                        opacity: 0.05,
+                        border: selected ? '1px solid black' : '1px solid transparent',
+                        opacity: available ? 1 : 0.3,
+                      }}
+                      onClick={() => {
+                        if (!selected) {
+                          navigate(`?${variantUriQuery}`, {
+                            replace: true,
+                          });
+                        }
                       }}
                     >
-                      {name}
-                    </div>
+                      <ProductOptionSwatch swatch={swatch} name={name} />
+                    </button>
                   );
                 }
               })}
@@ -233,6 +228,31 @@ export default function Product() {
           ],
         }}
       />
+    </div>
+  );
+}
+
+function ProductOptionSwatch({
+  swatch,
+  name,
+}: {
+  swatch?: Maybe<ProductOptionValueSwatch> | undefined;
+  name: string;
+}) {
+  const image = swatch?.image?.previewImage?.url;
+  const color = swatch?.color;
+
+  if (!image && !color) return name;
+
+  return (
+    <div
+      aria-label={name}
+      className="product-option-label-swatch"
+      style={{
+        backgroundColor: color || 'transparent',
+      }}
+    >
+      {!!image && <img src={image} alt={name} /> }
     </div>
   );
 }
@@ -286,6 +306,14 @@ const PRODUCT_FRAGMENT = `#graphql
       name
       optionValues {
         name
+        swatch {
+          color
+          image {
+            previewImage {
+              url
+            }
+          }
+        }
       }
     }
     encodedVariantExistence
