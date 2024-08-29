@@ -79,10 +79,12 @@ export function ShopifyAnalytics({
     onReady: () => setPrivacyReady(true),
   });
 
-  const hasUserConsent = privacyReady ? canTrack() : false;
-
   // set up shopify_Y and shopify_S cookies
-  useShopifyCookies({hasUserConsent, domain, checkoutDomain});
+  useShopifyCookies({
+    hasUserConsent: privacyReady ? canTrack() : true, // must be initialized with true
+    domain,
+    checkoutDomain
+  });
 
   useEffect(() => {
     if (init.current) return;
