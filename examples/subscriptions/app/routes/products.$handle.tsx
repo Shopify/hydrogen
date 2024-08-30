@@ -46,6 +46,7 @@ import {
   SellingPlanSelector,
   type SellingPlanGroup,
 } from '~/components/SellingPlanSelector';
+import {getSelectedSellingPlan} from '~/lib/getSelectedSellingPlan';
 import sellingPanStyle from '~/styles/selling-plan.css?url';
 import type {LinksFunction} from '@remix-run/node';
 
@@ -58,6 +59,7 @@ export const links: LinksFunction = () => [
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
 };
+
 
 export async function loader({params, request, context}: LoaderFunctionArgs) {
   const {handle} = params;
@@ -76,28 +78,16 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
     throw new Response(null, {status: 404});
   }
 
+
   /***********************************************/
   /**********  EXAMPLE UPDATE STARTS  ************/
-  // 2. Get the selected selling plan id from the request url
-  const selectedSellingPlanId =
-    new URL(request.url).searchParams.get('selling_plan') ?? null;
-  // 3. Get the selected selling plan from the product
-  const selectedSellingPlan =
-    product.sellingPlanGroups.nodes?.[0]?.sellingPlans.nodes?.find(
-      (sellingPlan: SellingPlanFragment) =>
-        sellingPlan.id === selectedSellingPlanId,
-    ) ?? null;
+  // 1. Get the selected selling plan
+  const {selectedSellingPlan, firstSellingPlanUrl} = getSelectedSellingPlan({ request, product })
 
-  // 4. If the product includes selling plans but no selling plan is selected,
+  // 2. If the product includes selling plans but no selling plan is selected,
   // we redirect to the first selling plan, so that's is selected by default
-  if (product.sellingPlanGroups.nodes?.length && !selectedSellingPlan) {
-    const firstSellingPlanId =
-      product.sellingPlanGroups.nodes[0].sellingPlans.nodes[0].id;
-    return redirect(
-      `/products/${product.handle}?${new URLSearchParams({
-        selling_plan: firstSellingPlanId,
-      }).toString()}`,
-    );
+  if (firstSellingPlanUrl) {
+    return redirect(firstSellingPlanUrl);
   }
   /**********   EXAMPLE UPDATE END   ************/
   /***********************************************/
@@ -134,7 +124,7 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
     variants,
     /***********************************************/
     /**********  EXAMPLE UPDATE STARTS  ************/
-    // 5. Pass the selectedSellingPlan to the client
+    // 3. Pass the selectedSellingPlan to the client
     selectedSellingPlan,
     /**********   EXAMPLE UPDATE END   ************/
     /***********************************************/
@@ -435,6 +425,7 @@ function SellingPlanGroup({
       <p className="mb-2">
         <strong>{sellingPlanGroup.name}:</strong>
       </p>
+      <div>
       {sellingPlanGroup.sellingPlans.nodes.map((sellingPlan) => {
         return (
           <Link
@@ -449,12 +440,13 @@ function SellingPlanGroup({
           >
             <p>
               {sellingPlan.options.map(
-                (option) => `${option.name} ${option.value}`,
+                (option) => `${option.value}`,
               )}
             </p>
           </Link>
         );
       })}
+      </div>
     </div>
   );
 }
@@ -485,6 +477,7 @@ function ProductForm({
     <div className="product-form">
       {/***********************************************/
       /**********  EXAMPLE UPDATE STARTS  ************/}
+
       {sellingPlanGroups.nodes.length > 0 ? (
         <>
           {/* 4. Add the SellingPlanSelector component inside the ProductForm */}
@@ -495,20 +488,20 @@ function ProductForm({
             {({sellingPlanGroup}) => (
               /* 5. Render the SellingPlanGroup component inside the SellingPlanSelector */
               <SellingPlanGroup
+              sellingPlanGroup={sellingPlanGroup}
                 key={sellingPlanGroup.name}
-                sellingPlanGroup={sellingPlanGroup}
               />
             )}
           </SellingPlanSelector>
         </>
       ) : (
-        <VariantSelector
-          handle={product.handle}
-          options={product.options}
-          variants={variants}
-        >
-          {({option}) => <ProductOptions key={option.name} option={option} />}
-        </VariantSelector>
+          <VariantSelector
+            handle={product.handle}
+            options={product.options}
+            variants={variants}
+          >
+            {({option}) => <ProductOptions key={option.name} option={option} />}
+          </VariantSelector>
       )}
       {/**********   EXAMPLE UPDATE END   ************/
       /***********************************************/}
@@ -648,17 +641,13 @@ const SELLING_PLAN_FRAGMENT = `#graphql
         ... on SellingPlanFixedAmountPriceAdjustment {
           __typename
           adjustmentAmount {
-            ... on MoneyV2 {
-               ...SellingPlanMoney
-            }
+             ...SellingPlanMoney
           }
         }
         ... on SellingPlanFixedPriceAdjustment {
           __typename
           price {
-            ... on MoneyV2 {
-              ...SellingPlanMoney
-            }
+            ...SellingPlanMoney
           }
         }
         ... on SellingPlanPercentagePriceAdjustment {

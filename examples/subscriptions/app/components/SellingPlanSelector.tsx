@@ -66,7 +66,8 @@ export function SellingPlanSelector({
               return null;
             }
             if (!sellingPlan.id) return null;
-            params.set(paramKey, sellingPlan.id);
+            const id = sellingPlan.id.split('/').pop() as string;
+            params.set(paramKey, id);
             sellingPlan.isSelected = selectedSellingPlan?.id === sellingPlan.id;
             sellingPlan.url = `${pathname}?${params.toString()}`;
             return sellingPlan;
