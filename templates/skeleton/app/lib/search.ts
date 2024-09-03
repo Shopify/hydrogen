@@ -48,10 +48,10 @@ interface UrlWithTrackingParams {
 
 /**
  * A utility function that appends tracking parameters to a URL. Tracking parameters are
- * used internally by shopify to enhance search results and admin dashboards.
+ * used internally by Shopify to enhance search results and admin dashboards.
  * @example
  * ```ts
- * const url = 'www.example.com';
+ * const baseUrl = 'www.example.com';
  * const trackingParams = 'utm_source=shopify&utm_medium=shopify_app&utm_campaign=storefront';
  * const params = { foo: 'bar' };
  * const term = 'search term';
