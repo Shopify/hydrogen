@@ -2,10 +2,6 @@
 
 This example contains a preview implementation of sitemap queries available in the unstable version of the Storefront API.
 
-## Requirements
-
-- Basic understanding of Remix's [pending optimistic UI](https://remix.run/docs/en/main/discussion/pending-ui)
-
 ## Install
 
 Setup a new project with this example:
