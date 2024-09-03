@@ -343,9 +343,16 @@ function useApisLoaded({
 
   const setLoaded = {
     customerPrivacy: () => {
-      setApisLoaded((prev) => [true, prev[1]]);
+      if (withPrivacyBanner) {
+        setApisLoaded((prev) => [true, prev[1]]);
+      } else {
+        setApisLoaded(() => [true]);
+      }
     },
     privacyBanner: () => {
+      if (!withPrivacyBanner) {
+        return;
+      }
       setApisLoaded((prev) => [prev[0], true]);
     },
   };
