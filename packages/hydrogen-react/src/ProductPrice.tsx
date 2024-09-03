@@ -49,6 +49,9 @@ export function ProductPrice<
       ) ?? null
     : null;
 
+  /**
+   * @deprecated (Next major release) Stop using compareAtPriceV2 and priceV2
+   */
   const variantPriceProperty =
     valueType === 'max' ? 'maxVariantPrice' : 'minVariantPrice';
 
