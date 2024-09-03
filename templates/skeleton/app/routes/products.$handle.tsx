@@ -141,8 +141,6 @@ export default function Product() {
                   swatch,
                 } = value;
 
-
-
                 if (isDifferentProduct) {
                   return (
                     <Link
