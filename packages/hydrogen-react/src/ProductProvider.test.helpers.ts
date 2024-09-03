@@ -56,6 +56,9 @@ export function getProduct(
 export function getVariant(
   variant: PartialDeep<ProductVariant, {recurseIntoArrays: true}> = {},
 ): PartialDeep<ProductVariant, {recurseIntoArrays: true}> {
+  const price = getPrice(variant.price);
+  const compareAtPrice = getPrice(variant.compareAtPrice ?? undefined);
+
   return {
     id: variant.id ?? faker.random.words(),
     title: variant.title ?? faker.random.words(),
@@ -65,8 +68,10 @@ export function getVariant(
     unitPriceMeasurement: getUnitPriceMeasurement(
       variant?.unitPriceMeasurement ?? undefined,
     ),
-    priceV2: getPrice(variant.priceV2),
-    compareAtPriceV2: getPrice(variant?.compareAtPriceV2 ?? undefined),
+    price,
+    priceV2: price,
+    compareAtPrice,
+    compareAtPriceV2: compareAtPrice,
     selectedOptions: [
       {name: faker.random.word(), value: faker.random.word()},
       {name: faker.random.word(), value: faker.random.word()},
