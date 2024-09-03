@@ -102,7 +102,7 @@
           "id": "2334",
           "steps": [
             {
-              "title": "Update your entry.server.jsx file to include this check",
+              "title": "Update your entry.client.jsx file to include this check",
               "code": "YGBgZGlmZgorIGlmICghd2luZG93LmxvY2F0aW9uLm9yaWdpbi5pbmNsdWRlcygid2ViY2FjaGUuZ29vZ2xldXNlcmNvbnRlbnQuY29tIikpIHsKICAgc3RhcnRUcmFuc2l0aW9uKCgpID0+IHsKICAgICBoeWRyYXRlUm9vdCgKICAgICAgIGRvY3VtZW50LAogICAgICAgPFN0cmljdE1vZGU+CiAgICAgICAgIDxSZW1peEJyb3dzZXIgLz4KICAgICAgIDwvU3RyaWN0TW9kZT4KICAgICApOwogICB9KTsKKyB9CmBgYA=="
             }
           ]
