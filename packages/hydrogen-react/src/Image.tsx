@@ -298,6 +298,7 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
           passthroughProps={passthroughProps}
           ref={ref}
           width={width}
+          data={data}
         />
       );
     } else {
@@ -314,6 +315,7 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
           placeholderWidth={placeholderWidth}
           ref={ref}
           sizes={sizes}
+          data={data}
         />
       );
     }
@@ -328,13 +330,14 @@ type FixedImageExludedProps =
   | 'srcSetOptions'
   | 'widths';
 
-type FixedWidthImageProps = Omit<HydrogenImageProps, FixedImageExludedProps> & {
-  loader: Loader;
-  passthroughProps: React.ImgHTMLAttributes<HTMLImageElement>;
-  normalizedProps: NormalizedProps;
-  imageWidths: number[];
-  ref: React.Ref<HTMLImageElement>;
-};
+type FixedWidthImageProps = Omit<HydrogenImageProps, FixedImageExludedProps> &
+  Pick<HydrogenImageBaseProps, 'data'> & {
+    loader: Loader;
+    passthroughProps: React.ImgHTMLAttributes<HTMLImageElement>;
+    normalizedProps: NormalizedProps;
+    imageWidths: number[];
+    ref: React.Ref<HTMLImageElement>;
+  };
 
 const FixedWidthImage = React.forwardRef<
   HTMLImageElement,
@@ -352,6 +355,7 @@ const FixedWidthImage = React.forwardRef<
       normalizedProps,
       passthroughProps,
       width,
+      data,
     },
     ref,
   ) => {
@@ -374,13 +378,16 @@ const FixedWidthImage = React.forwardRef<
         : undefined;
 
       /*
-       * The Sizes Array generates an array of all of the parts
+       * The Sizes Array generates an array of all the parts
        * that make up the srcSet, including the width, height, and crop
        */
       const sizesArray =
         imageWidths === undefined
           ? undefined
-          : generateSizes(imageWidths, fixedAspectRatio, crop);
+          : generateSizes(imageWidths, fixedAspectRatio, crop, {
+              width: data?.width ?? undefined,
+              height: data?.height ?? undefined,
+            });
 
       const fixedHeight = intHeight
         ? intHeight
@@ -406,6 +413,7 @@ const FixedWidthImage = React.forwardRef<
     }, [
       aspectRatio,
       crop,
+      data,
       height,
       imageWidths,
       loader,
@@ -441,14 +449,15 @@ type FluidImageExcludedProps =
   | 'loaderOptions'
   | 'srcSetOptions';
 
-type FluidImageProps = Omit<HydrogenImageProps, FluidImageExcludedProps> & {
-  imageWidths: number[];
-  loader: Loader;
-  normalizedProps: NormalizedProps;
-  passthroughProps: React.ImgHTMLAttributes<HTMLImageElement>;
-  placeholderWidth: number;
-  ref: React.Ref<HTMLImageElement>;
-};
+type FluidImageProps = Omit<HydrogenImageProps, FluidImageExcludedProps> &
+  Pick<HydrogenImageBaseProps, 'data'> & {
+    imageWidths: number[];
+    loader: Loader;
+    normalizedProps: NormalizedProps;
+    passthroughProps: React.ImgHTMLAttributes<HTMLImageElement>;
+    placeholderWidth: number;
+    ref: React.Ref<HTMLImageElement>;
+  };
 
 const FluidImage = React.forwardRef<HTMLImageElement, FluidImageProps>(
   (
@@ -462,6 +471,7 @@ const FluidImage = React.forwardRef<HTMLImageElement, FluidImageProps>(
       passthroughProps,
       placeholderWidth,
       sizes,
+      data,
     },
     ref,
   ) => {
@@ -469,7 +479,10 @@ const FluidImage = React.forwardRef<HTMLImageElement, FluidImageProps>(
       const sizesArray =
         imageWidths === undefined
           ? undefined
-          : generateSizes(imageWidths, normalizedProps.aspectRatio, crop);
+          : generateSizes(imageWidths, normalizedProps.aspectRatio, crop, {
+              width: data?.width ?? undefined,
+              height: data?.height ?? undefined,
+            });
 
       const placeholderHeight =
         normalizedProps.aspectRatio && placeholderWidth
@@ -491,7 +504,7 @@ const FluidImage = React.forwardRef<HTMLImageElement, FluidImageProps>(
         srcSet,
         src,
       };
-    }, [crop, imageWidths, loader, normalizedProps, placeholderWidth]);
+    }, [crop, data, imageWidths, loader, normalizedProps, placeholderWidth]);
 
     return (
       <img
@@ -621,10 +634,7 @@ function getNormalizedFixedUnit(value?: string | number): number | undefined {
  */
 function isFixedWidth(width: string | number): boolean {
   const fixedEndings = /\d(px|em|rem)$/;
-  return (
-    typeof width === 'number' ||
-    (typeof width === 'string' && fixedEndings.test(width))
-  );
+  return typeof width === 'number' || fixedEndings.test(width);
 }
 
 /**
@@ -705,6 +715,7 @@ export function generateSizes(
   imageWidths?: number[],
   aspectRatio?: string,
   crop: Crop = 'center',
+  sourceDimensions?: {width?: number; height?: number},
 ):
   | {
       width: number;
@@ -713,16 +724,31 @@ export function generateSizes(
     }[]
   | undefined {
   if (!imageWidths) return;
-  const sizes = imageWidths.map((width: number) => {
-    return {
-      width,
-      height: aspectRatio
-        ? width * (parseAspectRatio(aspectRatio) ?? 1)
-        : undefined,
-      crop,
-    };
-  });
-  return sizes;
+  return imageWidths
+    .map((width: number) => {
+      return {
+        width,
+        height: aspectRatio
+          ? width * (parseAspectRatio(aspectRatio) ?? 1)
+          : undefined,
+        crop,
+      };
+    })
+    .filter(({width, height}) => {
+      if (sourceDimensions?.width && width > sourceDimensions.width) {
+        return false;
+      }
+
+      if (
+        sourceDimensions?.height &&
+        height &&
+        height > sourceDimensions.height
+      ) {
+        return false;
+      }
+
+      return true;
+    });
   /*
     Given:
       ([100, 200], 1/1, 'center')

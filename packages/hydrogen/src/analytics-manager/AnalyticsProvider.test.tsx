@@ -104,6 +104,9 @@ vi.mock('./PerfKit', () => ({
 
 describe('<Analytics.Provider />', () => {
   beforeAll(() => {
+    global.document.cookie = `_cmp_a=%7B%22purposes%22%3A%7B%22p%22%3Afalse%2C%22a%22%3Afalse%2C%22m%22%3Afalse%2C%22t%22%3Atrue%7D%2C%22display_banner%22%3Afalse%2C%22sale_of_data_region%22%3Afalse%7D`;
+    global.document.cookie = `_tracking_consent=%7B%22con%22%3A%7B%22CMP%22%3A%7B%22a%22%3A%22%22%2C%22m%22%3A%22%22%2C%22p%22%3A%22%22%2C%22s%22%3A%22%22%7D%7D%2C%22v%22%3A%222.1%22%2C%22region%22%3A%22CAON%22%2C%22reg%22%3A%22%22%7D`;
+
     vi.stubGlobal(
       'fetch',
       function mockFetch(input: URL | RequestInfo): Promise<Response> {
@@ -139,16 +142,27 @@ describe('<Analytics.Provider />', () => {
   });
 
   describe('useAnalytics()', () => {
-    it('returns shop, cart, customData', async () => {
+    it('returns shop, cart, customData, privacyBanner and customerPrivacy', async () => {
+      const {analytics} = await renderAnalyticsProvider({
+        initialCart: CART_DATA,
+        customData: {test: 'test'},
+        mockCanTrack: false,
+      });
+
+      expect(analytics?.canTrack()).toBe(false);
+      expect(analytics?.shop).toBe(SHOP_DATA);
+      expect(analytics?.cart).toBe(CART_DATA);
+      expect(analytics?.customData).toEqual({test: 'test'});
+      expect(analytics?.privacyBanner).toEqual(null);
+      expect(analytics?.customerPrivacy).toEqual(null);
+    });
+
+    it('returns default canTrack true', async () => {
       const {analytics} = await renderAnalyticsProvider({
         initialCart: CART_DATA,
         customData: {test: 'test'},
       });
-
       expect(analytics?.canTrack()).toBe(true);
-      expect(analytics?.shop).toBe(SHOP_DATA);
-      expect(analytics?.cart).toBe(CART_DATA);
-      expect(analytics?.customData).toEqual({test: 'test'});
     });
 
     it('returns prevCart with an updated cart', async () => {
@@ -172,6 +186,7 @@ describe('<Analytics.Provider />', () => {
           analytics.subscribe('page_viewed', pageViewedEvent);
           ready();
         },
+        mockCanTrack: true,
       });
 
       expect(analytics?.canTrack()).toBe(true);
@@ -280,6 +295,7 @@ type RenderAnalyticsProviderProps = {
     ready: () => void,
   ) => void;
   children?: ReactNode;
+  mockCanTrack?: boolean;
 };
 
 async function renderAnalyticsProvider({
@@ -287,6 +303,7 @@ async function renderAnalyticsProvider({
   customData,
   registerCallback,
   children,
+  mockCanTrack = true,
 }: RenderAnalyticsProviderProps) {
   let analytics: AnalyticsContextValue | null = null;
   const getUpdatedAnalytics = () => analytics;
@@ -309,7 +326,10 @@ async function renderAnalyticsProvider({
         consent={CONSENT_DATA}
         customData={updateCustomData || customData}
       >
-        <LoopAnalytics registerCallback={registerCallback}>
+        <LoopAnalytics
+          registerCallback={registerCallback}
+          mockCanTrack={mockCanTrack}
+        >
           {loopAnalyticsFn}
         </LoopAnalytics>
         {children}
@@ -345,6 +365,7 @@ async function triggerCartUpdate({
       initialCart,
       customData,
       registerCallback,
+      mockCanTrack: true,
     });
 
   // Triggers a cart update
@@ -363,21 +384,35 @@ async function triggerCartUpdate({
 function LoopAnalytics({
   children,
   registerCallback,
+  mockCanTrack = true,
 }: {
   children: ReactNode | ((analytics: AnalyticsContextValue) => ReactNode);
   registerCallback?: (
     analytics: AnalyticsContextValue,
     ready: () => void,
   ) => void;
+  mockCanTrack?: boolean;
 }): JSX.Element {
   const analytics = useAnalytics();
   const {ready} = analytics.register('loopAnalytics');
   const {ready: customerPrivacyReady} = analytics.register(
-    'Internal_Shopify_CustomerPrivacy',
+    'Internal_Shopify_Customer_Privacy',
   );
   const {ready: perfKitReady} = analytics.register('Internal_Shopify_Perf_Kit');
+  const {ready: analyticsReady} = analytics.register(
+    'Internal_Shopify_Analytics',
+  );
 
   useEffect(() => {
+    // Mock the original customerPrivacy script injected APIs.
+    if (mockCanTrack) {
+      //@ts-ignore
+      global.window.Shopify = {};
+      global.window.Shopify.customerPrivacy = {
+        setTrackingConsent: () => {},
+        analyticsProcessingAllowed: () => true,
+      };
+    }
     if (registerCallback) {
       registerCallback(analytics, ready);
     } else {
@@ -385,8 +420,9 @@ function LoopAnalytics({
     }
   });
 
-  customerPrivacyReady();
   perfKitReady();
+  customerPrivacyReady();
+  analyticsReady();
 
   return (
     <div>{typeof children === 'function' ? children(analytics) : children}</div>
