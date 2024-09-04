@@ -1,4 +1,9 @@
-import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {
+  defer,
+  redirect,
+  type MetaArgs,
+  type LoaderFunctionArgs,
+} from '@shopify/remix-oxygen';
 import {
   useLoaderData,
   useNavigate,
@@ -11,14 +16,16 @@ import {
   Image,
   Money,
   Analytics,
+  getSeoMeta,
 } from '@shopify/hydrogen';
 import type {ProductItemFragment} from 'storefrontapi.generated';
 import {useEffect} from 'react';
 import {useVariantUrl} from '~/lib/variants';
+import {seoPayload} from '~/lib/seo';
 import {useInView} from 'react-intersection-observer';
 
-export const meta: MetaFunction<typeof loader> = ({data}) => {
-  return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
+export const meta = ({matches}: MetaArgs<typeof loader>) => {
+  return getSeoMeta(...matches.map((match) => (match.data as any).seo));
 };
 
 export async function loader(args: LoaderFunctionArgs) {
@@ -59,7 +66,10 @@ async function loadCriticalData({
       status: 404,
     });
   }
-  return {collection};
+
+  const seo = seoPayload.collection({collection, url: request.url});
+
+  return {collection, seo};
 }
 
 /**

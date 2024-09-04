@@ -1,5 +1,10 @@
 import {Suspense} from 'react';
-import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {
+  defer,
+  redirect,
+  type MetaArgs,
+  type LoaderFunctionArgs,
+} from '@shopify/remix-oxygen';
 import {
   Await,
   Link,
@@ -28,6 +33,7 @@ import {
   type CartViewPayload,
   useAnalytics,
   type OptimisticCartLineInput,
+  getSeoMeta,
 } from '@shopify/hydrogen';
 import type {
   SelectedOption,
@@ -38,6 +44,7 @@ import type {
   /***********************************************/
 } from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/lib/variants';
+import {seoPayload} from '~/lib/seo';
 import {useAside} from '~/components/Aside';
 /***********************************************/
 /**********  EXAMPLE UPDATE STARTS  ************/
@@ -55,8 +62,8 @@ export const links: LinksFunction = () => [
 /**********   EXAMPLE UPDATE END   ************/
 /***********************************************/
 
-export const meta: MetaFunction<typeof loader> = ({data}) => {
-  return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
+export const meta = ({matches}: MetaArgs<typeof loader>) => {
+  return getSeoMeta(...matches.map((match) => (match.data as any).seo));
 };
 
 export async function loader({params, request, context}: LoaderFunctionArgs) {

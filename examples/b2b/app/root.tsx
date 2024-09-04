@@ -1,5 +1,11 @@
-import {useNonce, getShopAnalytics, Analytics} from '@shopify/hydrogen';
-import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {
+  useNonce,
+  getShopAnalytics,
+  Analytics,
+  getSeoMeta,
+  SeoConfig,
+} from '@shopify/hydrogen';
+import {defer, MetaArgs, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {
   Links,
   Meta,
@@ -24,6 +30,7 @@ import type {
   CompanyLocation,
   Maybe,
 } from '@shopify/hydrogen/customer-account-api-types';
+import {seoPayload} from '~/lib/seo';
 
 export type RootLoader = typeof loader;
 
@@ -88,7 +95,11 @@ export type CustomerCompany =
 /**********   EXAMPLE UPDATE END   ************/
 /***********************************************/
 
-export async function loader({context}: LoaderFunctionArgs) {
+export const meta = ({data}: MetaArgs<typeof loader>) => {
+  return getSeoMeta(data!.seo as SeoConfig);
+};
+
+export async function loader({context, request}: LoaderFunctionArgs) {
   const {storefront, customerAccount, cart, env} = context;
   const publicStoreDomain = env.PUBLIC_STORE_DOMAIN;
 
@@ -104,17 +115,19 @@ export async function loader({context}: LoaderFunctionArgs) {
   });
 
   // await the header query (above the fold)
-  const headerPromise = storefront.query(HEADER_QUERY, {
+  const header = await storefront.query(HEADER_QUERY, {
     cache: storefront.CacheLong(),
     variables: {
       headerMenuHandle: 'main-menu', // Adjust to your header menu handle
     },
   });
 
+  const seo = seoPayload.root({shop: header.shop, url: request.url});
+
   return defer({
     cart: cartPromise,
     footer: footerPromise,
-    header: await headerPromise,
+    header,
     isLoggedIn: isLoggedInPromise,
     publicStoreDomain,
     shop: getShopAnalytics({
@@ -125,6 +138,7 @@ export async function loader({context}: LoaderFunctionArgs) {
       checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
     },
+    seo,
   });
 }
 

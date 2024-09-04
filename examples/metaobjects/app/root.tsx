@@ -1,5 +1,15 @@
-import {useNonce, getShopAnalytics, Analytics} from '@shopify/hydrogen';
-import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {
+  useNonce,
+  getShopAnalytics,
+  Analytics,
+  SeoConfig,
+  getSeoMeta,
+} from '@shopify/hydrogen';
+import {
+  defer,
+  type MetaArgs,
+  type LoaderFunctionArgs,
+} from '@shopify/remix-oxygen';
 import {
   Links,
   Meta,
@@ -16,6 +26,7 @@ import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import {PageLayout} from '~/components/PageLayout';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
+import {seoPayload} from '~/lib/seo';
 
 export type RootLoader = typeof loader;
 
@@ -56,7 +67,11 @@ export function links() {
   ];
 }
 
-export async function loader({context}: LoaderFunctionArgs) {
+export const meta = ({data}: MetaArgs<typeof loader>) => {
+  return getSeoMeta(data!.seo as SeoConfig);
+};
+
+export async function loader({context, request}: LoaderFunctionArgs) {
   const {storefront, customerAccount, cart, env} = context;
   const publicStoreDomain = env.PUBLIC_STORE_DOMAIN;
 
@@ -72,17 +87,19 @@ export async function loader({context}: LoaderFunctionArgs) {
   });
 
   // await the header query (above the fold)
-  const headerPromise = storefront.query(HEADER_QUERY, {
+  const header = await storefront.query(HEADER_QUERY, {
     cache: storefront.CacheLong(),
     variables: {
       headerMenuHandle: 'main-menu', // Adjust to your header menu handle
     },
   });
 
+  const seo = seoPayload.root({shop: header.shop, url: request.url});
+
   return defer({
     cart: cartPromise,
     footer: footerPromise,
-    header: await headerPromise,
+    header,
     isLoggedIn: isLoggedInPromise,
     publicStoreDomain,
     shop: getShopAnalytics({
@@ -93,6 +110,7 @@ export async function loader({context}: LoaderFunctionArgs) {
       checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
     },
+    seo,
     /***********************************************/
     /**********  EXAMPLE UPDATE STARTS  ************/
     publictoreSubdomain: context.env.PUBLIC_SHOPIFY_STORE_DOMAIN,
