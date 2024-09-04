@@ -116,6 +116,9 @@ export {
   type CustomEventMap,
   type CustomerPrivacyApiProps,
   useCustomerPrivacy,
+  /*
+    @deprecated use useAnalytics or useCustomerPrivacy instead
+  */
   getCustomerPrivacy,
 } from './customer-privacy/ShopifyCustomerPrivacy';
 
