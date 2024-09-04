@@ -12,6 +12,10 @@ export async function loader({context}) {
     consent: {
       checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+      withPrivacyBanner: true, // false stops the privacy banner from being displayed
+      // localize the privacy banner
+      country: context.storefront.i18n.country,
+      language: context.storefront.i18n.language,
     },
   });
 }
