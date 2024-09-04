@@ -22,7 +22,7 @@ import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import {PageLayout} from '~/components/PageLayout';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
-import {seoPayload} from './lib/seo';
+import {seoPayload} from '~/lib/seo';
 
 export type RootLoader = typeof loader;
 

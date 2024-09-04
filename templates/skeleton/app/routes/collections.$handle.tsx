@@ -54,13 +54,13 @@ async function loadCriticalData({
     }),
   ]);
 
-  const seo = seoPayload.collection({collection, url: request.url});
-
   if (!collection) {
     throw new Response(`Collection ${handle} not found`, {
       status: 404,
     });
   }
+
+  const seo = seoPayload.collection({collection, url: request.url});
 
   return {
     collection,
