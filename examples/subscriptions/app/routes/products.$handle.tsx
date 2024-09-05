@@ -14,8 +14,6 @@ import type {
   /***********************************************/
   /**********  EXAMPLE UPDATE STARTS  ************/
   SellingPlanFragment,
-  SellingPlanGroupFragment,
-  ProductQuery,
   /**********   EXAMPLE UPDATE END   ************/
   /***********************************************/
 } from 'storefrontapi.generated';
@@ -45,6 +43,7 @@ import { useAside } from '~/components/Aside';
 /**********  EXAMPLE UPDATE STARTS  ************/
 // 1. Import the SellingPlanSelector component and type
 import {
+  EnrichedSellingPlanGroup,
   SellingPlanSelector,
 } from '~/components/SellingPlanSelector';
 import { getSelectedSellingPlan } from '~/lib/getSelectedSellingPlan';
@@ -181,8 +180,8 @@ export default function Product() {
         /***********************************************/
         /**********  EXAMPLE UPDATE STARTS  ************/
         selectedSellingPlan={selectedSellingPlan}
-      /**********   EXAMPLE UPDATE END   ************/
-      /***********************************************/
+        /**********   EXAMPLE UPDATE END   ************/
+        /***********************************************/
       />
       <Analytics.ProductView
         data={{
@@ -362,7 +361,7 @@ function SellingPlanPrice({
         case 'SellingPlanFixedAmountPriceAdjustment':
           return {
             amount:
-              acc.amount +
+              acc.amount -
               parseFloat(adjustment.adjustmentValue.adjustmentAmount.amount),
             currencyCode: acc.currencyCode,
           };
@@ -549,29 +548,46 @@ function SellingPlanForm({
 function SellingPlanGroup({
   sellingPlanGroup,
 }: {
-  sellingPlanGroup: SellingPlanGroup;
+  sellingPlanGroup: EnrichedSellingPlanGroup
 }) {
   return (
-    <div key={sellingPlanGroup.name}>
-      <p className="mb-2">
+    <div key={sellingPlanGroup.name} style={{ marginTop: '1rem' }}>
+      <p style={{ marginBottom: '0.5rem' }}>
         <strong>{sellingPlanGroup.name}:</strong>
       </p>
       <div>
-        {sellingPlanGroup.sellingPlans.nodes.map((sellingPlan) => {
+        {sellingPlanGroup.sellingPlans.nodes.map(({
+          id,
+          options,
+          priceAdjustments,
+          recurringDeliveries,
+          checkoutCharge,
+          isSelected,
+          url
+        }) => {
+          const percentage = priceAdjustments[0]?.adjustmentValue?.adjustmentPercentage
+           ? `${priceAdjustments[0]?.adjustmentValue?.adjustmentPercentage}% off`
+            : undefined
+
+          const amount = priceAdjustments[0]?.adjustmentValue?.adjustmentAmount?.amount
+           ? `${priceAdjustments[0]?.adjustmentValue?.adjustmentAmount.currencyCode} ${priceAdjustments[0]?.adjustmentValue?.adjustmentAmount.amount} off`
+            : undefined
+
+          const price = priceAdjustments[0]?.adjustmentValue?.price?.amount
+           ? `${priceAdjustments[0]?.adjustmentValue?.price.currencyCode} ${priceAdjustments[0]?.adjustmentValue?.price.amount}`
+            : undefined
+
+          const discount = percentage ?? amount ?? price
           return (
             <Link
-              key={sellingPlan.id}
+              key={id}
               prefetch="intent"
-              to={sellingPlan.url}
-              className={`selling-plan ${sellingPlan.isSelected ? 'selected' : 'unselected'}`}
+              to={url}
+              className={`selling-plan ${isSelected ? 'selected' : 'unselected'}`}
               preventScrollReset
               replace
             >
-              <p>
-                {sellingPlan.options.map(
-                  (option) => `${option.value}`,
-                )}
-              </p>
+              <small>{options[0].value} {discount ? `(${discount})` : null}</small>
             </Link>
           );
         })}

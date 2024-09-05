@@ -90,7 +90,7 @@ export function SellingPlanSelector({
         return sellingPlanGroup;
       }),
     [baseSellingPlanGroups],
-  );
+  ) as EnrichedSellingPlanGroup[];
 
   return children({sellingPlanGroups, selectedSellingPlan});
 }

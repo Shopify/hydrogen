@@ -271,7 +271,6 @@ export type SellingPlanGroupFragment = Pick<
   StorefrontAPI.SellingPlanGroup,
   'name'
 > & {
-  options: Array<Pick<StorefrontAPI.SellingPlanGroupOption, 'name' | 'values'>>;
   sellingPlans: {
     nodes: Array<
       Pick<StorefrontAPI.SellingPlan, 'id' | 'recurringDeliveries'> & {
@@ -788,9 +787,6 @@ export type ProductFragment = Pick<
   sellingPlanGroups: {
     nodes: Array<
       Pick<StorefrontAPI.SellingPlanGroup, 'name'> & {
-        options: Array<
-          Pick<StorefrontAPI.SellingPlanGroupOption, 'name' | 'values'>
-        >;
         sellingPlans: {
           nodes: Array<
             Pick<StorefrontAPI.SellingPlan, 'id' | 'recurringDeliveries'> & {
@@ -909,9 +905,6 @@ export type ProductQuery = {
       sellingPlanGroups: {
         nodes: Array<
           Pick<StorefrontAPI.SellingPlanGroup, 'name'> & {
-            options: Array<
-              Pick<StorefrontAPI.SellingPlanGroupOption, 'name' | 'values'>
-            >;
             sellingPlans: {
               nodes: Array<
                 Pick<
@@ -1315,7 +1308,7 @@ interface GeneratedQueryTypes {
     return: PoliciesQuery;
     variables: PoliciesQueryVariables;
   };
-  '#graphql\n  query Product(\n    $country: CountryCode\n    $handle: String!\n    $language: LanguageCode\n    $selectedOptions: [SelectedOptionInput!]!\n  ) @inContext(country: $country, language: $language) {\n    product(handle: $handle) {\n      ...Product\n    }\n  }\n  #graphql\n  fragment Product on Product {\n    id\n    title\n    vendor\n    handle\n    descriptionHtml\n    description\n    options {\n      name\n      values\n    }\n    selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {\n      ...ProductVariant\n    }\n    variants(first: 1) {\n      nodes {\n        ...ProductVariant\n      }\n    }\n    seo {\n      description\n      title\n    }\n    #/***********************************************/\n    #/**********  EXAMPLE UPDATE STARTS  ************/\n    # 9. Add the SellingPlanGroups fragment to the Product fragment\n    sellingPlanGroups(first:10) {\n      nodes {\n        ...SellingPlanGroup\n      }\n    }\n    #/**********   EXAMPLE UPDATE END   ************/\n    #/***********************************************/\n  }\n  #graphql\n  fragment ProductVariant on ProductVariant {\n    availableForSale\n    compareAtPrice {\n      amount\n      currencyCode\n    }\n    id\n    image {\n      __typename\n      id\n      url\n      altText\n      width\n      height\n    }\n    price {\n      amount\n      currencyCode\n    }\n    product {\n      title\n      handle\n    }\n    selectedOptions {\n      name\n      value\n    }\n    sku\n    title\n    unitPrice {\n      amount\n      currencyCode\n    }\n  }\n\n  #/***********************************************/\n  #/**********  EXAMPLE UPDATE STARTS  ************/\n  #graphql\n  fragment SellingPlanGroup on SellingPlanGroup {\n    name\n    options {\n      name\n      values\n    }\n    sellingPlans(first:10) {\n      nodes {\n        ...SellingPlan\n      }\n    }\n  }\n  #graphql\n  fragment SellingPlanMoney on MoneyV2 {\n    amount\n    currencyCode\n  }\n  fragment SellingPlan on SellingPlan {\n    id\n    options {\n      name\n      value\n    }\n    priceAdjustments {\n      adjustmentValue {\n        ... on SellingPlanFixedAmountPriceAdjustment {\n          __typename\n          adjustmentAmount {\n             ...SellingPlanMoney\n          }\n        }\n        ... on SellingPlanFixedPriceAdjustment {\n          __typename\n          price {\n            ...SellingPlanMoney\n          }\n        }\n        ... on SellingPlanPercentagePriceAdjustment {\n          __typename\n          adjustmentPercentage\n        }\n      }\n      orderCount\n    }\n    recurringDeliveries\n    checkoutCharge {\n      type\n      value {\n        ... on MoneyV2 {\n          ...SellingPlanMoney\n        }\n        ... on SellingPlanCheckoutChargePercentageValue {\n          percentage\n        }\n      }\n    }\n }\n\n\n  #/**********   EXAMPLE UPDATE END   ************/\n  #/***********************************************/\n\n': {
+  '#graphql\n  query Product(\n    $country: CountryCode\n    $handle: String!\n    $language: LanguageCode\n    $selectedOptions: [SelectedOptionInput!]!\n  ) @inContext(country: $country, language: $language) {\n    product(handle: $handle) {\n      ...Product\n    }\n  }\n  #graphql\n  fragment Product on Product {\n    id\n    title\n    vendor\n    handle\n    descriptionHtml\n    description\n    options {\n      name\n      values\n    }\n    selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {\n      ...ProductVariant\n    }\n    variants(first: 1) {\n      nodes {\n        ...ProductVariant\n      }\n    }\n    seo {\n      description\n      title\n    }\n    #/***********************************************/\n    #/**********  EXAMPLE UPDATE STARTS  ************/\n    # 9. Add the SellingPlanGroups fragment to the Product fragment\n    sellingPlanGroups(first:10) {\n      nodes {\n        ...SellingPlanGroup\n      }\n    }\n    #/**********   EXAMPLE UPDATE END   ************/\n    #/***********************************************/\n  }\n  #graphql\n  fragment ProductVariant on ProductVariant {\n    availableForSale\n    compareAtPrice {\n      amount\n      currencyCode\n    }\n    id\n    image {\n      __typename\n      id\n      url\n      altText\n      width\n      height\n    }\n    price {\n      amount\n      currencyCode\n    }\n    product {\n      title\n      handle\n    }\n    selectedOptions {\n      name\n      value\n    }\n    sku\n    title\n    unitPrice {\n      amount\n      currencyCode\n    }\n  }\n\n  #/***********************************************/\n  #/**********  EXAMPLE UPDATE STARTS  ************/\n  #graphql\n  fragment SellingPlanGroup on SellingPlanGroup {\n    name\n#    options {\n#      name\n#      values\n#    }\n    sellingPlans(first:10) {\n      nodes {\n        ...SellingPlan\n      }\n    }\n  }\n  #graphql\n  fragment SellingPlan on SellingPlan {\n    id\n    options {\n      name\n      value\n    }\n    priceAdjustments {\n      adjustmentValue {\n        ... on SellingPlanFixedAmountPriceAdjustment {\n          __typename\n          adjustmentAmount {\n             ...SellingPlanMoney\n          }\n        }\n        ... on SellingPlanFixedPriceAdjustment {\n          __typename\n          price {\n            ...SellingPlanMoney\n          }\n        }\n        ... on SellingPlanPercentagePriceAdjustment {\n          __typename\n          adjustmentPercentage\n        }\n      }\n      orderCount\n    }\n    recurringDeliveries\n    checkoutCharge {\n      type\n      value {\n        ... on MoneyV2 {\n          ...SellingPlanMoney\n        }\n        ... on SellingPlanCheckoutChargePercentageValue {\n          percentage\n        }\n      }\n    }\n }\n #graphql\n  fragment SellingPlanMoney on MoneyV2 {\n    amount\n    currencyCode\n  }\n\n\n\n  #/**********   EXAMPLE UPDATE END   ************/\n  #/***********************************************/\n\n': {
     return: ProductQuery;
     variables: ProductQueryVariables;
   };

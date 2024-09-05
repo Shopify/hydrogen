@@ -188,11 +188,14 @@ export const FOOTER_QUERY = `#graphql
   ${MENU_FRAGMENT}
 ` as const;
 
-export const SELLING_PLAN_FRAGMENT = `#graphql
+export const SELLING_PLAN_MONEY = `#graphql
   fragment SellingPlanMoney on MoneyV2 {
     amount
     currencyCode
   }
+` as const;
+
+export const SELLING_PLAN_FRAGMENT = `#graphql
   fragment SellingPlan on SellingPlan {
     id
     options {
@@ -233,15 +236,16 @@ export const SELLING_PLAN_FRAGMENT = `#graphql
       }
     }
  }
+ ${SELLING_PLAN_MONEY}
 ` as const;
 
 export const SELLING_PLAN_GROUP_FRAGMENT = `#graphql
   fragment SellingPlanGroup on SellingPlanGroup {
     name
-    options {
-      name
-      values
-    }
+#    options {
+#      name
+#      values
+#    }
     sellingPlans(first:10) {
       nodes {
         ...SellingPlan
