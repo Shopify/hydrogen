@@ -82,6 +82,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
   /***********************************************/
   /**********  EXAMPLE UPDATE STARTS  ************/
   // 1. Get the selected selling plan
+  // TODO: selectedSellingPlan should perhaps return the actual price based on the plan type??
   const { selectedSellingPlan, firstSellingPlanUrl } = getSelectedSellingPlan<SellingPlanFragment>({
     request,
     productHandle: product.handle,
@@ -555,7 +556,7 @@ function SellingPlanGroup({
       <p style={{ marginBottom: '0.5rem' }}>
         <strong>{sellingPlanGroup.name}:</strong>
       </p>
-      <div>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
         {sellingPlanGroup.sellingPlans.nodes.map(({
           id,
           options,
@@ -612,7 +613,7 @@ function AddToCartButton({
   return (
     <CartForm route="/cart" inputs={{ lines }} action={CartForm.ACTIONS.LinesAdd}>
       {(fetcher: FetcherWithComponents<any>) => (
-        <>
+        <div style={{ marginTop: '2rem' }}>
           <input
             name="analytics"
             type="hidden"
@@ -625,7 +626,7 @@ function AddToCartButton({
           >
             {children}
           </button>
-        </>
+        </div>
       )}
     </CartForm>
   );
