@@ -1,24 +1,24 @@
-import type {
-  ProductFragment,
-  SellingPlanGroupFragment,
-  SellingPlanFragment,
-} from 'storefrontapi.generated';
+import type {Product, SellingPlan, SellingPlanGroup} from '@shopify/hydrogen/storefront-api-types';
 import {useMemo} from 'react';
 import {useLocation} from '@remix-run/react';
 
+type DeepPartial<T> = {
+	[P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
+};
+
 /* Enriched sellingPlan type including isSelected and url */
-export type SellingPlan = SellingPlanFragment & {
+export type EnrichedSellingPlan = SellingPlan & {
   isSelected: boolean;
   url: string;
 };
 
 /* Enriched sellingPlanGroup type including enriched SellingPlan nodes */
-export type SellingPlanGroup = Omit<
-  SellingPlanGroupFragment,
+export type EnrichedSellingPlanGroup = Omit<
+  SellingPlanGroup,
   'sellingPlans'
 > & {
   sellingPlans: {
-    nodes: SellingPlan[];
+    nodes: EnrichedSellingPlan[];
   };
 };
 
@@ -30,52 +30,67 @@ export type SellingPlanGroup = Omit<
  *     sellingPlanGroups={sellingPlanGroups}
  *     selectedSellingPlanId={selectedSellingPlanId}
  *   >
- *     {({sellingPlanGroup}) => ( ...your sellingPlanGroup component )}
+ *     {({sellingPlanGroups}) => ( ...your sellingPlanGroups component )}
  *  </SellingPlanSelector>
  *  ```
  **/
 export function SellingPlanSelector({
-  sellingPlanGroups,
+  sellingPlanGroups: baseSellingPlanGroups,
   selectedSellingPlan,
   children,
   paramKey = 'selling_plan',
 }: {
-  sellingPlanGroups: ProductFragment['sellingPlanGroups'];
-  selectedSellingPlan: SellingPlanFragment | null;
+  sellingPlanGroups: DeepPartial<SellingPlanGroup[]>;
+  selectedSellingPlan: DeepPartial<SellingPlan> | null;
   paramKey?: string;
   children: (params: {
-    sellingPlanGroup: SellingPlanGroup;
-    selectedSellingPlan: SellingPlanFragment | null;
+    sellingPlanGroups: EnrichedSellingPlanGroup[];
+    selectedSellingPlan: DeepPartial<SellingPlan> | null;
   }) => React.ReactNode;
 }) {
   const {search, pathname} = useLocation();
   const params = new URLSearchParams(search);
 
-  return useMemo(
+  const sellingPlanGroups = useMemo(
     () =>
       // @ts-ignore
-      sellingPlanGroups.nodes.map((sellingPlanGroup: SellingPlanGroup) => {
+      baseSellingPlanGroups.map((sellingPlanGroup) => {
         // Augmnet each sellingPlan node with isSelected and url
-        const sellingPlans = sellingPlanGroup.sellingPlans.nodes
-          .map((sellingPlan) => {
-            if (!sellingPlan?.id) {
+        if (!sellingPlanGroup?.sellingPlans?.nodes) {
+          // @ts-ignore
+          console.warn(
+            'SellingPlanSelector: sellingPlanGroup.sellingPlans.nodes is missing in the product query',
+          );
+          return null;
+        }
+
+        const sellingPlans = sellingPlanGroup?.sellingPlans?.nodes
+          .map((baseSellingPlan) => {
+            const sellingPlan = baseSellingPlan as EnrichedSellingPlan;
+            if (!baseSellingPlan?.id) {
               // @ts-ignore
               console.warn(
                 'SellingPlanSelector: sellingPlan.id is missing in the product query',
               );
               return null;
             }
-            if (!sellingPlan.id) return null;
-            const id = sellingPlan.id.split('/').pop() as string;
+            if (!baseSellingPlan.id) return null;
+
+            const id = baseSellingPlan.id.split('/').pop() as string;
             params.set(paramKey, id);
-            sellingPlan.isSelected = selectedSellingPlan?.id === sellingPlan.id;
+
+            sellingPlan.isSelected = selectedSellingPlan?.id === baseSellingPlan.id;
             sellingPlan.url = `${pathname}?${params.toString()}`;
             return sellingPlan;
           })
-          .filter(Boolean) as SellingPlan[];
+          .filter(Boolean) as EnrichedSellingPlan[];
+
         sellingPlanGroup.sellingPlans.nodes = sellingPlans;
-        return children({sellingPlanGroup, selectedSellingPlan});
+
+        return sellingPlanGroup;
       }),
-    [sellingPlanGroups],
+    [baseSellingPlanGroups],
   );
+
+  return children({sellingPlanGroups, selectedSellingPlan});
 }

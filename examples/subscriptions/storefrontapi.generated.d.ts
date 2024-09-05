@@ -229,6 +229,87 @@ export type FooterQuery = {
   >;
 };
 
+export type SellingPlanMoneyFragment = Pick<
+  StorefrontAPI.MoneyV2,
+  'amount' | 'currencyCode'
+>;
+
+export type SellingPlanFragment = Pick<
+  StorefrontAPI.SellingPlan,
+  'id' | 'recurringDeliveries'
+> & {
+  options: Array<Pick<StorefrontAPI.SellingPlanOption, 'name' | 'value'>>;
+  priceAdjustments: Array<
+    Pick<StorefrontAPI.SellingPlanPriceAdjustment, 'orderCount'> & {
+      adjustmentValue:
+        | ({__typename: 'SellingPlanFixedAmountPriceAdjustment'} & {
+            adjustmentAmount: Pick<
+              StorefrontAPI.MoneyV2,
+              'amount' | 'currencyCode'
+            >;
+          })
+        | ({__typename: 'SellingPlanFixedPriceAdjustment'} & {
+            price: Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>;
+          })
+        | ({__typename: 'SellingPlanPercentagePriceAdjustment'} & Pick<
+            StorefrontAPI.SellingPlanPercentagePriceAdjustment,
+            'adjustmentPercentage'
+          >);
+    }
+  >;
+  checkoutCharge: Pick<StorefrontAPI.SellingPlanCheckoutCharge, 'type'> & {
+    value:
+      | Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
+      | Pick<
+          StorefrontAPI.SellingPlanCheckoutChargePercentageValue,
+          'percentage'
+        >;
+  };
+};
+
+export type SellingPlanGroupFragment = Pick<
+  StorefrontAPI.SellingPlanGroup,
+  'name'
+> & {
+  options: Array<Pick<StorefrontAPI.SellingPlanGroupOption, 'name' | 'values'>>;
+  sellingPlans: {
+    nodes: Array<
+      Pick<StorefrontAPI.SellingPlan, 'id' | 'recurringDeliveries'> & {
+        options: Array<Pick<StorefrontAPI.SellingPlanOption, 'name' | 'value'>>;
+        priceAdjustments: Array<
+          Pick<StorefrontAPI.SellingPlanPriceAdjustment, 'orderCount'> & {
+            adjustmentValue:
+              | ({__typename: 'SellingPlanFixedAmountPriceAdjustment'} & {
+                  adjustmentAmount: Pick<
+                    StorefrontAPI.MoneyV2,
+                    'amount' | 'currencyCode'
+                  >;
+                })
+              | ({__typename: 'SellingPlanFixedPriceAdjustment'} & {
+                  price: Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>;
+                })
+              | ({__typename: 'SellingPlanPercentagePriceAdjustment'} & Pick<
+                  StorefrontAPI.SellingPlanPercentagePriceAdjustment,
+                  'adjustmentPercentage'
+                >);
+          }
+        >;
+        checkoutCharge: Pick<
+          StorefrontAPI.SellingPlanCheckoutCharge,
+          'type'
+        > & {
+          value:
+            | Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
+            | Pick<
+                StorefrontAPI.SellingPlanCheckoutChargePercentageValue,
+                'percentage'
+              >;
+        };
+      }
+    >;
+  };
+};
+
 export type StoreRobotsQueryVariables = StorefrontAPI.Exact<{
   country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
   language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
@@ -623,87 +704,6 @@ export type PoliciesQuery = {
     >;
     subscriptionPolicy?: StorefrontAPI.Maybe<
       Pick<StorefrontAPI.ShopPolicyWithDefault, 'id' | 'title' | 'handle'>
-    >;
-  };
-};
-
-export type SellingPlanMoneyFragment = Pick<
-  StorefrontAPI.MoneyV2,
-  'amount' | 'currencyCode'
->;
-
-export type SellingPlanFragment = Pick<
-  StorefrontAPI.SellingPlan,
-  'id' | 'recurringDeliveries'
-> & {
-  options: Array<Pick<StorefrontAPI.SellingPlanOption, 'name' | 'value'>>;
-  priceAdjustments: Array<
-    Pick<StorefrontAPI.SellingPlanPriceAdjustment, 'orderCount'> & {
-      adjustmentValue:
-        | ({__typename: 'SellingPlanFixedAmountPriceAdjustment'} & {
-            adjustmentAmount: Pick<
-              StorefrontAPI.MoneyV2,
-              'amount' | 'currencyCode'
-            >;
-          })
-        | ({__typename: 'SellingPlanFixedPriceAdjustment'} & {
-            price: Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>;
-          })
-        | ({__typename: 'SellingPlanPercentagePriceAdjustment'} & Pick<
-            StorefrontAPI.SellingPlanPercentagePriceAdjustment,
-            'adjustmentPercentage'
-          >);
-    }
-  >;
-  checkoutCharge: Pick<StorefrontAPI.SellingPlanCheckoutCharge, 'type'> & {
-    value:
-      | Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
-      | Pick<
-          StorefrontAPI.SellingPlanCheckoutChargePercentageValue,
-          'percentage'
-        >;
-  };
-};
-
-export type SellingPlanGroupFragment = Pick<
-  StorefrontAPI.SellingPlanGroup,
-  'name'
-> & {
-  options: Array<Pick<StorefrontAPI.SellingPlanGroupOption, 'name' | 'values'>>;
-  sellingPlans: {
-    nodes: Array<
-      Pick<StorefrontAPI.SellingPlan, 'id' | 'recurringDeliveries'> & {
-        options: Array<Pick<StorefrontAPI.SellingPlanOption, 'name' | 'value'>>;
-        priceAdjustments: Array<
-          Pick<StorefrontAPI.SellingPlanPriceAdjustment, 'orderCount'> & {
-            adjustmentValue:
-              | ({__typename: 'SellingPlanFixedAmountPriceAdjustment'} & {
-                  adjustmentAmount: Pick<
-                    StorefrontAPI.MoneyV2,
-                    'amount' | 'currencyCode'
-                  >;
-                })
-              | ({__typename: 'SellingPlanFixedPriceAdjustment'} & {
-                  price: Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>;
-                })
-              | ({__typename: 'SellingPlanPercentagePriceAdjustment'} & Pick<
-                  StorefrontAPI.SellingPlanPercentagePriceAdjustment,
-                  'adjustmentPercentage'
-                >);
-          }
-        >;
-        checkoutCharge: Pick<
-          StorefrontAPI.SellingPlanCheckoutCharge,
-          'type'
-        > & {
-          value:
-            | Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
-            | Pick<
-                StorefrontAPI.SellingPlanCheckoutChargePercentageValue,
-                'percentage'
-              >;
-        };
-      }
     >;
   };
 };

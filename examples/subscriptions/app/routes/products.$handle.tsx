@@ -1,5 +1,5 @@
-import {Suspense} from 'react';
-import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import { Suspense } from 'react';
+import { defer, redirect, type LoaderFunctionArgs } from '@shopify/remix-oxygen';
 import {
   Await,
   Link,
@@ -14,6 +14,8 @@ import type {
   /***********************************************/
   /**********  EXAMPLE UPDATE STARTS  ************/
   SellingPlanFragment,
+  SellingPlanGroupFragment,
+  ProductQuery,
   /**********   EXAMPLE UPDATE END   ************/
   /***********************************************/
 } from 'storefrontapi.generated';
@@ -37,61 +39,65 @@ import type {
   /**********   EXAMPLE UPDATE END   ************/
   /***********************************************/
 } from '@shopify/hydrogen/storefront-api-types';
-import {getVariantUrl} from '~/lib/variants';
-import {useAside} from '~/components/Aside';
+import { getVariantUrl } from '~/lib/variants';
+import { useAside } from '~/components/Aside';
 /***********************************************/
 /**********  EXAMPLE UPDATE STARTS  ************/
 // 1. Import the SellingPlanSelector component and type
 import {
   SellingPlanSelector,
-  type SellingPlanGroup,
 } from '~/components/SellingPlanSelector';
-import {getSelectedSellingPlan} from '~/lib/getSelectedSellingPlan';
+import { getSelectedSellingPlan } from '~/lib/getSelectedSellingPlan';
 import sellingPanStyle from '~/styles/selling-plan.css?url';
-import type {LinksFunction} from '@remix-run/node';
+import type { LinksFunction } from '@remix-run/node';
+import { SELLING_PLAN_GROUP_FRAGMENT } from 'app/lib/fragments';
 
 export const links: LinksFunction = () => [
-  {rel: 'stylesheet', href: sellingPanStyle},
+  { rel: 'stylesheet', href: sellingPanStyle },
 ];
 /**********   EXAMPLE UPDATE END   ************/
 /***********************************************/
 
-export const meta: MetaFunction<typeof loader> = ({data}) => {
-  return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+  return [{ title: `Hydrogen | ${data?.product.title ?? ''}` }];
 };
 
-
-export async function loader({params, request, context}: LoaderFunctionArgs) {
-  const {handle} = params;
-  const {storefront} = context;
+export async function loader({ params, request, context }: LoaderFunctionArgs) {
+  const { handle } = params;
+  const { storefront } = context;
 
   if (!handle) {
     throw new Error('Expected product handle to be defined');
   }
 
   // await the query for the critical product data
-  const {product} = await storefront.query(PRODUCT_QUERY, {
-    variables: {handle, selectedOptions: getSelectedProductOptions(request)},
+  const { product } = await storefront.query(PRODUCT_QUERY, {
+    variables: { handle, selectedOptions: getSelectedProductOptions(request) },
   });
 
   if (!product?.id) {
-    throw new Response(null, {status: 404});
+    throw new Response(null, { status: 404 });
   }
 
 
   /***********************************************/
   /**********  EXAMPLE UPDATE STARTS  ************/
   // 1. Get the selected selling plan
-  const {selectedSellingPlan, firstSellingPlanUrl} = getSelectedSellingPlan({ request, product })
+  const { selectedSellingPlan, firstSellingPlanUrl } = getSelectedSellingPlan<SellingPlanFragment>({
+    request,
+    productHandle: product.handle,
+    sellingPlanGroups: product.sellingPlanGroups.nodes,
+  })
 
   // 2. If the product includes selling plans but no selling plan is selected,
   // we redirect to the first selling plan, so that's is selected by default
-  if (firstSellingPlanUrl) {
-    return redirect(firstSellingPlanUrl);
+  if (!selectedSellingPlan) {
+    if (firstSellingPlanUrl) {
+      return redirect(firstSellingPlanUrl);
+    }
   }
   /**********   EXAMPLE UPDATE END   ************/
   /***********************************************/
-
   const firstVariant = product.variants.nodes[0];
   const firstVariantIsDefault = Boolean(
     firstVariant.selectedOptions.find(
@@ -106,7 +112,7 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
     // if no selected variant was returned from the selected options,
     // we redirect to the first variant's url with it's selected options applied
     if (!product.selectedVariant) {
-      throw redirectToFirstVariant({product, request});
+      throw redirectToFirstVariant({ product, request });
     }
   }
 
@@ -116,7 +122,7 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
   // where variant options might show as available when they're not, but after
   // this deffered query resolves, the UI will update.
   const variants = storefront.query(VARIANTS_QUERY, {
-    variables: {handle},
+    variables: { handle },
   });
 
   return defer({
@@ -164,7 +170,7 @@ export default function Product() {
     /**********   EXAMPLE UPDATE END   ************/
     /***********************************************/
   } = useLoaderData<typeof loader>();
-  const {selectedVariant} = product;
+  const { selectedVariant } = product;
   return (
     <div className="product">
       <ProductImage image={selectedVariant?.image} />
@@ -175,8 +181,8 @@ export default function Product() {
         /***********************************************/
         /**********  EXAMPLE UPDATE STARTS  ************/
         selectedSellingPlan={selectedSellingPlan}
-        /**********   EXAMPLE UPDATE END   ************/
-        /***********************************************/
+      /**********   EXAMPLE UPDATE END   ************/
+      /***********************************************/
       />
       <Analytics.ProductView
         data={{
@@ -197,7 +203,7 @@ export default function Product() {
   );
 }
 
-function ProductImage({image}: {image: ProductVariantFragment['image']}) {
+function ProductImage({ image }: { image: ProductVariantFragment['image'] }) {
   if (!image) {
     return <div className="product-image" />;
   }
@@ -242,56 +248,54 @@ function ProductMain({
   return (
     <div className="product-main">
       <h1>{title}</h1>
-      <ProductPrice
-        selectedVariant={selectedVariant}
-        /***********************************************/
-        /**********  EXAMPLE UPDATE STARTS  ************/
-        selectedSellingPlan={selectedSellingPlan}
-        /**********   EXAMPLE UPDATE END   ************/
-        /***********************************************/
-      />
-      <br />
-      <Suspense
-        fallback={
-          <ProductForm
-            product={product}
+      {selectedSellingPlan ? (
+        <>
+          <SellingPlanPrice
+            selectedSellingPlan={selectedSellingPlan}
             selectedVariant={selectedVariant}
-            variants={[]}
-            /***********************************************/
-            /**********  EXAMPLE UPDATE STARTS  ************/
+          />
+          <SellingPlanForm
+            selectedVariant={selectedVariant}
             selectedSellingPlan={selectedSellingPlan}
             sellingPlanGroups={sellingPlanGroups}
-            /**********   EXAMPLE UPDATE END   ************/
-            /***********************************************/
           />
-        }
-      >
-        <Await
-          errorElement="There was a problem loading product variants"
-          resolve={variants}
-        >
-          {(data) => (
-            <ProductForm
-              product={product}
-              selectedVariant={selectedVariant}
-              variants={data.product?.variants.nodes || []}
-              /***********************************************/
-              /**********  EXAMPLE UPDATE STARTS  ************/
-              selectedSellingPlan={selectedSellingPlan}
-              sellingPlanGroups={sellingPlanGroups}
-              /**********   EXAMPLE UPDATE END   ************/
-              /***********************************************/
-            />
-          )}
-        </Await>
-      </Suspense>
+        </>
+      ) : (
+        <>
+          <ProductPrice
+            selectedVariant={selectedVariant}
+          />
+          <Suspense
+            fallback={
+              <ProductForm
+                product={product}
+                selectedVariant={selectedVariant}
+                variants={[]}
+              />
+            }
+          >
+            <Await
+              errorElement="There was a problem loading product variants"
+              resolve={variants}
+            >
+              {(data) => (
+                <ProductForm
+                  product={product}
+                  selectedVariant={selectedVariant}
+                  variants={data.product?.variants.nodes || []}
+                />
+              )}
+            </Await>
+          </Suspense>
+        </>
+      )}
       <br />
       <br />
       <p>
         <strong>Description</strong>
       </p>
       <br />
-      <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
+      <div dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
       <br />
     </div>
   );
@@ -299,28 +303,9 @@ function ProductMain({
 
 function ProductPrice({
   selectedVariant,
-  selectedSellingPlan,
 }: {
   selectedVariant: ProductFragment['selectedVariant'];
-  /***********************************************/
-  /**********  EXAMPLE UPDATE STARTS  ************/
-  selectedSellingPlan: SellingPlanFragment | null;
-  /**********   EXAMPLE UPDATE END   ************/
-  /***********************************************/
 }) {
-  /***********************************************/
-  /**********  EXAMPLE UPDATE STARTS  ************/
-  if (selectedSellingPlan) {
-    return (
-      <SellingPlanPrice
-        selectedSellingPlan={selectedSellingPlan}
-        selectedVariant={selectedVariant}
-      />
-    );
-  }
-  /**********   EXAMPLE UPDATE END   ************/
-  /***********************************************/
-
   return (
     <div className="product-price">
       {selectedVariant?.compareAtPrice ? (
@@ -341,8 +326,6 @@ function ProductPrice({
   );
 }
 
-/***********************************************/
-/**********  EXAMPLE UPDATE STARTS  ************/
 type SellingPlanPrice = {
   amount: number;
   currencyCode: CurrencyCode;
@@ -414,107 +397,32 @@ function SellingPlanPrice({
   );
 }
 
-// Update as you see fit to match your design and requirements
-function SellingPlanGroup({
-  sellingPlanGroup,
-}: {
-  sellingPlanGroup: SellingPlanGroup;
-}) {
-  return (
-    <div key={sellingPlanGroup.name}>
-      <p className="mb-2">
-        <strong>{sellingPlanGroup.name}:</strong>
-      </p>
-      <div>
-      {sellingPlanGroup.sellingPlans.nodes.map((sellingPlan) => {
-        return (
-          <Link
-            key={sellingPlan.id}
-            prefetch="intent"
-            to={sellingPlan.url}
-            className={`selling-plan ${
-              sellingPlan.isSelected ? 'selected' : 'unselected'
-            }`}
-            preventScrollReset
-            replace
-          >
-            <p>
-              {sellingPlan.options.map(
-                (option) => `${option.value}`,
-              )}
-            </p>
-          </Link>
-        );
-      })}
-      </div>
-    </div>
-  );
-}
-/**********   EXAMPLE UPDATE END   ************/
-/***********************************************/
-
 function ProductForm({
   product,
   selectedVariant,
   variants,
-  selectedSellingPlan,
-  sellingPlanGroups,
 }: {
   product: ProductFragment;
   selectedVariant: ProductFragment['selectedVariant'];
   variants: Array<ProductVariantFragment>;
-  /***********************************************/
-  /**********  EXAMPLE UPDATE STARTS  ************/
-  selectedSellingPlan: SellingPlanFragment | null;
-  sellingPlanGroups: ProductFragment['sellingPlanGroups'];
-  /**********   EXAMPLE UPDATE END   ************/
-  /***********************************************/
 }) {
-  const {open} = useAside();
-  const {publish, shop, cart, prevCart} = useAnalytics();
+  const { open } = useAside();
+  const { publish, shop, cart, prevCart } = useAnalytics();
 
   return (
     <div className="product-form">
-      {/***********************************************/
-      /**********  EXAMPLE UPDATE STARTS  ************/}
-
-      {sellingPlanGroups.nodes.length > 0 ? (
-        <>
-          {/* 4. Add the SellingPlanSelector component inside the ProductForm */}
-          <SellingPlanSelector
-            sellingPlanGroups={sellingPlanGroups}
-            selectedSellingPlan={selectedSellingPlan}
-          >
-            {({sellingPlanGroup}) => (
-              /* 5. Render the SellingPlanGroup component inside the SellingPlanSelector */
-              <SellingPlanGroup
-              sellingPlanGroup={sellingPlanGroup}
-                key={sellingPlanGroup.name}
-              />
-            )}
-          </SellingPlanSelector>
-        </>
-      ) : (
-          <VariantSelector
-            handle={product.handle}
-            options={product.options}
-            variants={variants}
-          >
-            {({option}) => <ProductOptions key={option.name} option={option} />}
-          </VariantSelector>
-      )}
-      {/**********   EXAMPLE UPDATE END   ************/
-      /***********************************************/}
+      <VariantSelector
+        handle={product.handle}
+        options={product.options}
+        variants={variants}
+      >
+        {({ option }) => <ProductOptions key={option.name} option={option} />}
+      </VariantSelector>
       <br />
       <AddToCartButton
         disabled={
           !selectedVariant ||
-          !selectedVariant.availableForSale ||
-          /***********************************************/
-          /**********  EXAMPLE UPDATE STARTS  ************/
-          (sellingPlanGroups.nodes.length > 0 && !selectedSellingPlan)
-          /**********   EXAMPLE UPDATE END   ************/
-          /***********************************************/
+          !selectedVariant.availableForSale
         }
         onClick={() => {
           open('cart');
@@ -528,42 +436,29 @@ function ProductForm({
         lines={
           selectedVariant
             ? [
-                {
-                  merchandiseId: selectedVariant.id,
-                  quantity: 1,
-                  selectedVariant,
-                  /***********************************************/
-                  /**********  EXAMPLE UPDATE STARTS  ************/
-                  sellingPlanId: selectedSellingPlan?.id,
-                  /**********   EXAMPLE UPDATE END   ************/
-                  /***********************************************/
-                },
-              ]
+              {
+                merchandiseId: selectedVariant.id,
+                quantity: 1,
+                selectedVariant,
+              },
+            ]
             : []
         }
       >
-        {/***********************************************/
-        /**********  EXAMPLE UPDATE STARTS  ************/}
-        {sellingPlanGroups.nodes.length > 0
-          ? selectedSellingPlan
-            ? 'Subscribe'
-            : 'Select a subscription'
-          : selectedVariant?.availableForSale
+        {selectedVariant?.availableForSale
           ? 'Add to cart'
           : 'Sold out'}
-        {/**********   EXAMPLE UPDATE END   ************/
-        /***********************************************/}
       </AddToCartButton>
     </div>
   );
 }
 
-function ProductOptions({option}: {option: VariantOption}) {
+function ProductOptions({ option }: { option: VariantOption }) {
   return (
     <div className="product-options" key={option.name}>
       <h5>{option.name}</h5>
       <div className="product-options-grid">
-        {option.values.map(({value, isAvailable, isActive, to}) => {
+        {option.values.map(({ value, isAvailable, isActive, to }) => {
           return (
             <Link
               className="product-options-item"
@@ -587,6 +482,104 @@ function ProductOptions({option}: {option: VariantOption}) {
   );
 }
 
+function SellingPlanForm({
+  selectedVariant,
+  selectedSellingPlan,
+  sellingPlanGroups,
+}: {
+  selectedVariant: ProductFragment['selectedVariant'];
+  selectedSellingPlan: SellingPlanFragment | null;
+  sellingPlanGroups: ProductFragment['sellingPlanGroups'];
+}) {
+  const { open } = useAside();
+  const { publish, shop, cart, prevCart } = useAnalytics();
+
+  return (
+    <div className="selling-plan-form">
+      <SellingPlanSelector
+        sellingPlanGroups={sellingPlanGroups.nodes}
+        selectedSellingPlan={selectedSellingPlan}
+      >
+        {({ sellingPlanGroups }) => {
+          return (
+            sellingPlanGroups?.map((sellingPlanGroup) =>
+              <SellingPlanGroup
+                sellingPlanGroup={sellingPlanGroup}
+                key={sellingPlanGroup.name}
+              />
+            ))
+
+        }}
+      </SellingPlanSelector>
+      <AddToCartButton
+        disabled={
+          !selectedVariant ||
+          !selectedVariant.availableForSale ||
+          (sellingPlanGroups.nodes.length > 0 && !selectedSellingPlan)
+        }
+        onClick={() => {
+          open('cart');
+          publish('cart_viewed', {
+            cart,
+            prevCart,
+            shop,
+            url: window.location.href || '',
+          } as CartViewPayload);
+        }}
+        lines={
+          selectedVariant
+            ? [
+              {
+                merchandiseId: selectedVariant.id,
+                quantity: 1,
+                selectedVariant,
+                sellingPlanId: selectedSellingPlan?.id,
+              },
+            ]
+            : []
+        }
+      >
+        {selectedSellingPlan ? 'Subscribe' : 'Select a subscription'}
+      </AddToCartButton>
+    </div>
+  );
+}
+
+// Update as you see fit to match your design and requirements
+function SellingPlanGroup({
+  sellingPlanGroup,
+}: {
+  sellingPlanGroup: SellingPlanGroup;
+}) {
+  return (
+    <div key={sellingPlanGroup.name}>
+      <p className="mb-2">
+        <strong>{sellingPlanGroup.name}:</strong>
+      </p>
+      <div>
+        {sellingPlanGroup.sellingPlans.nodes.map((sellingPlan) => {
+          return (
+            <Link
+              key={sellingPlan.id}
+              prefetch="intent"
+              to={sellingPlan.url}
+              className={`selling-plan ${sellingPlan.isSelected ? 'selected' : 'unselected'}`}
+              preventScrollReset
+              replace
+            >
+              <p>
+                {sellingPlan.options.map(
+                  (option) => `${option.value}`,
+                )}
+              </p>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function AddToCartButton({
   analytics,
   children,
@@ -601,7 +594,7 @@ function AddToCartButton({
   onClick?: () => void;
 }) {
   return (
-    <CartForm route="/cart" inputs={{lines}} action={CartForm.ACTIONS.LinesAdd}>
+    <CartForm route="/cart" inputs={{ lines }} action={CartForm.ACTIONS.LinesAdd}>
       {(fetcher: FetcherWithComponents<any>) => (
         <>
           <input
@@ -621,75 +614,6 @@ function AddToCartButton({
     </CartForm>
   );
 }
-
-/***********************************************/
-/**********  EXAMPLE UPDATE STARTS  ************/
-// 7. Add the SellingPlanGroup fragment to the Product fragment
-const SELLING_PLAN_FRAGMENT = `#graphql
-  fragment SellingPlanMoney on MoneyV2 {
-    amount
-    currencyCode
-  }
-  fragment SellingPlan on SellingPlan {
-    id
-    options {
-      name
-      value
-    }
-    priceAdjustments {
-      adjustmentValue {
-        ... on SellingPlanFixedAmountPriceAdjustment {
-          __typename
-          adjustmentAmount {
-             ...SellingPlanMoney
-          }
-        }
-        ... on SellingPlanFixedPriceAdjustment {
-          __typename
-          price {
-            ...SellingPlanMoney
-          }
-        }
-        ... on SellingPlanPercentagePriceAdjustment {
-          __typename
-          adjustmentPercentage
-        }
-      }
-      orderCount
-    }
-    recurringDeliveries
-    checkoutCharge {
-      type
-      value {
-        ... on MoneyV2 {
-          ...SellingPlanMoney
-        }
-        ... on SellingPlanCheckoutChargePercentageValue {
-          percentage
-        }
-      }
-    }
- }
-` as const;
-
-//  8. Add the SellingPlanGroup fragment to the Product fragment
-const SELLING_PLAN_GROUP_FRAGMENT = `#graphql
-  fragment SellingPlanGroup on SellingPlanGroup {
-    name
-    options {
-      name
-      values
-    }
-    sellingPlans(first:10) {
-      nodes {
-        ...SellingPlan
-      }
-    }
-  }
-  ${SELLING_PLAN_FRAGMENT}
-` as const;
-/**********   EXAMPLE UPDATE END   ************/
-/***********************************************/
 
 const PRODUCT_VARIANT_FRAGMENT = `#graphql
   fragment ProductVariant on ProductVariant {

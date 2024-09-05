@@ -1,34 +1,41 @@
+import { SellingPlan, SellingPlanGroup } from "@shopify/hydrogen/storefront-api-types";
+
+type DeepPartial<T> = {
+	[P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
+};
 
 /**
- * Get the selected selling plan from the request query params and the product
+ * Get the selectedSellingPlan and firstSellingPlanUrl from the request query params and selling plan groups
  * @param request - The request object
- * @param product - The product object
  * @param paramKey - The query param key to use for the selected selling plan. Must match the key used in the SellingPlanSelector
   * @returns The selected selling plan and the first selling plan url
 */
-export function getSelectedSellingPlan({
+export function getSelectedSellingPlan<T>({
   request,
-  product,
+  productHandle,
+  sellingPlanGroups,
   paramKey: customParamKey,
 }: {
   request: Request;
-  product: ProductFragment;
+  productHandle: string
+  sellingPlanGroups: DeepPartial<SellingPlanGroup>[]
   paramKey?: string
-}) {
-  if (!product) {
-    throw new Error('Expected `product` to be defined');
+}): {
+  selectedSellingPlan: T | null
+  firstSellingPlanUrl: string | null
+} {
+  if (!productHandle) {
+    throw new Error('Expected `productHandle` to be defined');
   }
 
-  if (!product.sellingPlanGroups) {
-    throw new Error('Expected `product.sellingPlansGroup` to be defined');
+  if (!sellingPlanGroups) {
+    throw new Error('Expected `sellingPlansGroups` to be defined');
   }
 
   let paramKey = 'selling_plan'
   if (customParamKey) {
     paramKey = customParamKey;
   }
-
-  const {sellingPlanGroups} = product;
 
   const url = new URL(request.url);
   const selectedSellingPlanId = url.searchParams.has('selling_plan')
@@ -37,27 +44,35 @@ export function getSelectedSellingPlan({
 
   const selectedSellingPlanGid = `gid://shopify/SellingPlan/${selectedSellingPlanId}`
 
-  const sellingPlans = sellingPlanGroups.nodes
-   .map(({sellingPlans}) => sellingPlans.nodes).flat()
+  const sellingPlans = sellingPlanGroups
+   .filter((sellingPlanGroup) => {
+     const includesSellingPlans = typeof sellingPlanGroup.sellingPlans !== 'undefined' && sellingPlanGroup?.sellingPlans?.nodes
+     if (!includesSellingPlans) {
+       console.warn(`Selling plan group does not include sellingPlan nodes`)
+       return false
+     }
+     return true
+   })
+   .map(({sellingPlans}) => sellingPlans?.nodes)
+   .flat()
+   .filter((sellingPlan) => sellingPlan && sellingPlan.id) as NonNullable<SellingPlan>[]
 
   if (!sellingPlans.length) {
-    return {selectedSellingPlan: null, sellingPlansCount: 0}
+    console.warn(`No selling plans found`)
+    return {selectedSellingPlan: null, firstSellingPlanUrl: null}
   }
 
-  const selectedSellingPlan = sellingPlans
+  const selectedSellingPlan = (sellingPlans
     .filter((sellingPlan) => {
       return sellingPlan.id === selectedSellingPlanGid
-    }, null)[0] ?? null;
+    }, null)[0] ?? null) as T | null
 
   const firstSellingPlanId = sellingPlans[0].id.split('/').pop() ?? ''
 
-
   let firstSellingPlanUrl = null;
 
-  if (!selectedSellingPlan && firstSellingPlanId) {
-    url.searchParams.set(paramKey, firstSellingPlanId)
-    firstSellingPlanUrl  = `/products/${product.handle}?${url.searchParams.toString()}`
-  }
+  url.searchParams.set(paramKey, firstSellingPlanId)
+  firstSellingPlanUrl  = `/products/${productHandle}?${url.searchParams.toString()}` as string
 
   return {selectedSellingPlan, firstSellingPlanUrl}
 }
