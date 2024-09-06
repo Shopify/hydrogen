@@ -1,6 +1,10 @@
-import {Suspense} from 'react';
-import {Await, NavLink} from '@remix-run/react';
-import {type CartViewPayload, useAnalytics} from '@shopify/hydrogen';
+import {Suspense, useDeferredValue} from 'react';
+import {Await, NavLink, useAsyncValue} from '@remix-run/react';
+import {
+  type CartViewPayload,
+  useAnalytics,
+  useOptimisticCart,
+} from '@shopify/hydrogen';
 import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
 import {useAside} from '~/components/Aside';
 
@@ -159,13 +163,17 @@ function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
   return (
     <Suspense fallback={<CartBadge count={null} />}>
       <Await resolve={cart}>
-        {(cart) => {
-          if (!cart) return <CartBadge count={0} />;
-          return <CartBadge count={cart.totalQuantity || 0} />;
-        }}
+        <CartBanner />
       </Await>
     </Suspense>
   );
+}
+
+function CartBanner() {
+  const cart = useAsyncValue();
+  const optimisticCart = useOptimisticCart(cart);
+  const linesCount = optimisticCart?.lines?.nodes?.length || 0;
+  return <CartBadge count={linesCount} />;
 }
 
 const FALLBACK_HEADER_MENU = {
