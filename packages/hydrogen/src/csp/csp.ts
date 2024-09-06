@@ -69,6 +69,7 @@ export function createContentSecurityPolicy(
   props?: CreateContentSecurityPolicy & ShopProp,
 ): ContentSecurityPolicy {
   const nonce = generateNonce();
+  console.log('frooze props')
   const header = createCSPHeader(nonce, props);
 
   const Provider = ({children}: {children: ReactNode}) => {
@@ -148,12 +149,18 @@ function createCSPHeader(
     combinedDirectives.scriptSrc instanceof Array &&
     !combinedDirectives.scriptSrc.includes(nonceString)
   ) {
-    combinedDirectives.scriptSrc.push(nonceString);
+    combinedDirectives.scriptSrc = [
+      ...combinedDirectives.scriptSrc.filter((ss) => !ss.startsWith('nonce')),
+      nonceString
+    ]
   } else if (
     combinedDirectives.defaultSrc instanceof Array &&
     !combinedDirectives.defaultSrc.includes(nonceString)
   ) {
-    combinedDirectives.defaultSrc.push(nonceString);
+    combinedDirectives.defaultSrc = [
+      ...combinedDirectives.defaultSrc.filter((ss) => !ss.startsWith('nonce')),
+      nonceString
+    ]
   }
 
   return cspBuilder({
