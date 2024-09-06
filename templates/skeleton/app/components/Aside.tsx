@@ -1,4 +1,10 @@
-import {createContext, type ReactNode, useContext, useState} from 'react';
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 
 type AsideType = 'search' | 'cart' | 'mobile' | 'closed';
 type AsideContextValue = {
@@ -28,6 +34,23 @@ export function Aside({
 }) {
   const {type: activeType, close} = useAside();
   const expanded = type === activeType;
+
+  useEffect(() => {
+    const abortController = new AbortController();
+
+    if (expanded) {
+      document.addEventListener(
+        'keypress',
+        function handler(event: KeyboardEvent) {
+          if (event.key === 'Escape') {
+            close();
+          }
+        },
+        {signal: abortController.signal},
+      );
+    }
+    return () => abortController.abort();
+  }, [close, expanded]);
 
   return (
     <div
