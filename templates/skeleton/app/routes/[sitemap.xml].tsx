@@ -108,7 +108,25 @@ function generateSitemap({
       };
     });
 
-  const urls = [...products, ...collections, ...pages];
+  const blogArticles = flattenConnection(data.blogs)
+    .flatMap((blog) =>
+      flattenConnection(blog.articles).map((article) => ({
+        article,
+        blogHandle: blog.handle,
+      })),
+    )
+    .filter(({article, blogHandle}) => article.onlineStoreUrl)
+    .map(({article, blogHandle}) => {
+      const url = `${baseUrl}/blogs/${blogHandle}/${article.handle}`;
+
+      return {
+        url,
+        lastMod: article.publishedAt,
+        changeFreq: 'daily',
+      };
+    });
+
+  const urls = [...products, ...collections, ...pages, ...blogArticles];
 
   return `
     <urlset
@@ -171,6 +189,18 @@ const SITEMAP_QUERY = `#graphql
         updatedAt
         handle
         onlineStoreUrl
+      }
+    }
+    blogs(first: $urlLimits, query: "published_status:'published'") {
+      nodes {
+        handle
+        articles (first: $urlLimits, query: "published_status:'published'") {
+          nodes {
+            publishedAt
+            handle
+            onlineStoreUrl
+          }
+        }
       }
     }
   }
