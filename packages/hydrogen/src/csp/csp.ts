@@ -69,7 +69,6 @@ export function createContentSecurityPolicy(
   props?: CreateContentSecurityPolicy & ShopProp,
 ): ContentSecurityPolicy {
   const nonce = generateNonce();
-  console.log('frooze props');
   const header = createCSPHeader(nonce, props);
 
   const Provider = ({children}: {children: ReactNode}) => {
