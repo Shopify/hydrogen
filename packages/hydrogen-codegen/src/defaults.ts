@@ -53,7 +53,6 @@ const unstableSfapiDefaultValues: DefaultValues = {
     ),
 };
 
-
 const caapiDefaultValues: DefaultValues = {
   importTypesFrom: '@shopify/hydrogen/customer-account-api-types',
   namespacedImportName: 'CustomerAccountAPI',
@@ -69,6 +68,6 @@ export function getDefaultOptions(outputFile = '') {
   return /^(customer|caapi\.)/i.test(outputFile)
     ? caapiDefaultValues
     : /^(unstable)/i.test(outputFile)
-      ? unstableSfapiDefaultValues
-      : sfapiDefaultValues;
+    ? unstableSfapiDefaultValues
+    : sfapiDefaultValues;
 }

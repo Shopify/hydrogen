@@ -16,7 +16,11 @@ export function getSchema(
   options: Options<false>,
 ): string | undefined;
 export function getSchema(api: Api, options?: Options<boolean>) {
-  if (api !== 'storefront' && api !== 'customer-account' && api !== 'unstable-storefront') {
+  if (
+    api !== 'storefront' &&
+    api !== 'customer-account' &&
+    api !== 'unstable-storefront'
+  ) {
     throw new Error(
       `The provided API type "${api}" is unknown. Please use "storefront", "unstable-storefront" or "customer-account".`,
     );
