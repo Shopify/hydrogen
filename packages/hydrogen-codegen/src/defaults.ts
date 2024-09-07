@@ -42,6 +42,18 @@ const sfapiDefaultValues: DefaultValues = {
     ),
 };
 
+const unstableSfapiDefaultValues: DefaultValues = {
+  importTypesFrom: '@shopify/hydrogen/unstable-storefront-api-types',
+  namespacedImportName: 'UnstableStorefrontAPI',
+  interfaceExtensionCode: ({queryType, mutationType}) =>
+    replacePlaceholders(
+      sfapiDefaultInterfaceExtensionCode,
+      queryType,
+      mutationType,
+    ),
+};
+
+
 const caapiDefaultValues: DefaultValues = {
   importTypesFrom: '@shopify/hydrogen/customer-account-api-types',
   namespacedImportName: 'CustomerAccountAPI',
@@ -56,5 +68,7 @@ const caapiDefaultValues: DefaultValues = {
 export function getDefaultOptions(outputFile = '') {
   return /^(customer|caapi\.)/i.test(outputFile)
     ? caapiDefaultValues
-    : sfapiDefaultValues;
+    : /^(unstable)/i.test(outputFile)
+      ? unstableSfapiDefaultValues
+      : sfapiDefaultValues;
 }
