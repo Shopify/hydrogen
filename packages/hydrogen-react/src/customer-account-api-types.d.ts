@@ -59,24 +59,6 @@ export type AdditionalFeeSale = Node &
     totalTaxAmount: MoneyV2;
   };
 
-/** Return type for `addressCreate` mutation. */
-export type AddressCreatePayload = {
-  __typename?: 'AddressCreatePayload';
-  /** The created address. */
-  address?: Maybe<CustomerMailingAddress>;
-  /** The list of errors that occurred from executing the mutation. */
-  userErrors: Array<UserErrorsAddressUserErrors>;
-};
-
-/** Return type for `addressDelete` mutation. */
-export type AddressDeletePayload = {
-  __typename?: 'AddressDeletePayload';
-  /** The ID of the deleted address. */
-  deletedAddressId?: Maybe<Scalars['ID']['output']>;
-  /** The list of errors that occurred from executing the mutation. */
-  userErrors: Array<UserErrorsAddressUserErrors>;
-};
-
 /** The address form field. */
 export type AddressFormField = {
   __typename?: 'AddressFormField';
@@ -89,18 +71,11 @@ export type AddressFormFieldMode =
   /**
    * Indicates that the form field should be hidden from the UI.
    * Any values provided by the client will be ignored by the backend.
-   *
    */
   | 'IGNORED'
-  /**
-   * Indicates that the form field is visible in the UI and can be left empty.
-   *
-   */
+  /** Indicates that the form field is visible in the UI and can be left empty. */
   | 'OPTIONAL'
-  /**
-   * Indicates that the form field is visible in the UI and requires a non-empty value.
-   *
-   */
+  /** Indicates that the form field is visible in the UI and requires a non-empty value. */
   | 'REQUIRED';
 
 /** The settings for the address form. */
@@ -116,15 +91,6 @@ export type AddressFormSettings = {
   firstName: AddressFormField;
   /** The setting for the Phone form field. */
   phone: AddressFormField;
-};
-
-/** Return type for `addressUpdate` mutation. */
-export type AddressUpdatePayload = {
-  __typename?: 'AddressUpdatePayload';
-  /** The updated address. */
-  address?: Maybe<CustomerMailingAddress>;
-  /** The list of errors that occurred from executing the mutation. */
-  userErrors: Array<UserErrorsAddressUserErrors>;
 };
 
 /** A sale event that results in an adjustment to the order price. */
@@ -204,10 +170,7 @@ export type ApplePaySessionCreatePayload = {
   body?: Maybe<Scalars['String']['output']>;
   /** The ID for the created session. */
   id?: Maybe<Scalars['String']['output']>;
-  /**
-   * Whether the session is ready. The `body` field is `null` while this value is `false`.
-   *
-   */
+  /** Whether the session is ready. The `body` field is `null` while this value is `false`. */
   ready?: Maybe<Scalars['Boolean']['output']>;
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<ApplePaySessionUserError>;
@@ -253,19 +216,16 @@ export type AppliedGiftCard = Node & {
   presentmentAmountUsed: MoneyV2;
 };
 
-/** Represents a generic custom attribute. */
+/** Represents a generic custom attribute, such as whether an order is a customer's first. */
 export type Attribute = {
   __typename?: 'Attribute';
-  /** Key or name of the attribute. */
+  /** The key or name of the attribute. For example, `"customersFirstOrder"`. */
   key: Scalars['String']['output'];
-  /** Value of the attribute. */
+  /** The value of the attribute. For example, `"true"`. */
   value?: Maybe<Scalars['String']['output']>;
 };
 
-/**
- * Captures the intentions of a discount that was automatically applied.
- *
- */
+/** Captures the intentions of a discount that was automatically applied. */
 export type AutomaticDiscountApplication = DiscountApplication & {
   __typename?: 'AutomaticDiscountApplication';
   /** The method by which the discount's value is allocated to its entitled items. */
@@ -287,46 +247,13 @@ export type AvailableShippingRates = {
    * Whether the shipping rates are ready.
    * The `shippingRates` field is `null` when this value is `false`.
    * This field should be polled until its value becomes `true`.
-   *
    */
   ready: Scalars['Boolean']['output'];
   /** The fetched shipping rates. `null` until the `ready` field is `true`. */
   shippingRates?: Maybe<Array<ShippingRate>>;
 };
 
-/** Represents the business account information. */
-export type BusinessAccount = {
-  __typename?: 'BusinessAccount';
-  /** The list of companies the customer operates in. */
-  companies: CompanyConnection;
-  /** The information of the customer's company. */
-  company?: Maybe<Company>;
-  /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
-  /** The profile of the customer. */
-  profile?: Maybe<Contact>;
-  /** The profile of the customer. */
-  profileV1?: Maybe<Contact>;
-};
-
-/** Represents the business account information. */
-export type BusinessAccountCompaniesArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
-/** Represents the business account information. */
-export type BusinessAccountCompanyArgs = {
-  id?: InputMaybe<Scalars['ID']['input']>;
-};
-
-/**
- * The input fields required for updating a business contact.
- *
- */
+/** The input fields required for updating a business contact. */
 export type BusinessContactUpdateInput = {
   /** The first name of the business contact. */
   firstName?: InputMaybe<Scalars['String']['input']>;
@@ -343,15 +270,6 @@ export type BusinessContactUpdatePayload = {
   __typename?: 'BusinessContactUpdatePayload';
   /** The updated business contact information. */
   businessContact?: Maybe<CompanyContact>;
-  /** The list of errors that occurred from executing the mutation. */
-  userErrors: Array<UserErrorsBusinessContactUserErrors>;
-};
-
-/** Return type for `businessContactUpdateV1` mutation. */
-export type BusinessContactUpdateV1Payload = {
-  __typename?: 'BusinessContactUpdateV1Payload';
-  /** The updated business contact information. */
-  businessContact?: Maybe<Contact>;
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<UserErrorsBusinessContactUserErrors>;
 };
@@ -398,33 +316,12 @@ export type BusinessCustomerUserError = DisplayableError & {
   message: Scalars['String']['output'];
 };
 
-/** Return type for `businessLocationBillingAddressCreate` mutation. */
-export type BusinessLocationBillingAddressCreatePayload = {
-  __typename?: 'BusinessLocationBillingAddressCreatePayload';
-  /** The created address. */
-  businessLocationBillingAddress?: Maybe<CompanyAddress>;
-  /** The list of errors that occurred from executing the mutation. */
-  userErrors: Array<UserErrorsCompanyAddressUserErrors>;
-};
-
-/** Return type for `businessLocationBillingAddressUpdate` mutation. */
-export type BusinessLocationBillingAddressUpdatePayload = {
-  __typename?: 'BusinessLocationBillingAddressUpdatePayload';
-  /** The updated address. */
-  businessLocationBillingAddress?: Maybe<CompanyAddress>;
-  /** The list of errors that occurred from executing the mutation. */
-  userErrors: Array<UserErrorsCompanyAddressUserErrors>;
-};
-
 /** Return type for `businessLocationCreditCardAdd` mutation. */
 export type BusinessLocationCreditCardAddPayload = {
   __typename?: 'BusinessLocationCreditCardAddPayload';
   /** The newly added credit card. */
   creditCard?: Maybe<CustomerCreditCard>;
-  /**
-   * The URL to redirect the customer to for completing the 3D Secure payment flow.
-   *
-   */
+  /** The URL to redirect the customer to for completing the 3D Secure payment flow. */
   nextActionUrl?: Maybe<Scalars['URL']['output']>;
   /** If the card verification result is processing. When this is true, credit_card will be null. */
   processing?: Maybe<Scalars['Boolean']['output']>;
@@ -452,31 +349,12 @@ export type BusinessLocationPaymentInstrumentRemovePayload = {
   userErrors: Array<UserErrorsBusinessLocationPaymentInstrumentUserErrors>;
 };
 
-/** Return type for `businessLocationShippingAddressCreate` mutation. */
-export type BusinessLocationShippingAddressCreatePayload = {
-  __typename?: 'BusinessLocationShippingAddressCreatePayload';
-  /** The created address. */
-  businessLocationShippingAddress?: Maybe<CompanyAddress>;
-  /** The list of errors that occurred from executing the mutation. */
-  userErrors: Array<UserErrorsCompanyAddressUserErrors>;
-};
-
-/** Return type for `businessLocationShippingAddressUpdate` mutation. */
-export type BusinessLocationShippingAddressUpdatePayload = {
-  __typename?: 'BusinessLocationShippingAddressUpdatePayload';
-  /** The updated address. */
-  businessLocationShippingAddress?: Maybe<CompanyAddress>;
-  /** The list of errors that occurred from executing the mutation. */
-  userErrors: Array<UserErrorsCompanyAddressUserErrors>;
-};
-
 /** The configuration for the buyer's checkout. */
 export type BuyerExperienceConfiguration = {
   __typename?: 'BuyerExperienceConfiguration';
   /**
    * Whether the buyer must pay at checkout or
    * can choose to pay at checkout or pay later using net terms.
-   *
    */
   payNowOnly: Scalars['Boolean']['output'];
   /** The merchant configured payment terms. */
@@ -492,7 +370,7 @@ export type CardPaymentDetails = {
   last4?: Maybe<Scalars['String']['output']>;
 };
 
-/** A container for information required to checkout items and pay. */
+/** A container for information required to checkout items and pay. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type Checkout = Node & {
   __typename?: 'Checkout';
   /** The gift cards used on the checkout. */
@@ -501,7 +379,6 @@ export type Checkout = Node & {
    * The available shipping rates for this Checkout.
    * Should only be used when checkout `requiresShipping` is `true` and
    * the shipping address is valid.
-   *
    */
   availableShippingRates?: Maybe<AvailableShippingRates>;
   /** The date and time when the checkout was created. */
@@ -521,7 +398,6 @@ export type Checkout = Node & {
   /**
    * The sum of all the prices of all the items in the checkout,
    * excluding duties, taxes, shipping, and discounts.
-   *
    */
   lineItemsSubtotalPrice: MoneyV2;
   /** The note associated with the checkout. */
@@ -533,17 +409,13 @@ export type Checkout = Node & {
    * have asynchronous operations that can take time to finish. If you want
    * to complete a checkout or ensure all the fields are populated and up to
    * date, polling is required until the value is true.
-   *
    */
   ready: Scalars['Boolean']['output'];
   /** Whether the fulfillment requires shipping. */
   requiresShipping: Scalars['Boolean']['output'];
   /** The address where the line items will be shipped. */
   shippingAddress?: Maybe<CustomerMailingAddress>;
-  /**
-   * The discounts allocated to the shipping line by discount applications.
-   *
-   */
+  /** The discounts allocated to the shipping line by discount applications. */
   shippingDiscountAllocations: Array<DiscountAllocation>;
   /** The selected shipping rate, transitioned to a `shipping_line` object. */
   shippingLine?: Maybe<ShippingRate>;
@@ -560,7 +432,6 @@ export type Checkout = Node & {
   /**
    * The sum of all the prices of all the items in the checkout,
    * duties, taxes, and discounts included.
-   *
    */
   totalPrice: MoneyV2;
   /** The sum of all the taxes applied to the line items and shipping lines in the checkout. */
@@ -569,7 +440,7 @@ export type Checkout = Node & {
   webUrl: Scalars['URL']['output'];
 };
 
-/** A container for information required to checkout items and pay. */
+/** A container for information required to checkout items and pay. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CheckoutDiscountApplicationsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -578,7 +449,7 @@ export type CheckoutDiscountApplicationsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/** A container for information required to checkout items and pay. */
+/** A container for information required to checkout items and pay. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CheckoutLineItemsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -606,10 +477,7 @@ export type CheckoutLineItem = Node & {
   variantTitle?: Maybe<Scalars['String']['output']>;
 };
 
-/**
- * An auto-generated type for paginating through multiple CheckoutLineItems.
- *
- */
+/** An auto-generated type for paginating through multiple CheckoutLineItems. */
 export type CheckoutLineItemConnection = {
   __typename?: 'CheckoutLineItemConnection';
   /** A list of edges. */
@@ -620,10 +488,7 @@ export type CheckoutLineItemConnection = {
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one CheckoutLineItem and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one CheckoutLineItem and a cursor during pagination. */
 export type CheckoutLineItemEdge = {
   __typename?: 'CheckoutLineItemEdge';
   /** A cursor for use in pagination. */
@@ -649,7 +514,6 @@ export type Company = HasMetafields &
     /**
      * The metafields associated with the resource matching the
      * supplied list of namespaces and keys.
-     *
      */
     metafields: Array<Maybe<Metafield>>;
     /** The name of the company. */
@@ -658,8 +522,6 @@ export type Company = HasMetafields &
     orders: OrderConnection;
     /** The profile of the customer. */
     profile?: Maybe<CompanyContact>;
-    /** The profile of the customer. */
-    profileV1?: Maybe<Contact>;
   };
 
 /** Represents a company's information. */
@@ -706,7 +568,7 @@ export type CompanyOrdersArgs = {
   sortKey?: InputMaybe<OrderByCompanySortKeys>;
 };
 
-/** The address of a company location, either billing or shipping. */
+/** The address of a company location, either billing or shipping. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CompanyAddress = Node & {
   __typename?: 'CompanyAddress';
   /** The first line of the address. It is typically the street address or PO Box number. */
@@ -728,7 +590,6 @@ export type CompanyAddress = Node & {
   /**
    * The date and time (in [ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601))
    * when the company address was created.
-   *
    */
   createdAt: Scalars['DateTime']['output'];
   /** The first name of the recipient. */
@@ -747,36 +608,32 @@ export type CompanyAddress = Node & {
   latitude?: Maybe<Scalars['Float']['output']>;
   /** The longitude coordinate of the address. */
   longitude?: Maybe<Scalars['Float']['output']>;
-  /**
-   * The unique phone number of the customer, formatted using the E.164 standard, for example, _+16135551111_.
-   *
-   */
+  /** The unique phone number of the customer, formatted using the E.164 standard, for example, _+16135551111_. */
   phone?: Maybe<Scalars['String']['output']>;
   /** The region of the address, such as the province, state, or district. */
   province?: Maybe<Scalars['String']['output']>;
-  /** The two-letter code for the region, for example, ON. */
+  /** The alphanumeric code for the region, for example, ON. */
   provinceCode?: Maybe<Scalars['String']['output']>;
   /** The identity of the recipient, for example, 'Receiving Department'. */
   recipient?: Maybe<Scalars['String']['output']>;
   /**
    * The date and time (in [ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601))
    * when the company address was last updated.
-   *
    */
   updatedAt: Scalars['DateTime']['output'];
   /** The zip or postal code of the address. */
   zip?: Maybe<Scalars['String']['output']>;
-  /** The two-letter code for the region, for example, ON. */
+  /** The alphanumeric code for the region, for example, ON. */
   zoneCode?: Maybe<Scalars['String']['output']>;
 };
 
-/** The address of a company location, either billing or shipping. */
+/** The address of a company location, either billing or shipping. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CompanyAddressFormattedArgs = {
   withCompanyName?: InputMaybe<Scalars['Boolean']['input']>;
   withName?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/** The address of a company location, either billing or shipping. */
+/** The address of a company location, either billing or shipping. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CompanyAddressFormattedAddressArgs = {
   withCompanyName?: InputMaybe<Scalars['Boolean']['input']>;
   withName?: InputMaybe<Scalars['Boolean']['input']>;
@@ -813,20 +670,6 @@ export type CompanyAddressType =
   /** The address is a shipping address. */
   | 'SHIPPING';
 
-/**
- * An auto-generated type for paginating through multiple Companies.
- *
- */
-export type CompanyConnection = {
-  __typename?: 'CompanyConnection';
-  /** A list of edges. */
-  edges: Array<CompanyEdge>;
-  /** A list of the nodes contained in CompanyEdge. */
-  nodes: Array<Company>;
-  /** Information to aid in pagination. */
-  pageInfo: PageInfo;
-};
-
 /** Represents the customer's contact information. */
 export type CompanyContact = Node & {
   __typename?: 'CompanyContact';
@@ -842,8 +685,6 @@ export type CompanyContact = Node & {
   id: Scalars['ID']['output'];
   /** The list of locations that the company contact belongs to. */
   locations: CompanyLocationConnection;
-  /** The list of locations that the company contact belongs to. */
-  locationsV1: LocationConnection;
   /** The list of company contact's orders. */
   orders: OrderConnection;
   /** The current status of the company contact. */
@@ -884,17 +725,6 @@ export type CompanyContactLocationsArgs = {
 };
 
 /** Represents the customer's contact information. */
-export type CompanyContactLocationsV1Args = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<CompanyLocationSortKeys>;
-};
-
-/** Represents the customer's contact information. */
 export type CompanyContactOrdersArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -905,10 +735,7 @@ export type CompanyContactOrdersArgs = {
   sortKey?: InputMaybe<OrderByContactSortKeys>;
 };
 
-/**
- * An auto-generated type for paginating through multiple CompanyContacts.
- *
- */
+/** An auto-generated type for paginating through multiple CompanyContacts. */
 export type CompanyContactConnection = {
   __typename?: 'CompanyContactConnection';
   /** A list of edges. */
@@ -919,10 +746,7 @@ export type CompanyContactConnection = {
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one CompanyContact and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one CompanyContact and a cursor during pagination. */
 export type CompanyContactEdge = {
   __typename?: 'CompanyContactEdge';
   /** A cursor for use in pagination. */
@@ -931,7 +755,7 @@ export type CompanyContactEdge = {
   node: CompanyContact;
 };
 
-/** A role for a company contact. */
+/** A role for a company contact. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CompanyContactRole = Node & {
   __typename?: 'CompanyContactRole';
   /** A globally-unique ID. */
@@ -944,7 +768,7 @@ export type CompanyContactRole = Node & {
   resourcePermissions: Array<ResourcePermission>;
 };
 
-/** A role for a company contact. */
+/** A role for a company contact. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CompanyContactRoleResourcePermissionArgs = {
   resource: ResourceType;
 };
@@ -954,18 +778,13 @@ export type CompanyContactRoleAssignment = Node & {
   __typename?: 'CompanyContactRoleAssignment';
   /** The company contact for whom this role is assigned. */
   contact: CompanyContact;
-  /** The company contact for whom this role is assigned. */
-  contactV1: Contact;
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
   /** The role that's assigned. */
   role: CompanyContactRole;
 };
 
-/**
- * An auto-generated type for paginating through multiple CompanyContactRoleAssignments.
- *
- */
+/** An auto-generated type for paginating through multiple CompanyContactRoleAssignments. */
 export type CompanyContactRoleAssignmentConnection = {
   __typename?: 'CompanyContactRoleAssignmentConnection';
   /** A list of edges. */
@@ -976,10 +795,7 @@ export type CompanyContactRoleAssignmentConnection = {
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one CompanyContactRoleAssignment and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one CompanyContactRoleAssignment and a cursor during pagination. */
 export type CompanyContactRoleAssignmentEdge = {
   __typename?: 'CompanyContactRoleAssignmentEdge';
   /** A cursor for use in pagination. */
@@ -999,7 +815,6 @@ export type CompanyContactRoleAssignmentSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE'
   /** Sort by the `updated_at` value. */
@@ -1022,7 +837,6 @@ export type CompanyContactSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE'
   /** Sort by the `title` value. */
@@ -1037,18 +851,6 @@ export type CompanyContactStatusType =
   /** The contact is enabled and active. */
   | 'ENABLED';
 
-/**
- * An auto-generated type which holds one Company and a cursor during pagination.
- *
- */
-export type CompanyEdge = {
-  __typename?: 'CompanyEdge';
-  /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
-  /** The item at the end of CompanyEdge. */
-  node: Company;
-};
-
 /** Represents a company's business location. */
 export type CompanyLocation = HasMetafields &
   Node & {
@@ -1059,8 +861,6 @@ export type CompanyLocation = HasMetafields &
     buyerExperienceConfiguration?: Maybe<BuyerExperienceConfiguration>;
     /** The list of contacts under a particular business location. */
     contacts: CompanyContactConnection;
-    /** The list of contacts under a particular business location. */
-    contactsV1: ContactConnection;
     /** The credit card corresponding to the provided ID. */
     creditCard?: Maybe<CustomerCreditCard>;
     /** The list of stored credit cards. */
@@ -1078,7 +878,6 @@ export type CompanyLocation = HasMetafields &
     /**
      * The metafields associated with the resource matching the
      * supplied list of namespaces and keys.
-     *
      */
     metafields: Array<Maybe<Metafield>>;
     /** The name of the company location. */
@@ -1099,17 +898,6 @@ export type CompanyLocation = HasMetafields &
 
 /** Represents a company's business location. */
 export type CompanyLocationContactsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<CompanyContactSortKeys>;
-};
-
-/** Represents a company's business location. */
-export type CompanyLocationContactsV1Args = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -1186,10 +974,7 @@ export type CompanyLocationAssignAddressPayload = {
   userErrors: Array<BusinessCustomerUserError>;
 };
 
-/**
- * An auto-generated type for paginating through multiple CompanyLocations.
- *
- */
+/** An auto-generated type for paginating through multiple CompanyLocations. */
 export type CompanyLocationConnection = {
   __typename?: 'CompanyLocationConnection';
   /** A list of edges. */
@@ -1200,10 +985,7 @@ export type CompanyLocationConnection = {
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one CompanyLocation and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one CompanyLocation and a cursor during pagination. */
 export type CompanyLocationEdge = {
   __typename?: 'CompanyLocationEdge';
   /** A cursor for use in pagination. */
@@ -1227,191 +1009,20 @@ export type CompanyLocationSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE'
   /** Sort by the `updated_at` value. */
   | 'UPDATED_AT';
 
-/** Represents customer's personal information. */
-export type Contact = Node & {
-  __typename?: 'Contact';
-  /** The Draft Order corresponding to the provided ID. */
-  draftOrder?: Maybe<DraftOrder>;
-  /** The list of company draft orders. */
-  draftOrders: DraftOrderConnection;
-  /** The email address of the customer. */
-  email?: Maybe<Scalars['String']['output']>;
-  /** The email address of the contact. */
-  emailAddress?: Maybe<CustomerEmailAddress>;
-  /** The first name of the customer. */
-  firstName?: Maybe<Scalars['String']['output']>;
-  /** Whether the company contact has view permission on any location. */
-  hasOrdersViewPermissionOnAnyLocation: Scalars['Boolean']['output'];
-  /** Whether the company contact has permissions on locations in the scope. */
-  hasPermissionOnLocations: Scalars['Boolean']['output'];
-  /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
-  /** The last name of the customer. */
-  lastName?: Maybe<Scalars['String']['output']>;
-  /** The locale of the customer. */
-  locale?: Maybe<Scalars['String']['output']>;
-  /** The Location corresponding to the provided ID. */
-  location?: Maybe<CompanyLocation>;
-  /** The Location corresponding to the provided ID. */
-  locationV1?: Maybe<Location>;
-  /** The list of locations that the business of the business contact belongs to. */
-  locations: CompanyLocationConnection;
-  /** The list of locations that the business of the business contact belongs to. */
-  locationsV1: LocationConnection;
-  /** The Order corresponding to the provided ID. */
-  order?: Maybe<Order>;
-  /** The Order corresponding to the provided ID. */
-  orderDetailsPageOrder?: Maybe<OrderDetailsPageOrder>;
-  /** The list of contact orders. */
-  orders: OrderConnection;
-  /** The phone number of the customer. */
-  phone?: Maybe<Scalars['String']['output']>;
-  /** The phone number of the customer. */
-  phoneNumber?: Maybe<CustomerPhoneNumber>;
-  /** The current status of the customer. */
-  status: CompanyContactStatusType;
-  /** Whether the company contact is exempt from being charged taxes on their orders. */
-  taxExempt: Scalars['Boolean']['output'];
-  /** The list of tax exemption types applied to the company_contact. */
-  taxExemptions: Array<TaxExemption>;
-  /** The list of tax exemptions applied to the company contact with additional details. */
-  taxExemptionsDetails: Array<TaxExemptionDetails>;
-  /** The title of the customer. */
-  title?: Maybe<Scalars['String']['output']>;
-};
-
-/** Represents customer's personal information. */
-export type ContactDraftOrderArgs = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents customer's personal information. */
-export type ContactDraftOrdersArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<DraftOrderSortKeys>;
-};
-
-/** Represents customer's personal information. */
-export type ContactHasPermissionOnLocationsArgs = {
-  permissions: Array<PermittedOperation>;
-  resource: ResourceType;
-  scope: ContactPermissionLocationScopeType;
-};
-
-/** Represents customer's personal information. */
-export type ContactLocationArgs = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents customer's personal information. */
-export type ContactLocationV1Args = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents customer's personal information. */
-export type ContactLocationsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<CompanyLocationSortKeys>;
-};
-
-/** Represents customer's personal information. */
-export type ContactLocationsV1Args = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<CompanyLocationSortKeys>;
-};
-
-/** Represents customer's personal information. */
-export type ContactOrderArgs = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents customer's personal information. */
-export type ContactOrderDetailsPageOrderArgs = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents customer's personal information. */
-export type ContactOrdersArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<OrderByContactSortKeys>;
-};
-
-/**
- * An auto-generated type for paginating through multiple Contacts.
- *
- */
-export type ContactConnection = {
-  __typename?: 'ContactConnection';
-  /** A list of edges. */
-  edges: Array<ContactEdge>;
-  /** A list of the nodes contained in ContactEdge. */
-  nodes: Array<Contact>;
-  /** Information to aid in pagination. */
-  pageInfo: PageInfo;
-};
-
-/**
- * An auto-generated type which holds one Contact and a cursor during pagination.
- *
- */
-export type ContactEdge = {
-  __typename?: 'ContactEdge';
-  /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
-  /** The item at the end of ContactEdge. */
-  node: Contact;
-};
-
-/**
- * Defines the extent of locations for which a contact holds permissions on a resource.
- *
- */
+/** Defines the extent of locations for which a contact holds permissions on a resource. */
 export type ContactPermissionLocationScopeType =
-  /**
-   * The contact has permission on all locations.
-   *
-   */
+  /** The contact has permission on all locations. */
   | 'ALL'
-  /**
-   * The contact has permission for at least one location.
-   *
-   */
+  /** The contact has permission for at least one location. */
   | 'ANY'
-  /**
-   * The contact has no permission on any location.
-   *
-   */
+  /** The contact has no permission on any location. */
   | 'NONE'
-  /**
-   * The contact has permission on only one location.
-   *
-   */
+  /** The contact has permission on only one location. */
   | 'ONE';
 
 /**
@@ -1419,7 +1030,6 @@ export type ContactPermissionLocationScopeType =
  * If a territory doesn't have a country code value in the `CountryCode` enum, then it might be considered a subdivision
  * of another country. For example, the territories associated with Spain are represented by the country code `ES`,
  * and the territories associated with the United States of America are represented by the country code `US`.
- *
  */
 export type CountryCode =
   /** Ascension Island. */
@@ -1953,7 +1563,6 @@ export type CropRegion =
 /**
  * The three-letter currency codes that represent the world currencies used in stores. These include standard ISO 4217 codes, legacy codes,
  * and non-standard codes.
- *
  */
 export type CurrencyCode =
   /** United Arab Emirates Dirham (AED). */
@@ -2279,7 +1888,7 @@ export type CurrencyCode =
   /** Zambian Kwacha (ZMW). */
   | 'ZMW';
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type Customer = HasMetafields &
   Node & {
     __typename?: 'Customer';
@@ -2299,10 +1908,7 @@ export type Customer = HasMetafields &
     creditCards: CustomerCreditCardConnection;
     /** The default address of the customer. */
     defaultAddress?: Maybe<CustomerAddress>;
-    /**
-     * The full name of the customer, based on the first_name and last_name values. If these aren't available, it falls back to the customer's email address, and if that isn't available, the customer's phone number.
-     *
-     */
+    /** The full name of the customer, based on the first_name and last_name values. If these aren't available, it falls back to the customer's email address, and if that isn't available, the customer's phone number. */
     displayName: Scalars['String']['output'];
     /** The Draft Orders associated with the customer. */
     draftOrders: DraftOrderConnection;
@@ -2323,7 +1929,6 @@ export type Customer = HasMetafields &
     /**
      * The metafields associated with the resource matching the
      * supplied list of namespaces and keys.
-     *
      */
     metafields: Array<Maybe<Metafield>>;
     /** The orders associated with the customer. */
@@ -2344,7 +1949,7 @@ export type Customer = HasMetafields &
     taxExemptionsDetails: Array<TaxExemptionDetails>;
   };
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerAddressesArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -2354,7 +1959,7 @@ export type CustomerAddressesArgs = {
   skipDefault?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerCompanyContactsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -2363,12 +1968,12 @@ export type CustomerCompanyContactsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerCreditCardArgs = {
   id: Scalars['ID']['input'];
 };
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerCreditCardsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -2377,7 +1982,7 @@ export type CustomerCreditCardsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerDraftOrdersArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -2388,18 +1993,18 @@ export type CustomerDraftOrdersArgs = {
   sortKey?: InputMaybe<DraftOrderSortKeys>;
 };
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerMetafieldArgs = {
   key: Scalars['String']['input'];
   namespace: Scalars['String']['input'];
 };
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerMetafieldsArgs = {
   identifiers: Array<HasMetafieldsIdentifier>;
 };
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerOrdersArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -2410,17 +2015,17 @@ export type CustomerOrdersArgs = {
   sortKey?: InputMaybe<OrderSortKeys>;
 };
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerReturnArgs = {
   id: Scalars['ID']['input'];
 };
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerSubscriptionContractArgs = {
   id: Scalars['ID']['input'];
 };
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerSubscriptionContractsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -2434,31 +2039,20 @@ export type CustomerSubscriptionContractsArgs = {
 /**
  * Represents a customer's mailing address.
  * For example, a customer's default address and an order's billing address are both mailing addresses.
- *
+ * Apps using the Customer Account API must meet the
+ * protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data).
  */
 export type CustomerAddress = Node & {
   __typename?: 'CustomerAddress';
   /** The first line of the address. Typically the street address or PO Box number. */
   address1?: Maybe<Scalars['String']['output']>;
-  /**
-   * The second line of the address. This is typically the apartment, suite, or unit number.
-   *
-   */
+  /** The second line of the address. This is typically the apartment, suite, or unit number. */
   address2?: Maybe<Scalars['String']['output']>;
-  /**
-   * The name of the city, district, village, or town.
-   *
-   */
+  /** The name of the city, district, village, or town. */
   city?: Maybe<Scalars['String']['output']>;
-  /**
-   * The name of the customer's company or organization.
-   *
-   */
+  /** The name of the customer's company or organization. */
   company?: Maybe<Scalars['String']['output']>;
-  /**
-   * The name of the country.
-   *
-   */
+  /** The name of the country. */
   country?: Maybe<Scalars['String']['output']>;
   /** The first name of the customer. */
   firstName?: Maybe<Scalars['String']['output']>;
@@ -2470,16 +2064,12 @@ export type CustomerAddress = Node & {
   id: Scalars['ID']['output'];
   /** The last name of the customer. */
   lastName?: Maybe<Scalars['String']['output']>;
-  /**
-   * The full name of the customer, based on firstName and lastName.
-   *
-   */
+  /** The full name of the customer, based on firstName and lastName. */
   name?: Maybe<Scalars['String']['output']>;
   /**
    * The customer's unique phone number.
    *
    * Formatted using E.164 standard. For example, _+16135551111_.
-   *
    */
   phoneNumber?: Maybe<Scalars['String']['output']>;
   /** The region of the address, such as the province, state, or district. */
@@ -2488,16 +2078,14 @@ export type CustomerAddress = Node & {
    * The two-letter code for the country of the address.
    *
    * For example, US.
-   *
    */
   territoryCode?: Maybe<CountryCode>;
   /** The zip or postal code of the address. */
   zip?: Maybe<Scalars['String']['output']>;
   /**
-   * The two-letter code for the region.
+   * The alphanumeric code for the region.
    *
    * For example, ON.
-   *
    */
   zoneCode?: Maybe<Scalars['String']['output']>;
 };
@@ -2505,17 +2093,15 @@ export type CustomerAddress = Node & {
 /**
  * Represents a customer's mailing address.
  * For example, a customer's default address and an order's billing address are both mailing addresses.
- *
+ * Apps using the Customer Account API must meet the
+ * protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data).
  */
 export type CustomerAddressFormattedArgs = {
   withCompany?: InputMaybe<Scalars['Boolean']['input']>;
   withName?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/**
- * An auto-generated type for paginating through multiple CustomerAddresses.
- *
- */
+/** An auto-generated type for paginating through multiple CustomerAddresses. */
 export type CustomerAddressConnection = {
   __typename?: 'CustomerAddressConnection';
   /** A list of edges. */
@@ -2544,10 +2130,7 @@ export type CustomerAddressDeletePayload = {
   userErrors: Array<UserErrorsCustomerAddressUserErrors>;
 };
 
-/**
- * An auto-generated type which holds one CustomerAddress and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one CustomerAddress and a cursor during pagination. */
 export type CustomerAddressEdge = {
   __typename?: 'CustomerAddressEdge';
   /** A cursor for use in pagination. */
@@ -2576,16 +2159,13 @@ export type CustomerAddressInput = {
    * The country code, in ISO 3166-1 format. Accepts either a two-letter [alpha-2 code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2),
    * a three-letter [alpha-3 code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3), or a three-digit [numeric code](https://en.wikipedia.org/wiki/ISO_3166-1_numeric).
    * For example, `US`,  `USA`, or `840` represents the United States.
-   *
    */
   territoryCode?: InputMaybe<Scalars['String']['input']>;
   /** The zip or postal code of the address. */
   zip?: InputMaybe<Scalars['String']['input']>;
   /**
-   * The two-letter code ([ISO 3166-2 alpha-2]](https://en.wikipedia.org/wiki/ISO_3166-2) format)
-   * for the region of the address, such as the province, state, or district. For example, 'ON' for Ontario,
-   * Canada.
-   *
+   * The alphanumeric code for the region of the address, such as the province, state, or district.
+   * For example, 'ON' for Ontario, Canada.
    */
   zoneCode?: InputMaybe<Scalars['String']['input']>;
 };
@@ -2668,10 +2248,7 @@ export type CustomerCreditCardSubscriptionContractsArgs = {
   sortKey?: InputMaybe<SubscriptionContractsSortKeys>;
 };
 
-/**
- * An auto-generated type for paginating through multiple CustomerCreditCards.
- *
- */
+/** An auto-generated type for paginating through multiple CustomerCreditCards. */
 export type CustomerCreditCardConnection = {
   __typename?: 'CustomerCreditCardConnection';
   /** A list of edges. */
@@ -2682,10 +2259,7 @@ export type CustomerCreditCardConnection = {
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one CustomerCreditCard and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one CustomerCreditCard and a cursor during pagination. */
 export type CustomerCreditCardEdge = {
   __typename?: 'CustomerCreditCardEdge';
   /** A cursor for use in pagination. */
@@ -2694,7 +2268,7 @@ export type CustomerCreditCardEdge = {
   node: CustomerCreditCard;
 };
 
-/** An email address associated with a customer. */
+/** An email address associated with a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerEmailAddress = {
   __typename?: 'CustomerEmailAddress';
   /** The email address of the customer. */
@@ -2733,44 +2307,29 @@ export type CustomerEmailMarketingUnsubscribePayload = {
 /**
  * Represents a customer's mailing address.
  * For example, a customer's default address and an order's billing address are both mailing addresses.
- *
  */
 export type CustomerMailingAddress = Node & {
   __typename?: 'CustomerMailingAddress';
   /** The first line of the address. Typically the street address or PO Box number. */
   address1?: Maybe<Scalars['String']['output']>;
-  /**
-   * The second line of the address. This is typically the apartment, suite, or unit number.
-   *
-   */
+  /** The second line of the address. This is typically the apartment, suite, or unit number. */
   address2?: Maybe<Scalars['String']['output']>;
-  /**
-   * The name of the city, district, village, or town.
-   *
-   */
+  /** The name of the city, district, village, or town. */
   city?: Maybe<Scalars['String']['output']>;
-  /**
-   * The name of the customer's company or organization.
-   *
-   */
+  /** The name of the customer's company or organization. */
   company?: Maybe<Scalars['String']['output']>;
-  /**
-   * The name of the country.
-   *
-   */
+  /** The name of the country. */
   country?: Maybe<Scalars['String']['output']>;
   /**
    * The two-letter code for the country of the address.
    *
    * For example, US.
-   *
    */
   countryCode?: Maybe<Scalars['String']['output']>;
   /**
    * The two-letter code for the country of the address.
    *
    * For example, US.
-   *
    */
   countryCodeV2?: Maybe<CountryCode>;
   /** Indicates whether the address is the default address or not. */
@@ -2789,39 +2348,32 @@ export type CustomerMailingAddress = Node & {
   latitude?: Maybe<Scalars['Float']['output']>;
   /** The longitude coordinate of the customer's address. */
   longitude?: Maybe<Scalars['Float']['output']>;
-  /**
-   * The full name of the customer, based on firstName and lastName.
-   *
-   */
+  /** The full name of the customer, based on firstName and lastName. */
   name?: Maybe<Scalars['String']['output']>;
   /**
    * The customer's unique phone number.
    *
    * Formatted using E.164 standard. For example, _+16135551111_.
-   *
    */
   phone?: Maybe<Scalars['String']['output']>;
   /**
    * The customer's unique phone number.
    *
    * Formatted using E.164 standard. For example, _+16135551111_.
-   *
    */
   phoneNumber?: Maybe<Scalars['String']['output']>;
   /** The region of the address, such as the province, state, or district. */
   province?: Maybe<Scalars['String']['output']>;
   /**
-   * The two-letter code for the region.
+   * The alphanumeric code for the region.
    *
    * For example, ON.
-   *
    */
   provinceCode?: Maybe<Scalars['String']['output']>;
   /**
    * The two-letter code for the country of the address.
    *
    * For example, US.
-   *
    */
   territoryCode?: Maybe<CountryCode>;
   /** Indicates whether the address was geolocated and is a valid address. The field returns `false` if the verification failed, or if the job to verify this address was never started. */
@@ -2829,10 +2381,9 @@ export type CustomerMailingAddress = Node & {
   /** The zip or postal code of the address. */
   zip?: Maybe<Scalars['String']['output']>;
   /**
-   * The two-letter code for the region.
+   * The alphanumeric code for the region.
    *
    * For example, ON.
-   *
    */
   zoneCode?: Maybe<Scalars['String']['output']>;
 };
@@ -2840,37 +2391,10 @@ export type CustomerMailingAddress = Node & {
 /**
  * Represents a customer's mailing address.
  * For example, a customer's default address and an order's billing address are both mailing addresses.
- *
  */
 export type CustomerMailingAddressFormattedArgs = {
   withCompany?: InputMaybe<Scalars['Boolean']['input']>;
   withName?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
-/**
- * An auto-generated type for paginating through multiple CustomerMailingAddresses.
- *
- */
-export type CustomerMailingAddressConnection = {
-  __typename?: 'CustomerMailingAddressConnection';
-  /** A list of edges. */
-  edges: Array<CustomerMailingAddressEdge>;
-  /** A list of the nodes contained in CustomerMailingAddressEdge. */
-  nodes: Array<CustomerMailingAddress>;
-  /** Information to aid in pagination. */
-  pageInfo: PageInfo;
-};
-
-/**
- * An auto-generated type which holds one CustomerMailingAddress and a cursor during pagination.
- *
- */
-export type CustomerMailingAddressEdge = {
-  __typename?: 'CustomerMailingAddressEdge';
-  /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
-  /** The item at the end of CustomerMailingAddressEdge. */
-  node: CustomerMailingAddress;
 };
 
 /** The input fields to create or update a mailing address. */
@@ -2900,12 +2424,11 @@ export type CustomerMailingAddressInput = {
   /**
    * The code for the region of the address, such as the province,
    * state, or district. For example, QC for Quebec, Canada.
-   *
    */
   zoneCode?: InputMaybe<Scalars['String']['input']>;
 };
 
-/** Defines the phone number of the customer. */
+/** Defines the phone number of the customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerPhoneNumber = {
   __typename?: 'CustomerPhoneNumber';
   /** Indicates whether the customer has subscribed to SMS marketing material. */
@@ -2914,10 +2437,7 @@ export type CustomerPhoneNumber = {
   phoneNumber: Scalars['String']['output'];
 };
 
-/**
- * The input fields to update a customer's personal information.
- *
- */
+/** The input fields to update a customer's personal information. */
 export type CustomerUpdateInput = {
   /** The customer's first name. */
   firstName?: InputMaybe<Scalars['String']['input']>;
@@ -2941,10 +2461,7 @@ export type DeliveryOptionGroupType =
   /** A subscription. */
   | 'SUBSCRIPTION';
 
-/**
- * Represents an amount discounting the line that has been allocated by a discount.
- *
- */
+/** Represents an amount discounting the line that has been allocated by a discount. */
 export type DiscountAllocation = {
   __typename?: 'DiscountAllocation';
   /** The amount of discount allocated. */
@@ -2957,10 +2474,7 @@ export type DiscountAllocation = {
     | ScriptDiscountApplication;
 };
 
-/**
- * Captures the intentions of a discount source at the time of application.
- *
- */
+/** Captures the intentions of a discount source at the time of application. */
 export type DiscountApplication = {
   /** The method by which the discount's value is allocated to its entitled items. */
   allocationMethod: DiscountApplicationAllocationMethod;
@@ -2981,10 +2495,7 @@ export type DiscountApplicationAllocationMethod =
   /** The value is specifically applied onto a particular line. */
   | 'ONE';
 
-/**
- * An auto-generated type for paginating through multiple DiscountApplications.
- *
- */
+/** An auto-generated type for paginating through multiple DiscountApplications. */
 export type DiscountApplicationConnection = {
   __typename?: 'DiscountApplicationConnection';
   /** A list of edges. */
@@ -3000,10 +2511,7 @@ export type DiscountApplicationConnection = {
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one DiscountApplication and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one DiscountApplication and a cursor during pagination. */
 export type DiscountApplicationEdge = {
   __typename?: 'DiscountApplicationEdge';
   /** A cursor for use in pagination. */
@@ -3021,7 +2529,6 @@ export type DiscountApplicationEdge = {
  * the discount application's `targetType`. For example, the value `ENTITLED`, combined with a `targetType` of
  * `LINE_ITEM`, applies the discount on all line items that are entitled to the discount.
  * The value `ALL`, combined with a `targetType` of `SHIPPING_LINE`, applies the discount on all shipping lines.
- *
  */
 export type DiscountApplicationTargetSelection =
   /** The discount is allocated onto all the lines. */
@@ -3031,20 +2538,14 @@ export type DiscountApplicationTargetSelection =
   /** The discount is allocated onto explicitly chosen lines. */
   | 'EXPLICIT';
 
-/**
- * The type of line (i.e. line item or shipping line) on an order that the discount is applicable towards.
- *
- */
+/** The type of line (i.e. line item or shipping line) on an order that the discount is applicable towards. */
 export type DiscountApplicationTargetType =
   /** The discount applies onto line items. */
   | 'LINE_ITEM'
   /** The discount applies onto shipping lines. */
   | 'SHIPPING_LINE';
 
-/**
- * The type of the discount application.
- *
- */
+/** The type of the discount application. */
 export type DiscountApplicationType =
   /** Automatic discount application type. */
   | 'AUTOMATIC'
@@ -3055,10 +2556,7 @@ export type DiscountApplicationType =
   /** Script discount application type. */
   | 'SCRIPT';
 
-/**
- * Captures the intentions of a discount code at the time that it is applied.
- *
- */
+/** Captures the intentions of a discount code at the time that it is applied. */
 export type DiscountCodeApplication = DiscountApplication & {
   __typename?: 'DiscountCodeApplication';
   /** The method by which the discount's value is allocated to its entitled items. */
@@ -3094,33 +2592,23 @@ export type Domain = Node & {
   url: Scalars['URL']['output'];
 };
 
-/** A draft order for the customer. Any fields related to money are in the presentment currency. */
+/** A draft order for the customer. Any fields related to money are in the presentment currency. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type DraftOrder = Node & {
   __typename?: 'DraftOrder';
-  /**
-   * The billing address of the customer.
-   *
-   */
+  /** The billing address of the customer. */
   billingAddress?: Maybe<CustomerAddress>;
   /** Whether the customer who made the draft order has an associated enabled contact. */
   contactExists: Scalars['Boolean']['output'];
   /** The date and time when the draft order was created in Shopify. */
   createdAt: Scalars['DateTime']['output'];
-  /**
-   * The three-letter code for the currency of the store at the time that the invoice is sent.
-   *
-   */
+  /** The three-letter code for the currency of the store at the time that the invoice is sent. */
   currencyCode: CurrencyCode;
   /** The customer who placed the order. */
   customer?: Maybe<Customer>;
-  /** The customer who placed the order. */
-  customerV1?: Maybe<PersonalAccount>;
   /** The discount information for the draft order. */
   discountInformation: DraftOrderDiscountInformation;
   /** The email address of the customer, which is used to send notifications to. */
   email?: Maybe<Scalars['String']['output']>;
-  /** The email address of the customer, which is used to send notifications to. */
-  emailAddress?: Maybe<CustomerEmailAddress>;
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
   /** Whether the draft order is created from the online store and is open. */
@@ -3131,10 +2619,7 @@ export type DraftOrder = Node & {
   lineItems: DraftOrderLineItemConnection;
   /** The summary of draft order line items quantity. */
   lineItemsSummary?: Maybe<DraftOrderLineItemsSummary>;
-  /**
-   * The unique identifier for the draft order, which is unique within the store. For example, _#D1223_.
-   *
-   */
+  /** The unique identifier for the draft order, which is unique within the store. For example, _#D1223_. */
   name: Scalars['String']['output'];
   /** The order that was created from this draft order. */
   order?: Maybe<Order>;
@@ -3142,23 +2627,15 @@ export type DraftOrder = Node & {
   phone?: Maybe<Scalars['String']['output']>;
   /** The purchasing entity for the draft order. */
   purchasingEntity?: Maybe<PurchasingEntity>;
-  /** The purchasing entity for the draft order. */
-  purchasingEntityV1?: Maybe<PurchasingEntityV1>;
   /** Whether the draft order requires shipping or not. */
   requiresShipping: Scalars['Boolean']['output'];
   /** The shipping address of the customer. */
   shippingAddress?: Maybe<CustomerAddress>;
   /** The status of the draft order. */
   status: DraftOrderStatus;
-  /**
-   * The subtotal of the line items (doesn't include shipping charges, shipping discounts, or taxes).
-   *
-   */
+  /** The subtotal of the line items (doesn't include shipping charges, shipping discounts, or taxes). */
   subtotalPrice: MoneyV2;
-  /**
-   * The subtotal of the line items (doesn't include shipping charges, taxes, or any discounts).
-   *
-   */
+  /** The subtotal of the line items (doesn't include shipping charges, taxes, or any discounts). */
   subtotalPriceBeforeDiscounts: MoneyV2;
   /** Indicates whether the draft order is tax exempt. */
   taxExempt: Scalars['Boolean']['output'];
@@ -3166,32 +2643,22 @@ export type DraftOrder = Node & {
   taxesIncluded: Scalars['Boolean']['output'];
   /** The total price of line items for this draft order. */
   totalLineItemsPrice: MoneyV2;
-  /**
-   * The total amount of the draft order (includes taxes, shipping charges, and discounts).
-   *
-   */
+  /** The total amount of the draft order (includes taxes, shipping charges, and discounts). */
   totalPrice: MoneyV2;
-  /**
-   * The total shipping charge for the draft order.
-   *
-   */
+  /** The total shipping charge for the draft order. */
   totalShippingPrice: MoneyV2;
-  /**
-   * The total amount of taxes for the draft order.
-   *
-   */
+  /** The total amount of taxes for the draft order. */
   totalTax: MoneyV2;
   /** The total weight (in grams) of the draft order. */
   totalWeight: Scalars['UnsignedInt64']['output'];
   /**
    * The date and time when the draft order was last changed.
    * The format is YYYY-MM-DD HH:mm:ss (for example, 2016-02-05 17:04:01).
-   *
    */
   updatedAt: Scalars['DateTime']['output'];
 };
 
-/** A draft order for the customer. Any fields related to money are in the presentment currency. */
+/** A draft order for the customer. Any fields related to money are in the presentment currency. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type DraftOrderLineItemsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -3220,7 +2687,6 @@ export type DraftOrderByCompanySortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE'
   /** Sort by the `status` value. */
@@ -3241,7 +2707,6 @@ export type DraftOrderByLocationSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE'
   /** Sort by the `status` value. */
@@ -3251,10 +2716,7 @@ export type DraftOrderByLocationSortKeys =
   /** Sort by the `updated_at` value. */
   | 'UPDATED_AT';
 
-/**
- * An auto-generated type for paginating through multiple DraftOrders.
- *
- */
+/** An auto-generated type for paginating through multiple DraftOrders. */
 export type DraftOrderConnection = {
   __typename?: 'DraftOrderConnection';
   /** A list of edges. */
@@ -3274,10 +2736,7 @@ export type DraftOrderDiscountInformation = {
   totalDiscounts: MoneyV2;
 };
 
-/**
- * An auto-generated type which holds one DraftOrder and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one DraftOrder and a cursor during pagination. */
 export type DraftOrderEdge = {
   __typename?: 'DraftOrderEdge';
   /** A cursor for use in pagination. */
@@ -3291,15 +2750,9 @@ export type DraftOrderLineItem = Node & {
   __typename?: 'DraftOrderLineItem';
   /** The discount information for the draft order line item. */
   discountInformation: DraftOrderLineItemDiscountInformation;
-  /**
-   * The total price of the line item after discounts have been applied.
-   *
-   */
+  /** The total price of the line item after discounts have been applied. */
   discountedTotal: MoneyV2;
-  /**
-   * The discounted total divided by the quantity, resulting in the value of the discount per unit.
-   *
-   */
+  /** The discounted total divided by the quantity, resulting in the value of the discount per unit. */
   discountedUnitPrice: MoneyV2;
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
@@ -3307,10 +2760,7 @@ export type DraftOrderLineItem = Node & {
   image?: Maybe<Image>;
   /** The name of the product. */
   name: Scalars['String']['output'];
-  /**
-   * The total price of the line item, based on the original unit price of the variant multiplied by the quantity. This total doesn't include any discounts.
-   *
-   */
+  /** The total price of the line item, based on the original unit price of the variant multiplied by the quantity. This total doesn't include any discounts. */
   originalTotal: MoneyV2;
   /** The price of the variant without any discounts applied. */
   originalUnitPrice: MoneyV2;
@@ -3332,18 +2782,7 @@ export type DraftOrderLineItem = Node & {
   weight?: Maybe<Weight>;
 };
 
-/** A line item included in a draft order. */
-export type DraftOrderLineItemImageArgs = {
-  crop?: InputMaybe<CropRegion>;
-  maxHeight?: InputMaybe<Scalars['Int']['input']>;
-  maxWidth?: InputMaybe<Scalars['Int']['input']>;
-  scale?: InputMaybe<Scalars['Int']['input']>;
-};
-
-/**
- * An auto-generated type for paginating through multiple DraftOrderLineItems.
- *
- */
+/** An auto-generated type for paginating through multiple DraftOrderLineItems. */
 export type DraftOrderLineItemConnection = {
   __typename?: 'DraftOrderLineItemConnection';
   /** A list of edges. */
@@ -3363,10 +2802,7 @@ export type DraftOrderLineItemDiscountInformation = {
   totalDiscount: MoneyV2;
 };
 
-/**
- * An auto-generated type which holds one DraftOrderLineItem and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one DraftOrderLineItem and a cursor during pagination. */
 export type DraftOrderLineItemEdge = {
   __typename?: 'DraftOrderLineItemEdge';
   /** A cursor for use in pagination. */
@@ -3395,7 +2831,6 @@ export type DraftOrderSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE'
   /** Sort by the `status` value. */
@@ -3438,62 +2873,19 @@ export type DutySale = Node &
     totalTaxAmount: MoneyV2;
   };
 
-/**
- * Represents the customer's consent to receive marketing material by email.
- *
- */
-export type EmailMarketingConsentState = Node & {
-  __typename?: 'EmailMarketingConsentState';
-  /**
-   * The date and time when the customer consented to receive marketing material by email.
-   *
-   */
-  consentUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
-  /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
-  /**
-   * The marketing subscription opt-in level that the customer gave when they consented to receive marketing material by email.
-   *
-   */
-  marketingOptInLevel?: Maybe<MarketingOptInLevel>;
-  /** The current email marketing state for the customer. */
-  marketingState: EmailMarketingState;
-};
-
-/**
- * Represents the possible email marketing states for a customer.
- *
- */
+/** Represents the possible email marketing states for a customer. */
 export type EmailMarketingState =
-  /**
-   * The customer’s email marketing state is invalid.
-   *
-   */
+  /** The customer’s email marketing state is invalid. */
   | 'INVALID'
-  /**
-   * The customer isn't subscribed to email marketing.
-   *
-   */
+  /** The customer isn't subscribed to email marketing. */
   | 'NOT_SUBSCRIBED'
-  /**
-   * The customer is in the process of subscribing to email marketing.
-   *
-   */
+  /** The customer is in the process of subscribing to email marketing. */
   | 'PENDING'
-  /**
-   * The customer's personal data has been erased. This value is internally-set and read-only.
-   *
-   */
+  /** The customer's personal data has been erased. This value is internally-set and read-only. */
   | 'REDACTED'
-  /**
-   * The customer is subscribed to email marketing.
-   *
-   */
+  /** The customer is subscribed to email marketing. */
   | 'SUBSCRIBED'
-  /**
-   * The customer is not currently subscribed to email marketing but was previously subscribed.
-   *
-   */
+  /** The customer is not currently subscribed to email marketing but was previously subscribed. */
   | 'UNSUBSCRIBED';
 
 /** Tokens used by ui extensions to query various APIs. */
@@ -3585,10 +2977,7 @@ export type FulfillmentFulfillmentLineItemsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/**
- * An auto-generated type for paginating through multiple Fulfillments.
- *
- */
+/** An auto-generated type for paginating through multiple Fulfillments. */
 export type FulfillmentConnection = {
   __typename?: 'FulfillmentConnection';
   /** A list of edges. */
@@ -3599,10 +2988,7 @@ export type FulfillmentConnection = {
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one Fulfillment and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one Fulfillment and a cursor during pagination. */
 export type FulfillmentEdge = {
   __typename?: 'FulfillmentEdge';
   /** A cursor for use in pagination. */
@@ -3614,24 +3000,15 @@ export type FulfillmentEdge = {
 /** An event that occurred for a fulfillment. */
 export type FulfillmentEvent = Node & {
   __typename?: 'FulfillmentEvent';
-  /**
-   * The time when this fulfillment event occurred.
-   *
-   */
+  /** The time when this fulfillment event occurred. */
   happenedAt: Scalars['DateTime']['output'];
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
-  /**
-   * The status of the fulfillment event.
-   *
-   */
+  /** The status of the fulfillment event. */
   status: FulfillmentEventStatus;
 };
 
-/**
- * An auto-generated type for paginating through multiple FulfillmentEvents.
- *
- */
+/** An auto-generated type for paginating through multiple FulfillmentEvents. */
 export type FulfillmentEventConnection = {
   __typename?: 'FulfillmentEventConnection';
   /** A list of edges. */
@@ -3642,10 +3019,7 @@ export type FulfillmentEventConnection = {
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one FulfillmentEvent and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one FulfillmentEvent and a cursor during pagination. */
 export type FulfillmentEventEdge = {
   __typename?: 'FulfillmentEventEdge';
   /** A cursor for use in pagination. */
@@ -3663,74 +3037,34 @@ export type FulfillmentEventSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE';
 
-/**
- * The status of a fulfillment event.
- *
- */
+/** The status of a fulfillment event. */
 export type FulfillmentEventStatus =
-  /**
-   * A delivery was attempted.
-   *
-   */
+  /** A delivery was attempted. */
   | 'ATTEMPTED_DELIVERY'
-  /**
-   * The fulfillment has been picked up by the carrier.
-   *
-   */
+  /** The fulfillment has been picked up by the carrier. */
   | 'CARRIER_PICKED_UP'
-  /**
-   * The fulfillment is confirmed.
-   *
-   */
+  /** The fulfillment is confirmed. */
   | 'CONFIRMED'
-  /**
-   * The fulfillment is delayed.
-   *
-   */
+  /** The fulfillment is delayed. */
   | 'DELAYED'
-  /**
-   * The fulfillment was successfully delivered.
-   *
-   */
+  /** The fulfillment was successfully delivered. */
   | 'DELIVERED'
-  /**
-   * The fulfillment request failed.
-   *
-   */
+  /** The fulfillment request failed. */
   | 'FAILURE'
-  /**
-   * The fulfillment is in transit.
-   *
-   */
+  /** The fulfillment is in transit. */
   | 'IN_TRANSIT'
-  /**
-   * A purchased shipping label has been printed.
-   *
-   */
+  /** A purchased shipping label has been printed. */
   | 'LABEL_PRINTED'
-  /**
-   * A shipping label has been purchased.
-   *
-   */
+  /** A shipping label has been purchased. */
   | 'LABEL_PURCHASED'
-  /**
-   * The fulfillment is out for delivery.
-   *
-   */
+  /** The fulfillment is out for delivery. */
   | 'OUT_FOR_DELIVERY'
-  /**
-   * The fulfillment was successfully picked up.
-   *
-   */
+  /** The fulfillment was successfully picked up. */
   | 'PICKED_UP'
-  /**
-   * The fulfillment is ready to be picked up.
-   *
-   */
+  /** The fulfillment is ready to be picked up. */
   | 'READY_FOR_PICKUP';
 
 /** Represents a line item from an order that's included in a fulfillment. */
@@ -3744,10 +3078,7 @@ export type FulfillmentLineItem = Node & {
   quantity?: Maybe<Scalars['Int']['output']>;
 };
 
-/**
- * An auto-generated type for paginating through multiple FulfillmentLineItems.
- *
- */
+/** An auto-generated type for paginating through multiple FulfillmentLineItems. */
 export type FulfillmentLineItemConnection = {
   __typename?: 'FulfillmentLineItemConnection';
   /** A list of edges. */
@@ -3758,10 +3089,7 @@ export type FulfillmentLineItemConnection = {
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one FulfillmentLineItem and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one FulfillmentLineItem and a cursor during pagination. */
 export type FulfillmentLineItemEdge = {
   __typename?: 'FulfillmentLineItemEdge';
   /** A cursor for use in pagination. */
@@ -3779,7 +3107,6 @@ export type FulfillmentSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE';
 
@@ -3791,15 +3118,9 @@ export type FulfillmentStatus =
   | 'ERROR'
   /** The fulfillment request failed. */
   | 'FAILURE'
-  /**
-   * The third-party fulfillment service has acknowledged the fulfillment and is processing it.
-   *
-   */
+  /** The third-party fulfillment service has acknowledged the fulfillment and is processing it. */
   | 'OPEN'
-  /**
-   * Shopify has created the fulfillment and is waiting for the third-party fulfillment service to transition it to `open` or `success`.
-   *
-   */
+  /** Shopify has created the fulfillment and is waiting for the third-party fulfillment service to transition it to `open` or `success`. */
   | 'PENDING'
   /** The fulfillment was completed successfully. */
   | 'SUCCESS';
@@ -3911,7 +3232,6 @@ export type HasMetafields = {
   /**
    * The metafields associated with the resource matching the
    * supplied list of namespaces and keys.
-   *
    */
   metafields: Array<Maybe<Metafield>>;
 };
@@ -3948,7 +3268,6 @@ export type Image = {
    * The location of the original image as a URL.
    *
    * If there are any existing transformations in the original source URL, they will remain and not be stripped.
-   *
    * @deprecated Use `url` instead.
    */
   originalSrc: Scalars['URL']['output'];
@@ -3962,7 +3281,6 @@ export type Image = {
    *
    * All transformation arguments are considered "best-effort". If they can be applied to an image, they will be.
    * Otherwise any transformations which an image type doesn't support will be ignored.
-   *
    * @deprecated Use `url(transform:)` instead
    */
   transformedSrc: Scalars['URL']['output'];
@@ -3974,7 +3292,6 @@ export type Image = {
    * All transformation options are considered "best-effort". Any transformation that the original image type doesn't support will be ignored.
    *
    * If you need multiple variations of the same image, then you can use [GraphQL aliases](https://graphql.org/learn/queries/#aliases).
-   *
    */
   url: Scalars['URL']['output'];
   /** The original width of the image in pixels. Returns `null` if the image isn't hosted by Shopify. */
@@ -4008,7 +3325,6 @@ export type ImageContentType =
  * The available options for transforming an image.
  *
  * All transformation options are considered best effort. Any transformation that the original image type doesn't support will be ignored.
- *
  */
 export type ImageTransformInput = {
   /**
@@ -4017,39 +3333,25 @@ export type ImageTransformInput = {
    * The `crop` argument should coincide with the smaller value. A smaller `maxWidth` indicates a `LEFT` or `RIGHT` crop, while
    * a smaller `maxHeight` indicates a `TOP` or `BOTTOM` crop. For example, `{ maxWidth: 5, maxHeight: 10, crop: LEFT }` will result
    * in an image with a width of 5 and height of 10, where the right side of the image is removed.
-   *
    */
   crop?: InputMaybe<CropRegion>;
-  /**
-   * Image height in pixels between 1 and 5760.
-   *
-   */
+  /** Image height in pixels between 1 and 5760. */
   maxHeight?: InputMaybe<Scalars['Int']['input']>;
-  /**
-   * Image width in pixels between 1 and 5760.
-   *
-   */
+  /** Image width in pixels between 1 and 5760. */
   maxWidth?: InputMaybe<Scalars['Int']['input']>;
   /**
    * Convert the source image into the preferred content type.
    * Supported conversions: `.svg` to `.png`, any file type to `.jpg`, and any file type to `.webp`.
-   *
    */
   preferredContentType?: InputMaybe<ImageContentType>;
-  /**
-   * Image size multiplier for high-resolution retina displays. Must be within 1..3.
-   *
-   */
+  /** Image size multiplier for high-resolution retina displays. Must be within 1..3. */
   scale?: InputMaybe<Scalars['Int']['input']>;
 };
 
 /** A single line item in an order. */
 export type LineItem = Node & {
   __typename?: 'LineItem';
-  /**
-   * The total price of the line item, calculated by multiplying the current unit price of the variant by the quantity, expressed in presentment currencies.
-   *
-   */
+  /** The total price of the line item, calculated by multiplying the current unit price of the variant by the quantity, expressed in presentment currencies. */
   currentTotalPrice?: Maybe<MoneyV2>;
   /** The list of custom attributes associated with the line item. */
   customAttributes: Array<Attribute>;
@@ -4097,25 +3399,13 @@ export type LineItem = Node & {
   supportedReturnReasons: Array<ReturnSupportedReason>;
   /** The title of the product or variant. This field only applies to custom line items. */
   title: Scalars['String']['output'];
-  /**
-   * The total of the discount allocations on this line item, resulting from discounts applied specifically to this line item.
-   *
-   */
+  /** The total of the discount allocations on this line item, resulting from discounts applied specifically to this line item. */
   totalDiscount: MoneyV2;
-  /**
-   * The total price of the line item, calculated by multiplying the current unit price of the variant by the quantity, expressed in presentment currencies.
-   *
-   */
+  /** The total price of the line item, calculated by multiplying the current unit price of the variant by the quantity, expressed in presentment currencies. */
   totalPrice?: Maybe<MoneyV2>;
-  /**
-   * The total price of the line item, calculated by multiplying the unit price of the variant (before any discounts) by the quantity, expressed in presentment currencies.
-   *
-   */
+  /** The total price of the line item, calculated by multiplying the unit price of the variant (before any discounts) by the quantity, expressed in presentment currencies. */
   totalPriceBeforeDiscounts?: Maybe<MoneyV2>;
-  /**
-   * The total price of the line item, calculated by multiplying the unit price of the variant (after line item discounts) by the quantity, expressed in presentment currencies.
-   *
-   */
+  /** The total price of the line item, calculated by multiplying the unit price of the variant (after line item discounts) by the quantity, expressed in presentment currencies. */
   totalPriceWithDiscounts?: Maybe<MoneyV2>;
   /** The unit price of the line item in presentment currencies. */
   unitPrice?: Maybe<UnitPrice>;
@@ -4129,10 +3419,7 @@ export type LineItem = Node & {
   vendor?: Maybe<Scalars['String']['output']>;
 };
 
-/**
- * An auto-generated type for paginating through multiple LineItems.
- *
- */
+/** An auto-generated type for paginating through multiple LineItems. */
 export type LineItemConnection = {
   __typename?: 'LineItemConnection';
   /** A list of edges. */
@@ -4143,10 +3430,7 @@ export type LineItemConnection = {
   pageInfo: PageInfo;
 };
 
-/**
- * The information about the line item category for the order.
- *
- */
+/** The information about the line item category for the order. */
 export type LineItemContainer =
   | RemainingLineItemContainer
   | UnfulfilledDigitalLineItemContainer
@@ -4154,10 +3438,7 @@ export type LineItemContainer =
   | UnfulfilledLineItemContainer
   | UnfulfilledPhysicalLineItemContainer;
 
-/**
- * The information about the line item in the line item container.
- *
- */
+/** The information about the line item in the line item container. */
 export type LineItemContainerLineItem = Node & {
   __typename?: 'LineItemContainerLineItem';
   /** A globally-unique ID. */
@@ -4170,10 +3451,7 @@ export type LineItemContainerLineItem = Node & {
   totalQuantity: Scalars['Int']['output'];
 };
 
-/**
- * An auto-generated type for paginating through multiple LineItemContainerLineItems.
- *
- */
+/** An auto-generated type for paginating through multiple LineItemContainerLineItems. */
 export type LineItemContainerLineItemConnection = {
   __typename?: 'LineItemContainerLineItemConnection';
   /** A list of edges. */
@@ -4184,10 +3462,7 @@ export type LineItemContainerLineItemConnection = {
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one LineItemContainerLineItem and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one LineItemContainerLineItem and a cursor during pagination. */
 export type LineItemContainerLineItemEdge = {
   __typename?: 'LineItemContainerLineItemEdge';
   /** A cursor for use in pagination. */
@@ -4205,10 +3480,7 @@ export type LineItemDiscountInformation = {
   title?: Maybe<Scalars['String']['output']>;
 };
 
-/**
- * An auto-generated type which holds one LineItem and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one LineItem and a cursor during pagination. */
 export type LineItemEdge = {
   __typename?: 'LineItemEdge';
   /** A cursor for use in pagination. */
@@ -4220,15 +3492,9 @@ export type LineItemEdge = {
 /** The selling plan for a line item. */
 export type LineItemSellingPlan = {
   __typename?: 'LineItemSellingPlan';
-  /**
-   * The name of the selling plan for display purposes.
-   *
-   */
+  /** The name of the selling plan for display purposes. */
   name: Scalars['String']['output'];
-  /**
-   * The ID of the selling plan associated with the line item.
-   *
-   */
+  /** The ID of the selling plan associated with the line item. */
   sellingPlanId?: Maybe<Scalars['ID']['output']>;
 };
 
@@ -4241,116 +3507,7 @@ export type LineItemVariantOption = {
   value: Scalars['String']['output'];
 };
 
-/** Represents a company's business location. */
-export type Location = Node & {
-  __typename?: 'Location';
-  /** The billing address of the company location. */
-  billingAddress?: Maybe<CompanyAddress>;
-  /** The configuration of the buyer's B2B checkout. */
-  buyerExperienceConfiguration?: Maybe<BuyerExperienceConfiguration>;
-  /** The list of contacts under a particular business location. */
-  contacts: CompanyContactConnection;
-  /** The list of contacts under a particular business location. */
-  contactsV1: ContactConnection;
-  /** The credit card corresponding to the provided ID. */
-  creditCard?: Maybe<CustomerCreditCard>;
-  /** The list of stored credit cards. */
-  creditCards: CustomerCreditCardConnection;
-  /** A globally-unique ID. */
-  id: Scalars['ID']['output'];
-  /** The market that includes the location's shipping address. If the shipping address is empty, the shop's primary market is returned. */
-  market: Market;
-  /** The name of the company location. */
-  name: Scalars['String']['output'];
-  /** The list of roles assigned to this location. */
-  roleAssignments: CompanyContactRoleAssignmentConnection;
-  /** The shipping address of the company location. */
-  shippingAddress?: Maybe<CompanyAddress>;
-  /** The list of tax exemptions applied to the location. */
-  taxExemptions: Array<TaxExemption>;
-  /** The list of tax exemptions applied to the location with additional details. */
-  taxExemptionsDetails: Array<TaxExemptionDetails>;
-  /** The tax id of the company location. */
-  taxIdentifier?: Maybe<Scalars['String']['output']>;
-};
-
-/** Represents a company's business location. */
-export type LocationContactsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<CompanyContactSortKeys>;
-};
-
-/** Represents a company's business location. */
-export type LocationContactsV1Args = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<CompanyContactSortKeys>;
-};
-
-/** Represents a company's business location. */
-export type LocationCreditCardArgs = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents a company's business location. */
-export type LocationCreditCardsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
-/** Represents a company's business location. */
-export type LocationRoleAssignmentsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<CompanyContactRoleAssignmentSortKeys>;
-};
-
-/**
- * An auto-generated type for paginating through multiple Locations.
- *
- */
-export type LocationConnection = {
-  __typename?: 'LocationConnection';
-  /** A list of edges. */
-  edges: Array<LocationEdge>;
-  /** A list of the nodes contained in LocationEdge. */
-  nodes: Array<Location>;
-  /** Information to aid in pagination. */
-  pageInfo: PageInfo;
-};
-
-/**
- * An auto-generated type which holds one Location and a cursor during pagination.
- *
- */
-export type LocationEdge = {
-  __typename?: 'LocationEdge';
-  /** A cursor for use in pagination. */
-  cursor: Scalars['String']['output'];
-  /** The item at the end of LocationEdge. */
-  node: Location;
-};
-
-/**
- * Captures the intentions of a discount that was manually created.
- *
- */
+/** Captures the intentions of a discount that was manually created. */
 export type ManualDiscountApplication = DiscountApplication & {
   __typename?: 'ManualDiscountApplication';
   /** The method by which the discount's value is allocated to its entitled items. */
@@ -4370,7 +3527,6 @@ export type ManualDiscountApplication = DiscountApplication & {
 /**
  * A market, which is a group of one or more regions targeted for international sales.
  * A market allows configuration of a distinct, localized shopping experience for customers from a specific area of the world.
- *
  */
 export type Market = Node & {
   __typename?: 'Market';
@@ -4384,7 +3540,6 @@ export type Market = Node & {
    * language variants. If a market doesn't have its own web presence, then the market is accessible on the
    * shop’s primary domain using [country
    * selectors](https://shopify.dev/themes/internationalization/multiple-currencies-languages#the-country-selector).
-   *
    */
   webPresence?: Maybe<MarketWebPresence>;
 };
@@ -4402,31 +3557,23 @@ export type Market = Node & {
  * here do govern [the languages available on the Storefront
  * API](https://shopify.dev/custom-storefronts/internationalization/multiple-languages) for the countries in
  * this market.
- *
  */
 export type MarketWebPresence = Node & {
   __typename?: 'MarketWebPresence';
   /**
    * The domain of the web presence.
    * This field will be null if `subfolderSuffix` isn't null.
-   *
    */
   domain?: Maybe<Domain>;
   /** A globally-unique identifier. */
   id: Scalars['ID']['output'];
-  /**
-   * The list of root URLs for each of the web presence’s locales.
-   *
-   */
+  /** The list of root URLs for each of the web presence’s locales. */
   rootUrls: Array<MarketWebPresenceRootUrl>;
   /** The market-specific suffix of the subfolders defined by the web presence. Example: in `/en-us` the subfolder suffix is `us`. This field will be null if `domain` isn't null. */
   subfolderSuffix?: Maybe<Scalars['String']['output']>;
 };
 
-/**
- * The URL for the homepage of the online store in the context of a particular market and a particular locale.
- *
- */
+/** The URL for the homepage of the online store in the context of a particular market and a particular locale. */
 export type MarketWebPresenceRootUrl = {
   __typename?: 'MarketWebPresenceRootUrl';
   /** The locale in which the storefront loads. */
@@ -4436,36 +3583,8 @@ export type MarketWebPresenceRootUrl = {
 };
 
 /**
- * The possible values for the marketing subscription opt-in level enabled
- * when the customer consented to receive marketing information.
- *
- * The levels follow the M3AAWG best practices guideline
- * [document](https://www.m3aawg.org/sites/maawg/files/news/M3AAWG_Senders_BCP_Ver3-2015-02.pdf).
- *
- */
-export type MarketingOptInLevel =
-  /**
-   * The customer gets a confirmation and needs to
-   * perform an intermediate step before getting marketing information after providing their information.
-   *
-   */
-  | 'CONFIRMED_OPT_IN'
-  /**
-   * The customer gets marketing information without any
-   * intermediate steps after providing their information.
-   *
-   */
-  | 'SINGLE_OPT_IN'
-  /**
-   * The customer gets marketing information, but the opt-in method is unknown.
-   *
-   */
-  | 'UNKNOWN';
-
-/**
  * The custom metadata attached to a resource. Metafields can be sorted into namespaces and are
  * comprised of keys, values, and value types.
- *
  */
 export type Metafield = Node & {
   __typename?: 'Metafield';
@@ -4482,7 +3601,6 @@ export type Metafield = Node & {
   /**
    * The type name of the metafield.
    * See the list of [supported types](https://shopify.dev/apps/metafields/definitions/types).
-   *
    */
   type: Scalars['String']['output'];
   /** The date and time when the metafield was updated. */
@@ -4507,7 +3625,6 @@ export type MetafieldValueType =
 /**
  * A collection of monetary values in their respective currencies. Typically used in the context of multi-currency pricing and transactions,
  * when an amount in the shop's currency is converted to the customer's currency of choice (the presentment currency).
- *
  */
 export type MoneyBag = {
   __typename?: 'MoneyBag';
@@ -4517,10 +3634,7 @@ export type MoneyBag = {
   shopMoney: MoneyV2;
 };
 
-/**
- * A monetary value with currency.
- *
- */
+/** A monetary value with currency. */
 export type MoneyV2 = {
   __typename?: 'MoneyV2';
   /** Decimal money amount. */
@@ -4532,92 +3646,31 @@ export type MoneyV2 = {
 /** This is the schema's entry point for all mutation operations. */
 export type Mutation = {
   __typename?: 'Mutation';
-  /**
-   * Creates a new address for a customer.
-   *
-   */
-  addressCreate?: Maybe<AddressCreatePayload>;
-  /**
-   * Deletes a specific address for a customer.
-   *
-   */
-  addressDelete?: Maybe<AddressDeletePayload>;
-  /**
-   * Updates a specific address for a customer.
-   *
-   */
-  addressUpdate?: Maybe<AddressUpdatePayload>;
   /** Adds a new credit card using Apple Pay. */
   applePayCreditCardAdd?: Maybe<ApplePayCreditCardAddPayload>;
   /** Updates a credit card using Apple Pay. */
   applePayCreditCardUpdate?: Maybe<ApplePayCreditCardUpdatePayload>;
   /** Creates a new Apple Pay session. */
   applePaySessionCreate?: Maybe<ApplePaySessionCreatePayload>;
-  /**
-   * Updates the information for a business contact.
-   *
-   */
+  /** Updates the information for a business contact. */
   businessContactUpdate?: Maybe<BusinessContactUpdatePayload>;
-  /**
-   * Updates the information for a business contact.
-   *
-   */
-  businessContactUpdateV1?: Maybe<BusinessContactUpdateV1Payload>;
-  /**
-   * Creates a billing address for a business location and optionally a shipping address with the same input.
-   *
-   */
-  businessLocationBillingAddressCreate?: Maybe<BusinessLocationBillingAddressCreatePayload>;
-  /**
-   * Updates the billing address of a business location.
-   *
-   */
-  businessLocationBillingAddressUpdate?: Maybe<BusinessLocationBillingAddressUpdatePayload>;
-  /**
-   * Adds a new credit card to the available payment methods of a customer.
-   *
-   */
+  /** Adds a new credit card to the available payment methods of a customer. */
   businessLocationCreditCardAdd?: Maybe<BusinessLocationCreditCardAddPayload>;
-  /**
-   * Updates the details of a credit card for a customer.
-   *
-   */
+  /** Updates the details of a credit card for a customer. */
   businessLocationCreditCardUpdate?: Maybe<BusinessLocationCreditCardUpdatePayload>;
-  /**
-   * Removes a payment instrument from a customer.
-   *
-   */
+  /** Removes a payment instrument from a customer. */
   businessLocationPaymentInstrumentRemove?: Maybe<BusinessLocationPaymentInstrumentRemovePayload>;
-  /**
-   * Creates a shipping address for a business location and optionally a billing address with the same input.
-   *
-   */
-  businessLocationShippingAddressCreate?: Maybe<BusinessLocationShippingAddressCreatePayload>;
-  /**
-   * Updates the shipping address of a business location.
-   *
-   */
-  businessLocationShippingAddressUpdate?: Maybe<BusinessLocationShippingAddressUpdatePayload>;
   /** Updates an address on a company location. */
   companyLocationAssignAddress?: Maybe<CompanyLocationAssignAddressPayload>;
   /** Adds a new credit card to a customer's list of available payment methods. */
   creditCardAdd?: Maybe<CreditCardAddPayload>;
   /** Updates the details of a customer's credit card. */
   creditCardUpdate?: Maybe<CreditCardUpdatePayload>;
-  /**
-   * Creates a new address for a customer.
-   *
-   */
+  /** Creates a new address for a customer. */
   customerAddressCreate?: Maybe<CustomerAddressCreatePayload>;
-  /**
-   * Deletes a specific address for a customer.
-   *
-   */
+  /** Deletes a specific address for a customer. */
   customerAddressDelete?: Maybe<CustomerAddressDeletePayload>;
-  /**
-   * Updates a specific address for a customer.
-   *
-   */
+  /** Updates a specific address for a customer. */
   customerAddressUpdate?: Maybe<CustomerAddressUpdatePayload>;
   /** Subscribes the customer's email to marketing. */
   customerEmailMarketingOptIn?: Maybe<CustomerEmailMarketingOptInPayload>;
@@ -4625,10 +3678,7 @@ export type Mutation = {
   customerEmailMarketingSubscribe?: Maybe<CustomerEmailMarketingSubscribePayload>;
   /** Unsubscribes the customer from email marketing. */
   customerEmailMarketingUnsubscribe?: Maybe<CustomerEmailMarketingUnsubscribePayload>;
-  /**
-   * Updates the customer's personal information.
-   *
-   */
+  /** Updates the customer's personal information. */
   customerUpdate?: Maybe<CustomerUpdatePayload>;
   /** Adds a new credit card by using Google Pay. */
   googlePayCreditCardAdd?: Maybe<GooglePayCreditCardAddPayload>;
@@ -4638,20 +3688,12 @@ export type Mutation = {
   orderRequestReturn?: Maybe<OrderRequestReturnPayload>;
   /** Removes a payment instrument from a customer's account. */
   paymentInstrumentRemove?: Maybe<PaymentInstrumentRemovePayload>;
-  /**
-   * Updates a customer's default payment instrument.
-   *
-   */
+  /** Updates a customer's default payment instrument. */
   paymentInstrumentUpdateDefault?: Maybe<PaymentInstrumentUpdateDefaultPayload>;
   /** Connects a customer's PayPal account for use as a payment method. */
   paypalAccountEnable?: Maybe<PaypalAccountEnablePayload>;
   /** Creates a PayPal Express token. */
   paypalTokenCreate?: Maybe<PaypalTokenCreatePayload>;
-  /**
-   * Updates the customer's personal information.
-   *
-   */
-  personalInformationUpdate?: Maybe<PersonalInformationUpdatePayload>;
   /** Resends a gift card to the customer. */
   resendGiftCard?: Maybe<ResendGiftCardPayload>;
   /** Provides a URL that enables the customer to update a Shop Pay credit card. */
@@ -4659,7 +3701,6 @@ export type Mutation = {
   /**
    * Exchanges the Customer Access Token, provided in the Authorization header, into a Storefront Customer Access Token.
    * Renew this token each time you update the Customer Access Token found in the Authorization header.
-   *
    */
   storefrontCustomerAccessTokenCreate?: Maybe<StorefrontCustomerAccessTokenCreatePayload>;
   /** Skips a Subscription Billing Cycle. */
@@ -4678,24 +3719,6 @@ export type Mutation = {
   subscriptionContractPause?: Maybe<SubscriptionContractPausePayload>;
   /** Selects an option from a delivery options result and updates the delivery method on a Subscription Contract. */
   subscriptionContractSelectDeliveryMethod?: Maybe<SubscriptionContractSelectDeliveryMethodPayload>;
-};
-
-/** This is the schema's entry point for all mutation operations. */
-export type MutationAddressCreateArgs = {
-  address: CustomerMailingAddressInput;
-  defaultAddress?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
-/** This is the schema's entry point for all mutation operations. */
-export type MutationAddressDeleteArgs = {
-  addressId: Scalars['ID']['input'];
-};
-
-/** This is the schema's entry point for all mutation operations. */
-export type MutationAddressUpdateArgs = {
-  address?: InputMaybe<CustomerMailingAddressInput>;
-  addressId: Scalars['ID']['input'];
-  defaultAddress?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 /** This is the schema's entry point for all mutation operations. */
@@ -4726,25 +3749,6 @@ export type MutationBusinessContactUpdateArgs = {
 };
 
 /** This is the schema's entry point for all mutation operations. */
-export type MutationBusinessContactUpdateV1Args = {
-  companyId?: InputMaybe<Scalars['ID']['input']>;
-  input: BusinessContactUpdateInput;
-};
-
-/** This is the schema's entry point for all mutation operations. */
-export type MutationBusinessLocationBillingAddressCreateArgs = {
-  address: CompanyAddressInput;
-  companyLocationId: Scalars['ID']['input'];
-  useAsShipping?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
-/** This is the schema's entry point for all mutation operations. */
-export type MutationBusinessLocationBillingAddressUpdateArgs = {
-  address: CompanyAddressInput;
-  companyLocationId: Scalars['ID']['input'];
-};
-
-/** This is the schema's entry point for all mutation operations. */
 export type MutationBusinessLocationCreditCardAddArgs = {
   billingAddress: CustomerMailingAddressInput;
   companyLocationId: Scalars['ID']['input'];
@@ -4764,19 +3768,6 @@ export type MutationBusinessLocationPaymentInstrumentRemoveArgs = {
   companyLocationId: Scalars['ID']['input'];
   paymentInstrumentId: Scalars['ID']['input'];
   replacementPaymentInstrumentId?: InputMaybe<Scalars['ID']['input']>;
-};
-
-/** This is the schema's entry point for all mutation operations. */
-export type MutationBusinessLocationShippingAddressCreateArgs = {
-  address: CompanyAddressInput;
-  companyLocationId: Scalars['ID']['input'];
-  useAsBilling?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
-/** This is the schema's entry point for all mutation operations. */
-export type MutationBusinessLocationShippingAddressUpdateArgs = {
-  address: CompanyAddressInput;
-  companyLocationId: Scalars['ID']['input'];
 };
 
 /** This is the schema's entry point for all mutation operations. */
@@ -4861,11 +3852,6 @@ export type MutationPaypalAccountEnableArgs = {
 };
 
 /** This is the schema's entry point for all mutation operations. */
-export type MutationPersonalInformationUpdateArgs = {
-  input: PersonalInformationUpdateInput;
-};
-
-/** This is the schema's entry point for all mutation operations. */
 export type MutationResendGiftCardArgs = {
   orderId: Scalars['ID']['input'];
 };
@@ -4924,30 +3910,25 @@ export type MutationSubscriptionContractSelectDeliveryMethodArgs = {
  * [Relay specification](https://relay.dev/graphql/objectidentification.htm#sec-Node-Interface).
  * This interface is used by the [node](https://shopify.dev/api/admin-graphql/unstable/queries/node)
  * and [nodes](https://shopify.dev/api/admin-graphql/unstable/queries/nodes) queries.
- *
  */
 export type Node = {
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
 };
 
-/** A customer’s completed request to purchase one or more products from a shop. */
+/** A customer’s completed request to purchase one or more products from a shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type Order = HasMetafields &
   Node & {
     __typename?: 'Order';
     /** A list of sales agreements associated with the order. */
     agreements: SalesAgreementConnection;
-    /**
-     * The mailing address provided by the customer. Not all orders have a mailing address.
-     *
-     */
+    /** The mailing address provided by the customer. Not all orders have a mailing address. */
     billingAddress?: Maybe<CustomerAddress>;
     /** The reason for the cancellation of the order. Returns `null` if the order wasn't canceled. */
     cancelReason?: Maybe<OrderCancelReason>;
     /**
      * The date and time when the order was canceled.
      * Returns `null` if the order wasn't canceled.
-     *
      */
     cancelledAt?: Maybe<Scalars['DateTime']['output']>;
     /** The checkout token associated with this order. */
@@ -4956,11 +3937,8 @@ export type Order = HasMetafields &
      * A randomly generated alpha-numeric identifier for the order that may be shown to the customer
      * instead of the sequential order name. For example, "XPAV284CT", "R50KELTJP" or "35PKUN0UJ".
      * This value isn't guaranteed to be unique.
-     *
      */
     confirmationNumber?: Maybe<Scalars['String']['output']>;
-    /** Whether the customer who made the order has an enabled associated contact. */
-    contactExists: Scalars['Boolean']['output'];
     /** The date and time when the order was created. */
     createdAt: Scalars['DateTime']['output'];
     /** The shop currency when the order was placed. */
@@ -4971,10 +3949,6 @@ export type Order = HasMetafields &
     customer?: Maybe<Customer>;
     /** The locale code representing the region where this specific order was placed. */
     customerLocale?: Maybe<Scalars['String']['output']>;
-    /** The unique URL for the customer to access the order. */
-    customerStatusPageUrl?: Maybe<Scalars['URL']['output']>;
-    /** The customer who placed the order. */
-    customerV1?: Maybe<PersonalAccount>;
     /** The discounts that have been applied to the order. */
     discountApplications: DiscountApplicationConnection;
     /** The discount information for the order, including line-level discount applications. */
@@ -4983,17 +3957,12 @@ export type Order = HasMetafields &
     draftOrder?: Maybe<DraftOrder>;
     /** The name of the associated draft order. */
     draftOrderName?: Maybe<Scalars['String']['output']>;
-    /**
-     * The edit summary of the order.
-     *
-     */
+    /** The edit summary of the order. */
     editSummary?: Maybe<OrderEditSummary>;
     /** Whether the order has been edited or not. */
     edited: Scalars['Boolean']['output'];
     /** The email address of the customer. */
     email?: Maybe<Scalars['String']['output']>;
-    /** The email address of the customer. */
-    emailAddress?: Maybe<CustomerEmailAddress>;
     /** The financial status of the order. */
     financialStatus?: Maybe<OrderFinancialStatus>;
     /** The fulfillment status of the order. */
@@ -5023,13 +3992,11 @@ export type Order = HasMetafields &
     /**
      * The metafields associated with the resource matching the
      * supplied list of namespaces and keys.
-     *
      */
     metafields: Array<Maybe<Metafield>>;
     /**
      * The identifier for the order that appears on the order.
      * For example, _#1000_ or _Store1001.
-     *
      */
     name: Scalars['String']['output'];
     /** The order's notes. */
@@ -5040,10 +4007,7 @@ export type Order = HasMetafields &
     orderReceiptMetafields: Array<Metafield>;
     /** The payment information for the order. */
     paymentInformation?: Maybe<OrderPaymentInformation>;
-    /**
-     * Represents the merchant configured payment terms.
-     *
-     */
+    /** Represents the merchant configured payment terms. */
     paymentTermsTemplate?: Maybe<PaymentTermsTemplate>;
     /** The phone number of the customer for SMS notifications. */
     phone?: Maybe<Scalars['String']['output']>;
@@ -5055,7 +4019,6 @@ export type Order = HasMetafields &
      * The date and time when the order was processed.
      * This value can be set to dates in the past when importing from other systems.
      * If no value is provided, it will be auto-generated based on current date and time.
-     *
      */
     processedAt: Scalars['DateTime']['output'];
     /** The purchasing entity for the order. */
@@ -5066,17 +4029,13 @@ export type Order = HasMetafields &
     reorderPath?: Maybe<Scalars['String']['output']>;
     /** Whether the order requires shipping. */
     requiresShipping: Scalars['Boolean']['output'];
+    /** A Return identified by ID. */
+    return?: Maybe<Return>;
     /** The list of returns for the order with pagination. */
     returns: ReturnConnection;
-    /**
-     * The mailing address to which the order items are shipped.
-     *
-     */
+    /** The mailing address to which the order items are shipped. */
     shippingAddress?: Maybe<CustomerAddress>;
-    /**
-     * The discounts that have been allocated onto the shipping line by discount applications.
-     *
-     */
+    /** The discounts that have been allocated onto the shipping line by discount applications. */
     shippingDiscountAllocations: Array<DiscountAllocation>;
     /** A summary of all shipping costs on the order. */
     shippingLine?: Maybe<ShippingLine>;
@@ -5090,8 +4049,6 @@ export type Order = HasMetafields &
     soldInformation: OrderSoldInformation;
     /** The unique URL for the status page of the order. */
     statusPageUrl: Scalars['URL']['output'];
-    /** The unique URL for the status page of the order. */
-    statusUrl: Scalars['URL']['output'];
     /** The price of the order before duties, shipping, and taxes. */
     subtotal?: Maybe<MoneyV2>;
     /** The price of the order before order-level discounts, duties, shipping. It includes taxes in  tax-inclusive orders. */
@@ -5116,7 +4073,7 @@ export type Order = HasMetafields &
     transactions: Array<OrderTransaction>;
   };
 
-/** A customer’s completed request to purchase one or more products from a shop. */
+/** A customer’s completed request to purchase one or more products from a shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type OrderAgreementsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -5125,7 +4082,7 @@ export type OrderAgreementsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/** A customer’s completed request to purchase one or more products from a shop. */
+/** A customer’s completed request to purchase one or more products from a shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type OrderDiscountApplicationsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -5134,7 +4091,7 @@ export type OrderDiscountApplicationsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/** A customer’s completed request to purchase one or more products from a shop. */
+/** A customer’s completed request to purchase one or more products from a shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type OrderFulfillmentsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -5145,7 +4102,7 @@ export type OrderFulfillmentsArgs = {
   sortKey?: InputMaybe<FulfillmentSortKeys>;
 };
 
-/** A customer’s completed request to purchase one or more products from a shop. */
+/** A customer’s completed request to purchase one or more products from a shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type OrderLineItemsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -5154,18 +4111,23 @@ export type OrderLineItemsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/** A customer’s completed request to purchase one or more products from a shop. */
+/** A customer’s completed request to purchase one or more products from a shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type OrderMetafieldArgs = {
   key: Scalars['String']['input'];
   namespace: Scalars['String']['input'];
 };
 
-/** A customer’s completed request to purchase one or more products from a shop. */
+/** A customer’s completed request to purchase one or more products from a shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type OrderMetafieldsArgs = {
   identifiers: Array<HasMetafieldsIdentifier>;
 };
 
-/** A customer’s completed request to purchase one or more products from a shop. */
+/** A customer’s completed request to purchase one or more products from a shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
+export type OrderReturnArgs = {
+  id: Scalars['ID']['input'];
+};
+
+/** A customer’s completed request to purchase one or more products from a shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type OrderReturnsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -5178,7 +4140,6 @@ export type OrderReturnsArgs = {
 /**
  * The possible order action types for a
  * [sales agreement](https://shopify.dev/api/admin-graphql/latest/interfaces/salesagreement).
- *
  */
 export type OrderActionType =
   /** An order with a purchase or charge. */
@@ -5243,7 +4204,6 @@ export type OrderByCompanySortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE'
   /** Sort by the `total_price` value. */
@@ -5266,7 +4226,6 @@ export type OrderByContactSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE'
   /** Sort by the `total_price` value. */
@@ -5287,7 +4246,6 @@ export type OrderByLocationSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE'
   /** Sort by the `total_price` value. */
@@ -5310,10 +4268,7 @@ export type OrderCancelReason =
   /** Staff made an error. */
   | 'STAFF';
 
-/**
- * An auto-generated type for paginating through multiple Orders.
- *
- */
+/** An auto-generated type for paginating through multiple Orders. */
 export type OrderConnection = {
   __typename?: 'OrderConnection';
   /** A list of edges. */
@@ -5342,10 +4297,7 @@ export type OrderDiscountInformation = {
   totalOrderLevelAppliedDiscounts: MoneyV2;
 };
 
-/**
- * The status of duties for the order.
- *
- */
+/** The status of duties for the order. */
 export type OrderDutiesStatusType =
   /** The order is being shipped from another country, so duties and taxes may be charged on delivery. */
   | 'DUTIES_ERROR'
@@ -5354,10 +4306,7 @@ export type OrderDutiesStatusType =
   /** The order is being shipped from another country. Duties are not charged on orders of this value. */
   | 'DUTIES_ZERO';
 
-/**
- * The summary of duties associated with an order.
- *
- */
+/** The summary of duties associated with an order. */
 export type OrderDutiesSummary = {
   __typename?: 'OrderDutiesSummary';
   /** The total amount of duties for the order. */
@@ -5366,10 +4315,7 @@ export type OrderDutiesSummary = {
   totalDutiesStatus?: Maybe<OrderDutiesStatusType>;
 };
 
-/**
- * An auto-generated type which holds one Order and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one Order and a cursor during pagination. */
 export type OrderEdge = {
   __typename?: 'OrderEdge';
   /** A cursor for use in pagination. */
@@ -5410,10 +4356,7 @@ export type OrderEditSummary = {
   latestHappenedAt?: Maybe<Scalars['DateTime']['output']>;
 };
 
-/**
- * A change in the edit summary of an order.
- *
- */
+/** A change in the edit summary of an order. */
 export type OrderEditSummaryChange = Node & {
   __typename?: 'OrderEditSummaryChange';
   /** The quantity delta of the change. */
@@ -5443,65 +4386,29 @@ export type OrderFinancialStatus =
   /** Displayed as **Voided**. */
   | 'VOIDED';
 
-/**
- * The aggregation of each order's active fulfillments and opened fulfillment orders for display purposes.
- *
- */
+/** The aggregation of each order's active fulfillments and opened fulfillment orders for display purposes. */
 export type OrderFulfillmentStatus =
-  /**
-   * Attempted to deliver the fulfillment.
-   *
-   */
+  /** Attempted to deliver the fulfillment. */
   | 'ATTEMPTED_TO_DELIVER'
-  /**
-   * The order is confirmed.
-   *
-   */
+  /** The order is confirmed. */
   | 'CONFIRMED'
-  /**
-   * Every physical fulfillment of the order has been successfully delivered.
-   *
-   */
+  /** Every physical fulfillment of the order has been successfully delivered. */
   | 'DELIVERED'
-  /**
-   * The order has one fulfillment in transit.
-   *
-   */
+  /** The order has one fulfillment in transit. */
   | 'IN_TRANSIT'
-  /**
-   * This order has multiple physical fulfillments with differing statuses.
-   *
-   */
+  /** This order has multiple physical fulfillments with differing statuses. */
   | 'MULTIPLE_SHIPMENTS'
-  /**
-   * The order has one fulfillment on its way.
-   *
-   */
+  /** The order has one fulfillment on its way. */
   | 'ON_ITS_WAY'
-  /**
-   * The order has one fulfillment out for delivery.
-   *
-   */
+  /** The order has one fulfillment out for delivery. */
   | 'OUT_FOR_DELIVERY'
-  /**
-   * The order has been picked up.
-   *
-   */
+  /** The order has been picked up. */
   | 'PICKED_UP'
-  /**
-   * The order has one fulfillment being prepared for shipping.
-   *
-   */
+  /** The order has one fulfillment being prepared for shipping. */
   | 'PREPARING_FOR_SHIPPING'
-  /**
-   * The order is ready to be picked up.
-   *
-   */
+  /** The order is ready to be picked up. */
   | 'READY_FOR_PICKUP'
-  /**
-   * There was a problem with the fulfillment.
-   *
-   */
+  /** There was a problem with the fulfillment. */
   | 'THERE_WAS_A_PROBLEM';
 
 /** The quantitative information about the line items of a specific order. */
@@ -5549,10 +4456,7 @@ export type OrderPaymentStatus =
   /** The payment has been voided. */
   | 'VOIDED';
 
-/**
- * The pickup information associated with an order.
- *
- */
+/** The pickup information associated with an order. */
 export type OrderPickupInformation = {
   __typename?: 'OrderPickupInformation';
   /** The pickup address for the order. */
@@ -5611,7 +4515,6 @@ export type OrderSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE'
   /** Sort by the `total_price` value. */
@@ -5674,10 +4577,7 @@ export type OrderTransactionKind =
   /** A void transaction. */
   | 'VOID';
 
-/**
- * Represents the status of an order transaction.
- *
- */
+/** Represents the status of an order transaction. */
 export type OrderTransactionStatus =
   /** The transaction has an error. */
   | 'ERROR'
@@ -5713,7 +4613,6 @@ export type OrderTransactionType =
  * Returns information about pagination in a connection, in accordance with the
  * [Relay specification](https://relay.dev/graphql/connections.htm#sec-undefined.PageInfo).
  * For more information, please read our [GraphQL Pagination Usage Guide](https://shopify.dev/api/usage/pagination-graphql).
- *
  */
 export type PageInfo = {
   __typename?: 'PageInfo';
@@ -5749,7 +4648,6 @@ export type PaymentIconImage = Node & {
    * The location of the original image as a URL.
    *
    * If there are any existing transformations in the original source URL, they will remain and not be stripped.
-   *
    * @deprecated Use `url` instead.
    */
   originalSrc: Scalars['URL']['output'];
@@ -5763,7 +4661,6 @@ export type PaymentIconImage = Node & {
    *
    * All transformation arguments are considered "best-effort". If they can be applied to an image, they will be.
    * Otherwise any transformations which an image type doesn't support will be ignored.
-   *
    * @deprecated Use `url(transform:)` instead
    */
   transformedSrc: Scalars['URL']['output'];
@@ -5775,7 +4672,6 @@ export type PaymentIconImage = Node & {
    * All transformation options are considered "best-effort". Any transformation that the original image type doesn't support will be ignored.
    *
    * If you need multiple variations of the same image, then you can use [GraphQL aliases](https://graphql.org/learn/queries/#aliases).
-   *
    */
   url: Scalars['URL']['output'];
   /** The original width of the image in pixels. Returns `null` if the image isn't hosted by Shopify. */
@@ -5821,7 +4717,7 @@ export type PaymentInstrumentBillingAddress = {
   lastName?: Maybe<Scalars['String']['output']>;
   /** The region of the address, such as the province, state, or district. */
   province?: Maybe<Scalars['String']['output']>;
-  /** The two-letter code for the region, for example, ON. */
+  /** The alphanumeric code for the region, for example, ON. */
   provinceCode?: Maybe<Scalars['String']['output']>;
   /** The zip or postal code of the address. */
   zip?: Maybe<Scalars['String']['output']>;
@@ -5869,10 +4765,7 @@ export type PaymentSchedule = Node & {
   id: Scalars['ID']['output'];
 };
 
-/**
- * An auto-generated type for paginating through multiple PaymentSchedules.
- *
- */
+/** An auto-generated type for paginating through multiple PaymentSchedules. */
 export type PaymentScheduleConnection = {
   __typename?: 'PaymentScheduleConnection';
   /** A list of edges. */
@@ -5883,10 +4776,7 @@ export type PaymentScheduleConnection = {
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one PaymentSchedule and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one PaymentSchedule and a cursor during pagination. */
 export type PaymentScheduleEdge = {
   __typename?: 'PaymentScheduleEdge';
   /** A cursor for use in pagination. */
@@ -5900,10 +4790,7 @@ export type PaymentTerms = Node & {
   __typename?: 'PaymentTerms';
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
-  /**
-   * The next due date if this is the NET or FIXED type of payment terms.
-   *
-   */
+  /** The next due date if this is the NET or FIXED type of payment terms. */
   nextDueAt?: Maybe<Scalars['DateTime']['output']>;
   /** Whether the payment terms have overdue payment schedules. */
   overdue: Scalars['Boolean']['output'];
@@ -6008,254 +4895,22 @@ export type PaypalTokenCreatePayload = {
   userErrors: Array<UserErrorsPaypalTokenUserErrors>;
 };
 
-/**
- * The operations that can be performed on a B2B resource.
- *
- */
+/** The operations that can be performed on a B2B resource. */
 export type PermittedOperation =
-  /**
-   * The permission to add a resource.
-   *
-   */
+  /** The permission to add a resource. */
   | 'ADD'
-  /**
-   * All permissions for a resource.
-   *
-   */
+  /** All permissions for a resource. */
   | 'ALL'
-  /**
-   * The permission to delete a resource.
-   *
-   */
+  /** The permission to delete a resource. */
   | 'DELETE'
-  /**
-   * The permission to edit a resource.
-   *
-   */
+  /** The permission to edit a resource. */
   | 'EDIT'
-  /**
-   * The permission to use a resource.
-   *
-   */
+  /** The permission to use a resource. */
   | 'USE'
-  /**
-   * The permission to view a resource.
-   *
-   */
+  /** The permission to view a resource. */
   | 'VIEW';
 
-/** Represents the personal information of a customer. */
-export type PersonalAccount = HasMetafields &
-  Node & {
-    __typename?: 'PersonalAccount';
-    /**
-     * Indicates if the customer accepts email marketing communication.
-     * If the customer doesn't have an email address, then this property is `false`.
-     *
-     */
-    acceptsEmailMarketing: Scalars['Boolean']['output'];
-    /**
-     * Indicates if the customer accepts sms marketing communication.
-     * If the customer doesn't have a phone number, then this property is `false`.
-     *
-     */
-    acceptsSmsMarketing: Scalars['Boolean']['output'];
-    /** The addresses associated with the customer. */
-    addresses: CustomerMailingAddressConnection;
-    /** The list of wallet payment configs for providers that the payment method accepts. */
-    availableWalletPaymentConfigs: Array<WalletPaymentConfig>;
-    /** The date and time when the customer was created. */
-    createdAt: Scalars['DateTime']['output'];
-    /** The date and time when the customer was created. */
-    creationDate: Scalars['DateTime']['output'];
-    /** A Credit Card resource identified by ID. */
-    creditCard?: Maybe<CustomerCreditCard>;
-    /** The stored Credit Cards associated with the customer. */
-    creditCards: CustomerCreditCardConnection;
-    /** The email address of the customer. */
-    customerEmailAddress?: Maybe<CustomerEmailAddress>;
-    /** The phone number of the customer. */
-    customerPhoneNumber?: Maybe<CustomerPhoneNumber>;
-    /** The default mailing address of the customer. */
-    defaultAddress?: Maybe<CustomerMailingAddress>;
-    /**
-     * The full name of the customer, based on the first_name and last_name values. If these aren't available, it falls back to the customer's email address, and if that isn't available, the customer's phone number.
-     *
-     */
-    displayName: Scalars['String']['output'];
-    /** A Draft Order resource identified by ID. */
-    draftOrder?: Maybe<DraftOrder>;
-    /** The Draft Orders associated with the customer. */
-    draftOrders: DraftOrderConnection;
-    /** The email address of the customer. */
-    email?: Maybe<Scalars['String']['output']>;
-    /**
-     * The current email marketing state for the customer.
-     * If the customer doesn't have an email address, then this property is `null`.
-     *
-     */
-    emailMarketingConsent?: Maybe<EmailMarketingConsentState>;
-    /** The first name of the customer. */
-    firstName?: Maybe<Scalars['String']['output']>;
-    /** A globally-unique ID. */
-    id: Scalars['ID']['output'];
-    /** The URL to the avatar image of the customer. */
-    imageUrl: Scalars['URL']['output'];
-    /** The customer's most recently updated, incomplete checkout. */
-    lastIncompleteCheckout?: Maybe<Checkout>;
-    /** The last name of the customer. */
-    lastName?: Maybe<Scalars['String']['output']>;
-    /** A metafield found by namespace and key. */
-    metafield?: Maybe<Metafield>;
-    /**
-     * The metafields associated with the resource matching the
-     * supplied list of namespaces and keys.
-     *
-     */
-    metafields: Array<Maybe<Metafield>>;
-    /** Returns an Order resource by ID. */
-    order?: Maybe<Order>;
-    /** An Order resource identified by ID. */
-    orderDetailsPageOrder?: Maybe<OrderDetailsPageOrder>;
-    /** The orders associated with the customer. */
-    orders: OrderConnection;
-    /** A PayPal Billing Agreement resource. */
-    paypalBillingAgreement?: Maybe<PaypalBillingAgreement>;
-    /** The phone number of the customer. */
-    phone?: Maybe<Scalars['String']['output']>;
-    /** A Return identified by ID. */
-    return?: Maybe<Return>;
-    /** A Subscription Contract resource identified by ID. */
-    subscriptionContract?: Maybe<SubscriptionContract>;
-    /** The Subscription Contracts associated with the customer. */
-    subscriptionContracts: SubscriptionContractConnection;
-    /** A comma-separated list of tags that have been added to the customer. */
-    tags: Array<Scalars['String']['output']>;
-    /** Indicates whether the customer is exempt from being charged taxes on their orders. */
-    taxExempt: Scalars['Boolean']['output'];
-    /** The list of tax exemption types applied to the customer. */
-    taxExemptions: Array<TaxExemption>;
-    /** The list of tax exemptions applied to the customer with additional details. */
-    taxExemptionsDetails: Array<TaxExemptionDetails>;
-  };
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountAddressesArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  skipDefault?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountCreditCardArgs = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountCreditCardsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountDraftOrderArgs = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountDraftOrdersArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<DraftOrderSortKeys>;
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountMetafieldArgs = {
-  key: Scalars['String']['input'];
-  namespace: Scalars['String']['input'];
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountMetafieldsArgs = {
-  identifiers: Array<HasMetafieldsIdentifier>;
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountOrderArgs = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountOrderDetailsPageOrderArgs = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountOrdersArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<OrderSortKeys>;
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountReturnArgs = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountSubscriptionContractArgs = {
-  id: Scalars['ID']['input'];
-};
-
-/** Represents the personal information of a customer. */
-export type PersonalAccountSubscriptionContractsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  query?: InputMaybe<Scalars['String']['input']>;
-  reverse?: InputMaybe<Scalars['Boolean']['input']>;
-  sortKey?: InputMaybe<SubscriptionContractsSortKeys>;
-};
-
-/**
- * The input fields to update a customer's personal information.
- *
- */
-export type PersonalInformationUpdateInput = {
-  /** The customer's first name. */
-  firstName?: InputMaybe<Scalars['String']['input']>;
-  /** The customer's last name. */
-  lastName?: InputMaybe<Scalars['String']['input']>;
-};
-
-/** Return type for `personalInformationUpdate` mutation. */
-export type PersonalInformationUpdatePayload = {
-  __typename?: 'PersonalInformationUpdatePayload';
-  /** The customer's personal information that has been updated. */
-  personalInformation?: Maybe<PersonalAccount>;
-  /** The list of errors that occurred from executing the mutation. */
-  userErrors: Array<UserErrorsPersonalInformationUserErrors>;
-};
-
-/**
- * The address of a pickup location.
- *
- */
+/** The address of a pickup location. */
 export type PickupAddress = {
   __typename?: 'PickupAddress';
   /** The street address for the pickup location. */
@@ -6325,24 +4980,19 @@ export type PublicOrder = Node & {
   /**
    * The date and time when the order was canceled.
    * Returns `null` if the order wasn't canceled.
-   *
    */
   cancelledAt?: Maybe<Scalars['DateTime']['output']>;
   /**
    * A randomly generated alpha-numeric identifier for the order that may be shown to the customer
    * instead of the sequential order name. For example, "XPAV284CT", "R50KELTJP" or "35PKUN0UJ".
    * This value isn't guaranteed to be unique.
-   *
    */
   confirmationNumber?: Maybe<Scalars['String']['output']>;
   /** The discount information for the order, including line-level discount applications. */
   discountInformation: OrderDiscountInformation;
   /** The name of the associated draft order. */
   draftOrderName?: Maybe<Scalars['String']['output']>;
-  /**
-   * The edit summary of the order.
-   *
-   */
+  /** The edit summary of the order. */
   editSummary?: Maybe<OrderEditSummary>;
   /** The financial status of the order. */
   financialStatus?: Maybe<OrderFinancialStatus>;
@@ -6363,7 +5013,6 @@ export type PublicOrder = Node & {
   /**
    * The identifier for the order that appears on the order.
    * For example, _#1000_ or _Store1001.
-   *
    */
   name: Scalars['String']['output'];
   /** The payment information for the order. */
@@ -6376,7 +5025,6 @@ export type PublicOrder = Node & {
    * The date and time when the order was processed.
    * This value can be set to dates in the past when importing from other systems.
    * If no value is provided, it will be auto-generated based on current date and time.
-   *
    */
   processedAt: Scalars['DateTime']['output'];
   /** A list of refunds associated with the order. */
@@ -6385,6 +5033,8 @@ export type PublicOrder = Node & {
   reorderPath?: Maybe<Scalars['String']['output']>;
   /** Whether the order requires shipping. */
   requiresShipping: Scalars['Boolean']['output'];
+  /** A Return identified by ID. */
+  return?: Maybe<Return>;
   /** The list of returns for the order with pagination. */
   returns: ReturnConnection;
   /** The list of shipping line groups for the order. */
@@ -6436,6 +5086,11 @@ export type PublicOrderLineItemsArgs = {
 };
 
 /** The data that about an order that is visible to anyone with the order ID. */
+export type PublicOrderReturnArgs = {
+  id: Scalars['ID']['input'];
+};
+
+/** The data that about an order that is visible to anyone with the order ID. */
 export type PublicOrderReturnsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -6445,60 +5100,38 @@ export type PublicOrderReturnsArgs = {
   sortKey?: InputMaybe<ReturnSortKeys>;
 };
 
-/**
- * The information of the purchasing company for an order or draft order.
- *
- */
+/** The information of the purchasing company for an order or draft order. */
 export type PurchasingCompany = {
   __typename?: 'PurchasingCompany';
   /** The company associated with the order or draft order. */
   company: Company;
   /** The company contact associated with the order or draft order. */
   contact?: Maybe<CompanyContact>;
-  /** The company contact associated with the order or draft order. */
-  contactV1?: Maybe<Contact>;
   /** The company location associated with the order or draft order. */
   location: CompanyLocation;
-  /** The company location associated with the order or draft order. */
-  locationV1: Location;
 };
 
-/**
- * Represents information about the purchasing entity for the order or draft order.
- *
- */
+/** Represents information about the purchasing entity for the order or draft order. */
 export type PurchasingEntity = Customer | PurchasingCompany;
-
-/**
- * Represents information about the purchasing entity for the order or draft order.
- *
- */
-export type PurchasingEntityV1 = PersonalAccount | PurchasingCompany;
 
 /** This acts as the public, top-level API from which all queries start. */
 export type QueryRoot = {
   __typename?: 'QueryRoot';
-  /** Returns the settings for the address form. */
-  addressFormSettings: AddressFormSettings;
-  /** Returns the business account of the customer. */
-  businessAccount: BusinessAccount;
-  /** The information of the customer's company. */
+  /** The information of the customer's company. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
   company?: Maybe<Company>;
-  /** The Location corresponding to the provided ID. */
+  /** The Location corresponding to the provided ID. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
   companyLocation?: Maybe<CompanyLocation>;
-  /** Returns the Customer resource. */
+  /** Returns the Customer resource. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
   customer: Customer;
-  /** Returns a Draft Order resource by ID. */
+  /** Returns a draft order resource by ID. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
   draftOrder?: Maybe<DraftOrder>;
   /** The API tokens for UI extensions. */
   extensionApiTokens?: Maybe<ExtensionApiTokens>;
-  /** Returns an Order resource by ID. */
+  /** Returns an Order resource by ID. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
   order?: Maybe<Order>;
   /** An Order resource identified by ID. */
   orderDetailsPageOrder?: Maybe<OrderDetailsPageOrder>;
-  /** Returns the personal information of the customer. */
-  personalAccount: PersonalAccount;
-  /** Returns the information about the shop. */
+  /** Returns the information about the shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
   shop: Shop;
   /**
    * Public metafields for Shop, Order, Customer, Company, CompanyLocation, Product, and ProductVariant.
@@ -6506,7 +5139,6 @@ export type QueryRoot = {
    * Product and ProductVariant are only fetched if resource_ids are provided and there is a match for the
    * namespace and key. Either filters or extensionIds is needed. If both are provided, filters will be used.
    * This is restricted to development shops for local UI extension development purposes only.
-   *
    */
   uiExtensionMetafields: Array<UiExtensionMetafield>;
   /** A session token for an UI extension. */
@@ -6555,10 +5187,7 @@ export type QueryRootUiExtensionSessionTokenArgs = {
   id: Scalars['ID']['input'];
 };
 
-/**
- *         The record of refunds issued to a customer.
- *
- */
+/** The record of refunds issued to a customer. */
 export type Refund = Node & {
   __typename?: 'Refund';
   /** The date and time when the refund was created. */
@@ -6598,10 +5227,7 @@ export type RefundAgreementSalesArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/**
- * The information about the line items container for items that have not been refunded or removed.
- *
- */
+/** The information about the line items container for items that have not been refunded or removed. */
 export type RemainingLineItemContainer = {
   __typename?: 'RemainingLineItemContainer';
   /** A unique ID for the container. */
@@ -6610,10 +5236,7 @@ export type RemainingLineItemContainer = {
   lineItems: RemainingLineItemContainerLineItemConnection;
 };
 
-/**
- * The information about the line items container for items that have not been refunded or removed.
- *
- */
+/** The information about the line items container for items that have not been refunded or removed. */
 export type RemainingLineItemContainerLineItemsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -6622,10 +5245,7 @@ export type RemainingLineItemContainerLineItemsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/**
- * The information about the line item in the line item container.
- *
- */
+/** The information about the line item in the line item container. */
 export type RemainingLineItemContainerLineItem = Node & {
   __typename?: 'RemainingLineItemContainerLineItem';
   /** A globally-unique ID. */
@@ -6634,10 +5254,7 @@ export type RemainingLineItemContainerLineItem = Node & {
   lineItem: LineItem;
 };
 
-/**
- * An auto-generated type for paginating through multiple RemainingLineItemContainerLineItems.
- *
- */
+/** An auto-generated type for paginating through multiple RemainingLineItemContainerLineItems. */
 export type RemainingLineItemContainerLineItemConnection = {
   __typename?: 'RemainingLineItemContainerLineItemConnection';
   /** A list of edges. */
@@ -6648,10 +5265,7 @@ export type RemainingLineItemContainerLineItemConnection = {
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one RemainingLineItemContainerLineItem and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one RemainingLineItemContainerLineItem and a cursor during pagination. */
 export type RemainingLineItemContainerLineItemEdge = {
   __typename?: 'RemainingLineItemContainerLineItemEdge';
   /** A cursor for use in pagination. */
@@ -6666,7 +5280,6 @@ export type RequestedLineItemInput = {
    * A note from the customer explaining the item to be returned.
    * For instance, the note can detail issues with the item for the merchant's information.
    * Maximum length: 300 characters.
-   *
    */
   customerNote?: InputMaybe<Scalars['String']['input']>;
   /** The ID of the line item that's to be returned. */
@@ -6695,65 +5308,29 @@ export type ResourcePermission = {
   resource: ResourceType;
 };
 
-/**
- * The B2B resource types.
- *
- */
+/** The B2B resource types. */
 export type ResourceType =
-  /**
-   * The Business Profile resource type.
-   *
-   */
+  /** The Business Profile resource type. */
   | 'BUSINESS_PROFILE'
-  /**
-   * The Company resource type.
-   *
-   */
+  /** The Company resource type. */
   | 'COMPANY'
-  /**
-   * The Company Contact resource type.
-   *
-   */
+  /** The Company Contact resource type. */
   | 'COMPANY_CONTACT'
-  /**
-   * The Company Contact Role resource type.
-   *
-   */
+  /** The Company Contact Role resource type. */
   | 'COMPANY_CONTACT_ROLE'
-  /**
-   * The Company Location resource type.
-   *
-   */
+  /** The Company Location resource type. */
   | 'COMPANY_LOCATION'
-  /**
-   * The Company Location Billing Address resource type.
-   *
-   */
+  /** The Company Location Billing Address resource type. */
   | 'COMPANY_LOCATION_BILLING_ADDRESS'
-  /**
-   * The Company Location Shipping Address resource type.
-   *
-   */
+  /** The Company Location Shipping Address resource type. */
   | 'COMPANY_LOCATION_SHIPPING_ADDRESS'
-  /**
-   * The Company Tax Exemption resource type.
-   *
-   */
+  /** The Company Tax Exemption resource type. */
   | 'COMPANY_TAX_EXEMPTION'
-  /**
-   * The Draft Order resource type.
-   *
-   */
+  /** The Draft Order resource type. */
   | 'DRAFT_ORDER'
-  /**
-   * The Order resource type.
-   *
-   */
+  /** The Order resource type. */
   | 'ORDER'
-  /**
-   * The Payment Method resource type.
-   *
-   */
+  /** The Payment Method resource type. */
   | 'PAYMENT_METHOD';
 
 /** A product return. */
@@ -6822,10 +5399,7 @@ export type ReturnAgreementSalesArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/**
- * An auto-generated type for paginating through multiple Returns.
- *
- */
+/** An auto-generated type for paginating through multiple Returns. */
 export type ReturnConnection = {
   __typename?: 'ReturnConnection';
   /** A list of edges. */
@@ -6836,10 +5410,7 @@ export type ReturnConnection = {
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one Return and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one Return and a cursor during pagination. */
 export type ReturnEdge = {
   __typename?: 'ReturnEdge';
   /** A cursor for use in pagination. */
@@ -6861,10 +5432,7 @@ export type ReturnLineItem = Node & {
   returnReason: ReturnReason;
 };
 
-/**
- * An auto-generated type for paginating through multiple ReturnLineItems.
- *
- */
+/** An auto-generated type for paginating through multiple ReturnLineItems. */
 export type ReturnLineItemConnection = {
   __typename?: 'ReturnLineItemConnection';
   /** A list of edges. */
@@ -6875,10 +5443,7 @@ export type ReturnLineItemConnection = {
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one ReturnLineItem and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one ReturnLineItem and a cursor during pagination. */
 export type ReturnLineItemEdge = {
   __typename?: 'ReturnLineItemEdge';
   /** A cursor for use in pagination. */
@@ -6919,7 +5484,6 @@ export type ReturnSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE';
 
@@ -6950,7 +5514,6 @@ export type ReturnSupportedReason = {
  * This could occur when a buyer requests a return and the merchant provides a shipping label.
  * The reverse delivery includes the context of the items being returned, the method of return
  * (for example, a shipping label), and the current status of the delivery (tracking information).
- *
  */
 export type ReverseDelivery = Node & {
   __typename?: 'ReverseDelivery';
@@ -6962,10 +5525,7 @@ export type ReverseDelivery = Node & {
   id: Scalars['ID']['output'];
 };
 
-/**
- * An auto-generated type for paginating through multiple ReverseDeliveries.
- *
- */
+/** An auto-generated type for paginating through multiple ReverseDeliveries. */
 export type ReverseDeliveryConnection = {
   __typename?: 'ReverseDeliveryConnection';
   /** A list of edges. */
@@ -6979,10 +5539,7 @@ export type ReverseDeliveryConnection = {
 /** The method and associated details of a reverse delivery. */
 export type ReverseDeliveryDeliverable = ReverseDeliveryShippingDeliverable;
 
-/**
- * An auto-generated type which holds one ReverseDelivery and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one ReverseDelivery and a cursor during pagination. */
 export type ReverseDeliveryEdge = {
   __typename?: 'ReverseDeliveryEdge';
   /** A cursor for use in pagination. */
@@ -7028,7 +5585,6 @@ export type ReverseDeliveryTracking = {
  * To address this, the remaining currency units that couldn't be divided evenly are allocated one at a time, starting with the first line item, until they are all accounted for.
  * In aggregate, the values sum up correctly. In isolation, one line item might have a different tax or discount amount than another line item of the same price, before taxes and discounts.
  * This is because the amount could not be divided evenly across the items. The allocation of currency units across line items is immutable. After they are allocated, currency units are never reallocated or redistributed among the line items.
- *
  */
 export type Sale = {
   /** The type of order action represented by the sale. */
@@ -7062,10 +5618,7 @@ export type SaleActionType =
   /** A change to the price, taxes, or discounts for a previous purchase. */
   | 'UPDATE';
 
-/**
- * An auto-generated type for paginating through multiple Sales.
- *
- */
+/** An auto-generated type for paginating through multiple Sales. */
 export type SaleConnection = {
   __typename?: 'SaleConnection';
   /** A list of edges. */
@@ -7086,10 +5639,7 @@ export type SaleConnection = {
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one Sale and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one Sale and a cursor during pagination. */
 export type SaleEdge = {
   __typename?: 'SaleEdge';
   /** A cursor for use in pagination. */
@@ -7111,7 +5661,6 @@ export type SaleEdge = {
  * The possible line types of a sale record. A sale can be an adjustment, which occurs when a refund is issued for a line item that is either more or less than the total value of the line item.
  * Examples include restocking fees and goodwill payments. In such cases, Shopify generates a sales agreement with sale records for each line item that is returned or refunded, and an additional sale record for the adjustment, for example a restocking fee.
  * The sale records for the returned or refunded items represent the reversal of the original line item sale value. The additional adjustment sale record represents the difference between the original total value of all line items that were refunded, and the actual amount refunded.
- *
  */
 export type SaleLineType =
   /** An additional fee. */
@@ -7165,10 +5714,7 @@ export type SalesAgreementSalesArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/**
- * An auto-generated type for paginating through multiple SalesAgreements.
- *
- */
+/** An auto-generated type for paginating through multiple SalesAgreements. */
 export type SalesAgreementConnection = {
   __typename?: 'SalesAgreementConnection';
   /** A list of edges. */
@@ -7181,10 +5727,7 @@ export type SalesAgreementConnection = {
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one SalesAgreement and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one SalesAgreement and a cursor during pagination. */
 export type SalesAgreementEdge = {
   __typename?: 'SalesAgreementEdge';
   /** A cursor for use in pagination. */
@@ -7193,10 +5736,7 @@ export type SalesAgreementEdge = {
   node: OrderAgreement | OrderEditAgreement | RefundAgreement | ReturnAgreement;
 };
 
-/**
- * Captures the intentions of a discount that was created by a Shopify Script.
- *
- */
+/** Captures the intentions of a discount that was created by a Shopify Script. */
 export type ScriptDiscountApplication = DiscountApplication & {
   __typename?: 'ScriptDiscountApplication';
   /** The method by which the discount's value is allocated to its entitled items. */
@@ -7223,7 +5763,6 @@ export type SellingPlanAnchor = {
    * If `type` is MONTHDAY, then the value must be between 1-31.
    *
    * If `type` is YEARDAY, then the value must be `null`.
-   *
    */
   cutoffDay?: Maybe<Scalars['Int']['output']>;
   /**
@@ -7233,19 +5772,14 @@ export type SellingPlanAnchor = {
    * the days of the week according to ISO 8601, where 1 is Monday.
    *
    * If `type` isn't WEEKDAY, then the value must be between 1-31.
-   *
    */
   day: Scalars['Int']['output'];
   /**
    * The month of the anchor. If type is different than YEARDAY, then the value must
    * be `null` or between 1-12.
-   *
    */
   month?: Maybe<Scalars['Int']['output']>;
-  /**
-   * Represents the anchor type, it can be one one of WEEKDAY, MONTHDAY, YEARDAY.
-   *
-   */
+  /** Represents the anchor type, it can be one one of WEEKDAY, MONTHDAY, YEARDAY. */
   type: SellingPlanAnchorType;
 };
 
@@ -7330,7 +5864,6 @@ export type Shop = HasMetafields &
     /**
      * The metafields associated with the resource matching the
      * supplied list of namespaces and keys.
-     *
      */
     metafields: Array<Maybe<Metafield>>;
     /** The shop's .myshopify.com domain name. */
@@ -7357,70 +5890,31 @@ export type ShopMetafieldsArgs = {
 /** The shop app links and resources for an order. */
 export type ShopAppLinksAndResources = {
   __typename?: 'ShopAppLinksAndResources';
-  /**
-   * Whether the the buyer is associated to Shop App.
-   *
-   */
+  /** Whether the the buyer is associated to Shop App. */
   buyerHasShopApp: Scalars['Boolean']['output'];
-  /**
-   * Whether the the buyer is associated to Shop Pay.
-   *
-   */
+  /** Whether the the buyer is associated to Shop Pay. */
   buyerHasShopPay: Scalars['Boolean']['output'];
-  /**
-   * Whether or not the track order updates button should be rendered.
-   *
-   */
+  /** Whether or not the track order updates button should be rendered. */
   canTrackOrderUpdates: Scalars['Boolean']['output'];
-  /**
-   * Whether or not showing the installments highlight is eligible.
-   *
-   */
+  /** Whether or not showing the installments highlight is eligible. */
   installmentsHighlightEligible: Scalars['Boolean']['output'];
-  /**
-   * The URL to the mobile Shop App.
-   *
-   */
+  /** The URL to the mobile Shop App. */
   mobileUrl: Scalars['URL']['output'];
-  /**
-   * The attribution details related to the mobile url.
-   *
-   */
+  /** The attribution details related to the mobile url. */
   mobileUrlAttributionPayload: Scalars['String']['output'];
-  /**
-   * The various options that exist for subscribing to order updates.
-   *
-   */
+  /** The various options that exist for subscribing to order updates. */
   orderUpdateOptions: Array<Scalars['String']['output']>;
-  /**
-   * The URL to the Shop App QR code.
-   *
-   */
+  /** The URL to the Shop App QR code. */
   qrCodeUrl: Scalars['URL']['output'];
-  /**
-   * Whether or not Shop App eligible.
-   *
-   */
+  /** Whether or not Shop App eligible. */
   shopAppEligible: Scalars['Boolean']['output'];
-  /**
-   * Whether QR code should be hidden.
-   *
-   */
+  /** Whether QR code should be hidden. */
   shopAppQrCodeKillswitch: Scalars['Boolean']['output'];
-  /**
-   * The URL to the Shop Pay Installments reminders.
-   *
-   */
+  /** The URL to the Shop Pay Installments reminders. */
   shopInstallmentsMobileUrl: Scalars['URL']['output'];
-  /**
-   * The URL to view the Shop Pay Installments schedules in the mobile Shop App.
-   *
-   */
+  /** The URL to view the Shop Pay Installments schedules in the mobile Shop App. */
   shopInstallmentsViewSchedules: Scalars['URL']['output'];
-  /**
-   * Whether the order was a shop pay order.
-   *
-   */
+  /** Whether the order was a shop pay order. */
   shopPayOrder: Scalars['Boolean']['output'];
 };
 
@@ -7459,35 +5953,17 @@ export type ShopPolicy = Node & {
   url: Scalars['URL']['output'];
 };
 
-/**
- * Defines the valid SMS marketing states for a customer’s phone number.
- *
- */
+/** Defines the valid SMS marketing states for a customer’s phone number. */
 export type SmsMarketingState =
-  /**
-   * The customer has not subscribed to SMS marketing.
-   *
-   */
+  /** The customer has not subscribed to SMS marketing. */
   | 'NOT_SUBSCRIBED'
-  /**
-   * The customer is in the process of subscribing to SMS marketing.
-   *
-   */
+  /** The customer is in the process of subscribing to SMS marketing. */
   | 'PENDING'
-  /**
-   * The customer's personal data has been erased. This value is internally-set and read-only.
-   *
-   */
+  /** The customer's personal data has been erased. This value is internally-set and read-only. */
   | 'REDACTED'
-  /**
-   * The customer has subscribed to SMS marketing.
-   *
-   */
+  /** The customer has subscribed to SMS marketing. */
   | 'SUBSCRIBED'
-  /**
-   * The customer is not currently subscribed to SMS marketing but was previously subscribed.
-   *
-   */
+  /** The customer is not currently subscribed to SMS marketing but was previously subscribed. */
   | 'UNSUBSCRIBED';
 
 /** Return type for `storefrontCustomerAccessTokenCreate` mutation. */
@@ -7525,10 +6001,7 @@ export type SubscriptionBillingCycleBillingCycleStatus =
   /** The billing cycle has not been billed. */
   | 'UNBILLED';
 
-/**
- * An auto-generated type for paginating through multiple SubscriptionBillingCycles.
- *
- */
+/** An auto-generated type for paginating through multiple SubscriptionBillingCycles. */
 export type SubscriptionBillingCycleConnection = {
   __typename?: 'SubscriptionBillingCycleConnection';
   /** A list of edges. */
@@ -7539,10 +6012,7 @@ export type SubscriptionBillingCycleConnection = {
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one SubscriptionBillingCycle and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one SubscriptionBillingCycle and a cursor during pagination. */
 export type SubscriptionBillingCycleEdge = {
   __typename?: 'SubscriptionBillingCycleEdge';
   /** A cursor for use in pagination. */
@@ -7628,7 +6098,6 @@ export type SubscriptionBillingCyclesSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE';
 
@@ -7796,10 +6265,7 @@ export type SubscriptionContractChangePaymentInstrumentPayload = {
   userErrors: Array<SubscriptionContractUserError>;
 };
 
-/**
- * An auto-generated type for paginating through multiple SubscriptionContracts.
- *
- */
+/** An auto-generated type for paginating through multiple SubscriptionContracts. */
 export type SubscriptionContractConnection = {
   __typename?: 'SubscriptionContractConnection';
   /** A list of edges. */
@@ -7810,10 +6276,7 @@ export type SubscriptionContractConnection = {
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one SubscriptionContract and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one SubscriptionContract and a cursor during pagination. */
 export type SubscriptionContractEdge = {
   __typename?: 'SubscriptionContractEdge';
   /** A cursor for use in pagination. */
@@ -7928,7 +6391,6 @@ export type SubscriptionContractsSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE'
   /** Sort by the `updated_at` value. */
@@ -7944,7 +6406,6 @@ export type SubscriptionDeliveryMethod =
  * Specifies delivery method fields for a subscription contract.
  * This is an input union: one, and only one, field can be provided.
  * The field provided will determine which delivery method is to be used.
- *
  */
 export type SubscriptionDeliveryMethodInput = {
   /** The input fields for the local delivery method. */
@@ -7973,7 +6434,6 @@ export type SubscriptionDeliveryMethodLocalDeliveryInput = {
   /**
    * The phone number that the customer must provide to the merchant.
    * Formatted using E.164 standard. For example, `+16135551111`.
-   *
    */
   phone: Scalars['String']['input'];
 };
@@ -7988,7 +6448,6 @@ export type SubscriptionDeliveryMethodLocalDeliveryOption = {
   /**
    * The phone number of the customer provided to the merchant.
    * Formatted using E.164 standard. For example, `+16135551111`.
-   *
    */
   phone: Scalars['String']['output'];
   /** The displayed title of the delivery option. */
@@ -8076,7 +6535,7 @@ export type SubscriptionDeliveryOptionsResultSuccess = {
   token: Scalars['String']['output'];
 };
 
-/** Represents a Subscription Delivery Policy. */
+/** The delivery policy of a subscription. */
 export type SubscriptionDeliveryPolicy = {
   __typename?: 'SubscriptionDeliveryPolicy';
   /** The anchor dates for calculating delivery intervals. */
@@ -8105,7 +6564,6 @@ export type SubscriptionLine = {
   /**
    * The URL of the product in the online store.
    * A value of `null` indicates that the product isn't published in the Online Store sales channel.
-   *
    */
   onlineStoreUrl?: Maybe<Scalars['URL']['output']>;
   /** The quantity of the unit selected for the subscription line. */
@@ -8124,10 +6582,7 @@ export type SubscriptionLine = {
   variantTitle?: Maybe<Scalars['String']['output']>;
 };
 
-/**
- * An auto-generated type for paginating through multiple SubscriptionLines.
- *
- */
+/** An auto-generated type for paginating through multiple SubscriptionLines. */
 export type SubscriptionLineConnection = {
   __typename?: 'SubscriptionLineConnection';
   /** A list of edges. */
@@ -8138,10 +6593,7 @@ export type SubscriptionLineConnection = {
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one SubscriptionLine and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one SubscriptionLine and a cursor during pagination. */
 export type SubscriptionLineEdge = {
   __typename?: 'SubscriptionLineEdge';
   /** A cursor for use in pagination. */
@@ -8183,7 +6635,6 @@ export type SubscriptionMailingAddress = {
   /**
    * The two-letter code for the country of the address.
    * For example, US.
-   *
    */
   countryCode?: Maybe<CountryCode>;
   /** The first name of the customer. */
@@ -8197,9 +6648,8 @@ export type SubscriptionMailingAddress = {
   /** The region of the address, such as the province, state, or district. */
   province?: Maybe<Scalars['String']['output']>;
   /**
-   * The two-letter code for the region.
+   * The alphanumeric code for the region.
    * For example, ON.
-   *
    */
   provinceCode?: Maybe<Scalars['String']['output']>;
   /** The zip or postal code of the address. */
@@ -8219,10 +6669,7 @@ export type SubscriptionPickupOption = {
   phoneRequired: Scalars['Boolean']['output'];
   /** The pickup address where the customer will pickup the merchandise. */
   pickupAddress: PickupAddress;
-  /**
-   * The estimated amount of time it takes for the pickup to be ready. For example, "Usually ready in 24 hours".
-   *
-   */
+  /** The estimated amount of time it takes for the pickup to be ready. For example, "Usually ready in 24 hours". */
   pickupTime: Scalars['String']['output'];
   /** The presentment title of the pickup option. */
   presentmentTitle?: Maybe<Scalars['String']['output']>;
@@ -8238,7 +6685,6 @@ export type SubscriptionPriceBreakdown = {
   /**
    * The sum of the prices for all line items after discounts.
    * If taxesIncluded is true, then the subtotal also includes tax.
-   *
    */
   subtotalPrice: MoneyV2;
   /** Whether taxes are included in the subtotal price. */
@@ -8246,7 +6692,6 @@ export type SubscriptionPriceBreakdown = {
   /**
    * The total amount discounted.
    * This includes both order and line level discounts.
-   *
    */
   totalDiscounts: MoneyV2;
   /** The total price. This includes taxes and discounts. */
@@ -8954,10 +7399,7 @@ export type TaxRegionCode =
   /** Zimbabwe. */
   | 'ZW';
 
-/**
- * The events that chronicle resource activities available to the customer.
- *
- */
+/** The events that chronicle resource activities available to the customer. */
 export type TimelineEvent = Node & {
   __typename?: 'TimelineEvent';
   /** The date and time when the event occurred. */
@@ -9021,7 +7463,6 @@ export type TransactionTypeDetails = {
 /**
  * The custom data attached to a resource. Metafields can be sorted into namespaces and are
  * comprised of keys, values, and value types.
- *
  */
 export type UiExtensionMetafield = Node & {
   __typename?: 'UiExtensionMetafield';
@@ -9038,7 +7479,6 @@ export type UiExtensionMetafield = Node & {
   /**
    * The type name of the metafield.
    * See the list of [supported types](https://shopify.dev/apps/metafields/definitions/types).
-   *
    */
   type: Scalars['String']['output'];
   /** The value of a metafield. */
@@ -9058,28 +7498,16 @@ export type UiExtensionMetafieldFilterInput = {
   namespace: Scalars['String']['input'];
 };
 
-/**
- * A session token for a UI extension.
- *
- */
+/** A session token for a UI extension. */
 export type UiExtensionSessionToken = {
   __typename?: 'UiExtensionSessionToken';
-  /**
-   * The second count until the session token expires.
-   *
-   */
+  /** The second count until the session token expires. */
   expiresIn: Scalars['Int']['output'];
-  /**
-   * The value of the UI extension session token.
-   *
-   */
+  /** The value of the UI extension session token. */
   value: Scalars['String']['output'];
 };
 
-/**
- * The information about the container for unfulfilled digital line items (excluding gift cards).
- *
- */
+/** The information about the container for unfulfilled digital line items (excluding gift cards). */
 export type UnfulfilledDigitalLineItemContainer =
   UnfulfilledLineItemContainerCommonFields & {
     __typename?: 'UnfulfilledDigitalLineItemContainer';
@@ -9087,10 +7515,7 @@ export type UnfulfilledDigitalLineItemContainer =
     lineItems: LineItemContainerLineItemConnection;
   };
 
-/**
- * The information about the container for unfulfilled digital line items (excluding gift cards).
- *
- */
+/** The information about the container for unfulfilled digital line items (excluding gift cards). */
 export type UnfulfilledDigitalLineItemContainerLineItemsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -9099,10 +7524,7 @@ export type UnfulfilledDigitalLineItemContainerLineItemsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/**
- * The information about the container for unfulfilled gift card type line items.
- *
- */
+/** The information about the container for unfulfilled gift card type line items. */
 export type UnfulfilledGiftCardLineItemContainer =
   UnfulfilledLineItemContainerCommonFields & {
     __typename?: 'UnfulfilledGiftCardLineItemContainer';
@@ -9110,10 +7532,7 @@ export type UnfulfilledGiftCardLineItemContainer =
     lineItems: LineItemContainerLineItemConnection;
   };
 
-/**
- * The information about the container for unfulfilled gift card type line items.
- *
- */
+/** The information about the container for unfulfilled gift card type line items. */
 export type UnfulfilledGiftCardLineItemContainerLineItemsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -9122,10 +7541,7 @@ export type UnfulfilledGiftCardLineItemContainerLineItemsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/**
- * The information about the container for unfulfilled line items.
- *
- */
+/** The information about the container for unfulfilled line items. */
 export type UnfulfilledLineItemContainer =
   UnfulfilledLineItemContainerCommonFields & {
     __typename?: 'UnfulfilledLineItemContainer';
@@ -9137,10 +7553,7 @@ export type UnfulfilledLineItemContainer =
     state: Scalars['String']['output'];
   };
 
-/**
- * The information about the container for unfulfilled line items.
- *
- */
+/** The information about the container for unfulfilled line items. */
 export type UnfulfilledLineItemContainerLineItemsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -9164,10 +7577,7 @@ export type UnfulfilledLineItemContainerCommonFieldsLineItemsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/**
- * The information about the container for unfulfilled physical type line items.
- *
- */
+/** The information about the container for unfulfilled physical type line items. */
 export type UnfulfilledPhysicalLineItemContainer =
   UnfulfilledLineItemContainerCommonFields & {
     __typename?: 'UnfulfilledPhysicalLineItemContainer';
@@ -9175,10 +7585,7 @@ export type UnfulfilledPhysicalLineItemContainer =
     lineItems: LineItemContainerLineItemConnection;
   };
 
-/**
- * The information about the container for unfulfilled physical type line items.
- *
- */
+/** The information about the container for unfulfilled physical type line items. */
 export type UnfulfilledPhysicalLineItemContainerLineItemsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -9187,39 +7594,21 @@ export type UnfulfilledPhysicalLineItemContainerLineItemsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/**
- * The unit price of the line component. For example, "$9.99 / 100ml".
- *
- */
+/** The unit price of the line component. For example, "$9.99 / 100ml". */
 export type UnitPrice = {
   __typename?: 'UnitPrice';
-  /**
-   * The unit measurement. For example, "$9.99 / 100ml".
-   *
-   */
+  /** The unit measurement. For example, "$9.99 / 100ml". */
   measurement: UnitPriceMeasurement;
-  /**
-   * The unit price of the variant. For example, "$1 per xy" where price is "$1".
-   *
-   */
+  /** The unit price of the variant. For example, "$1 per xy" where price is "$1". */
   price: MoneyV2;
 };
 
-/**
- * The unit price measurement of the line component. For example, "$9.99 / 100ml".
- *
- */
+/** The unit price measurement of the line component. For example, "$9.99 / 100ml". */
 export type UnitPriceMeasurement = {
   __typename?: 'UnitPriceMeasurement';
-  /**
-   * The reference unit for the unit price measurement. For example, "$9.99 / 100ml" where the reference unit is "ml".
-   *
-   */
+  /** The reference unit for the unit price measurement. For example, "$9.99 / 100ml" where the reference unit is "ml". */
   referenceUnit: UnitPriceMeasurementUnit;
-  /**
-   * The reference value for the unit price measurement. For example, "$9.99 / 100ml" where the reference value is "100".
-   *
-   */
+  /** The reference value for the unit price measurement. For example, "$9.99 / 100ml" where the reference value is "100". */
   referenceValue: Scalars['Int']['output'];
 };
 
@@ -9271,54 +7660,6 @@ export type UnknownSale = Node &
     /** The total tax amount for the sale. */
     totalTaxAmount: MoneyV2;
   };
-
-/** The error codes that are provided for failed address mutations. */
-export type UserErrorsAddressUserErrors = DisplayableError & {
-  __typename?: 'UserErrorsAddressUserErrors';
-  /** The error code. */
-  code?: Maybe<UserErrorsAddressUserErrorsCode>;
-  /** The path to the input field that caused the error. */
-  field?: Maybe<Array<Scalars['String']['output']>>;
-  /** The error message. */
-  message: Scalars['String']['output'];
-};
-
-/** Possible error codes that can be returned by `UserErrorsAddressUserErrors`. */
-export type UserErrorsAddressUserErrorsCode =
-  /** The Address1 field is missing. */
-  | 'ADDRESS1_MISSING'
-  /** The provided address already exists. */
-  | 'ADDRESS_ALREADY_EXISTS'
-  /** The provided address argument is empty. */
-  | 'ADDRESS_ARGUMENT_EMPTY'
-  /** The provided address ID doesn't exist. */
-  | 'ADDRESS_ID_DOES_NOT_EXIST'
-  /** The Country Code field is missing. */
-  | 'COUNTRY_CODE_MISSING'
-  /** The provided country doesn't exist. */
-  | 'COUNTRY_NOT_EXIST'
-  /** The default address can't be deleted before setting another one as default. */
-  | 'DELETING_DEFAULT_ADDRESS_NOT_ALLOWED'
-  /** Demoting the default address isn't allowed. */
-  | 'DEMOTING_DEFAULT_ADDRESS_NOT_ALLOWED'
-  /** The provided address field isn't valid. */
-  | 'INVALID'
-  /** The provided value is invalid for the country. */
-  | 'INVALID_FOR_COUNTRY'
-  /** The provided value is invalid for the country and province. */
-  | 'INVALID_FOR_COUNTRY_AND_PROVINCE'
-  /** The provided Territory Code isn't valid. */
-  | 'INVALID_TERRITORY_CODE'
-  /** The provided phone number isn't valid. */
-  | 'PHONE_NUMBER_NOT_VALID'
-  /** The field is required. */
-  | 'REQUIRED'
-  /** The Territory Code field is missing. */
-  | 'TERRITORY_CODE_MISSING'
-  /** The provided address field is too long. */
-  | 'TOO_LONG'
-  /** The Zone Code field is missing. */
-  | 'ZONE_CODE_MISSING';
 
 /** The error codes for failed business contact mutations. */
 export type UserErrorsBusinessContactUserErrors = DisplayableError & {
@@ -9422,80 +7763,6 @@ export type UserErrorsBusinessLocationPaymentInstrumentUserErrorsCode =
   | 'YEAR_INVALID'
   /** The address's zip code is incorrect. */
   | 'ZIP_INCORRECT'
-  /** Zone Code field is missing. */
-  | 'ZONE_CODE_MISSING';
-
-/** The error codes for failed business location address mutations. */
-export type UserErrorsCompanyAddressUserErrors = DisplayableError & {
-  __typename?: 'UserErrorsCompanyAddressUserErrors';
-  /** The error code. */
-  code?: Maybe<UserErrorsCompanyAddressUserErrorsCode>;
-  /** The path to the input field that caused the error. */
-  field?: Maybe<Array<Scalars['String']['output']>>;
-  /** The error message. */
-  message: Scalars['String']['output'];
-};
-
-/** Possible error codes that can be returned by `UserErrorsCompanyAddressUserErrors`. */
-export type UserErrorsCompanyAddressUserErrorsCode =
-  /** Address1 field cannot be blank. */
-  | 'ADDRESS1_CANNOT_BE_BLANK'
-  /** Address1 field is missing. */
-  | 'ADDRESS1_MISSING'
-  /** Business location billing address doesn't exist. */
-  | 'BUSINESS_LOCATION_BILLING_ADDRESS_NOT_FOUND'
-  /** Business location doesn't exist. */
-  | 'BUSINESS_LOCATION_NOT_FOUND'
-  /** Business location shipping address doesn't exist. */
-  | 'BUSINESS_LOCATION_SHIPPING_ADDRESS_NOT_FOUND'
-  /** Company address create input argument is empty. */
-  | 'COMPANY_ADDRESS_CREATE_INPUT_ARGUMENT_EMPTY'
-  /** Company address update input argument is empty. */
-  | 'COMPANY_ADDRESS_UPDATE_INPUT_ARGUMENT_EMPTY'
-  /** Country_code field cannot be blank. */
-  | 'COUNTRY_CODE_CANNOT_BE_BLANK'
-  /** Country Code field is missing. */
-  | 'COUNTRY_CODE_MISSING'
-  /** Creating the address failed. */
-  | 'FAILED_TO_CREATE'
-  /** Deleting the address failed. */
-  | 'FAILED_TO_DELETE'
-  /** Setting the address failed. */
-  | 'FAILED_TO_SET_ADDRESS'
-  /** Setting the billing address failed. */
-  | 'FAILED_TO_SET_BILLING_ADDRESS'
-  /** Setting the shipping address failed. */
-  | 'FAILED_TO_SET_SHIPPING_ADDRESS'
-  /** Updating the address failed. */
-  | 'FAILED_TO_UPDATE'
-  /** The input value is invalid. */
-  | 'INVALID'
-  /** Invalid address field. */
-  | 'INVALID_ADDRESS_FIELD'
-  /** Invalid address type. */
-  | 'INVALID_ADDRESS_TYPE'
-  /** Location has already a billing address. */
-  | 'LOCATION_HAS_ALREADY_BILLING_ADDRESS'
-  /** Location has already a shipping address. */
-  | 'LOCATION_HAS_ALREADY_SHIPPING_ADDRESS'
-  /** The country does not have zones. */
-  | 'NO_ZONE_IN_COUNTRY'
-  /** Permission denied. */
-  | 'PERMISSION_DENIED'
-  /** Phone field cannot be blank. */
-  | 'PHONE_CANNOT_BE_BLANK'
-  /** Phone number is not valid. */
-  | 'PHONE_NUMBER_NOT_VALID'
-  /** Recipient and first/last name present at the same time. */
-  | 'PRESENT'
-  /** The field is required. */
-  | 'REQUIRED'
-  /** The field value is too long. */
-  | 'TOO_LONG'
-  /** Unexpected type. */
-  | 'UNEXPECTED_TYPE'
-  /** Zone_code field cannot be blank. */
-  | 'ZONE_CODE_CANNOT_BE_BLANK'
   /** Zone Code field is missing. */
   | 'ZONE_CODE_MISSING';
 
@@ -9715,28 +7982,6 @@ export type UserErrorsPaypalTokenUserErrorsCode =
   | 'REFERENCE_TRANSACTIONS_NOT_ENABLED'
   /** PayPal Express token could not be created. */
   | 'TOKEN_COULD_NOT_BE_CREATED';
-
-/** Provides error codes for failed personal information mutations. */
-export type UserErrorsPersonalInformationUserErrors = DisplayableError & {
-  __typename?: 'UserErrorsPersonalInformationUserErrors';
-  /** The error code. */
-  code?: Maybe<UserErrorsPersonalInformationUserErrorsCode>;
-  /** The path to the input field that caused the error. */
-  field?: Maybe<Array<Scalars['String']['output']>>;
-  /** The error message. */
-  message: Scalars['String']['output'];
-};
-
-/** Possible error codes that can be returned by `UserErrorsPersonalInformationUserErrors`. */
-export type UserErrorsPersonalInformationUserErrorsCode =
-  /** The customer does not exist. */
-  | 'CUSTOMER_DOES_NOT_EXIST'
-  /** The personal information field is not valid. */
-  | 'INVALID'
-  /** The personal information input argument is empty. */
-  | 'PERSONAL_INFORMATION_INPUT_ARGUMENT_EMPTY'
-  /** The personal information field is too long. */
-  | 'TOO_LONG';
 
 /** The error codes for failed resending gift card mutations. */
 export type UserErrorsResendGiftCardErrors = DisplayableError & {

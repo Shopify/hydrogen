@@ -1,6 +1,6 @@
 projects:
   default:
-    schema: 'node_modules/@shopify/hydrogen/storefront.schema.json'
+    schema: 'node_modules/@shopify/hydrogen/unstable-storefront.schema.json'
     documents:
       - '!*.d.ts'
       - '*.{ts,tsx,js,jsx}'
