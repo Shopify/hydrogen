@@ -40,7 +40,8 @@ describe('dev', () => {
         const response = await fetch(getUrl());
         expect(response.status).toEqual(200);
         expect(response.headers.get('content-type')).toEqual('text/html');
-        await expect(response.text()).resolves.toMatch('Mock.shop');
+
+        await expect(response.text()).resolves.toContain('Home | Hydrogen');
       } finally {
         await close();
       }

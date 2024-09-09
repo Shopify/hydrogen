@@ -41,7 +41,7 @@ import {QuantityRules, hasQuantityRules} from '~/components/QuantityRules';
 import {PriceBreaks} from '~/components/PriceBreaks';
 
 export const meta = ({matches}: MetaArgs<typeof loader>) => {
-  return getSeoMeta(...matches.map((match) => (match.data as any).seo));
+  return getSeoMeta(...matches.map((match) => (match.data as any)?.seo));
 };
 
 export async function loader(args: LoaderFunctionArgs) {

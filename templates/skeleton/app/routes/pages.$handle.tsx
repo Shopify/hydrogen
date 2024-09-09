@@ -61,7 +61,7 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
 }
 
 export const meta = ({matches}: MetaArgs<typeof loader>) => {
-  return getSeoMeta(...matches.map((match) => (match.data as any).seo));
+  return getSeoMeta(...matches.map((match) => (match.data as any)?.seo));
 };
 
 export default function Page() {

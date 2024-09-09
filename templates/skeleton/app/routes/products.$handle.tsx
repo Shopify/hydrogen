@@ -21,7 +21,7 @@ import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
 
 export const meta = ({matches}: MetaArgs<typeof loader>) => {
-  return getSeoMeta(...matches.map((match) => (match.data as any).seo));
+  return getSeoMeta(...matches.map((match) => (match.data as any)?.seo));
 };
 
 export async function loader(args: LoaderFunctionArgs) {

@@ -10,7 +10,7 @@ import {seoPayload} from '~/lib/seo';
 import {ROUTE_CONTENT_QUERY, RouteContent} from '~/sections/RouteContent';
 
 export const meta = ({matches}: MetaArgs<typeof loader>) => {
-  return getSeoMeta(...matches.map((match) => (match.data as any).seo));
+  return getSeoMeta(...matches.map((match) => (match.data as any)?.seo));
 };
 
 export async function loader({context, request}: LoaderFunctionArgs) {
