@@ -146,12 +146,12 @@ function createCSPHeader(
   // shouldn't use our utilities and just manually create their CSP.
   if (combinedDirectives.scriptSrc instanceof Array) {
     combinedDirectives.scriptSrc = [
-      ...combinedDirectives.scriptSrc.filter((ss) => !ss.startsWith('nonce')),
+      ...combinedDirectives.scriptSrc.filter((ss) => !ss.startsWith(`'nonce`)),
       nonceString,
     ];
   } else if (combinedDirectives.defaultSrc instanceof Array) {
     combinedDirectives.defaultSrc = [
-      ...combinedDirectives.defaultSrc.filter((ss) => !ss.startsWith('nonce')),
+      ...combinedDirectives.defaultSrc.filter((ss) => !ss.startsWith(`'nonce`)),
       nonceString,
     ];
   }
