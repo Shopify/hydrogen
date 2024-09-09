@@ -22,6 +22,7 @@ import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import {PageLayout} from '~/components/PageLayout';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
+import {seoPayload} from '~/lib/seo';
 import {B2BLocationProvider} from '~/components/B2BLocationProvider';
 import {B2BLocationSelector} from '~/components/B2BLocationSelector';
 import type {
@@ -30,7 +31,6 @@ import type {
   CompanyLocation,
   Maybe,
 } from '@shopify/hydrogen/customer-account-api-types';
-import {seoPayload} from '~/lib/seo';
 
 export type RootLoader = typeof loader;
 

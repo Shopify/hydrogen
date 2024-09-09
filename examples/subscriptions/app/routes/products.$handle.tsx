@@ -127,6 +127,12 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
     }
   }
 
+  const seo = seoPayload.product({
+    product,
+    selectedVariant: product?.selectedVariant,
+    url: request.url,
+  });
+
   // In order to show which variants are available in the UI, we need to query
   // all of them. But there might be a *lot*, so instead separate the variants
   // into it's own separate query that is deferred. So there's a brief moment
@@ -139,6 +145,7 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
   return defer({
     product,
     variants,
+    seo,
     /***********************************************/
     /**********  EXAMPLE UPDATE STARTS  ************/
     // 5. Pass the selectedSellingPlan to the client
