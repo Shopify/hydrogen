@@ -1,5 +1,11 @@
-import {useNonce, getShopAnalytics, Analytics} from '@shopify/hydrogen';
-import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {
+  useNonce,
+  getShopAnalytics,
+  Analytics,
+  getSeoMeta,
+  SeoConfig,
+} from '@shopify/hydrogen';
+import {defer, MetaArgs, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {
   Links,
   Meta,
@@ -16,6 +22,7 @@ import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import {PageLayout} from '~/components/PageLayout';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
+import {seoPayload} from '~/lib/seo';
 import {B2BLocationProvider} from '~/components/B2BLocationProvider';
 import {B2BLocationSelector} from '~/components/B2BLocationSelector';
 import type {
@@ -88,7 +95,11 @@ export type CustomerCompany =
 /**********   EXAMPLE UPDATE END   ************/
 /***********************************************/
 
-export async function loader({context}: LoaderFunctionArgs) {
+export const meta = ({data}: MetaArgs<typeof loader>) => {
+  return getSeoMeta(data!.seo as SeoConfig);
+};
+
+export async function loader({context, request}: LoaderFunctionArgs) {
   const {storefront, customerAccount, cart, env} = context;
   const publicStoreDomain = env.PUBLIC_STORE_DOMAIN;
 
@@ -104,17 +115,19 @@ export async function loader({context}: LoaderFunctionArgs) {
   });
 
   // await the header query (above the fold)
-  const headerPromise = storefront.query(HEADER_QUERY, {
+  const header = await storefront.query(HEADER_QUERY, {
     cache: storefront.CacheLong(),
     variables: {
       headerMenuHandle: 'main-menu', // Adjust to your header menu handle
     },
   });
 
+  const seo = seoPayload.root({shop: header.shop, url: request.url});
+
   return defer({
     cart: cartPromise,
     footer: footerPromise,
-    header: await headerPromise,
+    header,
     isLoggedIn: isLoggedInPromise,
     publicStoreDomain,
     shop: getShopAnalytics({
@@ -129,6 +142,7 @@ export async function loader({context}: LoaderFunctionArgs) {
       country: context.storefront.i18n.country,
       language: context.storefront.i18n.language,
     },
+    seo,
   });
 }
 

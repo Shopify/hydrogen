@@ -1,16 +1,27 @@
-import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {
+  json,
+  type MetaArgs,
+  type LoaderFunctionArgs,
+} from '@shopify/remix-oxygen';
 import {useLoaderData, Link} from '@remix-run/react';
+import {getSeoMeta} from '@shopify/hydrogen';
+import {seoPayload} from '~/lib/seo';
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader({context, request}: LoaderFunctionArgs) {
   const data = await context.storefront.query(POLICIES_QUERY);
-  const policies = Object.values(data.shop || {});
+  const policies = Object.values(data.shop || {}).filter(Boolean);
 
   if (!policies.length) {
     throw new Response('No policies found', {status: 404});
   }
+  const seo = seoPayload.policies({policies, url: request.url});
 
-  return json({policies});
+  return json({policies, seo});
 }
+
+export const meta = ({matches}: MetaArgs<typeof loader>) => {
+  return getSeoMeta(...matches.map((match) => (match.data as any)?.seo));
+};
 
 export default function Policies() {
   const {policies} = useLoaderData<typeof loader>();
