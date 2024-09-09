@@ -1,18 +1,22 @@
-import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {useLoaderData, Link, type MetaFunction} from '@remix-run/react';
+import {
+  defer,
+  redirect,
+  type LoaderFunctionArgs,
+  type MetaArgs,
+} from '@shopify/remix-oxygen';
+import {useLoaderData, Link} from '@remix-run/react';
 import {
   getPaginationVariables,
   Image,
   Money,
   Analytics,
+  getSeoMeta,
 } from '@shopify/hydrogen';
 import type {ProductItemFragment} from 'storefrontapi.generated';
 import {useVariantUrl} from '~/lib/variants';
+import {seoPayload} from '~/lib/seo';
+import {PRODUCT_ITEM_FRAGMENT} from '~/lib/fragments';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
-
-export const meta: MetaFunction<typeof loader> = ({data}) => {
-  return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
-};
 
 export async function loader(args: LoaderFunctionArgs) {
   // Start fetching non-critical data without blocking time to first byte
@@ -56,8 +60,11 @@ async function loadCriticalData({
     });
   }
 
+  const seo = seoPayload.collection({collection, url: request.url});
+
   return {
     collection,
+    seo,
   };
 }
 
@@ -101,6 +108,10 @@ export default function Collection() {
   );
 }
 
+export const meta = ({matches}: MetaArgs<typeof loader>) => {
+  return getSeoMeta(...matches.map((match) => (match.data as any)?.seo));
+};
+
 function ProductItem({
   product,
   loading,
@@ -134,41 +145,6 @@ function ProductItem({
   );
 }
 
-const PRODUCT_ITEM_FRAGMENT = `#graphql
-  fragment MoneyProductItem on MoneyV2 {
-    amount
-    currencyCode
-  }
-  fragment ProductItem on Product {
-    id
-    handle
-    title
-    featuredImage {
-      id
-      altText
-      url
-      width
-      height
-    }
-    priceRange {
-      minVariantPrice {
-        ...MoneyProductItem
-      }
-      maxVariantPrice {
-        ...MoneyProductItem
-      }
-    }
-    variants(first: 1) {
-      nodes {
-        selectedOptions {
-          name
-          value
-        }
-      }
-    }
-  }
-` as const;
-
 // NOTE: https://shopify.dev/docs/api/storefront/2022-04/objects/collection
 const COLLECTION_QUERY = `#graphql
   ${PRODUCT_ITEM_FRAGMENT}
@@ -186,6 +162,10 @@ const COLLECTION_QUERY = `#graphql
       handle
       title
       description
+      seo {
+        description
+        title
+      }
       products(
         first: $first,
         last: $last,
