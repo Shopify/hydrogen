@@ -18,7 +18,7 @@ afterEach(() => {
 describe('createContentSecurityPolicy', () => {
   it('creates default policy', () => {
     expect(createContentSecurityPolicy().header).toMatchInlineSnapshot(
-      `"base-uri 'self'; default-src 'self' 'nonce-somenonce' https://cdn.shopify.com https://shopify.com; frame-ancestors 'none'; style-src 'self' 'unsafe-inline' https://cdn.shopify.com; connect-src 'self' https://monorail-edge.shopifysvc.com"`,
+      `"base-uri 'self'; default-src 'self' https://cdn.shopify.com https://shopify.com 'nonce-somenonce'; frame-ancestors 'none'; style-src 'self' 'unsafe-inline' https://cdn.shopify.com; connect-src 'self' https://monorail-edge.shopifysvc.com"`,
     );
   });
 
@@ -28,7 +28,7 @@ describe('createContentSecurityPolicy', () => {
         styleSrc: ['https://some-custom-css.cdn'],
       }).header,
     ).toMatchInlineSnapshot(
-      `"base-uri 'self'; default-src 'self' 'nonce-somenonce' https://cdn.shopify.com https://shopify.com; frame-ancestors 'none'; style-src https://some-custom-css.cdn 'self' 'unsafe-inline' https://cdn.shopify.com; connect-src 'self' https://monorail-edge.shopifysvc.com"`,
+      `"base-uri 'self'; default-src 'self' https://cdn.shopify.com https://shopify.com 'nonce-somenonce'; frame-ancestors 'none'; style-src https://some-custom-css.cdn 'self' 'unsafe-inline' https://cdn.shopify.com; connect-src 'self' https://monorail-edge.shopifysvc.com"`,
     );
   });
 
@@ -41,7 +41,7 @@ describe('createContentSecurityPolicy', () => {
         },
       }).header,
     ).toMatchInlineSnapshot(
-      `"base-uri 'self'; default-src 'self' 'nonce-somenonce' https://cdn.shopify.com https://shopify.com; frame-ancestors 'none'; style-src 'self' 'unsafe-inline' https://cdn.shopify.com; connect-src 'self' https://monorail-edge.shopifysvc.com https://checkout.myshopify.com https://test.myshopify.com"`,
+      `"base-uri 'self'; default-src 'self' https://cdn.shopify.com https://shopify.com 'nonce-somenonce'; frame-ancestors 'none'; style-src 'self' 'unsafe-inline' https://cdn.shopify.com; connect-src 'self' https://monorail-edge.shopifysvc.com https://checkout.myshopify.com https://test.myshopify.com"`,
     );
   });
 
