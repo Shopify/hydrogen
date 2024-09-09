@@ -256,6 +256,10 @@ const COLLECTION_QUERY = `#graphql
       handle
       title
       description
+      seo {
+        description
+        title
+      }
       products(
         first: $first,
         last: $last,
