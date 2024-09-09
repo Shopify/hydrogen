@@ -3,22 +3,6 @@
 /* eslint-disable */
 import type * as StorefrontAPI from '@shopify/hydrogen/storefront-api-types';
 
-export type CustomerEmailMarketingSubscribeMutationVariables =
-  StorefrontAPI.Exact<{
-    email: StorefrontAPI.Scalars['String']['input'];
-  }>;
-
-export type CustomerEmailMarketingSubscribeMutation = {
-  customerEmailMarketingSubscribe?: StorefrontAPI.Maybe<{
-    customer?: StorefrontAPI.Maybe<
-      Pick<StorefrontAPI.CustomerMarketingSubscribe, 'id'>
-    >;
-    customerUserErrors: Array<
-      Pick<StorefrontAPI.CustomerUserError, 'code' | 'field' | 'message'>
-    >;
-  }>;
-};
-
 export type MoneyFragment = Pick<
   StorefrontAPI.MoneyV2,
   'currencyCode' | 'amount'
@@ -232,6 +216,38 @@ export type FooterQuery = {
       >;
     }
   >;
+};
+
+export type CustomerSmsMarketingSubscribeMutationVariables =
+  StorefrontAPI.Exact<{
+    phoneNumber: StorefrontAPI.Scalars['String']['input'];
+  }>;
+
+export type CustomerSmsMarketingSubscribeMutation = {
+  subscribe?: StorefrontAPI.Maybe<{
+    customer?: StorefrontAPI.Maybe<
+      Pick<StorefrontAPI.CustomerMarketingSubscribe, 'id'>
+    >;
+    customerUserErrors: Array<
+      Pick<StorefrontAPI.CustomerUserError, 'code' | 'field' | 'message'>
+    >;
+  }>;
+};
+
+export type CustomerEmailMarketingSubscribeMutationVariables =
+  StorefrontAPI.Exact<{
+    email: StorefrontAPI.Scalars['String']['input'];
+  }>;
+
+export type CustomerEmailMarketingSubscribeMutation = {
+  subscribe?: StorefrontAPI.Maybe<{
+    customer?: StorefrontAPI.Maybe<
+      Pick<StorefrontAPI.CustomerMarketingSubscribe, 'id'>
+    >;
+    customerUserErrors: Array<
+      Pick<StorefrontAPI.CustomerUserError, 'code' | 'field' | 'message'>
+    >;
+  }>;
 };
 
 export type StoreRobotsQueryVariables = StorefrontAPI.Exact<{
@@ -1220,7 +1236,11 @@ interface GeneratedQueryTypes {
 }
 
 interface GeneratedMutationTypes {
-  '#graphql\nmutation customerEmailMarketingSubscribe(\n  $email: String!\n) {\n  customerEmailMarketingSubscribe(email: $email) {\n    customer { id }\n    customerUserErrors {\n      code\n      field\n      message\n    }\n  }\n}\n': {
+  '#graphql\nmutation CustomerSmsMarketingSubscribe($phoneNumber: String!) {\n  subscribe: customerSmsMarketingSubscribe(phoneNumber: $phoneNumber) {\n    customer { id }\n    customerUserErrors {\n      code\n      field\n      message\n    }\n  }\n}\n': {
+    return: CustomerSmsMarketingSubscribeMutation;
+    variables: CustomerSmsMarketingSubscribeMutationVariables;
+  };
+  '#graphql\nmutation CustomerEmailMarketingSubscribe(\n  $email: String!\n) {\n  subscribe: customerEmailMarketingSubscribe(email: $email) {\n    customer { id  }\n    customerUserErrors {\n      code\n      field\n      message\n    }\n  }\n}\n': {
     return: CustomerEmailMarketingSubscribeMutation;
     variables: CustomerEmailMarketingSubscribeMutationVariables;
   };

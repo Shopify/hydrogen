@@ -1,6 +1,6 @@
 import {useFetcher, type FetcherWithComponents} from '@remix-run/react';
 import type {ReactNode} from 'react';
-import type {NewsletterSubscribeHandlerResponse} from './newsletterSubscribeHandler';
+import type {NewsletterSubscribeResponse} from '~/lib/newsletter';
 
 type NewsletterFormProps = {
   /**
@@ -8,13 +8,13 @@ type NewsletterFormProps = {
    * Children can be a render prop that receives the fetcher.
    */
   children:
-    | ((
-        fetcher: FetcherWithComponents<any>,
-        isSuccessful?: NewsletterSubscribeHandlerResponse['isSuccessful'],
-        simplifyError?: NewsletterSubscribeHandlerResponse['simplifyError'],
-        userErrors?: NewsletterSubscribeHandlerResponse['userErrors'],
-        apiErrors?: NewsletterSubscribeHandlerResponse['apiErrors'],
-      ) => ReactNode)
+    | (({
+        fetcher,
+        error,
+      }: {
+        fetcher: FetcherWithComponents<any>;
+        error: NewsletterSubscribeResponse['error'];
+      }) => ReactNode)
     | ReactNode;
   /**
    * The route to submit the form to.
@@ -32,20 +32,17 @@ export function NewsletterSubscribeForm({
   route = '/api/newsletter-subscribe',
   fetcherKey = 'newsletter-subscribe',
 }: NewsletterFormProps): JSX.Element {
-  const fetcher = useFetcher<NewsletterSubscribeHandlerResponse>({
+  const fetcher = useFetcher<NewsletterSubscribeResponse>({
     key: fetcherKey,
   });
 
   return (
     <fetcher.Form action={route} method="post">
       {typeof children === 'function'
-        ? children(
+        ? children({
             fetcher,
-            fetcher.data?.isSuccessful,
-            fetcher.data?.simplifyError,
-            fetcher.data?.userErrors,
-            fetcher.data?.apiErrors,
-          )
+            error: fetcher?.data?.error || null,
+          })
         : children}
     </fetcher.Form>
   );
