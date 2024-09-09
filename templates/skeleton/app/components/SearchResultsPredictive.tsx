@@ -13,14 +13,14 @@ type PredictiveSearchItems = PredictiveSearchReturn['result']['items'];
 type UsePredictiveSearchReturn = {
   term: React.MutableRefObject<string>;
   total: number;
-  inputRef: React.MutableRefObject<HTMLInputElement | null>;
   items: PredictiveSearchItems;
   fetcher: Fetcher<PredictiveSearchReturn>;
+  queriesDatalistId: string;
 };
 
 type SearchResultsPredictiveArgs = Pick<
   UsePredictiveSearchReturn,
-  'term' | 'total' | 'inputRef' | 'items'
+  'term' | 'total' | 'items' | 'queriesDatalistId'
 > & {
   state: Fetcher['state'];
   closeSearch: () => void;
@@ -244,35 +244,18 @@ function SearchResultsPredictiveProducts({
 
 function SearchResultsPredictiveQueries({
   queries,
-  inputRef,
-}: PartialPredictiveSearchResult<'queries', 'inputRef'>) {
+  queriesDatalistId,
+}: PartialPredictiveSearchResult<'queries', 'queriesDatalistId'>) {
   if (!queries.length) return null;
 
   return (
-    <div className="predictive-search-result" key="queries">
-      <h5>Queries</h5>
-      <ul>
-        {queries.map((suggestion) => {
-          if (!suggestion) return null;
+    <datalist id={queriesDatalistId}>
+      {queries.map((suggestion) => {
+        if (!suggestion) return null;
 
-          return (
-            <li className="predictive-search-result-item" key={suggestion.text}>
-              <div
-                role="presentation"
-                onClick={() => {
-                  if (!inputRef.current) return;
-                  inputRef.current.value = suggestion.text;
-                  inputRef.current.focus();
-                }}
-                dangerouslySetInnerHTML={{
-                  __html: suggestion?.styledText,
-                }}
-              />
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+        return <option key={suggestion.text} value={suggestion.text} />;
+      })}
+    </datalist>
   );
 }
 
