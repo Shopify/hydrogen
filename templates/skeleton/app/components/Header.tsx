@@ -1,4 +1,4 @@
-import {Suspense, useDeferredValue} from 'react';
+import {Suspense} from 'react';
 import {Await, NavLink, useAsyncValue} from '@remix-run/react';
 import {
   type CartViewPayload,
@@ -170,9 +170,9 @@ function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
 }
 
 function CartBanner() {
-  const cart = useAsyncValue();
-  const optimisticCart = useOptimisticCart(cart);
-  const linesCount = optimisticCart?.lines?.nodes?.length || 0;
+  const originalCart = useAsyncValue() as CartApiQueryFragment | null;
+  const cart = useOptimisticCart(originalCart);
+  const linesCount = cart.totalQuantity ?? null;
   return <CartBadge count={linesCount} />;
 }
 
