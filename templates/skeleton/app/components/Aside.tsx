@@ -40,7 +40,7 @@ export function Aside({
 
     if (expanded) {
       document.addEventListener(
-        'keypress',
+        'keydown',
         function handler(event: KeyboardEvent) {
           if (event.key === 'Escape') {
             close();
