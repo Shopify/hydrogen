@@ -51,7 +51,7 @@
           "id": "2459"
         },
         {
-          "title": "privacyBanner and customerPrivacy have been added to useAnalytics and useCustomerPrivacy",
+          "title": "Utilities `privacyBanner` and `customerPrivacy` have been added to `useAnalytics` and `useCustomerPrivacy`",
           "pr": "https://github.com/Shopify/hydrogen/pull/2457",
           "id": "2457"
         },
@@ -80,7 +80,7 @@
         {
           "title": "Consent localization",
           "pr": "https://github.com/Shopify/hydrogen/pull/2457",
-          "id": "2478"
+          "id": "2457"
         },
         {
           "title": "Skeleton search & predictive search enhancements",
