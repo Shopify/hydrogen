@@ -54,6 +54,16 @@
           "title": "privacyBanner and customerPrivacy have been added to useAnalytics and useCustomerPrivacy",
           "pr": "https://github.com/Shopify/hydrogen/pull/2457",
           "id": "2457"
+        },
+        {
+          "title": "Skeleton side panel link fix for mobile devices",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2438",
+          "id": "2438"
+        },
+        {
+          "title": "Default SEO meta tags added to Skeleton template",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2464",
+          "id": "2464"
         }
       ],
       "features": [
@@ -71,6 +81,11 @@
           "title": "Consent localization",
           "pr": "https://github.com/Shopify/hydrogen/pull/2457",
           "id": "2478"
+        },
+        {
+          "title": "Skeleton search & predictive search enhancements",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2363",
+          "id": "2363"
         }
       ]
     },
