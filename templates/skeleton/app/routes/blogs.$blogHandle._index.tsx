@@ -1,13 +1,12 @@
-import {
-  defer,
-  type MetaArgs,
-  type LoaderFunctionArgs,
-} from '@shopify/remix-oxygen';
-import {Link, useLoaderData} from '@remix-run/react';
-import {Image, getPaginationVariables, getSeoMeta} from '@shopify/hydrogen';
+import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {Link, useLoaderData, type MetaFunction} from '@remix-run/react';
+import {Image, getPaginationVariables} from '@shopify/hydrogen';
 import type {ArticleItemFragment} from 'storefrontapi.generated';
-import {seoPayload} from '~/lib/seo';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
+
+export const meta: MetaFunction<typeof loader> = ({data}) => {
+  return [{title: `Hydrogen | ${data?.blog.title ?? ''} blog`}];
+};
 
 export async function loader(args: LoaderFunctionArgs) {
   // Start fetching non-critical data without blocking time to first byte
@@ -50,9 +49,7 @@ async function loadCriticalData({
     throw new Response('Not found', {status: 404});
   }
 
-  const seo = seoPayload.blog({blog, url: request.url});
-
-  return {blog, seo};
+  return {blog};
 }
 
 /**
@@ -63,10 +60,6 @@ async function loadCriticalData({
 function loadDeferredData({context}: LoaderFunctionArgs) {
   return {};
 }
-
-export const meta = ({matches}: MetaArgs<typeof loader>) => {
-  return getSeoMeta(...matches.map((match) => (match.data as any)?.seo));
-};
 
 export default function Blog() {
   const {blog} = useLoaderData<typeof loader>();

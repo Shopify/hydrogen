@@ -1,10 +1,5 @@
 import {Suspense} from 'react';
-import {
-  defer,
-  MetaArgs,
-  redirect,
-  type LoaderFunctionArgs,
-} from '@shopify/remix-oxygen';
+import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {
   Await,
   Link,
@@ -28,20 +23,18 @@ import {
   Analytics,
   type CartViewPayload,
   useAnalytics,
-  getSeoMeta,
 } from '@shopify/hydrogen';
 import type {
   CartLineInput,
   SelectedOption,
 } from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/lib/variants';
-import {seoPayload} from '~/lib/seo';
 import {useAside} from '~/components/Aside';
 import {QuantityRules, hasQuantityRules} from '~/components/QuantityRules';
 import {PriceBreaks} from '~/components/PriceBreaks';
 
-export const meta = ({matches}: MetaArgs<typeof loader>) => {
-  return getSeoMeta(...matches.map((match) => (match.data as any)?.seo));
+export const meta: MetaFunction<typeof loader> = ({data}) => {
+  return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
 };
 
 export async function loader(args: LoaderFunctionArgs) {
@@ -126,12 +119,6 @@ async function loadCriticalData({
     }
   }
 
-  const seo = seoPayload.product({
-    product,
-    selectedVariant: product?.selectedVariant,
-    url: request.url,
-  });
-
   // In order to show which variants are available in the UI, we need to query
   // all of them. But there might be a *lot*, so instead separate the variants
   // into it's own separate query that is deferred. So there's a brief moment
@@ -146,7 +133,7 @@ async function loadCriticalData({
   /**********   EXAMPLE UPDATE END   *************/
   /***********************************************/
 
-  return {product, variants, seo};
+  return {product, variants};
 }
 
 /**

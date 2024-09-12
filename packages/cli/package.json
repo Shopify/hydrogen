@@ -26,7 +26,7 @@
     "devtools-protocol": "^0.0.1177611",
     "fast-glob": "^3.2.12",
     "flame-chart-js": "2.3.2",
-    "get-port": "^7.1.0",
+    "get-port": "^7.0.0",
     "type-fest": "^4.5.0",
     "vite": "^5.1.0",
     "vitest": "^1.0.4"
