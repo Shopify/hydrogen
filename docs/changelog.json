@@ -3,6 +3,88 @@
   "version": "1",
   "releases": [
     {
+      "title": "Improved sitemaps (unstable), search templates, cart gift cards, consent localization, CSP fix",
+      "version": "2024.7.5",
+      "hash": "11d4f230f3660670c08f0eff72616b354a7b12e2",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2438",
+      "commit": "https://github.com/Shopify/hydrogen/commit/11d4f230f3660670c08f0eff72616b354a7b12e2",
+      "dependencies": {
+        "@remix-run/react": "^2.10.1",
+        "@remix-run/server-runtime": "^2.10.1",
+        "@shopify/hydrogen": "2024.7.5",
+        "@shopify/remix-oxygen": "^2.0.6"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.10.1",
+        "@shopify/cli": "3.66.1",
+        "@shopify/oxygen-workers-types": "^4.1.2",
+        "typescript": "^5.2.2"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Improved content security policy implementation",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2500",
+          "id": "2500"
+        },
+        {
+          "title": "Infinite redirect fix when path contains double slashes",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2449",
+          "id": "2449"
+        },
+        {
+          "title": "useOptimisticCart optimistically calculates total quantities",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2459",
+          "id": "2459"
+        },
+        {
+          "title": "Utilities `privacyBanner` and `customerPrivacy` have been added to `useAnalytics` and `useCustomerPrivacy`",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2457",
+          "id": "2457"
+        },
+        {
+          "title": "Skeleton side panel link fix for mobile devices",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2438",
+          "id": "2438"
+        }
+      ],
+      "features": [
+        {
+          "title": "Unstable sitemap abstraction",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2478",
+          "id": "2478"
+        },
+        {
+          "title": "Cart gift card support",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2478",
+          "id": "2478"
+        },
+        {
+          "title": "Consent localization",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2457",
+          "id": "2457"
+        },
+        {
+          "title": "Skeleton search & predictive search enhancements",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2363",
+          "id": "2363"
+        }
+      ]
+    },
+    {
       "title": "Fix a regression issue with the `Script` component.",
       "version": "2024.7.4",
       "hash": "8df49d7241f404e0b036c3c92bd0de11081ad889",
@@ -232,7 +314,6 @@
             {
               "title": "Refactor App export to become Layout export",
               "desc": "In root file, changed default App export to Layout export. This component will wrap both the app content and ErrorBoundary. Ensure to use `useRouteLoaderData` and handle the case when returned data doesn't exist.",
-
               "code": "YGBgZGlmZgotZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gQXBwKCkgeworZXhwb3J0IGZ1bmN0aW9uIExheW91dCh7Y2hpbGRyZW59OiB7Y2hpbGRyZW4/OiBSZWFjdC5SZWFjdE5vZGV9KSB7CiAgY29uc3Qgbm9uY2UgPSB1c2VOb25jZSgpOwotICBjb25zdCBkYXRhID0gdXNlTG9hZGVyRGF0YTx0eXBlb2YgbG9hZGVyPigpOworICBjb25zdCBkYXRhID0gdXNlUm91dGVMb2FkZXJEYXRhPHR5cGVvZiBsb2FkZXI+KCdyb290Jyk7CgogIHJldHVybiAoCiAgICA8aHRtbD4KICAgIC4uLgogICAgICA8Ym9keT4KLSAgICAgICAgPExheW91dCB7Li4uZGF0YX0+Ci0gICAgICAgICAgPE91dGxldCAvPgotICAgICAgICA8L0xheW91dD4KKyAgICAgICAge2RhdGE/ICgKKyAgICAgICAgICA8UGFnZUxheW91dCB7Li4uZGF0YX0+e2NoaWxkcmVufTwvUGFnZUxheW91dD4KKyAgICAgICAgICkgOiAoCisgICAgICAgICAgY2hpbGRyZW4KKyAgICAgICAgKX0KICAgICAgPC9ib2R5PgogICAgPC9odG1sPgogICk7Cn0KYGBg"
             },
             {
