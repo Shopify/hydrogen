@@ -1,5 +1,89 @@
 # skeleton
 
+## 2024.7.6
+
+### Patch Changes
+
+- Update Shopify CLI and cli-kit dependencies to 3.66.1 ([#2512](https://github.com/Shopify/hydrogen/pull/2512)) by [@frandiox](https://github.com/frandiox)
+
+- createCartHandler supplies updateGiftCardCodes method ([#2298](https://github.com/Shopify/hydrogen/pull/2298)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Fix menu links in side panel not working on mobile devices ([#2450](https://github.com/Shopify/hydrogen/pull/2450)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  ```diff
+  // /app/components/Header.tsx
+
+  export function HeaderMenu({
+    menu,
+    primaryDomainUrl,
+    viewport,
+    publicStoreDomain,
+  }: {
+    menu: HeaderProps['header']['menu'];
+    primaryDomainUrl: HeaderProps['header']['shop']['primaryDomain']['url'];
+    viewport: Viewport;
+    publicStoreDomain: HeaderProps['publicStoreDomain'];
+  }) {
+    const className = `header-menu-${viewport}`;
+  +  const {close} = useAside();
+
+  -  function closeAside(event: React.MouseEvent<HTMLAnchorElement>) {
+  -    if (viewport === 'mobile') {
+  -      event.preventDefault();
+  -      window.location.href = event.currentTarget.href;
+  -    }
+  -  }
+
+    return (
+      <nav className={className} role="navigation">
+        {viewport === 'mobile' && (
+          <NavLink
+            end
+  -          onClick={closeAside}
+  +          onClick={close}
+            prefetch="intent"
+            style={activeLinkStyle}
+            to="/"
+          >
+            Home
+          </NavLink>
+        )}
+        {(menu || FALLBACK_HEADER_MENU).items.map((item) => {
+          if (!item.url) return null;
+
+          // if the url is internal, we strip the domain
+          const url =
+            item.url.includes('myshopify.com') ||
+            item.url.includes(publicStoreDomain) ||
+            item.url.includes(primaryDomainUrl)
+              ? new URL(item.url).pathname
+              : item.url;
+          return (
+            <NavLink
+              className="header-menu-item"
+              end
+              key={item.id}
+  -            onClick={closeAside}
+  +            onClick={close}
+              prefetch="intent"
+              style={activeLinkStyle}
+              to={url}
+            >
+              {item.title}
+            </NavLink>
+          );
+        })}
+      </nav>
+    );
+  }
+  ```
+
+- Add localization support to consent privacy banner ([#2457](https://github.com/Shopify/hydrogen/pull/2457)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies [[`d633e49a`](https://github.com/Shopify/hydrogen/commit/d633e49aff244a985c58ec77fc2796c9c1cd5df4), [`1b217cd6`](https://github.com/Shopify/hydrogen/commit/1b217cd68ffd5362d201d4bd225ec72e99713461), [`d929b561`](https://github.com/Shopify/hydrogen/commit/d929b5612ec28e53ec216844add33682f131aba7), [`664a09d5`](https://github.com/Shopify/hydrogen/commit/664a09d57ef5d3c67da947a4e8546527c01e37c4), [`0c1e511d`](https://github.com/Shopify/hydrogen/commit/0c1e511df72e9605534bb9c960e86d5c9a4bf2ea), [`eefa8203`](https://github.com/Shopify/hydrogen/commit/eefa820383fa93657ca214991f6099ce9268a4ee)]:
+  - @shopify/hydrogen@2024.7.5
+  - @shopify/remix-oxygen@2.0.7
+
 ## 2024.7.5
 
 ### Patch Changes

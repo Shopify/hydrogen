@@ -1,5 +1,24 @@
 # @shopify/hydrogen
 
+## 2024.7.5
+
+### Patch Changes
+
+- Prevent CSP nonces from persisting between requests ([#2500](https://github.com/Shopify/hydrogen/pull/2500)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- useOptimisticCart: optimistically calculate totalQuantity ([#2459](https://github.com/Shopify/hydrogen/pull/2459)) by [@scottdixon](https://github.com/scottdixon)
+
+- createCartHandler supplies updateGiftCardCodes method ([#2298](https://github.com/Shopify/hydrogen/pull/2298)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Introduce a new abstraction for generating sitemap index and child sitemaps. ([#2478](https://github.com/Shopify/hydrogen/pull/2478)) by [@blittle](https://github.com/blittle)
+
+  See the [sitemap example](https://github.com/Shopify/hydrogen/tree/main/examples/sitemap) for how to use it and read the [docs](https://shopify.dev/docs/api/hydrogen/utilities/getSitemapIndex) for more information.
+
+- Add localization support to consent privacy banner ([#2457](https://github.com/Shopify/hydrogen/pull/2457)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies [[`ca0c7692`](https://github.com/Shopify/hydrogen/commit/ca0c76921ee873920d58112849cd0709bb990858), [`81f2b540`](https://github.com/Shopify/hydrogen/commit/81f2b540c42c55f36c70c63bce34a3e1626d9965)]:
+  - @shopify/hydrogen-react@2024.7.3
+
 ## 2024.7.4
 
 ### Patch Changes
