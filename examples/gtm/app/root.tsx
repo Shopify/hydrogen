@@ -1,16 +1,5 @@
-import {
-  useNonce,
-  getShopAnalytics,
-  Analytics,
-  Script,
-  getSeoMeta,
-  SeoConfig,
-} from '@shopify/hydrogen';
-import {
-  defer,
-  type MetaArgs,
-  type LoaderFunctionArgs,
-} from '@shopify/remix-oxygen';
+import {useNonce, getShopAnalytics, Analytics, Script} from '@shopify/hydrogen';
+import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {
   Links,
   Meta,
@@ -27,7 +16,6 @@ import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import {PageLayout} from '~/components/PageLayout';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
-import {seoPayload} from '~/lib/seo';
 import {GoogleTagManager} from '~/components/GoogleTagManager';
 
 export type RootLoader = typeof loader;
@@ -69,10 +57,6 @@ export function links() {
   ];
 }
 
-export const meta = ({data}: MetaArgs<typeof loader>) => {
-  return getSeoMeta(data!.seo as SeoConfig);
-};
-
 export async function loader(args: LoaderFunctionArgs) {
   // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
@@ -105,7 +89,7 @@ export async function loader(args: LoaderFunctionArgs) {
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function loadCriticalData({context, request}: LoaderFunctionArgs) {
+async function loadCriticalData({context}: LoaderFunctionArgs) {
   const {storefront} = context;
 
   const [header] = await Promise.all([
@@ -118,11 +102,8 @@ async function loadCriticalData({context, request}: LoaderFunctionArgs) {
     // Add other queries here, so that they are loaded in parallel
   ]);
 
-  const seo = seoPayload.root({shop: header.shop, url: request.url});
-
   return {
     header,
-    seo,
   };
 }
 

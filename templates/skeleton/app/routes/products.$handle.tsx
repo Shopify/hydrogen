@@ -1,27 +1,20 @@
 import {Suspense} from 'react';
-import {
-  defer,
-  redirect,
-  type LoaderFunctionArgs,
-  type MetaArgs,
-} from '@shopify/remix-oxygen';
-import {Await, useLoaderData} from '@remix-run/react';
+import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {Await, useLoaderData, type MetaFunction} from '@remix-run/react';
 import type {ProductFragment} from 'storefrontapi.generated';
 import {
   getSelectedProductOptions,
   Analytics,
   useOptimisticVariant,
-  getSeoMeta,
 } from '@shopify/hydrogen';
 import type {SelectedOption} from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/lib/variants';
-import {seoPayload} from '~/lib/seo';
 import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
 
-export const meta = ({matches}: MetaArgs<typeof loader>) => {
-  return getSeoMeta(...matches.map((match) => (match.data as any)?.seo));
+export const meta: MetaFunction<typeof loader> = ({data}) => {
+  return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
 };
 
 export async function loader(args: LoaderFunctionArgs) {
@@ -79,15 +72,8 @@ async function loadCriticalData({
     }
   }
 
-  const seo = seoPayload.product({
-    product,
-    selectedVariant: product?.selectedVariant,
-    url: request.url,
-  });
-
   return {
     product,
-    seo,
   };
 }
 

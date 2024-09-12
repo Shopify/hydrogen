@@ -1,12 +1,7 @@
 import {useLoaderData, Link} from '@remix-run/react';
-import {
-  defer,
-  type MetaArgs,
-  type LoaderFunctionArgs,
-} from '@shopify/remix-oxygen';
-import {getPaginationVariables, getSeoMeta, Image} from '@shopify/hydrogen';
+import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {getPaginationVariables, Image} from '@shopify/hydrogen';
 import type {CollectionFragment} from 'storefrontapi.generated';
-import {seoPayload} from '~/lib/seo';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 
 export async function loader(args: LoaderFunctionArgs) {
@@ -35,12 +30,7 @@ async function loadCriticalData({context, request}: LoaderFunctionArgs) {
     // Add other queries here, so that they are loaded in parallel
   ]);
 
-  const seo = seoPayload.listCollections({
-    collections,
-    url: request.url,
-  });
-
-  return {collections, seo};
+  return {collections};
 }
 
 /**
@@ -51,10 +41,6 @@ async function loadCriticalData({context, request}: LoaderFunctionArgs) {
 function loadDeferredData({context}: LoaderFunctionArgs) {
   return {};
 }
-
-export const meta = ({matches}: MetaArgs<typeof loader>) => {
-  return getSeoMeta(...matches.map((match) => (match.data as any)?.seo));
-};
 
 export default function Collections() {
   const {collections} = useLoaderData<typeof loader>();
@@ -110,11 +96,6 @@ const COLLECTIONS_QUERY = `#graphql
     id
     title
     handle
-    description
-    seo {
-      description
-      title
-    }
     image {
       id
       url

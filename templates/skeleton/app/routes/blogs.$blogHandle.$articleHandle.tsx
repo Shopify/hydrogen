@@ -1,11 +1,10 @@
-import {
-  defer,
-  type MetaArgs,
-  type LoaderFunctionArgs,
-} from '@shopify/remix-oxygen';
-import {useLoaderData} from '@remix-run/react';
-import {getSeoMeta, Image} from '@shopify/hydrogen';
-import {seoPayload} from '~/lib/seo';
+import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {useLoaderData, type MetaFunction} from '@remix-run/react';
+import {Image} from '@shopify/hydrogen';
+
+export const meta: MetaFunction<typeof loader> = ({data}) => {
+  return [{title: `Hydrogen | ${data?.article.title ?? ''} article`}];
+};
 
 export async function loader(args: LoaderFunctionArgs) {
   // Start fetching non-critical data without blocking time to first byte
@@ -21,11 +20,7 @@ export async function loader(args: LoaderFunctionArgs) {
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function loadCriticalData({
-  context,
-  params,
-  request,
-}: LoaderFunctionArgs) {
+async function loadCriticalData({context, params}: LoaderFunctionArgs) {
   const {blogHandle, articleHandle} = params;
 
   if (!articleHandle || !blogHandle) {
@@ -44,8 +39,8 @@ async function loadCriticalData({
   }
 
   const article = blog.articleByHandle;
-  const seo = seoPayload.article({article, url: request.url});
-  return {article, seo};
+
+  return {article};
 }
 
 /**
@@ -56,10 +51,6 @@ async function loadCriticalData({
 function loadDeferredData({context}: LoaderFunctionArgs) {
   return {};
 }
-
-export const meta = ({matches}: MetaArgs<typeof loader>) => {
-  return getSeoMeta(...matches.map((match) => (match.data as any)?.seo));
-};
 
 export default function Article() {
   const {article} = useLoaderData<typeof loader>();
