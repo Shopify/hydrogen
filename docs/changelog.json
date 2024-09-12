@@ -59,11 +59,6 @@
           "title": "Skeleton side panel link fix for mobile devices",
           "pr": "https://github.com/Shopify/hydrogen/pull/2438",
           "id": "2438"
-        },
-        {
-          "title": "Default SEO meta tags added to Skeleton template",
-          "pr": "https://github.com/Shopify/hydrogen/pull/2464",
-          "id": "2464"
         }
       ],
       "features": [
