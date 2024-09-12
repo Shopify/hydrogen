@@ -206,11 +206,10 @@ export function getProductOptions({
         const searchParams = new URLSearchParams(targetOptionParams);
         const handle = variant?.product?.handle;
 
-
         return {
           ...value,
-          variant,
-          handle,
+          variant: variant ?? value.firstSelectableVariant,
+          handle: handle || value.firstSelectableVariant.product.handle,
           variantUriQuery: searchParams.toString(),
           selected: selectedOptions[option.name] === value.name,
           exists: decodedVariantExistence.includes(targetKey),

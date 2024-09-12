@@ -304,6 +304,15 @@ const PRODUCT_FRAGMENT = `#graphql
       name
       optionValues {
         name
+        firstSelectableVariant {
+          product {
+            handle
+          }
+          selectedOptions {
+            name
+            value
+          }
+        }
         swatch {
           color
           image {
