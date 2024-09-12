@@ -1,11 +1,9 @@
-import {
-  defer,
-  type MetaArgs,
-  type LoaderFunctionArgs,
-} from '@shopify/remix-oxygen';
-import {useLoaderData} from '@remix-run/react';
-import {getSeoMeta} from '@shopify/hydrogen';
-import {seoPayload} from '~/lib/seo';
+import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {useLoaderData, type MetaFunction} from '@remix-run/react';
+
+export const meta: MetaFunction<typeof loader> = ({data}) => {
+  return [{title: `Hydrogen | ${data?.page.title ?? ''}`}];
+};
 
 export async function loader(args: LoaderFunctionArgs) {
   // Start fetching non-critical data without blocking time to first byte
@@ -21,11 +19,7 @@ export async function loader(args: LoaderFunctionArgs) {
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function loadCriticalData({
-  context,
-  params,
-  request,
-}: LoaderFunctionArgs) {
+async function loadCriticalData({context, params}: LoaderFunctionArgs) {
   if (!params.handle) {
     throw new Error('Missing page handle');
   }
@@ -43,11 +37,8 @@ async function loadCriticalData({
     throw new Response('Not Found', {status: 404});
   }
 
-  const seo = seoPayload.page({page, url: request.url});
-
   return {
     page,
-    seo,
   };
 }
 
@@ -59,10 +50,6 @@ async function loadCriticalData({
 function loadDeferredData({context}: LoaderFunctionArgs) {
   return {};
 }
-
-export const meta = ({matches}: MetaArgs<typeof loader>) => {
-  return getSeoMeta(...matches.map((match) => (match.data as any)?.seo));
-};
 
 export default function Page() {
   const {page} = useLoaderData<typeof loader>();

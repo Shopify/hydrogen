@@ -1,7 +1,5 @@
-import {json, MetaArgs, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, type MetaFunction} from '@remix-run/react';
-import {getSeoMeta} from '@shopify/hydrogen';
-import {seoPayload} from '~/lib/seo';
 
 /***********************************************/
 /**********  EXAMPLE UPDATE STARTS  ************/
@@ -9,11 +7,11 @@ import {seoPayload} from '~/lib/seo';
 // 1. Add metaobject content imports
 import {ROUTE_CONTENT_QUERY, RouteContent} from '~/sections/RouteContent';
 
-export const meta = ({matches}: MetaArgs<typeof loader>) => {
-  return getSeoMeta(...matches.map((match) => (match.data as any)?.seo));
+export const meta: MetaFunction = () => {
+  return [{title: 'Hydrogen | Home'}];
 };
 
-export async function loader({context, request}: LoaderFunctionArgs) {
+export async function loader({context}: LoaderFunctionArgs) {
   const {storefront} = context;
 
   // 2. Query the home route metaobject
@@ -22,9 +20,7 @@ export async function loader({context, request}: LoaderFunctionArgs) {
     cache: storefront.CacheNone(),
   });
 
-  const seo = seoPayload.home({url: request.url});
-
-  return json({route, seo});
+  return json({route});
 }
 
 export default function Homepage() {
