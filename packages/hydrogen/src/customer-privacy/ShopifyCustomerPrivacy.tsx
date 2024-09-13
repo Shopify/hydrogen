@@ -231,6 +231,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
 
           // set the loaded state for the privacyBanner
           setLoaded.privacyBanner();
+          emitCustomerPrivacyApiLoaded();
         }
       },
     };
@@ -296,6 +297,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
                 };
 
                 setLoaded.customerPrivacy();
+                emitCustomerPrivacyApiLoaded();
               }
             },
           });
@@ -321,6 +323,14 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   }
 
   return result;
+}
+
+let hasEmitted = false;
+function emitCustomerPrivacyApiLoaded() {
+  if (hasEmitted) return;
+  hasEmitted = true;
+  const event = new CustomEvent('shopifyCustomerPrivacyApiLoaded');
+  document.dispatchEvent(event);
 }
 
 function useApisLoaded({

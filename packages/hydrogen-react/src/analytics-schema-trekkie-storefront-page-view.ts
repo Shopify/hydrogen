@@ -40,7 +40,8 @@ function formatPayload(
       ? ShopifyAppId[payload.shopifySalesChannel]
       : ShopifyAppId.headless,
     isMerchantRequest: isMerchantRequest(payload.url),
-    hydrogenSubchannelId: payload.storefrontId || '0',
+    hydrogenSubchannelId:
+      payload.storefrontId || payload.hydrogenSubchannelId || '0',
 
     isPersistentCookie: payload.hasUserConsent,
     uniqToken: payload.uniqueToken,
