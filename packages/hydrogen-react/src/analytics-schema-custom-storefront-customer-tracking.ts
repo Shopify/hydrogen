@@ -9,8 +9,9 @@ import {
 import {AnalyticsPageType, ShopifySalesChannel} from './analytics-constants.js';
 import {addDataIf, schemaWrapper, parseGid} from './analytics-utils.js';
 import {buildUUID} from './cookies-utils.js';
+import {version} from '../package.json';
 
-const SCHEMA_ID = 'custom_storefront_customer_tracking/1.0';
+const SCHEMA_ID = 'custom_storefront_customer_tracking/1.2';
 const PAGE_RENDERED_EVENT_NAME = 'page_rendered';
 const COLLECTION_PAGE_RENDERED_EVENT_NAME = 'collection_page_rendered';
 const PRODUCT_PAGE_RENDERED_EVENT_NAME = 'product_page_rendered';
@@ -138,6 +139,7 @@ export function collectionView(
           event_name: COLLECTION_PAGE_RENDERED_EVENT_NAME,
           ...additionalPayload,
           collection_name: pageViewPayload.collectionHandle,
+          collection_id: parseInt(parseGid(pageViewPayload.collectionId).id),
         },
         formatPayload(pageViewPayload),
       ),
@@ -221,11 +223,12 @@ function formatPayload(
 ): ShopifyMonorailPayload {
   return {
     source: payload.shopifySalesChannel || ShopifySalesChannel.headless,
-    hydrogenSubchannelId: payload.storefrontId || '0',
+    asset_version_id: payload.assetVersionId || version,
+    hydrogenSubchannelId:
+      payload.storefrontId || payload.hydrogenSubchannelId || '0',
 
     is_persistent_cookie: payload.hasUserConsent,
-    ccpa_enforced: false,
-    gdpr_enforced: false,
+    deprecated_visit_token: payload.visitToken,
     unique_token: payload.uniqueToken,
     event_time: Date.now(),
     event_id: buildUUID(),
@@ -238,6 +241,13 @@ function formatPayload(
 
     shop_id: parseInt(parseGid(payload.shopId).id),
     currency: payload.currency,
+
+    ccpa_enforced: payload.ccpaEnforced || false,
+    gdpr_enforced: payload.gdprEnforced || false,
+    gdpr_enforced_as_string: payload.gdprEnforced ? 'true' : 'false',
+    analytics_allowed: payload.analyticsAllowed || false,
+    marketing_allowed: payload.marketingAllowed || false,
+    sale_of_data_allowed: payload.saleOfDataAllowed || false,
   };
 }
 
