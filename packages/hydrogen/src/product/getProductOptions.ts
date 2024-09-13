@@ -1,5 +1,5 @@
-import {decodeOptionValues} from './productOptionValueDecoder';
-import type {ProductOption, ProductOptionValue, ProductVariant, Scalars, SelectedOption } from '@shopify/hydrogen-react/storefront-api-types';;
+import {decodeOptionValues, isOptionValueInEncoding} from './productOptionValueDecoder';
+import type {Product, ProductOption, ProductOptionValue, ProductVariant, Scalars, SelectedOption } from '@shopify/hydrogen-react/storefront-api-types';;
 
 
 type ProductOptionsMapping = Record<string, number>;
@@ -30,18 +30,6 @@ function mapProductOptions(options: ProductOption[]): ProductOptionsMapping[] {
     return Object.assign({}, ...option.optionValues.map((value, index) => {
       return {[value.name]: index}
     }));
-  });
-}
-
-/**
- * Decodes the encoded option values into a key for mapping to the product options
- * @param encodedOptionValues
- * @returns
- */
-function decodeOptionValuesAsKey(encodedOptionValues: string) {
-  const decodedOptionValues = decodeOptionValues(encodedOptionValues);
-  return decodedOptionValues.map((optionSet) => {
-    return JSON.stringify(optionSet);
   });
 }
 
@@ -159,19 +147,19 @@ export type MappedProductOptions = Omit<ProductOption, 'optionValues'> & {
   optionValues: MappedProductOptionValue[];
 }
 
-export function getProductOptions({
-  productHandle,
-  options,
-  selectedVariant,
-  adjacentVariants,
-  encodedVariantExistence,
-}: {
-  productHandle: string;
-  options: ProductOption[];
-  selectedVariant: ProductVariant;
-  adjacentVariants: ProductVariant[];
-  encodedVariantExistence: string;
-}): MappedProductOptions[] {
+export function getProductOptions(product: Product): MappedProductOptions[] {
+  const {
+    options,
+    //@ts-ignore
+    selectedOrFirstAvailableVariant: selectedVariant,
+    //@ts-ignore
+    adjacentVariants,
+    //@ts-ignore
+    encodedVariantExistence,
+    //@ts-ignore
+    encodedVariantAvailability,
+    handle: productHandle,
+  } = product;
   // Get a mapping of product option names to their index for matching encoded values
   const productOptionMappings = mapProductOptions(options);
 
@@ -184,10 +172,7 @@ export function getProductOptions({
   // Get the key:value version of selected options for building url query params
   const selectedOptions = mapSelectedProductOptionToObject(selectedVariant.selectedOptions || []);
 
-  // Decode the encoded variant existence
-  const decodedVariantExistence = decodeOptionValuesAsKey(encodedVariantExistence);
-
-  return options.map((option) => {
+  return options.map((option, optionIndex) => {
     return {
       ...option,
       optionValues: option.optionValues.map((value) => {
@@ -199,22 +184,29 @@ export function getProductOptions({
         // Encode the new selected option values as a key for mapping to the product variants
         const targetKey = encodeSelectedProductOptionAsKey(targetOptionParams || [], productOptionMappings);
 
-        // Get the variant for the current option value
-        const variant: ProductVariant = variants[targetKey];
+        // Top-down option check for existence and availability
+        const topDownKey = JSON.parse(targetKey).slice(0, optionIndex + 1);
+        const exists = isOptionValueInEncoding(topDownKey, encodedVariantExistence);
+        const available = isOptionValueInEncoding(topDownKey, encodedVariantAvailability);
 
-        // Build the query params for the current option value
-        const searchParams = new URLSearchParams(targetOptionParams);
+        // Get the variant for the current option value if exists, else use the first selectable variant
+        // @ts-ignore
+        const variant: ProductVariant = variants[targetKey] || value.firstSelectableVariant;
+
+        // Build the query params for this option value
+        const variantOptionParam = mapSelectedProductOptionToObject(variant.selectedOptions || []);
+        const searchParams = new URLSearchParams(variantOptionParam);
         const handle = variant?.product?.handle;
 
         return {
           ...value,
-          variant: variant ?? value.firstSelectableVariant,
-          handle: handle || value.firstSelectableVariant.product.handle,
+          variant,
+          handle,
           variantUriQuery: searchParams.toString(),
           selected: selectedOptions[option.name] === value.name,
-          exists: decodedVariantExistence.includes(targetKey),
-          available: variant?.availableForSale || false,
-          isDifferentProduct: handle ? handle !== productHandle : false,
+          exists,
+          available,
+          isDifferentProduct: handle !== productHandle,
         };
       }),
     };

@@ -50,20 +50,8 @@ async function loadCriticalData({
     // Add other queries here, so that they are loaded in parallel
   ]);
 
-  let selectedVariant: ProductVariant = product?.selectedVariant;
-
-  if (!selectedVariant) {
-    selectedVariant = product?.firstAvailableVariant;
-  }
-
-  if (!selectedVariant) {
-    selectedVariant = product?.variants.nodes[0];
-  }
   return {
-    product: {
-      ...product,
-      selectedVariant,
-    },
+    product,
   };
 }
 
@@ -96,24 +84,22 @@ function loadDeferredData({context, params}: LoaderFunctionArgs) {
 export default function Product() {
   const {product} = useLoaderData<typeof loader>();
 
+  console.log(product);
+
   // This works weirdly with the encodedVariantExistence
   // const selectedVariant = useOptimisticVariant(
   //   product.selectedVariant,
   //   product.adjacentVariants,
   // );
-  const selectedVariant = product.selectedVariant;
+  const selectedVariant = product.selectedOrFirstAvailableVariant;
   const navigate = useNavigate();
   const {open} = useAside();
 
   const {title, descriptionHtml} = product;
 
-  const productOptions = getProductOptions({
-    productHandle: product.handle,
-    options: product.options,
-    selectedVariant,
-    adjacentVariants: product.adjacentVariants,
-    encodedVariantExistence: product.encodedVariantExistence,
-  });
+  const productOptions = getProductOptions(product);
+
+  console.log(productOptions);
 
   return (
     <div className="product">
@@ -324,20 +310,13 @@ const PRODUCT_FRAGMENT = `#graphql
       }
     }
     encodedVariantExistence
-    selectedVariant: variantBySelectedOptions(
+    encodedVariantAvailability
+    selectedOrFirstAvailableVariant(
       selectedOptions: $selectedOptions
       ignoreUnknownOptions: true
       caseInsensitiveMatch: true
     ) {
       ...ProductVariant
-    }
-    firstAvailableVariant {
-      ...ProductVariant
-    }
-    variants(first: 1) {
-      nodes {
-        ...ProductVariant
-      }
     }
     adjacentVariants (selectedOptions: $selectedOptions) {
       ...ProductVariant
