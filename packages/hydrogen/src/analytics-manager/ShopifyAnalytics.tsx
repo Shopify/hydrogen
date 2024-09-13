@@ -29,6 +29,7 @@ import {
   ComponentizableCartLine,
   Maybe,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import {version} from '../../package.json';
 
 function getCustomerPrivacyRequired() {
   const customerPrivacy = getCustomerPrivacy();
@@ -149,6 +150,7 @@ function prepareBasePageViewPayload(
 
   const eventPayload: ShopifyPageViewPayload = {
     shopifySalesChannel: 'hydrogen',
+    assetVersionId: version,
     ...payload.shop,
     hasUserConsent,
     ...getClientBrowserParameters(),
@@ -157,6 +159,9 @@ function prepareBasePageViewPayload(
       customerPrivacy.marketingAllowed() &&
       customerPrivacy.analyticsProcessingAllowed()
     ),
+    analyticsAllowed: customerPrivacy.analyticsProcessingAllowed(),
+    marketingAllowed: customerPrivacy.marketingAllowed(),
+    saleOfDataAllowed: customerPrivacy.saleOfDataAllowed(),
   };
 
   return eventPayload;
@@ -239,6 +244,7 @@ function collectionViewHandler(payload: CollectionViewPayload) {
     ...eventPayload,
     ...viewPayload,
     collectionHandle: payload.collection.handle,
+    collectionId: payload.collection.id,
   };
 
   sendShopifyAnalytics({
@@ -300,7 +306,7 @@ function sendCartAnalytics({
 }) {
   const product: AnalyticsProduct = {
     id: matchedLine.merchandise.product.id,
-    variantId: matchedLine.id,
+    variantId: matchedLine.merchandise.id,
     title: matchedLine.merchandise.product.title,
     variantTitle: matchedLine.merchandise.title,
     vendor: matchedLine.merchandise.product.vendor,
