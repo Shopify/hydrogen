@@ -1,14 +1,13 @@
-import {LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {
-  CountryCode,
-  LanguageCode,
-} from '@shopify/hydrogen/storefront-api-types';
+import type {LoaderFunctionArgs} from '@remix-run/server-runtime';
+import type {Storefront} from '../storefront';
+
+const SITEMAP_INDEX_PREFIX = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+const SITEMAP_INDEX_SUFFIX = `\n</sitemapindex>`;
 
 const SITEMAP_PREFIX = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">`;
 const SITEMAP_SUFFIX = `</urlset>`;
-
-type Locale = `${LanguageCode}-${CountryCode}`;
 
 type SITEMAP_INDEX_TYPE =
   | 'pages'
@@ -18,20 +17,45 @@ type SITEMAP_INDEX_TYPE =
   | 'articles'
   | 'metaObjects';
 
-/**
- * Generate a sitemap index that links to separate sitemaps for each resource type.
- */
-export async function getSitemapIndex({
-  storefront,
-  request,
-  types = ['products', 'pages', 'collections', 'metaObjects', 'articles'],
-  customUrls = [],
-}: {
-  storefront: LoaderFunctionArgs['context']['storefront'];
+interface SitemapIndexOptions {
+  /** The Storefront API Client from Hydrogen */
+  storefront: Storefront;
+  /** A Remix Request object */
   request: Request;
+  /** The types of pages to include in the sitemap index. */
   types?: SITEMAP_INDEX_TYPE[];
-  customUrls?: string[];
-}) {
+  /** Add a URL to a custom child sitemap */
+  customChildSitemaps?: string[];
+}
+
+/**
+ * Generate a sitemap index that links to separate sitemaps for each resource type. Returns a standard Response object.
+ */
+export async function getSitemapIndex(
+  options: SitemapIndexOptions,
+): Promise<Response> {
+  const {
+    storefront,
+    request,
+    types = [
+      'products',
+      'pages',
+      'collections',
+      'metaObjects',
+      'articles',
+      'blogs',
+    ],
+    customChildSitemaps = [],
+  } = options;
+
+  if (!request || !request.url)
+    throw new Error('A request object is required to generate a sitemap index');
+
+  if (!storefront || !storefront.query)
+    throw new Error(
+      'A storefront client is required to generate a sitemap index',
+    );
+
   const data = await storefront.query(SITEMAP_INDEX_QUERY, {
     storefrontApiVersion: 'unstable',
   });
@@ -43,16 +67,26 @@ export async function getSitemapIndex({
   const baseUrl = new URL(request.url).origin;
 
   const body =
-    SITEMAP_PREFIX +
+    SITEMAP_INDEX_PREFIX +
     types
-      .map((type) =>
-        getSiteMapLinks(type, data[type].pagesCount.count, baseUrl),
+      .map((type) => {
+        if (!data[type]) {
+          throw new Error(
+            `[h2:sitemap:error] No data found for type ${type}. Check types passed to \`getSitemapIndex\``,
+          );
+        }
+        return getSiteMapLinks(type, data[type].pagesCount.count, baseUrl);
+      })
+      .join('\n') +
+    customChildSitemaps
+      .map(
+        (url) =>
+          '  <sitemap><loc>' +
+          (baseUrl + (url.startsWith('/') ? url : '/' + url)) +
+          '</loc></sitemap>',
       )
       .join('\n') +
-    customUrls
-      .map((url) => '<sitemap><loc>' + url + '</loc></sitemap>')
-      .join('\n') +
-    SITEMAP_SUFFIX;
+    SITEMAP_INDEX_SUFFIX;
 
   return new Response(body, {
     headers: {
@@ -66,7 +100,7 @@ interface GetSiteMapOptions {
   /** The params object from Remix */
   params: LoaderFunctionArgs['params'];
   /** The Storefront API Client from Hydrogen */
-  storefront: LoaderFunctionArgs['context']['storefront'];
+  storefront: Storefront;
   /** A Remix Request object */
   request: Request;
   /** A function that produces a canonical url for a resource. It is called multiple times for each locale supported by the app. */
@@ -74,22 +108,50 @@ interface GetSiteMapOptions {
     type: string | SITEMAP_INDEX_TYPE;
     baseUrl: string;
     handle?: string;
-    locale?: Locale;
+    locale?: string;
   }) => string;
   /** An array of locales to generate alternate tags */
-  locales: Locale[];
+  locales?: string[];
   /** Optionally customize the changefreq property for each URL */
   getChangeFreq?: (options: {
     type: string | SITEMAP_INDEX_TYPE;
     handle: string;
   }) => string;
+  /** If the sitemap has no links, fallback to rendering a link to the homepage. This prevents errors in Google's search console. Defaults to `/`.  */
+  noItemsFallback?: string;
 }
 
 /**
  * Generate a sitemap for a specific resource type.
  */
-export async function getSitemap(options: GetSiteMapOptions) {
-  const {storefront, request, params, getLink, locales = []} = options;
+export async function getSitemap(
+  options: GetSiteMapOptions,
+): Promise<Response> {
+  const {
+    storefront,
+    request,
+    params,
+    getLink,
+    locales = [],
+    getChangeFreq,
+    noItemsFallback = '/',
+  } = options;
+
+  if (!params)
+    throw new Error(
+      '[h2:sitemap:error] Remix params object is required to generate a sitemap',
+    );
+
+  if (!request || !request.url)
+    throw new Error('A request object is required to generate a sitemap');
+
+  if (!storefront || !storefront.query)
+    throw new Error('A storefront client is required to generate a index');
+
+  if (!getLink)
+    throw new Error(
+      'A `getLink` function to generate each resource is required to build a sitemap',
+    );
 
   if (!params.type || !params.page)
     throw new Response('No data found', {status: 404});
@@ -107,34 +169,38 @@ export async function getSitemap(options: GetSiteMapOptions) {
     storefrontApiVersion: 'unstable',
   });
 
-  if (!data?.sitemap?.resources?.items?.length) {
-    throw new Response('Not found', {status: 404});
-  }
-
   const baseUrl = new URL(request.url).origin;
+  let body: string = '';
 
-  const body =
-    SITEMAP_PREFIX +
-    data.sitemap.resources.items
-      .map((item: {handle: string; updatedAt: string; type?: string}) => {
-        return renderUrlTag({
-          getChangeFreq: options.getChangeFreq,
-          url: getLink({
-            type: item.type ?? type,
-            baseUrl,
+  if (!data?.sitemap?.resources?.items?.length) {
+    body =
+      SITEMAP_PREFIX +
+      `\n  <url><loc>${baseUrl + noItemsFallback}</loc></url>\n` +
+      SITEMAP_SUFFIX;
+  } else {
+    body =
+      SITEMAP_PREFIX +
+      data.sitemap.resources.items
+        .map((item: {handle: string; updatedAt: string; type?: string}) => {
+          return renderUrlTag({
+            getChangeFreq,
+            url: getLink({
+              type: item.type ?? type,
+              baseUrl,
+              handle: item.handle,
+            }),
+            type,
+            getLink,
+            updatedAt: item.updatedAt,
             handle: item.handle,
-          }),
-          type,
-          getLink,
-          updatedAt: item.updatedAt,
-          handle: item.handle,
-          metaobjectType: item.type,
-          locales,
-          baseUrl,
-        });
-      })
-      .join('\n') +
-    SITEMAP_SUFFIX;
+            metaobjectType: item.type,
+            locales,
+            baseUrl,
+          });
+        })
+        .join('\n') +
+      SITEMAP_SUFFIX;
+  }
 
   return new Response(body, {
     headers: {
@@ -148,7 +214,7 @@ function getSiteMapLinks(resource: string, count: number, baseUrl: string) {
   let links = ``;
 
   for (let i = 1; i <= count; i++) {
-    links += `<sitemap><loc>${baseUrl}/sitemap/${resource}/${i}.xml</loc></sitemap>`;
+    links += `  <sitemap><loc>${baseUrl}/sitemap/${resource}/${i}.xml</loc></sitemap>\n`;
   }
   return links;
 }
@@ -172,11 +238,11 @@ function renderUrlTag({
     type: string;
     baseUrl: string;
     handle?: string;
-    locale?: Locale;
+    locale?: string;
   }) => string;
   url: string;
   updatedAt: string;
-  locales: Locale[];
+  locales: string[];
   getChangeFreq?: (options: {type: string; handle: string}) => string;
 }) {
   return `<url>
@@ -199,7 +265,7 @@ ${locales
   `.trim();
 }
 
-function renderAlternateTag(url: string, locale: Locale) {
+function renderAlternateTag(url: string, locale: string) {
   return `  <xhtml:link rel="alternate" hreflang="${locale}" href="${url}" />`;
 }
 
@@ -217,7 +283,7 @@ const PRODUCT_SITEMAP_QUERY = `#graphql
 ` as const;
 
 const COLLECTION_SITEMAP_QUERY = `#graphql
-    query SitemapProducts($page: Int!) {
+    query SitemapCollections($page: Int!) {
       sitemap(type: COLLECTION) {
         resources(page: $page) {
           items {
@@ -230,7 +296,7 @@ const COLLECTION_SITEMAP_QUERY = `#graphql
 ` as const;
 
 const ARTICLE_SITEMAP_QUERY = `#graphql
-    query SitemapProducts($page: Int!) {
+    query SitemapArticles($page: Int!) {
       sitemap(type: ARTICLE) {
         resources(page: $page) {
           items {
@@ -243,7 +309,7 @@ const ARTICLE_SITEMAP_QUERY = `#graphql
 ` as const;
 
 const PAGE_SITEMAP_QUERY = `#graphql
-    query SitemapProducts($page: Int!) {
+    query SitemapPages($page: Int!) {
       sitemap(type: PAGE) {
         resources(page: $page) {
           items {
@@ -256,7 +322,7 @@ const PAGE_SITEMAP_QUERY = `#graphql
 ` as const;
 
 const BLOG_SITEMAP_QUERY = `#graphql
-    query SitemapProducts($page: Int!) {
+    query SitemapBlogs($page: Int!) {
       sitemap(type: BLOG) {
         resources(page: $page) {
           items {
@@ -269,7 +335,7 @@ const BLOG_SITEMAP_QUERY = `#graphql
 ` as const;
 
 const METAOBJECT_SITEMAP_QUERY = `#graphql
-    query SitemapProducts($page: Int!) {
+    query SitemapMetaobjects($page: Int!) {
       sitemap(type: METAOBJECT_PAGE) {
         resources(page: $page) {
           items {

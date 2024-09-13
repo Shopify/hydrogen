@@ -625,6 +625,59 @@ describe('useOptimisticCart', () => {
       expect(optimisticCart).toStrictEqual({...EMPTY_CART, isOptimistic: true});
     });
   });
+
+  describe('Total quantity', () => {
+    it('updates the total quantity when adding a line', async () => {
+      addPendingCartAction({
+        action: CartForm.ACTIONS.LinesAdd,
+        inputs: {
+          lines: [
+            {
+              merchandiseId: '1',
+              quantity: 1,
+              selectedVariant: {
+                id: '1',
+              },
+            },
+          ],
+        },
+      });
+
+      const optimisticCart = useOptimisticCart(EMPTY_CART);
+      expect(optimisticCart.totalQuantity).toStrictEqual(1);
+    });
+
+    it('updates the total quantity when removing a line', async () => {
+      addPendingCartAction({
+        action: CartForm.ACTIONS.LinesRemove,
+        inputs: {
+          lineIds: [
+            'gid://shopify/CartLine/53b449e1-6f6d-47ca-94e4-748a055b45e8?cart=Z2NwLXVzLWNlbnRyYWwxOjAxSFdOR0hESkVBUEtQVkoyMFJFMUhTRDFU',
+          ],
+        },
+      });
+
+      const optimisticCart = useOptimisticCart(CART_WITH_TWO_LINES);
+      expect(optimisticCart.totalQuantity).toStrictEqual(1);
+    });
+
+    it('updates the total quantity when updating a line', async () => {
+      addPendingCartAction({
+        action: CartForm.ACTIONS.LinesUpdate,
+        inputs: {
+          lines: [
+            {
+              id: 'gid://shopify/CartLine/53b449e1-6f6d-47ca-94e4-748a055b45e8?cart=Z2NwLXVzLWNlbnRyYWwxOjAxSFdOR0hESkVBUEtQVkoyMFJFMUhTRDFU',
+              quantity: 2,
+            },
+          ],
+        },
+      });
+
+      const optimisticCart = useOptimisticCart(CART_WITH_LINE);
+      expect(optimisticCart.totalQuantity).toStrictEqual(2);
+    });
+  });
 });
 
 const EMPTY_CART = {
@@ -632,7 +685,7 @@ const EMPTY_CART = {
   id: 'gid://shopify/Cart/Z2NwLXVzLWNlbnRyYWwxOjAxSFdOR0hESkVBUEtQVkoyMFJFMUhTRDFU',
   checkoutUrl:
     'https://checkout.hydrogen.shop/cart/c/Z2NwLXVzLWNlbnRyYWwxOjAxSFdOR0hESkVBUEtQVkoyMFJFMUhTRDFU?key=1b6ea717bf3c3bbe68fd26e20c991267',
-  totalQuantity: 1,
+  totalQuantity: 0,
   buyerIdentity: {
     countryCode: 'US',
     customer: null,

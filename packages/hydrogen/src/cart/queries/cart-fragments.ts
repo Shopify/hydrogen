@@ -10,5 +10,6 @@ export const MINIMAL_CART_FRAGMENT = `#graphql
   fragment CartApiMutation on Cart {
     id
     totalQuantity
+    checkoutUrl
   }
 `;

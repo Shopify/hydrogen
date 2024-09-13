@@ -1,5 +1,5 @@
 import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {getSitemap} from 'app/lib/sitemap';
+import {unstable__getSitemap as getSitemap} from '@shopify/hydrogen';
 
 export async function loader({
   request,

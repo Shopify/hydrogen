@@ -1,5 +1,13 @@
 # @shopify/hydrogen-react
 
+## 2024.7.3
+
+### Patch Changes
+
+- Update ProductPrice to use price instead of priceV2, and hide compareAt price if less than regular price ([#2461](https://github.com/Shopify/hydrogen/pull/2461)) by [@andershagbard](https://github.com/andershagbard)
+
+- Prevent Image component from generating srcset with higher dimensions than source image ([#2469](https://github.com/Shopify/hydrogen/pull/2469)) by [@andershagbard](https://github.com/andershagbard)
+
 ## 2024.7.2
 
 ### Patch Changes
