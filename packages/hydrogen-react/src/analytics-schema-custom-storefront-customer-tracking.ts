@@ -61,6 +61,7 @@ export function pageView(
               event_name: COLLECTION_PAGE_RENDERED_EVENT_NAME,
               ...additionalPayload,
               collection_name: pageViewPayload.collectionHandle,
+              collection_id: parseInt(parseGid(pageViewPayload.collectionId).id),
             },
             formatPayload(pageViewPayload),
           ),
