@@ -226,7 +226,7 @@ function ProductOptionSwatch({
   const image = swatch?.image?.previewImage?.url;
   const color = swatch?.color;
 
-  if (!image && !color) return name;
+  if (!image || !color) return name;
 
   return (
     <div
