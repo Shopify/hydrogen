@@ -35,6 +35,7 @@ export function createWithCache<T = unknown>(
     cacheKey: CacheKey,
     strategy: CachingStrategy,
     actionFn: ({addDebugData}: CacheActionFunctionParam) => T | Promise<T>,
+    shouldCacheResult?: (value: T) => boolean,
   ) {
     return runWithCache<T>(cacheKey, actionFn, {
       strategy,
@@ -44,6 +45,7 @@ export function createWithCache<T = unknown>(
         ...getDebugHeaders(request),
         stackInfo: getCallerStackLine?.(),
       },
+      shouldCacheResult,
     });
   };
 }
