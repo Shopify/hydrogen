@@ -40,7 +40,8 @@
           "pr": "https://github.com/Shopify/hydrogen/pull/2528",
           "id": "2528"
         }
-      ]
+      ],
+      "features": []
     },
     {
       "title": "Improved sitemaps (unstable), search templates, cart gift cards, consent localization, CSP fix",
