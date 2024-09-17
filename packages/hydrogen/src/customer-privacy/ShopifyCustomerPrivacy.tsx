@@ -408,6 +408,7 @@ function overrideCustomerPrivacySetTrackingConsent({
 }) {
   // Override the setTrackingConsent method to include the headless storefront configuration
   const original = customerPrivacy.setTrackingConsent;
+  const {locale, country, ...rest} = config;
 
   function updatedSetTrackingConsent(
     consent: VisitorConsent,
@@ -415,9 +416,9 @@ function overrideCustomerPrivacySetTrackingConsent({
   ) {
     original(
       {
-        ...consent,
+        ...rest,
         headlessStorefront: true,
-        ...config,
+        ...consent,
       },
       callback,
     );
