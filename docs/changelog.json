@@ -3,11 +3,51 @@
   "version": "1",
   "releases": [
     {
+      "title": "Shopify analytics fix",
+      "version": "2024.7.6",
+      "hash": "9e7a6a3bf75f137b5c6a536b2cfc57611f7100fb",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2529",
+      "commit": "https://github.com/Shopify/hydrogen/commit/9e7a6a3bf75f137b5c6a536b2cfc57611f7100fb",
+      "dependencies": {
+        "@remix-run/react": "^2.10.1",
+        "@remix-run/server-runtime": "^2.10.1",
+        "@shopify/hydrogen": "2024.7.6",
+        "@shopify/remix-oxygen": "^2.0.6"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.10.1",
+        "@shopify/cli": "3.66.1",
+        "@shopify/oxygen-workers-types": "^4.1.2",
+        "typescript": "^5.2.2"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Update Shopify analytics events and emit a document event when customer privacy is ready",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2528",
+          "id": "2528"
+        }
+      ]
+    },
+    {
       "title": "Improved sitemaps (unstable), search templates, cart gift cards, consent localization, CSP fix",
       "version": "2024.7.5",
-      "hash": "11d4f230f3660670c08f0eff72616b354a7b12e2",
+      "hash": "5197eeff75926c3cf07ee9ff6b72e88980bfce35",
       "pr": "https://github.com/Shopify/hydrogen/pull/2438",
-      "commit": "https://github.com/Shopify/hydrogen/commit/11d4f230f3660670c08f0eff72616b354a7b12e2",
+      "commit": "https://github.com/Shopify/hydrogen/commit/5197eeff75926c3cf07ee9ff6b72e88980bfce35",
       "dependencies": {
         "@remix-run/react": "^2.10.1",
         "@remix-run/server-runtime": "^2.10.1",
