@@ -1,5 +1,14 @@
 # @shopify/hydrogen
 
+## 2024.7.6
+
+### Patch Changes
+
+- Emit a document event `shopifyCustomerPrivacyApiLoaded` when Customer Privacy API is ready and fix analytics events sending to Shopify. ([#2528](https://github.com/Shopify/hydrogen/pull/2528)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Updated dependencies [[`d0ff37a9`](https://github.com/Shopify/hydrogen/commit/d0ff37a995bb64598930f8aa53f2612f3b1ea476)]:
+  - @shopify/hydrogen-react@2024.7.4
+
 ## 2024.7.5
 
 ### Patch Changes
