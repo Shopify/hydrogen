@@ -1,5 +1,11 @@
 # @shopify/hydrogen
 
+## 2024.7.7
+
+### Patch Changes
+
+- Fix Shopify.customerPrivacy.setTrackingConsent override not working properly ([#2538](https://github.com/Shopify/hydrogen/pull/2538)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 2024.7.6
 
 ### Patch Changes
