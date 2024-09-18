@@ -6,7 +6,7 @@
       "title": "Consent override fix",
       "version": "2024.7.7",
       "hash": "924685c104701fd29562b93b0e9c61a313977c97",
-      "pr": "https://github.com/Shopify/hydrogen/pull/2529",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2539",
       "commit": "https://github.com/Shopify/hydrogen/commit/924685c104701fd29562b93b0e9c61a313977c97",
       "dependencies": {
         "@remix-run/react": "^2.10.1",
