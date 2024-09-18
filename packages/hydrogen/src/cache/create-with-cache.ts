@@ -5,7 +5,9 @@ import {
   CacheActionFunctionParam,
   CacheKey,
   runWithCache,
+  type DebugOptions,
 } from './run-with-cache';
+import {fetchWithServerCache, type FetchCacheOptions} from './server-fetch';
 import type {WaitUntil} from '../types';
 
 type CreateWithCacheOptions = {
@@ -28,35 +30,58 @@ type CreateWithCacheOptions = {
  */
 export function createWithCache<T = unknown>(
   cacheOptions: CreateWithCacheOptions,
-): CreateWithCacheReturn<T> {
+) {
   const {cache, waitUntil, request} = cacheOptions;
 
-  return function withCache<T = unknown>(
-    cacheKey: CacheKey,
-    strategy: CachingStrategy,
-    actionFn: ({addDebugData}: CacheActionFunctionParam) => T | Promise<T>,
-  ) {
-    return runWithCache<T>(cacheKey, actionFn, {
-      strategy,
-      cacheInstance: cache,
-      waitUntil,
-      debugInfo: {
-        ...getDebugHeaders(request),
-        stackInfo: getCallerStackLine?.(),
-      },
-    });
+  return {
+    /**
+     * This is a caching async function. Whatever data is returned from the `actionFn` will be cached according to the strategy provided.
+     * Use the `CachingStrategy` to define a custom caching mechanism for your data. Or use one of the built-in caching strategies: `CacheNone`, `CacheShort`, `CacheLong`.
+     */
+    run<InferredActionReturn = T>(
+      cacheKey: CacheKey,
+      strategy: CachingStrategy,
+      actionFn: ({
+        addDebugData,
+      }: CacheActionFunctionParam) =>
+        | InferredActionReturn
+        | Promise<InferredActionReturn>,
+    ) {
+      return runWithCache(cacheKey, actionFn, {
+        strategy,
+        cacheInstance: cache,
+        waitUntil,
+        debugInfo: {
+          ...getDebugHeaders(request),
+          stackInfo: getCallerStackLine?.(),
+        },
+      });
+    },
+
+    /**
+     * Fetches data from a URL and caches the result according to the strategy provided.
+     * The caching is skipped for non successful responses.
+     */
+    fetch<Body = T>(
+      url: string,
+      requestInit?: RequestInit,
+      options?: Pick<DebugOptions, 'displayName'> &
+        Pick<FetchCacheOptions, 'cache' | 'cacheKey' | 'shouldCacheResponse'>,
+    ): Promise<{data: Body | null; response: Response}> {
+      return fetchWithServerCache<Body | null>(url, requestInit ?? {}, {
+        waitUntil,
+        cacheKey: [url, requestInit],
+        cacheInstance: cache,
+        debugInfo: {
+          url,
+          ...getDebugHeaders(request),
+          stackInfo: getCallerStackLine?.(),
+          displayName: options?.displayName,
+        },
+        ...options,
+      }).then(([data, response]) => ({data, response}));
+    },
   };
 }
-
-/**
- * This is a caching async function. Whatever data is returned from the `actionFn` will be cached according to the strategy provided.
- *
- * Use the `CachingStrategy` to define a custom caching mechanism for your data. Or use one of the built-in caching strategies: `CacheNone`, `CacheShort`, `CacheLong`.
- */
-type CreateWithCacheReturn<T> = <U = T>(
-  cacheKey: CacheKey,
-  strategy: CachingStrategy,
-  actionFn: ({addDebugData}: CacheActionFunctionParam) => U | Promise<U>,
-) => Promise<U>;
 
 export type WithCache = ReturnType<typeof createWithCache>;
