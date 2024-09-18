@@ -5,112 +5,189 @@ import {getItemFromCache} from './sub-request';
 import {CacheNone, CacheShort} from './strategies';
 
 describe('createWithCache', () => {
+  const waitUntil = vi.fn(() => {});
   const KEY = 'my-key';
   const VALUE = 'my-value';
-  const actionFn = vi.fn(() => VALUE);
-  const waitUntil = vi.fn(() => {});
   let cache: InMemoryCache;
   let withCache: WithCache;
+
+  const fetchStub = vi.fn(() => Promise.resolve(new Response(VALUE)));
+  vi.stubGlobal('fetch', fetchStub);
 
   beforeEach(() => {
     vi.useFakeTimers();
     cache = new InMemoryCache();
     withCache = createWithCache({cache, waitUntil});
-    actionFn.mockClear();
     waitUntil.mockClear();
     return () => vi.useRealTimers();
   });
 
-  it('creates a valid withCache function', () => {
-    expect(withCache).toBeInstanceOf(Function);
+  it('creates a valid withCache instance', () => {
+    expect(withCache.run).toBeInstanceOf(Function);
+    expect(withCache.fetch).toBeInstanceOf(Function);
   });
 
-  it('skips cache for no-cache policy', async () => {
-    await expect(withCache(KEY, CacheNone(), actionFn)).resolves.toEqual(VALUE);
+  describe('withCache.run', () => {
+    const actionFn = vi.fn(() => VALUE);
 
-    expect(waitUntil).toHaveBeenCalledTimes(0);
-    expect(actionFn).toHaveBeenCalledTimes(1);
-    await expect(getItemFromCache(cache, KEY)).resolves.toEqual(undefined);
+    beforeEach(() => {
+      actionFn.mockClear();
+    });
 
-    await expect(withCache(KEY, CacheNone(), actionFn)).resolves.toEqual(VALUE);
+    it('skips cache for no-cache policy', async () => {
+      await expect(withCache.run(KEY, CacheNone(), actionFn)).resolves.toEqual(
+        VALUE,
+      );
 
-    // No cache, always calls the action function:
-    expect(waitUntil).toHaveBeenCalledTimes(0);
-    expect(actionFn).toHaveBeenCalledTimes(2);
-    await expect(getItemFromCache(cache, KEY)).resolves.toEqual(undefined);
-  });
+      expect(waitUntil).toHaveBeenCalledTimes(0);
+      expect(actionFn).toHaveBeenCalledTimes(1);
+      await expect(getItemFromCache(cache, KEY)).resolves.toEqual(undefined);
 
-  it('skips cache when throwing', async () => {
-    actionFn.mockImplementationOnce(() => {
-      return Promise.resolve().then(() => {
-        throw new Error('test');
+      await expect(withCache.run(KEY, CacheNone(), actionFn)).resolves.toEqual(
+        VALUE,
+      );
+
+      // No cache, always calls the action function:
+      expect(waitUntil).toHaveBeenCalledTimes(0);
+      expect(actionFn).toHaveBeenCalledTimes(2);
+      await expect(getItemFromCache(cache, KEY)).resolves.toEqual(undefined);
+    });
+
+    it('skips cache when throwing', async () => {
+      actionFn.mockImplementationOnce(() => {
+        return Promise.resolve().then(() => {
+          throw new Error('test');
+        });
+      });
+
+      await expect(
+        withCache.run(KEY, CacheShort(), actionFn),
+      ).rejects.toThrowError('test');
+
+      expect(waitUntil).toHaveBeenCalledTimes(0);
+      expect(actionFn).toHaveBeenCalledTimes(1);
+      await expect(getItemFromCache(cache, KEY)).resolves.toEqual(undefined);
+    });
+
+    it('stores results in the cache', async () => {
+      const strategy = CacheShort({maxAge: 1, staleWhileRevalidate: 9});
+      await expect(withCache.run(KEY, strategy, actionFn)).resolves.toEqual(
+        VALUE,
+      );
+
+      expect(waitUntil).toHaveBeenCalledTimes(1);
+      expect(actionFn).toHaveBeenCalledTimes(1);
+      await expect(getItemFromCache(cache, KEY)).resolves.toContainEqual({
+        value: VALUE,
+      });
+
+      // Less than 1 sec of the cache duration:
+      vi.advanceTimersByTime(999);
+
+      await expect(withCache.run(KEY, strategy, actionFn)).resolves.toEqual(
+        VALUE,
+      );
+
+      // Cache hit, nothing to update:
+      expect(waitUntil).toHaveBeenCalledTimes(1);
+      expect(actionFn).toHaveBeenCalledTimes(1);
+      await expect(getItemFromCache(cache, KEY)).resolves.toContainEqual({
+        value: VALUE,
       });
     });
 
-    await expect(withCache(KEY, CacheShort(), actionFn)).rejects.toThrowError(
-      'test',
-    );
+    it('applies stale-while-revalidate', async () => {
+      const strategy = CacheShort({maxAge: 1, staleWhileRevalidate: 9});
+      await expect(withCache.run(KEY, strategy, actionFn)).resolves.toEqual(
+        VALUE,
+      );
 
-    expect(waitUntil).toHaveBeenCalledTimes(0);
-    expect(actionFn).toHaveBeenCalledTimes(1);
-    await expect(getItemFromCache(cache, KEY)).resolves.toEqual(undefined);
+      expect(waitUntil).toHaveBeenCalledTimes(1);
+      expect(actionFn).toHaveBeenCalledTimes(1);
+      await expect(getItemFromCache(cache, KEY)).resolves.toContainEqual({
+        value: VALUE,
+      });
+
+      // More than 1 sec of the cache duration:
+      vi.advanceTimersByTime(3000);
+
+      await expect(withCache.run(KEY, strategy, actionFn)).resolves.toEqual(
+        VALUE,
+      );
+
+      // Cache stale, call the action function again for SWR:
+      expect(waitUntil).toHaveBeenCalledTimes(2);
+      expect(actionFn).toHaveBeenCalledTimes(2);
+      await expect(getItemFromCache(cache, KEY)).resolves.toContainEqual({
+        value: VALUE,
+      });
+
+      // Make the cache expire. Note: We add a padded maxAge to the cache control
+      // header to support SWR in Oxygen/CFW. Our InMemoryCache doesn't understand
+      // this padded maxAge, so we need to advance timers considering the padded
+      // value: maxAge + (2 * SWR) => 19 sec.
+      vi.advanceTimersByTime(19001);
+      await expect(getItemFromCache(cache, KEY)).resolves.toEqual(undefined);
+
+      // Cache is expired, call the action function again:
+      await expect(withCache.run(KEY, strategy, actionFn)).resolves.toEqual(
+        VALUE,
+      );
+      expect(waitUntil).toHaveBeenCalledTimes(3);
+      expect(actionFn).toHaveBeenCalledTimes(3);
+    });
   });
 
-  it('stores results in the cache', async () => {
-    const strategy = CacheShort({maxAge: 1, staleWhileRevalidate: 9});
-    await expect(withCache(KEY, strategy, actionFn)).resolves.toEqual(VALUE);
+  describe('withCache.fetch', () => {
+    const url = 'https://example.com';
 
-    expect(waitUntil).toHaveBeenCalledTimes(1);
-    expect(actionFn).toHaveBeenCalledTimes(1);
-    await expect(getItemFromCache(cache, KEY)).resolves.toContainEqual({
-      value: VALUE,
+    it('returns body and response', async () => {
+      await expect(withCache.fetch(url)).resolves.toMatchObject({
+        data: VALUE,
+        response: expect.any(Response),
+      });
     });
 
-    // Less than 1 sec of the cache duration:
-    vi.advanceTimersByTime(999);
+    it('stores results in the cache', async () => {
+      const doFetch = () => withCache.fetch(url, undefined, {cacheKey: KEY});
+      await doFetch();
 
-    await expect(withCache(KEY, strategy, actionFn)).resolves.toEqual(VALUE);
+      expect(waitUntil).toHaveBeenCalledTimes(1);
 
-    // Cache hit, nothing to update:
-    expect(waitUntil).toHaveBeenCalledTimes(1);
-    expect(actionFn).toHaveBeenCalledTimes(1);
-    await expect(getItemFromCache(cache, KEY)).resolves.toContainEqual({
-      value: VALUE,
-    });
-  });
+      // Less than 1 sec of the cache duration:
+      vi.advanceTimersByTime(999);
 
-  it('applies stale-while-revalidate', async () => {
-    const strategy = CacheShort({maxAge: 1, staleWhileRevalidate: 9});
-    await expect(withCache(KEY, strategy, actionFn)).resolves.toEqual(VALUE);
+      await expect(doFetch()).resolves.toMatchObject({
+        data: VALUE,
+        response: expect.any(Response),
+      });
 
-    expect(waitUntil).toHaveBeenCalledTimes(1);
-    expect(actionFn).toHaveBeenCalledTimes(1);
-    await expect(getItemFromCache(cache, KEY)).resolves.toContainEqual({
-      value: VALUE,
+      // Cache hit, nothing to update:
+      expect(waitUntil).toHaveBeenCalledTimes(1);
+      await expect(getItemFromCache(cache, KEY)).resolves.toContainEqual({
+        value: [VALUE, expect.objectContaining({status: 200})],
+      });
     });
 
-    // More than 1 sec of the cache duration:
-    vi.advanceTimersByTime(3000);
+    it('skips cache when response is not successful', async () => {
+      const notFoundResponse = new Response(VALUE, {status: 404});
+      fetchStub.mockResolvedValue(notFoundResponse);
+      const doFetch = () => withCache.fetch(url, undefined, {cacheKey: KEY});
 
-    await expect(withCache(KEY, strategy, actionFn)).resolves.toEqual(VALUE);
+      await expect(doFetch()).resolves.toStrictEqual({
+        data: null,
+        response: notFoundResponse,
+      });
 
-    // Cache stale, call the action function again for SWR:
-    expect(waitUntil).toHaveBeenCalledTimes(2);
-    expect(actionFn).toHaveBeenCalledTimes(2);
-    await expect(getItemFromCache(cache, KEY)).resolves.toContainEqual({
-      value: VALUE,
+      expect(waitUntil).toHaveBeenCalledTimes(0);
+
+      const {response} = await doFetch();
+      expect(response).toStrictEqual(notFoundResponse);
+      // Body can still be consumed:
+      await expect(response.text()).resolves.toEqual(VALUE);
+
+      expect(waitUntil).toHaveBeenCalledTimes(0);
+      await expect(getItemFromCache(cache, KEY)).resolves.toEqual(undefined);
     });
-
-    // Make the cache expire. Note: We add a padded maxAge to the cache control
-    // header to support SWR in Oxygen/CFW. Our InMemoryCache doesn't understand
-    // this padded maxAge, so we need to advance timers considering the padded
-    // value: maxAge + (2 * SWR) => 19 sec.
-    vi.advanceTimersByTime(19001);
-    await expect(getItemFromCache(cache, KEY)).resolves.toEqual(undefined);
-
-    // Cache is expired, call the action function again:
-    await expect(withCache(KEY, strategy, actionFn)).resolves.toEqual(VALUE);
-    expect(waitUntil).toHaveBeenCalledTimes(3);
-    expect(actionFn).toHaveBeenCalledTimes(3);
   });
 });
