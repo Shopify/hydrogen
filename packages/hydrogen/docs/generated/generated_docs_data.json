@@ -2864,7 +2864,7 @@
     "subCategory": "caching",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a utility function that executes an asynchronous operation \n like `fetch` and caches the result according to the strategy provided.\nUse this to call any third-party APIs from loaders or actions.\n > Note:\n > Sometimes a request to a third-party API might fail, so you shouldn't cache the result. To prevent caching, throw when a request fails. If you don't throw, then the result is cached.",
+    "description": "Creates utility functions to store data in cache with stale-while-revalidate support.\n - Use `withCache.fetch` to simply fetch data from a third-party API.\n - Use the more advanced `withCache.run` to execute any asynchronous operation.",
     "type": "utility",
     "defaultExample": {
       "description": "I am the default example",
@@ -2872,12 +2872,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "// In your app's `server.ts` file:\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {createWithCache, CacheLong} from '@shopify/hydrogen';\n// Use another `createRequestHandler` if deploying off oxygen\nimport {createRequestHandler} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(request, env, executionContext) {\n    const cache = await caches.open('my-cms');\n    const withCache = createWithCache({\n      cache,\n      waitUntil: executionContext.waitUntil.bind(executionContext),\n      request,\n    });\n\n    // Create a custom utility to query a third-party API:\n    const fetchMyCMS = (query) =&gt; {\n      // Prefix the cache key and make it unique based on arguments.\n      return withCache(['my-cms', query], CacheLong(), async (params) =&gt; {\n        const response = await fetch('my-cms.com/api', {\n          method: 'POST',\n          body: query,\n        });\n\n        // Throw if the response is unsuccessful.\n        // This is important to prevent the results from being cached.\n        if (!response.ok) throw new Error(response.statusText);\n\n        // Assuming the API returns errors in the body:\n        const {data, error} = await response.json();\n\n        // Validate data and throw to avoid caching errors.\n        if (error || !data) throw new Error(error ?? 'Missing data');\n\n        // Optionally, add extra information to show\n        // in the Subrequest Profiler utility.\n        params.addDebugData({displayName: 'My CMS query', response});\n\n        return data;\n      });\n    };\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () =&gt; ({\n        // If you have one, update your env.d.ts to\n        // include `fetchMyCMS` in `AppLoadContext`.\n        fetchMyCMS,\n      }),\n    });\n\n    return handleRequest(request);\n  },\n};\n",
+            "code": "// In your app's `server.ts` file:\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {createWithCache, CacheLong} from '@shopify/hydrogen';\n// Use another `createRequestHandler` if deploying off oxygen\nimport {createRequestHandler} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(request, env, executionContext) {\n    const cache = await caches.open('my-cms');\n    const withCache = createWithCache({\n      cache,\n      waitUntil: executionContext.waitUntil.bind(executionContext),\n      request,\n    });\n\n    // 1. Create a custom utility to query a third-party API:\n    const fetchMyCMS = async (query) =&gt; {\n      const {data, response} = await withCache.fetch(\n        'https://my-cms.com/api',\n        {\n          method: 'POST',\n          body: query,\n          headers: {Authorization: 'Bearer 123'},\n        },\n        {\n          // Optionally, specify a cache strategy.\n          // Default is CacheShort().\n          cache: CacheLong(),\n          // Cache if there are no GralhQL errors:\n          shouldCacheResponse: (body) =&gt; !body?.errors,\n          // Optionally, add extra information to show\n          // in the Subrequest Profiler utility.\n          displayName: 'My CMS query',\n        },\n      );\n\n      // Access the response properties:\n      console.log(data, response.headers);\n\n      return data;\n    };\n\n    // 2. Or Create a more advanced utility to query multiple APIs under the same cache key:\n    const fetchMultipleCMS = (options) =&gt; {\n      // Prefix the cache key and make it unique based on arguments.\n      return withCache.run(\n        ['my-cms-composite', options.id, options.handle],\n        CacheLong(),\n        async (params) =&gt; {\n          // Run multiple subrequests in parallel, or any other async operations.\n          const [response1, response2] = await Promise.all([\n            fetch('https://my-cms-1.com/api', {\n              method: 'POST',\n              body: JSON.stringify({id: options.id}),\n            }),\n            fetch('https://my-cms-2.com/api', {\n              method: 'POST',\n              body: JSON.stringify({handle: options.handle}),\n            }),\n          ]);\n\n          // Throw if any response is unsuccessful.\n          // This is important to prevent the results from being cached.\n          if (!response1.ok || !response2.ok) {\n            throw new Error('Failed to fetch data');\n          }\n\n          const [data1, data2] = await Promise.all([\n            response1.json(),\n            response2.json(),\n          ]);\n\n          // Validate data and throw to avoid caching errors.\n          if (data1.errors || data2.errors) {\n            throw new Error('API errors');\n          }\n\n          // Optionally, add extra information to show\n          // in the Subrequest Profiler utility.\n          params.addDebugData({displayName: 'My CMS query'});\n\n          // Compose the result as needed.\n          return {\n            ...data1,\n            ...data2,\n            extra1: response1.headers.get('X-Extra'),\n            extra2: response2.headers.get('X-Extra'),\n          };\n        },\n      );\n    };\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () =&gt; ({\n        // Make sure to update env.d.ts to\n        // include these properties in `AppLoadContext`.\n        fetchMyCMS,\n        fetchMultipleCMS,\n      }),\n    });\n\n    return handleRequest(request);\n  },\n};\n",
             "language": "js"
           },
           {
             "title": "TypeScript",
-            "code": "// In your app's `server.ts` file:\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {createWithCache, CacheLong} from '@shopify/hydrogen';\n// Use another `createRequestHandler` if deploying off oxygen\nimport {createRequestHandler} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(\n    request: Request,\n    env: Record&lt;string, string&gt;,\n    executionContext: ExecutionContext,\n  ) {\n    const cache = await caches.open('my-cms');\n    const withCache = createWithCache({\n      cache,\n      waitUntil: executionContext.waitUntil.bind(executionContext),\n      request,\n    });\n\n    // Create a custom utility to query a third-party API:\n    const fetchMyCMS = (query: string) =&gt; {\n      // Prefix the cache key and make it unique based on arguments.\n      return withCache(['my-cms', query], CacheLong(), async (params) =&gt; {\n        const response = await fetch('my-cms.com/api', {\n          method: 'POST',\n          body: query,\n        });\n\n        // Throw if the response is unsuccessful.\n        // This is important to prevent the results from being cached.\n        if (!response.ok) throw new Error(response.statusText);\n\n        const {data, error} = (await response.json()) as {\n          data: unknown;\n          error?: string;\n        };\n\n        // Validate data and throw to avoid caching errors.\n        if (error || !data) throw new Error(error ?? 'Missing data');\n\n        // Optionally, add extra information to show\n        // in the Subrequest Profiler utility.\n        params.addDebugData({displayName: 'My CMS query', response});\n\n        return data;\n      });\n    };\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () =&gt; ({\n        // Make sure to update env.d.ts to\n        // include `fetchMyCMS` in `AppLoadContext`.\n        fetchMyCMS,\n      }),\n    });\n\n    return handleRequest(request);\n  },\n};\n",
+            "code": "// In your app's `server.ts` file:\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {createWithCache, CacheLong} from '@shopify/hydrogen';\n// Use another `createRequestHandler` if deploying off oxygen\nimport {createRequestHandler} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(\n    request: Request,\n    env: Record&lt;string, string&gt;,\n    executionContext: ExecutionContext,\n  ) {\n    const cache = await caches.open('my-cms');\n    const withCache = createWithCache({\n      cache,\n      waitUntil: executionContext.waitUntil.bind(executionContext),\n      request,\n    });\n\n    type ExpectedResponse = {\n      content: unknown;\n      errors?: string;\n    };\n\n    // 1. Create a custom utility to query a third-party API:\n    const fetchMyCMS = async (query: string) =&gt; {\n      const {data, response} = await withCache.fetch&lt;ExpectedResponse&gt;(\n        'https://my-cms.com/api',\n        {\n          method: 'POST',\n          body: query,\n          headers: {Authorization: 'Bearer 123'},\n        },\n        {\n          // Optionally, specify a cache strategy.\n          // Default is CacheShort().\n          cache: CacheLong(),\n          // Cache if there are no GralhQL errors:\n          shouldCacheResponse: (body) =&gt; !body?.errors,\n          // Optionally, add extra information to show\n          // in the Subrequest Profiler utility.\n          displayName: 'My CMS query',\n        },\n      );\n\n      // Access the response properties:\n      console.log(data, response.headers);\n\n      return data;\n    };\n\n    // 2. Or Create a more advanced utility to query multiple APIs under the same cache key:\n    const fetchMultipleCMS = (options: {id: string; handle: string}) =&gt; {\n      // Prefix the cache key and make it unique based on arguments.\n      return withCache.run(\n        ['my-cms-composite', options.id, options.handle],\n        CacheLong(),\n        async (params) =&gt; {\n          // Run multiple subrequests in parallel, or any other async operations.\n          const [response1, response2] = await Promise.all([\n            fetch('https://my-cms-1.com/api', {\n              method: 'POST',\n              body: JSON.stringify({id: options.id}),\n            }),\n            fetch('https://my-cms-2.com/api', {\n              method: 'POST',\n              body: JSON.stringify({handle: options.handle}),\n            }),\n          ]);\n\n          // Throw if any response is unsuccessful.\n          // This is important to prevent the results from being cached.\n          if (!response1.ok || !response2.ok) {\n            throw new Error('Failed to fetch data');\n          }\n\n          const [data1, data2] = (await Promise.all([\n            response1.json(),\n            response2.json(),\n          ])) as [ExpectedResponse, ExpectedResponse];\n\n          // Validate data and throw to avoid caching errors.\n          if (data1.errors || data2.errors) {\n            throw new Error('API errors');\n          }\n\n          // Optionally, add extra information to show\n          // in the Subrequest Profiler utility.\n          params.addDebugData({displayName: 'My CMS query'});\n\n          // Compose the result as needed.\n          return {\n            ...data1,\n            ...data2,\n            extra1: response1.headers.get('X-Extra'),\n            extra2: response2.headers.get('X-Extra'),\n          };\n        },\n      );\n    };\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () =&gt; ({\n        // Make sure to update env.d.ts to\n        // include these properties in `AppLoadContext`.\n        fetchMyCMS,\n        fetchMultipleCMS,\n      }),\n    });\n\n    return handleRequest(request);\n  },\n};\n",
             "language": "ts"
           }
         ],
@@ -2893,7 +2893,7 @@
           "CreateWithCacheGeneratedType": {
             "filePath": "src/cache/create-with-cache.ts",
             "name": "CreateWithCacheGeneratedType",
-            "description": "Creates a utility function that executes an asynchronous operation like `fetch` and caches the result according to the strategy provided. Use this to call any third-party APIs from loaders or actions.\n\n> Note: > Sometimes a request to a third-party API might fail, so you shouldn't cache the result. > To prevent caching, throw when a request fails. If you don't throw, then the result is cached.",
+            "description": "Creates utility functions to store data in cache with stale-while-revalidate support.\n- Use `withCache.fetch` to simply fetch data from a third-party API.\n- Use the more advanced `withCache.run` to execute any asynchronous operation.",
             "params": [
               {
                 "name": "cacheOptions",
@@ -2905,10 +2905,10 @@
             "returns": {
               "filePath": "src/cache/create-with-cache.ts",
               "description": "",
-              "name": "CreateWithCacheReturn<T = unknown>",
-              "value": "CreateWithCacheReturn<T = unknown>"
+              "name": "",
+              "value": ""
             },
-            "value": "export function createWithCache<T = unknown>(\n  cacheOptions: CreateWithCacheOptions,\n): CreateWithCacheReturn<T> {\n  const {cache, waitUntil, request} = cacheOptions;\n\n  return function withCache<T = unknown>(\n    cacheKey: CacheKey,\n    strategy: CachingStrategy,\n    actionFn: ({addDebugData}: CacheActionFunctionParam) => T | Promise<T>,\n  ) {\n    return runWithCache<T>(cacheKey, actionFn, {\n      strategy,\n      cacheInstance: cache,\n      waitUntil,\n      debugInfo: {\n        ...getDebugHeaders(request),\n        stackInfo: getCallerStackLine?.(),\n      },\n    });\n  };\n}"
+            "value": "export function createWithCache<T = unknown>(\n  cacheOptions: CreateWithCacheOptions,\n) {\n  const {cache, waitUntil, request} = cacheOptions;\n\n  return {\n    /**\n     * Utility function that executes asynchronous operations and caches the\n     * result according to the strategy provided. Use this to do any type\n     * of asynchronous operation where `withCache.fetch` is insufficient.\n     * For example, when making multiple calls to a third-party API where the\n     * result of all of them needs to be cached under the same cache key.\n     * Whatever data is returned from the `actionFn` will be cached according\n     * to the strategy provided.\n     * Use the `CachingStrategy` to define a custom caching mechanism for your data.\n     * Or use one of the built-in caching strategies: `CacheNone`, `CacheShort`, `CacheLong`.\n     * > Note:\n     * > To prevent caching the result you must throw an error. Otherwise, the result will be cached.\n     * > For example, if you call `fetch` but the response is not successful (e.g. status code >= 400),\n     * > you should throw an error. Otherwise, the response will be cached.\n     */\n    run<InferredActionReturn = T>(\n      cacheKey: CacheKey,\n      strategy: CachingStrategy,\n      actionFn: ({\n        addDebugData,\n      }: CacheActionFunctionParam) =>\n        | InferredActionReturn\n        | Promise<InferredActionReturn>,\n    ) {\n      return runWithCache(cacheKey, actionFn, {\n        strategy,\n        cacheInstance: cache,\n        waitUntil,\n        debugInfo: {\n          ...getDebugHeaders(request),\n          stackInfo: getCallerStackLine?.(),\n        },\n      });\n    },\n\n    /**\n     * Fetches data from a URL and caches the result according to the strategy provided.\n     * When the response is not successful (e.g. status code >= 400), the caching is\n     * skipped automatically and the returned `data` is `null`.\n     * You can also prevent caching by using the `shouldCacheResponse` option and returning\n     * `false` from the function you pass in. For example, you might want to fetch data from a\n     * third-party GraphQL API but not cache the result if the GraphQL response body contains errors.\n     */\n    fetch<Body = T>(\n      url: string,\n      requestInit?: RequestInit,\n      options?: Pick<DebugOptions, 'displayName'> &\n        Pick<\n          FetchCacheOptions<Body>,\n          'cache' | 'cacheKey' | 'shouldCacheResponse'\n        >,\n    ): Promise<{data: Body | null; response: Response}> {\n      return fetchWithServerCache<Body | null>(url, requestInit ?? {}, {\n        waitUntil,\n        cacheKey: [url, requestInit],\n        cacheInstance: cache,\n        debugInfo: {\n          url,\n          ...getDebugHeaders(request),\n          stackInfo: getCallerStackLine?.(),\n          displayName: options?.displayName,\n        },\n        ...options,\n      }).then(([data, response]) => ({data, response}));\n    },\n  };\n}"
           },
           "CreateWithCacheOptions": {
             "filePath": "src/cache/create-with-cache.ts",
@@ -2968,134 +2968,6 @@
                 "syntaxKind": "PropertySignature",
                 "name": "url",
                 "value": "string",
-                "description": "",
-                "isOptional": true
-              }
-            ]
-          },
-          "CreateWithCacheReturn": {
-            "filePath": "src/cache/create-with-cache.ts",
-            "name": "CreateWithCacheReturn",
-            "description": "This is a caching async function. Whatever data is returned from the `actionFn` will be cached according to the strategy provided.\n\nUse the `CachingStrategy` to define a custom caching mechanism for your data. Or use one of the built-in caching strategies: `CacheNone`, `CacheShort`, `CacheLong`.",
-            "params": [
-              {
-                "name": "cacheKey",
-                "description": "",
-                "value": "CacheKey",
-                "filePath": "src/cache/create-with-cache.ts"
-              },
-              {
-                "name": "strategy",
-                "description": "",
-                "value": "AllCacheOptions",
-                "filePath": "src/cache/create-with-cache.ts"
-              },
-              {
-                "name": "actionFn",
-                "description": "",
-                "value": "({ addDebugData }: CacheActionFunctionParam) => U | Promise<U>",
-                "filePath": "src/cache/create-with-cache.ts"
-              }
-            ],
-            "returns": {
-              "filePath": "src/cache/create-with-cache.ts",
-              "description": "",
-              "name": "interface Promise<T> {\n    /**\n     * Attaches callbacks for the resolution and/or rejection of the Promise.\n     * @param onfulfilled The callback to execute when the Promise is resolved.\n     * @param onrejected The callback to execute when the Promise is rejected.\n     * @returns A Promise for the completion of which ever callback is executed.\n     */\n    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): Promise<TResult1 | TResult2>;\n\n    /**\n     * Attaches a callback for only the rejection of the Promise.\n     * @param onrejected The callback to execute when the Promise is rejected.\n     * @returns A Promise for the completion of the callback.\n     */\n    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): Promise<T | TResult>;\n}, interface Promise<T> {}, Promise: PromiseConstructor, interface Promise<T> {\n    readonly [Symbol.toStringTag]: string;\n}, interface Promise<T> {\n    /**\n     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The\n     * resolved value cannot be modified from the callback.\n     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).\n     * @returns A Promise for the completion of the callback.\n     */\n    finally(onfinally?: (() => void) | undefined | null): Promise<T>;\n}",
-              "value": "interface Promise<T> {\n    /**\n     * Attaches callbacks for the resolution and/or rejection of the Promise.\n     * @param onfulfilled The callback to execute when the Promise is resolved.\n     * @param onrejected The callback to execute when the Promise is rejected.\n     * @returns A Promise for the completion of which ever callback is executed.\n     */\n    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): Promise<TResult1 | TResult2>;\n\n    /**\n     * Attaches a callback for only the rejection of the Promise.\n     * @param onrejected The callback to execute when the Promise is rejected.\n     * @returns A Promise for the completion of the callback.\n     */\n    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): Promise<T | TResult>;\n}, interface Promise<T> {}, Promise: PromiseConstructor, interface Promise<T> {\n    readonly [Symbol.toStringTag]: string;\n}, interface Promise<T> {\n    /**\n     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The\n     * resolved value cannot be modified from the callback.\n     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).\n     * @returns A Promise for the completion of the callback.\n     */\n    finally(onfinally?: (() => void) | undefined | null): Promise<T>;\n}"
-            },
-            "value": "type CreateWithCacheReturn<T> = <U = T>(\n  cacheKey: CacheKey,\n  strategy: CachingStrategy,\n  actionFn: ({addDebugData}: CacheActionFunctionParam) => U | Promise<U>,\n) => Promise<U>;"
-          },
-          "CacheKey": {
-            "filePath": "src/cache/run-with-cache.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CacheKey",
-            "value": "string | readonly unknown[]",
-            "description": "The cache key is used to uniquely identify a value in the cache."
-          },
-          "AllCacheOptions": {
-            "filePath": "src/cache/strategies.ts",
-            "name": "AllCacheOptions",
-            "description": "Override options for a cache strategy.",
-            "members": [
-              {
-                "filePath": "src/cache/strategies.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "maxAge",
-                "value": "number",
-                "description": "The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).",
-                "isOptional": true
-              },
-              {
-                "filePath": "src/cache/strategies.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "mode",
-                "value": "string",
-                "description": "The caching mode, generally `public`, `private`, or `no-store`.",
-                "isOptional": true
-              },
-              {
-                "filePath": "src/cache/strategies.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "sMaxAge",
-                "value": "number",
-                "description": "Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).",
-                "isOptional": true
-              },
-              {
-                "filePath": "src/cache/strategies.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "staleIfError",
-                "value": "number",
-                "description": "Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).",
-                "isOptional": true
-              },
-              {
-                "filePath": "src/cache/strategies.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "staleWhileRevalidate",
-                "value": "number",
-                "description": "Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).",
-                "isOptional": true
-              }
-            ],
-            "value": "export interface AllCacheOptions {\n  /**\n   * The caching mode, generally `public`, `private`, or `no-store`.\n   */\n  mode?: string;\n  /**\n   * The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).\n   */\n  maxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).\n   */\n  staleWhileRevalidate?: number;\n  /**\n   * Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).\n   */\n  sMaxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).\n   */\n  staleIfError?: number;\n}"
-          },
-          "CacheActionFunctionParam": {
-            "filePath": "src/cache/run-with-cache.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CacheActionFunctionParam",
-            "value": "{\n  addDebugData: (info: AddDebugDataParam) => void;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "src/cache/run-with-cache.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "addDebugData",
-                "value": "(info: AddDebugDataParam) => void",
-                "description": ""
-              }
-            ]
-          },
-          "AddDebugDataParam": {
-            "filePath": "src/cache/run-with-cache.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "AddDebugDataParam",
-            "value": "{\n  displayName?: string;\n  response?: Pick<Response, 'url' | 'status' | 'statusText' | 'headers'>;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "src/cache/run-with-cache.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "displayName",
-                "value": "string",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "src/cache/run-with-cache.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "response",
-                "value": "Pick<Response, 'url' | 'status' | 'statusText' | 'headers'>",
                 "description": "",
                 "isOptional": true
               }
@@ -27280,7 +27152,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "analyticsAllowed",
                 "value": "boolean",
-                "description": "",
+                "description": "Result of `customerPrivacyApi.analyticsProcessingAllowed()`",
                 "isOptional": true
               },
               {
@@ -27288,7 +27160,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "assetVersionId",
                 "value": "string",
-                "description": "NPM package version of either hydrogen or hydrogen-react.",
+                "description": "NPM package version of either hydrogen or hydrogen-react. Defaults to hydrogen-react package version.",
                 "isOptional": true
               },
               {
@@ -27304,7 +27176,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "ccpaEnforced",
                 "value": "boolean",
-                "description": "Result of customerPrivacyApi.saleOfDataNotAllowed()",
+                "description": "Result of `!customerPrivacyApi.saleOfDataAllowed()`",
                 "isOptional": true
               },
               {
@@ -27343,7 +27215,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "gdprEnforced",
                 "value": "boolean",
-                "description": "Result of customerPrivacyApi.notMarketingOrAnalyticsAllowed()",
+                "description": "Result of `!(customerPrivacyApi.marketingAllowed() && customerPrivacy.analyticsProcessingAllowed())`",
                 "isOptional": true
               },
               {
@@ -27366,7 +27238,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "marketingAllowed",
                 "value": "boolean",
-                "description": "",
+                "description": "Result of `customerPrivacyApi.marketingAllowed()`",
                 "isOptional": true
               },
               {
@@ -27426,7 +27298,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "saleOfDataAllowed",
                 "value": "boolean",
-                "description": "",
+                "description": "Result of `customerPrivacyApi.saleOfDataAllowed()`",
                 "isOptional": true
               },
               {
@@ -27511,7 +27383,7 @@
                 "description": "Shopify session token: Value of `_shopify_s` cookie.\n\nUse `getClientBrowserParameters()` to collect this value."
               }
             ],
-            "value": "export interface ShopifyPageViewPayload\n  extends ShopifyAnalyticsBase,\n    ClientBrowserParameters {\n  /** Canonical url. */\n  canonicalUrl?: string;\n  /** Shopify page type. */\n  pageType?: string;\n  /** Shopify resource id in the form of `gid://shopify/<type>/<id>`. */\n  resourceId?: string;\n  /** Shopify collection handle. */\n  collectionHandle?: string;\n  /** Shopify collection id. */\n  collectionId?: string\n  /** Search term used on a search results page. */\n  searchString?: string;\n}"
+            "value": "export interface ShopifyPageViewPayload\n  extends ShopifyAnalyticsBase,\n    ClientBrowserParameters {\n  /** Canonical url. */\n  canonicalUrl?: string;\n  /** Shopify page type. */\n  pageType?: string;\n  /** Shopify resource id in the form of `gid://shopify/<type>/<id>`. */\n  resourceId?: string;\n  /** Shopify collection handle. */\n  collectionHandle?: string;\n  /** Shopify collection id. */\n  collectionId?: string;\n  /** Search term used on a search results page. */\n  searchString?: string;\n}"
           },
           "ShopifyAnalyticsProduct": {
             "filePath": "src/analytics-types.ts",
@@ -27660,7 +27532,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "analyticsAllowed",
                 "value": "boolean",
-                "description": "",
+                "description": "Result of `customerPrivacyApi.analyticsProcessingAllowed()`",
                 "isOptional": true
               },
               {
@@ -27668,7 +27540,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "assetVersionId",
                 "value": "string",
-                "description": "NPM package version of either hydrogen or hydrogen-react.",
+                "description": "NPM package version of either hydrogen or hydrogen-react. Defaults to hydrogen-react package version.",
                 "isOptional": true
               },
               {
@@ -27683,7 +27555,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "ccpaEnforced",
                 "value": "boolean",
-                "description": "Result of customerPrivacyApi.saleOfDataNotAllowed()",
+                "description": "Result of `!customerPrivacyApi.saleOfDataAllowed()`",
                 "isOptional": true
               },
               {
@@ -27706,7 +27578,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "gdprEnforced",
                 "value": "boolean",
-                "description": "Result of customerPrivacyApi.notMarketingOrAnalyticsAllowed()",
+                "description": "Result of `!(customerPrivacyApi.marketingAllowed() && customerPrivacy.analyticsProcessingAllowed())`",
                 "isOptional": true
               },
               {
@@ -27729,7 +27601,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "marketingAllowed",
                 "value": "boolean",
-                "description": "",
+                "description": "Result of `customerPrivacyApi.marketingAllowed()`",
                 "isOptional": true
               },
               {
@@ -27773,7 +27645,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "saleOfDataAllowed",
                 "value": "boolean",
-                "description": "",
+                "description": "Result of `customerPrivacyApi.saleOfDataAllowed()`",
                 "isOptional": true
               },
               {
