@@ -7,11 +7,11 @@ import {
 import type {WaitUntil} from '../types.js';
 import {parseJSON} from '../utils/parse-json.js';
 
-export type FetchCacheOptions = {
+export type FetchCacheOptions<T = any> = {
   cache?: CachingStrategy;
   cacheInstance?: Cache;
   cacheKey?: CacheKey;
-  shouldCacheResponse?: (body: any, response: Response) => boolean;
+  shouldCacheResponse?: (body: T, response: Response) => boolean;
   waitUntil?: WaitUntil;
   debugInfo?: DebugOptions;
 };
