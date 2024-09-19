@@ -172,8 +172,7 @@ function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
 function CartBanner() {
   const originalCart = useAsyncValue() as CartApiQueryFragment | null;
   const cart = useOptimisticCart(originalCart);
-  const linesCount = cart.totalQuantity ?? null;
-  return <CartBadge count={linesCount} />;
+  return <CartBadge count={cart?.totalQuantity ?? null} />;
 }
 
 const FALLBACK_HEADER_MENU = {
