@@ -171,8 +171,8 @@
   },
   "dependencies": {
     "@google/model-viewer": "^1.12.1",
-    "@xstate/fsm": "^2.0.0",
-    "@xstate/react": "^3.2.1",
+    "@xstate/fsm": "2.0.0",
+    "@xstate/react": "3.2.1",
     "graphql": "^16.6.0",
     "type-fest": "^4.5.0",
     "worktop": "^0.7.3"
