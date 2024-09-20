@@ -8,9 +8,9 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@remix-run/node": "^2.10.1",
-    "@remix-run/react": "^2.10.1",
-    "@remix-run/serve": "^2.10.1",
+    "@remix-run/node": "^2.12.1",
+    "@remix-run/react": "^2.12.1",
+    "@remix-run/serve": "^2.12.1",
     "he": "^1.2.0",
     "isbot": "^3.8.0",
     "marked": "^9.1.0",
@@ -19,8 +19,8 @@
     "react-syntax-highlighter": "^15.5.0"
   },
   "devDependencies": {
-    "@remix-run/dev": "^2.10.1",
-    "@remix-run/eslint-config": "^2.10.1",
+    "@remix-run/dev": "^2.12.1",
+    "@remix-run/eslint-config": "^2.12.1",
     "@tailwindcss/vite": "4.0.0-alpha.17",
     "@types/he": "^1.2.1",
     "@types/react": "^18.2.20",

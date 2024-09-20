@@ -71,9 +71,9 @@
     "worktop": "^0.7.3"
   },
   "devDependencies": {
-    "@remix-run/dev": "^2.1.0",
-    "@remix-run/react": "^2.1.0",
-    "@remix-run/server-runtime": "^2.10.1",
+    "@remix-run/dev": "^2.12.1",
+    "@remix-run/react": "^2.12.1",
+    "@remix-run/server-runtime": "^2.12.1",
     "@shopify/generate-docs": "0.16.2",
     "@shopify/hydrogen-codegen": "*",
     "@testing-library/jest-dom": "^5.17.0",
