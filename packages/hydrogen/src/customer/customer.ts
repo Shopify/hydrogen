@@ -49,6 +49,7 @@ import type {
   Buyer,
 } from './types';
 import {createCustomerAccountHelper, URL_TYPE} from './customer-account-helper';
+import {warnOnce} from '../utils/warning';
 
 const DEFAULT_LOGIN_URL = '/account/login';
 const DEFAULT_AUTH_URL = '/account/authorize';
@@ -96,6 +97,11 @@ export function createCustomerAccountClient({
       '[h2:error:createCustomerAccountClient] The request object does not contain a URL.',
     );
   }
+
+  if (!!deprecatedCustomerAccountUrl) {
+    warnOnce('[h2:warn:createCustomerAccountClient] The `customerAccountUrl` option is deprecated and will be removed in a future version. Please remove `customerAccountUrl` and supply a `shopId: env.SHOP_ID` option instead.');
+  }
+
   const authStatusHandler = customAuthStatusHandler
     ? customAuthStatusHandler
     : () => defaultAuthStatusHandler(request);
