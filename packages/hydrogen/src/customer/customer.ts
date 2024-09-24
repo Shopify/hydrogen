@@ -98,8 +98,8 @@ export function createCustomerAccountClient({
     );
   }
 
-  if (!!deprecatedCustomerAccountUrl) {
-    warnOnce('[h2:warn:createCustomerAccountClient] The `customerAccountUrl` option is deprecated and will be removed in a future version. Please remove `customerAccountUrl` and supply a `shopId: env.SHOP_ID` option instead.');
+  if (!!deprecatedCustomerAccountUrl && !shopId) {
+    warnOnce('[h2:warn:createCustomerAccountClient] The `customerAccountUrl` option is deprecated and will be removed in a future version. Please remove `customerAccountUrl` and supply a `shopId: env.SHOP_ID` option instead.\n\nIf using `createHydrogenContext`, ensure there is a SHOP_ID defined in your local .env file.');
   }
 
   const authStatusHandler = customAuthStatusHandler
