@@ -56,7 +56,8 @@
   ],
   "prettier": "@shopify/prettier-config",
   "dependencies": {
-    "@shopify/cli-hydrogen": "*"
+    "@shopify/cli-hydrogen": "*",
+    "@shopify/cli-kit": "^3.66.1"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.4.8",
