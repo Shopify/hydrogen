@@ -1,5 +1,11 @@
 # @shopify/remix-oxygen
 
+## 2.0.8
+
+### Patch Changes
+
+- Remove unstable re-exports from remix-oxygen package ([#2551](https://github.com/Shopify/hydrogen/pull/2551)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 2.0.7
 
 ### Patch Changes

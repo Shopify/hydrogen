@@ -1,5 +1,14 @@
 # @shopify/hydrogen
 
+## 2024.7.8
+
+### Patch Changes
+
+- Update customer account buyer authentication exchange ([#2437](https://github.com/Shopify/hydrogen/pull/2437)) by [@s-lee-kwong](https://github.com/s-lee-kwong)
+
+- Updated dependencies [[`bb5b0979`](https://github.com/Shopify/hydrogen/commit/bb5b0979ddffb007111885b3a9b7aa490a3c6882)]:
+  - @shopify/hydrogen-react@2024.7.5
+
 ## 2024.7.7
 
 ### Patch Changes
