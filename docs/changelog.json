@@ -3,6 +3,52 @@
   "version": "1",
   "releases": [
     {
+      "title": "Remove unstable exports from remix-oxygen and update customer account buyer authentication exchange",
+      "version": "2024.7.7",
+      "hash": "094e3a6419ca5e7c680e31bf3733169d10ff60e3",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2563",
+      "commit": "https://github.com/Shopify/hydrogen/commit/094e3a6419ca5e7c680e31bf3733169d10ff60e3",
+      "dependencies": {
+        "@remix-run/react": "^2.10.1",
+        "@remix-run/server-runtime": "^2.10.1",
+        "@shopify/hydrogen": "2024.7.8",
+        "@shopify/remix-oxygen": "^2.0.8"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.10.1",
+        "@shopify/cli": "3.66.1",
+        "@shopify/oxygen-workers-types": "^4.1.2",
+        "typescript": "^5.2.2"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Remove unstable re-exports from remix-oxygen package",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2551",
+          "id": "2437"
+        },
+        {
+          "title": "Update customer account buyer authentication exchange",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2437",
+          "id": "2437"
+        }
+      ],
+      "features": []
+    },
+    {
       "title": "Consent override fix",
       "version": "2024.7.7",
       "hash": "924685c104701fd29562b93b0e9c61a313977c97",
