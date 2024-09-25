@@ -29,7 +29,9 @@ export async function loader({params, context}: LoaderFunctionArgs) {
 
   const lineItems = flattenConnection(order.lineItems);
   const discountApplications = flattenConnection(order.discountApplications);
-  const fulfillmentStatus = flattenConnection(order.fulfillments)[0].status;
+
+  const fulfillmentStatus =
+    flattenConnection(order.fulfillments)[0]?.status ?? 'N/A';
 
   const firstDiscount = discountApplications[0]?.value;
 
