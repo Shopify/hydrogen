@@ -10,7 +10,7 @@ import {CachePlugin} from '@miniflare/cache';
 import {VMScriptRunner} from '@miniflare/runner-vm';
 import {Log, LogLevel} from '@miniflare/shared';
 import {QueueBroker} from '@miniflare/queues';
-import sourceMapSupport from 'source-map-support';
+import sourceMapSupport from '@cspotcode/source-map-support';
 
 import {createServer, MiniOxygenServerOptions} from './server.js';
 import {StorageFactory} from './storage.js';

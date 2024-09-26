@@ -8,7 +8,7 @@ import type {
   Response as WorkerdResponse,
   ResponseInit,
 } from '@shopify/mini-oxygen';
-import {mapSourcePosition} from 'source-map-support';
+import {mapSourcePosition} from '@cspotcode/source-map-support';
 
 export const H2O_BINDING_NAME = 'H2O_LOG_EVENT';
 
