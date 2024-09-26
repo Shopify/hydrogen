@@ -103,7 +103,7 @@ function injectLogReplacer(
  * Mute logs from Miniflare / Workerd
  */
 export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
-  injectLogReplacer('log');
+  injectLogReplacer('log', warningDebouncer);
   injectLogReplacer('error');
   injectLogReplacer('warn', warningDebouncer);
   injectLogReplacer('debug', false);
