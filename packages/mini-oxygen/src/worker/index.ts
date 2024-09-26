@@ -67,15 +67,41 @@ type GetNewOptions = (
 ) => ReloadableOptions | Promise<ReloadableOptions>;
 
 export type MiniOxygenOptions = InputMiniflareOptions & {
+  /**
+   * Allows attaching a debugger to the worker instance.
+   * @default false
+   */
   debug?: boolean;
+  /**
+   * Path to the source map file to use in debuggers, if needed.
+   * @default undefined
+   */
   sourceMapPath?: string;
+  /**
+   * Allows serving static assets from a directory or another origin.
+   * @default undefined
+   */
   assets?: AssetOptions;
+  /**
+   * Hook into requests and responses. Useful for debugging and logging.
+   * @default undefined
+   */
   requestHook?: RequestHook | null;
+  /**
+   * Name of the worker used for attaching a debugger.
+   * @default undefined The first worker in the array is used.
+   */
   inspectWorkerName?: string;
 };
 
 export type MiniOxygenInstance = ReturnType<typeof createMiniOxygen>;
 
+/**
+ * Creates a MiniOxygen instance using the Workers runtime (workerd).
+ *
+ * @param options - Options for the MiniOxygen instance.
+ * @returns A MiniOxygen instance.
+ */
 export function createMiniOxygen({
   debug = false,
   inspectorPort,

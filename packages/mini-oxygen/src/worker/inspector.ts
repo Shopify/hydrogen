@@ -46,6 +46,20 @@ export interface ErrorProperties {
   stack?: string;
 }
 
+/**
+ * Creates a connection to the workerd inspector.
+ *
+ * The messages are sent via WebSockets following the Chrome DevTools Protocol:
+ * https://chromedevtools.github.io/devtools-protocol/
+ *
+ * Originally, the inspector connection served for ingesting logs (e.g. user's `console.log`)
+ * from workerd into the main Node.js process, so that they could be displayed
+ * in the terminal. However, after Miniflare added support for log streaming,
+ * the inspector connection is now only used for attaching debuggers.
+ *
+ * @param options - Options for the inspector.
+ * @returns A function to reconnect to the inspector.
+ */
 export function createInspectorConnector(options: {
   privateInspectorPort: number;
   publicInspectorPort?: number;
@@ -86,9 +100,16 @@ export function createInspectorConnector(options: {
   };
 }
 
+/**
+ * Since a workerd instance can have multiple workers, we need to find the
+ * inspector URL for the main worker that runs user code, since that's the
+ * worker we want to debug. We use the port number to query all the existing
+ * workers and find the one that matches the user worker name.
+ */
 async function findInspectorUrl(inspectorPort: number, workerName: string) {
   try {
     // Fetch the inspector JSON response from the DevTools Inspector protocol
+    // https://chromedevtools.github.io/devtools-protocol/#endpoints
     const jsonUrl = `http://127.0.0.1:${inspectorPort}/json`;
     const body = (await (
       await fetch(jsonUrl)

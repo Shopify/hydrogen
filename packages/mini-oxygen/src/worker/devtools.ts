@@ -20,6 +20,14 @@ const FAVICON_URL =
 
 export type InspectorProxy = ReturnType<typeof createInspectorProxy>;
 
+/**
+ * Creates a proxy server that forwards messages between the local
+ * debugger (e.g. VSCode, Browser DevTools) and the Workerd inspector.
+ * It also serves a custom in-browser DevTools UI for MiniOxygen by
+ * proxying the Cloudflare DevTools (used in Wrangler / Miniflare),
+ * and fixes a few issues related to serving this tool locally.
+ *
+ */
 export function createInspectorProxy(
   port: number,
   newInspectorConnection: InspectorConnection,
@@ -45,13 +53,15 @@ export function createInspectorProxy(
   const sourceMapPathname = '/__index.js.map';
   const sourceMapURL = `http://localhost:${port}${sourceMapPathname}`;
 
+  // Create the proxy server used when running with `--debug` flag:
   const server = createServer((req: IncomingMessage, res: ServerResponse) => {
     // Remove query params. E.g. `/json/list?for_tab`
     const [url = '/', queryString = ''] = req.url?.split('?') || [];
 
     switch (url) {
-      // We implement a couple of well known end points
-      // that are queried for metadata by chrome://inspect
+      // We implement a couple of well known end points that are queried
+      // for metadata when opening `chrome://inspect` in the browser.
+      // https://chromedevtools.github.io/devtools-protocol/#endpoints
       case '/json/version':
         res.setHeader('Content-Type', 'application/json');
         res.end(
@@ -84,7 +94,9 @@ export function createInspectorProxy(
         }
         return;
       case sourceMapPathname:
-        // Handle proxied sourcemaps
+        // Handle proxied sourcemaps. This is only used when serving
+        // a built application in h2:preview or classic project dev.
+        // h2:dev with Vite uses inlined sourcemaps instead.
         res.setHeader('Content-Type', 'text/plain');
         res.setHeader('Cache-Control', 'no-store');
         res.setHeader(
@@ -100,6 +112,7 @@ export function createInspectorProxy(
         }
         break;
       case '/favicon.ico':
+        // The browser requests for this automatically when opening DevTools.
         proxyHttp(FAVICON_URL, req.headers, res);
         break;
       case '/':
@@ -112,7 +125,7 @@ export function createInspectorProxy(
           );
           res.end();
         } else {
-          // Proxy CFW DevTools UI.
+          // Proxy the main page of the original CFW DevTools UI.
           proxyHttp(
             CFW_DEVTOOLS + '/js_app',
             req.headers,
@@ -128,6 +141,7 @@ export function createInspectorProxy(
         }
         break;
       default:
+        // Proxy assets from the original CFW DevTools UI, modifying them as needed.
         if (
           url === '/panels/sources/sources-meta.js' ||
           (url.startsWith('/core/i18n/locales/') && url.endsWith('.json'))
@@ -157,7 +171,8 @@ export function createInspectorProxy(
 
   wsServer.on('connection', (ws, req) => {
     if (wsServer.clients.size > 1) {
-      // Only support one active Devtools instance at a time.
+      // Only support one active DevTools instance at a time. E.g.
+      // either VSCode/editor debugger or 1 browser DevTools tab.
       console.error(
         'Tried to open a new devtools window when a previous one was already open.',
       );
@@ -190,12 +205,22 @@ export function createInspectorProxy(
 
   if (inspector.ws) onInspectorConnection();
 
+  /**
+   * This function is called when the inspector connection is established
+   * for the first time or when the inspector is reconnected. That happens
+   * when the source code is reloaded in h2:preview, h2:debug:cpu.
+   * However, it no longer happens in h2:dev with Vite because the worker
+   * instance is not reloaded after source code changes, only patched with HMR.
+   */
   function onInspectorConnection() {
     inspector.ws.addEventListener('message', sendMessageToDebugger);
 
     // In case this is a DevTools connection, send a warning
     // message to the console to inform about reconnection.
     // VSCode can reconnect automatically with `restart: true`.
+    //  > TODO: it would be good to send this message also in h2:dev with Vite.
+    //  > However, that requires a completely different type of wiring:
+    //  > Getting Vite's HMR notifications from this part of the code somehow.
     debuggerWs?.send(
       JSON.stringify({
         method: 'Runtime.consoleAPICalled',
@@ -234,6 +259,8 @@ export function createInspectorProxy(
   }
 
   return {
+    // Every time workerd is restarted (e.g. env var change, etc.),
+    // the inspector connection needs to be re-established.
     updateInspectorConnection(newConnection: InspectorConnection) {
       inspector = newConnection;
       onInspectorConnection();
