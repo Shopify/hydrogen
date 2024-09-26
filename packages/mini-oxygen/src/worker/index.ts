@@ -107,14 +107,14 @@ export function createMiniOxygen({
     }
   }
 
-  let reconnect: ReturnType<typeof createInspectorConnector>;
+  let reconnect: undefined | ReturnType<typeof createInspectorConnector>;
 
   const ready = mf.ready.then(async (workerUrl) => {
+    if (!debug) return {workerUrl};
+
     const [privateInspectorUrl, publicInspectorPort] = await Promise.all([
       mf.getInspectorURL(),
-      debug
-        ? inspectorPort ?? findPort(DEFAULT_PUBLIC_INSPECTOR_PORT)
-        : undefined,
+      inspectorPort ?? findPort(DEFAULT_PUBLIC_INSPECTOR_PORT),
     ]);
 
     reconnect = createInspectorConnector({
@@ -131,14 +131,12 @@ export function createMiniOxygen({
 
     return {
       workerUrl,
-      inspectorUrl: debug
-        ? new URL(
-            privateInspectorUrl.href.replace(
-              privateInspectorUrl.port,
-              String(publicInspectorPort),
-            ),
-          )
-        : undefined,
+      inspectorUrl: new URL(
+        privateInspectorUrl.href.replace(
+          privateInspectorUrl.port,
+          String(publicInspectorPort),
+        ),
+      ),
     };
   });
 
@@ -161,15 +159,16 @@ export function createMiniOxygen({
         workers: miniflareOptions.workers,
       });
 
-      await reconnect(() =>
+      const updateWorker = () =>
         mf.setOptions(
           buildMiniflareOptions(
             {...miniflareOptions, ...newOptions},
             requestHook,
             assets,
           ),
-        ),
-      );
+        );
+
+      await (reconnect ? reconnect(updateWorker) : updateWorker());
     },
     async dispose() {
       assetsServer?.closeAllConnections();
