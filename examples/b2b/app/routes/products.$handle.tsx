@@ -197,6 +197,11 @@ export default function Product() {
               product={product}
               selectedVariant={selectedVariant}
               variants={[]}
+              /***********************************************/
+              /**********  EXAMPLE UPDATE STARTS  ************/
+              quantity={1}
+              /**********   EXAMPLE UPDATE END   ************/
+              /***********************************************/
             />
           }
         >
