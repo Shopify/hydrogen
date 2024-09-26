@@ -155,6 +155,7 @@ export function Layout({children}: {children?: React.ReactNode}) {
             /**********  EXAMPLE UPDATE STARTS  ************/}
             <B2BLocationProvider>
               <PageLayout {...data}>{children}</PageLayout>
+              <B2BLocationSelector />
             </B2BLocationProvider>
             {/**********   EXAMPLE UPDATE END   ************/
             /***********************************************/}

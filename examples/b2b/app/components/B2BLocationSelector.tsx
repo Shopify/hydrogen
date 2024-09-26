@@ -3,7 +3,7 @@ import type {
   CustomerCompanyLocation,
   CustomerCompanyLocationConnection,
 } from '~/root';
-import {useB2BLocation} from './B2BLocationProvider';
+import {useB2BLocation} from '~/components/B2BLocationProvider';
 
 export function B2BLocationSelector() {
   const {company, modalOpen, setModalOpen} = useB2BLocation();

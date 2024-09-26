@@ -49,20 +49,14 @@ export function HeaderMenu({
   publicStoreDomain: HeaderProps['publicStoreDomain'];
 }) {
   const className = `header-menu-${viewport}`;
-
-  function closeAside(event: React.MouseEvent<HTMLAnchorElement>) {
-    if (viewport === 'mobile') {
-      event.preventDefault();
-      window.location.href = event.currentTarget.href;
-    }
-  }
+  const {close} = useAside();
 
   return (
     <nav className={className} role="navigation">
       {viewport === 'mobile' && (
         <NavLink
           end
-          onClick={closeAside}
+          onClick={close}
           prefetch="intent"
           style={activeLinkStyle}
           to="/"
@@ -85,7 +79,7 @@ export function HeaderMenu({
             className="header-menu-item"
             end
             key={item.id}
-            onClick={closeAside}
+            onClick={close}
             prefetch="intent"
             style={activeLinkStyle}
             to={url}
@@ -144,7 +138,7 @@ function SearchToggle() {
   );
 }
 
-function CartBadge({count}: {count: number}) {
+function CartBadge({count}: {count: number | null}) {
   const {open} = useAside();
   const {publish, shop, cart, prevCart} = useAnalytics();
 
@@ -162,14 +156,14 @@ function CartBadge({count}: {count: number}) {
         } as CartViewPayload);
       }}
     >
-      Cart {count}
+      Cart {count === null ? <span>&nbsp;</span> : count}
     </a>
   );
 }
 
 function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
   return (
-    <Suspense fallback={<CartBadge count={0} />}>
+    <Suspense fallback={<CartBadge count={null} />}>
       <Await resolve={cart}>
         {(cart) => {
           if (!cart) return <CartBadge count={0} />;
