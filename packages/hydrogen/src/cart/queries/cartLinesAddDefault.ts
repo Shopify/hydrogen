@@ -1,6 +1,10 @@
 import type {CartLineInput} from '@shopify/hydrogen-react/storefront-api-types';
 import {StorefrontApiErrors, formatAPIResult} from '../../storefront';
-import {CART_WARNING_FRAGMENT, MINIMAL_CART_FRAGMENT, USER_ERROR_FRAGMENT} from './cart-fragments';
+import {
+  CART_WARNING_FRAGMENT,
+  MINIMAL_CART_FRAGMENT,
+  USER_ERROR_FRAGMENT,
+} from './cart-fragments';
 import type {
   CartOptionalInput,
   CartQueryData,
