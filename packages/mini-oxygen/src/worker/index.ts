@@ -80,6 +80,11 @@ export type MiniOxygenOptions = InputMiniflareOptions & {
    */
   sourceMapPath?: string;
   /**
+   * Wether to replace stack traces in logs with source mapped stack traces.
+   * @default true
+   */
+  needsManualSourceMapping?: boolean;
+  /**
    * Allows serving static assets from a directory or another origin.
    * @default undefined
    */
@@ -108,7 +113,8 @@ export function createMiniOxygen({
   debug = false,
   inspectorPort,
   assets,
-  sourceMapPath = '',
+  sourceMapPath,
+  needsManualSourceMapping = true,
   requestHook,
   inspectWorkerName,
   ...miniflareOptions
@@ -131,8 +137,15 @@ export function createMiniOxygen({
     }
   }
 
+  const sourcemapOptions = {sourceMapPath, needsManualSourceMapping};
+
   const mf = new Miniflare(
-    buildMiniflareOptions(miniflareOptions, requestHook, assets),
+    buildMiniflareOptions(
+      miniflareOptions,
+      requestHook,
+      assets,
+      sourcemapOptions,
+    ),
   );
 
   let reconnect: undefined | ReturnType<typeof createInspectorConnector>;
@@ -193,6 +206,7 @@ export function createMiniOxygen({
             {...miniflareOptions, ...newOptions},
             requestHook,
             assets,
+            sourcemapOptions,
           ),
         );
 
@@ -248,6 +262,10 @@ function buildMiniflareOptions(
   {workers, ...mfOverwriteOptions}: InputMiniflareOptions,
   requestHook: RequestHook | null = defaultLogRequestLine,
   assetsOptions?: AssetOptions,
+  sourcemapOptions?: Pick<
+    MiniOxygenOptions,
+    'sourceMapPath' | 'needsManualSourceMapping'
+  >,
 ): OutputMiniflareOptions {
   const entryWorker = workers.find((worker) => !!worker.name);
   if (!entryWorker?.name) {
@@ -287,7 +305,9 @@ function buildMiniflareOptions(
       : {
           verbose: false,
           log: new NoOpLog(),
-          handleRuntimeStdio,
+          handleRuntimeStdio: handleRuntimeStdio.bind(null, {
+            applySourcemaps: sourcemapOptions?.needsManualSourceMapping ?? true,
+          }),
         }),
     ...mfOverwriteOptions,
     workers: [
@@ -338,10 +358,19 @@ function createAssetHandler(options: Partial<AssetOptions>) {
 }
 
 function injectConsoleSuffixCode(worker: WorkerOptions) {
-  const consoleSuffixScript = `\n(${addSuffixToConsoleMessages})()`;
+  // Instead of injecting a self-called function, we directly add
+  // the function body to the worker script to prevent Miniflare
+  // from throwing an error when the worker is executed.
+  const stringifiedFn = addSuffixToConsoleMessages.toString();
+  const consoleSuffixScript =
+    `\n` + stringifiedFn.slice(stringifiedFn.indexOf('{')).replace(/\s+/g, ' ');
+
   if ('script' in worker) {
     worker.script += consoleSuffixScript;
-  } else if (Array.isArray(worker.modules) && worker.modules[0]?.contents) {
+  } else if (
+    Array.isArray(worker.modules) &&
+    typeof worker.modules[0]?.contents === 'string'
+  ) {
     worker.modules[0].contents += consoleSuffixScript;
   }
 }

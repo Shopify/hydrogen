@@ -54,7 +54,11 @@ export function extractConsoleMessages(
 // The following is an adapted version of this code:
 // https://github.com/cloudflare/workers-sdk/blob/b098256e9ed315aa265d52ab10c208049c16a8ca/packages/wrangler/src/dev/miniflare.ts#L727
 
-export function handleRuntimeStdio(stdout: Readable, stderr: Readable) {
+export function handleRuntimeStdio(
+  {applySourcemaps}: {applySourcemaps: boolean},
+  stdout: Readable,
+  stderr: Readable,
+) {
   const classifiers = {
     // Is this chunk a big chonky barf from workerd that we want to hijack to cleanup/ignore?
     isBarf(chunk: string) {
@@ -100,7 +104,9 @@ export function handleRuntimeStdio(stdout: Readable, stderr: Readable) {
         // this process in verbose mode will still print these
         // logs to the console.
       } else {
-        console[method](getSourceMappedString(message));
+        console[method](
+          applySourcemaps ? getSourceMappedString(message) : message,
+        );
       }
     }
   });
@@ -139,7 +145,9 @@ export function handleRuntimeStdio(stdout: Readable, stderr: Readable) {
         // This should not happen when developing apps, only when developing the worker runtime itself
       } else {
         // Anything not explicitly handled above should be logged:
-        console[method](getSourceMappedString(message));
+        console[method](
+          applySourcemaps ? getSourceMappedString(message) : message,
+        );
       }
     }
   });

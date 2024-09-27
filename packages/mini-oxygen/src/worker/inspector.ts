@@ -53,7 +53,7 @@ export type MessageData = {id: number; result: unknown} & (
 export function createInspectorConnector(options: {
   privateInspectorPort: number;
   publicInspectorPort: number;
-  sourceMapPath: string;
+  sourceMapPath?: string;
   workerName: string;
 }) {
   let inspectorUrl: string | undefined;

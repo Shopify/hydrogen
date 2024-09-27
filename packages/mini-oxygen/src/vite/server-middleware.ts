@@ -96,6 +96,8 @@ async function startMiniOxygenRuntime({
     debug,
     inspectorPort,
     requestHook: null,
+    // Vite handles sourcemaps, so we don't need to apply them manually
+    needsManualSourceMapping: false,
     workers: [
       {
         name: 'vite-env',
