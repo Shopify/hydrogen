@@ -13,6 +13,7 @@ import type {
   InspectorWebSocketTarget,
   InspectorConnection,
 } from './inspector.js';
+import {extractConsoleMessages} from './stdio.js';
 
 const CFW_DEVTOOLS = 'https://devtools.devprod.cloudflare.dev';
 const FAVICON_URL =
@@ -281,6 +282,16 @@ function enhanceDevToolsEvent(event: MessageEvent, sourceMapUrl: string) {
       // This endpoint is handled in our proxy server above.
       message.params.sourceMapURL = sourceMapUrl;
     }
+  }
+
+  if (message.method === 'Runtime.consoleAPICalled') {
+    // Remove injected console suffixes from messages sent to the browser.
+    message.params.args.forEach((arg) => {
+      if (typeof arg.value === 'string') {
+        const [[, normalizedValue]] = extractConsoleMessages(arg.value);
+        arg.value = normalizedValue;
+      }
+    });
   }
 
   return {...event, data: JSON.stringify(message)};

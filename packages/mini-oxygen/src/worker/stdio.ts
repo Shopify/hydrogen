@@ -2,8 +2,56 @@ import type {Readable} from 'node:stream';
 import assert from 'node:assert';
 import {getFreshSourceMapSupport} from 'miniflare';
 
+/**
+ * Note: This function is stringified into worker code. Do not use outer scope.
+ *
+ * The worker streams logs to the MiniOxygen wrapper and we lose the ability to
+ * split the streamed logs into individual messages and restore the original
+ * console method. This is why we hijack the console methods and add a suffix
+ * to the original messages, so that we can later split the streamed logs into
+ * individual messages and restore the original console method.
+ * This is useful because we want to parse certain messages down the line to
+ * enhance errors with more context (e.g. GraphQL errors), styles, etc.
+ */
+export function addSuffixToConsoleMessages() {
+  const methods = ['log', 'error', 'warn', 'info', 'debug'] as const;
+
+  for (const method of methods) {
+    const originalMethod = console[method].bind(console);
+    console[method] = (...args: unknown[]) => {
+      return originalMethod(...args, `[{${method}}]<|end|>`);
+    };
+  }
+}
+
+type ConsoleMethod = 'log' | 'error' | 'warn' | 'info' | 'debug';
+
+/**
+ * Extract the original console messages from the streamed logs.
+ */
+export function extractConsoleMessages(
+  consoleChunk: string,
+  defaultMethod: ConsoleMethod = 'log',
+) {
+  // Workerd adds a newline to the end of some console method calls:
+  const messages = consoleChunk.split(/<\|end\|>\n?/);
+
+  // Extract the console method from the end of the message:
+  return messages.map((message) => {
+    const method = message.match(/\[\{([^\}]+)\}\]$/)?.[1];
+
+    return method && method in console
+      ? ([
+          method as ConsoleMethod,
+          // Consider the space before the suffix:
+          message.replace(` [{${method}}]`, ''),
+        ] as const)
+      : ([defaultMethod, message] as const);
+  });
+}
+
 // --- Runtime logs handler ---
-// The following code is an adapted version of this code:
+// The following is an adapted version of this code:
 // https://github.com/cloudflare/workers-sdk/blob/b098256e9ed315aa265d52ab10c208049c16a8ca/packages/wrangler/src/dev/miniflare.ts#L727
 
 export function handleRuntimeStdio(stdout: Readable, stderr: Readable) {
@@ -43,52 +91,56 @@ export function handleRuntimeStdio(stdout: Readable, stderr: Readable) {
   };
 
   stdout.on('data', (chunk: Buffer | string) => {
-    chunk = chunk.toString().trim();
+    const lines = extractConsoleMessages(chunk.toString().trim(), 'log');
 
-    if (classifiers.isBarf(chunk) || classifiers.isWarning(chunk)) {
-      // Ignore unactionable logs. Ideally we'd write them
-      // to a log file (eventually). In any case, running
-      // this process in verbose mode will still print these
-      // logs to the console.
-    } else {
-      console.log(getSourceMappedString(chunk));
-    }
-  });
-
-  stderr.on('data', (chunk: Buffer | string) => {
-    chunk = chunk.toString().trim();
-
-    if (classifiers.isBarf(chunk) || classifiers.isWarning(chunk)) {
-      // this is a big chonky barf from workerd that we want to hijack to cleanup/ignore
-
-      if (classifiers.isAddressInUse(chunk)) {
-        // This should never happen in practice because we set the port to 0 (i.e. random available port)
-      } else if (classifiers.isAccessViolation(chunk)) {
-        // Handle Access Violation errors on Windows, which may be caused by an outdated
-        // version of the Windows OS or the Microsoft Visual C++ Redistributable.
-        // See https://github.com/cloudflare/workers-sdk/issues/6170#issuecomment-2245209918
-        let errorMessage =
-          '[o2:runtime] There was an access violation in the runtime.';
-
-        if (process.platform === 'win32') {
-          errorMessage +=
-            '\nOn Windows, this may be caused by an outdated Microsoft Visual C++ Redistributable library.\n' +
-            'Check that you have the latest version installed.\n' +
-            'See https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist.';
-        }
-
-        console.error(new Error(errorMessage, {cause: chunk}));
-      } else {
+    for (const [method, message] of lines) {
+      if (classifiers.isBarf(message) || classifiers.isWarning(message)) {
         // Ignore unactionable logs. Ideally we'd write them
         // to a log file (eventually). In any case, running
         // this process in verbose mode will still print these
         // logs to the console.
+      } else {
+        console[method](getSourceMappedString(message));
       }
-    } else if (classifiers.isCodeMovedWarning(chunk)) {
-      // This should not happen when developing apps, only when developing the worker runtime itself
-    } else {
-      // Anything not explicitly handled above should be logged as an error (via stderr)
-      console.error(getSourceMappedString(chunk));
+    }
+  });
+
+  stderr.on('data', (chunk: Buffer | string) => {
+    const lines = extractConsoleMessages(chunk.toString().trim(), 'error');
+
+    for (const [method, message] of lines) {
+      if (classifiers.isBarf(message) || classifiers.isWarning(message)) {
+        // this is a big chonky barf from workerd that we want to hijack to cleanup/ignore
+
+        if (classifiers.isAddressInUse(message)) {
+          // This should never happen in practice because we set the port to 0 (i.e. random available port)
+        } else if (classifiers.isAccessViolation(message)) {
+          // Handle Access Violation errors on Windows, which may be caused by an outdated
+          // version of the Windows OS or the Microsoft Visual C++ Redistributable.
+          // See https://github.com/cloudflare/workers-sdk/issues/6170#issuecomment-2245209918
+          let errorMessage =
+            '[o2:runtime] There was an access violation in the runtime.';
+
+          if (process.platform === 'win32') {
+            errorMessage +=
+              '\nOn Windows, this may be caused by an outdated Microsoft Visual C++ Redistributable library.\n' +
+              'Check that you have the latest version installed.\n' +
+              'See https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist.';
+          }
+
+          console.error(new Error(errorMessage, {cause: chunk}));
+        } else {
+          // Ignore unactionable logs. Ideally we'd write them
+          // to a log file (eventually). In any case, running
+          // this process in verbose mode will still print these
+          // logs to the console.
+        }
+      } else if (classifiers.isCodeMovedWarning(message)) {
+        // This should not happen when developing apps, only when developing the worker runtime itself
+      } else {
+        // Anything not explicitly handled above should be logged:
+        console[method](getSourceMappedString(message));
+      }
     }
   });
 }
@@ -99,7 +151,7 @@ export function handleRuntimeStdio(stdout: Readable, stderr: Readable) {
 // For example, this is used in tests, in Classic Remix projects, and when running any sort of "preview" mode
 // with a prior build step.
 //
-// The following code is an adapted version of this code:
+// The following is an adapted version of this code:
 // https://github.com/cloudflare/workers-sdk/blob/b098256e9ed315aa265d52ab10c208049c16a8ca/packages/wrangler/src/sourcemap.ts
 
 let sourceMappingPrepareStackTrace: typeof Error.prepareStackTrace;

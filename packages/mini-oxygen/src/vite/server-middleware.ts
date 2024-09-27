@@ -1,5 +1,6 @@
 import {fetchModule, type ViteDevServer} from 'vite';
 import {fileURLToPath} from 'node:url';
+import {readFile} from 'node:fs/promises';
 import {
   createMiniOxygen,
   Request,
@@ -68,9 +69,9 @@ export type MiniOxygenViteOptions = InternalMiniOxygenOptions & {
   logRequestLine?: null | RequestHook;
 };
 
-type MiniOxygen = ReturnType<typeof startMiniOxygenRuntime>;
+type MiniOxygen = Awaited<ReturnType<typeof startMiniOxygenRuntime>>;
 
-function startMiniOxygenRuntime({
+async function startMiniOxygenRuntime({
   viteDevServer,
   env,
   debug = false,
@@ -99,7 +100,15 @@ function startMiniOxygenRuntime({
       {
         name: 'vite-env',
         modulesRoot: '/',
-        modules: [{type: 'ESModule', path: scriptPath}],
+        modules: [
+          {
+            type: 'ESModule',
+            path: scriptPath,
+            // Pass contents manually here so that the script
+            // can be modified later with console suffixes.
+            contents: await readFile(scriptPath, 'utf-8'),
+          },
+        ],
         serviceBindings: {
           ...(wrappedHook && {__VITE_REQUEST_HOOK: wrappedHook}),
         } satisfies OnlyServices<ViteEnv>,
@@ -213,9 +222,9 @@ export function setupOxygenMiddleware(
     const ready =
       miniOxygen && !miniOxygen.isDisposed
         ? Promise.resolve()
-        : getMiniOxygenOptions().then((options) => {
+        : getMiniOxygenOptions().then(async (options) => {
             miniOxygenOptions = options;
-            miniOxygen = startMiniOxygenRuntime(options);
+            miniOxygen = await startMiniOxygenRuntime(options);
           });
 
     ready.then(() =>

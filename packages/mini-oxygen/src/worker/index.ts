@@ -9,6 +9,7 @@ import {
   type SharedOptions,
   type CORE_PLUGIN,
   type MiniflareOptions as OutputMiniflareOptions,
+  type WorkerOptions,
 } from 'miniflare';
 import {createInspectorConnector} from './inspector.js';
 import {
@@ -25,7 +26,7 @@ import {OXYGEN_HEADERS_MAP} from '../common/headers.js';
 import {findPort} from '../common/find-port.js';
 import {OXYGEN_COMPAT_PARAMS} from '../common/compat.js';
 import {isO2Verbose} from '../common/debug.js';
-import {handleRuntimeStdio} from './stdio.js';
+import {addSuffixToConsoleMessages, handleRuntimeStdio} from './stdio.js';
 import type {OnlyBindings, OnlyServices} from './utils.js';
 
 export {
@@ -112,19 +113,15 @@ export function createMiniOxygen({
   inspectWorkerName,
   ...miniflareOptions
 }: MiniOxygenOptions) {
-  const mf = new Miniflare(
-    buildMiniflareOptions(miniflareOptions, requestHook, assets),
-  );
+  const mainWorker =
+    (inspectWorkerName &&
+      miniflareOptions.workers.find(({name}) => name === inspectWorkerName)) ||
+    miniflareOptions.workers[0];
 
-  if (!sourceMapPath) {
-    const mainWorker =
-      (inspectWorkerName &&
-        miniflareOptions.workers.find(
-          ({name}) => name === inspectWorkerName,
-        )) ||
-      miniflareOptions.workers[0];
+  if (mainWorker) {
+    if (!isO2Verbose()) injectConsoleSuffixCode(mainWorker);
 
-    if (mainWorker) {
+    if (!sourceMapPath) {
       if ('scriptPath' in mainWorker) {
         sourceMapPath = mainWorker.scriptPath + '.map';
       } else if (Array.isArray(mainWorker?.modules)) {
@@ -133,6 +130,10 @@ export function createMiniOxygen({
       }
     }
   }
+
+  const mf = new Miniflare(
+    buildMiniflareOptions(miniflareOptions, requestHook, assets),
+  );
 
   let reconnect: undefined | ReturnType<typeof createInspectorConnector>;
 
@@ -334,4 +335,13 @@ function createAssetHandler(options: Partial<AssetOptions>) {
       ),
     );
   };
+}
+
+function injectConsoleSuffixCode(worker: WorkerOptions) {
+  const consoleSuffixScript = `\n(${addSuffixToConsoleMessages})()`;
+  if ('script' in worker) {
+    worker.script += consoleSuffixScript;
+  } else if (Array.isArray(worker.modules) && worker.modules[0]?.contents) {
+    worker.modules[0].contents += consoleSuffixScript;
+  }
 }
