@@ -36,9 +36,7 @@ export const CART_ATTRIBUTES_UPDATE_MUTATION = (
   mutation cartAttributesUpdate(
     $cartId: ID!
     $attributes: [AttributeInput!]!
-    $language: LanguageCode
-    $country: CountryCode
-  ) @inContext(country: $country, language: $language) {
+  ) {
     cartAttributesUpdate(cartId: $cartId, attributes: $attributes) {
       cart {
         ...CartApiMutation
