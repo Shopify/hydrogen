@@ -1,6 +1,6 @@
 import {StorefrontApiErrors, formatAPIResult} from '../../storefront';
 import {throwIfLinesAreOptimistic} from '../optimistic/optimistic-cart.helper';
-import {MINIMAL_CART_FRAGMENT, USER_ERROR_FRAGMENT} from './cart-fragments';
+import {CART_WARNING_FRAGMENT, MINIMAL_CART_FRAGMENT, USER_ERROR_FRAGMENT} from './cart-fragments';
 import type {
   CartOptionalInput,
   CartQueryData,
@@ -51,9 +51,12 @@ export const CART_LINES_UPDATE_MUTATION = (
       userErrors {
         ...CartApiError
       }
+      warnings {
+        ...CartApiWarning
+      }
     }
   }
-
   ${cartFragment}
   ${USER_ERROR_FRAGMENT}
+  ${CART_WARNING_FRAGMENT}
 `;
