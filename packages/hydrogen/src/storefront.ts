@@ -177,7 +177,7 @@ type HydrogenClientProps<TI18n> = {
 };
 
 export type CreateStorefrontClientOptions<TI18n extends I18nBase> =
-  HydrogenClientProps<TI18n> & StorefrontClientProps;
+  HydrogenClientProps<TI18n> & StorefrontClientProps & { cachePurgeKey?: string };
 
 type StorefrontQueryOptions = StorefrontCommonExtraParams & {
   query: string;
@@ -208,6 +208,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     i18n,
     storefrontId,
     logErrors = true,
+    cachePurgeKey,
     ...clientOptions
   } = options;
   const H2_PREFIX_WARN = '[h2:warn:createStorefrontClient] ';
@@ -310,6 +311,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       requestInit.method,
       cacheKeyHeader,
       requestInit.body,
+      cachePurgeKey
     ];
 
     const [body, response] = await fetchWithServerCache(url, requestInit, {
