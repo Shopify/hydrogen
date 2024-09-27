@@ -41,7 +41,7 @@ describe('<ShopifyProvider/>', () => {
       });
 
       expect(result.current.getStorefrontApiUrl()).toBe(
-        'https://notashop.myshopify.com/api/2024-07/graphql.json',
+        'https://notashop.myshopify.com/api/2024-10/graphql.json',
       );
     });
 
@@ -183,7 +183,7 @@ describe('<ShopifyProvider/>', () => {
       });
 
       expect(result.current.getStorefrontApiUrl()).toBe(
-        'https://notashop.myshopify.com/api/2024-07/graphql.json',
+        'https://notashop.myshopify.com/api/2024-10/graphql.json',
       );
     });
 
@@ -203,7 +203,7 @@ describe('<ShopifyProvider/>', () => {
         result.current.getStorefrontApiUrl({
           storeDomain: 'https://test.myshopify.com',
         }),
-      ).toBe('https://test.myshopify.com/api/2024-07/graphql.json');
+      ).toBe('https://test.myshopify.com/api/2024-10/graphql.json');
     });
 
     it(`handles when a '/' is at the end of the url and doesn't add an extra one`, () => {
@@ -219,7 +219,7 @@ describe('<ShopifyProvider/>', () => {
       });
 
       expect(result.current.getStorefrontApiUrl()).toBe(
-        'https://notashop.myshopify.com/api/2024-07/graphql.json',
+        'https://notashop.myshopify.com/api/2024-10/graphql.json',
       );
     });
   });
