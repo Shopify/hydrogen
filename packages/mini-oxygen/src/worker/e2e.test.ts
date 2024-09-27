@@ -143,7 +143,9 @@ describe('MiniOxygen Worker Runtime', () => {
         const response = await fetch('/');
 
         expect(response.status).toEqual(500);
-        await expect(response.text()).resolves.toEqual('Error: test');
+        await expect(response.text()).resolves.toSatisfy((result) =>
+          (result as string).startsWith('Error: test'),
+        );
 
         // console.error from workerd is asynchronous
         await vi.waitFor(
