@@ -52,10 +52,10 @@ export interface ErrorProperties {
  * The messages are sent via WebSockets following the Chrome DevTools Protocol:
  * https://chromedevtools.github.io/devtools-protocol/
  *
- * Originally, the inspector connection served for ingesting logs (e.g. user's `console.log`)
- * from workerd into the main Node.js process, so that they could be displayed
- * in the terminal. However, after Miniflare added support for log streaming,
- * the inspector connection is now only used for attaching debuggers.
+ * The inspector connection has two purposes:
+ * 1. Attach debuggers to the workerd instance.
+ * 2. Ingest logs (e.g. user's `console.log` calls) from workerd into
+ *    the main Node.js process, so that we can display them in the terminal.
  *
  * @param options - Options for the inspector.
  * @returns A function to reconnect to the inspector.
