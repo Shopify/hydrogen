@@ -29,6 +29,7 @@ import {
   ComponentizableCartLine,
   Maybe,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import {version} from '../../package.json';
 
 function getCustomerPrivacyRequired() {
   const customerPrivacy = getCustomerPrivacy();
@@ -64,37 +65,24 @@ export function ShopifyAnalytics({
   const [shopifyReady, setShopifyReady] = useState(false);
   const [privacyReady, setPrivacyReady] = useState(false);
   const init = useRef(false);
+  const {checkoutDomain, storefrontAccessToken, language} = consent;
   const {ready: shopifyAnalyticsReady} = register('Internal_Shopify_Analytics');
-  const {ready: customerPrivacyReady} = register(
-    'Internal_Shopify_CustomerPrivacy',
-  );
-  const analyticsReady = () => {
-    shopifyReady && privacyReady && onReady();
-  };
 
-  const setCustomerPrivacyReady = () => {
-    setPrivacyReady(true);
-    customerPrivacyReady();
-    analyticsReady();
-  };
-
-  const {checkoutDomain, storefrontAccessToken, withPrivacyBanner} = consent;
-
+  // load customer privacy and (optionally) the privacy banner APIs
   useCustomerPrivacy({
+    ...consent,
+    locale: language,
     checkoutDomain: !checkoutDomain ? 'mock.shop' : checkoutDomain,
     storefrontAccessToken: !storefrontAccessToken
       ? 'abcdefghijklmnopqrstuvwxyz123456'
       : storefrontAccessToken,
-    withPrivacyBanner,
-    onVisitorConsentCollected: setCustomerPrivacyReady,
-    onReady: () => {
-      // Set customer privacy ready 3 seconds after load
-      setTimeout(setCustomerPrivacyReady, 3000);
-    },
+    onVisitorConsentCollected: () => setPrivacyReady(true),
+    onReady: () => setPrivacyReady(true),
   });
 
+  // set up shopify_Y and shopify_S cookies
   useShopifyCookies({
-    hasUserConsent: shopifyReady && privacyReady ? canTrack() : true,
+    hasUserConsent: privacyReady ? canTrack() : true, // must be initialized with true
     domain,
     checkoutDomain,
   });
@@ -112,10 +100,15 @@ export function ShopifyAnalytics({
     // Cart
     subscribe(AnalyticsEvent.PRODUCT_ADD_TO_CART, productAddedToCartHandler);
 
-    shopifyAnalyticsReady();
     setShopifyReady(true);
-    analyticsReady();
-  }, [subscribe, shopifyAnalyticsReady]);
+  }, [subscribe]);
+
+  useEffect(() => {
+    if (shopifyReady && privacyReady) {
+      shopifyAnalyticsReady();
+      onReady();
+    }
+  }, [shopifyReady, privacyReady, onReady]);
 
   return null;
 }
@@ -157,6 +150,7 @@ function prepareBasePageViewPayload(
 
   const eventPayload: ShopifyPageViewPayload = {
     shopifySalesChannel: 'hydrogen',
+    assetVersionId: version,
     ...payload.shop,
     hasUserConsent,
     ...getClientBrowserParameters(),
@@ -165,6 +159,9 @@ function prepareBasePageViewPayload(
       customerPrivacy.marketingAllowed() &&
       customerPrivacy.analyticsProcessingAllowed()
     ),
+    analyticsAllowed: customerPrivacy.analyticsProcessingAllowed(),
+    marketingAllowed: customerPrivacy.marketingAllowed(),
+    saleOfDataAllowed: customerPrivacy.saleOfDataAllowed(),
   };
 
   return eventPayload;
@@ -247,6 +244,7 @@ function collectionViewHandler(payload: CollectionViewPayload) {
     ...eventPayload,
     ...viewPayload,
     collectionHandle: payload.collection.handle,
+    collectionId: payload.collection.id,
   };
 
   sendShopifyAnalytics({
@@ -308,7 +306,7 @@ function sendCartAnalytics({
 }) {
   const product: AnalyticsProduct = {
     id: matchedLine.merchandise.product.id,
-    variantId: matchedLine.id,
+    variantId: matchedLine.merchandise.id,
     title: matchedLine.merchandise.product.title,
     variantTitle: matchedLine.merchandise.title,
     vendor: matchedLine.merchandise.product.vendor,

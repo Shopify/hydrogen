@@ -14,6 +14,7 @@ import type {
   ShopifyMonorailPayload,
   ShopifyPageViewPayload,
 } from './analytics-types.js';
+import {version} from '../package.json';
 
 describe(`analytics schema - custom storefront customer tracking`, () => {
   describe('page view', () => {
@@ -62,12 +63,57 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
       );
     });
 
+    it(`base payload with non-default values using hydrogenSubchannelId`, () => {
+      const pageViewPayload: ShopifyPageViewPayload = {
+        ...BASE_PAYLOAD,
+        shopId: 'gid://shopify/Shop/2',
+        hasUserConsent: false,
+        url: 'https://example.com/fr',
+        shopifySalesChannel: ShopifySalesChannel.hydrogen,
+        assetVersionId: '123',
+        hydrogenSubchannelId: '1',
+        acceptedLanguage: 'FR',
+        customerId: 'gid://shopify/Customer/1',
+        pageType: 'index',
+        resourceId: 'gid://shopify/Product/1',
+        canonicalUrl: 'https://example.com',
+        ccpaEnforced: true,
+        gdprEnforced: true,
+        analyticsAllowed: true,
+        marketingAllowed: true,
+        saleOfDataAllowed: true,
+      };
+      const events = pageView(pageViewPayload);
+
+      expectType<ShopifyMonorailPayload[]>(events);
+      expect(events.length).toBe(1);
+      expect(events[0]).toEqual(
+        getExpectedPayload(pageViewPayload, {
+          source: 'hydrogen',
+          asset_version_id: '123',
+          shop_id: 2,
+          event_name: 'page_rendered',
+          hydrogenSubchannelId: '1',
+          is_persistent_cookie: false,
+          customer_id: 1,
+          canonical_url: pageViewPayload.canonicalUrl,
+          ccpa_enforced: true,
+          gdpr_enforced: true,
+          gdpr_enforced_as_string: 'true',
+          analytics_allowed: true,
+          marketing_allowed: true,
+          sale_of_data_allowed: true,
+        }),
+      );
+    });
+
     describe('collection', () => {
       it(`with base payload`, () => {
         const pageViewPayload = {
           ...BASE_PAYLOAD,
           pageType: 'collection',
           collectionHandle: 'test',
+          collectionId: 'gid://shopify/Collection/1',
         };
         const events = pageView(pageViewPayload);
 
@@ -83,6 +129,7 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
           getExpectedPayload(pageViewPayload, {
             event_name: 'collection_page_rendered',
             collection_name: pageViewPayload.collectionHandle,
+            collection_id: 1,
             canonical_url: pageViewPayload.url,
           }),
         );
@@ -283,7 +330,7 @@ function getExpectedPayload(
   extraPayload: ShopifyMonorailPayload,
 ) {
   return {
-    schema_id: 'custom_storefront_customer_tracking/1.0',
+    schema_id: 'custom_storefront_customer_tracking/1.2',
     payload: {
       ...getForwardedPayload(initPayload),
       ...extraPayload,
@@ -299,10 +346,12 @@ function getForwardedPayload(initPayload: ShopifyAnalyticsPayload) {
   return {
     shop_id: 1,
     source: 'headless',
+    asset_version_id: version,
     hydrogenSubchannelId: '0',
     is_persistent_cookie: true,
     user_agent: initPayload.userAgent,
     unique_token: initPayload.uniqueToken,
+    deprecated_visit_token: initPayload.visitToken,
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     event_id: expect.any(String),
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -312,8 +361,12 @@ function getForwardedPayload(initPayload: ShopifyAnalyticsPayload) {
     currency: initPayload.currency,
     ccpa_enforced: false,
     gdpr_enforced: false,
+    gdpr_enforced_as_string: 'false',
     navigation_api: initPayload.navigationApi,
     navigation_type: initPayload.navigationType,
+    analytics_allowed: false,
+    marketing_allowed: false,
+    sale_of_data_allowed: false,
   };
 }
 

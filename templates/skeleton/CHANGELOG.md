@@ -1,5 +1,118 @@
 # skeleton
 
+## 2024.7.9
+
+### Patch Changes
+
+- Updated dependencies [[`f3363030`](https://github.com/Shopify/hydrogen/commit/f3363030a50bd24d946427e01b88ba77253a6cc9), [`bb5b0979`](https://github.com/Shopify/hydrogen/commit/bb5b0979ddffb007111885b3a9b7aa490a3c6882)]:
+  - @shopify/hydrogen@2024.7.8
+  - @shopify/remix-oxygen@2.0.8
+
+## 2024.7.8
+
+### Patch Changes
+
+- Updated dependencies [[`39f8f8fd`](https://github.com/Shopify/hydrogen/commit/39f8f8fd42766d02c6e98f8090608e641db9f002)]:
+  - @shopify/hydrogen@2024.7.7
+
+## 2024.7.7
+
+### Patch Changes
+
+- Updated dependencies [[`d0ff37a9`](https://github.com/Shopify/hydrogen/commit/d0ff37a995bb64598930f8aa53f2612f3b1ea476)]:
+  - @shopify/hydrogen@2024.7.6
+
+## 2024.7.6
+
+### Patch Changes
+
+- Update Shopify CLI and cli-kit dependencies to 3.66.1 ([#2512](https://github.com/Shopify/hydrogen/pull/2512)) by [@frandiox](https://github.com/frandiox)
+
+- createCartHandler supplies updateGiftCardCodes method ([#2298](https://github.com/Shopify/hydrogen/pull/2298)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Fix menu links in side panel not working on mobile devices ([#2450](https://github.com/Shopify/hydrogen/pull/2450)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  ```diff
+  // /app/components/Header.tsx
+
+  export function HeaderMenu({
+    menu,
+    primaryDomainUrl,
+    viewport,
+    publicStoreDomain,
+  }: {
+    menu: HeaderProps['header']['menu'];
+    primaryDomainUrl: HeaderProps['header']['shop']['primaryDomain']['url'];
+    viewport: Viewport;
+    publicStoreDomain: HeaderProps['publicStoreDomain'];
+  }) {
+    const className = `header-menu-${viewport}`;
+  +  const {close} = useAside();
+
+  -  function closeAside(event: React.MouseEvent<HTMLAnchorElement>) {
+  -    if (viewport === 'mobile') {
+  -      event.preventDefault();
+  -      window.location.href = event.currentTarget.href;
+  -    }
+  -  }
+
+    return (
+      <nav className={className} role="navigation">
+        {viewport === 'mobile' && (
+          <NavLink
+            end
+  -          onClick={closeAside}
+  +          onClick={close}
+            prefetch="intent"
+            style={activeLinkStyle}
+            to="/"
+          >
+            Home
+          </NavLink>
+        )}
+        {(menu || FALLBACK_HEADER_MENU).items.map((item) => {
+          if (!item.url) return null;
+
+          // if the url is internal, we strip the domain
+          const url =
+            item.url.includes('myshopify.com') ||
+            item.url.includes(publicStoreDomain) ||
+            item.url.includes(primaryDomainUrl)
+              ? new URL(item.url).pathname
+              : item.url;
+          return (
+            <NavLink
+              className="header-menu-item"
+              end
+              key={item.id}
+  -            onClick={closeAside}
+  +            onClick={close}
+              prefetch="intent"
+              style={activeLinkStyle}
+              to={url}
+            >
+              {item.title}
+            </NavLink>
+          );
+        })}
+      </nav>
+    );
+  }
+  ```
+
+- Add localization support to consent privacy banner ([#2457](https://github.com/Shopify/hydrogen/pull/2457)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies [[`d633e49a`](https://github.com/Shopify/hydrogen/commit/d633e49aff244a985c58ec77fc2796c9c1cd5df4), [`1b217cd6`](https://github.com/Shopify/hydrogen/commit/1b217cd68ffd5362d201d4bd225ec72e99713461), [`d929b561`](https://github.com/Shopify/hydrogen/commit/d929b5612ec28e53ec216844add33682f131aba7), [`664a09d5`](https://github.com/Shopify/hydrogen/commit/664a09d57ef5d3c67da947a4e8546527c01e37c4), [`0c1e511d`](https://github.com/Shopify/hydrogen/commit/0c1e511df72e9605534bb9c960e86d5c9a4bf2ea), [`eefa8203`](https://github.com/Shopify/hydrogen/commit/eefa820383fa93657ca214991f6099ce9268a4ee)]:
+  - @shopify/hydrogen@2024.7.5
+  - @shopify/remix-oxygen@2.0.7
+
+## 2024.7.5
+
+### Patch Changes
+
+- Updated dependencies [[`b0d3bc06`](https://github.com/Shopify/hydrogen/commit/b0d3bc0696d266fcfc4eb93d0a4adb9ccb56ade6)]:
+  - @shopify/hydrogen@2024.7.4
+
 ## 2024.7.4
 
 ### Patch Changes

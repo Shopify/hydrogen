@@ -1,5 +1,38 @@
 # @shopify/cli-hydrogen
 
+## 8.4.4
+
+### Patch Changes
+
+- Update starter template with latest Hydrogen version. ([#2541](https://github.com/Shopify/hydrogen/pull/2541)) by [@scottdixon](https://github.com/scottdixon)
+
+## 8.4.3
+
+### Patch Changes
+
+- Update starter template with latest Hydrogen version. ([#2535](https://github.com/Shopify/hydrogen/pull/2535)) by [@scottdixon](https://github.com/scottdixon)
+
+## 8.4.2
+
+### Patch Changes
+
+- Update Shopify CLI and cli-kit dependencies to 3.66.1 ([#2512](https://github.com/Shopify/hydrogen/pull/2512)) by [@frandiox](https://github.com/frandiox)
+
+- Add `--force-client-sourcemap` flag. Client sourcemapping is avoided by default because it makes backend code visible in the browser. Use this flag to force enabling it. ([#2477](https://github.com/Shopify/hydrogen/pull/2477)) by [@frandiox](https://github.com/frandiox)
+
+  It is recommended to delete client sourcemaps before deploying the app to production.
+
+- Updated dependencies [[`664a09d5`](https://github.com/Shopify/hydrogen/commit/664a09d57ef5d3c67da947a4e8546527c01e37c4), [`9dd4c615`](https://github.com/Shopify/hydrogen/commit/9dd4c615507f9f458f9d86db912d03fbefeed863)]:
+  - @shopify/mini-oxygen@3.0.5
+
+## 8.4.1
+
+### Patch Changes
+
+- Update starter template with latest Hydrogen version. ([#2432](https://github.com/Shopify/hydrogen/pull/2432)) by [@frandiox](https://github.com/frandiox)
+
+- Fix upgrade notification right after scaffolding a new project. ([#2432](https://github.com/Shopify/hydrogen/pull/2432)) by [@frandiox](https://github.com/frandiox)
+
 ## 8.4.0
 
 ### Minor Changes

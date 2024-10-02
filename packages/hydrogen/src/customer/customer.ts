@@ -48,6 +48,8 @@ import type {
   LogoutOptions,
   Buyer,
 } from './types';
+import {createCustomerAccountHelper, URL_TYPE} from './customer-account-helper';
+import {warnOnce} from '../utils/warning';
 
 const DEFAULT_LOGIN_URL = '/account/login';
 const DEFAULT_AUTH_URL = '/account/authorize';
@@ -68,7 +70,8 @@ function defaultAuthStatusHandler(request: CrossRuntimeRequest) {
 export function createCustomerAccountClient({
   session,
   customerAccountId,
-  customerAccountUrl,
+  customerAccountUrl: deprecatedCustomerAccountUrl,
+  shopId,
   customerApiVersion = DEFAULT_CUSTOMER_API_VERSION,
   request,
   waitUntil,
@@ -94,6 +97,13 @@ export function createCustomerAccountClient({
       '[h2:error:createCustomerAccountClient] The request object does not contain a URL.',
     );
   }
+
+  if (!!deprecatedCustomerAccountUrl && !shopId) {
+    warnOnce(
+      '[h2:warn:createCustomerAccountClient] The `customerAccountUrl` option is deprecated and will be removed in a future version. Please remove `customerAccountUrl` and supply a `shopId: env.SHOP_ID` option instead.\n\nIf using `createHydrogenContext`, ensure there is a SHOP_ID defined in your local .env file.',
+    );
+  }
+
   const authStatusHandler = customAuthStatusHandler
     ? customAuthStatusHandler
     : () => defaultAuthStatusHandler(request);
@@ -108,7 +118,19 @@ export function createCustomerAccountClient({
     defaultUrl: DEFAULT_AUTH_URL,
     redirectUrl: authUrl,
   });
-  const customerAccountApiUrl = `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`;
+
+  const getCustomerAccountUrl = createCustomerAccountHelper(
+    customerApiVersion,
+    deprecatedCustomerAccountUrl,
+    shopId,
+  );
+
+  const ifInvalidCredentialThrowError = createIfInvalidCredentialThrowError(
+    getCustomerAccountUrl,
+    customerAccountId,
+  );
+
+  const customerAccountApiUrl = getCustomerAccountUrl(URL_TYPE.GRAPHQL);
   const locks: Locks = {};
 
   async function fetchCustomerAPI<T>({
@@ -211,7 +233,8 @@ export function createCustomerAccountClient({
   }
 
   async function isLoggedIn() {
-    if (!customerAccountUrl || !customerAccountId) return false;
+    if (!shopId && (!deprecatedCustomerAccountUrl || !customerAccountId))
+      return false;
 
     const customerAccount = session.get(CUSTOMER_ACCOUNT_SESSION_KEY);
     const accessToken = customerAccount?.accessToken;
@@ -228,7 +251,9 @@ export function createCustomerAccountClient({
         expiresAt,
         session,
         customerAccountId,
-        customerAccountUrl,
+        customerAccountTokenExchangeUrl: getCustomerAccountUrl(
+          URL_TYPE.TOKEN_EXCHANGE,
+        ),
         httpsOrigin,
         debugInfo: {
           waitUntil,
@@ -261,7 +286,7 @@ export function createCustomerAccountClient({
     mutation: Parameters<CustomerAccount['mutate']>[0],
     options?: Parameters<CustomerAccount['mutate']>[1],
   ) {
-    ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
+    ifInvalidCredentialThrowError();
 
     mutation = minifyQuery(mutation);
     assertMutation(mutation, 'customer.mutate');
@@ -276,7 +301,7 @@ export function createCustomerAccountClient({
     query: Parameters<CustomerAccount['query']>[0],
     options?: Parameters<CustomerAccount['query']>[1],
   ) {
-    ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
+    ifInvalidCredentialThrowError();
 
     query = minifyQuery(query);
     assertQuery(query, 'customer.query');
@@ -338,8 +363,8 @@ export function createCustomerAccountClient({
 
   return {
     login: async (options?: LoginOptions) => {
-      ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
-      const loginUrl = new URL(`${customerAccountUrl}/auth/oauth/authorize`);
+      ifInvalidCredentialThrowError();
+      const loginUrl = new URL(getCustomerAccountUrl(URL_TYPE.AUTH));
 
       const state = generateState();
       const nonce = generateNonce();
@@ -350,7 +375,7 @@ export function createCustomerAccountClient({
       loginUrl.searchParams.append('redirect_uri', redirectUri);
       loginUrl.searchParams.set(
         'scope',
-        'openid email https://api.customers.com/auth/customer.graphql',
+        getCustomerAccountUrl(URL_TYPE.LOGIN_SCOPE),
       );
       loginUrl.searchParams.append('state', state);
       loginUrl.searchParams.append('nonce', nonce);
@@ -385,7 +410,7 @@ export function createCustomerAccountClient({
     },
 
     logout: async (options?: LogoutOptions) => {
-      ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
+      ifInvalidCredentialThrowError();
 
       const idToken = session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.idToken;
       const postLogoutRedirectUri = ensureLocalRedirectUrl({
@@ -396,7 +421,7 @@ export function createCustomerAccountClient({
 
       const logoutUrl = idToken
         ? new URL(
-            `${customerAccountUrl}/auth/logout?${new URLSearchParams([
+            `${getCustomerAccountUrl(URL_TYPE.LOGOUT)}?${new URLSearchParams([
               ['id_token_hint', idToken],
               ['post_logout_redirect_uri', postLogoutRedirectUri],
             ]).toString()}`,
@@ -414,7 +439,7 @@ export function createCustomerAccountClient({
     mutate: mutate as CustomerAccount['mutate'],
     query: query as CustomerAccount['query'],
     authorize: async () => {
-      ifInvalidCredentialThrowError(customerAccountUrl, customerAccountId);
+      ifInvalidCredentialThrowError();
 
       const code = requestUrl.searchParams.get('code');
       const state = requestUrl.searchParams.get('state');
@@ -466,7 +491,7 @@ export function createCustomerAccountClient({
 
       const stackInfo = getCallerStackLine?.();
       const startTime = new Date().getTime();
-      const url = `${customerAccountUrl}/auth/oauth/token`;
+      const url = getCustomerAccountUrl(URL_TYPE.TOKEN_EXCHANGE);
       const response = await fetch(url, {
         method: 'POST',
         headers,
@@ -509,17 +534,21 @@ export function createCustomerAccountClient({
         );
       }
 
-      const customerAccessToken = await exchangeAccessToken(
-        access_token,
-        customerAccountId,
-        customerAccountUrl,
-        httpsOrigin,
-        {
-          waitUntil,
-          stackInfo,
-          ...getDebugHeaders(request),
-        },
-      );
+      let customerAccessToken = access_token;
+
+      if (!shopId) {
+        customerAccessToken = await exchangeAccessToken(
+          access_token,
+          customerAccountId,
+          getCustomerAccountUrl(URL_TYPE.TOKEN_EXCHANGE),
+          httpsOrigin,
+          {
+            waitUntil,
+            stackInfo,
+            ...getDebugHeaders(request),
+          },
+        );
+      }
 
       const redirectPath = session.get(
         CUSTOMER_ACCOUNT_SESSION_KEY,
@@ -543,25 +572,29 @@ export function createCustomerAccountClient({
   };
 }
 
-function ifInvalidCredentialThrowError(
-  customerAccountUrl?: string,
+function createIfInvalidCredentialThrowError(
+  getCustomerAccountUrl: (urlType: URL_TYPE) => string,
   customerAccountId?: string,
 ) {
-  try {
-    if (!customerAccountUrl || !customerAccountId) throw Error();
-    new URL(customerAccountUrl);
-  } catch {
-    console.error(
-      new Error(
-        '[h2:error:customerAccount] You do not have the valid credential to use Customer Account API.\nRun `h2 env pull` to link your store credentials.',
-      ),
-    );
+  return function ifInvalidCredentialThrowError() {
+    try {
+      if (!customerAccountId) throw Error();
 
-    const publicMessage =
-      process.env.NODE_ENV === 'production'
-        ? 'Internal Server Error'
-        : 'You do not have the valid credential to use Customer Account API (/account).';
+      new URL(getCustomerAccountUrl(URL_TYPE.CA_BASE_URL));
+      new URL(getCustomerAccountUrl(URL_TYPE.CA_BASE_AUTH_URL));
+    } catch {
+      console.error(
+        new Error(
+          '[h2:error:customerAccount] You do not have the valid credential to use Customer Account API.\nRun `h2 env pull` to link your store credentials.',
+        ),
+      );
 
-    throw new Response(publicMessage, {status: 500});
-  }
+      const publicMessage =
+        process.env.NODE_ENV === 'production'
+          ? 'Internal Server Error'
+          : 'You do not have the valid credential to use Customer Account API (/account).';
+
+      throw new Response(publicMessage, {status: 500});
+    }
+  };
 }

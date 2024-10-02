@@ -1,5 +1,54 @@
 # @shopify/hydrogen
 
+## 2024.7.8
+
+### Patch Changes
+
+- Update customer account buyer authentication exchange ([#2437](https://github.com/Shopify/hydrogen/pull/2437)) by [@s-lee-kwong](https://github.com/s-lee-kwong)
+
+- Updated dependencies [[`bb5b0979`](https://github.com/Shopify/hydrogen/commit/bb5b0979ddffb007111885b3a9b7aa490a3c6882)]:
+  - @shopify/hydrogen-react@2024.7.5
+
+## 2024.7.7
+
+### Patch Changes
+
+- Fix Shopify.customerPrivacy.setTrackingConsent override not working properly ([#2538](https://github.com/Shopify/hydrogen/pull/2538)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+## 2024.7.6
+
+### Patch Changes
+
+- Emit a document event `shopifyCustomerPrivacyApiLoaded` when Customer Privacy API is ready and fix analytics events sending to Shopify. ([#2528](https://github.com/Shopify/hydrogen/pull/2528)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Updated dependencies [[`d0ff37a9`](https://github.com/Shopify/hydrogen/commit/d0ff37a995bb64598930f8aa53f2612f3b1ea476)]:
+  - @shopify/hydrogen-react@2024.7.4
+
+## 2024.7.5
+
+### Patch Changes
+
+- Prevent CSP nonces from persisting between requests ([#2500](https://github.com/Shopify/hydrogen/pull/2500)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- useOptimisticCart: optimistically calculate totalQuantity ([#2459](https://github.com/Shopify/hydrogen/pull/2459)) by [@scottdixon](https://github.com/scottdixon)
+
+- createCartHandler supplies updateGiftCardCodes method ([#2298](https://github.com/Shopify/hydrogen/pull/2298)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Introduce a new abstraction for generating sitemap index and child sitemaps. ([#2478](https://github.com/Shopify/hydrogen/pull/2478)) by [@blittle](https://github.com/blittle)
+
+  See the [sitemap example](https://github.com/Shopify/hydrogen/tree/main/examples/sitemap) for how to use it and read the [docs](https://shopify.dev/docs/api/hydrogen/utilities/getSitemapIndex) for more information.
+
+- Add localization support to consent privacy banner ([#2457](https://github.com/Shopify/hydrogen/pull/2457)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies [[`ca0c7692`](https://github.com/Shopify/hydrogen/commit/ca0c76921ee873920d58112849cd0709bb990858), [`81f2b540`](https://github.com/Shopify/hydrogen/commit/81f2b540c42c55f36c70c63bce34a3e1626d9965)]:
+  - @shopify/hydrogen-react@2024.7.3
+
+## 2024.7.4
+
+### Patch Changes
+
+- Fix the `Script` component to not throw when using it for inline scripts with `dangerouslySetInnerHTML` ([#2428](https://github.com/Shopify/hydrogen/pull/2428)) by [@blittle](https://github.com/blittle)
+
 ## 2024.7.3
 
 ### Patch Changes

@@ -10,13 +10,12 @@ import type {ViteDevServer} from 'vite';
  */
 export function toURL(req: string | IncomingMessage = '/', origin?: string) {
   const isRequest = typeof req !== 'string';
-  const pathname = (isRequest ? req.url : req) || '/';
+  let pathname = (isRequest ? req.url : req) || '/';
 
   return new URL(
-    pathname,
-    origin ||
+    (origin ||
       (isRequest && req.headers.host && `http://${req.headers.host}`) ||
-      'http://example.com',
+      'http://example.com') + pathname,
   );
 }
 

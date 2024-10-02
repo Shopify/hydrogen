@@ -91,7 +91,7 @@ Defaults to the '.env' located in your project path `--path`.",
   sourcemap: {
     sourcemap: Flags.boolean({
       description:
-        'Controls whether sourcemaps are generated. Default to `true`. Deactivate `--no-sourcemaps`.',
+        'Controls whether server sourcemaps are generated. Default to `true`. Deactivate `--no-sourcemaps`.',
       env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
       default: true,
       allowNo: true,

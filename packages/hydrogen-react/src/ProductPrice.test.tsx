@@ -1,7 +1,7 @@
 import {describe, expect, it} from 'vitest';
 
 import {render, screen} from '@testing-library/react';
-import {getProduct} from './ProductProvider.test.helpers.js';
+import {getProduct, getVariant} from './ProductProvider.test.helpers.js';
 import {ProductPrice} from './ProductPrice.js';
 
 describe('<ProductPrice />', () => {
@@ -12,12 +12,31 @@ describe('<ProductPrice />', () => {
       render(<ProductPrice data={product} variantId={variant?.id} />);
 
       expect(
+        screen.getByText(variant?.price?.amount || '', {exact: false}),
+      ).toBeInTheDocument();
+
+      expect(
         screen.getByText(variant?.priceV2?.amount || '', {exact: false}),
       ).toBeInTheDocument();
     });
 
     it("renders <Money /> with the variant's minimum compareAt price", () => {
-      const product = getProduct();
+      const product = getProduct({
+        variants: {
+          nodes: [
+            getVariant({
+              price: {
+                currencyCode: 'CAD',
+                amount: '250.00',
+              },
+              compareAtPrice: {
+                currencyCode: 'CAD',
+                amount: '500.00',
+              },
+            }),
+          ],
+        },
+      });
       const variant = product?.variants?.nodes?.[0];
       render(
         <ProductPrice
@@ -26,6 +45,12 @@ describe('<ProductPrice />', () => {
           variantId={variant?.id}
         />,
       );
+
+      expect(
+        screen.getByText(variant?.compareAtPrice?.amount || '', {
+          exact: false,
+        }),
+      ).toBeInTheDocument();
 
       expect(
         screen.getByText(variant?.compareAtPriceV2?.amount || '', {
@@ -74,7 +99,20 @@ describe('<ProductPrice />', () => {
   });
 
   it("renders <Money /> with the product's minimum compareAt price when the `priceType` is `compareAt`", () => {
-    const product = getProduct();
+    const product = getProduct({
+      priceRange: {
+        minVariantPrice: {
+          currencyCode: 'CAD',
+          amount: '500.00',
+        },
+      },
+      compareAtPriceRange: {
+        minVariantPrice: {
+          currencyCode: 'CAD',
+          amount: '750.00',
+        },
+      },
+    });
     render(<ProductPrice data={product} priceType="compareAt" />);
 
     expect(
@@ -86,7 +124,20 @@ describe('<ProductPrice />', () => {
   });
 
   it("renders <Money /> with the product's maximum compareAt price when `valueType` is `max` and `priceType` is `compareAt`", () => {
-    const product = getProduct();
+    const product = getProduct({
+      priceRange: {
+        maxVariantPrice: {
+          currencyCode: 'CAD',
+          amount: '500.00',
+        },
+      },
+      compareAtPriceRange: {
+        maxVariantPrice: {
+          currencyCode: 'CAD',
+          amount: '750.00',
+        },
+      },
+    });
     render(
       <ProductPrice data={product} valueType="max" priceType="compareAt" />,
     );
@@ -97,6 +148,32 @@ describe('<ProductPrice />', () => {
         {exact: false},
       ),
     ).toBeInTheDocument();
+  });
+
+  it('does not show compareAt price when regular price is larger than compareAt price', () => {
+    const product = getProduct({
+      priceRange: {
+        minVariantPrice: {
+          currencyCode: 'CAD',
+          amount: '750.00',
+        },
+      },
+      compareAtPriceRange: {
+        minVariantPrice: {
+          currencyCode: 'CAD',
+          amount: '500.00',
+        },
+      },
+    });
+
+    render(<ProductPrice data={product} priceType="compareAt" />);
+
+    expect(
+      screen.queryByText(
+        product.compareAtPriceRange?.minVariantPrice?.amount ?? '',
+        {exact: false},
+      ),
+    ).toBeNull();
   });
 
   it('supports passthrough props', () => {
