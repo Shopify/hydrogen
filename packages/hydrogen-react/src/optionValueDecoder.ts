@@ -21,14 +21,14 @@ const V1_CONTROL_CHARS = {
 };
 
 export type IsOptionValueCombinationInEncodedVariantForDocs = (
-  targetOptionValueIndices: number[],
+  targetOptionValueCombination: number[],
   encodedVariantField: string,
 ) => boolean;
 
 /**
- * Determine whether an option value set is present in an encoded option value string. Function is memoized by encodedVariantField.
+ * Determine whether an option value combination is present in an encoded option value string. Function is memoized by encodedVariantField.
  *
- * @param targetOptionValueIndices - Indices of option values to look up in the encoded option value string. A partial set of indices may be passed to determine whether a node or any children is present. For example, if a product has 3 options, passing [0] will return true if any option value combination for the first option's option value is present in the encoded string.
+ * @param targetOptionValueCombination - Indices of option values to look up in the encoded option value string. A partial set of indices may be passed to determine whether a node or any children is present. For example, if a product has 3 options, passing [0] will return true if any option value combination for the first option's option value is present in the encoded string.
  * @param encodedVariantField - Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantavailability)
  * @returns - True if a full or partial targetOptionValueIndices is present in the encoded option value string, false otherwise.
  */
@@ -36,10 +36,10 @@ export const isOptionValueCombinationInEncodedVariant = (() => {
   const decodedOptionValues = new Map<string, Set<string>>();
 
   return function (
-    targetOptionValueIndices: number[],
+    targetOptionValueCombination: number[],
     encodedVariantField: string,
   ): boolean {
-    if (targetOptionValueIndices.length === 0) {
+    if (targetOptionValueCombination.length === 0) {
       return false;
     }
 
@@ -64,7 +64,7 @@ export const isOptionValueCombinationInEncodedVariant = (() => {
     return Boolean(
       decodedOptionValues
         .get(encodedVariantField)
-        ?.has(targetOptionValueIndices.join(OPTION_VALUE_SEPARATOR)),
+        ?.has(targetOptionValueCombination.join(OPTION_VALUE_SEPARATOR)),
     );
   };
 })();
