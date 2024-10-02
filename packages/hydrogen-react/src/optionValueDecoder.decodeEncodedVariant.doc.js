@@ -1,20 +1,15 @@
-import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
-
-const data: ReferenceEntityTemplateSchema = {
-  name: 'decodeOptionValues',
+'use strict';
+Object.defineProperty(exports, '__esModule', {value: true});
+const data = {
+  name: 'decodeEncodedVariant',
   category: 'utilities',
   subCategory: 'Product option value decoder',
   isVisualComponent: false,
   related: [
     {
-      name: 'getOptionValueIndices',
+      name: 'isOptionValueCombinationInEncodedVariant',
       type: 'utility',
-      url: '/docs/api/hydrogen/2024-10/utilities/getOptionValueIndices',
-    },
-    {
-      name: 'isOptionValueInEncoding',
-      type: 'utility',
-      url: '/docs/api/hydrogen/2024-10/utilities/isOptionValueInEncoding',
+      url: '/docs/api/hydrogen/2024-10/utilities/isOptionValueCombinationInEncodedVariant',
     },
   ],
   description:
@@ -26,7 +21,7 @@ const data: ReferenceEntityTemplateSchema = {
       tabs: [
         {
           title: 'JavaScript',
-          code: './optionValueDecoder.decodeOptionValues.example.js',
+          code: './optionValueDecoder.decodeEncodedVariant.example.js',
           language: 'js',
         },
       ],
@@ -36,11 +31,10 @@ const data: ReferenceEntityTemplateSchema = {
   definitions: [
     {
       title: 'Props',
-      type: 'DecodeOptionValuesGeneratedType',
+      type: 'DecodeEncodedVariantGeneratedType',
       description:
         'Decodes an encoded option value string into an array of option value combinations.',
     },
   ],
 };
-
-export default data;
+exports.default = data;

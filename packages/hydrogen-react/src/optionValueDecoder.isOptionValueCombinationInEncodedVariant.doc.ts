@@ -1,20 +1,15 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'isOptionValueInEncoding',
+  name: 'isOptionValueCombinationInEncodedVariant',
   category: 'utilities',
   subCategory: 'Product option value decoder',
   isVisualComponent: false,
   related: [
     {
-      name: 'decodeOptionValues',
+      name: 'decodeEncodedVariant',
       type: 'utility',
-      url: '/docs/api/hydrogen/2024-10/utilities/decodeOptionValues',
-    },
-    {
-      name: 'getOptionValueIndices',
-      type: 'utility',
-      url: '/docs/api/hydrogen/2024-10/utilities/getOptionValueIndices',
+      url: '/docs/api/hydrogen/2024-10/utilities/decodeEncodedVariant',
     },
   ],
   description:
@@ -26,7 +21,7 @@ const data: ReferenceEntityTemplateSchema = {
       tabs: [
         {
           title: 'JavaScript',
-          code: './optionValueDecoder.isOptionValueInEncoding.example.js',
+          code: './optionValueDecoder.isOptionValueCombinationInEncodedVariant.example.js',
           language: 'js',
         },
       ],
@@ -36,7 +31,7 @@ const data: ReferenceEntityTemplateSchema = {
   definitions: [
     {
       title: 'Props',
-      type: 'IsOptionValueInEncodingGeneratedType',
+      type: 'IsOptionValueCombinationInEncodedVariantForDocs',
       description:
         'Determines whether an option value set is present in an encoded option value string.',
     },

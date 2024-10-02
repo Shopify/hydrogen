@@ -71,6 +71,6 @@ export {Video} from './Video.js';
 
 export {
   getOptionValueIndices,
-  isOptionValueInEncoding,
-  decodeOptionValues,
+  isOptionValueCombinationInEncodedVariant,
+  decodeEncodedVariant,
 } from './optionValueDecoder.js';

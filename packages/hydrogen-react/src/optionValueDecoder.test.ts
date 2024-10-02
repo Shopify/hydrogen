@@ -1,49 +1,62 @@
 import {describe, expect, it} from 'vitest';
 import {
-  decodeOptionValues,
-  isOptionValueInEncoding,
+  decodeEncodedVariant,
+  isOptionValueCombinationInEncodedVariant,
 } from './optionValueDecoder';
 
-describe('isOptionValueInEncoding', () => {
+describe('isOptionValueCombinationInEncodedVariant', () => {
   it('returns true when target option values are present in encoded option values', () => {
     const MOCK_ENCODED_OPTION_VALUES = 'v1_0:0:0,,1:1:1,,2:2:2,,';
 
-    expect(isOptionValueInEncoding([0, 0, 0], MOCK_ENCODED_OPTION_VALUES)).toBe(
-      true,
-    );
+    expect(
+      isOptionValueCombinationInEncodedVariant(
+        [0, 0, 0],
+        MOCK_ENCODED_OPTION_VALUES,
+      ),
+    ).toBe(true);
   });
 
   it('returns true when a partial target option value is present in encoded option values', () => {
     const MOCK_ENCODED_OPTION_VALUES = 'v1_0:0:0,,1:1:1,,2:2:2,,';
 
-    expect(isOptionValueInEncoding([0], MOCK_ENCODED_OPTION_VALUES)).toBe(true);
+    expect(
+      isOptionValueCombinationInEncodedVariant([0], MOCK_ENCODED_OPTION_VALUES),
+    ).toBe(true);
 
-    expect(isOptionValueInEncoding([2, 2], MOCK_ENCODED_OPTION_VALUES)).toBe(
-      true,
-    );
+    expect(
+      isOptionValueCombinationInEncodedVariant(
+        [2, 2],
+        MOCK_ENCODED_OPTION_VALUES,
+      ),
+    ).toBe(true);
   });
 
   it('returns false when target option values are not present in encoded option values', () => {
     const MOCK_ENCODED_OPTION_VALUES = 'v1_0:0:0,,1:1:1,,2:2:2,,';
 
-    expect(isOptionValueInEncoding([0, 0, 1], MOCK_ENCODED_OPTION_VALUES)).toBe(
-      false,
-    );
+    expect(
+      isOptionValueCombinationInEncodedVariant(
+        [0, 0, 1],
+        MOCK_ENCODED_OPTION_VALUES,
+      ),
+    ).toBe(false);
   });
 
   it('returns false if no target option values are passed', () => {
     const MOCK_ENCODED_OPTION_VALUES = 'v1_0:0:0,,1:1:1,,2:2:2,,';
 
-    expect(isOptionValueInEncoding([], MOCK_ENCODED_OPTION_VALUES)).toBe(false);
+    expect(
+      isOptionValueCombinationInEncodedVariant([], MOCK_ENCODED_OPTION_VALUES),
+    ).toBe(false);
   });
 });
 
-describe('decodeOptionValues', () => {
+describe('decodeEncodedVariant', () => {
   describe('v1', () => {
     const VERSION_PREFIX = 'v1_';
 
     it('it correctly decodes a set of 1-dimensional arrays with no gaps in the number sequence', () => {
-      expect(decodeOptionValues(`${VERSION_PREFIX}0-9`)).toStrictEqual([
+      expect(decodeEncodedVariant(`${VERSION_PREFIX}0-9`)).toStrictEqual([
         [0],
         [1],
         [2],
@@ -58,21 +71,14 @@ describe('decodeOptionValues', () => {
     });
 
     it('it correctly decodes a set of 1-dimensional arrays with gaps in the number sequence', () => {
-      expect(decodeOptionValues(`${VERSION_PREFIX}0-2 4-6 8-9`)).toStrictEqual([
-        [0],
-        [1],
-        [2],
-        [4],
-        [5],
-        [6],
-        [8],
-        [9],
-      ]);
+      expect(
+        decodeEncodedVariant(`${VERSION_PREFIX}0-2 4-6 8-9`),
+      ).toStrictEqual([[0], [1], [2], [4], [5], [6], [8], [9]]);
     });
 
     it('it correctly decodes a set of 2-dimensional arrays with no gaps in the number sequence', () => {
       expect(
-        decodeOptionValues(`${VERSION_PREFIX}0:0-2,1:0-2,2:0-2,`),
+        decodeEncodedVariant(`${VERSION_PREFIX}0:0-2,1:0-2,2:0-2,`),
       ).toStrictEqual([
         [0, 0],
         [0, 1],
@@ -88,7 +94,7 @@ describe('decodeOptionValues', () => {
 
     it('it correctly decodes a set of 2-dimensional arrays with gaps in the number sequence', () => {
       expect(
-        decodeOptionValues(`${VERSION_PREFIX}0:0-1,1:0 2,2:1-2,`),
+        decodeEncodedVariant(`${VERSION_PREFIX}0:0-1,1:0 2,2:1-2,`),
       ).toStrictEqual([
         [0, 0],
         [0, 1],
@@ -102,7 +108,7 @@ describe('decodeOptionValues', () => {
     it('it correctly decodes a set of 3-dimensional arrays with no gaps in the number sequence', () => {
       const output = generateCombinations(3, 3);
       expect(
-        decodeOptionValues(
+        decodeEncodedVariant(
           `${VERSION_PREFIX}0:0:0-2,1:0-2,2:0-2,,1:0:0-2,1:0-2,2:0-2,,2:0:0-2,1:0-2,2:0-2,,`,
         ),
       ).toStrictEqual(output);
@@ -115,7 +121,7 @@ describe('decodeOptionValues', () => {
         [0, 2, 2],
       ]);
       expect(
-        decodeOptionValues(
+        decodeEncodedVariant(
           `${VERSION_PREFIX}0:0:0-2,1:0-2,2:0-1,,1:0:0 2,1:0-2,2:0-2,,2:0:0-2,1:0-2,2:0-1,`,
         ),
       ).toStrictEqual(output);
@@ -124,7 +130,7 @@ describe('decodeOptionValues', () => {
     it('it correctly decodes a set of 4-dimensional arrays with no gaps in the number sequence', () => {
       const output = generateCombinations(4, 3);
       expect(
-        decodeOptionValues(
+        decodeEncodedVariant(
           `${VERSION_PREFIX}"0:0:0:0-2,1:0-2,2:0-2,,1:0:0-2,1:0-2,2:0-2,,2:0:0-2,1:0-2,2:0-2,,,1:0:0:0-2,1:0-2,2:0-2,,1:0:0-2,1:0-2,2:0-2,,2:0:0-2,1:0-2,2:0-2,,,2:0:0:0-2,1:0-2,2:0-2,,1:0:0-2,1:0-2,2:0-2,,2:0:0-2,1:0-2,2:0-2,,,"`,
         ),
       ).toStrictEqual(output);
@@ -137,7 +143,7 @@ describe('decodeOptionValues', () => {
         [0, 2, 2, 1],
       ]);
       expect(
-        decodeOptionValues(
+        decodeEncodedVariant(
           `${VERSION_PREFIX}0:0:0:0-2,1:0-2,2:0-2,,1:0:0-2,1:0-2,2:0-2,,2:0:0-2,1:0-2,2:0 2,,,1:0:0:0-2,1:1-2,2:0-2,,1:0:0-2,1:0-2,2:0-2,,2:0:0-2,1:0-2,2:0-2,,,2:0:0:0-2,1:0-2,2:0-2,,1:0:0-2,1:0-2,2:0-2,,2:0:0-2,1:0-2,2:1-2,,,`,
         ),
       ).toStrictEqual(output);

@@ -11,8 +11,6 @@
 
 import {Product} from './storefront-api-types';
 
-type OptionValues = string[];
-
 const OPTION_VALUE_SEPARATOR = ',';
 
 const V1_CONTROL_CHARS = {
@@ -22,28 +20,39 @@ const V1_CONTROL_CHARS = {
   RANGE: '-',
 };
 
+export type IsOptionValueCombinationInEncodedVariantForDocs = (
+  /**
+   * Indices of option values to look up in the encoded option value string. A partial set of indices may be passed to determine whether a node or any children is present. For example, if a product has 3 options, passing [0] will return true if any option value combination for the first option's option value is present in the encoded string.
+   */
+  targetOptionValueIndices: number[],
+  /**
+   * Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantavailability)
+   */
+  encodedVariantField: string,
+) => boolean;
+
 /**
- * Determine whether an option value set is present in an encoded option value string. Function is memoized by encodedOptionValues.
+ * Determine whether an option value set is present in an encoded option value string. Function is memoized by encodedVariantField.
  *
  * @param targetOptionValueIndices - Indices of option values to look up in the encoded option value string. A partial set of indices may be passed to determine whether a node or any children is present. For example, if a product has 3 options, passing [0] will return true if any option value combination for the first option's option value is present in the encoded string.
- * @param encodedOptionValues - Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantavailability)
+ * @param encodedVariantField - Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantavailability)
  * @returns - True if a full or partial targetOptionValueIndices is present in the encoded option value string, false otherwise.
  */
-export const isOptionValueInEncoding = (() => {
+export const isOptionValueCombinationInEncodedVariant = (() => {
   const decodedOptionValues = new Map<string, Set<string>>();
 
   return function (
     targetOptionValueIndices: number[],
-    encodedOptionValues: string,
+    encodedVariantField: string,
   ): boolean {
     if (targetOptionValueIndices.length === 0) {
       return false;
     }
 
-    if (!decodedOptionValues.has(encodedOptionValues)) {
+    if (!decodedOptionValues.has(encodedVariantField)) {
       const decodedOptionValuesSet = new Set<string>();
 
-      for (const optionValue of decodeOptionValues(encodedOptionValues)) {
+      for (const optionValue of decodeEncodedVariant(encodedVariantField)) {
         // add the complete option value to the decoded option values set
         decodedOptionValuesSet.add(optionValue.join(OPTION_VALUE_SEPARATOR));
 
@@ -55,41 +64,41 @@ export const isOptionValueInEncoding = (() => {
         }
       }
 
-      decodedOptionValues.set(encodedOptionValues, decodedOptionValuesSet);
+      decodedOptionValues.set(encodedVariantField, decodedOptionValuesSet);
     }
 
     return Boolean(
       decodedOptionValues
-        .get(encodedOptionValues)
+        .get(encodedVariantField)
         ?.has(targetOptionValueIndices.join(OPTION_VALUE_SEPARATOR)),
     );
   };
 })();
 
-type EncodedOptionValues =
+type EncodedVariantField =
   | Product['encodedVariantAvailability']
   | Product['encodedVariantExistence'];
 type DecodedOptionValues = number[][];
 
 /**
  * For an encoded option value string, decode into option value combinations. Entries represent a valid combination formatted as an array of option value positions.
- * @param encodedOptionValues - Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantavailability)
+ * @param encodedVariantField - Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantavailability)
  * @returns - Decoded option value combinations
  */
-export function decodeOptionValues(
-  encodedOptionValues: EncodedOptionValues,
+export function decodeEncodedVariant(
+  encodedVariantField: EncodedVariantField,
 ): DecodedOptionValues {
-  if (!encodedOptionValues) return [];
+  if (!encodedVariantField) return [];
 
-  if (encodedOptionValues.startsWith('v1_')) {
-    return v1Decoder(stripVersion(encodedOptionValues));
+  if (encodedVariantField.startsWith('v1_')) {
+    return v1Decoder(stripVersion(encodedVariantField));
   }
 
   throw new Error('Unsupported option value encoding');
 }
 
-const stripVersion = (encodedOptionValues: string) =>
-  encodedOptionValues.replace(/^v1_/, '');
+const stripVersion = (encodedVariantField: string) =>
+  encodedVariantField.replace(/^v1_/, '');
 
 /**
  * We encode an array of arrays representing variants, expressed in terms of options and option values, as a trie.
@@ -113,7 +122,7 @@ const stripVersion = (encodedOptionValues: string) =>
  * step 3: encode data as a trie so no prefixes need to be repeated: "0:0:0,1:0 1,,1:0:0 1,1:1,,2:0:1,1:0,,"
  * step 4: since the options are sorted, use a dash to express ranges: "0:0:0,1:0-1,,1:0:0-1,1:1,,2:0:1,1:0,,"
  */
-function v1Decoder(encodedOptionValues: string) {
+function v1Decoder(encodedVariantField: string) {
   const tokenizer = /[ :,-]/g;
   let index = 0;
   let token: RegExpExecArray | null;
@@ -123,10 +132,10 @@ function v1Decoder(encodedOptionValues: string) {
   let rangeStart: number | null = null;
 
   // iterate over control characters
-  while ((token = tokenizer.exec(encodedOptionValues))) {
+  while ((token = tokenizer.exec(encodedVariantField))) {
     const operation = token[0];
     const optionValueIndex =
-      Number.parseInt(encodedOptionValues.slice(index, token.index)) || 0;
+      Number.parseInt(encodedVariantField.slice(index, token.index)) || 0;
 
     if (rangeStart !== null) {
       // If a range has been started, iterate over the range and add each option value to the list of options
@@ -152,7 +161,7 @@ function v1Decoder(encodedOptionValues: string) {
       if (
         operation === V1_CONTROL_CHARS.SEQUENCE_GAP ||
         (operation === V1_CONTROL_CHARS.END_OF_PREFIX &&
-          encodedOptionValues[token.index - 1] !==
+          encodedVariantField[token.index - 1] !==
             V1_CONTROL_CHARS.END_OF_PREFIX)
       ) {
         // add the current option value to the list of options if we hit a gap in our sequence or we are at the end of our depth and need to move back up
@@ -169,10 +178,10 @@ function v1Decoder(encodedOptionValues: string) {
 
   // Because we iterate over control characters and the range processing happens in the while,
   // if the last control char is a range we need to manually add the final range to the option list.
-  const lastRangeStartIndex = encodedOptionValues.lastIndexOf('-');
+  const lastRangeStartIndex = encodedVariantField.lastIndexOf('-');
   if (rangeStart != null && lastRangeStartIndex > 0) {
     const finalValueIndex = parseInt(
-      encodedOptionValues.substring(lastRangeStartIndex + 1),
+      encodedVariantField.substring(lastRangeStartIndex + 1),
     );
     for (; rangeStart <= finalValueIndex; rangeStart++) {
       currentOptionValue[depth] = rangeStart;
