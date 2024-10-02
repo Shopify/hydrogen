@@ -16,8 +16,9 @@
       },
       "devDependencies": {
         "@remix-run/dev": "^2.10.1",
-        "@shopify/cli": "3.66.1",
+        "@shopify/cli": "3.68.0",
         "@shopify/oxygen-workers-types": "^4.1.2",
+        "@shopify/mini-oxygen": "3.0.6",
         "typescript": "^5.2.2"
       },
       "dependenciesMeta": {
@@ -31,6 +32,9 @@
           "required": true
         },
         "@remix-run/server-runtime": {
+          "required": true
+        },
+        "@shopify/mini-oxygen": {
           "required": true
         }
       },
