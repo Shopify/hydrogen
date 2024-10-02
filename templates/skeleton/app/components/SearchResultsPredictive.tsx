@@ -13,14 +13,14 @@ type PredictiveSearchItems = PredictiveSearchReturn['result']['items'];
 type UsePredictiveSearchReturn = {
   term: React.MutableRefObject<string>;
   total: number;
+  inputRef: React.MutableRefObject<HTMLInputElement | null>;
   items: PredictiveSearchItems;
   fetcher: Fetcher<PredictiveSearchReturn>;
-  queriesDatalistId: string;
 };
 
 type SearchResultsPredictiveArgs = Pick<
   UsePredictiveSearchReturn,
-  'term' | 'total' | 'items' | 'queriesDatalistId'
+  'term' | 'total' | 'inputRef' | 'items'
 > & {
   state: Fetcher['state'];
   closeSearch: () => void;
@@ -245,7 +245,9 @@ function SearchResultsPredictiveProducts({
 function SearchResultsPredictiveQueries({
   queries,
   queriesDatalistId,
-}: PartialPredictiveSearchResult<'queries', 'queriesDatalistId'>) {
+}: PartialPredictiveSearchResult<'queries', never> & {
+  queriesDatalistId: string;
+}) {
   if (!queries.length) return null;
 
   return (
