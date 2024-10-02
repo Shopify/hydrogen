@@ -9,7 +9,7 @@
  *  - `-` indicates a continuous range of option values. ex: `0 1-3 4`. Ranges are only present encoded in the final option value position, so for example the trie for the set [[0,0,0],[0,0,1], ..., [0,2,2]] will be structured as `0:0:0-2,1:0-2,2:0-2`, not `0:0-2:0-2`.
  */
 
-import {Product} from './storefront-api-types';
+import {Product} from './storefront-api-types.js';
 
 const OPTION_VALUE_SEPARATOR = ',';
 
@@ -20,7 +20,7 @@ const V1_CONTROL_CHARS = {
   RANGE: '-',
 };
 
-export type IsOptionValueCombinationInEncodedVariantForDocs = (
+export type IsOptionValueCombinationInEncodedVariant = (
   targetOptionValueCombination: number[],
   encodedVariantField: string,
 ) => boolean;
@@ -32,42 +32,43 @@ export type IsOptionValueCombinationInEncodedVariantForDocs = (
  * @param encodedVariantField - Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantavailability)
  * @returns - True if a full or partial targetOptionValueIndices is present in the encoded option value string, false otherwise.
  */
-export const isOptionValueCombinationInEncodedVariant = (() => {
-  const decodedOptionValues = new Map<string, Set<string>>();
+export const isOptionValueCombinationInEncodedVariant: IsOptionValueCombinationInEncodedVariant =
+  ((): IsOptionValueCombinationInEncodedVariant => {
+    const decodedOptionValues = new Map<string, Set<string>>();
 
-  return function (
-    targetOptionValueCombination: number[],
-    encodedVariantField: string,
-  ): boolean {
-    if (targetOptionValueCombination.length === 0) {
-      return false;
-    }
-
-    if (!decodedOptionValues.has(encodedVariantField)) {
-      const decodedOptionValuesSet = new Set<string>();
-
-      for (const optionValue of decodeEncodedVariant(encodedVariantField)) {
-        // add the complete option value to the decoded option values set
-        decodedOptionValuesSet.add(optionValue.join(OPTION_VALUE_SEPARATOR));
-
-        // add all composite parts of the option value to the decoded option values set. e.g. if the option value is [0,1,2], add "0", "0,1", "0,1,2"
-        for (let i = 0; i < optionValue.length; i++) {
-          decodedOptionValuesSet.add(
-            optionValue.slice(0, i + 1).join(OPTION_VALUE_SEPARATOR),
-          );
-        }
+    return function (
+      targetOptionValueCombination: number[],
+      encodedVariantField: string,
+    ): boolean {
+      if (targetOptionValueCombination.length === 0) {
+        return false;
       }
 
-      decodedOptionValues.set(encodedVariantField, decodedOptionValuesSet);
-    }
+      if (!decodedOptionValues.has(encodedVariantField)) {
+        const decodedOptionValuesSet = new Set<string>();
 
-    return Boolean(
-      decodedOptionValues
-        .get(encodedVariantField)
-        ?.has(targetOptionValueCombination.join(OPTION_VALUE_SEPARATOR)),
-    );
-  };
-})();
+        for (const optionValue of decodeEncodedVariant(encodedVariantField)) {
+          // add the complete option value to the decoded option values set
+          decodedOptionValuesSet.add(optionValue.join(OPTION_VALUE_SEPARATOR));
+
+          // add all composite parts of the option value to the decoded option values set. e.g. if the option value is [0,1,2], add "0", "0,1", "0,1,2"
+          for (let i = 0; i < optionValue.length; i++) {
+            decodedOptionValuesSet.add(
+              optionValue.slice(0, i + 1).join(OPTION_VALUE_SEPARATOR),
+            );
+          }
+        }
+
+        decodedOptionValues.set(encodedVariantField, decodedOptionValuesSet);
+      }
+
+      return Boolean(
+        decodedOptionValues
+          .get(encodedVariantField)
+          ?.has(targetOptionValueCombination.join(OPTION_VALUE_SEPARATOR)),
+      );
+    };
+  })();
 
 type EncodedVariantField =
   | Product['encodedVariantAvailability']
@@ -76,7 +77,7 @@ type DecodedOptionValues = number[][];
 
 /**
  * For an encoded option value string, decode into option value combinations. Entries represent a valid combination formatted as an array of option value positions.
- * @param encodedVariantField Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantavailability)
+ * @param encodedVariantField - Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantavailability)
  * @returns Decoded option value combinations
  */
 export function decodeEncodedVariant(
@@ -91,8 +92,9 @@ export function decodeEncodedVariant(
   throw new Error('Unsupported option value encoding');
 }
 
-const stripVersion = (encodedVariantField: string) =>
-  encodedVariantField.replace(/^v1_/, '');
+const stripVersion: (encodedVariantField: string) => string = (
+  encodedVariantField: string,
+) => encodedVariantField.replace(/^v1_/, '');
 
 /**
  * We encode an array of arrays representing variants, expressed in terms of options and option values, as a trie.
@@ -116,12 +118,12 @@ const stripVersion = (encodedVariantField: string) =>
  * step 3: encode data as a trie so no prefixes need to be repeated: "0:0:0,1:0 1,,1:0:0 1,1:1,,2:0:1,1:0,,"
  * step 4: since the options are sorted, use a dash to express ranges: "0:0:0,1:0-1,,1:0:0-1,1:1,,2:0:1,1:0,,"
  */
-function v1Decoder(encodedVariantField: string) {
+function v1Decoder(encodedVariantField: string): number[][] {
   const tokenizer = /[ :,-]/g;
   let index = 0;
   let token: RegExpExecArray | null;
-  let options: number[][] = [];
-  let currentOptionValue: number[] = [];
+  const options: number[][] = [];
+  const currentOptionValue: number[] = [];
   let depth = 0;
   let rangeStart: number | null = null;
 

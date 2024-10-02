@@ -2,7 +2,7 @@ import {describe, expect, it} from 'vitest';
 import {
   decodeEncodedVariant,
   isOptionValueCombinationInEncodedVariant,
-} from './optionValueDecoder';
+} from './optionValueDecoder.js';
 
 describe('isOptionValueCombinationInEncodedVariant', () => {
   it('returns true when target option values are present in encoded option values', () => {
@@ -157,7 +157,7 @@ function generateCombinations(
   width: number,
   exclusions: number[][] = [],
 ): number[][] {
-  let input: number[][] = [];
+  const input: number[][] = [];
 
   function isInExclusions(array: number[]): boolean {
     return exclusions.some(
