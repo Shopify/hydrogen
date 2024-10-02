@@ -1,5 +1,14 @@
 # @shopify/cli-hydrogen
 
+## 8.4.5
+
+### Patch Changes
+
+- Update starter template with latest Hydrogen version. ([#2580](https://github.com/Shopify/hydrogen/pull/2580)) by [@scottdixon](https://github.com/scottdixon)
+
+- Updated dependencies [[`04b4c7c3`](https://github.com/Shopify/hydrogen/commit/04b4c7c3362aa07fc12ce749bfc5a955aa1254e4)]:
+  - @shopify/mini-oxygen@3.0.6
+
 ## 8.4.4
 
 ### Patch Changes

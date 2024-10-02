@@ -1,5 +1,11 @@
 # @shopify/create-hydrogen
 
+## 5.0.8
+
+### Patch Changes
+
+- Update starter template with latest Hydrogen version. ([#2580](https://github.com/Shopify/hydrogen/pull/2580)) by [@scottdixon](https://github.com/scottdixon)
+
 ## 5.0.7
 
 ### Patch Changes
