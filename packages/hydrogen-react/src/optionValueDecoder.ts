@@ -9,7 +9,7 @@
  *  - `-` indicates a continuous range of option values. ex: `0 1-3 4`. Ranges are only present encoded in the final option value position, so for example the trie for the set [[0,0,0],[0,0,1], ..., [0,2,2]] will be structured as `0:0:0-2,1:0-2,2:0-2`, not `0:0-2:0-2`.
  */
 
-import { Product } from "./storefront-api-types";
+import {Product} from './storefront-api-types';
 
 type OptionValues = string[];
 
@@ -21,38 +21,6 @@ const V1_CONTROL_CHARS = {
   SEQUENCE_GAP: ' ',
   RANGE: '-',
 };
-
-/**
- * For a full or partial set of option values, returns the indices of the option values for the product option set.
- * e.g. if product options are [["red", "blue"], ["small", "medium"]], passing target values ["red", "medium"] will return [0, 1]; passing ["red"] will return [0].
- * If an option value is not found or parent options are missing, throws an error.
- *
- * @param targetOptionValues - option values to look up in the encoded option value string
- * @param productOptions - Product options from the [Storefront API](/docs/api/storefront/2024-07/objects/ProductOption). Make sure `values` is a part of your query.
- * @returns - Indices of option values for the product option set.
- */
-export function getOptionValueIndices(
-  targetOptionValues: OptionValues,
-  productOptionValues: OptionValues[],
-) {
-  if (productOptionValues.length < targetOptionValues.length) {
-    throw new Error(
-      'One product option must be provided per target option value',
-    );
-  }
-
-  return targetOptionValues.map((optionValue, index) => {
-    const optionValueIndex =
-      productOptionValues[index]?.indexOf(optionValue) ?? -1;
-    if (optionValueIndex === -1) {
-      throw new Error(
-        `Option value "${optionValue}" not found in product options`,
-      );
-    }
-
-    return optionValueIndex;
-  });
-}
 
 /**
  * Determine whether an option value set is present in an encoded option value string. Function is memoized by encodedOptionValues.
@@ -98,15 +66,21 @@ export const isOptionValueInEncoding = (() => {
   };
 })();
 
-type EncodedOptionValues = Product['encodedVariantAvailability'] | Product['encodedVariantExistence'];
+type EncodedOptionValues =
+  | Product['encodedVariantAvailability']
+  | Product['encodedVariantExistence'];
 type DecodedOptionValues = number[][];
 
 /**
  * For an encoded option value string, decode into option value combinations. Entries represent a valid combination formatted as an array of option value positions.
- * @param encodedOptionValues
- * @returns
+ * @param encodedOptionValues - Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantavailability)
+ * @returns - Decoded option value combinations
  */
-export function decodeOptionValues(encodedOptionValues: EncodedOptionValues): DecodedOptionValues {
+export function decodeOptionValues(
+  encodedOptionValues: EncodedOptionValues,
+): DecodedOptionValues {
+  if (!encodedOptionValues) return [];
+
   if (encodedOptionValues.startsWith('v1_')) {
     return v1Decoder(stripVersion(encodedOptionValues));
   }

@@ -29,11 +29,6 @@ const data: ReferenceEntityTemplateSchema = {
           code: './optionValueDecoder.isOptionValueInEncoding.example.js',
           language: 'js',
         },
-        {
-          title: 'TypeScript',
-          code: './optionValueDecoder.isOptionValueInEncoding.example.ts',
-          language: 'ts',
-        },
       ],
       title: 'Example code',
     },

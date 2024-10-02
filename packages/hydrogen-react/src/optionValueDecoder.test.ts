@@ -1,55 +1,8 @@
 import {describe, expect, it} from 'vitest';
 import {
   decodeOptionValues,
-  getOptionValueIndices,
   isOptionValueInEncoding,
 } from './optionValueDecoder';
-
-const MOCK_PARENT_OPTIONS = [
-  ['red', 'blue', 'green'],
-  ['small', 'medium', 'large'],
-  ['cotton', 'polyester', 'wool'],
-];
-
-describe('getOptionValueIndices', () => {
-  it('returns an empty array when no option values are passed', () => {
-    expect(getOptionValueIndices([], [])).toEqual([]);
-  });
-
-  it('returns an array of indices when option values match product option values', () => {
-    expect(
-      getOptionValueIndices(['red', 'medium', 'cotton'], MOCK_PARENT_OPTIONS),
-    ).toEqual([0, 1, 0]);
-  });
-
-  it('returns a partial array of indices when a partial set of option values matches product option values', () => {
-    expect(
-      getOptionValueIndices(['red', 'medium'], MOCK_PARENT_OPTIONS),
-    ).toEqual([0, 1]);
-  });
-
-  describe('errors', () => {
-    it('throws an error when an option value is not found in product options', () => {
-      expect(() =>
-        getOptionValueIndices(
-          ['red', 'fantastic', 'cotton'],
-          MOCK_PARENT_OPTIONS,
-        ),
-      ).toThrowError(`Option value "fantastic" not found in product options`);
-    });
-
-    it('throws an error if fewer product optinos than target option values are provided', () => {
-      expect(() =>
-        getOptionValueIndices(
-          ['red', 'small', 'cotton'],
-          MOCK_PARENT_OPTIONS.slice(0, 2),
-        ),
-      ).toThrowError(
-        `One product option must be provided per target option value`,
-      );
-    });
-  });
-});
 
 describe('isOptionValueInEncoding', () => {
   it('returns true when target option values are present in encoded option values', () => {
@@ -82,27 +35,6 @@ describe('isOptionValueInEncoding', () => {
     const MOCK_ENCODED_OPTION_VALUES = 'v1_0:0:0,,1:1:1,,2:2:2,,';
 
     expect(isOptionValueInEncoding([], MOCK_ENCODED_OPTION_VALUES)).toBe(false);
-  });
-});
-
-describe('getOptionValueIndices', () => {
-  it('returns an empty array when no option values are passed', () => {
-    expect(getOptionValueIndices([], [])).toEqual([]);
-  });
-
-  it('returns an array of indices when option values match product option values', () => {
-    expect(
-      getOptionValueIndices(['red', 'medium', 'cotton'], MOCK_PARENT_OPTIONS),
-    ).toEqual([0, 1, 0]);
-  });
-
-  it('throws an error when an option value is not found in product options', () => {
-    expect(() =>
-      getOptionValueIndices(
-        ['red', 'fantastic', 'cotton'],
-        MOCK_PARENT_OPTIONS,
-      ),
-    ).toThrowError(`Option value "fantastic" not found in product options`);
   });
 });
 
