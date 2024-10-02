@@ -70,7 +70,6 @@ export {useShopifyCookies} from './useShopifyCookies.js';
 export {Video} from './Video.js';
 
 export {
-  getOptionValueIndices,
   isOptionValueCombinationInEncodedVariant,
   decodeEncodedVariant,
 } from './optionValueDecoder.js';

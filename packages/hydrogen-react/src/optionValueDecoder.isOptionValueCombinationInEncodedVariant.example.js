@@ -29,18 +29,18 @@ const encodedVariantExistence = 'v1_0:0-1,1:2';
 // }
 
 // Returns true since there are variants exist for [Red]
-isOptionValueCombinationInEncodedVariant([0], encodedVariantExistence); // Return true
+isOptionValueCombinationInEncodedVariant([0], encodedVariantExistence); // true
 
-isOptionValueCombinationInEncodedVariant([0, 0], encodedVariantExistence); // Return true
-isOptionValueCombinationInEncodedVariant([0, 1], encodedVariantExistence); // Return true
-isOptionValueCombinationInEncodedVariant([0, 2], encodedVariantExistence); // Return false - no variant exist for [Red, L]
+isOptionValueCombinationInEncodedVariant([0, 0], encodedVariantExistence); // true
+isOptionValueCombinationInEncodedVariant([0, 1], encodedVariantExistence); // true
+isOptionValueCombinationInEncodedVariant([0, 2], encodedVariantExistence); // false - no variant exist for [Red, L]
 
 // Returns true since there is a variant exist for [Blue]
-isOptionValueCombinationInEncodedVariant([1], encodedVariantExistence); // Return true
+isOptionValueCombinationInEncodedVariant([1], encodedVariantExistence); // true
 
-isOptionValueCombinationInEncodedVariant([1, 0], encodedVariantExistence); // Return false - no variant exist for [Blue, S]
-isOptionValueCombinationInEncodedVariant([1, 1], encodedVariantExistence); // Return false - no variant exist for [Blue, M]
-isOptionValueCombinationInEncodedVariant([1, 2], encodedVariantExistence); // Return true
+isOptionValueCombinationInEncodedVariant([1, 0], encodedVariantExistence); // false - no variant exist for [Blue, S]
+isOptionValueCombinationInEncodedVariant([1, 1], encodedVariantExistence); // false - no variant exist for [Blue, M]
+isOptionValueCombinationInEncodedVariant([1, 2], encodedVariantExistence); // true
 
 // Returns false since there is no variant exist for [Green]
-isOptionValueCombinationInEncodedVariant([2], encodedVariantExistence); // Return false
+isOptionValueCombinationInEncodedVariant([2], encodedVariantExistence); // false

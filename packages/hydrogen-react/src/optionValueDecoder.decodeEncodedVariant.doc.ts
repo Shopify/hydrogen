@@ -31,8 +31,7 @@ const data: ReferenceEntityTemplateSchema = {
     {
       title: 'Props',
       type: 'DecodeEncodedVariantGeneratedType',
-      description:
-        'Decodes an encoded option value string into an array of option value combinations.',
+      description: '',
     },
   ],
 };
