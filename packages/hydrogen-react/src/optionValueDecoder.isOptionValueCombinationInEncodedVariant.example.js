@@ -42,5 +42,5 @@ isOptionValueCombinationInEncodedVariant([1, 0], encodedVariantExistence); // Re
 isOptionValueCombinationInEncodedVariant([1, 1], encodedVariantExistence); // Return false - no variant exist for [Blue, M]
 isOptionValueCombinationInEncodedVariant([1, 2], encodedVariantExistence); // Return true
 
-// Returns false since there is no entry for the third option
-isOptionValueCombinationInEncodedVariant([2], encodedVariantExistence); // Return false - no variant exist for [Green]
+// Returns false since there is no variant exist for [Green]
+isOptionValueCombinationInEncodedVariant([2], encodedVariantExistence); // Return false

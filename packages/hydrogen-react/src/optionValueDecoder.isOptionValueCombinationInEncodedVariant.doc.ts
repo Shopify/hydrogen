@@ -3,7 +3,6 @@ import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 const data: ReferenceEntityTemplateSchema = {
   name: 'isOptionValueCombinationInEncodedVariant',
   category: 'utilities',
-  subCategory: 'Product option value decoder',
   isVisualComponent: false,
   related: [
     {
@@ -32,8 +31,7 @@ const data: ReferenceEntityTemplateSchema = {
     {
       title: 'Props',
       type: 'IsOptionValueCombinationInEncodedVariantForDocs',
-      description:
-        'Determines whether an option value set is present in an encoded option value string.',
+      description: '',
     },
   ],
 };

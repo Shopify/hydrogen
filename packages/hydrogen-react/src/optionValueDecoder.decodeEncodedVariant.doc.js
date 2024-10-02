@@ -3,7 +3,6 @@ Object.defineProperty(exports, '__esModule', {value: true});
 const data = {
   name: 'decodeEncodedVariant',
   category: 'utilities',
-  subCategory: 'Product option value decoder',
   isVisualComponent: false,
   related: [
     {

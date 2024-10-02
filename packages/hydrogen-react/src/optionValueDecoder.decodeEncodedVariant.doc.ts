@@ -3,7 +3,6 @@ import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 const data: ReferenceEntityTemplateSchema = {
   name: 'decodeEncodedVariant',
   category: 'utilities',
-  subCategory: 'Product option value decoder',
   isVisualComponent: false,
   related: [
     {
