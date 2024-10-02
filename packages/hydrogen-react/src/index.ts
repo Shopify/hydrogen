@@ -68,3 +68,9 @@ export {createStorefrontClient} from './storefront-client.js';
 export {useMoney} from './useMoney.js';
 export {useShopifyCookies} from './useShopifyCookies.js';
 export {Video} from './Video.js';
+
+export {
+  getOptionValueIndices,
+  isOptionValueInEncoding,
+  decodeOptionValues,
+} from './optionValueDecoder.js';

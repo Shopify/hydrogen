@@ -9,6 +9,8 @@
  *  - `-` indicates a continuous range of option values. ex: `0 1-3 4`. Ranges are only present encoded in the final option value position, so for example the trie for the set [[0,0,0],[0,0,1], ..., [0,2,2]] will be structured as `0:0:0-2,1:0-2,2:0-2`, not `0:0-2:0-2`.
  */
 
+import { Product } from "./storefront-api-types";
+
 type OptionValues = string[];
 
 const OPTION_VALUE_SEPARATOR = ',';
@@ -96,12 +98,15 @@ export const isOptionValueInEncoding = (() => {
   };
 })();
 
+type EncodedOptionValues = Product['encodedVariantAvailability'] | Product['encodedVariantExistence'];
+type DecodedOptionValues = number[][];
+
 /**
  * For an encoded option value string, decode into option value combinations. Entries represent a valid combination formatted as an array of option value positions.
  * @param encodedOptionValues
  * @returns
  */
-export function decodeOptionValues(encodedOptionValues: string): number[][] {
+export function decodeOptionValues(encodedOptionValues: EncodedOptionValues): DecodedOptionValues {
   if (encodedOptionValues.startsWith('v1_')) {
     return v1Decoder(stripVersion(encodedOptionValues));
   }
