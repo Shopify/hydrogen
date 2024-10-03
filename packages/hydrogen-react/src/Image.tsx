@@ -549,12 +549,13 @@ const FluidImage = React.forwardRef<HTMLImageElement, FluidImageProps>(
  * })
  * ```
  */
+const PLACEHOLDER_DOMAIN = 'https://placeholder.shopify.com';
 export function shopifyLoader({src, width, height, crop}: LoaderParams) {
   if (!src) {
     return '';
   }
 
-  const url = new URL(src);
+  const url = new URL(src, PLACEHOLDER_DOMAIN);
 
   if (width) {
     url.searchParams.append('width', Math.round(width).toString());
@@ -567,7 +568,7 @@ export function shopifyLoader({src, width, height, crop}: LoaderParams) {
   if (crop) {
     url.searchParams.append('crop', crop);
   }
-  return url.href;
+  return url.href.replace(PLACEHOLDER_DOMAIN, '');
 }
 
 /**
