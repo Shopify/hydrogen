@@ -166,6 +166,8 @@ type HydrogenClientProps<TI18n> = {
   storefrontHeaders?: StorefrontHeaders;
   /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */
   cache?: Cache;
+  /** Token to be appended as a suffix of cache keys. Change it when you want to invalidate the cache. */
+  cacheBustingToken?: string;
   /** The globally unique identifier for the Shop */
   storefrontId?: string;
   /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
@@ -204,6 +206,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
   const {
     storefrontHeaders,
     cache,
+    cacheBustingToken,
     waitUntil,
     i18n,
     storefrontId,
@@ -310,6 +313,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       requestInit.method,
       cacheKeyHeader,
       requestInit.body,
+      cacheBustingToken,
     ];
 
     const [body, response] = await fetchWithServerCache(url, requestInit, {
