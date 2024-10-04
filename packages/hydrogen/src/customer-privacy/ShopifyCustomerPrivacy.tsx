@@ -204,7 +204,8 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     if (!withPrivacyBanner || observing.current.privacyBanner) return;
     observing.current.privacyBanner = true;
 
-    let customPrivacyBanner: PrivacyBanner | undefined = window.privacyBanner || undefined;
+    let customPrivacyBanner: PrivacyBanner | undefined =
+      window.privacyBanner || undefined;
 
     const privacyBannerWatcher = {
       configurable: true,
