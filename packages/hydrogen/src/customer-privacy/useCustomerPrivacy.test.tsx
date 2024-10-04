@@ -13,6 +13,7 @@ let body: HTMLBodyElement;
 const CUSTOMER_PRIVACY_PROPS = {
   checkoutDomain: 'checkout.shopify.com',
   storefrontAccessToken: 'test-token',
+  withPrivacyBanner: true,
 };
 
 describe(`useCustomerPrivacy`, () => {
@@ -40,6 +41,18 @@ describe(`useCustomerPrivacy`, () => {
     head.innerHTML = '';
     body.innerHTML = '';
     document.querySelectorAll('script').forEach((node) => node.remove());
+  });
+
+  it('By default, loads just the customerPrivacy script', () => {
+    renderHook(() =>
+      useCustomerPrivacy({
+        checkoutDomain: 'checkout.shopify.com',
+        storefrontAccessToken: 'test-token',
+      }),
+    );
+    const script = html.querySelector('body script');
+    expect(script).toContainHTML(`src="${CONSENT_API}"`);
+    expect(script).toContainHTML('type="text/javascript"');
   });
 
   it('loads the customerPrivacy with privacyBanner script', () => {
@@ -75,10 +88,7 @@ describe(`useCustomerPrivacy`, () => {
   it('returns both customerPrivacy and privacyBanner initially as null', async () => {
     let cp;
     renderHook(() => {
-      cp = useCustomerPrivacy({
-        ...CUSTOMER_PRIVACY_PROPS,
-        withPrivacyBanner: true,
-      });
+      cp = useCustomerPrivacy(CUSTOMER_PRIVACY_PROPS);
     });
 
     // Wait until idle

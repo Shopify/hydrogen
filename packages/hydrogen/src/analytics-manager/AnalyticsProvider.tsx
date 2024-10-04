@@ -336,7 +336,7 @@ function AnalyticsProvider({
       }
 
       if (consent.withPrivacyBanner === undefined) {
-        consent.withPrivacyBanner = true;
+        consent.withPrivacyBanner = false;
       }
     }
   }
