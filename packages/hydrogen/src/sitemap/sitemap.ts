@@ -9,6 +9,8 @@ const SITEMAP_PREFIX = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">`;
 const SITEMAP_SUFFIX = `</urlset>`;
 
+const SITEMAP_STOREFRONT_API_VERSION = '2024-10';
+
 type SITEMAP_INDEX_TYPE =
   | 'pages'
   | 'products'
@@ -57,7 +59,7 @@ export async function getSitemapIndex(
     );
 
   const data = await storefront.query(SITEMAP_INDEX_QUERY, {
-    storefrontApiVersion: 'unstable',
+    storefrontApiVersion: SITEMAP_STOREFRONT_API_VERSION
   });
 
   if (!data) {
@@ -166,7 +168,7 @@ export async function getSitemap(
     variables: {
       page: parseInt(params.page, 10),
     },
-    storefrontApiVersion: 'unstable',
+    storefrontApiVersion: SITEMAP_STOREFRONT_API_VERSION,
   });
 
   const baseUrl = new URL(request.url).origin;
@@ -336,7 +338,7 @@ const BLOG_SITEMAP_QUERY = `#graphql
 
 const METAOBJECT_SITEMAP_QUERY = `#graphql
     query SitemapMetaobjects($page: Int!) {
-      sitemap(type: METAOBJECT_PAGE) {
+      sitemap(type: METAOBJECT) {
         resources(page: $page) {
           items {
             handle
@@ -377,7 +379,7 @@ query SitemapIndex {
       count
     }
   }
-  metaObjects: sitemap(type: METAOBJECT_PAGE) {
+  metaObjects: sitemap(type: METAOBJECT) {
     pagesCount {
       count
     }
