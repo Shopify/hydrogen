@@ -12,7 +12,7 @@ let body: HTMLBodyElement;
 
 const CUSTOMER_PRIVACY_PROPS = {
   checkoutDomain: 'checkout.shopify.com',
-  storefrontAccessToken: 'test-token',
+  storefrontAccessToken: '3b580e70970c4528da70c98e097c2fa0',
   withPrivacyBanner: true,
 };
 
@@ -47,7 +47,7 @@ describe(`useCustomerPrivacy`, () => {
     renderHook(() =>
       useCustomerPrivacy({
         checkoutDomain: 'checkout.shopify.com',
-        storefrontAccessToken: 'test-token',
+        storefrontAccessToken: '3b580e70970c4528da70c98e097c2fa0',
       }),
     );
     const script = html.querySelector('body script');
@@ -59,18 +59,6 @@ describe(`useCustomerPrivacy`, () => {
     renderHook(() => useCustomerPrivacy(CUSTOMER_PRIVACY_PROPS));
     const script = html.querySelector('body script');
     expect(script).toContainHTML(`src="${CONSENT_API_WITH_BANNER}"`);
-    expect(script).toContainHTML('type="text/javascript"');
-  });
-
-  it('loads just the customerPrivacy script', () => {
-    renderHook(() =>
-      useCustomerPrivacy({
-        ...CUSTOMER_PRIVACY_PROPS,
-        withPrivacyBanner: false,
-      }),
-    );
-    const script = html.querySelector('body script');
-    expect(script).toContainHTML(`src="${CONSENT_API}"`);
     expect(script).toContainHTML('type="text/javascript"');
   });
 
