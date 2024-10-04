@@ -174,6 +174,6 @@ export {
 } from './createHydrogenContext';
 
 export {
-  getSitemapIndex as unstable__getSitemapIndex,
-  getSitemap as unstable__getSitemap,
+  getSitemapIndex,
+  getSitemap
 } from './sitemap/sitemap';
