@@ -59,7 +59,7 @@ export async function getSitemapIndex(
     );
 
   const data = await storefront.query(SITEMAP_INDEX_QUERY, {
-    storefrontApiVersion: SITEMAP_STOREFRONT_API_VERSION
+    storefrontApiVersion: SITEMAP_STOREFRONT_API_VERSION,
   });
 
   if (!data) {
