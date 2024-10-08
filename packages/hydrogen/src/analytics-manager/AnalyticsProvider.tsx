@@ -382,7 +382,9 @@ function AnalyticsProvider({
           onReady={() => {
             listenerSet.current = true;
             setAnalyticsLoaded(true);
-            setCanTrack(() => shopifyCanTrack);
+            setCanTrack(
+              customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
+            );
           }}
           domain={cookieDomain}
         />
