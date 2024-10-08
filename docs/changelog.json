@@ -3,6 +3,66 @@
   "version": "1",
   "releases": [
     {
+      "title": "Various Analytics.Provider fixes and support local assets for Image component.",
+      "version": "2024.7.9",
+      "hash": "1335c41b30026212f5db40abd01378e61960456d",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2583",
+      "commit": "https://github.com/Shopify/hydrogen/commit/1335c41b30026212f5db40abd01378e61960456d",
+      "dependencies": {
+        "@remix-run/react": "^2.10.1",
+        "@remix-run/server-runtime": "^2.10.1",
+        "@shopify/hydrogen": "2024.7.9",
+        "@shopify/remix-oxygen": "^2.0.8"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.10.1",
+        "@shopify/cli": "3.68.0",
+        "@shopify/oxygen-workers-types": "^4.1.2",
+        "typescript": "^5.2.2",
+        "@shopify/mini-oxygen": "^3.0.6"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        },
+        "@shopify/mini-oxygen": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Fix provided canTrack function being override by ShopifyAnalytics",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2596",
+          "id": "2596"
+        },
+        {
+          "title": "Fix analytics provider breaking after hitting a 404 page",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2590",
+          "id": "2590"
+        },
+        {
+          "title": "Image component: support local assets in development",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2573",
+          "id": "2573"
+        },
+        {
+          "title": "Use HTML datalist element for query suggestions for autocomplete experience",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2506",
+          "id": "2506"
+        }
+      ],
+      "features": []
+    },
+    {
       "title": "Remove unstable exports from remix-oxygen and update customer account buyer authentication exchange",
       "version": "2024.7.8",
       "hash": "094e3a6419ca5e7c680e31bf3733169d10ff60e3",
