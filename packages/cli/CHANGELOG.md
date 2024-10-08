@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 8.4.6
+
+### Patch Changes
+
+- Bump cli packages version ([#2592](https://github.com/Shopify/hydrogen/pull/2592)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 8.4.5
 
 ### Patch Changes
