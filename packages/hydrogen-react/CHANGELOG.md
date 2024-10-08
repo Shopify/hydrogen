@@ -1,5 +1,17 @@
 # @shopify/hydrogen-react
 
+## 2024.7.6
+
+### Patch Changes
+
+- Image component: support local assets in development ([#2573](https://github.com/Shopify/hydrogen/pull/2573)) by [@scottdixon](https://github.com/scottdixon)
+
+## 2024.7.5
+
+### Patch Changes
+
+- Remove unstable re-exports from remix-oxygen package ([#2551](https://github.com/Shopify/hydrogen/pull/2551)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 2024.7.4
 
 ### Patch Changes

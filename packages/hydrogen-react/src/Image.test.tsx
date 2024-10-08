@@ -78,6 +78,27 @@ describe('<Image />', () => {
         crop,
       });
     });
+
+    it('handles remote assets', () => {
+      render(<Image {...defaultProps} />);
+      expect(screen.getByRole('img')).toHaveAttribute(
+        'src',
+        'https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=100&crop=center',
+      );
+    });
+
+    it('handles local assets', () => {
+      const props = {
+        ...defaultProps,
+        src: '/assets/image.png',
+      };
+
+      render(<Image {...props} />);
+      expect(screen.getByRole('img')).toHaveAttribute(
+        'src',
+        '/assets/image.png?width=100&crop=center',
+      );
+    });
   });
 
   describe('aspect-ratio', () => {

@@ -1,5 +1,17 @@
 # @shopify/create-hydrogen
 
+## 5.0.9
+
+### Patch Changes
+
+- Bump cli packages version ([#2592](https://github.com/Shopify/hydrogen/pull/2592)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+## 5.0.8
+
+### Patch Changes
+
+- Update starter template with latest Hydrogen version. ([#2580](https://github.com/Shopify/hydrogen/pull/2580)) by [@scottdixon](https://github.com/scottdixon)
+
 ## 5.0.7
 
 ### Patch Changes

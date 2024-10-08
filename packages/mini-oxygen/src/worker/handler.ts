@@ -12,7 +12,14 @@ export function getMiniOxygenHandlerScript() {
   return `export default { fetch: ${miniOxygenHandler} }\n${withRequestHook}`;
 }
 
-// This function is stringified, do not use anything from outer scope here:
+/**
+ * Main entry point for the worker. It serves as a router, dispatching requests
+ * to the appropriate handlers, but also to handle common cases like static assets
+ * and polyfills Oxygen headers.
+ *
+ * Since this function is stringified and executed in the "worker", do not
+ * add anything from the outer scope here.
+ */
 async function miniOxygenHandler(
   request: Request,
   env: MiniOxygenHandlerEnv,

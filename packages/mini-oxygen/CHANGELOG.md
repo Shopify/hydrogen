@@ -1,5 +1,11 @@
 # @shopify/mini-oxygen
 
+## 3.0.6
+
+### Patch Changes
+
+- Update internal version of the worker runtime. ([#2567](https://github.com/Shopify/hydrogen/pull/2567)) by [@frandiox](https://github.com/frandiox)
+
 ## 3.0.5
 
 ### Patch Changes

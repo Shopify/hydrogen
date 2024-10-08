@@ -153,8 +153,8 @@ describe('<Analytics.Provider />', () => {
       expect(analytics?.shop).toBe(SHOP_DATA);
       expect(analytics?.cart).toBe(CART_DATA);
       expect(analytics?.customData).toEqual({test: 'test'});
-      expect(analytics?.privacyBanner).toEqual(null);
-      expect(analytics?.customerPrivacy).toEqual(null);
+      expect(analytics?.privacyBanner).toBeDefined();
+      expect(analytics?.customerPrivacy).toBeDefined();
     });
 
     it('returns default canTrack true', async () => {
@@ -411,6 +411,8 @@ function LoopAnalytics({
       global.window.Shopify.customerPrivacy = {
         setTrackingConsent: () => {},
         analyticsProcessingAllowed: () => true,
+        saleOfDataAllowed: () => true,
+        marketingAllowed: () => true,
       };
     }
     if (registerCallback) {

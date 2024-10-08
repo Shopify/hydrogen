@@ -4,7 +4,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "3.0.5",
+  "version": "3.0.6",
   "license": "MIT",
   "type": "module",
   "description": "Development assistant for custom Shopify Oxygen hosted storefronts",
@@ -52,7 +52,7 @@
     "body-parser": "1.20.2",
     "connect": "^3.7.0",
     "get-port": "^7.0.0",
-    "miniflare": "3.20240304.2",
+    "miniflare": "^3.20240925.0",
     "mrmime": "1.0.1",
     "source-map": "^0.7.4",
     "source-map-support": "^0.5.21",
