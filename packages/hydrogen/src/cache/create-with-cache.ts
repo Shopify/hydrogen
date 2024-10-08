@@ -13,6 +13,8 @@ import type {WaitUntil} from '../types';
 type CreateWithCacheOptions = {
   /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */
   cache: Cache;
+  /** Token to be appended as a suffix of cache keys. Change it when you want to invalidate the cache. */
+  cacheBustingToken?: string;
   /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
   waitUntil: WaitUntil;
   /** The `request` object is used to access certain headers for debugging */
@@ -27,7 +29,7 @@ type CreateWithCacheOptions = {
 export function createWithCache<T = unknown>(
   cacheOptions: CreateWithCacheOptions,
 ) {
-  const {cache, waitUntil, request} = cacheOptions;
+  const {cache, cacheBustingToken, waitUntil, request} = cacheOptions;
 
   return {
     /**
@@ -54,7 +56,7 @@ export function createWithCache<T = unknown>(
         | InferredActionReturn
         | Promise<InferredActionReturn>,
     ) {
-      return runWithCache(cacheKey, actionFn, {
+      return runWithCache([cacheKey, cacheBustingToken], actionFn, {
         strategy,
         cacheInstance: cache,
         waitUntil,
@@ -84,7 +86,7 @@ export function createWithCache<T = unknown>(
     ): Promise<{data: Body | null; response: Response}> {
       return fetchWithServerCache<Body | null>(url, requestInit ?? {}, {
         waitUntil,
-        cacheKey: [url, requestInit],
+        cacheKey: [url, requestInit, cacheBustingToken],
         cacheInstance: cache,
         debugInfo: {
           url,
