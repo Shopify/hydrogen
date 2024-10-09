@@ -19,6 +19,13 @@ type CreateWithCacheOptions = {
   request?: CrossRuntimeRequest;
 };
 
+type RunOptions<T> = {
+  cacheKey: CacheKey;
+  strategy: CachingStrategy;
+  shouldCacheResult: (value: T) => boolean;
+  actionFn: ({addDebugData}: CacheActionFunctionParam) => T | Promise<T>;
+};
+
 /**
  * Creates utility functions to store data in cache with stale-while-revalidate support.
  * - Use `withCache.fetch` to simply fetch data from a third-party API.
@@ -45,16 +52,14 @@ export function createWithCache<T = unknown>(
      * > For example, if you call `fetch` but the response is not successful (e.g. status code >= 400),
      * > you should throw an error. Otherwise, the response will be cached.
      */
-    run<InferredActionReturn = T>(
-      cacheKey: CacheKey,
-      strategy: CachingStrategy,
-      actionFn: ({
-        addDebugData,
-      }: CacheActionFunctionParam) =>
-        | InferredActionReturn
-        | Promise<InferredActionReturn>,
-    ) {
+    run<InferredActionReturn = T>({
+      cacheKey,
+      strategy,
+      shouldCacheResult,
+      actionFn,
+    }: RunOptions<InferredActionReturn>) {
       return runWithCache(cacheKey, actionFn, {
+        shouldCacheResult,
         strategy,
         cacheInstance: cache,
         waitUntil,
@@ -75,8 +80,8 @@ export function createWithCache<T = unknown>(
      */
     fetch<Body = T>(
       url: string,
-      requestInit?: RequestInit,
-      options?: Pick<DebugOptions, 'displayName'> &
+      requestInit: RequestInit,
+      options: Pick<DebugOptions, 'displayName'> &
         Pick<
           FetchCacheOptions<Body>,
           'cache' | 'cacheKey' | 'shouldCacheResponse'

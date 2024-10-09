@@ -11,7 +11,7 @@ export type FetchCacheOptions<T = any> = {
   cache?: CachingStrategy;
   cacheInstance?: Cache;
   cacheKey?: CacheKey;
-  shouldCacheResponse?: (body: T, response: Response) => boolean;
+  shouldCacheResponse: (body: T, response: Response) => boolean;
   waitUntil?: WaitUntil;
   debugInfo?: DebugOptions;
 };
@@ -48,10 +48,10 @@ export async function fetchWithServerCache<T = unknown>(
     cacheInstance,
     cache: cacheOptions,
     cacheKey = [url, requestInit],
-    shouldCacheResponse = () => true,
+    shouldCacheResponse,
     waitUntil,
     debugInfo,
-  }: FetchCacheOptions = {},
+  }: FetchCacheOptions,
 ): Promise<readonly [T, Response]> {
   if (!cacheOptions && (!requestInit.method || requestInit.method === 'GET')) {
     cacheOptions = CacheShort();

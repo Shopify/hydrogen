@@ -43,10 +43,11 @@ export default {
     // 2. Or Create a more advanced utility to query multiple APIs under the same cache key:
     const fetchMultipleCMS = (options) => {
       // Prefix the cache key and make it unique based on arguments.
-      return withCache.run(
-        ['my-cms-composite', options.id, options.handle],
-        CacheLong(),
-        async (params) => {
+      return withCache.run({
+        cacheKey: ['my-cms-composite', options.id, options.handle],
+        strategy: CacheLong(),
+        shouldCacheResult: () => true,
+        actionFn: async (params) => {
           // Run multiple subrequests in parallel, or any other async operations.
           const [response1, response2] = await Promise.all([
             fetch('https://my-cms-1.com/api', {
@@ -87,7 +88,7 @@ export default {
             extra2: response2.headers.get('X-Extra'),
           };
         },
-      );
+      });
     };
 
     const handleRequest = createRequestHandler({
