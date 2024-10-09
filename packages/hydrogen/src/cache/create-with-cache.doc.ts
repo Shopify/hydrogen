@@ -6,7 +6,8 @@ const data: ReferenceEntityTemplateSchema = {
   subCategory: 'caching',
   isVisualComponent: false,
   related: [],
-  description: `Creates a utility function that executes an asynchronous operation \n like \`fetch\` and caches the result according to the strategy provided.\nUse this to call any third-party APIs from loaders or actions.\n > Note:\n > Sometimes a request to a third-party API might fail, so you shouldn't cache the result. To prevent caching, throw when a request fails. If you don't throw, then the result is cached.`,
+  description:
+    'Creates utility functions to store data in cache with stale-while-revalidate support.\n - Use `withCache.fetch` to simply fetch data from a third-party API.\n - Use the more advanced `withCache.run` to execute any asynchronous operation.',
   type: 'utility',
   defaultExample: {
     description: 'I am the default example',
