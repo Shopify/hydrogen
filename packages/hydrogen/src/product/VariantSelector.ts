@@ -61,7 +61,7 @@ export function VariantSelector({
   // But instead it always needs to be added to the product options so
   // the SFAPI properly finds the variant
   const optionsWithOnlyOneValue = options.filter(
-    (option) => option?.values?.length === 1,
+    (option) => option?.optionValues?.length === 1,
   );
 
   return createElement(
@@ -72,18 +72,20 @@ export function VariantSelector({
         let activeValue;
         let availableValues: VariantOptionValue[] = [];
 
-        for (let value of option.values!) {
+        for (let value of option.optionValues!) {
           // The clone the search params for each value, so we can calculate
           // a new URL for each option value pair
           const clonedSearchParams = new URLSearchParams(
             alreadyOnProductPage ? searchParams : undefined,
           );
+          // @ts-ignore
           clonedSearchParams.set(option.name!, value!);
 
           // Because we hide options with only one value, they aren't selectable,
           // but they still need to get into the URL
           optionsWithOnlyOneValue.forEach((option) => {
-            clonedSearchParams.set(option.name!, option.values![0]!);
+            // @ts-ignore
+            clonedSearchParams.set(option.name!, option.optionValues![0]!);
           });
 
           // Find a variant that matches all selected options.
@@ -99,6 +101,7 @@ export function VariantSelector({
 
           const calculatedActiveValue = currentParam
             ? // If a URL parameter exists for the current option, check if it equals the current value
+              // @ts-ignore
               currentParam === value!
             : false;
 
@@ -111,6 +114,7 @@ export function VariantSelector({
           const searchString = '?' + clonedSearchParams.toString();
 
           availableValues.push({
+            // @ts-ignore
             value: value!,
             isAvailable: variant ? variant.availableForSale! : true,
             to: path + searchString,
@@ -123,6 +127,7 @@ export function VariantSelector({
         return children({
           option: {
             name: option.name!,
+            // @ts-ignore
             value: activeValue,
             values: availableValues,
           },

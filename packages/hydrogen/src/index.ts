@@ -78,6 +78,11 @@ export type {
   VariantOptionValue,
 } from './product/VariantSelector';
 
+export {
+  type MappedProductOptions,
+  getProductOptions,
+} from './product/getProductOptions';
+
 export {createContentSecurityPolicy, useNonce} from './csp/csp';
 export {Script} from './csp/Script';
 
