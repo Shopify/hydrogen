@@ -49,7 +49,7 @@
     "@miniflare/shared": "^2.14.2",
     "@miniflare/storage-memory": "^2.14.2",
     "@miniflare/web-sockets": "^2.14.2",
-    "body-parser": "1.20.2",
+    "body-parser": "1.20.3",
     "connect": "^3.7.0",
     "get-port": "^7.0.0",
     "miniflare": "^3.20240925.0",
