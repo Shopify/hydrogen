@@ -13,3 +13,11 @@ export const MINIMAL_CART_FRAGMENT = `#graphql
     checkoutUrl
   }
 `;
+
+export const CART_WARNING_FRAGMENT = `#graphql
+  fragment CartApiWarning on CartWarning {
+    code
+    message
+    target
+  }
+`;
