@@ -50,6 +50,10 @@ export {useLoadScript} from './load-script.js';
 export {MediaFile} from './MediaFile.js';
 export {ModelViewer} from './ModelViewer.js';
 export {Money} from './Money.js';
+export {
+  decodeEncodedVariant,
+  isOptionValueCombinationInEncodedVariant,
+} from './optionValueDecoder.js';
 export {type ParsedMetafields, parseMetafield} from './parse-metafield.js';
 export {ProductPrice} from './ProductPrice.js';
 export {ProductProvider, useProduct} from './ProductProvider.js';
