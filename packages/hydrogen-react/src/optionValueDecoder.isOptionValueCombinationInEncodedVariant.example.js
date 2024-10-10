@@ -18,13 +18,12 @@ import {isOptionValueCombinationInEncodedVariant} from '@shopify/hydrogen-react'
 //     ]
 //   }
 // ]
-const encodedVariantExistence = 'v1_0:0-1,1:2';
+const encodedVariantExistence = 'v1_0:0-1,1:2,';
 
 // For reference: decoded encodedVariantExistence
 // {
 //   [0,0],    // Red, S
 //   [0,1],    // Red, M
-//   [0,2],    // Red, L
 //   [1,2]     // Blue, L
 // }
 

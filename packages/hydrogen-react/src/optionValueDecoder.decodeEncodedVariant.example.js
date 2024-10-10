@@ -19,7 +19,7 @@ import {decodeEncodedVariant} from '@shopify/hydrogen-react';
 //   }
 // ]
 
-const encodedVariantAvailability = 'v1_0:0-2,1:2';
+const encodedVariantAvailability = 'v1_0:0-2,1:2,';
 
 const decodedVariantAvailability = decodeEncodedVariant(
   encodedVariantAvailability,
