@@ -12,7 +12,7 @@ import {fileSize, removeFile} from '@shopify/cli-kit/node/fs';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
-import {hasViteConfig, getViteConfig} from '../../lib/vite-config.js';
+import {getViteConfig, isViteProject} from '../../lib/vite-config.js';
 import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
 import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
@@ -44,12 +44,15 @@ export default class Build extends Command {
         'Watches for changes and rebuilds the project writing output to disk.',
       env: 'SHOPIFY_HYDROGEN_FLAG_WATCH',
     }),
-
-    // For the classic compiler:
     'bundle-stats': Flags.boolean({
       description:
         'Show a bundle size summary after building. Defaults to true, use `--no-bundle-stats` to disable.',
       allowNo: true,
+    }),
+    'force-client-sourcemap': Flags.boolean({
+      description:
+        'Client sourcemapping is avoided by default because it makes backend code visible in the browser. Use this flag to force enabling it.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_FORCE_CLIENT_SOURCEMAP',
     }),
   };
 
@@ -71,7 +74,7 @@ export default class Build extends Command {
       directory,
     };
 
-    const result = (await hasViteConfig(directory))
+    const result = (await isViteProject(directory))
       ? await runBuild(buildParams)
       : await runClassicCompilerBuild(buildParams);
 
@@ -82,6 +85,7 @@ export default class Build extends Command {
 
           if (diff) {
             await diff.copyDiffBuild();
+            if (flags.codegen) await diff.copyDiffCodegen();
             await diff.cleanup();
           }
         });
@@ -89,6 +93,7 @@ export default class Build extends Command {
     } else {
       if (diff) {
         await diff.copyDiffBuild();
+        if (flags.codegen) await diff.copyDiffCodegen();
         await diff.cleanup();
       }
 
@@ -108,6 +113,7 @@ type RunBuildOptions = {
   useCodegen?: boolean;
   codegenConfigPath?: string;
   sourcemap?: boolean;
+  forceClientSourcemap?: boolean;
   disableRouteWarning?: boolean;
   assetPath?: string;
   bundleStats?: boolean;
@@ -123,6 +129,7 @@ export async function runBuild({
   useCodegen = false,
   codegenConfigPath,
   sourcemap = true,
+  forceClientSourcemap,
   disableRouteWarning = false,
   lockfileCheck = true,
   assetPath = '/',
@@ -175,8 +182,10 @@ export async function runBuild({
     build: {
       emptyOutDir: true,
       copyPublicDir: true,
-      // Disable client sourcemaps in production
-      sourcemap: process.env.NODE_ENV !== 'production' && sourcemap,
+      // Disable client sourcemaps in production by default
+      sourcemap:
+        forceClientSourcemap ??
+        (process.env.NODE_ENV !== 'production' && sourcemap),
       watch: watch ? {} : null,
     },
     plugins: [

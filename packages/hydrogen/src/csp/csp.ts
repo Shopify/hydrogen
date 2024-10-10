@@ -144,16 +144,16 @@ function createCSPHeader(
   // Make sure that at least script-src includes a nonce directive.
   // If someone doesn't want a nonce in their CSP, they probably
   // shouldn't use our utilities and just manually create their CSP.
-  if (
-    combinedDirectives.scriptSrc instanceof Array &&
-    !combinedDirectives.scriptSrc.includes(nonceString)
-  ) {
-    combinedDirectives.scriptSrc.push(nonceString);
-  } else if (
-    combinedDirectives.defaultSrc instanceof Array &&
-    !combinedDirectives.defaultSrc.includes(nonceString)
-  ) {
-    combinedDirectives.defaultSrc.push(nonceString);
+  if (combinedDirectives.scriptSrc instanceof Array) {
+    combinedDirectives.scriptSrc = [
+      ...combinedDirectives.scriptSrc.filter((ss) => !ss.startsWith(`'nonce`)),
+      nonceString,
+    ];
+  } else if (combinedDirectives.defaultSrc instanceof Array) {
+    combinedDirectives.defaultSrc = [
+      ...combinedDirectives.defaultSrc.filter((ss) => !ss.startsWith(`'nonce`)),
+      nonceString,
+    ];
   }
 
   return cspBuilder({

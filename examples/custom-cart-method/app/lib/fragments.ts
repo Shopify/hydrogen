@@ -66,6 +66,12 @@ export const CART_QUERY_FRAGMENT = `#graphql
   fragment CartApiQuery on Cart {
     updatedAt
     id
+    appliedGiftCards {
+      lastCharacters
+      amountUsed {
+        ...Money
+      }
+    }
     checkoutUrl
     totalQuantity
     buyerIdentity {
@@ -186,7 +192,7 @@ export const FOOTER_QUERY = `#graphql
 
 // NOTE: https://shopify.dev/docs/api/storefront/latest/queries/product
 export const PRODUCT_VARIANT_QUERY = `#graphql
-  query product(
+  query ProductVariant(
     $productId: ID!
     $selectedOptions: [SelectedOptionInput!]!
     $country: CountryCode

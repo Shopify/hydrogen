@@ -35,7 +35,13 @@ import type {
 import {AnalyticsEvent} from './events';
 import {ShopifyAnalytics} from './ShopifyAnalytics';
 import {CartAnalytics} from './CartAnalytics';
-import type {CustomerPrivacyApiProps} from '../customer-privacy/ShopifyCustomerPrivacy';
+import {
+  type PrivacyBanner,
+  getCustomerPrivacy,
+  getPrivacyBanner,
+  type CustomerPrivacy,
+  type CustomerPrivacyApiProps,
+} from '../customer-privacy/ShopifyCustomerPrivacy';
 import type {Storefront} from '../storefront';
 import {PerfKit} from './PerfKit';
 import {errorOnce, warnOnce} from '../utils/warning';
@@ -51,6 +57,13 @@ export type ShopAnalytics = {
   hydrogenSubchannelId: string | '0';
 };
 
+export type Consent = Partial<
+  Pick<
+    CustomerPrivacyApiProps,
+    'checkoutDomain' | 'storefrontAccessToken' | 'withPrivacyBanner' | 'country'
+  >
+> & {language?: LanguageCode}; // the privacyBanner SDKs refers to "language" as "locale" :(
+
 export type AnalyticsProviderProps = {
   /** React children to render. */
   children?: ReactNode;
@@ -63,12 +76,7 @@ export type AnalyticsProviderProps = {
   /** The shop configuration required to publish analytics events to Shopify. Use [`getShopAnalytics`](/docs/api/hydrogen/2024-07/utilities/getshopanalytics). */
   shop: Promise<ShopAnalytics | null> | ShopAnalytics | null;
   /** The customer privacy consent configuration and options. */
-  consent: Partial<
-    Pick<
-      CustomerPrivacyApiProps,
-      'checkoutDomain' | 'storefrontAccessToken' | 'withPrivacyBanner'
-    >
-  >;
+  consent: Consent;
   /** @deprecated Disable throwing errors when required props are missing. */
   disableThrowOnError?: boolean;
   /** The domain scope of the cookie set with `useShopifyCookies`. **/
@@ -97,6 +105,10 @@ export type AnalyticsContextValue = {
   shop: Awaited<AnalyticsProviderProps['shop']>;
   /** A function to subscribe to analytics events. */
   subscribe: typeof subscribe;
+  /** The privacy banner SDK methods with the config applied */
+  privacyBanner: PrivacyBanner | null;
+  /** The customer privacy SDK methods with the config applied */
+  customerPrivacy: CustomerPrivacy | null;
 };
 
 export const defaultAnalyticsContext: AnalyticsContextValue = {
@@ -108,6 +120,8 @@ export const defaultAnalyticsContext: AnalyticsContextValue = {
   shop: null,
   subscribe: () => {},
   register: () => ({ready: () => {}}),
+  customerPrivacy: null,
+  privacyBanner: null,
 };
 
 const AnalyticsContext = createContext<AnalyticsContextValue>(
@@ -278,12 +292,11 @@ function AnalyticsProvider({
   consent,
   customData = {},
   shop: shopProp = null,
-  disableThrowOnError = false,
   cookieDomain,
 }: AnalyticsProviderProps): JSX.Element {
   const listenerSet = useRef(false);
   const {shop} = useShopAnalytics(shopProp);
-  const [consentLoaded, setConsentLoaded] = useState(
+  const [analyticsLoaded, setAnalyticsLoaded] = useState(
     customCanTrack ? true : false,
   );
   const [carts, setCarts] = useState<Carts>({cart: null, prevCart: null});
@@ -313,6 +326,18 @@ function AnalyticsProvider({
         );
         errorOnce(errorMsg);
       }
+
+      if (!consent?.country) {
+        consent.country = 'US';
+      }
+
+      if (!consent?.language) {
+        consent.language = 'EN';
+      }
+
+      if (consent.withPrivacyBanner === undefined) {
+        consent.withPrivacyBanner = true;
+      }
     }
   }
 
@@ -325,12 +350,12 @@ function AnalyticsProvider({
       shop,
       subscribe,
       register,
+      customerPrivacy: getCustomerPrivacy(),
+      privacyBanner: getPrivacyBanner(),
     };
   }, [
-    consentLoaded,
-    canTrack(),
+    analyticsLoaded,
     canTrack,
-    JSON.stringify(canTrack),
     carts,
     carts.cart?.updatedAt,
     carts.prevCart,
@@ -340,6 +365,8 @@ function AnalyticsProvider({
     shop,
     register,
     JSON.stringify(registers),
+    getCustomerPrivacy,
+    getPrivacyBanner,
   ]);
 
   return (
@@ -354,8 +381,10 @@ function AnalyticsProvider({
           consent={consent}
           onReady={() => {
             listenerSet.current = true;
-            setConsentLoaded(true);
-            setCanTrack(() => shopifyCanTrack);
+            setAnalyticsLoaded(true);
+            setCanTrack(
+              customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
+            );
           }}
           domain={cookieDomain}
         />
@@ -393,8 +422,6 @@ function useShopAnalytics(shopProp: AnalyticsProviderProps['shop']): {
 
   return {shop};
 }
-
-// TODO: useCustomerAnalytics hook
 
 type ShopAnalyticsProps = {
   /**
@@ -455,15 +482,17 @@ export const Analytics = {
   SearchView: AnalyticsSearchView,
 };
 
-export type AnalyticsContextValueForDoc = {
+type DefaultCart = Promise<CartReturn | null> | CartReturn | null;
+
+export type AnalyticsContextValueForDoc<UserCart> = {
   /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.analyticsProcessingAllowed()`. */
   canTrack?: () => boolean;
-  /** The current cart state. */
-  cart?: Promise<CartReturn | null> | CartReturn | null;
+  /** The current cart state. You can overwrite the type by passing a generic */
+  cart?: UserCart | DefaultCart;
   /** The custom data passed in from the `AnalyticsProvider`. */
   customData?: Record<string, unknown>;
-  /** The previous cart state. */
-  prevCart?: Promise<CartReturn | null> | CartReturn | null;
+  /** The previous cart state. You can overwrite the type by passing a generic */
+  prevCart?: UserCart | DefaultCart;
   /** A function to publish an analytics event. */
   publish?: AnalyticsContextPublishForDoc;
   /** A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/2024-07/hooks/useanalytics#example-useanalytics.register). */

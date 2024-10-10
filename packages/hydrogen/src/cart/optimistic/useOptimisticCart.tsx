@@ -11,7 +11,15 @@ import {
 import type {PartialDeep} from 'type-fest';
 import type {CartReturn} from '../queries/cart-types';
 
-export type OptimisticCartLine<T = CartLine> = T & {isOptimistic?: boolean};
+type LikeACart = {
+  lines: {
+    nodes: Array<unknown>;
+  };
+};
+
+export type OptimisticCartLine<T = CartLine | CartReturn> = T extends LikeACart
+  ? T['lines']['nodes'][number] & {isOptimistic?: boolean}
+  : T & {isOptimistic?: boolean};
 
 export type OptimisticCart<T = CartReturn> = T extends undefined | null
   ? // This is the null/undefined case, where the cart has yet to be created.
@@ -21,18 +29,20 @@ export type OptimisticCart<T = CartReturn> = T extends undefined | null
       lines: {
         nodes: Array<OptimisticCartLine>;
       };
+      totalQuantity?: number;
     } & Omit<PartialDeep<CartReturn>, 'lines'>
   : Omit<T, 'lines'> & {
       isOptimistic?: boolean;
       lines: {
-        nodes: Array<OptimisticCartLine>;
+        nodes: Array<OptimisticCartLine<T>>;
       };
+      totalQuantity?: number;
     };
 
 /**
  * @param cart The cart object from `context.cart.get()` returned by a server loader.
  *
- * @returns A new cart object augmented with optimistic state. Each cart line item that is optimistically added includes an `isOptimistic` property. Also if the cart has _any_ optimistic state, a root property `isOptimistic` will be set to `true`.
+ * @returns A new cart object augmented with optimistic state for `lines` and `totalQuantity`. Each cart line item that is optimistically added includes an `isOptimistic` property. Also if the cart has _any_ optimistic state, a root property `isOptimistic` will be set to `true`.
  */
 export function useOptimisticCart<
   DefaultCart = {
@@ -49,7 +59,7 @@ export function useOptimisticCart<
     ? (structuredClone(cart) as OptimisticCart<DefaultCart>)
     : ({lines: {nodes: []}} as unknown as OptimisticCart<DefaultCart>);
 
-  const cartLines = optimisticCart.lines.nodes;
+  const cartLines = optimisticCart.lines.nodes as OptimisticCartLine[];
 
   let isOptimistic = false;
 
@@ -141,6 +151,12 @@ export function useOptimisticCart<
   if (isOptimistic) {
     optimisticCart.isOptimistic = isOptimistic;
   }
+
+  // Calculate the total quantity of the optimistic cart
+  optimisticCart.totalQuantity = cartLines.reduce(
+    (sum, line) => sum + line.quantity,
+    0,
+  );
 
   return optimisticCart;
 }

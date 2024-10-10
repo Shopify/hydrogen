@@ -4,7 +4,7 @@ import {AbortError} from '@shopify/cli-kit/node/error';
 import {outputInfo} from '@shopify/cli-kit/node/output';
 import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
 import {isH2Verbose, muteDevLogs, setH2OVerbose} from '../../lib/log.js';
-import {getProjectPaths, hasRemixConfigFile} from '../../lib/remix-config.js';
+import {getProjectPaths, isClassicProject} from '../../lib/remix-config.js';
 import {
   DEFAULT_APP_PORT,
   commonFlags,
@@ -37,6 +37,7 @@ export default class Preview extends Command {
     ...commonFlags.legacyRuntime,
     ...commonFlags.env,
     ...commonFlags.envBranch,
+    ...commonFlags.envFile,
     ...commonFlags.inspectorPort,
     ...commonFlags.debug,
     ...commonFlags.verbose,
@@ -86,6 +87,7 @@ export default class Preview extends Command {
       await close();
       if (diff) {
         await diff.copyDiffBuild();
+        if (flags.codegen) await diff.copyDiffCodegen();
         await diff.cleanup();
       }
     });
@@ -106,6 +108,7 @@ type PreviewOptions = {
   entry?: string;
   codegen?: boolean;
   codegenConfigPath?: string;
+  envFile: string;
 };
 
 export async function runPreview({
@@ -122,6 +125,7 @@ export async function runPreview({
   codegen: useCodegen = false,
   codegenConfigPath,
   entry,
+  envFile,
 }: PreviewOptions) {
   if (!process.env.NODE_ENV)
     process.env.NODE_ENV = watch ? 'development' : 'production';
@@ -132,9 +136,9 @@ export async function runPreview({
   let {root, buildPath, buildPathWorkerFile, buildPathClient} =
     getProjectPaths(directory);
 
-  const isClassicProject = await hasRemixConfigFile(root);
+  const useClassicCompiler = await isClassicProject(root);
 
-  if (watch && isClassicProject) {
+  if (watch && useClassicCompiler) {
     throw new AbortError(
       'Preview in watch mode is not supported for classic Remix projects.',
       'Please use the dev command instead, which is the equivalent for classic projects.',
@@ -156,7 +160,7 @@ export async function runPreview({
   };
 
   const buildProcess = shouldBuild
-    ? isClassicProject
+    ? useClassicCompiler
       ? await runClassicCompilerBuild({
           ...buildOptions,
         }).then(projectBuild.resolve)
@@ -175,7 +179,7 @@ export async function runPreview({
         })
     : projectBuild.resolve();
 
-  if (!isClassicProject) {
+  if (!useClassicCompiler) {
     const maybeResult = await getViteConfig(root).catch(() => null);
     buildPathWorkerFile =
       maybeResult?.serverOutFile ?? joinPath(buildPath, 'server', 'index.js');
@@ -189,6 +193,7 @@ export async function runPreview({
       fetchRemote,
       envBranch,
       envHandle,
+      envFile,
     },
   );
 

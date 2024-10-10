@@ -1,5 +1,23 @@
 # @shopify/remix-oxygen
 
+## 2.0.8
+
+### Patch Changes
+
+- Remove unstable re-exports from remix-oxygen package ([#2551](https://github.com/Shopify/hydrogen/pull/2551)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+## 2.0.7
+
+### Patch Changes
+
+- Prevent infinite redirects when a double slash exists in the URL ([#2449](https://github.com/Shopify/hydrogen/pull/2449)) by [@blittle](https://github.com/blittle)
+
+## 2.0.6
+
+### Patch Changes
+
+- Return a 400 BadRequest for HEAD and GET requests that include a body ([#2360](https://github.com/Shopify/hydrogen/pull/2360)) by [@blittle](https://github.com/blittle)
+
 ## 2.0.5
 
 ### Patch Changes

@@ -283,18 +283,9 @@ export function enhanceAuthLogs(hideInitialLog = false) {
       },
     ],
     [
-      ([first]) =>
-        typeof first === 'string' &&
-        first.includes('Open this link to start the auth process'),
-      ([first]) => {
-        // Hide logs
-        return [first.replace('👉 ', '').replace(': ', ':\n')];
-      },
-    ],
-    [
       ([first]) => typeof first === 'string' && first.includes('Logged in.'),
       () => {
-        process.stdout.write(ansiEscapes.eraseLines(hideInitialLog ? 4 : 5));
+        process.stdout.write(ansiEscapes.eraseLines(hideInitialLog ? 5 : 6));
         return;
       },
     ],

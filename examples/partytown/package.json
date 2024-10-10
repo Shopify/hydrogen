@@ -3,7 +3,7 @@
   "private": true,
   "prettier": "@shopify/prettier-config",
   "scripts": {
-    "build": "npm run partytown && shopify hydrogen build --diff",
+    "build": "npm run partytown && shopify hydrogen build --codegen --diff",
     "dev": "shopify hydrogen dev --codegen --diff",
     "preview": "shopify hydrogen preview --build --diff",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
@@ -12,7 +12,6 @@
     "partytown": "partytown copylib public/~partytown"
   },
   "dependencies": {
-    "@shopify/cli-hydrogen": "*",
     "@builder.io/partytown": "^0.8.1"
   },
   "devDependencies": {

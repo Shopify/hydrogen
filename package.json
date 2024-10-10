@@ -18,6 +18,7 @@
     "format": "prettier --write --ignore-unknown ./packages",
     "format:check": "prettier --check --ignore-unknown ./packages",
     "typecheck": "turbo typecheck --parallel",
+    "typecheck:examples": "turbo typecheck --parallel --filter=./examples/*",
     "test": "turbo run test --parallel",
     "test:watch": "turbo run test:watch",
     "version": "changeset version && npm run version:post",
@@ -39,7 +40,7 @@
     "examples/legacy-customer-account-flow",
     "examples/metaobjects",
     "examples/multipass",
-    "examples/optimistic-cart-ui",
+    "examples/sitemap",
     "examples/partytown",
     "examples/subscriptions",
     "examples/third-party-queries-caching",
@@ -96,6 +97,6 @@
   },
   "overrides": {
     "@oclif/core": "3.26.5",
-    "@shopify/cli-kit": "3.64.0"
+    "@shopify/cli-kit": "3.68.0"
   }
 }

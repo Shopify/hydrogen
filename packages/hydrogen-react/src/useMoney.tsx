@@ -115,38 +115,41 @@ export function useMoney(money: MoneyV2): UseMoneyValue {
 
   const amount = parseFloat(money.amount);
 
-  const options = useMemo(
-    () => ({
+  const {
+    defaultFormatter,
+    nameFormatter,
+    narrowSymbolFormatter,
+    withoutTrailingZerosFormatter,
+    withoutCurrencyFormatter,
+    withoutTrailingZerosOrCurrencyFormatter,
+  } = useMemo(() => {
+    const options = {
       style: 'currency' as const,
       currency: money.currencyCode,
-    }),
-    [money.currencyCode],
-  );
+    };
 
-  const defaultFormatter = useLazyFormatter(locale, options);
-
-  const nameFormatter = useLazyFormatter(locale, {
-    ...options,
-    currencyDisplay: 'name',
-  });
-
-  const narrowSymbolFormatter = useLazyFormatter(locale, {
-    ...options,
-    currencyDisplay: 'narrowSymbol',
-  });
-
-  const withoutTrailingZerosFormatter = useLazyFormatter(locale, {
-    ...options,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
-
-  const withoutCurrencyFormatter = useLazyFormatter(locale);
-
-  const withoutTrailingZerosOrCurrencyFormatter = useLazyFormatter(locale, {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
+    return {
+      defaultFormatter: getLazyFormatter(locale, options),
+      nameFormatter: getLazyFormatter(locale, {
+        ...options,
+        currencyDisplay: 'name',
+      }),
+      narrowSymbolFormatter: getLazyFormatter(locale, {
+        ...options,
+        currencyDisplay: 'narrowSymbol',
+      }),
+      withoutTrailingZerosFormatter: getLazyFormatter(locale, {
+        ...options,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }),
+      withoutCurrencyFormatter: getLazyFormatter(locale),
+      withoutTrailingZerosOrCurrencyFormatter: getLazyFormatter(locale, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }),
+    };
+  }, [money.currencyCode, locale]);
 
   const isPartCurrency = (part: Intl.NumberFormatPart): boolean =>
     part.type === 'currency';
@@ -219,12 +222,20 @@ export function useMoney(money: MoneyV2): UseMoneyValue {
   );
 }
 
-function useLazyFormatter(
+const formatterCache = new Map<string, Intl.NumberFormat>();
+
+function getLazyFormatter(
   locale: string,
   options?: Intl.NumberFormatOptions,
 ): () => Intl.NumberFormat {
-  return useMemo(() => {
-    let memoized: Intl.NumberFormat;
-    return () => (memoized ??= new Intl.NumberFormat(locale, options));
-  }, [locale, options]);
+  const key = JSON.stringify([locale, options]);
+
+  return function (): Intl.NumberFormat {
+    let formatter = formatterCache.get(key);
+    if (!formatter) {
+      formatter = new Intl.NumberFormat(locale, options);
+      formatterCache.set(key, formatter);
+    }
+    return formatter;
+  };
 }

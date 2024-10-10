@@ -25,6 +25,25 @@ export function createRequestHandler<Context = unknown>({
   const handleRequest = createRemixRequestHandler(build, mode);
 
   return async (request: Request) => {
+    const method = request.method;
+
+    if ((method === 'GET' || method === 'HEAD') && request.body) {
+      return new Response(`${method} requests cannot have a body`, {
+        status: 400,
+      });
+    }
+
+    const url = new URL(request.url);
+
+    if (url.pathname.includes('//')) {
+      return new Response(null, {
+        status: 301,
+        headers: {
+          location: url.pathname.replace(/\/+/g, '/'),
+        },
+      });
+    }
+
     const context = getLoadContext
       ? ((await getLoadContext(request)) as AppLoadContext)
       : undefined;

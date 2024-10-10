@@ -38,6 +38,7 @@ export {cartLinesAddDefault} from './cart/queries/cartLinesAddDefault';
 export {cartLinesUpdateDefault} from './cart/queries/cartLinesUpdateDefault';
 export {cartLinesRemoveDefault} from './cart/queries/cartLinesRemoveDefault';
 export {cartDiscountCodesUpdateDefault} from './cart/queries/cartDiscountCodesUpdateDefault';
+export {cartGiftCardCodesUpdateDefault} from './cart/queries/cartGiftCardCodeUpdateDefault';
 export {cartBuyerIdentityUpdateDefault} from './cart/queries/cartBuyerIdentityUpdateDefault';
 export {cartNoteUpdateDefault} from './cart/queries/cartNoteUpdateDefault';
 export {cartSelectedDeliveryOptionsUpdateDefault} from './cart/queries/cartSelectedDeliveryOptionsUpdateDefault';
@@ -91,6 +92,7 @@ export {
   Analytics,
   useAnalytics,
   getShopAnalytics,
+  type ShopAnalytics,
 } from './analytics-manager/AnalyticsProvider';
 export {AnalyticsEvent} from './analytics-manager/events';
 export {
@@ -114,6 +116,9 @@ export {
   type CustomEventMap,
   type CustomerPrivacyApiProps,
   useCustomerPrivacy,
+  /*
+    @deprecated use useAnalytics or useCustomerPrivacy instead
+  */
   getCustomerPrivacy,
 } from './customer-privacy/ShopifyCustomerPrivacy';
 
@@ -161,4 +166,14 @@ export type {
   StorefrontApiResponsePartial,
 } from '@shopify/hydrogen-react';
 
-export type {HydrogenSessionData, HydrogenSession} from './types';
+export type {HydrogenSessionData, HydrogenSession, HydrogenEnv} from './types';
+
+export {
+  createHydrogenContext,
+  type HydrogenContext,
+} from './createHydrogenContext';
+
+export {
+  getSitemapIndex as unstable__getSitemapIndex,
+  getSitemap as unstable__getSitemap,
+} from './sitemap/sitemap';

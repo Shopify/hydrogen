@@ -1,5 +1,19 @@
 # @shopify/mini-oxygen
 
+## 3.0.6
+
+### Patch Changes
+
+- Update internal version of the worker runtime. ([#2567](https://github.com/Shopify/hydrogen/pull/2567)) by [@frandiox](https://github.com/frandiox)
+
+## 3.0.5
+
+### Patch Changes
+
+- Prevent infinite redirects when a double slash exists in the URL ([#2449](https://github.com/Shopify/hydrogen/pull/2449)) by [@blittle](https://github.com/blittle)
+
+- Add oxygen-buyer-postal-code and oxygen-buyer-metro-code headers ([#2429](https://github.com/Shopify/hydrogen/pull/2429)) by [@jgodson](https://github.com/jgodson)
+
 ## 3.0.4
 
 ### Patch Changes

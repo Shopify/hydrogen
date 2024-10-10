@@ -124,6 +124,10 @@ export async function loader({context}: LoaderFunctionArgs) {
     consent: {
       checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+      withPrivacyBanner: true,
+      // localize the privacy banner
+      country: context.storefront.i18n.country,
+      language: context.storefront.i18n.language,
     },
   });
 }
@@ -151,6 +155,7 @@ export function Layout({children}: {children?: React.ReactNode}) {
             /**********  EXAMPLE UPDATE STARTS  ************/}
             <B2BLocationProvider>
               <PageLayout {...data}>{children}</PageLayout>
+              <B2BLocationSelector />
             </B2BLocationProvider>
             {/**********   EXAMPLE UPDATE END   ************/
             /***********************************************/}

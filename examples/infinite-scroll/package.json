@@ -3,7 +3,7 @@
   "private": true,
   "prettier": "@shopify/prettier-config",
   "scripts": {
-    "build": "shopify hydrogen build --diff",
+    "build": "shopify hydrogen build --codegen --diff",
     "dev": "shopify hydrogen dev --codegen --diff",
     "preview": "shopify hydrogen preview --build --diff",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
@@ -11,7 +11,6 @@
     "codegen": "shopify hydrogen codegen"
   },
   "dependencies": {
-    "@shopify/cli-hydrogen": "*",
     "react-intersection-observer": "^8.32.0"
   }
 }

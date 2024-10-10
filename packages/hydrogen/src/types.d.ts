@@ -10,7 +10,6 @@ import {
   BUYER_SESSION_KEY,
 } from './customer/constants';
 import type {BuyerInput} from '@shopify/hydrogen-react/storefront-api-types';
-
 export interface HydrogenSessionData {
   [CUSTOMER_ACCOUNT_SESSION_KEY]: {
     accessToken?: string;
@@ -40,6 +39,29 @@ export interface HydrogenSession<
 }
 
 export type WaitUntil = (promise: Promise<unknown>) => void;
+
+export interface HydrogenEnv {
+  SESSION_SECRET: string;
+  PUBLIC_STOREFRONT_API_TOKEN: string;
+  PRIVATE_STOREFRONT_API_TOKEN: string;
+  PUBLIC_STORE_DOMAIN: string;
+  PUBLIC_STOREFRONT_ID: string;
+  PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID: string;
+  PUBLIC_CUSTOMER_ACCOUNT_API_URL: string;
+  PUBLIC_CHECKOUT_DOMAIN: string;
+  SHOP_ID: string;
+}
+
+export type StorefrontHeaders = {
+  /** A unique ID that correlates all sub-requests together. */
+  requestGroupId: string | null;
+  /** The IP address of the client. */
+  buyerIp: string | null;
+  /** The cookie header from the client  */
+  cookie: string | null;
+  /** The purpose header value for debugging */
+  purpose: string | null;
+};
 
 declare global {
   interface Window {
