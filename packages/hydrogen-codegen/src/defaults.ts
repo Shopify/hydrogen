@@ -54,7 +54,7 @@ const caapiDefaultValues: DefaultValues = {
 };
 
 export function getDefaultOptions(outputFile = '') {
-  return /^(customer|caapi\.)/i.test(outputFile)
+  return /(customer|caapi\.)/i.test(outputFile)
     ? caapiDefaultValues
     : sfapiDefaultValues;
 }
