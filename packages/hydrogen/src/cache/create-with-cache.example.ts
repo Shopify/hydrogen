@@ -35,7 +35,7 @@ export default {
           // Optionally, specify a cache strategy.
           // Default is CacheShort().
           cache: CacheLong(),
-          // Cache if there are no GralhQL errors:
+          // Cache if there are no GraphQL errors:
           shouldCacheResponse: (body) => !body?.errors,
           // Optionally, add extra information to show
           // in the Subrequest Profiler utility.
@@ -52,11 +52,13 @@ export default {
     // 2. Or Create a more advanced utility to query multiple APIs under the same cache key:
     const fetchMultipleCMS = (options: {id: string; handle: string}) => {
       // Prefix the cache key and make it unique based on arguments.
-      return withCache.run({
-        cacheKey: ['my-cms-composite', options.id, options.handle],
-        strategy: CacheLong(),
-        shouldCacheResult: () => true,
-        actionFn: async (params) => {
+      return withCache.run(
+        {
+          cacheKey: ['my-cms-composite', options.id, options.handle],
+          strategy: CacheLong(),
+          shouldCacheResult: () => true,
+        },
+        async (params) => {
           // Run multiple subrequests in parallel, or any other async operations.
           const [response1, response2] = await Promise.all([
             fetch('https://my-cms-1.com/api', {
@@ -97,7 +99,7 @@ export default {
             extra2: response2.headers.get('X-Extra'),
           };
         },
-      });
+      );
     };
 
     const handleRequest = createRequestHandler({

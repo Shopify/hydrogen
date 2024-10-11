@@ -36,12 +36,14 @@ describe('createWithCache', () => {
 
     it('skips cache for no-cache policy', async () => {
       await expect(
-        withCache.run({
-          cacheKey: KEY,
-          strategy: CacheNone(),
-          shouldCacheResult: () => true,
+        withCache.run(
+          {
+            cacheKey: KEY,
+            strategy: CacheNone(),
+            shouldCacheResult: () => true,
+          },
           actionFn,
-        }),
+        ),
       ).resolves.toEqual(VALUE);
 
       expect(waitUntil).toHaveBeenCalledTimes(0);
@@ -49,12 +51,14 @@ describe('createWithCache', () => {
       await expect(getItemFromCache(cache, KEY)).resolves.toEqual(undefined);
 
       await expect(
-        withCache.run({
-          cacheKey: KEY,
-          strategy: CacheNone(),
-          shouldCacheResult: () => true,
+        withCache.run(
+          {
+            cacheKey: KEY,
+            strategy: CacheNone(),
+            shouldCacheResult: () => true,
+          },
           actionFn,
-        }),
+        ),
       ).resolves.toEqual(VALUE);
 
       // No cache, always calls the action function:
@@ -71,12 +75,14 @@ describe('createWithCache', () => {
       });
 
       await expect(
-        withCache.run({
-          cacheKey: KEY,
-          strategy: CacheShort(),
-          shouldCacheResult: () => true,
+        withCache.run(
+          {
+            cacheKey: KEY,
+            strategy: CacheShort(),
+            shouldCacheResult: () => true,
+          },
           actionFn,
-        }),
+        ),
       ).rejects.toThrowError('test');
 
       expect(waitUntil).toHaveBeenCalledTimes(0);
@@ -87,12 +93,14 @@ describe('createWithCache', () => {
     it('skips cache when shouldCacheResult returns false', async () => {
       const strategy = CacheShort({maxAge: 1, staleWhileRevalidate: 9});
       await expect(
-        withCache.run({
-          cacheKey: KEY,
-          strategy,
-          shouldCacheResult: (v) => v !== VALUE,
+        withCache.run(
+          {
+            cacheKey: KEY,
+            strategy,
+            shouldCacheResult: (v) => v !== VALUE,
+          },
           actionFn,
-        }),
+        ),
       ).resolves.toEqual(VALUE);
 
       expect(waitUntil).toHaveBeenCalledTimes(0);
@@ -100,12 +108,14 @@ describe('createWithCache', () => {
       await expect(getItemFromCache(cache, KEY)).resolves.toEqual(undefined);
 
       await expect(
-        withCache.run({
-          cacheKey: KEY,
-          strategy,
-          shouldCacheResult: (v) => v !== VALUE,
+        withCache.run(
+          {
+            cacheKey: KEY,
+            strategy,
+            shouldCacheResult: (v) => v !== VALUE,
+          },
           actionFn,
-        }),
+        ),
       ).resolves.toEqual(VALUE);
 
       // Doesn't cache, so always runs the actionFn:
@@ -117,12 +127,14 @@ describe('createWithCache', () => {
     it('stores results in the cache', async () => {
       const strategy = CacheShort({maxAge: 1, staleWhileRevalidate: 9});
       await expect(
-        withCache.run({
-          cacheKey: KEY,
-          strategy,
-          shouldCacheResult: () => true,
+        withCache.run(
+          {
+            cacheKey: KEY,
+            strategy,
+            shouldCacheResult: () => true,
+          },
           actionFn,
-        }),
+        ),
       ).resolves.toEqual(VALUE);
 
       expect(waitUntil).toHaveBeenCalledTimes(1);
@@ -135,12 +147,14 @@ describe('createWithCache', () => {
       vi.advanceTimersByTime(999);
 
       await expect(
-        withCache.run({
-          cacheKey: KEY,
-          strategy,
-          shouldCacheResult: () => true,
+        withCache.run(
+          {
+            cacheKey: KEY,
+            strategy,
+            shouldCacheResult: () => true,
+          },
           actionFn,
-        }),
+        ),
       ).resolves.toEqual(VALUE);
 
       // Cache hit, nothing to update:
@@ -154,12 +168,14 @@ describe('createWithCache', () => {
     it('applies stale-while-revalidate', async () => {
       const strategy = CacheShort({maxAge: 1, staleWhileRevalidate: 9});
       await expect(
-        withCache.run({
-          cacheKey: KEY,
-          strategy,
-          shouldCacheResult: () => true,
+        withCache.run(
+          {
+            cacheKey: KEY,
+            strategy,
+            shouldCacheResult: () => true,
+          },
           actionFn,
-        }),
+        ),
       ).resolves.toEqual(VALUE);
 
       expect(waitUntil).toHaveBeenCalledTimes(1);
@@ -172,12 +188,14 @@ describe('createWithCache', () => {
       vi.advanceTimersByTime(3000);
 
       await expect(
-        withCache.run({
-          cacheKey: KEY,
-          strategy,
-          shouldCacheResult: () => true,
+        withCache.run(
+          {
+            cacheKey: KEY,
+            strategy,
+            shouldCacheResult: () => true,
+          },
           actionFn,
-        }),
+        ),
       ).resolves.toEqual(VALUE);
 
       // Cache stale, call the action function again for SWR:
@@ -196,12 +214,14 @@ describe('createWithCache', () => {
 
       // Cache is expired, call the action function again:
       await expect(
-        withCache.run({
-          cacheKey: KEY,
-          strategy,
-          shouldCacheResult: () => true,
+        withCache.run(
+          {
+            cacheKey: KEY,
+            strategy,
+            shouldCacheResult: () => true,
+          },
           actionFn,
-        }),
+        ),
       ).resolves.toEqual(VALUE);
       expect(waitUntil).toHaveBeenCalledTimes(3);
       expect(actionFn).toHaveBeenCalledTimes(3);
