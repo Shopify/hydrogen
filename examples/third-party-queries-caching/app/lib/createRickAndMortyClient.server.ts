@@ -1,6 +1,8 @@
-import {createWithCache, CacheLong, type WithCache} from '@shopify/hydrogen';
-
-type AllCacheOptions = Parameters<WithCache>[1];
+import {
+  createWithCache,
+  CacheLong,
+  type CachingStrategy,
+} from '@shopify/hydrogen';
 
 export function createRickAndMortyClient({
   cache,
@@ -18,41 +20,36 @@ export function createRickAndMortyClient({
       query: `#graphql:rickAndMorty${string}`,
       options: {
         variables?: object;
-        cache: AllCacheOptions;
-      } = {variables: {}, cache: CacheLong()},
+        cache?: CachingStrategy;
+      },
     ) {
       query = minifyQuery(query);
+      const body = JSON.stringify({query, variables: options.variables});
 
-      return withCache(
-        ['r&m', query, JSON.stringify(options.variables)],
-        options.cache,
-        async ({addDebugData}) => {
-          // Call to the API
-          const response = await fetch('https://rickandmortyapi.com/graphql', {
-            method: 'POST',
-            headers: {'Content-type': 'application/json'},
-            body: JSON.stringify({query, variables: options.variables}),
-          });
-
-          // Improve information shown in the Hydrogen Subrequest Profiler
-          addDebugData({
-            displayName:
-              'Rick & Morty - ' + query.match(/^(query|mutation)\s\w+/)?.[0],
-            response,
-          });
-
-          if (!response.ok) {
-            // Throwing is important to prevent the results from being cached
-            throw new Error(
-              `Error fetching from rick and morty api: ${response.statusText}`,
-            );
-          }
-
-          const json = await response.json<{data: T; error: string}>();
-
-          return json.data;
+      const {data, response} = await withCache.fetch<{data: T; error: string}>(
+        'https://rickandmortyapi.com/graphql',
+        {
+          method: 'POST',
+          headers: {'Content-type': 'application/json'},
+          body,
+        },
+        {
+          cacheStrategy: options.cache ?? CacheLong(),
+          shouldCacheResponse: (body) => !body?.error,
+          cacheKey: ['r&m', body],
+          displayName:
+            'Rick & Morty - ' + query.match(/^(query|mutation)\s\w+/)?.[0],
         },
       );
+
+      if (!response.ok || !data || data?.error) {
+        throw new Error(
+          data?.error ??
+            `Error fetching from rick and morty api: ${response.statusText}`,
+        );
+      }
+
+      return data.data;
     },
   };
 }

@@ -5030,7 +5030,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "analyticsAllowed",
                 "value": "boolean",
-                "description": "",
+                "description": "Result of `customerPrivacyApi.analyticsProcessingAllowed()`",
                 "isOptional": true
               },
               {
@@ -5038,7 +5038,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "assetVersionId",
                 "value": "string",
-                "description": "NPM package version of either hydrogen or hydrogen-react.",
+                "description": "NPM package version of either hydrogen or hydrogen-react. Defaults to hydrogen-react package version.",
                 "isOptional": true
               },
               {
@@ -5054,7 +5054,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "ccpaEnforced",
                 "value": "boolean",
-                "description": "Result of customerPrivacyApi.saleOfDataNotAllowed()",
+                "description": "Result of `!customerPrivacyApi.saleOfDataAllowed()`",
                 "isOptional": true
               },
               {
@@ -5093,7 +5093,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "gdprEnforced",
                 "value": "boolean",
-                "description": "Result of customerPrivacyApi.notMarketingOrAnalyticsAllowed()",
+                "description": "Result of `!(customerPrivacyApi.marketingAllowed() && customerPrivacy.analyticsProcessingAllowed())`",
                 "isOptional": true
               },
               {
@@ -5116,7 +5116,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "marketingAllowed",
                 "value": "boolean",
-                "description": "",
+                "description": "Result of `customerPrivacyApi.marketingAllowed()`",
                 "isOptional": true
               },
               {
@@ -5176,7 +5176,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "saleOfDataAllowed",
                 "value": "boolean",
-                "description": "",
+                "description": "Result of `customerPrivacyApi.saleOfDataAllowed()`",
                 "isOptional": true
               },
               {
@@ -5261,7 +5261,7 @@
                 "description": "Shopify session token: Value of `_shopify_s` cookie.\n\nUse `getClientBrowserParameters()` to collect this value."
               }
             ],
-            "value": "export interface ShopifyPageViewPayload\n  extends ShopifyAnalyticsBase,\n    ClientBrowserParameters {\n  /** Canonical url. */\n  canonicalUrl?: string;\n  /** Shopify page type. */\n  pageType?: string;\n  /** Shopify resource id in the form of `gid://shopify/<type>/<id>`. */\n  resourceId?: string;\n  /** Shopify collection handle. */\n  collectionHandle?: string;\n  /** Shopify collection id. */\n  collectionId?: string\n  /** Search term used on a search results page. */\n  searchString?: string;\n}"
+            "value": "export interface ShopifyPageViewPayload\n  extends ShopifyAnalyticsBase,\n    ClientBrowserParameters {\n  /** Canonical url. */\n  canonicalUrl?: string;\n  /** Shopify page type. */\n  pageType?: string;\n  /** Shopify resource id in the form of `gid://shopify/<type>/<id>`. */\n  resourceId?: string;\n  /** Shopify collection handle. */\n  collectionHandle?: string;\n  /** Shopify collection id. */\n  collectionId?: string;\n  /** Search term used on a search results page. */\n  searchString?: string;\n}"
           },
           "ShopifyAnalyticsProduct": {
             "filePath": "src/analytics-types.ts",
@@ -5410,7 +5410,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "analyticsAllowed",
                 "value": "boolean",
-                "description": "",
+                "description": "Result of `customerPrivacyApi.analyticsProcessingAllowed()`",
                 "isOptional": true
               },
               {
@@ -5418,7 +5418,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "assetVersionId",
                 "value": "string",
-                "description": "NPM package version of either hydrogen or hydrogen-react.",
+                "description": "NPM package version of either hydrogen or hydrogen-react. Defaults to hydrogen-react package version.",
                 "isOptional": true
               },
               {
@@ -5433,7 +5433,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "ccpaEnforced",
                 "value": "boolean",
-                "description": "Result of customerPrivacyApi.saleOfDataNotAllowed()",
+                "description": "Result of `!customerPrivacyApi.saleOfDataAllowed()`",
                 "isOptional": true
               },
               {
@@ -5456,7 +5456,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "gdprEnforced",
                 "value": "boolean",
-                "description": "Result of customerPrivacyApi.notMarketingOrAnalyticsAllowed()",
+                "description": "Result of `!(customerPrivacyApi.marketingAllowed() && customerPrivacy.analyticsProcessingAllowed())`",
                 "isOptional": true
               },
               {
@@ -5479,7 +5479,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "marketingAllowed",
                 "value": "boolean",
-                "description": "",
+                "description": "Result of `customerPrivacyApi.marketingAllowed()`",
                 "isOptional": true
               },
               {
@@ -5523,7 +5523,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "saleOfDataAllowed",
                 "value": "boolean",
-                "description": "",
+                "description": "Result of `customerPrivacyApi.saleOfDataAllowed()`",
                 "isOptional": true
               },
               {
