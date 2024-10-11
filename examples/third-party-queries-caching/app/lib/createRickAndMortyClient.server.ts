@@ -34,7 +34,7 @@ export function createRickAndMortyClient({
           body,
         },
         {
-          cache: options.cache ?? CacheLong(),
+          cacheStrategy: options.cache ?? CacheLong(),
           shouldCacheResponse: (body) => !body?.error,
           cacheKey: ['r&m', body],
           displayName:
