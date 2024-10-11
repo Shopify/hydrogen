@@ -25,7 +25,7 @@ type WithCacheRunOptions<T> = {
    * Use the `CachingStrategy` to define a custom caching mechanism for your data.
    * Or use one of the pre-defined caching strategies: [`CacheNone`](/docs/api/hydrogen/utilities/cachenone), [`CacheShort`](/docs/api/hydrogen/utilities/cacheshort), [`CacheLong`](/docs/api/hydrogen/utilities/cachelong).
    */
-  strategy: CachingStrategy;
+  cacheStrategy: CachingStrategy;
   /** Useful to avoid accidentally caching bad results */
   shouldCacheResult: (value: T) => boolean;
 };
@@ -36,7 +36,7 @@ type WithCacheFetchOptions<T> = {
    * Use the `CachingStrategy` to define a custom caching mechanism for your data.
    * Or use one of the pre-defined caching strategies: [`CacheNone`](/docs/api/hydrogen/utilities/cachenone), [`CacheShort`](/docs/api/hydrogen/utilities/cacheshort), [`CacheLong`](/docs/api/hydrogen/utilities/cachelong).
    */
-  cache?: CachingStrategy;
+  cacheStrategy?: CachingStrategy;
   /** The cache key for this fetch */
   cacheKey?: CacheKey;
   /** Useful to avoid e.g. caching a successful response that contains an error in the body */
@@ -62,12 +62,12 @@ export function createWithCache(
 
   return {
     run: <T>(
-      {cacheKey, strategy, shouldCacheResult}: WithCacheRunOptions<T>,
+      {cacheKey, cacheStrategy, shouldCacheResult}: WithCacheRunOptions<T>,
       fn: ({addDebugData}: CacheActionFunctionParam) => T | Promise<T>,
     ): Promise<T> => {
       return runWithCache(cacheKey, fn, {
         shouldCacheResult,
-        strategy,
+        strategy: cacheStrategy,
         cacheInstance: cache,
         waitUntil,
         debugInfo: {
@@ -92,6 +92,7 @@ export function createWithCache(
           stackInfo: getCallerStackLine?.(),
           displayName: options?.displayName,
         },
+        cache: options.cacheStrategy,
         ...options,
       }).then(([data, response]) => ({data, response}));
     },

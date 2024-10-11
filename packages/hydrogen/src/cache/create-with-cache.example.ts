@@ -34,7 +34,7 @@ export default {
         {
           // Optionally, specify a cache strategy.
           // Default is CacheShort().
-          cache: CacheLong(),
+          cacheStrategy: CacheLong(),
           // Cache if there are no GraphQL errors:
           shouldCacheResponse: (body) => !body?.errors,
           // Optionally, add extra information to show
@@ -55,7 +55,7 @@ export default {
       return withCache.run(
         {
           cacheKey: ['my-cms-composite', options.id, options.handle],
-          strategy: CacheLong(),
+          cacheStrategy: CacheLong(),
           shouldCacheResult: () => true,
         },
         async (params) => {

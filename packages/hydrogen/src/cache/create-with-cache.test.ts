@@ -39,7 +39,7 @@ describe('createWithCache', () => {
         withCache.run(
           {
             cacheKey: KEY,
-            strategy: CacheNone(),
+            cacheStrategy: CacheNone(),
             shouldCacheResult: () => true,
           },
           actionFn,
@@ -54,7 +54,7 @@ describe('createWithCache', () => {
         withCache.run(
           {
             cacheKey: KEY,
-            strategy: CacheNone(),
+            cacheStrategy: CacheNone(),
             shouldCacheResult: () => true,
           },
           actionFn,
@@ -78,7 +78,7 @@ describe('createWithCache', () => {
         withCache.run(
           {
             cacheKey: KEY,
-            strategy: CacheShort(),
+            cacheStrategy: CacheShort(),
             shouldCacheResult: () => true,
           },
           actionFn,
@@ -96,7 +96,7 @@ describe('createWithCache', () => {
         withCache.run(
           {
             cacheKey: KEY,
-            strategy,
+            cacheStrategy: strategy,
             shouldCacheResult: (v) => v !== VALUE,
           },
           actionFn,
@@ -111,7 +111,7 @@ describe('createWithCache', () => {
         withCache.run(
           {
             cacheKey: KEY,
-            strategy,
+            cacheStrategy: strategy,
             shouldCacheResult: (v) => v !== VALUE,
           },
           actionFn,
@@ -130,7 +130,7 @@ describe('createWithCache', () => {
         withCache.run(
           {
             cacheKey: KEY,
-            strategy,
+            cacheStrategy: strategy,
             shouldCacheResult: () => true,
           },
           actionFn,
@@ -150,7 +150,7 @@ describe('createWithCache', () => {
         withCache.run(
           {
             cacheKey: KEY,
-            strategy,
+            cacheStrategy: strategy,
             shouldCacheResult: () => true,
           },
           actionFn,
@@ -171,7 +171,7 @@ describe('createWithCache', () => {
         withCache.run(
           {
             cacheKey: KEY,
-            strategy,
+            cacheStrategy: strategy,
             shouldCacheResult: () => true,
           },
           actionFn,
@@ -191,7 +191,7 @@ describe('createWithCache', () => {
         withCache.run(
           {
             cacheKey: KEY,
-            strategy,
+            cacheStrategy: strategy,
             shouldCacheResult: () => true,
           },
           actionFn,
@@ -217,7 +217,7 @@ describe('createWithCache', () => {
         withCache.run(
           {
             cacheKey: KEY,
-            strategy,
+            cacheStrategy: strategy,
             shouldCacheResult: () => true,
           },
           actionFn,
