@@ -3,4 +3,4 @@
 '@shopify/hydrogen': patch
 ---
 
-Remove deprecated code usage for `priceV2`, `compareAtPriceV2`, and remove export for `getCustomerPrivacy`
+Update `<ProductPrice>` to remove deprecated code usage for `priceV2` and `compareAtPriceV2`. Remove export for `getCustomerPrivacy`.
