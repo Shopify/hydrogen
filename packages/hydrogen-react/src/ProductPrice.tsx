@@ -61,9 +61,7 @@ export function ProductPrice<
 
     let priceAsNumber: number;
     if (variantId && variant) {
-      priceAsNumber = parseFloat(
-        variant.price?.amount ?? '0',
-      );
+      priceAsNumber = parseFloat(variant.price?.amount ?? '0');
     } else {
       priceAsNumber = parseFloat(
         product?.priceRange?.[variantPriceProperty]?.amount ?? '0',
