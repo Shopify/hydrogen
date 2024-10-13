@@ -55,6 +55,7 @@ export type LoginOptions = {
 
 export type LogoutOptions = {
   postLogoutRedirectUri?: string;
+  headers?: HeadersInit;
 };
 
 export type CustomerAccount = {

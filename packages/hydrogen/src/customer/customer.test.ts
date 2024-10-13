@@ -329,6 +329,33 @@ describe('customer', () => {
           );
         });
 
+        it('Redirects to the customer account api logout url with optional headers from params included', async () => {
+          const origin = 'https://shop123.com';
+          const postLogoutRedirectUri = '/post-logout-landing-page';
+          const headers = {'Set-Cookie': 'cookie=test;'};
+
+          const customer = createCustomerAccountClient({
+            session,
+            customerAccountId: 'customerAccountId',
+            shopId: '1',
+            request: new Request(origin),
+            waitUntil: vi.fn(),
+          });
+
+          const response = await customer.logout({headers});
+
+          const url = new URL(response.headers.get('location')!);
+          expect(url.origin).toBe('https://shopify.com');
+          expect(url.pathname).toBe('/authentication/1/logout');
+
+          expect(response.headers.get('Set-Cookie')).toBe('cookie=test;');
+
+          // Session is cleared
+          expect(session.unset).toHaveBeenCalledWith(
+            CUSTOMER_ACCOUNT_SESSION_KEY,
+          );
+        });
+
         it('Redirects to app origin when customer is not login by default', async () => {
           const origin = 'https://shop123.com';
           const mockSession: HydrogenSession = {
