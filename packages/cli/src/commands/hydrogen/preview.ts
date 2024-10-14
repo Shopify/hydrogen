@@ -33,7 +33,6 @@ export default class Preview extends Command {
   static flags = {
     ...commonFlags.path,
     ...commonFlags.port,
-    worker: deprecated('--worker', {isBoolean: true}),
     ...commonFlags.legacyRuntime,
     ...commonFlags.env,
     ...commonFlags.envBranch,

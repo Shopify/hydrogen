@@ -669,11 +669,6 @@
           "allowNo": false,
           "type": "boolean"
         },
-        "worker": {
-          "hidden": true,
-          "name": "worker",
-          "type": "boolean"
-        },
         "legacy-runtime": {
           "description": "[Classic Remix Compiler] Runs the app in a Node.js sandbox instead of an Oxygen worker.",
           "env": "SHOPIFY_HYDROGEN_FLAG_LEGACY_RUNTIME",
@@ -1322,11 +1317,6 @@
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
-        },
-        "worker": {
-          "hidden": true,
-          "name": "worker",
-          "type": "boolean"
         },
         "legacy-runtime": {
           "description": "Runs the app in a Node.js sandbox instead of an Oxygen worker.",
