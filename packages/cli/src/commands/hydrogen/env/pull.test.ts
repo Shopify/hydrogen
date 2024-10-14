@@ -107,30 +107,10 @@ describe('pullVariables', () => {
       });
     });
 
-    it('calls getStorefrontEnvVariables when branch is provided', async () => {
-      await inTemporaryDirectory(async (tmpDir) => {
-        await runEnvPull({path: tmpDir, envBranch: 'main', envFile});
-
-        expect(getStorefrontEnvVariables).toHaveBeenCalledWith(
-          ADMIN_SESSION,
-          SHOPIFY_CONFIG.storefront.id,
-          'production',
-        );
-      });
-    });
-
     it('throws error if handle does not map to any environment', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
         await expect(
           runEnvPull({path: tmpDir, env: 'fake', envFile}),
-        ).rejects.toThrowError('Environment not found');
-      });
-    });
-
-    it('throws error if branch does not map to any environment', async () => {
-      await inTemporaryDirectory(async (tmpDir) => {
-        await expect(
-          runEnvPull({path: tmpDir, envBranch: 'fake', envFile}),
         ).rejects.toThrowError('Environment not found');
       });
     });

@@ -340,22 +340,7 @@
         },
         "env": {
           "description": "Specifies the environment to perform the operation using its handle. Fetch the handle using the `env list` command.",
-          "exclusive": [
-            "env-branch"
-          ],
           "name": "env",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "env-branch": {
-          "deprecated": {
-            "to": "env",
-            "message": "--env-branch is deprecated. Use --env instead."
-          },
-          "description": "Specifies the environment to perform the operation using its Git branch name.",
-          "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH",
-          "name": "env-branch",
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
@@ -369,7 +354,7 @@
           "type": "option"
         },
         "preview": {
-          "description": "Deploys to the Preview environment. Overrides --env-branch and Git metadata.",
+          "description": "Deploys to the Preview environment. Overrides Git metadata.",
           "name": "preview",
           "required": false,
           "allowNo": false,
@@ -594,22 +579,7 @@
         },
         "env": {
           "description": "Specifies the environment to perform the operation using its handle. Fetch the handle using the `env list` command.",
-          "exclusive": [
-            "env-branch"
-          ],
           "name": "env",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "env-branch": {
-          "deprecated": {
-            "to": "env",
-            "message": "--env-branch is deprecated. Use --env instead."
-          },
-          "description": "Specifies the environment to perform the operation using its Git branch name.",
-          "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH",
-          "name": "env-branch",
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
@@ -740,22 +710,7 @@
       "flags": {
         "env": {
           "description": "Specifies the environment to perform the operation using its handle. Fetch the handle using the `env list` command.",
-          "exclusive": [
-            "env-branch"
-          ],
           "name": "env",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "env-branch": {
-          "deprecated": {
-            "to": "env",
-            "message": "--env-branch is deprecated. Use --env instead."
-          },
-          "description": "Specifies the environment to perform the operation using its Git branch name.",
-          "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH",
-          "name": "env-branch",
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
@@ -811,9 +766,6 @@
       "flags": {
         "env": {
           "description": "Specifies the environment to perform the operation using its handle. Fetch the handle using the `env list` command.",
-          "exclusive": [
-            "env-branch"
-          ],
           "name": "env",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -1327,22 +1279,7 @@
         },
         "env": {
           "description": "Specifies the environment to perform the operation using its handle. Fetch the handle using the `env list` command.",
-          "exclusive": [
-            "env-branch"
-          ],
           "name": "env",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "env-branch": {
-          "deprecated": {
-            "to": "env",
-            "message": "--env-branch is deprecated. Use --env instead."
-          },
-          "description": "Specifies the environment to perform the operation using its Git branch name.",
-          "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH",
-          "name": "env-branch",
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
