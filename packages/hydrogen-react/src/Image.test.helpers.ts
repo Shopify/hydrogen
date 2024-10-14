@@ -14,8 +14,5 @@ export function getPreviewImage(image: Partial<ImageType> = {}): PartialDeep<
     url: image.url ?? faker.image.imageUrl(),
     width: image.width ?? faker.datatype.number(),
     height: image.height ?? faker.datatype.number(),
-    originalSrc: '',
-    transformedSrc: '',
-    src: '',
   };
 }

@@ -69,9 +69,7 @@ export function getVariant(
       variant?.unitPriceMeasurement ?? undefined,
     ),
     price,
-    priceV2: price,
     compareAtPrice,
-    compareAtPriceV2: compareAtPrice,
     selectedOptions: [
       {name: faker.random.word(), value: faker.random.word()},
       {name: faker.random.word(), value: faker.random.word()},
@@ -85,7 +83,7 @@ export function getVariant(
   };
 }
 
-const priceV2: MoneyV2 = {
+const price: MoneyV2 = {
   amount: '9.99',
   currencyCode: 'CAD',
 };
@@ -109,9 +107,9 @@ export const VARIANTS: PartialDeep<
         },
       ],
       availableForSale: true,
-      unitPrice: priceV2,
+      unitPrice: price,
       unitPriceMeasurement: getUnitPriceMeasurement(),
-      priceV2,
+      price,
       metafields: [],
     },
     {
@@ -128,9 +126,9 @@ export const VARIANTS: PartialDeep<
         },
       ],
       availableForSale: true,
-      unitPrice: priceV2,
+      unitPrice: price,
       unitPriceMeasurement: getUnitPriceMeasurement(),
-      priceV2,
+      price,
       metafields: [],
     },
     {
@@ -147,9 +145,9 @@ export const VARIANTS: PartialDeep<
         },
       ],
       availableForSale: true,
-      unitPrice: priceV2,
+      unitPrice: price,
       unitPriceMeasurement: getUnitPriceMeasurement(),
-      priceV2,
+      price,
       metafields: [],
     },
     {
@@ -166,9 +164,9 @@ export const VARIANTS: PartialDeep<
         },
       ],
       availableForSale: false,
-      unitPrice: priceV2,
+      unitPrice: price,
       unitPriceMeasurement: getUnitPriceMeasurement(),
-      priceV2,
+      price,
       metafields: [],
     },
   ],
