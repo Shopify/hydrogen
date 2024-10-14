@@ -87,26 +87,10 @@ describe('getAllEnvironmentVariables()', () => {
     });
   });
 
-  it('calls pullRemoteEnvironmentVariables using branch', async () => {
-    await inTemporaryDirectory(async (tmpDir) => {
-      await getAllEnvironmentVariables({
-        envBranch: 'main',
-        root: tmpDir,
-        envFile,
-      });
-
-      expect(getStorefrontEnvVariables).toHaveBeenCalledWith(
-        ADMIN_SESSION,
-        SHOPIFY_CONFIG.storefront.id,
-        'production',
-      );
-    });
-  });
-
   it('does not call pullRemoteEnvironmentVariables when indicated', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       await getAllEnvironmentVariables({
-        envBranch: 'main',
+        envHandle: 'production',
         root: tmpDir,
         fetchRemote: false,
         envFile,

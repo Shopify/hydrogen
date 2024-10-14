@@ -271,75 +271,11 @@ describe('deploy', () => {
     expect(vi.mocked(renderSuccess)).toHaveBeenCalled;
   });
 
-  it('calls createDeploy against an environment selected by envBranch', async () => {
-    vi.mocked(getOxygenDeploymentData).mockResolvedValue({
-      oxygenDeploymentToken: 'some-encoded-token',
-      environments: [
-        {
-          name: 'Production',
-          handle: 'production',
-          branch: 'main',
-          type: 'PRODUCTION',
-        },
-        {name: 'Preview', handle: 'preview', branch: null, type: 'PREVIEW'},
-        {name: 'Staging', handle: 'staging', branch: 'stage-1', type: 'CUSTOM'},
-      ],
-    });
-
-    await runDeploy({
-      ...deployParams,
-      envBranch: 'stage-1',
-    });
-
-    expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-      config: {
-        ...expectedConfig,
-        environmentTag: 'stage-1',
-      },
-      hooks: expectedHooks,
-      logger: deploymentLogger,
-    });
-    expect(vi.mocked(renderSuccess)).toHaveBeenCalled;
-  });
-
-  it('calls createDeploy against an envBranch in CI', async () => {
-    vi.mocked(ciPlatform).mockReturnValue({
-      isCI: true,
-      name: 'github',
-      metadata: {},
-    });
-
-    await runDeploy({
-      ...deployParams,
-      token: 'some-token',
-      envBranch: 'stage-1',
-    });
-
-    expect(vi.mocked(createDeploy)).toHaveBeenCalledWith({
-      config: {
-        ...expectedConfig,
-        environmentTag: 'stage-1',
-      },
-      hooks: expectedHooks,
-      logger: deploymentLogger,
-    });
-    expect(vi.mocked(renderSuccess)).toHaveBeenCalled;
-  });
-
   it("errors when the env provided doesn't match any environment", async () => {
     await expect(
       runDeploy({
         ...deployParams,
         env: 'fake-handle',
-      }),
-    ).rejects.toThrowError('Environment not found');
-  });
-
-  it("errors when the envBranch provided doesn't match any environment", async () => {
-    await expect(
-      runDeploy({
-        ...deployParams,
-        envBranch: 'fake-branch',
       }),
     ).rejects.toThrowError('Environment not found');
   });
@@ -791,19 +727,6 @@ describe('deploy', () => {
         await runDeploy({
           ...deployParams,
           env: 'production',
-        });
-
-        expect(renderConfirmationPrompt).toHaveBeenCalledWith({
-          confirmationMessage: 'Yes, confirm deploy',
-          cancellationMessage: 'No, cancel deploy',
-          message: expect.any(String),
-        });
-      });
-
-      it('renders a user confirmation on deploy when production environment branch is provided', async () => {
-        await runDeploy({
-          ...deployParams,
-          envBranch: 'main',
         });
 
         expect(renderConfirmationPrompt).toHaveBeenCalledWith({
