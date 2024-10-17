@@ -224,6 +224,8 @@ export function createHydrogenContext<
     customerAccount,
   });
 
+  proxyGraphQL(storefront, request as Request, waitUntil);
+
   return {
     storefront,
     customerAccount,
@@ -303,3 +305,60 @@ export type HydrogenContextOptionsForDocs<
     customMethods?: Record<string, Function>;
   };
 };
+
+function proxyGraphQL<TI18n extends I18nBase>(
+  storefront: StorefrontClient<TI18n>['storefront'],
+  request?: Request,
+  waitUntil?: WaitUntil,
+) {
+  const url = request?.url ? new URL(request.url) : null;
+  if (
+    url?.pathname?.match(/^\/api\/\d{4}-\d{2}\/graphql$/) &&
+    request?.method === 'POST' &&
+    waitUntil
+  ) {
+    const readableStream = new ReadableStream({
+      start(controller) {
+        const encoder = new TextEncoder();
+        waitUntil(
+          (request as any)
+            .json()
+            .then(
+              ({
+                query,
+                variables,
+              }: {
+                query: string;
+                variables: Record<string, string>;
+              }) => {
+                waitUntil(
+                  storefront
+                    .query(query, {
+                      variables,
+                      storefrontApiVersion: url.pathname.split('/')[2],
+                    })
+                    .then((resp) => {
+                      controller.enqueue(encoder.encode(JSON.stringify(resp)));
+                      controller.close();
+                    })
+                    .catch((err: unknown) => {
+                      controller.enqueue(encoder.encode(JSON.stringify(err)));
+                      controller.close();
+                    }),
+                );
+              },
+            )
+            .catch((err: unknown) => {
+              controller.enqueue(encoder.encode(JSON.stringify(err)));
+              controller.close();
+            }),
+        );
+      },
+    });
+
+    throw new Response(readableStream, {
+      status: 200,
+      headers: {'Content-Type': 'text/html'},
+    });
+  }
+}

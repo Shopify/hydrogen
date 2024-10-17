@@ -12,10 +12,12 @@ import {cartSetIdDefault} from './cart/cartSetIdDefault';
 import type {CustomerAccount} from './customer/types';
 import type {HydrogenSession} from './types';
 
+const mockStorefront = {
+  storefront: {query: vi.fn()},
+};
+
 vi.mock('./storefront', async () => ({
-  createStorefrontClient: vi.fn(() => ({
-    storefront: {},
-  })),
+  createStorefrontClient: vi.fn(() => mockStorefront),
 }));
 
 vi.mock('./customer/customer', async () => ({
@@ -65,6 +67,7 @@ const defaultOptions = {
   env: mockEnv,
   request: new Request('https://localhost'),
   session: {} as HydrogenSession,
+  waitUntil: vi.fn(),
 };
 
 describe('createHydrogenContext', () => {
@@ -486,6 +489,30 @@ describe('createHydrogenContext', () => {
 
       expect(hydrogenContext).toStrictEqual(
         expect.objectContaining({session: mockSession}),
+      );
+    });
+  });
+
+  describe('proxyGraphQL', async () => {
+    it('returns proxyGraphQL as it was passed in', async () => {
+      function createContext() {
+        createHydrogenContext({
+          ...defaultOptions,
+          request: new Request('https://localhost/api/2024-07/graphql', {
+            method: 'POST',
+            body: '{"query":"{shop{name}", "variables": {}}',
+          }),
+        });
+      }
+
+      expect(createContext).toThrow(Response);
+      await new Promise((resolve) => setTimeout(resolve));
+      expect(vi.mocked(mockStorefront.storefront.query)).toHaveBeenCalledWith(
+        '{shop{name}',
+        {
+          variables: {},
+          storefrontApiVersion: '2024-07',
+        },
       );
     });
   });
