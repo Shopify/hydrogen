@@ -224,7 +224,7 @@ export function createHydrogenContext<
     customerAccount,
   });
 
-  proxyGraphQL(storefront, request as Request, waitUntil);
+  maybeProxyGraphQL(storefront, request as Request, waitUntil);
 
   return {
     storefront,
@@ -306,7 +306,7 @@ export type HydrogenContextOptionsForDocs<
   };
 };
 
-function proxyGraphQL<TI18n extends I18nBase>(
+function maybeProxyGraphQL<TI18n extends I18nBase>(
   storefront: StorefrontClient<TI18n>['storefront'],
   request?: Request,
   waitUntil?: WaitUntil,
