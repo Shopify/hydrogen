@@ -23,7 +23,6 @@ jobs:
             {name: 'metaobjects', token: '1000014928'},
             {name: 'third-party-queries-caching', token: '1000014929'},
             {name: 'custom-cart-method', token: '1000014930'},
-            {name: 'sitemap', token: '1000022490'},
           ]
     steps:
       - uses: actions/checkout@v4
