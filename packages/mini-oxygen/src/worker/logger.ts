@@ -7,6 +7,14 @@ import type {
   MessageData,
 } from './inspector.js';
 
+/**
+ * Adds event listeners for console messages and exceptions to the inspector connection.
+ * Then, it handles logs and errors in the main Node.js process to display them in the terminal.
+ * It also formats and displays source maps for errors using information that only exists
+ * in the Node.js process, although this is not used for Vite processes because Vite already
+ * provides source maps for errors.
+ * @param inspector
+ */
 export function addInspectorConsoleLogger(inspector: InspectorConnection) {
   inspector.ws.addEventListener('message', async (event) => {
     if (typeof event.data !== 'string') {
@@ -28,6 +36,12 @@ export function addInspectorConsoleLogger(inspector: InspectorConnection) {
   });
 }
 
+/**
+ * Creates an Error instance in the Node.js process from an unhandled exception in workerd.
+ * @param exceptionDetails
+ * @param inspector
+ * @returns Resolves to an actual Error instance with stack trace and message.
+ */
 export async function createErrorFromException(
   exceptionDetails: Protocol.Runtime.ExceptionDetails,
   inspector: InspectorConnection,
@@ -56,6 +70,12 @@ export async function createErrorFromException(
   );
 }
 
+/**
+ * Creates an Error instance in the Node.js process from a logged error in workerd.
+ * @param ro RemoteObject representing the error logged.
+ * @param inspector
+ * @returns Resolves to an actual Error instance with stack trace and message.
+ */
 export async function createErrorFromLog(
   ro: Protocol.Runtime.RemoteObject,
   inspector: InspectorConnection,
@@ -85,14 +105,6 @@ export async function createErrorFromLog(
   return inspector.reconstructError(errorProperties, ro);
 }
 
-/**
- * This function converts a message serialised as a devtools event
- * into arguments suitable to be called by a console method, and
- * then actually calls the method with those arguments. Effectively,
- * we're just doing a little bit of the work of the devtools console,
- * directly in the terminal.
- */
-
 const mapConsoleAPIMessageTypeToConsoleMethod: {
   [key in Protocol.Runtime.ConsoleAPICalledEvent['type']]: Exclude<
     keyof Console,
@@ -119,6 +131,17 @@ const mapConsoleAPIMessageTypeToConsoleMethod: {
   endGroup: 'groupEnd',
 };
 
+/**
+ * This function converts a message serialised as a devtools event
+ * into arguments suitable to be called by a console method, and
+ * then actually calls the method with those arguments. Effectively,
+ * we're just doing a little bit of the work of the devtools console,
+ * directly in the terminal.
+ *
+ * Here we decide how to display each type of argument. For example,
+ * for Errors we reconstruct the stack trace; for Maps, we display
+ * the key-value pairs, etc.
+ */
 async function logConsoleMessage(
   evt: Protocol.Runtime.ConsoleAPICalledEvent,
   inspector: InspectorConnection,
@@ -132,9 +155,11 @@ async function logConsoleMessage(
       case 'undefined':
       case 'symbol':
       case 'bigint':
+        // Simple types are just pushed as-is
         args.push(ro.value);
         break;
       case 'function':
+        // Functions are displayed as "[Function: <name>]"
         args.push(`[Function: ${ro.description ?? '<no-description>'}]`);
         break;
       case 'object':
