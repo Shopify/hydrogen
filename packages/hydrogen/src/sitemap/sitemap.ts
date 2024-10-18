@@ -9,8 +9,6 @@ const SITEMAP_PREFIX = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">`;
 const SITEMAP_SUFFIX = `</urlset>`;
 
-const SITEMAP_STOREFRONT_API_VERSION = '2024-10';
-
 type SITEMAP_INDEX_TYPE =
   | 'pages'
   | 'products'
@@ -58,9 +56,7 @@ export async function getSitemapIndex(
       'A storefront client is required to generate a sitemap index',
     );
 
-  const data = await storefront.query(SITEMAP_INDEX_QUERY, {
-    storefrontApiVersion: SITEMAP_STOREFRONT_API_VERSION,
-  });
+  const data = await storefront.query(SITEMAP_INDEX_QUERY);
 
   if (!data) {
     throw new Response('No data found', {status: 404});
@@ -168,7 +164,6 @@ export async function getSitemap(
     variables: {
       page: parseInt(params.page, 10),
     },
-    storefrontApiVersion: SITEMAP_STOREFRONT_API_VERSION,
   });
 
   const baseUrl = new URL(request.url).origin;
