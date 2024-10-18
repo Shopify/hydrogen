@@ -59,7 +59,9 @@ export async function getSitemapIndex(
   const data = await storefront.query(SITEMAP_INDEX_QUERY);
 
   if (!data) {
-    throw new Response('No data found', {status: 404});
+    console.warn('[h2:sitemap:warning] Sitemap index is available in API version 2024-10 and later');
+    throw new Response(
+      'Sitemap index not found.', {status: 404});
   }
 
   const baseUrl = new URL(request.url).origin;
@@ -165,6 +167,11 @@ export async function getSitemap(
       page: parseInt(params.page, 10),
     },
   });
+
+  if (!data) {
+    console.warn('[h2:sitemap:warning] Sitemap is available in API version 2024-10 and later');
+    throw new Response('Sitemap not found.', {status: 404});
+  }
 
   const baseUrl = new URL(request.url).origin;
   let body: string = '';
