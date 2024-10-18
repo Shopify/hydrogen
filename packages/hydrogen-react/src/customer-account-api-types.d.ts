@@ -1,6 +1,6 @@
 /**
  * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
- * Based on Customer Account API 2024-07
+ * Based on Customer Account API 2024-10
  * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run `npm run graphql-types`.
  * Except custom Scalars, which are defined in the `codegen.ts` file
  */
@@ -72,18 +72,11 @@ export type AddressFormFieldMode =
   /**
    * Indicates that the form field should be hidden from the UI.
    * Any values provided by the client will be ignored by the backend.
-   *
    */
   | 'IGNORED'
-  /**
-   * Indicates that the form field is visible in the UI and can be left empty.
-   *
-   */
+  /** Indicates that the form field is visible in the UI and can be left empty. */
   | 'OPTIONAL'
-  /**
-   * Indicates that the form field is visible in the UI and requires a non-empty value.
-   *
-   */
+  /** Indicates that the form field is visible in the UI and requires a non-empty value. */
   | 'REQUIRED';
 
 /** The settings for the address form. */
@@ -178,10 +171,7 @@ export type ApplePaySessionCreatePayload = {
   body?: Maybe<Scalars['String']['output']>;
   /** The ID for the created session. */
   id?: Maybe<Scalars['String']['output']>;
-  /**
-   * Whether the session is ready. The `body` field is `null` while this value is `false`.
-   *
-   */
+  /** Whether the session is ready. The `body` field is `null` while this value is `false`. */
   ready?: Maybe<Scalars['Boolean']['output']>;
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<ApplePaySessionUserError>;
@@ -227,19 +217,16 @@ export type AppliedGiftCard = Node & {
   presentmentAmountUsed: MoneyV2;
 };
 
-/** Represents a generic custom attribute. */
+/** Represents a generic custom attribute, such as whether an order is a customer's first. */
 export type Attribute = {
   __typename?: 'Attribute';
-  /** Key or name of the attribute. */
+  /** The key or name of the attribute. For example, `"customersFirstOrder"`. */
   key: Scalars['String']['output'];
-  /** Value of the attribute. */
+  /** The value of the attribute. For example, `"true"`. */
   value?: Maybe<Scalars['String']['output']>;
 };
 
-/**
- * Captures the intentions of a discount that was automatically applied.
- *
- */
+/** Captures the intentions of a discount that was automatically applied. */
 export type AutomaticDiscountApplication = DiscountApplication & {
   __typename?: 'AutomaticDiscountApplication';
   /** The method by which the discount's value is allocated to its entitled items. */
@@ -261,17 +248,13 @@ export type AvailableShippingRates = {
    * Whether the shipping rates are ready.
    * The `shippingRates` field is `null` when this value is `false`.
    * This field should be polled until its value becomes `true`.
-   *
    */
   ready: Scalars['Boolean']['output'];
   /** The fetched shipping rates. `null` until the `ready` field is `true`. */
   shippingRates?: Maybe<Array<ShippingRate>>;
 };
 
-/**
- * The input fields required for updating a business contact.
- *
- */
+/** The input fields required for updating a business contact. */
 export type BusinessContactUpdateInput = {
   /** The first name of the business contact. */
   firstName?: InputMaybe<Scalars['String']['input']>;
@@ -339,10 +322,7 @@ export type BusinessLocationCreditCardAddPayload = {
   __typename?: 'BusinessLocationCreditCardAddPayload';
   /** The newly added credit card. */
   creditCard?: Maybe<CustomerCreditCard>;
-  /**
-   * The URL to redirect the customer to for completing the 3D Secure payment flow.
-   *
-   */
+  /** The URL to redirect the customer to for completing the 3D Secure payment flow. */
   nextActionUrl?: Maybe<Scalars['URL']['output']>;
   /** If the card verification result is processing. When this is true, credit_card will be null. */
   processing?: Maybe<Scalars['Boolean']['output']>;
@@ -373,10 +353,11 @@ export type BusinessLocationPaymentInstrumentRemovePayload = {
 /** The configuration for the buyer's checkout. */
 export type BuyerExperienceConfiguration = {
   __typename?: 'BuyerExperienceConfiguration';
+  /** The deposit amount required for the order. */
+  deposit?: Maybe<DepositConfiguration>;
   /**
    * Whether the buyer must pay at checkout or
    * can choose to pay at checkout or pay later using net terms.
-   *
    */
   payNowOnly: Scalars['Boolean']['output'];
   /** The merchant configured payment terms. */
@@ -392,7 +373,7 @@ export type CardPaymentDetails = {
   last4?: Maybe<Scalars['String']['output']>;
 };
 
-/** A container for information required to checkout items and pay. */
+/** A container for information required to checkout items and pay. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type Checkout = Node & {
   __typename?: 'Checkout';
   /** The gift cards used on the checkout. */
@@ -401,7 +382,6 @@ export type Checkout = Node & {
    * The available shipping rates for this Checkout.
    * Should only be used when checkout `requiresShipping` is `true` and
    * the shipping address is valid.
-   *
    */
   availableShippingRates?: Maybe<AvailableShippingRates>;
   /** The date and time when the checkout was created. */
@@ -421,7 +401,6 @@ export type Checkout = Node & {
   /**
    * The sum of all the prices of all the items in the checkout,
    * excluding duties, taxes, shipping, and discounts.
-   *
    */
   lineItemsSubtotalPrice: MoneyV2;
   /** The note associated with the checkout. */
@@ -433,17 +412,13 @@ export type Checkout = Node & {
    * have asynchronous operations that can take time to finish. If you want
    * to complete a checkout or ensure all the fields are populated and up to
    * date, polling is required until the value is true.
-   *
    */
   ready: Scalars['Boolean']['output'];
   /** Whether the fulfillment requires shipping. */
   requiresShipping: Scalars['Boolean']['output'];
   /** The address where the line items will be shipped. */
   shippingAddress?: Maybe<CustomerMailingAddress>;
-  /**
-   * The discounts allocated to the shipping line by discount applications.
-   *
-   */
+  /** The discounts allocated to the shipping line by discount applications. */
   shippingDiscountAllocations: Array<DiscountAllocation>;
   /** The selected shipping rate, transitioned to a `shipping_line` object. */
   shippingLine?: Maybe<ShippingRate>;
@@ -460,7 +435,6 @@ export type Checkout = Node & {
   /**
    * The sum of all the prices of all the items in the checkout,
    * duties, taxes, and discounts included.
-   *
    */
   totalPrice: MoneyV2;
   /** The sum of all the taxes applied to the line items and shipping lines in the checkout. */
@@ -469,7 +443,7 @@ export type Checkout = Node & {
   webUrl: Scalars['URL']['output'];
 };
 
-/** A container for information required to checkout items and pay. */
+/** A container for information required to checkout items and pay. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CheckoutDiscountApplicationsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -478,7 +452,7 @@ export type CheckoutDiscountApplicationsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/** A container for information required to checkout items and pay. */
+/** A container for information required to checkout items and pay. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CheckoutLineItemsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -506,27 +480,21 @@ export type CheckoutLineItem = Node & {
   variantTitle?: Maybe<Scalars['String']['output']>;
 };
 
-/**
- * An auto-generated type for paginating through multiple CheckoutLineItems.
- *
- */
+/** An auto-generated type for paginating through multiple CheckoutLineItems. */
 export type CheckoutLineItemConnection = {
   __typename?: 'CheckoutLineItemConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<CheckoutLineItemEdge>;
-  /** A list of the nodes contained in CheckoutLineItemEdge. */
+  /** A list of nodes that are contained in CheckoutLineItemEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<CheckoutLineItem>;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one CheckoutLineItem and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one CheckoutLineItem and a cursor during pagination. */
 export type CheckoutLineItemEdge = {
   __typename?: 'CheckoutLineItemEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of CheckoutLineItemEdge. */
   node: CheckoutLineItem;
@@ -549,7 +517,6 @@ export type Company = HasMetafields &
     /**
      * The metafields associated with the resource matching the
      * supplied list of namespaces and keys.
-     *
      */
     metafields: Array<Maybe<Metafield>>;
     /** The name of the company. */
@@ -604,7 +571,7 @@ export type CompanyOrdersArgs = {
   sortKey?: InputMaybe<OrderByCompanySortKeys>;
 };
 
-/** The address of a company location, either billing or shipping. */
+/** The address of a company location, either billing or shipping. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CompanyAddress = Node & {
   __typename?: 'CompanyAddress';
   /** The first line of the address. It is typically the street address or PO Box number. */
@@ -626,7 +593,6 @@ export type CompanyAddress = Node & {
   /**
    * The date and time (in [ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601))
    * when the company address was created.
-   *
    */
   createdAt: Scalars['DateTime']['output'];
   /** The first name of the recipient. */
@@ -645,10 +611,7 @@ export type CompanyAddress = Node & {
   latitude?: Maybe<Scalars['Float']['output']>;
   /** The longitude coordinate of the address. */
   longitude?: Maybe<Scalars['Float']['output']>;
-  /**
-   * The unique phone number of the customer, formatted using the E.164 standard, for example, _+16135551111_.
-   *
-   */
+  /** The unique phone number of the customer, formatted using the E.164 standard, for example, _+16135551111_. */
   phone?: Maybe<Scalars['String']['output']>;
   /** The region of the address, such as the province, state, or district. */
   province?: Maybe<Scalars['String']['output']>;
@@ -659,7 +622,6 @@ export type CompanyAddress = Node & {
   /**
    * The date and time (in [ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601))
    * when the company address was last updated.
-   *
    */
   updatedAt: Scalars['DateTime']['output'];
   /** The zip or postal code of the address. */
@@ -668,13 +630,13 @@ export type CompanyAddress = Node & {
   zoneCode?: Maybe<Scalars['String']['output']>;
 };
 
-/** The address of a company location, either billing or shipping. */
+/** The address of a company location, either billing or shipping. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CompanyAddressFormattedArgs = {
   withCompanyName?: InputMaybe<Scalars['Boolean']['input']>;
   withName?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/** The address of a company location, either billing or shipping. */
+/** The address of a company location, either billing or shipping. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CompanyAddressFormattedAddressArgs = {
   withCompanyName?: InputMaybe<Scalars['Boolean']['input']>;
   withName?: InputMaybe<Scalars['Boolean']['input']>;
@@ -776,33 +738,27 @@ export type CompanyContactOrdersArgs = {
   sortKey?: InputMaybe<OrderByContactSortKeys>;
 };
 
-/**
- * An auto-generated type for paginating through multiple CompanyContacts.
- *
- */
+/** An auto-generated type for paginating through multiple CompanyContacts. */
 export type CompanyContactConnection = {
   __typename?: 'CompanyContactConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<CompanyContactEdge>;
-  /** A list of the nodes contained in CompanyContactEdge. */
+  /** A list of nodes that are contained in CompanyContactEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<CompanyContact>;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one CompanyContact and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one CompanyContact and a cursor during pagination. */
 export type CompanyContactEdge = {
   __typename?: 'CompanyContactEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of CompanyContactEdge. */
   node: CompanyContact;
 };
 
-/** A role for a company contact. */
+/** A role for a company contact. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CompanyContactRole = Node & {
   __typename?: 'CompanyContactRole';
   /** A globally-unique ID. */
@@ -815,7 +771,7 @@ export type CompanyContactRole = Node & {
   resourcePermissions: Array<ResourcePermission>;
 };
 
-/** A role for a company contact. */
+/** A role for a company contact. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CompanyContactRoleResourcePermissionArgs = {
   resource: ResourceType;
 };
@@ -831,27 +787,21 @@ export type CompanyContactRoleAssignment = Node & {
   role: CompanyContactRole;
 };
 
-/**
- * An auto-generated type for paginating through multiple CompanyContactRoleAssignments.
- *
- */
+/** An auto-generated type for paginating through multiple CompanyContactRoleAssignments. */
 export type CompanyContactRoleAssignmentConnection = {
   __typename?: 'CompanyContactRoleAssignmentConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<CompanyContactRoleAssignmentEdge>;
-  /** A list of the nodes contained in CompanyContactRoleAssignmentEdge. */
+  /** A list of nodes that are contained in CompanyContactRoleAssignmentEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<CompanyContactRoleAssignment>;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one CompanyContactRoleAssignment and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one CompanyContactRoleAssignment and a cursor during pagination. */
 export type CompanyContactRoleAssignmentEdge = {
   __typename?: 'CompanyContactRoleAssignmentEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of CompanyContactRoleAssignmentEdge. */
   node: CompanyContactRoleAssignment;
@@ -868,7 +818,6 @@ export type CompanyContactRoleAssignmentSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE'
   /** Sort by the `updated_at` value. */
@@ -891,7 +840,6 @@ export type CompanyContactSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE'
   /** Sort by the `title` value. */
@@ -933,7 +881,6 @@ export type CompanyLocation = HasMetafields &
     /**
      * The metafields associated with the resource matching the
      * supplied list of namespaces and keys.
-     *
      */
     metafields: Array<Maybe<Metafield>>;
     /** The name of the company location. */
@@ -1030,27 +977,21 @@ export type CompanyLocationAssignAddressPayload = {
   userErrors: Array<BusinessCustomerUserError>;
 };
 
-/**
- * An auto-generated type for paginating through multiple CompanyLocations.
- *
- */
+/** An auto-generated type for paginating through multiple CompanyLocations. */
 export type CompanyLocationConnection = {
   __typename?: 'CompanyLocationConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<CompanyLocationEdge>;
-  /** A list of the nodes contained in CompanyLocationEdge. */
+  /** A list of nodes that are contained in CompanyLocationEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<CompanyLocation>;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one CompanyLocation and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one CompanyLocation and a cursor during pagination. */
 export type CompanyLocationEdge = {
   __typename?: 'CompanyLocationEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of CompanyLocationEdge. */
   node: CompanyLocation;
@@ -1071,44 +1012,43 @@ export type CompanyLocationSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE'
   /** Sort by the `updated_at` value. */
   | 'UPDATED_AT';
 
-/**
- * Defines the extent of locations for which a contact holds permissions on a resource.
- *
- */
+/** Defines the extent of locations for which a contact holds permissions on a resource. */
 export type ContactPermissionLocationScopeType =
-  /**
-   * The contact has permission on all locations.
-   *
-   */
+  /** The contact has permission on all locations. */
   | 'ALL'
-  /**
-   * The contact has permission for at least one location.
-   *
-   */
+  /** The contact has permission for at least one location. */
   | 'ANY'
-  /**
-   * The contact has no permission on any location.
-   *
-   */
+  /** The contact has no permission on any location. */
   | 'NONE'
-  /**
-   * The contact has permission on only one location.
-   *
-   */
+  /** The contact has permission on only one location. */
   | 'ONE';
+
+/** Details for count of elements. */
+export type Count = {
+  __typename?: 'Count';
+  /** The count of elements. */
+  count: Scalars['Int']['output'];
+  /** The count's precision, or the exactness of the value. */
+  precision: CountPrecision;
+};
+
+/** The precision of the value returned by a count field. */
+export type CountPrecision =
+  /** The count is at least the value. A limit was imposed and reached. */
+  | 'AT_LEAST'
+  /** The count is exactly the value. */
+  | 'EXACT';
 
 /**
  * The code designating a country/region, which generally follows ISO 3166-1 alpha-2 guidelines.
  * If a territory doesn't have a country code value in the `CountryCode` enum, then it might be considered a subdivision
  * of another country. For example, the territories associated with Spain are represented by the country code `ES`,
  * and the territories associated with the United States of America are represented by the country code `US`.
- *
  */
 export type CountryCode =
   /** Ascension Island. */
@@ -1642,7 +1582,6 @@ export type CropRegion =
 /**
  * The three-letter currency codes that represent the world currencies used in stores. These include standard ISO 4217 codes, legacy codes,
  * and non-standard codes.
- *
  */
 export type CurrencyCode =
   /** United Arab Emirates Dirham (AED). */
@@ -1968,7 +1907,7 @@ export type CurrencyCode =
   /** Zambian Kwacha (ZMW). */
   | 'ZMW';
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type Customer = HasMetafields &
   HasStoreCreditAccounts &
   Node & {
@@ -1989,10 +1928,7 @@ export type Customer = HasMetafields &
     creditCards: CustomerCreditCardConnection;
     /** The default address of the customer. */
     defaultAddress?: Maybe<CustomerAddress>;
-    /**
-     * The full name of the customer, based on the first_name and last_name values. If these aren't available, it falls back to the customer's email address, and if that isn't available, the customer's phone number.
-     *
-     */
+    /** The full name of the customer, based on the first_name and last_name values. If these aren't available, it falls back to the customer's email address, and if that isn't available, the customer's phone number. */
     displayName: Scalars['String']['output'];
     /** The Draft Orders associated with the customer. */
     draftOrders: DraftOrderConnection;
@@ -2013,7 +1949,6 @@ export type Customer = HasMetafields &
     /**
      * The metafields associated with the resource matching the
      * supplied list of namespaces and keys.
-     *
      */
     metafields: Array<Maybe<Metafield>>;
     /** The orders associated with the customer. */
@@ -2036,7 +1971,7 @@ export type Customer = HasMetafields &
     taxExemptionsDetails: Array<TaxExemptionDetails>;
   };
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerAddressesArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -2046,7 +1981,7 @@ export type CustomerAddressesArgs = {
   skipDefault?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerCompanyContactsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -2055,12 +1990,12 @@ export type CustomerCompanyContactsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerCreditCardArgs = {
   id: Scalars['ID']['input'];
 };
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerCreditCardsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -2069,7 +2004,7 @@ export type CustomerCreditCardsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerDraftOrdersArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -2080,18 +2015,18 @@ export type CustomerDraftOrdersArgs = {
   sortKey?: InputMaybe<DraftOrderSortKeys>;
 };
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerMetafieldArgs = {
   key: Scalars['String']['input'];
   namespace: Scalars['String']['input'];
 };
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerMetafieldsArgs = {
   identifiers: Array<HasMetafieldsIdentifier>;
 };
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerOrdersArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -2102,12 +2037,12 @@ export type CustomerOrdersArgs = {
   sortKey?: InputMaybe<OrderSortKeys>;
 };
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerReturnArgs = {
   id: Scalars['ID']['input'];
 };
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerStoreCreditAccountsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -2116,12 +2051,12 @@ export type CustomerStoreCreditAccountsArgs = {
   query?: InputMaybe<Scalars['String']['input']>;
 };
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerSubscriptionContractArgs = {
   id: Scalars['ID']['input'];
 };
 
-/** Represents the personal information of a customer. */
+/** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerSubscriptionContractsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -2135,31 +2070,20 @@ export type CustomerSubscriptionContractsArgs = {
 /**
  * Represents a customer's mailing address.
  * For example, a customer's default address and an order's billing address are both mailing addresses.
- *
+ * Apps using the Customer Account API must meet the
+ * protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data).
  */
 export type CustomerAddress = Node & {
   __typename?: 'CustomerAddress';
   /** The first line of the address. Typically the street address or PO Box number. */
   address1?: Maybe<Scalars['String']['output']>;
-  /**
-   * The second line of the address. This is typically the apartment, suite, or unit number.
-   *
-   */
+  /** The second line of the address. This is typically the apartment, suite, or unit number. */
   address2?: Maybe<Scalars['String']['output']>;
-  /**
-   * The name of the city, district, village, or town.
-   *
-   */
+  /** The name of the city, district, village, or town. */
   city?: Maybe<Scalars['String']['output']>;
-  /**
-   * The name of the customer's company or organization.
-   *
-   */
+  /** The name of the customer's company or organization. */
   company?: Maybe<Scalars['String']['output']>;
-  /**
-   * The name of the country.
-   *
-   */
+  /** The name of the country. */
   country?: Maybe<Scalars['String']['output']>;
   /** The first name of the customer. */
   firstName?: Maybe<Scalars['String']['output']>;
@@ -2171,16 +2095,12 @@ export type CustomerAddress = Node & {
   id: Scalars['ID']['output'];
   /** The last name of the customer. */
   lastName?: Maybe<Scalars['String']['output']>;
-  /**
-   * The full name of the customer, based on firstName and lastName.
-   *
-   */
+  /** The full name of the customer, based on firstName and lastName. */
   name?: Maybe<Scalars['String']['output']>;
   /**
    * The customer's unique phone number.
    *
    * Formatted using E.164 standard. For example, _+16135551111_.
-   *
    */
   phoneNumber?: Maybe<Scalars['String']['output']>;
   /** The region of the address, such as the province, state, or district. */
@@ -2189,7 +2109,6 @@ export type CustomerAddress = Node & {
    * The two-letter code for the country of the address.
    *
    * For example, US.
-   *
    */
   territoryCode?: Maybe<CountryCode>;
   /** The zip or postal code of the address. */
@@ -2198,7 +2117,6 @@ export type CustomerAddress = Node & {
    * The alphanumeric code for the region.
    *
    * For example, ON.
-   *
    */
   zoneCode?: Maybe<Scalars['String']['output']>;
 };
@@ -2206,24 +2124,22 @@ export type CustomerAddress = Node & {
 /**
  * Represents a customer's mailing address.
  * For example, a customer's default address and an order's billing address are both mailing addresses.
- *
+ * Apps using the Customer Account API must meet the
+ * protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data).
  */
 export type CustomerAddressFormattedArgs = {
   withCompany?: InputMaybe<Scalars['Boolean']['input']>;
   withName?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/**
- * An auto-generated type for paginating through multiple CustomerAddresses.
- *
- */
+/** An auto-generated type for paginating through multiple CustomerAddresses. */
 export type CustomerAddressConnection = {
   __typename?: 'CustomerAddressConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<CustomerAddressEdge>;
-  /** A list of the nodes contained in CustomerAddressEdge. */
+  /** A list of nodes that are contained in CustomerAddressEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<CustomerAddress>;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
@@ -2245,13 +2161,10 @@ export type CustomerAddressDeletePayload = {
   userErrors: Array<UserErrorsCustomerAddressUserErrors>;
 };
 
-/**
- * An auto-generated type which holds one CustomerAddress and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one CustomerAddress and a cursor during pagination. */
 export type CustomerAddressEdge = {
   __typename?: 'CustomerAddressEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of CustomerAddressEdge. */
   node: CustomerAddress;
@@ -2277,7 +2190,6 @@ export type CustomerAddressInput = {
    * The country code, in ISO 3166-1 format. Accepts either a two-letter [alpha-2 code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2),
    * a three-letter [alpha-3 code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3), or a three-digit [numeric code](https://en.wikipedia.org/wiki/ISO_3166-1_numeric).
    * For example, `US`,  `USA`, or `840` represents the United States.
-   *
    */
   territoryCode?: InputMaybe<Scalars['String']['input']>;
   /** The zip or postal code of the address. */
@@ -2285,7 +2197,6 @@ export type CustomerAddressInput = {
   /**
    * The alphanumeric code for the region of the address, such as the province, state, or district.
    * For example, 'ON' for Ontario, Canada.
-   *
    */
   zoneCode?: InputMaybe<Scalars['String']['input']>;
 };
@@ -2368,33 +2279,27 @@ export type CustomerCreditCardSubscriptionContractsArgs = {
   sortKey?: InputMaybe<SubscriptionContractsSortKeys>;
 };
 
-/**
- * An auto-generated type for paginating through multiple CustomerCreditCards.
- *
- */
+/** An auto-generated type for paginating through multiple CustomerCreditCards. */
 export type CustomerCreditCardConnection = {
   __typename?: 'CustomerCreditCardConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<CustomerCreditCardEdge>;
-  /** A list of the nodes contained in CustomerCreditCardEdge. */
+  /** A list of nodes that are contained in CustomerCreditCardEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<CustomerCreditCard>;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one CustomerCreditCard and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one CustomerCreditCard and a cursor during pagination. */
 export type CustomerCreditCardEdge = {
   __typename?: 'CustomerCreditCardEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of CustomerCreditCardEdge. */
   node: CustomerCreditCard;
 };
 
-/** An email address associated with a customer. */
+/** An email address associated with a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerEmailAddress = {
   __typename?: 'CustomerEmailAddress';
   /** The email address of the customer. */
@@ -2433,44 +2338,29 @@ export type CustomerEmailMarketingUnsubscribePayload = {
 /**
  * Represents a customer's mailing address.
  * For example, a customer's default address and an order's billing address are both mailing addresses.
- *
  */
 export type CustomerMailingAddress = Node & {
   __typename?: 'CustomerMailingAddress';
   /** The first line of the address. Typically the street address or PO Box number. */
   address1?: Maybe<Scalars['String']['output']>;
-  /**
-   * The second line of the address. This is typically the apartment, suite, or unit number.
-   *
-   */
+  /** The second line of the address. This is typically the apartment, suite, or unit number. */
   address2?: Maybe<Scalars['String']['output']>;
-  /**
-   * The name of the city, district, village, or town.
-   *
-   */
+  /** The name of the city, district, village, or town. */
   city?: Maybe<Scalars['String']['output']>;
-  /**
-   * The name of the customer's company or organization.
-   *
-   */
+  /** The name of the customer's company or organization. */
   company?: Maybe<Scalars['String']['output']>;
-  /**
-   * The name of the country.
-   *
-   */
+  /** The name of the country. */
   country?: Maybe<Scalars['String']['output']>;
   /**
    * The two-letter code for the country of the address.
    *
    * For example, US.
-   *
    */
   countryCode?: Maybe<Scalars['String']['output']>;
   /**
    * The two-letter code for the country of the address.
    *
    * For example, US.
-   *
    */
   countryCodeV2?: Maybe<CountryCode>;
   /** Indicates whether the address is the default address or not. */
@@ -2489,23 +2379,18 @@ export type CustomerMailingAddress = Node & {
   latitude?: Maybe<Scalars['Float']['output']>;
   /** The longitude coordinate of the customer's address. */
   longitude?: Maybe<Scalars['Float']['output']>;
-  /**
-   * The full name of the customer, based on firstName and lastName.
-   *
-   */
+  /** The full name of the customer, based on firstName and lastName. */
   name?: Maybe<Scalars['String']['output']>;
   /**
    * The customer's unique phone number.
    *
    * Formatted using E.164 standard. For example, _+16135551111_.
-   *
    */
   phone?: Maybe<Scalars['String']['output']>;
   /**
    * The customer's unique phone number.
    *
    * Formatted using E.164 standard. For example, _+16135551111_.
-   *
    */
   phoneNumber?: Maybe<Scalars['String']['output']>;
   /** The region of the address, such as the province, state, or district. */
@@ -2514,14 +2399,12 @@ export type CustomerMailingAddress = Node & {
    * The alphanumeric code for the region.
    *
    * For example, ON.
-   *
    */
   provinceCode?: Maybe<Scalars['String']['output']>;
   /**
    * The two-letter code for the country of the address.
    *
    * For example, US.
-   *
    */
   territoryCode?: Maybe<CountryCode>;
   /** Indicates whether the address was geolocated and is a valid address. The field returns `false` if the verification failed, or if the job to verify this address was never started. */
@@ -2532,7 +2415,6 @@ export type CustomerMailingAddress = Node & {
    * The alphanumeric code for the region.
    *
    * For example, ON.
-   *
    */
   zoneCode?: Maybe<Scalars['String']['output']>;
 };
@@ -2540,7 +2422,6 @@ export type CustomerMailingAddress = Node & {
 /**
  * Represents a customer's mailing address.
  * For example, a customer's default address and an order's billing address are both mailing addresses.
- *
  */
 export type CustomerMailingAddressFormattedArgs = {
   withCompany?: InputMaybe<Scalars['Boolean']['input']>;
@@ -2574,12 +2455,11 @@ export type CustomerMailingAddressInput = {
   /**
    * The code for the region of the address, such as the province,
    * state, or district. For example, QC for Quebec, Canada.
-   *
    */
   zoneCode?: InputMaybe<Scalars['String']['input']>;
 };
 
-/** Defines the phone number of the customer. */
+/** Defines the phone number of the customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type CustomerPhoneNumber = {
   __typename?: 'CustomerPhoneNumber';
   /** Indicates whether the customer has subscribed to SMS marketing material. */
@@ -2588,10 +2468,7 @@ export type CustomerPhoneNumber = {
   phoneNumber: Scalars['String']['output'];
 };
 
-/**
- * The input fields to update a customer's personal information.
- *
- */
+/** The input fields to update a customer's personal information. */
 export type CustomerUpdateInput = {
   /** The customer's first name. */
   firstName?: InputMaybe<Scalars['String']['input']>;
@@ -2615,10 +2492,17 @@ export type DeliveryOptionGroupType =
   /** A subscription. */
   | 'SUBSCRIPTION';
 
-/**
- * Represents an amount discounting the line that has been allocated by a discount.
- *
- */
+/** Configuration of the deposit. */
+export type DepositConfiguration = DepositPercentage;
+
+/** A percentage deposit. */
+export type DepositPercentage = {
+  __typename?: 'DepositPercentage';
+  /** The percentage value of the deposit. */
+  percentage: Scalars['Float']['output'];
+};
+
+/** Represents an amount discounting the line that has been allocated by a discount. */
 export type DiscountAllocation = {
   __typename?: 'DiscountAllocation';
   /** The amount of discount allocated. */
@@ -2631,10 +2515,7 @@ export type DiscountAllocation = {
     | ScriptDiscountApplication;
 };
 
-/**
- * Captures the intentions of a discount source at the time of application.
- *
- */
+/** Captures the intentions of a discount source at the time of application. */
 export type DiscountApplication = {
   /** The method by which the discount's value is allocated to its entitled items. */
   allocationMethod: DiscountApplicationAllocationMethod;
@@ -2655,32 +2536,26 @@ export type DiscountApplicationAllocationMethod =
   /** The value is specifically applied onto a particular line. */
   | 'ONE';
 
-/**
- * An auto-generated type for paginating through multiple DiscountApplications.
- *
- */
+/** An auto-generated type for paginating through multiple DiscountApplications. */
 export type DiscountApplicationConnection = {
   __typename?: 'DiscountApplicationConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<DiscountApplicationEdge>;
-  /** A list of the nodes contained in DiscountApplicationEdge. */
+  /** A list of nodes that are contained in DiscountApplicationEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<
     | AutomaticDiscountApplication
     | DiscountCodeApplication
     | ManualDiscountApplication
     | ScriptDiscountApplication
   >;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one DiscountApplication and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one DiscountApplication and a cursor during pagination. */
 export type DiscountApplicationEdge = {
   __typename?: 'DiscountApplicationEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of DiscountApplicationEdge. */
   node:
@@ -2695,7 +2570,6 @@ export type DiscountApplicationEdge = {
  * the discount application's `targetType`. For example, the value `ENTITLED`, combined with a `targetType` of
  * `LINE_ITEM`, applies the discount on all line items that are entitled to the discount.
  * The value `ALL`, combined with a `targetType` of `SHIPPING_LINE`, applies the discount on all shipping lines.
- *
  */
 export type DiscountApplicationTargetSelection =
   /** The discount is allocated onto all the lines. */
@@ -2705,20 +2579,14 @@ export type DiscountApplicationTargetSelection =
   /** The discount is allocated onto explicitly chosen lines. */
   | 'EXPLICIT';
 
-/**
- * The type of line (i.e. line item or shipping line) on an order that the discount is applicable towards.
- *
- */
+/** The type of line (i.e. line item or shipping line) on an order that the discount is applicable towards. */
 export type DiscountApplicationTargetType =
   /** The discount applies onto line items. */
   | 'LINE_ITEM'
   /** The discount applies onto shipping lines. */
   | 'SHIPPING_LINE';
 
-/**
- * The type of the discount application.
- *
- */
+/** The type of the discount application. */
 export type DiscountApplicationType =
   /** Automatic discount application type. */
   | 'AUTOMATIC'
@@ -2729,10 +2597,7 @@ export type DiscountApplicationType =
   /** Script discount application type. */
   | 'SCRIPT';
 
-/**
- * Captures the intentions of a discount code at the time that it is applied.
- *
- */
+/** Captures the intentions of a discount code at the time that it is applied. */
 export type DiscountCodeApplication = DiscountApplication & {
   __typename?: 'DiscountCodeApplication';
   /** The method by which the discount's value is allocated to its entitled items. */
@@ -2768,22 +2633,16 @@ export type Domain = Node & {
   url: Scalars['URL']['output'];
 };
 
-/** A draft order for the customer. Any fields related to money are in the presentment currency. */
+/** A draft order for the customer. Any fields related to money are in the presentment currency. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type DraftOrder = Node & {
   __typename?: 'DraftOrder';
-  /**
-   * The billing address of the customer.
-   *
-   */
+  /** The billing address of the customer. */
   billingAddress?: Maybe<CustomerAddress>;
   /** Whether the customer who made the draft order has an associated enabled contact. */
   contactExists: Scalars['Boolean']['output'];
   /** The date and time when the draft order was created in Shopify. */
   createdAt: Scalars['DateTime']['output'];
-  /**
-   * The three-letter code for the currency of the store at the time that the invoice is sent.
-   *
-   */
+  /** The three-letter code for the currency of the store at the time that the invoice is sent. */
   currencyCode: CurrencyCode;
   /** The customer who placed the order. */
   customer?: Maybe<Customer>;
@@ -2807,10 +2666,7 @@ export type DraftOrder = Node & {
   lineItems: DraftOrderLineItemConnection;
   /** The summary of draft order line items quantity. */
   lineItemsSummary?: Maybe<DraftOrderLineItemsSummary>;
-  /**
-   * The unique identifier for the draft order, which is unique within the store. For example, _#D1223_.
-   *
-   */
+  /** The unique identifier for the draft order, which is unique within the store. For example, _#D1223_. */
   name: Scalars['String']['output'];
   /** The order that was created from this draft order. */
   order?: Maybe<Order>;
@@ -2824,15 +2680,9 @@ export type DraftOrder = Node & {
   shippingAddress?: Maybe<CustomerAddress>;
   /** The status of the draft order. */
   status: DraftOrderStatus;
-  /**
-   * The subtotal of the line items (doesn't include shipping charges, shipping discounts, or taxes).
-   *
-   */
+  /** The subtotal of the line items (doesn't include shipping charges, shipping discounts, or taxes). */
   subtotalPrice: MoneyV2;
-  /**
-   * The subtotal of the line items (doesn't include shipping charges, taxes, or any discounts).
-   *
-   */
+  /** The subtotal of the line items (doesn't include shipping charges, taxes, or any discounts). */
   subtotalPriceBeforeDiscounts: MoneyV2;
   /** Indicates whether the draft order is tax exempt. */
   taxExempt: Scalars['Boolean']['output'];
@@ -2840,32 +2690,22 @@ export type DraftOrder = Node & {
   taxesIncluded: Scalars['Boolean']['output'];
   /** The total price of line items for this draft order. */
   totalLineItemsPrice: MoneyV2;
-  /**
-   * The total amount of the draft order (includes taxes, shipping charges, and discounts).
-   *
-   */
+  /** The total amount of the draft order (includes taxes, shipping charges, and discounts). */
   totalPrice: MoneyV2;
-  /**
-   * The total shipping charge for the draft order.
-   *
-   */
+  /** The total shipping charge for the draft order. */
   totalShippingPrice: MoneyV2;
-  /**
-   * The total amount of taxes for the draft order.
-   *
-   */
+  /** The total amount of taxes for the draft order. */
   totalTax: MoneyV2;
   /** The total weight (in grams) of the draft order. */
   totalWeight: Scalars['UnsignedInt64']['output'];
   /**
    * The date and time when the draft order was last changed.
    * The format is YYYY-MM-DD HH:mm:ss (for example, 2016-02-05 17:04:01).
-   *
    */
   updatedAt: Scalars['DateTime']['output'];
 };
 
-/** A draft order for the customer. Any fields related to money are in the presentment currency. */
+/** A draft order for the customer. Any fields related to money are in the presentment currency. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type DraftOrderLineItemsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -2894,7 +2734,6 @@ export type DraftOrderByCompanySortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE'
   /** Sort by the `status` value. */
@@ -2915,7 +2754,6 @@ export type DraftOrderByLocationSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE'
   /** Sort by the `status` value. */
@@ -2925,17 +2763,14 @@ export type DraftOrderByLocationSortKeys =
   /** Sort by the `updated_at` value. */
   | 'UPDATED_AT';
 
-/**
- * An auto-generated type for paginating through multiple DraftOrders.
- *
- */
+/** An auto-generated type for paginating through multiple DraftOrders. */
 export type DraftOrderConnection = {
   __typename?: 'DraftOrderConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<DraftOrderEdge>;
-  /** A list of the nodes contained in DraftOrderEdge. */
+  /** A list of nodes that are contained in DraftOrderEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<DraftOrder>;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
@@ -2948,13 +2783,10 @@ export type DraftOrderDiscountInformation = {
   totalDiscounts: MoneyV2;
 };
 
-/**
- * An auto-generated type which holds one DraftOrder and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one DraftOrder and a cursor during pagination. */
 export type DraftOrderEdge = {
   __typename?: 'DraftOrderEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of DraftOrderEdge. */
   node: DraftOrder;
@@ -2965,15 +2797,9 @@ export type DraftOrderLineItem = Node & {
   __typename?: 'DraftOrderLineItem';
   /** The discount information for the draft order line item. */
   discountInformation: DraftOrderLineItemDiscountInformation;
-  /**
-   * The total price of the line item after discounts have been applied.
-   *
-   */
+  /** The total price of the line item after discounts have been applied. */
   discountedTotal: MoneyV2;
-  /**
-   * The discounted total divided by the quantity, resulting in the value of the discount per unit.
-   *
-   */
+  /** The discounted total divided by the quantity, resulting in the value of the discount per unit. */
   discountedUnitPrice: MoneyV2;
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
@@ -2987,10 +2813,7 @@ export type DraftOrderLineItem = Node & {
   legacyFeeTitle?: Maybe<Scalars['String']['output']>;
   /** The name of the product. */
   name: Scalars['String']['output'];
-  /**
-   * The total price of the line item, based on the original unit price of the variant multiplied by the quantity. This total doesn't include any discounts.
-   *
-   */
+  /** The total price of the line item, based on the original unit price of the variant multiplied by the quantity. This total doesn't include any discounts. */
   originalTotal: MoneyV2;
   /** The price of the variant without any discounts applied. */
   originalUnitPrice: MoneyV2;
@@ -3012,25 +2835,14 @@ export type DraftOrderLineItem = Node & {
   weight?: Maybe<Weight>;
 };
 
-/** A line item included in a draft order. */
-export type DraftOrderLineItemImageArgs = {
-  crop?: InputMaybe<CropRegion>;
-  maxHeight?: InputMaybe<Scalars['Int']['input']>;
-  maxWidth?: InputMaybe<Scalars['Int']['input']>;
-  scale?: InputMaybe<Scalars['Int']['input']>;
-};
-
-/**
- * An auto-generated type for paginating through multiple DraftOrderLineItems.
- *
- */
+/** An auto-generated type for paginating through multiple DraftOrderLineItems. */
 export type DraftOrderLineItemConnection = {
   __typename?: 'DraftOrderLineItemConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<DraftOrderLineItemEdge>;
-  /** A list of the nodes contained in DraftOrderLineItemEdge. */
+  /** A list of nodes that are contained in DraftOrderLineItemEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<DraftOrderLineItem>;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
@@ -3043,13 +2855,10 @@ export type DraftOrderLineItemDiscountInformation = {
   totalDiscount: MoneyV2;
 };
 
-/**
- * An auto-generated type which holds one DraftOrderLineItem and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one DraftOrderLineItem and a cursor during pagination. */
 export type DraftOrderLineItemEdge = {
   __typename?: 'DraftOrderLineItemEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of DraftOrderLineItemEdge. */
   node: DraftOrderLineItem;
@@ -3077,7 +2886,6 @@ export type DraftOrderSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE'
   /** Sort by the `status` value. */
@@ -3120,40 +2928,19 @@ export type DutySale = Node &
     totalTaxAmount: MoneyV2;
   };
 
-/**
- * Represents the possible email marketing states for a customer.
- *
- */
+/** Represents the possible email marketing states for a customer. */
 export type EmailMarketingState =
-  /**
-   * The customer’s email marketing state is invalid.
-   *
-   */
+  /** The customer’s email marketing state is invalid. */
   | 'INVALID'
-  /**
-   * The customer isn't subscribed to email marketing.
-   *
-   */
+  /** The customer isn't subscribed to email marketing. */
   | 'NOT_SUBSCRIBED'
-  /**
-   * The customer is in the process of subscribing to email marketing.
-   *
-   */
+  /** The customer is in the process of subscribing to email marketing. */
   | 'PENDING'
-  /**
-   * The customer's personal data has been erased. This value is internally-set and read-only.
-   *
-   */
+  /** The customer's personal data has been erased. This value is internally-set and read-only. */
   | 'REDACTED'
-  /**
-   * The customer is subscribed to email marketing.
-   *
-   */
+  /** The customer is subscribed to email marketing. */
   | 'SUBSCRIBED'
-  /**
-   * The customer is not currently subscribed to email marketing but was previously subscribed.
-   *
-   */
+  /** The customer is not currently subscribed to email marketing but was previously subscribed. */
   | 'UNSUBSCRIBED';
 
 /** Tokens used by ui extensions to query various APIs. */
@@ -3245,27 +3032,21 @@ export type FulfillmentFulfillmentLineItemsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/**
- * An auto-generated type for paginating through multiple Fulfillments.
- *
- */
+/** An auto-generated type for paginating through multiple Fulfillments. */
 export type FulfillmentConnection = {
   __typename?: 'FulfillmentConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<FulfillmentEdge>;
-  /** A list of the nodes contained in FulfillmentEdge. */
+  /** A list of nodes that are contained in FulfillmentEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<Fulfillment>;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one Fulfillment and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one Fulfillment and a cursor during pagination. */
 export type FulfillmentEdge = {
   __typename?: 'FulfillmentEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of FulfillmentEdge. */
   node: Fulfillment;
@@ -3274,41 +3055,29 @@ export type FulfillmentEdge = {
 /** An event that occurred for a fulfillment. */
 export type FulfillmentEvent = Node & {
   __typename?: 'FulfillmentEvent';
-  /**
-   * The time when this fulfillment event occurred.
-   *
-   */
+  /** The time when this fulfillment event occurred. */
   happenedAt: Scalars['DateTime']['output'];
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
-  /**
-   * The status of the fulfillment event.
-   *
-   */
+  /** The status of the fulfillment event. */
   status: FulfillmentEventStatus;
 };
 
-/**
- * An auto-generated type for paginating through multiple FulfillmentEvents.
- *
- */
+/** An auto-generated type for paginating through multiple FulfillmentEvents. */
 export type FulfillmentEventConnection = {
   __typename?: 'FulfillmentEventConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<FulfillmentEventEdge>;
-  /** A list of the nodes contained in FulfillmentEventEdge. */
+  /** A list of nodes that are contained in FulfillmentEventEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<FulfillmentEvent>;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one FulfillmentEvent and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one FulfillmentEvent and a cursor during pagination. */
 export type FulfillmentEventEdge = {
   __typename?: 'FulfillmentEventEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of FulfillmentEventEdge. */
   node: FulfillmentEvent;
@@ -3323,74 +3092,34 @@ export type FulfillmentEventSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE';
 
-/**
- * The status of a fulfillment event.
- *
- */
+/** The status of a fulfillment event. */
 export type FulfillmentEventStatus =
-  /**
-   * A delivery was attempted.
-   *
-   */
+  /** A delivery was attempted. */
   | 'ATTEMPTED_DELIVERY'
-  /**
-   * The fulfillment has been picked up by the carrier.
-   *
-   */
+  /** The fulfillment has been picked up by the carrier. */
   | 'CARRIER_PICKED_UP'
-  /**
-   * The fulfillment is confirmed.
-   *
-   */
+  /** The fulfillment is confirmed. */
   | 'CONFIRMED'
-  /**
-   * The fulfillment is delayed.
-   *
-   */
+  /** The fulfillment is delayed. */
   | 'DELAYED'
-  /**
-   * The fulfillment was successfully delivered.
-   *
-   */
+  /** The fulfillment was successfully delivered. */
   | 'DELIVERED'
-  /**
-   * The fulfillment request failed.
-   *
-   */
+  /** The fulfillment request failed. */
   | 'FAILURE'
-  /**
-   * The fulfillment is in transit.
-   *
-   */
+  /** The fulfillment is in transit. */
   | 'IN_TRANSIT'
-  /**
-   * A purchased shipping label has been printed.
-   *
-   */
+  /** A purchased shipping label has been printed. */
   | 'LABEL_PRINTED'
-  /**
-   * A shipping label has been purchased.
-   *
-   */
+  /** A shipping label has been purchased. */
   | 'LABEL_PURCHASED'
-  /**
-   * The fulfillment is out for delivery.
-   *
-   */
+  /** The fulfillment is out for delivery. */
   | 'OUT_FOR_DELIVERY'
-  /**
-   * The fulfillment was successfully picked up.
-   *
-   */
+  /** The fulfillment was successfully picked up. */
   | 'PICKED_UP'
-  /**
-   * The fulfillment is ready to be picked up.
-   *
-   */
+  /** The fulfillment is ready to be picked up. */
   | 'READY_FOR_PICKUP';
 
 /** Represents a line item from an order that's included in a fulfillment. */
@@ -3404,27 +3133,21 @@ export type FulfillmentLineItem = Node & {
   quantity?: Maybe<Scalars['Int']['output']>;
 };
 
-/**
- * An auto-generated type for paginating through multiple FulfillmentLineItems.
- *
- */
+/** An auto-generated type for paginating through multiple FulfillmentLineItems. */
 export type FulfillmentLineItemConnection = {
   __typename?: 'FulfillmentLineItemConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<FulfillmentLineItemEdge>;
-  /** A list of the nodes contained in FulfillmentLineItemEdge. */
+  /** A list of nodes that are contained in FulfillmentLineItemEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<FulfillmentLineItem>;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one FulfillmentLineItem and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one FulfillmentLineItem and a cursor during pagination. */
 export type FulfillmentLineItemEdge = {
   __typename?: 'FulfillmentLineItemEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of FulfillmentLineItemEdge. */
   node: FulfillmentLineItem;
@@ -3439,7 +3162,6 @@ export type FulfillmentSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE';
 
@@ -3451,15 +3173,9 @@ export type FulfillmentStatus =
   | 'ERROR'
   /** The fulfillment request failed. */
   | 'FAILURE'
-  /**
-   * The third-party fulfillment service has acknowledged the fulfillment and is processing it.
-   *
-   */
+  /** The third-party fulfillment service has acknowledged the fulfillment and is processing it. */
   | 'OPEN'
-  /**
-   * Shopify has created the fulfillment and is waiting for the third-party fulfillment service to transition it to `open` or `success`.
-   *
-   */
+  /** Shopify has created the fulfillment and is waiting for the third-party fulfillment service to transition it to `open` or `success`. */
   | 'PENDING'
   /** The fulfillment was completed successfully. */
   | 'SUCCESS';
@@ -3568,7 +3284,6 @@ export type GooglePayWalletConfig = {
  * Represents a summary of the current version of data in a resource.
  *
  * The `compare_digest` field can be used as input for mutations that implement a compare-and-swap mechanism.
- *
  */
 export type HasCompareDigest = {
   /** The data stored in the resource, represented as a digest. */
@@ -3582,7 +3297,6 @@ export type HasMetafields = {
   /**
    * The metafields associated with the resource matching the
    * supplied list of namespaces and keys.
-   *
    */
   metafields: Array<Maybe<Metafield>>;
 };
@@ -3634,7 +3348,6 @@ export type Image = {
    * The location of the original image as a URL.
    *
    * If there are any existing transformations in the original source URL, they will remain and not be stripped.
-   *
    * @deprecated Use `url` instead.
    */
   originalSrc: Scalars['URL']['output'];
@@ -3648,7 +3361,6 @@ export type Image = {
    *
    * All transformation arguments are considered "best-effort". If they can be applied to an image, they will be.
    * Otherwise any transformations which an image type doesn't support will be ignored.
-   *
    * @deprecated Use `url(transform:)` instead
    */
   transformedSrc: Scalars['URL']['output'];
@@ -3660,7 +3372,6 @@ export type Image = {
    * All transformation options are considered "best-effort". Any transformation that the original image type doesn't support will be ignored.
    *
    * If you need multiple variations of the same image, then you can use [GraphQL aliases](https://graphql.org/learn/queries/#aliases).
-   *
    */
   url: Scalars['URL']['output'];
   /** The original width of the image in pixels. Returns `null` if the image isn't hosted by Shopify. */
@@ -3694,7 +3405,6 @@ export type ImageContentType =
  * The available options for transforming an image.
  *
  * All transformation options are considered best effort. Any transformation that the original image type doesn't support will be ignored.
- *
  */
 export type ImageTransformInput = {
   /**
@@ -3703,61 +3413,38 @@ export type ImageTransformInput = {
    * The `crop` argument should coincide with the smaller value. A smaller `maxWidth` indicates a `LEFT` or `RIGHT` crop, while
    * a smaller `maxHeight` indicates a `TOP` or `BOTTOM` crop. For example, `{ maxWidth: 5, maxHeight: 10, crop: LEFT }` will result
    * in an image with a width of 5 and height of 10, where the right side of the image is removed.
-   *
    */
   crop?: InputMaybe<CropRegion>;
-  /**
-   * Image height in pixels between 1 and 5760.
-   *
-   */
+  /** Image height in pixels between 1 and 5760. */
   maxHeight?: InputMaybe<Scalars['Int']['input']>;
-  /**
-   * Image width in pixels between 1 and 5760.
-   *
-   */
+  /** Image width in pixels between 1 and 5760. */
   maxWidth?: InputMaybe<Scalars['Int']['input']>;
   /**
    * Convert the source image into the preferred content type.
    * Supported conversions: `.svg` to `.png`, any file type to `.jpg`, and any file type to `.webp`.
-   *
    */
   preferredContentType?: InputMaybe<ImageContentType>;
-  /**
-   * Image size multiplier for high-resolution retina displays. Must be within 1..3.
-   *
-   */
+  /** Image size multiplier for high-resolution retina displays. Must be within 1..3. */
   scale?: InputMaybe<Scalars['Int']['input']>;
 };
 
 /** An object representing a product marked as a fee, aggregated by title. */
 export type LegacyAggregatedMerchandiseTermsAsFees = Node & {
   __typename?: 'LegacyAggregatedMerchandiseTermsAsFees';
-  /**
-   * The description of the fee line, as provided by the _legacy_product_as_fee_description line item property.
-   *
-   */
+  /** The description of the fee line, as provided by the _legacy_product_as_fee_description line item property. */
   description?: Maybe<Scalars['String']['output']>;
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
-  /**
-   * The title of the fee line, as provided by the _legacy_product_as_fee_title line item property.
-   *
-   */
+  /** The title of the fee line, as provided by the _legacy_product_as_fee_title line item property. */
   title: Scalars['String']['output'];
-  /**
-   * The total value of all the products with the same title.
-   *
-   */
+  /** The total value of all the products with the same title. */
   total: MoneyV2;
 };
 
 /** A single line item in an order. */
 export type LineItem = Node & {
   __typename?: 'LineItem';
-  /**
-   * The total price of the line item, calculated by multiplying the current unit price of the variant by the quantity, expressed in presentment currencies.
-   *
-   */
+  /** The total price of the line item, calculated by multiplying the current unit price of the variant by the quantity, expressed in presentment currencies. */
   currentTotalPrice?: Maybe<MoneyV2>;
   /** The list of custom attributes associated with the line item. */
   customAttributes: Array<Attribute>;
@@ -3811,25 +3498,13 @@ export type LineItem = Node & {
   supportedReturnReasons: Array<ReturnSupportedReason>;
   /** The title of the product or variant. This field only applies to custom line items. */
   title: Scalars['String']['output'];
-  /**
-   * The total of the discount allocations on this line item, resulting from discounts applied specifically to this line item.
-   *
-   */
+  /** The total of the discount allocations on this line item, resulting from discounts applied specifically to this line item. */
   totalDiscount: MoneyV2;
-  /**
-   * The total price of the line item, calculated by multiplying the current unit price of the variant by the quantity, expressed in presentment currencies.
-   *
-   */
+  /** The total price of the line item, calculated by multiplying the current unit price of the variant by the quantity, expressed in presentment currencies. */
   totalPrice?: Maybe<MoneyV2>;
-  /**
-   * The total price of the line item, calculated by multiplying the unit price of the variant (before any discounts) by the quantity, expressed in presentment currencies.
-   *
-   */
+  /** The total price of the line item, calculated by multiplying the unit price of the variant (before any discounts) by the quantity, expressed in presentment currencies. */
   totalPriceBeforeDiscounts?: Maybe<MoneyV2>;
-  /**
-   * The total price of the line item, calculated by multiplying the unit price of the variant (after line item discounts) by the quantity, expressed in presentment currencies.
-   *
-   */
+  /** The total price of the line item, calculated by multiplying the unit price of the variant (after line item discounts) by the quantity, expressed in presentment currencies. */
   totalPriceWithDiscounts?: Maybe<MoneyV2>;
   /** The unit price of the line item in presentment currencies. */
   unitPrice?: Maybe<UnitPrice>;
@@ -3843,24 +3518,18 @@ export type LineItem = Node & {
   vendor?: Maybe<Scalars['String']['output']>;
 };
 
-/**
- * An auto-generated type for paginating through multiple LineItems.
- *
- */
+/** An auto-generated type for paginating through multiple LineItems. */
 export type LineItemConnection = {
   __typename?: 'LineItemConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<LineItemEdge>;
-  /** A list of the nodes contained in LineItemEdge. */
+  /** A list of nodes that are contained in LineItemEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<LineItem>;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
-/**
- * The information about the line item category for the order.
- *
- */
+/** The information about the line item category for the order. */
 export type LineItemContainer =
   | RemainingLineItemContainer
   | UnfulfilledDigitalLineItemContainer
@@ -3868,10 +3537,7 @@ export type LineItemContainer =
   | UnfulfilledLineItemContainer
   | UnfulfilledPhysicalLineItemContainer;
 
-/**
- * The information about the line item in the line item container.
- *
- */
+/** The information about the line item in the line item container. */
 export type LineItemContainerLineItem = Node & {
   __typename?: 'LineItemContainerLineItem';
   /** A globally-unique ID. */
@@ -3884,27 +3550,21 @@ export type LineItemContainerLineItem = Node & {
   totalQuantity: Scalars['Int']['output'];
 };
 
-/**
- * An auto-generated type for paginating through multiple LineItemContainerLineItems.
- *
- */
+/** An auto-generated type for paginating through multiple LineItemContainerLineItems. */
 export type LineItemContainerLineItemConnection = {
   __typename?: 'LineItemContainerLineItemConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<LineItemContainerLineItemEdge>;
-  /** A list of the nodes contained in LineItemContainerLineItemEdge. */
+  /** A list of nodes that are contained in LineItemContainerLineItemEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<LineItemContainerLineItem>;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one LineItemContainerLineItem and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one LineItemContainerLineItem and a cursor during pagination. */
 export type LineItemContainerLineItemEdge = {
   __typename?: 'LineItemContainerLineItemEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of LineItemContainerLineItemEdge. */
   node: LineItemContainerLineItem;
@@ -3919,13 +3579,10 @@ export type LineItemDiscountInformation = {
   title?: Maybe<Scalars['String']['output']>;
 };
 
-/**
- * An auto-generated type which holds one LineItem and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one LineItem and a cursor during pagination. */
 export type LineItemEdge = {
   __typename?: 'LineItemEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of LineItemEdge. */
   node: LineItem;
@@ -3934,15 +3591,9 @@ export type LineItemEdge = {
 /** The selling plan for a line item. */
 export type LineItemSellingPlan = {
   __typename?: 'LineItemSellingPlan';
-  /**
-   * The name of the selling plan for display purposes.
-   *
-   */
+  /** The name of the selling plan for display purposes. */
   name: Scalars['String']['output'];
-  /**
-   * The ID of the selling plan associated with the line item.
-   *
-   */
+  /** The ID of the selling plan associated with the line item. */
   sellingPlanId?: Maybe<Scalars['ID']['output']>;
 };
 
@@ -3955,10 +3606,7 @@ export type LineItemVariantOption = {
   value: Scalars['String']['output'];
 };
 
-/**
- * Captures the intentions of a discount that was manually created.
- *
- */
+/** Captures the intentions of a discount that was manually created. */
 export type ManualDiscountApplication = DiscountApplication & {
   __typename?: 'ManualDiscountApplication';
   /** The method by which the discount's value is allocated to its entitled items. */
@@ -3978,7 +3626,6 @@ export type ManualDiscountApplication = DiscountApplication & {
 /**
  * A market, which is a group of one or more regions targeted for international sales.
  * A market allows configuration of a distinct, localized shopping experience for customers from a specific area of the world.
- *
  */
 export type Market = Node & {
   __typename?: 'Market';
@@ -3992,7 +3639,6 @@ export type Market = Node & {
    * language variants. If a market doesn't have its own web presence, then the market is accessible on the
    * shop’s primary domain using [country
    * selectors](https://shopify.dev/themes/internationalization/multiple-currencies-languages#the-country-selector).
-   *
    */
   webPresence?: Maybe<MarketWebPresence>;
 };
@@ -4010,31 +3656,23 @@ export type Market = Node & {
  * here do govern [the languages available on the Storefront
  * API](https://shopify.dev/custom-storefronts/internationalization/multiple-languages) for the countries in
  * this market.
- *
  */
 export type MarketWebPresence = Node & {
   __typename?: 'MarketWebPresence';
   /**
    * The domain of the web presence.
    * This field will be null if `subfolderSuffix` isn't null.
-   *
    */
   domain?: Maybe<Domain>;
   /** A globally-unique identifier. */
   id: Scalars['ID']['output'];
-  /**
-   * The list of root URLs for each of the web presence’s locales.
-   *
-   */
+  /** The list of root URLs for each of the web presence’s locales. */
   rootUrls: Array<MarketWebPresenceRootUrl>;
   /** The market-specific suffix of the subfolders defined by the web presence. Example: in `/en-us` the subfolder suffix is `us`. This field will be null if `domain` isn't null. */
   subfolderSuffix?: Maybe<Scalars['String']['output']>;
 };
 
-/**
- * The URL for the homepage of the online store in the context of a particular market and a particular locale.
- *
- */
+/** The URL for the homepage of the online store in the context of a particular market and a particular locale. */
 export type MarketWebPresenceRootUrl = {
   __typename?: 'MarketWebPresenceRootUrl';
   /** The locale in which the storefront loads. */
@@ -4046,7 +3684,6 @@ export type MarketWebPresenceRootUrl = {
 /**
  * The custom metadata attached to a resource. Metafields can be sorted into namespaces and are
  * comprised of keys, values, and value types.
- *
  */
 export type Metafield = HasCompareDigest &
   Node & {
@@ -4068,7 +3705,6 @@ export type Metafield = HasCompareDigest &
     /**
      * The type name of the metafield.
      * See the list of [supported types](https://shopify.dev/apps/metafields/definitions/types).
-     *
      */
     type: Scalars['String']['output'];
     /** The date and time when the metafield was updated. */
@@ -4077,10 +3713,7 @@ export type Metafield = HasCompareDigest &
     value: Scalars['String']['output'];
   };
 
-/**
- * Identifies a metafield by its owner resource, namespace, and key.
- *
- */
+/** Identifies a metafield by its owner resource, namespace, and key. */
 export type MetafieldIdentifier = {
   __typename?: 'MetafieldIdentifier';
   /** The key of the metafield. */
@@ -4091,10 +3724,7 @@ export type MetafieldIdentifier = {
   ownerId: Scalars['ID']['output'];
 };
 
-/**
- * The input fields that identify metafields.
- *
- */
+/** The input fields that identify metafields. */
 export type MetafieldIdentifierInput = {
   /** The key of the metafield. */
   key: Scalars['String']['input'];
@@ -4154,15 +3784,11 @@ export type MetafieldsDeleteUserErrorCode =
 
 /** The input fields for a metafield value to set. */
 export type MetafieldsSetInput = {
-  /**
-   * The `compareDigest` value obtained from a previous query. Provide this with updates to ensure the metafield is modified safely.
-   *
-   */
+  /** The `compareDigest` value obtained from a previous query. Provide this with updates to ensure the metafield is modified safely. */
   compareDigest?: InputMaybe<Scalars['String']['input']>;
   /**
    * The unique identifier for a metafield within its namespace.
    * Must be 3-64 characters long and can contain alphanumeric, hyphen, and underscore characters.
-   *
    */
   key: Scalars['String']['input'];
   /**
@@ -4170,7 +3796,6 @@ export type MetafieldsSetInput = {
    * with `key` to lookup a metafield on a resource, preventing conflicts with other metafields with the
    * same `key`.
    * Must be 3-255 characters long and can contain alphanumeric, hyphen, and underscore characters.
-   *
    */
   namespace: Scalars['String']['input'];
   /** The unique ID of the resource that the metafield is attached to. */
@@ -4180,13 +3805,9 @@ export type MetafieldsSetInput = {
    * The type must be one of the [supported types](https://shopify.dev/apps/metafields/types).
    * Required when there is no corresponding definition for the given `namespace`, `key`, and
    * owner resource type (derived from `ownerId`).
-   *
    */
   type?: InputMaybe<Scalars['String']['input']>;
-  /**
-   * The data stored in the metafield. Always stored as a string, regardless of the metafield's type.
-   *
-   */
+  /** The data stored in the metafield. Always stored as a string, regardless of the metafield's type. */
   value: Scalars['String']['input'];
 };
 
@@ -4242,7 +3863,6 @@ export type MetafieldsSetUserErrorCode =
 /**
  * A collection of monetary values in their respective currencies. Typically used in the context of multi-currency pricing and transactions,
  * when an amount in the shop's currency is converted to the customer's currency of choice (the presentment currency).
- *
  */
 export type MoneyBag = {
   __typename?: 'MoneyBag';
@@ -4252,10 +3872,7 @@ export type MoneyBag = {
   shopMoney: MoneyV2;
 };
 
-/**
- * A monetary value with currency.
- *
- */
+/** A monetary value with currency. */
 export type MoneyV2 = {
   __typename?: 'MoneyV2';
   /** Decimal money amount. */
@@ -4273,25 +3890,13 @@ export type Mutation = {
   applePayCreditCardUpdate?: Maybe<ApplePayCreditCardUpdatePayload>;
   /** Creates a new Apple Pay session. */
   applePaySessionCreate?: Maybe<ApplePaySessionCreatePayload>;
-  /**
-   * Updates the information for a business contact.
-   *
-   */
+  /** Updates the information for a business contact. */
   businessContactUpdate?: Maybe<BusinessContactUpdatePayload>;
-  /**
-   * Adds a new credit card to the available payment methods of a customer.
-   *
-   */
+  /** Adds a new credit card to the available payment methods of a customer. */
   businessLocationCreditCardAdd?: Maybe<BusinessLocationCreditCardAddPayload>;
-  /**
-   * Updates the details of a credit card for a customer.
-   *
-   */
+  /** Updates the details of a credit card for a customer. */
   businessLocationCreditCardUpdate?: Maybe<BusinessLocationCreditCardUpdatePayload>;
-  /**
-   * Removes a payment instrument from a customer.
-   *
-   */
+  /** Removes a payment instrument from a customer. */
   businessLocationPaymentInstrumentRemove?: Maybe<BusinessLocationPaymentInstrumentRemovePayload>;
   /** Updates an address on a company location. */
   companyLocationAssignAddress?: Maybe<CompanyLocationAssignAddressPayload>;
@@ -4299,20 +3904,11 @@ export type Mutation = {
   creditCardAdd?: Maybe<CreditCardAddPayload>;
   /** Updates the details of a customer's credit card. */
   creditCardUpdate?: Maybe<CreditCardUpdatePayload>;
-  /**
-   * Creates a new address for a customer.
-   *
-   */
+  /** Creates a new address for a customer. */
   customerAddressCreate?: Maybe<CustomerAddressCreatePayload>;
-  /**
-   * Deletes a specific address for a customer.
-   *
-   */
+  /** Deletes a specific address for a customer. */
   customerAddressDelete?: Maybe<CustomerAddressDeletePayload>;
-  /**
-   * Updates a specific address for a customer.
-   *
-   */
+  /** Updates a specific address for a customer. */
   customerAddressUpdate?: Maybe<CustomerAddressUpdatePayload>;
   /** Subscribes the customer's email to marketing. */
   customerEmailMarketingOptIn?: Maybe<CustomerEmailMarketingOptInPayload>;
@@ -4320,10 +3916,7 @@ export type Mutation = {
   customerEmailMarketingSubscribe?: Maybe<CustomerEmailMarketingSubscribePayload>;
   /** Unsubscribes the customer from email marketing. */
   customerEmailMarketingUnsubscribe?: Maybe<CustomerEmailMarketingUnsubscribePayload>;
-  /**
-   * Updates the customer's personal information.
-   *
-   */
+  /** Updates the customer's personal information. */
   customerUpdate?: Maybe<CustomerUpdatePayload>;
   /** Adds a new credit card by using Google Pay. */
   googlePayCreditCardAdd?: Maybe<GooglePayCreditCardAddPayload>;
@@ -4344,17 +3937,13 @@ export type Mutation = {
    * The `compareDigest` value can be acquired by querying the metafield object and selecting `compareDigest` as a field.
    * If the `compareDigest` value does not match the digest for the persisted value, the mutation will return an error.
    * You can opt out of write guarantees by not sending `compareDigest` in the request.
-   *
    */
   metafieldsSet?: Maybe<MetafieldsSetPayload>;
   /** Request a new return on behalf of a customer. */
   orderRequestReturn?: Maybe<OrderRequestReturnPayload>;
   /** Removes a payment instrument from a customer's account. */
   paymentInstrumentRemove?: Maybe<PaymentInstrumentRemovePayload>;
-  /**
-   * Updates a customer's default payment instrument.
-   *
-   */
+  /** Updates a customer's default payment instrument. */
   paymentInstrumentUpdateDefault?: Maybe<PaymentInstrumentUpdateDefaultPayload>;
   /** Connects a customer's PayPal account for use as a payment method. */
   paypalAccountEnable?: Maybe<PaypalAccountEnablePayload>;
@@ -4367,7 +3956,6 @@ export type Mutation = {
   /**
    * Exchanges the Customer Access Token, provided in the Authorization header, into a Storefront Customer Access Token.
    * Renew this token each time you update the Customer Access Token found in the Authorization header.
-   *
    */
   storefrontCustomerAccessTokenCreate?: Maybe<StorefrontCustomerAccessTokenCreatePayload>;
   /** Skips a Subscription Billing Cycle. */
@@ -4566,6 +4154,7 @@ export type MutationSubscriptionContractChangePaymentInstrumentArgs = {
 
 /** This is the schema's entry point for all mutation operations. */
 export type MutationSubscriptionContractFetchDeliveryOptionsArgs = {
+  address?: InputMaybe<CustomerAddressInput>;
   deliveryAddress?: InputMaybe<CustomerMailingAddressInput>;
   subscriptionContractId: Scalars['ID']['input'];
 };
@@ -4587,30 +4176,25 @@ export type MutationSubscriptionContractSelectDeliveryMethodArgs = {
  * [Relay specification](https://relay.dev/graphql/objectidentification.htm#sec-Node-Interface).
  * This interface is used by the [node](https://shopify.dev/api/admin-graphql/unstable/queries/node)
  * and [nodes](https://shopify.dev/api/admin-graphql/unstable/queries/nodes) queries.
- *
  */
 export type Node = {
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
 };
 
-/** A customer’s completed request to purchase one or more products from a shop. */
+/** A customer’s completed request to purchase one or more products from a shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type Order = HasMetafields &
   Node & {
     __typename?: 'Order';
     /** A list of sales agreements associated with the order. */
     agreements: SalesAgreementConnection;
-    /**
-     * The mailing address provided by the customer. Not all orders have a mailing address.
-     *
-     */
+    /** The mailing address provided by the customer. Not all orders have a mailing address. */
     billingAddress?: Maybe<CustomerAddress>;
     /** The reason for the cancellation of the order. Returns `null` if the order wasn't canceled. */
     cancelReason?: Maybe<OrderCancelReason>;
     /**
      * The date and time when the order was canceled.
      * Returns `null` if the order wasn't canceled.
-     *
      */
     cancelledAt?: Maybe<Scalars['DateTime']['output']>;
     /** The checkout token associated with this order. */
@@ -4619,7 +4203,6 @@ export type Order = HasMetafields &
      * A randomly generated alpha-numeric identifier for the order that may be shown to the customer
      * instead of the sequential order name. For example, "XPAV284CT", "R50KELTJP" or "35PKUN0UJ".
      * This value isn't guaranteed to be unique.
-     *
      */
     confirmationNumber?: Maybe<Scalars['String']['output']>;
     /** The date and time when the order was created. */
@@ -4640,10 +4223,7 @@ export type Order = HasMetafields &
     draftOrder?: Maybe<DraftOrder>;
     /** The name of the associated draft order. */
     draftOrderName?: Maybe<Scalars['String']['output']>;
-    /**
-     * The edit summary of the order.
-     *
-     */
+    /** The edit summary of the order. */
     editSummary?: Maybe<OrderEditSummary>;
     /** Whether the order has been edited or not. */
     edited: Scalars['Boolean']['output'];
@@ -4684,13 +4264,11 @@ export type Order = HasMetafields &
     /**
      * The metafields associated with the resource matching the
      * supplied list of namespaces and keys.
-     *
      */
     metafields: Array<Maybe<Metafield>>;
     /**
      * The identifier for the order that appears on the order.
      * For example, _#1000_ or _Store1001.
-     *
      */
     name: Scalars['String']['output'];
     /** The order's notes. */
@@ -4701,10 +4279,7 @@ export type Order = HasMetafields &
     orderReceiptMetafields: Array<Metafield>;
     /** The payment information for the order. */
     paymentInformation?: Maybe<OrderPaymentInformation>;
-    /**
-     * Represents the merchant configured payment terms.
-     *
-     */
+    /** Represents the merchant configured payment terms. */
     paymentTermsTemplate?: Maybe<PaymentTermsTemplate>;
     /** The phone number of the customer for SMS notifications. */
     phone?: Maybe<Scalars['String']['output']>;
@@ -4716,7 +4291,6 @@ export type Order = HasMetafields &
      * The date and time when the order was processed.
      * This value can be set to dates in the past when importing from other systems.
      * If no value is provided, it will be auto-generated based on current date and time.
-     *
      */
     processedAt: Scalars['DateTime']['output'];
     /** The purchasing entity for the order. */
@@ -4731,15 +4305,9 @@ export type Order = HasMetafields &
     return?: Maybe<Return>;
     /** The list of returns for the order with pagination. */
     returns: ReturnConnection;
-    /**
-     * The mailing address to which the order items are shipped.
-     *
-     */
+    /** The mailing address to which the order items are shipped. */
     shippingAddress?: Maybe<CustomerAddress>;
-    /**
-     * The discounts that have been allocated onto the shipping line by discount applications.
-     *
-     */
+    /** The discounts that have been allocated onto the shipping line by discount applications. */
     shippingDiscountAllocations: Array<DiscountAllocation>;
     /** A summary of all shipping costs on the order. */
     shippingLine?: Maybe<ShippingLine>;
@@ -4757,6 +4325,8 @@ export type Order = HasMetafields &
     subtotal?: Maybe<MoneyV2>;
     /** The price of the order before order-level discounts, duties, shipping. It includes taxes in  tax-inclusive orders. */
     subtotalBeforeDiscounts?: Maybe<MoneyV2>;
+    /** A list of tax invoices associated with the order. */
+    taxInvoices: Array<TaxInvoice>;
     /** The total cost of shipping after discounts. */
     totalDiscountedShipping: MoneyV2;
     /** The total amount of duties after returns. */
@@ -4777,7 +4347,7 @@ export type Order = HasMetafields &
     transactions: Array<OrderTransaction>;
   };
 
-/** A customer’s completed request to purchase one or more products from a shop. */
+/** A customer’s completed request to purchase one or more products from a shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type OrderAgreementsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -4786,7 +4356,7 @@ export type OrderAgreementsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/** A customer’s completed request to purchase one or more products from a shop. */
+/** A customer’s completed request to purchase one or more products from a shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type OrderDiscountApplicationsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -4795,7 +4365,7 @@ export type OrderDiscountApplicationsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/** A customer’s completed request to purchase one or more products from a shop. */
+/** A customer’s completed request to purchase one or more products from a shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type OrderFulfillmentsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -4806,7 +4376,7 @@ export type OrderFulfillmentsArgs = {
   sortKey?: InputMaybe<FulfillmentSortKeys>;
 };
 
-/** A customer’s completed request to purchase one or more products from a shop. */
+/** A customer’s completed request to purchase one or more products from a shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type OrderLineItemsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -4815,23 +4385,23 @@ export type OrderLineItemsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/** A customer’s completed request to purchase one or more products from a shop. */
+/** A customer’s completed request to purchase one or more products from a shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type OrderMetafieldArgs = {
   key: Scalars['String']['input'];
   namespace: Scalars['String']['input'];
 };
 
-/** A customer’s completed request to purchase one or more products from a shop. */
+/** A customer’s completed request to purchase one or more products from a shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type OrderMetafieldsArgs = {
   identifiers: Array<HasMetafieldsIdentifier>;
 };
 
-/** A customer’s completed request to purchase one or more products from a shop. */
+/** A customer’s completed request to purchase one or more products from a shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type OrderReturnArgs = {
   id: Scalars['ID']['input'];
 };
 
-/** A customer’s completed request to purchase one or more products from a shop. */
+/** A customer’s completed request to purchase one or more products from a shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type OrderReturnsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -4844,7 +4414,6 @@ export type OrderReturnsArgs = {
 /**
  * The possible order action types for a
  * [sales agreement](https://shopify.dev/api/admin-graphql/latest/interfaces/salesagreement).
- *
  */
 export type OrderActionType =
   /** An order with a purchase or charge. */
@@ -4909,7 +4478,6 @@ export type OrderByCompanySortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE'
   /** Sort by the `total_price` value. */
@@ -4932,7 +4500,6 @@ export type OrderByContactSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE'
   /** Sort by the `total_price` value. */
@@ -4953,7 +4520,6 @@ export type OrderByLocationSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE'
   /** Sort by the `total_price` value. */
@@ -4976,17 +4542,14 @@ export type OrderCancelReason =
   /** Staff made an error. */
   | 'STAFF';
 
-/**
- * An auto-generated type for paginating through multiple Orders.
- *
- */
+/** An auto-generated type for paginating through multiple Orders. */
 export type OrderConnection = {
   __typename?: 'OrderConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<OrderEdge>;
-  /** A list of the nodes contained in OrderEdge. */
+  /** A list of nodes that are contained in OrderEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<Order>;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
@@ -5008,10 +4571,7 @@ export type OrderDiscountInformation = {
   totalOrderLevelAppliedDiscounts: MoneyV2;
 };
 
-/**
- * The status of duties for the order.
- *
- */
+/** The status of duties for the order. */
 export type OrderDutiesStatusType =
   /** The order is being shipped from another country, so duties and taxes may be charged on delivery. */
   | 'DUTIES_ERROR'
@@ -5020,10 +4580,7 @@ export type OrderDutiesStatusType =
   /** The order is being shipped from another country. Duties are not charged on orders of this value. */
   | 'DUTIES_ZERO';
 
-/**
- * The summary of duties associated with an order.
- *
- */
+/** The summary of duties associated with an order. */
 export type OrderDutiesSummary = {
   __typename?: 'OrderDutiesSummary';
   /** The total amount of duties for the order. */
@@ -5032,13 +4589,10 @@ export type OrderDutiesSummary = {
   totalDutiesStatus?: Maybe<OrderDutiesStatusType>;
 };
 
-/**
- * An auto-generated type which holds one Order and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one Order and a cursor during pagination. */
 export type OrderEdge = {
   __typename?: 'OrderEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of OrderEdge. */
   node: Order;
@@ -5076,10 +4630,7 @@ export type OrderEditSummary = {
   latestHappenedAt?: Maybe<Scalars['DateTime']['output']>;
 };
 
-/**
- * A change in the edit summary of an order.
- *
- */
+/** A change in the edit summary of an order. */
 export type OrderEditSummaryChange = Node & {
   __typename?: 'OrderEditSummaryChange';
   /** The quantity delta of the change. */
@@ -5111,65 +4662,29 @@ export type OrderFinancialStatus =
   /** Displayed as **Voided**. */
   | 'VOIDED';
 
-/**
- * The aggregation of each order's active fulfillments and opened fulfillment orders for display purposes.
- *
- */
+/** The aggregation of each order's active fulfillments and opened fulfillment orders for display purposes. */
 export type OrderFulfillmentStatus =
-  /**
-   * Attempted to deliver the fulfillment.
-   *
-   */
+  /** Attempted to deliver the fulfillment. */
   | 'ATTEMPTED_TO_DELIVER'
-  /**
-   * The order is confirmed.
-   *
-   */
+  /** The order is confirmed. */
   | 'CONFIRMED'
-  /**
-   * Every physical fulfillment of the order has been successfully delivered.
-   *
-   */
+  /** Every physical fulfillment of the order has been successfully delivered. */
   | 'DELIVERED'
-  /**
-   * The order has one fulfillment in transit.
-   *
-   */
+  /** The order has one fulfillment in transit. */
   | 'IN_TRANSIT'
-  /**
-   * This order has multiple physical fulfillments with differing statuses.
-   *
-   */
+  /** This order has multiple physical fulfillments with differing statuses. */
   | 'MULTIPLE_SHIPMENTS'
-  /**
-   * The order has one fulfillment on its way.
-   *
-   */
+  /** The order has one fulfillment on its way. */
   | 'ON_ITS_WAY'
-  /**
-   * The order has one fulfillment out for delivery.
-   *
-   */
+  /** The order has one fulfillment out for delivery. */
   | 'OUT_FOR_DELIVERY'
-  /**
-   * The order has been picked up.
-   *
-   */
+  /** The order has been picked up. */
   | 'PICKED_UP'
-  /**
-   * The order has one fulfillment being prepared for shipping.
-   *
-   */
+  /** The order has one fulfillment being prepared for shipping. */
   | 'PREPARING_FOR_SHIPPING'
-  /**
-   * The order is ready to be picked up.
-   *
-   */
+  /** The order is ready to be picked up. */
   | 'READY_FOR_PICKUP'
-  /**
-   * There was a problem with the fulfillment.
-   *
-   */
+  /** There was a problem with the fulfillment. */
   | 'THERE_WAS_A_PROBLEM';
 
 /** The quantitative information about the line items of a specific order. */
@@ -5219,10 +4734,7 @@ export type OrderPaymentStatus =
   /** The payment has been voided. */
   | 'VOIDED';
 
-/**
- * The pickup information associated with an order.
- *
- */
+/** The pickup information associated with an order. */
 export type OrderPickupInformation = {
   __typename?: 'OrderPickupInformation';
   /** The pickup address for the order. */
@@ -5240,6 +4752,8 @@ export type OrderRequestReturnPayload = {
   __typename?: 'OrderRequestReturnPayload';
   /** The return request that has been made. */
   return?: Maybe<Return>;
+  /** The list of errors that occurred from executing the mutation. */
+  userErrors: Array<ReturnUserError>;
 };
 
 /** The group including the shipping lines of the order. */
@@ -5281,7 +4795,6 @@ export type OrderSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE'
   /** Sort by the `total_price` value. */
@@ -5344,10 +4857,7 @@ export type OrderTransactionKind =
   /** A void transaction. */
   | 'VOID';
 
-/**
- * Represents the status of an order transaction.
- *
- */
+/** Represents the status of an order transaction. */
 export type OrderTransactionStatus =
   /** The transaction has an error. */
   | 'ERROR'
@@ -5385,7 +4895,6 @@ export type OrderTransactionType =
  * Returns information about pagination in a connection, in accordance with the
  * [Relay specification](https://relay.dev/graphql/connections.htm#sec-undefined.PageInfo).
  * For more information, please read our [GraphQL Pagination Usage Guide](https://shopify.dev/api/usage/pagination-graphql).
- *
  */
 export type PageInfo = {
   __typename?: 'PageInfo';
@@ -5421,7 +4930,6 @@ export type PaymentIconImage = Node & {
    * The location of the original image as a URL.
    *
    * If there are any existing transformations in the original source URL, they will remain and not be stripped.
-   *
    * @deprecated Use `url` instead.
    */
   originalSrc: Scalars['URL']['output'];
@@ -5435,7 +4943,6 @@ export type PaymentIconImage = Node & {
    *
    * All transformation arguments are considered "best-effort". If they can be applied to an image, they will be.
    * Otherwise any transformations which an image type doesn't support will be ignored.
-   *
    * @deprecated Use `url(transform:)` instead
    */
   transformedSrc: Scalars['URL']['output'];
@@ -5447,7 +4954,6 @@ export type PaymentIconImage = Node & {
    * All transformation options are considered "best-effort". Any transformation that the original image type doesn't support will be ignored.
    *
    * If you need multiple variations of the same image, then you can use [GraphQL aliases](https://graphql.org/learn/queries/#aliases).
-   *
    */
   url: Scalars['URL']['output'];
   /** The original width of the image in pixels. Returns `null` if the image isn't hosted by Shopify. */
@@ -5541,27 +5047,21 @@ export type PaymentSchedule = Node & {
   id: Scalars['ID']['output'];
 };
 
-/**
- * An auto-generated type for paginating through multiple PaymentSchedules.
- *
- */
+/** An auto-generated type for paginating through multiple PaymentSchedules. */
 export type PaymentScheduleConnection = {
   __typename?: 'PaymentScheduleConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<PaymentScheduleEdge>;
-  /** A list of the nodes contained in PaymentScheduleEdge. */
+  /** A list of nodes that are contained in PaymentScheduleEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<PaymentSchedule>;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one PaymentSchedule and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one PaymentSchedule and a cursor during pagination. */
 export type PaymentScheduleEdge = {
   __typename?: 'PaymentScheduleEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of PaymentScheduleEdge. */
   node: PaymentSchedule;
@@ -5572,10 +5072,7 @@ export type PaymentTerms = Node & {
   __typename?: 'PaymentTerms';
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
-  /**
-   * The next due date if this is the NET or FIXED type of payment terms.
-   *
-   */
+  /** The next due date if this is the NET or FIXED type of payment terms. */
   nextDueAt?: Maybe<Scalars['DateTime']['output']>;
   /** Whether the payment terms have overdue payment schedules. */
   overdue: Scalars['Boolean']['output'];
@@ -5680,46 +5177,22 @@ export type PaypalTokenCreatePayload = {
   userErrors: Array<UserErrorsPaypalTokenUserErrors>;
 };
 
-/**
- * The operations that can be performed on a B2B resource.
- *
- */
+/** The operations that can be performed on a B2B resource. */
 export type PermittedOperation =
-  /**
-   * The permission to add a resource.
-   *
-   */
+  /** The permission to add a resource. */
   | 'ADD'
-  /**
-   * All permissions for a resource.
-   *
-   */
+  /** All permissions for a resource. */
   | 'ALL'
-  /**
-   * The permission to delete a resource.
-   *
-   */
+  /** The permission to delete a resource. */
   | 'DELETE'
-  /**
-   * The permission to edit a resource.
-   *
-   */
+  /** The permission to edit a resource. */
   | 'EDIT'
-  /**
-   * The permission to use a resource.
-   *
-   */
+  /** The permission to use a resource. */
   | 'USE'
-  /**
-   * The permission to view a resource.
-   *
-   */
+  /** The permission to view a resource. */
   | 'VIEW';
 
-/**
- * The address of a pickup location.
- *
- */
+/** The address of a pickup location. */
 export type PickupAddress = {
   __typename?: 'PickupAddress';
   /** The street address for the pickup location. */
@@ -5789,24 +5262,19 @@ export type PublicOrder = Node & {
   /**
    * The date and time when the order was canceled.
    * Returns `null` if the order wasn't canceled.
-   *
    */
   cancelledAt?: Maybe<Scalars['DateTime']['output']>;
   /**
    * A randomly generated alpha-numeric identifier for the order that may be shown to the customer
    * instead of the sequential order name. For example, "XPAV284CT", "R50KELTJP" or "35PKUN0UJ".
    * This value isn't guaranteed to be unique.
-   *
    */
   confirmationNumber?: Maybe<Scalars['String']['output']>;
   /** The discount information for the order, including line-level discount applications. */
   discountInformation: OrderDiscountInformation;
   /** The name of the associated draft order. */
   draftOrderName?: Maybe<Scalars['String']['output']>;
-  /**
-   * The edit summary of the order.
-   *
-   */
+  /** The edit summary of the order. */
   editSummary?: Maybe<OrderEditSummary>;
   /** The financial status of the order. */
   financialStatus?: Maybe<OrderFinancialStatus>;
@@ -5833,7 +5301,6 @@ export type PublicOrder = Node & {
   /**
    * The identifier for the order that appears on the order.
    * For example, _#1000_ or _Store1001.
-   *
    */
   name: Scalars['String']['output'];
   /** The payment information for the order. */
@@ -5846,7 +5313,6 @@ export type PublicOrder = Node & {
    * The date and time when the order was processed.
    * This value can be set to dates in the past when importing from other systems.
    * If no value is provided, it will be auto-generated based on current date and time.
-   *
    */
   processedAt: Scalars['DateTime']['output'];
   /** A list of refunds associated with the order. */
@@ -5922,10 +5388,7 @@ export type PublicOrderReturnsArgs = {
   sortKey?: InputMaybe<ReturnSortKeys>;
 };
 
-/**
- * The information of the purchasing company for an order or draft order.
- *
- */
+/** The information of the purchasing company for an order or draft order. */
 export type PurchasingCompany = {
   __typename?: 'PurchasingCompany';
   /** The company associated with the order or draft order. */
@@ -5936,30 +5399,27 @@ export type PurchasingCompany = {
   location: CompanyLocation;
 };
 
-/**
- * Represents information about the purchasing entity for the order or draft order.
- *
- */
+/** Represents information about the purchasing entity for the order or draft order. */
 export type PurchasingEntity = Customer | PurchasingCompany;
 
 /** This acts as the public, top-level API from which all queries start. */
 export type QueryRoot = {
   __typename?: 'QueryRoot';
-  /** The information of the customer's company. */
+  /** The information of the customer's company. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
   company?: Maybe<Company>;
-  /** The Location corresponding to the provided ID. */
+  /** The Location corresponding to the provided ID. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
   companyLocation?: Maybe<CompanyLocation>;
-  /** Returns the Customer resource. */
+  /** Returns the Customer resource. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
   customer: Customer;
-  /** Returns a draft order resource by ID. */
+  /** Returns a draft order resource by ID. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
   draftOrder?: Maybe<DraftOrder>;
   /** The API tokens for UI extensions. */
   extensionApiTokens?: Maybe<ExtensionApiTokens>;
-  /** Returns an Order resource by ID. */
+  /** Returns an Order resource by ID. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
   order?: Maybe<Order>;
   /** An Order resource identified by ID. */
   orderDetailsPageOrder?: Maybe<OrderDetailsPageOrder>;
-  /** Returns the information about the shop. */
+  /** Returns the information about the shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
   shop: Shop;
   /**
    * Public metafields for Shop, Order, Customer, Company, CompanyLocation, Product, and ProductVariant.
@@ -5967,7 +5427,6 @@ export type QueryRoot = {
    * Product and ProductVariant are only fetched if resource_ids are provided and there is a match for the
    * namespace and key. Either filters or extensionIds is needed. If both are provided, filters will be used.
    * This is restricted to development shops for local UI extension development purposes only.
-   *
    */
   uiExtensionMetafields: Array<UiExtensionMetafield>;
   /** A session token for an UI extension. */
@@ -5992,6 +5451,7 @@ export type QueryRootDraftOrderArgs = {
 /** This acts as the public, top-level API from which all queries start. */
 export type QueryRootExtensionApiTokensArgs = {
   appId: Scalars['ID']['input'];
+  extensionType?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** This acts as the public, top-level API from which all queries start. */
@@ -6016,10 +5476,7 @@ export type QueryRootUiExtensionSessionTokenArgs = {
   id: Scalars['ID']['input'];
 };
 
-/**
- *         The record of refunds issued to a customer.
- *
- */
+/** The record of refunds issued to a customer. */
 export type Refund = Node & {
   __typename?: 'Refund';
   /** The date and time when the refund was created. */
@@ -6059,10 +5516,7 @@ export type RefundAgreementSalesArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/**
- * The information about the line items container for items that have not been refunded or removed.
- *
- */
+/** The information about the line items container for items that have not been refunded or removed. */
 export type RemainingLineItemContainer = {
   __typename?: 'RemainingLineItemContainer';
   /** A unique ID for the container. */
@@ -6071,10 +5525,7 @@ export type RemainingLineItemContainer = {
   lineItems: RemainingLineItemContainerLineItemConnection;
 };
 
-/**
- * The information about the line items container for items that have not been refunded or removed.
- *
- */
+/** The information about the line items container for items that have not been refunded or removed. */
 export type RemainingLineItemContainerLineItemsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -6083,10 +5534,7 @@ export type RemainingLineItemContainerLineItemsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/**
- * The information about the line item in the line item container.
- *
- */
+/** The information about the line item in the line item container. */
 export type RemainingLineItemContainerLineItem = Node & {
   __typename?: 'RemainingLineItemContainerLineItem';
   /** A globally-unique ID. */
@@ -6095,27 +5543,21 @@ export type RemainingLineItemContainerLineItem = Node & {
   lineItem: LineItem;
 };
 
-/**
- * An auto-generated type for paginating through multiple RemainingLineItemContainerLineItems.
- *
- */
+/** An auto-generated type for paginating through multiple RemainingLineItemContainerLineItems. */
 export type RemainingLineItemContainerLineItemConnection = {
   __typename?: 'RemainingLineItemContainerLineItemConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<RemainingLineItemContainerLineItemEdge>;
-  /** A list of the nodes contained in RemainingLineItemContainerLineItemEdge. */
+  /** A list of nodes that are contained in RemainingLineItemContainerLineItemEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<RemainingLineItemContainerLineItem>;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one RemainingLineItemContainerLineItem and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one RemainingLineItemContainerLineItem and a cursor during pagination. */
 export type RemainingLineItemContainerLineItemEdge = {
   __typename?: 'RemainingLineItemContainerLineItemEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of RemainingLineItemContainerLineItemEdge. */
   node: RemainingLineItemContainerLineItem;
@@ -6127,7 +5569,6 @@ export type RequestedLineItemInput = {
    * A note from the customer explaining the item to be returned.
    * For instance, the note can detail issues with the item for the merchant's information.
    * Maximum length: 300 characters.
-   *
    */
   customerNote?: InputMaybe<Scalars['String']['input']>;
   /** The ID of the line item that's to be returned. */
@@ -6156,65 +5597,29 @@ export type ResourcePermission = {
   resource: ResourceType;
 };
 
-/**
- * The B2B resource types.
- *
- */
+/** The B2B resource types. */
 export type ResourceType =
-  /**
-   * The Business Profile resource type.
-   *
-   */
+  /** The Business Profile resource type. */
   | 'BUSINESS_PROFILE'
-  /**
-   * The Company resource type.
-   *
-   */
+  /** The Company resource type. */
   | 'COMPANY'
-  /**
-   * The Company Contact resource type.
-   *
-   */
+  /** The Company Contact resource type. */
   | 'COMPANY_CONTACT'
-  /**
-   * The Company Contact Role resource type.
-   *
-   */
+  /** The Company Contact Role resource type. */
   | 'COMPANY_CONTACT_ROLE'
-  /**
-   * The Company Location resource type.
-   *
-   */
+  /** The Company Location resource type. */
   | 'COMPANY_LOCATION'
-  /**
-   * The Company Location Billing Address resource type.
-   *
-   */
+  /** The Company Location Billing Address resource type. */
   | 'COMPANY_LOCATION_BILLING_ADDRESS'
-  /**
-   * The Company Location Shipping Address resource type.
-   *
-   */
+  /** The Company Location Shipping Address resource type. */
   | 'COMPANY_LOCATION_SHIPPING_ADDRESS'
-  /**
-   * The Company Tax Exemption resource type.
-   *
-   */
+  /** The Company Tax Exemption resource type. */
   | 'COMPANY_TAX_EXEMPTION'
-  /**
-   * The Draft Order resource type.
-   *
-   */
+  /** The Draft Order resource type. */
   | 'DRAFT_ORDER'
-  /**
-   * The Order resource type.
-   *
-   */
+  /** The Order resource type. */
   | 'ORDER'
-  /**
-   * The Payment Method resource type.
-   *
-   */
+  /** The Payment Method resource type. */
   | 'PAYMENT_METHOD';
 
 /** A product return. */
@@ -6224,6 +5629,8 @@ export type Return = Node & {
   closedAt?: Maybe<Scalars['DateTime']['output']>;
   /** The date when the return was created. */
   createdAt?: Maybe<Scalars['DateTime']['output']>;
+  /** The additional details about the declined return. */
+  decline?: Maybe<ReturnDecline>;
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
   /** The name assigned to the return. */
@@ -6283,31 +5690,96 @@ export type ReturnAgreementSalesArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/**
- * An auto-generated type for paginating through multiple Returns.
- *
- */
+/** An auto-generated type for paginating through multiple Returns. */
 export type ReturnConnection = {
   __typename?: 'ReturnConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<ReturnEdge>;
-  /** A list of the nodes contained in ReturnEdge. */
+  /** A list of nodes that are contained in ReturnEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<Return>;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one Return and a cursor during pagination.
- *
- */
+/** The extra information about why a merchant declined the customer's return request. */
+export type ReturnDecline = {
+  __typename?: 'ReturnDecline';
+  /** The notification message that was sent to the customer about their declined return. */
+  note?: Maybe<Scalars['String']['output']>;
+  /** The reason for the decline. */
+  reason: ReturnDeclineReason;
+};
+
+/** The specific reason for the merchant declining a customer's return request. */
+export type ReturnDeclineReason =
+  /** The return request was declined because it contains items from a final sale. */
+  | 'FINAL_SALE'
+  /** The return request was declined due to another reason. */
+  | 'OTHER'
+  /** The return request was declined because the return period has ended. */
+  | 'RETURN_PERIOD_ENDED';
+
+/** An auto-generated type which holds one Return and a cursor during pagination. */
 export type ReturnEdge = {
   __typename?: 'ReturnEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of ReturnEdge. */
   node: Return;
 };
+
+/** Possible error codes that can be returned by `ReturnUserError`. */
+export type ReturnErrorCode =
+  /** The requested resource already exists. */
+  | 'ALREADY_EXISTS'
+  /** The input value is blank. */
+  | 'BLANK'
+  /** A requested resource could not be created. */
+  | 'CREATION_FAILED'
+  /** The input value should be equal to the value allowed. */
+  | 'EQUAL_TO'
+  /** A required feature is not enabled. */
+  | 'FEATURE_NOT_ENABLED'
+  /** The input value should be greater than the minimum allowed value. */
+  | 'GREATER_THAN'
+  /** The input value should be greater than or equal to the minimum value allowed. */
+  | 'GREATER_THAN_OR_EQUAL_TO'
+  /** The input value isn't included in the list. */
+  | 'INCLUSION'
+  /** Unexpected internal error happened. */
+  | 'INTERNAL_ERROR'
+  /** The input value is invalid. */
+  | 'INVALID'
+  /** A resource was not in the correct state for the operation to succeed. */
+  | 'INVALID_STATE'
+  /** The input value should be less than the maximum value allowed. */
+  | 'LESS_THAN'
+  /** The input value should be less than or equal to the maximum value allowed. */
+  | 'LESS_THAN_OR_EQUAL_TO'
+  /** A requested notification could not be sent. */
+  | 'NOTIFICATION_FAILED'
+  /** A request is not authorized. */
+  | 'NOT_AUTHORIZED'
+  /** The input value is not a number. */
+  | 'NOT_A_NUMBER'
+  /** A requested item is not editable. */
+  | 'NOT_EDITABLE'
+  /** A requested item could not be found. */
+  | 'NOT_FOUND'
+  /** The input value needs to be blank. */
+  | 'PRESENT'
+  /** The input value is already taken. */
+  | 'TAKEN'
+  /** The input value is too big. */
+  | 'TOO_BIG'
+  /** The input value is too long. */
+  | 'TOO_LONG'
+  /** Too many arguments provided. */
+  | 'TOO_MANY_ARGUMENTS'
+  /** The input value is too short. */
+  | 'TOO_SHORT'
+  /** The input value is the wrong length. */
+  | 'WRONG_LENGTH';
 
 /** A line item that is being returned. */
 export type ReturnLineItem = Node & {
@@ -6322,27 +5794,21 @@ export type ReturnLineItem = Node & {
   returnReason: ReturnReason;
 };
 
-/**
- * An auto-generated type for paginating through multiple ReturnLineItems.
- *
- */
+/** An auto-generated type for paginating through multiple ReturnLineItems. */
 export type ReturnLineItemConnection = {
   __typename?: 'ReturnLineItemConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<ReturnLineItemEdge>;
-  /** A list of the nodes contained in ReturnLineItemEdge. */
+  /** A list of nodes that are contained in ReturnLineItemEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<ReturnLineItem>;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one ReturnLineItem and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one ReturnLineItem and a cursor during pagination. */
 export type ReturnLineItemEdge = {
   __typename?: 'ReturnLineItemEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of ReturnLineItemEdge. */
   node: ReturnLineItem;
@@ -6380,7 +5846,6 @@ export type ReturnSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE';
 
@@ -6406,12 +5871,22 @@ export type ReturnSupportedReason = {
   title: Scalars['String']['output'];
 };
 
+/** The errors that occur during the execution of a return mutation. */
+export type ReturnUserError = DisplayableError & {
+  __typename?: 'ReturnUserError';
+  /** The error code. */
+  code?: Maybe<ReturnErrorCode>;
+  /** The path to the input field that caused the error. */
+  field?: Maybe<Array<Scalars['String']['output']>>;
+  /** The error message. */
+  message: Scalars['String']['output'];
+};
+
 /**
  * A reverse delivery represents a package being sent back by a buyer to a merchant post-fulfillment.
  * This could occur when a buyer requests a return and the merchant provides a shipping label.
  * The reverse delivery includes the context of the items being returned, the method of return
  * (for example, a shipping label), and the current status of the delivery (tracking information).
- *
  */
 export type ReverseDelivery = Node & {
   __typename?: 'ReverseDelivery';
@@ -6423,30 +5898,24 @@ export type ReverseDelivery = Node & {
   id: Scalars['ID']['output'];
 };
 
-/**
- * An auto-generated type for paginating through multiple ReverseDeliveries.
- *
- */
+/** An auto-generated type for paginating through multiple ReverseDeliveries. */
 export type ReverseDeliveryConnection = {
   __typename?: 'ReverseDeliveryConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<ReverseDeliveryEdge>;
-  /** A list of the nodes contained in ReverseDeliveryEdge. */
+  /** A list of nodes that are contained in ReverseDeliveryEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<ReverseDelivery>;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
 /** The method and associated details of a reverse delivery. */
 export type ReverseDeliveryDeliverable = ReverseDeliveryShippingDeliverable;
 
-/**
- * An auto-generated type which holds one ReverseDelivery and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one ReverseDelivery and a cursor during pagination. */
 export type ReverseDeliveryEdge = {
   __typename?: 'ReverseDeliveryEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of ReverseDeliveryEdge. */
   node: ReverseDelivery;
@@ -6489,7 +5958,6 @@ export type ReverseDeliveryTracking = {
  * To address this, the remaining currency units that couldn't be divided evenly are allocated one at a time, starting with the first line item, until they are all accounted for.
  * In aggregate, the values sum up correctly. In isolation, one line item might have a different tax or discount amount than another line item of the same price, before taxes and discounts.
  * This is because the amount could not be divided evenly across the items. The allocation of currency units across line items is immutable. After they are allocated, currency units are never reallocated or redistributed among the line items.
- *
  */
 export type Sale = {
   /** The type of order action represented by the sale. */
@@ -6523,15 +5991,12 @@ export type SaleActionType =
   /** A change to the price, taxes, or discounts for a previous purchase. */
   | 'UPDATE';
 
-/**
- * An auto-generated type for paginating through multiple Sales.
- *
- */
+/** An auto-generated type for paginating through multiple Sales. */
 export type SaleConnection = {
   __typename?: 'SaleConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<SaleEdge>;
-  /** A list of the nodes contained in SaleEdge. */
+  /** A list of nodes that are contained in SaleEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<
     | AdditionalFeeSale
     | AdjustmentSale
@@ -6543,17 +6008,14 @@ export type SaleConnection = {
     | TipSale
     | UnknownSale
   >;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one Sale and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one Sale and a cursor during pagination. */
 export type SaleEdge = {
   __typename?: 'SaleEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of SaleEdge. */
   node:
@@ -6572,7 +6034,6 @@ export type SaleEdge = {
  * The possible line types of a sale record. A sale can be an adjustment, which occurs when a refund is issued for a line item that is either more or less than the total value of the line item.
  * Examples include restocking fees and goodwill payments. In such cases, Shopify generates a sales agreement with sale records for each line item that is returned or refunded, and an additional sale record for the adjustment, for example a restocking fee.
  * The sale records for the returned or refunded items represent the reversal of the original line item sale value. The additional adjustment sale record represents the difference between the original total value of all line items that were refunded, and the actual amount refunded.
- *
  */
 export type SaleLineType =
   /** An additional fee. */
@@ -6626,38 +6087,29 @@ export type SalesAgreementSalesArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/**
- * An auto-generated type for paginating through multiple SalesAgreements.
- *
- */
+/** An auto-generated type for paginating through multiple SalesAgreements. */
 export type SalesAgreementConnection = {
   __typename?: 'SalesAgreementConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<SalesAgreementEdge>;
-  /** A list of the nodes contained in SalesAgreementEdge. */
+  /** A list of nodes that are contained in SalesAgreementEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<
     OrderAgreement | OrderEditAgreement | RefundAgreement | ReturnAgreement
   >;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one SalesAgreement and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one SalesAgreement and a cursor during pagination. */
 export type SalesAgreementEdge = {
   __typename?: 'SalesAgreementEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of SalesAgreementEdge. */
   node: OrderAgreement | OrderEditAgreement | RefundAgreement | ReturnAgreement;
 };
 
-/**
- * Captures the intentions of a discount that was created by a Shopify Script.
- *
- */
+/** Captures the intentions of a discount that was created by a Shopify Script. */
 export type ScriptDiscountApplication = DiscountApplication & {
   __typename?: 'ScriptDiscountApplication';
   /** The method by which the discount's value is allocated to its entitled items. */
@@ -6671,64 +6123,6 @@ export type ScriptDiscountApplication = DiscountApplication & {
   /** The value of the discount application. */
   value: PricingValue;
 };
-
-/** Represents a selling plan policy anchor. */
-export type SellingPlanAnchor = {
-  __typename?: 'SellingPlanAnchor';
-  /**
-   * The cutoff day for the anchor.
-   *
-   * If `type` is WEEKDAY, then the value must be between 1-7. Shopify interprets
-   * the days of the week according to ISO 8601, where 1 is Monday.
-   *
-   * If `type` is MONTHDAY, then the value must be between 1-31.
-   *
-   * If `type` is YEARDAY, then the value must be `null`.
-   *
-   */
-  cutoffDay?: Maybe<Scalars['Int']['output']>;
-  /**
-   * The day of the anchor.
-   *
-   * If `type` is WEEKDAY, then the value must be between 1-7. Shopify interprets
-   * the days of the week according to ISO 8601, where 1 is Monday.
-   *
-   * If `type` isn't WEEKDAY, then the value must be between 1-31.
-   *
-   */
-  day: Scalars['Int']['output'];
-  /**
-   * The month of the anchor. If type is different than YEARDAY, then the value must
-   * be `null` or between 1-12.
-   *
-   */
-  month?: Maybe<Scalars['Int']['output']>;
-  /**
-   * Represents the anchor type, it can be one one of WEEKDAY, MONTHDAY, YEARDAY.
-   *
-   */
-  type: SellingPlanAnchorType;
-};
-
-/** Defines the anchor type. */
-export type SellingPlanAnchorType =
-  /** Represents a day of the month, between 1-31. */
-  | 'MONTHDAY'
-  /** Represents a day of the week, between 1-7. */
-  | 'WEEKDAY'
-  /** Represents days of the month and year, month between 1-12, and day between 1-31. */
-  | 'YEARDAY';
-
-/** Defines valid selling plan intervals. */
-export type SellingPlanInterval =
-  /** Represents a day interval. */
-  | 'DAY'
-  /** Represents a month interval. */
-  | 'MONTH'
-  /** Represents a week interval. */
-  | 'WEEK'
-  /** Represents a year interval. */
-  | 'YEAR';
 
 /** Represents the shipping details that the customer chose for their order. */
 export type ShippingLine = {
@@ -6791,7 +6185,6 @@ export type Shop = HasMetafields &
     /**
      * The metafields associated with the resource matching the
      * supplied list of namespaces and keys.
-     *
      */
     metafields: Array<Maybe<Metafield>>;
     /** The shop's .myshopify.com domain name. */
@@ -6818,70 +6211,31 @@ export type ShopMetafieldsArgs = {
 /** The shop app links and resources for an order. */
 export type ShopAppLinksAndResources = {
   __typename?: 'ShopAppLinksAndResources';
-  /**
-   * Whether the the buyer is associated to Shop App.
-   *
-   */
+  /** Whether the the buyer is associated to Shop App. */
   buyerHasShopApp: Scalars['Boolean']['output'];
-  /**
-   * Whether the the buyer is associated to Shop Pay.
-   *
-   */
+  /** Whether the the buyer is associated to Shop Pay. */
   buyerHasShopPay: Scalars['Boolean']['output'];
-  /**
-   * Whether or not the track order updates button should be rendered.
-   *
-   */
+  /** Whether or not the track order updates button should be rendered. */
   canTrackOrderUpdates: Scalars['Boolean']['output'];
-  /**
-   * Whether or not showing the installments highlight is eligible.
-   *
-   */
+  /** Whether or not showing the installments highlight is eligible. */
   installmentsHighlightEligible: Scalars['Boolean']['output'];
-  /**
-   * The URL to the mobile Shop App.
-   *
-   */
+  /** The URL to the mobile Shop App. */
   mobileUrl: Scalars['URL']['output'];
-  /**
-   * The attribution details related to the mobile url.
-   *
-   */
+  /** The attribution details related to the mobile url. */
   mobileUrlAttributionPayload: Scalars['String']['output'];
-  /**
-   * The various options that exist for subscribing to order updates.
-   *
-   */
+  /** The various options that exist for subscribing to order updates. */
   orderUpdateOptions: Array<Scalars['String']['output']>;
-  /**
-   * The URL to the Shop App QR code.
-   *
-   */
+  /** The URL to the Shop App QR code. */
   qrCodeUrl: Scalars['URL']['output'];
-  /**
-   * Whether or not Shop App eligible.
-   *
-   */
+  /** Whether or not Shop App eligible. */
   shopAppEligible: Scalars['Boolean']['output'];
-  /**
-   * Whether QR code should be hidden.
-   *
-   */
+  /** Whether QR code should be hidden. */
   shopAppQrCodeKillswitch: Scalars['Boolean']['output'];
-  /**
-   * The URL to the Shop Pay Installments reminders.
-   *
-   */
+  /** The URL to the Shop Pay Installments reminders. */
   shopInstallmentsMobileUrl: Scalars['URL']['output'];
-  /**
-   * The URL to view the Shop Pay Installments schedules in the mobile Shop App.
-   *
-   */
+  /** The URL to view the Shop Pay Installments schedules in the mobile Shop App. */
   shopInstallmentsViewSchedules: Scalars['URL']['output'];
-  /**
-   * Whether the order was a shop pay order.
-   *
-   */
+  /** Whether the order was a shop pay order. */
   shopPayOrder: Scalars['Boolean']['output'];
 };
 
@@ -6920,35 +6274,17 @@ export type ShopPolicy = Node & {
   url: Scalars['URL']['output'];
 };
 
-/**
- * Defines the valid SMS marketing states for a customer’s phone number.
- *
- */
+/** Defines the valid SMS marketing states for a customer’s phone number. */
 export type SmsMarketingState =
-  /**
-   * The customer has not subscribed to SMS marketing.
-   *
-   */
+  /** The customer has not subscribed to SMS marketing. */
   | 'NOT_SUBSCRIBED'
-  /**
-   * The customer is in the process of subscribing to SMS marketing.
-   *
-   */
+  /** The customer is in the process of subscribing to SMS marketing. */
   | 'PENDING'
-  /**
-   * The customer's personal data has been erased. This value is internally-set and read-only.
-   *
-   */
+  /** The customer's personal data has been erased. This value is internally-set and read-only. */
   | 'REDACTED'
-  /**
-   * The customer has subscribed to SMS marketing.
-   *
-   */
+  /** The customer has subscribed to SMS marketing. */
   | 'SUBSCRIBED'
-  /**
-   * The customer is not currently subscribed to SMS marketing but was previously subscribed.
-   *
-   */
+  /** The customer is not currently subscribed to SMS marketing but was previously subscribed. */
   | 'UNSUBSCRIBED';
 
 /**
@@ -6956,7 +6292,6 @@ export type SmsMarketingState =
  * The account is held in the specified currency and has an owner that cannot be transferred.
  *
  * The account balance is redeemable at checkout only when the owner is authenticated via [new customer accounts authentication](https://shopify.dev/docs/api/customer).
- *
  */
 export type StoreCreditAccount = Node & {
   __typename?: 'StoreCreditAccount';
@@ -6973,7 +6308,6 @@ export type StoreCreditAccount = Node & {
  * The account is held in the specified currency and has an owner that cannot be transferred.
  *
  * The account balance is redeemable at checkout only when the owner is authenticated via [new customer accounts authentication](https://shopify.dev/docs/api/customer).
- *
  */
 export type StoreCreditAccountTransactionsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
@@ -6985,17 +6319,14 @@ export type StoreCreditAccountTransactionsArgs = {
   sortKey?: InputMaybe<TransactionSortKeys>;
 };
 
-/**
- * An auto-generated type for paginating through multiple StoreCreditAccounts.
- *
- */
+/** An auto-generated type for paginating through multiple StoreCreditAccounts. */
 export type StoreCreditAccountConnection = {
   __typename?: 'StoreCreditAccountConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<StoreCreditAccountEdge>;
-  /** A list of the nodes contained in StoreCreditAccountEdge. */
+  /** A list of nodes that are contained in StoreCreditAccountEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<StoreCreditAccount>;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
@@ -7003,15 +6334,9 @@ export type StoreCreditAccountConnection = {
 export type StoreCreditAccountCreditTransaction = Node &
   StoreCreditAccountTransaction & {
     __typename?: 'StoreCreditAccountCreditTransaction';
-    /**
-     * The store credit account that the transaction belongs to.
-     *
-     */
+    /** The store credit account that the transaction belongs to. */
     account: StoreCreditAccount;
-    /**
-     * The amount of the transaction.
-     *
-     */
+    /** The amount of the transaction. */
     amount: MoneyV2;
     /** The balance of the account after the transaction. */
     balanceAfterTransaction: MoneyV2;
@@ -7020,7 +6345,6 @@ export type StoreCreditAccountCreditTransaction = Node &
     /**
      * The time at which the transaction expires.
      * Debit transactions will always spend the soonest expiring credit first.
-     *
      */
     expiresAt?: Maybe<Scalars['DateTime']['output']>;
     /** A globally-unique ID. */
@@ -7029,7 +6353,6 @@ export type StoreCreditAccountCreditTransaction = Node &
      * The remaining amount of the credit.
      * The remaining amount will decrease when a debit spends this credit. It may also increase if that debit is subsequently reverted.
      * In the event that the credit expires, the remaining amount will represent the amount that remained as the expiry ocurred.
-     *
      */
     remainingAmount: MoneyV2;
   };
@@ -7040,20 +6363,13 @@ export type StoreCreditAccountCreditTransaction = Node &
  *
  * Store credit account debit transactions are reverted when an order is cancelled, refunded or in the event of a payment failure at checkout.
  * The amount added to the balance is equal to the amount reverted on the original credit.
- *
  */
 export type StoreCreditAccountDebitRevertTransaction = Node &
   StoreCreditAccountTransaction & {
     __typename?: 'StoreCreditAccountDebitRevertTransaction';
-    /**
-     * The store credit account that the transaction belongs to.
-     *
-     */
+    /** The store credit account that the transaction belongs to. */
     account: StoreCreditAccount;
-    /**
-     * The amount of the transaction.
-     *
-     */
+    /** The amount of the transaction. */
     amount: MoneyV2;
     /** The balance of the account after the transaction. */
     balanceAfterTransaction: MoneyV2;
@@ -7069,15 +6385,9 @@ export type StoreCreditAccountDebitRevertTransaction = Node &
 export type StoreCreditAccountDebitTransaction = Node &
   StoreCreditAccountTransaction & {
     __typename?: 'StoreCreditAccountDebitTransaction';
-    /**
-     * The store credit account that the transaction belongs to.
-     *
-     */
+    /** The store credit account that the transaction belongs to. */
     account: StoreCreditAccount;
-    /**
-     * The amount of the transaction.
-     *
-     */
+    /** The amount of the transaction. */
     amount: MoneyV2;
     /** The balance of the account after the transaction. */
     balanceAfterTransaction: MoneyV2;
@@ -7087,13 +6397,10 @@ export type StoreCreditAccountDebitTransaction = Node &
     id: Scalars['ID']['output'];
   };
 
-/**
- * An auto-generated type which holds one StoreCreditAccount and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one StoreCreditAccount and a cursor during pagination. */
 export type StoreCreditAccountEdge = {
   __typename?: 'StoreCreditAccountEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of StoreCreditAccountEdge. */
   node: StoreCreditAccount;
@@ -7104,20 +6411,13 @@ export type StoreCreditAccountEdge = {
  * Expiration transactions are created automatically when a [store credit account credit transaction](https://shopify.dev/api/admin-graphql/latest/objects/StoreCreditAccountCreditTransaction) expires.
  *
  * The amount subtracted from the balance is equal to the remaining amount of the credit transaction.
- *
  */
 export type StoreCreditAccountExpirationTransaction =
   StoreCreditAccountTransaction & {
     __typename?: 'StoreCreditAccountExpirationTransaction';
-    /**
-     * The store credit account that the transaction belongs to.
-     *
-     */
+    /** The store credit account that the transaction belongs to. */
     account: StoreCreditAccount;
-    /**
-     * The amount of the transaction.
-     *
-     */
+    /** The amount of the transaction. */
     amount: MoneyV2;
     /** The balance of the account after the transaction. */
     balanceAfterTransaction: MoneyV2;
@@ -7129,15 +6429,9 @@ export type StoreCreditAccountExpirationTransaction =
 
 /** Interface for a store credit account transaction. */
 export type StoreCreditAccountTransaction = {
-  /**
-   * The store credit account that the transaction belongs to.
-   *
-   */
+  /** The store credit account that the transaction belongs to. */
   account: StoreCreditAccount;
-  /**
-   * The amount of the transaction.
-   *
-   */
+  /** The amount of the transaction. */
   amount: MoneyV2;
   /** The balance of the account after the transaction. */
   balanceAfterTransaction: MoneyV2;
@@ -7145,32 +6439,26 @@ export type StoreCreditAccountTransaction = {
   createdAt: Scalars['DateTime']['output'];
 };
 
-/**
- * An auto-generated type for paginating through multiple StoreCreditAccountTransactions.
- *
- */
+/** An auto-generated type for paginating through multiple StoreCreditAccountTransactions. */
 export type StoreCreditAccountTransactionConnection = {
   __typename?: 'StoreCreditAccountTransactionConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<StoreCreditAccountTransactionEdge>;
-  /** A list of the nodes contained in StoreCreditAccountTransactionEdge. */
+  /** A list of nodes that are contained in StoreCreditAccountTransactionEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<
     | StoreCreditAccountCreditTransaction
     | StoreCreditAccountDebitRevertTransaction
     | StoreCreditAccountDebitTransaction
     | StoreCreditAccountExpirationTransaction
   >;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one StoreCreditAccountTransaction and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one StoreCreditAccountTransaction and a cursor during pagination. */
 export type StoreCreditAccountTransactionEdge = {
   __typename?: 'StoreCreditAccountTransactionEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of StoreCreditAccountTransactionEdge. */
   node:
@@ -7188,6 +6476,12 @@ export type StorefrontCustomerAccessTokenCreatePayload = {
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<UserErrorsStorefrontCustomerAccessTokenCreateUserErrors>;
 };
+
+/** Represents a subscription anchor. */
+export type SubscriptionAnchor =
+  | SubscriptionMonthDayAnchor
+  | SubscriptionWeekDayAnchor
+  | SubscriptionYearDayAnchor;
 
 /** The billing cycle of a subscription. */
 export type SubscriptionBillingCycle = {
@@ -7215,27 +6509,21 @@ export type SubscriptionBillingCycleBillingCycleStatus =
   /** The billing cycle has not been billed. */
   | 'UNBILLED';
 
-/**
- * An auto-generated type for paginating through multiple SubscriptionBillingCycles.
- *
- */
+/** An auto-generated type for paginating through multiple SubscriptionBillingCycles. */
 export type SubscriptionBillingCycleConnection = {
   __typename?: 'SubscriptionBillingCycleConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<SubscriptionBillingCycleEdge>;
-  /** A list of the nodes contained in SubscriptionBillingCycleEdge. */
+  /** A list of nodes that are contained in SubscriptionBillingCycleEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<SubscriptionBillingCycle>;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one SubscriptionBillingCycle and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one SubscriptionBillingCycle and a cursor during pagination. */
 export type SubscriptionBillingCycleEdge = {
   __typename?: 'SubscriptionBillingCycleEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of SubscriptionBillingCycleEdge. */
   node: SubscriptionBillingCycle;
@@ -7318,7 +6606,6 @@ export type SubscriptionBillingCyclesSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE';
 
@@ -7326,11 +6613,11 @@ export type SubscriptionBillingCyclesSortKeys =
 export type SubscriptionBillingPolicy = {
   __typename?: 'SubscriptionBillingPolicy';
   /** The anchor dates for calculating billing intervals. */
-  anchors: Array<SellingPlanAnchor>;
+  anchors: Array<SubscriptionAnchor>;
   /** The type of interval associated with this schedule (e.g. Monthly, Weekly, etc). */
-  interval: SellingPlanInterval;
+  interval: SubscriptionInterval;
   /** The number of intervals between invoices. */
-  intervalCount: Scalars['Int']['output'];
+  intervalCount?: Maybe<Count>;
   /** The maximum number of cycles after which the subscription ends. */
   maxCycles?: Maybe<Scalars['Int']['output']>;
   /** The minimum number of cycles required for the subscription. */
@@ -7359,12 +6646,16 @@ export type SubscriptionContract = Node &
     deliveryPrice: MoneyV2;
     /** A globally-unique ID. */
     id: Scalars['ID']['output'];
+    /** The last billing error type of the contract. */
+    lastBillingAttemptErrorType?: Maybe<SubscriptionContractLastBillingErrorType>;
     /** The current status of the last payment. */
     lastPaymentStatus?: Maybe<SubscriptionContractLastPaymentStatus>;
     /** The number of lines associated with the subscription contract. */
     lineCount: Scalars['Int']['output'];
     /** A list of subscription lines associated with the subscription contract. */
     lines: SubscriptionLineConnection;
+    /** The number of lines associated with the subscription contract. */
+    linesCount?: Maybe<Count>;
     /** The next billing date for the subscription contract. */
     nextBillingDate?: Maybe<Scalars['DateTime']['output']>;
     /** A note that will be applied to the generated orders. */
@@ -7440,6 +6731,8 @@ export type SubscriptionContractBase = {
   lineCount: Scalars['Int']['output'];
   /** A list of subscription lines associated with the subscription contract. */
   lines: SubscriptionLineConnection;
+  /** The number of lines associated with the subscription contract. */
+  linesCount?: Maybe<Count>;
   /** A note that will be applied to the generated orders. */
   note?: Maybe<Scalars['String']['output']>;
   /** A list of the subscription contract's orders. */
@@ -7486,27 +6779,21 @@ export type SubscriptionContractChangePaymentInstrumentPayload = {
   userErrors: Array<SubscriptionContractUserError>;
 };
 
-/**
- * An auto-generated type for paginating through multiple SubscriptionContracts.
- *
- */
+/** An auto-generated type for paginating through multiple SubscriptionContracts. */
 export type SubscriptionContractConnection = {
   __typename?: 'SubscriptionContractConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<SubscriptionContractEdge>;
-  /** A list of the nodes contained in SubscriptionContractEdge. */
+  /** A list of nodes that are contained in SubscriptionContractEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<SubscriptionContract>;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one SubscriptionContract and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one SubscriptionContract and a cursor during pagination. */
 export type SubscriptionContractEdge = {
   __typename?: 'SubscriptionContractEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of SubscriptionContractEdge. */
   node: SubscriptionContract;
@@ -7520,6 +6807,17 @@ export type SubscriptionContractFetchDeliveryOptionsPayload = {
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<SubscriptionContractUserError>;
 };
+
+/** The possible values of the last billing error on a subscription contract. */
+export type SubscriptionContractLastBillingErrorType =
+  /** Subscription billing attempt error due to customer error. */
+  | 'CUSTOMER_ERROR'
+  /** Subscription billing attempt error due to inventory error. */
+  | 'INVENTORY_ERROR'
+  /** All other billing attempt errors. */
+  | 'OTHER'
+  /** Subscription billing attempt error due to payment error. */
+  | 'PAYMENT_ERROR';
 
 /** The status of the last payment on a subscription contract. */
 export type SubscriptionContractLastPaymentStatus =
@@ -7618,7 +6916,6 @@ export type SubscriptionContractsSortKeys =
   /**
    * Sort by relevance to the search terms when the `query` parameter is specified on the connection.
    * Don't use this sort key when no search query is specified.
-   *
    */
   | 'RELEVANCE'
   /** Sort by the `updated_at` value. */
@@ -7634,7 +6931,6 @@ export type SubscriptionDeliveryMethod =
  * Specifies delivery method fields for a subscription contract.
  * This is an input union: one, and only one, field can be provided.
  * The field provided will determine which delivery method is to be used.
- *
  */
 export type SubscriptionDeliveryMethodInput = {
   /** The input fields for the local delivery method. */
@@ -7657,13 +6953,14 @@ export type SubscriptionDeliveryMethodLocalDelivery = {
 /** The input fields for a local delivery method. */
 export type SubscriptionDeliveryMethodLocalDeliveryInput = {
   /** The address to deliver to. */
-  address: CustomerMailingAddressInput;
+  address?: InputMaybe<CustomerMailingAddressInput>;
+  /** The address to deliver to. */
+  deliveryAddress?: InputMaybe<CustomerAddressInput>;
   /** The delivery instructions that the customer can provide to the merchant. */
   instructions?: InputMaybe<Scalars['String']['input']>;
   /**
    * The phone number that the customer must provide to the merchant.
    * Formatted using E.164 standard. For example, `+16135551111`.
-   *
    */
   phone: Scalars['String']['input'];
 };
@@ -7678,7 +6975,6 @@ export type SubscriptionDeliveryMethodLocalDeliveryOption = {
   /**
    * The phone number of the customer provided to the merchant.
    * Formatted using E.164 standard. For example, `+16135551111`.
-   *
    */
   phone: Scalars['String']['output'];
   /** The displayed title of the delivery option. */
@@ -7725,7 +7021,9 @@ export type SubscriptionDeliveryMethodShipping = {
 /** The input fields for a shipping delivery method. */
 export type SubscriptionDeliveryMethodShippingInput = {
   /** The address to ship to. */
-  address: CustomerMailingAddressInput;
+  address?: InputMaybe<CustomerMailingAddressInput>;
+  /** The address to ship to. */
+  shippingAddress?: InputMaybe<CustomerAddressInput>;
 };
 
 /** The selected shipping option on a subscription contract. */
@@ -7766,16 +7064,27 @@ export type SubscriptionDeliveryOptionsResultSuccess = {
   token: Scalars['String']['output'];
 };
 
-/** Represents a Subscription Delivery Policy. */
+/** The delivery policy of a subscription. */
 export type SubscriptionDeliveryPolicy = {
   __typename?: 'SubscriptionDeliveryPolicy';
   /** The anchor dates for calculating delivery intervals. */
-  anchors: Array<SellingPlanAnchor>;
+  anchors: Array<SubscriptionAnchor>;
   /** The type of interval associated with this schedule (e.g. Monthly, Weekly, etc). */
-  interval: SellingPlanInterval;
+  interval: SubscriptionInterval;
   /** The number of intervals between deliveries. */
-  intervalCount: Scalars['Int']['output'];
+  intervalCount?: Maybe<Count>;
 };
+
+/** Defines valid subscription intervals. */
+export type SubscriptionInterval =
+  /** Represents a day interval. */
+  | 'DAY'
+  /** Represents a month interval. */
+  | 'MONTH'
+  /** Represents a week interval. */
+  | 'WEEK'
+  /** Represents a year interval. */
+  | 'YEAR';
 
 /** A line item in a subscription. */
 export type SubscriptionLine = {
@@ -7795,7 +7104,6 @@ export type SubscriptionLine = {
   /**
    * The URL of the product in the online store.
    * A value of `null` indicates that the product isn't published in the Online Store sales channel.
-   *
    */
   onlineStoreUrl?: Maybe<Scalars['URL']['output']>;
   /** The quantity of the unit selected for the subscription line. */
@@ -7814,27 +7122,21 @@ export type SubscriptionLine = {
   variantTitle?: Maybe<Scalars['String']['output']>;
 };
 
-/**
- * An auto-generated type for paginating through multiple SubscriptionLines.
- *
- */
+/** An auto-generated type for paginating through multiple SubscriptionLines. */
 export type SubscriptionLineConnection = {
   __typename?: 'SubscriptionLineConnection';
-  /** A list of edges. */
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
   edges: Array<SubscriptionLineEdge>;
-  /** A list of the nodes contained in SubscriptionLineEdge. */
+  /** A list of nodes that are contained in SubscriptionLineEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
   nodes: Array<SubscriptionLine>;
-  /** Information to aid in pagination. */
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
   pageInfo: PageInfo;
 };
 
-/**
- * An auto-generated type which holds one SubscriptionLine and a cursor during pagination.
- *
- */
+/** An auto-generated type which holds one SubscriptionLine and a cursor during pagination. */
 export type SubscriptionLineEdge = {
   __typename?: 'SubscriptionLineEdge';
-  /** A cursor for use in pagination. */
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
   cursor: Scalars['String']['output'];
   /** The item at the end of SubscriptionLineEdge. */
   node: SubscriptionLine;
@@ -7873,7 +7175,6 @@ export type SubscriptionMailingAddress = {
   /**
    * The two-letter code for the country of the address.
    * For example, US.
-   *
    */
   countryCode?: Maybe<CountryCode>;
   /** The first name of the customer. */
@@ -7889,11 +7190,17 @@ export type SubscriptionMailingAddress = {
   /**
    * The alphanumeric code for the region.
    * For example, ON.
-   *
    */
   provinceCode?: Maybe<Scalars['String']['output']>;
   /** The zip or postal code of the address. */
   zip?: Maybe<Scalars['String']['output']>;
+};
+
+/** Represents an anchor specifying a day of the month. */
+export type SubscriptionMonthDayAnchor = {
+  __typename?: 'SubscriptionMonthDayAnchor';
+  /** Day of the month (1-31). */
+  dayOfMonth: Scalars['Int']['output'];
 };
 
 /** A pickup option to deliver a subscription contract. */
@@ -7909,10 +7216,7 @@ export type SubscriptionPickupOption = {
   phoneRequired: Scalars['Boolean']['output'];
   /** The pickup address where the customer will pickup the merchandise. */
   pickupAddress: PickupAddress;
-  /**
-   * The estimated amount of time it takes for the pickup to be ready. For example, "Usually ready in 24 hours".
-   *
-   */
+  /** The estimated amount of time it takes for the pickup to be ready. For example, "Usually ready in 24 hours". */
   pickupTime: Scalars['String']['output'];
   /** The presentment title of the pickup option. */
   presentmentTitle?: Maybe<Scalars['String']['output']>;
@@ -7928,7 +7232,6 @@ export type SubscriptionPriceBreakdown = {
   /**
    * The sum of the prices for all line items after discounts.
    * If taxesIncluded is true, then the subtotal also includes tax.
-   *
    */
   subtotalPrice: MoneyV2;
   /** Whether taxes are included in the subtotal price. */
@@ -7936,7 +7239,6 @@ export type SubscriptionPriceBreakdown = {
   /**
    * The total amount discounted.
    * This includes both order and line level discounts.
-   *
    */
   totalDiscounts: MoneyV2;
   /** The total price. This includes taxes and discounts. */
@@ -7962,6 +7264,22 @@ export type SubscriptionShippingOption = {
   price: MoneyV2;
   /** The title of the shipping option. */
   title: Scalars['String']['output'];
+};
+
+/** Represents an anchor specifying a day of the week. */
+export type SubscriptionWeekDayAnchor = {
+  __typename?: 'SubscriptionWeekDayAnchor';
+  /** Day of the week (1-7, where 1 is Monday). */
+  dayOfWeek: Scalars['Int']['output'];
+};
+
+/** Represents an anchor specifying a specific day and month of the year. */
+export type SubscriptionYearDayAnchor = {
+  __typename?: 'SubscriptionYearDayAnchor';
+  /** Day of the month (1-31). Specifies the exact day within the given month. */
+  dayOfMonth: Scalars['Int']['output'];
+  /** Month of the year (1-12). Specifies the month in which the day occurs. */
+  month: Scalars['Int']['output'];
 };
 
 /** The available tax exemptions for a customer. */
@@ -8131,6 +7449,28 @@ export type TaxExemptionDetails = {
   /** The unique type of the exemption. */
   type: TaxExemption;
 };
+
+/** A tax invoice on an order. */
+export type TaxInvoice = {
+  __typename?: 'TaxInvoice';
+  /** The time zone of the destination address of the tax invoice. */
+  buyerTimeZone: Scalars['String']['output'];
+  /** The datetime of when the tax invoice was created. */
+  createdAt: Scalars['DateTime']['output'];
+  /** The invoice number of the tax invoice. */
+  invoiceNumber: Scalars['String']['output'];
+  /** The current processing status of the tax invoice. */
+  status: TaxInvoiceStatus;
+  /** The url to download the tax invoice. */
+  url: Scalars['URL']['output'];
+};
+
+/** The current processing status of the tax invoices. */
+export type TaxInvoiceStatus =
+  /** The tax invoice has been created. */
+  | 'PROCESSED'
+  /** The tax invoice is being created. */
+  | 'PROCESSING';
 
 /** The details about a single tax applied to the associated line item. */
 export type TaxLine = Node & {
@@ -8644,10 +7984,7 @@ export type TaxRegionCode =
   /** Zimbabwe. */
   | 'ZW';
 
-/**
- * The events that chronicle resource activities available to the customer.
- *
- */
+/** The events that chronicle resource activities available to the customer. */
 export type TimelineEvent = Node & {
   __typename?: 'TimelineEvent';
   /** The date and time when the event occurred. */
@@ -8718,7 +8055,6 @@ export type TransactionTypeDetails = {
 /**
  * The custom data attached to a resource. Metafields can be sorted into namespaces and are
  * comprised of keys, values, and value types.
- *
  */
 export type UiExtensionMetafield = Node & {
   __typename?: 'UiExtensionMetafield';
@@ -8735,7 +8071,6 @@ export type UiExtensionMetafield = Node & {
   /**
    * The type name of the metafield.
    * See the list of [supported types](https://shopify.dev/apps/metafields/definitions/types).
-   *
    */
   type: Scalars['String']['output'];
   /** The value of a metafield. */
@@ -8755,28 +8090,16 @@ export type UiExtensionMetafieldFilterInput = {
   namespace: Scalars['String']['input'];
 };
 
-/**
- * A session token for a UI extension.
- *
- */
+/** A session token for a UI extension. */
 export type UiExtensionSessionToken = {
   __typename?: 'UiExtensionSessionToken';
-  /**
-   * The second count until the session token expires.
-   *
-   */
+  /** The second count until the session token expires. */
   expiresIn: Scalars['Int']['output'];
-  /**
-   * The value of the UI extension session token.
-   *
-   */
+  /** The value of the UI extension session token. */
   value: Scalars['String']['output'];
 };
 
-/**
- * The information about the container for unfulfilled digital line items (excluding gift cards).
- *
- */
+/** The information about the container for unfulfilled digital line items (excluding gift cards). */
 export type UnfulfilledDigitalLineItemContainer =
   UnfulfilledLineItemContainerCommonFields & {
     __typename?: 'UnfulfilledDigitalLineItemContainer';
@@ -8784,10 +8107,7 @@ export type UnfulfilledDigitalLineItemContainer =
     lineItems: LineItemContainerLineItemConnection;
   };
 
-/**
- * The information about the container for unfulfilled digital line items (excluding gift cards).
- *
- */
+/** The information about the container for unfulfilled digital line items (excluding gift cards). */
 export type UnfulfilledDigitalLineItemContainerLineItemsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -8796,10 +8116,7 @@ export type UnfulfilledDigitalLineItemContainerLineItemsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/**
- * The information about the container for unfulfilled gift card type line items.
- *
- */
+/** The information about the container for unfulfilled gift card type line items. */
 export type UnfulfilledGiftCardLineItemContainer =
   UnfulfilledLineItemContainerCommonFields & {
     __typename?: 'UnfulfilledGiftCardLineItemContainer';
@@ -8807,10 +8124,7 @@ export type UnfulfilledGiftCardLineItemContainer =
     lineItems: LineItemContainerLineItemConnection;
   };
 
-/**
- * The information about the container for unfulfilled gift card type line items.
- *
- */
+/** The information about the container for unfulfilled gift card type line items. */
 export type UnfulfilledGiftCardLineItemContainerLineItemsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -8819,10 +8133,7 @@ export type UnfulfilledGiftCardLineItemContainerLineItemsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/**
- * The information about the container for unfulfilled line items.
- *
- */
+/** The information about the container for unfulfilled line items. */
 export type UnfulfilledLineItemContainer =
   UnfulfilledLineItemContainerCommonFields & {
     __typename?: 'UnfulfilledLineItemContainer';
@@ -8834,10 +8145,7 @@ export type UnfulfilledLineItemContainer =
     state: Scalars['String']['output'];
   };
 
-/**
- * The information about the container for unfulfilled line items.
- *
- */
+/** The information about the container for unfulfilled line items. */
 export type UnfulfilledLineItemContainerLineItemsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -8861,10 +8169,7 @@ export type UnfulfilledLineItemContainerCommonFieldsLineItemsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/**
- * The information about the container for unfulfilled physical type line items.
- *
- */
+/** The information about the container for unfulfilled physical type line items. */
 export type UnfulfilledPhysicalLineItemContainer =
   UnfulfilledLineItemContainerCommonFields & {
     __typename?: 'UnfulfilledPhysicalLineItemContainer';
@@ -8872,10 +8177,7 @@ export type UnfulfilledPhysicalLineItemContainer =
     lineItems: LineItemContainerLineItemConnection;
   };
 
-/**
- * The information about the container for unfulfilled physical type line items.
- *
- */
+/** The information about the container for unfulfilled physical type line items. */
 export type UnfulfilledPhysicalLineItemContainerLineItemsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -8884,39 +8186,21 @@ export type UnfulfilledPhysicalLineItemContainerLineItemsArgs = {
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-/**
- * The unit price of the line component. For example, "$9.99 / 100ml".
- *
- */
+/** The unit price of the line component. For example, "$9.99 / 100ml". */
 export type UnitPrice = {
   __typename?: 'UnitPrice';
-  /**
-   * The unit measurement. For example, "$9.99 / 100ml".
-   *
-   */
+  /** The unit measurement. For example, "$9.99 / 100ml". */
   measurement: UnitPriceMeasurement;
-  /**
-   * The unit price of the variant. For example, "$1 per xy" where price is "$1".
-   *
-   */
+  /** The unit price of the variant. For example, "$1 per xy" where price is "$1". */
   price: MoneyV2;
 };
 
-/**
- * The unit price measurement of the line component. For example, "$9.99 / 100ml".
- *
- */
+/** The unit price measurement of the line component. For example, "$9.99 / 100ml". */
 export type UnitPriceMeasurement = {
   __typename?: 'UnitPriceMeasurement';
-  /**
-   * The reference unit for the unit price measurement. For example, "$9.99 / 100ml" where the reference unit is "ml".
-   *
-   */
+  /** The reference unit for the unit price measurement. For example, "$9.99 / 100ml" where the reference unit is "ml". */
   referenceUnit: UnitPriceMeasurementUnit;
-  /**
-   * The reference value for the unit price measurement. For example, "$9.99 / 100ml" where the reference value is "100".
-   *
-   */
+  /** The reference value for the unit price measurement. For example, "$9.99 / 100ml" where the reference value is "100". */
   referenceValue: Scalars['Int']['output'];
 };
 
