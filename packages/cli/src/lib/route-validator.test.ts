@@ -51,7 +51,7 @@ describe('missing-routes', () => {
   });
 });
 
-describe.only('reserved-routes', () => {
+describe('reserved-routes', () => {
   it('returns an empty array when no routes are present', async () => {
     expect(findReservedRoutes({routes: {}})).toHaveLength(0);
   });
