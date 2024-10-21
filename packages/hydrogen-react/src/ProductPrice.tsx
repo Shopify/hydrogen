@@ -49,30 +49,19 @@ export function ProductPrice<
       ) ?? null
     : null;
 
-  /**
-   * @deprecated (Next major release) Stop using compareAtPriceV2 and priceV2
-   */
   const variantPriceProperty =
     valueType === 'max' ? 'maxVariantPrice' : 'minVariantPrice';
 
   if (priceType === 'compareAt') {
     if (variantId && variant) {
-      if (variant.compareAtPriceV2) {
-        console.error(
-          '<ProductPrice> `compareAtPriceV2` is deprecated. Use `compareAtPrice` instead.',
-        );
-      }
-
-      price = variant.compareAtPrice ?? variant.compareAtPriceV2;
+      price = variant.compareAtPrice;
     } else {
       price = product?.compareAtPriceRange?.[variantPriceProperty];
     }
 
     let priceAsNumber: number;
     if (variantId && variant) {
-      priceAsNumber = parseFloat(
-        variant.price?.amount ?? variant.priceV2?.amount ?? '0',
-      );
+      priceAsNumber = parseFloat(variant.price?.amount ?? '0');
     } else {
       priceAsNumber = parseFloat(
         product?.priceRange?.[variantPriceProperty]?.amount ?? '0',
@@ -86,13 +75,7 @@ export function ProductPrice<
     }
   } else {
     if (variantId && variant) {
-      if (variant.priceV2) {
-        console.error(
-          '<ProductPrice> `priceV2` is deprecated. Use `price` instead.',
-        );
-      }
-
-      price = variant.price ?? variant.priceV2;
+      price = variant.price;
       if (valueType === 'unit') {
         price = variant.unitPrice;
         measurement = variant.unitPriceMeasurement;

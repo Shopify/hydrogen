@@ -42,11 +42,11 @@ const Template: Story<ProductPriceProps> = (props) => {
             nodes: [
               getVariant({
                 id: '123',
-                priceV2: {
+                price: {
                   currencyCode: 'USD',
                   amount: '300',
                 },
-                compareAtPriceV2: {
+                compareAtPrice: {
                   currencyCode: 'USD',
                   amount: '310',
                 },

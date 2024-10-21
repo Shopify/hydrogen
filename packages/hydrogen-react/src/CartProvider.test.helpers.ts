@@ -16,7 +16,7 @@ export const CART_LINE: PartialDeep<CartLine, {recurseIntoArrays: true}> = {
   merchandise: {
     id: 'def',
     availableForSale: true,
-    priceV2: {
+    price: {
       amount: '123',
       currencyCode: 'USD',
     },
