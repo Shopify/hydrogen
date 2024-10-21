@@ -23,7 +23,7 @@ jobs:
         id: flags
         run: |
           # IMPORTANT: Update this latestBranch whenever we move to a new major version:
-          echo "latestBranch=2024-07" >> $GITHUB_ENV
+          echo "latestBranch=2024-10" >> $GITHUB_ENV
           echo "latest=${{ github.ref_name == 'main' }}" >> $GITHUB_ENV
 
       - name: Checkout the code
