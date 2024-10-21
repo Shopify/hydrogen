@@ -1,5 +1,16 @@
 # @shopify/hydrogen
 
+## 2024.7.9
+
+### Patch Changes
+
+- Fix provided canTrack function being override by ShopifyAnalytics ([#2596](https://github.com/Shopify/hydrogen/pull/2596)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Fix analytics provider breaking after hitting a 404 page ([#2590](https://github.com/Shopify/hydrogen/pull/2590)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Updated dependencies [[`229d4aa0`](https://github.com/Shopify/hydrogen/commit/229d4aa039bf44ced34122c273254d8961a3ed0c)]:
+  - @shopify/hydrogen-react@2024.7.6
+
 ## 2024.7.8
 
 ### Patch Changes
