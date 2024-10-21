@@ -320,7 +320,9 @@ function buildMiniflareOptions(
           isNormalWorker && process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0';
 
         return {
-          ...(isNormalWorker && OXYGEN_COMPAT_PARAMS),
+          ...(isNormalWorker &&
+            !worker.compatibilityDate &&
+            OXYGEN_COMPAT_PARAMS),
           ...(useUnsafeOutboundService && UNSAFE_OUTBOUND_SERVICE),
           ...worker,
         };
