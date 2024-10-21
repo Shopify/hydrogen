@@ -57,34 +57,34 @@ describe('reserved-routes', () => {
   });
 
   it("doesn't find routes that don't match the reserved routes", async () => {
-    expect(
-      findReservedRoutes(createRoute('/collections/:handle')),
-    ).toHaveLength(0);
+    expect(findReservedRoutes(createRoute('collections/:handle'))).toHaveLength(
+      0,
+    );
   });
 
   it('returns an array of reserved routes', async () => {
     expect(
-      findReservedRoutes(createRoute('/api/2024-10/graphql.json')),
+      findReservedRoutes(createRoute('api/2024-10/graphql.json')),
     ).toHaveLength(1);
 
     expect(
-      findReservedRoutes(createRoute('/api/:param/graphql.json')),
+      findReservedRoutes(createRoute('api/:param/graphql.json')),
     ).toHaveLength(1);
   });
 
   it('finds reserved routes /cdn/', async () => {
-    expect(findReservedRoutes(createRoute('/cdn/'))).toHaveLength(1);
+    expect(findReservedRoutes(createRoute('cdn/'))).toHaveLength(1);
 
     expect(
-      findReservedRoutes(createRoute('/cdn/something/for/you.jpg')),
+      findReservedRoutes(createRoute('cdn/something/for/you.jpg')),
     ).toHaveLength(1);
   });
 
   it('finds reserved routes /_t/', async () => {
-    expect(findReservedRoutes(createRoute('/_t/'))).toHaveLength(1);
+    expect(findReservedRoutes(createRoute('_t/'))).toHaveLength(1);
 
     expect(
-      findReservedRoutes(createRoute('/_t/something/for/you.jpg')),
+      findReservedRoutes(createRoute('_t/something/for/you.jpg')),
     ).toHaveLength(1);
   });
 });
