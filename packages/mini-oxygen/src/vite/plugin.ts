@@ -107,6 +107,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
                   apiOptions.inspectorPort ?? pluginOptions.inspectorPort,
                 requestHook: apiOptions.requestHook,
                 entryPointErrorHandler: apiOptions.entryPointErrorHandler,
+                compatibilityDate: apiOptions.compatibilityDate,
                 logRequestLine:
                   // Give priority to the plugin option over the CLI option here,
                   // since the CLI one is just a default, not a user-provided flag.
@@ -128,6 +129,29 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
             // Accept HMR in server entry module to avoid full-page refresh in the browser.
             // Note: appending code at the end should not break the source map.
             code: code + '\nif (import.meta.hot) import.meta.hot.accept();',
+          };
+        }
+      },
+      generateBundle(_, bundle) {
+        if (apiOptions.compatibilityDate) {
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(apiOptions.compatibilityDate)) {
+            throw new Error(
+              `Invalid compatibility date "${apiOptions.compatibilityDate}"`,
+            );
+          }
+
+          const oxygenJsonFile = 'oxygen.json';
+          const oxygenJsonContent = {
+            version: 1,
+            compatibility_date: apiOptions.compatibilityDate,
+          };
+
+          bundle[oxygenJsonFile] = {
+            type: 'asset',
+            fileName: oxygenJsonFile,
+            name: oxygenJsonFile,
+            needsCodeReference: false,
+            source: JSON.stringify(oxygenJsonContent, null, 2),
           };
         }
       },

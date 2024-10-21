@@ -10,6 +10,7 @@ import {getVirtualRoutes} from './get-virtual-routes.js';
 
 // Do not import JS from here, only types
 import type {OxygenPlugin} from '~/mini-oxygen/vite/plugin.js';
+import {getCompatDate} from './compat-date.js';
 
 export type {HydrogenPluginOptions};
 
@@ -99,6 +100,7 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
         middlewareOptions.isOxygen = !!oxygenPlugin;
 
         oxygenPlugin?.api?.registerPluginOptions?.({
+          compatibilityDate: getCompatDate(),
           requestHook: ({request, response, meta}) => {
             // Emit events for requests
             emitRequestEvent(

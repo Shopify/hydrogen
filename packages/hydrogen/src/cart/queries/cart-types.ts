@@ -7,6 +7,7 @@ import type {
   CartUserError,
   MetafieldsSetUserError,
   MetafieldDeleteUserError,
+  CartWarning,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import type {StorefrontApiErrors, Storefront} from '../../storefront';
 import {CustomerAccount} from '../../customer/types';
@@ -60,6 +61,7 @@ export type CartQueryData = {
     | CartUserError[]
     | MetafieldsSetUserError[]
     | MetafieldDeleteUserError[];
+  warnings?: CartWarning[];
 };
 
 export type CartQueryDataReturn = CartQueryData & {

@@ -1,6 +1,6 @@
 /**
  * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
- * Based on Storefront API 2024-07
+ * Based on Storefront API 2024-10
  * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run `npm run graphql-types`.
  * Except custom Scalars, which are defined in the `codegen.ts` file
  */
@@ -159,7 +159,7 @@ export type Article = HasMetafields &
     tags: Array<Scalars['String']['output']>;
     /** The article’s name. */
     title: Scalars['String']['output'];
-    /** A URL parameters to be added to a page URL when it is linked from a GraphQL result. This allows for tracking the origin of the traffic. */
+    /** URL parameters to be added to a page URL to track the origin of on-site search traffic for [analytics reporting](https://help.shopify.com/manual/reports-and-analytics/shopify-reports/report-types/default-reports/behaviour-reports). Returns a result when accessed through the [search](https://shopify.dev/docs/api/storefront/current/queries/search) or [predictiveSearch](https://shopify.dev/docs/api/storefront/current/queries/predictiveSearch) queries, otherwise returns null. */
     trackingParameters?: Maybe<Scalars['String']['output']>;
   };
 
@@ -255,12 +255,18 @@ export type ArticleSortKeys =
   /** Sort by the `updated_at` value. */
   | 'UPDATED_AT';
 
-/** Represents a generic custom attribute. */
+/** Represents a generic custom attribute, such as whether an order is a customer's first. */
 export type Attribute = {
   __typename?: 'Attribute';
-  /** Key or name of the attribute. */
+  /**
+   * The key or name of the attribute. For example, `"customersFirstOrder"`.
+   *
+   */
   key: Scalars['String']['output'];
-  /** Value of the attribute. */
+  /**
+   * The value of the attribute. For example, `"true"`.
+   *
+   */
   value?: Maybe<Scalars['String']['output']>;
 };
 
@@ -649,6 +655,8 @@ export type CartAttributesUpdatePayload = {
   cart?: Maybe<Cart>;
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<CartUserError>;
+  /** A list of warnings that occurred during the mutation. */
+  warnings: Array<CartWarning>;
 };
 
 /** The discounts automatically applied to the cart line based on prerequisites that have been met. */
@@ -669,6 +677,8 @@ export type CartBillingAddressUpdatePayload = {
   cart?: Maybe<Cart>;
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<CartUserError>;
+  /** A list of warnings that occurred during the mutation. */
+  warnings: Array<CartWarning>;
 };
 
 /** Represents information about the buyer that is interacting with the cart. */
@@ -740,6 +750,8 @@ export type CartBuyerIdentityUpdatePayload = {
   cart?: Maybe<Cart>;
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<CartUserError>;
+  /** A list of warnings that occurred during the mutation. */
+  warnings: Array<CartWarning>;
 };
 
 /**
@@ -850,6 +862,8 @@ export type CartCreatePayload = {
   cart?: Maybe<Cart>;
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<CartUserError>;
+  /** A list of warnings that occurred during the mutation. */
+  warnings: Array<CartWarning>;
 };
 
 /** The discounts automatically applied to the cart line based on prerequisites that have been met. */
@@ -998,12 +1012,8 @@ export type CartDeliveryPreference = {
 
 /** Delivery preferences can be used to prefill the delivery section at checkout. */
 export type CartDeliveryPreferenceInput = {
-  /**
-   * The coordinates of a delivery location in order of preference.
-   *
-   * The input must not contain more than `250` values.
-   */
-  coordinates?: InputMaybe<Array<CartDeliveryCoordinatesPreferenceInput>>;
+  /** The coordinates of a delivery location in order of preference. */
+  coordinates?: InputMaybe<CartDeliveryCoordinatesPreferenceInput>;
   /**
    * The preferred delivery methods such as shipping, local pickup or through pickup points.
    *
@@ -1056,6 +1066,8 @@ export type CartDiscountCodesUpdatePayload = {
   cart?: Maybe<Cart>;
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<CartUserError>;
+  /** A list of warnings that occurred during the mutation. */
+  warnings: Array<CartWarning>;
 };
 
 /** Possible error codes that can be returned by `CartUserError`. */
@@ -1150,6 +1162,8 @@ export type CartGiftCardCodesUpdatePayload = {
   cart?: Maybe<Cart>;
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<CartUserError>;
+  /** A list of warnings that occurred during the mutation. */
+  warnings: Array<CartWarning>;
 };
 
 /** The input fields to create a cart. */
@@ -1321,6 +1335,8 @@ export type CartLinesAddPayload = {
   cart?: Maybe<Cart>;
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<CartUserError>;
+  /** A list of warnings that occurred during the mutation. */
+  warnings: Array<CartWarning>;
 };
 
 /** Return type for `cartLinesRemove` mutation. */
@@ -1330,6 +1346,8 @@ export type CartLinesRemovePayload = {
   cart?: Maybe<Cart>;
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<CartUserError>;
+  /** A list of warnings that occurred during the mutation. */
+  warnings: Array<CartWarning>;
 };
 
 /** Return type for `cartLinesUpdate` mutation. */
@@ -1339,6 +1357,8 @@ export type CartLinesUpdatePayload = {
   cart?: Maybe<Cart>;
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<CartUserError>;
+  /** A list of warnings that occurred during the mutation. */
+  warnings: Array<CartWarning>;
 };
 
 /** The input fields to delete a cart metafield. */
@@ -1397,6 +1417,8 @@ export type CartNoteUpdatePayload = {
   cart?: Maybe<Cart>;
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<CartUserError>;
+  /** A list of warnings that occurred during the mutation. */
+  warnings: Array<CartWarning>;
 };
 
 /**
@@ -1437,6 +1459,8 @@ export type CartPaymentUpdatePayload = {
   cart?: Maybe<Cart>;
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<CartUserError>;
+  /** A list of warnings that occurred during the mutation. */
+  warnings: Array<CartWarning>;
 };
 
 /**
@@ -1458,12 +1482,8 @@ export type CartPreferences = {
 
 /** The input fields represent preferences for the buyer that is interacting with the cart. */
 export type CartPreferencesInput = {
-  /**
-   * Delivery preferences can be used to prefill the delivery section in at checkout.
-   *
-   * The input must not contain more than `250` values.
-   */
-  delivery?: InputMaybe<Array<CartDeliveryPreferenceInput>>;
+  /** Delivery preferences can be used to prefill the delivery section in at checkout. */
+  delivery?: InputMaybe<CartDeliveryPreferenceInput>;
   /**
    * Wallet preferences are used to populate relevant payment fields in the checkout flow.
    * Accepted value: `["shop_pay"]`.
@@ -1491,6 +1511,8 @@ export type CartSelectedDeliveryOptionsUpdatePayload = {
   cart?: Maybe<Cart>;
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<CartUserError>;
+  /** A list of warnings that occurred during the mutation. */
+  warnings: Array<CartWarning>;
 };
 
 /** Return type for `cartSubmitForCompletion` mutation. */
@@ -1531,6 +1553,26 @@ export type CartWalletPaymentMethodInput = {
   shopPayWalletContent?: InputMaybe<ShopPayWalletContentInput>;
 };
 
+/** A warning that occurred during a cart mutation. */
+export type CartWarning = {
+  __typename?: 'CartWarning';
+  /** The code of the warning. */
+  code: CartWarningCode;
+  /** The message text of the warning. */
+  message: Scalars['String']['output'];
+  /** The target of the warning. */
+  target: Scalars['ID']['output'];
+};
+
+/** The code for the cart warning. */
+export type CartWarningCode =
+  /** The merchandise does not have enough stock. */
+  | 'MERCHANDISE_NOT_ENOUGH_STOCK'
+  /** The merchandise is out of stock. */
+  | 'MERCHANDISE_OUT_OF_STOCK'
+  /** Gift cards are not available as a payment method. */
+  | 'PAYMENTS_GIFT_CARDS_UNAVAILABLE';
+
 /**
  * A collection represents a grouping of products that a shop owner can create to
  * organize them or make their shops easier to browse.
@@ -1567,7 +1609,7 @@ export type Collection = HasMetafields &
     seo: Seo;
     /** The collection’s name. Limit of 255 characters. */
     title: Scalars['String']['output'];
-    /** A URL parameters to be added to a page URL when it is linked from a GraphQL result. This allows for tracking the origin of the traffic. */
+    /** URL parameters to be added to a page URL to track the origin of on-site search traffic for [analytics reporting](https://help.shopify.com/manual/reports-and-analytics/shopify-reports/report-types/default-reports/behaviour-reports). Returns a result when accessed through the [search](https://shopify.dev/docs/api/storefront/current/queries/search) or [predictiveSearch](https://shopify.dev/docs/api/storefront/current/queries/predictiveSearch) queries, otherwise returns null. */
     trackingParameters?: Maybe<Scalars['String']['output']>;
     /** The date and time when the collection was last modified. */
     updatedAt: Scalars['DateTime']['output'];
@@ -1860,6 +1902,22 @@ export type ComponentizableCartLine = BaseCartLine &
 export type ComponentizableCartLineAttributeArgs = {
   key: Scalars['String']['input'];
 };
+
+/** Details for count of elements. */
+export type Count = {
+  __typename?: 'Count';
+  /** Count of elements. */
+  count: Scalars['Int']['output'];
+  /** Precision of count, how exact is the value. */
+  precision: CountPrecision;
+};
+
+/** The precision of the value returned by a count field. */
+export type CountPrecision =
+  /** The count is at least the value. A limit was reached. */
+  | 'AT_LEAST'
+  /** The count is exactly the value. */
+  | 'EXACT';
 
 /** A country. */
 export type Country = {
@@ -3716,7 +3774,7 @@ export type Language = {
   name: Scalars['String']['output'];
 };
 
-/** ISO 639-1 language codes supported by Shopify. */
+/** Language codes supported by Shopify. */
 export type LanguageCode =
   /** Afrikaans. */
   | 'AF'
@@ -4471,6 +4529,8 @@ export type MenuItemType =
   | 'COLLECTION'
   /** A collection link. */
   | 'COLLECTIONS'
+  /** A customer account page link. */
+  | 'CUSTOMER_ACCOUNT_PAGE'
   /** A frontpage link. */
   | 'FRONTPAGE'
   /** An http link. */
@@ -5164,7 +5224,7 @@ export type Order = HasMetafields &
     currentTotalShippingPrice: MoneyV2;
     /** The total of all taxes applied to the order, excluding taxes for returned line items. */
     currentTotalTax: MoneyV2;
-    /** A list of the custom attributes added to the order. */
+    /** A list of the custom attributes added to the order. For example, whether an order is a customer's first. */
     customAttributes: Array<Attribute>;
     /** The locale code in which this specific order happened. */
     customerLocale?: Maybe<Scalars['String']['output']>;
@@ -5460,7 +5520,7 @@ export type Page = HasMetafields &
     seo?: Maybe<Seo>;
     /** The title of the page. */
     title: Scalars['String']['output'];
-    /** A URL parameters to be added to a page URL when it is linked from a GraphQL result. This allows for tracking the origin of the traffic. */
+    /** URL parameters to be added to a page URL to track the origin of on-site search traffic for [analytics reporting](https://help.shopify.com/manual/reports-and-analytics/shopify-reports/report-types/default-reports/behaviour-reports). Returns a result when accessed through the [search](https://shopify.dev/docs/api/storefront/current/queries/search) or [predictiveSearch](https://shopify.dev/docs/api/storefront/current/queries/predictiveSearch) queries, otherwise returns null. */
     trackingParameters?: Maybe<Scalars['String']['output']>;
     /** The timestamp of the latest page update. */
     updatedAt: Scalars['DateTime']['output'];
@@ -5535,6 +5595,19 @@ export type PageSortKeys =
   | 'TITLE'
   /** Sort by the `updated_at` value. */
   | 'UPDATED_AT';
+
+/** Type for paginating through multiple sitemap's resources. */
+export type PaginatedSitemapResources = {
+  __typename?: 'PaginatedSitemapResources';
+  /** Whether there are more pages to fetch following the current page. */
+  hasNextPage: Scalars['Boolean']['output'];
+  /**
+   * List of sitemap resources for the current page.
+   * Note: The number of items varies between 0 and 250 per page.
+   *
+   */
+  items: Array<SitemapResource | SitemapResourceMetaobject>;
+};
 
 /** Settings related to payments. */
 export type PaymentSettings = {
@@ -5640,8 +5713,23 @@ export type Product = HasMetafields &
   OnlineStorePublishable &
   Trackable & {
     __typename?: 'Product';
+    /**
+     * A list of variants whose selected options differ with the provided selected options by one, ordered by variant id.
+     * If selected options are not provided, adjacent variants to the first available variant is returned.
+     *
+     * Note that this field returns an array of variants. In most cases, the number of variants in this array will be low.
+     * However, with a low number of options and a high number of values per option, the number of variants returned
+     * here can be high. In such cases, it recommended to avoid using this field.
+     *
+     * This list of variants can be used in combination with the `options` field to build a rich variant picker that
+     * includes variant availability or other variant information.
+     *
+     */
+    adjacentVariants: Array<ProductVariant>;
     /** Indicates if at least one product variant is available for sale. */
     availableForSale: Scalars['Boolean']['output'];
+    /** The taxonomy category for the product. */
+    category?: Maybe<TaxonomyCategory>;
     /** List of collections a product belongs to. */
     collections: CollectionConnection;
     /** The compare at price of the product across all variants. */
@@ -5652,6 +5740,67 @@ export type Product = HasMetafields &
     description: Scalars['String']['output'];
     /** The description of the product, complete with HTML formatting. */
     descriptionHtml: Scalars['HTML']['output'];
+    /**
+     * An encoded string containing all option value combinations
+     * with a corresponding variant that is currently available for sale.
+     *
+     * Integers represent option and values:
+     * [0,1] represents option_value at array index 0 for the option at array index 0
+     *
+     * `:`, `,`, ` ` and `-` are control characters.
+     * `:` indicates a new option. ex: 0:1 indicates value 0 for the option in position 1, value 1 for the option in position 2.
+     * `,` indicates the end of a repeated prefix, mulitple consecutive commas indicate the end of multiple repeated prefixes.
+     * ` ` indicates a gap in the sequence of option values. ex: 0 4 indicates option values in position 0 and 4 are present.
+     * `-` indicates a continuous range of option values. ex: 0 1-3 4
+     *
+     * Decoding process:
+     *
+     * Example options: [Size, Color, Material]
+     * Example values: [[Small, Medium, Large], [Red, Blue], [Cotton, Wool]]
+     * Example encoded string: "0:0:0,1:0-1,,1:0:0-1,1:1,,2:0:1,1:0,,"
+     *
+     * Step 1: Expand ranges into the numbers they represent: "0:0:0,1:0 1,,1:0:0 1,1:1,,2:0:1,1:0,,"
+     * Step 2: Expand repeated prefixes: "0:0:0,0:1:0 1,1:0:0 1,1:1:1,2:0:1,2:1:0,"
+     * Step 3: Expand shared prefixes so data is encoded as a string: "0:0:0,0:1:0,0:1:1,1:0:0,1:0:1,1:1:1,2:0:1,2:1:0,"
+     * Step 4: Map to options + option values to determine existing variants:
+     *
+     * [Small, Red, Cotton] (0:0:0), [Small, Blue, Cotton] (0:1:0), [Small, Blue, Wool] (0:1:1),
+     * [Medium, Red, Cotton] (1:0:0), [Medium, Red, Wool] (1:0:1), [Medium, Blue, Wool] (1:1:1),
+     * [Large, Red, Wool] (2:0:1), [Large, Blue, Cotton] (2:1:0).
+     *
+     *
+     */
+    encodedVariantAvailability?: Maybe<Scalars['String']['output']>;
+    /**
+     * An encoded string containing all option value combinations with a corresponding variant.
+     *
+     * Integers represent option and values:
+     * [0,1] represents option_value at array index 0 for the option at array index 0
+     *
+     * `:`, `,`, ` ` and `-` are control characters.
+     * `:` indicates a new option. ex: 0:1 indicates value 0 for the option in position 1, value 1 for the option in position 2.
+     * `,` indicates the end of a repeated prefix, mulitple consecutive commas indicate the end of multiple repeated prefixes.
+     * ` ` indicates a gap in the sequence of option values. ex: 0 4 indicates option values in position 0 and 4 are present.
+     * `-` indicates a continuous range of option values. ex: 0 1-3 4
+     *
+     * Decoding process:
+     *
+     * Example options: [Size, Color, Material]
+     * Example values: [[Small, Medium, Large], [Red, Blue], [Cotton, Wool]]
+     * Example encoded string: "0:0:0,1:0-1,,1:0:0-1,1:1,,2:0:1,1:0,,"
+     *
+     * Step 1: Expand ranges into the numbers they represent: "0:0:0,1:0 1,,1:0:0 1,1:1,,2:0:1,1:0,,"
+     * Step 2: Expand repeated prefixes: "0:0:0,0:1:0 1,1:0:0 1,1:1:1,2:0:1,2:1:0,"
+     * Step 3: Expand shared prefixes so data is encoded as a string: "0:0:0,0:1:0,0:1:1,1:0:0,1:0:1,1:1:1,2:0:1,2:1:0,"
+     * Step 4: Map to options + option values to determine existing variants:
+     *
+     * [Small, Red, Cotton] (0:0:0), [Small, Blue, Cotton] (0:1:0), [Small, Blue, Wool] (0:1:1),
+     * [Medium, Red, Cotton] (1:0:0), [Medium, Red, Wool] (1:0:1), [Medium, Blue, Wool] (1:1:1),
+     * [Large, Red, Wool] (2:0:1), [Large, Blue, Cotton] (2:1:0).
+     *
+     *
+     */
+    encodedVariantExistence?: Maybe<Scalars['String']['output']>;
     /**
      * The featured image for the product.
      *
@@ -5677,7 +5826,11 @@ export type Product = HasMetafields &
     metafield?: Maybe<Metafield>;
     /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
     metafields: Array<Maybe<Metafield>>;
-    /** The URL used for viewing the resource on the shop's Online Store. Returns `null` if the resource is currently not published to the Online Store sales channel. */
+    /**
+     * The URL used for viewing the resource on the shop's Online Store. Returns
+     * `null` if the resource is currently not published to the Online Store sales channel.
+     *
+     */
     onlineStoreUrl?: Maybe<Scalars['URL']['output']>;
     /** List of product options. */
     options: Array<ProductOption>;
@@ -5689,6 +5842,14 @@ export type Product = HasMetafields &
     publishedAt: Scalars['DateTime']['output'];
     /** Whether the product can only be purchased with a selling plan. */
     requiresSellingPlan: Scalars['Boolean']['output'];
+    /**
+     * Find an active product variant based on selected options, availability or the first variant.
+     *
+     * All arguments are optional. If no selected options are provided, the first available variant is returned.
+     * If no variants are available, the first variant is returned.
+     *
+     */
+    selectedOrFirstAvailableVariant?: Maybe<ProductVariant>;
     /** A list of a product's available selling plan groups. A selling plan group represents a selling method. For example, 'Subscribe and save' is a selling method where customers pay for goods or services per delivery. A selling plan group contains individual selling plans. */
     sellingPlanGroups: SellingPlanGroupConnection;
     /** The product's SEO information. */
@@ -5703,7 +5864,7 @@ export type Product = HasMetafields &
     title: Scalars['String']['output'];
     /** The total quantity of inventory in stock for this Product. */
     totalInventory?: Maybe<Scalars['Int']['output']>;
-    /** A URL parameters to be added to a page URL when it is linked from a GraphQL result. This allows for tracking the origin of the traffic. */
+    /** URL parameters to be added to a page URL to track the origin of on-site search traffic for [analytics reporting](https://help.shopify.com/manual/reports-and-analytics/shopify-reports/report-types/default-reports/behaviour-reports). Returns a result when accessed through the [search](https://shopify.dev/docs/api/storefront/current/queries/search) or [predictiveSearch](https://shopify.dev/docs/api/storefront/current/queries/predictiveSearch) queries, otherwise returns null. */
     trackingParameters?: Maybe<Scalars['String']['output']>;
     /**
      * The date and time when the product was last modified.
@@ -5722,9 +5883,24 @@ export type Product = HasMetafields &
     variantBySelectedOptions?: Maybe<ProductVariant>;
     /** List of the product’s variants. */
     variants: ProductVariantConnection;
+    /** The total count of variants for this product. */
+    variantsCount?: Maybe<Count>;
     /** The product’s vendor name. */
     vendor: Scalars['String']['output'];
   };
+
+/**
+ * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
+ * For example, a digital download (such as a movie, music or ebook file) also
+ * qualifies as a product, as do services (such as equipment rental, work for hire,
+ * customization of another product or an extended warranty).
+ *
+ */
+export type ProductAdjacentVariantsArgs = {
+  caseInsensitiveMatch?: InputMaybe<Scalars['Boolean']['input']>;
+  ignoreUnknownOptions?: InputMaybe<Scalars['Boolean']['input']>;
+  selectedOptions?: InputMaybe<Array<SelectedOptionInput>>;
+};
 
 /**
  * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
@@ -5816,6 +5992,19 @@ export type ProductMetafieldsArgs = {
  */
 export type ProductOptionsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/**
+ * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
+ * For example, a digital download (such as a movie, music or ebook file) also
+ * qualifies as a product, as do services (such as equipment rental, work for hire,
+ * customization of another product or an extended warranty).
+ *
+ */
+export type ProductSelectedOrFirstAvailableVariantArgs = {
+  caseInsensitiveMatch?: InputMaybe<Scalars['Boolean']['input']>;
+  ignoreUnknownOptions?: InputMaybe<Scalars['Boolean']['input']>;
+  selectedOptions?: InputMaybe<Array<SelectedOptionInput>>;
 };
 
 /**
@@ -5993,6 +6182,14 @@ export type ProductOption = Node & {
  */
 export type ProductOptionValue = Node & {
   __typename?: 'ProductOptionValue';
+  /**
+   * The product variant that combines this option value with the
+   * lowest-position option values for all other options.
+   *
+   * This field will always return a variant, provided a variant including this option value exists.
+   *
+   */
+  firstSelectableVariant?: Maybe<ProductVariant>;
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
   /** The name of the product option value. */
@@ -6123,6 +6320,8 @@ export type ProductVariant = HasMetafields &
     selectedOptions: Array<SelectedOption>;
     /** Represents an association between a variant and a selling plan. Selling plan allocations describe which selling plans are available for each variant, and what their impact is on pricing. */
     sellingPlanAllocations: SellingPlanAllocationConnection;
+    /** The Shop Pay Installments pricing information for the product variant. */
+    shopPayInstallmentsPricing?: Maybe<ShopPayInstallmentsProductVariantPricing>;
     /** The SKU (stock keeping unit) associated with the variant. */
     sku?: Maybe<Scalars['String']['output']>;
     /** The in-store pickup availability of this variant by location. */
@@ -6472,7 +6671,11 @@ export type QueryRoot = {
     | ProductOptionValue
     | ProductVariant
     | Shop
+    | ShopPayInstallmentsFinancingPlan
+    | ShopPayInstallmentsFinancingPlanTerm
+    | ShopPayInstallmentsProductVariantPricing
     | ShopPolicy
+    | TaxonomyCategory
     | UrlRedirect
     | Video
   >;
@@ -6509,7 +6712,11 @@ export type QueryRoot = {
       | ProductOptionValue
       | ProductVariant
       | Shop
+      | ShopPayInstallmentsFinancingPlan
+      | ShopPayInstallmentsFinancingPlanTerm
+      | ShopPayInstallmentsProductVariantPricing
       | ShopPolicy
+      | TaxonomyCategory
       | UrlRedirect
       | Video
     >
@@ -6555,6 +6762,8 @@ export type QueryRoot = {
   search: SearchResultItemConnection;
   /** The shop associated with the storefront access token. */
   shop: Shop;
+  /** Contains all fields required to generate sitemaps. */
+  sitemap: Sitemap;
   /** A list of redirects for a shop. */
   urlRedirects: UrlRedirectConnection;
 };
@@ -6764,6 +6973,11 @@ export type QueryRootSearchArgs = {
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
+export type QueryRootSitemapArgs = {
+  type: SitemapType;
+};
+
+/** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootUrlRedirectsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -6815,7 +7029,7 @@ export type SearchQuerySuggestion = Trackable & {
   styledText: Scalars['String']['output'];
   /** The text of the search query suggestion. */
   text: Scalars['String']['output'];
-  /** A URL parameters to be added to a page URL when it is linked from a GraphQL result. This allows for tracking the origin of the traffic. */
+  /** URL parameters to be added to a page URL to track the origin of on-site search traffic for [analytics reporting](https://help.shopify.com/manual/reports-and-analytics/shopify-reports/report-types/default-reports/behaviour-reports). Returns a result when accessed through the [search](https://shopify.dev/docs/api/storefront/current/queries/search) or [predictiveSearch](https://shopify.dev/docs/api/storefront/current/queries/predictiveSearch) queries, otherwise returns null. */
   trackingParameters?: Maybe<Scalars['String']['output']>;
 };
 
@@ -7237,6 +7451,8 @@ export type Shop = HasMetafields &
     shippingPolicy?: Maybe<ShopPolicy>;
     /** Countries that the shop ships to. */
     shipsToCountries: Array<CountryCode>;
+    /** The Shop Pay Installments pricing information for the shop. */
+    shopPayInstallmentsPricing?: Maybe<ShopPayInstallmentsPricing>;
     /** The shop’s subscription policy. */
     subscriptionPolicy?: Maybe<ShopPolicyWithDefault>;
     /** The shop’s terms of service. */
@@ -7252,6 +7468,78 @@ export type ShopMetafieldArgs = {
 /** Shop represents a collection of the general settings and information about the shop. */
 export type ShopMetafieldsArgs = {
   identifiers: Array<HasMetafieldsIdentifier>;
+};
+
+/** The financing plan in Shop Pay Installments. */
+export type ShopPayInstallmentsFinancingPlan = Node & {
+  __typename?: 'ShopPayInstallmentsFinancingPlan';
+  /** A globally-unique ID. */
+  id: Scalars['ID']['output'];
+  /** The maximum price to qualify for the financing plan. */
+  maxPrice: MoneyV2;
+  /** The minimum price to qualify for the financing plan. */
+  minPrice: MoneyV2;
+  /** The terms of the financing plan. */
+  terms: Array<ShopPayInstallmentsFinancingPlanTerm>;
+};
+
+/** The payment frequency for a Shop Pay Installments Financing Plan. */
+export type ShopPayInstallmentsFinancingPlanFrequency =
+  /** Monthly payment frequency. */
+  | 'MONTHLY'
+  /** Weekly payment frequency. */
+  | 'WEEKLY';
+
+/** The terms of the financing plan in Shop Pay Installments. */
+export type ShopPayInstallmentsFinancingPlanTerm = Node & {
+  __typename?: 'ShopPayInstallmentsFinancingPlanTerm';
+  /** The annual percentage rate (APR) of the financing plan. */
+  apr: Scalars['Int']['output'];
+  /** The payment frequency for the financing plan. */
+  frequency: ShopPayInstallmentsFinancingPlanFrequency;
+  /** A globally-unique ID. */
+  id: Scalars['ID']['output'];
+  /** The number of installments for the financing plan. */
+  installmentsCount?: Maybe<Count>;
+  /** The type of loan for the financing plan. */
+  loanType: ShopPayInstallmentsLoan;
+};
+
+/** The loan type for a Shop Pay Installments Financing Plan Term. */
+export type ShopPayInstallmentsLoan =
+  /** An interest-bearing loan type. */
+  | 'INTEREST'
+  /** A split-pay loan type. */
+  | 'SPLIT_PAY'
+  /** A zero-percent loan type. */
+  | 'ZERO_PERCENT';
+
+/** The result for a Shop Pay Installments pricing request. */
+export type ShopPayInstallmentsPricing = {
+  __typename?: 'ShopPayInstallmentsPricing';
+  /** The financing plans available for the given price range. */
+  financingPlans: Array<ShopPayInstallmentsFinancingPlan>;
+  /** The maximum price to qualify for financing. */
+  maxPrice: MoneyV2;
+  /** The minimum price to qualify for financing. */
+  minPrice: MoneyV2;
+};
+
+/** The shop pay installments pricing information for a product variant. */
+export type ShopPayInstallmentsProductVariantPricing = Node & {
+  __typename?: 'ShopPayInstallmentsProductVariantPricing';
+  /** Whether the product variant is available. */
+  available: Scalars['Boolean']['output'];
+  /** Whether the product variant is eligible for Shop Pay Installments. */
+  eligible: Scalars['Boolean']['output'];
+  /** The full price of the product variant. */
+  fullPrice: MoneyV2;
+  /** The ID of the product variant. */
+  id: Scalars['ID']['output'];
+  /** The number of payment terms available for the product variant. */
+  installmentsCount?: Maybe<Count>;
+  /** The price per term for the product variant. */
+  pricePerTerm: MoneyV2;
 };
 
 /** Represents a Shop Pay payment request. */
@@ -7635,6 +7923,97 @@ export type ShopPolicyWithDefault = {
   url: Scalars['URL']['output'];
 };
 
+/** Contains all fields required to generate sitemaps. */
+export type Sitemap = {
+  __typename?: 'Sitemap';
+  /** The number of sitemap's pages for a given type. */
+  pagesCount?: Maybe<Count>;
+  /**
+   * A list of sitemap's resources for a given type.
+   *
+   * Important Notes:
+   *   - The number of items per page varies from 0 to 250.
+   *   - Empty pages (0 items) may occur and do not necessarily indicate the end of results.
+   *   - Always check `hasNextPage` to determine if more pages are available.
+   *
+   */
+  resources?: Maybe<PaginatedSitemapResources>;
+};
+
+/** Contains all fields required to generate sitemaps. */
+export type SitemapResourcesArgs = {
+  page: Scalars['Int']['input'];
+};
+
+/** Represents a sitemap's image. */
+export type SitemapImage = {
+  __typename?: 'SitemapImage';
+  /** Image's alt text. */
+  alt?: Maybe<Scalars['String']['output']>;
+  /** Path to the image. */
+  filepath?: Maybe<Scalars['String']['output']>;
+  /** The date and time when the image was updated. */
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/** Represents a sitemap resource that is not a metaobject. */
+export type SitemapResource = SitemapResourceInterface & {
+  __typename?: 'SitemapResource';
+  /** Resource's handle. */
+  handle: Scalars['String']['output'];
+  /** Resource's image. */
+  image?: Maybe<SitemapImage>;
+  /** Resource's title. */
+  title?: Maybe<Scalars['String']['output']>;
+  /** The date and time when the resource was updated. */
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/** Represents the common fields for all sitemap resource types. */
+export type SitemapResourceInterface = {
+  /** Resource's handle. */
+  handle: Scalars['String']['output'];
+  /** The date and time when the resource was updated. */
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/**
+ * A SitemapResourceMetaobject represents a metaobject with
+ * [the `renderable` capability](https://shopify.dev/docs/apps/build/custom-data/metaobjects/use-metaobject-capabilities#render-metaobjects-as-web-pages).
+ *
+ */
+export type SitemapResourceMetaobject = SitemapResourceInterface & {
+  __typename?: 'SitemapResourceMetaobject';
+  /** Resource's handle. */
+  handle: Scalars['String']['output'];
+  /** The URL handle for accessing pages of this metaobject type in the Online Store. */
+  onlineStoreUrlHandle?: Maybe<Scalars['String']['output']>;
+  /** The type of the metaobject. Defines the namespace of its associated metafields. */
+  type: Scalars['String']['output'];
+  /** The date and time when the resource was updated. */
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/** The types of resources potentially present in a sitemap. */
+export type SitemapType =
+  /** Articles present in the sitemap. */
+  | 'ARTICLE'
+  /** Blogs present in the sitemap. */
+  | 'BLOG'
+  /** Collections present in the sitemap. */
+  | 'COLLECTION'
+  /**
+   * Metaobjects present in the sitemap. Only metaobject types with the
+   * [`renderable` capability](https://shopify.dev/docs/apps/build/custom-data/metaobjects/use-metaobject-capabilities#render-metaobjects-as-web-pages)
+   * are included in sitemap.
+   *
+   */
+  | 'METAOBJECT'
+  /** Pages present in the sitemap. */
+  | 'PAGE'
+  /** Products present in the sitemap. */
+  | 'PRODUCT';
+
 /**
  * The availability of a product variant at a particular location.
  * Local pick-up must be enabled in the  store's shipping settings, otherwise this will return an empty result.
@@ -7851,9 +8230,23 @@ export type Swatch = {
   image?: Maybe<MediaImage>;
 };
 
+/**
+ * The taxonomy category for the product.
+ *
+ */
+export type TaxonomyCategory = Node & {
+  __typename?: 'TaxonomyCategory';
+  /** All parent nodes of the current taxonomy category. */
+  ancestors: Array<TaxonomyCategory>;
+  /** A static identifier for the taxonomy category. */
+  id: Scalars['ID']['output'];
+  /** The localized name of the taxonomy category. */
+  name: Scalars['String']['output'];
+};
+
 /** Represents a resource that you can track the origin of the search traffic. */
 export type Trackable = {
-  /** A URL parameters to be added to a page URL when it is linked from a GraphQL result. This allows for tracking the origin of the traffic. */
+  /** URL parameters to be added to a page URL to track the origin of on-site search traffic for [analytics reporting](https://help.shopify.com/manual/reports-and-analytics/shopify-reports/report-types/default-reports/behaviour-reports). Returns a result when accessed through the [search](https://shopify.dev/docs/api/storefront/current/queries/search) or [predictiveSearch](https://shopify.dev/docs/api/storefront/current/queries/predictiveSearch) queries, otherwise returns null. */
   trackingParameters?: Maybe<Scalars['String']['output']>;
 };
 
@@ -7964,7 +8357,7 @@ export type UserError = DisplayableError & {
   message: Scalars['String']['output'];
 };
 
-/** Represents an error that happens during execution of a customer mutation. */
+/** Error codes for failed Shop Pay payment request session mutations. */
 export type UserErrorsShopPayPaymentRequestSessionUserErrors =
   DisplayableError & {
     __typename?: 'UserErrorsShopPayPaymentRequestSessionUserErrors';
