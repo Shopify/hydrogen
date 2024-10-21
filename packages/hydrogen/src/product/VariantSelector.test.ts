@@ -41,7 +41,10 @@ describe('getSelectedProductOptions', () => {
 });
 
 describe('<VariantSelector>', () => {
+  const consoleWarnSpy = vi.spyOn(console, 'warn');
+
   afterEach(() => {
+    consoleWarnSpy.mockClear();
     cleanup();
   });
 
@@ -54,8 +57,8 @@ describe('<VariantSelector>', () => {
       createElement(VariantSelector, {
         handle: 'snowboard',
         options: [
-          {name: 'Color', values: ['Red', 'Blue']},
-          {name: 'Size', values: ['S', 'M']},
+          {name: 'Color', optionValues: [{name: 'Red'}, {name: 'Blue'}]},
+          {name: 'Size', optionValues: [{name: 'S'}, {name: 'M'}]},
         ],
         children: ({option}) =>
           createElement(
@@ -98,14 +101,138 @@ describe('<VariantSelector>', () => {
     `);
   });
 
+  it('accepts deprecated product.options.values and logs a warning', () => {
+    const {asFragment} = render(
+      createElement(VariantSelector, {
+        handle: 'snowboard',
+        options: [
+          {name: 'Color', values: ['Red', 'Blue']},
+          {name: 'Size', values: ['S', 'M']},
+        ],
+        children: ({option}) =>
+          createElement(
+            'div',
+            null,
+            option.values.map(({value, to}) =>
+              createElement('a', {key: option.name + value, href: to}, value),
+            ),
+          ),
+      }),
+    );
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      '[h2:warn:VariantSelector] product.options.values is deprecated. Use product.options.optionValues instead.',
+    );
+
+    expect(asFragment()).toMatchInlineSnapshot(`
+      <DocumentFragment>
+        <div>
+          <a
+            href="/products/snowboard?Color=Red"
+          >
+            Red
+          </a>
+          <a
+            href="/products/snowboard?Color=Blue"
+          >
+            Blue
+          </a>
+        </div>
+        <div>
+          <a
+            href="/products/snowboard?Size=S"
+          >
+            S
+          </a>
+          <a
+            href="/products/snowboard?Size=M"
+          >
+            M
+          </a>
+        </div>
+      </DocumentFragment>
+    `);
+  });
+
+  it('accepts deprecated product.options.values, the new product.options.optionValues and does not override the new optionValues', () => {
+    const {asFragment} = render(
+      createElement(VariantSelector, {
+        handle: 'snowboard',
+        options: [
+          {
+            name: 'Color',
+            values: ['Red', 'Blue'],
+            optionValues: [
+              {name: 'Red', id: '1'},
+              {name: 'Blue', id: '2'},
+            ],
+          },
+          {
+            name: 'Size',
+            values: ['S', 'M'],
+            optionValues: [
+              {name: 'S', id: '3'},
+              {name: 'M', id: '4'},
+            ],
+          },
+        ],
+        children: ({option}) =>
+          createElement(
+            'div',
+            null,
+            option.values.map(({value, to, optionValue}) =>
+              createElement(
+                'a',
+                {key: option.name + value, href: to, 'data-id': optionValue.id},
+                value,
+              ),
+            ),
+          ),
+      }),
+    );
+
+    expect(asFragment()).toMatchInlineSnapshot(`
+      <DocumentFragment>
+        <div>
+          <a
+            data-id="1"
+            href="/products/snowboard?Color=Red"
+          >
+            Red
+          </a>
+          <a
+            data-id="2"
+            href="/products/snowboard?Color=Blue"
+          >
+            Blue
+          </a>
+        </div>
+        <div>
+          <a
+            data-id="3"
+            href="/products/snowboard?Size=S"
+          >
+            S
+          </a>
+          <a
+            data-id="4"
+            href="/products/snowboard?Size=M"
+          >
+            M
+          </a>
+        </div>
+      </DocumentFragment>
+    `);
+  });
+
   it('uses a custom product path', () => {
     const {asFragment} = render(
       createElement(VariantSelector, {
         handle: 'snowboard',
         productPath: 'shop',
         options: [
-          {name: 'Color', values: ['Red', 'Blue']},
-          {name: 'Size', values: ['S', 'M']},
+          {name: 'Color', optionValues: [{name: 'Red'}, {name: 'Blue'}]},
+          {name: 'Size', optionValues: [{name: 'S'}, {name: 'M'}]},
         ],
         children: ({option}) =>
           createElement(
@@ -154,8 +281,8 @@ describe('<VariantSelector>', () => {
         handle: 'snowboard',
         productPath: '/shop',
         options: [
-          {name: 'Color', values: ['Red', 'Blue']},
-          {name: 'Size', values: ['S', 'M']},
+          {name: 'Color', optionValues: [{name: 'Red'}, {name: 'Blue'}]},
+          {name: 'Size', optionValues: [{name: 'S'}, {name: 'M'}]},
         ],
         children: ({option}) =>
           createElement(
@@ -207,8 +334,8 @@ describe('<VariantSelector>', () => {
       createElement(VariantSelector, {
         handle: 'snowboard',
         options: [
-          {name: 'Color', values: ['Red']},
-          {name: 'Size', values: ['S', 'M']},
+          {name: 'Color', optionValues: [{name: 'Red'}]},
+          {name: 'Size', optionValues: [{name: 'S'}, {name: 'M'}]},
         ],
         children: ({option}) =>
           createElement(
@@ -264,8 +391,8 @@ describe('<VariantSelector>', () => {
       createElement(VariantSelector, {
         handle: 'snowboard',
         options: [
-          {name: 'Color', values: ['Red']},
-          {name: 'Size', values: ['S', 'M']},
+          {name: 'Color', optionValues: [{name: 'Red'}]},
+          {name: 'Size', optionValues: [{name: 'S'}, {name: 'M'}]},
         ],
         children: ({option}) =>
           createElement(
@@ -316,7 +443,7 @@ describe('<VariantSelector>', () => {
     const {asFragment} = render(
       createElement(VariantSelector, {
         handle: 'snowboard',
-        options: [{name: 'Size', values: ['S', 'M']}],
+        options: [{name: 'Size', optionValues: [{name: 'S'}, {name: 'M'}]}],
         children: ({option}) =>
           createElement(
             'div',
@@ -360,7 +487,7 @@ describe('<VariantSelector>', () => {
     const {asFragment} = render(
       createElement(VariantSelector, {
         handle: 'snowboard',
-        options: [{name: 'Size', values: ['S', 'M']}],
+        options: [{name: 'Size', optionValues: [{name: 'S'}, {name: 'M'}]}],
         variants: [
           {
             availableForSale: true,
@@ -414,7 +541,7 @@ describe('<VariantSelector>', () => {
     const {asFragment} = render(
       createElement(VariantSelector, {
         handle: 'snowboard',
-        options: [{name: 'Size', values: ['S', 'M']}],
+        options: [{name: 'Size', optionValues: [{name: 'S'}, {name: 'M'}]}],
         variants: {
           nodes: [
             {
@@ -470,7 +597,7 @@ describe('<VariantSelector>', () => {
     const {asFragment} = render(
       createElement(VariantSelector, {
         handle: 'snowboard',
-        options: [{name: 'Size', values: ['S', 'M']}],
+        options: [{name: 'Size', optionValues: [{name: 'S'}, {name: 'M'}]}],
         variants: {
           nodes: [
             {
