@@ -149,6 +149,7 @@ describe('<Analytics.Provider />', () => {
         mockCanTrack: false,
       });
 
+      console.log(analytics?.canTrack)
       expect(analytics?.canTrack()).toBe(false);
       expect(analytics?.shop).toBe(SHOP_DATA);
       expect(analytics?.cart).toBe(CART_DATA);
@@ -325,6 +326,7 @@ async function renderAnalyticsProvider({
         shop={SHOP_DATA}
         consent={CONSENT_DATA}
         customData={updateCustomData || customData}
+        canTrack={() => mockCanTrack}
       >
         <LoopAnalytics
           registerCallback={registerCallback}
