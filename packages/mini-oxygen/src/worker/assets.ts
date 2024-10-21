@@ -21,6 +21,10 @@ export function buildAssetsUrl(assetsPort: number) {
 /**
  * Creates a server that serves static assets from the build directory.
  * Mimics Shopify CDN URLs for Oxygen v2.
+ * Note: this is not used when running with Vite because it already
+ * serves transformed assets before reaching MiniOxygen.
+ * See the following for more details:
+ * https://github.com/Shopify/hydrogen/pull/2078#issuecomment-2121705993
  */
 export function createAssetsServer(assetsDirectory: string) {
   return createServer(async (req: IncomingMessage, res: ServerResponse) => {

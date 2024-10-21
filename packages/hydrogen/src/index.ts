@@ -144,6 +144,8 @@ export {
   useMoney,
   useShopifyCookies,
   Video,
+  isOptionValueCombinationInEncodedVariant,
+  decodeEncodedVariant,
 } from '@shopify/hydrogen-react';
 export {RichText} from './RichText';
 

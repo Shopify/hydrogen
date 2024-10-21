@@ -204,7 +204,8 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     if (!withPrivacyBanner || observing.current.privacyBanner) return;
     observing.current.privacyBanner = true;
 
-    let customPrivacyBanner: PrivacyBanner | undefined = undefined;
+    let customPrivacyBanner: PrivacyBanner | undefined =
+      window.privacyBanner || undefined;
 
     const privacyBannerWatcher = {
       configurable: true,
@@ -252,7 +253,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
 
     let customCustomerPrivacy: CustomerPrivacy | null = null;
     let customShopify: {customerPrivacy: CustomerPrivacy} | undefined | object =
-      undefined;
+      window.Shopify || undefined;
 
     // monitor for when window.Shopify = {} is first set
     Object.defineProperty(window, 'Shopify', {
