@@ -6,7 +6,7 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description:
-    'A hook that loads the [Customer Privacy API](/docs/api/customer-privacy).\n\nYou can get the customer privacy instance with `getCustomerPrivacy()`.\n\nYou can also listen to a `document` event for `shopifyCustomerPrivacyApiLoaded`. It will be emitted when the Customer Privacy API is loaded.',
+    'A hook that loads the [Customer Privacy API](/docs/api/customer-privacy).\n\nYou can also listen to a `document` event for `shopifyCustomerPrivacyApiLoaded`. It will be emitted when the Customer Privacy API is loaded.',
   type: 'hook',
   defaultExample: {
     description: 'This is the default example',
@@ -37,7 +37,7 @@ const data: ReferenceEntityTemplateSchema = {
     description: 'Example usage with `useAnalytics`:',
     exampleGroups: [
       {
-        title: 'getCustomerPrivacy',
+        title: 'useCustomerPrivacy',
         examples: [
           {
             description:
