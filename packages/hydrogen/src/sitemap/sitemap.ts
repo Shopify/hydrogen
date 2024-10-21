@@ -56,12 +56,13 @@ export async function getSitemapIndex(
       'A storefront client is required to generate a sitemap index',
     );
 
-  const data = await storefront.query(SITEMAP_INDEX_QUERY, {
-    storefrontApiVersion: 'unstable',
-  });
+  const data = await storefront.query(SITEMAP_INDEX_QUERY);
 
   if (!data) {
-    throw new Response('No data found', {status: 404});
+    console.warn(
+      '[h2:sitemap:warning] Sitemap index is available in API version 2024-10 and later',
+    );
+    throw new Response('Sitemap index not found.', {status: 404});
   }
 
   const baseUrl = new URL(request.url).origin;
@@ -166,8 +167,14 @@ export async function getSitemap(
     variables: {
       page: parseInt(params.page, 10),
     },
-    storefrontApiVersion: 'unstable',
   });
+
+  if (!data) {
+    console.warn(
+      '[h2:sitemap:warning] Sitemap is available in API version 2024-10 and later',
+    );
+    throw new Response('Sitemap not found.', {status: 404});
+  }
 
   const baseUrl = new URL(request.url).origin;
   let body: string = '';
@@ -336,7 +343,7 @@ const BLOG_SITEMAP_QUERY = `#graphql
 
 const METAOBJECT_SITEMAP_QUERY = `#graphql
     query SitemapMetaobjects($page: Int!) {
-      sitemap(type: METAOBJECT_PAGE) {
+      sitemap(type: METAOBJECT) {
         resources(page: $page) {
           items {
             handle
@@ -377,7 +384,7 @@ query SitemapIndex {
       count
     }
   }
-  metaObjects: sitemap(type: METAOBJECT_PAGE) {
+  metaObjects: sitemap(type: METAOBJECT) {
     pagesCount {
       count
     }
