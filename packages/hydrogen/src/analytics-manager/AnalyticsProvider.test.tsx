@@ -303,7 +303,7 @@ async function renderAnalyticsProvider({
   customData,
   registerCallback,
   children,
-  mockCanTrack = true,
+  mockCanTrack,
 }: RenderAnalyticsProviderProps) {
   let analytics: AnalyticsContextValue | null = null;
   const getUpdatedAnalytics = () => analytics;
@@ -325,6 +325,9 @@ async function renderAnalyticsProvider({
         shop={SHOP_DATA}
         consent={CONSENT_DATA}
         customData={updateCustomData || customData}
+        {...(typeof mockCanTrack === 'boolean'
+          ? {canTrack: () => mockCanTrack}
+          : {})}
       >
         <LoopAnalytics
           registerCallback={registerCallback}

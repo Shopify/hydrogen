@@ -14,7 +14,7 @@
     "@remix-run/node": "^2.10.1",
     "@remix-run/react": "^2.10.1",
     "@remix-run/server-runtime": "^2.10.1",
-    "@shopify/hydrogen": "2024.7.9",
+    "@shopify/hydrogen": "2024.10.0",
     "compression": "^1.7.4",
     "cross-env": "^7.0.3",
     "express": "^4.19.2",
