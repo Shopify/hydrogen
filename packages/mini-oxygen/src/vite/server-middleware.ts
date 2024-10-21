@@ -24,6 +24,10 @@ const WARMUP_PATHNAME = '/__vite_warmup';
 
 export type InternalMiniOxygenOptions = {
   /**
+   * A compatibility date to choose a version of the Oxygen worker.
+   */
+  compatibilityDate?: string;
+  /**
    * A function called asynchronously when the worker gets a response.
    */
   requestHook?: RequestHook;
@@ -79,6 +83,7 @@ function startMiniOxygenRuntime({
   entry: workerEntryFile,
   requestHook,
   logRequestLine = defaultLogRequestLine,
+  compatibilityDate,
 }: MiniOxygenViteOptions) {
   const wrappedHook =
     requestHook || logRequestLine
@@ -113,6 +118,7 @@ function startMiniOxygenRuntime({
         } satisfies OnlyBindings<ViteEnv>,
         unsafeEvalBinding: '__VITE_UNSAFE_EVAL',
         wrappedBindings: {__VITE_SETUP_ENV: 'setup-environment'},
+        ...(compatibilityDate && {compatibilityDate}),
       },
       {
         name: 'setup-environment',
