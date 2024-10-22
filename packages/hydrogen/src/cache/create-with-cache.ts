@@ -14,8 +14,8 @@ type CreateWithCacheOptions = {
   cache: Cache;
   /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
   waitUntil: WaitUntil;
-  /** The `request` object is used to access certain headers for debugging */
-  request?: CrossRuntimeRequest;
+  /** The `request` object is used by the Subrequest profiler, and to access certain headers for debugging */
+  request: CrossRuntimeRequest;
 };
 
 type WithCacheRunOptions<T> = {

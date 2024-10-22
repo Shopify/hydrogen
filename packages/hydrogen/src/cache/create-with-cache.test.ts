@@ -17,7 +17,7 @@ describe('createWithCache', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     cache = new InMemoryCache();
-    withCache = createWithCache({cache, waitUntil});
+    withCache = createWithCache({cache, waitUntil, request: {headers: {}}});
     waitUntil.mockClear();
     return () => vi.useRealTimers();
   });
