@@ -1,6 +1,26 @@
 import {renderSuccess, renderWarning} from '@shopify/cli-kit/node/ui';
 import type {RemixConfig} from './remix-config.js';
 
+const RESERVED_ROUTES = ['^api/[^/]+/graphql.json', '^cdn/', '^_t/'];
+
+export function findReservedRoutes(config: {routes: RemixConfig['routes']}) {
+  const routes = new Set<string>();
+
+  Object.values(config.routes)
+    .filter((route) =>
+      RESERVED_ROUTES.some((pattern) =>
+        new RegExp(pattern).test(route.path ?? ''),
+      ),
+    )
+    .forEach((route) => {
+      if (route.path) {
+        routes.add(route.path);
+      }
+    });
+
+  return [...routes];
+}
+
 // Sorted by importance for better warnings.
 const REQUIRED_ROUTES = [
   '',
@@ -114,6 +134,26 @@ export function logMissingRoutes(routes: string[]) {
   } else {
     renderSuccess({
       headline: 'All standard Shopify routes present',
+    });
+  }
+}
+
+export function warnReservedRoutes(routes: string[]) {
+  if (routes.length) {
+    renderWarning({
+      headline: 'Reserved routes present',
+      body:
+        `Your Hydrogen project is using ${routes.length} reserved route${
+          routes.length > 1 ? 's' : ''
+        }.\n` +
+        'These routes are reserved by Shopify and may cause issues with your storefront:\n\n' +
+        routes
+          .slice(0, LINE_LIMIT - (routes.length <= LINE_LIMIT ? 0 : 1))
+          .map((route) => `• /${route}`)
+          .join('\n') +
+        (routes.length > LINE_LIMIT
+          ? `\n• ...and ${routes.length - LINE_LIMIT + 1} more`
+          : ''),
     });
   }
 }

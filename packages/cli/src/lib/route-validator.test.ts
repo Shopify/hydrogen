@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest';
-import {findMissingRoutes} from './missing-routes.js';
+import {findMissingRoutes, findReservedRoutes} from './route-validator.js';
 
 const createRoute = (path: string) => ({
   routes: {
@@ -48,5 +48,43 @@ describe('missing-routes', () => {
         findMissingRoutes(createRoute(validRoute), requiredRoutes),
       ).toHaveLength(0);
     }
+  });
+});
+
+describe('reserved-routes', () => {
+  it('returns an empty array when no routes are present', async () => {
+    expect(findReservedRoutes({routes: {}})).toHaveLength(0);
+  });
+
+  it("doesn't find routes that don't match the reserved routes", async () => {
+    expect(findReservedRoutes(createRoute('collections/:handle'))).toHaveLength(
+      0,
+    );
+  });
+
+  it('returns an array of reserved routes', async () => {
+    expect(
+      findReservedRoutes(createRoute('api/2024-10/graphql.json')),
+    ).toHaveLength(1);
+
+    expect(
+      findReservedRoutes(createRoute('api/:param/graphql.json')),
+    ).toHaveLength(1);
+  });
+
+  it('finds reserved routes /cdn/', async () => {
+    expect(findReservedRoutes(createRoute('cdn/'))).toHaveLength(1);
+
+    expect(
+      findReservedRoutes(createRoute('cdn/something/for/you.jpg')),
+    ).toHaveLength(1);
+  });
+
+  it('finds reserved routes /_t/', async () => {
+    expect(findReservedRoutes(createRoute('_t/'))).toHaveLength(1);
+
+    expect(
+      findReservedRoutes(createRoute('_t/something/for/you.jpg')),
+    ).toHaveLength(1);
   });
 });
