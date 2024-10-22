@@ -25,7 +25,7 @@ import {
   type ServerMode,
 } from '../remix-config.js';
 import {checkLockfileStatus} from '../check-lockfile.js';
-import {findMissingRoutes} from '../missing-routes.js';
+import {findMissingRoutes} from '../route-validator.js';
 import {createRemixLogger, muteRemixLogs} from '../log.js';
 import {codegen} from '../codegen.js';
 import {
