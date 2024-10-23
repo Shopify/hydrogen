@@ -19,7 +19,16 @@ export default {
 
     type ExpectedResponse = {
       content: unknown;
+      isLoggedIn: boolean;
       errors?: string;
+    };
+
+    type MergedResponse = {
+      content: unknown;
+      isLoggedIn: boolean;
+      errors?: string;
+      extra1: string | null;
+      extra2: string | null;
     };
 
     // 1. Create a custom utility to query a third-party API:
@@ -35,8 +44,8 @@ export default {
           // Optionally, specify a cache strategy.
           // Default is CacheShort().
           cacheStrategy: CacheLong(),
-          // Cache if there are no GraphQL errors:
-          shouldCacheResponse: (body) => !body?.errors,
+          // Cache if there are no GralhQL errors or a specific result that make this result not suited for caching:
+          shouldCacheResponse: (result) => !(result?.errors || result?.isLoggedIn),
           // Optionally, add extra information to show
           // in the Subrequest Profiler utility.
           displayName: 'My CMS query',
@@ -52,54 +61,55 @@ export default {
     // 2. Or Create a more advanced utility to query multiple APIs under the same cache key:
     const fetchMultipleCMS = (options: {id: string; handle: string}) => {
       // Prefix the cache key and make it unique based on arguments.
-      return withCache.run(
-        {
-          cacheKey: ['my-cms-composite', options.id, options.handle],
-          cacheStrategy: CacheLong(),
-          shouldCacheResult: () => true,
-        },
-        async (params) => {
-          // Run multiple subrequests in parallel, or any other async operations.
-          const [response1, response2] = await Promise.all([
-            fetch('https://my-cms-1.com/api', {
-              method: 'POST',
-              body: JSON.stringify({id: options.id}),
-            }),
-            fetch('https://my-cms-2.com/api', {
-              method: 'POST',
-              body: JSON.stringify({handle: options.handle}),
-            }),
-          ]);
+      return withCache.run({
+        // Define a cache key that is unique to this query
+        cacheKey: ['my-cms-composite', options.id, options.handle],
+        // Optionally, specify a cache strategy.
+        // Default is CacheShort().
+        cacheStrategy: CacheLong(),
+        // Cache if there are no GralhQL errors or a specific result that make this result not suited for caching:
+        shouldCacheResult: (result: MergedResponse) => !(result?.errors || result?.isLoggedIn),
+      }, async (params) => {
+        // Run multiple subrequests in parallel, or any other async operations.
+        const [response1, response2] = await Promise.all([
+          fetch('https://my-cms-1.com/api', {
+            method: 'POST',
+            body: JSON.stringify({id: options.id}),
+          }),
+          fetch('https://my-cms-2.com/api', {
+            method: 'POST',
+            body: JSON.stringify({handle: options.handle}),
+          }),
+        ]);
 
-          // Throw if any response is unsuccessful.
-          // This is important to prevent the results from being cached.
-          if (!response1.ok || !response2.ok) {
-            throw new Error('Failed to fetch data');
-          }
+        // Throw if any response is unsuccessful.
+        // This is important to prevent the results from being cached.
+        if (!response1.ok || !response2.ok) {
+          throw new Error('Failed to fetch data');
+        }
 
-          const [data1, data2] = (await Promise.all([
-            response1.json(),
-            response2.json(),
-          ])) as [ExpectedResponse, ExpectedResponse];
+        const [data1, data2] = (await Promise.all([
+          response1.json(),
+          response2.json(),
+        ])) as [ExpectedResponse, ExpectedResponse];
 
-          // Validate data and throw to avoid caching errors.
-          if (data1.errors || data2.errors) {
-            throw new Error('API errors');
-          }
+        // Validate data and throw to avoid caching errors.
+        if (data1.errors || data2.errors) {
+          throw new Error('API errors');
+        }
 
-          // Optionally, add extra information to show
-          // in the Subrequest Profiler utility.
-          params.addDebugData({displayName: 'My CMS query'});
+        // Optionally, add extra information to show
+        // in the Subrequest Profiler utility.
+        params.addDebugData({displayName: 'My CMS query'});
 
-          // Compose the result as needed.
-          return {
-            ...data1,
-            ...data2,
-            extra1: response1.headers.get('X-Extra'),
-            extra2: response2.headers.get('X-Extra'),
-          };
-        },
-      );
+        // Compose the result as needed.
+        return {
+          ...data1,
+          ...data2,
+          extra1: response1.headers.get('X-Extra'),
+          extra2: response2.headers.get('X-Extra'),
+        } as MergedResponse;
+      });
     };
 
     const handleRequest = createRequestHandler({
