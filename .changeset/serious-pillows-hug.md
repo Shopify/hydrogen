@@ -31,7 +31,8 @@ export default {
 +    return withCache.run({
 +      cacheKey: ['my-cms', query],
 +      cacheStrategy: CacheLong(),
-+      shouldCacheResult: (body) => !body?.errors,
++      // Cache if there are no data errors or a specific data that make this result not suited for caching
++      shouldCacheResult: (result) => !result?.errors,
 +    }, async(params) => {
       const response = await fetch('my-cms.com/api', {
         method: 'POST',
@@ -60,7 +61,8 @@ export default {
     },
     {
       cacheStrategy: options.cache ?? CacheLong(),
-      shouldCacheResponse: (body) => !body?.error,
+      // Cache if there are no data errors or a specific data that make this result not suited for caching
+      shouldCacheResponse: (result) => !result?.error,
       cacheKey: ['my-cms', body],
       displayName: 'My CMS query',
     },

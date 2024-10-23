@@ -44,7 +44,7 @@ export default {
           // Optionally, specify a cache strategy.
           // Default is CacheShort().
           cacheStrategy: CacheLong(),
-          // Cache if there are no GralhQL errors or a specific result that make this result not suited for caching:
+          // Cache if there are no data errors or a specific data that make this result not suited for caching
           shouldCacheResponse: (result) => !(result?.errors || result?.isLoggedIn),
           // Optionally, add extra information to show
           // in the Subrequest Profiler utility.
@@ -67,7 +67,7 @@ export default {
         // Optionally, specify a cache strategy.
         // Default is CacheShort().
         cacheStrategy: CacheLong(),
-        // Cache if there are no GralhQL errors or a specific result that make this result not suited for caching:
+        // Cache if there are no data errors or a specific data that make this result not suited for caching
         shouldCacheResult: (result: MergedResponse) => !(result?.errors || result?.isLoggedIn),
       }, async (params) => {
         // Run multiple subrequests in parallel, or any other async operations.
