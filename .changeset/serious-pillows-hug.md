@@ -21,7 +21,9 @@ export default {
 +     const withCache = createWithCache({cache, waitUntil, request});
 ```
 
-`createWithCache` now returns an object with two utility functions. The original `withCache` callback function is now `withCache.run`.
+`createWithCache` now returns an object with two utility functions: `withCache.run` and `withCache.fetch`. Both have a new prop `shouldCacheResult` that must be defined.
+
+The original `withCache` callback function is now `withCache.run`.
 
 ```diff
   const withCache = createWithCache({cache, waitUntil, request});
