@@ -29,7 +29,7 @@ export default {
   const fetchMyCMS = (query) => {
 -    return withCache(['my-cms', query], CacheLong(), async (params) => {
 +    return withCache.run({
-+      cacheKey: ['my-cms-composite', query],
++      cacheKey: ['my-cms', query],
 +      cacheStrategy: CacheLong(),
 +      shouldCacheResult: (body) => !body?.errors,
 +    }, async(params) => {
