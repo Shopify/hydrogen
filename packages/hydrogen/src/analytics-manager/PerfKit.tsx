@@ -14,7 +14,7 @@ declare global {
 
 // Pin to a version that have SPA support.
 const PERF_KIT_URL =
-  'https://cdn.shopify.com/shopifycloud/perf-kit/shopify-perf-kit-1.0.0.min.js';
+  'https://cdn.shopify.com/shopifycloud/perf-kit/shopify-perf-kit-1.0.1.min.js';
 
 export function PerfKit({shop}: {shop: ShopAnalytics}) {
   const loadedEvent = useRef(false);
