@@ -72,6 +72,7 @@ export default class Deploy extends Command {
   static flags: any = {
     ...commonFlags.entry,
     ...commonFlags.env,
+    ...commonFlags.envBranch,
     ...overrideFlag(commonFlags.envFile, {
       'env-file': {
         description:
@@ -196,6 +197,7 @@ interface OxygenDeploymentOptions {
   buildCommand?: string;
   defaultEnvironment: boolean;
   env?: string;
+  envBranch?: string;
   environmentFile?: string;
   force: boolean;
   noVerify: boolean;
@@ -244,6 +246,7 @@ export async function runDeploy(
     buildCommand,
     defaultEnvironment,
     env: envHandle,
+    envBranch,
     environmentFile,
     force: forceOnUncommitedChanges,
     noVerify,
@@ -354,6 +357,10 @@ export async function runDeploy(
     );
   }
 
+  if (isCI && envBranch) {
+    userProvidedEnvironmentTag = envBranch;
+  }
+
   if (!isCI) {
     deploymentData = await getOxygenDeploymentData({
       root,
@@ -375,6 +382,11 @@ export async function runDeploy(
       if (userProvidedEnvironmentTag === null) {
         isPreview = true;
       }
+    } else if (envBranch) {
+      userProvidedEnvironmentTag = findEnvironmentByBranchOrThrow(
+        deploymentData.environments || [],
+        envBranch,
+      ).branch;
     }
   }
 
@@ -393,6 +405,7 @@ export async function runDeploy(
     !isCI &&
     !defaultEnvironment &&
     !envHandle &&
+    !envBranch &&
     deploymentData?.environments
   ) {
     if (deploymentData.environments.length > 1) {

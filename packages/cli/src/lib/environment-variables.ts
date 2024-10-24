@@ -7,6 +7,8 @@ import {type AbortError} from '@shopify/cli-kit/node/error';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import {getStorefrontEnvVariables} from './graphql/admin/pull-variables.js';
+import {getStorefrontEnvironments} from './graphql/admin/list-environments.js';
+import {findEnvironmentByBranchOrThrow} from './common.js';
 import {login} from './auth.js';
 
 type EnvMap = Record<string, string>;
@@ -14,6 +16,7 @@ type EnvMap = Record<string, string>;
 interface Arguments {
   root: string;
   envHandle?: string;
+  envBranch?: string;
   fetchRemote?: boolean;
   envFile: string;
   localVariables?: EnvMap;
@@ -27,6 +30,7 @@ const createEmptyRemoteVars = () => ({
 export async function getAllEnvironmentVariables({
   root,
   envHandle,
+  envBranch,
   envFile,
   fetchRemote = true,
   localVariables: inlineLocalVariables,
@@ -35,17 +39,19 @@ export async function getAllEnvironmentVariables({
     await Promise.all([
       // Get remote vars
       fetchRemote
-        ? getRemoteVariables(root, envHandle).catch((error: AbortError) => {
-            renderWarning({
-              headline:
-                'Failed to load environment variables from Shopify. The development server will still start, but the following error occurred:',
-              body: [error.message, error.tryMessage, error.nextSteps]
-                .filter(Boolean)
-                .join('\n\n'),
-            });
+        ? getRemoteVariables(root, envHandle, envBranch).catch(
+            (error: AbortError) => {
+              renderWarning({
+                headline:
+                  'Failed to load environment variables from Shopify. The development server will still start, but the following error occurred:',
+                body: [error.message, error.tryMessage, error.nextSteps]
+                  .filter(Boolean)
+                  .join('\n\n'),
+              });
 
-            return createEmptyRemoteVars();
-          })
+              return createEmptyRemoteVars();
+            },
+          )
         : createEmptyRemoteVars(),
       // Get local vars
       inlineLocalVariables
@@ -95,8 +101,20 @@ export async function getAllEnvironmentVariables({
   };
 }
 
-async function getRemoteVariables(root: string, envHandle?: string) {
+async function getRemoteVariables(
+  root: string,
+  envHandle?: string,
+  envBranch?: string,
+) {
   const {session, config} = await login(root);
+
+  if (envBranch) {
+    const environments =
+      (await getStorefrontEnvironments(session, config.storefront!.id))
+        ?.environments || [];
+
+    envHandle = findEnvironmentByBranchOrThrow(environments, envBranch).handle;
+  }
 
   const envVariables =
     (await getStorefrontEnvVariables(session, config.storefront!.id, envHandle))

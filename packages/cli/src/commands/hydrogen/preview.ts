@@ -35,6 +35,7 @@ export default class Preview extends Command {
     ...commonFlags.port,
     ...commonFlags.legacyRuntime,
     ...commonFlags.env,
+    ...commonFlags.envBranch,
     ...commonFlags.envFile,
     ...commonFlags.inspectorPort,
     ...commonFlags.debug,
@@ -97,6 +98,7 @@ type PreviewOptions = {
   directory?: string;
   legacyRuntime?: boolean;
   env?: string;
+  envBranch?: string;
   inspectorPort?: number;
   debug: boolean;
   verbose?: boolean;
@@ -113,6 +115,7 @@ export async function runPreview({
   directory,
   legacyRuntime = false,
   env: envHandle,
+  envBranch,
   inspectorPort,
   debug,
   verbose,
@@ -187,6 +190,7 @@ export async function runPreview({
     {
       root,
       fetchRemote,
+      envBranch,
       envHandle,
       envFile,
     },

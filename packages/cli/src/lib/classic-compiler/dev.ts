@@ -55,6 +55,7 @@ type DevOptions = {
   disableVirtualRoutes?: boolean;
   disableVersionCheck?: boolean;
   env?: string;
+  envBranch?: string;
   debug?: boolean;
   sourcemap?: boolean;
   inspectorPort?: number;
@@ -73,6 +74,7 @@ export async function runClassicCompilerDev({
   codegenConfigPath,
   disableVirtualRoutes,
   env: envHandle,
+  envBranch,
   debug = false,
   sourcemap = true,
   disableVersionCheck = false,
@@ -158,6 +160,7 @@ export async function runClassicCompilerDev({
     getAllEnvironmentVariables({
       root,
       fetchRemote,
+      envBranch,
       envHandle,
       localVariables,
       envFile,
@@ -323,6 +326,7 @@ export async function runClassicCompilerDev({
             await getAllEnvironmentVariables({
               root,
               fetchRemote,
+              envBranch,
               envHandle,
               envFile,
             });
