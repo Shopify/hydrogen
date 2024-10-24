@@ -6,6 +6,7 @@ import {
   CacheKey,
   runWithCache,
 } from './run-with-cache';
+import {fetchWithServerCache} from './server-fetch';
 import type {WaitUntil} from '../types';
 
 type CreateWithCacheOptions = {
@@ -13,50 +14,87 @@ type CreateWithCacheOptions = {
   cache: Cache;
   /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */
   waitUntil: WaitUntil;
-  /** The `request` object is used to access certain headers for debugging */
-  request?: CrossRuntimeRequest;
+  /** The `request` object is used by the Subrequest profiler, and to access certain headers for debugging */
+  request: CrossRuntimeRequest;
 };
 
-/**
- * Creates a utility function that executes an asynchronous operation
- * like `fetch` and caches the result according to the strategy provided.
- * Use this to call any third-party APIs from loaders or actions.
- *
- * > Note:
- * > Sometimes a request to a third-party API might fail, so you shouldn't cache the result.
- * > To prevent caching, throw when a request fails. If you don't throw, then the result is cached.
- */
-export function createWithCache<T = unknown>(
+type WithCacheRunOptions<T> = {
+  /** The cache key for this run */
+  cacheKey: CacheKey;
+  /**
+   * Use the `CachingStrategy` to define a custom caching mechanism for your data.
+   * Or use one of the pre-defined caching strategies: [`CacheNone`](/docs/api/hydrogen/utilities/cachenone), [`CacheShort`](/docs/api/hydrogen/utilities/cacheshort), [`CacheLong`](/docs/api/hydrogen/utilities/cachelong).
+   */
+  cacheStrategy: CachingStrategy;
+  /** Useful to avoid accidentally caching bad results */
+  shouldCacheResult: (value: T) => boolean;
+};
+
+type WithCacheFetchOptions<T> = {
+  displayName?: string;
+  /**
+   * Use the `CachingStrategy` to define a custom caching mechanism for your data.
+   * Or use one of the pre-defined caching strategies: [`CacheNone`](/docs/api/hydrogen/utilities/cachenone), [`CacheShort`](/docs/api/hydrogen/utilities/cacheshort), [`CacheLong`](/docs/api/hydrogen/utilities/cachelong).
+   */
+  cacheStrategy?: CachingStrategy;
+  /** The cache key for this fetch */
+  cacheKey?: CacheKey;
+  /** Useful to avoid e.g. caching a successful response that contains an error in the body */
+  shouldCacheResponse: (body: T, response: Response) => boolean;
+};
+
+export type WithCache = {
+  run: <T>(
+    options: WithCacheRunOptions<T>,
+    fn: ({addDebugData}: CacheActionFunctionParam) => T | Promise<T>,
+  ) => Promise<T>;
+  fetch: <T>(
+    url: string,
+    requestInit: RequestInit,
+    options: WithCacheFetchOptions<T>,
+  ) => Promise<{data: T | null; response: Response}>;
+};
+
+export function createWithCache(
   cacheOptions: CreateWithCacheOptions,
-): CreateWithCacheReturn<T> {
+): WithCache {
   const {cache, waitUntil, request} = cacheOptions;
 
-  return function withCache<T = unknown>(
-    cacheKey: CacheKey,
-    strategy: CachingStrategy,
-    actionFn: ({addDebugData}: CacheActionFunctionParam) => T | Promise<T>,
-  ) {
-    return runWithCache<T>(cacheKey, actionFn, {
-      strategy,
-      cacheInstance: cache,
-      waitUntil,
-      debugInfo: {
-        ...getDebugHeaders(request),
-        stackInfo: getCallerStackLine?.(),
-      },
-    });
+  return {
+    run: <T>(
+      {cacheKey, cacheStrategy, shouldCacheResult}: WithCacheRunOptions<T>,
+      fn: ({addDebugData}: CacheActionFunctionParam) => T | Promise<T>,
+    ): Promise<T> => {
+      return runWithCache(cacheKey, fn, {
+        shouldCacheResult,
+        strategy: cacheStrategy,
+        cacheInstance: cache,
+        waitUntil,
+        debugInfo: {
+          ...getDebugHeaders(request),
+          stackInfo: getCallerStackLine?.(),
+        },
+      });
+    },
+
+    fetch: <T>(
+      url: string,
+      requestInit: RequestInit,
+      options: WithCacheFetchOptions<T>,
+    ): Promise<{data: T | null; response: Response}> => {
+      return fetchWithServerCache<T | null>(url, requestInit ?? {}, {
+        waitUntil,
+        cacheKey: [url, requestInit],
+        cacheInstance: cache,
+        debugInfo: {
+          url,
+          ...getDebugHeaders(request),
+          stackInfo: getCallerStackLine?.(),
+          displayName: options?.displayName,
+        },
+        cache: options.cacheStrategy,
+        ...options,
+      }).then(([data, response]) => ({data, response}));
+    },
   };
 }
-
-/**
- * This is a caching async function. Whatever data is returned from the `actionFn` will be cached according to the strategy provided.
- *
- * Use the `CachingStrategy` to define a custom caching mechanism for your data. Or use one of the built-in caching strategies: `CacheNone`, `CacheShort`, `CacheLong`.
- */
-type CreateWithCacheReturn<T> = <U = T>(
-  cacheKey: CacheKey,
-  strategy: CachingStrategy,
-  actionFn: ({addDebugData}: CacheActionFunctionParam) => U | Promise<U>,
-) => Promise<U>;
-
-export type WithCache = ReturnType<typeof createWithCache>;
