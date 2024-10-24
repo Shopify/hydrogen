@@ -81,8 +81,7 @@ export default class Deploy extends Command {
       },
     }),
     preview: Flags.boolean({
-      description:
-        'Deploys to the Preview environment. Overrides --env-branch and Git metadata.',
+      description: 'Deploys to the Preview environment.',
       required: false,
       default: false,
     }),
