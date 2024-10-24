@@ -82,7 +82,7 @@ export default class Deploy extends Command {
     }),
     preview: Flags.boolean({
       description:
-        'Deploys to the Preview environment. Overrides Git metadata.',
+        'Deploys to the Preview environment.',
       required: false,
       default: false,
     }),

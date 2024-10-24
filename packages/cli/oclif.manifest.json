@@ -369,7 +369,7 @@
           "type": "option"
         },
         "preview": {
-          "description": "Deploys to the Preview environment. Overrides Git metadata.",
+          "description": "Deploys to the Preview environment.",
           "name": "preview",
           "required": false,
           "allowNo": false,
