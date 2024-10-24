@@ -81,8 +81,7 @@ export default class Deploy extends Command {
       },
     }),
     preview: Flags.boolean({
-      description:
-        'Deploys to the Preview environment.',
+      description: 'Deploys to the Preview environment.',
       required: false,
       default: false,
     }),
