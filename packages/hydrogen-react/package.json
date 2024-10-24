@@ -174,7 +174,7 @@
     "@xstate/fsm": "2.0.0",
     "@xstate/react": "3.2.1",
     "graphql": "^16.6.0",
-    "type-fest": "^4.5.0",
+    "type-fest": "^4.26.1",
     "worktop": "^0.7.3"
   },
   "repository": {
