@@ -9,7 +9,7 @@ import {
   type StorefrontClientProps,
 } from '@shopify/hydrogen-react';
 import type {WritableDeep} from 'type-fest';
-import {fetchWithServerCache, checkGraphQLErrors} from './cache/server-fetch';
+import {fetchWithServerCache} from './cache/server-fetch';
 import {
   SDK_VARIANT_HEADER,
   SDK_VARIANT_SOURCE_HEADER,
@@ -316,8 +316,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       cacheInstance: mutation ? undefined : cache,
       cache: cacheOptions || CacheDefault(),
       cacheKey,
-      shouldCacheResponse: checkGraphQLErrors,
       waitUntil,
+      // Check if the response body has GraphQL errors:
+      // https://spec.graphql.org/June2018/#sec-Response-Format
+      shouldCacheResponse: (body: any) => !body?.errors,
+      // Optional information for the subrequest profiler:
       debugInfo: {
         requestId: requestInit.headers[STOREFRONT_REQUEST_GROUP_ID_HEADER],
         displayName,
@@ -343,10 +346,14 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        * We try both and conform them to a single {errors} format.
        */
       let errors;
+      let bodyText = body;
       try {
-        errors = parseJSON(body);
+        bodyText ??= await response.text();
+        errors = parseJSON(bodyText);
       } catch (_e) {
-        errors = [{message: body}];
+        errors = [
+          {message: bodyText ?? 'Could not parse Storefront API response'},
+        ];
       }
 
       throwErrorWithGqlLink({...errorOptions, errors});

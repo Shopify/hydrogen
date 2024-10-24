@@ -50,7 +50,7 @@ export type CacheActionFunctionParam = {
 type WithCacheOptions<T = unknown> = {
   strategy?: CachingStrategy | null;
   cacheInstance?: Cache;
-  shouldCacheResult?: (value: T) => boolean;
+  shouldCacheResult: (value: T) => boolean;
   waitUntil?: WaitUntil;
   debugInfo?: DebugOptions;
 };
