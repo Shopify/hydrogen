@@ -1,5 +1,11 @@
 # @shopify/hydrogen-codegen
 
+## 0.3.2
+
+### Patch Changes
+
+- Checks anywhere in generated filename for "customer" or "caapi" ([#2600](https://github.com/Shopify/hydrogen/pull/2600)) by [@weotch](https://github.com/weotch)
+
 ## 0.3.1
 
 ### Patch Changes

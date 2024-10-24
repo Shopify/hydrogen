@@ -1,5 +1,67 @@
 # @shopify/cli-hydrogen
 
+## 8.5.0
+
+### Minor Changes
+
+- Remove deprecated --worker cli flag ([#2603](https://github.com/Shopify/hydrogen/pull/2603)) by [@rbshop](https://github.com/rbshop)
+
+### Patch Changes
+
+- Stabilize `getSitemap`, `getSitemapIndex` and implement on skeleton ([#2589](https://github.com/Shopify/hydrogen/pull/2589)) by [@juanpprieto](https://github.com/juanpprieto)
+
+  1. Update the `getSitemapIndex` at `/app/routes/[sitemap.xml].tsx`
+
+  ```diff
+  - import {unstable__getSitemapIndex as getSitemapIndex} from '@shopify/hydrogen';
+  + import {getSitemapIndex} from '@shopify/hydrogen';
+  ```
+
+  2. Update the `getSitemap` at `/app/routes/sitemap.$type.$page[.xml].tsx`
+
+  ```diff
+  - import {unstable__getSitemap as getSitemap} from '@shopify/hydrogen';
+  + import {getSitemap} from '@shopify/hydrogen';
+  ```
+
+  For a reference implementation please see the skeleton template sitemap routes
+
+- Add warnings to the Shopify CLI when your app uses reserved routes. These routes are reserved by Oxygen, and any local routes that conflict with them will not be used. ([#2613](https://github.com/Shopify/hydrogen/pull/2613)) by [@blittle](https://github.com/blittle)
+
+- Update to 2024-10 SFAPI ([#2570](https://github.com/Shopify/hydrogen/pull/2570)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- SFAPI update - Deprecate usages of `product.options.values` and use `product.options.optionValues` instead. ([#2585](https://github.com/Shopify/hydrogen/pull/2585)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  1. Update your product graphql query to use the new `optionValues` field.
+
+  ```diff
+    const PRODUCT_FRAGMENT = `#graphql
+      fragment Product on Product {
+        id
+        title
+        options {
+          name
+  -        values
+  +        optionValues {
+  +          name
+  +        }
+        }
+  ```
+
+  2. Update your `<VariantSelector>` to use the new `optionValues` field.
+
+  ```diff
+    <VariantSelector
+      handle={product.handle}
+  -    options={product.options.filter((option) => option.values.length > 1)}
+  +    options={product.options.filter((option) => option.optionValues.length > 1)}
+      variants={variants}
+    >
+  ```
+
+- Updated dependencies [[`a0f660aa`](https://github.com/Shopify/hydrogen/commit/a0f660aac56a5c3c41502c17d2ed44d3468ee6aa)]:
+  - @shopify/hydrogen-codegen@0.3.2
+
 ## 8.4.6
 
 ### Patch Changes
