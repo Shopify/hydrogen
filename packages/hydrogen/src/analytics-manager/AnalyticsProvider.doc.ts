@@ -7,7 +7,7 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description:
-    'Provides a context for tracking page views and cart events to send as analytics data to Shopify. This component is integrated with the Customer Privacy API for consent management. The provider can also be used to connect third-party analytics services through its subscribe and publish system. The [`useAnalytics`](/docs/api/hydrogen/2024-07/hooks/useanalytics) hook provides access to the analytics provider context.\n\nYou can also listen to a `document` event for `shopifyCustomerPrivacyApiLoaded`. It will be emitted when the Customer Privacy API is loaded.',
+    'Provides a context for tracking page views and cart events to send as analytics data to Shopify. This component is integrated with the Customer Privacy API for consent management. The provider can also be used to connect third-party analytics services through its subscribe and publish system. The [`useAnalytics`](/docs/api/hydrogen/2024-10/hooks/useanalytics) hook provides access to the analytics provider context.\n\nYou can also listen to a `document` event for `shopifyCustomerPrivacyApiLoaded`. It will be emitted when the Customer Privacy API is loaded.',
   type: 'component',
   defaultExample: {
     description: 'This is the default example',

@@ -8,7 +8,7 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'createHydrogenContext',
       type: 'utility',
-      url: '/docs/api/hydrogen/2024-07/utilities/createhydrogencontext',
+      url: '/docs/api/hydrogen/2024-10/utilities/createhydrogencontext',
     },
   ],
   description: `

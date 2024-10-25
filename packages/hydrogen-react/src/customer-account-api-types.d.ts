@@ -3931,7 +3931,7 @@ export type Mutation = {
    *
    * This operation is atomic, meaning no changes are persisted if an error is encountered.
    *
-   * As of `2024-07`, this operation supports compare-and-set functionality to better handle concurrent requests.
+   * As of `2024-10`, this operation supports compare-and-set functionality to better handle concurrent requests.
    * If `compareDigest` is set for any metafield, the mutation will only set that metafield if the persisted metafield value matches the digest used on `compareDigest`.
    * If the metafield doesn't exist yet, but you want to guarantee that the operation will run in a safe manner, set `compareDigest` to `null`.
    * The `compareDigest` value can be acquired by querying the metafield object and selecting `compareDigest` as a field.
