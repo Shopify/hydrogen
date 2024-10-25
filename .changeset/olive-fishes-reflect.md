@@ -3,19 +3,20 @@
 '@shopify/hydrogen': patch
 ---
 
-Change `<Analytics.Provider>` to set up Customer Privacy without the Shopify's cookie banner by default.
+[**Breaking change**]: Set up Customer Privacy without the Shopify's cookie banner by default.
 
-# Breaking Change
-
-If you are using `<Analytics.Provider>` in your app, you need to add `withPrivacyBanner={true}` to the `<AnalyticsProvider>` component if you are using the Shopify's cookie banner. Without this props, the Shopify cookie banner will not appear.
+If you are using Shopify's cookie banner to handle user consent in your app, you need to set `withPrivacyBanner: true` to the consent config. Without this update, the Shopify cookie banner will not appear.
 
 ```diff
-  <Analytics.Provider
-    cart={data.cart}
-    shop={data.shop}
-    consent={data.consent}
-+    withPrivacyBanner={true}
-  >
-  ...
-</Analytics.Provider>
+  return defer({
+    ...
+    consent: {
+      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
+      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
++      withPrivacyBanner: true,
+      // localize the privacy banner
+      country: args.context.storefront.i18n.country,
+      language: args.context.storefront.i18n.language,
+    },
+  });
 ```
