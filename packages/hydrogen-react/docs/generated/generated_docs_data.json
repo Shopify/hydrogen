@@ -4547,12 +4547,12 @@
             "tabs": [
               {
                 "title": "JavaScript",
-                "code": "import {ShopifyProvider, ShopPayButton} from '@shopify/hydrogen-react';\n\nexport default function App() {\n  return (\n    &lt;ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2024-07\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    &gt;\n      &lt;AddVariantQuantity1 variantId=\"gid://shopify/ProductVariant/1\" /&gt;\n    &lt;/ShopifyProvider&gt;\n  );\n}\n\nexport function AddVariantQuantity1({variantId}) {\n  return &lt;ShopPayButton variantIds={[variantId]} /&gt;;\n}\n",
+                "code": "import {ShopifyProvider, ShopPayButton} from '@shopify/hydrogen-react';\n\nexport default function App() {\n  return (\n    &lt;ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2024-10\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    &gt;\n      &lt;AddVariantQuantity1 variantId=\"gid://shopify/ProductVariant/1\" /&gt;\n    &lt;/ShopifyProvider&gt;\n  );\n}\n\nexport function AddVariantQuantity1({variantId}) {\n  return &lt;ShopPayButton variantIds={[variantId]} /&gt;;\n}\n",
                 "language": "jsx"
               },
               {
                 "title": "TypeScript",
-                "code": "import {ShopifyProvider, ShopPayButton} from '@shopify/hydrogen-react';\n\nexport default function App() {\n  return (\n    &lt;ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2024-07\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    &gt;\n      &lt;AddVariantQuantity1 variantId=\"gid://shopify/ProductVariant/1\" /&gt;\n    &lt;/ShopifyProvider&gt;\n  );\n}\n\nexport function AddVariantQuantity1({variantId}: {variantId: string}) {\n  return &lt;ShopPayButton variantIds={[variantId]} /&gt;;\n}\n",
+                "code": "import {ShopifyProvider, ShopPayButton} from '@shopify/hydrogen-react';\n\nexport default function App() {\n  return (\n    &lt;ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2024-10\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    &gt;\n      &lt;AddVariantQuantity1 variantId=\"gid://shopify/ProductVariant/1\" /&gt;\n    &lt;/ShopifyProvider&gt;\n  );\n}\n\nexport function AddVariantQuantity1({variantId}: {variantId: string}) {\n  return &lt;ShopPayButton variantIds={[variantId]} /&gt;;\n}\n",
                 "language": "tsx"
               }
             ],
@@ -6541,6 +6541,131 @@
     ]
   },
   {
+    "name": "decodeEncodedVariant",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "isOptionValueCombinationInEncodedVariant",
+        "type": "utility",
+        "url": "/docs/api/hydrogen/2024-10/utilities/isOptionValueCombinationInEncodedVariant"
+      }
+    ],
+    "description": "Decodes an encoded option value string into an array of option value combinations.",
+    "type": "utility",
+    "defaultExample": {
+      "description": "Decode an encoded option value string",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {decodeEncodedVariant} from '@shopify/hydrogen-react';\n\n// product.options = [\n//   {\n//     name: 'Color',\n//     optionValues: [\n//       {name: 'Red'},\n//       {name: 'Blue'},\n//       {name: 'Green'},\n//     ]\n//   },\n//   {\n//     name: 'Size',\n//     optionValues: [\n//       {name: 'S'},\n//       {name: 'M'},\n//       {name: 'L'},\n//     ]\n//   }\n// ]\n\nconst encodedVariantAvailability = 'v1_0:0-2,1:2,';\n\nconst decodedVariantAvailability = decodeEncodedVariant(\n  encodedVariantAvailability,\n);\n\n// decodedVariantAvailability\n// {\n//   [0,0],    // Red, S\n//   [0,1],    // Red, M\n//   [0,2],    // Red, L\n//   [1,2]     // Blue, L\n// }\n",
+            "language": "js"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "DecodeEncodedVariantGeneratedType",
+        "typeDefinitions": {
+          "DecodeEncodedVariantGeneratedType": {
+            "filePath": "src/optionValueDecoder.ts",
+            "name": "DecodeEncodedVariantGeneratedType",
+            "description": "For an encoded option value string, decode into option value combinations. Entries represent a valid combination formatted as an array of option value positions.",
+            "params": [
+              {
+                "name": "encodedVariantField",
+                "description": "Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantavailability)",
+                "value": "string",
+                "filePath": "src/optionValueDecoder.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "src/optionValueDecoder.ts",
+              "description": "Decoded option value combinations",
+              "name": "DecodedOptionValues",
+              "value": "DecodedOptionValues"
+            },
+            "value": "export function decodeEncodedVariant(\n  encodedVariantField: EncodedVariantField,\n): DecodedOptionValues {\n  if (!encodedVariantField) return [];\n\n  if (encodedVariantField.startsWith('v1_')) {\n    return v1Decoder(stripVersion(encodedVariantField));\n  }\n\n  throw new Error('Unsupported option value encoding');\n}"
+          },
+          "DecodedOptionValues": {
+            "filePath": "src/optionValueDecoder.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "DecodedOptionValues",
+            "value": "number[][]",
+            "description": ""
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "isOptionValueCombinationInEncodedVariant",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "decodeEncodedVariant",
+        "type": "utility",
+        "url": "/docs/api/hydrogen/2024-10/utilities/decodeEncodedVariant"
+      }
+    ],
+    "description": "\n    Determines whether an option value combination is present in an encoded option value string.\n\n`targetOptionValueCombination` - Indices of option values to look up in the encoded option value string. A partial set of indices may be passed to determine whether a node or any children is present. For example, if a product has 3 options, passing `[0]` will return true if any option value combination for the first option's option value is present in the encoded string.\n  ",
+    "type": "utility",
+    "defaultExample": {
+      "description": "Check if option value is in encoding",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {isOptionValueCombinationInEncodedVariant} from '@shopify/hydrogen-react';\n\n// product.options = [\n//   {\n//     name: 'Color',\n//     optionValues: [\n//       {name: 'Red'},\n//       {name: 'Blue'},\n//       {name: 'Green'},\n//     ]\n//   },\n//   {\n//     name: 'Size',\n//     optionValues: [\n//       {name: 'S'},\n//       {name: 'M'},\n//       {name: 'L'},\n//     ]\n//   }\n// ]\nconst encodedVariantExistence = 'v1_0:0-1,1:2,';\n\n// For reference: decoded encodedVariantExistence\n// {\n//   [0,0],    // Red, S\n//   [0,1],    // Red, M\n//   [1,2]     // Blue, L\n// }\n\n// Returns true since there are variants exist for [Red]\nisOptionValueCombinationInEncodedVariant([0], encodedVariantExistence); // true\n\nisOptionValueCombinationInEncodedVariant([0, 0], encodedVariantExistence); // true\nisOptionValueCombinationInEncodedVariant([0, 1], encodedVariantExistence); // true\nisOptionValueCombinationInEncodedVariant([0, 2], encodedVariantExistence); // false - no variant exist for [Red, L]\n\n// Returns true since there is a variant exist for [Blue]\nisOptionValueCombinationInEncodedVariant([1], encodedVariantExistence); // true\n\nisOptionValueCombinationInEncodedVariant([1, 0], encodedVariantExistence); // false - no variant exist for [Blue, S]\nisOptionValueCombinationInEncodedVariant([1, 1], encodedVariantExistence); // false - no variant exist for [Blue, M]\nisOptionValueCombinationInEncodedVariant([1, 2], encodedVariantExistence); // true\n\n// Returns false since there is no variant exist for [Green]\nisOptionValueCombinationInEncodedVariant([2], encodedVariantExistence); // false\n",
+            "language": "js"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "IsOptionValueCombinationInEncodedVariant",
+        "typeDefinitions": {
+          "IsOptionValueCombinationInEncodedVariant": {
+            "filePath": "src/optionValueDecoder.ts",
+            "name": "IsOptionValueCombinationInEncodedVariant",
+            "description": "",
+            "params": [
+              {
+                "name": "targetOptionValueCombination",
+                "description": "",
+                "value": "number[]",
+                "filePath": "src/optionValueDecoder.ts"
+              },
+              {
+                "name": "encodedVariantField",
+                "description": "",
+                "value": "string",
+                "filePath": "src/optionValueDecoder.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "src/optionValueDecoder.ts",
+              "description": "",
+              "name": "boolean",
+              "value": "boolean"
+            },
+            "value": "export type IsOptionValueCombinationInEncodedVariant = (\n  targetOptionValueCombination: number[],\n  encodedVariantField: string,\n) => boolean;"
+          }
+        }
+      }
+    ]
+  },
+  {
     "name": "parseGid",
     "category": "utilities",
     "isVisualComponent": false,
@@ -6716,7 +6841,7 @@
         "tabs": [
           {
             "title": "Client Example in NextJS",
-            "code": "import {createStorefrontClient} from '@shopify/hydrogen-react';\n\nexport const client = createStorefrontClient({\n  storeDomain: 'https://{store-name}.myshopify.com',\n  storefrontApiVersion: '2024-07',\n  privateStorefrontToken: '{private token for server-side requests}',\n});\n\n// in another file where you need to make queries, for example in NextJS server-side:\n\n// a Storefront API query\nconst GRAPHQL_QUERY = `\n  query {\n    shop {\n      name\n    }\n  }\n`;\n\n// make the request\nexport async function getServerSideProps() {\n  // Get the Storefront API url\n  const response = await fetch(client.getStorefrontApiUrl(), {\n    body: JSON.stringify({\n      query: GRAPHQL_QUERY,\n    }),\n    // Generate the headers using the private token. Additionally, you can pass in the buyer's IP address from the request object to help prevent bad actors from overloading your store.\n    headers: client.getPrivateTokenHeaders({buyerIp: '...'}),\n    method: 'POST',\n  });\n\n  if (!response.ok) {\n    throw new Error(response.statusText);\n  }\n\n  const json = await response.json();\n\n  return {props: json};\n}\n",
+            "code": "import {createStorefrontClient} from '@shopify/hydrogen-react';\n\nexport const client = createStorefrontClient({\n  storeDomain: 'https://{store-name}.myshopify.com',\n  storefrontApiVersion: '2024-10',\n  privateStorefrontToken: '{private token for server-side requests}',\n});\n\n// in another file where you need to make queries, for example in NextJS server-side:\n\n// a Storefront API query\nconst GRAPHQL_QUERY = `\n  query {\n    shop {\n      name\n    }\n  }\n`;\n\n// make the request\nexport async function getServerSideProps() {\n  // Get the Storefront API url\n  const response = await fetch(client.getStorefrontApiUrl(), {\n    body: JSON.stringify({\n      query: GRAPHQL_QUERY,\n    }),\n    // Generate the headers using the private token. Additionally, you can pass in the buyer's IP address from the request object to help prevent bad actors from overloading your store.\n    headers: client.getPrivateTokenHeaders({buyerIp: '...'}),\n    method: 'POST',\n  });\n\n  if (!response.ok) {\n    throw new Error(response.statusText);\n  }\n\n  const json = await response.json();\n\n  return {props: json};\n}\n",
             "language": "js"
           }
         ],
