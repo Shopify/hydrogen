@@ -1,10 +1,5 @@
-import {LIB_VERSION} from '../version.js';
-
+// This cannot use LIB_VERSION as it changes when deploy on next tag
+const COMPAT_DATE = '2024-10-01';
 export function getCompatDate() {
-  const [compatDate] = new Date(LIB_VERSION.replace(/\.\d+$/, '') + ' UTC')
-    .toISOString()
-    .split('T');
-
-  // E.g. '2024-10-01'
-  return compatDate;
+  return COMPAT_DATE;
 }
