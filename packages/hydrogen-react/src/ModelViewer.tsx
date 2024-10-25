@@ -23,7 +23,7 @@ type ModelViewerProps = Omit<
   ModelViewerBaseProps;
 
 type ModelViewerBaseProps = {
-  /** An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2024-07/objects/model3d). */
+  /** An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2024-10/objects/model3d). */
   data: PartialDeep<Model3d, {recurseIntoArrays: true}>;
   /** The callback to invoke when the 'error' event is triggered. Refer to [error in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-error). */
   onError?: (event: Event) => void;

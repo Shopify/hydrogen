@@ -31,7 +31,7 @@ const data: ReferenceEntityTemplateSchema = {
   definitions: [
     {
       title: 'Props',
-      type: 'IsOptionValueCombinationInEncodedVariantForDocs',
+      type: 'IsOptionValueCombinationInEncodedVariant',
       description: '',
     },
   ],

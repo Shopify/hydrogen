@@ -8,7 +8,7 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'CartForm',
       type: 'components',
-      url: '/docs/api/hydrogen/2024-07/components/cartform',
+      url: '/docs/api/hydrogen/2024-10/components/cartform',
     },
   ],
   description: `The \`useOptimisticCart\` takes an existing cart object, processes all pending cart actions, and locally mutates the cart with optimistic state. An optimistic cart makes cart actions immediately render in the browser while actions sync to the server. This increases the perceived performance of the application.`,
