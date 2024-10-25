@@ -5,6 +5,6 @@ export function getCompatDate() {
     .toISOString()
     .split('T');
 
-  // E.g. '2024-07-01'
+  // E.g. '2024-10-01'
   return compatDate;
 }

@@ -35,7 +35,7 @@
         "type": "Generic",
         "anchorLink": "authentication",
         "title": "Authentication",
-        "sectionContent": "To use Hydrogen React, you need to authenticate with and make requests to the [Storefront API](/docs/api/storefront). Hydrogen React includes an [API client](/docs/api/hydrogen-react/2024-07/utilities/createstorefrontclient) to securely handle API queries and mutations.\n\nYou can create and manage Storefront API access tokens by installing the [Headless sales channel](https://apps.shopify.com/headless) on your store.\n\nApps have access to [two kinds of tokens](/docs/api/usage/authentication#access-tokens-for-the-storefront-api): a public API token, which can be used in client-side code, and a private API token, which should only be used in server-side contexts and never exposed publicly.",
+        "sectionContent": "To use Hydrogen React, you need to authenticate with and make requests to the [Storefront API](/docs/api/storefront). Hydrogen React includes an [API client](/docs/api/hydrogen-react/2024-10/utilities/createstorefrontclient) to securely handle API queries and mutations.\n\nYou can create and manage Storefront API access tokens by installing the [Headless sales channel](https://apps.shopify.com/headless) on your store.\n\nApps have access to [two kinds of tokens](/docs/api/usage/authentication#access-tokens-for-the-storefront-api): a public API token, which can be used in client-side code, and a private API token, which should only be used in server-side contexts and never exposed publicly.",
         "sectionCard": [
           {
             "subtitle": "Install",

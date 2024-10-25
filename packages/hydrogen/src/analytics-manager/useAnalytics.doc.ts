@@ -6,7 +6,7 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description:
-    'A hook that provides access to the analytics provider context. Must be a descendent of [`Analytics.Provider`](/docs/api/hydrogen/2024-07/components/Analytics-provider).',
+    'A hook that provides access to the analytics provider context. Must be a descendent of [`Analytics.Provider`](/docs/api/hydrogen/2024-10/components/Analytics-provider).',
   type: 'hook',
   defaultExample: {
     description: 'This is the default example',
