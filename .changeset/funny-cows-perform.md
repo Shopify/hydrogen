@@ -1,7 +1,6 @@
 ---
 'skeleton': patch
 '@shopify/hydrogen': patch
-'@shopify/cli-hydrogen': patch
 ---
 
 Stabilize `getSitemap`, `getSitemapIndex` and implement on skeleton

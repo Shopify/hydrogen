@@ -1,11 +1,11 @@
 ---
 'skeleton': patch
 '@shopify/hydrogen': patch
-'@shopify/cli-hydrogen': patch
-'@shopify/create-hydrogen': patch
 ---
 
-SFAPI update - Deprecate usages of `product.options.values` and use `product.options.optionValues` instead.
+[**Breaking change**]
+
+Deprecate usages of `product.options.values` and use `product.options.optionValues` instead.
 
 1. Update your product graphql query to use the new `optionValues` field.
 

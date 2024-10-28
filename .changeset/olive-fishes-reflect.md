@@ -3,7 +3,9 @@
 '@shopify/hydrogen': patch
 ---
 
-[**Breaking change**]: Set up Customer Privacy without the Shopify's cookie banner by default.
+[**Breaking change**]
+
+Set up Customer Privacy without the Shopify's cookie banner by default.
 
 If you are using Shopify's cookie banner to handle user consent in your app, you need to set `withPrivacyBanner: true` to the consent config. Without this update, the Shopify cookie banner will not appear.
 
