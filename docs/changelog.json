@@ -5,9 +5,9 @@
     {
       "title": "SFAPI 2024.10, Cart mutation warnings, improved createWithCache, sitemap API stabilization, deprecations",
       "version": "2024.10.0",
-      "hash": "",
+      "hash": "845a7f61c87b5bbbffe7076814f0413163f72e72",
       "pr": "https://github.com/Shopify/hydrogen/pull/2612",
-      "commit": "https://github.com/Shopify/hydrogen/commit/",
+      "commit": "https://github.com/Shopify/hydrogen/commit/845a7f61c87b5bbbffe7076814f0413163f72e72",
       "dependencies": {
         "@remix-run/react": "^2.13.1",
         "@remix-run/server-runtime": "^2.13.1",
