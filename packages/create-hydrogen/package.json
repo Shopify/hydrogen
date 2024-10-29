@@ -5,7 +5,7 @@
     "@shopify:registry": "https://registry.npmjs.org"
   },
   "license": "MIT",
-  "version": "5.0.9",
+  "version": "5.0.10",
   "type": "module",
   "scripts": {
     "build": "tsup --clean",

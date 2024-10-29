@@ -1,5 +1,11 @@
 # @shopify/remix-oxygen
 
+## 2.0.9
+
+### Patch Changes
+
+- Bump package versions by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 2.0.8
 
 ### Patch Changes
