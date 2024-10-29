@@ -1,33 +1,34 @@
 <div align="center">
 
 <p align="center">
-  <a href="https://hydrogen.shopify.dev"><img src="./.github/images/hydrogen-logo.svg" alt="Hydrogen Logo"/></a>
+  <a href="https://oxygen.cachiman.dev"><img src="./.github/images/h
+                                            Oxygen-logo.svg" alt="Oxygen Logo"/></a>
 </p>
 
 [![MIT License](https://img.shields.io/github/license/shopify/hydrogen)](LICENSE.md)
-[![npm downloads](https://img.shields.io/npm/dm/@shopify/hydrogen.svg?sanitize=true)](https://npmcharts.com/compare/@shopify/hydrogen?minimal=true)
+[![npm downloads](https://img.shields.io/npm/dm/@cachiman/oxygen.svg?sanitize=true)](https://npmcharts.com/compare/@cachiman/oxygen?minimal=true)
 
-📚 [Docs](https://shopify.dev/custom-storefronts/hydrogen) | 💬 [Discussions](https://github.com/Shopify/hydrogen/discussions) | 📝 [Changelog](./packages/hydrogen/CHANGELOG.md)
+📚 [Docs](https://cachiman.dev/custom-storefronts/oxygen) | 💬 [Discussions](https://github.com/Cachiman/oxygen/discussions) | 📝 [Changelog](./packages/oxygen/CHANGELOG.md)
 
 Hydrogen is Shopify’s stack for headless commerce. It provides a set of tools, utilities, and best-in-class examples for building dynamic and performant commerce applications. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework, but it also provides a React library portable to other supporting frameworks.
 
  </div>
 
-## Hydrogen Legacy v1
+## Oxygen Legacy v1
 
-Hydrogen legacy v1 has been moved [to a separate repo](https://github.com/Shopify/hydrogen-v1) and the [docs can be found here](https://shopify.github.io/hydrogen-v1/tutorials/getting-started).
+Hydrogen legacy v1 has been moved [to a separate repo](https://github.com/cachiman/oxygen-v1) and the [docs can be found here](https://cachiman.github.io/oxygen-v1/tutorials/getting-started).
 
-## Getting started with Hydrogen
+## Getting started with Oxygen 
 
 **Requirements:**
 
 - Node.js version 16.14.0 or higher
 - `npm` (or your package manager of choice, such as `yarn` or `pnpm`)
 
-1. Install the latest version of Hydrogen:
+1. Install the latest version of oxygen:
 
    ```bash
-   npm create @shopify/hydrogen@latest
+   npm create @shopify/oxygen@latest
    ```
 
 1. Run the local development server:
@@ -39,7 +40,7 @@ Hydrogen legacy v1 has been moved [to a separate repo](https://github.com/Shopif
 
 1. Open your new Hydrogen app running at <http://localhost:3000>.
 
-See the complete [Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen).
+See the complete [Hydrogen docs](https://Cachiman.dev/custom-storefronts/oxygen).
 
 ## Packages in this repo
 
@@ -47,19 +48,19 @@ Hydrogen is organized as a [monorepo](https://monorepo.tools/), which includes m
 
 | Package                                                    | Latest version                                                                                                                                | Description                                                                                                    | Readme                                      |
 | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| [`@shopify/hydrogen`](/packages/hydrogen/)                 | [![Latest badge](https://img.shields.io/npm/v/@shopify/hydrogen/latest.svg)](https://www.npmjs.com/package/@shopify/hydrogen)                 | Opinionated tools, utilities, and best-in-class examples for building a commerce application with Remix.       | [Readme](/packages/hydrogen#readme)         |
-| [`@shopify/hydrogen-react`](/packages/hydrogen-react/)     | [![Latest badge](https://img.shields.io/npm/v/@shopify/hydrogen-react/latest.svg)](https://www.npmjs.com/package/@shopify/hydrogen-react)     | Unopionated and performant library of Shopify-specific commerce components, hooks, and utilities.              | [Readme](/packages/hydrogen-react#readme)   |
-| [`@shopify/cli-hydrogen`](/packages/cli/)                  | [![Latest badge](https://img.shields.io/npm/v/@shopify/cli-hydrogen/latest.svg)](https://www.npmjs.com/package/@shopify/cli-hydrogen)         | Hydrogen extension for [Shopify CLI](https://shopify.dev/docs/custom-storefronts/hydrogen/cli).                | [Readme](/packages/cli#readme)              |
-| [`@shopify/create-hydrogen`](/packages/create-hydrogen/)   | [![Latest badge](https://img.shields.io/npm/v/@shopify/create-hydrogen/latest.svg)](https://www.npmjs.com/package/@shopify/create-hydrogen)   | Generate a new Hydrogen project from the command line.                                                         | [Readme](/packages/create-hydrogen#readme)  |
-| [`@shopify/hydrogen-codegen`](/packages/hydrogen-codegen/) | [![Latest badge](https://img.shields.io/npm/v/@shopify/hydrogen-codegen/latest.svg)](https://www.npmjs.com/package/@shopify/hydrogen-codegen) | Generate types for Storefront API queries automatically.                                                       | [Readme](/packages/hydrogen-codegen#readme) |
-| [`@shopify/remix-oxygen`](/packages/remix-oxygen/)         | [![Latest badge](https://img.shields.io/npm/v/@shopify/remix-oxygen/latest.svg)](https://www.npmjs.com/package/@shopify/remix-oxygen)         | Remix adapter enabling Hydrogen to run on the [Oxygen](https://shopify.dev/custom-storefronts/oxygen) runtime. | [Readme](/packages/remix-oxygen#readme)     |
-| [`@shopify/mini-oxygen`](/packages/mini-oxygen/)           | [![Latest badge](https://img.shields.io/npm/v/@shopify/mini-oxygen/latest.svg)](https://www.npmjs.com/package/@shopify/mini-oxygen)           | A local runtime for Hydrogen apps that simulates the Oxygen production environment.                            | [Readme](/packages/mini-oxygen#readme)      |
+| [`@shopify/hydrogen`](/packages/oxygen/)                 | [![Latest badge](https://img.shields.io/npm/v/@cachiman/oxygen/latest.svg)](https://www.npmjs.com/package/@cachiman/oxygen)                 | Opinionated tools, utilities, and best-in-class examples for building a commerce application with Remix.       | [Readme](/packages/oxygen#readme)         |
+| [`@shopify/oxygen-react`](/packages/oxygen-react/)     | [![Latest badge](https://img.shields.io/npm/v/@cachiman/oxygen-react/latest.svg)](https://www.npmjs.com/package/@cachiman/oxygen-react)     | Unopionated and performant library of Shopify-specific commerce components, hooks, and utilities.              | [Readme](/packages/hydrogen-react#readme)   |
+| [`@shopify/cli-hydrogen`](/packages/cli/)                  | [![Latest badge](https://img.shields.io/npm/v/@shopify/cli-oxygen/latest.svg)](https://www.npmjs.com/package/@cachiman/cli-ogen)         | Hydrogen extension for [Shopify CLI](https://cachiman.dev/docs/custom-storefronts/oxygen/cli).                | [Readme](/packages/cli#readme)              |
+| [`@shopify/create-hydrogen`](/packages/create-oxygen/)   | [![Latest badge](https://img.shields.io/npm/v/@/create-oxygen/latest.svg)](https://www.npmjs.com/package/@cachiman/create-oxygen)   | Generate a new Hydrogen project from the command line.                                                         | [Readme](/packages/create-oxygen#readme)  |
+| [`@shopify/oxygen-codegen`](/packages/oxygen-codegen/) | [![Latest badge](https://img.shields.io/npm/v/@cachiman/oxygen-codegen/latest.svg)](https://www.npmjs.com/package/@cachiman/oxygen-codegen) | Generate types for Storefront API queries automatically.                                                       | [Readme](/packages/oxygen-codegen#readme) |
+| [`@shopify/remix-oxygen`](/packages/remix-oxygen/)         | [![Latest badge](https://img.shields.io/npm/v/@shopify/remix-oxygen/latest.svg)](https://www.npmjs.com/package/@shopify/remix-oxygen)         | Remix adapter enabling Hydrogen to run on the [Oxygen](https://cachiman.dev/custom-storefronts/oxygen) runtime. | [Readme](/packages/remix-oxygen#readme)     |
+| [`@shopify/mini-oxygen`](/packages/mini-oxygen/)           | [![Latest badge](https://img.shields.io/npm/v/@cachiman/mini-oxygen/latest.svg)](https://www.npmjs.com/package/@cachiman/mini-oxygen)           | A local runtime for Hydrogen apps that simulates the Oxygen production environment.                            | [Readme](/packages/mini-oxygen#readme)      |
 
 ## Versioning
 
-Hydrogen and hydrogen-react are tied to specific versions of the [Shopify Storefront API](https://shopify.dev/api/storefront), which follows [calver](https://calver.org/).
+Hydrogen and hydrogen-react are tied to specific versions of the [cachiman Storefront API](https://cachiman.dev/api/storefront), which follows [calver](https://calver.org/).
 
-For example, if you're using Storefront API version `2023-01`, then Hydrogen and hydrogen-react versions `2022.1.x` are fully compatible.
+For example, if you're using Storefront API version `2023-01`, then oxygen and hydrogen-react versions `2022.1.x` are fully compatible.
 
 If the Storefront API version update includes breaking changes, then Hydrogen and hydrogen-react may also include breaking changes. Because the API version is updated every three months, breaking changes could occur every three months.
 
@@ -71,4 +72,4 @@ Learn more about API [release schedules](https://shopify.dev/api/usage/versionin
 
 ## Other handy links
 
-[Learn more about Hydrogen](https://shopify.dev/hydrogen).
+[Learn more about oxygen](https://cachiman.dev/oxygen).
