@@ -59,8 +59,8 @@
           "id": "2588",
           "steps": [
             {
-              "title": "If you are using `<Analytics.Provider>` in your app, you need to add `withPrivacyBanner={true}` to the `<AnalyticsProvider>` component if you are using the Shopify's cookie banner. Without this props, the Shopify cookie banner will not appear.",
-              "code": "YGBgZGlmZgogIDxBbmFseXRpY3MuUHJvdmlkZXIKICAgIGNhcnQ9e2RhdGEuY2FydH0KICAgIHNob3A9e2RhdGEuc2hvcH0KICAgIGNvbnNlbnQ9e2RhdGEuY29uc2VudH0KKyAgICB3aXRoUHJpdmFjeUJhbm5lcj17dHJ1ZX0KICA+CiAgLi4uCjwvQW5hbHl0aWNzLlByb3ZpZGVyPgpgYGAK"
+              "title": "If you are using Shopify's cookie banner to handle user consent in your app, you need to set `withPrivacyBanner: true` to the consent config. Without this update, the Shopify cookie banner will not appear.",
+              "code": "YGBgZGlmZgogIHJldHVybiBkZWZlcih7CiAgICAuLi4KICAgIGNvbnNlbnQ6IHsKICAgICAgY2hlY2tvdXREb21haW46IGVudi5QVUJMSUNfQ0hFQ0tPVVRfRE9NQUlOLAogICAgICBzdG9yZWZyb250QWNjZXNzVG9rZW46IGVudi5QVUJMSUNfU1RPUkVGUk9OVF9BUElfVE9LRU4sCisgICAgICB3aXRoUHJpdmFjeUJhbm5lcjogdHJ1ZSwKICAgICAgLy8gbG9jYWxpemUgdGhlIHByaXZhY3kgYmFubmVyCiAgICAgIGNvdW50cnk6IGFyZ3MuY29udGV4dC5zdG9yZWZyb250LmkxOG4uY291bnRyeSwKICAgICAgbGFuZ3VhZ2U6IGFyZ3MuY29udGV4dC5zdG9yZWZyb250LmkxOG4ubGFuZ3VhZ2UsCiAgICB9LAogIH0pOwpgYGAK"
             }
           ]
         },
