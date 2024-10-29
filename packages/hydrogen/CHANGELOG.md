@@ -1,5 +1,163 @@
 # @shopify/hydrogen
 
+## 2024.10.1
+
+### Patch Changes
+
+- Add optional headers param for logout redirect ([#2602](https://github.com/Shopify/hydrogen/pull/2602)) by [@coryagami](https://github.com/coryagami)
+
+- Stabilize `getSitemap`, `getSitemapIndex` and implement on skeleton ([#2589](https://github.com/Shopify/hydrogen/pull/2589)) by [@juanpprieto](https://github.com/juanpprieto)
+
+  1. Update the `getSitemapIndex` at `/app/routes/[sitemap.xml].tsx`
+
+  ```diff
+  - import {unstable__getSitemapIndex as getSitemapIndex} from '@shopify/hydrogen';
+  + import {getSitemapIndex} from '@shopify/hydrogen';
+  ```
+
+  2. Update the `getSitemap` at `/app/routes/sitemap.$type.$page[.xml].tsx`
+
+  ```diff
+  - import {unstable__getSitemap as getSitemap} from '@shopify/hydrogen';
+  + import {getSitemap} from '@shopify/hydrogen';
+  ```
+
+  For a reference implementation please see the skeleton template sitemap routes
+
+- Update `<ProductPrice>` to remove deprecated code usage for `priceV2` and `compareAtPriceV2`. Remove export for `getCustomerPrivacy`. ([#2601](https://github.com/Shopify/hydrogen/pull/2601)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- [**Breaking change**] ([#2588](https://github.com/Shopify/hydrogen/pull/2588)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  Set up Customer Privacy without the Shopify's cookie banner by default.
+
+  If you are using Shopify's cookie banner to handle user consent in your app, you need to set `withPrivacyBanner: true` to the consent config. Without this update, the Shopify cookie banner will not appear.
+
+  ```diff
+    return defer({
+      ...
+      consent: {
+        checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
+        storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+  +      withPrivacyBanner: true,
+        // localize the privacy banner
+        country: args.context.storefront.i18n.country,
+        language: args.context.storefront.i18n.language,
+      },
+    });
+  ```
+
+- Update to 2024-10 SFAPI ([#2570](https://github.com/Shopify/hydrogen/pull/2570)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- [**Breaking change**] ([#2546](https://github.com/Shopify/hydrogen/pull/2546)) by [@frandiox](https://github.com/frandiox)
+
+  Update `createWithCache` to make it harder to accidentally cache undesired results. `request` is now mandatory prop when initializing `createWithCache`.
+
+  ```diff
+  // server.ts
+  export default {
+    async fetch(
+      request: Request,
+      env: Env,
+      executionContext: ExecutionContext,
+    ): Promise<Response> {
+      try {
+        // ...
+  -     const withCache = createWithCache({cache, waitUntil});
+  +     const withCache = createWithCache({cache, waitUntil, request});
+  ```
+
+  `createWithCache` now returns an object with two utility functions: `withCache.run` and `withCache.fetch`. Both have a new prop `shouldCacheResult` that must be defined.
+
+  The original `withCache` callback function is now `withCache.run`. This is useful to run _multiple_ fetch calls and merge their responses, or run any arbitrary code. It caches anything you return, but you can throw if you don't want to cache anything.
+
+  ```diff
+    const withCache = createWithCache({cache, waitUntil, request});
+
+    const fetchMyCMS = (query) => {
+  -    return withCache(['my-cms', query], CacheLong(), async (params) => {
+  +    return withCache.run({
+  +      cacheKey: ['my-cms', query],
+  +      cacheStrategy: CacheLong(),
+  +      // Cache if there are no data errors or a specific data that make this result not suited for caching
+  +      shouldCacheResult: (result) => !result?.errors,
+  +    }, async(params) => {
+        const response = await fetch('my-cms.com/api', {
+          method: 'POST',
+          body: query,
+        });
+        if (!response.ok) throw new Error(response.statusText);
+        const {data, error} = await response.json();
+        if (error || !data) throw new Error(error ?? 'Missing data');
+        params.addDebugData({displayName: 'My CMS query', response});
+        return data;
+      });
+    };
+  ```
+
+  New `withCache.fetch` is for caching simple fetch requests. This method caches the responses if they are OK responses, and you can pass `shouldCacheResponse`, `cacheKey`, etc. to modify behavior. `data` is the consumed body of the response (we need to consume to cache it).
+
+  ```ts
+  const withCache = createWithCache({cache, waitUntil, request});
+
+  const {data, response} = await withCache.fetch<{data: T; error: string}>(
+    'my-cms.com/api',
+    {
+      method: 'POST',
+      headers: {'Content-type': 'application/json'},
+      body,
+    },
+    {
+      cacheStrategy: CacheLong(),
+      // Cache if there are no data errors or a specific data that make this result not suited for caching
+      shouldCacheResponse: (result) => !result?.error,
+      cacheKey: ['my-cms', body],
+      displayName: 'My CMS query',
+    },
+  );
+  ```
+
+- [**Breaking change**] ([#2585](https://github.com/Shopify/hydrogen/pull/2585)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  Deprecate usages of `product.options.values` and use `product.options.optionValues` instead.
+
+  1. Update your product graphql query to use the new `optionValues` field.
+
+  ```diff
+    const PRODUCT_FRAGMENT = `#graphql
+      fragment Product on Product {
+        id
+        title
+        options {
+          name
+  -        values
+  +        optionValues {
+  +          name
+  +        }
+        }
+  ```
+
+  2. Update your `<VariantSelector>` to use the new `optionValues` field.
+
+  ```diff
+    <VariantSelector
+      handle={product.handle}
+  -    options={product.options.filter((option) => option.values.length > 1)}
+  +    options={product.options.filter((option) => option.optionValues.length > 1)}
+      variants={variants}
+    >
+  ```
+
+- Add utility functions `decodeEncodedVariant` and `isOptionValueCombinationInEncodedVariant` for parsing `product.encodedVariantExistence` and `product.encodedVariantAvailability` fields. ([#2425](https://github.com/Shopify/hydrogen/pull/2425)) by [@lhoffbeck](https://github.com/lhoffbeck)
+
+- [**Breaking change**] ([#2572](https://github.com/Shopify/hydrogen/pull/2572)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  Update all cart mutation methods from `createCartHandler` to return cart warnings.
+
+  As of API version 2024-10, inventory errors about stock levels will no longer be included in the `userErrors` of cart mutations. Inventory errors will now be available in a new return field `warnings` and will contain explicit code values of `MERCHANDISE_NOT_ENOUGH_STOCK` or `MERCHANDISE_OUT_OF_STOCK`. Reference: https://shopify.dev/changelog/cart-warnings-in-storefront-api-cart
+
+- Updated dependencies [[`8c89f298`](https://github.com/Shopify/hydrogen/commit/8c89f298a8d9084ee510fb4d0d17766ec43c249c), [`84a66b1e`](https://github.com/Shopify/hydrogen/commit/84a66b1e9d07bd6d6a10e5379ad3350b6bbecde9), [`76cd4f9b`](https://github.com/Shopify/hydrogen/commit/76cd4f9ba3dd8eff4433d72f4422c06a7d567537)]:
+  - @shopify/hydrogen-react@2024.10.1
+
 ## 2024.7.9
 
 ### Patch Changes
