@@ -28,7 +28,7 @@
     "@graphql-codegen/cli": "5.0.2",
     "@remix-run/dev": "^2.13.1",
     "@remix-run/eslint-config": "^2.13.1",
-    "@shopify/cli": "~3.69.2",
+    "@shopify/cli": "~3.69.3",
     "@shopify/hydrogen-codegen": "^0.3.2",
     "@shopify/mini-oxygen": "^3.1.0",
     "@shopify/oxygen-workers-types": "^4.1.2",
