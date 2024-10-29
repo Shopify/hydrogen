@@ -1,5 +1,15 @@
 # @shopify/hydrogen-react
 
+## 2024.10.0
+
+### Patch Changes
+
+- Update `<ProductPrice>` to remove deprecated code usage for `priceV2` and `compareAtPriceV2`. Remove export for `getCustomerPrivacy`. ([#2601](https://github.com/Shopify/hydrogen/pull/2601)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Update to 2024-10 SFAPI ([#2570](https://github.com/Shopify/hydrogen/pull/2570)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Add utility functions `decodeEncodedVariant` and `isOptionValueCombinationInEncodedVariant` for parsing `product.encodedVariantExistence` and `product.encodedVariantAvailability` fields. ([#2425](https://github.com/Shopify/hydrogen/pull/2425)) by [@lhoffbeck](https://github.com/lhoffbeck)
+
 ## 2024.7.6
 
 ### Patch Changes

@@ -1,5 +1,19 @@
 # @shopify/cli-hydrogen
 
+## 9.0.0
+
+### Minor Changes
+
+- Remove deprecated --worker cli flag ([#2603](https://github.com/Shopify/hydrogen/pull/2603)) by [@rbshop](https://github.com/rbshop)
+
+### Patch Changes
+
+- Add warnings to the Shopify CLI when your app uses reserved routes. These routes are reserved by Oxygen, and any local routes that conflict with them will not be used. ([#2613](https://github.com/Shopify/hydrogen/pull/2613)) by [@blittle](https://github.com/blittle)
+
+- Updated dependencies [[`a0f660aa`](https://github.com/Shopify/hydrogen/commit/a0f660aac56a5c3c41502c17d2ed44d3468ee6aa), [`29876f12`](https://github.com/Shopify/hydrogen/commit/29876f12c39ed23b0b80443769e566d29e84b56c)]:
+  - @shopify/hydrogen-codegen@0.3.2
+  - @shopify/mini-oxygen@3.1.0
+
 ## 8.4.6
 
 ### Patch Changes
