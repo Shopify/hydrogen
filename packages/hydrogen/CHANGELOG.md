@@ -1,6 +1,6 @@
 # @shopify/hydrogen
 
-## 2024.10.1
+## 2024.10.0
 
 ### Patch Changes
 
@@ -156,7 +156,7 @@
   As of API version 2024-10, inventory errors about stock levels will no longer be included in the `userErrors` of cart mutations. Inventory errors will now be available in a new return field `warnings` and will contain explicit code values of `MERCHANDISE_NOT_ENOUGH_STOCK` or `MERCHANDISE_OUT_OF_STOCK`. Reference: https://shopify.dev/changelog/cart-warnings-in-storefront-api-cart
 
 - Updated dependencies [[`8c89f298`](https://github.com/Shopify/hydrogen/commit/8c89f298a8d9084ee510fb4d0d17766ec43c249c), [`84a66b1e`](https://github.com/Shopify/hydrogen/commit/84a66b1e9d07bd6d6a10e5379ad3350b6bbecde9), [`76cd4f9b`](https://github.com/Shopify/hydrogen/commit/76cd4f9ba3dd8eff4433d72f4422c06a7d567537)]:
-  - @shopify/hydrogen-react@2024.10.1
+  - @shopify/hydrogen-react@2024.10.0
 
 ## 2024.7.9
 
