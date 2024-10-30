@@ -16,7 +16,7 @@
       },
       "devDependencies": {
         "@remix-run/dev": "^2.13.1",
-        "@shopify/cli": "3.69.2",
+        "@shopify/cli": "~3.69.4",
         "@shopify/hydrogen-codegen": "^0.3.2",
         "@shopify/mini-oxygen": "^3.1.0"
       },
