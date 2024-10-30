@@ -1,5 +1,11 @@
 # @shopify/create-hydrogen
 
+## 5.0.11
+
+### Patch Changes
+
+- Bump to get new cli package version by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 5.0.10
 
 ### Patch Changes
