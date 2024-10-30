@@ -72,3 +72,4 @@ Learn more about API [release schedules](https://shopify.dev/api/usage/versionin
 ## Other handy links
 
 [Learn more about Hydrogen](https://shopify.dev/hydrogen).
+
