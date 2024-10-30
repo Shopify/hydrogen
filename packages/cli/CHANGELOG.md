@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 9.0.2
+
+### Patch Changes
+
+- Restore cli-kit dependency ([#2629](https://github.com/Shopify/hydrogen/pull/2629)) by [@rbshop](https://github.com/rbshop)
+
 ## 9.0.1
 
 ### Patch Changes
