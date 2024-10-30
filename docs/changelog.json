@@ -3,6 +3,159 @@
   "version": "1",
   "releases": [
     {
+      "title": "SFAPI 2024.10, Cart mutation warnings, improved createWithCache, sitemap API stabilization, deprecations",
+      "version": "2024.10.0",
+      "hash": "845a7f61c87b5bbbffe7076814f0413163f72e72",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2612",
+      "commit": "https://github.com/Shopify/hydrogen/commit/845a7f61c87b5bbbffe7076814f0413163f72e72",
+      "dependencies": {
+        "@remix-run/react": "^2.13.1",
+        "@remix-run/server-runtime": "^2.13.1",
+        "@shopify/hydrogen": "2024.10.0",
+        "@shopify/remix-oxygen": "^2.0.9"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.13.1",
+        "@shopify/cli": "~3.69.4",
+        "@shopify/hydrogen-codegen": "^0.3.2",
+        "@shopify/mini-oxygen": "^3.1.0"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        },
+        "@shopify/mini-oxygen": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Add warnings to the Shopify CLI when your app uses reserved routes",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2613",
+          "id": "2613"
+        },
+        {
+          "title": "Remove deprecated --worker cli flag",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2603",
+          "id": "2603"
+        },
+        {
+          "title": "Remove deprecated code usage for priceV2 and compareAtPriceV2. Remove export for getCustomerPrivacy.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2601",
+          "id": "2601"
+        },
+        {
+          "title": "Make set up cookie banner by default to false",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2588",
+          "id": "2588",
+          "steps": [
+            {
+              "title": "If you are using Shopify's cookie banner to handle user consent in your app, you need to set `withPrivacyBanner: true` to the consent config. Without this update, the Shopify cookie banner will not appear.",
+              "code": "YGBgZGlmZgogIHJldHVybiBkZWZlcih7CiAgICAuLi4KICAgIGNvbnNlbnQ6IHsKICAgICAgY2hlY2tvdXREb21haW46IGVudi5QVUJMSUNfQ0hFQ0tPVVRfRE9NQUlOLAogICAgICBzdG9yZWZyb250QWNjZXNzVG9rZW46IGVudi5QVUJMSUNfU1RPUkVGUk9OVF9BUElfVE9LRU4sCisgICAgICB3aXRoUHJpdmFjeUJhbm5lcjogdHJ1ZSwKICAgICAgLy8gbG9jYWxpemUgdGhlIHByaXZhY3kgYmFubmVyCiAgICAgIGNvdW50cnk6IGFyZ3MuY29udGV4dC5zdG9yZWZyb250LmkxOG4uY291bnRyeSwKICAgICAgbGFuZ3VhZ2U6IGFyZ3MuY29udGV4dC5zdG9yZWZyb250LmkxOG4ubGFuZ3VhZ2UsCiAgICB9LAogIH0pOwpgYGAK"
+            }
+          ]
+        },
+        {
+          "title": "Deprecate usages of product.options.values and use product.options.optionValues instead",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2585",
+          "id": "2585",
+          "steps": [
+            {
+              "title": "Update your product graphql query to use the new `optionValues` field",
+              "code": "YGBgZGlmZgogIGNvbnN0IFBST0RVQ1RfRlJBR01FTlQgPSBgI2dyYXBocWwKICAgIGZyYWdtZW50IFByb2R1Y3Qgb24gUHJvZHVjdCB7CiAgICAgIGlkCiAgICAgIHRpdGxlCiAgICAgIG9wdGlvbnMgewogICAgICAgIG5hbWUKLSAgICAgICAgdmFsdWVzCisgICAgICAgIG9wdGlvblZhbHVlcyB7CisgICAgICAgICAgbmFtZQorICAgICAgICB9CiAgICAgIH0KYGBgCg=="
+            },
+            {
+              "title": "Update your `<VariantSelector>` to use the new `optionValues` field",
+              "code": "YGBgZGlmZgogIDxWYXJpYW50U2VsZWN0b3IKICAgIGhhbmRsZT17cHJvZHVjdC5oYW5kbGV9Ci0gICAgb3B0aW9ucz17cHJvZHVjdC5vcHRpb25zLmZpbHRlcigob3B0aW9uKSA9PiBvcHRpb24udmFsdWVzLmxlbmd0aCA+IDEpfQorICAgIG9wdGlvbnM9e3Byb2R1Y3Qub3B0aW9ucy5maWx0ZXIoKG9wdGlvbikgPT4gb3B0aW9uLm9wdGlvblZhbHVlcy5sZW5ndGggPiAxKX0KICAgIHZhcmlhbnRzPXt2YXJpYW50c30KICA+CmBgYAo="
+            }
+          ]
+        },
+        {
+          "title": "Update all cart mutation methods from createCartHandler to return cart warnings",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2572",
+          "id": "2572",
+          "steps": [
+            {
+              "title": "Check warnings for stock levels",
+              "docs": "https://shopify.dev/changelog/cart-warnings-in-storefront-api-cart",
+              "desc": "As of API version 2024-10, inventory errors about stock levels will no longer be included in the `userErrors` of cart mutations. Inventory errors will now be available in a new return field `warnings` and will contain explicit code values of `MERCHANDISE_NOT_ENOUGH_STOCK`` or MERCHANDISE_OUT_OF_STOCK`."
+            }
+          ]
+        },
+        {
+          "title": "Update createWithCache to make it harder to accidentally cache undesired results",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2546",
+          "id": "2546",
+          "steps": [
+            {
+              "title": "request is now a mandatory prop when initializing createWithCache.",
+              "code": "YGBgZGlmZgovLyBzZXJ2ZXIudHMKZXhwb3J0IGRlZmF1bHQgewogIGFzeW5jIGZldGNoKAogICAgcmVxdWVzdDogUmVxdWVzdCwKICAgIGVudjogRW52LAogICAgZXhlY3V0aW9uQ29udGV4dDogRXhlY3V0aW9uQ29udGV4dCwKICApOiBQcm9taXNlPFJlc3BvbnNlPiB7CiAgICB0cnkgewogICAgICAvLyAuLi4KLSAgICAgY29uc3Qgd2l0aENhY2hlID0gY3JlYXRlV2l0aENhY2hlKHtjYWNoZSwgd2FpdFVudGlsfSk7CisgICAgIGNvbnN0IHdpdGhDYWNoZSA9IGNyZWF0ZVdpdGhDYWNoZSh7Y2FjaGUsIHdhaXRVbnRpbCwgcmVxdWVzdH0pOwpgYGAK"
+            },
+            {
+              "title": "New `withCache.fetch` is for caching simple fetch requests. This method caches the responses if they are OK responses, and you can pass `shouldCacheResponse`, `cacheKey`, etc. to modify behavior. `data` is the consumed body of the response (we need to consume to cache it).",
+              "code": "YGBgdHMKICBjb25zdCB3aXRoQ2FjaGUgPSBjcmVhdGVXaXRoQ2FjaGUoe2NhY2hlLCB3YWl0VW50aWwsIHJlcXVlc3R9KTsKCiAgY29uc3Qge2RhdGEsIHJlc3BvbnNlfSA9IGF3YWl0IHdpdGhDYWNoZS5mZXRjaDx7ZGF0YTogVDsgZXJyb3I6IHN0cmluZ30+KAogICAgJ215LWNtcy5jb20vYXBpJywKICAgIHsKICAgICAgbWV0aG9kOiAnUE9TVCcsCiAgICAgIGhlYWRlcnM6IHsnQ29udGVudC10eXBlJzogJ2FwcGxpY2F0aW9uL2pzb24nfSwKICAgICAgYm9keSwKICAgIH0sCiAgICB7CiAgICAgIGNhY2hlU3RyYXRlZ3k6IENhY2hlTG9uZygpLAogICAgICAvLyBDYWNoZSBpZiB0aGVyZSBhcmUgbm8gZGF0YSBlcnJvcnMgb3IgYSBzcGVjaWZpYyBkYXRhIHRoYXQgbWFrZSB0aGlzIHJlc3VsdCBub3Qgc3VpdGVkIGZvciBjYWNoaW5nCiAgICAgIHNob3VsZENhY2hlUmVzcG9uc2U6IChyZXN1bHQpID0+ICFyZXN1bHQ/LmVycm9yLAogICAgICBjYWNoZUtleTogWydteS1jbXMnLCBib2R5XSwKICAgICAgZGlzcGxheU5hbWU6ICdNeSBDTVMgcXVlcnknLAogICAgfSwKICApOwpgYGAK"
+            },
+            {
+              "title": "The original `withCache` callback function is now `withCache.run`. This is useful to run *multiple* fetch calls and merge their responses, or run any arbitrary code. It caches anything you return, but you can throw if you don't want to cache anything.",
+              "code": "YGBgZGlmZgogIGNvbnN0IHdpdGhDYWNoZSA9IGNyZWF0ZVdpdGhDYWNoZSh7Y2FjaGUsIHdhaXRVbnRpbCwgcmVxdWVzdH0pOwoKICBjb25zdCBmZXRjaE15Q01TID0gKHF1ZXJ5KSA9PiB7Ci0gICAgcmV0dXJuIHdpdGhDYWNoZShbJ215LWNtcycsIHF1ZXJ5XSwgQ2FjaGVMb25nKCksIGFzeW5jIChwYXJhbXMpID0+IHsKKyAgICByZXR1cm4gd2l0aENhY2hlLnJ1bih7CisgICAgICBjYWNoZUtleTogWydteS1jbXMnLCBxdWVyeV0sCisgICAgICBjYWNoZVN0cmF0ZWd5OiBDYWNoZUxvbmcoKSwKKyAgICAgIC8vIENhY2hlIGlmIHRoZXJlIGFyZSBubyBkYXRhIGVycm9ycyBvciBhIHNwZWNpZmljIGRhdGEgdGhhdCBtYWtlIHRoaXMgcmVzdWx0IG5vdCBzdWl0ZWQgZm9yIGNhY2hpbmcKKyAgICAgIHNob3VsZENhY2hlUmVzdWx0OiAocmVzdWx0KSA9PiAhcmVzdWx0Py5lcnJvcnMsCisgICAgfSwgYXN5bmMocGFyYW1zKSA9PiB7CiAgICAgIGNvbnN0IHJlc3BvbnNlID0gYXdhaXQgZmV0Y2goJ215LWNtcy5jb20vYXBpJywgewogICAgICAgIG1ldGhvZDogJ1BPU1QnLAogICAgICAgIGJvZHk6IHF1ZXJ5LAogICAgICB9KTsKICAgICAgaWYgKCFyZXNwb25zZS5vaykgdGhyb3cgbmV3IEVycm9yKHJlc3BvbnNlLnN0YXR1c1RleHQpOwogICAgICBjb25zdCB7ZGF0YSwgZXJyb3J9ID0gYXdhaXQgcmVzcG9uc2UuanNvbigpOwogICAgICBpZiAoZXJyb3IgfHwgIWRhdGEpIHRocm93IG5ldyBFcnJvcihlcnJvciA/PyAnTWlzc2luZyBkYXRhJyk7CiAgICAgIHBhcmFtcy5hZGREZWJ1Z0RhdGEoe2Rpc3BsYXlOYW1lOiAnTXkgQ01TIHF1ZXJ5JywgcmVzcG9uc2V9KTsKICAgICAgcmV0dXJuIGRhdGE7CiAgICB9KTsKICB9OwpgYGAK"
+            }
+          ]
+        },
+        {
+          "title": "Add option value decoder utility functions",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2425",
+          "id": "2425"
+        }
+      ],
+      "features": [
+        {
+          "title": "Add optional headers param for logout redirect",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2602",
+          "id": "2602"
+        },
+        {
+          "title": "Support customer API codegen in directories",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2600",
+          "id": "2600"
+        },
+        {
+          "title": "Stabilize getSitemap, getSitemapIndex and implement on skeleton",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2589",
+          "id": "2589",
+          "steps": [
+            {
+              "title": "Update the getSitemapIndex at /app/routes/[sitemap.xml].tsx",
+              "code": "YGBgZGlmZgotIGltcG9ydCB7dW5zdGFibGVfX2dldFNpdGVtYXBJbmRleCBhcyBnZXRTaXRlbWFwSW5kZXh9IGZyb20gJ0BzaG9waWZ5L2h5ZHJvZ2VuJzsKKyBpbXBvcnQge2dldFNpdGVtYXBJbmRleH0gZnJvbSAnQHNob3BpZnkvaHlkcm9nZW4nOwpgYGAK"
+            },
+            {
+              "title": "Update the getSitemap at /app/routes/sitemap.$type.$page[.xml].tsx",
+              "code": "YGBgZGlmZgotIGltcG9ydCB7dW5zdGFibGVfX2dldFNpdGVtYXAgYXMgZ2V0U2l0ZW1hcH0gZnJvbSAnQHNob3BpZnkvaHlkcm9nZW4nOworIGltcG9ydCB7Z2V0U2l0ZW1hcH0gZnJvbSAnQHNob3BpZnkvaHlkcm9nZW4nOwpgYGAK"
+            }
+          ]
+        },
+        {
+          "title": "H2O compatibility date",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2380",
+          "id": "2380",
+          "steps": [
+            {
+              "title": "Check your project is working properly in an Oxygen deployment",
+              "desc": "Starting from this major version, on each deploy to Oxygen, Hydrogen will be on Cloudflare worker compatibility date `2024-10-01`. Onwards, Hydrogen will update worker compatibility date on every SFAPI release. There is no specific project update that needs to be done in order to get this feature. However, please ensure your project is working properly in an Oxygen deployment when updating to this Hydrogen version."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "title": "Various Analytics.Provider fixes and support local assets for Image component.",
       "version": "2024.7.9",
       "hash": "1335c41b30026212f5db40abd01378e61960456d",
