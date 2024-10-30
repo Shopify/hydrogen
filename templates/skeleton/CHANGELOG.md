@@ -1,5 +1,11 @@
 # skeleton
 
+## 2024.10.1
+
+### Patch Changes
+
+- Bump to get new cli package version by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 2024.10.0
 
 ### Patch Changes
