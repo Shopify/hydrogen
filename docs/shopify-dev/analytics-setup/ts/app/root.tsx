@@ -167,8 +167,9 @@ export function Layout({children}: {children?: React.ReactNode}) {
             consent={data.consent}
           >
           {/* [END provider] */}
-            {/* [START custom-component] */}
             <PageLayout {...data}>{children}</PageLayout>
+            {/* [START custom-component] */}
+            <ThirdPartyAnalyticsIntegration />
             {/* [END custom-component] */}
           {/* [START provider] */}
           </Analytics.Provider>
