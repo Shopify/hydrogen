@@ -12,14 +12,17 @@ import {
   Outlet,
   Scripts,
   useRouteError,
-  useLoaderData,
+  useRouteLoaderData,
   ScrollRestoration,
   isRouteErrorResponse,
 } from '@remix-run/react';
-import favicon from './assets/favicon.svg';
-import resetStyles from './styles/reset.css?url';
-import appStyles from './styles/app.css?url';
+import favicon from '~/assets/favicon.svg';
+import resetStyles from '~/styles/reset.css?url';
+import appStyles from '~/styles/app.css?url';
+import tailwindCss from './styles/tailwind.css?url';
 import {PageLayout} from '~/components/PageLayout';
+import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
+
 // [START import-custom]
 import {ThirdPartyAnalyticsIntegration} from '~/components/ThirdPartyAnalyticsIntegration';
 // [END import-custom]
@@ -28,22 +31,24 @@ import {ThirdPartyAnalyticsIntegration} from '~/components/ThirdPartyAnalyticsIn
  * This is important to avoid re-fetching root queries on sub-navigations
  * @type {ShouldRevalidateFunction}
  */
-export const shouldRevalidate = ({formMethod, currentUrl, nextUrl}) => {
+export const shouldRevalidate = ({
+  formMethod,
+  currentUrl,
+  nextUrl,
+  defaultShouldRevalidate,
+}) => {
   // revalidate when a mutation is performed e.g add to cart, login...
-  if (formMethod && formMethod !== 'GET') {
-    return true;
-  }
+  if (formMethod && formMethod !== 'GET') return true;
 
   // revalidate when manually revalidating via useRevalidator
-  if (currentUrl.toString() === nextUrl.toString()) {
-    return true;
-  }
+  if (currentUrl.toString() === nextUrl.toString()) return true;
 
-  return false;
+  return defaultShouldRevalidate;
 };
 
 export function links() {
   return [
+    {rel: 'stylesheet', href: tailwindCss},
     {rel: 'stylesheet', href: resetStyles},
     {rel: 'stylesheet', href: appStyles},
     {
@@ -59,60 +64,99 @@ export function links() {
 }
 
 /**
- * @param {LoaderFunctionArgs}
+ * @param {LoaderFunctionArgs} args
  */
-export async function loader({context}) {
+export async function loader(args) {
+  // Start fetching non-critical data without blocking time to first byte
+  const deferredData = loadDeferredData(args);
+
+  // Await the critical data required to render initial state of the page
+  const criticalData = await loadCriticalData(args);
+
   // [START env]
-  const {storefront, customerAccount, cart, env} = context;
+  const {storefront, env} = args.context;
   // [END env]
-  const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
 
-  const isLoggedInPromise = customerAccount.isLoggedIn();
-  const cartPromise = cart.get();
-
-  // defer the footer query (below the fold)
-  const footerPromise = storefront.query(FOOTER_QUERY, {
-    cache: storefront.CacheLong(),
-    variables: {
-      footerMenuHandle: 'footer', // Adjust to your footer menu handle
-    },
-  });
-
-  // await the header query (above the fold)
-  const headerPromise = storefront.query(HEADER_QUERY, {
-    cache: storefront.CacheLong(),
-    variables: {
-      headerMenuHandle: 'main-menu', // Adjust to your header menu handle
-    },
-  });
-
-  return defer(
-    {
-      cart: cartPromise,
-      footer: footerPromise,
-      header: await headerPromise,
-      isLoggedIn: isLoggedInPromise,
-      publicStoreDomain,
-      // [START getshop]
-      shop: getShopAnalytics({
-        storefront,
-        publicStorefrontId: env.PUBLIC_STOREFRONT_ID
-      }),
-      // [END getshop]
+  return defer({
+    ...deferredData,
+    ...criticalData,
+    publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
+    // [START getshop]
+    shop: getShopAnalytics({
+      storefront,
+      publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
+    }),
+    // [END getshop]
       // [START consent]
-      consent: {
-        checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
-        storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-      },
-      // [END consent]
-    }
-  );
+    consent: {
+      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
+      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+      withPrivacyBanner: true,
+      // localize the privacy banner
+      country: args.context.storefront.i18n.country,
+      language: args.context.storefront.i18n.language,
+    },
+     // [END consent]
+  });
 }
 
+/**
+ * Load data necessary for rendering content above the fold. This is the critical data
+ * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
+ * @param {LoaderFunctionArgs}
+ */
+async function loadCriticalData({context}) {
+  const {storefront} = context;
+
+  const [header] = await Promise.all([
+    storefront.query(HEADER_QUERY, {
+      cache: storefront.CacheLong(),
+      variables: {
+        headerMenuHandle: 'main-menu', // Adjust to your header menu handle
+      },
+    }),
+    // Add other queries here, so that they are loaded in parallel
+  ]);
+
+  return {header};
+}
+
+/**
+ * Load data for rendering content below the fold. This data is deferred and will be
+ * fetched after the initial page load. If it's unavailable, the page should still 200.
+ * Make sure to not throw any errors here, as it will cause the page to 500.
+ * @param {LoaderFunctionArgs}
+ */
+function loadDeferredData({context}) {
+  const {storefront, customerAccount, cart} = context;
+
+  // defer the footer query (below the fold)
+  const footer = storefront
+    .query(FOOTER_QUERY, {
+      cache: storefront.CacheLong(),
+      variables: {
+        footerMenuHandle: 'footer', // Adjust to your footer menu handle
+      },
+    })
+    .catch((error) => {
+      // Log query errors, but don't throw them so the page can still render
+      console.error(error);
+      return null;
+    });
+  return {
+    cart: cart.get(),
+    isLoggedIn: customerAccount.isLoggedIn(),
+    footer,
+  };
+}
+
+/**
+ * @param {{children?: React.ReactNode}}
+ */
 export function Layout({children}) {
   const nonce = useNonce();
-  /** @type {LoaderReturnData} */
-  const data = useRouteLoaderData<RootLoader>('root');
+  /** @type {RootLoader} */
+  const data = useRouteLoaderData('root');
 
   return (
     <html lang="en">
@@ -123,21 +167,25 @@ export function Layout({children}) {
         <Links />
       </head>
       <body>
-        {/* [START provider] */}
-        <Analytics.Provider
-          cart={data.cart}
-          shop={data.shop}
-          consent={data.consent}
-          customData={{foo: 'bar'}}
-        >
-        {/* [END provider] */}
-          <PageLayout {...data}>{children}</PageLayout>
-          {/* [START custom-component] */}
-          <ThirdPartyAnalyticsIntegration />
-          {/* [END custom-component] */}
-        {/* [START provider] */}
-        </Analytics.Provider>
-        {/* [END provider] */}
+        {data ? (
+          {/* [START provider] */}
+          <Analytics.Provider
+            cart={data.cart}
+            shop={data.shop}
+            consent={data.consent}
+            customData={{foo: 'bar'}}
+          >
+          {/* [END provider] */}
+            <PageLayout {...data}>{children}</PageLayout>
+            {/* [START custom-component] */}
+            <ThirdPartyAnalyticsIntegration />
+            {/* [END custom-component] */}
+          {/* [START provider] */}
+          </Analytics.Provider>
+          {/* [END provider] */}
+        ) : (
+          children
+        )}
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>
@@ -174,75 +222,7 @@ export function ErrorBoundary() {
   );
 }
 
-const MENU_FRAGMENT = `#graphql
-  fragment MenuItem on MenuItem {
-    id
-    resourceId
-    tags
-    title
-    type
-    url
-  }
-  fragment ChildMenuItem on MenuItem {
-    ...MenuItem
-  }
-  fragment ParentMenuItem on MenuItem {
-    ...MenuItem
-    items {
-      ...ChildMenuItem
-    }
-  }
-  fragment Menu on Menu {
-    id
-    items {
-      ...ParentMenuItem
-    }
-  }
-`;
-
-const HEADER_QUERY = `#graphql
-  fragment Shop on Shop {
-    id
-    name
-    description
-    primaryDomain {
-      url
-    }
-    brand {
-      logo {
-        image {
-          url
-        }
-      }
-    }
-  }
-  query Header(
-    $country: CountryCode
-    $headerMenuHandle: String!
-    $language: LanguageCode
-  ) @inContext(language: $language, country: $country) {
-    shop {
-      ...Shop
-    }
-    menu(handle: $headerMenuHandle) {
-      ...Menu
-    }
-  }
-  ${MENU_FRAGMENT}
-`;
-
-const FOOTER_QUERY = `#graphql
-  query Footer(
-    $country: CountryCode
-    $footerMenuHandle: String!
-    $language: LanguageCode
-  ) @inContext(language: $language, country: $country) {
-    menu(handle: $footerMenuHandle) {
-      ...Menu
-    }
-  }
-  ${MENU_FRAGMENT}
-`;
+/** @typedef {LoaderReturnData} RootLoader */
 
 /** @typedef {import('@shopify/remix-oxygen').LoaderFunctionArgs} LoaderFunctionArgs */
 /** @typedef {import('@remix-run/react').ShouldRevalidateFunction} ShouldRevalidateFunction */

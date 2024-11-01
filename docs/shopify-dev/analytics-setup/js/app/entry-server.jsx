@@ -3,6 +3,13 @@ import isbot from 'isbot';
 import {renderToReadableStream} from 'react-dom/server';
 import {createContentSecurityPolicy} from '@shopify/hydrogen';
 
+/**
+ * @param {Request} request
+ * @param {number} responseStatusCode
+ * @param {Headers} responseHeaders
+ * @param {EntryContext} remixContext
+ * @param {AppLoadContext} context
+ */
 export default async function handleRequest(
   request,
   responseStatusCode,
@@ -17,7 +24,7 @@ export default async function handleRequest(
     shop: {
       checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
       storeDomain: context.env.PUBLIC_STORE_DOMAIN,
-    }
+    },
   });
   // [END csp]
 
@@ -48,3 +55,6 @@ export default async function handleRequest(
     status: responseStatusCode,
   });
 }
+
+/** @typedef {import('@shopify/remix-oxygen').EntryContext} EntryContext */
+/** @typedef {import('@shopify/remix-oxygen').AppLoadContext} AppLoadContext */
