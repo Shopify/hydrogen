@@ -106,7 +106,9 @@ export const CART_QUERY_FRAGMENT = `#graphql
     }
   }
   fragment CartApiQuery on Cart {
+    // [START query]
     updatedAt
+    // [END query]
     id
     appliedGiftCards {
       lastCharacters
