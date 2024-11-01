@@ -146,6 +146,14 @@ export type CustomerAccountOptions = {
   logErrors?: boolean | ((error?: Error) => boolean);
   /** UNSTABLE feature, this will eventually goes away. If true then we will exchange customerAccessToken for storefrontCustomerAccessToken. */
   unstableB2b?: boolean;
+
+  /** the shop name store domain */
+  storeDomain?: string;
+
+  /** the shop name store domain */
+  storefrontAccessToken?: string;
+  /** the shop name store domain */
+  adminAccessToken?: string;
 };
 
 /** Below are types meant for documentation only. Ensure it stay in sync with the type above. */

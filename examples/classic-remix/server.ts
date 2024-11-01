@@ -62,6 +62,9 @@ export default {
         session,
         customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID,
         customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_API_URL,
+        storeDomain: env.PUBLIC_STORE_DOMAIN,
+        storefrontAccessToken: env.CUSTOM_APP_STOREFRONT_ACCESS_TOKEN,
+        adminAccessToken: env.CUSTOM_APP_ACCESS_TOKEN,
       });
 
       /*
