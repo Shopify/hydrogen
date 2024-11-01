@@ -1,9 +1,8 @@
-import {Await} from '@remix-run/react';
+import {Await, useRouteLoaderData} from '@remix-run/react';
 import {Suspense} from 'react';
 import {CartForm, Analytics} from '@shopify/hydrogen';
 import {json} from '@shopify/remix-oxygen';
-import {CartMain} from '~/components/Cart';
-import {useRootLoaderData} from '~/lib/root-data';
+import {CartMain} from '~/components/CartMain';
 
 /**
  * @type {MetaFunction}
@@ -73,9 +72,9 @@ export async function action({request, context}) {
       throw new Error(`${action} cart action is not defined`);
   }
 
-  const cartId = result.cart.id;
-  const headers = cart.setCartId(result.cart.id);
-  const {cart: cartResult, errors} = result;
+  const cartId = result?.cart?.id;
+  const headers = cartId ? cart.setCartId(result.cart.id) : new Headers();
+  const {cart: cartResult, errors, warnings} = result;
 
   const redirectTo = formData.get('redirectTo') ?? null;
   if (typeof redirectTo === 'string') {
@@ -87,6 +86,7 @@ export async function action({request, context}) {
     {
       cart: cartResult,
       errors,
+      warnings,
       analytics: {
         cartId,
       },
@@ -96,15 +96,16 @@ export async function action({request, context}) {
 }
 
 export default function Cart() {
-  const rootData = useRootLoaderData();
-  const cartPromise = rootData.cart;
+  /** @type {RootLoader} */
+  const rootData = useRouteLoaderData('root');
+  if (!rootData) return null;
 
   return (
     <div className="cart">
       <h1>Cart</h1>
       <Suspense fallback={<p>Loading cart ...</p>}>
         <Await
-          resolve={cartPromise}
+          resolve={rootData.cart}
           errorElement={<div>An error occurred</div>}
         >
           {(cart) => {
@@ -122,4 +123,5 @@ export default function Cart() {
 /** @template T @typedef {import('@remix-run/react').MetaFunction<T>} MetaFunction */
 /** @typedef {import('@shopify/hydrogen').CartQueryDataReturn} CartQueryDataReturn */
 /** @typedef {import('@shopify/remix-oxygen').ActionFunctionArgs} ActionFunctionArgs */
+/** @typedef {import('~/root').RootLoader} RootLoader */
 /** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof action>} ActionReturnData */
