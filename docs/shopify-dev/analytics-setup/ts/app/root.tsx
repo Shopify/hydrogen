@@ -12,7 +12,7 @@ import {
   Outlet,
   Scripts,
   useRouteError,
-  useLoaderData,
+  useRouteLoaderData,
   ScrollRestoration,
   isRouteErrorResponse,
   type ShouldRevalidateFunction,
@@ -21,9 +21,12 @@ import favicon from './assets/favicon.svg';
 import resetStyles from './styles/reset.css?url';
 import appStyles from './styles/app.css?url';
 import {PageLayout} from '~/components/PageLayout';
+import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
 // [START import-custom]
 import {ThirdPartyAnalyticsIntegration} from '~/components/ThirdPartyAnalyticsIntegration';
 // [END import-custom]
+
+export type RootLoader = typeof loader;
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -62,52 +65,85 @@ export function links() {
   ];
 }
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader(args: LoaderFunctionArgs) {
   // [START env]
-  const {storefront, customerAccount, cart, env} = context;
+  const {storefront, env} = args.context;
   // [END env]
-  const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
+  // Start fetching non-critical data without blocking time to first byte
+  const deferredData = loadDeferredData(args);
 
-  const isLoggedInPromise = customerAccount.isLoggedIn();
-  const cartPromise = cart.get();
+  // Await the critical data required to render initial state of the page
+  const criticalData = await loadCriticalData(args);
+
+  return defer({
+    ...deferredData,
+    ...criticalData,
+    publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
+    // [START getshop]
+    shop: getShopAnalytics({
+      storefront,
+      publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
+    }),
+    // [END getshop]
+    // [START consent]
+    consent: {
+      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
+      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+      withPrivacyBanner: false,
+      // localize the privacy banner
+      country: storefront.i18n.country,
+      language: storefront.i18n.language,
+    },
+    // [END consent]
+  });
+}
+
+/**
+ * Load data necessary for rendering content above the fold. This is the critical data
+ * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
+ */
+async function loadCriticalData({context}: LoaderFunctionArgs) {
+  const {storefront} = context;
+
+  const [header] = await Promise.all([
+    storefront.query(HEADER_QUERY, {
+      cache: storefront.CacheLong(),
+      variables: {
+        headerMenuHandle: 'main-menu', // Adjust to your header menu handle
+      },
+    }),
+    // Add other queries here, so that they are loaded in parallel
+  ]);
+
+  return {header};
+}
+
+/**
+ * Load data for rendering content below the fold. This data is deferred and will be
+ * fetched after the initial page load. If it's unavailable, the page should still 200.
+ * Make sure to not throw any errors here, as it will cause the page to 500.
+ */
+function loadDeferredData({context}: LoaderFunctionArgs) {
+  const {storefront, customerAccount, cart} = context;
 
   // defer the footer query (below the fold)
-  const footerPromise = storefront.query(FOOTER_QUERY, {
-    cache: storefront.CacheLong(),
-    variables: {
-      footerMenuHandle: 'footer', // Adjust to your footer menu handle
-    },
-  });
-
-  // await the header query (above the fold)
-  const headerPromise = storefront.query(HEADER_QUERY, {
-    cache: storefront.CacheLong(),
-    variables: {
-      headerMenuHandle: 'main-menu', // Adjust to your header menu handle
-    },
-  });
-
-  return defer(
-    {
-      cart: cartPromise,
-      footer: footerPromise,
-      header: await headerPromise,
-      isLoggedIn: isLoggedInPromise,
-      publicStoreDomain,
-      // [START getshop]
-      shop: getShopAnalytics({
-        storefront,
-        publicStorefrontId: env.PUBLIC_STOREFRONT_ID
-      }),
-      // [END getshop]
-      // [START consent]
-      consent: {
-        checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
-        storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+  const footer = storefront
+    .query(FOOTER_QUERY, {
+      cache: storefront.CacheLong(),
+      variables: {
+        footerMenuHandle: 'footer', // Adjust to your footer menu handle
       },
-      // [END consent]
-    }
-  );
+    })
+    .catch((error) => {
+      // Log query errors, but don't throw them so the page can still render
+      console.error(error);
+      return null;
+    });
+  return {
+    cart: cart.get(),
+    isLoggedIn: customerAccount.isLoggedIn(),
+    footer,
+  };
 }
 
 export function Layout({children}: {children?: React.ReactNode}) {
@@ -123,21 +159,23 @@ export function Layout({children}: {children?: React.ReactNode}) {
         <Links />
       </head>
       <body>
-        {/* [START provider] */}
-        <Analytics.Provider
-          cart={data.cart}
-          shop={data.shop}
-          consent={data.consent}
-          customData={{foo: 'bar'}}
-        >
-        {/* [END provider] */}
-          <PageLayout {...data}>{children}</PageLayout>
-          {/* [START custom-component] */}
-          <ThirdPartyAnalyticsIntegration />
-          {/* [END custom-component] */}
-        {/* [START provider] */}
-        </Analytics.Provider>
-        {/* [END provider] */}
+        {data ? (
+          {/* [START provider] */}
+          <Analytics.Provider
+            cart={data.cart}
+            shop={data.shop}
+            consent={data.consent}
+          >
+          {/* [END provider] */}
+            {/* [START custom-component] */}
+            <PageLayout {...data}>{children}</PageLayout>
+            {/* [END custom-component] */}
+          {/* [START provider] */}
+          </Analytics.Provider>
+          {/* [END provider] */}
+        ) : (
+          children
+        )}
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>
@@ -173,73 +211,3 @@ export function ErrorBoundary() {
     </div>
   );
 }
-
-const MENU_FRAGMENT = `#graphql
-  fragment MenuItem on MenuItem {
-    id
-    resourceId
-    tags
-    title
-    type
-    url
-  }
-  fragment ChildMenuItem on MenuItem {
-    ...MenuItem
-  }
-  fragment ParentMenuItem on MenuItem {
-    ...MenuItem
-    items {
-      ...ChildMenuItem
-    }
-  }
-  fragment Menu on Menu {
-    id
-    items {
-      ...ParentMenuItem
-    }
-  }
-` as const;
-
-const HEADER_QUERY = `#graphql
-  fragment Shop on Shop {
-    id
-    name
-    description
-    primaryDomain {
-      url
-    }
-    brand {
-      logo {
-        image {
-          url
-        }
-      }
-    }
-  }
-  query Header(
-    $country: CountryCode
-    $headerMenuHandle: String!
-    $language: LanguageCode
-  ) @inContext(language: $language, country: $country) {
-    shop {
-      ...Shop
-    }
-    menu(handle: $headerMenuHandle) {
-      ...Menu
-    }
-  }
-  ${MENU_FRAGMENT}
-` as const;
-
-const FOOTER_QUERY = `#graphql
-  query Footer(
-    $country: CountryCode
-    $footerMenuHandle: String!
-    $language: LanguageCode
-  ) @inContext(language: $language, country: $country) {
-    menu(handle: $footerMenuHandle) {
-      ...Menu
-    }
-  }
-  ${MENU_FRAGMENT}
-` as const;

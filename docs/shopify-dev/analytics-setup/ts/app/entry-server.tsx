@@ -1,11 +1,13 @@
-import type {EntryContext} from '@shopify/remix-oxygen';
+import type {
+  EntryContext,
+  // [START csp]
+  AppLoadContext,
+  // [END csp]
+} from '@shopify/remix-oxygen';
 import {RemixServer} from '@remix-run/react';
 import isbot from 'isbot';
 import {renderToReadableStream} from 'react-dom/server';
 import {createContentSecurityPolicy} from '@shopify/hydrogen';
-// [START csp]
-import type {AppLoadContext} from '@remix-run/server-runtime';
-// [END csp]
 
 export default async function handleRequest(
   request: Request,
@@ -21,7 +23,7 @@ export default async function handleRequest(
     shop: {
       checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
       storeDomain: context.env.PUBLIC_STORE_DOMAIN,
-    }
+    },
   });
   // [END csp]
 
