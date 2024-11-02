@@ -66,6 +66,7 @@ export default {
         storeDomain: env.PUBLIC_STORE_DOMAIN,
         storefrontAccessToken: env.CUSTOM_APP_STOREFRONT_ACCESS_TOKEN,
         adminAccessToken: env.CUSTOM_APP_ACCESS_TOKEN,
+        ssoLoginUrl: env.PUBLIC_SSO_LOGIN_URL,
         /***********************************************/
         /**********  EXAMPLE UPDATE STARTS  ************/
         unstableB2b: true,

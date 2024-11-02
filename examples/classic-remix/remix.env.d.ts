@@ -33,6 +33,7 @@ declare global {
     PUBLIC_CHECKOUT_DOMAIN: string;
     CUSTOM_APP_STOREFRONT_ACCESS_TOKEN: string;
     CUSTOM_APP_ACCESS_TOKEN: string;
+    PUBLIC_SSO_LOGIN_URL: string;
   }
 }
 

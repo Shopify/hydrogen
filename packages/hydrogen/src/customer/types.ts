@@ -150,6 +150,8 @@ export type CustomerAccountOptions = {
   /** the shop name store domain */
   storeDomain?: string;
 
+  ssoLoginUrl?: string;
+
   /** the shop name store domain */
   storefrontAccessToken?: string;
   /** the shop name store domain */

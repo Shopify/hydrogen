@@ -59,6 +59,7 @@ export function createCustomerAccountClient({
   storeDomain,
   storefrontAccessToken,
   adminAccessToken,
+  ssoLoginUrl,
   customAuthStatusHandler,
   logErrors = true,
   unstableB2b = false,
@@ -374,7 +375,7 @@ export function createCustomerAccountClient({
   return {
     login: async (options?: LoginOptions) => {
       const loginUrl = new URL(
-        `https://store.xecurify.com/moas/broker/login/shopify/${storeDomain}/index`,
+        `${ssoLoginUrl}`,
       );
 
       session.set(CUSTOMER_ACCOUNT_SESSION_KEY, {

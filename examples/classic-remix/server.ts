@@ -50,6 +50,7 @@ export default {
         privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
         storeDomain: env.PUBLIC_STORE_DOMAIN,
         storefrontId: env.PUBLIC_STOREFRONT_ID,
+        ssoLoginUrl: env.PUBLIC_SSO_LOGIN_URL,
         storefrontHeaders: getStorefrontHeaders(request),
       });
 
