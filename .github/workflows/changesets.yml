@@ -16,6 +16,8 @@ jobs:
     name: Changelog PR or Release
     outputs:
       published: ${{ steps.changesets.outputs.published }}
+      # A JSON array to present the published packages. The format is [{"name": "@xx/xx", "version": "1.2.0"}, {"name": "@xx/xy", "version": "0.8.9"}]
+      publishedPackages: ${{ steps.changesets.outputs.publishedPackages }}
       latest: ${{ env.latest }}
       latestBranch: ${{ env.latestBranch }}
     steps:
@@ -100,24 +102,17 @@ jobs:
     if: needs.changelog.outputs.published == 'true' && needs.changelog.outputs.latest == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Check out the code
-        uses: actions/checkout@v3
-
-      - name: Read Hydrogen version from package.json
-        id: read_package_json
-        working-directory: ./packages/hydrogen
+      # Extract the Hydrogen version from published packages
+      - name: Extract Hydrogen version
+        id: extract_version
         run: |
-          content=`cat ./package.json`
-          # the following lines are required for multi line json
-          content="${content//'%'/'%25'}"
-          content="${content//$'\n'/'%0A'}"
-          content="${content//$'\r'/'%0D'}"
-          # end of handling multi line json
-          echo "::set-output name=packageJson::$content"
-      - run: |
-          echo "HYDROGEN_VERSION=${{fromJSON(steps.read_package_json.outputs.packageJson).version}}" >> $GITHUB_ENV
+          PACKAGES='${{ needs.changelog.outputs.publishedPackages }}'
+          HYDROGEN_VERSION=$(echo $PACKAGES | jq -r '.[] | select(.name == "@shopify/hydrogen") | .version')
+          echo "HYDROGEN_VERSION=$HYDROGEN_VERSION" >> $GITHUB_ENV
 
       - name: Post release announcement on Partner Slack
+        # Only post if a Hydrogen version was included in the release
+        if: env.HYDROGEN_VERSION != ''
         id: slack
         uses: fjogeleit/http-request-action@v1
         with:
