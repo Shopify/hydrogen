@@ -4,6 +4,7 @@ import type {
   ProductFragment,
   ProductVariantFragment,
 } from 'storefrontapi.generated';
+import type {ProductVariant} from '@shopify/hydrogen-react/storefront-api-types';
 import {AddToCartButton} from '~/components/AddToCartButton';
 import {useAside} from '~/components/Aside';
 
@@ -13,7 +14,7 @@ export function ProductForm({
   variants,
 }: {
   product: ProductFragment;
-  selectedVariant: ProductFragment['selectedVariant'];
+  selectedVariant: ProductVariant;
   variants: Array<ProductVariantFragment>;
 }) {
   const {open} = useAside();
@@ -21,8 +22,11 @@ export function ProductForm({
     <div className="product-form">
       <VariantSelector
         handle={product.handle}
-        options={product.options.filter((option) => option.optionValues.length > 1)}
+        options={product.options.filter(
+          (option) => option.optionValues.length > 1,
+        )}
         variants={variants}
+        selectedVariant={selectedVariant}
       >
         {({option}) => <ProductOptions key={option.name} option={option} />}
       </VariantSelector>
