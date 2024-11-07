@@ -8,7 +8,7 @@ import type {PartialDeep} from 'type-fest';
 type StorefrontApiExtensions = {
   /**
    * Shows error codes common to Shopify. Additional error codes may also be shown.
-   * https://shopify.dev/api/storefront#status_and_error_codes
+   * @see https://shopify.dev/api/storefront#status_and_error_codes
    */
   code?:
     | 'THROTTLED'

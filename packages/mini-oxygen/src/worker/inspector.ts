@@ -1,6 +1,6 @@
 /**
  * Huge part of this code comes from Wrangler:
- * https://github.com/cloudflare/workers-sdk/blob/main/packages/wrangler/src/inspect.ts
+ * @see https://github.com/cloudflare/workers-sdk/blob/main/packages/wrangler/src/inspect.ts
  */
 
 import {dirname} from 'node:path';
@@ -12,7 +12,9 @@ import {type Protocol} from 'devtools-protocol';
 import {addInspectorConsoleLogger, formatStack} from './logger.js';
 import {createInspectorProxy, type InspectorProxy} from './devtools.js';
 
-// https://chromedevtools.github.io/devtools-protocol/#endpoints
+/**
+ * @see https://chromedevtools.github.io/devtools-protocol/#endpoints
+ */
 export interface InspectorWebSocketTarget {
   id: string;
   title: string;
@@ -50,7 +52,7 @@ export interface ErrorProperties {
  * Creates a connection to the workerd inspector.
  *
  * The messages are sent via WebSockets following the Chrome DevTools Protocol:
- * https://chromedevtools.github.io/devtools-protocol/
+ * @see https://chromedevtools.github.io/devtools-protocol/
  *
  * The inspector connection has two purposes:
  * 1. Attach debuggers to the workerd instance.
