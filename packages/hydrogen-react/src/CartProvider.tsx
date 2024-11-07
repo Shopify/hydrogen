@@ -96,7 +96,7 @@ type CartProviderProps = {
   customerAccessToken?: CartBuyerIdentityInput['customerAccessToken'];
   /** The ISO country code for i18n. */
   countryCode?: CountryCode;
-  /** The ISO luanguage code for i18n. */
+  /** The ISO language code for i18n. */
   languageCode?: LanguageCode;
 };
 
