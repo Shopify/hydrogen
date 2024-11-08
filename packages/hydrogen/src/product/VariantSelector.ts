@@ -47,6 +47,7 @@ type VariantSelectorProps = {
   productPath?: string;
   /** Should the VariantSelector wait to update until after the browser navigates to a variant. */
   waitForNavigation?: boolean;
+  selectedVariant?: ProductVariant;
   children: ({option}: {option: VariantOption}) => ReactNode;
 };
 
@@ -56,6 +57,7 @@ export function VariantSelector({
   variants: _variants = [],
   productPath = 'products',
   waitForNavigation = false,
+  selectedVariant,
   children,
 }: VariantSelectorProps) {
   // Deprecation notice for product.options.values
@@ -90,6 +92,17 @@ export function VariantSelector({
   const optionsWithOnlyOneValue = options.filter(
     (option) => option?.optionValues?.length === 1,
   );
+
+  // If a selected variant is provided, create a map of selected values
+  const selectedVariantOptions = selectedVariant
+    ? selectedVariant.selectedOptions.reduce<Record<string, string>>(
+        (selectedValues, item) => {
+          selectedValues[item.name] = item.value;
+          return selectedValues;
+        },
+        {},
+      )
+    : {};
 
   return createElement(
     Fragment,
@@ -126,11 +139,17 @@ export function VariantSelector({
             ),
           );
 
-          const currentParam = searchParams.get(option.name!);
+          let selectedValue = searchParams.get(option.name!);
 
-          const calculatedActiveValue = currentParam
+          if (!selectedValue && selectedVariant) {
+            // If there's no value set via a URL parameter, default
+            // to the value from the first available variant
+            selectedValue = selectedVariantOptions[option.name!] || null;
+          }
+
+          const calculatedActiveValue = selectedValue
             ? // If a URL parameter exists for the current option, check if it equals the current value
-              currentParam === value.name!
+              selectedValue === value.name
             : false;
 
           if (calculatedActiveValue) {
