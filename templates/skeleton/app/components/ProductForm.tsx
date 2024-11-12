@@ -14,7 +14,8 @@ export function ProductForm({
   variants,
 }: {
   product: ProductFragment;
-  selectedVariant: ProductVariant;
+  selectedVariant: ProductFragment['selectedVariant'];
+  //selectedVariant: ProductVariant;
   variants: Array<ProductVariantFragment>;
 }) {
   const {open} = useAside();
@@ -26,7 +27,7 @@ export function ProductForm({
           (option) => option.optionValues.length > 1,
         )}
         variants={variants}
-        selectedVariant={selectedVariant}
+        selectedVariant={selectedVariant as ProductVariant}
       >
         {({option}) => <ProductOptions key={option.name} option={option} />}
       </VariantSelector>
