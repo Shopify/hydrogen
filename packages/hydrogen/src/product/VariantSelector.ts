@@ -6,6 +6,7 @@ import type {
   ProductVariant,
   ProductVariantConnection,
   SelectedOptionInput,
+  Maybe,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {type ReactNode, useMemo, createElement, Fragment} from 'react';
 import type {PartialDeep} from 'type-fest';
@@ -47,7 +48,7 @@ type VariantSelectorProps = {
   productPath?: string;
   /** Should the VariantSelector wait to update until after the browser navigates to a variant. */
   waitForNavigation?: boolean;
-  selectedVariant?: ProductVariant;
+  selectedVariant?: Maybe<PartialDeep<ProductVariant>>;
   children: ({option}: {option: VariantOption}) => ReactNode;
 };
 
@@ -95,7 +96,7 @@ export function VariantSelector({
 
   // If a selected variant is provided, create a map of selected values
   const selectedVariantOptions = selectedVariant
-    ? selectedVariant.selectedOptions.reduce<Record<string, string>>(
+    ? selectedVariant?.selectedOptions?.reduce<Record<string, string>>(
         (selectedValues, item) => {
           selectedValues[item.name] = item.value;
           return selectedValues;
@@ -144,7 +145,7 @@ export function VariantSelector({
           if (!selectedValue && selectedVariant) {
             // If there's no value set via a URL parameter, default
             // to the value from the first available variant
-            selectedValue = selectedVariantOptions[option.name!] || null;
+            selectedValue = selectedVariantOptions?.[option.name!] || null;
           }
 
           const calculatedActiveValue = selectedValue
