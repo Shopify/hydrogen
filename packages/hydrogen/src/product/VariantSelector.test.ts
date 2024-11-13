@@ -723,17 +723,22 @@ describe('<VariantSelector>', () => {
           createElement(
             'div',
             null,
-            option.values.map(({value, to, isActive}) =>
-              createElement(
+            option.values.map(({value, to, isActive, isAvailable}) => {
+              const classNames = [];
+
+              if (isActive) classNames.push('active');
+              if (isAvailable) classNames.push('available');
+
+              return createElement(
                 'a',
                 {
                   key: option.name + value,
                   href: to,
-                  className: isActive ? 'active' : undefined,
+                  className: classNames.join(' '),
                 },
                 value,
-              ),
-            ),
+              );
+            }),
           ),
       }),
     );
@@ -742,12 +747,13 @@ describe('<VariantSelector>', () => {
       <DocumentFragment>
         <div>
           <a
+            class="available"
             href="/en-us/products/snowboard?Size=S"
           >
             S
           </a>
           <a
-            class="active"
+            class="active available"
             href="/en-us/products/snowboard?Size=M"
           >
             M

@@ -132,14 +132,16 @@ export function VariantSelector({
               );
           });
 
-          // Find a variant that matches all selected options.
-          const variant = variants.find((variant) =>
-            variant?.selectedOptions?.every(
-              (selectedOption) =>
-                clonedSearchParams.get(selectedOption?.name!) ===
-                selectedOption?.value,
-            ),
-          );
+          const variant = variants.find((variant) => {
+            return variant?.selectedOptions?.every((selectedOption) => {
+              // Get the selected value from the URL (default) or the selected variant
+              const selectedValue =
+                clonedSearchParams.get(selectedOption?.name!) ||
+                selectedVariantOptions?.[selectedOption?.name!];
+
+              return selectedValue === selectedOption?.value;
+            });
+          });
 
           let selectedValue = searchParams.get(option.name!);
 
