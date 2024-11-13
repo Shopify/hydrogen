@@ -1,20 +1,23 @@
-import {Suspense, useEffect} from 'react';
-import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {Suspense} from 'react';
+import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {Await, useLoaderData, type MetaFunction} from '@remix-run/react';
-import type {ProductFragment} from 'storefrontapi.generated';
 import {
   getSelectedProductOptions,
   Analytics,
   useOptimisticVariant,
 } from '@shopify/hydrogen';
-import type {SelectedOption} from '@shopify/hydrogen/storefront-api-types';
-import {getVariantUrl} from '~/lib/variants';
 import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
-  return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
+  return [
+    {title: `Hydrogen | ${data?.product.title ?? ''}`},
+    {
+      rel: 'canonical',
+      href: `/products/${data?.product.handle}`,
+    },
+  ];
 };
 
 export async function loader(args: LoaderFunctionArgs) {
