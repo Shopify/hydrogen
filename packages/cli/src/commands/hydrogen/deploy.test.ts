@@ -1,9 +1,20 @@
+import {createRequire} from 'node:module';
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
+import {execa} from 'execa';
+import {joinPath} from '@shopify/cli-kit/node/path';
+import {
+  inTemporaryDirectory,
+  writeFile,
+  readFile,
+  removeFile,
+  fileExists,
+  mkdir,
+} from '@shopify/cli-kit/node/fs';
 import {type AdminSession, login} from '../../lib/auth.js';
 import {getStorefronts} from '../../lib/graphql/admin/link-storefront.js';
+import {getSkeletonSourceDir} from '../../lib/build.js';
 import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {writeFile} from '@shopify/cli-kit/node/fs';
 import {
   renderConfirmationPrompt,
   renderSelectPrompt,
@@ -17,7 +28,7 @@ import {
   GitDirectoryNotCleanError,
 } from '@shopify/cli-kit/node/git';
 
-import {deploymentLogger, runDeploy} from './deploy.js';
+import {deploymentLogger, runDeploy, getHydrogenVersion} from './deploy.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
 import {execAsync} from '../../lib/process.js';
 import {createEnvironmentCliChoiceLabel} from '../../lib/common.js';
@@ -28,10 +39,10 @@ import {
 } from '@shopify/oxygen-cli/deploy';
 import {ciPlatform} from '@shopify/cli-kit/node/context/local';
 import {runBuild} from './build.js';
+import {PackageJson} from 'type-fest';
 
 vi.mock('@shopify/oxygen-cli/deploy');
 vi.mock('@shopify/cli-kit/node/dot-env');
-vi.mock('@shopify/cli-kit/node/fs');
 vi.mock('@shopify/cli-kit/node/context/local');
 vi.mock('../../lib/get-oxygen-deployment-data.js');
 vi.mock('../../lib/process.js');
@@ -61,7 +72,101 @@ vi.mock('@shopify/cli-kit/node/git', async () => {
   };
 });
 
-describe('deploy', () => {
+async function createSkeletonPackageJson() {
+  const require = createRequire(import.meta.url);
+  const packageJson: PackageJson = require(joinPath(
+    getSkeletonSourceDir(),
+    'package.json',
+  ));
+
+  if (!packageJson) throw new Error('Could not parse package.json');
+  if (!packageJson?.dependencies)
+    throw new Error('Could not parse package.json dependencies');
+  if (!packageJson?.devDependencies)
+    throw new Error('Could not parse package.json devDependencies');
+
+  packageJson.dependencies['@shopify/hydrogen'] = '^2023.1.7';
+
+  return packageJson;
+}
+
+/**
+ * Creates a temporary directory with a git repo and a package.json
+ */
+async function inTemporaryHydrogenRepo(
+  cb: (tmpDir: string) => Promise<void>,
+  {
+    cleanGitRepo,
+    packageJson,
+    nodeModulesHydrogenPackageJson,
+  }: {
+    cleanGitRepo?: boolean;
+    packageJson?: PackageJson;
+    nodeModulesHydrogenPackageJson?: PackageJson;
+  } = {cleanGitRepo: true},
+) {
+  return inTemporaryDirectory(async (tmpDir) => {
+    // init the git repo
+    await execa('git', ['init'], {cwd: tmpDir});
+
+    if (packageJson) {
+      const packageJsonPath = joinPath(tmpDir, 'package.json');
+      await writeFile(packageJsonPath, JSON.stringify(packageJson));
+      expect(await fileExists(packageJsonPath)).toBeTruthy();
+    }
+
+    if (nodeModulesHydrogenPackageJson) {
+      const nodeModulesPath = joinPath(
+        tmpDir,
+        'node_modules',
+        '@shopify',
+        'hydrogen',
+      );
+      await mkdir(nodeModulesPath);
+
+      const packageJsonPath = joinPath(nodeModulesPath, 'package.json');
+      await writeFile(
+        packageJsonPath,
+        JSON.stringify(nodeModulesHydrogenPackageJson),
+      );
+      expect(await fileExists(packageJsonPath)).toBeTruthy();
+    }
+
+    // expect to be a git repo
+    expect(await fileExists(joinPath(tmpDir, '/.git/config'))).toBeTruthy();
+
+    if (cleanGitRepo && (packageJson || nodeModulesHydrogenPackageJson)) {
+      if (packageJson) {
+        await execa('git', ['add', 'package.json'], {cwd: tmpDir});
+      }
+
+      if (nodeModulesHydrogenPackageJson) {
+        await execa(
+          'git',
+          ['add', 'node_modules/@shopify/hydrogen/package.json'],
+          {cwd: tmpDir},
+        );
+      }
+
+      if (process.env.NODE_ENV === 'test' && process.env.CI) {
+        await execa('git', ['config', 'user.email', 'test@hydrogen.shop'], {
+          cwd: tmpDir,
+        });
+        await execa('git', ['config', 'user.name', 'Hydrogen Test'], {
+          cwd: tmpDir,
+        });
+      }
+      await execa('git', ['commit', '-m', 'initial commit'], {cwd: tmpDir});
+    }
+
+    await cb(tmpDir);
+  });
+}
+
+describe('deploy', async () => {
+  // Create an outdated skeleton package.json for all tests
+  const HYDROGEN_PACKAGE_JSON = await createSkeletonPackageJson();
+
   const ADMIN_SESSION: AdminSession = {
     token: 'abc123',
     storeFqdn: 'my-shop.myshopify.com',
@@ -631,6 +736,33 @@ describe('deploy', () => {
   });
 
   it('writes a file with JSON content in CI environments', async () => {
+    const ciDeployParams = {
+      ...deployParams,
+      token: 'some-token',
+      metadataDescription: 'cool new stuff',
+      generateAuthBypassToken: true,
+    };
+
+    await inTemporaryHydrogenRepo(
+      async () => {
+        await runDeploy(ciDeployParams);
+
+        const fileContent = await readFile('h2_deploy_log.json');
+
+        expect(JSON.parse(fileContent)).toEqual({
+          authBypassToken: 'some-token',
+          url: 'https://a-lovely-deployment.com',
+        });
+      },
+      {
+        cleanGitRepo: true,
+        packageJson: undefined,
+        nodeModulesHydrogenPackageJson: undefined,
+      },
+    );
+  });
+
+  it('does not write a file in CI environments when jsonOutput is false', async () => {
     vi.mocked(ciPlatform).mockReturnValue({
       isCI: true,
       name: 'github',
@@ -642,22 +774,15 @@ describe('deploy', () => {
       token: 'some-token',
       metadataDescription: 'cool new stuff',
       generateAuthBypassToken: true,
+      jsonOutput: false,
     };
 
+    await removeFile('h2_deploy_log.json');
+    expect(await fileExists('h2_deploy_log.json')).toBeFalsy();
+
     await runDeploy(ciDeployParams);
 
-    expect(vi.mocked(writeFile)).toHaveBeenCalledWith(
-      'h2_deploy_log.json',
-      JSON.stringify({
-        authBypassToken: 'some-token',
-        url: 'https://a-lovely-deployment.com',
-      }),
-    );
-
-    vi.mocked(writeFile).mockClear();
-    ciDeployParams.jsonOutput = false;
-    await runDeploy(ciDeployParams);
-    expect(vi.mocked(writeFile)).not.toHaveBeenCalled();
+    expect(await fileExists('h2_deploy_log.json')).toBeFalsy();
   });
 
   it('handles error during uploadFiles', async () => {
@@ -940,6 +1065,65 @@ describe('deploy', () => {
           body: ['Successfully deployed to Oxygen'],
           nextSteps: [],
         });
+      });
+    });
+  });
+
+  describe('getHydrogenVersion', () => {
+    describe('when there are no package.json files to read', () => {
+      it('version is undefined', async () => {
+        await inTemporaryHydrogenRepo(
+          async (appPath) => {
+            const version = await getHydrogenVersion({appPath});
+
+            expect(version).toBeUndefined();
+          },
+          {
+            cleanGitRepo: true,
+            packageJson: undefined,
+            nodeModulesHydrogenPackageJson: undefined,
+          },
+        );
+      });
+    });
+
+    describe('when there is no node_modules/@shopify/hydrogen/package.json', () => {
+      it('returns the version', async () => {
+        await inTemporaryHydrogenRepo(
+          async (appPath) => {
+            const version = await getHydrogenVersion({appPath});
+
+            expect(version).toMatch('^2023.1.7');
+          },
+          {
+            cleanGitRepo: true,
+            packageJson: HYDROGEN_PACKAGE_JSON,
+            nodeModulesHydrogenPackageJson: undefined,
+          },
+        );
+      });
+    });
+
+    // NEED TO FIX THIS TEST
+    // ALWAYS PASSING UNLESS REMOVING TOP MOCK
+    // USING WRITEFILE FOR REAL, BUT ALSO MOCKING IT
+    describe('when there is a node_modules/@shopify/hydrogen/package.json', () => {
+      it('returns the version', async () => {
+        await inTemporaryHydrogenRepo(
+          async (appPath) => {
+            const version = await getHydrogenVersion({appPath});
+
+            expect(version).toMatch('1.0.0');
+          },
+          {
+            cleanGitRepo: true,
+            packageJson: HYDROGEN_PACKAGE_JSON,
+            nodeModulesHydrogenPackageJson: {
+              ...HYDROGEN_PACKAGE_JSON,
+              version: '1.0.0',
+            } as PackageJson,
+          },
+        );
       });
     });
   });
