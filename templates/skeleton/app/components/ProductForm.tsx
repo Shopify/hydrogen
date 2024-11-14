@@ -4,7 +4,6 @@ import type {
   ProductFragment,
   ProductVariantFragment,
 } from 'storefrontapi.generated';
-import type {ProductVariant} from '@shopify/hydrogen-react/storefront-api-types';
 import {AddToCartButton} from '~/components/AddToCartButton';
 import {useAside} from '~/components/Aside';
 

@@ -48,7 +48,7 @@ type VariantSelectorProps = {
   productPath?: string;
   /** Should the VariantSelector wait to update until after the browser navigates to a variant. */
   waitForNavigation?: boolean;
-  /** An optional selected variant to use for the initial state */
+  /** An optional selected variant to use for the initial state if no URL parameters are set */
   selectedVariant?: Maybe<PartialDeep<ProductVariant>>;
   children: ({option}: {option: VariantOption}) => ReactNode;
 };
