@@ -78,6 +78,8 @@ type PaginationProps<NodesType> = {
   connection: Connection<NodesType>;
   /** A render prop that includes pagination data and helpers. */
   children: PaginationRenderProp<NodesType>;
+  /** A namespace for the pagination component to avoid URL param conflicts. */
+  namespace?: string;
 };
 
 type PaginationRenderProp<NodesType> = FC<PaginationInfo<NodesType>>;
@@ -96,6 +98,7 @@ export function Pagination<NodesType>({
     console.warn('<Pagination> requires children to work properly');
     return null;
   },
+  namespace,
 }: PaginationProps<NodesType>): ReturnType<FC> {
   const transition = useNavigation();
   const isLoading = transition.state === 'loading';
@@ -107,7 +110,7 @@ export function Pagination<NodesType>({
     nodes,
     previousPageUrl,
     startCursor,
-  } = usePagination<NodesType>(connection);
+  } = usePagination<NodesType>(connection, namespace);
 
   const state = useMemo(
     () => ({
@@ -175,10 +178,13 @@ export function Pagination<NodesType>({
   });
 }
 
-function getParamsWithoutPagination(paramsString?: string) {
+function getParamsWithoutPagination(paramsString?: string, namespace?: string) {
   const params = new URLSearchParams(paramsString);
-  params.delete('cursor');
-  params.delete('direction');
+  const cursorParam = namespace ? `${namespace}_cursor` : 'cursor';
+  const directionParam = namespace ? `${namespace}_direction` : 'direction';
+
+  params.delete(cursorParam);
+  params.delete(directionParam);
   return params.toString();
 }
 
@@ -197,6 +203,7 @@ function makeError(prop: string) {
  */
 export function usePagination<NodesType>(
   connection: Connection<NodesType>,
+  namespace?: string,
 ): Omit<
   PaginationInfo<NodesType>,
   'isLoading' | 'state' | 'NextLink' | 'PreviousLink'
@@ -231,8 +238,11 @@ export function usePagination<NodesType>(
     pathname?: string;
   };
 
+  const cursorParam = namespace ? `${namespace}_cursor` : 'cursor';
+  const directionParam = namespace ? `${namespace}_direction` : 'direction';
+
   const params = new URLSearchParams(search);
-  const direction = params.get('direction');
+  const direction = params.get(directionParam);
   const isPrevious = direction === 'previous';
 
   const nodes = useMemo(() => {
@@ -298,7 +308,7 @@ export function usePagination<NodesType>(
 
   // Keep track of the current URL state, to compare whenever the URL changes
   const urlRef = useRef({
-    params: getParamsWithoutPagination(search),
+    params: getParamsWithoutPagination(search, namespace),
     pathname,
   });
 
@@ -315,12 +325,12 @@ export function usePagination<NodesType>(
     if (
       // If the URL changes (independent of pagination params)
       // then reset the pagination params in the URL
-      getParamsWithoutPagination(search) !== urlRef.current.params ||
+      getParamsWithoutPagination(search, namespace) !== urlRef.current.params ||
       pathname !== urlRef.current.pathname
     ) {
       urlRef.current = {
         pathname,
-        params: getParamsWithoutPagination(search),
+        params: getParamsWithoutPagination(search, namespace),
       };
       navigate(`${pathname}?${getParamsWithoutPagination(search)}`, {
         replace: true,
@@ -332,17 +342,17 @@ export function usePagination<NodesType>(
 
   const previousPageUrl = useMemo(() => {
     const params = new URLSearchParams(search);
-    params.set('direction', 'previous');
+    params.set(directionParam, 'previous');
     currentPageInfo.startCursor &&
-      params.set('cursor', currentPageInfo.startCursor);
+      params.set(cursorParam, currentPageInfo.startCursor);
     return `?${params.toString()}`;
   }, [search, currentPageInfo.startCursor]);
 
   const nextPageUrl = useMemo(() => {
     const params = new URLSearchParams(search);
-    params.set('direction', 'next');
+    params.set(directionParam, 'next');
     currentPageInfo.endCursor &&
-      params.set('cursor', currentPageInfo.endCursor);
+      params.set(cursorParam, currentPageInfo.endCursor);
     return `?${params.toString()}`;
   }, [search, currentPageInfo.endCursor]);
 
@@ -357,7 +367,7 @@ export function usePagination<NodesType>(
  */
 export function getPaginationVariables(
   request: Request,
-  options: {pageBy: number} = {pageBy: 20},
+  options: {pageBy: number; namespace?: string} = {pageBy: 20},
 ) {
   if (typeof request?.url === 'undefined') {
     throw new Error(
@@ -368,9 +378,16 @@ export function getPaginationVariables(
   const {pageBy} = options;
   const searchParams = new URLSearchParams(new URL(request.url).search);
 
-  const cursor = searchParams.get('cursor') ?? undefined;
+  const cursorParam = options.namespace
+    ? `${options.namespace}_cursor`
+    : 'cursor';
+  const directionParam = options.namespace
+    ? `${options.namespace}_direction`
+    : 'direction';
+
+  const cursor = searchParams.get(cursorParam) ?? undefined;
   const direction =
-    searchParams.get('direction') === 'previous' ? 'previous' : 'next';
+    searchParams.get(directionParam) === 'previous' ? 'previous' : 'next';
   const isPrevious = direction === 'previous';
 
   const prevPage = {

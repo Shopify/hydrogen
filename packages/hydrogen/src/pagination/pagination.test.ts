@@ -63,6 +63,17 @@ describe('getPaginationVariables', () => {
       ),
     ).toEqual({startCursor: 'abc', last: 10});
   });
+
+  it('returns cursor from search params with namespace', () => {
+    expect(
+      getPaginationVariables(
+        new Request(
+          'https://localhost:3000?products_cursor=abc&products_direction=previous',
+        ),
+        {pageBy: 20, namespace: 'products'},
+      ),
+    ).toEqual({startCursor: 'abc', last: 20});
+  });
 });
 
 describe('<Pagination>', () => {

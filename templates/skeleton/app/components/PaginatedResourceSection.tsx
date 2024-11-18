@@ -15,7 +15,7 @@ export function PaginatedResourceSection<NodesType>({
   resourcesClassName?: string;
 }) {
   return (
-    <Pagination connection={connection}>
+    <Pagination connection={connection} namespace="products">
       {({nodes, isLoading, PreviousLink, NextLink}) => {
         const resoucesMarkup = nodes.map((node, index) =>
           children({node, index}),
