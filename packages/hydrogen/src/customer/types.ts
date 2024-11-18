@@ -152,6 +152,12 @@ export type CustomerAccountOptions = {
   logErrors?: boolean | ((error?: Error) => boolean);
   /** UNSTABLE feature, this will eventually goes away. If true then we will exchange customerAccessToken for storefrontCustomerAccessToken. */
   unstableB2b?: boolean;
+  /** The path to redirect to after login. Defaults to `/account`. */
+  defaultRedirectPath?: string;
+  /** The path to login. Defaults to `/account/login`. */
+  loginPath?: string;
+  /** The oauth authorize path. Defaults to `/account/authorize`. */
+  authorizePath?: string;
 };
 
 /** Below are types meant for documentation only. Ensure it stay in sync with the type above. */
