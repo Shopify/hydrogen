@@ -250,6 +250,8 @@ export function usePagination<NodesType>(
       return flattenConnection(connection);
     }
 
+    console.log('STATE', namespace, flattenConnection(connection));
+
     if (isPrevious) {
       return [...flattenConnection(connection), ...state.nodes];
     } else {
@@ -328,15 +330,19 @@ export function usePagination<NodesType>(
       getParamsWithoutPagination(search, namespace) !== urlRef.current.params ||
       pathname !== urlRef.current.pathname
     ) {
-      urlRef.current = {
-        pathname,
-        params: getParamsWithoutPagination(search, namespace),
-      };
-      navigate(`${pathname}?${getParamsWithoutPagination(search)}`, {
-        replace: true,
-        preventScrollReset: true,
-        state: {nodes: undefined, pageInfo: undefined},
-      });
+      // urlRef.current = {
+      //   pathname,
+      //   params: getParamsWithoutPagination(search, namespace),
+      // };
+      // console.log('navigating, ', {
+      //   pathname,
+      //   params: getParamsWithoutPagination(search, namespace),
+      // });
+      // navigate(`${pathname}?${getParamsWithoutPagination(search, namespace)}`, {
+      //   replace: true,
+      //   preventScrollReset: true,
+      //   state: {nodes: undefined, pageInfo: undefined},
+      // });
     }
   }, [pathname, search]);
 
