@@ -27,7 +27,6 @@ async function loadCriticalData({context, request}: LoaderFunctionArgs) {
   const {storefront} = context;
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 3,
-    namespace: 'products1',
   });
 
   const paginationVariables2 = getPaginationVariables(request, {
@@ -65,7 +64,6 @@ export default function Collection() {
       <PaginatedResourceSection
         connection={products}
         resourcesClassName="products-grid"
-        namespace="products1"
       >
         {({node: product, index}) => (
           <span key={`product-${product.id}`}>{product.title}</span>

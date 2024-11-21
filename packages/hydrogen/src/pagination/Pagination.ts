@@ -107,7 +107,7 @@ export function Pagination<NodesType>({
     console.warn('<Pagination> requires children to work properly');
     return null;
   },
-  namespace = 'default',
+  namespace = '',
 }: PaginationProps<NodesType>): ReturnType<FC> {
   const transition = useNavigation();
   const isLoading = transition.state === 'loading';
@@ -208,15 +208,24 @@ function getParamsWithoutPagination(
 ) {
   const params = new URLSearchParams(paramsString);
 
+  // Get all namespaces from state
   const activeNamespaces = Object.keys(state?.pagination || {});
 
-  activeNamespaces.forEach((namespace) => {
-    const cursorParam = `${namespace}_cursor`;
-    const directionParam = `${namespace}_direction`;
+  // Handle non-namespaced params (empty string namespace)
+  if (activeNamespaces.includes('')) {
+    params.delete('cursor');
+    params.delete('direction');
+  }
 
-    params.delete(cursorParam);
-    params.delete(directionParam);
-  });
+  activeNamespaces
+    .filter((namespace) => namespace !== '')
+    .forEach((namespace) => {
+      const cursorParam = `${namespace}_cursor`;
+      const directionParam = `${namespace}_direction`;
+
+      params.delete(cursorParam);
+      params.delete(directionParam);
+    });
 
   return params.toString();
 }
@@ -419,17 +428,11 @@ export function getPaginationVariables(
     );
   }
 
-  const {pageBy, namespace = 'default'} = options;
+  const {pageBy, namespace = ''} = options;
   const searchParams = new URLSearchParams(new URL(request.url).search);
 
-  console.log('GET VARIABLES', pageBy, namespace);
-
-  const cursorParam = options.namespace
-    ? `${options.namespace}_cursor`
-    : 'cursor';
-  const directionParam = options.namespace
-    ? `${options.namespace}_direction`
-    : 'direction';
+  const cursorParam = namespace ? `${namespace}_cursor` : 'cursor';
+  const directionParam = namespace ? `${namespace}_direction` : 'direction';
 
   const cursor = searchParams.get(cursorParam) ?? undefined;
   const direction =
