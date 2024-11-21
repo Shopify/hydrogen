@@ -9,15 +9,13 @@ export function PaginatedResourceSection<NodesType>({
   connection,
   children,
   resourcesClassName,
-  namespace,
 }: {
   connection: React.ComponentProps<typeof Pagination<NodesType>>['connection'];
   children: React.FunctionComponent<{node: NodesType; index: number}>;
   resourcesClassName?: string;
-  namespace?: string;
 }) {
   return (
-    <Pagination connection={connection} namespace={namespace}>
+    <Pagination connection={connection}>
       {({nodes, isLoading, PreviousLink, NextLink}) => {
         const resoucesMarkup = nodes.map((node, index) =>
           children({node, index}),

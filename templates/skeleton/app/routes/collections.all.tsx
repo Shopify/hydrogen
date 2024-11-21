@@ -26,24 +26,16 @@ export async function loader(args: LoaderFunctionArgs) {
 async function loadCriticalData({context, request}: LoaderFunctionArgs) {
   const {storefront} = context;
   const paginationVariables = getPaginationVariables(request, {
-    pageBy: 3,
+    pageBy: 8,
   });
 
-  const paginationVariables2 = getPaginationVariables(request, {
-    pageBy: 3,
-    namespace: 'products2',
-  });
-
-  const [{products}, {products: products2}] = await Promise.all([
+  const [{products}] = await Promise.all([
     storefront.query(CATALOG_QUERY, {
       variables: {...paginationVariables},
     }),
-    storefront.query(CATALOG_QUERY_2, {
-      variables: {...paginationVariables2},
-    }),
     // Add other queries here, so that they are loaded in parallel
   ]);
-  return {products, products2};
+  return {products};
 }
 
 /**
@@ -56,28 +48,21 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
 }
 
 export default function Collection() {
-  const {products, products2} = useLoaderData<typeof loader>();
+  const {products} = useLoaderData<typeof loader>();
 
   return (
     <div className="collection">
-      <h1>Products 1</h1>
+      <h1>Products</h1>
       <PaginatedResourceSection
         connection={products}
         resourcesClassName="products-grid"
       >
         {({node: product, index}) => (
-          <span key={`product-${product.id}`}>{product.title}</span>
-        )}
-      </PaginatedResourceSection>
-
-      <h1>Products 2</h1>
-      <PaginatedResourceSection
-        connection={products2}
-        resourcesClassName="products-grid"
-        namespace="products2"
-      >
-        {({node: product, index}) => (
-          <span key={`product2-${product.id}`}>{product.title}</span>
+          <ProductItem
+            key={product.id}
+            product={product}
+            loading={index < 8 ? 'eager' : undefined}
+          />
         )}
       </PaginatedResourceSection>
     </div>
@@ -155,30 +140,6 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
 // NOTE: https://shopify.dev/docs/api/storefront/2024-01/objects/product
 const CATALOG_QUERY = `#graphql
   query Catalog(
-    $country: CountryCode
-    $language: LanguageCode
-    $first: Int
-    $last: Int
-    $startCursor: String
-    $endCursor: String
-  ) @inContext(country: $country, language: $language) {
-    products(first: $first, last: $last, before: $startCursor, after: $endCursor) {
-      nodes {
-        ...ProductItem
-      }
-      pageInfo {
-        hasPreviousPage
-        hasNextPage
-        startCursor
-        endCursor
-      }
-    }
-  }
-  ${PRODUCT_ITEM_FRAGMENT}
-` as const;
-
-const CATALOG_QUERY_2 = `#graphql
-  query Catalog2(
     $country: CountryCode
     $language: LanguageCode
     $first: Int
