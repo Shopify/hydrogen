@@ -111,6 +111,8 @@ export function Pagination<NodesType>({
 }: PaginationProps<NodesType>): ReturnType<FC> {
   const transition = useNavigation();
   const isLoading = transition.state === 'loading';
+  const location = useLocation();
+
   const {
     endCursor,
     hasNextPage,
@@ -120,7 +122,19 @@ export function Pagination<NodesType>({
     previousPageUrl,
     startCursor,
   } = usePagination<NodesType>(connection, namespace);
-  const location = useLocation();
+
+  // Throw error for duplicate namespace
+  if (
+    location.state?.pagination &&
+    namespace in location.state.pagination &&
+    transition.state === 'idle'
+  ) {
+    console.warn(
+      `Warning: Multiple <Pagination /> components are using the same namespace${
+        namespace ? `"${namespace}"` : ''
+      }. This will cause state conflicts. Each <Pagination /> component should have a unique namespace.`,
+    );
+  }
 
   const state = useMemo(
     () => ({
