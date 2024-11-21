@@ -123,7 +123,7 @@ export function Pagination<NodesType>({
     startCursor,
   } = usePagination<NodesType>(connection, namespace);
 
-  // Throw error for duplicate namespace
+  // Warn about non-unique namespace
   if (
     location.state?.pagination &&
     namespace in location.state.pagination &&
