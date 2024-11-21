@@ -259,7 +259,7 @@ function makeError(prop: string) {
  */
 export function usePagination<NodesType>(
   connection: Connection<NodesType>,
-  namespace: string = 'default',
+  namespace: string = '',
 ): Omit<
   PaginationInfo<NodesType>,
   'isLoading' | 'state' | 'NextLink' | 'PreviousLink'
