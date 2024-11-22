@@ -287,6 +287,7 @@ export function usePagination<NodesType>(
     makeError('pageInfo.hasPreviousPage');
   }
 
+  const transition = useNavigation();
   const navigate = useNavigate();
   const {state, search, pathname} = useLocation() as {
     state?: PaginationState<NodesType>;
@@ -389,11 +390,16 @@ export function usePagination<NodesType>(
   }, []);
 
   useEffect(() => {
+    const currentParams = getParamsWithoutPagination(search, state);
+    const previousParams = urlRef.current.params;
+    const pathChanged = pathname !== urlRef.current.pathname;
+    const nonPaginationParamsChanged = currentParams !== previousParams;
+
     if (
-      // If the URL changes (independent of pagination params)
-      // then reset the pagination params in the URL
-      getParamsWithoutPagination(search, state) !== urlRef.current.params ||
-      pathname !== urlRef.current.pathname
+      // Only clean up if the base URL or non-pagination params change
+      (pathChanged || nonPaginationParamsChanged) &&
+      // And we're not on the initial load
+      !(transition.state === 'idle' && !transition.location)
     ) {
       urlRef.current = {
         pathname,
