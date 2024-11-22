@@ -1,8 +1,12 @@
-import {json, type LoaderArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, Link} from '@remix-run/react';
 import {getPaginationVariables, Pagination} from '@shopify/hydrogen';
+import {type Collection} from '@shopify/hydrogen-react/storefront-api-types';
 
-export async function loader({request, context: {storefront}}: LoaderArgs) {
+export async function loader({
+  request,
+  context: {storefront},
+}: LoaderFunctionArgs) {
   const womensPaginationVariables = getPaginationVariables(request, {
     pageBy: 2,
     namespace: 'womens', // Specify a unique namespace for the pagination parameters
@@ -13,10 +17,10 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
   });
 
   const [womensProducts, mensProducts] = await Promise.all([
-    storefront.query(COLLECTION_PRODUCTS_QUERY, {
+    storefront.query<{collection: Collection}>(COLLECTION_PRODUCTS_QUERY, {
       variables: {...womensPaginationVariables, handle: 'women'},
     }),
-    storefront.query(COLLECTION_PRODUCTS_QUERY, {
+    storefront.query<{collection: Collection}>(COLLECTION_PRODUCTS_QUERY, {
       variables: {...mensPaginationVariables, handle: 'men'},
     }),
   ]);
