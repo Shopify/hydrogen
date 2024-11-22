@@ -87,7 +87,7 @@ type PaginationProps<NodesType> = {
   connection: Connection<NodesType>;
   /** A render prop that includes pagination data and helpers. */
   children: PaginationRenderProp<NodesType>;
-  /** A namespace for the pagination component to avoid URL param conflicts. */
+  /** A namespace for the pagination component to avoid URL param conflicts when using multiple `Pagination` components on a single page. */
   namespace?: string;
 };
 
@@ -434,7 +434,7 @@ export function usePagination<NodesType>(
 
 /**
  * @param request The request object passed to your Remix loader function.
- * @param options Options for how to configure the pagination variables. Includes the ability to change how many nodes are within each page.
+ * @param options Options for how to configure the pagination variables. Includes the ability to change how many nodes are within each page as well as a namespace to avoid URL param conflicts when using multiple `Pagination` components on a single page.
  *
  * @returns Variables to be used with the `storefront.query` function
  */
