@@ -235,7 +235,7 @@ describe('<Pagination>', () => {
           <a
             data-preventscrollreset="true"
             href="?direction=next&cursor=abc"
-            state="{"pageInfo":{"endCursor":"abc","hasPreviousPage":false,"hasNextPage":true,"startCursor":"cde"},"nodes":[1,2,3]}"
+            state="{"pagination":{"":{"pageInfo":{"endCursor":"abc","hasPreviousPage":false,"hasNextPage":true,"startCursor":"cde"},"nodes":[1,2,3]}}}"
           />
         </div>
       </DocumentFragment>
@@ -269,7 +269,7 @@ describe('<Pagination>', () => {
           <a
             data-preventscrollreset="true"
             href="?direction=previous&cursor=cde"
-            state="{"pageInfo":{"endCursor":"abc","hasPreviousPage":true,"hasNextPage":false,"startCursor":"cde"},"nodes":[1,2,3]}"
+            state="{"pagination":{"":{"pageInfo":{"endCursor":"abc","hasPreviousPage":true,"hasNextPage":false,"startCursor":"cde"},"nodes":[1,2,3]}}}"
           />
         </div>
       </DocumentFragment>
@@ -321,17 +321,21 @@ describe('<Pagination>', () => {
         <div>
           {
         "state": {
-          "pageInfo": {
-            "endCursor": "abc",
-            "hasPreviousPage": true,
-            "hasNextPage": false,
-            "startCursor": "cde"
-          },
-          "nodes": [
-            1,
-            2,
-            3
-          ]
+          "pagination": {
+            "": {
+              "pageInfo": {
+                "endCursor": "abc",
+                "hasPreviousPage": true,
+                "hasNextPage": false,
+                "startCursor": "cde"
+              },
+              "nodes": [
+                1,
+                2,
+                3
+              ]
+            }
+          }
         },
         "hasNextPage": false,
         "hasPreviousPage": true,
@@ -504,7 +508,7 @@ describe('<Pagination>', () => {
           <a
             data-preventscrollreset="true"
             href="?products_direction=next&products_cursor=abc"
-            state="{"pageInfo":{"endCursor":"abc","hasPreviousPage":false,"hasNextPage":true,"startCursor":"cde"},"nodes":[1,2,3]}"
+            state="{"pagination":{"products":{"pageInfo":{"endCursor":"abc","hasPreviousPage":false,"hasNextPage":true,"startCursor":"cde"},"nodes":[1,2,3]}}}"
           />
         </div>
         <div>
@@ -520,7 +524,7 @@ describe('<Pagination>', () => {
           <a
             data-preventscrollreset="true"
             href="?orders_direction=previous&orders_cursor=ghi"
-            state="{"pageInfo":{"endCursor":"def","hasPreviousPage":true,"hasNextPage":false,"startCursor":"ghi"},"nodes":[4,5,6]}"
+            state="{"pagination":{"orders":{"pageInfo":{"endCursor":"def","hasPreviousPage":true,"hasNextPage":false,"startCursor":"ghi"},"nodes":[4,5,6]}}}"
           />
         </div>
       </DocumentFragment>
