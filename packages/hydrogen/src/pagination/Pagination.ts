@@ -44,12 +44,7 @@ type PaginationState<NodesType> = {
   pagination?: {
     [key: string]: {
       nodes: Array<NodesType>;
-      pageInfo: {
-        endCursor: Maybe<string> | undefined;
-        startCursor: Maybe<string> | undefined;
-        hasPreviousPage: boolean;
-        hasNextPage: boolean;
-      };
+      pageInfo?: PageInfo | null;
     };
   };
 };
@@ -225,21 +220,14 @@ function getParamsWithoutPagination(
   // Get all namespaces from state
   const activeNamespaces = Object.keys(state?.pagination || {});
 
-  // Handle non-namespaced params (empty string namespace)
-  if (activeNamespaces.includes('')) {
-    params.delete('cursor');
-    params.delete('direction');
-  }
-
-  activeNamespaces
-    .filter((namespace) => namespace !== '')
-    .forEach((namespace) => {
-      const cursorParam = `${namespace}_cursor`;
-      const directionParam = `${namespace}_direction`;
-
-      params.delete(cursorParam);
-      params.delete(directionParam);
-    });
+  activeNamespaces.forEach((namespace) => {
+    // Clean up cursor and direction params for both namespaced and non-namespaced pagination
+    const namespacePrefix = namespace === '' ? '' : `${namespace}_`;
+    const cursorParam = `${namespacePrefix}cursor`;
+    const directionParam = `${namespacePrefix}direction`;
+    params.delete(cursorParam);
+    params.delete(directionParam);
+  });
 
   return params.toString();
 }
