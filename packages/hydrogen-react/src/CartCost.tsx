@@ -42,7 +42,7 @@ export function CartCost(props: CartCostProps): JSX.Element | null {
   );
 }
 
-// This is only for documenation purposes, and it is not used in the code.
+// This is only for documentation purposes, and it is not used in the code.
 export interface CartCostPropsForDocs<AsType extends React.ElementType = 'div'>
   extends Omit<MoneyPropsBase<AsType>, 'data'>,
     CartCostPropsBase {}

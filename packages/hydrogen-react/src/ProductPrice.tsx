@@ -100,7 +100,7 @@ export function ProductPrice<
   return <Money {...passthroughProps} data={price} />;
 }
 
-// This is only for documenation purposes, and it is not used in the code.
+// This is only for documentation purposes, and it is not used in the code.
 export interface ProductPricePropsForDocs<
   AsType extends React.ElementType = 'div',
 > extends Omit<MoneyPropsBase<AsType>, 'data' | 'measurement'>,

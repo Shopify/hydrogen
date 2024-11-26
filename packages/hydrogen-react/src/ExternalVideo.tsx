@@ -24,7 +24,6 @@ export type ExternalVideoProps = Omit<
  * The `ExternalVideo` component renders an embedded video for the Storefront
  * API's [ExternalVideo object](https://shopify.dev/api/storefront/reference/products/externalvideo).
  */
-
 export const ExternalVideo = forwardRef<HTMLIFrameElement, ExternalVideoProps>(
   (props, ref): JSX.Element => {
     const {

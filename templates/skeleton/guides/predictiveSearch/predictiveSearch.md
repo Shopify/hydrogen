@@ -157,7 +157,7 @@ const PREDICTIVE_SEARCH_QUERY = `#graphql
 /**
  * Predictive search fetcher
  */
-async function predictiveSeach({
+async function predictiveSearch({
   request,
   context,
 }: Pick<ActionFunctionArgs, 'request' | 'context'>) {
