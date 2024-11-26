@@ -272,8 +272,10 @@ function register(key: string) {
   };
 }
 
-// This functions attempts to automatically determine if the user can be tracked if the
-// customer privacy API is available. If not, it will default to false.
+/**
+ * This functions attempts to automatically determine if the user can be tracked if the
+ * customer privacy API is available. If not, it will default to false.
+ */
 function shopifyCanTrack(): boolean {
   try {
     return window.Shopify.customerPrivacy.analyticsProcessingAllowed();

@@ -107,7 +107,7 @@ export function AddToCartButton<AsType extends React.ElementType = 'button'>(
   );
 }
 
-// This is only for documenation purposes, and it is not used in the code.
+// This is only for documentation purposes, and it is not used in the code.
 export interface AddToCartButtonPropsForDocs<
   AsType extends React.ElementType = 'button',
 > extends AddToCartButtonPropsBase,

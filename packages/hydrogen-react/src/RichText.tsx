@@ -208,6 +208,6 @@ function richTextToString(
   return result.join('').trim();
 }
 
-// This is only for documenation purposes, and it is not used in the code.
+// This is only for documentation purposes, and it is not used in the code.
 export type RichTextPropsForDocs<AsType extends React.ElementType = 'div'> =
   RichTextPropsBase<AsType>;

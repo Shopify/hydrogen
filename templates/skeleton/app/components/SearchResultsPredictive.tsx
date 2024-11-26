@@ -133,7 +133,7 @@ function SearchResultsPredictiveCollections({
       <h5>Collections</h5>
       <ul>
         {collections.map((collection) => {
-          const colllectionUrl = urlWithTrackingParams({
+          const collectionUrl = urlWithTrackingParams({
             baseUrl: `/collections/${collection.handle}`,
             trackingParams: collection.trackingParameters,
             term: term.current,
@@ -141,7 +141,7 @@ function SearchResultsPredictiveCollections({
 
           return (
             <li className="predictive-search-result-item" key={collection.id}>
-              <Link onClick={closeSearch} to={colllectionUrl}>
+              <Link onClick={closeSearch} to={collectionUrl}>
                 {collection.image?.url && (
                   <Image
                     alt={collection.image.altText ?? ''}

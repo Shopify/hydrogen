@@ -96,7 +96,7 @@ type CartProviderProps = {
   customerAccessToken?: CartBuyerIdentityInput['customerAccessToken'];
   /** The ISO country code for i18n. */
   countryCode?: CountryCode;
-  /** The ISO luanguage code for i18n. */
+  /** The ISO language code for i18n. */
   languageCode?: LanguageCode;
 };
 
@@ -531,8 +531,9 @@ function useDelayedStateUntilHydration<T>(state: T): T {
   return displayState;
 }
 
-/** Check for storage availability funciton obtained from
- * https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API
+/**
+ * Check for storage availability function obtained from
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API
  */
 export function storageAvailable(
   type: 'localStorage' | 'sessionStorage',
