@@ -656,4 +656,110 @@ describe('<VariantSelector>', () => {
       </DocumentFragment>
     `);
   });
+
+  it('accepts a selected variant', () => {
+    const {asFragment} = render(
+      createElement(VariantSelector, {
+        handle: 'snowboard',
+        options: [{name: 'Size', optionValues: [{name: 'S'}, {name: 'M'}]}],
+        selectedVariant: {
+          availableForSale: true,
+          selectedOptions: [{name: 'Size', value: 'M'}],
+        },
+        children: ({option}) =>
+          createElement(
+            'div',
+            null,
+            option.values.map(({value, to, isActive}) =>
+              createElement(
+                'a',
+                {
+                  key: option.name + value,
+                  href: to,
+                  className: isActive ? 'active' : undefined,
+                },
+                value,
+              ),
+            ),
+          ),
+      }),
+    );
+
+    expect(asFragment()).toMatchInlineSnapshot(`
+      <DocumentFragment>
+        <div>
+          <a
+            href="/products/snowboard?Size=S"
+          >
+            S
+          </a>
+          <a
+            class="active"
+            href="/products/snowboard?Size=M"
+          >
+            M
+          </a>
+        </div>
+      </DocumentFragment>
+    `);
+  });
+
+  it('defaults to options set in URL params when a selected variant is also provided', () => {
+    // URL params are Size M
+    vi.mocked(useLocation).mockReturnValueOnce(
+      fillLocation({search: '?Size=M', pathname: '/en-us/'}),
+    );
+
+    const {asFragment} = render(
+      createElement(VariantSelector, {
+        handle: 'snowboard',
+        options: [{name: 'Size', optionValues: [{name: 'S'}, {name: 'M'}]}],
+        // Selected variant option is Size S
+        selectedVariant: {
+          availableForSale: true,
+          selectedOptions: [{name: 'Size', value: 'S'}],
+        },
+        children: ({option}) =>
+          createElement(
+            'div',
+            null,
+            option.values.map(({value, to, isActive, isAvailable}) => {
+              const classNames = [];
+
+              if (isActive) classNames.push('active');
+              if (isAvailable) classNames.push('available');
+
+              return createElement(
+                'a',
+                {
+                  key: option.name + value,
+                  href: to,
+                  className: classNames.join(' '),
+                },
+                value,
+              );
+            }),
+          ),
+      }),
+    );
+
+    expect(asFragment()).toMatchInlineSnapshot(`
+      <DocumentFragment>
+        <div>
+          <a
+            class="available"
+            href="/en-us/products/snowboard?Size=S"
+          >
+            S
+          </a>
+          <a
+            class="active available"
+            href="/en-us/products/snowboard?Size=M"
+          >
+            M
+          </a>
+        </div>
+      </DocumentFragment>
+      `);
+  });
 });

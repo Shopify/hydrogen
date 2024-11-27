@@ -21,8 +21,11 @@ export function ProductForm({
     <div className="product-form">
       <VariantSelector
         handle={product.handle}
-        options={product.options.filter((option) => option.optionValues.length > 1)}
+        options={product.options.filter(
+          (option) => option.optionValues.length > 1,
+        )}
         variants={variants}
+        selectedVariant={selectedVariant}
       >
         {({option}) => <ProductOptions key={option.name} option={option} />}
       </VariantSelector>
