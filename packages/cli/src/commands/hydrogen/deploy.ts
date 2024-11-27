@@ -55,6 +55,7 @@ import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {getProjectPaths, isClassicProject} from '../../lib/remix-config.js';
 import {packageManagers} from '../../lib/package-managers.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
+import {importLocal} from '../../lib/import-utils.js';
 
 const DEPLOY_OUTPUT_FILE_HANDLE = 'h2_deploy_log.json';
 
@@ -469,6 +470,8 @@ export async function runDeploy(
 
   const metadataHydrogenVersion = await getHydrogenVersion({appPath: root});
 
+  outputInfo(`Hydrogen version: ${metadataHydrogenVersion}`);
+
   const config: DeploymentConfig = {
     assetsDir,
     bugsnag: true,
@@ -685,6 +688,18 @@ Continue?`.value,
  */
 export async function getHydrogenVersion({appPath}: {appPath: string}) {
   const {root} = getProjectPaths(appPath);
+
+  type HydrogenType = typeof import('@shopify/hydrogen');
+  const {LIB_VERSION} = await importLocal<HydrogenType>(
+    '@shopify/hydrogen',
+    root,
+  ).catch(() => {
+    return undefined;
+  });
+
+  outputInfo(`Hydrogen version NEW: ${LIB_VERSION}`);
+
+  // separate
 
   let packageJson: PackageJson | undefined;
   const nodeModulesHydrogenPath = joinPath(

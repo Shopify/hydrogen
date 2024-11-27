@@ -172,3 +172,5 @@ export {
 } from './createHydrogenContext';
 
 export {getSitemapIndex, getSitemap} from './sitemap/sitemap';
+
+export {LIB_VERSION} from './version';
