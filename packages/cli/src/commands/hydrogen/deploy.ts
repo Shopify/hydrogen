@@ -32,7 +32,7 @@ import {
   DeploymentVerificationDetailsResponse,
   parseToken,
 } from '@shopify/oxygen-cli/deploy';
-import {PackageJson} from 'type-fest';
+import {createRequire} from 'node:module';
 
 import {
   createEnvironmentCliChoiceLabel,
@@ -55,7 +55,6 @@ import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {getProjectPaths, isClassicProject} from '../../lib/remix-config.js';
 import {packageManagers} from '../../lib/package-managers.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
-import {importLocal} from '../../lib/import-utils.js';
 
 const DEPLOY_OUTPUT_FILE_HANDLE = 'h2_deploy_log.json';
 
@@ -470,8 +469,6 @@ export async function runDeploy(
 
   const metadataHydrogenVersion = await getHydrogenVersion({appPath: root});
 
-  outputInfo(`Hydrogen version: ${metadataHydrogenVersion}`);
-
   const config: DeploymentConfig = {
     assetsDir,
     bugsnag: true,
@@ -684,52 +681,15 @@ Continue?`.value,
 }
 
 /**
- * Gets the current @shopify/hydrogen version from the app's package.json
+ * Gets the current @shopify/hydrogen version from the package's package.json
  */
 export async function getHydrogenVersion({appPath}: {appPath: string}) {
   const {root} = getProjectPaths(appPath);
 
-  type HydrogenType = typeof import('@shopify/hydrogen');
-  const {LIB_VERSION} = await importLocal<HydrogenType>(
-    '@shopify/hydrogen',
-    root,
-  ).catch(() => {
-    return undefined;
-  });
+  const require = createRequire(import.meta.url);
+  const {version} = require(require.resolve('@shopify/hydrogen/package.json', {
+    paths: [root],
+  }));
 
-  outputInfo(`Hydrogen version NEW: ${LIB_VERSION}`);
-
-  // separate
-
-  let packageJson: PackageJson | undefined;
-  const nodeModulesHydrogenPath = joinPath(
-    root,
-    'node_modules',
-    '@shopify',
-    'hydrogen',
-    'package.json',
-  );
-  try {
-    packageJson = JSON.parse(await readFile(nodeModulesHydrogenPath));
-  } catch {}
-
-  if (packageJson?.version) {
-    return packageJson.version;
-  }
-
-  const packageJsonPath = joinPath(root, 'package.json');
-  try {
-    packageJson = JSON.parse(await readFile(packageJsonPath));
-  } catch {}
-
-  if (!packageJson) {
-    return undefined;
-  }
-
-  const currentDependencies = {
-    ...packageJson?.dependencies,
-    ...packageJson?.devDependencies,
-  };
-
-  return currentDependencies['@shopify/hydrogen'];
+  return version;
 }
