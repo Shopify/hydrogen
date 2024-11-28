@@ -5,10 +5,13 @@ import {
   getSelectedProductOptions,
   Analytics,
   useOptimisticVariant,
+  getProductOptions,
+  decodeEncodedVariant,
 } from '@shopify/hydrogen';
 import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
+import { ProductFormV2 } from '~/components/ProductFormV2';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [
@@ -90,10 +93,22 @@ function loadDeferredData({context, params}: LoaderFunctionArgs) {
 
 export default function Product() {
   const {product, variants} = useLoaderData<typeof loader>();
+
   const selectedVariant = useOptimisticVariant(
     product.selectedVariant,
-    variants,
+    [product.selectedVariant, ...product.adjacentVariants],
   );
+
+  const productOptions = getProductOptions({
+    ...product,
+    selectedOrFirstAvailableVariant: selectedVariant,
+  });
+
+  console.log({
+    selectedVariant,
+    encodedVariantAvailability: product.encodedVariantAvailability,
+    decodedVariantAvailability: decodeEncodedVariant(product.encodedVariantAvailability),
+  });
 
   const {title, descriptionHtml} = product;
 
@@ -129,6 +144,14 @@ export default function Product() {
             )}
           </Await>
         </Suspense>
+        <div style={{
+          padding: '8px',
+          border: '1px solid gray',
+          backgroundColor: 'rgb(236 252 203)',
+        }}>
+          <h3>Product Form V2</h3>
+          <ProductFormV2 productOptions={productOptions} />
+        </div>
         <br />
         <br />
         <p>
@@ -202,13 +225,29 @@ const PRODUCT_FRAGMENT = `#graphql
     handle
     descriptionHtml
     description
+    encodedVariantExistence
+    encodedVariantAvailability
     options {
       name
       optionValues {
         name
+        firstSelectableVariant {
+          ...ProductVariant
+        }
+        swatch {
+          color
+          image {
+            previewImage {
+              url
+            }
+          }
+        }
       }
     }
     selectedVariant: selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
+      ...ProductVariant
+    }
+    adjacentVariants (selectedOptions: $selectedOptions) {
       ...ProductVariant
     }
     variants(first: 1) {

@@ -30,31 +30,36 @@ export function useOptimisticVariant<
   const navigation = useNavigation();
   const [resolvedVariants, setResolvedVariants] = useState<
     Array<PartialDeep<ProductVariant>>
-  >([]);
+  >(
+    variants instanceof Array
+      ? variants
+      : (variants as PartialDeep<ProductVariant>).product
+        ?.variants?.nodes || []
+  );
 
-  useEffect(() => {
-    Promise.resolve(variants)
-      .then((productWithVariants) => {
-        if (productWithVariants) {
-          setResolvedVariants(
-            productWithVariants instanceof Array
-              ? productWithVariants
-              : (productWithVariants as PartialDeep<ProductVariant>).product
-                  ?.variants?.nodes || [],
-          );
-        }
-      })
-      .catch((error) => {
-        reportError(
-          new Error(
-            '[h2:error:useOptimisticVariant] An error occurred while resolving the variants for the optimistic product hook.',
-            {
-              cause: error,
-            },
-          ),
-        );
-      });
-  }, [variants]);
+  // useEffect(() => {
+  //   Promise.resolve(variants)
+  //     .then((productWithVariants) => {
+  //       if (productWithVariants) {
+  //         setResolvedVariants(
+  //           productWithVariants instanceof Array
+  //             ? productWithVariants
+  //             : (productWithVariants as PartialDeep<ProductVariant>).product
+  //                 ?.variants?.nodes || [],
+  //         );
+  //       }
+  //     })
+  //     .catch((error) => {
+  //       reportError(
+  //         new Error(
+  //           '[h2:error:useOptimisticVariant] An error occurred while resolving the variants for the optimistic product hook.',
+  //           {
+  //             cause: error,
+  //           },
+  //         ),
+  //       );
+  //     });
+  // }, [variants]);
 
   if (navigation.state === 'loading') {
     const queryParams = new URLSearchParams(navigation.location.search);
