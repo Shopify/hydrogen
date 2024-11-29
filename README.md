@@ -59,7 +59,7 @@ Hydrogen is organized as a [monorepo](https://monorepo.tools/), which includes m
 
 Hydrogen and hydrogen-react are tied to specific versions of the [Shopify Storefront API](https://shopify.dev/api/storefront), which follows [calver](https://calver.org/).
 
-For example, if you're using Storefront API version `2023-01`, then Hydrogen and hydrogen-react versions `2022.1.x` are fully compatible.
+For example, if you're using Storefront API version `2023-01`, then Hydrogen and hydrogen-react versions `2023.1.x` are fully compatible.
 
 If the Storefront API version update includes breaking changes, then Hydrogen and hydrogen-react may also include breaking changes. Because the API version is updated every three months, breaking changes could occur every three months.
 
