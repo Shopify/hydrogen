@@ -33,8 +33,7 @@ export function useOptimisticVariant<
   >(
     variants instanceof Array
       ? variants
-      : (variants as PartialDeep<ProductVariant>).product
-        ?.variants?.nodes || []
+      : (variants as PartialDeep<ProductVariant>).product?.variants?.nodes || []
   );
 
   // useEffect(() => {
@@ -83,6 +82,8 @@ export function useOptimisticVariant<
         return queryParams.get(option.name) === option.value;
       });
     });
+
+    console.log({matchingVariant, queryParams: queryParams.toString()})
 
     if (matchingVariant) {
       return {

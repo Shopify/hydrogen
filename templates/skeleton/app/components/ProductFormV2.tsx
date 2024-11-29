@@ -18,7 +18,6 @@ export function ProductFormV2({productOptions}: {
                 handle,
                 variantUriQuery,
                 selected,
-                exists,
                 available,
                 isDifferentProduct,
                 swatch,
@@ -45,9 +44,8 @@ export function ProductFormV2({productOptions}: {
                 return (
                   <button
                     type="button"
-                    className={`product-options-item${exists && !selected ? ' link' : ''}`}
+                    className={`product-options-item${!selected ? ' link' : ''}`}
                     key={option.name + name}
-                    disabled={!exists}
                     style={{
                       border: selected ? '1px solid black' : '1px solid transparent',
                       opacity: available ? 1 : 0.3,

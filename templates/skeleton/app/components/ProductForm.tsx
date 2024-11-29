@@ -13,7 +13,7 @@ export function ProductForm({
   variants,
 }: {
   product: ProductFragment;
-  selectedVariant: ProductFragment['selectedVariant'];
+  selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
   variants: Array<ProductVariantFragment>;
 }) {
   const {open} = useAside();

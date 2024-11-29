@@ -7,6 +7,7 @@ import {
   useOptimisticVariant,
   getProductOptions,
   decodeEncodedVariant,
+  getAdjacentAndFirstAvailableVariants,
 } from '@shopify/hydrogen';
 import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
@@ -75,7 +76,7 @@ function loadDeferredData({context, params}: LoaderFunctionArgs) {
   // all of them. But there might be a *lot*, so instead separate the variants
   // into it's own separate query that is deferred. So there's a brief moment
   // where variant options might show as available when they're not, but after
-  // this deffered query resolves, the UI will update.
+  // this deferred query resolves, the UI will update.
   const variants = context.storefront
     .query(VARIANTS_QUERY, {
       variables: {handle: params.handle!},
@@ -95,14 +96,11 @@ export default function Product() {
   const {product, variants} = useLoaderData<typeof loader>();
 
   const selectedVariant = useOptimisticVariant(
-    product.selectedVariant,
-    [product.selectedVariant, ...product.adjacentVariants],
+    product.selectedOrFirstAvailableVariant,
+    getAdjacentAndFirstAvailableVariants(product),
   );
 
-  const productOptions = getProductOptions({
-    ...product,
-    selectedOrFirstAvailableVariant: selectedVariant,
-  });
+  const productOptions = getProductOptions(product);
 
   console.log({
     selectedVariant,
@@ -244,7 +242,7 @@ const PRODUCT_FRAGMENT = `#graphql
         }
       }
     }
-    selectedVariant: selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
+    selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
       ...ProductVariant
     }
     adjacentVariants (selectedOptions: $selectedOptions) {

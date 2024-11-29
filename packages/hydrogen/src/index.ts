@@ -143,6 +143,7 @@ export {
   isOptionValueCombinationInEncodedVariant,
   decodeEncodedVariant,
   getProductOptions,
+  getAdjacentAndFirstAvailableVariants,
 } from '@shopify/hydrogen-react';
 export {RichText} from './RichText';
 

@@ -1,13 +1,68 @@
 import {afterEach, describe, expect, it, vi} from 'vitest';
-import {checkProductParam} from './getProductOptions.js';
+import {checkProductParam, getAdjacentAndFirstAvailableVariants} from './getProductOptions.js';
 import {Product} from './storefront-api-types.js';
 
-const ERROR_MSG_START = '[h2:warn:getProductOptions] product.';
+const ERROR_MSG_START = '[h2:error:getProductOptions] product.';
 const ERROR_MSG_END = ' is missing. Make sure you query for this field from the Storefront API.';
+
+describe('getAdjacentAndFirstAvailableVariants', () => {
+  it('returns the correct number of variants found', () => {
+    const variants = getAdjacentAndFirstAvailableVariants({
+      options: [
+        {
+          optionValues: [
+            {
+              firstSelectableVariant: {
+                id: "snowboard",
+                selectedOptions: [
+                  {
+                    name: "Color",
+                    value: "Turquoise"
+                  },
+                ],
+              },
+            }
+          ],
+        }
+      ],
+      selectedOrFirstAvailableVariant: {
+        id: "snowboard",
+        selectedOptions: [
+          {
+            name: "Color",
+            value: "Turquoise"
+          },
+        ],
+      },
+      adjacentVariants: [{
+        id: "snowboard-2",
+        selectedOptions: [
+          {
+            name: "Color",
+            value: "Ember"
+          },
+        ],
+      }],
+    } as unknown as Product);
+
+    expect(variants.length).toBe(2);
+    expect(variants[0]).toMatchInlineSnapshot(`
+      {
+        "id": "snowboard",
+        "selectedOptions": [
+          {
+            "name": "Color",
+            "value": "Turquoise",
+          },
+        ],
+      }
+    `);
+  });
+});
 
 describe('checkProductParam', () => {
   beforeEach(() => {
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   })
 
   afterEach(() => {
@@ -46,23 +101,49 @@ describe('checkProductParam', () => {
       encodedVariantAvailability: '',
       selectedOrFirstAvailableVariant: null,
       adjacentVariants: [],
+    } as unknown as Product, true);
+
+    expect(console.error).toHaveBeenCalledTimes(0);
+  });
+
+  it('logs nothing when provided a valid product input without checkAll flag', () => {
+    checkProductParam({
+      options: [
+        {
+          optionValues: [
+            {
+              firstSelectableVariant: {
+                id: "snowboard",
+                selectedOptions: [
+                  {
+                    name: "Color",
+                    value: "Turquoise"
+                  },
+                ],
+              },
+            }
+          ],
+        }
+      ],
+      selectedOrFirstAvailableVariant: null,
+      adjacentVariants: [],
     } as unknown as Product);
 
-    expect(console.warn).toHaveBeenCalledTimes(0);
+    expect(console.error).toHaveBeenCalledTimes(0);
   });
 
   it('logs warnings for each missing field when provided an invalid product input', () => {
     checkProductParam({
       id: "snowboard",
-    } as unknown as Product)
+    } as unknown as Product, true)
 
-    expect(console.warn).toHaveBeenCalledTimes(6);
-    expect(console.warn).toHaveBeenCalledWith(`${ERROR_MSG_START}handle${ERROR_MSG_END}`);
-    expect(console.warn).toHaveBeenCalledWith(`${ERROR_MSG_START}options${ERROR_MSG_END}`);
-    expect(console.warn).toHaveBeenCalledWith(`${ERROR_MSG_START}encodedVariantExistence${ERROR_MSG_END}`);
-    expect(console.warn).toHaveBeenCalledWith(`${ERROR_MSG_START}encodedVariantAvailability${ERROR_MSG_END}`);
-    expect(console.warn).toHaveBeenCalledWith(`${ERROR_MSG_START}selectedOrFirstAvailableVariant${ERROR_MSG_END}`);
-    expect(console.warn).toHaveBeenCalledWith(`${ERROR_MSG_START}adjacentVariants${ERROR_MSG_END}`);
+    expect(console.error).toHaveBeenCalledTimes(6);
+    expect(console.error).toHaveBeenCalledWith(`${ERROR_MSG_START}handle${ERROR_MSG_END}`);
+    expect(console.error).toHaveBeenCalledWith(`${ERROR_MSG_START}options${ERROR_MSG_END}`);
+    expect(console.error).toHaveBeenCalledWith(`${ERROR_MSG_START}encodedVariantExistence${ERROR_MSG_END}`);
+    expect(console.error).toHaveBeenCalledWith(`${ERROR_MSG_START}encodedVariantAvailability${ERROR_MSG_END}`);
+    expect(console.error).toHaveBeenCalledWith(`${ERROR_MSG_START}selectedOrFirstAvailableVariant${ERROR_MSG_END}`);
+    expect(console.error).toHaveBeenCalledWith(`${ERROR_MSG_START}adjacentVariants${ERROR_MSG_END}`);
   });
 
   it('logs warnings when provided an invalid options input - missing optionValues', () => {
@@ -78,10 +159,10 @@ describe('checkProductParam', () => {
       encodedVariantAvailability: '',
       selectedOrFirstAvailableVariant: null,
       adjacentVariants: [],
-    } as unknown as Product)
+    } as unknown as Product, true)
 
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(`${ERROR_MSG_START}options.optionValues${ERROR_MSG_END}`);
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error).toHaveBeenCalledWith(`${ERROR_MSG_START}options.optionValues${ERROR_MSG_END}`);
   });
 
   it('logs warnings when provided an invalid options input - missing optionValues.name', () => {
@@ -111,10 +192,10 @@ describe('checkProductParam', () => {
       encodedVariantAvailability: '',
       selectedOrFirstAvailableVariant: null,
       adjacentVariants: [],
-    } as unknown as Product)
+    } as unknown as Product, true)
 
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(`${ERROR_MSG_START}options.optionValues.name${ERROR_MSG_END}`);
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error).toHaveBeenCalledWith(`${ERROR_MSG_START}options.optionValues.name${ERROR_MSG_END}`);
   });
 
   it('logs warnings when provided an invalid options input - missing optionValues.firstSelectableVariant', () => {
@@ -139,10 +220,10 @@ describe('checkProductParam', () => {
       encodedVariantAvailability: '',
       selectedOrFirstAvailableVariant: null,
       adjacentVariants: [],
-    } as unknown as Product)
+    } as unknown as Product, true)
 
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(`${ERROR_MSG_START}options.optionValues.firstSelectableVariant${ERROR_MSG_END}`);
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error).toHaveBeenCalledWith(`${ERROR_MSG_START}options.optionValues.firstSelectableVariant${ERROR_MSG_END}`);
   });
 
   it('logs warnings when provided an invalid options input - missing optionValues.firstSelectableVariant.product.handle', () => {
@@ -171,10 +252,10 @@ describe('checkProductParam', () => {
       encodedVariantAvailability: '',
       selectedOrFirstAvailableVariant: null,
       adjacentVariants: [],
-    } as unknown as Product)
+    } as unknown as Product, true)
 
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(`${ERROR_MSG_START}options.optionValues.firstSelectableVariant.product.handle${ERROR_MSG_END}`);
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error).toHaveBeenCalledWith(`${ERROR_MSG_START}options.optionValues.firstSelectableVariant.product.handle${ERROR_MSG_END}`);
   });
 
   it('logs warnings when provided an invalid options input - missing optionValues.firstSelectableVariant.product.selectedOptions', () => {
@@ -200,10 +281,10 @@ describe('checkProductParam', () => {
       encodedVariantAvailability: '',
       selectedOrFirstAvailableVariant: null,
       adjacentVariants: [],
-    } as unknown as Product)
+    } as unknown as Product, true)
 
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(`${ERROR_MSG_START}options.optionValues.firstSelectableVariant.selectedOptions${ERROR_MSG_END}`);
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error).toHaveBeenCalledWith(`${ERROR_MSG_START}options.optionValues.firstSelectableVariant.selectedOptions${ERROR_MSG_END}`);
   });
 
   it('logs warnings when provided an invalid options input - missing optionValues.firstSelectableVariant.product.selectedOptions.name', () => {
@@ -234,10 +315,10 @@ describe('checkProductParam', () => {
       encodedVariantAvailability: '',
       selectedOrFirstAvailableVariant: null,
       adjacentVariants: [],
-    } as unknown as Product)
+    } as unknown as Product, true)
 
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(`${ERROR_MSG_START}options.optionValues.firstSelectableVariant.selectedOptions.name${ERROR_MSG_END}`);
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error).toHaveBeenCalledWith(`${ERROR_MSG_START}options.optionValues.firstSelectableVariant.selectedOptions.name${ERROR_MSG_END}`);
   });
 
   it('logs warnings when provided an invalid options input - missing optionValues.firstSelectableVariant.product.selectedOptions.value', () => {
@@ -268,10 +349,10 @@ describe('checkProductParam', () => {
       encodedVariantAvailability: '',
       selectedOrFirstAvailableVariant: null,
       adjacentVariants: [],
-    } as unknown as Product)
+    } as unknown as Product, true)
 
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(`${ERROR_MSG_START}options.optionValues.firstSelectableVariant.selectedOptions.value${ERROR_MSG_END}`);
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error).toHaveBeenCalledWith(`${ERROR_MSG_START}options.optionValues.firstSelectableVariant.selectedOptions.value${ERROR_MSG_END}`);
   });
 
   it('logs warnings when product.selectedOrFirstAvailableVariant is available but is invalid - missing selectedOrFirstAvailableVariant.product.handle', () => {
@@ -313,10 +394,10 @@ describe('checkProductParam', () => {
         ]
       },
       adjacentVariants: [],
-    } as unknown as Product);
+    } as unknown as Product, true);
 
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(`${ERROR_MSG_START}selectedOrFirstAvailableVariant.product.handle${ERROR_MSG_END}`);
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error).toHaveBeenCalledWith(`${ERROR_MSG_START}selectedOrFirstAvailableVariant.product.handle${ERROR_MSG_END}`);
   });
 
   it('logs warnings when product.selectedOrFirstAvailableVariant is available but is invalid - missing selectedOrFirstAvailableVariant.selectedOptions', () => {
@@ -355,10 +436,10 @@ describe('checkProductParam', () => {
         },
       },
       adjacentVariants: [],
-    } as unknown as Product);
+    } as unknown as Product, true);
 
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(`${ERROR_MSG_START}selectedOrFirstAvailableVariant.selectedOptions${ERROR_MSG_END}`);
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error).toHaveBeenCalledWith(`${ERROR_MSG_START}selectedOrFirstAvailableVariant.selectedOptions${ERROR_MSG_END}`);
   });
 
   it('logs warnings when product.selectedOrFirstAvailableVariant is available but is invalid - missing selectedOrFirstAvailableVariant.selectedOptions.name', () => {
@@ -402,10 +483,10 @@ describe('checkProductParam', () => {
         ]
       },
       adjacentVariants: [],
-    } as unknown as Product);
+    } as unknown as Product, true);
 
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(`${ERROR_MSG_START}selectedOrFirstAvailableVariant.selectedOptions.name${ERROR_MSG_END}`);
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error).toHaveBeenCalledWith(`${ERROR_MSG_START}selectedOrFirstAvailableVariant.selectedOptions.name${ERROR_MSG_END}`);
   });
 
   it('logs warnings when product.selectedOrFirstAvailableVariant is available but is invalid - missing selectedOrFirstAvailableVariant.selectedOptions.value', () => {
@@ -449,10 +530,10 @@ describe('checkProductParam', () => {
         ]
       },
       adjacentVariants: [],
-    } as unknown as Product);
+    } as unknown as Product, true);
 
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(`${ERROR_MSG_START}selectedOrFirstAvailableVariant.selectedOptions.value${ERROR_MSG_END}`);
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error).toHaveBeenCalledWith(`${ERROR_MSG_START}selectedOrFirstAvailableVariant.selectedOptions.value${ERROR_MSG_END}`);
   });
 
   it('logs warnings when product.adjacentVariants is available but is invalid - missing adjacentVariants.product.handle', () => {
@@ -494,10 +575,10 @@ describe('checkProductParam', () => {
           },
         ]
       }],
-    } as unknown as Product);
+    } as unknown as Product, true);
 
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(`${ERROR_MSG_START}adjacentVariants.product.handle${ERROR_MSG_END}`);
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error).toHaveBeenCalledWith(`${ERROR_MSG_START}adjacentVariants.product.handle${ERROR_MSG_END}`);
   });
 
   it('logs warnings when product.adjacentVariants is available but is invalid - missing adjacentVariants.selectedOptions', () => {
@@ -536,10 +617,10 @@ describe('checkProductParam', () => {
           handle: "snowboard"
         },
       }],
-    } as unknown as Product);
+    } as unknown as Product, true);
 
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(`${ERROR_MSG_START}adjacentVariants.selectedOptions${ERROR_MSG_END}`);
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error).toHaveBeenCalledWith(`${ERROR_MSG_START}adjacentVariants.selectedOptions${ERROR_MSG_END}`);
   });
 
   it('logs warnings when product.adjacentVariants is available but is invalid - missing adjacentVariants.selectedOptions.name', () => {
@@ -583,10 +664,10 @@ describe('checkProductParam', () => {
           },
         ]
       }],
-    } as unknown as Product);
+    } as unknown as Product, true);
 
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(`${ERROR_MSG_START}adjacentVariants.selectedOptions.name${ERROR_MSG_END}`);
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error).toHaveBeenCalledWith(`${ERROR_MSG_START}adjacentVariants.selectedOptions.name${ERROR_MSG_END}`);
   });
 
   it('logs warnings when product.adjacentVariants is available but is invalid - missing adjacentVariants.selectedOptions.value', () => {
@@ -630,9 +711,9 @@ describe('checkProductParam', () => {
           },
         ]
       }],
-    } as unknown as Product);
+    } as unknown as Product, true);
 
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(`${ERROR_MSG_START}adjacentVariants.selectedOptions.value${ERROR_MSG_END}`);
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error).toHaveBeenCalledWith(`${ERROR_MSG_START}adjacentVariants.selectedOptions.value${ERROR_MSG_END}`);
   });
 });
