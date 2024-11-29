@@ -42,7 +42,11 @@ export {
   customerAccountApiCustomScalars,
   storefrontApiCustomScalars,
 } from './codegen.helpers.js';
-export {getProductOptions, getAdjacentAndFirstAvailableVariants, type MappedProductOptions} from'./getProductOptions.js';
+export {
+  getProductOptions,
+  getAdjacentAndFirstAvailableVariants,
+  type MappedProductOptions,
+} from './getProductOptions.js';
 export {getShopifyCookies} from './cookies-utils.js';
 export {ExternalVideo} from './ExternalVideo.js';
 export {flattenConnection} from './flatten-connection.js';

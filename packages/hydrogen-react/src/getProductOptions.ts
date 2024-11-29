@@ -1,9 +1,19 @@
-import { validate } from "graphql";
-import {decodeEncodedVariant, isOptionValueCombinationInEncodedVariant } from "./optionValueDecoder";
-import type {Maybe, Product, ProductOption, ProductOptionValue, ProductVariant, SelectedOption } from "./storefront-api-types";
-import { PartialDeep } from "type-fest";
+import {validate} from 'graphql';
+import {
+  decodeEncodedVariant,
+  isOptionValueCombinationInEncodedVariant,
+} from './optionValueDecoder';
+import type {
+  Maybe,
+  Product,
+  ProductOption,
+  ProductOptionValue,
+  ProductVariant,
+  SelectedOption,
+} from './storefront-api-types';
+import {PartialDeep} from 'type-fest';
 
-type RecursivePartial<T> = {
+export type RecursivePartial<T> = {
   [P in keyof T]?: RecursivePartial<T[P]>;
 };
 type ProductOptionsMapping = Record<string, number>;
@@ -41,9 +51,12 @@ type MappedProductOptionValue = ProductOptionValue & ProductOptionValueState;
  */
 function mapProductOptions(options: ProductOption[]): ProductOptionsMapping[] {
   return options.map((option) => {
-    return Object.assign({}, ...option?.optionValues.map((value, index) => {
-      return {[value.name]: index}
-    }));
+    return Object.assign(
+      {},
+      ...option?.optionValues.map((value, index) => {
+        return {[value.name]: index};
+      }),
+    );
   });
 }
 
@@ -66,10 +79,15 @@ function mapProductOptions(options: ProductOption[]): ProductOptionsMapping[] {
  *    Size: 'Medium',
  *  }
  */
-function mapSelectedProductOptionToObject(options: Pick<SelectedOption, "name" | "value">[]) {
-  return Object.assign({}, ...options.map((key) => {
-    return {[key.name]: key.value};
-  }));
+function mapSelectedProductOptionToObject(
+  options: Pick<SelectedOption, 'name' | 'value'>[],
+) {
+  return Object.assign(
+    {},
+    ...options.map((key) => {
+      return {[key.name]: key.value};
+    }),
+  );
 }
 
 /**
@@ -77,7 +95,9 @@ function mapSelectedProductOptionToObject(options: Pick<SelectedOption, "name" |
  * @param options Returns selected options as a JSON string
  * @returns
  */
-function mapSelectedProductOptionToObjectAsString(options: Pick<SelectedOption, "name" | "value">[]) {
+function mapSelectedProductOptionToObjectAsString(
+  options: Pick<SelectedOption, 'name' | 'value'>[],
+) {
   return JSON.stringify(mapSelectedProductOptionToObject(options));
 }
 
@@ -109,15 +129,24 @@ function mapSelectedProductOptionToObjectAsString(options: Pick<SelectedOption, 
  * @param productOptionMappings - The result of product option mapping from mapProductOptions
  * @returns
  */
-function encodeSelectedProductOptionAsKey(selectedOption: Pick<SelectedOption, "name" | "value">[] | Record<string, string>, productOptionMappings: ProductOptionsMapping[]) {
+function encodeSelectedProductOptionAsKey(
+  selectedOption:
+    | Pick<SelectedOption, 'name' | 'value'>[]
+    | Record<string, string>,
+  productOptionMappings: ProductOptionsMapping[],
+) {
   if (Array.isArray(selectedOption)) {
-    return JSON.stringify(selectedOption.map((key, index) => {
-      return productOptionMappings[index][key.value];
-    }));
+    return JSON.stringify(
+      selectedOption.map((key, index) => {
+        return productOptionMappings[index][key.value];
+      }),
+    );
   } else {
-    return JSON.stringify(Object.keys(selectedOption).map((key, index) => {
-      return productOptionMappings[index][selectedOption[key]];
-    }));
+    return JSON.stringify(
+      Object.keys(selectedOption).map((key, index) => {
+        return productOptionMappings[index][selectedOption[key]];
+      }),
+    );
   }
 }
 
@@ -149,16 +178,25 @@ function encodeSelectedProductOptionAsKey(selectedOption: Pick<SelectedOption, "
  * @param productOptionMappings
  * @returns
  */
-function mapVariants(variants: ProductVariant[], productOptionMappings: ProductOptionsMapping[]) {
-  return Object.assign({}, ...variants.map((variant) => {
-    const variantKey = encodeSelectedProductOptionAsKey(variant.selectedOptions || [], productOptionMappings);
-    return {[variantKey]: variant};;
-  }));
+function mapVariants(
+  variants: ProductVariant[],
+  productOptionMappings: ProductOptionsMapping[],
+) {
+  return Object.assign(
+    {},
+    ...variants.map((variant) => {
+      const variantKey = encodeSelectedProductOptionAsKey(
+        variant.selectedOptions || [],
+        productOptionMappings,
+      );
+      return {[variantKey]: variant};
+    }),
+  );
 }
 
 export type MappedProductOptions = Omit<ProductOption, 'optionValues'> & {
   optionValues: MappedProductOptionValue[];
-}
+};
 
 const PRODUCT_INPUTS = [
   'options',
@@ -173,16 +211,24 @@ const PRODUCT_INPUTS_EXTRA = [
 ];
 
 function logError(key: string) {
-  console.error(`[h2:error:getProductOptions] product.${key} is missing. Make sure you query for this field from the Storefront API.`)
+  console.error(
+    `[h2:error:getProductOptions] product.${key} is missing. Make sure you query for this field from the Storefront API.`,
+  );
   return false;
 }
 
-export function checkProductParam(product: RecursivePartial<Product>, checkAll = false): Product {
+export function checkProductParam(
+  product: RecursivePartial<Product>,
+  checkAll = false,
+): Product {
   let validParam = true;
   const productKeys = Object.keys(product);
 
   // Check product input
-  (checkAll ? [...PRODUCT_INPUTS, ...PRODUCT_INPUTS_EXTRA] : PRODUCT_INPUTS).forEach((key) => {
+  (checkAll
+    ? [...PRODUCT_INPUTS, ...PRODUCT_INPUTS_EXTRA]
+    : PRODUCT_INPUTS
+  ).forEach((key) => {
     if (!productKeys.includes(key)) {
       validParam = logError(key);
     }
@@ -202,7 +248,12 @@ export function checkProductParam(product: RecursivePartial<Product>, checkAll =
       // Check for options.optionValues.firstSelectableVariant
       if (firstOptionValues?.firstSelectableVariant) {
         // check product variant
-        validParam = checkProductVariantParam(firstOptionValues.firstSelectableVariant, 'options.optionValues.firstSelectableVariant', validParam, checkAll)
+        validParam = checkProductVariantParam(
+          firstOptionValues.firstSelectableVariant,
+          'options.optionValues.firstSelectableVariant',
+          validParam,
+          checkAll,
+        );
       } else {
         validParam = logError('options.optionValues.firstSelectableVariant');
       }
@@ -212,19 +263,34 @@ export function checkProductParam(product: RecursivePartial<Product>, checkAll =
   }
 
   // Check for nested selectedOrFirstAvailableVariant requirements
-  if(product.selectedOrFirstAvailableVariant) {
-    validParam = checkProductVariantParam(product.selectedOrFirstAvailableVariant, 'selectedOrFirstAvailableVariant', validParam, checkAll)
+  if (product.selectedOrFirstAvailableVariant) {
+    validParam = checkProductVariantParam(
+      product.selectedOrFirstAvailableVariant,
+      'selectedOrFirstAvailableVariant',
+      validParam,
+      checkAll,
+    );
   }
 
   // Check for nested adjacentVariants requirements
-  if(!!product.adjacentVariants && product.adjacentVariants[0]) {
-    validParam = checkProductVariantParam(product.adjacentVariants[0], 'adjacentVariants', validParam, checkAll)
+  if (!!product.adjacentVariants && product.adjacentVariants[0]) {
+    validParam = checkProductVariantParam(
+      product.adjacentVariants[0],
+      'adjacentVariants',
+      validParam,
+      checkAll,
+    );
   }
 
   return (validParam ? product : {}) as Product;
 }
 
-function checkProductVariantParam(variant: RecursivePartial<ProductVariant>, key: string, currentValidParamState: boolean, checkAll: boolean): boolean {
+function checkProductVariantParam(
+  variant: RecursivePartial<ProductVariant>,
+  key: string,
+  currentValidParamState: boolean,
+  checkAll: boolean,
+): boolean {
   let validParam = currentValidParamState;
 
   if (checkAll && !variant.product?.handle) {
@@ -251,7 +317,9 @@ function checkProductVariantParam(variant: RecursivePartial<ProductVariant>, key
  * @param product
  * @returns
  */
-export function getAdjacentAndFirstAvailableVariants(product: RecursivePartial<Product>) {
+export function getAdjacentAndFirstAvailableVariants(
+  product: RecursivePartial<Product>,
+) {
   // Checks for valid product input
   const checkedProduct = checkProductParam(product);
 
@@ -260,28 +328,36 @@ export function getAdjacentAndFirstAvailableVariants(product: RecursivePartial<P
   const availableVariants: Record<string, ProductVariant> = {};
   checkedProduct.options.map((option) => {
     option.optionValues?.map((value) => {
-      if(!!value.firstSelectableVariant) {
-        const variantKey = mapSelectedProductOptionToObjectAsString(value.firstSelectableVariant.selectedOptions);
+      if (!!value.firstSelectableVariant) {
+        const variantKey = mapSelectedProductOptionToObjectAsString(
+          value.firstSelectableVariant.selectedOptions,
+        );
         availableVariants[variantKey] = value.firstSelectableVariant;
       }
-    })
+    });
   });
 
   checkedProduct.adjacentVariants.map((variant) => {
-    const variantKey = mapSelectedProductOptionToObjectAsString(variant.selectedOptions);
+    const variantKey = mapSelectedProductOptionToObjectAsString(
+      variant.selectedOptions,
+    );
     availableVariants[variantKey] = variant;
   });
 
   const selectedVariant = checkedProduct.selectedOrFirstAvailableVariant;
   if (!!selectedVariant) {
-    const variantKey = mapSelectedProductOptionToObjectAsString(selectedVariant.selectedOptions);
+    const variantKey = mapSelectedProductOptionToObjectAsString(
+      selectedVariant.selectedOptions,
+    );
     availableVariants[variantKey] = selectedVariant;
   }
 
   return Object.values(availableVariants);
 }
 
-export function getProductOptions(product: RecursivePartial<Product>): MappedProductOptions[] {
+export function getProductOptions(
+  product: RecursivePartial<Product>,
+): MappedProductOptions[] {
   // Checks for valid product input
   const checkedProduct = checkProductParam(product, true);
 
@@ -299,36 +375,50 @@ export function getProductOptions(product: RecursivePartial<Product>): MappedPro
   const productOptionMappings = mapProductOptions(options);
 
   // Get the adjacent variants mapped to the encoded selected option values
-  const variants = mapVariants(selectedVariant ? [
-    selectedVariant,
-    ...adjacentVariants,
-  ] : adjacentVariants, productOptionMappings);
+  const variants = mapVariants(
+    selectedVariant ? [selectedVariant, ...adjacentVariants] : adjacentVariants,
+    productOptionMappings,
+  );
 
   // Get the key:value version of selected options for building url query params
-  const selectedOptions = mapSelectedProductOptionToObject(selectedVariant ? selectedVariant.selectedOptions : []);
+  const selectedOptions = mapSelectedProductOptionToObject(
+    selectedVariant ? selectedVariant.selectedOptions : [],
+  );
 
-  const productOptions =  options.map((option, optionIndex) => {
+  const productOptions = options.map((option, optionIndex) => {
     return {
       ...option,
       optionValues: option.optionValues.map((value) => {
-        const targetOptionParams = {...selectedOptions};  // Clones the selected options
+        const targetOptionParams = {...selectedOptions}; // Clones the selected options
 
         // Modify the selected option value to the current option value
         targetOptionParams[option.name] = value.name;
 
         // Encode the new selected option values as a key for mapping to the product variants
-        const targetKey = encodeSelectedProductOptionAsKey(targetOptionParams || [], productOptionMappings);
+        const targetKey = encodeSelectedProductOptionAsKey(
+          targetOptionParams || [],
+          productOptionMappings,
+        );
 
         // Top-down option check for existence and availability
         const topDownKey = JSON.parse(targetKey).slice(0, optionIndex + 1);
-        const exists = isOptionValueCombinationInEncodedVariant(topDownKey, encodedVariantExistence || '');
-        let available = isOptionValueCombinationInEncodedVariant(topDownKey, encodedVariantAvailability || '');
+        const exists = isOptionValueCombinationInEncodedVariant(
+          topDownKey,
+          encodedVariantExistence || '',
+        );
+        let available = isOptionValueCombinationInEncodedVariant(
+          topDownKey,
+          encodedVariantAvailability || '',
+        );
 
         // Get the variant for the current option value if exists, else use the first selectable variant
-        const variant: ProductVariant = variants[targetKey] || value.firstSelectableVariant;
+        const variant: ProductVariant =
+          variants[targetKey] || value.firstSelectableVariant;
 
         // Build the query params for this option value
-        const variantOptionParam = mapSelectedProductOptionToObject(variant.selectedOptions || []);
+        const variantOptionParam = mapSelectedProductOptionToObject(
+          variant.selectedOptions || [],
+        );
         const searchParams = new URLSearchParams(variantOptionParam);
         const handle = variant?.product?.handle;
 
@@ -355,16 +445,23 @@ export function getProductOptions(product: RecursivePartial<Product>): MappedPro
       // Make sure leaf option values always reflect the variant's availableForSale attribute
       option.optionValues.map((value, valueIndex) => {
         if (!value.isDifferentProduct) {
-          const available = value.variant.availableForSale
-          productOptions[optionIndex].optionValues[valueIndex].available = available;
+          const available = value.variant.availableForSale;
+          productOptions[optionIndex].optionValues[valueIndex].available =
+            available;
           if (available) optionAvailable = true;
         }
-      })
+      });
     } else {
       // If not the last option, for selected optionValue, check for previous option for availability
-      const selectedValue = option.optionValues.filter((value) => value.selected);
+      const selectedValue = option.optionValues.filter(
+        (value) => value.selected,
+      );
       const previousOptionAvailable = optionsAvailable[optionIndex - 1];
-      if (selectedValue && selectedValue.length === 1 && !selectedValue[0].isDifferentProduct) {
+      if (
+        selectedValue &&
+        selectedValue.length === 1 &&
+        !selectedValue[0].isDifferentProduct
+      ) {
         selectedValue[0].available = previousOptionAvailable;
         if (previousOptionAvailable) optionAvailable = true;
       }
