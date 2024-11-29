@@ -328,7 +328,7 @@ export function getAdjacentAndFirstAvailableVariants(
   const availableVariants: Record<string, ProductVariant> = {};
   checkedProduct.options.map((option) => {
     option.optionValues?.map((value) => {
-      if (!!value.firstSelectableVariant) {
+      if (value.firstSelectableVariant) {
         const variantKey = mapSelectedProductOptionToObjectAsString(
           value.firstSelectableVariant.selectedOptions,
         );
@@ -345,7 +345,7 @@ export function getAdjacentAndFirstAvailableVariants(
   });
 
   const selectedVariant = checkedProduct.selectedOrFirstAvailableVariant;
-  if (!!selectedVariant) {
+  if (selectedVariant) {
     const variantKey = mapSelectedProductOptionToObjectAsString(
       selectedVariant.selectedOptions,
     );
@@ -406,7 +406,7 @@ export function getProductOptions(
           topDownKey,
           encodedVariantExistence || '',
         );
-        let available = isOptionValueCombinationInEncodedVariant(
+        const available = isOptionValueCombinationInEncodedVariant(
           topDownKey,
           encodedVariantAvailability || '',
         );
