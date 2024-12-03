@@ -3,9 +3,10 @@ import {
   checkProductParam,
   getAdjacentAndFirstAvailableVariants,
   getProductOptions,
+  mapSelectedProductOptionToObject,
   RecursivePartial,
 } from './getProductOptions.js';
-import {Product} from './storefront-api-types.js';
+import {Product, SelectedOption} from './storefront-api-types.js';
 
 const ERROR_MSG_START = '[h2:error:getProductOptions] product.';
 const ERROR_MSG_END =
@@ -273,6 +274,28 @@ describe('getAdjacentAndFirstAvailableVariants', () => {
           ],
         },
       ]
+    `);
+  });
+});
+
+describe('mapSelectedProductOptionToObject', () => {
+  it('returns the selected option in an object form', () => {
+    const option = mapSelectedProductOptionToObject([
+      {
+        name: 'Color',
+        value: 'Turquoise',
+      },
+      {
+        name: 'Size',
+        value: 'Small',
+      },
+    ]);
+
+    expect(option).toMatchInlineSnapshot(`
+      {
+        "Color": "Turquoise",
+        "Size": "Small",
+      }
     `);
   });
 });
