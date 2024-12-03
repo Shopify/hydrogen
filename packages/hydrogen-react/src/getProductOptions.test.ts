@@ -279,6 +279,7 @@ describe('getAdjacentAndFirstAvailableVariants', () => {
 
 describe('checkProductParam', () => {
   beforeEach(() => {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 

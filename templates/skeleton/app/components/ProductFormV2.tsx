@@ -1,11 +1,22 @@
 import {Link, useNavigate} from '@remix-run/react';
-import {MappedProductOptions} from "@shopify/hydrogen";
-import {Maybe, ProductOptionValueSwatch} from '@shopify/hydrogen/storefront-api-types';
+import {type MappedProductOptions} from '@shopify/hydrogen';
+import type {
+  Maybe,
+  ProductOptionValueSwatch,
+} from '@shopify/hydrogen/storefront-api-types';
+import {AddToCartButton} from './AddToCartButton';
+import {useAside} from './Aside';
+import type {ProductFragment} from 'storefrontapi.generated';
 
-export function ProductFormV2({productOptions}: {
-  productOptions: MappedProductOptions[]
+export function ProductFormV2({
+  productOptions,
+  selectedVariant,
+}: {
+  productOptions: MappedProductOptions[];
+  selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
 }) {
   const navigate = useNavigate();
+  const {open} = useAside();
   return (
     <>
       {productOptions.map((option) => (
@@ -19,6 +30,7 @@ export function ProductFormV2({productOptions}: {
                 variantUriQuery,
                 selected,
                 available,
+                exists,
                 isDifferentProduct,
                 swatch,
               } = value;
@@ -33,7 +45,9 @@ export function ProductFormV2({productOptions}: {
                     replace
                     to={`/products/${handle}?${variantUriQuery}`}
                     style={{
-                      border: selected ? '1px solid black' : '1px solid transparent',
+                      border: selected
+                        ? '1px solid black'
+                        : '1px solid transparent',
                       opacity: available ? 1 : 0.3,
                     }}
                   >
@@ -44,12 +58,17 @@ export function ProductFormV2({productOptions}: {
                 return (
                   <button
                     type="button"
-                    className={`product-options-item${!selected ? ' link' : ''}`}
+                    className={`product-options-item${
+                      exists && !selected ? ' link' : ''
+                    }`}
                     key={option.name + name}
                     style={{
-                      border: selected ? '1px solid black' : '1px solid transparent',
+                      border: selected
+                        ? '1px solid black'
+                        : '1px solid transparent',
                       opacity: available ? 1 : 0.3,
                     }}
+                    disabled={!exists}
                     onClick={() => {
                       if (!selected) {
                         navigate(`?${variantUriQuery}`, {
@@ -67,8 +86,27 @@ export function ProductFormV2({productOptions}: {
           <br />
         </div>
       ))}
+      <AddToCartButton
+        disabled={!selectedVariant || !selectedVariant.availableForSale}
+        onClick={() => {
+          open('cart');
+        }}
+        lines={
+          selectedVariant
+            ? [
+                {
+                  merchandiseId: selectedVariant.id,
+                  quantity: 1,
+                  selectedVariant,
+                },
+              ]
+            : []
+        }
+      >
+        {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
+      </AddToCartButton>
     </>
-  )
+  );
 }
 
 function ProductOptionSwatch({
@@ -91,7 +129,7 @@ function ProductOptionSwatch({
         backgroundColor: color || 'transparent',
       }}
     >
-      {!!image && <img src={image} alt={name} /> }
+      {!!image && <img src={image} alt={name} />}
     </div>
   );
 }

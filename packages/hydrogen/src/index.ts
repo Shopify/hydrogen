@@ -144,6 +144,7 @@ export {
   decodeEncodedVariant,
   getProductOptions,
   getAdjacentAndFirstAvailableVariants,
+  mapSelectedProductOptionToObject,
 } from '@shopify/hydrogen-react';
 export {RichText} from './RichText';
 
