@@ -4,6 +4,7 @@ import {
   useMemo,
   useRef,
   forwardRef,
+  useState,
   type Ref,
   type FC,
 } from 'react';
@@ -104,9 +105,16 @@ export function Pagination<NodesType>({
   },
   namespace = '',
 }: PaginationProps<NodesType>): ReturnType<FC> {
+  const [isLoading, setIsLoading] = useState(false);
   const transition = useNavigation();
-  const isLoading = transition.state === 'loading';
   const location = useLocation();
+
+  // Reset loading state once the transition state is idle
+  useEffect(() => {
+    if (transition.state === 'idle') {
+      setIsLoading(false);
+    }
+  }, [transition.state]);
 
   const {
     endCursor,
@@ -117,19 +125,6 @@ export function Pagination<NodesType>({
     previousPageUrl,
     startCursor,
   } = usePagination<NodesType>(connection, namespace);
-
-  // Warn about non-unique namespace
-  if (
-    location.state?.pagination &&
-    namespace in location.state.pagination &&
-    transition.state === 'idle'
-  ) {
-    console.warn(
-      `Warning: Multiple <Pagination /> components are using the same namespace${
-        namespace ? `"${namespace}"` : ''
-      }. This will cause state conflicts. Each <Pagination /> component should have a unique namespace.`,
-    );
-  }
 
   const state = useMemo(
     () => ({
@@ -172,6 +167,7 @@ export function Pagination<NodesType>({
               state,
               replace: true,
               ref,
+              onClick: () => setIsLoading(true),
             })
           : null;
       }),
@@ -192,6 +188,7 @@ export function Pagination<NodesType>({
               state,
               replace: true,
               ref,
+              onClick: () => setIsLoading(true),
             })
           : null;
       }),
