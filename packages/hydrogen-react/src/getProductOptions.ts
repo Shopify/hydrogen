@@ -225,6 +225,12 @@ export function checkProductParam(
 
   // Check for nested options requirements
   if (product.options) {
+    const firstOption = product?.options[0];
+
+    if (checkAll && !firstOption?.name) {
+      validParam = logError('options.name');
+    }
+
     // Check for options.optionValues
     if (product?.options[0]?.optionValues) {
       const firstOptionValues = product.options[0].optionValues[0];
