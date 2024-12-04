@@ -440,6 +440,7 @@ describe('checkProductParam', () => {
         handle: 'snowboard',
         options: [
           {
+            name: 'Color',
             optionValues: [
               {
                 firstSelectableVariant: {
