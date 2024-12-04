@@ -18,7 +18,7 @@ export function ProductForm({
   const navigate = useNavigate();
   const {open} = useAside();
   return (
-    <>
+    <div className="product-form">
       {productOptions.map((option) => (
         <div className="product-options" key={option.name}>
           <h5>{option.name}</h5>
@@ -114,7 +114,7 @@ export function ProductForm({
       >
         {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
       </AddToCartButton>
-    </>
+    </div>
   );
 }
 

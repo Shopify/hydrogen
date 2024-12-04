@@ -1,7 +1,5 @@
-import {Suspense} from 'react';
-import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, type MetaFunction} from '@remix-run/react';
-import type {ProductFragment} from 'storefrontapi.generated';
 import {
   getSelectedProductOptions,
   Analytics,
@@ -10,8 +8,6 @@ import {
   getAdjacentAndFirstAvailableVariants,
   mapSelectedProductOptionToObject,
 } from '@shopify/hydrogen';
-import type {SelectedOption} from '@shopify/hydrogen/storefront-api-types';
-import {getVariantUrl} from '~/lib/variants';
 import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
