@@ -250,7 +250,9 @@ export function checkProductParam(
           checkAll,
         );
       } else {
-        validParam = logErrorAndReturnFalse('options.optionValues.firstSelectableVariant');
+        validParam = logErrorAndReturnFalse(
+          'options.optionValues.firstSelectableVariant',
+        );
       }
     } else {
       validParam = logErrorAndReturnFalse('options.optionValues');
