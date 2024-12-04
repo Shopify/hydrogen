@@ -6,29 +6,34 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [
     {
-      name: 'Storefront Schema',
+      name: 'mapSelectedProductOptionToObject',
       type: 'gear',
-      url: '/api/hydrogen-react/utilities/storefront-schema',
+      url: '/api/hydrogen-react/utilities/mapselectedproductoptiontoobject',
     },
     {
-      name: 'Storefront API Types',
+      name: 'getAdjacentAndFirstAvailableVariants',
       type: 'gear',
-      url: '/api/hydrogen-react/utilities/storefront-api-types',
+      url: '/api/hydrogen-react/utilities/getadjacentandfirstavailablevariants',
     },
   ],
-  description: `Returns a product options array with its relevant information about the variant.`,
+  description: `Returns a product options array with its relevant information about the variant. This function supports combined listing products and products with 2000 variants limit.`,
   type: 'utility',
   defaultExample: {
     description: 'I am the default example',
     codeblock: {
       tabs: [
         {
-          title: 'getProductOption example',
-          code: './getProductOptions.example.js',
-          language: 'js',
+          title: 'JavaScript',
+          code: './getProductOptions.example.jsx',
+          language: 'jsx',
+        },
+        {
+          title: 'TypeScript',
+          code: './getProductOptions.example.tsx',
+          language: 'tsx',
         },
       ],
-      title: 'getProductOptions.js',
+      title: 'Example code',
     },
   },
   definitions: [],

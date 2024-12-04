@@ -6,7 +6,7 @@ import {
   mapSelectedProductOptionToObject,
   RecursivePartial,
 } from './getProductOptions.js';
-import {Product, SelectedOption} from './storefront-api-types.js';
+import {Product} from './storefront-api-types.js';
 
 const ERROR_MSG_START = '[h2:error:getProductOptions] product.';
 const ERROR_MSG_END =
