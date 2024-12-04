@@ -199,7 +199,7 @@ const PRODUCT_INPUTS_EXTRA = [
   'encodedVariantAvailability',
 ];
 
-function logError(key: string): boolean {
+function logErrorAndReturnFalse(key: string): boolean {
   console.error(
     `[h2:error:getProductOptions] product.${key} is missing. Make sure you query for this field from the Storefront API.`,
   );
@@ -219,7 +219,7 @@ export function checkProductParam(
     : PRODUCT_INPUTS
   ).forEach((key) => {
     if (!productKeys.includes(key)) {
-      validParam = logError(key);
+      validParam = logErrorAndReturnFalse(key);
     }
   });
 
@@ -228,7 +228,7 @@ export function checkProductParam(
     const firstOption = product?.options[0];
 
     if (checkAll && !firstOption?.name) {
-      validParam = logError('options.name');
+      validParam = logErrorAndReturnFalse('options.name');
     }
 
     // Check for options.optionValues
@@ -237,7 +237,7 @@ export function checkProductParam(
 
       // Check for options.optionValues.name
       if (checkAll && !firstOptionValues?.name) {
-        validParam = logError('options.optionValues.name');
+        validParam = logErrorAndReturnFalse('options.optionValues.name');
       }
 
       // Check for options.optionValues.firstSelectableVariant
@@ -250,10 +250,10 @@ export function checkProductParam(
           checkAll,
         );
       } else {
-        validParam = logError('options.optionValues.firstSelectableVariant');
+        validParam = logErrorAndReturnFalse('options.optionValues.firstSelectableVariant');
       }
     } else {
-      validParam = logError('options.optionValues');
+      validParam = logErrorAndReturnFalse('options.optionValues');
     }
   }
 
@@ -289,18 +289,18 @@ function checkProductVariantParam(
   let validParam = currentValidParamState;
 
   if (checkAll && !variant.product?.handle) {
-    validParam = logError(`${key}.product.handle`);
+    validParam = logErrorAndReturnFalse(`${key}.product.handle`);
   }
   if (variant.selectedOptions) {
     const firstSelectedOption = variant.selectedOptions[0];
     if (!firstSelectedOption?.name) {
-      validParam = logError(`${key}.selectedOptions.name`);
+      validParam = logErrorAndReturnFalse(`${key}.selectedOptions.name`);
     }
     if (!firstSelectedOption?.value) {
-      validParam = logError(`${key}.selectedOptions.value`);
+      validParam = logErrorAndReturnFalse(`${key}.selectedOptions.value`);
     }
   } else {
-    validParam = logError(`${key}.selectedOptions`);
+    validParam = logErrorAndReturnFalse(`${key}.selectedOptions`);
   }
 
   return validParam;
