@@ -108,6 +108,7 @@ export function Pagination<NodesType>({
   const [isLoading, setIsLoading] = useState(false);
   const transition = useNavigation();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Reset loading state once the transition state is idle
   useEffect(() => {
@@ -115,6 +116,14 @@ export function Pagination<NodesType>({
       setIsLoading(false);
     }
   }, [transition.state]);
+
+  useEffect(() => {
+    // Clean up location state on initial load
+    navigate(window.location.toString(), {
+      replace: true,
+      state: {nodes: undefined, pageInfo: undefined},
+    });
+  }, []);
 
   const {
     endCursor,
