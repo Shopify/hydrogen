@@ -16,11 +16,13 @@ import {
   getLatestGitCommit,
   GitDirectoryNotCleanError,
 } from '@shopify/cli-kit/node/git';
+import {createRequire} from 'node:module';
 
-import {deploymentLogger, runDeploy} from './deploy.js';
+import {deploymentLogger, getHydrogenVersion, runDeploy} from './deploy.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
 import {execAsync} from '../../lib/process.js';
 import {createEnvironmentCliChoiceLabel} from '../../lib/common.js';
+import {getSkeletonSourceDir} from '../../lib/build.js';
 import {
   CompletedDeployment,
   createDeploy,
@@ -28,6 +30,7 @@ import {
 } from '@shopify/oxygen-cli/deploy';
 import {ciPlatform} from '@shopify/cli-kit/node/context/local';
 import {runBuild} from './build.js';
+import {PackageJson} from 'type-fest';
 
 vi.mock('@shopify/oxygen-cli/deploy');
 vi.mock('@shopify/cli-kit/node/dot-env');
@@ -61,7 +64,21 @@ vi.mock('@shopify/cli-kit/node/git', async () => {
   };
 });
 
-describe('deploy', () => {
+async function createHydrogenDependencyPackageJson(version?: string) {
+  const require = createRequire(import.meta.url);
+  const packageJson: PackageJson = require(require.resolve(
+    '@shopify/hydrogen/package.json',
+    {paths: [getSkeletonSourceDir()]},
+  ));
+
+  packageJson.version = version;
+
+  return packageJson;
+}
+
+describe('deploy', async () => {
+  await createHydrogenDependencyPackageJson('2000.1.1');
+
   const ADMIN_SESSION: AdminSession = {
     token: 'abc123',
     storeFqdn: 'my-shop.myshopify.com',
@@ -119,6 +136,7 @@ describe('deploy', () => {
       url: deployParams.metadataUrl,
       user: deployParams.metadataUser,
       version: deployParams.metadataVersion,
+      hydrogenVersion: '2000.1.1',
     },
     skipVerification: true,
     rootPath: deployParams.path,
@@ -163,6 +181,7 @@ describe('deploy', () => {
       oxygenDeploymentToken: 'some-encoded-token',
       environments: [],
     });
+
     vi.mocked(parseToken).mockReturnValue(mockToken);
   });
 
@@ -940,6 +959,22 @@ describe('deploy', () => {
           body: ['Successfully deployed to Oxygen'],
           nextSteps: [],
         });
+      });
+    });
+  });
+
+  describe('getHydrogenVersion', () => {
+    it('returns the version', async () => {
+      const version = await getHydrogenVersion({appPath: deployParams.path});
+      expect(version).toBe('2000.1.1');
+    });
+
+    describe('when there are no version is available', () => {
+      it('returns undefined', async () => {
+        await createHydrogenDependencyPackageJson(undefined);
+
+        const version = await getHydrogenVersion({appPath: deployParams.path});
+        expect(version).toBeUndefined();
       });
     });
   });
