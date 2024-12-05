@@ -8,13 +8,13 @@ import {
 } from '@shopify/cli-kit/node/output';
 import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {writeFile} from '@shopify/cli-kit/node/fs';
+import {readFile, writeFile} from '@shopify/cli-kit/node/fs';
 import {
   ensureIsClean,
   getLatestGitCommit,
   GitDirectoryNotCleanError,
 } from '@shopify/cli-kit/node/git';
-import {relativePath, resolvePath} from '@shopify/cli-kit/node/path';
+import {joinPath, relativePath, resolvePath} from '@shopify/cli-kit/node/path';
 import {
   renderConfirmationPrompt,
   renderSelectPrompt,
@@ -32,6 +32,7 @@ import {
   DeploymentVerificationDetailsResponse,
   parseToken,
 } from '@shopify/oxygen-cli/deploy';
+import {createRequire} from 'node:module';
 
 import {
   createEnvironmentCliChoiceLabel,
@@ -51,7 +52,7 @@ import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
 import {runBuild} from './build.js';
 import {getViteConfig} from '../../lib/vite-config.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
-import {isClassicProject} from '../../lib/remix-config.js';
+import {getProjectPaths, isClassicProject} from '../../lib/remix-config.js';
 import {packageManagers} from '../../lib/package-managers.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 
@@ -466,6 +467,8 @@ export async function runDeploy(
     }
   }
 
+  const metadataHydrogenVersion = await getHydrogenVersion({appPath: root});
+
   const config: DeploymentConfig = {
     assetsDir,
     bugsnag: true,
@@ -484,6 +487,9 @@ export async function runDeploy(
       ...(metadataUrl ? {url: metadataUrl} : {}),
       ...(metadataUser ? {user: metadataUser} : {}),
       ...(metadataVersion ? {version: metadataVersion} : {}),
+      ...(metadataHydrogenVersion
+        ? {hydrogenVersion: metadataHydrogenVersion}
+        : {}),
     },
     skipVerification: noVerify,
     rootPath: root,
@@ -672,4 +678,18 @@ Continue?`.value,
     });
 
   return deployPromise;
+}
+
+/**
+ * Gets the current @shopify/hydrogen version from the package's package.json
+ */
+export async function getHydrogenVersion({appPath}: {appPath: string}) {
+  const {root} = getProjectPaths(appPath);
+
+  const require = createRequire(import.meta.url);
+  const {version} = require(require.resolve('@shopify/hydrogen/package.json', {
+    paths: [root],
+  }));
+
+  return version;
 }
