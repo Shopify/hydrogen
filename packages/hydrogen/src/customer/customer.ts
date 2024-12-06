@@ -432,7 +432,7 @@ export function createCustomerAccountClient({
 
       clearSession(session);
 
-      return redirect(logoutUrl);
+      return redirect(logoutUrl, {headers: options?.headers || {}});
     },
     isLoggedIn,
     handleAuthStatus,
