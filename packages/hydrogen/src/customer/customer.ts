@@ -51,17 +51,16 @@ import type {
 import {createCustomerAccountHelper, URL_TYPE} from './customer-account-helper';
 import {warnOnce} from '../utils/warning';
 
-const DEFAULT_LOGIN_URL = '/account/login';
-const DEFAULT_AUTH_URL = '/account/authorize';
-const DEFAULT_REDIRECT_PATH = '/account';
-
-function defaultAuthStatusHandler(request: CrossRuntimeRequest) {
-  if (!request.url) return DEFAULT_LOGIN_URL;
+function defaultAuthStatusHandler(
+  request: CrossRuntimeRequest,
+  defaultLoginUrl: string,
+) {
+  if (!request.url) return defaultLoginUrl;
 
   const {pathname} = new URL(request.url);
 
   const redirectTo =
-    DEFAULT_LOGIN_URL +
+    defaultLoginUrl +
     `?${new URLSearchParams({return_to: pathname}).toString()}`;
 
   return redirect(redirectTo);
@@ -79,6 +78,9 @@ export function createCustomerAccountClient({
   customAuthStatusHandler,
   logErrors = true,
   unstableB2b = false,
+  loginPath = '/account/login',
+  authorizePath = '/account/authorize',
+  defaultRedirectPath = '/account',
 }: CustomerAccountOptions): CustomerAccount {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.warn(
@@ -106,7 +108,7 @@ export function createCustomerAccountClient({
 
   const authStatusHandler = customAuthStatusHandler
     ? customAuthStatusHandler
-    : () => defaultAuthStatusHandler(request);
+    : () => defaultAuthStatusHandler(request, loginPath);
 
   const requestUrl = new URL(request.url);
   const httpsOrigin =
@@ -115,7 +117,7 @@ export function createCustomerAccountClient({
       : requestUrl.origin;
   const redirectUri = ensureLocalRedirectUrl({
     requestUrl: httpsOrigin,
-    defaultUrl: DEFAULT_AUTH_URL,
+    defaultUrl: authorizePath,
     redirectUrl: authUrl,
   });
 
@@ -400,7 +402,7 @@ export function createCustomerAccountClient({
         redirectPath:
           getRedirectUrl(request.url) ||
           getHeader(request, 'Referer') ||
-          DEFAULT_REDIRECT_PATH,
+          defaultRedirectPath,
       });
 
       loginUrl.searchParams.append('code_challenge', challenge);
@@ -565,7 +567,7 @@ export function createCustomerAccountClient({
 
       await exchangeForStorefrontCustomerAccessToken();
 
-      return redirect(redirectPath || DEFAULT_REDIRECT_PATH);
+      return redirect(redirectPath || defaultRedirectPath);
     },
     UNSTABLE_setBuyer: setBuyer,
     UNSTABLE_getBuyer: getBuyer,
