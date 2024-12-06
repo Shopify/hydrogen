@@ -1,5 +1,24 @@
 # @shopify/hydrogen
 
+## 2024.10.1
+
+### Patch Changes
+
+- Add params to override the login and authorize paths: ([#2648](https://github.com/Shopify/hydrogen/pull/2648)) by [@blittle](https://github.com/blittle)
+
+  ```ts
+  const hydrogenContext = createHydrogenContext({
+    // ...
+    customerAccount: {
+      loginPath = '/account/login',
+      authorizePath = '/account/authorize',
+      defaultRedirectPath = '/account',
+    },
+  });
+  ```
+
+- Add `selectedVariant` prop to the `VariantSelector` to use for the initial state if no URL parameters are set ([#2643](https://github.com/Shopify/hydrogen/pull/2643)) by [@scottdixon](https://github.com/scottdixon)
+
 ## 2024.10.0
 
 ### Patch Changes
