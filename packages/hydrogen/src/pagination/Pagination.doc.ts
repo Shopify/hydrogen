@@ -38,6 +38,35 @@ const data: ReferenceEntityTemplateSchema = {
       description: '',
     },
   ],
+  examples: {
+    description: 'Other examples using the `Pagination` component.',
+    exampleGroups: [
+      {
+        title: 'Multiple `Pagination` components on a single page',
+        examples: [
+          {
+            description:
+              'Use the `namespace` prop to differentiate between multiple `Pagination` components on a single page',
+            codeblock: {
+              title: 'Example',
+              tabs: [
+                {
+                  title: 'JavaScript',
+                  code: './Pagination.multiple.example.jsx',
+                  language: 'jsx',
+                },
+                {
+                  title: 'TypeScript',
+                  code: './Pagination.multiple.example.tsx',
+                  language: 'tsx',
+                },
+              ],
+            },
+          },
+        ],
+      },
+    ],
+  },
 };
 
 export default data;
