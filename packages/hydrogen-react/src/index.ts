@@ -45,6 +45,12 @@ export {
 export {getShopifyCookies} from './cookies-utils.js';
 export {ExternalVideo} from './ExternalVideo.js';
 export {flattenConnection} from './flatten-connection.js';
+export {
+  getAdjacentAndFirstAvailableVariants,
+  getProductOptions,
+  type MappedProductOptions,
+  mapSelectedProductOptionToObject,
+} from './getProductOptions.js';
 export {Image, IMAGE_FRAGMENT} from './Image.js';
 export {useLoadScript} from './load-script.js';
 export {MediaFile} from './MediaFile.js';

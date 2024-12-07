@@ -13,17 +13,20 @@ const docsToCopy = [
   'useMoney',
   'useLoadScript',
   'useShopifyCookies',
+  'decodeEncodedVariant',
   'flattenConnection',
+  'getAdjacentAndFirstAvailableVariants',
   'getClientBrowserParameters',
+  'getProductOptions',
   'getShopifyCookies',
+  'isOptionValueCombinationInEncodedVariant',
+  'mapSelectedProductOptionToObject',
+  'parseGid',
   'parseMetafield',
   'sendShopifyAnalytics',
   'storefrontApiCustomScalars',
-  'parseGid',
   'Storefront Schema',
   'Storefront API Types',
-  'decodeEncodedVariant',
-  'isOptionValueCombinationInEncodedVariant',
 ];
 
 async function copyFiles() {
