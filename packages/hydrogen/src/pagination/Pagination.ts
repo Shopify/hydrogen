@@ -117,14 +117,6 @@ export function Pagination<NodesType>({
     }
   }, [transition.state]);
 
-  useEffect(() => {
-    // Clean up location state on initial load
-    navigate(window.location.toString(), {
-      replace: true,
-      state: {nodes: undefined, pageInfo: undefined},
-    });
-  }, []);
-
   const {
     endCursor,
     hasNextPage,
