@@ -1,5 +1,5 @@
 ---
-'@shopify/hydrogen': minor
+'@shopify/hydrogen': patch
 ---
 
 Added namespace support to prevent conflicts when using multiple Pagination components:
