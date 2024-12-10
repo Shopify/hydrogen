@@ -11,7 +11,6 @@ import {
 import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
-import {useEffect} from 'react';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [

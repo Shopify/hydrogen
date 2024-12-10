@@ -13,7 +13,6 @@ import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
 import {QuantityRules, hasQuantityRules} from '~/components/QuantityRules';
 import {PriceBreaks} from '~/components/PriceBreaks';
-import {useEffect} from 'react';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
