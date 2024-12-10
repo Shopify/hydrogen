@@ -6479,6 +6479,11 @@
         "name": "getAdjacentAndFirstAvailableVariants",
         "type": "gear",
         "url": "/api/hydrogen-react/utilities/getadjacentandfirstavailablevariants"
+      },
+      {
+        "name": "useSelectedOptionInUrlParam",
+        "type": "gear",
+        "url": "/api/hydrogen-react/utilities/useselectedoptioninurlparam"
       }
     ],
     "description": "Returns a product options array with its relevant information about the variant. This function supports combined listing products and products with 2000 variants limit.",
@@ -6517,6 +6522,11 @@
         "name": "mapSelectedProductOptionToObject",
         "type": "gear",
         "url": "/api/hydrogen-react/utilities/mapselectedproductoptiontoobject"
+      },
+      {
+        "name": "useSelectedOptionInUrlParam",
+        "type": "gear",
+        "url": "/api/hydrogen-react/utilities/useselectedoptioninurlparam"
       }
     ],
     "description": "Finds all the variants provided by `adjacentVariants`, `options.optionValues.firstAvailableVariant`, and `selectedOrFirstAvailableVariant` and return them in a single array. This function will remove any duplicated variants found.",
@@ -6550,6 +6560,11 @@
         "name": "getAdjacentAndFirstAvailableVariants",
         "type": "gear",
         "url": "/api/hydrogen-react/utilities/getadjacentandfirstavailablevariants"
+      },
+      {
+        "name": "useSelectedOptionInUrlParam",
+        "type": "gear",
+        "url": "/api/hydrogen-react/utilities/useselectedoptioninurlparam"
       }
     ],
     "description": "Converts the product selected option into an `Object<key, value>` format for building URL query params",
@@ -7875,6 +7890,39 @@
         }
       }
     ]
+  },
+  {
+    "name": "useSelectedOptionInUrlParam",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "getProductOptions",
+        "type": "gear",
+        "url": "/api/hydrogen-react/utilities/getproductoptions"
+      },
+      {
+        "name": "getAdjacentAndFirstAvailableVariants",
+        "type": "gear",
+        "url": "/api/hydrogen-react/utilities/getadjacentandfirstavailablevariants"
+      }
+    ],
+    "description": "Sets the url params to the selected option.",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "useSelectedOptionInUrlParam example",
+            "code": "import {useSelectedOptionInUrlParam} from '@shopify/hydrogen-react';\n\nconst selectedOption = [\n  {\n    name: 'Color',\n    value: 'Red',\n  },\n  {\n    name: 'Size',\n    value: 'Medium',\n  },\n];\n\nuseSelectedOptionInUrlParam(selectedOption);\n\n// URL will be updated to &lt;original product url&gt;?Color=Red&Size=Medium\n",
+            "language": "js"
+          }
+        ],
+        "title": "Example"
+      }
+    },
+    "definitions": []
   },
   {
     "name": "useShop",
