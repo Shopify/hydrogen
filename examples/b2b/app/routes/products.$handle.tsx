@@ -6,7 +6,7 @@ import {
   useOptimisticVariant,
   getProductOptions,
   getAdjacentAndFirstAvailableVariants,
-  mapSelectedProductOptionToObject,
+  useSelectedOptionInUrlParam,
 } from '@shopify/hydrogen';
 import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
@@ -127,23 +127,7 @@ export default function Product() {
 
   // Sets the search param to the selected variant without navigation
   // only when no search params are set in the url
-  useEffect(() => {
-    const searchParams = new URLSearchParams(
-      mapSelectedProductOptionToObject(
-        selectedVariant.selectedOptions || [],
-      ),
-    );
-
-    if (window.location.search === '' && searchParams.toString() !== '') {
-      window.history.replaceState(
-        {},
-        '',
-        `${location.pathname}?${searchParams.toString()}`,
-      );
-    }
-  }, [
-    JSON.stringify(selectedVariant.selectedOptions),
-  ]);
+  useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
 
   // Get the product options array
   const productOptions = getProductOptions({

@@ -15,6 +15,11 @@ const data: ReferenceEntityTemplateSchema = {
       type: 'gear',
       url: '/api/hydrogen-react/utilities/mapselectedproductoptiontoobject',
     },
+    {
+      name: 'useSelectedOptionInUrlParam',
+      type: 'gear',
+      url: '/api/hydrogen-react/utilities/useselectedoptioninurlparam',
+    },
   ],
   description:
     'Finds all the variants provided by `adjacentVariants`, `options.optionValues.firstAvailableVariant`, and `selectedOrFirstAvailableVariant` and return them in a single array. This function will remove any duplicated variants found.',

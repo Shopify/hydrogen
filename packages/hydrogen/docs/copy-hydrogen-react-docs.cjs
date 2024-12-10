@@ -24,6 +24,7 @@ const docsToCopy = [
   'parseGid',
   'parseMetafield',
   'sendShopifyAnalytics',
+  'useSelectedOptionInUrlParam',
   'storefrontApiCustomScalars',
   'Storefront Schema',
   'Storefront API Types',

@@ -15,6 +15,11 @@ const data: ReferenceEntityTemplateSchema = {
       type: 'gear',
       url: '/api/hydrogen-react/utilities/getadjacentandfirstavailablevariants',
     },
+    {
+      name: 'useSelectedOptionInUrlParam',
+      type: 'gear',
+      url: '/api/hydrogen-react/utilities/useselectedoptioninurlparam',
+    },
   ],
   description: `Returns a product options array with its relevant information about the variant. This function supports combined listing products and products with 2000 variants limit.`,
   type: 'utility',

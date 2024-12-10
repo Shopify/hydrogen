@@ -1,7 +1,7 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'mapSelectedProductOptionToObject',
+  name: 'useSelectedOptionInUrlParam',
   category: 'utilities',
   isVisualComponent: false,
   related: [
@@ -15,26 +15,21 @@ const data: ReferenceEntityTemplateSchema = {
       type: 'gear',
       url: '/api/hydrogen-react/utilities/getadjacentandfirstavailablevariants',
     },
-    {
-      name: 'useSelectedOptionInUrlParam',
-      type: 'gear',
-      url: '/api/hydrogen-react/utilities/useselectedoptioninurlparam',
-    },
   ],
   description:
-    'Converts the product selected option into an `Object<key, value>` format for building URL query params',
+    'Sets the url params to the selected option.',
   type: 'utility',
   defaultExample: {
     description: 'I am the default example',
     codeblock: {
       tabs: [
         {
-          title: 'mapSelectedProductOptionToObject example',
-          code: './getProductOptions.mapSelectedProductOptionToObject.example.js',
+          title: 'useSelectedOptionInUrlParam example',
+          code: './useSelectedOptionInUrlParam.example.js',
           language: 'js',
         },
       ],
-      title: 'mapSelectedProductOptionToObject.js',
+      title: 'Example',
     },
   },
   definitions: [],
