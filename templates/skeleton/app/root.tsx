@@ -10,6 +10,7 @@ import {
   ScrollRestoration,
   isRouteErrorResponse,
   type ShouldRevalidateFunction,
+  Await,
 } from '@remix-run/react';
 import favicon from '~/assets/favicon.svg';
 import resetStyles from '~/styles/reset.css?url';
@@ -142,17 +143,24 @@ export function Layout({children}: {children?: React.ReactNode}) {
         <Links />
       </head>
       <body>
-        {data ? (
-          <Analytics.Provider
-            cart={data.cart}
-            shop={data.shop}
-            consent={data.consent}
-          >
-            <PageLayout {...data}>{children}</PageLayout>
-          </Analytics.Provider>
-        ) : (
-          children
-        )}
+        <Await resolve={{}}>
+          {() => (
+            <>
+              {data ? (
+                <Analytics.Provider
+                  cart={data.cart}
+                  shop={data.shop}
+                  consent={data.consent}
+                >
+                  <PageLayout {...data}>{children}</PageLayout>
+                </Analytics.Provider>
+              ) : (
+                children
+              )}
+            </>
+          )}
+        </Await>
+
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>
