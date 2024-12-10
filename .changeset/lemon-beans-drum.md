@@ -405,3 +405,350 @@ function ProductOptionSwatch({
 +    width: 100%;
 +  }
 ```
+
+9. Update `lib/variants.ts`
+
+Make `useVariantUrl` flexible to supplying a selected option param
+
+```diff
+export function useVariantUrl(
+  handle: string,
+-  selectedOptions: SelectedOption[],
++  selectedOptions?: SelectedOption[],
+) {
+  const {pathname} = useLocation();
+
+  return useMemo(() => {
+    return getVariantUrl({
+      handle,
+      pathname,
+      searchParams: new URLSearchParams(),
+      selectedOptions,
+    });
+  }, [handle, selectedOptions, pathname]);
+}
+export function getVariantUrl({
+  handle,
+  pathname,
+  searchParams,
+  selectedOptions,
+}: {
+  handle: string;
+  pathname: string;
+  searchParams: URLSearchParams;
+-  selectedOptions: SelectedOption[];
++  selectedOptions?: SelectedOption[],
+}) {
+  const match = /(\/[a-zA-Z]{2}-[a-zA-Z]{2}\/)/g.exec(pathname);
+  const isLocalePathname = match && match.length > 0;
+  const path = isLocalePathname
+    ? `${match![0]}products/${handle}`
+    : `/products/${handle}`;
+
+-  selectedOptions.forEach((option) => {
++  selectedOptions?.forEach((option) => {
+    searchParams.set(option.name, option.value);
+  });
+```
+
+10. Update `routes/collections.$handle.tsx`
+
+We no longer need to query for the variants since product route can efficiently
+obtain the first available variants. Update the code to reflect that:
+
+```diff
+const PRODUCT_ITEM_FRAGMENT = `#graphql
+  fragment MoneyProductItem on MoneyV2 {
+    amount
+    currencyCode
+  }
+  fragment ProductItem on Product {
+    id
+    handle
+    title
+    featuredImage {
+      id
+      altText
+      url
+      width
+      height
+    }
+    priceRange {
+      minVariantPrice {
+        ...MoneyProductItem
+      }
+      maxVariantPrice {
+        ...MoneyProductItem
+      }
+    }
+-    variants(first: 1) {
+-      nodes {
+-        selectedOptions {
+-          name
+-          value
+-        }
+-      }
+-    }
+  }
+` as const;
+```
+
+and remove the variant reference
+```diff
+function ProductItem({
+  product,
+  loading,
+}: {
+  product: ProductItemFragment;
+  loading?: 'eager' | 'lazy';
+}) {
+-  const variant = product.variants.nodes[0];
+-  const variantUrl = useVariantUrl(product.handle, variant.selectedOptions);
++  const variantUrl = useVariantUrl(product.handle);
+  return (
+```
+
+11. Update `routes/collections.all.tsx`
+
+Same reasoning as `collections.$handle.tsx`
+
+```diff
+const PRODUCT_ITEM_FRAGMENT = `#graphql
+  fragment MoneyProductItem on MoneyV2 {
+    amount
+    currencyCode
+  }
+  fragment ProductItem on Product {
+    id
+    handle
+    title
+    featuredImage {
+      id
+      altText
+      url
+      width
+      height
+    }
+    priceRange {
+      minVariantPrice {
+        ...MoneyProductItem
+      }
+      maxVariantPrice {
+        ...MoneyProductItem
+      }
+    }
+-    variants(first: 1) {
+-      nodes {
+-        selectedOptions {
+-          name
+-          value
+-        }
+-      }
+-    }
+  }
+` as const;
+```
+
+and remove the variant reference
+```diff
+function ProductItem({
+  product,
+  loading,
+}: {
+  product: ProductItemFragment;
+  loading?: 'eager' | 'lazy';
+}) {
+-  const variant = product.variants.nodes[0];
+-  const variantUrl = useVariantUrl(product.handle, variant.selectedOptions);
++  const variantUrl = useVariantUrl(product.handle);
+  return (
+```
+
+12. Update `routes/search.tsx`
+
+Instead of using the first variant, use `selectedOrFirstAvailableVariant`
+
+```diff
+const SEARCH_PRODUCT_FRAGMENT = `#graphql
+  fragment SearchProduct on Product {
+    __typename
+    handle
+    id
+    publishedAt
+    title
+    trackingParameters
+    vendor
+-    variants(first: 1) {
+-      nodes {
++    selectedOrFirstAvailableVariant(
++      selectedOptions: []
++      ignoreUnknownOptions: true
++      caseInsensitiveMatch: true
++    ) {
+        id
+        image {
+          url
+          altText
+          width
+          height
+        }
+        price {
+          amount
+          currencyCode
+        }
+        compareAtPrice {
+          amount
+          currencyCode
+        }
+        selectedOptions {
+          name
+          value
+        }
+        product {
+          handle
+          title
+        }
+     }
+-    }
+  }
+` as const;
+```
+
+```diff
+const PREDICTIVE_SEARCH_PRODUCT_FRAGMENT = `#graphql
+  fragment PredictiveProduct on Product {
+    __typename
+    id
+    title
+    handle
+    trackingParameters
+-    variants(first: 1) {
+-      nodes {
++    selectedOrFirstAvailableVariant(
++      selectedOptions: []
++      ignoreUnknownOptions: true
++      caseInsensitiveMatch: true
++    ) {
+        id
+        image {
+          url
+          altText
+          width
+          height
+        }
+        price {
+          amount
+          currencyCode
+        }
+     }
+-    }
+  }
+```
+
+13. Update `components/SearchResults.tsx`
+
+```diff
+function SearchResultsProducts({
+  term,
+  products,
+}: PartialSearchResult<'products'>) {
+  if (!products?.nodes.length) {
+    return null;
+  }
+
+  return (
+    <div className="search-result">
+      <h2>Products</h2>
+      <Pagination connection={products}>
+        {({nodes, isLoading, NextLink, PreviousLink}) => {
+          const ItemsMarkup = nodes.map((product) => {
+            const productUrl = urlWithTrackingParams({
+              baseUrl: `/products/${product.handle}`,
+              trackingParams: product.trackingParameters,
+              term,
+            });
+
++            const price = product?.selectedOrFirstAvailableVariant?.price;
++            const image = product?.selectedOrFirstAvailableVariant?.image;
+
+            return (
+              <div className="search-results-item" key={product.id}>
+                <Link prefetch="intent" to={productUrl}>
+-                  {product.variants.nodes[0].image && (
++                  {image && (
+                    <Image
+-                      data={product.variants.nodes[0].image}
++                      data={image}
+                      alt={product.title}
+                      width={50}
+                    />
+                  )}
+                  <div>
+                    <p>{product.title}</p>
+                    <small>
+-                      <Money data={product.variants.nodes[0].price} />
++                      {price &&
++                        <Money data={price} />
++                      }
+                    </small>
+                  </div>
+                </Link>
+              </div>
+            );
+          });
+```
+
+14. Update `components/SearchResultsPredictive.tsx`
+
+```diff
+function SearchResultsPredictiveProducts({
+  term,
+  products,
+  closeSearch,
+}: PartialPredictiveSearchResult<'products'>) {
+  if (!products.length) return null;
+
+  return (
+    <div className="predictive-search-result" key="products">
+      <h5>Products</h5>
+      <ul>
+        {products.map((product) => {
+          const productUrl = urlWithTrackingParams({
+            baseUrl: `/products/${product.handle}`,
+            trackingParams: product.trackingParameters,
+            term: term.current,
+          });
+
++          const price = product?.selectedOrFirstAvailableVariant?.price;
+-          const image = product?.variants?.nodes?.[0].image;
++          const image = product?.selectedOrFirstAvailableVariant?.image;
+          return (
+            <li className="predictive-search-result-item" key={product.id}>
+              <Link to={productUrl} onClick={closeSearch}>
+                {image && (
+                  <Image
+                    alt={image.altText ?? ''}
+                    src={image.url}
+                    width={50}
+                    height={50}
+                  />
+                )}
+                <div>
+                  <p>{product.title}</p>
+                  <small>
+-                    {product?.variants?.nodes?.[0].price && (
++                    {price && (
+-                      <Money data={product.variants.nodes[0].price} />
++                      <Money data={price} />
+                    )}
+                  </small>
+                </div>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+```
