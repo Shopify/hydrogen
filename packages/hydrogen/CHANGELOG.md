@@ -1,5 +1,33 @@
 # @shopify/hydrogen
 
+## 2024.11.0
+
+### Minor Changes
+
+- Added namespace support to prevent conflicts when using multiple Pagination components: ([#2649](https://github.com/Shopify/hydrogen/pull/2649)) by [@scottdixon](https://github.com/scottdixon)
+
+  - New optional `namespace` prop for the `<Pagination/>` component
+  - New optional `namespace` option for `getPaginationVariables()` utility
+  - When specified, pagination URL parameters are prefixed with the namespace (e.g., `products_cursor` instead of `cursor`)
+  - Maintains backwards compatibility when no namespace is provided
+
+### Patch Changes
+
+- Add params to override the login and authorize paths: ([#2648](https://github.com/Shopify/hydrogen/pull/2648)) by [@blittle](https://github.com/blittle)
+
+  ```ts
+  const hydrogenContext = createHydrogenContext({
+    // ...
+    customerAccount: {
+      loginPath = '/account/login',
+      authorizePath = '/account/authorize',
+      defaultRedirectPath = '/account',
+    },
+  });
+  ```
+
+- Add `selectedVariant` prop to the `VariantSelector` to use for the initial state if no URL parameters are set ([#2643](https://github.com/Shopify/hydrogen/pull/2643)) by [@scottdixon](https://github.com/scottdixon)
+
 ## 2024.10.0
 
 ### Patch Changes

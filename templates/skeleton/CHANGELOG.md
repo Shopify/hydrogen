@@ -1,5 +1,16 @@
 # skeleton
 
+## 2024.10.2
+
+### Patch Changes
+
+- Remove initial redirect from product display page ([#2643](https://github.com/Shopify/hydrogen/pull/2643)) by [@scottdixon](https://github.com/scottdixon)
+
+- Update `Aside` to have an accessible close button label ([#2639](https://github.com/Shopify/hydrogen/pull/2639)) by [@lb-](https://github.com/lb-)
+
+- Updated dependencies [[`8f64915e`](https://github.com/Shopify/hydrogen/commit/8f64915e934130299307417627a12caf756cd8da), [`91d60fd2`](https://github.com/Shopify/hydrogen/commit/91d60fd2174b7c34f9f6b781cd5f0a70371fd899), [`23a80f3e`](https://github.com/Shopify/hydrogen/commit/23a80f3e7bf9f9908130fc9345397fc694420364)]:
+  - @shopify/hydrogen@2024.11.0
+
 ## 2024.10.1
 
 ### Patch Changes
