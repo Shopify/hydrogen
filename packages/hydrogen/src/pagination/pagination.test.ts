@@ -63,6 +63,17 @@ describe('getPaginationVariables', () => {
       ),
     ).toEqual({startCursor: 'abc', last: 10});
   });
+
+  it('returns cursor from search params with namespace', () => {
+    expect(
+      getPaginationVariables(
+        new Request(
+          'https://localhost:3000?products_cursor=abc&products_direction=previous',
+        ),
+        {pageBy: 20, namespace: 'products'},
+      ),
+    ).toEqual({startCursor: 'abc', last: 20});
+  });
 });
 
 describe('<Pagination>', () => {
@@ -224,7 +235,7 @@ describe('<Pagination>', () => {
           <a
             data-preventscrollreset="true"
             href="?direction=next&cursor=abc"
-            state="{"pageInfo":{"endCursor":"abc","hasPreviousPage":false,"hasNextPage":true,"startCursor":"cde"},"nodes":[1,2,3]}"
+            state="{"pagination":{"":{"pageInfo":{"endCursor":"abc","hasPreviousPage":false,"hasNextPage":true,"startCursor":"cde"},"nodes":[1,2,3]}}}"
           />
         </div>
       </DocumentFragment>
@@ -258,7 +269,7 @@ describe('<Pagination>', () => {
           <a
             data-preventscrollreset="true"
             href="?direction=previous&cursor=cde"
-            state="{"pageInfo":{"endCursor":"abc","hasPreviousPage":true,"hasNextPage":false,"startCursor":"cde"},"nodes":[1,2,3]}"
+            state="{"pagination":{"":{"pageInfo":{"endCursor":"abc","hasPreviousPage":true,"hasNextPage":false,"startCursor":"cde"},"nodes":[1,2,3]}}}"
           />
         </div>
       </DocumentFragment>
@@ -310,17 +321,21 @@ describe('<Pagination>', () => {
         <div>
           {
         "state": {
-          "pageInfo": {
-            "endCursor": "abc",
-            "hasPreviousPage": true,
-            "hasNextPage": false,
-            "startCursor": "cde"
-          },
-          "nodes": [
-            1,
-            2,
-            3
-          ]
+          "pagination": {
+            "": {
+              "pageInfo": {
+                "endCursor": "abc",
+                "hasPreviousPage": true,
+                "hasNextPage": false,
+                "startCursor": "cde"
+              },
+              "nodes": [
+                1,
+                2,
+                3
+              ]
+            }
+          }
         },
         "hasNextPage": false,
         "hasPreviousPage": true,
@@ -333,6 +348,184 @@ describe('<Pagination>', () => {
         ],
         "previousPageUrl": "?direction=previous&cursor=cde"
       }
+        </div>
+      </DocumentFragment>
+    `);
+  });
+
+  it('allows multiple Pagination components with unique namespaces', () => {
+    const {asFragment} = render(
+      createElement(
+        Fragment,
+        null,
+        createElement(Pagination, {
+          connection: {
+            nodes: [1, 2, 3],
+            pageInfo: {
+              endCursor: 'abc',
+              startCursor: 'cde',
+              hasNextPage: true,
+              hasPreviousPage: false,
+            },
+          },
+          namespace: 'products',
+          children: ({nodes}) =>
+            createElement(
+              Fragment,
+              null,
+              nodes.map((node) =>
+                createElement(
+                  'div',
+                  {key: node as string},
+                  `Product: ${node as string}`,
+                ),
+              ),
+            ),
+        }),
+        createElement(Pagination, {
+          connection: {
+            nodes: [4, 5, 6],
+            pageInfo: {
+              endCursor: 'def',
+              startCursor: 'ghi',
+              hasNextPage: false,
+              hasPreviousPage: true,
+            },
+          },
+          namespace: 'orders',
+          children: ({nodes}) =>
+            createElement(
+              Fragment,
+              null,
+              nodes.map((node) =>
+                createElement(
+                  'div',
+                  {key: node as string},
+                  `Order: ${node as string}`,
+                ),
+              ),
+            ),
+        }),
+      ),
+    );
+
+    expect(asFragment()).toMatchInlineSnapshot(`
+      <DocumentFragment>
+        <div>
+          Product: 1
+        </div>
+        <div>
+          Product: 2
+        </div>
+        <div>
+          Product: 3
+        </div>
+        <div>
+          Order: 4
+        </div>
+        <div>
+          Order: 5
+        </div>
+        <div>
+          Order: 6
+        </div>
+      </DocumentFragment>
+    `);
+  });
+
+  it('renders multiple Pagination components with unique namespaces correctly', () => {
+    const {asFragment} = render(
+      createElement(
+        Fragment,
+        null,
+        createElement(Pagination, {
+          connection: {
+            nodes: [1, 2, 3],
+            pageInfo: {
+              endCursor: 'abc',
+              startCursor: 'cde',
+              hasNextPage: true,
+              hasPreviousPage: false,
+            },
+          },
+          namespace: 'products',
+          children: ({NextLink, PreviousLink, nodes}) =>
+            createElement(
+              'div',
+              null,
+              nodes.map((node) =>
+                createElement(
+                  'div',
+                  {key: node as string},
+                  `Order: ${node as string}`,
+                ),
+              ),
+              createElement(NextLink, null, 'Next'),
+              createElement(PreviousLink, null, 'Previous'),
+            ),
+        }),
+        createElement(Pagination, {
+          connection: {
+            nodes: [4, 5, 6],
+            pageInfo: {
+              endCursor: 'def',
+              startCursor: 'ghi',
+              hasNextPage: false,
+              hasPreviousPage: true,
+            },
+          },
+          namespace: 'orders',
+          children: ({NextLink, PreviousLink, nodes}) =>
+            createElement(
+              'div',
+              null,
+              nodes.map((node) =>
+                createElement(
+                  'div',
+                  {key: node as string},
+                  `Order: ${node as string}`,
+                ),
+              ),
+              createElement(NextLink, null, 'Next'),
+              createElement(PreviousLink, null, 'Previous'),
+            ),
+        }),
+      ),
+    );
+
+    expect(asFragment()).toMatchInlineSnapshot(`
+      <DocumentFragment>
+        <div>
+          <div>
+            Order: 1
+          </div>
+          <div>
+            Order: 2
+          </div>
+          <div>
+            Order: 3
+          </div>
+          <a
+            data-preventscrollreset="true"
+            href="?products_direction=next&products_cursor=abc"
+            state="{"pagination":{"products":{"pageInfo":{"endCursor":"abc","hasPreviousPage":false,"hasNextPage":true,"startCursor":"cde"},"nodes":[1,2,3]}}}"
+          />
+        </div>
+        <div>
+          <div>
+            Order: 4
+          </div>
+          <div>
+            Order: 5
+          </div>
+          <div>
+            Order: 6
+          </div>
+          <a
+            data-preventscrollreset="true"
+            href="?orders_direction=previous&orders_cursor=ghi"
+            state="{"pagination":{"orders":{"pageInfo":{"endCursor":"def","hasPreviousPage":true,"hasNextPage":false,"startCursor":"ghi"},"nodes":[4,5,6]}}}"
+          />
         </div>
       </DocumentFragment>
     `);
